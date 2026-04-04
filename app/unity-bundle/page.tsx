@@ -342,7 +342,7 @@ export default function UnityBundlePage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('unityBundle.title')}</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('unityBundle.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('unityBundle.subtitle')}</p>
             </div>
           </div>
           
@@ -350,12 +350,12 @@ export default function UnityBundlePage() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{t('unityBundlePage.auto')}</span>
-              <span className="text-[10px] text-white/70">{t('unityBundle.autoExtraction').split(' ')[1]}</span>
+              <span className="text-2xs text-white/70">{t('unityBundle.autoExtraction').split(' ')[1]}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Languages className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">AI</span>
-              <span className="text-[10px] text-white/70">{t('unityBundle.aiTranslation').split(' ')[1]}</span>
+              <span className="text-2xs text-white/70">{t('unityBundle.aiTranslation').split(' ')[1]}</span>
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function UnityBundlePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         {/* Step 1: Seleziona */}
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <FolderOpen className="h-4 w-4 text-emerald-400" />
@@ -400,7 +400,7 @@ export default function UnityBundlePage() {
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
             <div className="flex gap-2">
-              <Button onClick={handleSelectFolder} variant="outline" size="sm" className="h-8 text-xs">
+              <Button onClick={handleSelectFolder} variant="outline" size="xs" className="text-xs">
                 {t('unityBundle.browse')}
               </Button>
               <Button 
@@ -414,7 +414,7 @@ export default function UnityBundlePage() {
             </div>
             
             {folderPath && (
-              <p className="text-[10px] text-muted-foreground font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50">
+              <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50">
                 {folderPath.split('\\').slice(-2).join('\\')}
               </p>
             )}
@@ -437,7 +437,7 @@ export default function UnityBundlePage() {
                           {getStatusIcon(bundle.status)}
                           <span className="font-medium uppercase">{bundle.locale}</span>
                         </div>
-                        <Badge variant="outline" className="text-[10px] px-1 py-0">{formatBytes(bundle.size_bytes)}</Badge>
+                        <Badge variant="outline" className="text-2xs px-1 py-0">{formatBytes(bundle.size_bytes)}</Badge>
                       </div>
                     </div>
                   ))}
@@ -448,7 +448,7 @@ export default function UnityBundlePage() {
         </Card>
 
         {/* Step 2: Estrai */}
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Zap className="h-4 w-4 text-emerald-400" />
@@ -484,7 +484,7 @@ export default function UnityBundlePage() {
             {strings.length > 0 && (
               <ScrollArea className="h-[140px] border border-slate-800/50 rounded p-2 bg-slate-950/50">
                 {strings.slice(0, 30).map((s, i) => (
-                  <div key={i} className="text-[10px] py-1 border-b border-slate-800/30 last:border-0">
+                  <div key={i} className="text-2xs py-1 border-b border-slate-800/30 last:border-0">
                     <p className="text-muted-foreground truncate">{s.key}</p>
                     <p className="truncate">{s.value}</p>
                     {s.translated && <p className="text-green-400 truncate">→ {s.translated}</p>}
@@ -496,7 +496,7 @@ export default function UnityBundlePage() {
         </Card>
 
         {/* Step 3: Traduci */}
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-emerald-400" />
@@ -510,7 +510,7 @@ export default function UnityBundlePage() {
             {translating && (
               <div className="space-y-1">
                 <Progress value={translationProgress} className="h-1.5" />
-                <p className="text-[10px] text-center text-muted-foreground">{translationProgress}%</p>
+                <p className="text-2xs text-center text-muted-foreground">{translationProgress}%</p>
               </div>
             )}
             
@@ -528,7 +528,7 @@ export default function UnityBundlePage() {
             </Button>
             
             {currentStep >= 3 && strings.some(s => s.translated) && (
-              <p className="text-[10px] text-green-400 text-center">
+              <p className="text-2xs text-green-400 text-center">
                 ✓ {t('unityBundle.translationsReady')}
               </p>
             )}
@@ -536,7 +536,7 @@ export default function UnityBundlePage() {
         </Card>
 
         {/* Step 4: Import UABEA Wizard */}
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Package className="h-4 w-4 text-emerald-400" />
@@ -566,7 +566,7 @@ export default function UnityBundlePage() {
               <div className="space-y-1.5">
                 <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 1 ? 'bg-green-500/20' : 'bg-emerald-500/20'}`}>
                   <span className="font-bold">1.</span>
-                  <Button size="sm" onClick={openUABEA} disabled={uabeaStep > 1} className="h-6 text-[10px]">
+                  <Button size="sm" onClick={openUABEA} disabled={uabeaStep > 1} className="h-6 text-2xs">
                     {t('unityBundle.openUABEA')}
                   </Button>
                   {uabeaStep > 1 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
@@ -574,21 +574,21 @@ export default function UnityBundlePage() {
                 
                 <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 2 ? 'bg-green-500/20' : uabeaStep >= 2 ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
                   <span className="font-bold">2.</span>
-                  <Button size="sm" onClick={copyBundlePath} disabled={uabeaStep < 2 || uabeaStep > 2} className="h-6 text-[10px]">
+                  <Button size="sm" onClick={copyBundlePath} disabled={uabeaStep < 2 || uabeaStep > 2} className="h-6 text-2xs">
                     {t('unityBundle.copyBundlePath')}
                   </Button>
                   {uabeaStep > 2 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
                 </div>
-                <p className="text-[9px] text-muted-foreground pl-5">{t('unityBundlePage.fileOpenCtrlv')}</p>
+                <p className="text-micro text-muted-foreground pl-5">{t('unityBundlePage.fileOpenCtrlv')}</p>
                 
                 <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 3 ? 'bg-green-500/20' : uabeaStep >= 3 ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
                   <span className="font-bold">3.</span>
-                  <Button size="sm" onClick={copyDumpPath} disabled={uabeaStep < 3 || uabeaStep > 3} className="h-6 text-[10px]">
+                  <Button size="sm" onClick={copyDumpPath} disabled={uabeaStep < 3 || uabeaStep > 3} className="h-6 text-2xs">
                     {t('unityBundle.copyTranslationsPath')}
                   </Button>
                   {uabeaStep > 3 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
                 </div>
-                <p className="text-[9px] text-muted-foreground pl-5">{t('unityBundlePage.importDumpCtrlv')}</p>
+                <p className="text-micro text-muted-foreground pl-5">{t('unityBundlePage.importDumpCtrlv')}</p>
                 
                 {uabeaStep >= 4 && (
                   <div className="flex items-center gap-2 p-1.5 rounded bg-green-500/20 text-xs">

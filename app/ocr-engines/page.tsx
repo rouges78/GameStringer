@@ -190,18 +190,18 @@ export default function OCREnginesPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-4",
+                  <Badge variant="outline" className={cn("text-micro px-1 py-0 h-4",
                     isAvailable ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"
                   )}>
                     {isAvailable ? "Online" : "Offline"}
                   </Badge>
                   {probe?.latencyMs !== undefined && probe.latencyMs > 0 && (
-                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-micro text-muted-foreground flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" /> {probe.latencyMs}ms
                     </span>
                   )}
                   {info && (
-                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-micro text-muted-foreground flex items-center gap-0.5">
                       <Zap className="h-2.5 w-2.5" /> Q:{info.qualityScore}/10
                     </span>
                   )}
@@ -210,13 +210,13 @@ export default function OCREnginesPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-5 text-[9px] mt-1 px-1 text-muted-foreground"
+                    className="h-5 text-micro mt-1 px-1 text-muted-foreground"
                     onClick={(e) => { e.stopPropagation(); setShowSetup(showSetup === engineId ? null : engineId) }}
                   >
                     <Settings className="h-2.5 w-2.5 mr-0.5" />{t('offlineTranslator.setup')}</Button>
                 )}
                 {showSetup === engineId && info && (
-                  <div className="mt-2 p-2 rounded bg-muted/50 text-[10px] text-muted-foreground">
+                  <div className="mt-2 p-2 rounded bg-muted/50 text-2xs text-muted-foreground">
                     {info.setupInstructions}
                   </div>
                 )}
@@ -248,7 +248,7 @@ export default function OCREnginesPage() {
                   <div className="text-center p-6">
                     <Upload className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
                     <p className="text-xs text-muted-foreground">{t('ocrEnginesPage.dropImage')}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">{t('ocrEnginesPage.formats')}</p>
+                    <p className="text-2xs text-muted-foreground/60 mt-1">{t('ocrEnginesPage.formats')}</p>
                   </div>
                 )}
               </div>
@@ -294,10 +294,10 @@ export default function OCREnginesPage() {
               </CardTitle>
               {ocrResult && (
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={cn("text-[10px]", ENGINE_COLORS[ocrResult.engine])}>
+                  <Badge variant="outline" className={cn("text-2xs", ENGINE_COLORS[ocrResult.engine])}>
                     {ENGINE_ICONS[ocrResult.engine]} {ocrResult.engine}
                   </Badge>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleCopyText}>
+                  <Button variant="ghost" size="xs" className="text-xs" onClick={handleCopyText}>
                     <Copy className="h-3 w-3 mr-1" />{t('translationFixer.copy')}</Button>
                 </div>
               )}
@@ -343,13 +343,13 @@ export default function OCREnginesPage() {
                     <>
                       <Separator />
                       <div>
-                        <Label className="text-[10px] text-muted-foreground">Righe ({ocrResult.lines.length})</Label>
+                        <Label className="text-2xs text-muted-foreground">Righe ({ocrResult.lines.length})</Label>
                         <div className="space-y-0.5 mt-1 max-h-[150px] overflow-y-auto">
                           {ocrResult.lines.map((line, i) => (
                             <div key={i} className="flex items-center gap-2 text-[11px] p-1 rounded hover:bg-muted/30">
                               <span className="text-muted-foreground w-4 text-right">{i + 1}</span>
                               <span className="flex-1 truncate">{line.text}</span>
-                              <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-4",
+                              <Badge variant="outline" className={cn("text-micro px-1 py-0 h-4",
                                 line.confidence >= 80 ? "text-emerald-400" :
                                 line.confidence >= 50 ? "text-yellow-400" :
                                 "text-red-400"
@@ -368,7 +368,7 @@ export default function OCREnginesPage() {
                     <>
                       <Separator />
                       <div>
-                        <Label className="text-[10px] text-muted-foreground">
+                        <Label className="text-2xs text-muted-foreground">
                           Confronto Engine ({ocrResult.allResults.length})
                         </Label>
                         <div className="space-y-1 mt-1">
@@ -378,18 +378,18 @@ export default function OCREnginesPage() {
                               r.engine === ocrResult.engine ? "border-primary/30 bg-primary/5" : "border-transparent bg-muted/30"
                             )}>
                               <div className="flex items-center justify-between mb-1">
-                                <Badge variant="outline" className={cn("text-[9px]", ENGINE_COLORS[r.engine])}>
+                                <Badge variant="outline" className={cn("text-micro", ENGINE_COLORS[r.engine])}>
                                   {ENGINE_ICONS[r.engine]} {r.engine}
                                 </Badge>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <div className="flex items-center gap-2 text-2xs text-muted-foreground">
                                   <span>{Math.round(r.result.confidence)}% conf.</span>
                                   <span>{r.result.processingTime}ms</span>
                                   {r.engine === ocrResult.engine && (
-                                    <Badge className="text-[8px] h-3 bg-primary/20">BEST</Badge>
+                                    <Badge className="text-2xs h-3 bg-primary/20">BEST</Badge>
                                   )}
                                 </div>
                               </div>
-                              <div className="text-[10px] truncate text-muted-foreground">{r.result.text.substring(0, 100)}...</div>
+                              <div className="text-2xs truncate text-muted-foreground">{r.result.text.substring(0, 100)}...</div>
                             </div>
                           ))}
                         </div>
@@ -422,13 +422,13 @@ export default function OCREnginesPage() {
                       {info.name}
                       {info.available && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">{info.description}</div>
+                    <div className="text-2xs text-muted-foreground">{info.description}</div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {info.strengths.map((s, i) => (
-                        <Badge key={i} variant="secondary" className="text-[8px] px-1 py-0">{s}</Badge>
+                        <Badge key={i} variant="secondary" className="text-2xs px-1 py-0">{s}</Badge>
                       ))}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-2xs text-muted-foreground">
                       Ottimale: {info.bestFor.join(", ")} · Latenza: ~{info.avgLatencyMs}ms · Qualità: {info.qualityScore}/10
                     </div>
                   </div>

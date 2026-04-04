@@ -89,7 +89,7 @@ function SupabaseSettingsCard() {
   return (
     <Card className="p-4">
       <CardHeader className="p-0 pb-4">
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle as="h2" className="flex items-center gap-2 text-base">
           <Database className="h-4 w-4 text-emerald-400" />
           Community Hub — Supabase Backend
         </CardTitle>
@@ -156,17 +156,17 @@ function SupabaseSettingsCard() {
 
         {showSql && (
           <div className="space-y-2">
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               {language === 'it'
                 ? 'Esegui questo SQL nel SQL Editor di Supabase per creare le tabelle necessarie:'
                 : 'Run this SQL in Supabase SQL Editor to create required tables:'}
             </p>
             <div className="relative">
-              <pre className="text-[9px] bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-slate-300 whitespace-pre-wrap">
+              <pre className="text-micro bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-slate-300 whitespace-pre-wrap">
                 {SUPABASE_MIGRATION_SQL.trim().substring(0, 2000)}
                 {SUPABASE_MIGRATION_SQL.length > 2000 ? '\n\n... (copia per vedere tutto)' : ''}
               </pre>
-              <Button size="sm" variant="outline" onClick={handleCopySql} className="absolute top-2 right-2 h-6 text-[9px] gap-1">
+              <Button size="sm" variant="outline" onClick={handleCopySql} className="absolute top-2 right-2 h-6 text-micro gap-1">
                 {language === 'it' ? 'Copia SQL' : 'Copy SQL'}
               </Button>
             </div>
@@ -207,7 +207,7 @@ function CacheStatsCard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle as="h2" className="flex items-center space-x-2">
             <Monitor className="h-5 w-5 text-green-500" />
             <span>{t('settings.systemConfig')}</span>
           </CardTitle>
@@ -226,7 +226,7 @@ function CacheStatsCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
+        <CardTitle as="h2" className="flex items-center space-x-2">
           <Monitor className="h-5 w-5 text-green-500" />
           <span>{t('settings.systemConfig')}</span>
         </CardTitle>
@@ -555,7 +555,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('settings.title')}</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('settings.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('settings.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -665,7 +665,7 @@ export default function SettingsPage() {
           {/* LM Studio Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle as="h2" className="flex items-center space-x-2">
                 <Monitor className="h-5 w-5 text-purple-500" />
                 <span>{t('settingsPage.lmStudioLocale')}</span>
               </CardTitle>
@@ -683,7 +683,7 @@ export default function SettingsPage() {
                     placeholder="http://localhost:1234"
                     className="font-mono text-xs"
                   />
-                  <p className="text-[10px] text-muted-foreground">{t('settingsPage.portaDefault1234')}</p>
+                  <p className="text-2xs text-muted-foreground">{t('settingsPage.portaDefault1234')}</p>
                 </div>
                 <div className="space-y-2">
                   <Label>{t('settingsPage.modelOptional')}</Label>
@@ -693,10 +693,10 @@ export default function SettingsPage() {
                     placeholder="Auto-detect dal server"
                     className="font-mono text-xs"
                   />
-                  <p className="text-[10px] text-muted-foreground">{t('settingsPage.leaveEmpty')}</p>
+                  <p className="text-2xs text-muted-foreground">{t('settingsPage.leaveEmpty')}</p>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 Scarica LM Studio da <a href="https://lmstudio.ai" target="_blank" rel="noopener" className="underline">lmstudio.ai</a> — 
                 Carica un modello GGUF, avvia il server locale, e GameStringer lo userà automaticamente.
               </p>
@@ -706,7 +706,7 @@ export default function SettingsPage() {
           {/* Alocai ModelWiz Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle as="h2" className="flex items-center space-x-2">
                 <Globe className="h-5 w-5 text-teal-500" />
                 <span>Alocai ModelWiz</span>
               </CardTitle>
@@ -724,7 +724,7 @@ export default function SettingsPage() {
                     placeholder="http://localhost:8080"
                     className="font-mono text-xs"
                   />
-                  <p className="text-[10px] text-muted-foreground">URL del server ModelWiz (locale o cloud)</p>
+                  <p className="text-2xs text-muted-foreground">URL del server ModelWiz (locale o cloud)</p>
                 </div>
                 <div className="space-y-2">
                   <Label>API Key (opzionale)</Label>
@@ -735,10 +735,10 @@ export default function SettingsPage() {
                     placeholder="Solo per cloud Alocai"
                     className="font-mono text-xs"
                   />
-                  <p className="text-[10px] text-muted-foreground">Necessaria solo per endpoint cloud Alocai</p>
+                  <p className="text-2xs text-muted-foreground">Necessaria solo per endpoint cloud Alocai</p>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 Scarica ModelWiz da <a href="https://www.alocai.com/download-modelwiz" target="_blank" rel="noopener" className="underline">alocai.com/download-modelwiz</a> — 
                 Avvia il server locale e GameStringer lo userà automaticamente nella catena di traduzione.
               </p>
@@ -747,7 +747,7 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle as="h2" className="flex items-center space-x-2">
                 <Brain className="h-5 w-5 text-blue-500" />
                 <span>{t('settings.aiConfig')}</span>
               </CardTitle>
@@ -792,7 +792,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-muted-foreground">{t('settingsPage.apiKeysFallback')}</h4>
+                <h3 className="text-sm font-medium text-muted-foreground">{t('settingsPage.apiKeysFallback')}</h3>
                 
                 <div className="space-y-2">
                   <Label htmlFor="translation-api-key">🔑 Google Gemini API Key</Label>
@@ -808,6 +808,7 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Mostra/Nascondi"
                       onClick={() => setShowApiKeys(prev => ({ ...prev, translation: !prev.translation }))}
                     >
                       {showApiKeys.translation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -830,6 +831,7 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Mostra/Nascondi"
                       onClick={() => setShowApiKeys(prev => ({ ...prev, groq: !prev.groq }))}
                     >
                       {showApiKeys.groq ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -852,6 +854,7 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Mostra/Nascondi"
                       onClick={() => setShowApiKeys(prev => ({ ...prev, deepseek: !prev.deepseek }))}
                     >
                       {showApiKeys.deepseek ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -874,6 +877,7 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Mostra/Nascondi"
                       onClick={() => setShowApiKeys(prev => ({ ...prev, openai: !prev.openai }))}
                     >
                       {showApiKeys.openai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -896,6 +900,7 @@ export default function SettingsPage() {
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Mostra/Nascondi"
                       onClick={() => setShowApiKeys(prev => ({ ...prev, anthropic: !prev.anthropic }))}
                     >
                       {showApiKeys.anthropic ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -914,65 +919,65 @@ export default function SettingsPage() {
                     <Label htmlFor="mistral-api-key" className="text-xs">{t('settingsPage.mistralAi')}</Label>
                     <div className="flex space-x-1">
                       <Input id="mistral-api-key" type={showApiKeys.mistral ? "text" : "password"} value={settings.translation.mistralApiKey} onChange={(e) => updateSetting('translation', 'mistralApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, mistral: !prev.mistral }))}>{showApiKeys.mistral ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, mistral: !prev.mistral }))}>{showApiKeys.mistral ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="cohere-api-key" className="text-xs">Cohere</Label>
                     <div className="flex space-x-1">
                       <Input id="cohere-api-key" type={showApiKeys.cohere ? "text" : "password"} value={settings.translation.cohereApiKey} onChange={(e) => updateSetting('translation', 'cohereApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, cohere: !prev.cohere }))}>{showApiKeys.cohere ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, cohere: !prev.cohere }))}>{showApiKeys.cohere ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.freeTrial')}<a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTrial')}<a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="together-api-key" className="text-xs">{t('settingsPage.togetherAi')}</Label>
                     <div className="flex space-x-1">
                       <Input id="together-api-key" type={showApiKeys.together ? "text" : "password"} value={settings.translation.togetherApiKey} onChange={(e) => updateSetting('translation', 'togetherApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, together: !prev.together }))}>{showApiKeys.together ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, together: !prev.together }))}>{showApiKeys.together ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">$25 free credit — <a href="https://api.together.xyz/settings/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">$25 free credit — <a href="https://api.together.xyz/settings/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="fireworks-api-key" className="text-xs">{t('settingsPage.fireworksAi')}</Label>
                     <div className="flex space-x-1">
                       <Input id="fireworks-api-key" type={showApiKeys.fireworks ? "text" : "password"} value={settings.translation.fireworksApiKey} onChange={(e) => updateSetting('translation', 'fireworksApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, fireworks: !prev.fireworks }))}>{showApiKeys.fireworks ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, fireworks: !prev.fireworks }))}>{showApiKeys.fireworks ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://fireworks.ai/account/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://fireworks.ai/account/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="openrouter-api-key" className="text-xs">OpenRouter</Label>
                     <div className="flex space-x-1">
                       <Input id="openrouter-api-key" type={showApiKeys.openrouter ? "text" : "password"} value={settings.translation.openrouterApiKey} onChange={(e) => updateSetting('translation', 'openrouterApiKey', e.target.value)} placeholder="sk-or-..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, openrouter: !prev.openrouter }))}>{showApiKeys.openrouter ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, openrouter: !prev.openrouter }))}>{showApiKeys.openrouter ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.modelliGratuitiInclusi')}<a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.modelliGratuitiInclusi')}<a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="cerebras-api-key" className="text-xs">Cerebras</Label>
                     <div className="flex space-x-1">
                       <Input id="cerebras-api-key" type={showApiKeys.cerebras ? "text" : "password"} value={settings.translation.cerebrasApiKey} onChange={(e) => updateSetting('translation', 'cerebrasApiKey', e.target.value)} placeholder="csk-..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, cerebras: !prev.cerebras }))}>{showApiKeys.cerebras ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, cerebras: !prev.cerebras }))}>{showApiKeys.cerebras ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.freeTierUltraveloce')}<a href="https://cloud.cerebras.ai/platform" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTierUltraveloce')}<a href="https://cloud.cerebras.ai/platform" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="deepl-api-key" className="text-xs">DeepL</Label>
                     <div className="flex space-x-1">
                       <Input id="deepl-api-key" type={showApiKeys.deepl ? "text" : "password"} value={settings.translation.deeplApiKey} onChange={(e) => updateSetting('translation', 'deeplApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, deepl: !prev.deepl }))}>{showApiKeys.deepl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, deepl: !prev.deepl }))}>{showApiKeys.deepl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">500K chars/mese gratis — <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">500K chars/mese gratis — <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="qwen-api-key" className="text-xs">{t('settingsPage.qwen3AlibabaDashscope')}</Label>
                     <div className="flex space-x-1">
                       <Input id="qwen-api-key" type={showApiKeys.qwen ? "text" : "password"} value={settings.translation.qwenApiKey} onChange={(e) => updateSetting('translation', 'qwenApiKey', e.target.value)} placeholder="sk-..." className="font-mono text-xs h-8" />
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, qwen: !prev.qwen }))}>{showApiKeys.qwen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                      <Button variant="outline" size="icon" aria-label="Mostra/Nascondi" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, qwen: !prev.qwen }))}>{showApiKeys.qwen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">1M token/mese gratis, top multilingue — <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">1M token/mese gratis, top multilingue — <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                 </div>
               </details>
@@ -1079,7 +1084,7 @@ export default function SettingsPage() {
         <TabsContent value="performance" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
+              <CardTitle as="h2" className="flex items-center space-x-2">
                 <Zap className="h-5 w-5 text-yellow-500" />
                 <span>{t('settings.perfConfig')}</span>
               </CardTitle>
@@ -1143,7 +1148,7 @@ export default function SettingsPage() {
         <TabsContent value="rss" className="space-y-3">
           <Card className="p-4">
             <CardHeader className="p-0 pb-4">
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle as="h2" className="flex items-center gap-2 text-base">
                 <Rss className="h-5 w-5 text-orange-500" />
                 Feed RSS Dashboard
               </CardTitle>
@@ -1222,28 +1227,28 @@ export default function SettingsPage() {
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Monitor className="h-3.5 w-3.5 text-blue-400" />
-                <span className="text-[10px] text-muted-foreground">{t('settingsPage.window')}</span>
+                <span className="text-2xs text-muted-foreground">{t('settingsPage.window')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '...'}</p>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Maximize2 className="h-3.5 w-3.5 text-purple-400" />
-                <span className="text-[10px] text-muted-foreground">{t('settingsPage.screen')}</span>
+                <span className="text-2xs text-muted-foreground">{t('settingsPage.screen')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '...'}</p>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-green-400" />
-                <span className="text-[10px] text-muted-foreground">DPI</span>
+                <span className="text-2xs text-muted-foreground">DPI</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${(window.devicePixelRatio * 100).toFixed(0)}%` : '...'}</p>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Columns className="h-3.5 w-3.5 text-yellow-400" />
-                <span className="text-[10px] text-muted-foreground">{t('settingsPage.ratio')}</span>
+                <span className="text-2xs text-muted-foreground">{t('settingsPage.ratio')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? (window.innerWidth / window.innerHeight).toFixed(2) : '...'}</p>
             </div>
@@ -1256,7 +1261,7 @@ export default function SettingsPage() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold">{t('settingsPage.uiScale')}</Label>
-                    <Badge variant="outline" className="font-mono text-[10px] h-5">{settings.display.uiScale}%</Badge>
+                    <Badge variant="outline" className="font-mono text-2xs h-5">{settings.display.uiScale}%</Badge>
                   </div>
                   <Slider
                     value={[settings.display.uiScale]}
@@ -1264,14 +1269,14 @@ export default function SettingsPage() {
                     max={150} min={75} step={5}
                     className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
                   />
-                  <div className="flex justify-between text-[9px] text-muted-foreground">
+                  <div className="flex justify-between text-micro text-muted-foreground">
                     <span>75%</span><span>100%</span><span>150%</span>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold">{t('settingsPage.sidebar')}</Label>
-                    <Badge variant="outline" className="font-mono text-[10px] h-5">{settings.display.sidebarWidth}px</Badge>
+                    <Badge variant="outline" className="font-mono text-2xs h-5">{settings.display.sidebarWidth}px</Badge>
                   </div>
                   <Slider
                     value={[settings.display.sidebarWidth]}
@@ -1279,7 +1284,7 @@ export default function SettingsPage() {
                     max={320} min={200} step={8}
                     className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
                   />
-                  <div className="flex justify-between text-[9px] text-muted-foreground">
+                  <div className="flex justify-between text-micro text-muted-foreground">
                     <span>200px</span><span>256px</span><span>320px</span>
                   </div>
                 </div>
@@ -1315,7 +1320,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.compact')}</Label>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.lessPadding')}</p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.lessPadding')}</p>
                   </div>
                   <Switch
                     checked={settings.display.compactMode}
@@ -1325,7 +1330,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.animations')}</Label>
-                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.uiTransitions')}</p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.uiTransitions')}</p>
                   </div>
                   <Switch
                     checked={settings.display.animationsEnabled}
@@ -1346,7 +1351,7 @@ export default function SettingsPage() {
                     { label: 'QHD', sub: '2560x1440', icon: '\ud83d\udcfa', scale: 110, font: 'medium' as const, compact: false, sw: 280 },
                     { label: '4K', sub: '3840x2160', icon: '\ud83c\udf1f', scale: 125, font: 'large' as const, compact: false, sw: 300 },
                   ].map((p) => (
-                    <Button key={p.label} variant="outline" size="sm" className="h-auto py-2 flex-col gap-0.5 text-[10px]" onClick={() => {
+                    <Button key={p.label} variant="outline" size="sm" className="h-auto py-2 flex-col gap-0.5 text-2xs" onClick={() => {
                       updateSetting('display', 'uiScale', p.scale);
                       updateSetting('display', 'fontSize', p.font);
                       updateSetting('display', 'compactMode', p.compact);
@@ -1369,7 +1374,7 @@ export default function SettingsPage() {
             <div className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
               <TestTube className="h-3.5 w-3.5" />
               {t('settings.debugTools')}
-              <Badge variant="outline" className="text-[10px] ml-1">{t('settings.developers')}</Badge>
+              <Badge variant="outline" className="text-2xs ml-1">{t('settings.developers')}</Badge>
             </div>
             <div className="mb-3">
               <Button onClick={testGameLibrary} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5 w-full">
@@ -1379,7 +1384,7 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between items-center mb-2">
               <p className="text-xs font-semibold text-slate-400">{t('settings.debugConsole')}</p>
-              <Button onClick={clearDebugResults} variant="ghost" size="sm" className="h-6 text-xs gap-1">
+              <Button onClick={clearDebugResults} variant="ghost" size="xs" className="text-xs gap-1">
                 <Trash2 className="h-3 w-3" />
                 {t('settings.clear')}
               </Button>

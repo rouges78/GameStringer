@@ -48,7 +48,7 @@ export function NotificationSettings({
       <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/30 border border-slate-800">
         <div className="space-y-0.5">
           <Label htmlFor="globalEnabled" className="text-sm font-medium">{t('notifications.enableNotifications')}</Label>
-          <p className="text-[10px] text-muted-foreground">{t('notifications.enableNotificationsDesc')}</p>
+          <p className="text-2xs text-muted-foreground">{t('notifications.enableNotificationsDesc')}</p>
         </div>
         <Switch
           id="globalEnabled"

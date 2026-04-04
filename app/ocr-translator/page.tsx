@@ -409,7 +409,7 @@ export default function OcrTranslatorPage() {
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 OCR Translator
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {t('ocrTranslator.subtitle')}
               </p>
             </div>
@@ -476,13 +476,13 @@ export default function OcrTranslatorPage() {
                     <X className="h-3 w-3" />
                   </button>
                 </div>
-                <p className="text-[10px] text-slate-500">Trascina un altro screenshot per sostituire</p>
+                <p className="text-2xs text-slate-500">Trascina un altro screenshot per sostituire</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <ImageIcon className="h-12 w-12 text-slate-500 mx-auto" />
                 <p className="text-sm text-slate-300">Trascina uno screenshot qui</p>
-                <p className="text-[10px] text-slate-500">oppure</p>
+                <p className="text-2xs text-slate-500">oppure</p>
                 <div className="flex items-center justify-center gap-2">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}>
@@ -514,12 +514,12 @@ export default function OcrTranslatorPage() {
                     {screenshotTexts.map((t, i) => (
                       <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:bg-slate-800/60 transition-colors">
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-slate-500 mb-0.5">Originale</p>
+                          <p className="text-2xs text-slate-500 mb-0.5">Originale</p>
                           <p className="text-xs text-slate-300">{t.original}</p>
                         </div>
                         <ArrowRight className="h-3 w-3 text-blue-400 mt-4 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-emerald-500 mb-0.5">Traduzione</p>
+                          <p className="text-2xs text-emerald-500 mb-0.5">Traduzione</p>
                           <p className="text-xs text-emerald-300">{t.translated}</p>
                         </div>
                       </div>
@@ -629,7 +629,7 @@ export default function OcrTranslatorPage() {
                     <option value="gemini">✨ Gemini (API Key richiesta)</option>
                   </select>
                   {ocrProvider === 'vlm' && (
-                    <div className="mt-2 text-[10px] text-amber-400 bg-amber-500/10 p-2 rounded">
+                    <div className="mt-2 text-2xs text-amber-400 bg-amber-500/10 p-2 rounded">
                       <strong>{t('ocrTranslatorPage.notaVlm')}</strong> L'immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
                     </div>
                   )}
@@ -701,8 +701,8 @@ export default function OcrTranslatorPage() {
               )}
             </Button>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-muted-foreground">
-                {t('ocrTranslator.shortcut')}: <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]">{t('ocrTranslatorPage.ctrlshiftt')}</kbd>
+              <span className="text-2xs text-muted-foreground">
+                {t('ocrTranslator.shortcut')}: <kbd className="px-1 py-0.5 rounded bg-muted text-2xs">{t('ocrTranslatorPage.ctrlshiftt')}</kbd>
               </span>
               <Button 
                 onClick={async () => {
@@ -777,7 +777,7 @@ export default function OcrTranslatorPage() {
       </>)}
 
       {/* Info */}
-      <p className="text-center text-[10px] text-muted-foreground">
+      <p className="text-center text-2xs text-muted-foreground">
         💡 {t('ocrTranslator.footerInfo')}
       </p>
     </div>

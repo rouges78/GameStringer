@@ -126,7 +126,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
             <User className="h-4 w-4 text-blue-400" />
             <span className="text-sm font-medium text-white">{currentProfile.name}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+          <div className="flex items-center gap-1.5 text-2xs text-slate-500">
             <div className={`w-1.5 h-1.5 rounded-full ${autoSaveEnabled ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
             {t('notifications.autoSave')}
           </div>

@@ -68,7 +68,7 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search translations..."
+            aria-label="Search" placeholder="Search translations..."
             value={filters.text}
             onChange={(e) => updateFilter('text', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -133,7 +133,7 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
           <div className="flex space-x-2">
             <Input
               id="search"
-              placeholder="Search in original or translation..."
+              aria-label="Search" placeholder="Search in original or translation..."
               value={filters.text}
               onChange={(e) => updateFilter('text', e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}

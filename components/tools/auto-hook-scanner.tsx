@@ -73,7 +73,7 @@ export function AutoHookScanner() {
         <div className="flex items-center gap-2">
           <Crosshair className="h-5 w-5 text-rose-400" />
           <CardTitle className="text-base">{t('autoHookScannerComp.autohookScanner')}</CardTitle>
-          <Badge variant="outline" className="text-[9px] px-1.5 border-rose-500/20 text-rose-400">
+          <Badge variant="outline" className="text-micro px-1.5 border-rose-500/20 text-rose-400">
             Click-to-Hook
           </Badge>
         </div>
@@ -86,7 +86,7 @@ export function AutoHookScanner() {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-slate-500 mb-1 block">{t('autoHookScannerComp.processIdPid')}</label>
+            <label className="text-2xs text-slate-500 mb-1 block">{t('autoHookScannerComp.processIdPid')}</label>
             <Input
               value={processId}
               onChange={e => setProcessId(e.target.value.replace(/\D/g, ''))}
@@ -95,7 +95,7 @@ export function AutoHookScanner() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-slate-500 mb-1 block">{t('autoHookScannerComp.testoDaCercare')}</label>
+            <label className="text-2xs text-slate-500 mb-1 block">{t('autoHookScannerComp.testoDaCercare')}</label>
             <Input
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
@@ -132,7 +132,7 @@ export function AutoHookScanner() {
               <span className="text-xs text-slate-400">
                 {result.candidates.length} risultati in {result.scan_duration_ms}ms
               </span>
-              <Badge variant="outline" className="text-[9px]">
+              <Badge variant="outline" className="text-micro">
                 {result.process_name}
               </Badge>
             </div>
@@ -150,15 +150,15 @@ export function AutoHookScanner() {
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-[10px] text-rose-300 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded">
+                        <code className="text-2xs text-rose-300 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded">
                           {c.address}
                         </code>
-                        <Badge className={`text-[8px] px-1 py-0 h-3.5 ${
+                        <Badge className={`text-2xs px-1 py-0 h-3.5 ${
                           c.hook_type === 'UTF-16LE' ? 'bg-violet-500/20 text-violet-300' : 'bg-blue-500/20 text-blue-300'
                         }`}>
                           {c.hook_type}
                         </Badge>
-                        <span className="text-[9px] text-slate-500">{c.module_name}</span>
+                        <span className="text-micro text-slate-500">{c.module_name}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <div className={`h-1.5 w-6 rounded-full overflow-hidden bg-slate-700`}>
@@ -179,7 +179,7 @@ export function AutoHookScanner() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate font-mono">
+                    <p className="text-2xs text-slate-400 truncate font-mono">
                       {c.text_preview}
                     </p>
                   </div>
@@ -189,7 +189,7 @@ export function AutoHookScanner() {
           </div>
         )}
 
-        <div className="text-[9px] text-slate-600 flex items-center gap-1">
+        <div className="text-micro text-slate-600 flex items-center gap-1">
           <Zap className="h-3 w-3" />
           Suggerimento: Apri Task Manager, trova il PID del gioco, inserisci il testo visibile a schermo.
         </div>

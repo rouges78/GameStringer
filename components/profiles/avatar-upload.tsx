@@ -161,14 +161,14 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
               Carica Immagine
             </Button>
             
-            <p className="text-[10px] text-slate-500 text-center">
+            <p className="text-2xs text-slate-500 text-center">
               JPG, PNG o GIF • Max 5MB
             </p>
           </div>
           
           {/* Preset Avatars */}
           <div className="w-full">
-            <p className="text-[10px] font-medium mb-2 text-center text-slate-500 uppercase tracking-wider">Preset</p>
+            <p className="text-2xs font-medium mb-2 text-center text-slate-500 uppercase tracking-wider">Preset</p>
             <div className="flex justify-center gap-2 flex-wrap">
               {[
                 { emoji: '🎮', from: '#3730a3', to: '#1e40af' },

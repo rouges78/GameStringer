@@ -1817,7 +1817,7 @@ export default function GameDetailPage() {
             }`}>
               {game.metacritic.score}
             </div>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">Metacritic</span>
+            <span className="text-2xs font-bold uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">Metacritic</span>
           </a>
         )}
 
@@ -1836,7 +1836,7 @@ export default function GameDetailPage() {
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center"><Gamepad2 className="h-10 w-10 text-slate-700" /></div>
               )}
-              <button className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-all text-[8px] font-bold uppercase tracking-wider flex items-center gap-1" onClick={() => setIsCoverPickerOpen(true)}>
+              <button className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-all text-2xs font-bold uppercase tracking-wider flex items-center gap-1" onClick={() => setIsCoverPickerOpen(true)}>
                 <ImageIcon className="h-2.5 w-2.5" /> Cover
               </button>
             </div>
@@ -1851,18 +1851,18 @@ export default function GameDetailPage() {
           >
             {/* Badges row */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
+              <span className={`text-2xs font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
                 game.platform === 'Steam' ? 'text-blue-300 bg-blue-500/15 border-blue-500/25' :
                 game.platform === 'GOG' ? 'text-violet-300 bg-violet-500/15 border-violet-500/25' :
                 'text-slate-300 bg-white/10 border-white/15'
               }`}>{game.platform || 'Steam'}</span>
               {showEngine && (
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/15 border border-sky-500/25 flex items-center gap-1">
+                <span className="text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/15 border border-sky-500/25 flex items-center gap-1">
                   <Cpu className="h-3 w-3" /> {engineLabel}
                 </span>
               )}
               {game.isInstalled && (
-                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 flex items-center gap-1">
+                <span className="text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" /> Installato
                 </span>
               )}
@@ -1884,15 +1884,15 @@ export default function GameDetailPage() {
             {/* Genre pills + scores inline */}
             <div className="flex items-center gap-2 flex-wrap">
               {game.genres?.filter((g: unknown) => g?.description).slice(0, 4).map((genre: unknown, i: number) => (
-                <span key={i} className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
+                <span key={i} className="text-2xs font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
               ))}
               {typeof game.recommendations === 'object' && game.recommendations?.total > 0 && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
               ) || typeof game.recommendations === 'number' && game.recommendations > 0 && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.toLocaleString()}</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.toLocaleString()}</span>
               )}
               {game.playtime_forever > 0 && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(game.playtime_forever / 60)}h</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(game.playtime_forever / 60)}h</span>
               )}
             </div>
           </motion.div>
@@ -1914,7 +1914,7 @@ export default function GameDetailPage() {
             <div className="flex flex-col items-stretch">
               <div className="flex items-stretch gap-0">
                 {/* ── Bottone STRING IT! ── */}
-                <button className="h-10 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 border-r-0 relative overflow-hidden group"
+                <button className="h-10 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-2xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 border-r-0 relative overflow-hidden group"
                   onClick={startAutoTranslate}
                   disabled={autoTranslateActive}
                 >
@@ -1924,7 +1924,7 @@ export default function GameDetailPage() {
                 {/* ── Bandierina lingua target ── */}
                 <div className="relative" ref={langPickerRef}>
                   <button
-                    className="h-10 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-purple-500/20 transition-all border border-purple-400/20 border-l-0"
+                    className="h-10 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-2xs font-bold uppercase tracking-wider shadow-lg shadow-purple-500/20 transition-all border border-purple-400/20 border-l-0"
                     onClick={() => setShowLangPicker(!showLangPicker)}
                     title={`Lingua: ${currentFlag.label}`}
                   >
@@ -1943,7 +1943,7 @@ export default function GameDetailPage() {
                           >
                             <span className="text-sm">{emojis[lang.flag] || '🌐'}</span>
                             <span>{lang.label}</span>
-                            <span className="ml-auto text-[9px] text-slate-500 uppercase">{lang.code}</span>
+                            <span className="ml-auto text-micro text-slate-500 uppercase">{lang.code}</span>
                           </button>
                         );
                       })}
@@ -1952,13 +1952,13 @@ export default function GameDetailPage() {
                 </div>
               </div>
               {translationStrategy?.ready && (
-                <div className="text-[8px] text-center mt-1 text-slate-500 tracking-wide">
+                <div className="text-2xs text-center mt-1 text-slate-500 tracking-wide">
                   {translationStrategy.engine} · {translationStrategy.detail}
                 </div>
               )}
             </div>
             {game.platform === 'Steam' && game.appid > 0 && (
-              <button className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-[9px] font-bold uppercase tracking-wider transition-all"
+              <button className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all"
                 onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
               >
                 <Globe className="h-3 w-3" /> Steam Store
@@ -1966,7 +1966,7 @@ export default function GameDetailPage() {
             )}
             {game.isInstalled && game.installPath && (
               <Link href={`/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`}
-                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 text-[9px] font-bold uppercase tracking-wider transition-all no-underline"
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
               >
                 <Brain className="h-3 w-3" /> P.T.
               </Link>
@@ -1978,13 +1978,13 @@ export default function GameDetailPage() {
       {/* ═══ MOBILE ACTION BAR (visible only on small screens) ═══ */}
       <div className="flex lg:hidden gap-2 px-4 py-2.5 bg-[#0a0e14]/95 border-t border-white/[0.04] shrink-0">
         {game.isInstalled && (
-          <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
+          <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 text-white font-bold text-2xs uppercase tracking-wider"
             onClick={async () => { if (game.appid > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
           >
             <Play className="h-3.5 w-3.5 fill-current" /> Gioca
           </button>
         )}
-        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-indigo-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
+        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-indigo-600/90 text-white font-bold text-2xs uppercase tracking-wider"
           onClick={startAutoTranslate}
           disabled={autoTranslateActive}
         >
@@ -2029,10 +2029,10 @@ export default function GameDetailPage() {
                   </div>
                   <div>
                     <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
-                    <span className="text-[10px] text-indigo-400/70">{`String it! → ${currentFlag.label}`}</span>
+                    <span className="text-2xs text-indigo-400/70">{`String it! → ${currentFlag.label}`}</span>
                   </div>
                   {autoTranslateSteps.every(s => s.status === 'done') && (
-                    <button className="ml-auto text-[9px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
+                    <button className="ml-auto text-micro font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
                       onClick={() => setAutoTranslateActive(false)}
                     >
                       {t('gameDetails.close') || 'Close'}
@@ -2061,7 +2061,7 @@ export default function GameDetailPage() {
                           'text-slate-600'
                         }`}>{step.label}</span>
                         {step.detail && (
-                          <span className={`text-[9px] block mt-0.5 ${
+                          <span className={`text-micro block mt-0.5 ${
                             step.status === 'running' ? 'text-indigo-400/60' :
                             step.status === 'done' ? 'text-slate-500' :
                             'text-red-400/60'
@@ -2077,10 +2077,10 @@ export default function GameDetailPage() {
                   ))}
                 </div>
                 {autoTranslateError && (
-                  <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-300">
+                  <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-2xs text-red-300">
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                     <span>{autoTranslateError}</span>
-                    <button className="ml-auto text-[9px] font-bold text-red-400 hover:text-red-300 uppercase tracking-wider" onClick={() => setAutoTranslateActive(false)}>Chiudi</button>
+                    <button className="ml-auto text-micro font-bold text-red-400 hover:text-red-300 uppercase tracking-wider" onClick={() => setAutoTranslateActive(false)}>Chiudi</button>
                   </div>
                 )}
               </div>
@@ -2092,7 +2092,7 @@ export default function GameDetailPage() {
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
               <p className="text-[13px] text-slate-300/90 leading-relaxed line-clamp-3">{translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description}</p>
               {game.description && !translatedDescription && language !== 'en' && (
-                <button className="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1.5 flex items-center gap-1 font-semibold" onClick={() => translateDescription(game.description)}>
+                <button className="text-2xs text-indigo-400 hover:text-indigo-300 mt-1.5 flex items-center gap-1 font-semibold" onClick={() => translateDescription(game.description)}>
                   <Languages className="h-3 w-3" /> Traduci in {language.toUpperCase()}
                 </button>
               )}
@@ -2106,8 +2106,8 @@ export default function GameDetailPage() {
           {game.screenshots?.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><ImageIcon className="h-3 w-3" /> Screenshot</span>
-                <span className="text-[10px] text-slate-600">{game.screenshots.length} immagini</span>
+                <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><ImageIcon className="h-3 w-3" /> Screenshot</span>
+                <span className="text-2xs text-slate-600">{game.screenshots.length} immagini</span>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar snap-x snap-mandatory">
                 {game.screenshots.slice(0, 12).map((screenshot: unknown, index: number) => (
@@ -2174,16 +2174,16 @@ export default function GameDetailPage() {
                       <div key={tr.id} className="flex items-center gap-2 flex-wrap">
                         <span className="text-[11px] text-[#c6d4df] font-medium truncate max-w-[220px]">{tr.title}</span>
                         {tr.state && (
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                          <span className={`text-micro font-bold px-1.5 py-0.5 rounded-full border ${
                             tr.state === '100%' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
                             : 'bg-amber-500/20 border-amber-500/30 text-amber-300'
                           }`}>{tr.state}</span>
                         )}
-                        {tr.revision && <span className="text-[9px] text-[#8f98a0]">rev. {tr.revision}</span>}
-                        {tr.author && <span className="text-[9px] text-[#8f98a0]">by {tr.author}</span>}
+                        {tr.revision && <span className="text-micro text-[#8f98a0]">rev. {tr.revision}</span>}
+                        {tr.author && <span className="text-micro text-[#8f98a0]">by {tr.author}</span>}
                         <div className="flex items-center gap-1 ml-auto shrink-0">
                           <button
-                            className="h-5 px-2 rounded text-[10px] font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 transition-all flex items-center gap-1"
+                            className="h-5 px-2 rounded text-2xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 transition-all flex items-center gap-1"
                             onClick={() => invoke('open_gamestranslator_page', { url: tr.page_url }).catch(() => window.open(tr.page_url, '_blank'))}
                           >
                             <ExternalLink className="h-2.5 w-2.5" /> Scarica
@@ -2194,7 +2194,7 @@ export default function GameDetailPage() {
                   </div>
                   {game.installPath && (
                     <button
-                      className="mt-2 h-6 px-2.5 rounded-lg text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all flex items-center gap-1.5"
+                      className="mt-2 h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all flex items-center gap-1.5"
                       onClick={installCommunityZip}
                       disabled={isInstallingCommunityZip}
                     >
@@ -2228,7 +2228,7 @@ export default function GameDetailPage() {
                 {updateStatus.patch_details.length > 0 && (
                   <div className="mt-1.5 space-y-0.5">
                     {updateStatus.patch_details.map((d, i) => (
-                      <p key={i} className="text-[10px] text-[#8f98a0]/70">{d}</p>
+                      <p key={i} className="text-2xs text-[#8f98a0]/70">{d}</p>
                     ))}
                   </div>
                 )}
@@ -2236,7 +2236,7 @@ export default function GameDetailPage() {
                   {/* Riapplica patch */}
                   {updateStatus.patch_type === 'bepinex' && game.installPath && (
                     <button
-                      className="h-6 px-2.5 rounded-lg text-[10px] font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/20 transition-all flex items-center gap-1"
+                      className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/20 transition-all flex items-center gap-1"
                       onClick={async () => {
                         try {
                           let exeName = '';
@@ -2253,7 +2253,7 @@ export default function GameDetailPage() {
                   )}
                   {updateStatus.patch_type === 'unreal_pak' && game.installPath && (
                     <button
-                      className="h-6 px-2.5 rounded-lg text-[10px] font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/20 transition-all flex items-center gap-1"
+                      className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/20 transition-all flex items-center gap-1"
                       onClick={upgradeUEWithAI}
                       disabled={isUeAiUpgrading}
                     >
@@ -2262,7 +2262,7 @@ export default function GameDetailPage() {
                   )}
                   {/* Segna come visto */}
                   <button
-                    className="h-6 px-2.5 rounded-lg text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all"
+                    className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all"
                     onClick={dismissUpdate}
                     disabled={isDismissingUpdate}
                   >
@@ -2270,7 +2270,7 @@ export default function GameDetailPage() {
                   </button>
                 </div>
               </div>
-              <span className="text-[9px] font-mono text-[#8f98a0]/50 shrink-0">build {updateStatus.current_build_id}</span>
+              <span className="text-micro font-mono text-[#8f98a0]/50 shrink-0">build {updateStatus.current_build_id}</span>
             </motion.div>
           )}
 
@@ -2320,19 +2320,19 @@ export default function GameDetailPage() {
               <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-[#2a475e]/20 hover:bg-[#2a475e]/40 text-[#8f98a0] border border-[#2a475e]/30 transition-all" onClick={() => setIsCoverPickerOpen(true)}>
                 <ImageIcon className="h-3.5 w-3.5" /> Cover
               </button>
-              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[10px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={() => setShowGspackExport(true)}>
+              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={() => setShowGspackExport(true)}>
                 <Package className="h-3 w-3" /> {t('gspack.exportBtn')}
               </button>
-              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[10px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all" onClick={() => setShowGspackImport(true)}>
+              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all" onClick={() => setShowGspackImport(true)}>
                 <Upload className="h-3 w-3" /> {t('gspack.importBtn')}
               </button>
               {game.platform === 'Steam' && game.appid > 0 && (
-                <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-[10px] font-semibold text-[#8f98a0] hover:text-[#67c1f5] hover:bg-[#2a475e]/30 transition-all">
+                <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-[#67c1f5] hover:bg-[#2a475e]/30 transition-all">
                   <Globe className="h-3 w-3" /> Steam
                 </a>
               )}
               {game.installPath && (
-                <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-[10px] font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
+                <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
                   onClick={async () => { try { await invoke('open_folder_in_explorer', { folderPath: game.installPath }); } catch { toast.error('Impossibile aprire la cartella'); } }}
                 >
                   <FolderOpen className="h-3 w-3" /> Cartella
@@ -2347,7 +2347,7 @@ export default function GameDetailPage() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabFiles')}</span>
                   {(game.detectedFiles?.length || 0) > 0 && (
-                    <span className="text-[10px] font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles.length} file</span>
+                    <span className="text-2xs font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles.length} file</span>
                   )}
                 </div>
                 {(game.detectedFiles?.length || 0) > 0 ? (
@@ -2363,7 +2363,7 @@ export default function GameDetailPage() {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-[11px] text-[#8f98a0]/60 mb-2">{t('gameDetails.noFilesDetected')}</p>
-                    <button className="text-[10px] font-semibold text-[#67c1f5] hover:text-[#1a9fff] transition-colors" onClick={scanGameFiles} disabled={isScanning}>
+                    <button className="text-2xs font-semibold text-[#67c1f5] hover:text-[#1a9fff] transition-colors" onClick={scanGameFiles} disabled={isScanning}>
                       {t('gameDetails.searchTranslatableFiles')}
                     </button>
                   </div>
@@ -2380,7 +2380,7 @@ export default function GameDetailPage() {
                         <Zap className="h-3.5 w-3.5 text-sky-400" />
                         <div><span className="text-[11px] font-bold text-sky-300">XUnity AutoTranslator</span></div>
                       </div>
-                      <Button size="sm" className="h-6 text-[9px] font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
+                      <Button size="xs" className="text-micro font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
                         {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
                       </Button>
                     </div>
@@ -2391,7 +2391,7 @@ export default function GameDetailPage() {
                         <Cpu className="h-3.5 w-3.5 text-violet-400" />
                         <div><span className="text-[11px] font-bold text-violet-300">Unreal Translator</span></div>
                       </div>
-                      <Button size="sm" className="h-6 text-[9px] font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
+                      <Button size="xs" className="text-micro font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
                         {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
                       </Button>
                     </div>
@@ -2406,25 +2406,25 @@ export default function GameDetailPage() {
                   {/* Info compatte */}
                   <div className="space-y-1.5 pt-1 border-t border-[#2a475e]/30">
                     {game.developers?.[0] && (
-                      <div className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center justify-between text-2xs">
                         <span className="text-[#8f98a0]/60">Sviluppatore</span>
                         <span className="text-[#c6d4df] font-medium">{game.developers.join(', ')}</span>
                       </div>
                     )}
                     {(game.release_date?.date || game.releaseDate) && (
-                      <div className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center justify-between text-2xs">
                         <span className="text-[#8f98a0]/60">Uscita</span>
                         <span className="text-[#c6d4df] font-medium">{game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                       </div>
                     )}
                     {showEngine && (
-                      <div className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center justify-between text-2xs">
                         <span className="text-[#8f98a0]/60">Engine</span>
                         <span className="text-sky-400 font-bold flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {engineLabel}</span>
                       </div>
                     )}
                     {game.metacritic?.score && (
-                      <div className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center justify-between text-2xs">
                         <span className="text-[#8f98a0]/60">Metacritic</span>
                         <a
                           href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
@@ -2437,7 +2437,7 @@ export default function GameDetailPage() {
                       </div>
                     )}
                     {game.playtime_forever > 0 && (
-                      <div className="flex items-center justify-between text-[10px]">
+                      <div className="flex items-center justify-between text-2xs">
                         <span className="text-[#8f98a0]/60">Giocato</span>
                         <span className="text-[#c6d4df] font-medium">{Math.round(game.playtime_forever / 60)}h</span>
                       </div>
@@ -2447,7 +2447,7 @@ export default function GameDetailPage() {
                   {/* DLC compatti */}
                   {dlcGames.length > 0 && (
                     <div className="pt-1 border-t border-[#2a475e]/30">
-                      <span className="text-[9px] text-[#8f98a0]/60">DLC: {dlcGames.length}</span>
+                      <span className="text-micro text-[#8f98a0]/60">DLC: {dlcGames.length}</span>
                     </div>
                   )}
                 </div>
@@ -2461,7 +2461,7 @@ export default function GameDetailPage() {
                   <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
                     <Cpu className="h-3.5 w-3.5 text-violet-400" /> Unreal Localizzazione (.locres)
                   </span>
-                  <button className="text-[10px] font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
+                  <button className="text-2xs font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
                     onClick={async () => { setShowUeLocPanel(v => !v); if (!ueLocStatus) await loadUeLocStatus(); }}>
                     {showUeLocPanel ? '▲ Chiudi' : '▼ Espandi'}
                   </button>
@@ -2478,7 +2478,7 @@ export default function GameDetailPage() {
                       </span>
                       {ueLocStatus?.has_gs_pak && (
                         <button
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all"
+                          className="text-micro font-bold px-1.5 py-0.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all"
                           onClick={async () => {
                             try {
                               await invoke('remove_unreal_translation', { gamePath: game.installPath });
@@ -2499,9 +2499,9 @@ export default function GameDetailPage() {
                       </button>
                     )}
                     {ueLocStatus?.paks_dir && (
-                      <p className="text-[10px] text-[#8f98a0]/60">Paks: {ueLocStatus.paks_dir}</p>
+                      <p className="text-2xs text-[#8f98a0]/60">Paks: {ueLocStatus.paks_dir}</p>
                     )}
-                    <p className="text-[10px] text-[#8f98a0]/50">Il _P.pak di override viene caricato automaticamente da UE4/UE5 senza modificare i file originali.</p>
+                    <p className="text-2xs text-[#8f98a0]/50">Il _P.pak di override viene caricato automaticamente da UE4/UE5 senza modificare i file originali.</p>
                   </div>
                 )}
               </div>
@@ -2515,7 +2515,7 @@ export default function GameDetailPage() {
                     <HardDrive className="h-3.5 w-3.5 text-amber-400" /> Unity Assets (.assets)
                   </span>
                   <button
-                    className="text-[10px] font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
+                    className="text-2xs font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
                     onClick={async () => {
                       setShowAssetsPanel(v => !v);
                       if (!showAssetsPanel && !uabeaStatus) {
@@ -2543,7 +2543,7 @@ export default function GameDetailPage() {
                       </span>
                       {!uabeaStatus?.installed && (
                         <button
-                          className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/20 transition-all disabled:opacity-50"
+                          className="text-2xs font-bold px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/20 transition-all disabled:opacity-50"
                           disabled={isDownloadingUabea}
                           onClick={async () => {
                             setIsDownloadingUabea(true);
@@ -2566,15 +2566,15 @@ export default function GameDetailPage() {
                     {/* File .assets trovati */}
                     {assetsFiles.length > 0 ? (
                       <div className="space-y-1">
-                        <span className="text-[10px] text-[#8f98a0]/60">{assetsFiles.length} file .assets trovati</span>
+                        <span className="text-2xs text-[#8f98a0]/60">{assetsFiles.length} file .assets trovati</span>
                         <div className="max-h-[120px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
                           {assetsFiles.map((af: unknown, idx: number) => (
                             <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/30 transition-all">
                               <span className="text-[11px] text-[#c6d4df] truncate flex-1">{af.file_name}</span>
-                              <span className="text-[10px] text-[#8f98a0]/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
+                              <span className="text-2xs text-[#8f98a0]/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
                               {uabeaStatus?.installed && (
                                 <button
-                                  className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 transition-all shrink-0"
+                                  className="ml-2 text-micro font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 transition-all shrink-0"
                                   onClick={() => invoke('open_assets_with_uabea', { assetsFile: af.path }).catch(e => toast.error(String(e)))}
                                 >
                                   Apri
@@ -2588,7 +2588,7 @@ export default function GameDetailPage() {
                       <p className="text-[11px] text-[#8f98a0]/60 text-center py-2">Nessun file .assets trovato nella cartella del gioco</p>
                     )}
 
-                    <p className="text-[10px] text-[#8f98a0]/50">
+                    <p className="text-2xs text-[#8f98a0]/50">
                       UABEA permette di tradurre testi e texture incorporati nei file .assets Unity (come il pacchetto immagini di Blue Prince).
                     </p>
                   </div>

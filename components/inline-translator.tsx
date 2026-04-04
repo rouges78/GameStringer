@@ -312,7 +312,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                               </div>
                             </div>
                             <div className="text-right flex items-center gap-3">
-                              <Badge className={`text-[10px] px-2 py-0.5 ${
+                              <Badge className={`text-2xs px-2 py-0.5 ${
                                 file.type === 'json' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
                                 file.type === 'xml' ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' :
                                 file.type === 'subtitle' ? 'bg-green-500/20 text-green-300 border-green-500/30' :

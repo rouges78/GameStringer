@@ -1205,7 +1205,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
       <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-2.5 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-violet-400" />
-          <span className="text-[10px] text-violet-300/60">{t('translationRecommendationComp.analisi')}</span>
+          <span className="text-2xs text-violet-300/60">{t('translationRecommendationComp.analisi')}</span>
         </div>
       </div>
     );
@@ -1216,7 +1216,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
       <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-2.5 backdrop-blur-md">
         <div className="flex items-center gap-1.5 text-orange-400">
           <AlertTriangle className="h-3.5 w-3.5" />
-          <span className="text-[10px]">{t('translationRecommendationComp.analisiNonDisponibile')}</span>
+          <span className="text-2xs">{t('translationRecommendationComp.analisiNonDisponibile')}</span>
         </div>
       </div>
     );
@@ -1241,13 +1241,13 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             <h3 className="text-xs font-bold text-[#e5e9ed]">{t('translationRecommendationComp.strategiaOttimale')}</h3>
             <div className="flex items-center gap-2 mt-0.5">
               {recommendation.engine_name && recommendation.engine_name !== 'Sconosciuto' && (
-                <span className="flex items-center gap-1 text-[10px] text-cyan-400/80">
+                <span className="flex items-center gap-1 text-2xs text-cyan-400/80">
                   <Cpu className="h-3 w-3" />
                   {recommendation.engine_name}
                 </span>
               )}
               {recommendation.has_existing_patch && (
-                <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                <span className="flex items-center gap-1 text-2xs text-emerald-400">
                   <CheckCircle2 className="h-3 w-3" />
                   Patch installata
                 </span>
@@ -1269,7 +1269,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           <Shield className="h-4 w-4 text-red-400 shrink-0" />
           <div>
             <span className="text-[11px] font-semibold text-red-300">{recommendation.anti_cheat_detected}</span>
-            <p className="text-[10px] text-red-300/60 mt-0.5">{recommendation.anti_cheat_warning}</p>
+            <p className="text-2xs text-red-300/60 mt-0.5">{recommendation.anti_cheat_warning}</p>
           </div>
         </div>
       )}
@@ -1287,12 +1287,12 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 onClick={() => handleAction(tool.route)}
                 className="w-full flex items-center gap-2.5 p-2 rounded-lg bg-[#0e1419]/60 hover:bg-[#1a2736] border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all text-left group"
               >
-                <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[#1a9fff]/15 text-[#67c1f5] text-[10px] font-bold shrink-0">{idx + 1}</span>
+                <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[#1a9fff]/15 text-[#67c1f5] text-2xs font-bold shrink-0">{idx + 1}</span>
                 <div className="flex-1 min-w-0">
                   <span className="text-[11px] font-semibold text-[#c6d4df] group-hover:text-white transition-colors">{tool.name}</span>
-                  <span className="text-[10px] text-[#8f98a0] ml-2">{tool.reason}</span>
+                  <span className="text-2xs text-[#8f98a0] ml-2">{tool.reason}</span>
                 </div>
-                <span className={`text-[10px] font-bold shrink-0 ${tool.reliability >= 80 ? 'text-emerald-400' : tool.reliability >= 60 ? 'text-yellow-400' : 'text-orange-400'}`}>{tool.reliability}%</span>
+                <span className={`text-2xs font-bold shrink-0 ${tool.reliability >= 80 ? 'text-emerald-400' : tool.reliability >= 60 ? 'text-yellow-400' : 'text-orange-400'}`}>{tool.reliability}%</span>
                 <ChevronRight className="h-3 w-3 text-[#8f98a0]/40 group-hover:text-[#67c1f5] transition-colors shrink-0" />
               </button>
             ))}
@@ -1306,25 +1306,25 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-[11px] font-semibold text-[#c6d4df]">{recommendation.method_description}</h4>
-            <p className="text-[10px] text-[#8f98a0] mt-0.5">{recommendation.reason}</p>
+            <p className="text-2xs text-[#8f98a0] mt-0.5">{recommendation.reason}</p>
           </div>
         </div>
       )}
 
       {/* ── INFO ROW: AI + file + lingua ── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="flex items-center gap-1.5 text-[10px] text-violet-300/70 bg-violet-500/10 px-2 py-1 rounded-md">
+        <span className="flex items-center gap-1.5 text-2xs text-violet-300/70 bg-violet-500/10 px-2 py-1 rounded-md">
           <Bot className="h-3 w-3" />
           {aiLabels[recommendation.recommended_ai] || recommendation.recommended_ai}
         </span>
         {recommendation.translatable_files_count != null && recommendation.translatable_files_count > 0 && (
-          <span className="flex items-center gap-1.5 text-[10px] text-blue-300/70 bg-blue-500/10 px-2 py-1 rounded-md">
+          <span className="flex items-center gap-1.5 text-2xs text-blue-300/70 bg-blue-500/10 px-2 py-1 rounded-md">
             <FileText className="h-3 w-3" />
             {recommendation.translatable_files_count} file
           </span>
         )}
         {recommendation.missing_italian && (
-          <span className="text-[10px] text-orange-300/80 bg-orange-500/10 px-2 py-1 rounded-md">
+          <span className="text-2xs text-orange-300/80 bg-orange-500/10 px-2 py-1 rounded-md">
             IT mancante
           </span>
         )}
@@ -1334,7 +1334,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
       {recommendation.tips && recommendation.tips.length > 0 && (
         <div className="space-y-1">
           {recommendation.tips.slice(0, 2).map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-2 text-[10px] text-amber-200/70">
+            <div key={idx} className="flex items-start gap-2 text-2xs text-amber-200/70">
               <Lightbulb className="h-3 w-3 text-amber-400/60 shrink-0 mt-0.5" />
               <span>{tip}</span>
             </div>
@@ -1385,17 +1385,17 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             
             <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">1</span>
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xs">1</span>
                 Scansione file traducibili
               </div>
               {strategy?.tools.map((tool, idx) => (
                 <div key={tool.id} className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px]">{idx + 2}</span>
+                  <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xs">{idx + 2}</span>
                   {tool.name} ({tool.reliability}%)
                 </div>
               ))}
               <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-[10px]">✓</span>
+                <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-2xs">✓</span>
                 Controllo qualità + Applica patch
               </div>
             </div>
@@ -1421,12 +1421,12 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                           {selectedChain === preset.id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
                         </span>
                         <span className="text-xs font-semibold text-slate-200">{preset.name}</span>
-                        <span className="text-[10px] text-slate-500">{preset.quality}</span>
+                        <span className="text-2xs text-slate-500">{preset.quality}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400">{preset.cost}</span>
+                      <span className="text-2xs text-slate-400">{preset.cost}</span>
                     </div>
                     {selectedChain === preset.id && (
-                      <p className="text-[10px] text-cyan-400/60 mt-1 ml-5">
+                      <p className="text-2xs text-cyan-400/60 mt-1 ml-5">
                         {preset.providers.join(' → ')}
                       </p>
                     )}
@@ -1437,7 +1437,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
 
             {/* Warning requisiti mancanti */}
             {checkingChain ? (
-              <div className="flex items-center gap-2 text-[10px] text-slate-500 py-1">
+              <div className="flex items-center gap-2 text-2xs text-slate-500 py-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Verifica requisiti...
               </div>
@@ -1451,8 +1451,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                     </p>
                     {chainWarnings.filter(w => w.severity === 'critical').map((w, i) => (
                       <div key={i} className="ml-5 space-y-0.5">
-                        <p className="text-[10px] text-amber-300/90 font-medium">{w.label}: {w.message}</p>
-                        <div className="text-[9px] text-slate-400 space-y-0">
+                        <p className="text-2xs text-amber-300/90 font-medium">{w.label}: {w.message}</p>
+                        <div className="text-micro text-slate-400 space-y-0">
                           {w.fixSteps.map((step, j) => (
                             <p key={j}>{step}</p>
                           ))}
@@ -1464,7 +1464,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                               href={link.url}
                               target={link.url.startsWith('/') ? '_self' : '_blank'}
                               rel="noopener"
-                              className="text-[9px] text-cyan-400 underline hover:text-cyan-300"
+                              className="text-micro text-cyan-400 underline hover:text-cyan-300"
                             >
                               {link.label} ↗
                             </a>
@@ -1476,12 +1476,12 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 )}
                 {chainWarnings.filter(w => w.severity === 'warning').length > 0 && (
                   <details className="group">
-                    <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-400">
+                    <summary className="text-2xs text-slate-500 cursor-pointer hover:text-slate-400">
                       + {chainWarnings.filter(w => w.severity === 'warning').length} provider opzionali non configurati
                     </summary>
                     <div className="mt-1 space-y-1 pl-2 border-l border-slate-700">
                       {chainWarnings.filter(w => w.severity === 'warning').map((w, i) => (
-                        <div key={i} className="text-[9px] text-slate-500">
+                        <div key={i} className="text-micro text-slate-500">
                           <span className="text-slate-400">{w.label}</span> — {w.issue === 'no_api_key' ? 'API key mancante' : w.issue === 'ollama_offline' ? 'Ollama offline' : 'modello mancante'}
                           {w.links.filter(l => !l.url.startsWith('/')).map((link, j) => (
                             <a key={j} href={link.url} target="_blank" rel="noopener" className="ml-1 text-cyan-500/70 underline hover:text-cyan-400">
@@ -1551,7 +1551,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             <div className="bg-slate-800/50 rounded-lg p-3 space-y-2 max-h-60 overflow-y-auto">
               {autoState.steps.map((step, idx) => (
                 <div key={step.id} className="flex items-center gap-2">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] shrink-0 ${
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs shrink-0 ${
                     step.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
                     step.status === 'running' ? 'bg-cyan-500/20 text-cyan-400' :
                     step.status === 'error' ? 'bg-red-500/20 text-red-400' :
@@ -1571,7 +1571,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                       {step.name}
                     </div>
                     {step.message && (
-                      <div className="text-[10px] text-slate-500 truncate">{step.message}</div>
+                      <div className="text-2xs text-slate-500 truncate">{step.message}</div>
                     )}
                   </div>
                   {step.status === 'running' && (
@@ -1598,7 +1598,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 <FileCheck className="h-4 w-4 text-emerald-400 shrink-0" />
                 <div className="min-w-0">
                   <p className="text-[11px] font-medium text-emerald-300">{t('translationRecommendationComp.fileDiTraduzioneCreatoConSucce')}</p>
-                  <p className="text-[10px] text-slate-400 truncate" title={`${gamePath}/GameStringer_Translation/translations.json`}>
+                  <p className="text-2xs text-slate-400 truncate" title={`${gamePath}/GameStringer_Translation/translations.json`}>
                     📁 {gamePath}/GameStringer_Translation/translations.json
                   </p>
                 </div>
@@ -1614,21 +1614,21 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <div className="grid grid-cols-4 gap-2">
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-emerald-400">{translationStats.translatedStrings}</p>
-                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.tradotte')}</p>
+                      <p className="text-micro text-slate-500">{t('translationRecommendationComp.tradotte')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-cyan-400">
                         {translationStats.endTime ? formatDuration(translationStats.endTime - translationStats.startTime) : '—'}
                       </p>
-                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.durata')}</p>
+                      <p className="text-micro text-slate-500">{t('translationRecommendationComp.durata')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-amber-400">{formatCost(translationStats.estimatedCost)}</p>
-                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.costo')}</p>
+                      <p className="text-micro text-slate-500">{t('translationRecommendationComp.costo')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-purple-400">{translationStats.avgSpeed.toFixed(1)}/s</p>
-                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.velocità')}</p>
+                      <p className="text-micro text-slate-500">{t('translationRecommendationComp.velocità')}</p>
                     </div>
                   </div>
                   {/* Provider breakdown */}
@@ -1637,7 +1637,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                       {Object.entries(translationStats.providerUsage)
                         .sort(([, a], [, b]) => b - a)
                         .map(([prov, count]) => (
-                          <span key={prov} className="text-[9px] bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded">
+                          <span key={prov} className="text-micro bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded">
                             {prov}: {count}
                           </span>
                         ))}
@@ -1667,22 +1667,22 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   </div>
                   {validationResult.issues.length > 0 ? (
                     <details className="group">
-                      <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-400">
+                      <summary className="text-2xs text-slate-500 cursor-pointer hover:text-slate-400">
                         {validationResult.issues.filter(i => i.severity === 'error').length} errori, {validationResult.issues.filter(i => i.severity === 'warning').length} warning su {validationResult.totalChecked} stringhe
                       </summary>
                       <div className="mt-1.5 space-y-1 max-h-24 overflow-y-auto">
                         {validationResult.issues.slice(0, 10).map((issue, i) => (
-                          <p key={i} className={`text-[9px] ${issue.severity === 'error' ? 'text-red-400' : 'text-amber-400/70'}`}>
+                          <p key={i} className={`text-micro ${issue.severity === 'error' ? 'text-red-400' : 'text-amber-400/70'}`}>
                             #{issue.index}: {issue.message}
                           </p>
                         ))}
                         {validationResult.issues.length > 10 && (
-                          <p className="text-[9px] text-slate-500">...e altri {validationResult.issues.length - 10}</p>
+                          <p className="text-micro text-slate-500">...e altri {validationResult.issues.length - 10}</p>
                         )}
                       </div>
                     </details>
                   ) : (
-                    <p className="text-[10px] text-emerald-400/70">{t('translationRecommendationComp.nessunProblemaRilevato')}</p>
+                    <p className="text-2xs text-emerald-400/70">{t('translationRecommendationComp.nessunProblemaRilevato')}</p>
                   )}
                 </div>
               )}
@@ -1725,7 +1725,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                           toast.error(`Errore export ${fmt}`);
                         }
                       }}
-                      className="text-[10px] px-2 py-1 rounded border border-slate-600 bg-slate-900/50 text-slate-300 hover:border-blue-500/40 hover:text-blue-300 transition-colors"
+                      className="text-2xs px-2 py-1 rounded border border-slate-600 bg-slate-900/50 text-slate-300 hover:border-blue-500/40 hover:text-blue-300 transition-colors"
                       title={desc}
                     >
                       {label}
@@ -1750,7 +1750,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <FolderOpen className="h-4 w-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.apriCartella')}</p>
-                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.vediIFileTradotti')}</p>
+                    <p className="text-micro text-slate-500">{t('translationRecommendationComp.vediIFileTradotti')}</p>
                   </div>
                 </button>
 
@@ -1764,7 +1764,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <ClipboardCheck className="h-4 w-4 text-purple-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.revisiona')}</p>
-                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.controllaQualitàMtpe')}</p>
+                    <p className="text-micro text-slate-500">{t('translationRecommendationComp.controllaQualitàMtpe')}</p>
                   </div>
                 </button>
 
@@ -1778,7 +1778,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <Library className="h-4 w-4 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.altroGioco')}</p>
-                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.traduciUnAltroTitolo')}</p>
+                    <p className="text-micro text-slate-500">{t('translationRecommendationComp.traduciUnAltroTitolo')}</p>
                   </div>
                 </button>
 
@@ -1792,7 +1792,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.vaiAlTraduttore')}</p>
-                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.modificaSingoleStringhe')}</p>
+                    <p className="text-micro text-slate-500">{t('translationRecommendationComp.modificaSingoleStringhe')}</p>
                   </div>
                 </button>
               </div>

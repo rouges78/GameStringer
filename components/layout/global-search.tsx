@@ -118,11 +118,11 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search pages, tools..."
+            aria-label="Search" placeholder="Search pages, tools..."
             className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-12"
             autoFocus
           />
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -167,15 +167,15 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         
         <div className="flex items-center justify-between px-3 py-2 border-t text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">↑↓</kbd>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-2xs">↑↓</kbd>
             <span>{t('globalSearchComp.navigate')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">{t('globalSearchComp.enter')}</kbd>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-2xs">{t('globalSearchComp.enter')}</kbd>
             <span>{t('globalSearchComp.open')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">{t('globalSearchComp.ctrlk')}</kbd>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-2xs">{t('globalSearchComp.ctrlk')}</kbd>
             <span>{t('globalSearchComp.search')}</span>
           </div>
         </div>

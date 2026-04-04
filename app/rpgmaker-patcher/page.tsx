@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
+import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 
 interface RpgMakerGame {
   path: string;
@@ -200,8 +202,27 @@ export default function RpgMakerPatcherPage() {
     }
   };
 
+  const handleExportPO = useCallback(() => {
+    const generic = entriesToGeneric(strings, 'rpgmaker');
+    const metadata: PoMetadata = {
+      project_name: game?.title || 'GameStringer Project',
+      language: 'it',
+      source_language: 'en',
+      game_engine: 'rpgmaker',
+      generator: 'GameStringer',
+    };
+    const poContent = generatePOString(generic, metadata);
+    const blob = new Blob([poContent], { type: 'text/x-gettext; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${game?.title || 'translation'}.po`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [strings, game]);
+
   const updateTranslation = (id: string, translation: string) => {
-    setStrings(prev => prev.map(s => 
+    setStrings(prev => prev.map(s =>
       s.id === id ? { ...s, translated: translation } : s
     ));
     setEditingId(null);
@@ -227,6 +248,13 @@ export default function RpgMakerPatcherPage() {
 
   const uniqueFiles = [...new Set(strings.map(s => s.file))];
 
+  const RPGMAKER_STEPS: WizardStep[] = [
+    { num: 1, label: 'Selezione Gioco' },
+    { num: 2, label: 'Traduzioni' },
+    { num: 3, label: 'Esporta' },
+  ];
+  const rpgmakerCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
@@ -251,7 +279,7 @@ export default function RpgMakerPatcherPage() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                   <Check className="h-3.5 w-3.5 text-blue-300" />
                   <span className="text-sm font-bold text-white">T++</span>
-                  <span className="text-[10px] text-white/70">{t('workshop.installed')}</span>
+                  <span className="text-2xs text-white/70">{t('workshop.installed')}</span>
                 </div>
               ) : (
                 <Button variant="outline" size="sm" className="bg-black/30 border-white/20 text-white hover:bg-black/50" asChild>
@@ -267,15 +295,17 @@ export default function RpgMakerPatcherPage() {
         </div>
       </div>
 
+      <WizardStepper steps={RPGMAKER_STEPS} currentStep={rpgmakerCurrentStep} size="sm" />
+
       {/* Game Selection */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+      <Card variant="muted">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
             <FolderOpen className="w-4 h-4 text-blue-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-blue-600 hover:bg-blue-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-blue-600 hover:bg-blue-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               Sfoglia
             </Button>
@@ -302,7 +332,7 @@ export default function RpgMakerPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-[10px] text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -311,7 +341,7 @@ export default function RpgMakerPatcherPage() {
 
       {/* Stats & Actions */}
       {stats && (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardContent className="pt-4 px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-6">
@@ -335,8 +365,12 @@ export default function RpgMakerPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   Carica
                 </Button>
-                <Button onClick={saveTranslations} size="sm" className="h-8 bg-blue-600 hover:bg-blue-500">
+                <Button onClick={saveTranslations} size="xs" className="bg-blue-600 hover:bg-blue-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
+                <Button size="sm" variant="outline" onClick={handleExportPO} disabled={strings.length === 0} className="h-8" aria-label="Esporta file PO">
+                  <Download className="h-4 w-4 mr-1.5" />
+                  PO
+                </Button>
               </div>
             </div>
             <Progress value={stats.percentage} className="h-2 bg-slate-800" />
@@ -345,7 +379,7 @@ export default function RpgMakerPatcherPage() {
       )}
 
       {/* Editor */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex-1">
+      <Card variant="muted" className="flex-1">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -362,7 +396,7 @@ export default function RpgMakerPatcherPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Cerca testi..."
+                  aria-label="Cerca" placeholder="Cerca testi..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -395,8 +429,8 @@ export default function RpgMakerPatcherPage() {
                       className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="text-[10px]">{entry.file}</Badge>
-                        <span className="text-[10px] text-muted-foreground">{entry.context}</span>
+                        <Badge variant="outline" className="text-2xs">{entry.file}</Badge>
+                        <span className="text-2xs text-muted-foreground">{entry.context}</span>
                       </div>
                       
                       <div className="mb-2">

@@ -372,16 +372,16 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           <h3 className="text-base font-bold text-white">GameMaker Translator</h3>
           {dataInfo && (
             <>
-              <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">
+              <Badge variant="outline" className="text-2xs border-amber-500/30 text-amber-400">
                 {dataInfo.gm_version}
               </Badge>
               {dataInfo.is_yyc && (
-                <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-400">
+                <Badge variant="outline" className="text-2xs border-purple-500/30 text-purple-400">
                   EXE Strings
                 </Badge>
               )}
               {dataInfo.has_language_files && (
-                <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
+                <Badge variant="outline" className="text-2xs border-emerald-500/30 text-emerald-400">
                   .jn Files ({dataInfo.language_file_count})
                 </Badge>
               )}
@@ -416,25 +416,25 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-white">{dataInfo.total_strings.toLocaleString()}</div>
-                <div className="text-[9px] text-slate-400 uppercase">Totali</div>
+                <div className="text-micro text-slate-400 uppercase">Totali</div>
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-amber-400">{dataInfo.translatable_strings.toLocaleString()}</div>
-                <div className="text-[9px] text-slate-400 uppercase">Traducibili</div>
+                <div className="text-micro text-slate-400 uppercase">Traducibili</div>
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-emerald-400">{translatedCount}</div>
-                <div className="text-[9px] text-slate-400 uppercase">Tradotte</div>
+                <div className="text-micro text-slate-400 uppercase">Tradotte</div>
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-sky-400">{translationPercent}%</div>
-                <div className="text-[9px] text-slate-400 uppercase">Progresso</div>
+                <div className="text-micro text-slate-400 uppercase">Progresso</div>
               </CardContent>
             </Card>
           </div>
@@ -454,7 +454,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
                     Traduzione AI: {translateProgress}/{translateTotal}
                   </span>
                 </div>
-                <Button size="sm" variant="destructive" className="h-6 text-[10px]"
+                <Button size="sm" variant="destructive" className="h-6 text-2xs"
                   onClick={() => { abortRef.current = true; }}>
                   <X className="h-3 w-3 mr-1" /> Stop
                 </Button>
@@ -465,28 +465,28 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
 
           {/* Action buttons */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Button size="sm" className="h-8 bg-amber-600 hover:bg-amber-700 text-white"
+            <Button size="xs" className="bg-amber-600 hover:bg-amber-700 text-white"
               onClick={() => extractStrings(0)}
               disabled={isExtracting}>
               {isExtracting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <FileText className="h-3.5 w-3.5 mr-1.5" />}
               Estrai Stringhe
             </Button>
             
-            <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white"
+            <Button size="xs" className="bg-sky-600 hover:bg-sky-700 text-white"
               onClick={translateBatch}
               disabled={isTranslating || strings.length === 0}>
               <Languages className="h-3.5 w-3.5 mr-1.5" />
               Traduci Pagina
             </Button>
 
-            <Button size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-white"
+            <Button size="xs" className="bg-violet-600 hover:bg-violet-700 text-white"
               onClick={translateAll}
               disabled={isTranslating || !dataInfo}>
               <Zap className="h-3.5 w-3.5 mr-1.5" />
               Traduci Tutto ({dataInfo.translatable_strings})
             </Button>
 
-            <Button size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+            <Button size="xs" className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={patchDataWin}
               disabled={isPatching || translatedCount === 0}>
               {isPatching ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
@@ -504,7 +504,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <Input
-                  placeholder="Cerca stringhe..."
+                  aria-label="Cerca" placeholder="Cerca stringhe..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') searchStrings(); }}
@@ -526,7 +526,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           {strings.length > 0 && (
             <div className="border border-slate-700/50 rounded-lg overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 bg-slate-800/80 text-[10px] uppercase text-slate-400 font-bold tracking-wider">
+              <div className="grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 bg-slate-800/80 text-2xs uppercase text-slate-400 font-bold tracking-wider">
                 <span>#</span>
                 <span>Originale</span>
                 <span>Traduzione</span>
@@ -537,7 +537,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               <div className="max-h-[400px] overflow-y-auto custom-scrollbar divide-y divide-slate-800/50">
                 {displayStrings.map((s) => (
                   <div key={s.index} className={`grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 text-xs hover:bg-slate-800/30 transition-colors ${translations[s.index] ? 'bg-emerald-500/5' : ''}`}>
-                    <span className="text-slate-500 font-mono text-[10px]">{s.index}</span>
+                    <span className="text-slate-500 font-mono text-2xs">{s.index}</span>
                     
                     <div className="text-slate-300 break-words line-clamp-3 leading-relaxed" title={s.original}>
                       {s.original.length > 200 ? s.original.slice(0, 200) + '...' : s.original}
@@ -556,7 +556,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
                               if (e.key === 'Escape') cancelEdit();
                             }}
                           />
-                          <Button size="sm" className="h-7 w-7 p-0" onClick={() => saveEdit(s.index)}>
+                          <Button size="xs" className="w-7 p-0" onClick={() => saveEdit(s.index)}>
                             <Check className="h-3 w-3" />
                           </Button>
                           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={cancelEdit}>

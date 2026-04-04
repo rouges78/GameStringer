@@ -113,7 +113,7 @@ export function SessionStatus() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-2">
+        <Button variant="ghost" size="xs" className="gap-2">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
               <User className="w-3 h-3 text-white" />

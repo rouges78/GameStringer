@@ -104,12 +104,12 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-red-400" />
             <span className="text-sm font-medium">{t('translationHistoryPanelComp.cronologia')}</span>
-            <Badge variant="outline" className="text-[10px]">{stats?.totalTranslations || 0}</Badge>
+            <Badge variant="outline" className="text-2xs">{stats?.totalTranslations || 0}</Badge>
           </div>
         </div>
         
         {stats && (
-          <div className="grid grid-cols-3 gap-2 text-[10px]">
+          <div className="grid grid-cols-3 gap-2 text-2xs">
             <div className="p-1.5 rounded bg-slate-800/30 text-center">
               <div className="font-bold text-red-400">{stats.totalWords.toLocaleString()}</div>
               <div className="text-muted-foreground">{t('translationHistoryPanelComp.parole')}</div>
@@ -129,7 +129,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
   }
 
   return (
-    <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+    <Card variant="muted">
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -164,7 +164,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input 
-                  placeholder="Search translations..." 
+                  aria-label="Search" placeholder="Search translations..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -199,15 +199,15 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <Badge variant="outline" className={`text-[9px] px-1 ${toolColors[record.tool] || ''}`}>
+                          <Badge variant="outline" className={`text-micro px-1 ${toolColors[record.tool] || ''}`}>
                             {record.tool}
                           </Badge>
-                          <Badge variant="outline" className={`text-[9px] px-1 ${providerColors[record.provider] || ''}`}>
+                          <Badge variant="outline" className={`text-micro px-1 ${providerColors[record.provider] || ''}`}>
                             {record.provider}
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-3 mt-1 text-2xs text-muted-foreground">
                         <span>{record.sourceLanguage} → {record.targetLanguage}</span>
                         {record.gameName && <span>• {record.gameName}</span>}
                         <span>• {new Date(record.timestamp).toLocaleDateString()}</span>
@@ -227,22 +227,22 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                   <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
                     <Zap className="h-4 w-4 text-red-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-red-400">{stats.totalTranslations}</div>
-                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.translations')}</div>
+                    <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.translations')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
                     <BarChart3 className="h-4 w-4 text-blue-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-blue-400">{stats.totalWords.toLocaleString()}</div>
-                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.words')}</div>
+                    <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.words')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
                     <DollarSign className="h-4 w-4 text-green-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-green-400">{formatCost(stats.totalCost)}</div>
-                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.cost')}</div>
+                    <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.cost')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
                     <Clock className="h-4 w-4 text-orange-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-orange-400">{formatDuration(stats.totalDuration)}</div>
-                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.time')}</div>
+                    <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.time')}</div>
                   </div>
                 </div>
 
@@ -275,7 +275,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                   <div className="text-xs font-medium text-muted-foreground">{t('translationHistoryPanelComp.perLingua')}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(stats.byLanguage).slice(0, 8).map(([pair, count]) => (
-                      <Badge key={pair} variant="secondary" className="text-[10px]">
+                      <Badge key={pair} variant="secondary" className="text-2xs">
                         {pair}: {count}
                       </Badge>
                     ))}
@@ -292,7 +292,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                         : 0}%
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-1 text-2xs text-muted-foreground">
                     <span>Hits: {stats.cacheHits}</span>
                     <span>•</span>
                     <span>Misses: {stats.cacheMisses}</span>

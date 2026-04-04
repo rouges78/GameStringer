@@ -259,7 +259,7 @@ export function ProfileHeader() {
                     <p className="text-sm font-medium leading-none text-slate-100">
                       {currentProfile.name}
                     </p>
-                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30">
+                    <Badge className="text-2xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30">
                       {t('profile.active')}
                     </Badge>
                   </div>
@@ -310,7 +310,7 @@ export function ProfileHeader() {
                           <span className="font-medium text-slate-200 text-xs">{profiles.length}</span>
                           <Info className="w-2.5 h-2.5 text-slate-500" />
                         </div>
-                        <span className="text-slate-400 text-[9px] uppercase tracking-wider">{t('profile.profilesCreated')}</span>
+                        <span className="text-slate-400 text-micro uppercase tracking-wider">{t('profile.profilesCreated')}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -332,7 +332,7 @@ export function ProfileHeader() {
                     <Palette className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
                     {settings?.theme || 'Auto'}
                   </span>
-                  <span className="text-slate-400 text-[9px] uppercase tracking-wider">{t('profile.theme')}</span>
+                  <span className="text-slate-400 text-micro uppercase tracking-wider">{t('profile.theme')}</span>
                 </div>
               </div>
             </div>

@@ -230,7 +230,7 @@ export default function MemoryPage() {
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 {t('dictionary.title')}
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {t('dictionary.subtitle')}
               </p>
             </div>
@@ -241,12 +241,12 @@ export default function MemoryPage() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Sparkles className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{filteredUnits.length.toLocaleString()}</span>
-              <span className="text-[10px] text-white/80">{t('dictionary.translations')}</span>
+              <span className="text-2xs text-white/80">{t('dictionary.translations')}</span>
             </div>
             {stats && stats.totalUnits > filteredUnits.length && (
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-amber-500/40">
                 <AlertCircle className="h-3.5 w-3.5 text-white" />
-                <span className="text-[10px] text-white">{stats.totalUnits - filteredUnits.length} {t('dictionary.corrupted')}</span>
+                <span className="text-2xs text-white">{stats.totalUnits - filteredUnits.length} {t('dictionary.corrupted')}</span>
               </div>
             )}
             <Button 
@@ -322,10 +322,10 @@ export default function MemoryPage() {
             <table className="w-full table-fixed border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-slate-800/95 backdrop-blur-sm">
-                  <th className="text-left py-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-600/50 w-1/2">
+                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-600/50 w-1/2">
                     {t('dictionary.original')}
                   </th>
-                  <th className="text-left py-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-orange-400/80 border-b border-slate-600/50 w-1/2">
+                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-orange-400/80 border-b border-slate-600/50 w-1/2">
                     {t('dictionary.translation')}
                   </th>
                 </tr>
@@ -360,7 +360,7 @@ export default function MemoryPage() {
                             }}
                             className="h-8 text-sm bg-slate-800 border-teal-500/50 focus:border-teal-400 focus:ring-teal-400/20"
                           />
-                          <Button size="sm" className="h-8 px-3 bg-teal-600 hover:bg-teal-500 text-white" onClick={() => handleEdit(unit)}>
+                          <Button size="xs" className="px-3 bg-teal-600 hover:bg-teal-500 text-white" onClick={() => handleEdit(unit)}>
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setEditingId(null)}>

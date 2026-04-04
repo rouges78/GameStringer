@@ -136,7 +136,7 @@ export default function WorkshopExportPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-white">{t('workshopExportPage.title')}</h1>
-            <p className="text-white/60 text-[10px]">
+            <p className="text-white/60 text-2xs">
               Genera pacchetti di traduzione pronti per la pubblicazione su Steam Workshop
             </p>
           </div>
@@ -254,7 +254,7 @@ export default function WorkshopExportPage() {
                 <Label className="text-xs">{t('workshopExportPage.tags')}</Label>
                 <div className="flex items-center gap-1 flex-wrap">
                   {config.tags.map((tag, i) => (
-                    <Badge key={i} variant="secondary" className="text-[10px] cursor-pointer" onClick={() => handleRemoveTag(i)}>
+                    <Badge key={i} variant="secondary" className="text-2xs cursor-pointer" onClick={() => handleRemoveTag(i)}>
                       {tag} &times;
                     </Badge>
                   ))}
@@ -264,7 +264,7 @@ export default function WorkshopExportPage() {
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                       placeholder="Aggiungi tag..."
-                      className="h-6 text-[10px] w-28"
+                      className="h-6 text-2xs w-28"
                     />
                   </div>
                 </div>
@@ -289,7 +289,7 @@ export default function WorkshopExportPage() {
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Package className="h-8 w-8 mx-auto text-zinc-500 mb-2" />
                   <p className="text-xs text-zinc-400">{t('workshopExportPage.clickToAdd')}</p>
-                  <p className="text-[10px] text-zinc-600">{t('workshopExportPage.supportedFormats')}</p>
+                  <p className="text-2xs text-zinc-600">{t('workshopExportPage.supportedFormats')}</p>
                 </label>
               </div>
 
@@ -319,17 +319,17 @@ export default function WorkshopExportPage() {
             </CardHeader>
             <CardContent className="space-y-1">
               {validation.errors.map((err, i) => (
-                <div key={i} className="flex items-center gap-1 text-red-400 text-[10px]">
+                <div key={i} className="flex items-center gap-1 text-red-400 text-2xs">
                   <AlertCircle className="h-3 w-3 flex-shrink-0" /> {err}
                 </div>
               ))}
               {validation.warnings.map((warn, i) => (
-                <div key={i} className="flex items-center gap-1 text-amber-400 text-[10px]">
+                <div key={i} className="flex items-center gap-1 text-amber-400 text-2xs">
                   <AlertCircle className="h-3 w-3 flex-shrink-0" /> {warn}
                 </div>
               ))}
               {validation.valid && validation.warnings.length === 0 && (
-                <div className="flex items-center gap-1 text-emerald-400 text-[10px]">
+                <div className="flex items-center gap-1 text-emerald-400 text-2xs">
                   <CheckCircle2 className="h-3 w-3" /> Configurazione valida
                 </div>
               )}
@@ -343,7 +343,7 @@ export default function WorkshopExportPage() {
                 <Eye className="h-3 w-3" /> Preview Pacchetto
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 text-[10px] text-zinc-400">
+            <CardContent className="space-y-1 text-2xs text-zinc-400">
               <div>workshop_item.json</div>
               <div>README.md</div>
               <div>preview.svg</div>
@@ -372,7 +372,7 @@ export default function WorkshopExportPage() {
             )}
           </Button>
           
-          <p className="text-[10px] text-zinc-600 text-center">
+          <p className="text-2xs text-zinc-600 text-center">
             Il pacchetto ZIP generato contiene tutto il necessario per la pubblicazione su Steam Workshop
             tramite SteamCMD o lo strumento di upload Workshop.
           </p>

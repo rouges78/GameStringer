@@ -242,7 +242,7 @@ export function SteamWorkshopBrowser() {
           </Button>
 
           {apiKey && (
-            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] h-8 px-2 flex items-center gap-1">
+            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-2xs h-8 px-2 flex items-center gap-1">
               <CheckCircle className="h-3 w-3" />
               Steam connesso
             </Badge>
@@ -350,7 +350,7 @@ export function SteamWorkshopBrowser() {
                         {item.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
                             {item.tags.map((tag, i) => (
-                              <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
+                              <Badge key={i} variant="outline" className="text-2xs px-1.5 py-0">
                                 {tag}
                               </Badge>
                             ))}

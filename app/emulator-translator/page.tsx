@@ -318,7 +318,7 @@ export default function EmulatorTranslatorPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Emulator Translator</h1>
-              <p className="text-white/70 text-[10px]">Traduzione in tempo reale per giochi retro via emulatore</p>
+              <p className="text-white/70 text-2xs">Traduzione in tempo reale per giochi retro via emulatore</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-2">
@@ -330,14 +330,14 @@ export default function EmulatorTranslatorPage() {
             )}
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10">
               <span className="text-sm font-bold text-white">{history.length}</span>
-              <span className="text-[10px] text-white/70">traduzioni</span>
+              <span className="text-2xs text-white/70">traduzioni</span>
             </div>
           </div>
         </div>
         <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">Vedi anche</span>
-          <Link href="/ocr-translator"><Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">OCR Translator</Button></Link>
-          <Link href="/community-hub"><Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">Community Hub</Button></Link>
+          <span className="text-2xs text-white/50 mr-2 self-center">Vedi anche</span>
+          <Link href="/ocr-translator"><Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">OCR Translator</Button></Link>
+          <Link href="/community-hub"><Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">Community Hub</Button></Link>
         </div>
       </div>
 
@@ -391,7 +391,7 @@ export default function EmulatorTranslatorPage() {
               <div className="space-y-3">
                 <Gamepad2 className="h-12 w-12 text-slate-500 mx-auto" />
                 <p className="text-sm text-slate-300">Trascina uno screenshot dell&apos;emulatore</p>
-                <p className="text-[10px] text-slate-500">oppure</p>
+                <p className="text-2xs text-slate-500">oppure</p>
                 <div className="flex items-center justify-center gap-2">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}><Upload className="h-3.5 w-3.5" />Upload</Button>
@@ -416,9 +416,9 @@ export default function EmulatorTranslatorPage() {
                   <div className="space-y-1.5">
                     {screenshotTexts.map((tx, i) => (
                       <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                        <div className="flex-1 min-w-0"><p className="text-[10px] text-slate-500">Originale</p><p className="text-xs text-slate-300">{tx.original}</p></div>
+                        <div className="flex-1 min-w-0"><p className="text-2xs text-slate-500">Originale</p><p className="text-xs text-slate-300">{tx.original}</p></div>
                         <ArrowRight className="h-3 w-3 text-purple-400 mt-4 shrink-0" />
-                        <div className="flex-1 min-w-0"><p className="text-[10px] text-emerald-500">Traduzione</p><p className="text-xs text-emerald-300">{tx.translated}</p></div>
+                        <div className="flex-1 min-w-0"><p className="text-2xs text-emerald-500">Traduzione</p><p className="text-xs text-emerald-300">{tx.translated}</p></div>
                       </div>
                     ))}
                   </div>
@@ -509,7 +509,7 @@ export default function EmulatorTranslatorPage() {
                     <input type="range" min="500" max="5000" step="250" value={captureInterval}
                       onChange={e => setCaptureInterval(Number(e.target.value))} disabled={isRunning} className="w-full accent-purple-500" />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     Intervalli più bassi = più reattivo ma più CPU. Per giochi con testo che cambia lentamente (JRPG), 2-3 secondi sono sufficienti.
                   </p>
                 </div>
@@ -568,10 +568,10 @@ export default function EmulatorTranslatorPage() {
                   <span className="text-sm font-medium">Cronologia ({history.length})</span>
                 </div>
                 <div className="flex gap-1.5">
-                  <Button variant="outline" size="sm" className="h-6 text-[10px]" onClick={() => { navigator.clipboard.writeText(history.map(h => `${h.original}\n→ ${h.translated}`).join('\n\n')); toast.success('Copiato!'); }}>
+                  <Button variant="outline" size="xs" className="text-2xs" onClick={() => { navigator.clipboard.writeText(history.map(h => `${h.original}\n→ ${h.translated}`).join('\n\n')); toast.success('Copiato!'); }}>
                     <Copy className="h-2.5 w-2.5 mr-1" />Copia
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-6 text-[10px] text-red-400" onClick={() => setHistory([])}>Svuota</Button>
+                  <Button variant="ghost" size="xs" className="text-2xs text-red-400" onClick={() => setHistory([])}>Svuota</Button>
                 </div>
               </div>
               <ScrollArea className="max-h-[350px]">
@@ -579,7 +579,7 @@ export default function EmulatorTranslatorPage() {
                   {history.map((h, i) => (
                     <div key={i} className="flex gap-3 p-2 rounded-lg bg-slate-800/30 border border-slate-700/20">
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-slate-500">{new Date(h.timestamp).toLocaleTimeString()}</p>
+                        <p className="text-2xs text-slate-500">{new Date(h.timestamp).toLocaleTimeString()}</p>
                         <p className="text-xs text-slate-400">{h.original}</p>
                       </div>
                       <ArrowRight className="h-3 w-3 text-purple-400 mt-3 shrink-0" />
@@ -596,7 +596,7 @@ export default function EmulatorTranslatorPage() {
       </>)}
 
       {/* Footer */}
-      <p className="text-center text-[10px] text-muted-foreground">
+      <p className="text-center text-2xs text-muted-foreground">
         {selectedEmulator.icon} {selectedEmulator.name} — Catture: {captureCount} | Cache: {translationCache.current.size} traduzioni
       </p>
     </div>

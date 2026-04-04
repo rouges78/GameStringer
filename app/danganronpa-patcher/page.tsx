@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
@@ -33,6 +33,8 @@ import {
 import { toast } from 'sonner';
 import { WadExtractor } from '@/components/tools/wad-extractor';
 import { useTranslation } from '@/lib/i18n';
+import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
+import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 
 interface DanganronpaGame {
   path: string;
@@ -399,6 +401,25 @@ export default function DanganronpaPatcherPage() {
     }
   };
 
+  const handleExportPO = useCallback(() => {
+    const generic = entriesToGeneric(linDialogues, 'danganronpa');
+    const metadata: PoMetadata = {
+      project_name: selectedSteamGame?.game_name || 'Danganronpa',
+      language: 'it',
+      source_language: 'ja',
+      game_engine: 'danganronpa',
+      generator: 'GameStringer',
+    };
+    const poContent = generatePOString(generic, metadata);
+    const blob = new Blob([poContent], { type: 'text/x-gettext; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedSteamGame?.game_name || 'danganronpa'}.po`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [linDialogues, selectedSteamGame]);
+
   const loadLinDialogues = async () => {
     try {
       const filePath = await open({
@@ -677,6 +698,13 @@ export default function DanganronpaPatcherPage() {
     }
   };
 
+  const DANGANRONPA_STEPS: WizardStep[] = [
+    { num: 1, label: 'Selezione Gioco' },
+    { num: 2, label: 'File & Traduzioni' },
+    { num: 3, label: 'Applica Patch' },
+  ];
+  const danganronpaCurrentStep = poFile || selectedPak ? 2 : game ? 2 : 1;
+
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-2 overflow-y-auto">
       {/* Hero Header - Stile Unity Bundle */}
@@ -691,7 +719,7 @@ export default function DanganronpaPatcherPage() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('visualNovelPage.title')}</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('visualNovelPage.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('visualNovelPage.subtitle')}</p>
             </div>
           </div>
           
@@ -701,7 +729,7 @@ export default function DanganronpaPatcherPage() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                   <Check className="h-3.5 w-3.5 text-emerald-300" />
                   <span className="text-sm font-bold text-white">DRAT</span>
-                  <span className="text-[10px] text-white/70">{t('workshop.installed')}</span>
+                  <span className="text-2xs text-white/70">{t('workshop.installed')}</span>
                 </div>
               ) : (
                 <Button variant="outline" size="sm" className="bg-black/30 border-white/20 text-white hover:bg-black/50" asChild>
@@ -717,18 +745,20 @@ export default function DanganronpaPatcherPage() {
         </div>
       </div>
 
+      <WizardStepper steps={DANGANRONPA_STEPS} currentStep={danganronpaCurrentStep} size="sm" />
+
       {/* Game Selection */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+      <Card variant="muted">
         <CardHeader className="py-1.5 px-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs flex items-center gap-1.5">
               <FolderOpen className="w-3 h-3 text-emerald-400" />{t('telltale.selectGame')}</CardTitle>
-            <span className="text-[10px] text-muted-foreground">{t('visualNovelPage.selectFolder')}</span>
+            <span className="text-2xs text-muted-foreground">{t('visualNovelPage.selectFolder')}</span>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-2">
           {!game ? (
-            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               Sfoglia
             </Button>
@@ -737,7 +767,7 @@ export default function DanganronpaPatcherPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-semibold">{getGameTypeName(game.game_type)}</h3>
-                  <p className="text-[10px] text-muted-foreground truncate max-w-[500px]">{game.path}</p>
+                  <p className="text-2xs text-muted-foreground truncate max-w-[500px]">{game.path}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{game.pak_files.length} PAK</Badge>
@@ -780,7 +810,7 @@ export default function DanganronpaPatcherPage() {
         <TabsContent value="pak" className="space-y-1.5">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
             {/* PAK List */}
-            <Card className="lg:col-span-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted" className="lg:col-span-1">
               <CardHeader className="py-1.5 px-3">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <Package className="w-3 h-3 text-emerald-400" />
@@ -841,7 +871,7 @@ export default function DanganronpaPatcherPage() {
             </Card>
 
             {/* PAK Contents */}
-            <Card className="lg:col-span-2 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted" className="lg:col-span-2">
               <CardHeader className="py-1.5 px-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -857,7 +887,7 @@ export default function DanganronpaPatcherPage() {
                     )}
                   </div>
                   {selectedPak && (
-                    <Button onClick={extractAllPak} disabled={loading} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                    <Button onClick={extractAllPak} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                       {loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
                       Estrai
                     </Button>
@@ -896,13 +926,13 @@ export default function DanganronpaPatcherPage() {
         <TabsContent value="po" className="space-y-1.5">
           {/* PO Stats */}
           {poStats && (
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardContent className="pt-2 px-3 pb-2">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-lg font-bold">{poStats.percentage}%</p>
-                      <p className="text-[10px] text-muted-foreground">{t('batchTranslator.done')}</p>
+                      <p className="text-2xs text-muted-foreground">{t('batchTranslator.done')}</p>
                     </div>
                     <div className="flex gap-3 text-xs">
                       <div className="flex items-center gap-1">
@@ -925,7 +955,7 @@ export default function DanganronpaPatcherPage() {
                       Apri
                     </Button>
                     {poFile && (
-                      <Button onClick={savePoFile} disabled={loading} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                      <Button onClick={savePoFile} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                         {loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
                         Salva
                       </Button>
@@ -938,13 +968,13 @@ export default function DanganronpaPatcherPage() {
           )}
 
           {/* PO Editor */}
-          <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex-1">
+          <Card variant="muted" className="flex-1">
             <CardHeader className="py-1.5 px-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <Globe className="w-3 h-3 text-emerald-400" />{t('editor.title')}</CardTitle>
                 {!poFile && (
-                  <Button onClick={openPoFile} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                  <Button onClick={openPoFile} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                     <Upload className="w-3 h-3 mr-1" />
                     Apri PO
                   </Button>
@@ -955,7 +985,7 @@ export default function DanganronpaPatcherPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Cerca testi..."
+                      aria-label="Cerca" placeholder="Cerca testi..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-9"
@@ -1048,12 +1078,12 @@ export default function DanganronpaPatcherPage() {
         <TabsContent value="patch" className="space-y-2">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
             {/* Steam Games */}
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardHeader className="py-1.5 px-3">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <Globe className="w-3 h-3 text-emerald-400" />
                   Giochi Steam Rilevati
-                  <span className="text-[10px] font-normal text-muted-foreground ml-1">
+                  <span className="text-2xs font-normal text-muted-foreground ml-1">
                     {steamGames.length > 0 
                       ? `${steamGames.length} trovati`
                       : 'Nessuno'}
@@ -1079,11 +1109,11 @@ export default function DanganronpaPatcherPage() {
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-medium text-sm">{sg.game_name}</span>
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge variant="outline" className="text-2xs">
                               {sg.wad_files.length} WAD
                             </Badge>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                          <p className="text-2xs text-muted-foreground mt-1 truncate">
                             {sg.path}
                           </p>
                         </div>
@@ -1100,7 +1130,7 @@ export default function DanganronpaPatcherPage() {
             </Card>
 
             {/* Apply Patch */}
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardHeader className="py-1.5 px-3">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <Download className="w-3 h-3 text-emerald-400" />
@@ -1129,11 +1159,11 @@ export default function DanganronpaPatcherPage() {
                       <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800">
                         <span className="text-xs font-mono">{wad.name}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-2xs text-muted-foreground">
                             {(wad.size / 1024 / 1024).toFixed(1)} MB
                           </span>
                           {wad.is_patched && (
-                            <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px]">
+                            <Badge className="bg-emerald-500/20 text-emerald-400 text-2xs">
                               <Check className="w-2.5 h-2.5 mr-1" />
                               Patchato
                             </Badge>
@@ -1150,7 +1180,7 @@ export default function DanganronpaPatcherPage() {
           {/* Backups & All-Ice Info */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
             {/* Backups */}
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardHeader className="py-1.5 px-3">
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 text-emerald-400" />
@@ -1165,7 +1195,7 @@ export default function DanganronpaPatcherPage() {
                         <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800">
                           <div>
                             <span className="text-xs font-mono">{backup.name}</span>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-2xs text-muted-foreground">
                               {(backup.size / 1024 / 1024).toFixed(1)} MB
                             </p>
                           </div>
@@ -1183,7 +1213,7 @@ export default function DanganronpaPatcherPage() {
                   ) : (
                     <div className="text-center py-3 text-muted-foreground">
                       <p className="text-xs">{t('visualNovelPage.noBackup')}</p>
-                      <p className="text-[10px] mt-0.5">{t('visualNovelPage.autoCreated')}</p>
+                      <p className="text-2xs mt-0.5">{t('visualNovelPage.autoCreated')}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -1192,23 +1222,23 @@ export default function DanganronpaPatcherPage() {
 
             {/* All-Ice Team Info */}
             {alliceInfo && (
-              <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+              <Card variant="muted">
                 <CardHeader className="py-1.5 px-3">
                   <CardTitle className="text-xs flex items-center gap-1.5">
                     <Globe className="w-3 h-3 text-emerald-400" />
                     {alliceInfo.team_name}
-                    <span className="text-[10px] font-normal text-muted-foreground ml-1">{t('visualNovelPage.officialTeam')}</span>
+                    <span className="text-2xs font-normal text-muted-foreground ml-1">{t('visualNovelPage.officialTeam')}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2 space-y-2">
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                    <Button variant="outline" size="xs" className="text-xs" asChild>
                       <a href={alliceInfo.website} target="_blank" rel="noopener noreferrer">
                         <Globe className="w-3 h-3 mr-1" />
                         Sito Web
                       </a>
                     </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+                    <Button variant="outline" size="xs" className="text-xs" asChild>
                       <a href={alliceInfo.discord} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="w-3 h-3 mr-1" />
                         Discord
@@ -1222,13 +1252,13 @@ export default function DanganronpaPatcherPage() {
                       <div key={i} className="p-2 rounded bg-slate-950/50 border border-slate-800">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium">{patch.game}</span>
-                          <Badge variant="outline" className="text-[10px]">v{patch.version}</Badge>
+                          <Badge variant="outline" className="text-2xs">v{patch.version}</Badge>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-1">{patch.notes}</p>
+                        <p className="text-2xs text-muted-foreground mt-1">{patch.notes}</p>
                         <Button
                           variant="link"
                           size="sm"
-                          className="h-6 p-0 text-[10px] text-emerald-400"
+                          className="h-6 p-0 text-2xs text-emerald-400"
                           asChild
                         >
                           <a href={patch.download_url} target="_blank" rel="noopener noreferrer">
@@ -1249,7 +1279,7 @@ export default function DanganronpaPatcherPage() {
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <Archive className="w-3 h-3 text-emerald-400" />
                 Esporta Patch Distribuibile
-                <span className="text-[10px] font-normal text-muted-foreground ml-1">.zip con WAD, installer e istruzioni</span>
+                <span className="text-2xs font-normal text-muted-foreground ml-1">.zip con WAD, installer e istruzioni</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-2 space-y-2">
@@ -1299,13 +1329,13 @@ export default function DanganronpaPatcherPage() {
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {exportResult.filesIncluded.map((f, i) => (
-                      <Badge key={i} variant="outline" className="text-[10px]">{f}</Badge>
+                      <Badge key={i} variant="outline" className="text-2xs">{f}</Badge>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="text-[10px] text-muted-foreground space-y-1 p-2 rounded bg-slate-950/50 border border-slate-800">
+              <div className="text-2xs text-muted-foreground space-y-1 p-2 rounded bg-slate-950/50 border border-slate-800">
                 <p className="font-medium text-slate-400">{t('visualNovelPage.zipContent')}</p>
                 <p>&#x2022; <span className="text-emerald-400/70">dr1_data_keyboard_us.wad</span> — WAD patchato italiano</p>
                 <p>&#x2022; <span className="text-emerald-400/70">install.bat</span> — Installer automatico Steam</p>
@@ -1320,13 +1350,13 @@ export default function DanganronpaPatcherPage() {
         <TabsContent value="lin" className="space-y-1.5">
           {/* LIN Stats */}
           {linStats && linStats.total > 0 && (
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardContent className="pt-2 px-3 pb-2">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-lg font-bold text-emerald-400">{linStats.percentage}%</p>
-                      <p className="text-[10px] text-muted-foreground">{t('batchTranslator.done')}</p>
+                      <p className="text-2xs text-muted-foreground">{t('batchTranslator.done')}</p>
                     </div>
                     <div className="flex gap-3 text-xs">
                       <div className="flex items-center gap-1">
@@ -1340,7 +1370,7 @@ export default function DanganronpaPatcherPage() {
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       {Object.entries(linStats.by_speaker).slice(0, 5).map(([speaker, count]) => (
-                        <Badge key={speaker} variant="outline" className="text-[10px]">
+                        <Badge key={speaker} variant="outline" className="text-2xs">
                           {speaker}: {count}
                         </Badge>
                       ))}
@@ -1365,8 +1395,12 @@ export default function DanganronpaPatcherPage() {
                       <Upload className="w-3 h-3 mr-1" />
                       Carica JSON
                     </Button>
-                    <Button onClick={saveLinDialogues} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                    <Button onClick={saveLinDialogues} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                       <Download className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
+                    <Button size="sm" variant="outline" onClick={handleExportPO} disabled={linDialogues.length === 0} className="h-8" aria-label="Esporta file PO">
+                      <Download className="h-4 w-4 mr-1.5" />
+                      PO
+                    </Button>
                   </div>
                 </div>
                 <Progress value={linStats.percentage} className="h-2 bg-slate-800" />
@@ -1375,7 +1409,7 @@ export default function DanganronpaPatcherPage() {
           )}
 
           {/* LIN Editor */}
-          <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex-1">
+          <Card variant="muted" className="flex-1">
             <CardHeader className="py-1.5 px-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs flex items-center gap-1.5">
@@ -1385,7 +1419,7 @@ export default function DanganronpaPatcherPage() {
                     <Badge variant="outline" className="ml-2">{filteredLinDialogues.length} / {linDialogues.length}</Badge>
                   )}
                 </CardTitle>
-                <Button onClick={openLinFile} disabled={extractingLin} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                <Button onClick={openLinFile} disabled={extractingLin} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                   {extractingLin ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Upload className="w-3 h-3 mr-1" />}
                   Apri .LIN
                 </Button>
@@ -1396,7 +1430,7 @@ export default function DanganronpaPatcherPage() {
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        placeholder="Cerca dialoghi o personaggi..."
+                        aria-label="Cerca" placeholder="Cerca dialoghi o personaggi..."
                         value={linSearchTerm}
                         onChange={(e) => setLinSearchTerm(e.target.value)}
                         className="pl-9"
@@ -1466,7 +1500,7 @@ export default function DanganronpaPatcherPage() {
                               isUntranslated ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-slate-800/50'
                             }`}
                           >
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] shrink-0">
+                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-2xs shrink-0">
                               {dialogue.speaker}
                             </Badge>
                             <span className="text-xs font-mono truncate flex-1 text-muted-foreground">
@@ -1491,7 +1525,7 @@ export default function DanganronpaPatcherPage() {
                             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                               {dialogue.speaker}
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-2xs text-muted-foreground">
                               {dialogue.file} #{dialogue.line_index}
                             </span>
                           </div>

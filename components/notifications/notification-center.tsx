@@ -670,7 +670,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden="true" />
             <Input
               id="notification-search"
-              placeholder="Search notifications..."
+              aria-label="Search" placeholder="Search notifications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-slate-800/50 border-slate-700 focus:border-purple-500/50 focus:ring-purple-500/20 placeholder:text-slate-500"

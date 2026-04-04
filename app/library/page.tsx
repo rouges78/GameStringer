@@ -1221,7 +1221,7 @@ function LibraryListView() {
             
             {/* Badge piattaforma in alto a destra */}
             <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-20">
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md ${
+              <span className={`text-micro font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md ${
                 game.platform === 'Steam' ? 'bg-[#171a21]/90 text-white border border-[#66c0f4]/30' :
                 game.platform === 'Epic Games' ? 'bg-[#2a2a2a]/90 text-white border border-white/20' :
                 game.platform === 'GOG' ? 'bg-[#5c2f82]/90 text-white border border-purple-400/30' :
@@ -1232,7 +1232,7 @@ function LibraryListView() {
                 {game.platform || 'Unknown'}
               </span>
               {game.isShared && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md bg-orange-500/90 text-white border border-orange-400/30">
+                <span className="text-micro font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md bg-orange-500/90 text-white border border-orange-400/30">
                   Shared
                 </span>
               )}
@@ -1241,13 +1241,13 @@ function LibraryListView() {
             {/* Badge Engine/VR/Installed in alto a sinistra */}
             <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
               {game.is_installed && (
-                <span className="bg-emerald-500/90 text-emerald-50 text-[10px] w-5 h-5 flex items-center justify-center rounded shadow-md backdrop-blur-md border border-emerald-400/30 font-bold" title="Installato">✓</span>
+                <span className="bg-emerald-500/90 text-emerald-50 text-2xs w-5 h-5 flex items-center justify-center rounded shadow-md backdrop-blur-md border border-emerald-400/30 font-bold" title="Installato">✓</span>
               )}
               {game.engine && game.engine !== 'Unknown' && (
-                <span className="bg-sky-600/90 text-sky-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-sky-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
+                <span className="bg-sky-600/90 text-sky-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-sky-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
               )}
               {game.is_vr && (
-                <span className="bg-violet-600/90 text-violet-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-violet-400/30 font-bold" title="VR Support">VR</span>
+                <span className="bg-violet-600/90 text-violet-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-violet-400/30 font-bold" title="VR Support">VR</span>
               )}
             </div>
 
@@ -1306,7 +1306,7 @@ function LibraryListView() {
                   {languages && languages.length > 1 ? (
                     <LanguageFlags supportedLanguages={languages} maxFlags={8} />
                   ) : (
-                    <span className="text-[10px] text-slate-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
+                    <span className="text-2xs text-slate-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
                   )}
                 </div>
               );
@@ -1444,15 +1444,15 @@ function LibraryListView() {
                     <div className="flex-grow min-w-0 mr-4">
                       <h3 className="text-sm font-bold text-slate-200 truncate group-hover:text-indigo-300 transition-colors drop-shadow-sm">{game.title}</h3>
                       <div className="flex items-center gap-2.5 mt-1">
-                        <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">{game.platform}</span>
+                        <span className="text-2xs font-semibold text-slate-500 tracking-wide uppercase">{game.platform}</span>
                         {game.engine && game.engine.toLowerCase() !== 'unknown' && (
-                          <span className="text-[9px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded">{game.engine}</span>
+                          <span className="text-micro font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded">{game.engine}</span>
                         )}
                       </div>
                     </div>
                     <div className="hidden lg:flex items-center gap-1.5 mr-4">
                       {game.genres && game.genres.filter(g => g && g.toLowerCase() !== 'unknown').slice(0, 3).map((genre, idx) => (
-                        <span key={`${game.id}-genre-${idx}`} className="text-[9px] font-medium bg-slate-800/80 text-slate-400 px-2 py-1 rounded-md border border-slate-700">{genre}</span>
+                        <span key={`${game.id}-genre-${idx}`} className="text-micro font-medium bg-slate-800/80 text-slate-400 px-2 py-1 rounded-md border border-slate-700">{genre}</span>
                       ))}
                     </div>
                     {(() => {
@@ -1467,23 +1467,23 @@ function LibraryListView() {
                     })()}
                     <div className="flex items-center gap-3 mr-4">
                       {game.is_installed && (
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                        <span className="flex items-center gap-1 text-2xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                           Installed
                         </span>
                       )}
                       {game.is_vr && (
-                        <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-md border border-violet-500/20">VR</span>
+                        <span className="text-2xs font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-md border border-violet-500/20">VR</span>
                       )}
                       {game.isShared && (
-                        <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">{t('libraryPage.shared')}</span>
+                        <span className="text-2xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">{t('libraryPage.shared')}</span>
                       )}
                     </div>
                     {/* Quick actions lista */}
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300 pr-2">
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
-                        className="flex items-center gap-1 bg-indigo-600/90 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-md hover:shadow-indigo-500/30"
+                        className="flex items-center gap-1 bg-indigo-600/90 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-indigo-500/30"
                         title="Translation Wizard"
                       >
                         <Sparkles className="h-3 w-3" />
@@ -1491,7 +1491,7 @@ function LibraryListView() {
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                        className="flex items-center gap-1 bg-sky-600/90 hover:bg-sky-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-md hover:shadow-sky-500/30"
+                        className="flex items-center gap-1 bg-sky-600/90 hover:bg-sky-500 px-2.5 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-sky-500/30"
                         title="Batch translate"
                       >
                         <FolderOpen className="h-3 w-3" />
@@ -1564,21 +1564,21 @@ function LibraryListView() {
                 <Monitor className="h-4 w-4 text-emerald-400" />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-200 leading-none">{statsInstalled}</span>
-                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.installed}</span>
+                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.installed}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
                 <FolderOpen className="h-4 w-4 text-sky-400" />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-200 leading-none">{statsPlatforms}</span>
-                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.provider}</span>
+                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.provider}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
                 <Wrench className="h-4 w-4 text-amber-400" />
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-200 leading-none">{statsEngines}</span>
-                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.engine}</span>
+                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.engine}</span>
                 </div>
               </div>
               {statsShared > 0 && (
@@ -1586,7 +1586,7 @@ function LibraryListView() {
                   <Languages className="h-4 w-4 text-violet-400" />
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-200 leading-none">{statsShared}</span>
-                    <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
+                    <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
                   </div>
                 </div>
               )}
@@ -1702,7 +1702,7 @@ function LibraryListView() {
             {(() => {
               const activeCount = selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length;
               return activeCount > 0 ? (
-                <span className="ml-1 bg-indigo-500 text-white text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center">
+                <span className="ml-1 bg-indigo-500 text-white text-2xs font-bold w-5 h-5 rounded-md flex items-center justify-center">
                   {activeCount}
                 </span>
               ) : (
@@ -1741,7 +1741,7 @@ function LibraryListView() {
             
             {/* Status */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Monitor className="h-3 w-3" /> {lib.status}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1760,7 +1760,7 @@ function LibraryListView() {
             
             {/* Engine */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Wrench className="h-3 w-3" /> {lib.engine}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1779,7 +1779,7 @@ function LibraryListView() {
             
             {/* Tags */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Gamepad2 className="h-3 w-3" /> {lib.tag}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1798,7 +1798,7 @@ function LibraryListView() {
             
             {/* Provider */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                 <FolderOpen className="h-3 w-3" /> {lib.provider}
               </span>
               <div className="flex flex-wrap gap-2">

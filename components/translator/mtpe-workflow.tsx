@@ -415,19 +415,19 @@ export function MTPEWorkflow({
             <div className="grid grid-cols-4 gap-2">
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-green-400">{currentItem.qualityScore.fluency}</div>
-                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.fluidità')}</div>
+                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.fluidità')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-blue-400">{currentItem.qualityScore.accuracy}</div>
-                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.accuratezza')}</div>
+                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.accuratezza')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-purple-400">{currentItem.qualityScore.consistency}</div>
-                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.coerenza')}</div>
+                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.coerenza')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-amber-400">{currentItem.qualityScore.style}</div>
-                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.stile')}</div>
+                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.stile')}</div>
               </div>
             </div>
           )}

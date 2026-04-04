@@ -323,7 +323,7 @@ export default function AIPipelinePage() {
                   <span className="flex items-center gap-1.5">
                     <span>🤖</span> Multi-Agent
                     {(agentConfig.translate || agentConfig.autoFix || agentConfig.review) && (
-                      <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-violet-500/10 text-violet-400 border-violet-500/30">ON</Badge>
+                      <Badge variant="outline" className="text-2xs px-1 py-0 h-3.5 bg-violet-500/10 text-violet-400 border-violet-500/30">ON</Badge>
                     )}
                   </span>
                   <ChevronRight className={cn("h-3 w-3 transition-transform", showAgents && "rotate-90")} />
@@ -339,7 +339,7 @@ export default function AIPipelinePage() {
                           onClick={() => applyPreset(preset.id)}
                           title={preset.description}
                           className={cn(
-                            "text-[9px] px-1.5 py-1.5 rounded border transition-colors text-center truncate",
+                            "text-micro px-1.5 py-1.5 rounded border transition-colors text-center truncate",
                             activePresetId === preset.id
                               ? "bg-violet-500/15 border-violet-500/40 text-violet-300"
                               : "bg-background/50 border-border/50 hover:border-border text-muted-foreground"
@@ -351,17 +351,17 @@ export default function AIPipelinePage() {
                     </div>
 
                     {ollamaModels.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground">Ollama offline o nessun modello installato</p>
+                      <p className="text-2xs text-muted-foreground">Ollama offline o nessun modello installato</p>
                     ) : (
                       <>
-                        <p className="text-[9px] text-muted-foreground">Assegna modelli diversi a ogni step. Vuoto = usa provider chain di default.</p>
+                        <p className="text-micro text-muted-foreground">Assegna modelli diversi a ogni step. Vuoto = usa provider chain di default.</p>
                         {([['translate', '🔤 Traduzione', agentConfig.translate], ['autoFix', '🔧 Auto-Fix', agentConfig.autoFix], ['review', '👁 Review', agentConfig.review]] as [keyof MultiAgentConfig, string, AgentModelConfig | undefined][]).map(([role, label, current]) => (
                           <div key={role}>
-                            <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                            <Label className="text-2xs text-muted-foreground">{label}</Label>
                             <select
                               value={current?.model || ''}
                               onChange={(e) => { updateAgent(role, e.target.value); setActivePresetId('custom'); }}
-                              className="w-full h-6 text-[10px] bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+                              className="w-full h-6 text-2xs bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
                             >
                               <option value="">Default (provider chain)</option>
                               {ollamaModels.map(m => (
@@ -411,9 +411,9 @@ export default function AIPipelinePage() {
                         "bg-muted/10 border-transparent"
                       )}>
                         <StatusIcon className={cn("h-3 w-3", STEP_COLORS[step.status], step.status === "running" && "animate-spin")} />
-                        <span className={cn("text-[10px]", STEP_COLORS[step.status])}>{step.name}</span>
+                        <span className={cn("text-2xs", STEP_COLORS[step.status])}>{step.name}</span>
                         {step.durationMs !== undefined && step.status !== "skipped" && (
-                          <span className="text-[9px] text-muted-foreground">({step.durationMs}ms)</span>
+                          <span className="text-micro text-muted-foreground">({step.durationMs}ms)</span>
                         )}
                       </div>
                       {i < steps.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
@@ -431,7 +431,7 @@ export default function AIPipelinePage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.avgScore')}</div>
+                <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.avgScore')}</div>
                 <div className={cn("text-xl font-bold",
                   result.averageScore >= 80 ? "text-emerald-400" :
                   result.averageScore >= 60 ? "text-yellow-400" :
@@ -439,19 +439,19 @@ export default function AIPipelinePage() {
                 )}>{result.averageScore}%</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.firstShot')}</div>
+                <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.firstShot')}</div>
                 <div className="text-xl font-bold text-emerald-400">{result.stats.passedFirstTime}/{result.stats.totalStrings}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.autoFixed')}</div>
+                <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.autoFixed')}</div>
                 <div className="text-xl font-bold text-blue-400">{result.stats.fixedByAutoFix}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.reviewImproved')}</div>
+                <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.reviewImproved')}</div>
                 <div className="text-xl font-bold text-purple-400">{result.stats.improvedByReview}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.totalTime')}</div>
+                <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.totalTime')}</div>
                 <div className="text-xl font-bold text-muted-foreground">{(result.totalDurationMs / 1000).toFixed(1)}s</div>
               </Card>
             </div>
@@ -461,7 +461,7 @@ export default function AIPipelinePage() {
               <Card className="lg:col-span-2">
                 <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
                   <CardTitle className="text-xs">Traduzioni ({result.translations.length})</CardTitle>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleExport}>
+                  <Button variant="ghost" size="xs" className="text-xs" onClick={handleExport}>
                     <Download className="h-3 w-3 mr-1" />{t('projects.export')}</Button>
                 </CardHeader>
                 <ScrollArea className="h-[400px]">
@@ -483,11 +483,11 @@ export default function AIPipelinePage() {
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <div className="text-[10px] text-muted-foreground truncate">{texts[i] || `#${i + 1}`}</div>
+                              <div className="text-2xs text-muted-foreground truncate">{texts[i] || `#${i + 1}`}</div>
                               <div className="text-xs mt-0.5">{trans || <span className="text-muted-foreground italic">—</span>}</div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                              <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4",
+                              <Badge variant="outline" className={cn("text-micro px-1.5 py-0 h-4",
                                 score >= 80 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
                                 score >= 60 ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/30" :
                                 "bg-red-500/10 text-red-400 border-red-500/30"
@@ -525,7 +525,7 @@ export default function AIPipelinePage() {
                       )}>
                         {selectedReport.overallScore}%
                       </div>
-                      <Badge variant={selectedReport.passed ? "default" : "destructive"} className="text-[10px]">
+                      <Badge variant={selectedReport.passed ? "default" : "destructive"} className="text-2xs">
                         {selectedReport.passed ? "PASS" : "FAIL"}
                       </Badge>
                     </div>
@@ -567,7 +567,7 @@ export default function AIPipelinePage() {
                       <>
                         <Separator />
                         <div>
-                          <Label className="text-[10px] text-muted-foreground">{t('aiPipelinePage.suggestions')}</Label>
+                          <Label className="text-2xs text-muted-foreground">{t('aiPipelinePage.suggestions')}</Label>
                           {selectedReport.suggestions.map((s, si) => (
                             <div key={si} className="text-[11px] text-muted-foreground mt-0.5">• {s}</div>
                           ))}
@@ -602,7 +602,7 @@ export default function AIPipelinePage() {
             <Card>
               <CardContent className="px-4 py-3">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-[10px]">
+                  <table className="w-full text-2xs">
                     <thead>
                       <tr className="border-b border-border/50 text-muted-foreground">
                         <th className="text-left py-1 pr-2">Data</th>

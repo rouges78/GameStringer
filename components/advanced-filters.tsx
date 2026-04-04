@@ -260,7 +260,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               Search
             </Label>
             <Input
-              placeholder="Search games, stores, genres..."
+              aria-label="Search" placeholder="Search games, stores, genres..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
             />

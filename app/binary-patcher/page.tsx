@@ -734,7 +734,7 @@ export default function BinaryPatcherPage() {
                     <Gamepad2 className="h-5 w-5 text-orange-400" />
                     <div>
                       <p className="font-medium text-white">{gameName}</p>
-                      {gamePath && <p className="text-[10px] text-white/40 font-mono">{gamePath}</p>}
+                      {gamePath && <p className="text-2xs text-white/40 font-mono">{gamePath}</p>}
                     </div>
                   </div>
                 )}
@@ -859,13 +859,13 @@ export default function BinaryPatcherPage() {
             {/* Lingue + Categorie inline */}
             <div className="flex flex-wrap gap-1.5 mb-4">
               {Object.entries(stats.byLanguage).sort((a, b) => b[1] - a[1]).map(([lang, count]) => (
-                <Badge key={lang} variant="outline" className="text-[10px]">
+                <Badge key={lang} variant="outline" className="text-2xs">
                   {LANG_NAMES[lang] || lang}: {count}
                 </Badge>
               ))}
               <span className="text-white/20 mx-1">|</span>
               {Object.entries(stats.byCategory).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([cat, count]) => (
-                <Badge key={cat} className={`text-[10px] ${CATEGORY_COLORS[cat] || ''}`}>
+                <Badge key={cat} className={`text-2xs ${CATEGORY_COLORS[cat] || ''}`}>
                   {CATEGORY_NAMES[cat] || cat}: {count}
                 </Badge>
               ))}
@@ -887,7 +887,7 @@ export default function BinaryPatcherPage() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-8 text-xs bg-amber-600 hover:bg-amber-700" onClick={() => {
+                    <Button size="xs" className="text-xs bg-amber-600 hover:bg-amber-700" onClick={() => {
                       setProject(savedCheckpoint.project);
                       setTargetLang(savedCheckpoint.targetLang);
                       setFileName(savedCheckpoint.fileName);
@@ -896,7 +896,7 @@ export default function BinaryPatcherPage() {
                     }}>
                       <Eye className="h-3 w-3 mr-1" /> Review
                     </Button>
-                    <Button size="sm" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                    <Button size="xs" className="text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => {
                       setProject(savedCheckpoint.project);
                       setTargetLang(savedCheckpoint.targetLang);
                       setFileName(savedCheckpoint.fileName);
@@ -955,7 +955,7 @@ export default function BinaryPatcherPage() {
                     <span className="text-sm font-medium text-white">{t('binaryPatcherPage.aiLlm')}</span>
                     <Sparkles className="h-3 w-3 text-purple-400" />
                   </div>
-                  <p className="text-[10px] text-white/50">{t('binaryPatcherPage.geminiDeepseekOpenaiOllamaDeep')}</p>
+                  <p className="text-2xs text-white/50">{t('binaryPatcherPage.geminiDeepseekOpenaiOllamaDeep')}</p>
                 </div>
                 {/* Rule-based Mode */}
                 <div
@@ -969,7 +969,7 @@ export default function BinaryPatcherPage() {
                     <Zap className="h-4 w-4 text-orange-400" />
                     <span className="text-sm font-medium text-white">{t('binaryPatcherPage.ruleBased')}</span>
                   </div>
-                  <p className="text-[10px] text-white/50">{t('binaryPatcherPage.offlineDict')}</p>
+                  <p className="text-2xs text-white/50">{t('binaryPatcherPage.offlineDict')}</p>
                 </div>
               </div>
 
@@ -990,10 +990,10 @@ export default function BinaryPatcherPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-white">{preset.name}</span>
-                            <span className="text-[10px] text-white/30">{preset.cost}</span>
-                            <span className="text-[10px] text-white/30">{preset.quality}</span>
+                            <span className="text-2xs text-white/30">{preset.cost}</span>
+                            <span className="text-2xs text-white/30">{preset.quality}</span>
                           </div>
-                          <p className="text-[10px] text-white/40">{preset.description}</p>
+                          <p className="text-2xs text-white/40">{preset.description}</p>
                         </div>
                         {chainPreset === preset.id && <CheckCircle2 className="h-4 w-4 text-purple-400 flex-none" />}
                       </div>
@@ -1022,7 +1022,7 @@ export default function BinaryPatcherPage() {
             {isProcessing && progress.total > 0 && (
               <div className="mb-4">
                 <Progress value={(progress.current / progress.total) * 100} className="h-2 mb-1" />
-                <p className="text-[10px] text-white/40 text-center">{progress.label}</p>
+                <p className="text-2xs text-white/40 text-center">{progress.label}</p>
               </div>
             )}
 
@@ -1080,7 +1080,7 @@ export default function BinaryPatcherPage() {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
                 <Input
                   value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cerca stringhe..."
+                  aria-label="Cerca" placeholder="Cerca stringhe..."
                   className="pl-8 h-8 text-sm bg-white/5 border-white/10"
                 />
               </div>
@@ -1117,7 +1117,7 @@ export default function BinaryPatcherPage() {
                     <div key={realIdx} className={`px-3 py-2 hover:bg-white/5 transition-colors ${s.isTranslated ? '' : 'opacity-60'}`}>
                       <div className="flex items-start gap-2">
                         {/* Category badge */}
-                        <Badge className={`text-[10px] mt-0.5 flex-none ${CATEGORY_COLORS[s.category || 'unknown']}`}>
+                        <Badge className={`text-2xs mt-0.5 flex-none ${CATEGORY_COLORS[s.category || 'unknown']}`}>
                           {(CATEGORY_NAMES[s.category || 'unknown'] || '').slice(0, 4)}
                         </Badge>
 
@@ -1134,7 +1134,7 @@ export default function BinaryPatcherPage() {
                               <Button size="sm" variant="ghost" onClick={handleSaveEdit} className="h-7 px-2">
                                 <CheckCircle2 className="h-3 w-3 text-green-400" />
                               </Button>
-                              <span className={`text-[10px] ${new TextEncoder().encode(editValue).length === s.byteLen ? 'text-green-400' : 'text-red-400'}`}>
+                              <span className={`text-2xs ${new TextEncoder().encode(editValue).length === s.byteLen ? 'text-green-400' : 'text-red-400'}`}>
                                 {new TextEncoder().encode(editValue).length}/{s.byteLen}b
                               </span>
                             </div>
@@ -1148,8 +1148,8 @@ export default function BinaryPatcherPage() {
 
                         {/* Byte length indicator */}
                         <div className="flex items-center gap-1 flex-none">
-                          <span className={`text-[10px] ${byteLenOk ? 'text-white/20' : 'text-red-400'}`}>{s.byteLen}b</span>
-                          {s.language && <span className="text-[10px] text-white/20">{s.language}</span>}
+                          <span className={`text-2xs ${byteLenOk ? 'text-white/20' : 'text-red-400'}`}>{s.byteLen}b</span>
+                          {s.language && <span className="text-2xs text-white/20">{s.language}</span>}
                         </div>
                       </div>
                     </div>

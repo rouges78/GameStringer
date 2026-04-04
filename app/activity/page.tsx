@@ -206,7 +206,7 @@ export default function ActivityHistoryPage() {
                   <span className="text-lg">{activityIcons[type]}</span>
                   <div>
                     <p className="text-xl font-bold">{counts[type] || 0}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-2xs text-muted-foreground truncate">
                       {activityNames[type]}
                     </p>
                   </div>
@@ -246,7 +246,7 @@ export default function ActivityHistoryPage() {
         {/* Activity List */}
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle as="h2" className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5" />
               Recent Activity
             </CardTitle>
@@ -278,7 +278,7 @@ export default function ActivityHistoryPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="font-medium truncate">{activity.title}</p>
-                          <Badge variant="outline" className={`text-[10px] ${getColorClass(activity.activity_type)}`}>
+                          <Badge variant="outline" className={`text-2xs ${getColorClass(activity.activity_type)}`}>
                             {activityNames[activity.activity_type]}
                           </Badge>
                         </div>
@@ -307,6 +307,7 @@ export default function ActivityHistoryPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Elimina"
                         className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
                         onClick={() => handleDelete(activity.id)}
                       >

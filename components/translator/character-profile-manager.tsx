@@ -432,10 +432,10 @@ export function CharacterProfileManager({
                     {preset.personality}
                   </p>
                   <div className="flex gap-1 mt-2">
-                    <Badge variant="outline" className="text-[10px] px-1">
+                    <Badge variant="outline" className="text-2xs px-1">
                       {preset.vocabulary || 'moderno'}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px] px-1">
+                    <Badge variant="outline" className="text-2xs px-1">
                       {preset.tone || 'neutro'}
                     </Badge>
                   </div>
@@ -497,10 +497,10 @@ export function CharacterProfileManager({
                       {profile.personality}
                     </p>
                     <div className="flex gap-1 mt-2">
-                      <Badge variant="outline" className="text-[10px] px-1">
+                      <Badge variant="outline" className="text-2xs px-1">
                         {profile.vocabulary || 'moderno'}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px] px-1">
+                      <Badge variant="outline" className="text-2xs px-1">
                         {profile.tone || 'neutro'}
                       </Badge>
                     </div>

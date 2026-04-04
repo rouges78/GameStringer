@@ -153,15 +153,15 @@ export default function RetroPage() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Gamepad2 className="w-3.5 h-3.5 text-emerald-300" />
               <span className="text-sm font-bold">8</span>
-              <span className="text-[10px] text-white/70">{t('retroRom.consoles')}</span>
+              <span className="text-2xs text-white/70">{t('retroRom.consoles')}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Table className="w-3.5 h-3.5 text-emerald-300" />
-              <span className="text-[10px] text-white/70">{t('retroRom.tblSupport')}</span>
+              <span className="text-2xs text-white/70">{t('retroRom.tblSupport')}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Type className="w-3.5 h-3.5 text-emerald-300" />
-              <span className="text-[10px] text-white/70">{t('retroRom.fontInjection')}</span>
+              <span className="text-2xs text-white/70">{t('retroRom.fontInjection')}</span>
             </div>
           </div>
         </div>

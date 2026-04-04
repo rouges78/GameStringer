@@ -463,7 +463,7 @@ export function TextureTranslator() {
                   <p className="text-xs text-teal-400/70">
                     {t('textureTranslator.dropTextures')}
                   </p>
-                  <p className="text-[10px] text-teal-400/50 mt-1">
+                  <p className="text-2xs text-teal-400/50 mt-1">
                     PNG, DDS, TGA, JPG
                   </p>
                 </div>
@@ -490,17 +490,17 @@ export function TextureTranslator() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-white truncate">{texture.name}</p>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <Badge className="h-4 text-[8px] bg-teal-500/30 px-1">
+                            <Badge className="h-4 text-2xs bg-teal-500/30 px-1">
                               {texture.format.toUpperCase()}
                             </Badge>
                             {texture.processed && (
-                              <Badge className="h-4 text-[8px] bg-green-500/30 px-1">
+                              <Badge className="h-4 text-2xs bg-green-500/30 px-1">
                                 <CheckCircle2 className="h-2 w-2 mr-0.5" />
                                 OCR
                               </Badge>
                             )}
                             {texture.modified && (
-                              <Badge className="h-4 text-[8px] bg-yellow-500/30 px-1">
+                              <Badge className="h-4 text-2xs bg-yellow-500/30 px-1">
                                 Mod
                               </Badge>
                             )}
@@ -638,7 +638,7 @@ export function TextureTranslator() {
             <CardContent className="p-3 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-teal-400 mb-1 block">{t('common.from')}</label>
+                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.from')}</label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -656,7 +656,7 @@ export function TextureTranslator() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[10px] text-teal-400 mb-1 block">{t('common.to')}</label>
+                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.to')}</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -701,7 +701,7 @@ export function TextureTranslator() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-teal-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
+                <label className="text-2xs text-teal-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
                 <Select value={selectedFont} onValueChange={setSelectedFont}>
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue />
@@ -746,11 +746,11 @@ export function TextureTranslator() {
                               className="w-3 h-3 rounded border"
                               style={{ backgroundColor: region.backgroundColor }}
                             />
-                            <span className="text-[10px] text-teal-400">
+                            <span className="text-2xs text-teal-400">
                               {region.fontSize}px
                             </span>
                           </div>
-                          <Badge className="text-[10px] bg-green-500/20 text-green-400">
+                          <Badge className="text-2xs bg-green-500/20 text-green-400">
                             {Math.round(region.confidence * 100)}%
                           </Badge>
                         </div>

@@ -433,6 +433,14 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <TutorialProvider>
       <div className="flex h-full bg-background">
+        {/* Skip to content — a11y */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[9999] focus:bg-cyan-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium focus:shadow-lg"
+        >
+          Vai al contenuto principale
+        </a>
+
         {/* Sidebar */}
         <aside 
           data-tutorial="sidebar"
@@ -465,7 +473,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   >
                     GameStringer
                   </span>
-                  <span className="text-[9px] font-medium text-slate-500 uppercase tracking-[0.2em] -mt-0.5">Studio</span>
+                  <span className="text-micro font-medium text-slate-500 uppercase tracking-[0.2em] -mt-0.5">Studio</span>
                 </div>
               </div>
             )}
@@ -677,7 +685,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       {/* Label gruppo normale */}
                       {group.label && sidebarOpen && (
                         <div className="px-3 pt-2 pb-0.5">
-                          <span className={cn("text-[9px] font-semibold uppercase tracking-wider", group.labelColor)}>
+                          <span className={cn("text-micro font-semibold uppercase tracking-wider", group.labelColor)}>
                             {group.label}
                           </span>
                         </div>
@@ -741,7 +749,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             {sidebarOpen ? (
               <div className="w-full flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer group">
                 <TutorialMenu />
-                <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-widest">Tutorial & Guide</span>
+                <span className="text-2xs font-medium text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-widest">Tutorial & Guide</span>
               </div>
             ) : (
               <TutorialMenu />
@@ -908,7 +916,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     )}
                     {language === 'zh' && (
                       <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
-                        <span className="text-[6px] text-yellow-400">★</span>
+                        <span className="text-2xs text-yellow-400">★</span>
                       </span>
                     )}
                     {language === 'ko' && (
@@ -993,7 +1001,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('zh')} className="gap-3">
                     <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
-                      <span className="text-[8px] text-yellow-400">★</span>
+                      <span className="text-2xs text-yellow-400">★</span>
                     </span>
                     <span className="flex-1">中文</span>
                     {language === 'zh' && <Check className="h-4 w-4 text-blue-400" />}
@@ -1043,7 +1051,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   href="http://www.gamestringer.ai/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800/50 rounded-md transition-all"
+                  className="flex items-center gap-1.5 px-2 py-1 text-2xs font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800/50 rounded-md transition-all"
                   title="Visita gamestringer.ai"
                 >
                   <Globe className="w-3 h-3" />
@@ -1052,7 +1060,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <div className="w-px h-3 bg-slate-800 mx-1" />
                 <button 
                   onClick={() => setChangelogOpen(true)}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-md transition-all"
+                  className="flex items-center gap-1.5 px-2 py-1 text-2xs font-medium text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-md transition-all"
                   title="Changelog"
                 >
                   {isOnline ? (
@@ -1084,7 +1092,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </header>
 
           {/* Content */}
-          <main className="flex-1 overflow-hidden flex flex-col min-h-0">
+          <main id="main-content" role="main" className="flex-1 overflow-hidden flex flex-col min-h-0">
             <DefaultProfileAlert />
             <div key={pathname} className="flex-1 overflow-auto min-h-0">
               {children}

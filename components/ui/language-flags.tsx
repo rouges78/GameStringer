@@ -166,7 +166,7 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
                 return (
                     <span 
                         key={`${code}-${index}`} 
-                        className="text-[10px] leading-none" 
+                        className="text-2xs leading-none" 
                         title={code}
                     >
                         {getFlagEmoji(code)}

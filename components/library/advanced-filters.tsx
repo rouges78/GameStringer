@@ -134,7 +134,7 @@ export function AdvancedFilters({
       {/* Search */}
       <div className="relative flex-1 max-w-md">
         <Input
-          placeholder="Cerca giochi..."
+          aria-label="Cerca" placeholder="Cerca giochi..."
           value={filter.search}
           onChange={(e) => updateFilter({ search: e.target.value })}
           className="pl-9"

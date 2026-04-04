@@ -155,7 +155,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
                     <Music className={`h-3.5 w-3.5 shrink-0 ${selectedFile?.path === file.path ? 'text-purple-400' : 'text-slate-400'}`} />
                     <span className="text-xs truncate text-white/90" title={file.name}>{file.name}</span>
                   </div>
-                  <span className="text-[10px] text-slate-500 shrink-0 ml-2 bg-black/40 px-1.5 py-0.5 rounded">
+                  <span className="text-2xs text-slate-500 shrink-0 ml-2 bg-black/40 px-1.5 py-0.5 rounded">
                     {formatSize(file.size_bytes)}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
                   <h4 className="text-sm font-bold text-purple-400 mb-1 truncate" title={selectedFile.name}>
                     {selectedFile.name}
                   </h4>
-                  <p className="text-[10px] text-slate-500 truncate" title={selectedFile.path}>
+                  <p className="text-2xs text-slate-500 truncate" title={selectedFile.path}>
                     {selectedFile.path}
                   </p>
                   <div className="flex gap-2 mt-2">

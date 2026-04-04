@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,8 @@ import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
+// Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
+// Telltale .langdb extraction is wired into this patcher.
 
 interface TelltaleGame {
   id: string;
@@ -87,6 +89,11 @@ export function TelltalePatcher() {
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
   };
+
+  const handleExportPO = useCallback(() => {
+    // Telltale patcher: export PO from extracted .langdb strings (when available)
+    toast.info('PO export requires extracted translation strings. Extract .langdb files first.');
+  }, []);
 
   const selectGameFolder = async () => {
     try {
@@ -367,7 +374,7 @@ export function TelltalePatcher() {
           </div>
           <div>
             <h2 className="text-sm font-bold text-white">{t('telltale.title')}</h2>
-            <p className="text-white/80 text-[10px]">{t('telltale.subtitle')}</p>
+            <p className="text-white/80 text-2xs">{t('telltale.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -375,13 +382,13 @@ export function TelltalePatcher() {
       {/* Layout a 2 colonne */}
       <div className="flex gap-3 flex-1 min-h-0">
         {/* Left Column - Games List */}
-        <Card className="w-[320px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+        <Card variant="muted" className="w-[320px] shrink-0 flex flex-col">
           <CardHeader className="py-2 px-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-emerald-400" />
                 {t('telltale.supportedGames')}
-                <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                <Badge variant="outline" className="ml-1 text-2xs px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                   {SUPPORTED_GAMES.length}
                 </Badge>
               </CardTitle>
@@ -404,7 +411,7 @@ export function TelltalePatcher() {
                   </div>
                   <span className="truncate flex-1 font-medium text-[11px]">{game.name}</span>
                   {game.translationUrl && (
-                    <Badge variant="outline" className="text-[8px] px-1 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shrink-0">
+                    <Badge variant="outline" className="text-2xs px-1 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shrink-0">
                       ITA
                     </Badge>
                   )}
@@ -435,12 +442,12 @@ export function TelltalePatcher() {
                 <Download className="w-4 h-4 text-emerald-400" />
                 {selectedGame ? selectedGame.name : t('telltale.selectGame')}
                 {detectedPlatform && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                  <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
                     {detectedPlatform.toUpperCase()}
                   </Badge>
                 )}
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={selectGameFolder} className="h-6 text-[10px] text-muted-foreground hover:text-white px-2">
+              <Button variant="ghost" size="sm" onClick={selectGameFolder} className="h-6 text-2xs text-muted-foreground hover:text-white px-2">
                 <FolderOpen className="w-3 h-3 mr-1" />
                 {t('telltale.browseFolder').replace('...', '')}
               </Button>
@@ -449,7 +456,7 @@ export function TelltalePatcher() {
           <CardContent className="p-3 pt-0 flex-1 flex flex-col gap-3 overflow-y-auto relative z-10">
             {/* Path Display */}
             {gamePath && (
-              <div className="p-2 bg-slate-950/50 border border-slate-800/50 rounded text-[10px] font-mono text-slate-400 break-all">
+              <div className="p-2 bg-slate-950/50 border border-slate-800/50 rounded text-2xs font-mono text-slate-400 break-all">
                 📁 {gamePath}
               </div>
             )}
@@ -492,19 +499,22 @@ export function TelltalePatcher() {
 
                 {/* Tools Row */}
                 <div className="flex gap-2">
-                  <Button onClick={createBackup} variant="outline" size="sm" disabled={!hasExistingPatch || hasBackup} className="h-7 text-[10px] flex-1">
+                  <Button onClick={createBackup} variant="outline" size="sm" disabled={!hasExistingPatch || hasBackup} className="h-7 text-2xs flex-1">
                     💾 {t('telltale.backup')}
                   </Button>
-                  <Button onClick={restoreBackup} variant="outline" size="sm" disabled={!hasBackup} className="h-7 text-[10px] flex-1">
+                  <Button onClick={restoreBackup} variant="outline" size="sm" disabled={!hasBackup} className="h-7 text-2xs flex-1">
                     🔄 {t('telltale.restore')}
                   </Button>
-                  <Button onClick={verifyInstallation} variant="outline" size="sm" disabled={!gamePath} className="h-7 text-[10px] flex-1">
+                  <Button onClick={verifyInstallation} variant="outline" size="sm" disabled={!gamePath} className="h-7 text-2xs flex-1">
                     ✅ {t('telltale.verify')}
+                  </Button>
+                  <Button onClick={handleExportPO} variant="outline" size="sm" className="h-7 text-2xs flex-1" aria-label="Esporta file PO">
+                    <Download className="w-3 h-3 mr-1" /> PO
                   </Button>
                 </div>
 
                 {selectedGame.id === 'wolf-among-us' && (
-                  <Button onClick={openTranslationSource} variant="ghost" size="sm" className="w-full h-6 text-[10px] text-muted-foreground">
+                  <Button onClick={openTranslationSource} variant="ghost" size="sm" className="w-full h-6 text-2xs text-muted-foreground">
                     <Globe className="w-3 h-3 mr-1" /> {t('telltale.credits')}
                   </Button>
                 )}
@@ -514,9 +524,9 @@ export function TelltalePatcher() {
             {/* Logs */}
             {logs.length > 0 && (
               <div className="flex-1 min-h-[120px]">
-                <div className="text-[10px] text-muted-foreground mb-1">{t('telltale.log')}</div>
+                <div className="text-2xs text-muted-foreground mb-1">{t('telltale.log')}</div>
                 <ScrollArea className="h-full max-h-[200px] rounded border border-slate-800/50 bg-slate-950/50 p-2">
-                  <div className="font-mono text-[10px] space-y-0.5">
+                  <div className="font-mono text-2xs space-y-0.5">
                     {logs.map((log, i) => (
                       <div key={i} className="text-slate-400">{log}</div>
                     ))}
@@ -532,7 +542,7 @@ export function TelltalePatcher() {
       {isPatching && (
         <div className="px-2">
           <Progress value={progress} className="h-1" />
-          <p className="text-[10px] text-muted-foreground text-center mt-1">{progress}%</p>
+          <p className="text-2xs text-muted-foreground text-center mt-1">{progress}%</p>
         </div>
       )}
 

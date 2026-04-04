@@ -159,7 +159,7 @@ export function TranslationFixer() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('translationFixer.title')}</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('translationFixer.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('translationFixer.subtitle')}</p>
             </div>
           </div>
           
@@ -311,7 +311,7 @@ export function TranslationFixer() {
                               </p>
                             </div>
                             {issue.autoFixable && (
-                              <Badge variant="outline" className="text-[10px] border-green-500 text-green-500">
+                              <Badge variant="outline" className="text-2xs border-green-500 text-green-500">
                                 Auto-Fix
                               </Badge>
                             )}

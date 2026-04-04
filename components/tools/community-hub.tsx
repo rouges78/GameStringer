@@ -439,7 +439,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-2xs rounded-full h-4 w-4 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -449,7 +449,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <div className="flex items-center justify-between p-3 border-b">
                   <span className="text-sm font-semibold">Notifiche</span>
                   {unreadCount > 0 && (
-                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleMarkAllRead}>
+                    <Button variant="ghost" size="xs" className="text-xs" onClick={handleMarkAllRead}>
                       Segna tutte lette
                     </Button>
                   )}
@@ -475,7 +475,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-xs">{n.title}</p>
                           <p className="text-xs text-muted-foreground truncate">{n.message}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(n.createdAt).toLocaleDateString()}</p>
+                          <p className="text-2xs text-muted-foreground mt-0.5">{new Date(n.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                     </div>
@@ -510,42 +510,42 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
             <Package className="h-4 w-4 text-orange-500" />
             <div>
               <p className="text-sm font-bold">{stats.totalPacks}</p>
-              <p className="text-[10px] text-muted-foreground">{t('communityHub.packs')}</p>
+              <p className="text-2xs text-muted-foreground">{t('communityHub.packs')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
             <Download className="h-4 w-4 text-green-500" />
             <div>
               <p className="text-sm font-bold">{(stats.totalDownloads / 1000).toFixed(1)}k</p>
-              <p className="text-[10px] text-muted-foreground">download</p>
+              <p className="text-2xs text-muted-foreground">download</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
             <Users className="h-4 w-4 text-orange-400" />
             <div>
               <p className="text-sm font-bold">{stats.totalContributors}</p>
-              <p className="text-[10px] text-muted-foreground">{t('communityHub.contributors')}</p>
+              <p className="text-2xs text-muted-foreground">{t('communityHub.contributors')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
             <FileText className="h-4 w-4 text-orange-500" />
             <div>
               <p className="text-sm font-bold">{(stats.totalStrings / 1000).toFixed(0)}k</p>
-              <p className="text-[10px] text-muted-foreground">stringhe</p>
+              <p className="text-2xs text-muted-foreground">stringhe</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
             <Globe className="h-4 w-4 text-cyan-500" />
             <div>
               <p className="text-sm font-bold">{stats.languagesCovered}</p>
-              <p className="text-[10px] text-muted-foreground">lingue</p>
+              <p className="text-2xs text-muted-foreground">lingue</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
             <TrendingUp className="h-4 w-4 text-pink-500" />
             <div>
               <p className="text-sm font-bold">{stats.gamesCovered}</p>
-              <p className="text-[10px] text-muted-foreground">giochi</p>
+              <p className="text-2xs text-muted-foreground">giochi</p>
             </div>
           </div>
         </div>
@@ -664,11 +664,11 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                     {/* Progress */}
                     <div className="flex items-center gap-2 mb-2">
                       <Progress value={pack.completionPercentage} className="h-1.5 flex-1" />
-                      <span className="text-[10px] text-muted-foreground w-8">{pack.completionPercentage}%</span>
+                      <span className="text-2xs text-muted-foreground w-8">{pack.completionPercentage}%</span>
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-2">
+                    <div className="flex items-center gap-3 text-2xs text-muted-foreground mb-2">
                       <span className="flex items-center gap-0.5">
                         <Download className="h-3 w-3" />
                         {pack.downloads.toLocaleString()}
@@ -678,10 +678,10 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                         {(pack.translatedStrings / 1000).toFixed(1)}k
                       </span>
                       {pack.patchFormat && pack.patchFormat !== 'none' && (
-                        <Badge variant="outline" className="text-[10px] h-4 px-1 uppercase">{pack.patchFormat}</Badge>
+                        <Badge variant="outline" className="text-2xs h-4 px-1 uppercase">{pack.patchFormat}</Badge>
                       )}
                       {pack.tags.length > 0 && (
-                        <Badge variant="outline" className="text-[10px] h-4 px-1">{pack.tags[0]}</Badge>
+                        <Badge variant="outline" className="text-2xs h-4 px-1">{pack.tags[0]}</Badge>
                       )}
                     </div>
 
@@ -811,11 +811,11 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                           <span className="text-sm">
                             {RETRO_PLATFORMS.find(p => p.id === pack.platform)?.icon || '🎮'}
                           </span>
-                          <Badge variant="outline" className="text-[10px] h-4">
+                          <Badge variant="outline" className="text-2xs h-4">
                             {RETRO_PLATFORMS.find(p => p.id === pack.platform)?.name.split(' / ')[0] || pack.platform}
                           </Badge>
                           {pack.patchFormat && pack.patchFormat !== 'none' && (
-                            <Badge className="text-[10px] h-4 bg-purple-500/80 uppercase">{pack.patchFormat}</Badge>
+                            <Badge className="text-2xs h-4 bg-purple-500/80 uppercase">{pack.patchFormat}</Badge>
                           )}
                         </div>
                         <h3 className="font-semibold text-sm truncate">{pack.name}</h3>
@@ -828,7 +828,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                         <span className="text-xs font-medium">{pack.rating.toFixed(1)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-2">
+                    <div className="flex items-center gap-3 text-2xs text-muted-foreground mb-2">
                       <span className="flex items-center gap-0.5"><Download className="h-3 w-3" />{pack.downloads.toLocaleString()}</span>
                       <span className="flex items-center gap-0.5"><FileText className="h-3 w-3" />{(pack.size / 1024).toFixed(0)} KB</span>
                     </div>
@@ -966,7 +966,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                           {entry.verifiedTranslator && <Shield className="h-3 w-3 text-blue-500" />}
                           {entry.country && <span className="text-xs">{entry.country}</span>}
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                        <div className="flex items-center gap-3 text-2xs text-muted-foreground">
                           <span>{entry.publishedPacks} pack</span>
                           <span>{entry.totalDownloads.toLocaleString()} dl</span>
                           {entry.avgRating > 0 && <span>★ {entry.avgRating.toFixed(1)}</span>}
@@ -976,7 +976,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                       {/* Score */}
                       <div className="text-right">
                         <p className="text-sm font-bold text-orange-500">{entry.score.toLocaleString()}</p>
-                        <p className="text-[10px] text-muted-foreground">punti</p>
+                        <p className="text-2xs text-muted-foreground">punti</p>
                       </div>
                     </div>
                   ))}
@@ -1028,7 +1028,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <Progress value={pack.completionPercentage} className="h-1.5 flex-1" />
-                        <span className="text-[10px] text-muted-foreground w-8">{pack.completionPercentage}%</span>
+                        <span className="text-2xs text-muted-foreground w-8">{pack.completionPercentage}%</span>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleViewPack(pack)}>
@@ -1220,9 +1220,9 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium">{comment.author.username}</span>
                                 {comment.author.verifiedTranslator && <Shield className="h-3 w-3 text-blue-500" />}
-                                {comment.edited && <span className="text-[10px] text-muted-foreground">(modificato)</span>}
+                                {comment.edited && <span className="text-2xs text-muted-foreground">(modificato)</span>}
                               </div>
-                              <span className="text-[10px] text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                              <span className="text-2xs text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString()}</span>
                             </div>
                             <p className="text-sm mb-2">{comment.content}</p>
                             <div className="flex items-center gap-3">
@@ -1251,11 +1251,11 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                                       <span className="text-xs font-medium">{reply.author.username}</span>
                                       {reply.author.verifiedTranslator && <Shield className="h-2.5 w-2.5 text-blue-500" />}
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground">{new Date(reply.createdAt).toLocaleDateString()}</span>
+                                    <span className="text-2xs text-muted-foreground">{new Date(reply.createdAt).toLocaleDateString()}</span>
                                   </div>
                                   <p className="text-xs">{reply.content}</p>
                                   <button
-                                    className={`flex items-center gap-1 text-[10px] mt-1 ${reply.likedByMe ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-500`}
+                                    className={`flex items-center gap-1 text-2xs mt-1 ${reply.likedByMe ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-500`}
                                     onClick={() => handleToggleCommentLike(reply.id, selectedPack.id)}
                                   >
                                     <ThumbsUp className="h-2.5 w-2.5" /> {reply.likes > 0 ? reply.likes : ''}
@@ -1526,7 +1526,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <MessageSquare className="h-4 w-4 text-cyan-400" />
                 <span className="text-sm font-semibold text-slate-200">Community Chat</span>
               </div>
-              <span className="text-[10px] text-slate-500">▼ Chiudi</span>
+              <span className="text-2xs text-slate-500">▼ Chiudi</span>
             </button>
             {/* Chat body */}
             <div className="flex-1 overflow-hidden">
@@ -1540,7 +1540,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           >
             <MessageSquare className="h-4 w-4 text-cyan-400 group-hover:scale-110 transition-transform" />
             <span className="text-sm font-semibold text-slate-200">Chat</span>
-            <span className="text-[10px] text-slate-500 ml-1">▲</span>
+            <span className="text-2xs text-slate-500 ml-1">▲</span>
           </button>
         )}
       </div>

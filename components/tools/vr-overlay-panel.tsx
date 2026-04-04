@@ -104,7 +104,7 @@ export function VROverlayPanel() {
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 {t('vrOverlay.title')}
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {t('vrOverlay.subtitle')}
               </p>
             </div>

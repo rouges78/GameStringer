@@ -173,7 +173,7 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
         <Terminal className="h-3.5 w-3.5" />
         Debug Console
         {logs.filter(l => l.level === 'error').length > 0 && (
-          <Badge className="bg-red-500/20 text-red-300 text-[9px] px-1 py-0 h-4">
+          <Badge className="bg-red-500/20 text-red-300 text-micro px-1 py-0 h-4">
             {logs.filter(l => l.level === 'error').length}
           </Badge>
         )}
@@ -190,7 +190,7 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-slate-400" />
             <span className="text-xs font-semibold text-slate-300">Debug Console</span>
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-slate-600">
+            <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-slate-600">
               {filteredLogs.length} / {logs.length}
             </Badge>
           </div>
@@ -200,7 +200,7 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
               <button
                 key={level}
                 onClick={() => setFilterLevel(level)}
-                className={`text-[9px] px-1.5 py-0.5 rounded ${
+                className={`text-micro px-1.5 py-0.5 rounded ${
                   filterLevel === level ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
@@ -230,8 +230,8 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
             <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Cerca nei log..."
-              className="h-6 text-[10px] pl-7 bg-slate-900/50 border-slate-700/30"
+              aria-label="Cerca" placeholder="Cerca nei log..."
+              className="h-6 text-2xs pl-7 bg-slate-900/50 border-slate-700/30"
             />
           </div>
         </div>
@@ -248,16 +248,16 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
                 key={entry.id}
                 className={`flex items-start gap-2 px-3 py-1 border-b ${LOG_BG[entry.level]} hover:bg-slate-800/30 group`}
               >
-                <span className="text-[9px] text-slate-600 w-16 flex-shrink-0 pt-0.5">
+                <span className="text-micro text-slate-600 w-16 flex-shrink-0 pt-0.5">
                   {entry.timestamp.toLocaleTimeString('it-IT', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
-                <span className={`text-[9px] px-1 py-0 rounded ${LOG_BADGES[entry.level]} flex-shrink-0 w-12 text-center`}>
+                <span className={`text-micro px-1 py-0 rounded ${LOG_BADGES[entry.level]} flex-shrink-0 w-12 text-center`}>
                   {entry.level.toUpperCase()}
                 </span>
-                <span className="text-[9px] text-slate-500 flex-shrink-0 w-14 truncate">
+                <span className="text-micro text-slate-500 flex-shrink-0 w-14 truncate">
                   {entry.source}
                 </span>
-                <span className={`text-[10px] ${LOG_COLORS[entry.level]} flex-1 break-all`}>
+                <span className={`text-2xs ${LOG_COLORS[entry.level]} flex-1 break-all`}>
                   {entry.message}
                 </span>
                 <button

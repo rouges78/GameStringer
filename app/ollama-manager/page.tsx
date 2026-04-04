@@ -188,7 +188,7 @@ export default function OllamaManagerPage() {
             )}>
               {ollamaOnline === true ? '● Online' : ollamaOnline === false ? '● Offline' : '● Checking...'}
             </Badge>
-            <Button onClick={refresh} disabled={loading} variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+            <Button onClick={refresh} disabled={loading} variant="ghost" size="icon" aria-label="Aggiorna" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
           </div>
@@ -230,32 +230,32 @@ export default function OllamaManagerPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-mono font-medium truncate">{m.name}</span>
-                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 text-emerald-400 border-emerald-500/30">{formatSize(m.size)}</Badge>
+                            <Badge variant="outline" className="text-2xs h-3.5 px-1 text-emerald-400 border-emerald-500/30">{formatSize(m.size)}</Badge>
                             {m.details?.parameter_size && (
-                              <Badge variant="outline" className="text-[8px] h-3.5 px-1 text-cyan-400 border-cyan-500/30">{m.details.parameter_size}</Badge>
+                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-cyan-400 border-cyan-500/30">{m.details.parameter_size}</Badge>
                             )}
                             {m.details?.quantization_level && (
-                              <Badge variant="outline" className="text-[8px] h-3.5 px-1 text-slate-400 border-slate-500/30">{m.details.quantization_level}</Badge>
+                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-slate-400 border-slate-500/30">{m.details.quantization_level}</Badge>
                             )}
                           </div>
                           {sr && (
                             <div className="flex items-center gap-3 mt-0.5">
-                              <span className="text-[10px] text-emerald-300"><Zap className="h-2.5 w-2.5 inline mr-0.5" />{sr.tokensPerSecond.toFixed(1)} tok/s</span>
-                              <span className="text-[10px] text-muted-foreground">TTFT: {sr.firstTokenMs}ms</span>
-                              <span className="text-[10px] text-muted-foreground">Total: {(sr.totalTimeMs / 1000).toFixed(1)}s</span>
+                              <span className="text-2xs text-emerald-300"><Zap className="h-2.5 w-2.5 inline mr-0.5" />{sr.tokensPerSecond.toFixed(1)} tok/s</span>
+                              <span className="text-2xs text-muted-foreground">TTFT: {sr.firstTokenMs}ms</span>
+                              <span className="text-2xs text-muted-foreground">Total: {(sr.totalTimeMs / 1000).toFixed(1)}s</span>
                             </div>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
-                            variant="ghost" size="icon" className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                            variant="ghost" size="icon" aria-label="Speed test" className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
                             onClick={() => handleSpeedTest(m.name)}
                             disabled={speedTesting === m.name}
                           >
                             {speedTesting === m.name ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Timer className="h-3.5 w-3.5" />}
                           </Button>
                           <Button
-                            variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            variant="ghost" size="icon" aria-label="Elimina" className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                             onClick={() => handleDelete(m.name)}
                             disabled={deleting === m.name}
                           >
@@ -291,26 +291,26 @@ export default function OllamaManagerPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-xs font-semibold">{rm.name}</span>
-                            {rm.recommended && <Badge className="text-[7px] h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
+                            {rm.recommended && <Badge className="text-2xs h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
                             {isInstalled && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
                           </div>
-                          <p className="text-[10px] text-muted-foreground leading-tight">{rm.description}</p>
+                          <p className="text-2xs text-muted-foreground leading-tight">{rm.description}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            <Badge variant="outline" className="text-[7px] h-3 px-1 text-slate-400 border-slate-500/30">{rm.sizeGb}</Badge>
-                            <Badge variant="outline" className="text-[7px] h-3 px-1 text-cyan-400 border-cyan-500/30">VRAM {rm.vramGb}GB</Badge>
-                            <Badge variant="outline" className={cn("text-[7px] h-3 px-1",
+                            <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-400 border-slate-500/30">{rm.sizeGb}</Badge>
+                            <Badge variant="outline" className="text-2xs h-3 px-1 text-cyan-400 border-cyan-500/30">VRAM {rm.vramGb}GB</Badge>
+                            <Badge variant="outline" className={cn("text-2xs h-3 px-1",
                               rm.speed === 'fast' ? "text-emerald-400 border-emerald-500/30" :
                               rm.speed === 'medium' ? "text-amber-400 border-amber-500/30" :
                               "text-red-400 border-red-500/30"
                             )}>{rm.speed}</Badge>
-                            <Badge variant="outline" className="text-[7px] h-3 px-1 text-yellow-400 border-yellow-500/30">
+                            <Badge variant="outline" className="text-2xs h-3 px-1 text-yellow-400 border-yellow-500/30">
                               {'★'.repeat(rm.quality)}{'☆'.repeat(5 - rm.quality)}
                             </Badge>
                           </div>
                         </div>
                         {!isInstalled && (
                           <Button
-                            variant="outline" size="sm" className="h-7 text-[10px] gap-1 shrink-0"
+                            variant="outline" size="xs" className="text-2xs gap-1 shrink-0"
                             onClick={() => handlePull(rm.pullName)}
                             disabled={!!pulling}
                           >
@@ -322,7 +322,7 @@ export default function OllamaManagerPage() {
                       {isPulling && (
                         <div className="mt-2 space-y-1">
                           <Progress value={pullProgress.percent} className="h-1.5" />
-                          <p className="text-[9px] text-muted-foreground truncate">{pullProgress.status} — {pullProgress.percent}%</p>
+                          <p className="text-micro text-muted-foreground truncate">{pullProgress.status} — {pullProgress.percent}%</p>
                         </div>
                       )}
                     </div>
@@ -343,7 +343,7 @@ export default function OllamaManagerPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
-                      variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-purple-300 hover:text-purple-200"
+                      variant="ghost" size="xs" className="text-2xs gap-1 text-purple-300 hover:text-purple-200"
                       onClick={async () => {
                         setDiscovering(true);
                         try {
@@ -361,7 +361,7 @@ export default function OllamaManagerPage() {
                     </Button>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground mb-2">
+                <p className="text-2xs text-muted-foreground mb-2">
                   Modelli trovati automaticamente su ollama.com, filtrati per utilità alla traduzione. Non ancora installati né nella lista consigliati.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -376,30 +376,30 @@ export default function OllamaManagerPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">
                               <span className="text-xs font-semibold">{dm.name}</span>
-                              {dm.isNew && <Badge className="text-[7px] h-3 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">NUOVO</Badge>}
-                              <Badge variant="outline" className="text-[7px] h-3 px-1 text-purple-400 border-purple-500/30">
+                              {dm.isNew && <Badge className="text-2xs h-3 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">NUOVO</Badge>}
+                              <Badge variant="outline" className="text-2xs h-3 px-1 text-purple-400 border-purple-500/30">
                                 {dm.relevanceScore}% rilevante
                               </Badge>
                             </div>
                             {dm.description && (
-                              <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">{dm.description}</p>
+                              <p className="text-2xs text-muted-foreground leading-tight line-clamp-2">{dm.description}</p>
                             )}
                             <div className="flex flex-wrap gap-1 mt-1">
                               {dm.pulls !== '0' && (
-                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-slate-400 border-slate-500/30">
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-400 border-slate-500/30">
                                   <TrendingUp className="h-2 w-2 mr-0.5" />{dm.pulls} pulls
                                 </Badge>
                               )}
                               {dm.sizes.length > 0 && (
-                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-cyan-400 border-cyan-500/30">
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-cyan-400 border-cyan-500/30">
                                   {dm.sizes.slice(0, 3).join(', ')}
                                 </Badge>
                               )}
                               {dm.categories.map(c => (
-                                <Badge key={c} variant="outline" className="text-[7px] h-3 px-1 text-amber-400 border-amber-500/30">{c}</Badge>
+                                <Badge key={c} variant="outline" className="text-2xs h-3 px-1 text-amber-400 border-amber-500/30">{c}</Badge>
                               ))}
                               {dm.updatedAgo !== 'unknown' && (
-                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-slate-500 border-slate-600/30">{dm.updatedAgo}</Badge>
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-500 border-slate-600/30">{dm.updatedAgo}</Badge>
                               )}
                             </div>
                           </div>
@@ -413,7 +413,7 @@ export default function OllamaManagerPage() {
                               <ExternalLink className="h-3 w-3" />
                             </a>
                             <Button
-                              variant="outline" size="sm" className="h-7 text-[10px] gap-1"
+                              variant="outline" size="xs" className="text-2xs gap-1"
                               onClick={() => handlePull(dm.name)}
                               disabled={!!pulling}
                             >
@@ -425,7 +425,7 @@ export default function OllamaManagerPage() {
                         {isPullingThis && (
                           <div className="mt-2 space-y-1">
                             <Progress value={pullProgress.percent} className="h-1.5" />
-                            <p className="text-[9px] text-muted-foreground truncate">{pullProgress.status} — {pullProgress.percent}%</p>
+                            <p className="text-micro text-muted-foreground truncate">{pullProgress.status} — {pullProgress.percent}%</p>
                           </div>
                         )}
                       </div>
@@ -446,7 +446,7 @@ export default function OllamaManagerPage() {
                     <span className="text-xs font-semibold text-cyan-400">{t('ollamaManagerPage.speedTest')}</span>
                   </div>
                   <Button
-                    variant="outline" size="sm" className="h-6 text-[10px] gap-1"
+                    variant="outline" size="xs" className="text-2xs gap-1"
                     disabled={!!speedTesting}
                     onClick={async () => {
                       for (const m of installed) {
@@ -469,8 +469,8 @@ export default function OllamaManagerPage() {
                           <span className="text-xs font-mono flex-1 truncate">{name}</span>
                           <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-cyan-300 tabular-nums">{sr.tokensPerSecond.toFixed(1)} tok/s</span>
-                            <span className="text-[10px] text-muted-foreground tabular-nums">TTFT {sr.firstTokenMs}ms</span>
-                            <span className="text-[10px] text-muted-foreground tabular-nums">{(sr.totalTimeMs / 1000).toFixed(1)}s</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">TTFT {sr.firstTokenMs}ms</span>
+                            <span className="text-2xs text-muted-foreground tabular-nums">{(sr.totalTimeMs / 1000).toFixed(1)}s</span>
                           </div>
                         </div>
                       ))
@@ -491,7 +491,7 @@ export default function OllamaManagerPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.modelA')}</label>
+                    <label className="text-2xs text-muted-foreground">{t('ollamaManagerPage.modelA')}</label>
                     <select
                       value={compareModelA}
                       onChange={e => setCompareModelA(e.target.value)}
@@ -501,7 +501,7 @@ export default function OllamaManagerPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.modelB')}</label>
+                    <label className="text-2xs text-muted-foreground">{t('ollamaManagerPage.modelB')}</label>
                     <select
                       value={compareModelB}
                       onChange={e => setCompareModelB(e.target.value)}
@@ -522,7 +522,7 @@ export default function OllamaManagerPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.testText')}</label>
+                  <label className="text-2xs text-muted-foreground">{t('ollamaManagerPage.testText')}</label>
                   <Input
                     value={compareText}
                     onChange={e => setCompareText(e.target.value)}
@@ -541,13 +541,13 @@ export default function OllamaManagerPage() {
                           : "border-white/5 bg-background/30"
                       )}>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-mono font-bold">{r.name}</span>
+                          <span className="text-2xs font-mono font-bold">{r.name}</span>
                           {r.timeMs <= Math.min(compareResult.modelA.timeMs, compareResult.modelB.timeMs) && (
-                            <Badge className="text-[7px] h-3 px-1 bg-emerald-500/20 text-emerald-300">{t('ollamaManagerPage.faster')}</Badge>
+                            <Badge className="text-2xs h-3 px-1 bg-emerald-500/20 text-emerald-300">{t('ollamaManagerPage.faster')}</Badge>
                           )}
                         </div>
                         <p className="text-xs text-foreground leading-relaxed mb-1.5">{r.translation}</p>
-                        <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+                        <div className="flex items-center gap-2 text-micro text-muted-foreground">
                           <span><Zap className="h-2.5 w-2.5 inline" /> {r.tokensPerSecond} tok/s</span>
                           <span><Timer className="h-2.5 w-2.5 inline" /> {(r.timeMs / 1000).toFixed(1)}s</span>
                         </div>

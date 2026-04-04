@@ -284,7 +284,7 @@ export function LiveOcrOverlay() {
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 Live OCR Overlay
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 Traduzione real-time dello schermo di gioco
               </p>
             </div>
@@ -479,11 +479,11 @@ export function LiveOcrOverlay() {
                           <p className="text-xs text-gray-400 truncate">{text.original}</p>
                           <p className="text-sm text-white font-medium mt-1">{text.translated}</p>
                         </div>
-                        <Badge variant="outline" className="text-[10px] shrink-0">
+                        <Badge variant="outline" className="text-2xs shrink-0">
                           {Math.round(text.confidence * 100)}%
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-2 text-[10px] text-gray-500">
+                      <div className="flex items-center gap-2 mt-2 text-2xs text-gray-500">
                         <span>📍 {text.x}, {text.y}</span>
                         <span>📐 {text.width}x{text.height}</span>
                       </div>
@@ -501,25 +501,25 @@ export function LiveOcrOverlay() {
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-cyan-400">{fps}</div>
-            <div className="text-[10px] text-gray-400">FPS</div>
+            <div className="text-2xs text-gray-400">FPS</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">{detectedTexts.length}</div>
-            <div className="text-[10px] text-gray-400">Testi attuali</div>
+            <div className="text-2xs text-gray-400">Testi attuali</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-400">{totalDetected}</div>
-            <div className="text-[10px] text-gray-400">Totali sessione</div>
+            <div className="text-2xs text-gray-400">Totali sessione</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400">{captureInterval}ms</div>
-            <div className="text-[10px] text-gray-400">Intervallo</div>
+            <div className="text-2xs text-gray-400">Intervallo</div>
           </div>
         </Card>
       </div>

@@ -179,7 +179,7 @@ export function SmartContextPanel({
                 <div className="flex items-center gap-2">
                   <Brain className="h-4 w-4 text-purple-400" />
                   <span className="text-sm font-medium text-purple-300">{t('smartContextPanelComp.smartContext')}</span>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-2xs">
                     {context.stats.learnings} apprendimenti
                   </Badge>
                 </div>
@@ -191,18 +191,18 @@ export function SmartContextPanel({
           <CollapsibleContent>
             <CardContent className="p-3 pt-0 space-y-2">
               <div className="flex gap-1">
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   <Users className="h-3 w-3 mr-1" />
                   {context.characters.length} personaggi
                 </Badge>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   <BookOpen className="h-3 w-3 mr-1" />
                   {context.terms.length} termini
                 </Badge>
               </div>
               
               {context.characters.length > 0 && (
-                <div className="text-[10px] text-gray-500">
+                <div className="text-2xs text-gray-500">
                   Personaggi: {context.characters.slice(0, 3).map(c => c.name).join(', ')}
                   {context.characters.length > 3 && ` +${context.characters.length - 3}`}
                 </div>
@@ -224,14 +224,14 @@ export function SmartContextPanel({
             </div>
             <div>
               <CardTitle className="text-base text-purple-300">{t('smartContextPanelComp.smartContext')}</CardTitle>
-              <p className="text-[10px] text-gray-500">{context.gameName}</p>
+              <p className="text-2xs text-gray-500">{context.gameName}</p>
             </div>
           </div>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={exportContext} className="h-7 px-2">
               <Download className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 px-2">
+            <Button variant="ghost" size="xs" className="px-2">
               <Settings className="h-3 w-3" />
             </Button>
           </div>
@@ -239,11 +239,11 @@ export function SmartContextPanel({
 
         {/* Stats */}
         <div className="flex gap-2 mt-2">
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-2xs">
             <Sparkles className="h-3 w-3 mr-1" />
             {context.stats.learnings} apprendimenti
           </Badge>
-          <Badge variant="outline" className="text-[10px]">
+          <Badge variant="outline" className="text-2xs">
             {context.stats.translatedStrings} traduzioni
           </Badge>
         </div>
@@ -288,7 +288,7 @@ export function SmartContextPanel({
                     </div>
                     <Badge 
                       variant="outline" 
-                      className={`text-[10px] ${
+                      className={`text-2xs ${
                         char.speechStyle === 'formal' ? 'border-blue-500/30 text-blue-400' :
                         char.speechStyle === 'informal' ? 'border-green-500/30 text-green-400' :
                         char.speechStyle === 'archaic' ? 'border-amber-500/30 text-amber-400' :
@@ -299,12 +299,12 @@ export function SmartContextPanel({
                     </Badge>
                   </div>
                   {char.personality && (
-                    <p className="text-[10px] text-gray-500 mt-1">{char.personality}</p>
+                    <p className="text-2xs text-gray-500 mt-1">{char.personality}</p>
                   )}
                   {char.aliases.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                       {char.aliases.map((alias, j) => (
-                        <Badge key={j} variant="outline" className="text-[9px] h-4">
+                        <Badge key={j} variant="outline" className="text-micro h-4">
                           {alias}
                         </Badge>
                       ))}
@@ -433,11 +433,11 @@ export function SmartContextPanel({
                       <span className="text-sm text-purple-300">{term.translation}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="text-[9px] h-4">
+                      <Badge variant="outline" className="text-micro h-4">
                         ×{term.frequency}
                       </Badge>
                       {term.approved ? (
-                        <Badge className="text-[9px] h-4 bg-green-600">
+                        <Badge className="text-micro h-4 bg-green-600">
                           <Check className="h-2 w-2" />
                         </Badge>
                       ) : (
@@ -453,7 +453,7 @@ export function SmartContextPanel({
                     </div>
                   </div>
                   {term.context && (
-                    <p className="text-[10px] text-gray-500 mt-1">{term.context}</p>
+                    <p className="text-2xs text-gray-500 mt-1">{term.context}</p>
                   )}
                 </div>
               ))}
@@ -516,7 +516,7 @@ export function SmartContextPanel({
         <div className="mt-3 p-2 bg-primary/10 rounded-lg border border-primary/20">
           <div className="flex items-start gap-2">
             <Lightbulb className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-purple-300/80">
+            <p className="text-2xs text-purple-300/80">
               Smart Context apprende automaticamente mentre traduci. I personaggi e termini vengono rilevati dai dialoghi.
             </p>
           </div>

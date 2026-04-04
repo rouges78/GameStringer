@@ -975,7 +975,7 @@ export default function EditorPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10" onClick={() => setShowImportDialog(true)}>
+                    <Button variant="ghost" size="icon" aria-label="Importa" className="h-7 w-7 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10" onClick={() => setShowImportDialog(true)}>
                       <Upload className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
@@ -1005,13 +1005,13 @@ export default function EditorPage() {
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
             <Input 
-              placeholder="Cerca stringa o gioco..." 
+              aria-label="Cerca" placeholder="Cerca stringa o gioco..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="h-8 pl-9 pr-8 text-xs bg-slate-950/60 border-slate-700/50 focus-visible:ring-indigo-500/30 rounded-lg shadow-inner text-slate-200 placeholder:text-slate-500"
             />
             {searchTerm && (
-              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 hover:bg-slate-800 rounded-md" onClick={() => setSearchTerm('')}>
+              <Button variant="ghost" size="icon" aria-label="Chiudi" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 hover:bg-slate-800 rounded-md" onClick={() => setSearchTerm('')}>
                 <X className="h-3 w-3 text-slate-400" />
               </Button>
             )}
@@ -1042,7 +1042,7 @@ export default function EditorPage() {
             </Select>
           </div>
           
-          <div className="flex items-center justify-between text-[9px] font-semibold uppercase tracking-widest text-slate-500 px-1 pt-1">
+          <div className="flex items-center justify-between text-micro font-semibold uppercase tracking-widest text-slate-500 px-1 pt-1">
             <span>{filteredTranslations.length} elementi</span>
             <div className="flex items-center gap-2">
               <span className="text-emerald-400 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {stats.completed}</span>
@@ -1088,12 +1088,12 @@ export default function EditorPage() {
                       <p className="font-bold text-sm truncate text-slate-200 group-hover:text-indigo-300 transition-colors">
                         {project.game.title}
                       </p>
-                      <p className="text-[10px] text-slate-500 font-medium">
+                      <p className="text-2xs text-slate-500 font-medium">
                         {project.files.length} file • {project.totalStrings} stringhe
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 pr-1">
-                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                      <Badge variant="outline" className="text-micro h-4 px-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                         {Math.round((project.completedStrings / Math.max(project.totalStrings, 1)) * 100)}%
                       </Badge>
                       <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-indigo-400 transition-colors group-hover:translate-x-0.5" />
@@ -1107,7 +1107,7 @@ export default function EditorPage() {
             <div className="flex flex-col">
               {/* Header con back button */}
               <div className="flex items-center gap-2 p-2 border-b border-slate-800/50 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('games'); setSelectedProject(null); }}>
+                <Button variant="ghost" size="icon" aria-label="Indietro" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('games'); setSelectedProject(null); }}>
                   <ChevronRight className="h-4 w-4 rotate-180 text-slate-400" />
                 </Button>
                 <span className="font-bold text-xs text-slate-300 truncate tracking-wide">{selectedProject.game.title}</span>
@@ -1149,11 +1149,11 @@ export default function EditorPage() {
                         )}>
                           {file.filename}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-medium">
+                        <p className="text-2xs text-slate-500 font-medium">
                           {file.stringCount} stringhe • <span className="uppercase text-slate-400">{file.targetLanguage}</span>
                         </p>
                       </div>
-                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-500/5 text-emerald-400/80 border-emerald-500/20 font-mono">
+                      <Badge variant="outline" className="text-micro h-4 px-1.5 bg-emerald-500/5 text-emerald-400/80 border-emerald-500/20 font-mono">
                         {Math.round((file.completedCount / Math.max(file.stringCount, 1)) * 100)}%
                       </Badge>
                     </motion.div>
@@ -1166,7 +1166,7 @@ export default function EditorPage() {
             <div className="flex flex-col">
               {/* Header con back button */}
               <div className="flex items-center gap-2 p-2 border-b border-slate-800/50 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('files'); setSelectedFile(null); }}>
+                <Button variant="ghost" size="icon" aria-label="Indietro" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('files'); setSelectedFile(null); }}>
                   <ChevronRight className="h-4 w-4 rotate-180 text-slate-400" />
                 </Button>
                 <span className="font-bold text-xs text-slate-300 truncate tracking-wide">{selectedFile?.filename || 'Stringhe'}</span>
@@ -1202,7 +1202,7 @@ export default function EditorPage() {
                       <p className="text-[11px] text-slate-500 line-clamp-1 mt-1 w-full">
                         {t.translatedText || <span className="italic opacity-50">— non tradotto —</span>}
                       </p>
-                      <Badge variant="outline" className={cn("text-[8px] uppercase tracking-wider font-bold h-4 px-1.5 gap-1 mt-2", getStatusColor(t.status))}>
+                      <Badge variant="outline" className={cn("text-2xs uppercase tracking-wider font-bold h-4 px-1.5 gap-1 mt-2", getStatusColor(t.status))}>
                         {getStatusIcon(t.status)}
                         <span>{t.status}</span>
                       </Badge>
@@ -1234,19 +1234,19 @@ export default function EditorPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {isMultiLangFile && (
-                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-emerald-500/30 text-emerald-400 uppercase tracking-widest font-bold">
+                        <Badge variant="outline" className="text-micro h-4 px-1.5 border-emerald-500/30 text-emerald-400 uppercase tracking-widest font-bold">
                           Multi-Lang
                         </Badge>
                       )}
                       {selectedTranslation.confidence > 0 && (
-                        <span className="text-[10px] font-mono text-emerald-500/80">CONF:{Math.round(selectedTranslation.confidence * 100)}%</span>
+                        <span className="text-2xs font-mono text-emerald-500/80">CONF:{Math.round(selectedTranslation.confidence * 100)}%</span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
+                  <Button variant="ghost" size="xs" className="text-xs font-semibold text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
                     {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-indigo-400" />}
                     Traduci AI
                   </Button>
@@ -1260,11 +1260,11 @@ export default function EditorPage() {
                   <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
                   {/* Cross-navigation */}
                   <Link href={`/batch?game=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg">
+                    <Button variant="ghost" size="xs" className="text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg">
                       <FolderTree className="h-3.5 w-3.5 mr-1" />{t('aiTranslator.batch')}</Button>
                   </Link>
                   <Link href={`/glossary?gameId=${selectedTranslation.gameId || ''}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg hidden sm:flex">
+                    <Button variant="ghost" size="xs" className="text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg hidden sm:flex">
                       <BookOpen className="h-3.5 w-3.5 mr-1" />{t('nav.memory')}</Button>
                   </Link>
                   <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
@@ -1278,7 +1278,7 @@ export default function EditorPage() {
                     Salva
                   </Button>
                   <Link href={`/community-hub?action=publish&gameId=${selectedTranslation.gameId || ''}&gameName=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg border border-blue-500/20 hidden lg:flex">
+                    <Button variant="ghost" size="xs" className="text-xs font-semibold text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg border border-blue-500/20 hidden lg:flex">
                       <Globe className="h-3.5 w-3.5 mr-1" />
                       Condividi
                     </Button>
@@ -1290,7 +1290,7 @@ export default function EditorPage() {
               {isMultiLangFile && detectedLanguages.length > 0 && (
                 <div className="flex items-center gap-4 pt-2 mt-1 border-t border-slate-800/50">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.sourceLabel')}</span>
+                    <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.sourceLabel')}</span>
                     <Select value={String(sourceLanguageIndex)} onValueChange={(v) => setSourceLanguageIndex(Number(v))}>
                       <SelectTrigger className="h-7 w-[140px] text-xs bg-slate-950/50 border-slate-700/50 rounded-md font-medium text-slate-300">
                         <SelectValue />
@@ -1304,7 +1304,7 @@ export default function EditorPage() {
                   </div>
                   <ArrowLeftRight className="h-3.5 w-3.5 text-slate-600" />
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.destLabel')}</span>
+                    <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.destLabel')}</span>
                     <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{t('languages.it')}</span>
                   </div>
                 </div>
@@ -1318,10 +1318,10 @@ export default function EditorPage() {
                 <div className="w-[340px] flex flex-col border-r border-slate-800/50 bg-slate-900/40 relative z-10 shadow-[5px_0_15px_-5px_rgba(0,0,0,0.3)]">
                   <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 backdrop-blur-md sticky top-0 z-20">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest">
                         Progresso File
                       </span>
-                      <Badge variant="outline" className="text-[9px] h-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                      <Badge variant="outline" className="text-micro h-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                         {Math.round((selectedTranslation.parsedLines.filter(l => l.translatedText).length / selectedTranslation.parsedLines.length) * 100)}%
                       </Badge>
                     </div>
@@ -1336,11 +1336,11 @@ export default function EditorPage() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-emerald-400 text-[10px] font-semibold flex items-center gap-1">
+                      <span className="text-emerald-400 text-2xs font-semibold flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" />
                         {selectedTranslation.parsedLines.filter(l => l.translatedText).length} fatte
                       </span>
-                      <span className="text-amber-400/80 text-[10px] font-semibold flex items-center gap-1">
+                      <span className="text-amber-400/80 text-2xs font-semibold flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         {selectedTranslation.parsedLines.length - selectedTranslation.parsedLines.filter(l => l.translatedText).length} da fare
                       </span>
@@ -1373,14 +1373,14 @@ export default function EditorPage() {
                             
                             <div className="flex justify-between items-start mb-1.5 pl-2">
                               <span className={cn(
-                                "text-[9px] font-bold tracking-wider uppercase flex items-center gap-1",
+                                "text-micro font-bold tracking-wider uppercase flex items-center gap-1",
                                 isTranslated ? "text-emerald-400" : "text-amber-500/70"
                               )}>
                                 {isTranslated ? <CheckCircle className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
                                 #{line.lineNumber}
                               </span>
                               {line.key && (
-                                <span className="text-[8px] font-mono text-slate-500 truncate max-w-[120px] bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800/50">
+                                <span className="text-2xs font-mono text-slate-500 truncate max-w-[120px] bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800/50">
                                   {line.key}
                                 </span>
                               )}
@@ -1409,9 +1409,9 @@ export default function EditorPage() {
                 /* Original Panel (fallback for non-parsed content) */
                 <div className="flex-1 flex flex-col border-r border-slate-800/50 min-w-[300px] bg-slate-900/20">
                   <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5" />{t('qaCheck.originalText')}</span>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
+                    <Button variant="ghost" size="icon" aria-label="Copia" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
                       navigator.clipboard.writeText(selectedTranslation.originalText);
                       toast({ title: 'Copiato negli appunti' });
                     }}>
@@ -1437,11 +1437,11 @@ export default function EditorPage() {
                   <div className="border-b border-slate-800/50 bg-slate-900/20">
                     <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5" />{t('mangaTranslator.source')}</span>
-                        <Badge variant="outline" className="text-[9px] h-4 bg-slate-800/50 text-slate-400 border-slate-700/50">Riga {selectedLine.lineNumber}</Badge>
+                        <Badge variant="outline" className="text-micro h-4 bg-slate-800/50 text-slate-400 border-slate-700/50">Riga {selectedLine.lineNumber}</Badge>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
+                      <Button variant="ghost" size="icon" aria-label="Copia" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
                         navigator.clipboard.writeText(selectedLine.originalText);
                         toast({ title: 'Copiato negli appunti' });
                       }}>
@@ -1461,10 +1461,10 @@ export default function EditorPage() {
                   {/* Translation input */}
                   <div className="flex-1 flex flex-col bg-slate-950/40">
                     <div className="px-4 py-3 bg-indigo-950/30 border-b border-indigo-500/20 flex justify-between items-center backdrop-blur-md">
-                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="text-2xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
                         <Edit3 className="h-3.5 w-3.5" />{t('offlineTranslator.translation')}</span>
                       {selectedLine.translatedText && (
-                        <Badge variant="outline" className="text-[9px] h-4 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider">
+                        <Badge variant="outline" className="text-micro h-4 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider">
                           <CheckCircle className="h-2.5 w-2.5 mr-1" />{t('batchTranslator.done')}</Badge>
                       )}
                     </div>
@@ -1496,8 +1496,8 @@ export default function EditorPage() {
                           <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
                             <BookOpen className="h-3 w-3 text-amber-400" />
                           </div>
-                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
-                          <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
+                          <span className="text-2xs font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
+                          <span className="text-micro text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {glossaryTerms.map(term => (
@@ -1513,7 +1513,7 @@ export default function EditorPage() {
                               <span className="text-amber-200/60 font-medium group-hover:text-amber-200 transition-colors">{term.sourceTerm}</span>
                               <ChevronRight className="h-3 w-3 text-amber-500/40" />
                               <span className="text-amber-300 font-bold group-hover:text-amber-100 transition-colors">{term.targetTerm}</span>
-                              {term.tier === 'locked' && <span className="text-red-400 text-[10px] ml-0.5" title="Termine bloccato (priorità alta)">🔒</span>}
+                              {term.tier === 'locked' && <span className="text-red-400 text-2xs ml-0.5" title="Termine bloccato (priorità alta)">🔒</span>}
                             </button>
                           ))}
                         </div>
@@ -1535,11 +1535,11 @@ export default function EditorPage() {
                 <div className="flex-1 flex flex-col min-w-[300px] bg-slate-950/20 relative z-0">
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
                   <div className="px-4 py-3 bg-indigo-950/30 border-b border-indigo-500/20 flex justify-between items-center backdrop-blur-md">
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="text-2xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
                       <Edit3 className="h-3.5 w-3.5" /> Area di Traduzione
                     </span>
                     {hasUnsavedChanges && (
-                      <Badge variant="outline" className="text-[9px] h-4 bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold uppercase tracking-wider animate-pulse">
+                      <Badge variant="outline" className="text-micro h-4 bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold uppercase tracking-wider animate-pulse">
                         <AlertCircle className="h-2.5 w-2.5 mr-1" /> Modificato
                       </Badge>
                     )}
@@ -1561,8 +1561,8 @@ export default function EditorPage() {
                         <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
                           <BookOpen className="h-3 w-3 text-amber-400" />
                         </div>
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
-                        <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
+                        <span className="text-2xs font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
+                        <span className="text-micro text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {glossaryTerms.map(term => (
@@ -1578,7 +1578,7 @@ export default function EditorPage() {
                             <span className="text-amber-200/60 font-medium group-hover:text-amber-200 transition-colors">{term.sourceTerm}</span>
                             <ChevronRight className="h-3 w-3 text-amber-500/40" />
                             <span className="text-amber-300 font-bold group-hover:text-amber-100 transition-colors">{term.targetTerm}</span>
-                            {term.tier === 'locked' && <span className="text-red-400 text-[10px] ml-0.5" title="Termine bloccato">🔒</span>}
+                            {term.tier === 'locked' && <span className="text-red-400 text-2xs ml-0.5" title="Termine bloccato">🔒</span>}
                           </button>
                         ))}
                       </div>

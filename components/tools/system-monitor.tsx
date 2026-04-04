@@ -152,11 +152,11 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
                 <div className="flex items-center gap-1.5">
                   <Cpu className="h-3 w-3 text-violet-400" />
                   <span className="text-[11px] text-violet-300 font-medium">GPU</span>
-                  <span className="text-[10px] text-violet-400/50 truncate max-w-[180px]">{stats.gpu_name}</span>
+                  <span className="text-2xs text-violet-400/50 truncate max-w-[180px]">{stats.gpu_name}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {stats.gpu_temp_celsius != null && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-violet-500/20">
+                    <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-violet-500/20">
                       <Thermometer className="h-2.5 w-2.5 mr-0.5" />
                       {stats.gpu_temp_celsius}°C
                     </Badge>
@@ -168,17 +168,17 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
               </div>
               <Progress value={stats.vram_usage_percent} className={`h-1.5 ${getProgressColor(stats.vram_usage_percent)}`} />
               <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-violet-400/50">
+                <span className="text-micro text-violet-400/50">
                   VRAM: {(stats.vram_used_mb / 1024).toFixed(1)} / {(stats.vram_total_mb / 1024).toFixed(1)} GB
                 </span>
-                <span className="text-[9px] text-violet-400/50">
+                <span className="text-micro text-violet-400/50">
                   Libera: {(stats.vram_free_mb / 1024).toFixed(1)} GB
                 </span>
               </div>
             </div>
           ) : (
             <div className="p-2 rounded-lg bg-slate-950/30 border border-slate-500/10 text-center">
-              <span className="text-[10px] text-slate-500">Nessuna GPU NVIDIA rilevata</span>
+              <span className="text-2xs text-slate-500">Nessuna GPU NVIDIA rilevata</span>
             </div>
           )}
 
@@ -195,10 +195,10 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
             </div>
             <Progress value={stats.ram_usage_percent} className={`h-1.5 ${getProgressColor(stats.ram_usage_percent)}`} />
             <div className="flex justify-between mt-1">
-              <span className="text-[9px] text-cyan-400/50">
+              <span className="text-micro text-cyan-400/50">
                 {(stats.ram_used_mb / 1024).toFixed(1)} / {(stats.ram_total_mb / 1024).toFixed(1)} GB
               </span>
-              <span className="text-[9px] text-cyan-400/50">
+              <span className="text-micro text-cyan-400/50">
                 Libera: {((stats.ram_total_mb - stats.ram_used_mb) / 1024).toFixed(1)} GB
               </span>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
+import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 
 interface WolfRpgGame {
   path: string;
@@ -250,17 +252,43 @@ export default function WolfRpgPatcherPage() {
     }
   };
 
+  const handleExportPO = useCallback(() => {
+    const generic = entriesToGeneric(strings, 'wolfrpg');
+    const metadata: PoMetadata = {
+      project_name: game?.title || 'GameStringer Project',
+      language: 'it',
+      source_language: 'en',
+      game_engine: 'wolfrpg',
+      generator: 'GameStringer',
+    };
+    const poContent = generatePOString(generic, metadata);
+    const blob = new Blob([poContent], { type: 'text/x-gettext; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${game?.title || 'translation'}.po`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [strings, game]);
+
   const updateTranslation = (id: string, translation: string) => {
-    setStrings(prev => prev.map(s => 
+    setStrings(prev => prev.map(s =>
       s.id === id ? { ...s, translated: translation } : s
     ));
     setEditingId(null);
   };
 
-  const filteredStrings = strings.filter(s => 
+  const filteredStrings = strings.filter(s =>
     s.original.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.translated.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const WOLFRPG_STEPS: WizardStep[] = [
+    { num: 1, label: 'Selezione Gioco' },
+    { num: 2, label: 'Traduzioni' },
+    { num: 3, label: 'Esporta' },
+  ];
+  const wolfrpgCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
@@ -294,15 +322,17 @@ export default function WolfRpgPatcherPage() {
         </div>
       </div>
 
+      <WizardStepper steps={WOLFRPG_STEPS} currentStep={wolfrpgCurrentStep} size="sm" />
+
       {/* Game Selection */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+      <Card variant="muted">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
             <FolderOpen className="w-4 h-4 text-orange-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-orange-600 hover:bg-orange-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-orange-600 hover:bg-orange-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               Sfoglia
             </Button>
@@ -327,7 +357,7 @@ export default function WolfRpgPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-[10px] text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -348,7 +378,7 @@ export default function WolfRpgPatcherPage() {
 
       {/* File List & Extraction */}
       {game && (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Database className="w-4 h-4 text-orange-400" />
@@ -370,7 +400,7 @@ export default function WolfRpgPatcherPage() {
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-muted-foreground" />
                       <span className="font-mono text-xs">{file.filename}</span>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-2xs">
                         {(file.size / 1024).toFixed(1)} KB
                       </Badge>
                     </div>
@@ -397,7 +427,7 @@ export default function WolfRpgPatcherPage() {
 
       {/* Stats & Actions */}
       {stats && stats.total > 0 && (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardContent className="pt-4 px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-6">
@@ -425,10 +455,14 @@ export default function WolfRpgPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   Carica
                 </Button>
-                <Button onClick={saveTranslations} size="sm" className="h-8 bg-orange-600 hover:bg-orange-500">
+                <Button onClick={saveTranslations} size="xs" className="bg-orange-600 hover:bg-orange-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
-                <Button onClick={exportCSV} size="sm" className="h-8 bg-amber-600 hover:bg-amber-500">
+                <Button onClick={exportCSV} size="xs" className="bg-amber-600 hover:bg-amber-500">
                   <Download className="w-3 h-3 mr-1" />{t('projects.export')}</Button>
+                <Button size="sm" variant="outline" onClick={handleExportPO} disabled={strings.length === 0} className="h-8" aria-label="Esporta file PO">
+                  <Download className="h-4 w-4 mr-1.5" />
+                  PO
+                </Button>
               </div>
             </div>
             <Progress value={stats.percentage} className="h-2 bg-slate-800" />
@@ -437,7 +471,7 @@ export default function WolfRpgPatcherPage() {
       )}
 
       {/* Editor */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex-1">
+      <Card variant="muted" className="flex-1">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -453,7 +487,7 @@ export default function WolfRpgPatcherPage() {
             <div className="relative mt-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca testi..."
+                aria-label="Cerca" placeholder="Cerca testi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -475,7 +509,7 @@ export default function WolfRpgPatcherPage() {
                       className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline" className="text-[10px]">{entry.file}</Badge>
+                        <Badge variant="outline" className="text-2xs">{entry.file}</Badge>
                       </div>
                       
                       <div className="mb-2">
