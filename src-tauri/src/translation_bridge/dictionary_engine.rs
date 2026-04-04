@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{info, warn};
 
 use super::protocol::TranslationRequest;
 
@@ -361,7 +361,7 @@ impl DictionaryEngine {
                     self.watch_paths.insert(path, Some(mtime));
                 }
                 Err(e) => {
-                    info!("[DictionaryEngine] Hot-reload errore {}: {}", path, e);
+                    warn!("[DictionaryEngine] Hot-reload errore {}: {}", path, e);
                 }
             }
         }

@@ -626,10 +626,15 @@ impl InjektTranslator {
                     &mut bytes_read,
                 )
             };
-            if ok == 0 || bytes_read < pat_len { offset += CHUNK; continue; }
+            if ok == 0 || bytes_read < pat_len {
+                // Lettura fallita o troppo corta — salta avanti senza gap
+                offset += bytes_read.max(1);
+                continue;
+            }
 
             // Cerca il pattern nel buffer
-            for i in 0..(bytes_read - pat_len + 1) {
+            let searchable = bytes_read - pat_len + 1;
+            for i in 0..searchable {
                 let matched = match mask {
                     Some(m) => (0..pat_len).all(|j| m[j] == 0 || buf[i + j] == pattern[j]),
                     None => &buf[i..i + pat_len] == pattern,
@@ -640,7 +645,10 @@ impl InjektTranslator {
                     return Some(addr);
                 }
             }
-            offset += CHUNK;
+            // Avanza di searchable (non CHUNK) per garantire che i pat_len-1
+            // byte alla fine del chunk vengano riesaminati nel prossimo ciclo,
+            // coprendo pattern a cavallo del confine tra blocchi.
+            offset += searchable;
         }
 
         None
@@ -762,33 +770,33 @@ impl InjektTranslator {
     /// che vive nel plugin iniettato (unity-translator-dll / ue-translator-dll).
     /// Quando il plugin DLL sarà collegato, qui si scriverà:
     ///   [0xE9, rel32] dove rel32 = detour_addr - (hook_addr + 5)
-    fn perform_hook(&self, hook: &HookPoint) -> Result<(), Box<dyn Error>> {
+    fn perform_hook(&self, hook: &mut HookPoint) -> Result<(), Box<dyn Error>> {
         let handle = self.process_handle.as_ref()
             .ok_or("Handle processo non disponibile")?
             .get();
 
         unsafe {
-            // Salva i byte originali (necessari per remove_hooks)
-            let mut original_bytes = vec![0u8; 5];
+            // Salva i byte originali nel hook (necessari per remove_hooks)
             let mut bytes_read = 0;
+            hook.original_bytes.resize(5, 0);
 
             let read_result = ReadProcessMemory(
                 handle,
                 hook.address as LPVOID,
-                original_bytes.as_mut_ptr() as LPVOID,
-                original_bytes.len(),
+                hook.original_bytes.as_mut_ptr() as LPVOID,
+                hook.original_bytes.len(),
                 &mut bytes_read,
             );
 
-            if read_result == 0 || bytes_read != original_bytes.len() {
+            if read_result == 0 || bytes_read != hook.original_bytes.len() {
                 return Err("Impossibile leggere memoria processo".into());
             }
 
             // TODO: Scrivere JMP quando il detour address sara' disponibile
             // dal plugin DLL iniettato. Per ora registriamo l'hook come "trovato"
             // senza modificare la memoria del processo.
-            log::info!("Hook registrato a 0x{:X} ({}) — attesa detour DLL",
-                hook.address, hook.module_name);
+            log::info!("Hook registrato a 0x{:X} ({}, saved {} original bytes) — attesa detour DLL",
+                hook.address, hook.module_name, bytes_read);
             Ok(())
         }
     }

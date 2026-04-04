@@ -15,6 +15,13 @@
 //! L'area Response Data è un circular buffer: `response_data_head` (scritto da Rust)
 //! e `response_data_tail` (scritto da C# dopo aver letto) delimitano lo spazio occupato.
 //! Rust rifiuta di scrivere se non c'è spazio sufficiente (slot → Error).
+//!
+//! **Wrap convention**: quando una traduzione non entra nello spazio contiguo tra head
+//! e la fine del buffer, Rust wrappa a offset 0 (verificando spazio prima di tail).
+//! I byte tra il vecchio head e RESPONSE_DATA_SIZE diventano dead space.
+//! Il C# NON deve leggere sequenzialmente dal buffer — ogni slot contiene
+//! `translated_offset` e `translated_len` che puntano direttamente alla traduzione.
+//! Il C# avanza `response_data_tail` all'offset massimo consumato per liberare spazio.
 
 use serde::{Deserialize, Serialize};
 

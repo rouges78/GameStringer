@@ -57,11 +57,18 @@ export class TranslationBridgeClient {
         return await fn();
       } catch (error) {
         lastError = error;
-        // Only retry on transient errors (timeouts, IPC failures, network issues)
-        const msg = String(error).toLowerCase();
-        const isTransient = msg.includes('timeout') || msg.includes('ipc')
-          || msg.includes('connection') || msg.includes('unavailable')
-          || msg.includes('channel closed');
+        // Only retry on transient errors (timeouts, IPC failures, network issues).
+        // Check structured error properties first, fall back to string matching.
+        const err = error as Record<string, unknown>;
+        const isTransient =
+          err?.code === 'ETIMEDOUT' || err?.code === 'ECONNRESET'
+          || err?.code === 'ECONNREFUSED' || err?.code === 'ERR_IPC_CHANNEL_CLOSED'
+          || (() => {
+            const msg = String(error).toLowerCase();
+            return msg.includes('timeout') || msg.includes('ipc')
+              || msg.includes('connection') || msg.includes('unavailable')
+              || msg.includes('channel closed');
+          })();
         if (!isTransient || attempt >= retries) {
           throw error;
         }

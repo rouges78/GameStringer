@@ -553,18 +553,16 @@ impl TranslationBridge {
                             let resp_tail =
                                 std::ptr::read_volatile(&(*header).response_data_tail) as usize;
 
+                            // Spazio libero totale nel circular buffer (contando entrambi
+                            // i segmenti: [head..END] e [0..tail]). Il -1 evita che
+                            // head == tail venga interpretato come "vuoto" quando pieno.
                             let free_space = if resp_head >= resp_tail {
-                                // [tail ... head ... END] — spazio = (END - head) + tail
-                                (RESPONSE_DATA_SIZE - resp_head) + resp_tail
+                                (RESPONSE_DATA_SIZE - resp_head) + resp_tail - 1
                             } else {
-                                // [head ... tail ... END] — spazio = tail - head
-                                resp_tail - resp_head
+                                resp_tail - resp_head - 1
                             };
 
-                            // Serve almeno translated_len + 1 byte liberi (il +1 evita
-                            // che head == tail venga interpretato come "vuoto" quando
-                            // in realtà il buffer è pieno)
-                            if free_space <= translated_len {
+                            if free_space < translated_len {
                                 // Buffer risposte pieno — C# non ha ancora consumato.
                                 // Marca come errore; il C# riproverà al prossimo ciclo.
                                 warn!(
@@ -578,10 +576,28 @@ impl TranslationBridge {
                                 local_errors += 1;
                             } else {
                                 // Scegli offset: scrivi a head se c'è spazio contiguo,
-                                // altrimenti wrappa a 0 (spazio già verificato sopra)
+                                // altrimenti wrappa a 0. Quando si wrappa, i byte tra
+                                // resp_head e RESPONSE_DATA_SIZE diventano dead space —
+                                // il C# non li legge perché ogni slot ha il proprio
+                                // translated_offset esplicito. Aggiorniamo head a 0
+                                // così il free_space accounting rimane corretto.
                                 let write_offset = if resp_head + translated_len <= RESPONSE_DATA_SIZE {
                                     resp_head
                                 } else {
+                                    // Wrap: verifica che ci sia spazio dall'inizio al tail
+                                    if translated_len >= resp_tail {
+                                        warn!(
+                                            "[TranslationBridge] Response buffer: wrap fallito (need={}, tail={})",
+                                            translated_len, resp_tail
+                                        );
+                                        std::ptr::write_volatile(
+                                            &mut (*slot).state,
+                                            SlotState::Error as u8,
+                                        );
+                                        local_errors += 1;
+                                        current_idx = current_idx.wrapping_add(1);
+                                        continue;
+                                    }
                                     0
                                 };
 
@@ -638,16 +654,8 @@ impl TranslationBridge {
         if processed > 0 {
             std::ptr::write_volatile(&mut (*header).read_index, current_idx);
 
-            // Batch update delle stats nella shared memory (visibili al C#).
-            // Singola scrittura per campo — su x86 le write allineate u64 sono atomiche.
-            let total = std::ptr::read_volatile(&(*header).total_requests);
-            std::ptr::write_volatile(&mut (*header).total_requests, total + (local_hits + local_misses + local_errors));
-            let hits = std::ptr::read_volatile(&(*header).cache_hits);
-            std::ptr::write_volatile(&mut (*header).cache_hits, hits + local_hits);
-            let misses = std::ptr::read_volatile(&(*header).cache_misses);
-            std::ptr::write_volatile(&mut (*header).cache_misses, misses + local_misses);
-
-            // Batch update delle stats Rust (singola acquisizione del lock)
+            // Batch update delle stats Rust (singola acquisizione del lock).
+            // Le stats Rust sono la source of truth — i totali assoluti.
             let mut s = stats.write();
             s.cache_hits += local_hits;
             s.cache_misses += local_misses;
@@ -659,6 +667,14 @@ impl TranslationBridge {
                 let n = s.total_requests as f64;
                 s.avg_response_time_us += (elapsed_us - s.avg_response_time_us) / n;
             }
+
+            // Copia i totali assoluti nella shared memory (visibili al C#).
+            // Singola write volatile per campo — nessun read-modify-write, nessun
+            // rischio TOCTOU. Il C# legge questi valori come snapshot diagnostici.
+            // Su x86 le write allineate u64 sono atomiche (non torn).
+            std::ptr::write_volatile(&mut (*header).total_requests, s.total_requests);
+            std::ptr::write_volatile(&mut (*header).cache_hits, s.cache_hits);
+            std::ptr::write_volatile(&mut (*header).cache_misses, s.cache_misses);
         }
 
         processed
