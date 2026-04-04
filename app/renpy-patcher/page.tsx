@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
+import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 
 interface RenpyGame {
   path: string;
@@ -202,8 +204,27 @@ export default function RenpyPatcherPage() {
     }
   };
 
+  const handleExportPO = useCallback(() => {
+    const generic = entriesToGeneric(strings, 'renpy');
+    const metadata: PoMetadata = {
+      project_name: game?.title || 'GameStringer Project',
+      language: targetLanguage || 'it',
+      source_language: 'en',
+      game_engine: 'renpy',
+      generator: 'GameStringer',
+    };
+    const poContent = generatePOString(generic, metadata);
+    const blob = new Blob([poContent], { type: 'text/x-gettext; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${game?.title || 'translation'}.po`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [strings, game, targetLanguage]);
+
   const updateTranslation = (id: string, translation: string) => {
-    setStrings(prev => prev.map(s => 
+    setStrings(prev => prev.map(s =>
       s.id === id ? { ...s, translated: translation } : s
     ));
     setEditingId(null);
@@ -234,6 +255,13 @@ export default function RenpyPatcherPage() {
     const matchesType = filterType === 'all' || s.string_type === filterType;
     return matchesSearch && matchesType;
   });
+
+  const RENPY_STEPS: WizardStep[] = [
+    { num: 1, label: 'Selezione Gioco' },
+    { num: 2, label: 'Traduzioni' },
+    { num: 3, label: 'Esporta' },
+  ];
+  const renpyCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
@@ -267,15 +295,17 @@ export default function RenpyPatcherPage() {
         </div>
       </div>
 
+      <WizardStepper steps={RENPY_STEPS} currentStep={renpyCurrentStep} size="sm" />
+
       {/* Game Selection */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+      <Card variant="muted">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
             <FolderOpen className="w-4 h-4 text-emerald-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               Sfoglia
             </Button>
@@ -307,7 +337,7 @@ export default function RenpyPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-[10px] text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -316,7 +346,7 @@ export default function RenpyPatcherPage() {
 
       {/* Stats & Actions */}
       {stats && (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardContent className="pt-4 px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-6">
@@ -336,7 +366,7 @@ export default function RenpyPatcherPage() {
                 </div>
                 <div className="flex gap-2 text-xs">
                   {Object.entries(stats.by_type).map(([type, count]) => (
-                    <Badge key={type} variant="outline" className="text-[10px]">
+                    <Badge key={type} variant="outline" className="text-2xs">
                       {type}: {count}
                     </Badge>
                   ))}
@@ -347,12 +377,16 @@ export default function RenpyPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   Carica
                 </Button>
-                <Button onClick={saveTranslations} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
+                <Button onClick={saveTranslations} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
+                <Button size="sm" variant="outline" onClick={handleExportPO} disabled={strings.length === 0} className="h-8" aria-label="Esporta file PO">
+                  <Download className="h-4 w-4 mr-1.5" />
+                  PO
+                </Button>
               </div>
             </div>
             <Progress value={stats.percentage} className="h-2 bg-slate-800" />
-            
+
             {/* Generate Translation */}
             <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-800">
               <span className="text-sm text-muted-foreground">{t('renpyPatcherPage.generateTl')}</span>
@@ -377,7 +411,7 @@ export default function RenpyPatcherPage() {
       )}
 
       {/* Editor */}
-      <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex-1">
+      <Card variant="muted" className="flex-1">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -394,7 +428,7 @@ export default function RenpyPatcherPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Cerca testi o personaggi..."
+                  aria-label="Cerca" placeholder="Cerca testi o personaggi..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -428,18 +462,18 @@ export default function RenpyPatcherPage() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Badge className={`${getTypeBadgeColor(entry.string_type)} text-[10px] flex items-center gap-1`}>
+                          <Badge className={`${getTypeBadgeColor(entry.string_type)} text-2xs flex items-center gap-1`}>
                             {getTypeIcon(entry.string_type)}
                             {entry.string_type}
                           </Badge>
                           {entry.character && (
-                            <Badge variant="outline" className="text-[10px] flex items-center gap-1">
+                            <Badge variant="outline" className="text-2xs flex items-center gap-1">
                               <User className="w-2.5 h-2.5" />
                               {entry.character}
                             </Badge>
                           )}
                         </div>
-                        <span className="text-[10px] text-muted-foreground">{entry.file}:{entry.line_number}</span>
+                        <span className="text-2xs text-muted-foreground">{entry.file}:{entry.line_number}</span>
                       </div>
                       
                       <div className="mb-2">

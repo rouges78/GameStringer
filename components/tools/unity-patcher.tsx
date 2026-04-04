@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
+// Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
+// Unity string extraction is wired into this patcher.
 
 interface PatchStatus {
   success: boolean;
@@ -102,6 +104,11 @@ export function UnityPatcher() {
   ];
 
   // Helper functions (definite prima degli useEffect che le usano)
+  const handleExportPO = useCallback(() => {
+    // Unity patcher: export PO from captured translation strings (when available)
+    toast.info('PO export requires extracted translation strings. Use the Unity CSV Translator to extract and export.');
+  }, []);
+
   const getGameName = (g: Game) => g.name || g.title || 'Unknown game';
   
   const guessExeName = (gameName: string): string => {
@@ -524,20 +531,20 @@ export function UnityPatcher() {
       {/* Layout a 2 colonne - flex per riempire */}
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Games List */}
-        <Card className="w-[400px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+        <Card variant="muted" className="w-[400px] shrink-0 flex flex-col">
           <CardHeader className="py-2 px-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-emerald-400" />
                 {t('gamePatcher.games')}
-                <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                <Badge variant="outline" className="ml-1 text-2xs px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                   {unityGames.filter(g => g.engine?.toLowerCase() === 'unity').length} Unity
                 </Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
                   {unityGames.filter(g => g.engine?.toLowerCase().includes('unreal')).length} Unreal
                 </Badge>
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={handleSelectFolder} className="h-6 text-[10px] text-muted-foreground hover:text-white px-2">
+              <Button variant="ghost" size="sm" onClick={handleSelectFolder} className="h-6 text-2xs text-muted-foreground hover:text-white px-2">
                 <FolderOpen className="w-3 h-3 mr-1" />
                 {t('gamePatcher.folder')}
               </Button>
@@ -592,7 +599,7 @@ export function UnityPatcher() {
                       {/* Badge Engine */}
                       <Badge 
                         variant="outline" 
-                        className={`text-[8px] px-1 py-0 shrink-0 ${
+                        className={`text-2xs px-1 py-0 shrink-0 ${
                           isUnity ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' :
                           isUnreal ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' :
                           'bg-slate-500/20 text-slate-400 border-slate-500/40'
@@ -612,12 +619,16 @@ export function UnityPatcher() {
         </Card>
 
         {/* Patch Configuration */}
-        <Card className="flex-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col overflow-hidden">
+        <Card variant="muted" className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Download className="w-4 h-4 text-emerald-400" />
               {selectedGame ? getGameName(selectedGame) : gamePath ? t('gamePatcher.folder') : t('gamePatcher.patchConfiguration')}
             </CardTitle>
+            <Button size="sm" variant="outline" onClick={handleExportPO} className="h-7 text-xs" aria-label="Esporta file PO">
+              <Download className="h-3 w-3 mr-1" />
+              PO
+            </Button>
           </CardHeader>
           <CardContent className="p-2 pt-0 overflow-hidden">
             {(selectedGame || gamePath) ? (
@@ -632,7 +643,7 @@ export function UnityPatcher() {
                       const canPatch = isUnity; // Solo Unity supporta BepInEx
                       
                       return (
-                        <div className={`flex items-center gap-1.5 p-1.5 rounded border text-[10px] ${
+                        <div className={`flex items-center gap-1.5 p-1.5 rounded border text-2xs ${
                           isUnity ? 'bg-emerald-500/5 border-emerald-500/30' :
                           isUnreal ? 'bg-blue-500/5 border-blue-500/30' :
                           'bg-slate-800/30 border-slate-700/50'
@@ -665,7 +676,7 @@ export function UnityPatcher() {
                   <select
                     value={targetLanguage}
                     onChange={(e) => setTargetLanguage(e.target.value)}
-                    className="h-7 px-2 text-[10px] w-24 bg-slate-950/50 border border-slate-800/70 rounded text-slate-200"
+                    className="h-7 px-2 text-2xs w-24 bg-slate-950/50 border border-slate-800/70 rounded text-slate-200"
                   >
                     {supportedLanguages.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.name}</option>
@@ -683,7 +694,7 @@ export function UnityPatcher() {
 
                 {/* Sezione Patch - Collassabile */}
                 <details className="group">
-                  <summary className="flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer hover:text-slate-300">
+                  <summary className="flex items-center gap-1 text-2xs text-slate-400 cursor-pointer hover:text-slate-300">
                     <span>▶</span>
                     <span>{t('gamePatcher.firstTimeInstall')}</span>
                   </summary>
@@ -692,7 +703,7 @@ export function UnityPatcher() {
                       <select
                         value={translationMode}
                         onChange={(e) => setTranslationMode(e.target.value as 'google' | 'deepl' | 'capture')}
-                        className="h-6 px-1 text-[9px] w-28 bg-slate-950/50 border border-slate-800/70 rounded text-slate-200"
+                        className="h-6 px-1 text-micro w-28 bg-slate-950/50 border border-slate-800/70 rounded text-slate-200"
                       >
                         {translationModes.map(mode => (
                           <option key={mode.id} value={mode.id}>{mode.name}</option>
@@ -702,10 +713,10 @@ export function UnityPatcher() {
                         value={exeName} 
                         onChange={(e) => setExeName(e.target.value)} 
                         placeholder="Game.exe"
-                        className="h-6 text-[10px] flex-1 bg-slate-950/50 border-slate-800/70 px-1"
+                        className="h-6 text-2xs flex-1 bg-slate-950/50 border-slate-800/70 px-1"
                       />
                       <Button 
-                        className="h-6 px-2 text-[10px] bg-emerald-600 hover:bg-emerald-500" 
+                        className="h-6 px-2 text-2xs bg-emerald-600 hover:bg-emerald-500" 
                         onClick={handlePatch} 
                         disabled={isPatching || !exeName || !gamePath || (engineCheck && !engineCheck.can_patch)}
                       >
@@ -713,10 +724,10 @@ export function UnityPatcher() {
                       </Button>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] text-slate-500 truncate flex-1">{translationModes.find(m => m.id === translationMode)?.description}</span>
+                      <span className="text-micro text-slate-500 truncate flex-1">{translationModes.find(m => m.id === translationMode)?.description}</span>
                       <Button 
                         variant="ghost"
-                        className="h-5 px-1 text-[9px] text-red-400 hover:text-red-300" 
+                        className="h-5 px-1 text-micro text-red-400 hover:text-red-300" 
                         onClick={handleRemovePatch}
                         disabled={!gamePath}
                       >
@@ -727,27 +738,27 @@ export function UnityPatcher() {
                 </details>
 
                 {status === 'error' && (
-                  <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                  <div className="text-2xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
                     {errorMessage}
                   </div>
                 )}
                 {(status === 'success' || engineCheck?.has_bepinex) && (
-                  <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[10px] flex items-center gap-2">
+                  <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-2xs flex items-center gap-2">
                     <span className="text-emerald-400 shrink-0">✅ {t('gamePatcher.patchOk')}</span>
                     <span className="text-emerald-300/70 truncate flex-1">
                       {engineCheck?.has_bepinex ? t('gamePatcher.alreadyInstalled') : ''}
                     </span>
                     {/* Badge Traduzione */}
                     {translationMode === 'google' || translationMode === 'deepl' ? (
-                      <Badge className="shrink-0 bg-gradient-to-r from-slate-400 to-slate-300 text-slate-900 font-bold px-1.5 py-0 text-[9px] shadow-sm">
+                      <Badge className="shrink-0 bg-gradient-to-r from-slate-400 to-slate-300 text-slate-900 font-bold px-1.5 py-0 text-micro shadow-sm">
                         🥈
                       </Badge>
                     ) : engineCheck?.has_xunity ? (
-                      <Badge className="shrink-0 bg-gradient-to-r from-slate-500 to-slate-400 text-white font-bold px-1.5 py-0 text-[9px]">
+                      <Badge className="shrink-0 bg-gradient-to-r from-slate-500 to-slate-400 text-white font-bold px-1.5 py-0 text-micro">
                         🥈
                       </Badge>
                     ) : (
-                      <Badge className="shrink-0 bg-gradient-to-r from-orange-800 to-orange-700 text-orange-200 font-bold px-1.5 py-0 text-[9px]">
+                      <Badge className="shrink-0 bg-gradient-to-r from-orange-800 to-orange-700 text-orange-200 font-bold px-1.5 py-0 text-micro">
                         🥉
                       </Badge>
                     )}
@@ -757,7 +768,7 @@ export function UnityPatcher() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[100px] text-center">
                 <Download className="w-6 h-6 text-slate-600 mb-1" />
-                <p className="text-[10px] text-slate-400">{t('gamePatcher.selectGame')}</p>
+                <p className="text-2xs text-slate-400">{t('gamePatcher.selectGame')}</p>
               </div>
             )}
           </CardContent>
@@ -765,7 +776,7 @@ export function UnityPatcher() {
       </div>
 
       {/* Istruzioni - inline compatte */}
-      <div className="flex items-center gap-2 text-[10px] text-slate-500 px-2 py-1">
+      <div className="flex items-center gap-2 text-2xs text-slate-500 px-2 py-1">
         <Info className="w-3 h-3 text-blue-400 shrink-0" />
         <span>{t('gamePatcher.afterPatchInfo')}</span>
       </div>

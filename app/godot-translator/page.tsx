@@ -9,10 +9,12 @@ import {
   Settings2, StopCircle, Wand2, Zap, AlertTriangle, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { buildSingleTranslationPrompt, detectGenreFromText, getAllGenres, type GameGenre } from '@/lib/genre-prompts';
 import { suggestImprovement, type PostEditSuggestion } from '@/lib/ai-post-edit';
+import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 
 interface LocaleEntry {
   key: string;
@@ -247,9 +249,43 @@ export default function GodotTranslatorPage() {
     log(`📁 Esportate ${total} traduzioni → ${path}`);
   }, [files, projectName, log]);
 
+  const handleExportPO = useCallback(() => {
+    const allEntries = files.flatMap(f =>
+      f.entries.map(e => ({
+        key: e.key,
+        value: e.english,
+        translated: e.translated,
+        file: f.name,
+      }))
+    );
+    const generic = entriesToGeneric(allEntries, 'godot');
+    const metadata: PoMetadata = {
+      project_name: projectName || 'GameStringer Project',
+      language: targetLang || 'it',
+      source_language: 'en',
+      game_engine: 'godot',
+      generator: 'GameStringer',
+    };
+    const poContent = generatePOString(generic, metadata);
+    const blob = new Blob([poContent], { type: 'text/x-gettext; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${projectName || 'translation'}.po`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [files, projectName, targetLang]);
+
   const totalStrings = files.reduce((s, f) => s + f.entries.length, 0);
   const totalDone = files.reduce((s, f) => s + f.doneCount, 0);
   const pct = prog.tot > 0 ? Math.round((prog.cur / prog.tot) * 100) : 0;
+
+  const GODOT_STEPS: WizardStep[] = [
+    { num: 1, label: 'Seleziona Progetto' },
+    { num: 2, label: 'File Localizzazione' },
+    { num: 3, label: 'Traduci con AI' },
+  ];
+  const godotCurrentStep = files.length > 0 ? 3 : projectPath ? 2 : 1;
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -263,30 +299,31 @@ export default function GodotTranslatorPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Godot Translator</h1>
-              <p className="text-white/70 text-[10px]">Traduci progetti Godot Engine (.csv, .po, .tres, .translation)</p>
+              <p className="text-white/70 text-2xs">Traduci progetti Godot Engine (.csv, .po, .tres, .translation)</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
             {[{ v: files.length, l: 'File' }, { v: totalStrings, l: 'Stringhe' }, { v: totalDone, l: 'Tradotte' }].map((s, i) => (
               <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10">
                 <span className="text-sm font-bold text-white">{s.v}</span>
-                <span className="text-[10px] text-white/70">{s.l}</span>
+                <span className="text-2xs text-white/70">{s.l}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">Altri engine</span>
+          <span className="text-2xs text-white/50 mr-2 self-center">Altri engine</span>
           {[{ h: '/unity-csv-translator', l: 'Unity' }, { h: '/unreal-translator', l: 'Unreal' }, { h: '/rpgmaker-translator', l: 'RPG Maker' }].map(x => (
-            <Link key={x.h} href={x.h}><Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">{x.l}</Button></Link>
+            <Link key={x.h} href={x.h}><Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">{x.l}</Button></Link>
           ))}
         </div>
       </div>
 
+      <WizardStepper steps={GODOT_STEPS} currentStep={godotCurrentStep} size="sm" />
+
       {/* Step 1: Select */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">1</div>
           <h2 className="text-base font-bold text-white">Seleziona progetto Godot</h2>
         </div>
         <div className="flex gap-2 items-center">
@@ -302,10 +339,10 @@ export default function GodotTranslatorPage() {
       {files.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-violet-600 flex items-center justify-center text-white text-sm font-bold">2</div>
             <h2 className="text-base font-bold text-white">File di localizzazione ({files.length})</h2>
             <div className="flex-1" />
             <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={totalDone === 0}><Download className="h-3 w-3" />Esporta</Button>
+            <Button onClick={handleExportPO} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={totalStrings === 0} aria-label="Esporta file PO"><Download className="h-3 w-3" />PO</Button>
           </div>
           <div className="space-y-1.5">
             {files.map((f, fi) => {
@@ -316,9 +353,9 @@ export default function GodotTranslatorPage() {
                     {isExp ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
                     <FileText className="h-3.5 w-3.5 text-violet-400" />
                     <span className="text-sm font-semibold text-white flex-1">{f.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-900/50 text-violet-300">.{f.format}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{f.entries.length} str</span>
-                    {f.doneCount > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">{f.doneCount} ✓</span>}
+                    <span className="text-2xs px-1.5 py-0.5 rounded bg-violet-900/50 text-violet-300">.{f.format}</span>
+                    <span className="text-2xs px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{f.entries.length} str</span>
+                    {f.doneCount > 0 && <span className="text-2xs px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">{f.doneCount} ✓</span>}
                   </button>
                   {isExp && (
                     <div className="px-3 pb-3 max-h-[350px] overflow-y-auto">
@@ -336,7 +373,7 @@ export default function GodotTranslatorPage() {
                           </tr>
                         ))}</tbody>
                       </table>
-                      {f.entries.length > 100 && <p className="text-[10px] text-slate-500 mt-2 text-center">100/{f.entries.length}</p>}
+                      {f.entries.length > 100 && <p className="text-2xs text-slate-500 mt-2 text-center">100/{f.entries.length}</p>}
                     </div>
                   )}
                 </div>
@@ -350,10 +387,9 @@ export default function GodotTranslatorPage() {
       {files.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">3</div>
             <h2 className="text-base font-bold text-white">Traduci con AI</h2>
             <div className="flex-1" />
-            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
+            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="xs" className="gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
           </div>
           {showCfg && (
             <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
@@ -375,7 +411,7 @@ export default function GodotTranslatorPage() {
                   {getAllGenres().map(g => <option key={g.value} value={g.value}>{g.icon} {g.label}</option>)}
                 </select>
               </div>
-              <span className="text-[10px] text-slate-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
+              <span className="text-2xs text-slate-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
             </div>
           )}
           {status === 'translating' && (
@@ -411,7 +447,7 @@ export default function GodotTranslatorPage() {
           <span className="text-xs font-medium text-slate-400">Log ({logs.length})</span>
         </button>
         {showLogs && (
-          <div ref={logRef} className="px-4 pb-3 max-h-[200px] overflow-y-auto font-mono text-[10px] text-slate-500 space-y-0.5">
+          <div ref={logRef} className="px-4 pb-3 max-h-[200px] overflow-y-auto font-mono text-2xs text-slate-500 space-y-0.5">
             {logs.map((l, i) => <div key={i}>{l}</div>)}
           </div>
         )}

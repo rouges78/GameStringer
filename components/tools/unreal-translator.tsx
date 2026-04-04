@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,13 +21,16 @@ import {
   Trash2,
   Shield,
   Cpu,
-  RefreshCw
+  RefreshCw,
+  Download
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
+// Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
+// Unreal string extraction is wired into this translator.
 
 interface Game {
   id: string;
@@ -279,6 +282,11 @@ export function UnrealTranslator() {
 
   const getGameName = (game: Game) => game.title || game.name || game.id;
 
+  const handleExportPO = useCallback(() => {
+    // Unreal translator: export PO from captured translation strings (when available)
+    toast.info('PO export requires extracted translation strings. Use the Unreal string extractor to extract and export.');
+  }, []);
+
   const fuzzyMatch = (text: string, query: string): boolean => {
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
@@ -323,7 +331,7 @@ export function UnrealTranslator() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Gamepad2 className="h-3.5 w-3.5 text-emerald-300" />
               <span className="text-sm font-bold text-white">{filteredGames.length}</span>
-              <span className="text-[10px] text-white/70">{t('ueTranslator.games')}</span>
+              <span className="text-2xs text-white/70">{t('ueTranslator.games')}</span>
             </div>
           </div>
         </div>
@@ -341,13 +349,13 @@ export function UnrealTranslator() {
       {/* Layout a 2 colonne */}
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Games List */}
-        <Card className="w-[400px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+        <Card variant="muted" className="w-[400px] shrink-0 flex flex-col">
           <CardHeader className="py-2 px-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-emerald-400" />
                 {t('ueTranslator.unrealGames')}
-                <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                <Badge variant="outline" className="ml-1 text-2xs px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
                   {filteredGames.length}
                 </Badge>
               </CardTitle>
@@ -393,7 +401,7 @@ export function UnrealTranslator() {
                       </div>
                     )}
                     <span className="truncate flex-1 font-medium text-[11px]">{getGameName(game)}</span>
-                    <Badge variant="outline" className="text-[8px] px-1 py-0 shrink-0 bg-blue-500/20 text-blue-400 border-blue-500/40">
+                    <Badge variant="outline" className="text-2xs px-1 py-0 shrink-0 bg-blue-500/20 text-blue-400 border-blue-500/40">
                       UE
                     </Badge>
                     {selectedGame?.id === game.id && (
@@ -407,7 +415,7 @@ export function UnrealTranslator() {
         </Card>
 
         {/* Configuration Panel */}
-        <Card className="flex-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col overflow-hidden">
+        <Card variant="muted" className="flex-1 flex flex-col overflow-hidden">
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Settings className="w-4 h-4 text-emerald-400" />
@@ -531,14 +539,26 @@ export function UnrealTranslator() {
             </div>
 
             {/* Clear Cache */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="w-full text-muted-foreground"
               onClick={handleClearCache}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               {t('ueTranslator.clearCache')}
+            </Button>
+
+            {/* PO Export */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleExportPO}
+              aria-label="Esporta file PO"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Esporta PO
             </Button>
           </CardContent>
         </Card>
