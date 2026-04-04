@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::process::Command;
+use crate::commands::process_util::no_window_command;
 
 /// Risultato riconoscimento Tesseract
 #[derive(Debug, Clone)]
@@ -41,7 +41,7 @@ impl TesseractEngine {
         }
         
         // Prova nel PATH
-        if let Ok(output) = Command::new("where").arg("tesseract").output() {
+        if let Ok(output) = no_window_command("where").arg("tesseract").output() {
             if output.status.success() {
                 let path_str = String::from_utf8_lossy(&output.stdout);
                 if let Some(first_line) = path_str.lines().next() {
@@ -77,7 +77,7 @@ impl TesseractEngine {
             .map_err(|e| format!("Errore salvataggio immagine temp: {}", e))?;
         
         // Esegui Tesseract
-        let output = Command::new(exe_path)
+        let output = no_window_command(exe_path)
             .arg(&input_path)
             .arg(&output_path)
             .arg("-l")
@@ -118,7 +118,7 @@ impl TesseractEngine {
         let temp_dir = std::env::temp_dir();
         let output_path = temp_dir.join("gamestringer_ocr_output");
         
-        let output = Command::new(exe_path)
+        let output = no_window_command(exe_path)
             .arg(image_path)
             .arg(&output_path)
             .arg("-l")
@@ -158,7 +158,7 @@ impl TesseractEngine {
         };
         
         // Esegui tesseract --list-langs
-        let output = Command::new(exe_path)
+        let output = no_window_command(exe_path)
             .arg("--list-langs")
             .output();
         

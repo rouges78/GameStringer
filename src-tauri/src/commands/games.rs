@@ -1784,12 +1784,12 @@ pub async fn launch_executable(path: String) -> Result<String, String> {
     
     // Usa PowerShell Start-Process - più affidabile su Windows
     let result = tokio::task::spawn_blocking(move || {
-        use std::process::Command;
-        
+        use crate::commands::process_util::no_window_command;
+
         #[cfg(target_os = "windows")]
         {
             // PowerShell Start-Process con working directory
-            let output = Command::new("powershell")
+            let output = no_window_command("powershell")
                 .args([
                     "-NoProfile",
                     "-Command",
@@ -1816,7 +1816,7 @@ pub async fn launch_executable(path: String) -> Result<String, String> {
         
         #[cfg(not(target_os = "windows"))]
         {
-            Command::new("open")
+            no_window_command("open")
                 .arg(&path_clone)
                 .spawn()
                 .map(|_| ())

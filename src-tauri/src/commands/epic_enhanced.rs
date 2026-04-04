@@ -358,10 +358,10 @@ async fn scan_epic_installation_dirs() -> Result<Vec<EpicGameEnhanced>, String> 
 
 /// 🔍 Scansione Epic Games via Legendary CLI
 async fn scan_epic_via_legendary() -> Result<Vec<EpicGameEnhanced>, String> {
-    use std::process::Command;
-    
+    use crate::commands::process_util::no_window_command;
+
     // Verifica se Legendary è disponibile
-    let output = Command::new("legendary")
+    let output = no_window_command("legendary")
         .args(["list", "--json"])
         .output()
         .map_err(|_| "Legendary CLI non disponibile")?;

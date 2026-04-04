@@ -17,6 +17,7 @@ pub mod launcher;
 pub mod steam_workshop;
 
 // === Core features (cross-platform) ===
+pub mod process_util;
 pub mod extensions;
 pub mod mod_profiles;
 pub mod load_order;

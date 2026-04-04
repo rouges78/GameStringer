@@ -12,7 +12,7 @@
 use std::fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use super::process_util::no_window_command;
 use reqwest::Client;
 use zip::ZipArchive;
 use serde::{Deserialize, Serialize};
@@ -200,7 +200,7 @@ fn create_pak_with_repak(
     };
 
     // Esegui: repak.exe pack --version V11 --mount-point ../../../ <tmp_dir> <output.pak>
-    let output = Command::new(repak_exe)
+    let output = no_window_command(repak_exe)
         .args([
             "pack",
             "--version", version_arg,

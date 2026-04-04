@@ -275,11 +275,11 @@ pub async fn launch_with_translator(game_path: String, executable: String) -> Re
     
     #[cfg(target_os = "windows")]
     {
-        use std::process::Command;
-        
+        use crate::commands::process_util::no_window_command;
+
         // Avvia il gioco normalmente per ora
         // L'injection verrà implementata con un injector separato
-        Command::new(&exe_path)
+        no_window_command(&exe_path)
             .current_dir(game_dir)
             .spawn()
             .map_err(|e| format!("Errore avvio gioco: {}", e))?;

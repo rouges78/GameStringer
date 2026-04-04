@@ -1,5 +1,6 @@
 // use tauri::api::shell; // Rimosso - non più disponibile in Tauri v2
 use std::process::Command;
+use super::process_util::no_window_command;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
 use log::{info, warn, error, debug};
@@ -117,7 +118,7 @@ async fn launch_steam_direct(app_id: &str) -> Result<LaunchResult, String> {
     debug!("📁 Percorso Steam trovato: {}", steam_path);
     
     // Esegui steam.exe -applaunch <appid>
-    match Command::new(&steam_path)
+    match no_window_command(&steam_path)
         .args(["-applaunch", app_id])
         .spawn()
     {
@@ -249,7 +250,7 @@ async fn launch_with_epic_protocol(epic_url: &str, app_name: &str) -> Result<Lau
     
     #[cfg(target_os = "windows")]
     {
-        match Command::new("cmd")
+        match no_window_command("cmd")
             .args(["/C", "start", epic_url])
             .spawn()
         {
@@ -271,7 +272,7 @@ async fn launch_with_epic_protocol(epic_url: &str, app_name: &str) -> Result<Lau
     
     #[cfg(not(target_os = "windows"))]
     {
-        match Command::new("xdg-open")
+        match no_window_command("xdg-open")
             .arg(epic_url)
             .spawn()
         {
@@ -301,7 +302,7 @@ async fn launch_epic_direct(app_name: &str) -> Result<LaunchResult, String> {
     debug!("📁 Percorso Epic Games Launcher trovato: {}", epic_path);
     
     // Esegui EpicGamesLauncher.exe -openapp <appname>
-    match Command::new(&epic_path)
+    match no_window_command(&epic_path)
         .args(["-openapp", app_name])
         .spawn()
     {
@@ -408,7 +409,7 @@ async fn launch_with_gog_protocol(gog_url: &str, game_id: &str) -> Result<Launch
     
     #[cfg(target_os = "windows")]
     {
-        match Command::new("cmd")
+        match no_window_command("cmd")
             .args(["/C", "start", gog_url])
             .spawn()
         {
@@ -430,7 +431,7 @@ async fn launch_with_gog_protocol(gog_url: &str, game_id: &str) -> Result<Launch
     
     #[cfg(not(target_os = "windows"))]
     {
-        match Command::new("xdg-open")
+        match no_window_command("xdg-open")
             .arg(gog_url)
             .spawn()
         {
@@ -460,7 +461,7 @@ async fn launch_gog_direct(game_id: &str) -> Result<LaunchResult, String> {
     debug!("📁 Percorso GOG Galaxy trovato: {}", gog_path);
     
     // Esegui GalaxyClient.exe /gameId=<gameid>
-    match Command::new(&gog_path)
+    match no_window_command(&gog_path)
         .args([&format!("/gameId={}", game_id)])
         .spawn()
     {
@@ -528,6 +529,8 @@ pub async fn launch_game_direct(executable_path: String, launch_options: Option<
     }
 
     // Prepara comando
+    // NB: niente no_window_command qui — è un eseguibile di gioco GUI,
+    // il flag è irrilevante e non vogliamo nascondere eventuale output console.
     let mut command = Command::new(&executable_path);
     
     // Aggiungi opzioni di lancio se presenti

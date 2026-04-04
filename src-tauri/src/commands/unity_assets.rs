@@ -1,7 +1,7 @@
 use tauri::command;
 use std::path::{Path, PathBuf};
 use std::fs;
-use std::process::Command;
+use super::process_util::no_window_command;
 use reqwest::Client;
 use std::io::Cursor;
 use zip::ZipArchive;
@@ -183,7 +183,7 @@ pub async fn open_assets_with_uabea(assets_file: String) -> Result<(), String> {
     if !exe.exists() {
         return Err("UABEA non installato. Chiama download_uabea() prima.".to_string());
     }
-    Command::new(&exe).arg(&assets_file).spawn()
+    no_window_command(&exe).arg(&assets_file).spawn()
         .map_err(|e| format!("Errore avvio UABEA: {}", e))?;
     Ok(())
 }
