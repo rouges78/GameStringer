@@ -176,6 +176,7 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: Wand2,
         subItems: [
           { name: 'Unity', href: '/unity-patcher', icon: Wand2 },
+          { name: 'Unity Localization', href: '/unity-localization', icon: Globe },
           { name: 'Unreal Engine', href: '/unreal-translator', icon: Cpu },
           { name: 'Godot', href: '/godot-translator', icon: Globe },
           { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },

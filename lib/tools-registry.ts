@@ -388,6 +388,23 @@ export function getToolsRegistry(): ToolDefinition[] {
       ],
     },
     {
+      id: 'unity-localization',
+      href: '/unity-localization',
+      name: 'Unity Localization',
+      icon: Globe,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Supporto nativo Unity Localization Package',
+        'Parsing StringTable e SharedTableData',
+        'Preservazione Smart Strings ({variabili})',
+        'Lettura catalogo Addressables',
+      ],
+      addedInVersion: '1.6.0',
+      isNew: true,
+    },
+    {
       id: 'bethesda-patcher',
       href: '/bethesda-patcher',
       name: 'Bethesda Patcher',
