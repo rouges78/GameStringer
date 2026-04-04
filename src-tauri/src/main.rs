@@ -112,7 +112,12 @@ fn main() {
 
         .manage(profile_state)
         .manage(settings_state)
-        .manage(commands::translation_bridge::TranslationBridgeState::new())
+        .manage({
+            #[cfg(windows)]
+            { commands::translation_bridge::TranslationBridgeState::new() }
+            #[cfg(not(windows))]
+            { commands::translation_bridge::TranslationBridgeState::new() }
+        })
         .manage(commands::activity_history::ActivityHistoryState::default())
         .manage(notification_state)
         .invoke_handler(tauri::generate_handler![

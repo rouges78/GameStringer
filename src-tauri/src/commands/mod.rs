@@ -39,7 +39,10 @@ pub mod smart_glossary;
 pub mod context_injection;
 pub mod prediction_tool;
 pub mod file_manager;
+#[cfg(windows)]
 pub mod translation_bridge;
+#[cfg(not(windows))]
+pub mod translation_bridge { pub use super::platform_stubs::translation_bridge_stubs::*; }
 pub mod translation_api;
 pub mod activity_history;
 pub mod game_dictionaries;
