@@ -73,6 +73,7 @@ pub mod unity_patcher;
 pub mod unity_bundle;
 pub mod unity_csv;
 pub mod unity_asset_injector;
+pub mod unity_localization;
 pub mod unreal_patcher;
 pub mod unreal_localization;
 pub mod unreal_iostore;

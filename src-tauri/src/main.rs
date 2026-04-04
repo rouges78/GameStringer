@@ -560,6 +560,14 @@ fn main() {
             commands::unity_asset_injector::restore_unity_assets,
             commands::unity_asset_injector::scan_unity_ink_strings,
 
+            // Unity Localization Package (StringTable + Addressables + Smart Strings)
+            commands::unity_localization::parse_addressables_catalog,
+            commands::unity_localization::detect_string_tables_in_folder,
+            commands::unity_localization::extract_string_table,
+            commands::unity_localization::parse_smart_string,
+            commands::unity_localization::validate_smart_string_translation,
+            commands::unity_localization::build_patched_bundle,
+
             // Unity Direct Injection (bypassa BepInEx)
             commands::unity_injector::inject_unity_translator,
             commands::unity_injector::start_unity_translation_server,
