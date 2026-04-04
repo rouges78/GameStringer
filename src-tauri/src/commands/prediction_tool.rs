@@ -4323,7 +4323,9 @@ struct LLMModel {
     quality_score: u32,
     max_context_tokens: u32,
     rate_limit: u32,
+    #[allow(dead_code)]
     special_features: Vec<String>,
+    #[allow(dead_code)]
     best_for: Vec<String>,
 }
 
@@ -5099,7 +5101,7 @@ fn walk_directory(path: &Path, extensions: &[&str]) -> std::io::Result<Vec<PathB
     Ok(files)
 }
 
-fn is_localizable_audio(path: &Path, ext: &str) -> bool {
+fn is_localizable_audio(path: &Path, _ext: &str) -> bool {
     let path_str = path.to_string_lossy().to_lowercase();
     
     // Check file name patterns for dialogue/voice files
@@ -5129,7 +5131,7 @@ fn is_localizable_audio(path: &Path, ext: &str) -> bool {
     false
 }
 
-fn is_music_ambient_audio(path: &Path, ext: &str) -> bool {
+fn is_music_ambient_audio(path: &Path, _ext: &str) -> bool {
     let path_str = path.to_string_lossy().to_lowercase();
     
     let music_patterns = [
@@ -5555,7 +5557,7 @@ fn select_multimedia_audio_tools(db: &[MultimediaTool], stats: &AudioStats, engi
     tools
 }
 
-fn select_multimedia_graphics_tools(db: &[MultimediaTool], stats: &GraphicsStats, engine: &str) -> Vec<SelectedMultimediaTool> {
+fn select_multimedia_graphics_tools(db: &[MultimediaTool], stats: &GraphicsStats, _engine: &str) -> Vec<SelectedMultimediaTool> {
     let mut tools = Vec::new();
     
     // Score tools based on compatibility with detected formats
@@ -5643,7 +5645,7 @@ fn select_engine_specific_tools(db: &[MultimediaTool], engine: &str) -> Vec<Sele
     tools
 }
 
-fn select_compression_tools(db: &[MultimediaTool], audio_stats: &AudioStats, graphics_stats: &GraphicsStats) -> Vec<SelectedMultimediaTool> {
+fn select_compression_tools(db: &[MultimediaTool], audio_stats: &AudioStats, _graphics_stats: &GraphicsStats) -> Vec<SelectedMultimediaTool> {
     let mut tools = Vec::new();
     
     // Select compression tools based on detected compressed formats
@@ -5854,7 +5856,7 @@ fn analyze_backup_strategy(game_path: &Path, engine: &str, multimedia_analysis: 
     }
 }
 
-fn determine_optimal_backup_type(engine: &str, multimedia_analysis: &MultimediaAnalysis) -> BackupType {
+fn determine_optimal_backup_type(_engine: &str, multimedia_analysis: &MultimediaAnalysis) -> BackupType {
     // Decision logic for backup type
     let total_multimedia_files = multimedia_analysis.audio_stats.total_audio_files + multimedia_analysis.graphics_stats.total_graphics_files;
     let has_complex_multimedia = multimedia_analysis.multimedia_complexity_score > 50;
@@ -6892,12 +6894,11 @@ async fn execute_workflow_from_prediction(
 
         let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
         let mut translated_count = 0u64;
-        let mut failed_count = 0u64;
         let mut ollama_failed = false;
         let batch_size = 10;
 
         for batch_indices in (0..gm_str_vec.len().min(500)).collect::<Vec<_>>().chunks(batch_size) {
-            let gm_pct = if gm_str_vec.is_empty() { 0 } else { (translated_count as u32 * 100 / gm_str_vec.len().min(500) as u32) };
+            let gm_pct = if gm_str_vec.is_empty() { 0 } else { translated_count as u32 * 100 / gm_str_vec.len().min(500) as u32 };
             emit_progress!("gm_translate_batch", 6, format!("🤖 GameMaker: {}/{} stringhe ({}%)...", translated_count, gm_str_vec.len().min(500), gm_pct), 50 + gm_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| gm_str_vec[i].original.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
@@ -6934,7 +6935,7 @@ async fn execute_workflow_from_prediction(
                 if let Some(ref t) = results[j] {
                     translations.insert(gm_str_vec[idx].index, t.clone());
                     translated_count += 1;
-                } else { failed_count += 1; }
+                }
             }
         }
         t_outputs.push(format!("✅ Tradotte: {}/{}", translated_count, gm_str_vec.len()));
@@ -7051,7 +7052,7 @@ async fn execute_workflow_from_prediction(
         let max_strings = rpg_strings.len().min(500);
 
         for batch_indices in (0..max_strings).collect::<Vec<_>>().chunks(10) {
-            let rpg_pct = if max_strings == 0 { 0 } else { (translated_count as u32 * 100 / max_strings as u32) };
+            let rpg_pct = if max_strings == 0 { 0 } else { translated_count as u32 * 100 / max_strings as u32 };
             emit_progress!("rpg_translate_batch", 6, format!("🤖 RPG Maker: {}/{} stringhe ({}%)...", translated_count, max_strings, rpg_pct), 50 + rpg_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| rpg_strings[i].original.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
@@ -7208,7 +7209,7 @@ async fn execute_workflow_from_prediction(
         let mut ollama_failed = false;
 
         for batch_indices in (0..vis_strings.len().min(500)).collect::<Vec<_>>().chunks(10) {
-            let vis_pct = if vis_strings.is_empty() { 0 } else { (translated_count as u32 * 100 / vis_strings.len().min(500) as u32) };
+            let vis_pct = if vis_strings.is_empty() { 0 } else { translated_count as u32 * 100 / vis_strings.len().min(500) as u32 };
             emit_progress!("vis_translate_batch", 6, format!("🤖 Visionaire: {}/{} stringhe ({}%)...", translated_count, vis_strings.len().min(500), vis_pct), 50 + vis_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| vis_strings[i].text.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
@@ -7337,7 +7338,7 @@ async fn execute_workflow_from_prediction(
 
             let max_entries = entries.len().min(500);
             for batch_indices in (0..max_entries).collect::<Vec<_>>().chunks(10) {
-                let ue_pct = if max_entries == 0 { 0 } else { (translated_count as u32 * 100 / max_entries as u32) };
+                let ue_pct = if max_entries == 0 { 0 } else { translated_count as u32 * 100 / max_entries as u32 };
                 emit_progress!("ue_translate_batch", 6, format!("🤖 Unreal: {}/{} stringhe ({}%)...", translated_count, max_entries, ue_pct), 50 + ue_pct * 35 / 100);
                 let originals: Vec<&str> = batch_indices.iter().map(|&i| entries[i].value.as_str()).collect();
                 let mut results: Vec<Option<String>> = vec![None; originals.len()];
@@ -7617,7 +7618,7 @@ async fn execute_workflow_from_prediction(
     // ══════════════════════════════════════════════════════════════════════════
     let stage_start = std::time::Instant::now();
     let mut stage5_outputs = Vec::new();
-    let mut stage5_errors = Vec::new();
+    let stage5_errors = Vec::new();
     let mut translated_count = 0u64;
     let mut failed_count = 0u64;
     let mut translated_files: Vec<PathBuf> = Vec::new();
@@ -7883,7 +7884,7 @@ async fn execute_workflow_from_prediction(
     
     if translated_count > 0 {
         // For text-based files, we can do direct injection by replacing original content
-        for (file_path, strings) in extracted_strings.iter().take(50) {
+        for (file_path, _strings) in extracted_strings.iter().take(50) {
             match std::fs::read_to_string(file_path) {
                 Ok(mut content) => {
                     let mut modified = false;
@@ -8179,11 +8180,11 @@ pub async fn execute_complete_workflow(
 // ── Workflow Orchestrator Engine ─────────────────────────────────────────────
 
 fn create_workflow_plan(
-    game_path: &Path,
+    _game_path: &Path,
     engine: &str,
     multimedia_analysis: &MultimediaAnalysis,
     selected_tools: &SelectedTools,
-    llm_chains: &[OptimizedChain],
+    _llm_chains: &[OptimizedChain],
 ) -> WorkflowPlan {
     // Determine optimal approach
     let recommended_approach = determine_workflow_approach(engine, multimedia_analysis, selected_tools);
@@ -8458,7 +8459,7 @@ fn create_workflow_stages(
     stages
 }
 
-fn analyze_workflow_dependencies(engine: &str, selected_tools: &SelectedTools) -> Vec<WorkflowDependency> {
+fn analyze_workflow_dependencies(engine: &str, _selected_tools: &SelectedTools) -> Vec<WorkflowDependency> {
     let mut dependencies = Vec::new();
     
     // Tool installation dependencies
@@ -8502,8 +8503,8 @@ fn analyze_workflow_dependencies(engine: &str, selected_tools: &SelectedTools) -
 
 fn assess_workflow_risks(
     engine: &str,
-    multimedia_analysis: &MultimediaAnalysis,
-    selected_tools: &SelectedTools,
+    _multimedia_analysis: &MultimediaAnalysis,
+    _selected_tools: &SelectedTools,
 ) -> Vec<RiskFactor> {
     let mut risks = Vec::new();
     
@@ -8609,7 +8610,7 @@ fn create_quality_assurance_plan(engine: &str, workflow_stages: &[WorkflowStage]
     }
 }
 
-fn create_testing_phases(workflow_stages: &[WorkflowStage]) -> Vec<TestingPhase> {
+fn create_testing_phases(_workflow_stages: &[WorkflowStage]) -> Vec<TestingPhase> {
     vec![
         TestingPhase {
             phase_name: "Unit Testing".to_string(),
@@ -8809,7 +8810,7 @@ fn create_quality_metrics() -> Vec<QualityMetric> {
     ]
 }
 
-fn define_deliverables(workflow_stages: &[WorkflowStage], engine: &str) -> Vec<Deliverable> {
+fn define_deliverables(_workflow_stages: &[WorkflowStage], engine: &str) -> Vec<Deliverable> {
     vec![
         Deliverable {
             deliverable_id: "DEL-001".to_string(),
