@@ -49,30 +49,28 @@ impl LanguageDictionary {
     /// Aggiunge una traduzione. Sovrascrive se la chiave esiste già (nessun count drift).
     /// Ritorna false se il dizionario ha raggiunto il limite massimo.
     pub fn add(&mut self, original: String, translated: String) -> bool {
+        use std::collections::hash_map::Entry;
         let hash = TranslationRequest::compute_hash(&original);
+        let at_capacity = self.entries.len() >= MAX_DICTIONARY_ENTRIES;
 
-        // Se la chiave esiste già, aggiorna senza incrementare
-        if self.entries.contains_key(&hash) {
-            if let Some(entry) = self.entries.get_mut(&hash) {
+        match self.entries.entry(hash) {
+            Entry::Occupied(mut e) => {
+                let entry = e.get_mut();
                 entry.original = original;
                 entry.translated = translated;
+                true
             }
-            return true;
+            Entry::Vacant(e) => {
+                if at_capacity { return false; }
+                e.insert(TranslationEntry {
+                    original,
+                    translated,
+                    context: None,
+                    verified: false,
+                });
+                true
+            }
         }
-
-        // Controlla limite dimensione
-        if self.entries.len() >= MAX_DICTIONARY_ENTRIES {
-            return false;
-        }
-
-        let entry = TranslationEntry {
-            original,
-            translated,
-            context: None,
-            verified: false,
-        };
-        self.entries.insert(hash, entry);
-        true
     }
 
     /// Cerca traduzione per hash (O(1), verifica collisioni)
@@ -80,9 +78,9 @@ impl LanguageDictionary {
         self.entries.get(&hash).filter(|e| e.original == original_text)
     }
 
-    /// Cerca traduzione per testo (scansione lineare, fallback lento)
-    pub fn get_by_text(&self, text: &str) -> Option<&TranslationEntry> {
-        self.entries.values().find(|e| e.original == text)
+    /// Controlla se un hash esiste (per diagnostica collisioni)
+    pub fn has_hash(&self, hash: u64) -> bool {
+        self.entries.contains_key(&hash)
     }
 
     /// Numero di traduzioni
@@ -276,13 +274,12 @@ impl DictionaryEngine {
         let key = Self::get_key(&self.active_source, &self.active_target);
 
         if let Some(dict) = self.dictionaries.get(&key) {
-            // Hash lookup O(1) con verifica collisione
             if let Some(entry) = dict.get_by_hash(hash, original_text) {
                 return Some(entry.translated.clone());
             }
-            // Fallback lineare (per collisioni hash)
-            if let Some(entry) = dict.get_by_text(original_text) {
-                return Some(entry.translated.clone());
+            // Hash presente ma original diverso = collisione FNV-1a (estremamente rara)
+            if dict.has_hash(hash) {
+                info!("[DictionaryEngine] Collisione hash FNV-1a per '{}' (hash={})", original_text, hash);
             }
         }
 
@@ -297,9 +294,6 @@ impl DictionaryEngine {
 
         if let Some(dict) = self.dictionaries.get(&key) {
             if let Some(entry) = dict.get_by_hash(hash, original_text) {
-                return Some(entry.translated.clone());
-            }
-            if let Some(entry) = dict.get_by_text(original_text) {
                 return Some(entry.translated.clone());
             }
         }
@@ -321,13 +315,7 @@ impl DictionaryEngine {
         if let Some(dict) = self.dictionaries.get(&key) {
             texts.iter().map(|text| {
                 let hash = TranslationRequest::compute_hash(text);
-                if let Some(entry) = dict.get_by_hash(hash, text) {
-                    Some(entry.translated.clone())
-                } else if let Some(entry) = dict.get_by_text(text) {
-                    Some(entry.translated.clone())
-                } else {
-                    None
-                }
+                dict.get_by_hash(hash, text).map(|e| e.translated.clone())
             }).collect()
         } else {
             vec![None; texts.len()]

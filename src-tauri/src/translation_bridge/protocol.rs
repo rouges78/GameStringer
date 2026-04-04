@@ -11,6 +11,10 @@
 //! Il plugin C# scrive le stringhe originali nell'area Request Data e imposta lo
 //! slot a PendingRequest. Il server Rust legge, cerca nel dizionario, scrive la
 //! traduzione nell'area Response Data e imposta PendingResponse.
+//!
+//! L'area Response Data è un circular buffer: `response_data_head` (scritto da Rust)
+//! e `response_data_tail` (scritto da C# dopo aver letto) delimitano lo spazio occupato.
+//! Rust rifiuta di scrivere se non c'è spazio sufficiente (slot → Error).
 
 use serde::{Deserialize, Serialize};
 
@@ -111,8 +115,14 @@ pub struct SharedMemoryHeader {
     pub cache_misses: u64,
     /// Write head nell'area richieste (offset relativo a REQUEST_DATA_OFFSET)
     pub request_data_head: u32,
-    /// Write head nell'area risposte (offset relativo a RESPONSE_DATA_OFFSET)
+    /// Write head nell'area risposte (offset relativo a RESPONSE_DATA_OFFSET).
+    /// Avanzato da Rust dopo ogni scrittura di traduzione.
     pub response_data_head: u32,
+    /// Read tail nell'area risposte (offset relativo a RESPONSE_DATA_OFFSET).
+    /// Avanzato dal C# dopo aver letto una traduzione.
+    /// Rust non scrive mai nell'intervallo [tail..head) per evitare di sovrascrivere
+    /// risposte non ancora lette.
+    pub response_data_tail: u32,
 }
 
 impl SharedMemoryHeader {
@@ -130,6 +140,7 @@ impl SharedMemoryHeader {
             cache_misses: 0,
             request_data_head: 0,
             response_data_head: 0,
+            response_data_tail: 0,
         }
     }
 

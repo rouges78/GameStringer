@@ -23,6 +23,32 @@ use tracing::{debug, info, warn};
 use super::dictionary_engine::DictionaryEngine;
 use super::protocol::*;
 
+/// Wrapper thread-safe per `Shmem`.
+///
+/// `Shmem` non implementa `Send`/`Sync` perché contiene un raw pointer.
+/// Questo wrapper è sicuro perché:
+/// - Il puntatore è valido per tutta la vita dell'`Arc<SharedShmem>`
+/// - Tutti gli accessi usano `volatile` read/write (necessario per cross-process)
+/// - La `Shmem` viene rilasciata solo quando l'ultimo `Arc` viene droppato,
+///   quindi il server thread non può mai usare un puntatore dangling
+struct SharedShmem(Shmem);
+
+// SAFETY: Shmem è un mapping di memoria del sistema operativo. Il puntatore
+// interno è valido finché l'oggetto Shmem esiste. Tutti gli accessi alla
+// shared memory usano ptr::read_volatile / ptr::write_volatile.
+unsafe impl Send for SharedShmem {}
+unsafe impl Sync for SharedShmem {}
+
+impl SharedShmem {
+    fn as_ptr(&self) -> *mut u8 {
+        self.0.as_ptr()
+    }
+
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
 /// Statistiche del bridge — esposte al frontend via Tauri commands
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct BridgeStats {
@@ -72,8 +98,10 @@ struct InternalStats {
 pub struct TranslationBridge {
     /// Dictionary engine per le traduzioni (thread-safe, condiviso con server thread)
     dictionary: Arc<RwLock<DictionaryEngine>>,
-    /// Shared memory region (mantiene il mapping vivo)
-    shmem: Option<Shmem>,
+    /// Shared memory region — condivisa con il server thread via Arc.
+    /// Il server thread mantiene un clone dell'Arc, garantendo che la Shmem
+    /// resti viva anche se TranslationBridge viene droppato durante un panic.
+    shmem: Option<Arc<SharedShmem>>,
     /// Server thread che processa le richieste IPC
     server_thread: Option<JoinHandle<()>>,
     /// Flag atomico per controllare il server thread
@@ -90,13 +118,6 @@ pub struct TranslationBridge {
     miss_sender: mpsc::Sender<String>,
     miss_receiver: Arc<parking_lot::Mutex<mpsc::Receiver<String>>>,
 }
-
-// SAFETY: TranslationBridge contiene una Shmem il cui puntatore raw viene passato
-// al server thread come usize. La Shmem resta viva (owned da TranslationBridge)
-// per tutta la durata del server thread. Il puntatore non viene mai usato dopo
-// che stop() rilascia la Shmem.
-unsafe impl Send for TranslationBridge {}
-unsafe impl Sync for TranslationBridge {}
 
 impl TranslationBridge {
     /// Crea un nuovo Translation Bridge con il nome shared memory di default
@@ -132,20 +153,19 @@ impl TranslationBridge {
         }
 
         // 1. Crea o apri la shared memory
-        let shmem = self.create_shared_memory()?;
-        let shmem_ptr = shmem.as_ptr() as usize;
+        let shmem = Arc::new(SharedShmem(self.create_shared_memory()?));
         let shmem_len = shmem.len();
 
         // 2. Inizializza header e slot
         Self::initialize_shared_memory(shmem.as_ptr(), shmem_len)?;
 
         // 3. Salva riferimenti
-        self.shmem = Some(shmem);
+        self.shmem = Some(Arc::clone(&shmem));
         self.shmem_size = shmem_len;
         self.running.store(true, Ordering::SeqCst);
         self.start_time = Some(Instant::now());
 
-        // 4. Avvia server thread
+        // 4. Avvia server thread (co-owner della shmem via Arc)
         let dictionary = Arc::clone(&self.dictionary);
         let running = Arc::clone(&self.running);
         let stats = Arc::clone(&self.stats);
@@ -154,7 +174,7 @@ impl TranslationBridge {
             .name("translation-bridge-ipc".to_string())
             .spawn(move || {
                 info!("[TranslationBridge] Server IPC thread avviato");
-                Self::server_loop(shmem_ptr, dictionary, running, stats);
+                Self::server_loop(&shmem, dictionary, running, stats);
                 info!("[TranslationBridge] Server IPC thread terminato");
             })
             .map_err(|e| format!("Errore avvio server thread: {}", e))?;
@@ -186,14 +206,18 @@ impl TranslationBridge {
             }
         }
 
-        // Attendi che il thread termini (timeout implicito: il thread esce dal loop)
+        // Attendi che il thread termini (timeout implicito: il thread esce dal loop).
+        // Il thread detiene un Arc<SharedShmem>, quindi la shmem resta viva finché
+        // il thread non termina — nessun rischio di dangling pointer.
         if let Some(thread) = self.server_thread.take() {
             if let Err(e) = thread.join() {
                 warn!("[TranslationBridge] Server thread join error: {:?}", e);
             }
         }
 
-        // Rilascia shared memory (chiude il mapping Windows)
+        // Rilascia il nostro Arc — se il thread è già terminato, questo è l'ultimo
+        // riferimento e la Shmem viene chiusa. Se il thread è ancora vivo (join fallito),
+        // la Shmem resta viva finché il thread non termina.
         self.shmem = None;
         self.shmem_size = 0;
         self.start_time = None;
@@ -280,6 +304,11 @@ impl TranslationBridge {
     /// Ottieni accesso al dictionary engine (per Tauri commands)
     pub fn dictionary(&self) -> &Arc<RwLock<DictionaryEngine>> {
         &self.dictionary
+    }
+
+    /// Ottieni accesso al receiver dei cache miss (per Tauri commands, evita double-locking)
+    pub fn miss_receiver(&self) -> &Arc<parking_lot::Mutex<mpsc::Receiver<String>>> {
+        &self.miss_receiver
     }
 
     /// Drena la coda di cache miss (testi non tradotti).
@@ -375,12 +404,12 @@ impl TranslationBridge {
     /// - Carico medio: thread yield
     /// - Idle: sleep 50µs (CPU ~0%)
     fn server_loop(
-        shmem_ptr: usize,
+        shmem: &Arc<SharedShmem>,
         dictionary: Arc<RwLock<DictionaryEngine>>,
         running: Arc<AtomicBool>,
         stats: Arc<RwLock<InternalStats>>,
     ) {
-        let base_ptr = shmem_ptr as *mut u8;
+        let base_ptr = shmem.as_ptr();
         let mut idle_count: u32 = 0;
         let start_time = Instant::now();
 
@@ -517,54 +546,77 @@ impl TranslationBridge {
                             );
                             local_errors += 1;
                         } else {
-                            // Alloca spazio nell'area risposte con wrap-around
+                            // Circular buffer: calcola spazio disponibile
+                            // head = dove Rust scrive, tail = dove C# ha consumato
                             let resp_head =
                                 std::ptr::read_volatile(&(*header).response_data_head) as usize;
+                            let resp_tail =
+                                std::ptr::read_volatile(&(*header).response_data_tail) as usize;
 
-                            let write_offset = if resp_head + translated_len <= RESPONSE_DATA_SIZE {
-                                resp_head
+                            let free_space = if resp_head >= resp_tail {
+                                // [tail ... head ... END] — spazio = (END - head) + tail
+                                (RESPONSE_DATA_SIZE - resp_head) + resp_tail
                             } else {
-                                0 // Wrap around all'inizio del buffer
+                                // [head ... tail ... END] — spazio = tail - head
+                                resp_tail - resp_head
                             };
 
-                            // Copia la traduzione nell'area risposte
-                            std::ptr::copy_nonoverlapping(
-                                translated_bytes.as_ptr(),
-                                response_data.add(write_offset),
-                                translated_len,
-                            );
+                            // Serve almeno translated_len + 1 byte liberi (il +1 evita
+                            // che head == tail venga interpretato come "vuoto" quando
+                            // in realtà il buffer è pieno)
+                            if free_space <= translated_len {
+                                // Buffer risposte pieno — C# non ha ancora consumato.
+                                // Marca come errore; il C# riproverà al prossimo ciclo.
+                                warn!(
+                                    "[TranslationBridge] Response buffer pieno (free={}, need={}), slot in errore",
+                                    free_space, translated_len
+                                );
+                                std::ptr::write_volatile(
+                                    &mut (*slot).state,
+                                    SlotState::Error as u8,
+                                );
+                                local_errors += 1;
+                            } else {
+                                // Scegli offset: scrivi a head se c'è spazio contiguo,
+                                // altrimenti wrappa a 0 (spazio già verificato sopra)
+                                let write_offset = if resp_head + translated_len <= RESPONSE_DATA_SIZE {
+                                    resp_head
+                                } else {
+                                    0
+                                };
 
-                            // Aggiorna metadata dello slot
-                            (*slot).translated_offset = write_offset as u32;
-                            (*slot).translated_len = translated_len as u32;
+                                // Copia la traduzione nell'area risposte
+                                std::ptr::copy_nonoverlapping(
+                                    translated_bytes.as_ptr(),
+                                    response_data.add(write_offset),
+                                    translated_len,
+                                );
 
-                            // Aggiorna write head
-                            let new_head = (write_offset + translated_len) % RESPONSE_DATA_SIZE;
-                            std::ptr::write_volatile(
-                                &mut (*header).response_data_head,
-                                new_head as u32,
-                            );
+                                // Aggiorna metadata dello slot
+                                (*slot).translated_offset = write_offset as u32;
+                                (*slot).translated_len = translated_len as u32;
 
-                            // Aggiorna stats nella shared memory (visibili al C#)
-                            let hits = std::ptr::read_volatile(&(*header).cache_hits);
-                            std::ptr::write_volatile(&mut (*header).cache_hits, hits + 1);
+                                // Aggiorna write head
+                                let new_head = (write_offset + translated_len) % RESPONSE_DATA_SIZE;
+                                std::ptr::write_volatile(
+                                    &mut (*header).response_data_head,
+                                    new_head as u32,
+                                );
 
-                            // Marca come completato
-                            std::ptr::write_volatile(
-                                &mut (*slot).state,
-                                SlotState::PendingResponse as u8,
-                            );
+                                // Marca come completato
+                                std::ptr::write_volatile(
+                                    &mut (*slot).state,
+                                    SlotState::PendingResponse as u8,
+                                );
 
-                            local_hits += 1;
+                                local_hits += 1;
+                            }
                         }
                     }
                     None => {
                         // Traduzione non trovata — slot marcato come PendingResponse con len=0
                         (*slot).translated_len = 0;
                         (*slot).translated_offset = 0;
-
-                        let misses = std::ptr::read_volatile(&(*header).cache_misses);
-                        std::ptr::write_volatile(&mut (*header).cache_misses, misses + 1);
 
                         std::ptr::write_volatile(
                             &mut (*slot).state,
@@ -575,10 +627,6 @@ impl TranslationBridge {
                     }
                 }
 
-                // Aggiorna contatore richieste nella shared memory
-                let total = std::ptr::read_volatile(&(*header).total_requests);
-                std::ptr::write_volatile(&mut (*header).total_requests, total + 1);
-
                 response_times.push(request_start.elapsed().as_micros() as f64);
                 processed += 1;
             }
@@ -586,9 +634,18 @@ impl TranslationBridge {
             current_idx = current_idx.wrapping_add(1);
         }
 
-        // Aggiorna read_index nella shared memory
+        // Aggiorna read_index e stats nella shared memory (batch, una sola volta)
         if processed > 0 {
             std::ptr::write_volatile(&mut (*header).read_index, current_idx);
+
+            // Batch update delle stats nella shared memory (visibili al C#).
+            // Singola scrittura per campo — su x86 le write allineate u64 sono atomiche.
+            let total = std::ptr::read_volatile(&(*header).total_requests);
+            std::ptr::write_volatile(&mut (*header).total_requests, total + (local_hits + local_misses + local_errors));
+            let hits = std::ptr::read_volatile(&(*header).cache_hits);
+            std::ptr::write_volatile(&mut (*header).cache_hits, hits + local_hits);
+            let misses = std::ptr::read_volatile(&(*header).cache_misses);
+            std::ptr::write_volatile(&mut (*header).cache_misses, misses + local_misses);
 
             // Batch update delle stats Rust (singola acquisizione del lock)
             let mut s = stats.write();
@@ -705,9 +762,9 @@ mod tests {
         bridge.start().unwrap();
 
         // Verifica che la shared memory sia stata inizializzata correttamente
-        if let Some(ref shmem) = bridge.shmem {
+        if let Some(ref shmem_arc) = bridge.shmem {
             unsafe {
-                let header = shmem.as_ptr() as *const SharedMemoryHeader;
+                let header = shmem_arc.as_ptr() as *const SharedMemoryHeader;
                 assert_eq!((*header).magic, MAGIC_NUMBER);
                 assert_eq!((*header).version, PROTOCOL_VERSION);
                 assert_eq!((*header).server_active, 1);
@@ -876,6 +933,96 @@ mod tests {
 
         let stats = bridge.get_stats();
         assert_eq!(stats.cache_misses, 1);
+
+        bridge.stop();
+    }
+
+    #[test]
+    fn test_response_buffer_full_returns_error() {
+        let name = unique_shmem_name();
+        let mut bridge = TranslationBridge::with_name(&name);
+
+        // Traduzione da 60KB (dentro MAX_STRING_SIZE=64KB) per riempire il buffer velocemente
+        let big_translation = "A".repeat(60_000);
+        bridge.load_dictionary(
+            "en", "it",
+            vec![
+                ("fill".to_string(), big_translation),
+                ("extra".to_string(), "Qualcosa".to_string()),
+            ],
+        );
+
+        bridge.start().unwrap();
+
+        let shmem_ptr = bridge.shmem.as_ref().unwrap().as_ptr();
+
+        // Helper: invia una richiesta nello slot `slot_idx` e attendi la risposta
+        let submit_and_wait = |slot_idx: usize, text: &str, write_idx: u32| -> SlotState {
+            let text_bytes = text.as_bytes();
+            let data_offset = slot_idx * 64; // spazio separato per ogni richiesta
+            unsafe {
+                let header = shmem_ptr as *mut SharedMemoryHeader;
+                let slots_base = shmem_ptr.add(SLOTS_OFFSET) as *mut TranslationSlot;
+                let request_data = shmem_ptr.add(REQUEST_DATA_OFFSET);
+
+                std::ptr::copy_nonoverlapping(
+                    text_bytes.as_ptr(),
+                    request_data.add(data_offset),
+                    text_bytes.len(),
+                );
+
+                let slot = slots_base.add(slot_idx);
+                (*slot).original_offset = data_offset as u32;
+                (*slot).original_len = text_bytes.len() as u32;
+                (*slot).original_hash = TranslationRequest::compute_hash(text);
+                (*slot).translated_offset = 0;
+                (*slot).translated_len = 0;
+                std::ptr::write_volatile(&mut (*slot).state, SlotState::PendingRequest as u8);
+                std::ptr::write_volatile(&mut (*header).write_index, write_idx);
+            }
+
+            let deadline = Instant::now() + Duration::from_secs(2);
+            loop {
+                let state = unsafe {
+                    let slot = shmem_ptr.add(SLOTS_OFFSET) as *const TranslationSlot;
+                    SlotState::from(std::ptr::read_volatile(&(*slot.add(slot_idx)).state))
+                };
+                if state == SlotState::PendingResponse || state == SlotState::Error {
+                    return state;
+                }
+                if Instant::now() > deadline { panic!("Timeout slot {}", slot_idx); }
+                thread::sleep(Duration::from_millis(1));
+            }
+        };
+
+        // 1. Riempi il buffer con 60KB di traduzione (tail resta 0, non consumiamo)
+        let state0 = submit_and_wait(0, "fill", 1);
+        assert_eq!(state0, SlotState::PendingResponse, "Primo slot deve avere successo");
+
+        // Verifica che head sia avanzato di ~60K
+        let head_after = unsafe {
+            let header = shmem_ptr as *const SharedMemoryHeader;
+            (*header).response_data_head
+        };
+        assert!(head_after >= 59_000, "Head deve essere avanzato: {}", head_after);
+
+        // 2-N. Continua a inviare "fill" finché il buffer non è pieno.
+        // Con RESPONSE_DATA_SIZE = 2MB e 60KB per richiesta, servono ~34 richieste.
+        // Il tail resta 0 (non simuliamo il C# che consuma) quindi a un certo punto
+        // lo spazio finisce e il server deve restituire Error.
+        let mut got_error = false;
+        for i in 1..50 {
+            let state = submit_and_wait(i % MAX_SLOTS, "fill", (i + 1) as u32);
+            if state == SlotState::Error {
+                got_error = true;
+                break;
+            }
+        }
+
+        assert!(got_error, "Il server deve restituire Error quando il buffer risposte è pieno");
+
+        let stats = bridge.get_stats();
+        assert!(stats.errors > 0, "Deve avere almeno un errore");
 
         bridge.stop();
     }

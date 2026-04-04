@@ -13,20 +13,24 @@ use crate::translation_bridge::shared_memory_ipc::BridgeStats;
 use crate::translation_bridge::dictionary_engine::{DictionaryEngine, DictionaryStats};
 
 /// Stato globale del Translation Bridge.
-/// `dictionary` è esposto direttamente per evitare double-locking:
-/// le operazioni sul dizionario usano `RwLock` senza passare dal `Mutex<TranslationBridge>`.
+/// `dictionary` e `miss_receiver` sono esposti direttamente per evitare double-locking:
+/// le operazioni sul dizionario usano `RwLock` e il drain dei miss usa il proprio Mutex,
+/// entrambi senza passare dal `Mutex<TranslationBridge>`.
 pub struct TranslationBridgeState {
     pub bridge: Arc<Mutex<TranslationBridge>>,
     pub dictionary: Arc<RwLock<DictionaryEngine>>,
+    pub miss_receiver: Arc<parking_lot::Mutex<std::sync::mpsc::Receiver<String>>>,
 }
 
 impl TranslationBridgeState {
     pub fn new() -> Self {
         let bridge = TranslationBridge::new();
         let dictionary = Arc::clone(bridge.dictionary());
+        let miss_receiver = Arc::clone(bridge.miss_receiver());
         Self {
             bridge: Arc::new(Mutex::new(bridge)),
             dictionary,
+            miss_receiver,
         }
     }
 }
@@ -218,12 +222,25 @@ pub async fn translation_bridge_clear(
 /// Drena i cache miss (testi non tradotti) per AI fallback.
 /// Il frontend può usare questi testi per chiamare l'API di traduzione e
 /// poi reinserirli nel dizionario con `translation_bridge_add_translation`.
+/// Usa il receiver diretto (non passa dal Mutex<TranslationBridge>).
 #[tauri::command]
 pub async fn translation_bridge_drain_misses(
     state: State<'_, TranslationBridgeState>,
     max: Option<usize>,
 ) -> Result<BridgeResponse<Vec<String>>, String> {
-    let bridge = state.bridge.lock();
-    let misses = bridge.drain_misses(max.unwrap_or(100));
-    Ok(BridgeResponse::ok(misses))
+    let max = max.unwrap_or(100);
+    let receiver = state.miss_receiver.lock();
+    let mut texts = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    while texts.len() < max {
+        match receiver.try_recv() {
+            Ok(text) => {
+                if seen.insert(text.clone()) {
+                    texts.push(text);
+                }
+            }
+            Err(_) => break,
+        }
+    }
+    Ok(BridgeResponse::ok(texts))
 }

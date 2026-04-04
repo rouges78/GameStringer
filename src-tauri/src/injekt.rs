@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -19,7 +18,6 @@ use parking_lot::RwLock;
 use crate::anti_cheat::AntiCheatManager;
 use crate::process_utils::is_process_running;
 use crate::translation_bridge::dictionary_engine::DictionaryEngine;
-use crate::translation_bridge::protocol::TranslationRequest;
 
 /// Wrapper thread-safe per HANDLE di Windows
 #[derive(Debug)]
@@ -288,54 +286,34 @@ impl InjektTranslator {
     fn apply_hooks(&mut self) -> Result<(), Box<dyn Error>> {
         let start_time = Instant::now();
         let mut hooks = self.hooks.lock().unwrap_or_else(|e| e.into_inner());
-        
-        // Calcola numero di hook necessari per la modalità
-        let hook_count = match self.config.hook_mode.as_str() {
-            "minimal" => 1,
-            "safe" => 2,
-            "aggressive" => 4,
-            _ => return Err("Modalità hook non valida".into()),
-        };
-        
-        // Ottimizzazione hook disabilitata per cleanup warning
-        let optimized_hooks = vec![0; hook_count as usize]; // Placeholder array
-        
-        log::info!("⚡ Hook ottimizzati: {} hook preparati", optimized_hooks.len());
-        
-        // Applica hook in base alla modalità con ottimizzazioni
+        let unused_ids: &[usize] = &[];
+
+        // Applica hook in base alla modalità — ogni funzione usa pattern scanning
+        // per trovare l'indirizzo reale nel processo target
         match self.config.hook_mode.as_str() {
             "minimal" => {
-                // Hook solo UI principale
-                self.hook_ui_text_optimized(&mut hooks, &optimized_hooks[0..1])?;
+                self.hook_ui_text_optimized(&mut hooks, unused_ids)?;
             }
             "safe" => {
-                // Hook UI e dialoghi
-                self.hook_ui_text_optimized(&mut hooks, &optimized_hooks[0..1])?;
-                self.hook_dialog_boxes_optimized(&mut hooks, &optimized_hooks[1..2])?;
+                self.hook_ui_text_optimized(&mut hooks, unused_ids)?;
+                self.hook_dialog_boxes_optimized(&mut hooks, unused_ids)?;
             }
             "aggressive" => {
-                // Hook tutto con batch processing
-                self.hook_ui_text_optimized(&mut hooks, &optimized_hooks[0..1])?;
-                self.hook_dialog_boxes_optimized(&mut hooks, &optimized_hooks[1..2])?;
-                self.hook_menu_items_optimized(&mut hooks, &optimized_hooks[2..3])?;
-                self.hook_subtitles_optimized(&mut hooks, &optimized_hooks[3..4])?;
+                self.hook_ui_text_optimized(&mut hooks, unused_ids)?;
+                self.hook_dialog_boxes_optimized(&mut hooks, unused_ids)?;
+                self.hook_menu_items_optimized(&mut hooks, unused_ids)?;
+                self.hook_subtitles_optimized(&mut hooks, unused_ids)?;
             }
             _ => return Err("Modalità hook non valida".into()),
         }
-        
-        // Aggiorna stats con metriche di performance
+
         let application_time = start_time.elapsed().as_millis() as u64;
         let mut stats = self.stats.lock().unwrap_or_else(|e| e.into_inner());
         stats.active_hooks = hooks.len();
-        
-        // Aggiorna metriche performance optimizer
-        let memory_usage = self.estimate_memory_usage();
-        let cpu_usage = self.estimate_cpu_usage();
-        // Performance metrics update disabilitato per cleanup warning
-        
-        log::info!("🚀 Hook applicati con successo in {}ms (Memoria: {}KB, CPU: {:.1}%)", 
-            application_time, memory_usage, cpu_usage);
-        
+
+        log::info!("Hook applicati in {}ms: {} hook attivi (modalita': {})",
+            application_time, hooks.len(), self.config.hook_mode);
+
         Ok(())
     }
     
@@ -355,117 +333,6 @@ impl InjektTranslator {
                         std::ptr::null_mut(),
                     );
                 }
-            }
-        }
-        
-        Ok(())
-    }
-    
-    #[allow(dead_code)] // Hook UI text - essenziale per traduzione interfaccia
-    fn hook_ui_text(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
-        // Simulazione: in un'implementazione reale, cercheremmo pattern specifici
-        // per le funzioni di rendering del testo nel gioco
-        let mut hook = HookPoint {
-            address: 0x401000, // Indirizzo fittizio
-            original_bytes: vec![0x90; 5], // NOP placeholder
-            hook_type: HookType::TextRender,
-            module_name: "game_engine.dll".to_string(),
-            retry_count: 0,
-            last_error: None,
-            created_at: Instant::now(),
-            is_active: false,
-        };
-        
-        // Applica hook con retry e validazione
-        match self.apply_hook_with_retry(&mut hook) {
-            Ok(()) => {
-                hooks.push(hook);
-                log::info!("✅ Hook UI Text applicato con successo");
-            }
-            Err(e) => {
-                log::error!("❌ Fallimento hook UI Text: {}", e);
-                // Continua con altri hook anche se questo fallisce
-            }
-        }
-        
-        Ok(())
-    }
-    
-    #[allow(dead_code)] // Hook dialog box - essenziale per traduzione dialoghi
-    fn hook_dialog_boxes(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
-        // Hook per intercettare MessageBox e dialoghi simili
-        let mut hook = HookPoint {
-            address: 0x402000,
-            original_bytes: vec![0x90; 5],
-            hook_type: HookType::DialogBox,
-            module_name: "user32.dll".to_string(),
-            retry_count: 0,
-            last_error: None,
-            created_at: Instant::now(),
-            is_active: false,
-        };
-        
-        match self.apply_hook_with_retry(&mut hook) {
-            Ok(()) => {
-                hooks.push(hook);
-                log::info!("✅ Hook Dialog Boxes applicato con successo");
-            }
-            Err(e) => {
-                log::error!("❌ Fallimento hook Dialog Boxes: {}", e);
-            }
-        }
-        
-        Ok(())
-    }
-    
-    #[allow(dead_code)] // Hook menu items - essenziale per traduzione menu
-    fn hook_menu_items(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
-        // Hook per menu di gioco
-        let mut hook = HookPoint {
-            address: 0x403000,
-            original_bytes: vec![0x90; 5],
-            hook_type: HookType::MenuItem,
-            module_name: "game_ui.dll".to_string(),
-            retry_count: 0,
-            last_error: None,
-            created_at: Instant::now(),
-            is_active: false,
-        };
-        
-        match self.apply_hook_with_retry(&mut hook) {
-            Ok(()) => {
-                hooks.push(hook);
-                log::info!("✅ Hook Menu Items applicato con successo");
-            }
-            Err(e) => {
-                log::error!("❌ Fallimento hook Menu Items: {}", e);
-            }
-        }
-        
-        Ok(())
-    }
-    
-    #[allow(dead_code)] // Hook sottotitoli - essenziale per traduzione sottotitoli
-    fn hook_subtitles(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
-        // Hook per sottotitoli
-        let mut hook = HookPoint {
-            address: 0x404000,
-            original_bytes: vec![0x90; 5],
-            hook_type: HookType::Subtitle,
-            module_name: "subtitle_engine.dll".to_string(),
-            retry_count: 0,
-            last_error: None,
-            created_at: Instant::now(),
-            is_active: false,
-        };
-        
-        match self.apply_hook_with_retry(&mut hook) {
-            Ok(()) => {
-                hooks.push(hook);
-                log::info!("✅ Hook Subtitles applicato con successo");
-            }
-            Err(e) => {
-                log::error!("❌ Fallimento hook Subtitles: {}", e);
             }
         }
         
@@ -502,8 +369,9 @@ impl InjektTranslator {
                         stats_guard.last_heartbeat = Some(chrono::Utc::now().to_rfc3339());
                         stats_guard.uptime_seconds = start_time.elapsed().as_secs();
                         
-                        // Simula calcolo uso memoria (in KB)
-                        stats_guard.memory_usage_kb = 1024 + (stats_guard.active_hooks * 64) as u64;
+                        // Stima conservativa: base overhead + hook overhead
+                        // (il valore reale richiederebbe Process Memory Counters API)
+                        stats_guard.memory_usage_kb = 512 + (stats_guard.active_hooks * 8) as u64;
                         
                         log::debug!("💓 Heartbeat - Uptime: {}s, Hooks: {}, Traduzioni: {}", 
                             stats_guard.uptime_seconds, 
@@ -549,9 +417,6 @@ impl InjektTranslator {
                 }
                 
                 // Sincronizza stats dal dizionario condiviso (se collegato).
-                // Quando il pattern scanning reale sara' implementato (Task #4),
-                // gli hook cattureranno il testo dal processo e lo tradurranno
-                // tramite dictionary.get_translation().
                 if let Some(ref dict) = translation_dict {
                     let d = dict.read();
                     let dict_stats = d.get_stats();
@@ -654,79 +519,8 @@ impl InjektTranslator {
         self.install_hook_by_pattern(hooks, HookType::Subtitle, "SUBTITLE", pattern, Some(mask))
     }
     
-    /// Stima l'uso della memoria corrente
-    fn estimate_memory_usage(&self) -> u64 {
-        let base_memory = 2048; // 2MB base
-        let hooks_memory = if let Ok(hooks) = self.hooks.lock() {
-            hooks.len() as u64 * 64 // 64KB per hook
-        } else {
-            0
-        };
-        
-        let stats_memory = 256; // 256KB per statistiche
-        base_memory + hooks_memory + stats_memory
-    }
-    
-    /// Stima l'uso della CPU corrente
-    fn estimate_cpu_usage(&self) -> f32 {
-        let base_cpu = 2.0; // 2% base
-        let hooks_cpu = if let Ok(hooks) = self.hooks.lock() {
-            hooks.len() as f32 * 0.5 // 0.5% per hook attivo
-        } else {
-            0.0
-        };
-        
-        (base_cpu + hooks_cpu).min(100.0)
-    }
-    
-    /// Traduce un batch di testi usando il dictionary engine collegato.
-    /// Se il dizionario non e' collegato o il testo non e' trovato,
-    /// restituisce il testo originale invariato.
-    #[allow(dead_code)]
-    pub fn optimize_translations(&self, texts: Vec<String>) -> Result<Vec<String>, Box<dyn Error>> {
-        let start_time = Instant::now();
-
-        let translated = if let Some(ref dict) = self.translation_dict {
-            let d = dict.read();
-            texts.iter().map(|text| {
-                let hash = TranslationRequest::compute_hash(text);
-                d.get_translation(hash, text).unwrap_or_else(|| text.clone())
-            }).collect()
-        } else {
-            texts
-        };
-
-        let translation_time = start_time.elapsed().as_millis();
-        log::info!("🔄 Traduzioni: {} testi in {}ms ({})",
-            translated.len(), translation_time,
-            if self.translation_dict.is_some() { "via dictionary" } else { "passthrough" });
-
-        Ok(translated)
-    }
-    
-    /// Esegue garbage collection per ottimizzare le performance
-    #[allow(dead_code)]
-    pub fn perform_gc(&self) -> Result<usize, Box<dyn Error>> {
-        // Garbage collection disabilitato per cleanup warning
-        Ok(0)
-    }
-    
-    /// Ottiene le metriche di performance correnti
-    #[allow(dead_code)]
-    pub fn get_performance_metrics(&self) -> Result<String, Box<dyn Error>> {
-        // Performance metrics disabilitato per cleanup warning
-        Ok("Performance metrics disabled".to_string())
-    }
-    
-    /// Genera report di performance dettagliato
-    #[allow(dead_code)]
-    pub fn generate_performance_report(&self) -> Result<HashMap<String, serde_json::Value>, Box<dyn Error>> {
-        // Performance report disabilitato per cleanup warning
-        Ok(HashMap::new())
-    }
-    
     // === FUNZIONI DI STABILIZZAZIONE AVANZATE ===
-    
+
     /// Rileva sistemi anti-cheat comuni
     #[allow(dead_code)] // Metodo anti-cheat detection - mantenuto per future security features
     fn detect_anti_cheat(&self, _pid: u32) -> Result<bool, Box<dyn Error>> {
@@ -961,48 +755,41 @@ impl InjektTranslator {
     }
     
     /// Esegue l'hook effettivo
-    #[allow(dead_code)] // Implementazione hook core - essenziale per injection system
+    /// Esegue l'hook effettivo: salva i byte originali e scrive un JMP al detour.
+    ///
+    /// Attualmente salva i byte originali dal processo ma non scrive il JMP,
+    /// perché il detour address richiede l'infrastruttura DLL (MiniHook/trampoline)
+    /// che vive nel plugin iniettato (unity-translator-dll / ue-translator-dll).
+    /// Quando il plugin DLL sarà collegato, qui si scriverà:
+    ///   [0xE9, rel32] dove rel32 = detour_addr - (hook_addr + 5)
     fn perform_hook(&self, hook: &HookPoint) -> Result<(), Box<dyn Error>> {
-        if let Some(handle_arc) = &self.process_handle {
-            let handle = handle_arc.get();
-            unsafe {
-                // Leggi i bytes originali
-                let mut original_bytes = vec![0u8; 5];
-                let mut bytes_read = 0;
-                
-                let read_result = ReadProcessMemory(
-                    handle,
-                    hook.address as LPVOID,
-                    original_bytes.as_mut_ptr() as LPVOID,
-                    original_bytes.len(),
-                    &mut bytes_read
-                );
-                
-                if read_result == 0 || bytes_read != original_bytes.len() {
-                    return Err("Impossibile leggere memoria processo".into());
-                }
-                
-                // Crea il jump hook (JMP instruction)
-                let hook_bytes = [0xE9, 0x00, 0x00, 0x00, 0x00]; // JMP placeholder
-                
-                // Scrivi l'hook
-                let write_result = WriteProcessMemory(
-                    handle,
-                    hook.address as LPVOID,
-                    hook_bytes.as_ptr() as LPVOID,
-                    hook_bytes.len(),
-                    std::ptr::null_mut()
-                );
-                
-                if write_result == 0 {
-                    return Err("Impossibile scrivere hook in memoria".into());
-                }
-                
-                log::info!("🔗 Hook installato a 0x{:x} ({})", hook.address, hook.module_name);
-                Ok(())
+        let handle = self.process_handle.as_ref()
+            .ok_or("Handle processo non disponibile")?
+            .get();
+
+        unsafe {
+            // Salva i byte originali (necessari per remove_hooks)
+            let mut original_bytes = vec![0u8; 5];
+            let mut bytes_read = 0;
+
+            let read_result = ReadProcessMemory(
+                handle,
+                hook.address as LPVOID,
+                original_bytes.as_mut_ptr() as LPVOID,
+                original_bytes.len(),
+                &mut bytes_read,
+            );
+
+            if read_result == 0 || bytes_read != original_bytes.len() {
+                return Err("Impossibile leggere memoria processo".into());
             }
-        } else {
-            Err("Handle processo non disponibile".into())
+
+            // TODO: Scrivere JMP quando il detour address sara' disponibile
+            // dal plugin DLL iniettato. Per ora registriamo l'hook come "trovato"
+            // senza modificare la memoria del processo.
+            log::info!("Hook registrato a 0x{:X} ({}) — attesa detour DLL",
+                hook.address, hook.module_name);
+            Ok(())
         }
     }
     

@@ -47,7 +47,8 @@ export class TranslationBridgeClient {
   private retryDelayMs: number = 500;
 
   /**
-   * Retry wrapper: retries a Tauri invoke call on transient failures
+   * Retry wrapper: retries a Tauri invoke call only on transient failures.
+   * Non-transient errors (validation, not found, etc.) are thrown immediately.
    */
   private async withRetry<T>(fn: () => Promise<T>, retries = this.maxRetries): Promise<T> {
     let lastError: unknown;
@@ -56,9 +57,15 @@ export class TranslationBridgeClient {
         return await fn();
       } catch (error) {
         lastError = error;
-        if (attempt < retries) {
-          await new Promise(r => setTimeout(r, this.retryDelayMs * (attempt + 1)));
+        // Only retry on transient errors (timeouts, IPC failures, network issues)
+        const msg = String(error).toLowerCase();
+        const isTransient = msg.includes('timeout') || msg.includes('ipc')
+          || msg.includes('connection') || msg.includes('unavailable')
+          || msg.includes('channel closed');
+        if (!isTransient || attempt >= retries) {
+          throw error;
         }
+        await new Promise(r => setTimeout(r, this.retryDelayMs * (attempt + 1)));
       }
     }
     throw lastError;
@@ -235,6 +242,22 @@ export class TranslationBridgeClient {
     } catch (error) {
       console.error('[TranslationBridge] Failed to export JSON:', error);
       return false;
+    }
+  }
+
+  /**
+   * Drain cache misses (untranslated texts) for AI fallback.
+   * Returns up to `max` unique texts that were not found in the dictionary.
+   */
+  async drainMisses(max: number = 100): Promise<string[]> {
+    try {
+      const response = await invoke<BridgeResponse<string[]>>('translation_bridge_drain_misses', {
+        max,
+      });
+      return response.data ?? [];
+    } catch (error) {
+      console.error('[TranslationBridge] Failed to drain misses:', error);
+      return [];
     }
   }
 

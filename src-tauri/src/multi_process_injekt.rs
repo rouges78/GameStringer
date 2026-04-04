@@ -53,7 +53,6 @@ pub struct MultiProcessInjekt {
     active_processes: Arc<Mutex<HashMap<u32, ProcessInfo>>>,
     is_running: Arc<Mutex<bool>>,
     monitor_thread: Option<thread::JoinHandle<()>>,
-    translation_cache: Arc<Mutex<HashMap<String, String>>>,
     stats: Arc<Mutex<MultiProcessStats>>,
     translation_dict: Option<Arc<RwLock<DictionaryEngine>>>,
 }
@@ -64,8 +63,6 @@ pub struct MultiProcessStats {
     pub active_injections: u32,
     pub primary_process_active: bool,
     pub secondary_processes_active: u32,
-    pub total_translations: u32,
-    pub synchronized_translations: u32,
     pub last_process_scan: Option<String>,
     pub uptime_seconds: u64,
 }
@@ -81,15 +78,12 @@ impl MultiProcessInjekt {
             active_processes: Arc::new(Mutex::new(HashMap::new())),
             is_running: Arc::new(Mutex::new(false)),
             monitor_thread: None,
-            translation_cache: Arc::new(Mutex::new(HashMap::new())),
             translation_dict: None,
             stats: Arc::new(Mutex::new(MultiProcessStats {
                 total_processes: 0,
                 active_injections: 0,
                 primary_process_active: false,
                 secondary_processes_active: 0,
-                total_translations: 0,
-                synchronized_translations: 0,
                 last_process_scan: None,
                 uptime_seconds: 0,
             })),
@@ -136,7 +130,6 @@ impl MultiProcessInjekt {
         let is_running = Arc::clone(&self.is_running);
         let active_processes = Arc::clone(&self.active_processes);
         let stats = Arc::clone(&self.stats);
-        let translation_cache = Arc::clone(&self.translation_cache);
         let config = self.config.clone();
         let base_config = self.base_injection_config.clone();
         let translation_dict = self.translation_dict.clone();
@@ -191,7 +184,7 @@ impl MultiProcessInjekt {
                                 
                                 // Avvia injection se necessario
                                 if should_inject {
-                                    match Self::start_injection_for_process(&mut process_info, &base_config, &translation_cache, &translation_dict) {
+                                    match Self::start_injection_for_process(&mut process_info, &base_config, &translation_dict) {
                                         Ok(()) => {
                                             log::info!("✅ Injection avviata per processo: {} (PID: {})", name, pid);
                                         }
@@ -249,7 +242,7 @@ impl MultiProcessInjekt {
                 
                 // Sincronizza traduzioni tra processi se abilitato
                 if config.sync_translations {
-                    Self::synchronize_translations(&active_processes, &translation_cache);
+                    Self::synchronize_translations(&active_processes);
                 }
                 
                 thread::sleep(Duration::from_secs(2));
@@ -285,7 +278,6 @@ impl MultiProcessInjekt {
     fn start_injection_for_process(
         process_info: &mut ProcessInfo,
         base_config: &InjectionConfig,
-        _translation_cache: &Arc<Mutex<HashMap<String, String>>>,
         translation_dict: &Option<Arc<RwLock<DictionaryEngine>>>
     ) -> Result<(), Box<dyn Error>> {
         // Crea configurazione specifica per questo processo
@@ -316,7 +308,6 @@ impl MultiProcessInjekt {
 
     fn synchronize_translations(
         active_processes: &Arc<Mutex<HashMap<u32, ProcessInfo>>>,
-        _translation_cache: &Arc<Mutex<HashMap<String, String>>>
     ) {
         // La sincronizzazione e' automatica: tutti i processi condividono
         // lo stesso Arc<RwLock<DictionaryEngine>> come source of truth.
@@ -385,7 +376,6 @@ impl MultiProcessInjekt {
                     Self::start_injection_for_process(
                         process_info,
                         &self.base_injection_config,
-                        &self.translation_cache,
                         &self.translation_dict
                     )?;
                     log::info!("✅ Injection forzata completata per PID: {}", pid);
