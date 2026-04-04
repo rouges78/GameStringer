@@ -117,7 +117,7 @@ export default function BlogPage() {
     <div className="rounded-sm bg-[#1b2838] border border-[#2a475e] p-4 space-y-3">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div>
-          <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
+          <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
             {language === 'it' ? 'Data' : 'Date'}
           </label>
           <Input 
@@ -128,7 +128,7 @@ export default function BlogPage() {
           />
         </div>
         <div>
-          <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">Tag</label>
+          <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">Tag</label>
           <select 
             value={form.tag}
             onChange={(e) => setForm(f => ({ ...f, tag: e.target.value }))}
@@ -138,7 +138,7 @@ export default function BlogPage() {
           </select>
         </div>
         <div>
-          <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 flex items-center gap-1 ">
+          <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 flex items-center gap-1 ">
             <Gamepad2 className="h-3 w-3" /> {language === 'it' ? 'Gioco' : 'Game'}
           </label>
           <Input 
@@ -149,7 +149,7 @@ export default function BlogPage() {
           />
         </div>
         <div>
-          <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
+          <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 flex items-center gap-1">
             <Image className="h-3 w-3" /> {language === 'it' ? 'Immagine URL' : 'Image URL'}
           </label>
           <Input 
@@ -161,7 +161,7 @@ export default function BlogPage() {
         </div>
       </div>
       <div>
-        <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
+        <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
           {language === 'it' ? 'Titolo' : 'Title'}
         </label>
         <Input 
@@ -172,7 +172,7 @@ export default function BlogPage() {
         />
       </div>
       <div>
-        <label className="text-[10px] text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
+        <label className="text-2xs text-[#8f98a0] uppercase tracking-wider font-semibold mb-1 block">
           {language === 'it' ? 'Descrizione' : 'Description'}
         </label>
         <textarea 
@@ -187,7 +187,7 @@ export default function BlogPage() {
       {form.image && (
         <div className="flex items-center gap-3 p-2 rounded bg-[#171d25] border border-[#2a475e]/50">
           <img src={form.image} alt="Preview" className="w-[120px] h-[68px] rounded-sm object-cover border border-black/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <span className="text-[10px] text-[#8f98a0]">{language === 'it' ? 'Anteprima immagine' : 'Image preview'}</span>
+          <span className="text-2xs text-[#8f98a0]">{language === 'it' ? 'Anteprima immagine' : 'Image preview'}</span>
         </div>
       )}
       <div className="flex gap-2 pt-1">
@@ -214,7 +214,7 @@ export default function BlogPage() {
           <Newspaper className="h-5 w-5 text-[#67c1f5]" />
           <div>
             <h1 className="text-base font-bold text-[#c6d4df]">News & {language === 'it' ? 'Aggiornamenti' : 'Updates'}</h1>
-            <p className="text-[10px] text-[#8f98a0]">{language === 'it' ? 'Gestisci il feed notizie della dashboard' : 'Manage the dashboard news feed'}</p>
+            <p className="text-2xs text-[#8f98a0]">{language === 'it' ? 'Gestisci il feed notizie della dashboard' : 'Manage the dashboard news feed'}</p>
           </div>
         </div>
         
@@ -249,7 +249,7 @@ export default function BlogPage() {
                   <div className="w-[140px] h-[80px] rounded-sm flex-shrink-0 border border-[#2a475e]/40 flex items-center justify-center"
                     style={{ background: 'linear-gradient(135deg, #1b2838 0%, #2a475e 100%)' }}>
                     {post.gameName ? (
-                      <span className="text-[10px] font-bold text-[#67c1f5]/50 text-center px-2">{post.gameName}</span>
+                      <span className="text-2xs font-bold text-[#67c1f5]/50 text-center px-2">{post.gameName}</span>
                     ) : (
                       <Newspaper className="h-6 w-6 text-[#67c1f5]/15" />
                     )}
@@ -260,12 +260,12 @@ export default function BlogPage() {
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[9px] text-[#8f98a0]/60">{post.date}</span>
-                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${tagColors[post.tag] || 'text-[#8f98a0] bg-[#2a475e]/30'}`}>
+                      <span className="text-micro text-[#8f98a0]/60">{post.date}</span>
+                      <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${tagColors[post.tag] || 'text-[#8f98a0] bg-[#2a475e]/30'}`}>
                         {post.tag}
                       </span>
                       {post.gameName && (
-                        <span className="text-[8px] text-[#67c1f5]/60 flex items-center gap-0.5">
+                        <span className="text-2xs text-[#67c1f5]/60 flex items-center gap-0.5">
                           <Gamepad2 className="h-2.5 w-2.5" /> {post.gameName}
                         </span>
                       )}
@@ -273,7 +273,7 @@ export default function BlogPage() {
                         <Pin className="h-2.5 w-2.5 text-[#67c1f5] fill-[#67c1f5]/30" />
                       )}
                     </div>
-                    <h3 className="text-[13px] font-bold text-[#c6d4df] leading-snug line-clamp-1">{post.title}</h3>
+                    <h2 className="text-[13px] font-bold text-[#c6d4df] leading-snug line-clamp-1">{post.title}</h2>
                   </div>
                   <p className="text-[11px] text-[#8f98a0] line-clamp-2 leading-relaxed mt-0.5">{post.description}</p>
                 </div>

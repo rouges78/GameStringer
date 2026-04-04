@@ -28,7 +28,7 @@ export default function CommunityHubPage() {
               <h1 className="text-base font-bold text-[#c6d4df]">
                 {t('communityHub.title')}
               </h1>
-              <p className="text-[#8f98a0] text-[10px]">
+              <p className="text-[#8f98a0] text-2xs">
                 {t('communityHub.subtitle')}
               </p>
             </div>

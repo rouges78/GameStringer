@@ -55,7 +55,7 @@ export function MultiLlmComparisonSettings() {
         <CardTitle className="flex items-center gap-2 text-base">
           <GitCompareArrows className="h-5 w-5 text-purple-400" />
           <span>{t('multiLlmComparisonSettingsComp.multillmComparison')}</span>
-          <Badge className="text-[10px] bg-purple-600/80 text-white border-0 ml-1">NEW</Badge>
+          <Badge className="text-2xs bg-purple-600/80 text-white border-0 ml-1">NEW</Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
           Invia la stessa traduzione a più provider in parallelo e scegli automaticamente la migliore.
@@ -95,9 +95,9 @@ export function MultiLlmComparisonSettings() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm">Candidati paralleli: {config.maxCandidates}</Label>
                 <div className="flex gap-1">
-                  {config.maxCandidates === 2 && <Badge variant="outline" className="text-[10px]"><Zap className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.veloce')}</Badge>}
-                  {config.maxCandidates === 3 && <Badge variant="outline" className="text-[10px]"><Trophy className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.bilanciato')}</Badge>}
-                  {config.maxCandidates >= 4 && <Badge variant="outline" className="text-[10px]"><Brain className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.preciso')}</Badge>}
+                  {config.maxCandidates === 2 && <Badge variant="outline" className="text-2xs"><Zap className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.veloce')}</Badge>}
+                  {config.maxCandidates === 3 && <Badge variant="outline" className="text-2xs"><Trophy className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.bilanciato')}</Badge>}
+                  {config.maxCandidates >= 4 && <Badge variant="outline" className="text-2xs"><Brain className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.preciso')}</Badge>}
                 </div>
               </div>
               <Slider
@@ -108,7 +108,7 @@ export function MultiLlmComparisonSettings() {
                 step={1}
                 className="w-full [&_[data-slot=range]]:bg-purple-500 [&_[data-slot=thumb]]:bg-purple-500 [&_[data-slot=thumb]]:border-purple-500"
               />
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 2 = veloce e economico | 3 = consigliato | 4-6 = massima precisione ma più lento
               </p>
             </div>
@@ -164,7 +164,7 @@ export function MultiLlmComparisonSettings() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-2xs text-muted-foreground">
                     Usa un provider con API key configurata. Consigliato: Gemini o Groq (gratuiti).
                   </p>
                 </div>

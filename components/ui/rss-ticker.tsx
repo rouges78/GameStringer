@@ -150,7 +150,7 @@ export function RssTicker({ className = '' }: RssTickerProps) {
         className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-colors cursor-pointer"
       >
         <Rss className="h-3 w-3 text-orange-400" />
-        <span className="text-[9px] text-orange-400 font-medium uppercase">Live</span>
+        <span className="text-micro text-orange-400 font-medium uppercase">Live</span>
       </button>
       
       <div className="flex-1 overflow-hidden">
@@ -160,7 +160,7 @@ export function RssTicker({ className = '' }: RssTickerProps) {
           rel="noopener noreferrer"
           className="group flex items-center gap-2 hover:text-orange-300 transition-colors"
         >
-          <span className="text-[10px] text-orange-400/70 font-medium shrink-0">
+          <span className="text-2xs text-orange-400/70 font-medium shrink-0">
             [{currentItem.source}]
           </span>
           <span className="text-xs text-muted-foreground group-hover:text-orange-300 truncate">

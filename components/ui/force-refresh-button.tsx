@@ -47,7 +47,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
     <button
       onClick={handleForceRefresh}
       disabled={isRefreshing}
-      className={`text-[10px] px-2 py-1 bg-orange-600/80 hover:bg-orange-500 text-white rounded transition-colors disabled:opacity-50 ${className || ''}`}
+      className={`text-2xs px-2 py-1 bg-orange-600/80 hover:bg-orange-500 text-white rounded transition-colors disabled:opacity-50 ${className || ''}`}
     >
       {isRefreshing ? (
         <>

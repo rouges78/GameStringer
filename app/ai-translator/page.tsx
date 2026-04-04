@@ -47,7 +47,7 @@ export default function AITranslatorPage() {
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 {gameName ? `${ai.title} • ${gameName}` : ai.title}
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {ai.subtitle}
               </p>
             </div>
@@ -68,33 +68,33 @@ export default function AITranslatorPage() {
 
         {/* Quick Links */}
         <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">{ai.more}</span>
+          <span className="text-2xs text-white/50 mr-2 self-center">{ai.more}</span>
           <Link href="/translator/pro">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Brain className="h-3 w-3" />
               {ai.neuralPro}
             </Button>
           </Link>
           <Link href="/ocr-translator">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Scan className="h-3 w-3" />
               OCR
             </Button>
           </Link>
           <Link href="/editor">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <ImageIcon className="h-3 w-3" />
               Visual
             </Button>
           </Link>
           <Link href="/memory">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Database className="h-3 w-3" />
               {ai.dictionary}
             </Button>
           </Link>
           <Link href="/batch-translation">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Layers className="h-3 w-3" />
               Batch
             </Button>

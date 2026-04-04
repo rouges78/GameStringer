@@ -169,17 +169,17 @@ export function PixelFontPreview({
         {/* Status */}
         <div className="flex items-center gap-2">
           {isOverflow ? (
-            <Badge variant="destructive" className="text-[9px]">
+            <Badge variant="destructive" className="text-micro">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Testo troppo lungo!
             </Badge>
           ) : (
-            <Badge variant="outline" className="text-[9px] border-green-500/30 text-green-400">
+            <Badge variant="outline" className="text-micro border-green-500/30 text-green-400">
               <Check className="h-3 w-3 mr-1" />
               OK
             </Badge>
           )}
-          <span className="text-[9px] text-muted-foreground">
+          <span className="text-micro text-muted-foreground">
             {text.length}/{calculateCharLimit()} char
           </span>
         </div>
@@ -327,7 +327,7 @@ export function PixelFontPreview({
             <Badge
               key={preset.name}
               variant={selectedPreset.name === preset.name ? 'default' : 'outline'}
-              className="text-[9px] cursor-pointer"
+              className="text-micro cursor-pointer"
               onClick={() => applyPreset(preset)}
             >
               {preset.name}
@@ -391,7 +391,7 @@ export function PixelFontPreview({
         {/* Comparison with original */}
         {originalText && (
           <div className="mb-4 p-2 bg-muted/30 rounded border border-border/50">
-            <div className="text-[10px] text-muted-foreground mb-1">{t('pixelFontPreviewComp.originale')}</div>
+            <div className="text-2xs text-muted-foreground mb-1">{t('pixelFontPreviewComp.originale')}</div>
             <div 
               className="text-xs text-muted-foreground"
               style={{ fontFamily: selectedFont.family, fontSize: `${fontSize}px` }}

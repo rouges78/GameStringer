@@ -101,7 +101,7 @@ export function SupportButton({
         <DropdownMenuSeparator />
         
         <div className="px-2 py-2">
-          <p className="text-[10px] text-muted-foreground text-center">
+          <p className="text-2xs text-muted-foreground text-center">
             {t('support.freeOpenSource')}<br />
             {t('support.helpsDevelopment')}
           </p>

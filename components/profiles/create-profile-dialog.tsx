@@ -348,7 +348,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                     title={lang.name}
                   >
                     <lang.Flag className="w-6 h-4 rounded-[2px] shadow-sm" />
-                    <span className={`text-[9px] font-medium leading-none ${
+                    <span className={`text-micro font-medium leading-none ${
                       isSelected ? 'text-indigo-300' : 'text-slate-500'
                     }`}>{lang.code.toUpperCase()}</span>
                   </button>

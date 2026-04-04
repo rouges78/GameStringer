@@ -100,7 +100,7 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
         <span
           className={cn(
             "absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-background",
-            "text-[9px] font-bold text-white flex items-center justify-center",
+            "text-micro font-bold text-white flex items-center justify-center",
             "transition-all duration-200",
             isAnimating && "scale-110"
           )}
@@ -110,7 +110,7 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
 
       {!showBadge && hasNotifications && (
         <span 
-          className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 border border-background text-[8px] font-bold text-white flex items-center justify-center"
+          className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 border border-background text-2xs font-bold text-white flex items-center justify-center"
           aria-hidden="true"
         >!</span>
       )}

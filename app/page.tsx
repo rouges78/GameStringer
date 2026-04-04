@@ -423,17 +423,17 @@ export default function Dashboard() {
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-[#2a475e]/30 transition-opacity duration-300 ${totalGames > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <Gamepad2 className="h-3.5 w-3.5 text-[#67c1f5]" />
               <span className="text-sm font-bold text-[#67c1f5]">{totalGames}</span>
-              <span className="text-[9px] text-[#8f98a0] uppercase tracking-wider">{language === 'it' ? 'giochi' : 'games'}</span>
+              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{language === 'it' ? 'giochi' : 'games'}</span>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-emerald-500/20 transition-opacity duration-300 ${(totalTranslated > 0 || stats.tmEntries > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-sm font-bold text-emerald-400">{(totalTranslated + stats.tmEntries).toLocaleString()}</span>
-              <span className="text-[9px] text-[#8f98a0] uppercase tracking-wider">{language === 'it' ? 'stringhe tradotte' : 'translated strings'}</span>
+              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{language === 'it' ? 'stringhe tradotte' : 'translated strings'}</span>
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-purple-500/20 transition-opacity duration-300 ${(stats.tmEntries > 0 && totalTranslated > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <Zap className="h-3.5 w-3.5 text-purple-400" />
               <span className="text-sm font-bold text-purple-400">{stats.tmEntries.toLocaleString()}</span>
-              <span className="text-[9px] text-[#8f98a0] uppercase tracking-wider">TM</span>
+              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">TM</span>
             </div>
           </div>
         </div>
@@ -456,7 +456,7 @@ export default function Dashboard() {
                 }`}
               >
                 <Rss className="h-3.5 w-3.5" /> Feed
-                {rssNews.length > 0 && <span className={`text-[9px] ml-0.5 px-1.5 py-0.5 rounded-full ${newsSource === 'rss' ? 'bg-[#1a9fff]/20 text-[#67c1f5]' : 'bg-[#2a475e]/30 text-[#8f98a0]'}`}>{rssNews.length}</span>}
+                {rssNews.length > 0 && <span className={`text-micro ml-0.5 px-1.5 py-0.5 rounded-full ${newsSource === 'rss' ? 'bg-[#1a9fff]/20 text-[#67c1f5]' : 'bg-[#2a475e]/30 text-[#8f98a0]'}`}>{rssNews.length}</span>}
                 {rssLoading && <RefreshCw className="h-2.5 w-2.5 animate-spin opacity-50" />}
               </button>
               <button
@@ -474,7 +474,7 @@ export default function Dashboard() {
               <select
                 value={newsFilter}
                 onChange={(e) => setNewsFilter(e.target.value)}
-                className="text-[10px] bg-[#0d1520] border border-[#2a475e]/60 rounded-md px-2.5 py-1.5 text-[#c6d4df] hover:border-[#67c1f5]/50 focus:border-[#67c1f5] focus:outline-none focus:ring-1 focus:ring-[#67c1f5]/20 transition-all cursor-pointer"
+                className="text-2xs bg-[#0d1520] border border-[#2a475e]/60 rounded-md px-2.5 py-1.5 text-[#c6d4df] hover:border-[#67c1f5]/50 focus:border-[#67c1f5] focus:outline-none focus:ring-1 focus:ring-[#67c1f5]/20 transition-all cursor-pointer"
               >
                 {newsSource === 'rss' ? (
                   <>
@@ -508,7 +508,7 @@ export default function Dashboard() {
                     {(idx === 0 || filteredRss[idx - 1]?.pubDate !== item.pubDate) && (
                       <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
                         <div className="h-px flex-1 bg-gradient-to-r from-[#2a475e] to-transparent" />
-                        <span className="text-[10px] font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{item.pubDate}</span>
+                        <span className="text-2xs font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{item.pubDate}</span>
                         <div className="h-px flex-1 bg-gradient-to-l from-[#2a475e] to-transparent" />
                       </div>
                     )}
@@ -525,8 +525,8 @@ export default function Dashboard() {
 
                       <div className="relative flex-1 min-w-0 flex flex-col py-0.5">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[9px] font-bold text-[#67c1f5] uppercase tracking-widest">{item.sourceName}</span>
-                          {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-[8px] px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {language === 'it' ? ci.label_it : ci.label_en}</span> : null; })()}
+                          <span className="text-micro font-bold text-[#67c1f5] uppercase tracking-widest">{item.sourceName}</span>
+                          {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-2xs px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {language === 'it' ? ci.label_it : ci.label_en}</span> : null; })()}
                         </div>
                         <h3 className="text-[13px] font-bold text-[#e5e9ed] group-hover:text-white leading-snug transition-colors line-clamp-2">
                           {decode(item.title)}
@@ -536,7 +536,7 @@ export default function Dashboard() {
                         </p>
                         <div className="flex items-center gap-2 mt-auto pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <ExternalLink className="h-3 w-3 text-[#1a9fff]/60" />
-                          <span className="text-[9px] text-[#1a9fff]/60">{language === 'it' ? 'Leggi articolo' : 'Read article'}</span>
+                          <span className="text-micro text-[#1a9fff]/60">{language === 'it' ? 'Leggi articolo' : 'Read article'}</span>
                         </div>
                       </div>
                     </div>
@@ -589,7 +589,7 @@ export default function Dashboard() {
                     {(idx === 0 || filteredPosts[idx - 1]?.date !== post.date) && (
                       <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
                         <div className="h-px flex-1 bg-gradient-to-r from-[#2a475e] to-transparent" />
-                        <span className="text-[10px] font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{post.date}</span>
+                        <span className="text-2xs font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{post.date}</span>
                         <div className="h-px flex-1 bg-gradient-to-l from-[#2a475e] to-transparent" />
                       </div>
                     )}
@@ -609,7 +609,7 @@ export default function Dashboard() {
                       )}
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                         <div>
-                          <span className="text-[9px] font-bold text-[#8f98a0] uppercase tracking-widest">{post.tag || (language === 'it' ? 'NOTIZIE' : 'NEWS')}</span>
+                          <span className="text-micro font-bold text-[#8f98a0] uppercase tracking-widest">{post.tag || (language === 'it' ? 'NOTIZIE' : 'NEWS')}</span>
                           <h3 className="text-[13px] font-bold text-[#e5e9ed] group-hover:text-white leading-snug transition-colors line-clamp-2 mt-1">
                             {post.title}
                           </h3>
@@ -640,7 +640,7 @@ export default function Dashboard() {
               <button
                 onClick={scrollToTop}
                 title={language === 'it' ? 'Torna in cima' : 'Back to top'}
-                className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1a9fff]/90 hover:bg-[#1a9fff] text-white text-[10px] font-bold shadow-lg shadow-[#1a9fff]/20 hover:shadow-[#1a9fff]/40 transition-all hover:-translate-y-0.5 backdrop-blur-sm z-10"
+                className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1a9fff]/90 hover:bg-[#1a9fff] text-white text-2xs font-bold shadow-lg shadow-[#1a9fff]/20 hover:shadow-[#1a9fff]/40 transition-all hover:-translate-y-0.5 backdrop-blur-sm z-10"
               >
                 <ArrowUpCircle className="h-3.5 w-3.5" />
                 {language === 'it' ? 'Torna in cima' : 'Back to top'}
@@ -665,14 +665,14 @@ export default function Dashboard() {
                       <div className="absolute bottom-0 left-0 right-0 p-3.5">
                         <div className="flex items-center gap-1.5 mb-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                           <Play className="h-3 w-3 text-[#67c1f5]" fill="currentColor" />
-                          <span className="text-[9px] text-[#8f98a0] uppercase tracking-[0.2em] font-bold">{language === 'it' ? 'Ultimo gioco' : 'Last opened'}</span>
+                          <span className="text-micro text-[#8f98a0] uppercase tracking-[0.2em] font-bold">{language === 'it' ? 'Ultimo gioco' : 'Last opened'}</span>
                         </div>
                         <p className="text-[15px] font-bold text-white truncate drop-shadow-md">{lastGame.title}</p>
                       </div>
                       {activeTranslation && (
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 bg-[#0e1419]/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-[#1a9fff]/30 shadow-lg">
                           <span className="text-[11px] font-bold text-[#67c1f5]">{activeTranslation.percent}%</span>
-                          <span className="text-[8px] text-[#8f98a0] uppercase font-bold">{activeTranslation.lang}</span>
+                          <span className="text-2xs text-[#8f98a0] uppercase font-bold">{activeTranslation.lang}</span>
                         </div>
                       )}
                     </div>
@@ -685,7 +685,7 @@ export default function Dashboard() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <Play className="h-2.5 w-2.5 text-[#67c1f5]" fill="currentColor" />
-                            <span className="text-[8px] text-[#8f98a0] uppercase tracking-[0.15em] font-bold">{language === 'it' ? 'Ultimo gioco' : 'Last opened'}</span>
+                            <span className="text-2xs text-[#8f98a0] uppercase tracking-[0.15em] font-bold">{language === 'it' ? 'Ultimo gioco' : 'Last opened'}</span>
                           </div>
                           <p className="text-xs font-bold text-[#c6d4df] truncate group-hover:text-white transition-colors">{lastGame.title}</p>
                         </div>
@@ -695,7 +695,7 @@ export default function Dashboard() {
                   {activeTranslation && (
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/auto-translate?gameId=${lastGame.id}&gameName=${encodeURIComponent(lastGame.title)}&installPath=&platform=${lastGame.platform}`; }}
-                      className="w-full py-2 bg-gradient-to-r from-[#1a9fff]/15 to-[#1a9fff]/5 hover:from-[#1a9fff]/25 hover:to-[#1a9fff]/15 border-t border-[#2a475e]/30 text-[10px] font-bold text-[#67c1f5] flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                      className="w-full py-2 bg-gradient-to-r from-[#1a9fff]/15 to-[#1a9fff]/5 hover:from-[#1a9fff]/25 hover:to-[#1a9fff]/15 border-t border-[#2a475e]/30 text-2xs font-bold text-[#67c1f5] flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
                       <Zap className="h-3 w-3" fill="currentColor" /> {language === 'it' ? 'Continua Traduzione' : 'Continue Translation'}
                     </button>
                   )}
@@ -739,8 +739,8 @@ export default function Dashboard() {
                           <div className="flex-1 min-w-0">
                             <p className="text-[11px] text-[#e5e9ed] leading-snug group-hover:text-white transition-colors line-clamp-2">{activity.text}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[9px] text-[#8f98a0]">{activity.time}</span>
-                              <span className="text-[8px] text-[#8f98a0]/60 uppercase tracking-wider">{activity.type}</span>
+                              <span className="text-micro text-[#8f98a0]">{activity.time}</span>
+                              <span className="text-2xs text-[#8f98a0]/60 uppercase tracking-wider">{activity.type}</span>
                             </div>
                           </div>
                         </div>
@@ -749,7 +749,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 text-[#8f98a0]/30 gap-2">
                     <Clock className="h-6 w-6 opacity-20" />
-                    <span className="text-[10px]">{dash.noRecentActivity}</span>
+                    <span className="text-2xs">{dash.noRecentActivity}</span>
                   </div>
                 )}
               </div>
@@ -759,15 +759,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-lg bg-[#1b2838] border border-[#2a475e]/50 p-2.5 text-center hover:border-[#67c1f5]/40 transition-colors">
                 <div className="text-base font-bold text-[#67c1f5]">{totalTranslated.toLocaleString()}</div>
-                <div className="text-[7px] text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.totalTranslations}</div>
+                <div className="text-2xs text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.totalTranslations}</div>
               </div>
               <div className="rounded-lg bg-[#1b2838] border border-[#2a475e]/50 p-2.5 text-center hover:border-[#67c1f5]/40 transition-colors">
                 <div className="text-base font-bold text-[#67c1f5]">{stats.patches}</div>
-                <div className="text-[7px] text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.gamesPatched}</div>
+                <div className="text-2xs text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.gamesPatched}</div>
               </div>
               <div className="rounded-lg bg-[#1b2838] border border-[#2a475e]/50 p-2.5 text-center hover:border-[#67c1f5]/40 transition-colors">
                 <div className="text-base font-bold text-[#67c1f5]">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
-                <div className="text-[7px] text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.timeSaved}</div>
+                <div className="text-2xs text-[#8f98a0] uppercase tracking-wider mt-0.5 font-medium">{dash.timeSaved}</div>
               </div>
             </div>
 
@@ -787,18 +787,18 @@ export default function Dashboard() {
               <div className="p-3 space-y-2">
                 {ollamaStatus ? (
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-[#8f98a0]">Ollama</span>
+                    <span className="text-2xs text-[#8f98a0]">Ollama</span>
                     {ollamaStarting ? (
-                      <span className="text-[10px] font-bold text-yellow-400 flex items-center gap-1">
+                      <span className="text-2xs font-bold text-yellow-400 flex items-center gap-1">
                         <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Avvio...
                       </span>
                     ) : ollamaStatus.running ? (
-                      <span className="text-[10px] font-bold text-emerald-400">{ollamaStatus.models} modelli</span>
+                      <span className="text-2xs font-bold text-emerald-400">{ollamaStatus.models} modelli</span>
                     ) : (
                       <button
                         onClick={startOllama}
                         title="Premi per avviare Ollama"
-                        className="text-[10px] font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                        className="text-2xs font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                       >
                         Offline — Avvia ↗
                       </button>
@@ -806,7 +806,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-[#8f98a0]">Ollama</span>
+                    <span className="text-2xs text-[#8f98a0]">Ollama</span>
                     <RefreshCw className="h-2.5 w-2.5 text-[#8f98a0] animate-spin" />
                   </div>
                 )}
@@ -816,15 +816,15 @@ export default function Dashboard() {
                     <Link href="/ai-pipeline" className="block group">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Workflow className="h-2.5 w-2.5 text-violet-400" />
-                        <span className="text-[9px] text-[#8f98a0] uppercase tracking-wider font-bold">{language === 'it' ? 'Ultimo Pipeline' : 'Last Pipeline'}</span>
+                        <span className="text-micro text-[#8f98a0] uppercase tracking-wider font-bold">{language === 'it' ? 'Ultimo Pipeline' : 'Last Pipeline'}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-[#c6d4df] group-hover:text-white transition-colors">{lastBenchmark.presetName}</span>
+                        <span className="text-2xs text-[#c6d4df] group-hover:text-white transition-colors">{lastBenchmark.presetName}</span>
                         <span className={`text-xs font-bold ${lastBenchmark.averageScore >= 80 ? 'text-emerald-400' : lastBenchmark.averageScore >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
                           {lastBenchmark.averageScore}%
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#8f98a0]">
+                      <div className="flex items-center gap-2 mt-0.5 text-micro text-[#8f98a0]">
                         <span>{lastBenchmark.totalStrings} str</span>
                         <span>{(lastBenchmark.totalDurationMs / 1000).toFixed(1)}s</span>
                         <span>{lastBenchmark.msPerString}ms/str</span>
@@ -840,10 +840,10 @@ export default function Dashboard() {
               className="group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/15 transition-all cursor-pointer">
               <span className="text-base">❤️</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-semibold text-amber-300 group-hover:text-amber-200 transition-colors">
+                <p className="text-2xs font-semibold text-amber-300 group-hover:text-amber-200 transition-colors">
                   {language === 'it' ? 'Supporta GameStringer' : 'Support GameStringer'}
                 </p>
-                <p className="text-[8px] text-[#8f98a0]/70">
+                <p className="text-2xs text-[#8f98a0]/70">
                   {language === 'it' ? 'Aiutaci a mantenere le API e lo sviluppo' : 'Help us maintain APIs and development'}
                 </p>
               </div>

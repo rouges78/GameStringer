@@ -1370,19 +1370,19 @@ export default function PredictionToolPage() {
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {result.encodingInfo.hasUnicode && (
-                      <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">Unicode</span>
+                      <span className="text-2xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">Unicode</span>
                     )}
                     {result.encodingInfo.hasCjk && (
-                      <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">CJK</span>
+                      <span className="text-2xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">CJK</span>
                     )}
                     {result.encodingInfo.hasRtl && (
-                      <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">RTL</span>
+                      <span className="text-2xs bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">RTL</span>
                     )}
                     {result.encodingInfo.bomDetected && (
-                      <span className="text-[10px] bg-slate-600/30 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full">BOM</span>
+                      <span className="text-2xs bg-slate-600/30 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full">BOM</span>
                     )}
                     {!result.encodingInfo.hasUnicode && !result.encodingInfo.hasCjk && !result.encodingInfo.hasRtl && (
-                      <span className="text-[10px] text-slate-500">Solo caratteri ASCII/Latin</span>
+                      <span className="text-2xs text-slate-500">Solo caratteri ASCII/Latin</span>
                     )}
                   </div>
                 </div>
@@ -1413,13 +1413,13 @@ export default function PredictionToolPage() {
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {result.translationComplexity.hasPlurals && (
-                    <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full">Plurali</span>
+                    <span className="text-2xs bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full">Plurali</span>
                   )}
                   {result.translationComplexity.hasGenderForms && (
-                    <span className="text-[10px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 rounded-full">Genere</span>
+                    <span className="text-2xs bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 rounded-full">Genere</span>
                   )}
                   {result.translationComplexity.variableFormats.map((fmt, i) => (
-                    <span key={i} className="text-[10px] bg-slate-700/50 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full font-mono">{fmt}</span>
+                    <span key={i} className="text-2xs bg-slate-700/50 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full font-mono">{fmt}</span>
                   ))}
                 </div>
               </div>
@@ -1466,7 +1466,7 @@ export default function PredictionToolPage() {
                           <span className="text-xs font-mono bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">{file.fileType}</span>
                           <span className="text-xs text-slate-400 truncate max-w-xs">{file.filePath.split('/').pop()}</span>
                           {file.language && (
-                            <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{file.language}</span>
+                            <span className="text-2xs bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{file.language}</span>
                           )}
                         </div>
                         <span className="text-xs text-slate-500">{(file.fileSizeKb / 1024).toFixed(1)}MB</span>
@@ -1485,7 +1485,7 @@ export default function PredictionToolPage() {
                   <h4 className="text-xs font-medium text-green-300 mb-2">Sistemi di Localizzazione</h4>
                   <div className="flex flex-wrap gap-1">
                     {result.existingTools.localizationTools.map((tool, i) => (
-                      <span key={i} className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">
+                      <span key={i} className="text-2xs bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">
                         {tool}
                       </span>
                     ))}
@@ -1504,11 +1504,11 @@ export default function PredictionToolPage() {
                           <span className="text-xs text-slate-300">{patch.patchName}</span>
                           <div className="flex gap-1">
                             {patch.languages.map((lang, j) => (
-                              <span key={j} className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">{lang}</span>
+                              <span key={j} className="text-2xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">{lang}</span>
                             ))}
                           </div>
                         </div>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        <span className={`text-2xs px-1.5 py-0.5 rounded ${
                           patch.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'
                         }`}>
                           {patch.status}
@@ -1556,10 +1556,10 @@ export default function PredictionToolPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-200">{result.selectedTools.primaryTextTool.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                        <span className="text-2xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
                           Score: {result.selectedTools.primaryTextTool.compatibilityScore}
                         </span>
-                        <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
+                        <span className="text-2xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
                           {result.selectedTools.primaryTextTool.cost}
                         </span>
                       </div>
@@ -1579,9 +1579,9 @@ export default function PredictionToolPage() {
                       <div key={i} className="flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-2">
                         <div>
                           <span className="text-xs text-slate-300">{tool.name}</span>
-                          <span className="text-[10px] text-slate-500 ml-2">Score: {tool.compatibilityScore}</span>
+                          <span className="text-2xs text-slate-500 ml-2">Score: {tool.compatibilityScore}</span>
                         </div>
-                        <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                        <span className="text-2xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
                           {tool.cost}
                         </span>
                       </div>
@@ -1598,7 +1598,7 @@ export default function PredictionToolPage() {
                     {result.selectedTools.archiveTools.map((tool, i) => (
                       <div key={i} className="flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-2">
                         <span className="text-xs text-slate-300">{tool.name}</span>
-                        <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">
+                        <span className="text-2xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">
                           {tool.cost}
                         </span>
                       </div>
@@ -1615,13 +1615,13 @@ export default function PredictionToolPage() {
                     {result.selectedTools.audioTools.slice(0, 2).map((tool, i) => (
                       <div key={`audio-${i}`} className="bg-slate-900/30 rounded-lg px-3 py-2">
                         <span className="text-xs text-slate-300">{tool.name}</span>
-                        <span className="text-[10px] text-cyan-400 block mt-1">Audio</span>
+                        <span className="text-2xs text-cyan-400 block mt-1">Audio</span>
                       </div>
                     ))}
                     {result.selectedTools.graphicsTools.slice(0, 2).map((tool, i) => (
                       <div key={`graphics-${i}`} className="bg-slate-900/30 rounded-lg px-3 py-2">
                         <span className="text-xs text-slate-300">{tool.name}</span>
-                        <span className="text-[10px] text-pink-400 block mt-1">Grafica</span>
+                        <span className="text-2xs text-pink-400 block mt-1">Grafica</span>
                       </div>
                     ))}
                   </div>
@@ -1674,7 +1674,7 @@ export default function PredictionToolPage() {
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-bold text-slate-200">#{i + 1}</span>
-                          <div className="px-2 py-1 rounded-full text-[10px] font-medium"
+                          <div className="px-2 py-1 rounded-full text-2xs font-medium"
                             style={{
                               backgroundColor: getChainTypeColor(chain.chainType),
                               color: 'white'
@@ -1701,7 +1701,7 @@ export default function PredictionToolPage() {
                               style={{ width: `${chain.chainScore}%` }}
                             />
                           </div>
-                          <span className="text-[10px] font-mono text-slate-400">{chain.chainScore}</span>
+                          <span className="text-2xs font-mono text-slate-400">{chain.chainScore}</span>
                         </div>
                       </div>
                     </div>
@@ -1711,9 +1711,9 @@ export default function PredictionToolPage() {
                       <div className="flex flex-wrap gap-1">
                         {chain.models.map((model, j) => (
                           <div key={j} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
-                            <span className="text-[10px] font-medium text-slate-300">{model.modelName}</span>
-                            <span className="text-[8px] text-slate-500">{model.workloadPercentage}%</span>
-                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                            <span className="text-2xs font-medium text-slate-300">{model.modelName}</span>
+                            <span className="text-2xs text-slate-500">{model.workloadPercentage}%</span>
+                            <span className="text-2xs px-1 rounded bg-slate-700 text-slate-400">
                               {getRoleLabel(model.role)}
                             </span>
                           </div>
@@ -1743,7 +1743,7 @@ export default function PredictionToolPage() {
                             style={{ width: `${chain.predictionConfidence}%` }}
                           />
                         </div>
-                        <span className="text-[10px] font-mono text-blue-400">{chain.predictionConfidence}%</span>
+                        <span className="text-2xs font-mono text-blue-400">{chain.predictionConfidence}%</span>
                       </div>
                     </div>
                   </div>
@@ -1757,8 +1757,8 @@ export default function PredictionToolPage() {
                   {result.llmChains.filter(c => c.targetBudget).slice(0, 3).map((chain, i) => (
                     <div key={i} className="bg-slate-900/30 rounded-lg px-3 py-2 text-center">
                       <div className="text-xs font-medium text-slate-300">${chain.targetBudget}</div>
-                      <div className="text-[10px] text-slate-500">Q{chain.finalQualityScore}</div>
-                      <div className="text-[10px] text-green-400">{chain.estimatedTimeHours.toFixed(1)}h</div>
+                      <div className="text-2xs text-slate-500">Q{chain.finalQualityScore}</div>
+                      <div className="text-2xs text-green-400">{chain.estimatedTimeHours.toFixed(1)}h</div>
                     </div>
                   ))}
                 </div>
@@ -1773,7 +1773,7 @@ export default function PredictionToolPage() {
                         className="w-2 h-2 rounded-full" 
                         style={{ backgroundColor: getChainTypeColor(type) }}
                       />
-                      <span className="text-[10px] text-slate-400">{getChainTypeLabel(type)}</span>
+                      <span className="text-2xs text-slate-400">{getChainTypeLabel(type)}</span>
                     </div>
                   ))}
                 </div>
@@ -1918,8 +1918,8 @@ export default function PredictionToolPage() {
                       <div className="flex flex-wrap gap-1">
                         {result.multimediaAnalysis.recommendedTools.audioTools.slice(0, 3).map((tool, i) => (
                           <div key={i} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
-                            <span className="text-[10px] font-medium text-slate-300">{tool.name}</span>
-                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                            <span className="text-2xs font-medium text-slate-300">{tool.name}</span>
+                            <span className="text-2xs px-1 rounded bg-slate-700 text-slate-400">
                               {getLearningCurveLabel(tool.learningCurve)}
                             </span>
                           </div>
@@ -1935,8 +1935,8 @@ export default function PredictionToolPage() {
                       <div className="flex flex-wrap gap-1">
                         {result.multimediaAnalysis.recommendedTools.graphicsTools.slice(0, 3).map((tool, i) => (
                           <div key={i} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
-                            <span className="text-[10px] font-medium text-slate-300">{tool.name}</span>
-                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                            <span className="text-2xs font-medium text-slate-300">{tool.name}</span>
+                            <span className="text-2xs px-1 rounded bg-slate-700 text-slate-400">
                               {getLearningCurveLabel(tool.learningCurve)}
                             </span>
                           </div>
@@ -1961,7 +1961,7 @@ export default function PredictionToolPage() {
                               className="w-2 h-2 rounded-full" 
                               style={{ backgroundColor: getProblemSeverityColor(problem.severity) }}
                             />
-                            <span className="text-[8px] text-slate-400">
+                            <span className="text-2xs text-slate-400">
                               {getProblemSeverityLabel(problem.severity)}
                             </span>
                           </div>
@@ -1969,7 +1969,7 @@ export default function PredictionToolPage() {
                         <div className="text-xs text-slate-400">{problem.description}</div>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {problem.suggestedSolutions.slice(0, 2).map((solution, j) => (
-                            <span key={j} className="text-[8px] bg-slate-700/50 rounded px-1 text-slate-300">
+                            <span key={j} className="text-2xs bg-slate-700/50 rounded px-1 text-slate-300">
                               {solution}
                             </span>
                           ))}
@@ -2014,7 +2014,7 @@ export default function PredictionToolPage() {
                           <span className="text-xs font-mono bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{lang.code}</span>
                           <span className="text-sm text-slate-300">{lang.name}</span>
                           {lang.code === targetLang && (
-                            <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full">TARGET</span>
+                            <span className="text-2xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded-full">TARGET</span>
                           )}
                         </div>
                         <div className="text-right">
@@ -2045,7 +2045,7 @@ export default function PredictionToolPage() {
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-3 mt-3 pt-3 border-t border-slate-700/50 text-[10px] text-slate-500">
+                <div className="flex gap-3 mt-3 pt-3 border-t border-slate-700/50 text-2xs text-slate-500">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Traducibile</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-600" /> Binario</span>
                 </div>
@@ -2085,15 +2085,15 @@ export default function PredictionToolPage() {
                       {te.provider.includes('locale') ? <Server className="w-3.5 h-3.5 text-cyan-400" /> : <Cloud className="w-3.5 h-3.5 text-blue-400" />}
                       <span className="text-xs font-bold text-slate-200">{te.modelName}</span>
                     </div>
-                    <p className="text-[10px] text-slate-500">{te.modelSize} • {te.provider}</p>
+                    <p className="text-2xs text-slate-500">{te.modelSize} • {te.provider}</p>
                     <div className="mt-2.5">
                       <p className="text-lg font-black text-slate-200">
                         {te.estimatedHours < 1 ? `${Math.round(te.estimatedHours * 60)}m` : `${te.estimatedHours.toFixed(1)}h`}
                       </p>
-                      <p className="text-[10px] text-slate-500">{te.speedStringsPerMin}/min</p>
+                      <p className="text-2xs text-slate-500">{te.speedStringsPerMin}/min</p>
                     </div>
                     <div className="mt-2">
-                      <p className="text-[10px] text-slate-500 mb-0.5">Qualità</p>
+                      <p className="text-2xs text-slate-500 mb-0.5">Qualità</p>
                       <QualityBar score={te.qualityScore} />
                     </div>
                   </div>
@@ -2122,7 +2122,7 @@ export default function PredictionToolPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-slate-200">{ce.chainName}</span>
                             {isRecommended && (
-                              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="text-2xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded-full flex items-center gap-1">
                                 <Star className="w-2.5 h-2.5" /> Consigliato
                               </span>
                             )}
@@ -2134,21 +2134,21 @@ export default function PredictionToolPage() {
                             <p className="text-sm font-bold text-slate-200">
                               {ce.estimatedHours < 1 ? `${Math.round(ce.estimatedHours * 60)}m` : `${ce.estimatedHours.toFixed(1)}h`}
                             </p>
-                            <p className="text-[10px] text-slate-500">tempo</p>
+                            <p className="text-2xs text-slate-500">tempo</p>
                           </div>
                           <div className="w-16">
                             <QualityBar score={ce.qualityScore} />
-                            <p className="text-[10px] text-slate-500 text-center">qualità</p>
+                            <p className="text-2xs text-slate-500 text-center">qualità</p>
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-emerald-400">{ce.costEstimate}</p>
-                            <p className="text-[10px] text-slate-500">costo</p>
+                            <p className="text-2xs text-slate-500">costo</p>
                           </div>
                         </div>
                       </div>
                       {isExpanded && (
                         <div className="px-4 pb-3 pt-1 border-t border-slate-700/30">
-                          <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Pipeline</p>
+                          <p className="text-2xs text-slate-500 uppercase tracking-wider mb-2">Pipeline</p>
                           <div className="space-y-1.5">
                             {ce.steps.map((step, i) => (
                               <div key={i} className="flex items-start gap-2 text-xs text-slate-400">
@@ -2173,7 +2173,7 @@ export default function PredictionToolPage() {
               <p className="text-sm text-slate-300">{result.recommendedMethod}</p>
               {result.textStats.localizationFolders.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Cartelle Localizzazione Trovate</p>
+                  <p className="text-2xs text-slate-500 uppercase tracking-wider mb-1">Cartelle Localizzazione Trovate</p>
                   <div className="flex flex-wrap gap-1.5">
                     {result.textStats.localizationFolders.map((f, i) => (
                       <span key={i} className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">{f}</span>

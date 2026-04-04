@@ -88,7 +88,7 @@ export default function SubtitlesPage() {
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.multiFormat')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.importExport')}</p>
+            <p className="text-2xs text-muted-foreground">{t('subtitleTranslator.importExport')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
@@ -97,7 +97,7 @@ export default function SubtitlesPage() {
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.timingPreserved')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.sync')}</p>
+            <p className="text-2xs text-muted-foreground">{t('subtitleTranslator.sync')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
@@ -106,7 +106,7 @@ export default function SubtitlesPage() {
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.integratedEditor')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.editLines')}</p>
+            <p className="text-2xs text-muted-foreground">{t('subtitleTranslator.editLines')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
@@ -115,7 +115,7 @@ export default function SubtitlesPage() {
           </div>
           <div>
             <p className="text-xs font-medium">{t('subtitleTranslator.qaValidation')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.autoCheck')}</p>
+            <p className="text-2xs text-muted-foreground">{t('subtitleTranslator.autoCheck')}</p>
           </div>
         </div>
       </div>

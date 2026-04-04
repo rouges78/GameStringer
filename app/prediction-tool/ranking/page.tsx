@@ -197,35 +197,35 @@ export default function PredictionRankingPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
               <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
                 <div className="text-2xl font-bold text-white">{stats.total}</div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Giochi</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">Giochi</div>
               </div>
               <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/20 text-center">
                 <div className="text-2xl font-bold text-green-400">{stats.easy}</div>
-                <div className="text-[10px] text-green-400/70 uppercase tracking-wider">Facili</div>
+                <div className="text-2xs text-green-400/70 uppercase tracking-wider">Facili</div>
               </div>
               <div className="bg-yellow-500/10 rounded-xl p-3 border border-yellow-500/20 text-center">
                 <div className="text-2xl font-bold text-yellow-400">{stats.medium}</div>
-                <div className="text-[10px] text-yellow-400/70 uppercase tracking-wider">Medi</div>
+                <div className="text-2xs text-yellow-400/70 uppercase tracking-wider">Medi</div>
               </div>
               <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/20 text-center">
                 <div className="text-2xl font-bold text-red-400">{stats.hard}</div>
-                <div className="text-[10px] text-red-400/70 uppercase tracking-wider">Difficili</div>
+                <div className="text-2xs text-red-400/70 uppercase tracking-wider">Difficili</div>
               </div>
               <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20 text-center">
                 <div className="text-2xl font-bold text-blue-400">{stats.withItalian}</div>
-                <div className="text-[10px] text-blue-400/70 uppercase tracking-wider">Con IT</div>
+                <div className="text-2xs text-blue-400/70 uppercase tracking-wider">Con IT</div>
               </div>
               <div className="bg-purple-500/10 rounded-xl p-3 border border-purple-500/20 text-center">
                 <div className="text-2xl font-bold text-purple-400">{stats.gsSupported}</div>
-                <div className="text-[10px] text-purple-400/70 uppercase tracking-wider">GS OK</div>
+                <div className="text-2xs text-purple-400/70 uppercase tracking-wider">GS OK</div>
               </div>
               <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
                 <div className="text-2xl font-bold text-cyan-400">{formatStrings(stats.totalStrings)}</div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Stringhe Tot.</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">Stringhe Tot.</div>
               </div>
               <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 text-center">
                 <div className="text-2xl font-bold text-emerald-400">${stats.totalCost.toFixed(0)}</div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Costo Cloud Tot.</div>
+                <div className="text-2xs text-slate-400 uppercase tracking-wider">Costo Cloud Tot.</div>
               </div>
             </div>
 
@@ -280,14 +280,14 @@ export default function PredictionRankingPage() {
                             el.style.display = 'none';
                             el.parentElement!.classList.add('flex', 'items-center', 'justify-center');
                             const span = document.createElement('span');
-                            span.className = 'text-[9px] text-slate-500 text-center px-1';
+                            span.className = 'text-micro text-slate-500 text-center px-1';
                             span.textContent = game.gameTitle.slice(0, 15);
                             el.parentElement!.appendChild(span);
                           }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-[9px] text-slate-500 text-center px-1">{game.gameTitle.slice(0, 15)}</span>
+                          <span className="text-micro text-slate-500 text-center px-1">{game.gameTitle.slice(0, 15)}</span>
                         </div>
                       )}
                     </div>
@@ -296,12 +296,12 @@ export default function PredictionRankingPage() {
                         {game.gameTitle}
                       </span>
                       {game.isDemo && (
-                        <span className="flex-shrink-0 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded">
+                        <span className="flex-shrink-0 px-1.5 py-0.5 text-micro font-bold uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded">
                           Demo
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-500">{game.sizeGb > 0 ? `${game.sizeGb.toFixed(1)} GB` : ''}</span>
+                    <span className="text-2xs text-slate-500">{game.sizeGb > 0 ? `${game.sizeGb.toFixed(1)} GB` : ''}</span>
                   </div>
 
                   {/* Engine */}
@@ -341,7 +341,7 @@ export default function PredictionRankingPage() {
                   <div className="flex items-center justify-center gap-1">
                     <Globe className="h-3 w-3 text-slate-500" />
                     <span className="text-xs text-slate-300">{game.langCount}</span>
-                    {game.hasItalian && <span className="text-[9px] text-green-400">🇮🇹</span>}
+                    {game.hasItalian && <span className="text-micro text-green-400">🇮🇹</span>}
                   </div>
 
                   {/* GS Supported */}

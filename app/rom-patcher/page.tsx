@@ -15,7 +15,7 @@ export default function RomPatcherPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-white">ROM Patcher</h1>
-            <p className="text-white/60 text-[10px]">
+            <p className="text-white/60 text-2xs">
               Applica e crea patch IPS/BPS per traduzioni retro gaming
             </p>
           </div>

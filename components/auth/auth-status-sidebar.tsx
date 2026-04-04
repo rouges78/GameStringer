@@ -163,7 +163,7 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
               <p className="text-xs font-medium text-white truncate">
                 {currentProfile.name}
               </p>
-              <p className="text-[9px] text-gray-500">
+              <p className="text-micro text-gray-500">
                 {authStatus.text}
               </p>
             </div>

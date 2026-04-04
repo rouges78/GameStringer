@@ -81,7 +81,7 @@ export function VramSettingsCard() {
           <div className="flex items-center space-x-2">
             <Monitor className="h-5 w-5 text-violet-500" />
             <span>{t('vramManager.title')}</span>
-            <Badge className={`text-[10px] px-2 py-0 border ${TIER_COLORS[tier]}`}>
+            <Badge className={`text-2xs px-2 py-0 border ${TIER_COLORS[tier]}`}>
               {getTierLabels(t)[tier]}
             </Badge>
           </div>
@@ -97,14 +97,14 @@ export function VramSettingsCard() {
             <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/50 space-y-1">
               <div className="flex items-center gap-1.5">
                 <Cpu className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.gpu')}</span>
+                <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.gpu')}</span>
               </div>
               <p className="text-xs font-semibold text-slate-300 truncate">{stats.gpu_name}</p>
             </div>
             <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/50 space-y-1">
               <div className="flex items-center gap-1.5">
                 <Monitor className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.vram')}</span>
+                <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.vram')}</span>
               </div>
               <p className={`text-xs font-bold ${stats.vram_usage_percent > 85 ? 'text-red-400' : stats.vram_usage_percent > 65 ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {stats.vram_used_mb}MB / {stats.vram_total_mb}MB ({stats.vram_usage_percent.toFixed(0)}%)
@@ -113,7 +113,7 @@ export function VramSettingsCard() {
             <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/50 space-y-1">
               <div className="flex items-center gap-1.5">
                 <HardDrive className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.ram')}</span>
+                <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.ram')}</span>
               </div>
               <p className="text-xs font-semibold text-slate-300">
                 {stats.ram_used_mb}MB / {stats.ram_total_mb}MB ({stats.ram_usage_percent.toFixed(0)}%)
@@ -123,7 +123,7 @@ export function VramSettingsCard() {
               <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/50 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <Thermometer className="h-3.5 w-3.5 text-slate-500" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.temp')}</span>
+                  <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{t('vramManager.temp')}</span>
                 </div>
                 <p className={`text-xs font-bold ${stats.gpu_temp_celsius > 80 ? 'text-red-400' : stats.gpu_temp_celsius > 65 ? 'text-amber-400' : 'text-emerald-400'}`}>
                   {stats.gpu_temp_celsius.toFixed(0)}°C
@@ -144,9 +144,9 @@ export function VramSettingsCard() {
             <p className="text-xs font-bold text-slate-300">
               {t('vramManager.recommendedModel')}: <span className={activeModel.provider === 'local' ? 'text-emerald-400' : 'text-violet-400'}>{activeModel.model}</span>
             </p>
-            <p className="text-[10px] text-slate-500">{recommendation.reason}</p>
+            <p className="text-2xs text-slate-500">{recommendation.reason}</p>
           </div>
-          <Badge variant="outline" className="text-[9px]">
+          <Badge variant="outline" className="text-micro">
             {activeModel.provider === 'local' ? t('vramManager.local') : t('vramManager.cloud')}
           </Badge>
         </div>
@@ -164,7 +164,7 @@ export function VramSettingsCard() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-semibold">{t('vramManager.autoSwitch')}</Label>
-              <p className="text-[10px] text-slate-500">{t('vramManager.autoSwitchDesc')}</p>
+              <p className="text-2xs text-slate-500">{t('vramManager.autoSwitchDesc')}</p>
             </div>
             <Switch checked={config.autoSwitch} onCheckedChange={(v) => updateConfig({ autoSwitch: v })} />
           </div>
@@ -172,7 +172,7 @@ export function VramSettingsCard() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-semibold">{t('vramManager.preferLocal')}</Label>
-              <p className="text-[10px] text-slate-500">{t('vramManager.preferLocalDesc')}</p>
+              <p className="text-2xs text-slate-500">{t('vramManager.preferLocalDesc')}</p>
             </div>
             <Switch checked={config.preferLocalModels} onCheckedChange={(v) => updateConfig({ preferLocalModels: v })} />
           </div>
@@ -180,7 +180,7 @@ export function VramSettingsCard() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-semibold">{t('vramManager.alertHighUsage')}</Label>
-              <p className="text-[10px] text-slate-500">{t('vramManager.alertHighUsageDesc')}</p>
+              <p className="text-2xs text-slate-500">{t('vramManager.alertHighUsageDesc')}</p>
             </div>
             <Switch checked={config.alertOnHighUsage} onCheckedChange={(v) => updateConfig({ alertOnHighUsage: v })} />
           </div>
@@ -223,13 +223,13 @@ export function VramSettingsCard() {
               const tierLabels = getTierLabels(t);
               return (
                 <div key={tierKey} className={`flex items-center gap-3 p-2 rounded-lg border transition-all ${isActive ? TIER_COLORS[tierKey] : 'bg-slate-900/30 border-slate-800/30'}`}>
-                  <span className={`text-[10px] font-bold w-14 ${isActive ? '' : 'text-slate-500'}`}>{tierLabels[tierKey].split(' ')[0]}</span>
-                  <span className="text-[10px] text-slate-500 w-20">{tierLabels[tierKey].match(/\(.*\)/)?.[0] || ''}</span>
-                  <span className={`text-[10px] font-mono flex-1 ${isActive ? 'font-bold' : 'text-slate-600'}`}>
+                  <span className={`text-2xs font-bold w-14 ${isActive ? '' : 'text-slate-500'}`}>{tierLabels[tierKey].split(' ')[0]}</span>
+                  <span className="text-2xs text-slate-500 w-20">{tierLabels[tierKey].match(/\(.*\)/)?.[0] || ''}</span>
+                  <span className={`text-2xs font-mono flex-1 ${isActive ? 'font-bold' : 'text-slate-600'}`}>
                     {rec.localModel || '—'}
                   </span>
-                  <span className="text-[10px] text-slate-600 font-mono">{rec.cloudFallback}</span>
-                  <span className="text-[9px] text-slate-600">{t('vramManager.batch')} {rec.batchSize}</span>
+                  <span className="text-2xs text-slate-600 font-mono">{rec.cloudFallback}</span>
+                  <span className="text-micro text-slate-600">{t('vramManager.batch')} {rec.batchSize}</span>
                   {isActive && <Zap className="h-3 w-3 text-amber-400" />}
                 </div>
               );

@@ -404,16 +404,16 @@ export function MangaTranslator() {
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-white">P.{index + 1}</span>
+                            <span className="text-2xs text-white">P.{index + 1}</span>
                             <div className="flex gap-1">
                               {page.processed && (
-                                <Badge className="h-4 text-[8px] bg-green-500/80 px-1">
+                                <Badge className="h-4 text-2xs bg-green-500/80 px-1">
                                   <CheckCircle2 className="h-2 w-2 mr-0.5" />
                                   OCR
                                 </Badge>
                               )}
                               {page.inpainted && (
-                                <Badge className="h-4 text-[8px] bg-blue-500/80 px-1">
+                                <Badge className="h-4 text-2xs bg-blue-500/80 px-1">
                                   <PaintBucket className="h-2 w-2 mr-0.5" />
                                   INP
                                 </Badge>
@@ -526,7 +526,7 @@ export function MangaTranslator() {
                           </span>
                         </div>
                         <Badge 
-                          className="absolute -top-2 -right-2 h-4 text-[8px] bg-teal-600"
+                          className="absolute -top-2 -right-2 h-4 text-2xs bg-teal-600"
                         >
                           {Math.round(balloon.confidence * 100)}%
                         </Badge>
@@ -665,10 +665,10 @@ export function MangaTranslator() {
                         onClick={() => setSelectedBalloon(balloon.id)}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <Badge variant="outline" className="text-[10px]">
+                          <Badge variant="outline" className="text-2xs">
                             #{idx + 1}
                           </Badge>
-                          <Badge className="text-[10px] bg-green-500/20 text-green-400">
+                          <Badge className="text-2xs bg-green-500/20 text-green-400">
                             {Math.round(balloon.confidence * 100)}%
                           </Badge>
                         </div>

@@ -97,14 +97,14 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
               <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-xs font-semibold text-red-300">{t('disclaimer.translationQuality')}</h3>
-                <p className="text-[10px] text-slate-400">{t('disclaimer.translationQualityText')}</p>
+                <p className="text-2xs text-slate-400">{t('disclaimer.translationQualityText')}</p>
               </div>
             </div>
             <div className="flex items-start gap-2 p-2 bg-slate-800/50 border border-slate-700/50 rounded-lg">
               <Shield className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-xs font-semibold text-purple-300">{t('disclaimer.noWarranty')}</h3>
-                <p className="text-[10px] text-slate-400">{t('disclaimer.noWarrantyText')}</p>
+                <p className="text-2xs text-slate-400">{t('disclaimer.noWarrantyText')}</p>
               </div>
             </div>
           </div>

@@ -241,7 +241,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                 Character Voice AI
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 Profili personalità per traduzioni contestuali
               </p>
             </div>
@@ -443,7 +443,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                         <span className="font-medium text-sm">{profile.name}</span>
                       </div>
                       <div className="flex items-center gap-1 mt-1">
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-2xs">
                           {ARCHETYPE_NAMES[profile.personality.archetype]}
                         </Badge>
                       </div>
@@ -483,7 +483,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {selectedProfile.personality.traits.map((trait, i) => (
-                      <Badge key={i} variant="outline" className="text-[10px]">{trait}</Badge>
+                      <Badge key={i} variant="outline" className="text-2xs">{trait}</Badge>
                     ))}
                   </div>
                   {selectedProfile.patterns.catchphrases.length > 0 && (

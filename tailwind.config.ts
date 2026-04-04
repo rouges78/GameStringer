@@ -30,6 +30,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        'micro': ['0.5625rem', { lineHeight: '0.75rem' }],   // 9px  — replaces text-micro
+        '2xs':   ['0.625rem',  { lineHeight: '0.875rem' }],  // 10px — replaces text-2xs
+      },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':

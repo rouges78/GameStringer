@@ -145,7 +145,7 @@ export function DragDropZone({
             </Button>
           </label>
           
-          <p className="text-[10px] text-muted-foreground mt-3">
+          <p className="text-2xs text-muted-foreground mt-3">
             Formats: {accept.join(', ')} • Max {maxSize}MB
           </p>
         </div>

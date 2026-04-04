@@ -80,7 +80,7 @@ export function TutorialMenu({ userId }: TutorialMenuProps) {
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{getGuideText(tutorial.id, 'name', tutorial.name)}</p>
-                <p className="text-[10px] text-slate-500 truncate">{getGuideText(tutorial.id, 'description', tutorial.description)}</p>
+                <p className="text-2xs text-slate-500 truncate">{getGuideText(tutorial.id, 'description', tutorial.description)}</p>
               </div>
             </DropdownMenuItem>
           );

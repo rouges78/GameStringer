@@ -576,7 +576,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                             {cover.upvotes}
                           </span>
                           {cover.style && (
-                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                            <Badge variant="secondary" className="text-2xs px-1 py-0">
                               {getStyleLabel(cover.style)}
                             </Badge>
                           )}
@@ -586,7 +586,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
 
                     {/* Type badge */}
                     <div className="absolute top-1 right-1">
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 gap-0.5 bg-black/60">
+                      <Badge variant="secondary" className="text-2xs px-1.5 py-0.5 gap-0.5 bg-black/60">
                         {getTypeIcon(cover.type)}
                         {cover.type}
                       </Badge>
@@ -596,10 +596,10 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
                     {(cover.nsfw || cover.humor) && (
                       <div className="absolute top-1 left-1 flex gap-1">
                         {cover.nsfw && (
-                          <Badge variant="destructive" className="text-[10px] px-1 py-0">NSFW</Badge>
+                          <Badge variant="destructive" className="text-2xs px-1 py-0">NSFW</Badge>
                         )}
                         {cover.humor && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 bg-yellow-500/20 text-yellow-300 border-yellow-500/30">😄</Badge>
+                          <Badge variant="outline" className="text-2xs px-1 py-0 bg-yellow-500/20 text-yellow-300 border-yellow-500/30">😄</Badge>
                         )}
                       </div>
                     )}

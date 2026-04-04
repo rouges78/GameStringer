@@ -53,8 +53,8 @@ function UsageBar({ percent, label, color, detail }: { percent: number; label: s
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
-        <span className={`text-[10px] font-bold ${percent > 85 ? 'text-red-400' : percent > 65 ? 'text-amber-400' : 'text-slate-400'}`}>
+        <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+        <span className={`text-2xs font-bold ${percent > 85 ? 'text-red-400' : percent > 65 ? 'text-amber-400' : 'text-slate-400'}`}>
           {percent.toFixed(0)}%
         </span>
       </div>
@@ -64,7 +64,7 @@ function UsageBar({ percent, label, color, detail }: { percent: number; label: s
           style={{ width: `${Math.min(100, percent)}%`, backgroundColor: color }}
         />
       </div>
-      {detail && <span className="text-[9px] text-slate-600">{detail}</span>}
+      {detail && <span className="text-micro text-slate-600">{detail}</span>}
     </div>
   );
 }
@@ -132,7 +132,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
           ) : (
             <Cloud className={`h-3.5 w-3.5 ${tierColor}`} />
           )}
-          <span className={`text-[10px] font-bold ${tierColor}`}>
+          <span className={`text-2xs font-bold ${tierColor}`}>
             {stats.gpu_available ? `VRAM ${stats.vram_usage_percent.toFixed(0)}%` : 'Cloud'}
           </span>
           {stats.vram_usage_percent > 85 && (
@@ -155,7 +155,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
             <span className="text-[11px] font-bold text-slate-300">Monitor Sistema</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border ${tierBg} ${tierColor}`}>
+            <span className={`text-micro font-bold px-2 py-0.5 rounded-md border ${tierBg} ${tierColor}`}>
               {TIER_LABELS[tier]}
             </span>
             <button onClick={() => setExpanded(false)} className="p-1 hover:bg-white/5 rounded-lg transition-colors">
@@ -170,7 +170,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
             <>
               <div className="flex items-center gap-2">
                 <Monitor className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-[10px] font-semibold text-slate-400 truncate">{stats.gpu_name}</span>
+                <span className="text-2xs font-semibold text-slate-400 truncate">{stats.gpu_name}</span>
               </div>
 
               <UsageBar
@@ -183,7 +183,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
               {stats.gpu_temp_celsius !== null && (
                 <div className="flex items-center gap-2">
                   <Thermometer className={`h-3 w-3 ${stats.gpu_temp_celsius > 80 ? 'text-red-400' : stats.gpu_temp_celsius > 65 ? 'text-amber-400' : 'text-slate-500'}`} />
-                  <span className={`text-[10px] font-semibold ${stats.gpu_temp_celsius > 80 ? 'text-red-400' : stats.gpu_temp_celsius > 65 ? 'text-amber-400' : 'text-slate-400'}`}>
+                  <span className={`text-2xs font-semibold ${stats.gpu_temp_celsius > 80 ? 'text-red-400' : stats.gpu_temp_celsius > 65 ? 'text-amber-400' : 'text-slate-400'}`}>
                     {stats.gpu_temp_celsius.toFixed(0)}°C
                   </span>
                 </div>
@@ -213,8 +213,8 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
             ) : (
               <Cloud className="h-3 w-3 text-violet-400" />
             )}
-            <span className="text-[10px] text-slate-500">Modello:</span>
-            <span className={`text-[10px] font-bold ${modelInfo.provider === 'local' ? 'text-emerald-400' : 'text-violet-400'}`}>
+            <span className="text-2xs text-slate-500">Modello:</span>
+            <span className={`text-2xs font-bold ${modelInfo.provider === 'local' ? 'text-emerald-400' : 'text-violet-400'}`}>
               {modelInfo.model}
             </span>
             <Zap className="h-2.5 w-2.5 text-amber-400 ml-auto" />
@@ -224,7 +224,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
         {/* Warning */}
         {stats.warning && (
           <div className="px-4 py-2 border-t border-red-500/10 bg-red-500/[0.03]">
-            <p className="text-[9px] text-red-400 leading-relaxed">{stats.warning}</p>
+            <p className="text-micro text-red-400 leading-relaxed">{stats.warning}</p>
           </div>
         )}
       </div>

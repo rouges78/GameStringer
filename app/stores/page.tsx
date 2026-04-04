@@ -688,7 +688,7 @@ export default function StoresPage() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-white">{t('stores.title')}</h1>
-            <p className="text-white/70 text-[9px]">{t('stores.subtitle')}</p>
+            <p className="text-white/70 text-micro">{t('stores.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -748,9 +748,9 @@ export default function StoresPage() {
               <div className="flex items-center gap-1.5 mb-0.5">
                 <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
                   {store.id === 'xbox' ? (
-                    <div className="h-6 w-6 rounded bg-[#107c10] flex items-center justify-center text-white text-[10px] font-bold">X</div>
+                    <div className="h-6 w-6 rounded bg-[#107c10] flex items-center justify-center text-white text-2xs font-bold">X</div>
                   ) : store.id === 'amazon' ? (
-                    <div className="h-6 w-6 rounded bg-[#ff9900] flex items-center justify-center text-black text-[10px] font-bold">A</div>
+                    <div className="h-6 w-6 rounded bg-[#ff9900] flex items-center justify-center text-black text-2xs font-bold">A</div>
                   ) : store.logoUrl ? (
                     <Image
                       src={store.logoUrl}
@@ -772,7 +772,7 @@ export default function StoresPage() {
                       <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[9px] text-muted-foreground line-clamp-1">
+                  <p className="text-micro text-muted-foreground line-clamp-1">
                     {autoDetectStatus ?? t(`stores.${store.descKey}`)}
                   </p>
                 </div>
@@ -783,7 +783,7 @@ export default function StoresPage() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="flex-1 h-7 text-[10px]"
+                      className="flex-1 h-7 text-2xs"
                       disabled={isLoading || currentLoading}
                       onClick={() => handleDisconnect(store.id)}
                     >
@@ -794,7 +794,7 @@ export default function StoresPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2 text-[10px] border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                        className="h-7 px-2 text-2xs border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
                         onClick={() => setIsFamilySharingOpen(true)}
                         title="Family Sharing"
                       >
@@ -805,7 +805,7 @@ export default function StoresPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                        className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
                         onClick={() => shellOpen('https://www.gog.com/account').catch(() => window.open('https://www.gog.com/account', '_blank'))}
                         title="Apri GOG.com"
                       >
@@ -834,7 +834,7 @@ export default function StoresPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                      className="flex-1 h-7 text-2xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
                       disabled={isLoading || currentLoading}
                       onClick={() => handleConnect(store.id)}
                     >
@@ -846,7 +846,7 @@ export default function StoresPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
                           onClick={() => shellOpen('https://www.gog.com/en/games').catch(() => window.open('https://www.gog.com/en/games', '_blank'))}
                           title="GOG Store"
                         >
@@ -855,7 +855,7 @@ export default function StoresPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
                           onClick={() => shellOpen('https://www.gog.com/galaxy').catch(() => window.open('https://www.gog.com/galaxy', '_blank'))}
                           title="Scarica GOG Galaxy"
                         >
@@ -865,7 +865,7 @@ export default function StoresPage() {
                     )}
                   </>
                 ) : (
-                  <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px] border-orange-500/30 text-orange-300/50" disabled={true}>
+                  <Button size="sm" variant="outline" className="flex-1 h-7 text-2xs border-orange-500/30 text-orange-300/50" disabled={true}>
                     {t('stores.notAvailable')}
                   </Button>
                 )}
@@ -934,7 +934,7 @@ export default function StoresPage() {
         
         {utilityExpanded && (
         <div id="utility-section" className="mt-1">
-        <p className="text-muted-foreground text-[10px] mb-0.5">
+        <p className="text-muted-foreground text-2xs mb-0.5">
           {t('stores.utilityServicesDesc')}
         </p>
         
@@ -962,7 +962,7 @@ export default function StoresPage() {
                       <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[9px] text-muted-foreground line-clamp-1">{t(`stores.${service.descKey}`)}</p>
+                  <p className="text-micro text-muted-foreground line-clamp-1">{t(`stores.${service.descKey}`)}</p>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -971,7 +971,7 @@ export default function StoresPage() {
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="flex-1 h-7 text-[10px]"
+                    className="flex-1 h-7 text-2xs"
                     disabled={isLoading || currentLoading}
                     onClick={() => handleDisconnectUtility(service.id)}
                   >
@@ -999,7 +999,7 @@ export default function StoresPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                  className="flex-1 h-7 text-2xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
                   disabled={isLoading || currentLoading}
                   onClick={() => handleConnectUtility(service.id)}
                 >
@@ -1007,7 +1007,7 @@ export default function StoresPage() {
                   {t('stores.activate')}
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px] border-orange-500/30 text-orange-300/50" disabled={true}>
+                <Button size="sm" variant="outline" className="flex-1 h-7 text-2xs border-orange-500/30 text-orange-300/50" disabled={true}>
                   {t('stores.comingSoon')}
                 </Button>
               )}

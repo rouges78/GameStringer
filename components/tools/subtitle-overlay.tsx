@@ -169,7 +169,7 @@ export function SubtitleOverlay() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('subtitleOverlay.title')}</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('subtitleOverlay.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('subtitleOverlay.subtitle')}</p>
             </div>
           </div>
           

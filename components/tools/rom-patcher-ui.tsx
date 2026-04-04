@@ -251,7 +251,7 @@ export function RomPatcherUI() {
                     <div className="flex items-center justify-center gap-2">
                       <HardDrive className="h-4 w-4 text-green-500" />
                       <span className="text-sm font-medium">{applyRomFile.name}</span>
-                      <Badge variant="outline" className="text-[10px]">{formatBytes(applyRomFile.data.length)}</Badge>
+                      <Badge variant="outline" className="text-2xs">{formatBytes(applyRomFile.data.length)}</Badge>
                     </div>
                   ) : (
                     <>
@@ -274,10 +274,10 @@ export function RomPatcherUI() {
                     <div className="flex items-center justify-center gap-2">
                       <FileDown className="h-4 w-4 text-blue-500" />
                       <span className="text-sm font-medium">{applyPatchFile.name}</span>
-                      <Badge className={`text-[10px] uppercase ${applyPatchFile.info.valid ? 'bg-green-500' : 'bg-red-500'}`}>
+                      <Badge className={`text-2xs uppercase ${applyPatchFile.info.valid ? 'bg-green-500' : 'bg-red-500'}`}>
                         {applyPatchFile.info.format}
                       </Badge>
-                      <Badge variant="outline" className="text-[10px]">{formatBytes(applyPatchFile.data.length)}</Badge>
+                      <Badge variant="outline" className="text-2xs">{formatBytes(applyPatchFile.data.length)}</Badge>
                     </div>
                   ) : (
                     <>
@@ -297,7 +297,7 @@ export function RomPatcherUI() {
                     <span>Target: <strong>{formatBytes(applyPatchFile.info.targetSize)}</strong></span>
                   )}
                   {applyPatchFile.info.sourceCrc && (
-                    <span>CRC32 src: <code className="text-[10px]">{applyPatchFile.info.sourceCrc}</code></span>
+                    <span>CRC32 src: <code className="text-2xs">{applyPatchFile.info.sourceCrc}</code></span>
                   )}
                 </div>
               )}
@@ -375,7 +375,7 @@ export function RomPatcherUI() {
                     <div className="flex items-center justify-center gap-2">
                       <HardDrive className="h-4 w-4 text-blue-500" />
                       <span className="text-sm font-medium">{createOriginal.name}</span>
-                      <Badge variant="outline" className="text-[10px]">{formatBytes(createOriginal.data.length)}</Badge>
+                      <Badge variant="outline" className="text-2xs">{formatBytes(createOriginal.data.length)}</Badge>
                     </div>
                   ) : (
                     <>
@@ -398,7 +398,7 @@ export function RomPatcherUI() {
                     <div className="flex items-center justify-center gap-2">
                       <HardDrive className="h-4 w-4 text-green-500" />
                       <span className="text-sm font-medium">{createModified.name}</span>
-                      <Badge variant="outline" className="text-[10px]">{formatBytes(createModified.data.length)}</Badge>
+                      <Badge variant="outline" className="text-2xs">{formatBytes(createModified.data.length)}</Badge>
                     </div>
                   ) : (
                     <>
@@ -416,7 +416,7 @@ export function RomPatcherUI() {
                   <span>Originale: <strong>{formatBytes(createOriginal.data.length)}</strong></span>
                   <span>Tradotta: <strong>{formatBytes(createModified.data.length)}</strong></span>
                   {createOriginal.data.length !== createModified.data.length && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-2xs">
                       {createModified.data.length > createOriginal.data.length ? '+' : ''}
                       {formatBytes(createModified.data.length - createOriginal.data.length)}
                     </Badge>
@@ -485,7 +485,7 @@ export function RomPatcherUI() {
                         </Button>
                       </div>
                       <div className="mt-2 p-2 rounded bg-muted/50">
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-2xs text-muted-foreground">
                           La patch contiene solo le differenze tra le due ROM — sicura da distribuire, nessun dato protetto da copyright.
                         </p>
                       </div>
