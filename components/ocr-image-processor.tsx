@@ -119,37 +119,72 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Simulate OCR processing (in production you would use Tesseract.js or external API)
-  const simulateOCR = async (imageUrl: string): Promise<OCRResult> => {
-    // Simulate progress
-    for (let i = 0; i <= 100; i += 10) {
-      setProgress(i);
-      await new Promise(resolve => setTimeout(resolve, 100));
+  // Run OCR via Tauri Tesseract backend
+  const runOCR = async (imageUrl: string): Promise<OCRResult> => {
+    setProgress(10);
+
+    // Convert image URL to base64 for the Tauri command
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1] || result);
+      };
+      reader.readAsDataURL(blob);
+    });
+
+    setProgress(30);
+
+    const lang = settings.language === 'auto' ? 'eng' : settings.language;
+
+    let text: string;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      text = await invoke<string>('tesseract_recognize', {
+        imageBase64: base64,
+        language: lang,
+      });
+    } catch {
+      // Fallback: try Windows native OCR
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        text = await invoke<string>('ocr_recognize', {
+          imageBase64: base64,
+        });
+      } catch (e2) {
+        throw new Error(
+          `OCR non disponibile. Installa Tesseract o usa Windows 10+ per OCR nativo. Dettagli: ${e2}`
+        );
+      }
     }
 
-    // Simulate OCR result
-    const mockResult: OCRResult = {
-      id: `ocr-${Date.now()}`,
-      text: `Testo estratto dall'immagine...
-      
-Questo è un esempio di testo che potrebbe essere estratto da un'immagine di game.
-Potrebbero esserci dialoghi, menu, istruzioni o altri elementi testuali.
+    setProgress(80);
 
-Il sistema OCR può riconoscere diversi tipi di font e stili di testo,
-anche in condizioni di illuminazione non ottimali.`,
-      confidence: 85.5,
+    // Split into lines for bounding boxes (approximate)
+    const lines = text.split('\n').filter((l) => l.trim().length > 0);
+    const boundingBoxes: BoundingBox[] = lines.map((line, i) => ({
+      x: 50,
+      y: 100 + i * 40,
+      width: Math.min(line.length * 8, 500),
+      height: 30,
+      text: line,
+      confidence: 85,
+    }));
+
+    setProgress(100);
+
+    return {
+      id: `ocr-${Date.now()}`,
+      text,
+      confidence: 85,
       language: settings.language === 'auto' ? 'en' : settings.language,
-      boundingBoxes: [
-        { x: 50, y: 100, width: 200, height: 30, text: 'Testo estratto dall\'immagine...', confidence: 90 },
-        { x: 50, y: 150, width: 300, height: 80, text: 'Questo è un esempio di testo...', confidence: 85 },
-        { x: 50, y: 250, width: 280, height: 60, text: 'Il sistema OCR può riconoscere...', confidence: 80 }
-      ],
+      boundingBoxes,
       timestamp: new Date(),
       imageUrl,
-      processedImageUrl: settings.enhanceImage ? imageUrl + '?processed=true' : undefined
+      processedImageUrl: settings.enhanceImage ? imageUrl : undefined,
     };
-
-    return mockResult;
   };
 
   // Preprocessa immagine
@@ -219,7 +254,7 @@ anche in condizioni di illuminazione non ottimali.`,
       const processedImageUrl = await preprocessImage(file);
       
       // Run OCR
-      const result = await simulateOCR(processedImageUrl);
+      const result = await runOCR(processedImageUrl);
       
       // Filter results by minimum confidence
       const filteredBoundingBoxes = result.boundingBoxes.filter(
