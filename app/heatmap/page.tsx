@@ -284,14 +284,14 @@ export default function HeatmapPage() {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('heatmap.title')}</h1>
-                <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('heatmap.subtitle')}</p>
+                <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('heatmap.subtitle')}</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                 <BarChart3 className="h-3.5 w-3.5 text-white" />
                 <span className="text-sm font-bold text-white">8</span>
-                <span className="text-[10px] text-white/70">{t('heatmap.metrics')}</span>
+                <span className="text-2xs text-white/70">{t('heatmap.metrics')}</span>
               </div>
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                 <AlertTriangle className="h-3.5 w-3.5 text-white" />

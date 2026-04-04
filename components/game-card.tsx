@@ -228,14 +228,14 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
                 />
               ))
             ) : (
-              <span className="text-[10px] text-muted-foreground">-</span>
+              <span className="text-2xs text-muted-foreground">-</span>
             )}
           </div>
           
           {game.engine && game.engine !== 'Unknown' && (
             <Badge 
               variant="secondary" 
-              className="text-[10px] bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-sm px-1.5 py-0"
+              className="text-2xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-sm px-1.5 py-0"
               title={`Motore: ${game.engine}`}
             >
               <Cog className="h-2.5 w-2.5 mr-0.5" />
@@ -246,7 +246,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
         
         {/* Riga 2: HowLongToBeat */}
         {game.howLongToBeat && game.howLongToBeat.main > 0 && (
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-slate-800/50 rounded px-2 py-1">
+          <div className="flex items-center gap-2 text-2xs text-muted-foreground bg-slate-800/50 rounded px-2 py-1">
             <Timer className="h-3 w-3 text-amber-400" />
             <span title="Storia principale">🎮 {game.howLongToBeat.main}h</span>
             {game.howLongToBeat.mainExtra > 0 && (

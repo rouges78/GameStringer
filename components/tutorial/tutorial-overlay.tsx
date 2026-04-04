@@ -211,7 +211,7 @@ export function TutorialOverlay() {
                   {t('tutorial.overlay.back')}
                 </Button>
 
-                <span className="text-[10px] text-slate-600">
+                <span className="text-2xs text-slate-600">
                   {currentStep + 1} / {totalSteps}
                 </span>
 
@@ -236,7 +236,7 @@ export function TutorialOverlay() {
 
               {/* Hint */}
               <div className="px-3 pb-2 text-center">
-                <span className="text-[9px] text-slate-600">
+                <span className="text-micro text-slate-600">
                   {t('tutorial.overlay.hint')}
                 </span>
               </div>

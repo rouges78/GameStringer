@@ -81,7 +81,7 @@ export function ContentTypeBadge({ type, confidence, showConfidence = false, siz
             variant="outline" 
             className={cn(
               colorClass,
-              size === 'sm' ? 'text-[10px] px-1.5 h-5' : 'text-xs px-2 h-6'
+              size === 'sm' ? 'text-2xs px-1.5 h-5' : 'text-xs px-2 h-6'
             )}
           >
             <Icon className={cn("mr-1", size === 'sm' ? "h-3 w-3" : "h-3.5 w-3.5")} />
@@ -136,7 +136,7 @@ export function QualityScoreBadge({ score, size = 'sm', showLabel = true }: Qual
             variant="outline" 
             className={cn(
               colorClass,
-              size === 'sm' ? 'text-[10px] px-1.5 h-5' : 
+              size === 'sm' ? 'text-2xs px-1.5 h-5' : 
               size === 'md' ? 'text-xs px-2 h-6' : 
               'text-sm px-2.5 h-7'
             )}
@@ -208,7 +208,7 @@ export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarP
       )}
       
       {showDetails && score.details.length > 0 && (
-        <div className="text-[10px] space-y-0.5 pt-1 border-t border-slate-700">
+        <div className="text-2xs space-y-0.5 pt-1 border-t border-slate-700">
           {score.details.slice(0, 4).map((detail, i) => (
             <p key={i} className="text-muted-foreground">{detail}</p>
           ))}
@@ -253,13 +253,13 @@ export function TranslationInsights({
       )}
       
       {classification.metadata.hasPlaceholders && (
-        <Badge variant="outline" className="text-[10px] px-1.5 h-5 bg-orange-500/10 text-orange-400 border-orange-500/30">
+        <Badge variant="outline" className="text-2xs px-1.5 h-5 bg-orange-500/10 text-orange-400 border-orange-500/30">
           {'{...}'}
         </Badge>
       )}
       
       {classification.metadata.hasCharacterLimit && (
-        <Badge variant="outline" className="text-[10px] px-1.5 h-5 bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+        <Badge variant="outline" className="text-2xs px-1.5 h-5 bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
           ≤{classification.metadata.estimatedCharLimit}
         </Badge>
       )}

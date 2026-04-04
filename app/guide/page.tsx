@@ -121,7 +121,7 @@ export default function GuidePage() {
               <p className="text-xs text-muted-foreground">{t('guidePage.everythingAbout')} v{version}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/30">
+          <Badge variant="outline" className="text-2xs bg-orange-500/10 text-orange-400 border-orange-500/30">
             {registry.length} {t('nav.tools').toLowerCase()}
           </Badge>
         </div>
@@ -333,7 +333,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.wfOcrStep1Title}>
-                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">{t('guidePage.ocrTranslator')}</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[10px] font-mono">{t('guidePage.ctrlshiftt')}</kbd> {g.wfOcrStep1Line1c}</p>
+                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">{t('guidePage.ocrTranslator')}</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-2xs font-mono">{t('guidePage.ctrlshiftt')}</kbd> {g.wfOcrStep1Line1c}</p>
                   </Step>
                   <Step number={2} title={g.wfOcrStep2Title}>
                     <p>{g.wfOcrStep2Line1}</p>
@@ -389,7 +389,7 @@ export default function GuidePage() {
                     <div className="flex items-center gap-2 mb-3">
                       <div className={`h-1 w-8 rounded-full bg-${meta.color}-500`} />
                       <h2 className={`text-sm font-bold text-${meta.color}-400 uppercase tracking-wider`}>{meta.label}</h2>
-                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4">
+                      <Badge variant="secondary" className="text-micro px-1.5 py-0 h-4">
                         {groupedByCategory[cat].reduce((acc, g) => acc + g.tools.length, 0)}
                       </Badge>
                     </div>
@@ -412,19 +412,19 @@ export default function GuidePage() {
                                         <Icon className={`h-3.5 w-3.5 text-${tool.color}-400`} />
                                       </div>
                                       <span className="text-white">{tool.name}</span>
-                                      {tool.isNew && <Badge className="text-[8px] px-1 py-0 h-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30">NEW</Badge>}
+                                      {tool.isNew && <Badge className="text-2xs px-1 py-0 h-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30">NEW</Badge>}
                                     </CardTitle>
                                   </CardHeader>
                                   <CardContent className="py-1 px-3 pb-2">
                                     <ul className="space-y-0.5">
                                       {tool.features.slice(0, 3).map((f, j) => (
-                                        <li key={j} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
+                                        <li key={j} className="flex items-start gap-1.5 text-2xs text-muted-foreground">
                                           <ChevronRight className="h-2.5 w-2.5 mt-0.5 text-slate-600 shrink-0" />
                                           <span>{f}</span>
                                         </li>
                                       ))}
                                       {tool.features.length > 3 && (
-                                        <li className="text-[10px] text-slate-600 pl-4">+{tool.features.length - 3} {g.otherFunctions}</li>
+                                        <li className="text-2xs text-slate-600 pl-4">+{tool.features.length - 3} {g.otherFunctions}</li>
                                       )}
                                     </ul>
                                   </CardContent>
@@ -467,7 +467,7 @@ export default function GuidePage() {
                       { shortcut: 'Shift + ?', desc: g.scNavShortcuts },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-blue-400 whitespace-nowrap">
+                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-2xs font-mono text-blue-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -494,7 +494,7 @@ export default function GuidePage() {
                       { shortcut: 'ALT + T', desc: g.scGlobalXunity },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-[10px] font-mono text-green-400 whitespace-nowrap">
+                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-2xs font-mono text-green-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -522,7 +522,7 @@ export default function GuidePage() {
                       { shortcut: 'Enter', desc: g.scTransConfirm },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-violet-400 whitespace-nowrap">
+                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-2xs font-mono text-violet-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -613,12 +613,12 @@ export default function GuidePage() {
                     <Card className="border-slate-800/50 bg-slate-900/30 hover:bg-slate-800/40 transition-colors cursor-pointer h-full">
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className={`text-[9px] border-${e.color}-500/30 text-${e.color}-400 bg-${e.color}-500/10`}>
+                          <Badge variant="outline" className={`text-micro border-${e.color}-500/30 text-${e.color}-400 bg-${e.color}-500/10`}>
                             {e.engine}
                           </Badge>
                         </div>
                         <p className="text-xs font-medium text-white">{e.tool}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{e.desc}</p>
+                        <p className="text-2xs text-muted-foreground mt-0.5">{e.desc}</p>
                       </CardContent>
                     </Card>
                   </Link>

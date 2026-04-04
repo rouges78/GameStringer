@@ -172,7 +172,7 @@ export function CommandPalette() {
             className="border-0 focus-visible:ring-0 h-12 text-base"
             autoFocus
           />
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -219,7 +219,7 @@ export function CommandPalette() {
                             )}
                           </div>
                           {currentIndex === selectedIndex && (
-                            <kbd className="hidden sm:inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px]">
+                            <kbd className="hidden sm:inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">
                               ↵
                             </kbd>
                           )}
@@ -235,14 +235,14 @@ export function CommandPalette() {
         
         <div className="border-t px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px]">↑↓</kbd>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">↑↓</kbd>
             <span>navigate</span>
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px]">↵</kbd>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">↵</kbd>
             <span>select</span>
           </div>
           <div className="flex items-center gap-1">
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px]">Ctrl</kbd>
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px]">K</kbd>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">Ctrl</kbd>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">K</kbd>
             <span>open/close</span>
           </div>
         </div>

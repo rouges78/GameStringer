@@ -207,7 +207,7 @@ export function GitHubDiscussions() {
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-violet-400" />
           <span className="text-sm font-medium">{t('communityHub.discussions') || 'Discussions'}</span>
-          <Badge variant="outline" className="text-[10px] h-5">
+          <Badge variant="outline" className="text-2xs h-5">
             {discussions.length}
           </Badge>
         </div>
@@ -271,13 +271,13 @@ export function GitHubDiscussions() {
                     <div className="flex items-center gap-2 mb-1">
                       <Badge 
                         variant="outline" 
-                        className={`text-[10px] h-5 px-1.5 gap-1 ${categoryColors[discussion.category?.name ?? ''] || 'bg-gray-500/20 text-gray-400'}`}
+                        className={`text-2xs h-5 px-1.5 gap-1 ${categoryColors[discussion.category?.name ?? ''] || 'bg-gray-500/20 text-gray-400'}`}
                       >
                         {categoryIcons[discussion.category?.name ?? ''] || <Tag className="h-3 w-3" />}
                         {discussion.category?.name ?? 'General'}
                       </Badge>
                       {discussion.answerChosenAt && (
-                        <Badge className="text-[10px] h-5 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
+                        <Badge className="text-2xs h-5 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           {t('communityHub.answered') || 'Answered'}
                         </Badge>
@@ -293,7 +293,7 @@ export function GitHubDiscussions() {
                     </p>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-3 text-2xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {discussion.author.login}

@@ -23,7 +23,7 @@ export default function UnityPatcherPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('gamePatcher.title')}</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('gamePatcher.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('gamePatcher.subtitle')}</p>
             </div>
           </div>
           
@@ -32,7 +32,7 @@ export default function UnityPatcherPage() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Layers className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">5</span>
-              <span className="text-[10px] text-white/70">{t('gamePatcher.engines')}</span>
+              <span className="text-2xs text-white/70">{t('gamePatcher.engines')}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-white" />
@@ -47,27 +47,27 @@ export default function UnityPatcherPage() {
 
         {/* Quick Links */}
         <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">{t('gamePatcher.otherPatchers')}</span>
+          <span className="text-2xs text-white/50 mr-2 self-center">{t('gamePatcher.otherPatchers')}</span>
           <Link href="/unreal-translator">
-            <Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Cpu className="h-3 w-3" />
               Unreal
             </Button>
           </Link>
           <Link href="/telltale-patcher">
-            <Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Gamepad2 className="h-3 w-3" />
               Telltale
             </Button>
           </Link>
           <Link href="/unity-bundle">
-            <Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Package className="h-3 w-3" />
               Unity Bundle
             </Button>
           </Link>
           <Link href="/nexus-mods">
-            <Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+            <Button variant="outline" size="sm" className="gap-1 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Download className="h-3 w-3" />
               Nexus Mods
             </Button>

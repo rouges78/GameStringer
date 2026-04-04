@@ -253,7 +253,7 @@ export function TranslationStatsWidget() {
                       minHeight: '4px'
                     }}
                   />
-                  <span className="text-[10px] text-muted-foreground">{day.date}</span>
+                  <span className="text-2xs text-muted-foreground">{day.date}</span>
                 </div>
               ))}
             </div>

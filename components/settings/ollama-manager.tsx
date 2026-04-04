@@ -396,7 +396,7 @@ export function OllamaManager() {
             Modelli consigliati per traduzione
           </h4>
           {!status?.running && (
-            <p className="text-[10px] text-amber-400/80">{t('ollamaManagerComp.avviaOllamaPerInstallareIModel')}</p>
+            <p className="text-2xs text-amber-400/80">{t('ollamaManagerComp.avviaOllamaPerInstallareIModel')}</p>
           )}
           <div className="grid gap-2">
             {recommendedModels.map((model) => {
@@ -410,15 +410,15 @@ export function OllamaManager() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono font-medium">{model.name}</span>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.size}</Badge>
+                      <Badge variant="outline" className="text-2xs px-1.5 py-0">{model.size}</Badge>
                       {isInstalled && (
-                        <Badge className="text-[10px] px-1.5 py-0 bg-green-500/20 text-green-500 border-green-500/30">
+                        <Badge className="text-2xs px-1.5 py-0 bg-green-500/20 text-green-500 border-green-500/30">
                           <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
                           Installato
                         </Badge>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{model.description}</p>
+                    <p className="text-2xs text-muted-foreground mt-0.5 truncate">{model.description}</p>
                   </div>
                   {!isInstalled && (
                     <Button 
@@ -446,7 +446,7 @@ export function OllamaManager() {
 
         {/* Info */}
         {status?.installed && status.version && (
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-2xs text-muted-foreground">
             {status.version} — {status.install_path}
           </p>
         )}

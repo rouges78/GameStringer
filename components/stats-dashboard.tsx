@@ -234,7 +234,7 @@ export function StatsDashboard() {
                       style={{ height: `${height}%`, minHeight: day.words > 0 ? '4px' : '0' }}
                       title={`${day.words} parole`}
                     />
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-2xs text-muted-foreground">
                       {new Date(day.date).toLocaleDateString('it-IT', { weekday: 'short' })}
                     </span>
                   </div>

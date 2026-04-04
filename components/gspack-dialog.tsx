@@ -146,9 +146,9 @@ export function GspackExportDialog({
               <Gamepad2 className="h-5 w-5 text-slate-500" />
               <div>
                 <p className="text-sm font-bold text-slate-200">{gameName}</p>
-                <p className="text-[10px] text-slate-500">{platform} {engine ? `• ${engine}` : ''} {gameAppId ? `• ID ${gameAppId}` : ''}</p>
+                <p className="text-2xs text-slate-500">{platform} {engine ? `• ${engine}` : ''} {gameAppId ? `• ID ${gameAppId}` : ''}</p>
               </div>
-              <Badge className="ml-auto text-[9px] bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+              <Badge className="ml-auto text-micro bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
                 {files.length} {t('gspack.file')}
               </Badge>
             </div>
@@ -297,7 +297,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
                   <h3 className="text-sm font-bold text-slate-200">{result.manifest.name}</h3>
                   <p className="text-xs text-slate-500 mt-0.5">{result.manifest.description || t('gspack.noDescription')}</p>
                 </div>
-                <Badge className="text-[9px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                <Badge className="text-micro bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                   {result.manifest.translation.quality || 'draft'}
                 </Badge>
               </div>
@@ -323,7 +323,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
 
               {/* Progress */}
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px]">
+                <div className="flex justify-between text-2xs">
                   <span className="text-slate-500">{t('gspack.completion')}</span>
                   <span className="font-bold text-emerald-400">{result.manifest.translation.completionPercent}%</span>
                 </div>
@@ -339,7 +339,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
                 {result.warnings.map((w, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
-                    <span className="text-[10px] text-amber-400/80">{w}</span>
+                    <span className="text-2xs text-amber-400/80">{w}</span>
                   </div>
                 ))}
               </div>
@@ -348,13 +348,13 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
             {/* Files list */}
             {result.files && result.files.length > 0 && (
               <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('gspack.includedFiles')}</span>
+                <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest">{t('gspack.includedFiles')}</span>
                 {result.files.map((f, i) => (
                   <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
                     <FileText className="h-3.5 w-3.5 text-slate-500" />
                     <span className="text-xs text-slate-300 truncate flex-1">{f.path}</span>
-                    <Badge variant="secondary" className="font-mono text-[9px]">{f.format}</Badge>
-                    <span className="text-[9px] text-slate-500">{f.translatedCount}/{f.stringCount}</span>
+                    <Badge variant="secondary" className="font-mono text-micro">{f.format}</Badge>
+                    <span className="text-micro text-slate-500">{f.translatedCount}/{f.stringCount}</span>
                   </div>
                 ))}
               </div>
@@ -362,7 +362,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
 
             {/* Glossary */}
             {result.glossary && result.glossary.length > 0 && (
-              <div className="text-[10px] text-slate-500">
+              <div className="text-2xs text-slate-500">
                 {t('gspack.glossaryIncluded')}: {result.glossary.length} {t('gspack.terms')}
               </div>
             )}
@@ -370,7 +370,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
             {/* Notes */}
             {result.notes && (
               <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">{t('gspack.translatorNotes')}</span>
+                <span className="text-micro font-bold text-slate-500 uppercase tracking-widest block mb-1">{t('gspack.translatorNotes')}</span>
                 <p className="text-xs text-slate-400">{result.notes}</p>
               </div>
             )}

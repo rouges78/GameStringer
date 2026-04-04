@@ -131,7 +131,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
             <span className={cn("text-xs font-semibold", stat.color)}>
               {stat.value}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-2xs text-muted-foreground">
               {stat.label}
             </span>
           </div>
@@ -144,7 +144,7 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
           href={data.url} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="ml-auto text-[10px] text-muted-foreground hover:text-purple-400 flex items-center gap-0.5 transition-colors"
+          className="ml-auto text-2xs text-muted-foreground hover:text-purple-400 flex items-center gap-0.5 transition-colors"
         >
           <ExternalLink className="h-2.5 w-2.5" />
         </a>

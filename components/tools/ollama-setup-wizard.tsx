@@ -224,7 +224,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             {progress > 0 && (
               <div className="space-y-1">
                 <Progress value={progress} className="h-2" />
-                <p className="text-[10px] text-slate-500">{progressMessage}</p>
+                <p className="text-2xs text-slate-500">{progressMessage}</p>
               </div>
             )}
             <div className="flex gap-2">
@@ -277,9 +277,9 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-slate-200">{model.name}</span>
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">{model.size}</Badge>
+                    <Badge variant="outline" className="text-micro px-1.5 py-0 h-4">{model.size}</Badge>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{model.description}</p>
+                  <p className="text-2xs text-slate-400 mt-0.5">{model.description}</p>
                 </button>
               ))}
             </div>
@@ -287,7 +287,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             {progress > 0 && (
               <div className="space-y-1">
                 <Progress value={progress} className="h-2" />
-                <p className="text-[10px] text-slate-500">{progressMessage}</p>
+                <p className="text-2xs text-slate-500">{progressMessage}</p>
               </div>
             )}
 
@@ -315,7 +315,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             {status?.models && status.models.length > 0 && (
               <div className="flex flex-wrap gap-1 justify-center">
                 {status.models.map(m => (
-                  <Badge key={m} variant="outline" className="text-[10px]">{m}</Badge>
+                  <Badge key={m} variant="outline" className="text-2xs">{m}</Badge>
                 ))}
               </div>
             )}
@@ -331,7 +331,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
           <div className="mt-3 text-center">
             <button
               onClick={onComplete}
-              className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-2xs text-slate-500 hover:text-slate-300 transition-colors"
             >
               Salta — userò un provider cloud (Gemini, DeepSeek, Groq)
             </button>

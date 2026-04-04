@@ -196,7 +196,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
         <div className="rounded-lg bg-sky-500/15 border border-sky-500/25 p-2 backdrop-blur-md">
           <div className="flex items-center gap-1.5">
             <Loader2 className="h-3 w-3 text-sky-400 animate-spin" />
-            <span className="text-[9px] text-sky-300/60">Analisi libreria...</span>
+            <span className="text-micro text-sky-300/60">Analisi libreria...</span>
           </div>
         </div>
       </div>
@@ -213,11 +213,11 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
             <div className="p-1.5 bg-cyan-600/80 rounded-lg">
               <Languages className="h-4 w-4 text-white" />
             </div>
-            <span className="text-[10px] text-white uppercase tracking-wide font-semibold">
+            <span className="text-2xs text-white uppercase tracking-wide font-semibold">
               {t('widget.recommendedToTranslate') || 'Da Tradurre'}
             </span>
           </div>
-          <p className="text-[10px] text-cyan-300/60 text-center py-2">
+          <p className="text-2xs text-cyan-300/60 text-center py-2">
             {t('widget.allGamesTranslated') || 'Tutti i giochi hanno la lingua!'}
           </p>
         </div>
@@ -259,12 +259,12 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
             <div className="p-1.5 bg-cyan-600/80 rounded-lg">
               <Languages className="h-4 w-4 text-white" />
             </div>
-            <span className="text-[10px] text-white uppercase tracking-wide font-semibold">
+            <span className="text-2xs text-white uppercase tracking-wide font-semibold">
               {t('widget.recommendedToTranslate') || 'Da Tradurre'}
             </span>
           </div>
           {gamesWithoutLang.length > 1 && (
-            <span className="text-[9px] text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">
+            <span className="text-micro text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">
               {currentIndex + 1}/{gamesWithoutLang.length}
             </span>
           )}
@@ -317,7 +317,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
                 </h4>
               </div>
               {game.reason && (
-                <span className="text-[10px] text-cyan-400 font-medium whitespace-nowrap">
+                <span className="text-2xs text-cyan-400 font-medium whitespace-nowrap">
                   {game.reason}
                 </span>
               )}
@@ -353,7 +353,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
               />
             ))}
             {gamesWithoutLang.length > 6 && (
-              <span className="text-[8px] text-white/40 ml-0.5">+{gamesWithoutLang.length - 6}</span>
+              <span className="text-2xs text-white/40 ml-0.5">+{gamesWithoutLang.length - 6}</span>
             )}
           </div>
         )}

@@ -110,7 +110,7 @@ export function UpdateNotification() {
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="text-slate-500 text-[10px] mt-0.5">
+          <p className="text-slate-500 text-2xs mt-0.5">
             Versione attuale: {updateInfo.current_version}
           </p>
         </div>
@@ -118,11 +118,11 @@ export function UpdateNotification() {
         <div className="px-4 py-3">
           {releaseItems.length > 0 && (
             <div className="max-h-28 overflow-y-auto mb-3 pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-              <p className="text-slate-500 text-[10px] uppercase tracking-wider font-medium mb-1.5">Novità</p>
+              <p className="text-slate-500 text-2xs uppercase tracking-wider font-medium mb-1.5">Novità</p>
               <ul className="space-y-1">
                 {releaseItems.slice(0, 6).map((item, i) => (
                   <li key={i} className="text-slate-300 text-[11px] flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 text-[8px]">●</span>
+                    <span className="text-emerald-500 mt-0.5 text-2xs">●</span>
                     <span>{item}</span>
                   </li>
                 ))}

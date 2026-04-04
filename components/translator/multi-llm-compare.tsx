@@ -166,7 +166,7 @@ export function MultiLLMCompare() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{t('multiLlmCompare.title')}</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('multiLlmCompare.subtitle')}</p>
+              <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('multiLlmCompare.subtitle')}</p>
             </div>
           </div>
           
@@ -175,7 +175,7 @@ export function MultiLLMCompare() {
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
               <Sparkles className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{PROVIDERS.length}</span>
-              <span className="text-[10px] text-white/80">{t('multiLlmCompare.providers')}</span>
+              <span className="text-2xs text-white/80">{t('multiLlmCompare.providers')}</span>
             </div>
           </div>
         </div>

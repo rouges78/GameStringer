@@ -224,7 +224,7 @@ export function OnboardingWizard() {
                 <tool.icon className={cn("h-4 w-4", tool.color)} />
                 <div className="flex-1">
                   <p className="text-xs font-medium">{tool.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{tool.desc}</p>
+                  <p className="text-2xs text-muted-foreground">{tool.desc}</p>
                 </div>
               </div>
             ))}

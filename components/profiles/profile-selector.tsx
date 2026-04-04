@@ -303,7 +303,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
               </div>
 
               {(profile.failed_attempts > 0 && !profile.is_locked) && (
-                <Badge variant="outline" className="mt-2 text-[10px] border-orange-500/50 text-orange-400 bg-orange-500/10 h-5 px-1.5">
+                <Badge variant="outline" className="mt-2 text-2xs border-orange-500/50 text-orange-400 bg-orange-500/10 h-5 px-1.5">
                   <AlertTriangle className="w-2.5 h-2.5 mr-1" />
                   {profile.failed_attempts} {t('profile.failedAttemptsCount').replace('{count}', '').trim()}
                 </Badge>
@@ -333,7 +333,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                 <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-2">
                   <input type="text" name="username" value={profile.name} autoComplete="username" className="sr-only" tabIndex={-1} readOnly aria-hidden="true" />
                   <div className="space-y-1.5">
-                    <Label htmlFor={`password-${profile.id}`} className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                    <Label htmlFor={`password-${profile.id}`} className="text-2xs font-medium text-slate-400 uppercase tracking-wider">
                       {t('profile.password')}
                     </Label>
                     <div className="relative group/input">

@@ -254,11 +254,11 @@ export default function OfflineTranslator() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white">{model.name}</span>
                       {model.recommended && (
-                        <span className="text-[9px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full font-bold">
+                        <span className="text-micro bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded-full font-bold">
                           {t('offlineTranslator.recommended')}
                         </span>
                       )}
-                      <span className="text-[10px] text-slate-500">{model.size_gb} GB</span>
+                      <span className="text-2xs text-slate-500">{model.size_gb} GB</span>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5 truncate">{model.description}</p>
                   </div>
@@ -346,7 +346,7 @@ export default function OfflineTranslator() {
         {/* Input */}
         {batchMode ? (
           <div>
-            <label className="text-[10px] text-slate-500 uppercase font-semibold mb-1 block">
+            <label className="text-2xs text-slate-500 uppercase font-semibold mb-1 block">
               {t('offlineTranslator.batchPlaceholder')}
             </label>
             <textarea
@@ -356,7 +356,7 @@ export default function OfflineTranslator() {
               rows={6}
               className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500 resize-none"
             />
-            <p className="text-[10px] text-slate-500 mt-1">
+            <p className="text-2xs text-slate-500 mt-1">
               {batchTexts.split('\n').filter(l => l.trim()).length} {t('offlineTranslator.lines')}
             </p>
           </div>
@@ -390,12 +390,12 @@ export default function OfflineTranslator() {
             )}
           </Button>
           {!ollamaReady && (
-            <p className="text-[10px] text-red-400">
+            <p className="text-2xs text-red-400">
               {!status?.ollama_running ? t('offlineTranslator.startOllamaHint') : t('offlineTranslator.downloadModelHint')} {t('offlineTranslator.toTranslate')}
             </p>
           )}
         </div>
-        <p className="text-[10px] text-slate-600">{t('offlineTranslator.ctrlEnter')}</p>
+        <p className="text-2xs text-slate-600">{t('offlineTranslator.ctrlEnter')}</p>
       </div>
 
       {/* Results */}
@@ -419,16 +419,16 @@ export default function OfflineTranslator() {
               <div key={i} className="p-3 hover:bg-white/[0.02] transition-colors group">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[10px] text-slate-500 uppercase mb-1">{t('offlineTranslator.original')}</p>
+                    <p className="text-2xs text-slate-500 uppercase mb-1">{t('offlineTranslator.original')}</p>
                     <p className="text-sm text-slate-300">{r.original}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-emerald-500 uppercase mb-1">{t('offlineTranslator.translation')}</p>
+                    <p className="text-2xs text-emerald-500 uppercase mb-1">{t('offlineTranslator.translation')}</p>
                     <p className="text-sm text-white font-medium">{r.translated}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                  <div className="flex items-center gap-3 text-2xs text-slate-500">
                     <span className="flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {r.model}</span>
                     <span className="flex items-center gap-1"><Zap className="h-2.5 w-2.5" /> {r.duration_ms}ms</span>
                   </div>

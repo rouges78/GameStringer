@@ -98,7 +98,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         <BookOpen className="h-3.5 w-3.5 text-amber-400" />
         <span className="text-amber-300">{t('loreAssistantComp.loreAssistant')}</span>
         {stats && stats.totalDialogues > 0 && (
-          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
+          <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
             {stats.totalDialogues} dialoghi
           </Badge>
         )}
@@ -115,7 +115,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-amber-400" />
             <span className="text-sm font-semibold text-amber-300">{t('loreAssistantComp.loreAssistant')}</span>
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
+            <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
               {stats?.totalDialogues || 0} dialoghi
             </Badge>
           </div>
@@ -146,7 +146,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
             {stats.speakers.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
                 {stats.speakers.slice(0, 10).map((s: string) => (
-                  <Badge key={s} variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-amber-500/20 text-amber-400/70">
+                  <Badge key={s} variant="outline" className="text-2xs px-1 py-0 h-3.5 border-amber-500/20 text-amber-400/70">
                     {s}
                   </Badge>
                 ))}
@@ -161,7 +161,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
             <div className="text-center py-6">
               <Sparkles className="h-8 w-8 text-amber-400/20 mx-auto mb-2" />
               <p className="text-xs text-amber-400/40">{t('loreAssistantComp.chiediQualsiasiCosaSullaLoreDe')}</p>
-              <p className="text-[10px] text-amber-400/25 mt-1">"Chi è questo personaggio?" • "Cosa è successo prima?" • "Dove mi trovo?"</p>
+              <p className="text-2xs text-amber-400/25 mt-1">"Chi è questo personaggio?" • "Cosa è successo prima?" • "Dove mi trovo?"</p>
             </div>
           ) : (
             messages.map(msg => (
@@ -182,7 +182,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
                       <div className={`h-1.5 w-1.5 rounded-full ${
                         msg.confidence > 0.7 ? 'bg-emerald-400' : msg.confidence > 0.4 ? 'bg-amber-400' : 'bg-red-400'
                       }`} />
-                      <span className="text-[9px] text-amber-400/40">
+                      <span className="text-micro text-amber-400/40">
                         Confidenza: {Math.round(msg.confidence * 100)}%
                       </span>
                     </div>

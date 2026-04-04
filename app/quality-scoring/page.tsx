@@ -17,7 +17,7 @@ export default function QualityScoringPage() {
           </div>
           <div>
             <h1 className="text-base font-bold text-white">{t('qualityScoringPage.qualityScoringHva')}</h1>
-            <p className="text-white/60 text-[10px]">
+            <p className="text-white/60 text-2xs">
               Traccia l&apos;origine e la qualit&agrave; di ogni traduzione: Human, Validated, AI
             </p>
           </div>

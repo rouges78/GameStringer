@@ -161,7 +161,7 @@ export default function DryRunScanner() {
           {/* Engine breakdown */}
           <div className="flex flex-wrap gap-2">
             {Object.entries(report.by_engine).sort((a, b) => b[1] - a[1]).map(([engine, count]) => (
-              <span key={engine} className={`text-[10px] px-2 py-0.5 rounded-full border font-mono ${ENGINE_COLORS[engine] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
+              <span key={engine} className={`text-2xs px-2 py-0.5 rounded-full border font-mono ${ENGINE_COLORS[engine] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
                 {ENGINE_LABELS[engine] || engine}: {count}
               </span>
             ))}
@@ -171,7 +171,7 @@ export default function DryRunScanner() {
           <div className="flex gap-1 border-b border-slate-800 pb-1">
             {(['all', 'ready', 'errors', 'unsupported'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
-                className={`text-[10px] px-3 py-1 rounded-t-lg font-medium transition-colors ${
+                className={`text-2xs px-3 py-1 rounded-t-lg font-medium transition-colors ${
                   filter === f ? 'bg-indigo-600/20 text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
@@ -203,7 +203,7 @@ export default function DryRunScanner() {
                     <td className="p-2 text-slate-200 font-medium truncate max-w-[200px]" title={g.title}>{g.title}</td>
                     <td className="p-2 text-slate-400">{g.engine_detected}</td>
                     <td className="p-2">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded border ${ENGINE_COLORS[g.fast_path] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
+                      <span className={`text-micro px-1.5 py-0.5 rounded border ${ENGINE_COLORS[g.fast_path] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
                         {ENGINE_LABELS[g.fast_path] || g.fast_path}
                       </span>
                     </td>
@@ -237,7 +237,7 @@ function SummaryCard({ label, value, icon, color }: { label: string; value: numb
         <span className={color}>{icon}</span>
         <div>
           <div className={`text-lg font-bold ${color}`}>{value}</div>
-          <div className="text-[9px] text-slate-500 uppercase tracking-wider">{label}</div>
+          <div className="text-micro text-slate-500 uppercase tracking-wider">{label}</div>
         </div>
       </CardContent>
     </Card>

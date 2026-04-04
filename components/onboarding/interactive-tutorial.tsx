@@ -394,7 +394,7 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
                   {t('tutorial.back')}
                 </Button>
 
-                <span className="text-[10px] text-slate-600">
+                <span className="text-2xs text-slate-600">
                   {t('tutorial.stepOf').replace('{current}', String(currentStep + 1)).replace('{total}', String(tutorialSteps.length))}
                 </span>
 
@@ -419,7 +419,7 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
 
               {/* Hint */}
               <div className="px-3 pb-2 text-center">
-                <span className="text-[9px] text-slate-600">
+                <span className="text-micro text-slate-600">
                   {t('tutorial.pressSpace')}
                 </span>
               </div>

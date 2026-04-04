@@ -451,7 +451,7 @@ export function TTSPreview({
             <Badge
               key={preset.id}
               variant={selectedPreset.id === preset.id ? 'default' : 'outline'}
-              className="text-[9px] cursor-pointer"
+              className="text-micro cursor-pointer"
               onClick={() => applyPreset(preset)}
             >
               {preset.name}
@@ -542,7 +542,7 @@ export function TTSPreview({
         )}
 
         {/* Info */}
-        <div className="mt-3 p-2 bg-primary/10 rounded border border-primary/20 text-[10px] text-muted-foreground">
+        <div className="mt-3 p-2 bg-primary/10 rounded border border-primary/20 text-2xs text-muted-foreground">
           💡 {useOpenAI 
             ? 'OpenAI TTS offre voci di alta qualità (richiede API key)' 
             : 'Usa le voci del browser - gratis e offline'

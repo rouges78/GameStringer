@@ -167,7 +167,7 @@ export function UniversalInjector() {
           </div>
           <div>
             <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('universalInjector.title')}</h2>
-            <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('universalInjector.subtitle')}</p>
+            <p className="text-white/70 text-2xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('universalInjector.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -311,7 +311,7 @@ export function UniversalInjector() {
                         </div>
                         <div className="flex items-center gap-1">
                           {tool.auto_install ? (
-                            <Badge className="bg-green-500 text-[10px]">Auto</Badge>
+                            <Badge className="bg-green-500 text-2xs">Auto</Badge>
                           ) : (
                             <a
                               href={tool.url}
@@ -343,7 +343,7 @@ export function UniversalInjector() {
                         <div key={i} className="flex items-center gap-2 text-xs p-1.5 bg-muted/50 rounded">
                           <FileText className="h-3 w-3 text-muted-foreground" />
                           <span className="flex-1 truncate font-mono">{file.path}</span>
-                          <Badge variant="outline" className="text-[10px]">{file.file_type}</Badge>
+                          <Badge variant="outline" className="text-2xs">{file.file_type}</Badge>
                         </div>
                       ))}
                     </div>

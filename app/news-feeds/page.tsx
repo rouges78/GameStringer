@@ -80,20 +80,20 @@ export default function NewsFeedsPage() {
           <Rss className="h-5 w-5 text-[#67c1f5]" />
           <div>
             <h1 className="text-base font-bold text-[#c6d4df]">{language === 'it' ? 'Gestisci Feed Notizie' : 'Manage News Feeds'}</h1>
-            <p className="text-[10px] text-[#8f98a0]">
+            <p className="text-2xs text-[#8f98a0]">
               {enabledCount} {language === 'it' ? 'feed attivi su' : 'active feeds out of'} {sources.length}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={handleRefreshCache} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#2a475e]/30 hover:bg-[#2a475e]/50 text-[#8f98a0] hover:text-[#c6d4df] text-[10px] transition-colors">
+          <button onClick={handleRefreshCache} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#2a475e]/30 hover:bg-[#2a475e]/50 text-[#8f98a0] hover:text-[#c6d4df] text-2xs transition-colors">
             <RefreshCw className="h-3 w-3" /> {language === 'it' ? 'Pulisci cache' : 'Clear cache'}
           </button>
-          <button onClick={handleEnableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] text-[10px] transition-colors border border-[#1a9fff]/20">
+          <button onClick={handleEnableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] text-2xs transition-colors border border-[#1a9fff]/20">
             <Check className="h-3 w-3" /> {language === 'it' ? 'Attiva tutti' : 'Enable all'}
           </button>
-          <button onClick={handleDisableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] transition-colors border border-red-500/20">
+          <button onClick={handleDisableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 text-2xs transition-colors border border-red-500/20">
             <X className="h-3 w-3" /> {language === 'it' ? 'Disattiva tutti' : 'Disable all'}
           </button>
         </div>
@@ -103,7 +103,7 @@ export default function NewsFeedsPage() {
       <div className="flex flex-wrap gap-1.5">
         <button
           onClick={() => setSelectedCategory('all')}
-          className={`px-3 py-1.5 rounded-sm text-[10px] font-medium transition-all border ${
+          className={`px-3 py-1.5 rounded-sm text-2xs font-medium transition-all border ${
             selectedCategory === 'all'
               ? 'bg-[#1a9fff]/20 border-[#1a9fff]/40 text-[#67c1f5]'
               : 'bg-[#1b2838]/60 border-[#2a475e]/30 text-[#8f98a0] hover:border-[#2a475e]/60 hover:text-[#c6d4df]'
@@ -118,7 +118,7 @@ export default function NewsFeedsPage() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-medium transition-all border ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-2xs font-medium transition-all border ${
                 selectedCategory === cat.id
                   ? 'bg-[#1a9fff]/20 border-[#1a9fff]/40 text-[#67c1f5]'
                   : 'bg-[#1b2838]/60 border-[#2a475e]/30 text-[#8f98a0] hover:border-[#2a475e]/60 hover:text-[#c6d4df]'
@@ -126,7 +126,7 @@ export default function NewsFeedsPage() {
             >
               <span>{cat.icon}</span>
               {language === 'it' ? cat.label_it : cat.label_en}
-              <span className="text-[8px] opacity-60">({enabledInCat}/{count})</span>
+              <span className="text-2xs opacity-60">({enabledInCat}/{count})</span>
             </button>
           );
         })}
@@ -148,13 +148,13 @@ export default function NewsFeedsPage() {
                 <span className="text-[11px] font-bold text-[#c6d4df] uppercase tracking-wider">
                   {language === 'it' ? cat.label_it : cat.label_en}
                 </span>
-                <span className="text-[9px] text-[#8f98a0]">
+                <span className="text-micro text-[#8f98a0]">
                   ({catSources.filter(s => s.enabled).length}/{catSources.length})
                 </span>
               </div>
               <button
                 onClick={() => handleToggleCategory(cat.id, !allEnabled)}
-                className={`px-2 py-0.5 rounded-sm text-[9px] font-medium transition-colors ${
+                className={`px-2 py-0.5 rounded-sm text-micro font-medium transition-colors ${
                   allEnabled
                     ? 'bg-[#1a9fff]/20 text-[#67c1f5] hover:bg-red-500/20 hover:text-red-400'
                     : someEnabled
@@ -193,13 +193,13 @@ export default function NewsFeedsPage() {
                       <span className={`text-[12px] font-bold transition-colors ${source.enabled ? 'text-[#c6d4df]' : 'text-[#8f98a0]/50'}`}>
                         {source.name}
                       </span>
-                      <span className={`text-[8px] px-1 py-0.5 rounded-sm uppercase tracking-wider font-semibold ${
+                      <span className={`text-2xs px-1 py-0.5 rounded-sm uppercase tracking-wider font-semibold ${
                         source.language === 'it' ? 'bg-green-500/15 text-green-400' : 'bg-blue-500/15 text-blue-400'
                       }`}>
                         {source.language.toUpperCase()}
                       </span>
                     </div>
-                    <p className={`text-[10px] mt-0.5 transition-colors ${source.enabled ? 'text-[#8f98a0]' : 'text-[#8f98a0]/30'}`}>
+                    <p className={`text-2xs mt-0.5 transition-colors ${source.enabled ? 'text-[#8f98a0]' : 'text-[#8f98a0]/30'}`}>
                       {source.description}
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export default function NewsFeedsPage() {
       <div className="rounded-sm bg-[#1b2838]/20 border border-[#2a475e]/15 p-3 flex items-start gap-2">
         <Globe className="h-4 w-4 text-[#8f98a0]/40 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-[10px] text-[#8f98a0]/60 leading-relaxed">
+          <p className="text-2xs text-[#8f98a0]/60 leading-relaxed">
             {language === 'it' 
               ? 'I feed vengono aggiornati automaticamente ogni 15 minuti. Le notizie sono recuperate tramite RSS pubblici. Nessun dato personale viene inviato.'
               : 'Feeds are automatically refreshed every 15 minutes. News are fetched via public RSS. No personal data is sent.'}

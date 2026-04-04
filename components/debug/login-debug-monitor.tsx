@@ -139,7 +139,7 @@ export function LoginDebugMonitor() {
         </button>
       </CardHeader>
       <CardContent className="py-1.5 px-3">
-        <div className="text-[10px] font-mono space-y-0.5 max-h-40 overflow-y-auto">
+        <div className="text-2xs font-mono space-y-0.5 max-h-40 overflow-y-auto">
           {logs.slice(-15).map((log, i) => (
             <div 
               key={i} 
@@ -156,7 +156,7 @@ export function LoginDebugMonitor() {
         </div>
         <button 
           onClick={() => setLogs([])} 
-          className="mt-1 text-[10px] bg-red-600 px-2 py-0.5 rounded"
+          className="mt-1 text-2xs bg-red-600 px-2 py-0.5 rounded"
         >
           Clear
         </button>
