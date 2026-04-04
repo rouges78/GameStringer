@@ -389,6 +389,22 @@ pub async fn get_recommended_ollama_models() -> Result<Vec<OllamaModelInfo>, Str
             size: "~3.5 GB".to_string(),
             description: "🚀 LFM2 24B-A2B (MoE) — Liquid AI, attiva solo 2B. Velocissimo su 8GB RAM!".to_string(),
         },
+        // ─── GEMMA 4 (Aprile 2026) ───
+        OllamaModelInfo {
+            name: "gemma4:27b".to_string(),
+            size: "~16 GB".to_string(),
+            description: "🆕 Google Gemma 4 27B MoE (A4B) — 27B totali, attiva solo 4B. Qualità da 27B, velocità da 4B! 256K context, 35+ lingue.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "gemma4:e4b".to_string(),
+            size: "~3 GB".to_string(),
+            description: "🆕 Google Gemma 4 E4B — Edge-optimized, 128K context, multimodale. Gira su GPU consumer.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "gemma4:e2b".to_string(),
+            size: "~1.5 GB".to_string(),
+            description: "🆕 Google Gemma 4 E2B — Ultra-leggero, ASR + traduzione audio. Gira anche su Raspberry Pi.".to_string(),
+        },
         // ─── MULTILINGUE GENERAL PURPOSE ───
         OllamaModelInfo {
             name: "glm4:8b".to_string(),

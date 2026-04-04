@@ -171,7 +171,7 @@ export const RECOMMENDED_MODELS: RecommendedModel[] = [
   // ─── MULTILINGUE GENERAL PURPOSE ──────────────────────────────
   {
     name: 'GLM-4.7 Flash 8B',
-    pullName: 'glm4',
+    pullName: 'glm4:8b',
     description: '🆕 NUOVO — Zhipu AI, tuttofare veloce, molto lodato dalla community.',
     sizeGb: '~5.0',
     category: 'multilingual',
