@@ -93,6 +93,26 @@
   transition-delay: 0s !important;
 }
 
+/* A11y: Respect OS reduced-motion preference automatically */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* A11y: High contrast mode support */
+@media (forced-colors: active) {
+  .border-slate-800\/50, .border-slate-700\/50, .border-slate-800\/30 {
+    border-color: ButtonText;
+  }
+  .bg-cyan-600, .bg-emerald-600 {
+    forced-color-adjust: none;
+  }
+}
+
 /* Rainbow gradient animation */
 @keyframes rainbow-shift {
   0% { background-position: 0% 50%; }
