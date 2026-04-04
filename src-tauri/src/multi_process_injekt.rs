@@ -8,8 +8,10 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use crate::injekt::{InjektTranslator, InjectionConfig};
 use crate::process_utils::is_process_running;
+use crate::translation_bridge::dictionary_engine::DictionaryEngine;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MultiProcessConfig {
@@ -53,6 +55,7 @@ pub struct MultiProcessInjekt {
     monitor_thread: Option<thread::JoinHandle<()>>,
     translation_cache: Arc<Mutex<HashMap<String, String>>>,
     stats: Arc<Mutex<MultiProcessStats>>,
+    translation_dict: Option<Arc<RwLock<DictionaryEngine>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,6 +84,7 @@ impl MultiProcessInjekt {
             is_running: Arc::new(Mutex::new(false)),
             monitor_thread: None,
             translation_cache: Arc::new(Mutex::new(HashMap::new())),
+            translation_dict: None,
             stats: Arc::new(Mutex::new(MultiProcessStats {
                 total_processes: 0,
                 active_injections: 0,
@@ -92,6 +96,12 @@ impl MultiProcessInjekt {
                 uptime_seconds: 0,
             })),
         })
+    }
+
+    pub fn set_dictionary(&mut self, dict: Arc<RwLock<DictionaryEngine>>) {
+        let entries = dict.read().get_stats().total_entries;
+        self.translation_dict = Some(dict);
+        log::info!("[MultiProcessInjekt] Dictionary engine collegato ({} entries)", entries);
     }
 
     pub fn start(&mut self) -> Result<(), Box<dyn Error>> {
@@ -134,6 +144,7 @@ impl MultiProcessInjekt {
         let translation_cache = Arc::clone(&self.translation_cache);
         let config = self.config.clone();
         let base_config = self.base_injection_config.clone();
+        let translation_dict = self.translation_dict.clone();
         let start_time = Utc::now();
         
         let monitor_thread = thread::spawn(move || {
@@ -185,7 +196,7 @@ impl MultiProcessInjekt {
                                 
                                 // Avvia injection se necessario
                                 if should_inject {
-                                    match Self::start_injection_for_process(&mut process_info, &base_config, &translation_cache) {
+                                    match Self::start_injection_for_process(&mut process_info, &base_config, &translation_cache, &translation_dict) {
                                         Ok(()) => {
                                             log::info!("✅ Injection avviata per processo: {} (PID: {})", name, pid);
                                         }
@@ -279,14 +290,21 @@ impl MultiProcessInjekt {
     fn start_injection_for_process(
         process_info: &mut ProcessInfo,
         base_config: &InjectionConfig,
-        _translation_cache: &Arc<Mutex<HashMap<String, String>>>
+        _translation_cache: &Arc<Mutex<HashMap<String, String>>>,
+        translation_dict: &Option<Arc<RwLock<DictionaryEngine>>>
     ) -> Result<(), Box<dyn Error>> {
         // Crea configurazione specifica per questo processo
         let mut process_config = base_config.clone();
         process_config.target_process = process_info.name.clone();
-        
+
         // Crea injector per questo processo
-        let injector = InjektTranslator::new(process_config)?;
+        let mut injector = InjektTranslator::new(process_config)?;
+
+        // Collega il dictionary engine condiviso
+        if let Some(ref dict) = translation_dict {
+            injector.set_dictionary(Arc::clone(dict));
+        }
+
         let injector_arc = Arc::new(Mutex::new(injector));
         
         // Avvia injection
@@ -305,25 +323,15 @@ impl MultiProcessInjekt {
         active_processes: &Arc<Mutex<HashMap<u32, ProcessInfo>>>,
         _translation_cache: &Arc<Mutex<HashMap<String, String>>>
     ) {
-        // Implementazione di sincronizzazione traduzioni tra processi
-        // In un'implementazione reale, qui raccoglieremmo le traduzioni
-        // da tutti i processi attivi e le sincronizzeremmo
-        
+        // La sincronizzazione e' automatica: tutti i processi condividono
+        // lo stesso Arc<RwLock<DictionaryEngine>> come source of truth.
+        // Qui logghiamo solo lo stato per diagnostica.
         if let Ok(processes) = active_processes.lock() {
             let active_count = processes.values()
                 .filter(|p| p.injection_active)
                 .count();
-            
             if active_count > 1 {
-                log::debug!("🔄 Sincronizzazione traduzioni tra {} processi", active_count);
-                
-                // Simula sincronizzazione
-                if let Ok(mut cache) = _translation_cache.lock() {
-                    // Aggiungi traduzioni comuni
-                    cache.insert("Continue".to_string(), "Continua".to_string());
-                    cache.insert("New Game".to_string(), "Nuovo Gioco".to_string());
-                    cache.insert("Options".to_string(), "Opzioni".to_string());
-                }
+                log::debug!("🔄 {} processi condividono il dictionary engine (sync automatico)", active_count);
             }
         }
     }
@@ -391,7 +399,8 @@ impl MultiProcessInjekt {
                     Self::start_injection_for_process(
                         process_info,
                         &self.base_injection_config,
-                        &self.translation_cache
+                        &self.translation_cache,
+                        &self.translation_dict
                     )?;
                     log::info!("✅ Injection forzata completata per PID: {}", pid);
                 } else {

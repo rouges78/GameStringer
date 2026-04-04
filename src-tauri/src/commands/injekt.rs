@@ -1,8 +1,10 @@
 use crate::injekt::InjectionConfig;
 use crate::multi_process_injekt::{MultiProcessInjekt, MultiProcessConfig, InjectionStrategy};
+use crate::commands::translation_bridge::TranslationBridgeState;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
+use tauri::State;
 
 // Singleton per gestire istanze multi-processo
 static MULTI_PROCESS_INSTANCES: Lazy<Arc<Mutex<HashMap<String, MultiProcessInjekt>>>> = 
@@ -297,7 +299,7 @@ pub async fn get_process_info(process_id: u32) -> Result<serde_json::Value, Stri
 }
 
 #[tauri::command]
-pub async fn inject_translation(process_id: u32, original_text: String, translated_text: String, _position: Option<serde_json::Value>) -> Result<(), String> {
+pub async fn inject_translation(process_id: u32, original_text: String, translated_text: String, _position: Option<serde_json::Value>, bridge_state: State<'_, TranslationBridgeState>) -> Result<(), String> {
     log::info!("💉 Iniezione traduzione in PID {}: '{}' -> '{}'", 
         process_id, 
         if original_text.len() > 30 { format!("{}...", &original_text[..30]) } else { original_text.clone() },
@@ -315,9 +317,13 @@ pub async fn inject_translation(process_id: u32, original_text: String, translat
         }
     }
     
-    // Iniezione reale in memoria richiede WriteProcessMemory — 
-    // per ora traccia la traduzione e la conta, l'hook DLL gestisce la sostituzione
-    log::info!("✅ Traduzione registrata per PID {} (totale aggiornato)", process_id);
+    // Salva la traduzione nel dictionary engine condiviso cosi' tutti i sistemi la vedono
+    {
+        let bridge = bridge_state.bridge.lock();
+        bridge.dictionary().write().add_translation(original_text, translated_text);
+    }
+
+    log::info!("✅ Traduzione registrata per PID {} (totale aggiornato + dictionary)", process_id);
     Ok(())
 }
 
@@ -419,7 +425,8 @@ pub async fn start_multi_process_injection(
     primary_process: String,
     secondary_processes: Vec<String>,
     injection_strategy: String,
-    base_config: serde_json::Value
+    base_config: serde_json::Value,
+    bridge_state: State<'_, TranslationBridgeState>
 ) -> Result<serde_json::Value, String> {
     log::info!("🚀 Avvio injection multi-processo per: {}", game_name);
     
@@ -468,6 +475,12 @@ pub async fn start_multi_process_injection(
     // Crea e avvia sistema multi-processo
     match MultiProcessInjekt::new(multi_config, injection_config) {
         Ok(mut multi_injekt) => {
+            // Collega il dictionary engine condiviso dal TranslationBridge
+            {
+                let bridge = bridge_state.bridge.lock();
+                multi_injekt.set_dictionary(Arc::clone(bridge.dictionary()));
+            }
+
             match multi_injekt.start() {
                 Ok(()) => {
                     // Salva l'istanza nel singleton

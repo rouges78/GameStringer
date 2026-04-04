@@ -13,10 +13,12 @@ use winapi::um::processthreadsapi::OpenProcess;
 use winapi::um::winnt::{HANDLE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, PROCESS_ALL_ACCESS, MEMORY_BASIC_INFORMATION};
 
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, Module32First, Module32Next, MODULEENTRY32, TH32CS_SNAPMODULE};
-use crate::anti_cheat::AntiCheatManager;
-// use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, PerformanceMetrics}; // Rimosso per cleanup warning
+use parking_lot::RwLock;
 
+use crate::anti_cheat::AntiCheatManager;
 use crate::process_utils::is_process_running;
+use crate::translation_bridge::dictionary_engine::DictionaryEngine;
+use crate::translation_bridge::protocol::TranslationRequest;
 
 /// Wrapper thread-safe per HANDLE di Windows
 #[derive(Debug)]
@@ -85,7 +87,8 @@ pub struct InjektTranslator {
     is_running: Arc<Mutex<bool>>,
     monitor_thread: Option<thread::JoinHandle<()>>,
     anti_cheat_manager: AntiCheatManager,
-    // performance_optimizer: PerformanceOptimizer, // Rimosso per cleanup warning
+    /// Dizionario condiviso dal TranslationBridge per lookup O(1)
+    translation_dict: Option<Arc<RwLock<DictionaryEngine>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -180,10 +183,18 @@ impl InjektTranslator {
             is_running: Arc::new(Mutex::new(false)),
             monitor_thread: None,
             anti_cheat_manager: AntiCheatManager::new(),
-            // performance_optimizer: PerformanceOptimizer::new(OptimizationConfig::default()), // Rimosso per cleanup warning
+            translation_dict: None,
         })
     }
-    
+
+    /// Collega il dictionary engine del TranslationBridge.
+    /// Tutte le traduzioni saranno cercate in questo dizionario condiviso.
+    pub fn set_dictionary(&mut self, dict: Arc<RwLock<DictionaryEngine>>) {
+        let entries = dict.read().get_stats().total_entries;
+        self.translation_dict = Some(dict);
+        log::info!("[InjektTranslator] Dictionary engine collegato ({} entries)", entries);
+    }
+
     pub fn start(&mut self) -> Result<(), Box<dyn Error>> {
         // Trova il processo target
         let processes = crate::process_utils::find_game_processes()?;
@@ -462,6 +473,7 @@ impl InjektTranslator {
         let is_running = Arc::clone(&self.is_running);
         let stats = Arc::clone(&self.stats);
         let hooks = Arc::clone(&self.hooks);
+        let translation_dict = self.translation_dict.clone();
         let pid = self.target_pid.unwrap();
         let start_time = Instant::now();
         
@@ -533,20 +545,15 @@ impl InjektTranslator {
                     }
                 }
                 
-                // Simula intercettazione e traduzione di testi
-                // In un'implementazione reale, qui leggeremmo la memoria
-                // e intercetteremmo le chiamate alle funzioni hooked
-                {
+                // Sincronizza stats dal dizionario condiviso (se collegato).
+                // Quando il pattern scanning reale sara' implementato (Task #4),
+                // gli hook cattureranno il testo dal processo e lo tradurranno
+                // tramite dictionary.get_translation().
+                if let Some(ref dict) = translation_dict {
+                    let d = dict.read();
+                    let dict_stats = d.get_stats();
                     if let Ok(mut stats_guard) = stats.lock() {
-                        // Simula nuove traduzioni basate su hook attivi
-                        if stats_guard.active_hooks > 0 && rand::random::<f32>() > 0.8 {
-                            stats_guard.translations_applied += 1;
-                            
-                            // Simula cache hit/miss
-                            if rand::random::<f32>() > 0.6 {
-                                stats_guard.cached_translations += 1;
-                            }
-                        }
+                        stats_guard.cached_translations = dict_stats.total_entries as u32;
                     }
                 }
                 
@@ -682,28 +689,28 @@ impl InjektTranslator {
         (base_cpu + hooks_cpu).min(100.0)
     }
     
-    /// Ottimizza le traduzioni usando il performance optimizer
-    #[allow(dead_code)] // Ottimizzazione traduzioni - essenziale per performance
+    /// Traduce un batch di testi usando il dictionary engine collegato.
+    /// Se il dizionario non e' collegato o il testo non e' trovato,
+    /// restituisce il testo originale invariato.
+    #[allow(dead_code)]
     pub fn optimize_translations(&self, texts: Vec<String>) -> Result<Vec<String>, Box<dyn Error>> {
         let start_time = Instant::now();
-        
-        // Batch processing disabilitato per cleanup warning
-        let optimized_batch = texts;
-        
-        // Simula traduzione ottimizzata
-        let mut translated = Vec::new();
-        for text in optimized_batch {
-            // Cache optimization disabilitata per cleanup warning
-            // Simula traduzione
-            let translated_text = format!("[IT] {}", text);
-            
-            // Cache translation disabilitata per cleanup warning
-            translated.push(translated_text);
-        }
-        
+
+        let translated = if let Some(ref dict) = self.translation_dict {
+            let d = dict.read();
+            texts.iter().map(|text| {
+                let hash = TranslationRequest::compute_hash(text);
+                d.get_translation(hash, text).unwrap_or_else(|| text.clone())
+            }).collect()
+        } else {
+            texts
+        };
+
         let translation_time = start_time.elapsed().as_millis();
-        log::info!("🔄 Traduzioni ottimizzate: {} testi in {}ms", translated.len(), translation_time);
-        
+        log::info!("🔄 Traduzioni: {} testi in {}ms ({})",
+            translated.len(), translation_time,
+            if self.translation_dict.is_some() { "via dictionary" } else { "passthrough" });
+
         Ok(translated)
     }
     
