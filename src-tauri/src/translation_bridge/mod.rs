@@ -8,6 +8,8 @@
 
 pub mod dictionary_engine;
 pub mod protocol;
+#[cfg(windows)]
 pub mod shared_memory_ipc;
 
+#[cfg(windows)]
 pub use shared_memory_ipc::TranslationBridge;

@@ -218,6 +218,101 @@ pub async fn check_ue_translator_compatibility(_game_path: String) -> Result<Com
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// commands::translation_bridge stubs
+// ═══════════════════════════════════════════════════════════════════
+
+pub mod translation_bridge_stubs {
+    use serde::Serialize;
+
+    #[derive(Default)]
+    pub struct TranslationBridgeState;
+
+    impl TranslationBridgeState {
+        pub fn new() -> Self { Self }
+    }
+
+    #[derive(Serialize)]
+    pub struct BridgeResponse<T: Serialize> {
+        pub success: bool,
+        pub data: Option<T>,
+        pub error: Option<String>,
+    }
+
+    impl<T: Serialize> BridgeResponse<T> {
+        fn err(msg: &str) -> Self {
+            Self { success: false, data: None, error: Some(msg.to_string()) }
+        }
+    }
+
+    const PLATFORM_ERR: &str = "Translation Bridge è disponibile solo su Windows";
+
+    #[tauri::command]
+    pub async fn translation_bridge_start() -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_stop() -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_status() -> Result<BridgeResponse<bool>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_stats() -> Result<BridgeResponse<serde_json::Value>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_dictionary_stats() -> Result<BridgeResponse<serde_json::Value>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_load_translations(_params: serde_json::Value) -> Result<BridgeResponse<usize>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_load_json(_path: String) -> Result<BridgeResponse<usize>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_set_languages(_source: String, _target: String) -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_add_translation(_original: String, _translated: String) -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_get_translation(_text: String) -> Result<BridgeResponse<Option<String>>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_export_json(_path: String) -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_clear() -> Result<BridgeResponse<String>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_drain_misses(_max: Option<usize>) -> Result<BridgeResponse<Vec<String>>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // commands::screen_capture stubs
 // ═══════════════════════════════════════════════════════════════════
 
