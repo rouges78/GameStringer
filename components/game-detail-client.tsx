@@ -1405,6 +1405,8 @@ export default function GameDetailPage() {
       setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx ? { ...s, status: 'done' } : s));
     };
 
+    let unlistenWorkflow: (() => void) | null = null;
+
     try {
       // ── STEP 1: Complete Analysis ──
       updateStep(0, 'running', 'Analisi predittiva avanzata...');
@@ -1462,7 +1464,6 @@ export default function GameDetailPage() {
       updateStep(6, 'running', 'Esecuzione traduzione completa...');
       
       // Listen for real-time progress events from backend
-      let unlistenWorkflow: (() => void) | null = null;
       try {
         const { listen } = await import('@tauri-apps/api/event');
         unlistenWorkflow = await listen<{stage: string, step: number, message: string, progress: number}>('workflow-progress', (event) => {
