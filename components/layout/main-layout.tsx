@@ -180,6 +180,8 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'Godot', href: '/godot-translator', icon: Globe },
           { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },
           { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
+          { name: 'Bethesda', href: '/bethesda-patcher', icon: Shield },
+          { name: 'CRI Middleware', href: '/cri-patcher', icon: Disc },
         ],
       },
       { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },

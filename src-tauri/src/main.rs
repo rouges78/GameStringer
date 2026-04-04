@@ -512,6 +512,20 @@ fn main() {
             commands::visionaire_patcher::patch_vis_strings,
             commands::visionaire_patcher::restore_vis_backup,
 
+            // Universal PO export/import
+            commands::po_export::generate_po_file,
+            commands::po_export::parse_po_file,
+            commands::po_export::generate_pot_file,
+            commands::po_export::merge_po_translations,
+
+            // Bethesda Engine Patcher (BSA/BA2, STRINGS, ESP/ESM)
+            commands::bethesda_patcher::detect_bethesda_game,
+            commands::bethesda_patcher::list_bsa_contents,
+            commands::bethesda_patcher::extract_strings_file,
+            commands::bethesda_patcher::extract_plugin_strings,
+            commands::bethesda_patcher::build_patched_strings,
+            commands::bethesda_patcher::extract_file_from_bsa,
+
             // repak wrapper
             commands::repak_wrapper::download_repak_tool,
             commands::repak_wrapper::check_repak_installed,
@@ -923,7 +937,14 @@ fn main() {
             commands::danganronpa_patcher::export_danganronpa_patch,
             commands::danganronpa_patcher::extract_danganronpa_dialogues,
             commands::danganronpa_patcher::auto_translate_danganronpa,
-            
+
+            // CRI Middleware Patcher
+            commands::cri_patcher::detect_cri_game,
+            commands::cri_patcher::list_cpk_contents,
+            commands::cri_patcher::extract_text_files_from_cpk,
+            commands::cri_patcher::parse_cri_text_file,
+            commands::cri_patcher::build_patched_cpk,
+
             // RPG Maker Patcher
             commands::rpgmaker_patcher::detect_rpgmaker_game,
             commands::rpgmaker_patcher::extract_rpgmaker_strings,
