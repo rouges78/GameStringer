@@ -11,6 +11,7 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
@@ -85,6 +86,9 @@ pub struct TranslationBridge {
     shmem_name: String,
     /// Dimensione della shared memory allocata
     shmem_size: usize,
+    /// Coda di testi non tradotti (cache miss) — drenata dall'AI fallback
+    miss_sender: mpsc::Sender<String>,
+    miss_receiver: Arc<parking_lot::Mutex<mpsc::Receiver<String>>>,
 }
 
 // SAFETY: TranslationBridge contiene una Shmem il cui puntatore raw viene passato
@@ -102,6 +106,7 @@ impl TranslationBridge {
 
     /// Crea un bridge con nome shared memory custom (per test isolation)
     pub fn with_name(name: &str) -> Self {
+        let (miss_sender, miss_receiver) = mpsc::channel();
         Self {
             dictionary: Arc::new(RwLock::new(DictionaryEngine::new())),
             shmem: None,
@@ -111,6 +116,8 @@ impl TranslationBridge {
             start_time: None,
             shmem_name: name.to_string(),
             shmem_size: 0,
+            miss_sender,
+            miss_receiver: Arc::new(parking_lot::Mutex::new(miss_receiver)),
         }
     }
 
@@ -236,6 +243,8 @@ impl TranslationBridge {
                 stats.cache_hits += 1;
             } else {
                 stats.cache_misses += 1;
+                // Accoda per AI fallback (best-effort, ignora errore se coda piena)
+                let _ = self.miss_sender.send(text.to_string());
             }
             // Welford's online algorithm per media stabile
             let n = stats.total_requests as f64;
@@ -271,6 +280,25 @@ impl TranslationBridge {
     /// Ottieni accesso al dictionary engine (per Tauri commands)
     pub fn dictionary(&self) -> &Arc<RwLock<DictionaryEngine>> {
         &self.dictionary
+    }
+
+    /// Drena la coda di cache miss (testi non tradotti).
+    /// Ritorna fino a `max` testi unici da tradurre con AI fallback.
+    pub fn drain_misses(&self, max: usize) -> Vec<String> {
+        let receiver = self.miss_receiver.lock();
+        let mut texts = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+        while texts.len() < max {
+            match receiver.try_recv() {
+                Ok(text) => {
+                    if seen.insert(text.clone()) {
+                        texts.push(text);
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+        texts
     }
 
     // ─── Internals ────────────────────────────────────────────────

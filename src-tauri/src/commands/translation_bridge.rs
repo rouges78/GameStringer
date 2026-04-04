@@ -214,3 +214,16 @@ pub async fn translation_bridge_clear(
     dict.clear_all();
     Ok(BridgeResponse::ok("Dizionari puliti".to_string()))
 }
+
+/// Drena i cache miss (testi non tradotti) per AI fallback.
+/// Il frontend può usare questi testi per chiamare l'API di traduzione e
+/// poi reinserirli nel dizionario con `translation_bridge_add_translation`.
+#[tauri::command]
+pub async fn translation_bridge_drain_misses(
+    state: State<'_, TranslationBridgeState>,
+    max: Option<usize>,
+) -> Result<BridgeResponse<Vec<String>>, String> {
+    let bridge = state.bridge.lock();
+    let misses = bridge.drain_misses(max.unwrap_or(100));
+    Ok(BridgeResponse::ok(misses))
+}

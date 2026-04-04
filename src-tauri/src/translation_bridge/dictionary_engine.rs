@@ -8,6 +8,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -115,9 +116,8 @@ pub struct DictionaryEngine {
     active_source: String,
     /// Lingua target attiva
     active_target: String,
-    /// Path per hot-reload
-    #[allow(dead_code)]
-    watch_paths: Vec<String>,
+    /// Path per hot-reload con ultimo modification time noto
+    watch_paths: HashMap<String, Option<SystemTime>>,
 }
 
 impl DictionaryEngine {
@@ -126,7 +126,7 @@ impl DictionaryEngine {
             dictionaries: HashMap::new(),
             active_source: "en".to_string(),
             active_target: "it".to_string(),
-            watch_paths: Vec::new(),
+            watch_paths: HashMap::new(),
         }
     }
     
@@ -332,6 +332,53 @@ impl DictionaryEngine {
         } else {
             vec![None; texts.len()]
         }
+    }
+
+    /// Registra un file JSON per hot-reload. Carica immediatamente e memorizza il mtime.
+    pub fn watch_file(&mut self, path: &str) -> Result<usize, String> {
+        let count = self.load_from_json(path)?;
+        let mtime = fs::metadata(path).ok().and_then(|m| m.modified().ok());
+        self.watch_paths.insert(path.to_string(), mtime);
+        info!("[DictionaryEngine] Watching file: {} ({} traduzioni)", path, count);
+        Ok(count)
+    }
+
+    /// Controlla tutti i file watched per modifiche e ricarica quelli cambiati.
+    /// Ritorna il numero totale di traduzioni ricaricate.
+    pub fn check_and_reload(&mut self) -> usize {
+        // Fase 1: raccogli i path da ricaricare (borrow immutabile)
+        let mut to_reload: Vec<(String, SystemTime)> = Vec::new();
+
+        for (path, last_mtime) in &self.watch_paths {
+            if let Ok(meta) = fs::metadata(path) {
+                if let Ok(current_mtime) = meta.modified() {
+                    let changed = match last_mtime {
+                        Some(prev) => current_mtime > *prev,
+                        None => true,
+                    };
+                    if changed {
+                        to_reload.push((path.clone(), current_mtime));
+                    }
+                }
+            }
+        }
+
+        // Fase 2: ricarica i file modificati (borrow mutabile)
+        let mut reloaded = 0;
+        for (path, mtime) in to_reload {
+            match self.load_from_json(&path) {
+                Ok(count) => {
+                    info!("[DictionaryEngine] Hot-reload: {} ({} traduzioni)", path, count);
+                    reloaded += count;
+                    self.watch_paths.insert(path, Some(mtime));
+                }
+                Err(e) => {
+                    info!("[DictionaryEngine] Hot-reload errore {}: {}", path, e);
+                }
+            }
+        }
+
+        reloaded
     }
 
     /// Ottieni statistiche

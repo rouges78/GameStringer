@@ -601,6 +601,7 @@ fn main() {
             commands::translation_bridge::translation_bridge_get_translation,
             commands::translation_bridge::translation_bridge_export_json,
             commands::translation_bridge::translation_bridge_clear,
+            commands::translation_bridge::translation_bridge_drain_misses,
 
             // Translation API (DeepL, Google, LibreTranslate)
             commands::translation_api::translate_deepl,

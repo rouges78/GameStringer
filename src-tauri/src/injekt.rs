@@ -571,100 +571,87 @@ impl InjektTranslator {
     
     // === FUNZIONI DI OTTIMIZZAZIONE PERFORMANCE ===
     
-    /// Versione ottimizzata di hook_ui_text con pooling
-    fn hook_ui_text_optimized(&self, hooks: &mut Vec<HookPoint>, hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
+    /// Cerca e installa un hook per una funzione specificata da un pattern di byte.
+    /// Il pattern è cercato via `scan_pattern` nella memoria del processo.
+    /// Se il pattern non viene trovato, il hook viene saltato con un warning.
+    fn install_hook_by_pattern(
+        &self,
+        hooks: &mut Vec<HookPoint>,
+        hook_type: HookType,
+        label: &str,
+        pattern: &[u8],
+        mask: Option<&[u8]>,
+    ) -> Result<(), Box<dyn Error>> {
         let start_time = Instant::now();
-        
-        for &hook_id in hook_ids {
-            let hook = HookPoint {
-                address: 0x1000 + hook_id, // Indirizzo simulato
-                original_bytes: vec![0x90, 0x90, 0x90], // NOP simulato
-                hook_type: HookType::TextRender,
-                module_name: "UI_TEXT".to_string(),
-                retry_count: 0,
-                last_error: None,
-                created_at: Instant::now(),
-                is_active: true,
-            };
-            
-            hooks.push(hook);
+
+        match self.scan_pattern(pattern, mask)? {
+            Some(address) => {
+                let mut hook = HookPoint {
+                    address,
+                    original_bytes: vec![0; 5],
+                    hook_type,
+                    module_name: label.to_string(),
+                    retry_count: 0,
+                    last_error: None,
+                    created_at: Instant::now(),
+                    is_active: false,
+                };
+
+                match self.apply_hook_with_retry(&mut hook) {
+                    Ok(()) => {
+                        hooks.push(hook);
+                        log::info!("✅ Hook {} installato a 0x{:X} (scan: {}ms)",
+                            label, address, start_time.elapsed().as_millis());
+                    }
+                    Err(e) => {
+                        log::warn!("⚠️ Hook {} trovato a 0x{:X} ma non installabile: {}",
+                            label, address, e);
+                    }
+                }
+            }
+            None => {
+                log::warn!("⚠️ Pattern per {} non trovato nel processo (scan: {}ms)",
+                    label, start_time.elapsed().as_millis());
+            }
         }
-        
-        let hook_time = start_time.elapsed().as_millis();
-        log::debug!("⚡ UI Text hook ottimizzato: {}ms per {} hook", hook_time, hook_ids.len());
+
         Ok(())
     }
-    
-    /// Versione ottimizzata di hook_dialog_boxes con pooling
-    fn hook_dialog_boxes_optimized(&self, hooks: &mut Vec<HookPoint>, hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
-        let start_time = Instant::now();
-        
-        for &hook_id in hook_ids {
-            let hook = HookPoint {
-                address: 0x2000 + hook_id,
-                original_bytes: vec![0x90, 0x90, 0x90],
-                hook_type: HookType::DialogBox,
-                module_name: "DIALOG_BOX".to_string(),
-                retry_count: 0,
-                last_error: None,
-                created_at: Instant::now(),
-                is_active: true,
-            };
-            
-            hooks.push(hook);
-        }
-        
-        let hook_time = start_time.elapsed().as_millis();
-        log::debug!("⚡ Dialog Box hook ottimizzato: {}ms per {} hook", hook_time, hook_ids.len());
-        Ok(())
+
+    // Patterns comuni per text rendering in game engines.
+    // I mask bytes 0x00 = wildcard, 0xFF = match esatto.
+
+    /// Hook funzioni di rendering testo UI (TextOutW, DrawTextW patterns)
+    fn hook_ui_text_optimized(&self, hooks: &mut Vec<HookPoint>, _hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
+        // Pattern: MOV ECX, [esp+...]; PUSH; CALL — tipico di wrapper TextOut/DrawText
+        // Wildcard sui registri per adattarsi a compilatori diversi
+        let pattern = &[0x8B, 0x4C, 0x24, 0x00, 0x56, 0xFF, 0x15]; // MOV ECX,[esp+?]; PUSH ESI; CALL [...]
+        let mask    = &[0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF];
+        self.install_hook_by_pattern(hooks, HookType::TextRender, "UI_TEXT", pattern, Some(mask))
     }
-    
-    /// Versione ottimizzata di hook_menu_items con pooling
-    fn hook_menu_items_optimized(&self, hooks: &mut Vec<HookPoint>, hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
-        let start_time = Instant::now();
-        
-        for &hook_id in hook_ids {
-            let hook = HookPoint {
-                address: 0x3000 + hook_id,
-                original_bytes: vec![0x90, 0x90, 0x90],
-                hook_type: HookType::MenuItem,
-                module_name: "MENU_ITEM".to_string(),
-                retry_count: 0,
-                last_error: None,
-                created_at: Instant::now(),
-                is_active: true,
-            };
-            
-            hooks.push(hook);
-        }
-        
-        let hook_time = start_time.elapsed().as_millis();
-        log::debug!("⚡ Menu Item hook ottimizzato: {}ms per {} hook", hook_time, hook_ids.len());
-        Ok(())
+
+    /// Hook funzioni dialog box (MessageBoxW, ShowWindow patterns)
+    fn hook_dialog_boxes_optimized(&self, hooks: &mut Vec<HookPoint>, _hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
+        // Pattern: PUSH 0 (MB_OK); PUSH reg; PUSH reg; PUSH reg; CALL — MessageBoxW style
+        let pattern = &[0x6A, 0x00, 0x50, 0x51, 0x52, 0xFF, 0x15];
+        let mask    = &[0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        self.install_hook_by_pattern(hooks, HookType::DialogBox, "DIALOG_BOX", pattern, Some(mask))
     }
-    
-    /// Versione ottimizzata di hook_subtitles con pooling
-    fn hook_subtitles_optimized(&self, hooks: &mut Vec<HookPoint>, hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
-        let start_time = Instant::now();
-        
-        for &hook_id in hook_ids {
-            let hook = HookPoint {
-                address: 0x4000 + hook_id,
-                original_bytes: vec![0x90, 0x90, 0x90],
-                hook_type: HookType::Subtitle,
-                module_name: "SUBTITLE".to_string(),
-                retry_count: 0,
-                last_error: None,
-                created_at: Instant::now(),
-                is_active: true,
-            };
-            
-            hooks.push(hook);
-        }
-        
-        let hook_time = start_time.elapsed().as_millis();
-        log::debug!("⚡ Subtitle hook ottimizzato: {}ms per {} hook", hook_time, hook_ids.len());
-        Ok(())
+
+    /// Hook menu rendering
+    fn hook_menu_items_optimized(&self, hooks: &mut Vec<HookPoint>, _hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
+        // Pattern: LEA reg, [string_ref]; PUSH reg; CALL — common for menu text setup
+        let pattern = &[0x8D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0xE8];
+        let mask    = &[0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF];
+        self.install_hook_by_pattern(hooks, HookType::MenuItem, "MENU_ITEM", pattern, Some(mask))
+    }
+
+    /// Hook subtitle rendering
+    fn hook_subtitles_optimized(&self, hooks: &mut Vec<HookPoint>, _hook_ids: &[usize]) -> Result<(), Box<dyn Error>> {
+        // Pattern: MOV [esp+...], reg; LEA reg, [...]; CALL — subtitle display pipeline
+        let pattern = &[0x89, 0x44, 0x24, 0x00, 0x8D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE8];
+        let mask    = &[0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF];
+        self.install_hook_by_pattern(hooks, HookType::Subtitle, "SUBTITLE", pattern, Some(mask))
     }
     
     /// Stima l'uso della memoria corrente
@@ -815,6 +802,77 @@ impl InjektTranslator {
         Ok(modules)
     }
     
+    /// Scansiona la memoria di un modulo per trovare un pattern di byte.
+    /// Supporta wildcard (`0xFF` = qualsiasi byte) tramite maschera opzionale.
+    /// Ritorna il primo indirizzo che corrisponde, o None.
+    fn scan_pattern_in_module(
+        &self,
+        module: &ProcessModule,
+        pattern: &[u8],
+        mask: Option<&[u8]>,
+    ) -> Option<usize> {
+        let handle = self.process_handle.as_ref()?.get();
+        let pat_len = pattern.len();
+        if pat_len == 0 || module.size < pat_len { return None; }
+
+        // Leggi il modulo a blocchi di 64KB
+        const CHUNK: usize = 65536;
+        let mut buf = vec![0u8; CHUNK + pat_len];
+        let mut offset = 0usize;
+
+        while offset < module.size {
+            let read_size = (CHUNK + pat_len).min(module.size - offset);
+            let mut bytes_read = 0usize;
+            let ok = unsafe {
+                ReadProcessMemory(
+                    handle,
+                    (module.base_address + offset) as LPVOID,
+                    buf.as_mut_ptr() as LPVOID,
+                    read_size,
+                    &mut bytes_read,
+                )
+            };
+            if ok == 0 || bytes_read < pat_len { offset += CHUNK; continue; }
+
+            // Cerca il pattern nel buffer
+            for i in 0..(bytes_read - pat_len + 1) {
+                let matched = match mask {
+                    Some(m) => (0..pat_len).all(|j| m[j] == 0 || buf[i + j] == pattern[j]),
+                    None => &buf[i..i + pat_len] == pattern,
+                };
+                if matched {
+                    let addr = module.base_address + offset + i;
+                    log::info!("[PatternScan] Match trovato a 0x{:X} in {}", addr, module.name);
+                    return Some(addr);
+                }
+            }
+            offset += CHUNK;
+        }
+
+        None
+    }
+
+    /// Scansiona tutti i moduli del processo per un pattern.
+    /// Filtra per moduli sicuri (no system DLLs, no anti-cheat).
+    fn scan_pattern(
+        &self,
+        pattern: &[u8],
+        mask: Option<&[u8]>,
+    ) -> Result<Option<usize>, Box<dyn Error>> {
+        let handle = self.process_handle.as_ref()
+            .ok_or("Handle processo non disponibile")?.get();
+        let modules = self.get_process_modules(handle)?;
+
+        for module in &modules {
+            if !module.is_safe { continue; }
+            if let Some(addr) = self.scan_pattern_in_module(module, pattern, mask) {
+                return Ok(Some(addr));
+            }
+        }
+
+        Ok(None)
+    }
+
     /// Verifica se un modulo è sicuro per l'hook
     #[allow(dead_code)] // Validazione sicurezza moduli - critica per protezione anti-cheat
     fn is_module_safe(&self, module_name: &str) -> bool {
