@@ -148,7 +148,7 @@ export function VisionTranslator() {
         <div>
           <h2 className="text-lg font-bold text-slate-200 flex items-center gap-2">
             Vision LLM Translator
-            <Badge className="bg-fuchsia-500/20 text-fuchsia-300 text-[9px]">NEW</Badge>
+            <Badge className="bg-fuchsia-500/20 text-fuchsia-300 text-micro">NEW</Badge>
           </h2>
           <p className="text-xs text-slate-400">{t('visionTranslatorComp.liaVedeLoSchermoDelGiocoETradu')}</p>
         </div>
@@ -160,7 +160,7 @@ export function VisionTranslator() {
           {/* Provider selection */}
           <Card className="border-slate-700/30 bg-slate-950/40">
             <CardContent className="p-3">
-              <label className="text-[10px] text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.providerVision')}</label>
+              <label className="text-2xs text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.providerVision')}</label>
               <div className="grid grid-cols-3 gap-1.5">
                 {VISION_PROVIDERS.map(p => (
                   <button
@@ -174,16 +174,16 @@ export function VisionTranslator() {
                   >
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm">{p.icon}</span>
-                      <span className="text-[10px] font-medium text-slate-300">{p.label}</span>
+                      <span className="text-2xs font-medium text-slate-300">{p.label}</span>
                     </div>
-                    <p className="text-[8px] text-slate-500 mt-0.5">{p.description}</p>
+                    <p className="text-2xs text-slate-500 mt-0.5">{p.description}</p>
                   </button>
                 ))}
               </div>
 
               {provider === 'ollama' && availableModels.length > 0 && (
                 <div className="mt-2">
-                  <label className="text-[9px] text-slate-500 mb-1 block">{t('visionTranslatorComp.modelloVision')}</label>
+                  <label className="text-micro text-slate-500 mb-1 block">{t('visionTranslatorComp.modelloVision')}</label>
                   <select
                     value={model}
                     onChange={e => setModel(e.target.value)}
@@ -197,7 +197,7 @@ export function VisionTranslator() {
               )}
               {provider === 'ollama' && availableModels.length === 0 && (
                 <div className="mt-2 p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                  <p className="text-[10px] text-amber-300">
+                  <p className="text-2xs text-amber-300">
                     Nessun modello Vision trovato su Ollama. Installa uno con: <code className="bg-amber-500/20 px-1 rounded">ollama pull llava:13b</code>
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export function VisionTranslator() {
           {/* Screenshot */}
           <Card className="border-slate-700/30 bg-slate-950/40">
             <CardContent className="p-3">
-              <label className="text-[10px] text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.screenshotDelGiocoOpzionaleMaP')}</label>
+              <label className="text-2xs text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.screenshotDelGiocoOpzionaleMaP')}</label>
               
               {screenshotPreview ? (
                 <div className="relative group">
@@ -218,7 +218,7 @@ export function VisionTranslator() {
                     className="w-full h-32 object-cover rounded-lg border border-fuchsia-500/20"
                   />
                   <div className="absolute top-1 right-1 flex gap-1">
-                    <Badge className="bg-fuchsia-500/80 text-white text-[8px]">
+                    <Badge className="bg-fuchsia-500/80 text-white text-2xs">
                       <Eye className="h-2.5 w-2.5 mr-0.5" /> Vision attivo
                     </Badge>
                     <button
@@ -262,7 +262,7 @@ export function VisionTranslator() {
           {/* Text input */}
           <Card className="border-slate-700/30 bg-slate-950/40">
             <CardContent className="p-3">
-              <label className="text-[10px] text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.testoDaTradurre')}</label>
+              <label className="text-2xs text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.testoDaTradurre')}</label>
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
@@ -271,7 +271,7 @@ export function VisionTranslator() {
               />
 
               <div className="flex items-center gap-2 mt-2">
-                <label className="text-[10px] text-slate-500">{t('visionTranslatorComp.linguaTarget')}</label>
+                <label className="text-2xs text-slate-500">{t('visionTranslatorComp.linguaTarget')}</label>
                 <select
                   value={targetLang}
                   onChange={e => setTargetLang(e.target.value)}
@@ -288,7 +288,7 @@ export function VisionTranslator() {
           {/* Context */}
           <Card className="border-slate-700/30 bg-slate-950/40">
             <CardContent className="p-3">
-              <label className="text-[10px] text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.contestoDialoghiOpzionale')}</label>
+              <label className="text-2xs text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.contestoDialoghiOpzionale')}</label>
               <div className="flex gap-1.5">
                 <Input
                   value={contextInput}
@@ -297,12 +297,12 @@ export function VisionTranslator() {
                   placeholder="Aggiungi frase precedente per contesto..."
                   className="h-7 text-xs bg-slate-900/50 border-slate-700/30"
                 />
-                <Button size="sm" className="h-7 px-2 text-xs" onClick={addContext} disabled={!contextInput.trim()}>+</Button>
+                <Button size="xs" className="px-2 text-xs" onClick={addContext} disabled={!contextInput.trim()}>+</Button>
               </div>
               {contextLines.length > 0 && (
                 <div className="mt-1.5 space-y-1">
                   {contextLines.map((line, i) => (
-                    <div key={i} className="flex items-center gap-1 text-[10px] text-slate-400">
+                    <div key={i} className="flex items-center gap-1 text-2xs text-slate-400">
                       <span className="text-slate-600">{i + 1}.</span>
                       <span className="flex-1 truncate">"{line}"</span>
                       <button onClick={() => setContextLines(prev => prev.filter((_, j) => j !== i))}>
@@ -337,7 +337,7 @@ export function VisionTranslator() {
                 <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-red-300 font-medium">{t('visionTranslatorComp.errore')}</p>
-                  <p className="text-[10px] text-red-400/70 mt-0.5">{error}</p>
+                  <p className="text-2xs text-red-400/70 mt-0.5">{error}</p>
                 </div>
               </CardContent>
             </Card>
@@ -376,7 +376,7 @@ export function VisionTranslator() {
               <Card className="border-slate-700/30 bg-slate-950/40">
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500">{t('visionTranslatorComp.confidenza')}</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.confidenza')}</span>
                     <div className="flex items-center gap-1.5">
                       <div className="h-1.5 w-20 rounded-full bg-slate-700 overflow-hidden">
                         <div
@@ -386,12 +386,12 @@ export function VisionTranslator() {
                           style={{ width: `${result.confidence * 100}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-slate-400">{Math.round(result.confidence * 100)}%</span>
+                      <span className="text-2xs text-slate-400">{Math.round(result.confidence * 100)}%</span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500">{t('visionTranslatorComp.contestoVisivo')}</span>
-                    <Badge variant="outline" className={`text-[9px] ${
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.contestoVisivo')}</span>
+                    <Badge variant="outline" className={`text-micro ${
                       screenshotBase64 ? 'border-fuchsia-500/20 text-fuchsia-300' : 'border-slate-600 text-slate-400'
                     }`}>
                       <Eye className="h-2.5 w-2.5 mr-0.5" />
@@ -400,8 +400,8 @@ export function VisionTranslator() {
                   </div>
                   {result.disambiguation && (
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-500">{t('visionTranslatorComp.disambiguazione')}</span>
-                      <span className="text-[10px] text-fuchsia-400">{result.disambiguation}</span>
+                      <span className="text-2xs text-slate-500">{t('visionTranslatorComp.disambiguazione')}</span>
+                      <span className="text-2xs text-fuchsia-400">{result.disambiguation}</span>
                     </div>
                   )}
                 </CardContent>
@@ -410,15 +410,15 @@ export function VisionTranslator() {
               {/* Comparison */}
               <Card className="border-slate-700/30 bg-slate-950/40">
                 <CardContent className="p-3">
-                  <label className="text-[10px] text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.confronto')}</label>
+                  <label className="text-2xs text-slate-500 mb-1.5 block font-medium">{t('visionTranslatorComp.confronto')}</label>
                   <div className="space-y-1.5">
                     <div className="flex items-start gap-2">
-                      <span className="text-[9px] text-slate-600 w-14 flex-shrink-0 pt-0.5">{t('visionTranslatorComp.originale')}</span>
+                      <span className="text-micro text-slate-600 w-14 flex-shrink-0 pt-0.5">{t('visionTranslatorComp.originale')}</span>
                       <span className="text-xs text-slate-400">{text}</span>
                     </div>
                     <div className="h-px bg-slate-700/30" />
                     <div className="flex items-start gap-2">
-                      <span className="text-[9px] text-fuchsia-500 w-14 flex-shrink-0 pt-0.5">{t('visionTranslatorComp.vision')}</span>
+                      <span className="text-micro text-fuchsia-500 w-14 flex-shrink-0 pt-0.5">{t('visionTranslatorComp.vision')}</span>
                       <span className="text-xs text-fuchsia-300 font-medium">{result.translated}</span>
                     </div>
                   </div>
@@ -431,22 +431,22 @@ export function VisionTranslator() {
               <CardContent className="p-8 text-center">
                 <Eye className="h-12 w-12 text-fuchsia-400/15 mx-auto mb-3" />
                 <h3 className="text-sm font-medium text-slate-400 mb-1">{t('visionTranslatorComp.liaVedeIlTuoGioco')}</h3>
-                <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
+                <p className="text-2xs text-slate-500 max-w-xs mx-auto">
                   Carica uno screenshot e inserisci il testo. L'IA userà il contesto visivo per tradurre con precisione — 
                   niente più errori di genere, ambiguità o allucinazioni.
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center max-w-sm mx-auto">
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Brain className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-[8px] text-slate-500">{t('visionTranslatorComp.disambigua')}<br/>parole</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.disambigua')}<br/>parole</span>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Monitor className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-[8px] text-slate-500">{t('visionTranslatorComp.rileva')}<br/>genere</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.rileva')}<br/>genere</span>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Zap className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-[8px] text-slate-500">{t('visionTranslatorComp.tono')}<br/>coerente</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.tono')}<br/>coerente</span>
                   </div>
                 </div>
               </CardContent>

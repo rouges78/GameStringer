@@ -441,13 +441,13 @@ export function BatchFolderTranslator() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Link href="/editor">
-                        <Button variant="outline" size="sm" className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
+                        <Button variant="outline" size="xs" className="text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
                           <Edit3 className="h-3 w-3 mr-1" />
                           Apri in Editor
                         </Button>
                       </Link>
                       <Link href="/community-hub?action=publish">
-                        <Button size="sm" className="h-7 text-xs bg-purple-600 hover:bg-purple-500 text-white">
+                        <Button size="xs" className="text-xs bg-purple-600 hover:bg-purple-500 text-white">
                           <Globe className="h-3 w-3 mr-1" />
                           Condividi
                         </Button>

@@ -164,7 +164,7 @@ export function ExtensionManager() {
         <div className="flex items-center gap-2">
           <Puzzle className="h-5 w-5 text-purple-400" />
           <h2 className="text-lg font-bold">{t('extensionManagerComp.extensions')}</h2>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-400 border-purple-500/30">
+          <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-purple-500/10 text-purple-400 border-purple-500/30">
             {extensions.length} installed
           </Badge>
         </div>
@@ -253,7 +253,7 @@ export function ExtensionManager() {
           <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : extensions.length === 0 ? (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Puzzle className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium">{t('extensionManagerComp.noExtensionsInstalled')}</h3>
@@ -281,12 +281,12 @@ export function ExtensionManager() {
                     <div className="flex items-center gap-1.5">
                       <Icon className="h-4 w-4 text-purple-400" />
                       <span className="text-sm font-medium truncate">{ext.name}</span>
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">v{ext.version}</Badge>
-                      <Badge className={`text-[9px] px-1 py-0 shrink-0 ${getExtensionTypeBadge(ext.extension_type)}`}>
+                      <Badge variant="outline" className="text-micro px-1 py-0 shrink-0">v{ext.version}</Badge>
+                      <Badge className={`text-micro px-1 py-0 shrink-0 ${getExtensionTypeBadge(ext.extension_type)}`}>
                         {ext.extension_type}
                       </Badge>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{ext.description}</p>
+                    <p className="text-2xs text-muted-foreground truncate">{ext.description}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

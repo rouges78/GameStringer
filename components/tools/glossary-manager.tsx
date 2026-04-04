@@ -203,11 +203,11 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
           <div className="flex items-center gap-2">
             <Book className="h-4 w-4 text-orange-400" />
             <span className="text-sm font-medium">{t('glossaryManager.glossary')}</span>
-            <Badge variant="outline" className="text-[10px]">{stats.totalEntries} {t('glossaryManager.terms')}</Badge>
+            <Badge variant="outline" className="text-2xs">{stats.totalEntries} {t('glossaryManager.terms')}</Badge>
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs">
+              <Button variant="outline" size="xs" className="text-xs">
                 <Edit2 className="h-3 w-3 mr-1" />
                 {t('glossaryManager.manage')}
               </Button>
@@ -224,12 +224,12 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
         {selectedGlossary && selectedGlossary.entries.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {selectedGlossary.entries.slice(0, 5).map(entry => (
-              <Badge key={entry.id} variant="secondary" className="text-[10px]">
+              <Badge key={entry.id} variant="secondary" className="text-2xs">
                 {entry.source} → {entry.target || '∅'}
               </Badge>
             ))}
             {selectedGlossary.entries.length > 5 && (
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-2xs">
                 +{selectedGlossary.entries.length - 5}
               </Badge>
             )}
@@ -375,7 +375,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
                   <div className="flex items-center gap-2">
                     {g.gameId ? <Gamepad2 className="h-3 w-3" /> : <Globe className="h-3 w-3" />}
                     <span>{g.name}</span>
-                    <Badge variant="outline" className="text-[9px] ml-1">{g.entries.length}</Badge>
+                    <Badge variant="outline" className="text-micro ml-1">{g.entries.length}</Badge>
                   </div>
                 </SelectItem>
               ))}
@@ -518,9 +518,9 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
                               {entry.target || <span className="italic text-orange-400">{t('glossaryManager.doNotTranslate')}</span>}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            {entry.caseSensitive && <Badge variant="outline" className="text-[9px] px-1">{t('glossaryManager.badgeCaseSensitive')}</Badge>}
-                            {entry.wholeWord && <Badge variant="outline" className="text-[9px] px-1">{t('glossaryManager.badgeWholeWord')}</Badge>}
+                          <div className="flex items-center gap-2 text-2xs text-muted-foreground">
+                            {entry.caseSensitive && <Badge variant="outline" className="text-micro px-1">{t('glossaryManager.badgeCaseSensitive')}</Badge>}
+                            {entry.wholeWord && <Badge variant="outline" className="text-micro px-1">{t('glossaryManager.badgeWholeWord')}</Badge>}
                           </div>
                         </div>
                       </div>

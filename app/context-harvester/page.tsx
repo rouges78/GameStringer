@@ -410,7 +410,7 @@ export default function ContextHarvesterPage() {
                     .sort(([, a], [, b]) => b - a)
                     .slice(0, 4)
                     .map(([screen, count]) => (
-                      <Badge key={screen} variant="outline" className={cn("text-[10px] px-1.5 py-0", SCREEN_COLORS[screen as ScreenType])}>
+                      <Badge key={screen} variant="outline" className={cn("text-2xs px-1.5 py-0", SCREEN_COLORS[screen as ScreenType])}>
                         {SCREEN_ICONS[screen as ScreenType] || "📄"} {screen} ({count})
                       </Badge>
                     ))}
@@ -427,7 +427,7 @@ export default function ContextHarvesterPage() {
                     .sort(([, a], [, b]) => b - a)
                     .slice(0, 4)
                     .map(([speaker, count]) => (
-                      <Badge key={speaker} variant="outline" className={cn("text-[10px] px-1.5 py-0", SPEAKER_COLORS[speaker as SpeakerType])}>
+                      <Badge key={speaker} variant="outline" className={cn("text-2xs px-1.5 py-0", SPEAKER_COLORS[speaker as SpeakerType])}>
                         {speaker} ({count})
                       </Badge>
                     ))}
@@ -456,7 +456,7 @@ export default function ContextHarvesterPage() {
                     .sort(([, a], [, b]) => b - a)
                     .slice(0, 4)
                     .map(([tone, count]) => (
-                      <Badge key={tone} variant="outline" className={cn("text-[10px] px-1.5 py-0", TONE_COLORS[tone as ToneType])}>
+                      <Badge key={tone} variant="outline" className={cn("text-2xs px-1.5 py-0", TONE_COLORS[tone as ToneType])}>
                         {tone} ({count})
                       </Badge>
                     ))}
@@ -472,7 +472,7 @@ export default function ContextHarvesterPage() {
                     <Sparkles className="h-3.5 w-3.5 text-amber-400" />
                     Prompt Hint Generato (iniettato automaticamente)
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleCopyPrompt}>
+                  <Button variant="ghost" size="xs" className="text-xs" onClick={handleCopyPrompt}>
                     <Copy className="h-3 w-3 mr-1" />{t('translationFixer.copy')}</Button>
                 </CardHeader>
                 <CardContent className="px-4 pb-3">
@@ -485,10 +485,10 @@ export default function ContextHarvesterPage() {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleExport}>
+              <Button variant="outline" size="xs" className="text-xs" onClick={handleExport}>
                 <Download className="h-3 w-3 mr-1" /> Esporta JSON
               </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleSave}>
+              <Button variant="outline" size="xs" className="text-xs" onClick={handleSave}>
                 <FileText className="h-3 w-3 mr-1" /> Salva per Gioco
               </Button>
               {/* Filters */}
@@ -540,24 +540,24 @@ export default function ContextHarvesterPage() {
                             isSelected ? "bg-accent border-accent-foreground/20" : "hover:bg-muted/50 border-transparent"
                           )}
                         >
-                          <span className="text-[10px] text-muted-foreground w-5 text-right mt-0.5 shrink-0">
+                          <span className="text-2xs text-muted-foreground w-5 text-right mt-0.5 shrink-0">
                             {index + 1}
                           </span>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs truncate">{text}</div>
                             {input?.key && (
-                              <div className="text-[10px] text-muted-foreground font-mono truncate">{input.key}</div>
+                              <div className="text-2xs text-muted-foreground font-mono truncate">{input.key}</div>
                             )}
                           </div>
                           <div className="flex flex-wrap gap-1 shrink-0">
-                            <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-4", SCREEN_COLORS[ctx.screen])}>
+                            <Badge variant="outline" className={cn("text-micro px-1 py-0 h-4", SCREEN_COLORS[ctx.screen])}>
                               {SCREEN_ICONS[ctx.screen] || "📄"} {ctx.screen}
                             </Badge>
-                            <Badge variant="outline" className={cn("text-[9px] px-1 py-0 h-4", SPEAKER_COLORS[ctx.speaker])}>
+                            <Badge variant="outline" className={cn("text-micro px-1 py-0 h-4", SPEAKER_COLORS[ctx.speaker])}>
                               {ctx.speaker}
                             </Badge>
                             {ctx.constraints.hasPlaceholders && (
-                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+                              <Badge variant="outline" className="text-micro px-1 py-0 h-4 bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
                                 ⚠️ vars
                               </Badge>
                             )}
@@ -581,12 +581,12 @@ export default function ContextHarvesterPage() {
                   <CardContent className="px-4 pb-4 space-y-3">
                     {/* Screen */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.screen')}</Label>
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.screen')}</Label>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge className={cn("text-xs", SCREEN_COLORS[selectedCtx.screen])}>
                           {SCREEN_ICONS[selectedCtx.screen]} {selectedCtx.screen}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-2xs text-muted-foreground">
                           ({Math.round(selectedCtx.screenConfidence * 100)}% conf.)
                         </span>
                       </div>
@@ -594,15 +594,15 @@ export default function ContextHarvesterPage() {
 
                     {/* Speaker */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.speaker')}</Label>
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.speaker')}</Label>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge className={cn("text-xs", SPEAKER_COLORS[selectedCtx.speaker])}>
                           {selectedCtx.speakerName || selectedCtx.speaker}
                         </Badge>
                         {selectedCtx.speakerName && (
-                          <span className="text-[10px] text-muted-foreground">({selectedCtx.speaker})</span>
+                          <span className="text-2xs text-muted-foreground">({selectedCtx.speaker})</span>
                         )}
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-2xs text-muted-foreground">
                           ({Math.round(selectedCtx.speakerConfidence * 100)}% conf.)
                         </span>
                       </div>
@@ -610,7 +610,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Tone */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.tone')}</Label>
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.tone')}</Label>
                       <div className="mt-0.5">
                         <Badge className={cn("text-xs", TONE_COLORS[selectedCtx.tone])}>
                           {selectedCtx.tone}
@@ -620,7 +620,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Content Type */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.contentType')}</Label>
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.contentType')}</Label>
                       <div className="mt-0.5">
                         <Badge variant="outline" className="text-xs">{selectedCtx.contentType}</Badge>
                       </div>
@@ -630,14 +630,14 @@ export default function ContextHarvesterPage() {
 
                     {/* Constraints */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.uiConstraints')}</Label>
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.uiConstraints')}</Label>
                       <div className="space-y-1 mt-1">
                         {selectedCtx.constraints.maxLength !== null && (
                           <div className="text-xs">📏 Max lunghezza: <span className="font-medium">{selectedCtx.constraints.maxLength}</span> chars</div>
                         )}
                         {selectedCtx.constraints.hasPlaceholders && (
                           <div className="text-xs">
-                            ⚠️ Placeholder: <code className="text-[10px] bg-muted px-1 rounded">{selectedCtx.constraints.placeholders.join(", ")}</code>
+                            ⚠️ Placeholder: <code className="text-2xs bg-muted px-1 rounded">{selectedCtx.constraints.placeholders.join(", ")}</code>
                           </div>
                         )}
                         {selectedCtx.constraints.isAllCaps && (
@@ -657,10 +657,10 @@ export default function ContextHarvesterPage() {
                     {/* Tags */}
                     {selectedCtx.tags.length > 0 && (
                       <div>
-                        <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.tag')}</Label>
+                        <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.tag')}</Label>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {selectedCtx.tags.map((tag, i) => (
-                            <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+                            <Badge key={i} variant="secondary" className="text-micro px-1.5 py-0">{tag}</Badge>
                           ))}
                         </div>
                       </div>
@@ -668,8 +668,8 @@ export default function ContextHarvesterPage() {
 
                     {/* Prompt Hint */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.promptHint')}</Label>
-                      <pre className="text-[10px] font-mono bg-muted/50 rounded p-1.5 mt-1 whitespace-pre-wrap text-muted-foreground">
+                      <Label className="text-2xs text-muted-foreground">{t('contextHarvesterPage.promptHint')}</Label>
+                      <pre className="text-2xs font-mono bg-muted/50 rounded p-1.5 mt-1 whitespace-pre-wrap text-muted-foreground">
                         {selectedCtx.promptHint || "—"}
                       </pre>
                     </div>

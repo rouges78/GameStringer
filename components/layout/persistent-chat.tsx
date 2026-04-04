@@ -290,7 +290,7 @@ export function PersistentChat() {
         <MessageSquare className="h-5 w-5" />
         <span className="text-sm font-medium">Chat</span>
         {unreadCount > 0 && (
-          <span className="flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-[10px] font-bold">
+          <span className="flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-2xs font-bold">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -315,17 +315,17 @@ export function PersistentChat() {
             <MessageSquare className="h-4 w-4 text-cyan-400" />
             <span className="text-sm font-semibold text-slate-200">Community Chat</span>
             {onlineUsers.length > 0 && (
-              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-emerald-500/30 text-emerald-400">
+              <Badge variant="outline" className="text-2xs h-5 px-1.5 border-emerald-500/30 text-emerald-400">
                 <Circle className="h-1.5 w-1.5 fill-emerald-400 mr-1" />
                 {onlineUsers.length}
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setExpanded(!expanded)}>
+            <Button variant="ghost" size="xs" className="w-6 p-0" onClick={() => setExpanded(!expanded)}>
               {expanded ? <Minimize2 className="h-3.5 w-3.5 text-slate-400" /> : <Maximize2 className="h-3.5 w-3.5 text-slate-400" />}
             </Button>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setOpen(false)}>
+            <Button variant="ghost" size="xs" className="w-6 p-0" onClick={() => setOpen(false)}>
               <X className="h-3.5 w-3.5 text-slate-400" />
             </Button>
           </div>
@@ -378,7 +378,7 @@ export function PersistentChat() {
                 <span className="font-medium truncate max-w-[180px]">{activeRoom?.name || 'Stanze'}</span>
                 <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform ${showRooms ? 'rotate-180' : ''}`} />
               </button>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-auto" onClick={() => setShowNewRoom(true)}>
+              <Button variant="ghost" size="xs" className="w-6 p-0 ml-auto" onClick={() => setShowNewRoom(true)}>
                 <Plus className="h-3 w-3 text-slate-500" />
               </Button>
             </div>
@@ -398,7 +398,7 @@ export function PersistentChat() {
                   >
                     {getRoomIcon(room.type)}
                     <span className="truncate">{room.name}</span>
-                    {room.isPinned && <span className="text-[9px]">📌</span>}
+                    {room.isPinned && <span className="text-micro">📌</span>}
                   </button>
                 ))}
               </div>
@@ -427,7 +427,7 @@ export function PersistentChat() {
                         {showAvatar && (
                           <Avatar className="h-5 w-5">
                             <AvatarImage src={msg.authorAvatar} />
-                            <AvatarFallback className="text-[8px] bg-slate-700">
+                            <AvatarFallback className="text-2xs bg-slate-700">
                               {(msg.authorName || '?')[0].toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -439,11 +439,11 @@ export function PersistentChat() {
                             <span className={`text-[11px] font-bold ${isOwn ? 'text-cyan-400' : 'text-orange-400'}`}>
                               {msg.authorName || 'Utente'}
                             </span>
-                            <span className="text-[9px] text-slate-600">{formatTime(msg.createdAt)}</span>
+                            <span className="text-micro text-slate-600">{formatTime(msg.createdAt)}</span>
                           </div>
                         )}
                         {msg.replyTo && (
-                          <div className="text-[9px] text-slate-500 border-l-2 border-slate-600 pl-1.5 mb-0.5 truncate">
+                          <div className="text-micro text-slate-500 border-l-2 border-slate-600 pl-1.5 mb-0.5 truncate">
                             ↳ risposta
                           </div>
                         )}
@@ -476,10 +476,10 @@ export function PersistentChat() {
             {/* Reply/Edit indicator */}
             {(replyTo || editingMsg) && (
               <div className="px-2 py-1 bg-slate-800/50 border-t border-slate-700/30 flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">
+                <span className="text-2xs text-slate-400">
                   {editingMsg ? '✏️ Modifica' : <>↳ Rispondi a <strong className="text-orange-400">{replyTo?.authorName}</strong></>}
                 </span>
-                <Button variant="ghost" size="sm" className="h-4 text-[9px] px-1" onClick={() => { setReplyTo(null); setEditingMsg(null); setMessageInput(''); }}>
+                <Button variant="ghost" size="sm" className="h-4 text-micro px-1" onClick={() => { setReplyTo(null); setEditingMsg(null); setMessageInput(''); }}>
                   Annulla
                 </Button>
               </div>

@@ -86,7 +86,7 @@ export default function InfoPage() {
               <f.icon className="h-4 w-4 text-orange-400" />
               <div>
                 <p className="font-medium text-xs">{f.title}</p>
-                <p className="text-[10px] text-muted-foreground">{f.desc}</p>
+                <p className="text-2xs text-muted-foreground">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -115,7 +115,7 @@ export default function InfoPage() {
           </p>
           <div className="flex flex-wrap gap-2">
             {links.map((link, i) => (
-              <Button key={i} variant="outline" size="sm" className="h-7 text-xs gap-1.5" asChild>
+              <Button key={i} variant="outline" size="xs" className="text-xs gap-1.5" asChild>
                 <a href={link.href} target="_blank" rel="noopener noreferrer">
                   <link.icon className={`h-3.5 w-3.5 ${link.color}`} />
                   {link.label}
@@ -146,12 +146,12 @@ export default function InfoPage() {
                 }`} />
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-bold font-mono">{v.version}</span>
-                  <Badge variant="outline" className={`text-[8px] h-3.5 px-1 ${
+                  <Badge variant="outline" className={`text-2xs h-3.5 px-1 ${
                     v.type === 'major' ? 'text-orange-400 border-orange-500/30' :
                     v.type === 'minor' ? 'text-amber-400 border-amber-500/30' :
                     'text-slate-400 border-slate-500/30'
                   }`}>{v.type}</Badge>
-                  <span className="text-[9px] text-muted-foreground/50">{new Date(v.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-micro text-muted-foreground/50">{new Date(v.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
                 <ul className="space-y-0.5">
                   {v.changes.map((c: string, ci: number) => (
@@ -191,10 +191,10 @@ export default function InfoPage() {
         <div className="flex items-center justify-between">
           <p className="text-sm">{t('infoPage.thanks')} 🎮</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+            <Button variant="outline" size="xs" className="text-xs" asChild>
               <a href="https://ko-fi.com/gamestringer" target="_blank"><Coffee className="h-3.5 w-3.5 mr-1 text-yellow-500" />{t('infoPage.kofi')}</a>
             </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+            <Button variant="outline" size="xs" className="text-xs" asChild>
               <a href="https://github.com/rouges78/GameStringer" target="_blank"><Github className="h-3.5 w-3.5 mr-1" />{t('infoPage.github')}</a>
             </Button>
           </div>

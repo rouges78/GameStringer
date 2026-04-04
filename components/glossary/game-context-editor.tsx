@@ -279,7 +279,7 @@ export function GameContextEditor({
                 </Label>
                 <Dialog open={showCharacterDialog} onOpenChange={setShowCharacterDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 text-xs" disabled={disabled}>
+                    <Button variant="outline" size="xs" className="text-xs" disabled={disabled}>
                       <Plus className="h-3 w-3 mr-1" />
                       Add
                     </Button>
@@ -424,7 +424,7 @@ export function GameContextEditor({
                   <Sparkles className="h-3 w-3" />
                   Contesto per l'IA
                 </Label>
-                <pre className="text-[10px] text-muted-foreground mt-1 whitespace-pre-wrap">
+                <pre className="text-2xs text-muted-foreground mt-1 whitespace-pre-wrap">
                   {generateContextPrompt()}
                 </pre>
               </div>

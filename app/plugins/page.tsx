@@ -163,7 +163,7 @@ export default function PluginsPage() {
             <div className="flex items-center gap-2">
               <div className="flex items-start gap-2 flex-1 p-2 rounded-lg bg-amber-500/[0.05] border border-amber-500/15">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-400/80 leading-relaxed">
+                <p className="text-2xs text-amber-400/80 leading-relaxed">
                   {t('plugins.externalWarning')}
                 </p>
               </div>
@@ -197,12 +197,12 @@ export default function PluginsPage() {
         <TabsContent value="parsers" className="flex-1 min-h-0 mt-0">
           <div className="flex gap-3 h-full">
             {/* Colonna sinistra - Estensioni */}
-            <Card className="w-[260px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+            <Card variant="muted" className="w-[260px] shrink-0 flex flex-col">
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileText className="w-4 h-4 text-sky-400" />
                   {t('plugins.supportedExtensions')}
-                  <Badge variant="outline" className="ml-auto text-[10px] px-1.5 py-0 bg-sky-500/10 text-sky-400 border-sky-500/30">
+                  <Badge variant="outline" className="ml-auto text-2xs px-1.5 py-0 bg-sky-500/10 text-sky-400 border-sky-500/30">
                     {supportedExtensions.length}
                   </Badge>
                 </CardTitle>
@@ -210,7 +210,7 @@ export default function PluginsPage() {
               <CardContent className="p-2 pt-0 flex-1 overflow-y-auto">
                 <div className="flex flex-wrap gap-1">
                   {supportedExtensions.map(ext => (
-                    <Badge key={ext} variant="secondary" className="font-mono text-[10px] px-1.5 py-0 h-5 bg-slate-800/50">
+                    <Badge key={ext} variant="secondary" className="font-mono text-2xs px-1.5 py-0 h-5 bg-slate-800/50">
                       {ext}
                     </Badge>
                   ))}
@@ -218,7 +218,7 @@ export default function PluginsPage() {
                 <div className="mt-3 p-2 rounded-lg bg-blue-500/5 border border-blue-500/20">
                   <div className="flex items-start gap-2">
                     <Info className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <p className="text-2xs text-muted-foreground leading-relaxed">
                       {t('plugins.builtinInfo')}
                     </p>
                   </div>
@@ -227,7 +227,7 @@ export default function PluginsPage() {
             </Card>
 
             {/* Colonna destra - Lista Plugin */}
-            <Card className="flex-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+            <Card variant="muted" className="flex-1 flex flex-col">
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Puzzle className="w-4 h-4 text-sky-400" />
@@ -250,12 +250,12 @@ export default function PluginsPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-medium truncate">{plugin.name}</span>
-                            <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">v{plugin.version}</Badge>
+                            <Badge variant="outline" className="text-micro px-1 py-0 shrink-0">v{plugin.version}</Badge>
                             {plugin.id.startsWith('builtin-') && (
-                              <Badge className="text-[9px] px-1 py-0 bg-slate-700 shrink-0">Builtin</Badge>
+                              <Badge className="text-micro px-1 py-0 bg-slate-700 shrink-0">Builtin</Badge>
                             )}
                           </div>
-                          <p className="text-[10px] text-muted-foreground truncate">{plugin.description}</p>
+                          <p className="text-2xs text-muted-foreground truncate">{plugin.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-2">
@@ -281,13 +281,13 @@ export default function PluginsPage() {
         <TabsContent value="engines" className="flex-1 min-h-0 mt-0">
           <div className="space-y-3">
             {enginePlugins.length === 0 ? (
-              <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+              <Card variant="muted">
                 <CardContent className="p-8 text-center">
                   <Cpu className="h-10 w-10 text-slate-600 mx-auto mb-3" />
                   <h3 className="text-sm font-bold text-slate-400 mb-1">{t('plugins.noEnginePlugins')}</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
                     {t('plugins.noEngineDesc')}{' '}
-                    {t('plugins.loadGsplugin')} <code className="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 text-[10px]">.gsplugin</code> {t('plugins.toStart')}
+                    {t('plugins.loadGsplugin')} <code className="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 text-2xs">.gsplugin</code> {t('plugins.toStart')}
                   </p>
                   <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-3.5 w-3.5 mr-1.5" /> {t('plugins.loadEnginePlugin')}
@@ -297,7 +297,7 @@ export default function PluginsPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {enginePlugins.map(plugin => (
-                  <Card key={plugin.id} className={`border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 transition-all ${plugin.enabled ? '' : 'opacity-50'}`}>
+                  <Card key={plugin.id} variant="muted" className={`transition-all ${plugin.enabled ? '' : 'opacity-50'}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -311,9 +311,9 @@ export default function PluginsPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-bold text-slate-200">{plugin.name}</span>
-                              <Badge variant="outline" className="text-[9px] px-1 py-0">v{plugin.version}</Badge>
+                              <Badge variant="outline" className="text-micro px-1 py-0">v{plugin.version}</Badge>
                             </div>
-                            <p className="text-[10px] text-slate-500">{t('plugins.by')} {plugin.author}</p>
+                            <p className="text-2xs text-slate-500">{t('plugins.by')} {plugin.author}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -327,11 +327,11 @@ export default function PluginsPage() {
                       </div>
                       <p className="text-xs text-slate-400 mb-3">{plugin.description}</p>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className="text-[9px] bg-sky-500/10 text-sky-400 border-sky-500/20">
+                        <Badge className="text-micro bg-sky-500/10 text-sky-400 border-sky-500/20">
                           {plugin.engineName}
                         </Badge>
                         {plugin.supportedExtensions.map(ext => (
-                          <Badge key={ext} variant="secondary" className="font-mono text-[9px] px-1.5 py-0 bg-slate-800/50">
+                          <Badge key={ext} variant="secondary" className="font-mono text-micro px-1.5 py-0 bg-slate-800/50">
                             {ext}
                           </Badge>
                         ))}
@@ -348,7 +348,7 @@ export default function PluginsPage() {
             )}
 
             {/* Built-in Engine Support Info */}
-            <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+            <Card variant="muted">
               <CardHeader className="py-3 px-4">
                 <CardTitle className="text-xs flex items-center gap-2 text-slate-500">
                   <Cog className="h-3.5 w-3.5" /> {t('plugins.nativeEngines')}
@@ -368,7 +368,7 @@ export default function PluginsPage() {
                   ].map(eng => (
                     <div key={eng.name} className="flex items-center gap-2 p-2 rounded-lg bg-white/[0.02] border border-white/[0.04]">
                       <span className={`text-xs font-bold ${eng.color}`}>{eng.name}</span>
-                      <span className="text-[9px] text-slate-600 ml-auto font-mono">{eng.ext}</span>
+                      <span className="text-micro text-slate-600 ml-auto font-mono">{eng.ext}</span>
                     </div>
                   ))}
                 </div>

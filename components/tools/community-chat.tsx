@@ -332,7 +332,7 @@ export function CommunityChat() {
         {/* Rooms header */}
         <div className="p-3 border-b border-slate-700/30 flex items-center justify-between">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Stanze</span>
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowNewRoom(true)}>
+          <Button variant="ghost" size="xs" className="w-6 p-0" onClick={() => setShowNewRoom(true)}>
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -352,7 +352,7 @@ export function CommunityChat() {
               >
                 {getRoomIcon(room.type)}
                 <span className="truncate flex-1 text-xs font-medium">{room.name}</span>
-                {room.isPinned && <span className="text-[10px] text-yellow-500">📌</span>}
+                {room.isPinned && <span className="text-2xs text-yellow-500">📌</span>}
               </button>
             ))}
           </div>
@@ -362,7 +362,7 @@ export function CommunityChat() {
         <div className="border-t border-slate-700/30 p-2">
           <div className="flex items-center gap-1.5 px-1 mb-1.5">
             <Users className="h-3 w-3 text-slate-500" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">
               Online — {onlineUsers.length}
             </span>
           </div>
@@ -374,7 +374,7 @@ export function CommunityChat() {
               </div>
             ))}
             {onlineUsers.length === 0 && (
-              <span className="text-[10px] text-slate-600 px-1">Nessuno online</span>
+              <span className="text-2xs text-slate-600 px-1">Nessuno online</span>
             )}
           </div>
         </div>
@@ -417,7 +417,7 @@ export function CommunityChat() {
                     {showAvatar && (
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={msg.authorAvatar} />
-                        <AvatarFallback className="text-[10px] bg-slate-700">
+                        <AvatarFallback className="text-2xs bg-slate-700">
                           {(msg.authorName || '?')[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -431,14 +431,14 @@ export function CommunityChat() {
                         <span className={`text-xs font-bold ${isOwn ? 'text-cyan-400' : 'text-orange-400'}`}>
                           {msg.authorName || 'Utente'}
                         </span>
-                        <span className="text-[10px] text-slate-600">{formatTime(msg.createdAt)}</span>
-                        {msg.edited && <span className="text-[9px] text-slate-600">(modificato)</span>}
+                        <span className="text-2xs text-slate-600">{formatTime(msg.createdAt)}</span>
+                        {msg.edited && <span className="text-micro text-slate-600">(modificato)</span>}
                       </div>
                     )}
 
                     {/* Reply preview */}
                     {msg.replyTo && (
-                      <div className="text-[10px] text-slate-500 border-l-2 border-slate-600 pl-2 mb-0.5 truncate">
+                      <div className="text-2xs text-slate-500 border-l-2 border-slate-600 pl-2 mb-0.5 truncate">
                         ↳ risposta a un messaggio
                       </div>
                     )}
@@ -506,7 +506,7 @@ export function CommunityChat() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-5 text-[10px] px-1.5"
+              className="h-5 text-2xs px-1.5"
               onClick={() => {
                 setReplyTo(null);
                 setEditingMsg(null);
