@@ -1,6 +1,26 @@
 use serde::Serialize;
 use std::process::Command;
 
+// Su Windows, evita il flash della console nera per ogni spawn di processo figlio.
+// Senza questo flag, il polling periodico di get_system_stats() genera un loop
+// di finestre cmd che appaiono e scompaiono (bug tray icon).
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+/// Costruisce un Command che su Windows non mostra la console figlia.
+fn no_window_command(program: &str) -> Command {
+    let cmd = Command::new(program);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        let mut cmd = cmd;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        return cmd;
+    }
+    #[cfg(not(target_os = "windows"))]
+    cmd
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemStats {
     pub cpu_usage_percent: f64,
@@ -20,7 +40,7 @@ pub struct SystemStats {
 /// Ottieni statistiche GPU via nvidia-smi (NVIDIA) o fallback
 fn get_gpu_stats() -> (String, u64, u64, u64, f64, Option<f64>, bool) {
     // Prova nvidia-smi
-    if let Ok(output) = Command::new("nvidia-smi")
+    if let Ok(output) = no_window_command("nvidia-smi")
         .args(["--query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"])
         .output()
     {
@@ -49,7 +69,7 @@ fn get_gpu_stats() -> (String, u64, u64, u64, f64, Option<f64>, bool) {
 fn get_ram_stats() -> (u64, u64) {
     #[cfg(target_os = "windows")]
     {
-        if let Ok(output) = Command::new("wmic")
+        if let Ok(output) = no_window_command("wmic")
             .args(["OS", "get", "TotalVisibleMemorySize,FreePhysicalMemory", "/format:csv"])
             .output()
         {
@@ -68,7 +88,7 @@ fn get_ram_stats() -> (u64, u64) {
             }
         }
         // Fallback PowerShell
-        if let Ok(output) = Command::new("powershell")
+        if let Ok(output) = no_window_command("powershell")
             .args(["-NoProfile", "-Command", "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | ConvertTo-Json)"])
             .output()
         {
