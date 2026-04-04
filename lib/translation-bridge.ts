@@ -43,6 +43,26 @@ export interface TranslationPair {
  */
 export class TranslationBridgeClient {
   private isConnected: boolean = false;
+  private maxRetries: number = 3;
+  private retryDelayMs: number = 500;
+
+  /**
+   * Retry wrapper: retries a Tauri invoke call on transient failures
+   */
+  private async withRetry<T>(fn: () => Promise<T>, retries = this.maxRetries): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, this.retryDelayMs * (attempt + 1)));
+        }
+      }
+    }
+    throw lastError;
+  }
 
   /**
    * Start the Translation Bridge server
@@ -91,7 +111,9 @@ export class TranslationBridgeClient {
    */
   async getStats(): Promise<BridgeStats | null> {
     try {
-      const response = await invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats');
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats')
+      );
       return response.data;
     } catch (error) {
       console.error('[TranslationBridge] Failed to get stats:', error);
@@ -104,7 +126,9 @@ export class TranslationBridgeClient {
    */
   async getDictionaryStats(): Promise<DictionaryStats | null> {
     try {
-      const response = await invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats');
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats')
+      );
       return response.data;
     } catch (error) {
       console.error('[TranslationBridge] Failed to get dictionary stats:', error);
@@ -187,9 +211,11 @@ export class TranslationBridgeClient {
    */
   async getTranslation(text: string): Promise<string | null> {
     try {
-      const response = await invoke<BridgeResponse<string | null>>('translation_bridge_get_translation', {
-        text,
-      });
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<string | null>>('translation_bridge_get_translation', {
+          text,
+        })
+      );
       return response.data;
     } catch (error) {
       console.error('[TranslationBridge] Failed to get translation:', error);

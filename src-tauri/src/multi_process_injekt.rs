@@ -70,10 +70,8 @@ pub struct MultiProcessStats {
     pub uptime_seconds: u64,
 }
 
-// SAFETY: MultiProcessInjekt contiene solo tipi thread-safe (Arc<Mutex<T>>, JoinHandle)
-// e può essere condiviso tra thread in modo sicuro
-unsafe impl Send for MultiProcessInjekt {}
-unsafe impl Sync for MultiProcessInjekt {}
+// Tutti i campi sono Arc<Mutex<T>>, Option<JoinHandle<()>>, Option<Arc<RwLock<T>>>
+// e tipi Clone/Send — Send e Sync sono derivati automaticamente dal compilatore.
 
 impl MultiProcessInjekt {
     pub fn new(config: MultiProcessConfig, base_config: InjectionConfig) -> Result<Self, Box<dyn Error>> {
@@ -107,12 +105,9 @@ impl MultiProcessInjekt {
     pub fn start(&mut self) -> Result<(), Box<dyn Error>> {
         log::info!("🚀 Avvio sistema multi-processo per: {}", self.config.game_name);
         
-        // Avvia il monitoraggio dei processi
+        // Avvia il monitoraggio dei processi (include scansione iniziale)
         self.start_process_monitoring()?;
-        
-        // Scansiona processi esistenti
-        self.scan_and_inject_processes()?;
-        
+
         *self.is_running.lock().unwrap_or_else(|e| e.into_inner()) = true;
         
         log::info!("✅ Sistema multi-processo avviato con successo");
@@ -334,15 +329,6 @@ impl MultiProcessInjekt {
                 log::debug!("🔄 {} processi condividono il dictionary engine (sync automatico)", active_count);
             }
         }
-    }
-
-    fn scan_and_inject_processes(&mut self) -> Result<(), Box<dyn Error>> {
-        log::info!("🔍 Scansione iniziale processi per: {}", self.config.game_name);
-        
-        // La scansione iniziale è gestita dal thread di monitoraggio
-        // Qui possiamo fare una scansione immediata se necessario
-        
-        Ok(())
     }
 
     fn stop_all_injections(&mut self) -> Result<(), Box<dyn Error>> {

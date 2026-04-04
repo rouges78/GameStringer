@@ -10,7 +10,8 @@ use winapi::um::handleapi::CloseHandle;
 use winapi::um::memoryapi::{ReadProcessMemory, WriteProcessMemory, VirtualQueryEx};
 use winapi::um::processthreadsapi::OpenProcess;
 
-use winapi::um::winnt::{HANDLE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, PROCESS_ALL_ACCESS, MEMORY_BASIC_INFORMATION};
+use winapi::um::winnt::{HANDLE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, MEMORY_BASIC_INFORMATION,
+    PROCESS_VM_READ, PROCESS_VM_WRITE, PROCESS_VM_OPERATION, PROCESS_QUERY_INFORMATION};
 
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, Module32First, Module32Next, MODULEENTRY32, TH32CS_SNAPMODULE};
 use parking_lot::RwLock;
@@ -207,7 +208,9 @@ impl InjektTranslator {
         
         // Apri il processo
         unsafe {
-            let handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, target.pid);
+            let handle = OpenProcess(
+                PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION,
+                FALSE, target.pid);
             if handle.is_null() {
                 return Err("Impossibile aprire il processo target".into());
             }
@@ -1001,12 +1004,3 @@ impl InjektTranslator {
     }
 }
 
-// Funzione helper per generare numeri casuali (placeholder)
-mod rand {
-    pub fn random<T>() -> T
-    where
-        T: Default,
-    {
-        T::default()
-    }
-}

@@ -318,10 +318,7 @@ pub async fn inject_translation(process_id: u32, original_text: String, translat
     }
     
     // Salva la traduzione nel dictionary engine condiviso cosi' tutti i sistemi la vedono
-    {
-        let bridge = bridge_state.bridge.lock();
-        bridge.dictionary().write().add_translation(original_text, translated_text);
-    }
+    bridge_state.dictionary.write().add_translation(original_text, translated_text);
 
     log::info!("✅ Traduzione registrata per PID {} (totale aggiornato + dictionary)", process_id);
     Ok(())
@@ -476,10 +473,7 @@ pub async fn start_multi_process_injection(
     match MultiProcessInjekt::new(multi_config, injection_config) {
         Ok(mut multi_injekt) => {
             // Collega il dictionary engine condiviso dal TranslationBridge
-            {
-                let bridge = bridge_state.bridge.lock();
-                multi_injekt.set_dictionary(Arc::clone(bridge.dictionary()));
-            }
+            multi_injekt.set_dictionary(Arc::clone(&bridge_state.dictionary));
 
             match multi_injekt.start() {
                 Ok(()) => {

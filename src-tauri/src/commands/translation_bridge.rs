@@ -7,19 +7,26 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use parking_lot::RwLock;
 use crate::translation_bridge::TranslationBridge;
 use crate::translation_bridge::shared_memory_ipc::BridgeStats;
-use crate::translation_bridge::dictionary_engine::DictionaryStats;
+use crate::translation_bridge::dictionary_engine::{DictionaryEngine, DictionaryStats};
 
-/// Stato globale del Translation Bridge
+/// Stato globale del Translation Bridge.
+/// `dictionary` è esposto direttamente per evitare double-locking:
+/// le operazioni sul dizionario usano `RwLock` senza passare dal `Mutex<TranslationBridge>`.
 pub struct TranslationBridgeState {
     pub bridge: Arc<Mutex<TranslationBridge>>,
+    pub dictionary: Arc<RwLock<DictionaryEngine>>,
 }
 
 impl TranslationBridgeState {
     pub fn new() -> Self {
+        let bridge = TranslationBridge::new();
+        let dictionary = Arc::clone(bridge.dictionary());
         Self {
-            bridge: Arc::new(Mutex::new(TranslationBridge::new())),
+            bridge: Arc::new(Mutex::new(bridge)),
+            dictionary,
         }
     }
 }
@@ -102,8 +109,7 @@ pub async fn translation_bridge_stats(
 pub async fn translation_bridge_dictionary_stats(
     state: State<'_, TranslationBridgeState>,
 ) -> Result<BridgeResponse<DictionaryStats>, String> {
-    let bridge = state.bridge.lock();
-    let dict = bridge.dictionary().read();
+    let dict = state.dictionary.read();
     Ok(BridgeResponse::ok(dict.get_stats()))
 }
 
@@ -127,14 +133,13 @@ pub async fn translation_bridge_load_translations(
     state: State<'_, TranslationBridgeState>,
     params: LoadTranslationsParams,
 ) -> Result<BridgeResponse<usize>, String> {
-    let bridge = state.bridge.lock();
-    
     let translations: Vec<(String, String)> = params.translations
         .into_iter()
         .map(|p| (p.original, p.translated))
         .collect();
-    
-    let count = bridge.load_dictionary(&params.source_lang, &params.target_lang, translations);
+
+    let mut dict = state.dictionary.write();
+    let count = dict.load_translations(&params.source_lang, &params.target_lang, translations);
     Ok(BridgeResponse::ok(count))
 }
 
@@ -144,9 +149,8 @@ pub async fn translation_bridge_load_json(
     state: State<'_, TranslationBridgeState>,
     path: String,
 ) -> Result<BridgeResponse<usize>, String> {
-    let bridge = state.bridge.lock();
-    
-    match bridge.load_dictionary_from_json(&path) {
+    let mut dict = state.dictionary.write();
+    match dict.load_from_json(&path) {
         Ok(count) => Ok(BridgeResponse::ok(count)),
         Err(e) => Ok(BridgeResponse::err(e)),
     }
@@ -159,8 +163,7 @@ pub async fn translation_bridge_set_languages(
     source: String,
     target: String,
 ) -> Result<BridgeResponse<String>, String> {
-    let bridge = state.bridge.lock();
-    let mut dict = bridge.dictionary().write();
+    let mut dict = state.dictionary.write();
     dict.set_active_languages(&source, &target);
     Ok(BridgeResponse::ok(format!("Lingue attive: {} -> {}", source, target)))
 }
@@ -172,8 +175,7 @@ pub async fn translation_bridge_add_translation(
     original: String,
     translated: String,
 ) -> Result<BridgeResponse<String>, String> {
-    let bridge = state.bridge.lock();
-    let mut dict = bridge.dictionary().write();
+    let mut dict = state.dictionary.write();
     dict.add_translation(original.clone(), translated);
     Ok(BridgeResponse::ok(format!("Aggiunta traduzione: {}", original)))
 }
@@ -184,12 +186,9 @@ pub async fn translation_bridge_get_translation(
     state: State<'_, TranslationBridgeState>,
     text: String,
 ) -> Result<BridgeResponse<Option<String>>, String> {
-    let bridge = state.bridge.lock();
-    let dict = bridge.dictionary().read();
-    
+    let dict = state.dictionary.read();
     let hash = crate::translation_bridge::protocol::TranslationRequest::compute_hash(&text);
     let result = dict.get_translation(hash, &text);
-    
     Ok(BridgeResponse::ok(result))
 }
 
@@ -199,9 +198,7 @@ pub async fn translation_bridge_export_json(
     state: State<'_, TranslationBridgeState>,
     path: String,
 ) -> Result<BridgeResponse<String>, String> {
-    let bridge = state.bridge.lock();
-    let dict = bridge.dictionary().read();
-    
+    let dict = state.dictionary.read();
     match dict.export_to_json(&path) {
         Ok(_) => Ok(BridgeResponse::ok(format!("Esportato in {}", path))),
         Err(e) => Ok(BridgeResponse::err(e)),
@@ -213,8 +210,7 @@ pub async fn translation_bridge_export_json(
 pub async fn translation_bridge_clear(
     state: State<'_, TranslationBridgeState>,
 ) -> Result<BridgeResponse<String>, String> {
-    let bridge = state.bridge.lock();
-    let mut dict = bridge.dictionary().write();
+    let mut dict = state.dictionary.write();
     dict.clear_all();
     Ok(BridgeResponse::ok("Dizionari puliti".to_string()))
 }
