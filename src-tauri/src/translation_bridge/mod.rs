@@ -1,12 +1,13 @@
 //! GameStringer Translation Bridge
-//! 
-//! Architettura "Cervello Esterno" per traduzione in-game Unity
-//! - Shared Memory IPC per comunicazione zero-copy con il plugin C#
-//! - Ring Buffer per latenza nanosecondi
-//! - Hot-reload dizionari senza riavvio
+//!
+//! IPC cross-process per traduzione in-game via shared memory:
+//! - Named File Mapping (Windows) per comunicazione zero-copy con il plugin C#
+//! - Ring buffer lock-free a 1024 slot con adaptive polling
+//! - Dictionary engine O(1) con hot-reload senza riavvio
+//! - Supporto multi-lingua con switch a caldo
 
-pub mod shared_memory_ipc;
 pub mod dictionary_engine;
 pub mod protocol;
+pub mod shared_memory_ipc;
 
 pub use shared_memory_ipc::TranslationBridge;
