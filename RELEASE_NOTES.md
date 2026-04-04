@@ -1,54 +1,73 @@
-# 🎮 GameStringer v1.5.0
+# 🎮 GameStringer v1.6.0
 
-> **Release Date**: March 24, 2026  
-> **Type**: Community Chat Realtime
-
----
-
-## 💬 Community Chat (v1.5.0)
-
-- **Real-time chat** integrated into Community Hub via Supabase Realtime
-- **4 default rooms**: General, Translations, Feedback & Bug, Announcements
-- **Create custom rooms** for specific games or translation projects
-- **Auto-bridge authentication**: GameStringer profile auto-syncs with Supabase Auth — no extra login needed
-- **Online presence**: see who's online in real-time
-- **Message actions**: send, reply, edit, delete messages
-- **Chat widget**: expandable drawer in bottom-right corner
-
-## 🔗 Auto-Bridge Authentication
-
-- **Zero-config login**: your GS profile is automatically bridged to Supabase
-- **Unified Supabase client**: eliminated "Multiple GoTrueClient" warnings
-- **Auto-profile creation**: database trigger creates user profile on sign-up
-
-## 🌍 i18n & Documentation
-
-- **Chat translations** in all 11 supported languages (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
-- **User guides** updated in 11 languages with Community Chat section
-- **Interactive tutorial** for Community Chat added
-- **Locales** common.json updated with chat section
-
-## 🗄️ Supabase Backend
-
-- **PostgreSQL**: chat_rooms, chat_messages, chat_room_members, user_presence tables
-- **RLS Policies**: row-level security for all chat data
-- **RPC Functions**: ensure_user_profile, update_presence (SECURITY DEFINER)
-- **Trigger**: auto-create user profile on auth sign-up
-- **Realtime**: message and presence broadcasting via Supabase Realtime
-
-## 📜 License v1.1
-
-- **Source Available License** updated
-- **Non-commercial clarified**: YouTuber/streamer OK with attribution
-- **Forks allowed**: Non-commercial forks explicitly permitted
+> **Release Date**: April 4, 2026
+> **Type**: Game Engine Patchers + Accessibility + Design System
 
 ---
 
-## 🔧 Bug Fixes (v1.0.8)
+## 🏰 Bethesda Engine Patcher (v1.6.0)
 
-- **Download button**: Now opens browser correctly
-- **Tauri Shell API**: Used instead of window.open for external links
-- **Toast feedback**: Visual confirmation for download opening
+Native support for the classic Bethesda titles, end to end:
+
+- **Supported games**: Skyrim LE/SE/AE, Fallout 3, Fallout: New Vegas, Fallout 4, Oblivion, Starfield
+- **BSA archives**: parser for versions 103, 104, 105
+- **BA2 archives**: both `GNRL` and `DX10` variants
+- **STRINGS / DLSTRINGS / ILSTRINGS**: full extraction with stable ID mapping
+- **ESP / ESM plugins**: parser with extraction of translatable fields (`FULL`, `DESC`, `NAM1`)
+- **Export**: PO (gettext), CSV, and patched STRINGS files
+
+## 🎵 CRI Middleware Patcher (v1.6.0)
+
+Native support for games built on CRI Middleware — used by Atlus, Sega, Bandai Namco and many Japanese studios:
+
+- **Supported games**: Persona 5 Royal, Yakuza series, Tales of series, Dragon Ball titles, and other CRI-based games
+- **CPK archives**: parser with big-endian `@UTF` tables
+- **CRILAYLA decompression**: bit-level LZ implementation
+- **Text formats**: MSG / BMD / FTD (Persona), plus generic JSON/XML
+- **Encoding detection**: automatic Shift-JIS / UTF-8 / UTF-16 detection
+
+## 🎯 Unity Localization Package Pipeline (v1.6.0)
+
+First-class support for the modern Unity Localization Package (StringTable + Addressables):
+
+- **parse_addressables_catalog**: read the Addressables `catalog.json`
+- **detect_string_tables_in_folder** / **extract_string_table**: find and extract StringTable + SharedTableData from UnityFS bundles
+- **parse_smart_string**: tokenizer for Smart Strings (`{variable}`, `{0:format}`)
+- **validate_smart_string_translation**: ensure token preservation in translations
+- **build_patched_bundle**: rebuild bundles with translated text
+- Multi-step wizard UI with live Smart Strings validation and translation preview
+
+## 📤 Universal PO Export
+
+Every patcher now exports to the industry-standard **gettext PO format** with full metadata (project name, language, source language, game engine, generator). Works on Bethesda, CRI, Unity, Unreal, Godot, RPG Maker, Ren'Py, Wolf RPG, Danganronpa, Telltale.
+
+## ♿ Accessibility Pass
+
+A thorough a11y sweep across the entire app:
+
+- **aria-label** on icon-only buttons and interactive controls throughout the app
+- **Semantic headings**: `CardTitle` renders `h2`/`h3` where the card is a true region heading
+- **focus-visible**: keyboard focus affordances on Dialog, Sheet, Button and many components
+- **Skip to content**: keyboard users can jump past the sidebar
+- **Landmark**: `<main>` with `role="main"` and stable `id`
+- **Italian sr-only**: accessible labels localized
+- **prefers-reduced-motion**: OS setting respected — animations reduced to 0.01ms
+- **forced-colors**: Windows High Contrast mode support
+
+## 🎨 Design System
+
+- **Card variants** via `cva`: `default`, `muted`, `highlight`, `success`, `error`, `warning`
+- **Button sizes**: new `xs` and `icon-sm` for denser UIs
+- **Text utilities**: `text-micro` (9px) and `text-2xs` (10px) replace inline arbitrary classes across 87 files
+- **Wizard Stepper** shared component for multi-step patcher flows
+
+## 👁️ OCR Image Processor
+
+OCR now uses the real Tauri **Tesseract** backend (replaces the earlier in-memory stub).
+
+## 🪟 Windows Tray Fix
+
+Fixed a regression that caused console windows to flash in a loop when the app was minimised to tray — `system_monitor.rs` polled `nvidia-smi` / `wmic` / `powershell` every 5–10s without `CREATE_NO_WINDOW`. New shared helper `process_util::no_window_command()` routes **all** Windows child process spawns through a safe path.
 
 ---
 
@@ -56,8 +75,8 @@
 
 | File | Description |
 |------|-------------|
-| `GameStringer-1.5.0-Setup.exe` | Windows Installer (recommended) |
-| `GameStringer-1.5.0-Portable.zip` | Portable version (no install) |
+| `GameStringer-1.6.0-Setup.exe` | Windows Installer (recommended) |
+| `GameStringer-1.6.0-Portable.zip` | Portable version (no install) |
 | `checksums-sha256.txt` | SHA256 checksums for verification |
 
 ### System Requirements
@@ -72,14 +91,14 @@
 
 ### Setup (Recommended)
 
-1. Download `GameStringer-1.5.0-Setup.exe`
+1. Download `GameStringer-1.6.0-Setup.exe`
 2. Run the installer
 3. Follow the installation wizard
 4. Launch GameStringer from Start Menu
 
 ### Portable
 
-1. Download `GameStringer-1.5.0-Portable.zip`
+1. Download `GameStringer-1.6.0-Portable.zip`
 2. Extract to any folder
 3. Run `GameStringer.exe`
 
@@ -105,18 +124,6 @@ User guides available in 11 languages:
 
 ---
 
-## 🆕 What's New Since v1.0.6
-
-| Feature | Description |
-|---------|-------------|
-| ✨ Animated headers | Breathing gradient effect on 16 pages |
-| 💬 Community Hub | GitHub Discussions integration |
-| � Update notifications | Smart alerts with sound |
-| 📜 License v1.1 | Clarified non-commercial use |
-| 📖 User guides | 7 languages documentation |
-
----
-
 ## 💖 Support
 
 If GameStringer helped you enjoy games in your language:
@@ -126,4 +133,4 @@ If GameStringer helped you enjoy games in your language:
 
 ---
 
-**Full Changelog**: <https://github.com/rouges78/GameStringer/compare/v1.4.2...v1.5.0>
+**Full Changelog**: <https://github.com/rouges78/GameStringer/compare/v1.5.0...v1.6.0>

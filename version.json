@@ -1,12 +1,12 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "major": 1,
-  "minor": 5,
+  "minor": 6,
   "patch": 0,
   "prerelease": null,
   "buildNumber": 122,
-  "buildDate": "2026-03-24T17:00:00.000Z",
-  "gitHash": "bf3e1cc",
+  "buildDate": "2026-04-04T21:48:43.118Z",
+  "gitHash": "59f2b31",
   "branch": "main",
   "changelog": {
     "1.5.0": {
@@ -513,6 +513,23 @@
         "Implementato sistema versioning automatico completo",
         "Integrazione UI dinamica",
         "Git hooks configurati"
+      ]
+    },
+    "1.6.0": {
+      "date": "2026-04-04",
+      "type": "minor",
+      "changes": [
+        "Bethesda Engine Patcher: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield con parser BSA v103-105 + BA2 GNRL/DX10 + ESP/ESM (FULL/DESC/NAM1)",
+        "CRI Middleware Patcher: parser CPK + CRILAYLA + MSG/BMD/FTD (Persona 5 Royal, Yakuza, Tales of, Dragon Ball) con rilevamento Shift-JIS/UTF-8/UTF-16",
+        "Unity Localization Package pipeline: StringTable, SharedTableData, Addressables catalog, Smart Strings tokenizer + validator",
+        "Universal PO export (gettext .po) per tutti i patcher con metadata project/language/source/engine",
+        "Wizard Stepper condiviso per flussi multi-step nei patcher",
+        "a11y: aria-label su icon button, CardTitle semantic headings, focus-visible su primitives, skip-to-content link, landmark main, sr-only italiano",
+        "a11y: prefers-reduced-motion e forced-colors (Windows High Contrast) rispettati",
+        "Design system: Card variants via cva (default/muted/highlight/success/error/warning), Button size xs + icon-sm",
+        "OCR Image Processor: wiring a backend Tauri Tesseract (sostituisce stub simulateOCR)",
+        "Text utilities: text-micro (9px) + text-2xs (10px) per eliminare classi Tailwind arbitrarie",
+        "Fix: prevent console flash loop su spawn processi Windows quando l'app è in tray (helper process_util::no_window_command)"
       ]
     }
   }

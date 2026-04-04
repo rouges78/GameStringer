@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versione-1.4.2-blue" alt="Versione" />
+  <img src="https://img.shields.io/badge/versione-1.6.0-blue" alt="Versione" />
   <img src="https://img.shields.io/badge/piattaforma-Windows%20%7C%20Linux-lightgrey" alt="Piattaforma" />
   <img src="https://img.shields.io/badge/licenza-Source--Available-green" alt="Licenza" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -226,5 +226,5 @@ Vedi [LICENSE](LICENSE) per i dettagli. Domande? Apri una [Discussione](https://
 
 <p align="center">
   Fatto con ❤️ per i gamer che vogliono giocare nella propria lingua<br>
-  <strong>GameStringer v1.4.2</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.6.0</strong> · © 2025-2026 GameStringer Team
 </p>

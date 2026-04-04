@@ -1133,6 +1133,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" />
                       <div>
                         <h3 className="text-lg font-bold text-white">
+                          {versionEntry.version === '1.6.0' && '🏰 '}
                           {versionEntry.version === '1.5.0' && '💬 '}
                           {versionEntry.version === '1.4.2' && '🚀 '}
                           {versionEntry.version === '1.4.1' && '🌍 '}

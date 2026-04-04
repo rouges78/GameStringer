@@ -1,910 +1,399 @@
 # GameStringer Changelog
 
-> Software professionale per la localizzazione di videogiochi.
->
-> **Stack**: Tauri v2 (Rust) + Next.js 15 + TailwindCSS
-
----
-
-## 🗺️ Roadmap verso 1.0.0
-
-| Fase | Versione | Stato |
-|:-----|:---------|:------|
-| Alpha | 0.1.x - 0.4.x | ✅ Completato |
-| Beta | 0.5.x - 0.8.x | ✅ Completato |
-| Release Candidate | 0.9.x | ✅ Completato |
-| Release Pubblica | 1.0.0 | ✅ Rilasciato |
-
----
-
-## 📅 Marzo 2026
-
-### v1.5.0 — Community Chat Realtime 💬🌐
-
-> **Data**: 2026-03-24
-
-#### 💬 Chat Community in Tempo Reale
-
-- **Chat Realtime**: messaggistica in tempo reale nel Community Hub via Supabase Realtime
-- **4 stanze predefinite**: Generale, Traduzioni, Feedback & Bug, Annunci
-- **Creazione stanze**: crea stanze personalizzate per giochi o progetti
-- **Messaggi**: invio, risposta, modifica, eliminazione in tempo reale
-- **Presenza online**: indicatore utenti connessi con Supabase Presence
-- **Widget chat**: drawer espandibile in basso a destra
-
-#### 🔗 Auto-Bridge Authentication
-
-- **Auto-login Supabase**: il profilo GameStringer si sincronizza automaticamente con Supabase Auth
-- **Zero-config**: nessun login aggiuntivo richiesto per la chat
-- **Client unificato**: eliminati i warning "Multiple GoTrueClient instances"
-- **Profilo automatico**: trigger database crea user_profiles al sign-up
-
-#### 🌍 i18n & Documentazione
-
-- **Traduzioni chat** in tutte le 11 lingue (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
-- **Guide utente** aggiornate in 11 lingue con sezione Community Chat
-- **Tutorial interattivo** Community Chat aggiunto
-- **Locales** common.json aggiornati con sezione chat
-
-#### 🗄️ Backend Supabase
-
-- **PostgreSQL**: tabelle chat_rooms, chat_messages, chat_room_members, user_presence
-- **RLS Policies**: sicurezza a livello di riga per tutti i dati chat
-- **RPC Functions**: ensure_user_profile, update_presence (SECURITY DEFINER)
-- **Trigger**: auto-creazione profilo utente al sign-up
-- **Realtime**: pubblicazione messaggi e presenza via Supabase Realtime
-
----
-
-### v1.4.2 — Vision LLM, Advanced Tools & Community Fix 🚀🧠
-
-> **Data**: 2026-03-03
-
-#### 👁 Vision LLM Translator
-
-- **Vision LLM**: traduzione context-aware usando screenshot del gioco
-- **Provider supportati**: Ollama (locale), Gemini 2.0 Flash, OpenAI GPT-4o
-- **Upload/Cattura**: carica immagine o cattura schermo per contesto visivo
-- **Pagina dedicata**: `/vision-translator` con sidebar integrata
-
-#### 🔧 Advanced Tools
-
-- **Lore Assistant**: chat RAG per lore e dialoghi del gioco
-- **Auto-Hook Scanner**: scansione memoria processo con WinAPI (`winapi` crate)
-- **System Monitor**: monitoraggio VRAM/RAM in tempo reale (backend Rust)
-- **Ollama Setup Wizard**: installazione guidata AI locale step-by-step
-- **Debug Console**: console di debug con intercept console integrato
-- **Plugin System**: design doc `PLUGIN_SYSTEM.md`
-
-#### 🌐 Community & Fix
-
-- **GitHub Discussions**: 12 discussioni create (Announcements, General, Ideas, Q&A, Show and tell, Polls)
-- **Community Hub**: fix fetch discussions con REST API pubblica (no token richiesto)
-- **Sidebar**: rinominato Workshop in Steam Workshop
-- **Update Bell**: fix versione corrente mostrata (fallback aggiornato)
-- **CI/CD**: Tauri Signing Key configurata per release firmate
-- **Dynamic imports**: fix "Rendered more hooks" con `ssr: false` sulle nuove pagine
-
-#### 🔧 Translation Provider Fix
-
-- **Ollama cooldown**: errori di rete ora usano cooldown 30s invece di blocco permanente
-- **Lingva 404**: troncamento automatico testi >500 chars per evitare URL troppo lunghi
-- **Auto-Translate Review**: pulsante "Traduci tutte le non tradotte" con progress bar e stop
-- **Tutorial querySelector**: fix SyntaxError con selettori `:contains()` (non CSS standard)
-- **Update Bell**: fix versione sbagliata nel popup (fallback hardcoded rimosso)
-
----
-
-### v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix 🌍📚
-
-> **Data**: 2026-03-02
-
-#### 🌍 i18n — 11 Lingue UI
-
-- **4 nuove lingue**: Coreano (KO), Portoghese (PT), Russo (RU), Polacco (PL)
-- **translations.ts**: da 13.472 a 22.528 righe (+9.056 righe)
-- **Locale type** e **SUPPORTED_LOCALES** aggiornati con `ru` e `pl`
-- **locales/ru/common.json** e **locales/pl/common.json** creati
-- **Lingue totali UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
-
-#### 📚 Guide Utente Aggiornate
-
-- **7 guide esistenti** (IT, EN, ES, FR, DE, JA, ZH) aggiornate con sezioni v1.1.0-v1.4.0
-- **4 nuove guide**: USER_GUIDE_KO.md, USER_GUIDE_PT.md, USER_GUIDE_RU.md, USER_GUIDE_PL.md
-- **README.md** e **README_IT.md** aggiornati con 11 lingue e tabella guide estesa
-- **site-i18n.js** aggiornato con supporto RU e PL
-
-#### 🔧 CI/CD
-
-- **Workflow CI** Linux + Windows fixato e funzionante
-- **Stub frontend** `out/` directory per `tauri::generate_context!()`
-- **Rust stable** toolchain (≥1.88) per compatibilità `home@0.5.12`
-
----
-
-## 📅 Febbraio 2026
-
-### v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase 🧹✨
-
-> **Data**: 2026-02-13
-
-#### 📦 Migrazione Radix UI
-
-- **Pacchetto unificato**: migrati 37 file da `@radix-ui/react-*` a `radix-ui`
-- **27 pacchetti rimossi**: accordion, alert-dialog, avatar, checkbox, dialog, dropdown-menu, etc.
-- **Pattern aggiornato**: `VisuallyHidden.Root`, `Slot.Root` per namespace exports
-
-#### 🏆 Quality Badge nel Traduttore Pro
-
-- **Per-riga**: ogni traduzione mostra `QualityScoreBadge` (0-100) e `ContentTypeBadge` (UI/Dialogo/Narrativa/Sistema)
-- **Live Preview**: ultime 3 traduzioni con score qualità in tempo reale durante il batch
-- **Tabella risultati**: fino a 200 righe con originale, traduzione, tipo e qualità
-
-#### 🌍 Nuove Feature
-
-- **Supporto RTL**: `lib/rtl.ts` con rilevamento automatico direzione testo
-- **Ollama Generico**: `translateWithOllamaGeneric` con PROVIDER_MAP e chain presets fallback
-
-#### ⚡ Ottimizzazione & Pulizia
-
-- **Bundle**: `optimizePackageImports` aggiornato con `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
-- **0 errori TypeScript** nei sorgenti (da ~15)
-- **Fix**: regex type casting in `translation-quality.ts` e `translation-validator.ts`
-- **Fix**: props opzionali mancanti in `NotificationToastProps`, `TutorialProviderProps`, `CreateNotificationRequest`
-- **Fix**: `TranslationMemoryEntry.usageCount` reso opzionale
-
----
-
-### v1.3.0 — Danganronpa WAD Patcher & Export System 🎮📦
-
-> **Data**: 2026-02-09
-
-#### 🎮 Danganronpa WAD Patcher v15
-
-- **All-Ice base + GameStringer override**: sistema di patching completo
-- **35.865 stringhe** estratte dal WAD per traduzione
-- **WAD Text Extractor CLI**: `scripts/extract-wad-text.mjs` per estrazione testi
-- **WAD Patcher CLI**: `scripts/patch-wad-v15.mjs` con override selettivo
-
-#### 🔍 WAD Extractor UI
-
-- **Nuovo tab** "WAD Extractor" nel Danganronpa Patcher
-- **Editor integrato** con ricerca, filtri e modifica stringhe
-- **Traduzione batch AI** delle stringhe estratte
-- **Export JSON** delle traduzioni
-
-#### 📦 Export Patch Distribuibile
-
-- **Backend Rust**: comando `export_danganronpa_patch` con `zip` crate (streaming ~626 MB)
-- **UI Export**: bottone "Esporta .zip" con dialog salvataggio nativo (`@tauri-apps/plugin-dialog`)
-- **Contenuto ZIP**: WAD patchato, `install.bat` (installer automatico Steam), `LEGGIMI.txt`, `translations.json`
-- **Script CLI**: `scripts/export-danganronpa-patch.mjs` alternativo senza dipendenze
-
-#### 📊 Dashboard Stats Reali
-
-- **Translation Memory**: dati reali dal backend Rust (`list_translation_memories`)
-- **Activity History**: traduzioni completate, patch applicate
-- **Tempo Risparmiato**: calcolato da TM entries + traduzioni
-- **Entry TM**: conteggio reale unità nelle Translation Memory
-
-#### 🎨 UI Compattata
-
-- **Danganronpa Patcher**: tutti i tab (PAK, PO, Patch, LIN, WAD Extractor) ottimizzati
-- **Header ridotti**: `py-1.5 px-3`, titoli `text-xs`, icone `w-3 h-3`
-- **ScrollArea ridotte**: 300-320px per massimizzare spazio
-- **Empty states** minimali e gap uniformi `gap-2`
-
----
-
-### v1.2.0 — Fallback Provider & Full Tauri Compatibility 🛡️
-
-> **Data**: 2026-02-06
-
-#### 🛡️ Fallback Provider Automatico
-
-- **Traduzione con fallback**: Gemini → DeepSeek → OpenAI → testo originale
-- **Helper centralizzato**: `lib/ai-translate-direct.ts` con `translateWithFallback()` e `translateSingleWithFallback()`
-- **10+ componenti aggiornati** per usare il fallback automatico
-- **Zero crash** se un provider fallisce o la quota è esaurita
-
-#### 🔧 Audit /api/* Completato al 100%
-
-- **0 fetch('/api/') attive** — tutto funziona senza API routes Next.js
-- **Injection UI** → Tauri `invoke()` (list_running_processes, start_injection, stop_injection)
-- **Secrets dashboard** → localStorage
-- **Logging dashboard** → localStorage
-- **Translation import** → localStorage TM diretta
-- **GitHub discussions** → GitHub API diretta
-- **Language detect** → solo rilevamento locale
-- **Force refresh** → solo Tauri (rimosso fallback API)
-
-#### 🔍 Danganronpa Filtro Smart
-
-- **Nuovo modulo**: `lib/danganronpa-filter.ts`
-- **Filtro locale**: elimina vuoti, duplicati, stringhe sistema, codici, UI buttons
-- **Classificazione AI** (opzionale): priorità 1-5 per dialoghi
-- **Risultato atteso**: 18K → ~3K stringhe rilevanti
-- **Stima risparmio**: mostra costo evitato nel toast
-
-#### 🧪 Test E2E Playwright
-
-- **38 test reali** tutti passanti (da 5 scheletrici)
-- **navigation.spec.ts**: 14 test (core pages, tool pages, sidebar, 404, console errors)
-- **translation.spec.ts**: 19 test (settings, AI translator, batch, TM, quality, specialized tools)
-- **danganronpa.spec.ts**: 5 test (page load, filtro dialoghi, stima costi)
-
-#### 🐛 Bug Fix
-
-- **notification-indicator.tsx**: fix precedenza operatori (`||` vs `&&`)
-- **Translation Memory**: usa `translateSingleWithFallback` invece di `/api/translate`
-- **Offline Cache**: usa `translateSingleWithFallback` invece di `/api/translate`
-
----
-
-### v1.1.0 — Website Multilingua & Danganronpa Support 🌐
-
-> **Data**: 2026-02-05
-
-#### 🌐 Sito Web Multilingua
-
-- **9 lingue supportate**: EN, IT, ES, DE, FR, JA, ZH, KO, PT
-- **Selettore lingua** con bandiere nel nav
-- **Auto-detect** lingua browser
-- **Persistenza** in localStorage
-- **URL params**: `?lang=en`, `?lang=ja`, etc.
-- **Cambio dinamico** senza reload pagina
-
-#### 🎮 Danganronpa Auto-Translator
-
-- Supporto nativo per file **PAK/LIN/STX**
-- Integrazione con **DRAT** (Danganronpa Another Tool)
-- Estrazione e traduzione automatica dialoghi
-
-#### 🧪 Test E2E con Playwright
-
-- **9 test** per navigation, translation e danganronpa
-- Configurazione multi-browser (Chromium, Firefox, WebKit)
-- Fix errori 500 da conflitto i18n
-
-#### 📝 Documentazione
-
-- Aggiornato `docs/sito/README.md` con info i18n
-- Aggiornate guide utente in 6 lingue
-
----
-
-## 📅 Gennaio 2026
-
-### v1.0.9 — Animated Headers & UI Polish ✨
-
-> **Data**: 2026-01-31
-
-#### ✨ Header Animati
-
-- **Effetto "Respiro"**: Gradiente che si espande/contrae dolcemente (12s)
-- **Animazione shimmer**: Keyframes CSS personalizzati per movimento fluido
-- **Ombreggiature profonde**: shadow-xl con tinta blu per maggiore profondità
-- **16 pagine aggiornate** con nuovo stile header
-
-#### 🎨 UI Miglioramenti
-
-- **Gradiente uniforme**: Sky → Blue → Cyan su tutti gli header Traduzione
-- **Menu Sidebar**: Sub-item con hover verde scuro (emerald-600)
-- **Coerenza visiva**: Stile unificato su tutte le pagine di traduzione
-
-#### 📄 Pagine Aggiornate
-
-- AI Translator, AI Review, Emotion Translator, OCR Translator
-- Memory, Batch, Subtitles, Neural Pro, Translator Tools
-- Live OCR, Manga, Texture, Voice Clone
-- Character Voice, Multi-LLM, Voice Translator
-
----
-
-### v1.0.8 — Fix Update Download 🔧
-
-> **Data**: 2026-01-29
-
-#### 🔧 Bug Fix
-
-- **Pulsante Scarica**: Ora apre il browser correttamente
-- **Tauri Shell API**: Usato invece di window.open per link esterni
-- **Feedback Toast**: Conferma visiva apertura download
-
----
-
-### v1.0.7 — Community Forum & License Update 💬📜
-
-> **Data**: 2026-01-29
-
-#### 💬 GitHub Discussions Integration
-
-- **Forum integrato**: Tab Discussions nel Community Hub
-- **Grafica personalizzata**: UI GameStringer per le discussioni
-- **API Route**: Fetch automatico da GitHub con scraping fallback
-- **Link esterni**: Apertura con Tauri shell API
-
-#### 🧹 Community Hub Cleanup
-
-- **Dati mock rimossi**: Ora solo dati reali
-- **Modal warning rimosso**: Accesso diretto senza popup
-- **Bottoni aggiornati**: Stile bordo arancione
-
-#### 📜 Licenza v1.1
-
-- **Source Available License** aggiornata
-- **Non-commercial chiarito**: YouTuber/streamer OK con attribuzione
-- **Fork permessi**: Fork non-commerciali esplicitamente consentiti
-- **Sezione 9**: Aggiornamenti licenza futuri
-
-#### 🌍 Traduzioni
-
-- Chiavi `communityHub.discussions` in **7 lingue** (IT, EN, ES, FR, DE, JA, ZH)
-
----
-
-### v1.0.6 — Bug Fixing & New Translation Providers 🔧🌐
-
-> **Data**: 2026-01-28
-
-#### 🌐 Nuovi Provider Traduzione
-
-- **Qwen 3**: Provider dedicato per lingue asiatiche (CN/JP/KR) via Ollama
-- **NLLB-200**: Supporto 200 lingue (incluse rare: Thai, Vietnamese, Hindi, Arabic) via HuggingFace
-- **Ollama Generico**: Usa qualsiasi modello installato in Ollama
-
-#### 🐛 Bug Fixing
-
-- **Catch vuoti**: Sostituiti 8 catch vuoti con logging appropriato
-- **Import non utilizzati**: Rimossi ~15 import inutilizzati dai file principali
-- **Vitest config**: Aggiunto provider 'v8' mancante per coverage
-- **Batch operations**: Fix firme funzioni incompatibili con wrapper
-
-#### 🌍 Traduzioni
-
-- Aggiunte traduzioni mancanti per **5 lingue** (ES, FR, DE, JA, ZH):
-  - `voiceCloneGuide` + features
-  - `vrOverlayGuide` + features
-  - `qualityGatesGuide` + features
-  - `playerFeedbackGuide` + features
-
-#### 📄 Documentazione
-
-- **Bug Report**: Creato report dettagliato dei bug (`BUG_REPORT_2026-01-28.md`)
-
----
-
-### v1.0.5 — AI Voice & VR Tools 🎤🥽
-
-> **Data**: 2026-01-26
-
-#### 🎤 Voice Clone Studio
-
-- **AI voice cloning** with ElevenLabs and OpenAI TTS
-- **Text-to-speech synthesis** with multiple voices
-- **Custom voice profiles** from audio samples
-- **Voice presets**: narrator, hero, villain, child, robot, elderly
-
-#### 🥽 VR Text Overlay
-
-- **Spatial subtitles** for VR games
-- **Headset detection**: Oculus, SteamVR, WMR
-- **Position presets**: bottom center, top center, peripheral, wrist
-- **Customizable style**: font size, opacity, shadow
-
-#### 🛡️ Quality Gates
-
-- **Automatic QA system** for translation validation
-- **Checks**: placeholders, numbers, HTML tags, length
-- **Context-aware validation**: UI, dialogue, narrative
-- **Quality score** with pass/fail threshold
-
-#### 💬 Player Feedback
-
-- **Feedback collection** from players
-- **Categories**: accuracy, fluency, context, terminology, style
-- **5-star rating system** with status tracking
-- **Export** as JSON or CSV
-
-#### 🌐 i18n
-
-- All 4 new tools translated in **7 languages** (IT, EN, ES, DE, JA, ZH)
-- Guide page updated with documentation
-
-#### 🎨 UI
-
-- **Green hero headers** for Tools section pages
-- **Compact VR Overlay layout** optimized for screen
-
----
-
-### v1.0.4 — Translation Tools Expansion 🚀
-
-> **Data**: 2026-01-23
-
-#### 🎬 Subtitle Translator
-
-- **Parser completo** per SRT, VTT, ASS/SSA
-- **Preview in tempo reale** con validazione QA
-- **Export multi-formato** con timing preservato
-
-#### 📁 Batch Folder Translator
-
-- **Scansione ricorsiva** con walkdir (Rust)
-- **10+ formati** supportati (JSON, PO, CSV, SRT, VTT, ASS, XML, YAML...)
-- **Progress tracking** con pausa/stop
-
-#### 👥 Community Hub
-
-- **Browser pacchetti** TM con search/filter
-- **Top contributori** e statistiche
-- **Download** Translation Memory dalla community
-
-#### 🎮 Retro ROM Tools
-
-- **8 console** supportate (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
-- **Table file** (.TBL) parser/generator
-- **Font injection** per caratteri accentati italiani
-
-#### 🔌 API Pubblica v1
-
-- `POST /api/v1/translate` - Traduzione singola
-- `POST /api/v1/batch` - Traduzione batch (max 100)
-- `GET /api/v1/languages` - 20 lingue supportate
-- `GET /api/v1/health` - Health check
-
-#### 🖥️ Screen Adaptation
-
-- **Adattamento automatico** risoluzione schermo
-- **Breakpoint** per compact (<1400px), normal, 4K (≥3840px)
-- **CSS variables** per spacing/font dinamici
-
-#### 🔧 Fix & Miglioramenti
-
-- **Tutorial unificato**: risolto conflitto OnboardingWizard/InteractiveTutorial
-- **Hero headers compatti** per Retro e Batch
-- **Landing page** pronta per deploy
-
----
-
-### v1.0.3 — Recovery Key & i18n Complete 🔐
-
-> **Data**: 2026-01-22
-
-#### 🔐 Recovery Key System
-
-- **Sistema recupero password** con 12 parole mnemoniche
-- **Generazione automatica** recovery key alla creazione profilo
-- **UI copia/download** per salvare la chiave in sicurezza
-- **Verifica chiave** per reset password senza email
-- **Hash SHA-256** della chiave salvato localmente
-
-#### 🌍 Traduzioni Complete
-
-- **+537 righe** aggiunte per ES, FR, DE
-- **9 nuove sezioni** tradotte: gameDetails, notifications, stores, projects, heatmap, activity, ocrTranslator, workshop
-- **Tutte le lingue ora complete**: IT, EN, ES, FR, DE, ZH
-
----
-
-### v1.0.2 — Multilingual Support 🌍
-
-> **Data**: 2026-01-22
-
-#### 🌍 Nuove Lingue
-
-- **Supporto multilingua completo**: Español, Français, Deutsch, 日本語, 中文
-- **Selettore lingua** ora attivo per tutte le lingue (rimosso "Coming Soon")
-- **Traduzioni Translation Fixer** complete per ES, FR, DE, JA, ZH
-- **Traduzioni AI Context Crawler** complete per ES, FR, DE, JA, ZH
-- **Categorie glossario** tradotte (personaggio, luogo, oggetto, abilità, nemico, etc.)
-
-#### 🔧 Miglioramenti
-
-- Stringhe "frames", "terms", "fps" tradotte in tutte le lingue
-- Nomi categorie nel Context Crawler ora localizzati dinamicamente
-
----
-
-### v1.0.1 — Game Details Layout Overhaul
-
-> **Data**: 2026-01-21
-
-#### 🎨 Layout Redesign
-
-- **Nuovo layout 3:1** per pagina dettaglio gioco
-  - Colonna principale (75%): screenshot gallery grande, tabs File/Traduzioni/Patch
-  - Sidebar destra (25%): info gioco, azioni, HLTB
-- **Screenshot gallery espansa**: griglia 4 colonne con fino a 12 screenshot
-- **Trama completa** nell'header hero (senza limite righe)
-- **Raccomandazione Traduzione** a tutta larghezza sotto la griglia
-- **Componente TranslationRecommendation** ingrandito e più leggibile
-
-#### 🌍 Traduzioni
-
-- **Traduzioni inglesi complete** per pagina dettaglio gioco
-- Nuove chiavi: `scanning`, `filesFound`, `translate`, `noFilesDetected`, `searchTranslatableFiles`, `scan`, `noActiveTranslations`, `engineNotRecognized`, `free`, `loadPlaytime`, `loading`
-- **Dialogo chiusura app** tradotto in IT/EN
-
-#### 🐛 Bug Fix
-
-- Risolti problemi di layout con colonne sbilanciate
-- Rimossi elementi duplicati dalla pagina dettagli
-
----
-
-### v1.0.0 — Public Release 🎉
-
-> **Data**: 2026-01-20
-
-#### ✨ Nuove Feature
-
-- **Hero Image Fusion**: immagine gioco fusa nell'header con gradiente cinematografico
-  - AI Translator, Neural Translator Pro, Game Detail
-  - Effetti blur e overlay per qualità visiva
-- **Screenshot Gallery**: mini-galleria 2x2 nella pagina dettaglio gioco
-  - Hover zoom + lightbox click
-  - Sostituisce immagine ridondante
-- **Game Info Espanse**: sviluppatore, publisher, data uscita, generi nella sidebar
-- **Raccomandazione Traduzione**: versione compatta e leggibile
-- **GitHub Sponsors**: integrazione completa con Stripe Connect
-
-#### 🌍 Traduzioni
-
-- **Componente Support**: tradotto completamente in italiano
-- **Pulsanti Libreria**: Aggiorna, Condivisi, Aggiorna DB
-- **Testo contestuale**: "Gioco non visibile?" e altri
-
----
-
-### v0.9.9-beta — Pre-Release Final
-
-> **Data**: 2026-01-19
-
-#### 🚀 Release Preparation
-
-- **Ultima beta** prima del release ufficiale 1.0.0
-- **Sistema i18n completo**: supporto Italiano e English
-- **Integrazione donazioni**: Ko-fi e GitHub Sponsors
-- **Ottimizzazioni finali** e bug fix pre-release
-
----
-
-### v0.9.6-beta — Tools Suite & Monetization
-
-> **Data**: 2026-01-18
-
-#### ✨ Nuove Feature
-
-- **Mod Injector Universale**: injection automatica per Unity/Unreal/Godot/RPG Maker
-- **AI Context Crawler**: estrazione contesto AI da cartelle gioco per prompt ottimali
-- **Translation Fixer**: rilevamento e fix automatico tag markup visibili (RPG Maker, Unity, Unreal)
-- **Subtitle Overlay**: overlay traduzioni real-time per streaming/recording con export SRT/VTT
-- **Bottone Supporta**: integrazione Ko-fi e GitHub Sponsors nell'header
-- **Landing Page**: pagina marketing completa per GameStringer
-
-#### 🔒 Licenza
-
-- **Nuova licenza Source-Available**: protezione codice da uso commerciale non autorizzato
-
-#### 🎨 UI
-
-- **Logo personalizzato** integrato in sidebar e landing page
-- **Navigazione sidebar** aggiornata con Fixer e Overlay
-
----
-
-### v0.9.0-beta — Game Detail Page Redesign
-
-> **Data**: 2026-01-12
-
-#### 🎨 Redesign UI
-
-- **Pagina Dettaglio Gioco**: nuovo hero header con gradiente indigo/purple/fuchsia
-- **Stats dinamiche** nell'header: piattaforma, stato installazione, data uscita, generi, traduzioni
-- **Background immagine gioco** integrato nell'header con overlay
-- **Metacritic score** con colori dinamici (verde/giallo/rosso) e shadow
-
-#### 🚀 Milestone
-
-- Raggiunta versione **0.9.x Release Candidate**
-- Beta completata (0.5.x - 0.8.x)
-
----
-
-### v0.8.9-beta — UI Redesign & Navigation
-
-> **Data**: 2026-01-08
-
-#### 🎨 Redesign UI
-
-- **Sidebar riorganizzata**: da 17 a 6 elementi per navigazione pulita e compatta
-- **Header hero colorati** per tutte le pagine principali:
-  - Traduci: gradiente viola/pink
-  - Patcher: gradiente verde/teal
-  - Community: gradiente arancione/ambra
-  - Impostazioni: gradiente sky/indigo
-- **Dialog Impostazioni Profilo**: design viola/pink con card colorate per sezioni
-- **Dialog Sicurezza Profilo**: design cyan/emerald con card colorate
-
-#### ✨ Nuove Feature
-
+## 🚀 v1.6.0 - 2026-04-04
+
+- Bethesda Engine Patcher: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield con parser BSA v103-105 + BA2 GNRL/DX10 + ESP/ESM (FULL/DESC/NAM1)
+- CRI Middleware Patcher: parser CPK + CRILAYLA + MSG/BMD/FTD (Persona 5 Royal, Yakuza, Tales of, Dragon Ball) con rilevamento Shift-JIS/UTF-8/UTF-16
+- Unity Localization Package pipeline: StringTable, SharedTableData, Addressables catalog, Smart Strings tokenizer + validator
+- Universal PO export (gettext .po) per tutti i patcher con metadata project/language/source/engine
+- Wizard Stepper condiviso per flussi multi-step nei patcher
+- a11y: aria-label su icon button, CardTitle semantic headings, focus-visible su primitives, skip-to-content link, landmark main, sr-only italiano
+- a11y: prefers-reduced-motion e forced-colors (Windows High Contrast) rispettati
+- Design system: Card variants via cva (default/muted/highlight/success/error/warning), Button size xs + icon-sm
+- OCR Image Processor: wiring a backend Tauri Tesseract (sostituisce stub simulateOCR)
+- Text utilities: text-micro (9px) + text-2xs (10px) per eliminare classi Tailwind arbitrarie
+- Fix: prevent console flash loop su spawn processi Windows quando l'app è in tray (helper process_util::no_window_command)
+
+## 📝 v1.5.0 - 2026-03-24
+
+- Community Chat Realtime: chat in tempo reale integrata nel Community Hub con Supabase Realtime
+- 4 stanze predefinite: Generale, Traduzioni, Feedback & Bug, Annunci
+- Auto-bridge: login automatico Supabase tramite profilo GameStringer (nessun login aggiuntivo)
+- Presenza online: indicatore utenti connessi in tempo reale con Supabase Presence
+- Creazione stanze personalizzate per giochi o progetti specifici
+- Risposte, modifica ed eliminazione messaggi
+- Widget chat in basso a destra con drawer espandibile
+- Backend Supabase: PostgreSQL, RLS policies, trigger auto-profilo, RPC functions
+- i18n: traduzioni chat in tutte le 11 lingue supportate (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
+- Tutorial interattivo Community Chat aggiunto
+- Guide utente aggiornate in 11 lingue con sezione Chat Community
+- Client Supabase unificato (eliminati Multiple GoTrueClient warnings)
+
+## 🔧 v1.4.2 - 2026-03-03
+
+- Vision LLM Translator: traduzione context-aware con screenshot del gioco (Ollama, Gemini, OpenAI)
+- Lore Assistant: chat RAG per lore e dialoghi del gioco
+- Auto-Hook Scanner: scansione memoria processo con WinAPI
+- System Monitor: monitoraggio VRAM/RAM in tempo reale (backend Rust)
+- Ollama Setup Wizard: installazione guidata AI locale step-by-step
+- Debug Console: console di debug con intercept console integrato
+- Plugin System: design doc PLUGIN_SYSTEM.md
+- GitHub Discussions: 12 discussioni create (Announcements, General, Ideas, Q&A, Show and tell, Polls)
+- Community Hub: fix fetch discussions con REST API pubblica (no token richiesto)
+- Sidebar: Vision LLM aggiunto, Workshop rinominato in Steam Workshop
+- Fix: Rendered more hooks — dynamic imports con ssr:false sulle nuove pagine
+- CI/CD: Tauri Signing Key per release firmate
+- Fix: Ollama provider cooldown invece di blocco permanente per errori di rete
+- Fix: Lingva 404 per testi lunghi (troncamento URL automatico)
+- Fix: Tutorial querySelector SyntaxError con selettori :contains()
+- Fix: Update Bell mostrava versione sbagliata (fallback hardcoded rimosso)
+- Auto-Translate Review: pulsante 'Traduci tutte le non tradotte' con progress bar
+
+## 📝 v1.4.1 - 2026-03-02
+
+- i18n: UI completa in 11 lingue (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
+- Aggiunte traduzioni KO (coreano), PT (portoghese), RU (russo), PL (polacco) a translations.ts
+- Aggiornato Locale type e SUPPORTED_LOCALES con ru e pl
+- Creati locales/ru/common.json e locales/pl/common.json
+- Guide utente aggiornate in tutte le 11 lingue con sezioni v1.1-v1.4
+- Nuove guide utente: USER_GUIDE_KO.md, USER_GUIDE_PT.md, USER_GUIDE_RU.md, USER_GUIDE_PL.md
+- README.md e README_IT.md aggiornati con 11 lingue e nuove guide
+- CHANGELOG.md e main-layout changelog aggiornati
+- site-i18n.js aggiornato con ru e pl
+- CI: workflow Linux + Windows fixato e funzionante
+
+## 📝 v1.4.0 - 2026-02-13
+
+- Radix UI Unificato: migrati 37 file da @radix-ui/react-* a radix-ui, rimossi 27 pacchetti
+- Quality Badge nel Traduttore Pro: punteggio qualità per-riga con ContentTypeBadge e QualityScoreBadge
+- Live Quality Preview: anteprima qualità in tempo reale durante la traduzione batch
+- Dettaglio Traduzioni: tabella risultati con tipo contenuto (UI/Dialogo/Narrativa) e score 0-100
+- Supporto RTL: rilevamento automatico direzione testo e applicazione dir attribute
+- Ollama Generico: translateWithOllamaGeneric con PROVIDER_MAP e chain presets fallback
+- Ottimizzazione Bundle: optimizePackageImports aggiornato con radix-ui, framer-motion, recharts, cmdk
+- Pulizia TypeScript: 0 errori TS nei sorgenti, fix in 8 file (translation-quality, validator, notifications, tutorial)
+- Fix: regex match type casting in translation-quality.ts e translation-validator.ts
+- Fix: NotificationToastProps con props opzionali mancanti
+- Fix: TutorialProviderProps con userId opzionale
+- Fix: CreateNotificationRequest con profileId opzionale
+
+## 📝 v1.3.0 - 2026-02-09
+
+- Danganronpa WAD Patcher v15: All-Ice base + GameStringer override (35.865 stringhe)
+- WAD Text Extractor CLI: estrazione completa testi da WAD per traduzione
+- WAD Extractor UI: nuovo tab nel Danganronpa Patcher con editor e traduzione batch AI
+- Export Patch Distribuibile: crea .zip con WAD, install.bat, LEGGIMI.txt, translations.json
+- Export Patch UI: bottone export nel tab Applica Patch con dialog salvataggio nativo
+- Export Patch Backend Rust: comando export_danganronpa_patch con zip streaming
+- Dashboard Stats Reali: collegati a Translation Memory Rust e activity history
+- UI Danganronpa Patcher compattata: tutti i tab ottimizzati per densità informativa
+
+## 📝 v1.2.0 - 2026-02-06
+
+- Fallback Provider: traduzione automatica Gemini → DeepSeek → OpenAI in tutti i componenti
+- Audit /api/* completato: 0 fetch('/api/') attive, tutto compatibile Tauri
+- Danganronpa Filtro Smart: riduce 18K→3K stringhe con filtro locale + AI opzionale
+- Test E2E Playwright: 38 test reali (navigation, translation, danganronpa)
+- Fix: injection UI usa Tauri invoke invece di API routes
+- Fix: secrets dashboard, logging, import traduzioni ora locali
+- Fix: bug precedenza operatori in notification-indicator
+- Translation Memory e Offline Cache usano fallback provider
+
+## 📝 v1.1.0 - 2026-02-05
+
+- Website Multilingua: 9 lingue (EN, IT, ES, DE, FR, JA, ZH, KO, PT)
+- Selettore lingua nel nav con bandiere e auto-detect browser
+- Danganronpa Auto-Translator: traduzione automatica con estrazione PAK nativa
+- Test E2E con Playwright: 9 test per navigation, translation, danganronpa
+- Verifica API Key: controllo chiavi prima di iniziare traduzione
+- Stima Costo: calcolo automatico token e costo per provider
+- Rate Limit Handler: retry automatico con delay per quota API
+- Redirect automatico a Settings se API non configurata
+
+## 📝 v1.0.9 - 2026-01-31
+
+- UI Header Animati: Effetto 'respiro' con gradiente che si espande/contrae
+- Ombreggiature Header: shadow-xl con tinta blu per profondità
+- Menu Sidebar: Sub-item con hover verde scuro (emerald-600)
+- Gradiente uniforme: Sky → Blue → Cyan su tutti gli header Traduzione
+- 16 pagine aggiornate con nuovo stile header animato
+
+## 🔧 v1.0.8 - 2026-01-29
+
+- Fix: Pulsante 'Scarica' aggiornamento ora apre il browser correttamente
+- Fix: Usato Tauri shell API invece di window.open per link esterni
+- Aggiunto feedback toast per debug download
+
+## 📝 v1.0.7 - 2026-01-29
+
+- GitHub Discussions: Forum integrato nel Community Hub
+- Tab Discussions con grafica GameStringer personalizzata
+- Fetch automatico discussioni da GitHub con API route
+- Link esterni aperti con Tauri shell API
+- Community Hub: rimossi dati mock, ora solo dati reali
+- Rimosso modal warning 'In Sviluppo' dal Community Hub
+- Licenza aggiornata a v1.1 Source Available
+- Licenza: chiarito uso non-commercial (YouTuber/streamer OK)
+- Licenza: fork non-commerciali permessi esplicitamente
+- i18n: traduzioni Discussions in 7 lingue
+
+## 🔧 v1.0.6 - 2026-01-28
+
+- Qwen 3: Provider dedicato per lingue asiatiche (CN/JP/KR) via Ollama
+- NLLB-200: Supporto 200 lingue via HuggingFace Inference API
+- Ollama Generico: Usa qualsiasi modello installato
+- Bug fix: Catch vuoti sostituiti con logging appropriato
+- Bug fix: Import non utilizzati rimossi dai file principali
+- Bug fix: Vitest config provider v8 mancante
+- Bug fix: Firme funzioni batch operations incompatibili
+- i18n: Traduzioni mancanti aggiunte per ES, FR, DE, JA, ZH
+
+## 📝 v1.0.5 - 2026-01-26
+
+- Voice Clone Studio: AI voice cloning with ElevenLabs and OpenAI TTS
+- VR Text Overlay: Spatial subtitles for VR games with headset detection
+- Quality Gates: Automatic translation quality control system
+- Player Feedback: Collect and manage player translation feedback
+- Guide Page: Documentation for all 4 new tools
+- i18n: Translations for all new features in 7 languages (IT, EN, ES, DE, JA, ZH)
+- UI: Green hero headers for Tools section pages
+
+## 📝 v1.0.4 - 2026-01-23
+
+- Subtitle Translator: parser SRT/VTT/ASS con preview e QA
+- Batch Folder Translator: scansione ricorsiva cartelle con walkdir
+- Community Hub: pagina completa con browser pacchetti TM
+- Retro ROM Tools: supporto NES/SNES/GB/GBA/Genesis/PSX con table files
+- API Pubblica v1: endpoint REST per CI/CD (/api/v1/translate, batch, languages, health)
+- Landing Page: pagina marketing pronta per deploy
+- Screen Adaptation: adattamento automatico risoluzione schermo
+- Tutorial unificato: risolto conflitto tra OnboardingWizard e InteractiveTutorial
+- Hero headers compatti per Retro e Batch
+
+## 📝 v1.0.3 - 2026-01-22
+
+- Recovery Key: sistema recupero password con 12 parole mnemoniche
+- Recovery Key: copia/download chiave alla creazione profilo
+- Recovery Key: verifica chiave per reset password
+- Traduzioni i18n complete per ES, FR, DE (9 sezioni aggiunte)
+- Nuove sezioni: gameDetails, notifications, stores, projects, heatmap, activity, ocrTranslator, workshop
+
+## 📝 v1.0.2 - 2026-01-22
+
+- Supporto multilingua completo: ES, FR, DE, JA, ZH
+- Selettore lingua abilitato per tutte le lingue
+- Traduzioni Translation Fixer per tutte le lingue
+- Traduzioni AI Context Crawler per tutte le lingue
+- Categorie glossario tradotte (personaggio, luogo, oggetto, etc.)
+
+## 🔧 v1.0.1 - 2026-01-21
+
+- Nuovo layout 3:1 per pagina dettaglio gioco
+- Screenshot gallery espansa (12 screenshot)
+- Raccomandazione traduzione full-width
+- Traduzioni EN complete per gameDetails
+- Trama completa nell'header hero
+
+## 💥 v1.0.0 - 2026-01-20
+
+- Release pubblica ufficiale
+- Sistema i18n completo (Italiano/English)
+- Hero Image Fusion per tutte le pagine
+- Screenshot Gallery nella pagina dettaglio
+- GitHub Sponsors integrato
+
+## 📝 v0.9.9-beta - 2026-01-19
+
+- Ultima versione beta prima del release ufficiale 1.0.0
+- Sistema i18n completo (Italiano/English)
+- Integrazione Ko-fi e GitHub Sponsors
+- Ottimizzazioni finali e bug fix
+
+## 📝 v0.9.8-beta - 2026-01-18
+
+- Esporta/Importa Profilo: backup e restore profili come JSON
+- OCR Service: Tesseract.js integrato per riconoscimento testo
+- Screen Capture: cattura schermo con fallback browser getDisplayMedia
+- Hero headers tutti compatti con text shadow uniforme
+- Community Hub ridisegnato con stile compatto
+- Libreria header minimalista con icona gradient
+- Rimosso mini logo GS dalla sidebar chiusa
+
+## 📝 v0.9.7-beta - 2026-01-18
+
+- Hero headers compatti per tutti gli strumenti (Overlay, Fixer, Crawler, Voice, Injector, Patcher)
+- Dashboard ridisegnata con gradiente viola e card animate
+- Menu profilo glassmorphism con effetto vetro
+- Game Patcher header unificato con quick links
+- Attività recenti espanse a 9 elementi
+- Rimossi indicatori Neural/Steam/Cache dall'header
+- Text shadows migliorati per leggibilità su gradienti chiari
+
+## 📝 v0.9.6-beta - 2026-01-12
+
+- Command Palette (Ctrl+K): ricerca globale stile VS Code
+- Skeleton Loaders: loading states eleganti per tutte le pagine
+- Empty States: illustrazioni e CTA per stati vuoti
+- Drag & Drop Zone: trascina file per tradurre
+- Info Tooltips: spiegazioni hover per funzioni complesse
+- Sidebar animata: hover effects, glow, transizioni fluide
+- Toast migliorati: gradienti colorati, progress bar, animazioni
+- Keyboard Shortcuts: Ctrl+L libreria, Ctrl+T traduci, etc.
+
+## 📝 v0.9.5-beta - 2026-01-12
+
+- Steam Workshop Browser: cerca e scarica traduzioni dalla community
+- Filtri per lingua, ordinamento (popolarità, recenti, rating)
+- Visualizzazione dettagli: subscribers, favorites, views, rating
+- Download simulato con stato installazione
+- Link diretto a Steam Workshop per ogni item
+
+## 📝 v0.9.4-beta - 2026-01-12
+
+- Dashboard completamente ridisegnata con hero header viola/fuchsia
+- Card Azioni Rapide con icone grandi e gradienti colorati
+- Link rapidi a Batch, Progetti, Statistiche, Impostazioni
+- Attività recenti in card dedicata con design cyan
+- Progress bar traduzioni con card emerald
+
+## 📝 v0.9.3-beta - 2026-01-12
+
+- Statistiche Traduzione: dashboard dettagliata con grafici
+- Grafico attività settimanale con barre
+- Stats: traduzioni totali, stringhe, parole, progress medio
+- Conteggio progetti completati e in corso
+- Lingue target più usate con percentuali
+- Tempo stimato rimanente per progetti attivi
+
+## 📝 v0.9.2-beta - 2026-01-12
+
+- Project Manager: salva/carica progetti di traduzione (.gsproj)
+- Esporta traduzioni in JSON, CSV, PO (Gettext)
+- Glossario progetto per consistenza terminologica
+- Statistiche progetto: file, stringhe, progress
+- Tab Panoramica, File, Glossario, Impostazioni
+
+## 📝 v0.9.1-beta - 2026-01-12
+
+- Batch Translation: coda di traduzione per più file simultanei
+- Supporto drag & drop file e cartelle nella coda
+- Progress tracking per ogni job con tempo stimato
+- Pausa/riprendi/stop elaborazione coda
+- Gradiente dinamico pagina gioco basato sul genere (Horror=rosso, RPG=viola, etc.)
+
+## 📝 v0.9.0-beta - 2026-01-12
+
+- Pagina Dettaglio Gioco: nuovo hero header con gradiente indigo/purple/fuchsia
+- Stats dinamiche: piattaforma, stato installazione, data uscita, generi, traduzioni
+- Background immagine gioco integrato nell'header
+- Metacritic score con colori dinamici (verde/giallo/rosso)
+
+## 📝 v0.8.9-beta - 2026-01-08
+
+- Sidebar riorganizzata: da 17 a 6 elementi per navigazione pulita
+- Header hero colorati per pagine Traduci, Patcher, Community, Impostazioni
+- Dialog Impostazioni Profilo con design viola/pink e card colorate
+- Dialog Sicurezza Profilo con design cyan/emerald
 - Link rapidi agli strumenti secondari nelle pagine principali
-- Strumenti accessibili da Impostazioni (Neural Pro, OCR, Visual Editor, Unreal, Telltale, etc.)
+- Fix accessibilità DialogTitle con VisuallyHidden
 
-#### 🔧 Fix
+## 📝 v0.8.8-beta - 2026-01-08
 
-- Accessibilità: aggiunto `DialogTitle` con `VisuallyHidden` per screen reader
+- Wizard Onboarding per primo avvio con configurazione guidata
+- Indicatore stato offline nell'header con feature disponibili
+- Sistema cache offline per traduzioni, giochi e pack
+- Tooltip contestuali per aiuto in-app
+- Servizio offline-support per funzionalità senza internet
 
----
+## 📝 v0.8.7-beta - 2026-01-08
 
-### v0.8.8-beta — Onboarding & Offline Support
+- Visual Translation Editor per preview stringhe su screenshot
+- Editor overlay con drag & drop, font, colori, opacità
+- Esportazione immagini PNG e progetti .gsvte
+- Nexus Mods Integration per cercare patch italiane
+- Ricerca automatica traduzioni per gioco
+- Download diretto da Nexus Mods (richiede API key)
 
-> **Data**: 2026-01-08
+## 📝 v0.8.6-beta - 2026-01-08
 
-#### ✨ Nuove Feature
+- Community Translation Hub per condivisione traduzioni
+- Sistema Translation Packs con download/upload
+- Rating e recensioni per pack traduzioni
+- Statistiche community in tempo reale
+- Filtri avanzati per ricerca pack
+- Supporto 10 lingue per traduzioni
 
-- **Wizard Onboarding**: configurazione guidata al primo avvio
-- **Indicatore stato offline**: nell'header con feature disponibili
-- **Sistema cache offline**: per traduzioni, giochi e pack
-- **Tooltip contestuali**: aiuto in-app per le funzionalità
-- **Servizio offline-support**: funzionalità senza internet
+## 📝 v0.8.5-beta - 2026-01-08
 
----
+- AI Translation Assistant con supporto LLM locali (Ollama, LM Studio)
+- Traduzioni context-aware per genere gioco (RPG, Horror, etc.)
+- Glossario personalizzabile per consistenza terminologica
+- Supporto voci personaggi con stile e formalità
+- Generazione alternative di traduzione
+- Cronologia traduzioni con riutilizzo rapido
 
-### v0.8.3-beta — Parser & Tools Expansion
+## 🔧 v0.8.4-beta - 2026-01-08
 
-> **Data**: 2026-01-08
+- Dialog Impostazioni Profilo (notifiche, libreria, sessione)
+- Dialog Sicurezza Profilo (cambio password, eliminazione)
+- Menu profilo completamente funzionale
+- Integrazione ThemeSelector nelle impostazioni profilo
 
-#### ✨ Nuove Feature
+## 🔧 v0.8.3-beta - 2026-01-08
 
-- **Parser Godot Engine**: supporto file `.tres`, `.tscn`, `.cfg`, `.translation`
-- **Parser Ren'Py**: supporto file `.rpy` per visual novel
-- **Theme Toggle**: switch chiaro/scuro/auto nell'header
-- **Telltale Patcher migliorato**:
-  - Backup automatico file originali
-  - Ripristino backup con un click
-  - Verifica installazione traduzione
+- Parser Godot Engine (.tres, .tscn, .cfg, .translation)
+- Parser Ren'Py (.rpy) per visual novel
+- Telltale Patcher: backup automatico e ripristino
+- Telltale Patcher: verifica installazione
+- Theme toggle (chiaro/scuro/auto) nell'header
+- Script version-manager sincronizza tutti i file versione
 
-#### 🛠️ Infrastruttura
+## 🔧 v0.8.2-beta - 2026-01-08
 
-- Script `version-manager.js` sincronizza automaticamente tutte le versioni
-- Nuovi comandi Rust: `create_directory_backup`, `restore_directory_backup`
-- Comando `npm run version:sync` per sincronizzare versioni
+- Telltale Patcher per Wolf Among Us, Walking Dead, Batman
+- Parser Telltale (.langdb, .landb, .dlog)
+- Fix immagini giochi nella pagina dettaglio
+- Steam API 403 rate limiting gestito gracefully
+- Tauri CLI aggiornato a v2.5.0
 
----
+## 🔧 v0.8.1-beta - 2026-01-04
 
-### v0.8.2-beta — Telltale Support & Image Fix
+- Dizionario righe compatte
+- Estensioni layout unificato con Parser
+- Campanella notifiche gialla fosforescente
+- Placeholder colorati per copertine mancanti
 
-> **Data**: 2026-01-08
+## 🚀 v0.8.0-beta - 2026-01-02
 
-#### ✨ Nuove Feature
+- Integrazione Epic Games Store via Legendary CLI
+- Filtro asset/plugin Unreal Engine (41 giochi)
+- Badge piattaforma Epic Games nella scheda gioco
+- Versione cliccabile per vedere changelog
 
-- **Telltale Patcher**: nuovo strumento per traduzioni giochi Telltale (Wolf Among Us, Walking Dead, Batman, etc.)
-- **Parser Telltale**: supporto file `.langdb`, `.landb`, `.dlog`
-- Rilevamento automatico piattaforma (Steam/GOG/Epic) per giochi Telltale
-- Istruzioni specifiche per versione GOG (script batch)
+## 🔧 v3.2.2 - 2025-07-07
 
-#### 🔧 Fix
+- Implementato sistema versioning automatico completo
+- Integrazione UI dinamica
+- Git hooks configurati
 
-- **Immagini giochi**: corretto caricamento copertine nella pagina dettaglio
-- Passaggio `appId` numerico dalla libreria alla pagina dettaglio
-- Evitato URL immagini Steam con appId 0 (causava sfondo bianco)
-- Steam API 403: gestito rate limiting gracefully (restituisce null invece di errore)
+## 🔧 v3.2.1 - 2025-01-07
 
-#### 🛠️ Infrastruttura
+- Sistema versioning automatico implementato
+- System Status spostato nella sidebar
+- Dashboard layout migliorato
+- Quick Actions compattate
 
-- Aggiornato `tauri-cli` da 1.6.5 a 2.5.0 (fix compatibilità config v2)
-- Nuovo comando Rust `check_path_exists` per verifiche filesystem
+## 🚀 v3.2.0 - 2025-01-06
 
----
+- Pagina impostazioni completamente ridisegnata
+- Debug tools integrati nelle impostazioni
+- Sidebar collassabile con animazioni
+- Steam API debugging migliorato
 
-### v0.8.1-beta — UI Polish & Fixes
+## 🚀 v3.1.0 - 2025-01-05
 
-> **Data**: 2026-01-04
+- Force refresh implementato per Steam games
+- Sistema manual game addition
+- Badge system per VR games
+- Dashboard design futuristico
 
-#### 🎨 Miglioramenti UI
-
-- Dizionario: righe molto più compatte (padding ridotto, testo xs)
-- Estensioni: layout unificato con Parser (stile compatto, bordo viola)
-- Notifiche: campanella gialla fosforescente quando ci sono notifiche non lette
-- Libreria: placeholder colorati per giochi senza copertina (6 gradienti diversi)
-
-#### 🔧 Fix
-
-- Widget Stato Traduzioni: ora mostra TUTTE le traduzioni fatte con GameStringer
-- Copertine mancanti: componente `GameImageWithFallback` con gestione errori
-
-#### ➖ Rimosso
-
-- Credenziali Steam dalla gestione profilo (disponibili solo in Settings)
-
-#### ⏸️ Disabilitato
-
-- HLTB Integration: temporaneamente disabilitato per API outdated
-
----
-
-### v0.8.0-beta — Epic Games Store Integration
-
-**Data**: 2026-01-02
-
-#### Nuove Feature
-
-- Integrazione completa Epic Games Store via Legendary CLI
-- Filtro automatico asset/plugin Unreal Engine (solo giochi veri)
-- Badge piattaforma dinamico (Steam/Epic/GOG/Origin)
-- Versione cliccabile per visualizzare changelog
-
-#### Miglioramenti
-
-- Placeholder per giochi senza immagine copertina
-- Rilevamento automatico piattaforma dal gameId
-
-#### Fix
-
-- Rimossa card "Gestione Piattaforme" duplicata in Settings
-
----
-
-### v0.7.9-beta — Badge Traduzione + Tracking
-
-**Data**: 2026-01-01
-
-#### Nuove Feature
-
-- Badge visivo stato traduzione (Argento / Bronzo)
-- Tracking patch installate in "Attività Recenti"
-
-#### Fix
-
-- Layout Unity Patcher tagliato a destra
-- Warning dead_code per costanti BepInEx 6.x
-
----
-
-## Dicembre 2025
-
-### v0.7.8-beta — Unity Patcher Stabilization
-
-**Data**: 2025-12-31
-
-- BepInEx 5.4.23.4 come default (compatibile con XUnity 5.5)
-- Plugin UIToolkitTranslator sperimentale
-- Rimosso BepInEx 6.x (incompatibile con XUnity)
-
----
-
-### v0.7.7-beta — Family Sharing Completo
-
-**Data**: 2025-12-31
-
-- Supporto fino a 4 Steam ID condivisori
-- Screenshot gallery con lightbox
-- UX intelligente Neural Translator
-- Persistenza IDs nel backend
-- Da 107 a ~276 giochi Family Sharing visibili
-
----
-
-### v0.7.6-beta — Streaming LLM Translation
-
-**Data**: 2025-12-31
-
-- Traduzioni in tempo reale con Server-Sent Events
-- Supporto OpenAI, Claude, Gemini, DeepSeek
-- Da 50 a 426+ giochi Steam rilevati
-
----
-
-### v0.7.5-beta — Translation Tools Pro
-
-**Data**: 2025-12-30
-
-- Glossario personalizzato con categorie
-- Hotkey globali OCR (Ctrl+Shift+T)
-- History traduzioni con statistiche
-- Auto-detect lingua sorgente
-
----
-
-### v0.7.4-beta — Epic Games Fix + Ottimizzazioni
-
-**Data**: 2025-12-30
-
-- Supporto IPA per Unity 5.0-5.5
-- Link tool esterni (gdsdecomp, UnrealLocres)
-- Sistema notifiche aggiornamenti
-- Ricerca fuzzy nella Library
-- Plugin system per formati file
-- Virtualizzazione liste (50MB → 5MB RAM)
-- Lazy loading immagini
-- Cache LRU con limite 5000 entries
-- Epic Games Parser: da 1939 a ~31 giochi reali
-
----
-
-### v0.7.3-beta — Translation Recommendation
-
-**Data**: 2025-12-29
-
-- Card raccomandazione metodo traduzione
-- Ordinamento "Recenti" nella Library
-- OCR Overlay non blocca più i giochi
-
----
-
-### v0.7.2-beta — Codebase Cleanup
-
-**Data**: 2025-12-29
-
-- Risolti tutti i 29 warning Rust
-- Compilazione pulita senza warning
-
----
-
-### v0.7.1-beta — Editor Multi-lingua
-
-**Data**: 2025-12-11
-
-- Vista split IDE-style per traduzioni
-- Translation Wizard integrato
-- Activity History con filtri
-- Bandiere grafiche per lingue
-
----
-
-## Agosto 2025
-
-### v0.6.x-beta — Sistema Profili
-
-**Data**: 2025-08
-
-- Sistema profili utente completo
-- Fix critico riavvio app durante login
-- Sistema notifiche con toast
-
----
-
-## Luglio 2025
-
-### v0.5.x-beta — Tauri v2 Migration
-
-**Data**: 2025-07
-
-- Migrazione completa a Tauri v2
-- Sistema traduzione OCR avanzato
-- Backend multipli (Claude, OpenAI, Google)
-- Game Launch Integration
-- Engine Detection automatico
-- HowLongToBeat integration
-- Supporto 2FA per GOG
-
----
-
-## Giugno 2025
-
-### v0.1.x-alpha — Fondamenta
-
-**Data**: 2025-06
-
-- Scansione librerie (Steam, Epic, GOG, Origin, Ubisoft, Battle.net, itch.io, Rockstar)
-- Traduzione neurale batch (Claude, OpenAI)
-- Translation Memory locale in Rust
-- Quality Gates per validazione
-- Supporto formati: JSON, PO, RESX, CSV
-- UI moderna Next.js + TailwindCSS + shadcn/ui
-
----
-
-## 📊 Statistiche Progetto
-
-| Metrica | Valore |
-|:--------|:-------|
-| **Versione attuale** | 1.3.0 |
-| **Periodo sviluppo** | Giugno 2025 - Presente |
-| **Stack Backend** | Rust (Tauri v2) |
-| **Stack Frontend** | Next.js 15, React, TailwindCSS |
-| **Piattaforme** | Windows, macOS, Linux |
-| **Parser supportati** | JSON, PO, RESX, CSV, XLIFF, Telltale, Godot, Ren'Py, WAD (Danganronpa), PAK, LIN, STX |
-| **Store supportati** | Steam, Epic, GOG, Origin, Ubisoft, Battle.net, itch.io |
