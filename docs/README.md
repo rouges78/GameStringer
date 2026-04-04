@@ -2,7 +2,7 @@
 
 ## Panoramica
 
-Documentazione completa di GameStringer v1.4.2 - Suite professionale di localizzazione videogiochi con AI.
+Documentazione completa di GameStringer v1.6.0 - Suite professionale di localizzazione videogiochi con AI.
 
 ---
 
@@ -108,7 +108,7 @@ Documentazione completa di GameStringer v1.4.2 - Suite professionale di localizz
 - [x] Plugin System - Design doc
 - [x] Port Management
 - [x] Store Integrations (8 piattaforme)
-- [x] Changelog aggiornato a v1.4.2
+- [x] Changelog aggiornato a v1.6.0
 
 ### In Aggiornamento
 
@@ -118,4 +118,4 @@ Documentazione completa di GameStringer v1.4.2 - Suite professionale di localizz
 
 ---
 
-Documentazione aggiornata alla versione 1.4.2 - 03/03/2026
+Documentazione aggiornata alla versione 1.6.0 - 04/04/2026

@@ -419,7 +419,7 @@ export function getToolsRegistry(): ToolDefinition[] {
         'Parser plugin ESP/ESM con estrazione campi traducibili (FULL, DESC, NAM1)',
         'Esportazione PO, CSV e file STRINGS patchati',
       ],
-      addedInVersion: '1.7.0',
+      addedInVersion: '1.6.0',
       isNew: true,
     },
     {
@@ -437,7 +437,7 @@ export function getToolsRegistry(): ToolDefinition[] {
         'Parser formati testo MSG/BMD/FTD (Persona) + JSON/XML generico',
         'Rilevamento encoding Shift-JIS/UTF-8/UTF-16 automatico',
       ],
-      addedInVersion: '1.7.0',
+      addedInVersion: '1.6.0',
       isNew: true,
     },
     {

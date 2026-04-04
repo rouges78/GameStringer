@@ -14,7 +14,7 @@ MAJOR.MINOR.PATCH
 
 ## Versione Corrente
 
-**v1.4.2** (Build 120) - 03/03/2026
+**v1.6.0** (Build 123) - 04/04/2026
 
 ## File da Aggiornare per ogni Release
 

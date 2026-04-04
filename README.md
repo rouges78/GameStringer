@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.5.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.6.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -172,7 +172,16 @@ That's it. No command line, no manual file editing, no modding experience needed
 - **Community Hub**: share and download translation memories
 - **Public API v1**: REST endpoints for integration (`/api/v1/translate`, `/api/v1/batch`)
 
-### Community Chat (NEW in v1.5.0)
+### Game Engine Patchers (NEW in v1.6.0)
+
+- **Bethesda Engine Patcher**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield — BSA/BA2/STRINGS/ESP parser
+- **CRI Middleware Patcher**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball — CPK + CRILAYLA + MSG/BMD/FTD
+- **Unity Localization Package**: StringTable + Addressables + Smart Strings validator
+- **Universal PO Export** (gettext) for every patcher
+- **Accessibility**: WCAG 2.1 AA sweep — aria-label, semantic headings, focus-visible, skip link, prefers-reduced-motion, Windows High Contrast
+- **OCR**: real Tauri Tesseract backend (replaces stub)
+
+### Community Chat (v1.5.0)
 
 - **Real-time chat** with other translators via Supabase Realtime
 - **4 default rooms**: General, Translations, Feedback & Bugs, Announcements
@@ -288,5 +297,5 @@ See [LICENSE](LICENSE) for details. Questions? Open a [Discussion](https://githu
 
 <p align="center">
   Made with ❤️ for gamers who want to play in their own language<br>
-  <strong>GameStringer v1.5.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.6.0</strong> · © 2025-2026 GameStringer Team
 </p>

@@ -1,14 +1,25 @@
 # Stato del Progetto GameStringer
 
-## Ultimo Aggiornamento: 03/03/2026 - v1.4.2
+## Ultimo Aggiornamento: 04/04/2026 - v1.6.0
 
-### PROGETTO v1.4.2 RILASCIATO
+### PROGETTO v1.6.0 RILASCIATO
 
-**GameStringer**: Suite completa di localizzazione videogiochi con AI. 18+ provider AI, 10+ engine supportati, 200+ lingue, 11 lingue UI.
+**GameStringer**: Suite completa di localizzazione videogiochi con AI. 20+ provider AI, 10+ engine supportati, 200+ lingue, 11 lingue UI.
 
 ---
 
-### Nuove Feature v1.4.2
+### Nuove Feature v1.6.0
+
+- **Bethesda Engine Patcher**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield — BSA v103-105, BA2 GNRL/DX10, ESP/ESM, STRINGS
+- **CRI Middleware Patcher**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball — CPK + CRILAYLA + MSG/BMD/FTD
+- **Unity Localization Package**: StringTable + Addressables + Smart Strings validator
+- **Universal PO Export**: gettext export per ogni patcher
+- **Accessibility**: WCAG 2.1 AA sweep — aria-label, semantic headings, focus-visible, skip link, prefers-reduced-motion, Windows High Contrast
+- **Design System**: Card variants via cva, Button xs/icon-sm, text-micro/text-2xs utilities
+- **OCR**: real Tauri Tesseract backend (sostituisce stub)
+- **Fix**: Console flash loop Windows quando l'app è in tray
+
+### Feature v1.4.2
 
 - **Vision LLM Translator**: Traduzione context-aware con screenshot del gioco (Ollama, Gemini, OpenAI)
 - **Lore Assistant**: Chat RAG per lore e dialoghi del gioco
