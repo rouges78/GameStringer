@@ -173,9 +173,13 @@ fn check_patch_integrity(game_path: &Path) -> (bool, String, Vec<String>) {
             })
             .unwrap_or_default();
 
+        // Nessun pak GameStringer = gioco Unreal mai patchato da noi,
+        // NON è una patch danneggiata. Ogni gioco Unreal ha Content/Paks/
+        // di default, quindi trovare la cartella non implica l'esistenza
+        // di una patch precedente.
         if gs_paks.is_empty() {
-            details.push("✗ Nessun _P.pak GameStringer trovato in Content/Paks/".to_string());
-            return (false, "unreal_pak".to_string(), details);
+            details.push("Nessuna patch GameStringer rilevata (gioco Unreal non patchato)".to_string());
+            return (true, "none".to_string(), details);
         } else {
             for pak in &gs_paks {
                 details.push(format!("✓ {} presente", pak.file_name().to_string_lossy()));
