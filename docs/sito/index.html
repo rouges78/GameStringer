@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GameStringer - Traduci Qualsiasi Videogioco con l'AI</title>
-  <meta name="description" content="GameStringer v1.5.0 — Suite open source per tradurre videogiochi con AI. 11+ engine, 20+ provider AI, Community Chat Realtime, Quality Badges, Auto-glossario.">
-  <meta name="keywords" content="game translation, video game localization, AI translator, Unity, Unreal, RPG Maker, Danganronpa, Ollama, GPT-4, TranslateGemma">
-  <meta property="og:title" content="GameStringer v1.5.0 - Traduci Qualsiasi Videogioco con l'AI">
+  <meta name="description" content="GameStringer v1.6.0 — Suite open source per tradurre videogiochi con AI. 11+ engine, 20+ provider AI, Bethesda/CRI Patchers, Unity Localization, Quality Badges, Auto-glossario.">
+  <meta name="keywords" content="game translation, video game localization, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
+  <meta property="og:title" content="GameStringer v1.6.0 - Traduci Qualsiasi Videogioco con l'AI">
   <meta property="og:description" content="Suite open source: 11+ engine, 20+ AI, auto-glossario, TM, Quality Badges. Gratuito.">
   <meta property="og:image" content="images/og-image.svg">
   <meta property="og:type" content="website">
@@ -49,7 +49,7 @@
       </div>
     </nav>
     <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.5.0 — Community Chat Realtime, Auto-Bridge Auth, 11 Lingue</span></span>
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.6.0 — Bethesda/CRI Patchers + Unity Localization + a11y</span></span>
       <h1 data-i18n="hero.title">GameStringer</h1>
       <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
       <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.</p>
@@ -135,7 +135,7 @@
         <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;text-align:left">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                         <h4 style="color:#e2e8f0;font-size:1rem;font-weight:700;margin:0">Community Chat</h4>
-            <span style="background:rgba(14,165,233,0.3);color:#7dd3fc;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">NEW v1.5.0</span>
+            <span style="background:rgba(14,165,233,0.3);color:#7dd3fc;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">v1.5.0</span>
           </div>
           <p style="color:#94a3b8;font-size:0.78rem;margin:0;line-height:1.4">Chat in tempo reale con Supabase Realtime. Stanze tematiche, presenza online, auto-login da profilo GS.</p>
         </div>
@@ -392,36 +392,48 @@
     </div>
   </div>
 </section>
-<!-- WHAT'S NEW v1.5.0 -->
+<!-- WHAT'S NEW v1.6.0 -->
 <section id="whatsnew">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge">// v1.5.0</span>
-    <h2 class="section-title" data-i18n="whatsnew.title">Novità nella Versione 1.5.0</h2>
-    <p class="section-desc" data-i18n="whatsnew.desc">Community Chat Realtime, Auto-Bridge Authentication e documentazione in 11 lingue.</p>
+    <span class="badge section-badge">// v1.6.0</span>
+    <h2 class="section-title" data-i18n="whatsnew.title">Novità nella Versione 1.6.0</h2>
+    <p class="section-desc" data-i18n="whatsnew.desc">Bethesda/CRI Patchers, Unity Localization Package, Universal PO export e Accessibility WCAG 2.1 AA.</p>
     <div class="grid grid-2" style="margin-top:48px;text-align:left">
-      <div class="card feature-card" style="border-left:4px solid #0ea5e9">
-        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)"><span style="color:#22d3ee;font-weight:800;font-size:14px">CHAT</span></div>
-        <h3 class="feature-title">Community Chat Realtime</h3>
-        <p class="feature-desc">Chat in tempo reale nel Community Hub via Supabase Realtime. 4 stanze predefinite (Generale, Traduzioni, Feedback & Bug, Annunci). Crea stanze personalizzate per giochi o progetti.</p>
-        <div class="feature-tags"><span class="feature-tag">Supabase Realtime</span><span class="feature-tag">4 Stanze</span><span class="feature-tag">Custom Rooms</span><span class="feature-tag">Presenza Online</span></div>
-      </div>
-      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
-        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><span style="color:#a78bfa;font-weight:800;font-size:14px">AUTH</span></div>
-        <h3 class="feature-title">Auto-Bridge Authentication</h3>
-        <p class="feature-desc">Il tuo profilo GameStringer si sincronizza automaticamente con Supabase Auth. Nessun login aggiuntivo. Client unificato, eliminati i warning "Multiple GoTrueClient".</p>
-        <div class="feature-tags"><span class="feature-tag">Zero Config</span><span class="feature-tag">Auto-Login</span><span class="feature-tag">Client Unificato</span><span class="feature-tag">Auto-Profile</span></div>
-      </div>
-      <div class="card feature-card" style="border-left:4px solid #22c55e">
-        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)"><span style="color:#34d399;font-weight:800;font-size:14px">i18n</span></div>
-        <h3 class="feature-title">i18n & Documentazione</h3>
-        <p class="feature-desc">Traduzioni chat in tutte le 11 lingue supportate. Guide utente aggiornate con sezione Community Chat. Tutorial interattivo dedicato.</p>
-        <div class="feature-tags"><span class="feature-tag">11 Lingue</span><span class="feature-tag">Guide Aggiornate</span><span class="feature-tag">Tutorial Chat</span><span class="feature-tag">Locales</span></div>
+      <div class="card feature-card" style="border-left:4px solid #dc2626">
+        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)"><span style="color:#f87171;font-weight:800;font-size:14px">BGS</span></div>
+        <h3 class="feature-title">Bethesda Engine Patcher</h3>
+        <p class="feature-desc">Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield. Supporta BSA v103-105, BA2 GNRL/DX10, ESP/ESM e STRINGS/DLSTRINGS/ILSTRINGS.</p>
+        <div class="feature-tags"><span class="feature-tag">BSA/BA2</span><span class="feature-tag">ESP/ESM</span><span class="feature-tag">STRINGS</span><span class="feature-tag">Creation Engine</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #f59e0b">
-        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><span style="color:#fbbf24;font-weight:800;font-size:16px">DB</span></div>
-        <h3 class="feature-title">Backend Supabase</h3>
-        <p class="feature-desc">PostgreSQL con RLS policies, trigger auto-profilo, RPC functions (SECURITY DEFINER). Realtime broadcasting per messaggi e presenza utenti.</p>
-        <div class="feature-tags"><span class="feature-tag">PostgreSQL</span><span class="feature-tag">RLS Policies</span><span class="feature-tag">RPC Functions</span><span class="feature-tag">Realtime</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><span style="color:#fbbf24;font-weight:800;font-size:14px">CRI</span></div>
+        <h3 class="feature-title">CRI Middleware Patcher</h3>
+        <p class="feature-desc">Persona 5 Royal, Yakuza, Tales of, Dragon Ball e tutti i titoli CRI. Decodifica CPK + CRILAYLA e formati MSG/BMD/FTD.</p>
+        <div class="feature-tags"><span class="feature-tag">CPK</span><span class="feature-tag">CRILAYLA</span><span class="feature-tag">MSG/BMD/FTD</span><span class="feature-tag">Atlus/SEGA</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #0ea5e9">
+        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)"><span style="color:#22d3ee;font-weight:800;font-size:14px">U-LOC</span></div>
+        <h3 class="feature-title">Unity Localization Package</h3>
+        <p class="feature-desc">Pipeline completa per il package ufficiale Unity Localization: StringTable + SharedTableData, Addressables e validator Smart Strings.</p>
+        <div class="feature-tags"><span class="feature-tag">StringTable</span><span class="feature-tag">Addressables</span><span class="feature-tag">Smart Strings</span><span class="feature-tag">Unity 2021+</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #22c55e">
+        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)"><span style="color:#34d399;font-weight:800;font-size:14px">PO</span></div>
+        <h3 class="feature-title">Universal PO Export</h3>
+        <p class="feature-desc">Export gettext PO con metadata completi da ogni patcher. Compatibile con Poedit, Weblate, Crowdin e qualsiasi CAT tool.</p>
+        <div class="feature-tags"><span class="feature-tag">gettext</span><span class="feature-tag">Poedit</span><span class="feature-tag">Weblate</span><span class="feature-tag">Metadata</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
+        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><span style="color:#a78bfa;font-weight:800;font-size:14px">A11Y</span></div>
+        <h3 class="feature-title">Accessibilità WCAG 2.1 AA</h3>
+        <p class="feature-desc">aria-label, heading semantici, focus-visible, skip link, prefers-reduced-motion e compatibilità Windows High Contrast su tutta l'app.</p>
+        <div class="feature-tags"><span class="feature-tag">WCAG 2.1 AA</span><span class="feature-tag">Screen Reader</span><span class="feature-tag">Forced Colors</span><span class="feature-tag">Reduced Motion</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #ec4899">
+        <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)"><span style="color:#f472b6;font-weight:800;font-size:14px">UI</span></div>
+        <h3 class="feature-title">Design System + OCR Reale</h3>
+        <p class="feature-desc">Card variants via cva, Button xs/icon-sm, utilities text-micro/text-2xs. Backend Tauri Tesseract reale al posto dello stub OCR.</p>
+        <div class="feature-tags"><span class="feature-tag">cva</span><span class="feature-tag">Design Tokens</span><span class="feature-tag">Tesseract</span><span class="feature-tag">Tray Fix</span></div>
       </div>
     </div>
   </div>
@@ -579,7 +591,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025-2026 GameStringer by <span style="color:#7dd3fc">rouges78</span>. Source-Available License v1.1</p>
-      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.5.0</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.6.0</p>
     </div>
   </div>
 </footer>

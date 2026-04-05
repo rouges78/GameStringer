@@ -413,6 +413,37 @@ Czat w czasie rzeczywistym zintegrowany z Community Hub, oparty na Supabase Real
 - **Tworzenie własnych pokojów**: dedykowane pokoje dla projektów lub gier
 - **Auto-login**: automatyczne połączenie przez profil GameStringer
 
+## Nowości v1.6.0
+
+### Patcher Bethesda Engine
+- **Obsługiwane gry**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **Formaty archiwów**: BSA v103/v104/v105 oraz BA2 (GNRL + DX10)
+- **Wtyczki**: parsowanie ESP/ESM z ekstrakcją rekordów do tłumaczenia
+- **Zlokalizowane ciągi**: STRINGS, DLSTRINGS, ILSTRINGS
+
+### Patcher CRI Middleware
+- **Obsługiwane gry**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball i wszystkie tytuły CRI
+- **Archiwa**: CPK z dekompresją CRILAYLA
+- **Formaty wiadomości**: MSG, BMD, FTD
+
+### Unity Localization Package
+- Pełny potok dla oficjalnego pakietu Unity Localization (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings
+- Dedykowany walidator placeholderów i form mnogich
+
+### Uniwersalny eksport PO
+- Eksport gettext PO z pełnymi metadanymi z każdego patchera
+- Kompatybilny z Poedit, Weblate, Crowdin
+
+### Dostępność WCAG 2.1 AA
+- aria-label, semantyczne nagłówki, focus-visible
+- Link pomijający, prefers-reduced-motion, Windows High Contrast
+
+### System projektowy i OCR
+- Warianty Card przez cva, Button xs/icon-sm
+- Prawdziwy backend Tauri Tesseract zamiast zaślepki OCR
+- Poprawka: pętla migania konsoli Windows w trybie tray
+
 ---
 
-GameStringer v1.5.0 - Przewodnik zaktualizowany 24.03.2026
+GameStringer v1.6.0 - Przewodnik zaktualizowany 04.04.2026

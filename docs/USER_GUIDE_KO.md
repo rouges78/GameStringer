@@ -413,6 +413,37 @@ Community Hub에 통합된 실시간 채팅. Supabase Realtime으로 구동.
 - **사용자 정의 채팅방 생성**: 프로젝트 또는 게임 전용 채팅방
 - **자동 로그인**: GameStringer 프로필로 자동 연결
 
+## v1.6.0 새 기능
+
+### Bethesda 엔진 패처
+- **지원 게임**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **아카이브 형식**: BSA v103/v104/v105 및 BA2 (GNRL + DX10)
+- **플러그인**: ESP/ESM 파싱 및 번역 가능 레코드 추출
+- **로컬라이즈 문자열**: STRINGS, DLSTRINGS, ILSTRINGS
+
+### CRI 미들웨어 패처
+- **지원 게임**: 페르소나 5 더 로열, 용과 같이, 테일즈 오브, 드래곤볼 등
+- **아카이브**: CPK 및 CRILAYLA 압축 해제
+- **메시지 형식**: MSG, BMD, FTD
+
+### Unity Localization 패키지
+- 공식 Unity Localization 패키지 파이프라인 (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings
+- 자리 표시자와 복수형 전용 검증기
+
+### 범용 PO 내보내기
+- 각 패처에서 전체 메타데이터와 함께 gettext PO 내보내기
+- Poedit, Weblate, Crowdin 호환
+
+### 접근성 WCAG 2.1 AA
+- aria-label, 시맨틱 헤딩, focus-visible
+- 건너뛰기 링크, prefers-reduced-motion, Windows 고대비
+
+### 디자인 시스템 및 OCR
+- cva 기반 Card 변형, Button xs/icon-sm
+- OCR 스텁 대신 실제 Tauri Tesseract 백엔드
+- 수정: 트레이 상태에서 Windows 콘솔 플래시 루프
+
 ---
 
-GameStringer v1.5.0 - 가이드 업데이트 2026/03/24
+GameStringer v1.6.0 - 가이드 업데이트 2026/04/04

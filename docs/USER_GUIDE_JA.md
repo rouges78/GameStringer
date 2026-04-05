@@ -413,6 +413,37 @@ Community Hubに統合されたリアルタイムチャット。Supabase Realtim
 - **カスタムルーム作成**：プロジェクトやゲーム専用ルーム
 - **自動ログイン**：GameStringerプロフィールで自動接続
 
+## v1.6.0の新機能
+
+### Bethesdaエンジン パッチャー
+- **対応ゲーム**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **アーカイブ形式**: BSA v103/v104/v105 および BA2 (GNRL + DX10)
+- **プラグイン**: ESP/ESM 解析と翻訳可能レコードの抽出
+- **ローカライズ文字列**: STRINGS, DLSTRINGS, ILSTRINGS
+
+### CRIミドルウェア パッチャー
+- **対応ゲーム**: ペルソナ5 ザ・ロイヤル、龍が如く、テイルズ オブ、ドラゴンボール等
+- **アーカイブ**: CPK + CRILAYLA 解凍
+- **メッセージ形式**: MSG, BMD, FTD
+
+### Unity Localization パッケージ
+- 公式 Unity Localization パッケージ用のパイプライン (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings
+- プレースホルダと複数形のバリデーター
+
+### 汎用PO エクスポート
+- 各パッチャーからの gettext PO エクスポート（メタデータ完備）
+- Poedit、Weblate、Crowdin と互換
+
+### アクセシビリティ WCAG 2.1 AA
+- aria-label、セマンティック見出し、focus-visible
+- スキップリンク、prefers-reduced-motion、Windows ハイコントラスト
+
+### デザインシステムとOCR
+- cva による Card バリアント、Button xs/icon-sm
+- OCR スタブを置き換える実 Tauri Tesseract バックエンド
+- 修正: タスクトレイ時のコンソールフラッシュ ループ
+
 ---
 
-GameStringer v1.5.0 - ガイド更新日 2026/03/24
+GameStringer v1.6.0 - ガイド更新日 2026/04/04

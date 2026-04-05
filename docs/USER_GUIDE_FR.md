@@ -413,6 +413,37 @@ Chat en temps réel intégré au Community Hub, propulsé par Supabase Realtime.
 - **Créer des salons personnalisés** : salons dédiés pour projets ou jeux
 - **Auto-login** : connexion automatique via profil GameStringer
 
+## Nouveautés v1.6.0
+
+### Patcheur Bethesda Engine
+- **Jeux pris en charge** : Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **Formats d'archive** : BSA v103/v104/v105 et BA2 (GNRL + DX10)
+- **Plugins** : analyse ESP/ESM avec extraction des enregistrements traduisibles
+- **Chaînes localisées** : STRINGS, DLSTRINGS, ILSTRINGS
+
+### Patcheur CRI Middleware
+- **Jeux pris en charge** : Persona 5 Royal, Yakuza, Tales of, Dragon Ball et tous les titres CRI
+- **Archives** : CPK avec décompression CRILAYLA
+- **Formats de messages** : MSG, BMD, FTD
+
+### Unity Localization Package
+- Pipeline pour le package officiel Unity Localization (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings
+- Validator dédié pour les placeholders et les formes plurielles
+
+### Export PO universel
+- Export gettext PO avec métadonnées complètes depuis chaque patcheur
+- Compatible avec Poedit, Weblate, Crowdin
+
+### Accessibilité WCAG 2.1 AA
+- aria-label, titres sémantiques, focus-visible
+- Lien d'évitement, prefers-reduced-motion, Windows High Contrast
+
+### Design System et OCR
+- Variantes de Card via cva, Button xs/icon-sm
+- Vrai backend Tauri Tesseract OCR à la place du stub
+- Correction : boucle de flash console Windows en mode tray
+
 ---
 
-GameStringer v1.5.0 - Guide mise à jour le 24/03/2026
+GameStringer v1.6.0 - Guide mise à jour le 04/04/2026

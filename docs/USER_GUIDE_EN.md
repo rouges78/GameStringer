@@ -410,6 +410,40 @@ Real-time community chat integrated into the Community Hub, powered by Supabase 
 - Active internet connection
 - Supabase backend configured (for self-hosting)
 
+## What's New v1.6.0
+
+### Bethesda Engine Patcher
+- **Supported games**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **Archive formats**: BSA v103/v104/v105 and BA2 (GNRL + DX10)
+- **Plugins**: ESP/ESM parsing with translatable record extraction
+- **Localized strings**: STRINGS, DLSTRINGS, ILSTRINGS
+- **Workflow**: extract → AI translate → repack with automatic backup
+
+### CRI Middleware Patcher
+- **Supported games**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball and every CRI title
+- **Archives**: CPK with CRILAYLA decompression
+- **Message formats**: MSG, BMD, FTD
+- **Workflow**: unpack CPK → decode messages → translate → repack
+
+### Unity Localization Package
+- Pipeline for the official Unity Localization package (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings support
+- Dedicated validator for placeholders and plural forms
+
+### Universal PO Export
+- gettext PO export with full metadata from every patcher
+- Compatible with Poedit, Weblate, Crowdin and any CAT tool
+
+### Accessibility WCAG 2.1 AA
+- aria-label on icon buttons, semantic headings, focus-visible
+- "Skip to content" skip link, prefers-reduced-motion
+- Windows High Contrast compatibility (forced-colors)
+
+### Design System and OCR
+- Card variants via cva, Button xs/icon-sm, text-micro/text-2xs utilities
+- Real Tauri Tesseract backend replacing the OCR stub
+- Fix: Windows console flash loop when the app runs in tray
+
 ---
 
-GameStringer v1.5.0 - Guide updated 24/03/2026
+GameStringer v1.6.0 - Guide updated 04/04/2026

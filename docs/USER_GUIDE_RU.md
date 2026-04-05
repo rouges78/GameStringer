@@ -413,6 +413,37 @@ Unity (Mono/IL2CPP), Unreal Engine, Godot, RPG Maker, Ren'Py, Source Engine, Cry
 - **Создание пользовательских комнат**: комнаты для проектов или игр
 - **Авто-вход**: автоматическое подключение через профиль GameStringer
 
+## Что нового в v1.6.0
+
+### Патчер Bethesda Engine
+- **Поддерживаемые игры**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **Форматы архивов**: BSA v103/v104/v105 и BA2 (GNRL + DX10)
+- **Плагины**: парсинг ESP/ESM с извлечением переводимых записей
+- **Локализованные строки**: STRINGS, DLSTRINGS, ILSTRINGS
+
+### Патчер CRI Middleware
+- **Поддерживаемые игры**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball и все CRI-тайтлы
+- **Архивы**: CPK с распаковкой CRILAYLA
+- **Форматы сообщений**: MSG, BMD, FTD
+
+### Unity Localization Package
+- Конвейер для официального пакета Unity Localization (Unity 2021.3+)
+- StringTable + SharedTableData, Addressables, Smart Strings
+- Выделенный валидатор для плейсхолдеров и форм множественного числа
+
+### Универсальный экспорт PO
+- Экспорт gettext PO с полными метаданными из каждого патчера
+- Совместимость с Poedit, Weblate, Crowdin
+
+### Доступность WCAG 2.1 AA
+- aria-label, семантические заголовки, focus-visible
+- Ссылка для перехода к контенту, prefers-reduced-motion, Windows High Contrast
+
+### Дизайн-система и OCR
+- Варианты Card через cva, Button xs/icon-sm
+- Реальный бэкенд Tauri Tesseract вместо заглушки OCR
+- Исправление: цикл мерцания консоли в Windows при работе в трее
+
 ---
 
-GameStringer v1.5.0 - Руководство обновлено 24.03.2026
+GameStringer v1.6.0 - Руководство обновлено 04.04.2026

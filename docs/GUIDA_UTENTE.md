@@ -1777,6 +1777,40 @@ La Chat Community è una funzionalità di messaggistica in tempo reale integrata
 - **Widget chat** in basso a destra con drawer espandibile
 - **i18n**: traduzioni chat in tutte le 11 lingue supportate
 
+## Novità v1.6.0
+
+### Patcher Bethesda Engine
+- **Giochi supportati**: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield
+- **Formati archivio**: BSA v103/v104/v105 e BA2 (GNRL + DX10)
+- **Plugin**: parsing ESP/ESM con estrazione record traducibili
+- **Stringhe localizzate**: STRINGS, DLSTRINGS, ILSTRINGS
+- **Workflow**: estrazione → traduzione AI → re-pack con backup automatico
+
+### Patcher CRI Middleware
+- **Giochi supportati**: Persona 5 Royal, Yakuza, Tales of, Dragon Ball e tutti i titoli CRI
+- **Archivi**: CPK con decompressione CRILAYLA
+- **Formati messaggi**: MSG, BMD, FTD
+- **Workflow**: unpack CPK → decode messaggi → traduzione → repack
+
+### Unity Localization Package
+- Pipeline per il package ufficiale Unity Localization (Unity 2021.3+)
+- Supporto StringTable + SharedTableData, Addressables, Smart Strings
+- Validator dedicato per placeholder e plural forms
+
+### Export PO Universale
+- Export gettext PO con metadata completi da ogni patcher
+- Compatibile con Poedit, Weblate, Crowdin e qualsiasi CAT tool
+
+### Accessibilità WCAG 2.1 AA
+- aria-label su icon button, heading semantici, focus-visible
+- Skip link "Salta al contenuto", prefers-reduced-motion
+- Compatibilità Windows High Contrast (forced-colors)
+
+### Design System e OCR
+- Card variants via cva, Button xs/icon-sm, utilities text-micro/text-2xs
+- Backend Tauri Tesseract reale al posto dello stub OCR
+- Fix: console flash loop Windows quando l'app è in tray
+
 ---
 
-GameStringer v1.5.0 - Guida aggiornata al 24/03/2026
+GameStringer v1.6.0 - Guida aggiornata al 04/04/2026
