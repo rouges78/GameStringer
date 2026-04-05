@@ -541,6 +541,7 @@ fn main() {
             commands::game_update_tracker::acknowledge_game_update,
             commands::game_update_tracker::verify_patch_integrity,
             commands::game_update_tracker::get_all_tracked_games,
+            commands::game_update_tracker::remove_tracked_game,
 
             // Unreal Engine Localization Pipeline (.locres + .pak)
             commands::unreal_localization::extract_unreal_localization,
@@ -828,6 +829,7 @@ fn main() {
             commands::prediction_tool::export_prediction_report,
             commands::prediction_tool::execute_complete_workflow,
             commands::prediction_tool::dry_run_scan_all_games,
+            commands::prediction_tool::has_cached_prediction,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,

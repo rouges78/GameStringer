@@ -2108,7 +2108,9 @@
       "PROVIDER_MAP with automatic model mapping",
       "Chain presets with automatic fallback between providers",
       "Completely free and offline"
-    ]
+    ],
+    "stores": "Stores",
+    "autotranslate": "Auto-Translate"
   },
   "dictionary": {
     "title": "Dictionary",

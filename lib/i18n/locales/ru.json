@@ -2059,7 +2059,9 @@
     "subtitle": "Руководства пользователя",
     "gettingStarted": "Начало работы",
     "advanced": "Продвинутый",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "stores": "Магазины",
+    "autotranslate": "Авто-перевод"
   },
   "gamePatcher": {
     "title": "Патчер игр",

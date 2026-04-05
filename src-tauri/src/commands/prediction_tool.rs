@@ -9176,3 +9176,45 @@ pub async fn dry_run_scan_all_games(app: tauri::AppHandle) -> Result<DryRunRepor
 
     Ok(report)
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// COMMAND: has_cached_prediction — rapido check "è già stato analizzato con P.T.?"
+// Usato da "String it!" per decidere se suggerire P.T. prima del wizard.
+// ──────────────────────────────────────────────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CachedPredictionInfo {
+    pub cached: bool,
+    pub expired: bool,
+    pub age_minutes: u64,
+    pub difficulty_score: Option<u32>,
+}
+
+#[tauri::command]
+pub async fn has_cached_prediction(
+    install_path: String,
+    game_title: String,
+) -> Result<CachedPredictionInfo, String> {
+    let cache_key = format!("{}:{}", game_title, install_path);
+    let cache = load_cache();
+
+    if let Some(entry) = cache.get(&cache_key) {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let age_minutes = now.saturating_sub(entry.timestamp) / 60;
+        return Ok(CachedPredictionInfo {
+            cached: true,
+            expired: entry.is_expired(),
+            age_minutes,
+            difficulty_score: Some(entry.result.difficulty_score),
+        });
+    }
+
+    Ok(CachedPredictionInfo {
+        cached: false,
+        expired: false,
+        age_minutes: 0,
+        difficulty_score: None,
+    })
+}

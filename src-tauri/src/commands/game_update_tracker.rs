@@ -173,9 +173,13 @@ fn check_patch_integrity(game_path: &Path) -> (bool, String, Vec<String>) {
             })
             .unwrap_or_default();
 
+        // Nessun pak GameStringer = gioco Unreal mai patchato da noi,
+        // NON è una patch danneggiata. Ogni gioco Unreal ha Content/Paks/
+        // di default, quindi trovare la cartella non implica l'esistenza
+        // di una patch precedente.
         if gs_paks.is_empty() {
-            details.push("✗ Nessun _P.pak GameStringer trovato in Content/Paks/".to_string());
-            return (false, "unreal_pak".to_string(), details);
+            details.push("Nessuna patch GameStringer rilevata (gioco Unreal non patchato)".to_string());
+            return (true, "none".to_string(), details);
         } else {
             for pak in &gs_paks {
                 details.push(format!("✓ {} presente", pak.file_name().to_string_lossy()));
@@ -289,4 +293,16 @@ pub async fn verify_patch_integrity(game_path: String) -> Result<serde_json::Val
 pub async fn get_all_tracked_games() -> Result<serde_json::Value, String> {
     let store = load_store();
     Ok(serde_json::json!(store.games))
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// COMMAND: Rimuove un gioco dal tracking (smette di monitorarlo)
+// ──────────────────────────────────────────────────────────────────────────────
+#[command]
+pub async fn remove_tracked_game(app_id: String) -> Result<bool, String> {
+    let mut store = load_store();
+    let game_key = format!("steam_{}", app_id);
+    let removed = store.games.remove(&game_key).is_some();
+    save_store(&store)?;
+    Ok(removed)
 }

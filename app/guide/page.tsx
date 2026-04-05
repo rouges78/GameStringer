@@ -15,7 +15,8 @@ import {
   CheckCircle2, Info, Globe, Monitor, Target, Eye, Wrench,
   Package, Heart, Cpu, Film, Layers, AudioLines, User,
   FileArchive, ShoppingBag, Users, MessageSquare, Glasses,
-  Subtitles, Play, FileText,
+  Subtitles, Play, FileText, Trophy, FlaskConical, GitBranch,
+  ListOrdered, Gauge, Workflow,
 } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 import { getGuideTranslations } from '@/lib/i18n/guide-translations';
@@ -129,7 +130,7 @@ export default function GuidePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid grid-cols-5 w-full h-9 shrink-0">
+        <TabsList className="grid grid-cols-6 w-full h-9 shrink-0">
           <TabsTrigger value="quickstart" className="text-xs gap-1">
             <Rocket className="h-3 w-3" /> {g.tabQuickStart}
           </TabsTrigger>
@@ -138,6 +139,9 @@ export default function GuidePage() {
           </TabsTrigger>
           <TabsTrigger value="tools" className="text-xs gap-1">
             <Wrench className="h-3 w-3" /> {g.tabTools}
+          </TabsTrigger>
+          <TabsTrigger value="advanced" className="text-xs gap-1">
+            <Brain className="h-3 w-3" /> Avanzate
           </TabsTrigger>
           <TabsTrigger value="shortcuts" className="text-xs gap-1">
             <Keyboard className="h-3 w-3" /> {g.tabShortcuts}
@@ -438,6 +442,224 @@ export default function GuidePage() {
                   </div>
                 );
               })}
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        {/* ================================================================ */}
+        {/* TAB: AVANZATE — P.T., Dry Run, P.T.Rank                         */}
+        {/* ================================================================ */}
+        <TabsContent value="advanced" className="flex-1 overflow-hidden mt-3">
+          <ScrollArea className="h-full">
+            <div className="space-y-4 pr-3 pb-6">
+
+              {/* ── CARD 1: Prediction Tool ────────────────────────────── */}
+              <Card className="border-purple-500/30 bg-gradient-to-br from-purple-950/20 to-slate-900/30">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-purple-400" />
+                    Prediction Tool (P.T.) — Lo strumento più potente
+                    <Badge variant="outline" className="ml-auto text-2xs border-purple-500/40 text-purple-300">v1.6.0</Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Analizza in profondità un gioco <em>prima</em> di tradurlo: difficoltà, engine, volume stringhe, DRM, encoding, tempi stimati LLM e chain suggerite.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 space-y-3">
+                  {/* Pipeline diagram */}
+                  <div className="rounded-lg border border-purple-500/20 bg-slate-950/40 p-3">
+                    <div className="text-2xs text-purple-300 font-semibold mb-2 uppercase tracking-wider">Pipeline di analisi</div>
+                    <div className="flex items-center justify-between gap-1 text-2xs">
+                      {[
+                        { icon: FolderTree, label: 'Input', sub: 'game path' },
+                        { icon: Cpu, label: 'Engine', sub: '20+ detect' },
+                        { icon: FileText, label: 'Extract', sub: 'stringhe' },
+                        { icon: Gauge, label: 'Analyze', sub: 'DRM/enc/vol' },
+                        { icon: Workflow, label: 'Plan', sub: 'chain + tempi' },
+                        { icon: CheckCircle2, label: 'Report', sub: 'score 0-100' },
+                      ].map((step, i, arr) => (
+                        <React.Fragment key={i}>
+                          <div className="flex flex-col items-center gap-1 min-w-0 flex-1">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/15 border border-purple-500/40">
+                              <step.icon className="h-3.5 w-3.5 text-purple-300" />
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-purple-200">{step.label}</div>
+                              <div className="text-[9px] text-muted-foreground">{step.sub}</div>
+                            </div>
+                          </div>
+                          {i < arr.length - 1 && (
+                            <ArrowRight className="h-3 w-3 text-purple-500/50 shrink-0 mt-[-14px]" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                        <Gauge className="h-3 w-3" /> Difficulty Score 0-100
+                      </div>
+                      <p className="text-2xs text-muted-foreground">Combinazione pesata di volume stringhe, engine, DRM, encoding e complessità linguistica. Più basso = più facile.</p>
+                    </div>
+                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                        <ShieldCheck className="h-3 w-3" /> DRM & Encoding
+                      </div>
+                      <p className="text-2xs text-muted-foreground">Rileva Denuvo, VMProtect, Steam DRM + encoding Shift-JIS/UTF-8/UTF-16 per-file prima di tradurre.</p>
+                    </div>
+                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                        <Cpu className="h-3 w-3" /> 18 modelli LLM stimati
+                      </div>
+                      <p className="text-2xs text-muted-foreground">Ollama (Gemma 4, Qwen, Llama), OpenAI, DeepL, Gemini — con tempo e costo per ogni modello.</p>
+                    </div>
+                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                        <GitBranch className="h-3 w-3" /> 5 chain suggerite
+                      </div>
+                      <p className="text-2xs text-muted-foreground">Local (privacy), Cloud (qualità), Hybrid (bilanciata) — con fallback automatico e qualità/costo stimati.</p>
+                    </div>
+                  </div>
+
+                  <Tip variant="info">
+                    Come si apre: <strong>icona Brain (viola)</strong> sulla game card in libreria (hover) oppure dal bottone <strong>P.T.</strong> nella pagina dettaglio gioco. Output: report esportabile + bottone "Esegui workflow".
+                  </Tip>
+                </CardContent>
+              </Card>
+
+              {/* ── CARD 2: Dry Run Scanner ────────────────────────────── */}
+              <Card className="border-sky-500/30 bg-gradient-to-br from-sky-950/20 to-slate-900/30">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <FlaskConical className="w-4 h-4 text-sky-400" />
+                    Dry Run Scanner — Scansione sicura dell'intera libreria
+                    <Badge variant="outline" className="ml-auto text-2xs border-sky-500/40 text-sky-300">v1.6.0</Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Analizza <strong>tutti</strong> i tuoi giochi Steam (800+) in batch <strong>senza modificare nessun file</strong>. Identifica quali sono traducibili e con quale engine.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 space-y-3">
+                  {/* Flow diagram */}
+                  <div className="rounded-lg border border-sky-500/20 bg-slate-950/40 p-3">
+                    <div className="text-2xs text-sky-300 font-semibold mb-2 uppercase tracking-wider">Flusso dry run</div>
+                    <div className="flex items-start gap-2 text-2xs">
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
+                          <Database className="h-3.5 w-3.5 text-sky-300" />
+                        </div>
+                        <div className="text-center font-semibold text-sky-200">Steam Library</div>
+                        <div className="text-[9px] text-muted-foreground">800+ giochi</div>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
+                          <Scan className="h-3.5 w-3.5 text-sky-300" />
+                        </div>
+                        <div className="text-center font-semibold text-sky-200">Engine Detect</div>
+                        <div className="text-[9px] text-muted-foreground">+ string count</div>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
+                          <Layers className="h-3.5 w-3.5 text-sky-300" />
+                        </div>
+                        <div className="text-center font-semibold text-sky-200">Categorizza</div>
+                        <div className="text-[9px] text-muted-foreground">ready/err/nosup</div>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <div className="flex flex-col items-center gap-1 flex-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
+                          <FileText className="h-3.5 w-3.5 text-sky-300" />
+                        </div>
+                        <div className="text-center font-semibold text-sky-200">Report JSON</div>
+                        <div className="text-[9px] text-muted-foreground">DATA_DIR</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded border border-emerald-500/30 bg-emerald-950/20 p-2 text-center">
+                      <div className="text-sm font-bold text-emerald-300">✓ Ready</div>
+                      <div className="text-[10px] text-muted-foreground">Engine supportato + stringhe estraibili</div>
+                    </div>
+                    <div className="rounded border border-amber-500/30 bg-amber-950/20 p-2 text-center">
+                      <div className="text-sm font-bold text-amber-300">⚠ Errors</div>
+                      <div className="text-[10px] text-muted-foreground">Manifest corrotto / DRM bloccante</div>
+                    </div>
+                    <div className="rounded border border-slate-500/30 bg-slate-950/40 p-2 text-center">
+                      <div className="text-sm font-bold text-slate-300">— Unsupported</div>
+                      <div className="text-[10px] text-muted-foreground">Engine ignoto o senza stringhe</div>
+                    </div>
+                  </div>
+
+                  <Tip variant="success">
+                    Come si lancia: bottone <strong>Dry Run</strong> nel pannello in cima alla pagina <NavLink href="/library">Libreria</NavLink>. Progress real-time, nessun file toccato. Al termine, report JSON salvato in <code className="text-[10px] bg-slate-800 px-1 rounded">DATA_DIR/dry_run_report.json</code>.
+                  </Tip>
+                </CardContent>
+              </Card>
+
+              {/* ── CARD 3: P.T.Rank / Classifica Rapida ─────────────── */}
+              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-950/20 to-slate-900/30">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    P.T.Rank — Classifica Rapida
+                    <Badge variant="outline" className="ml-auto text-2xs border-amber-500/40 text-amber-300">v1.6.0</Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Ordina tutti i giochi analizzati dal <strong>più facile</strong> al <strong>più difficile</strong> da tradurre. Perfetto per decidere da dove cominciare.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-3 space-y-3">
+                  {/* Sample ranking visualization */}
+                  <div className="rounded-lg border border-amber-500/20 bg-slate-950/40 p-3 space-y-1.5">
+                    <div className="text-2xs text-amber-300 font-semibold mb-1 uppercase tracking-wider flex items-center gap-1">
+                      <ListOrdered className="h-3 w-3" /> Esempio ranking
+                    </div>
+                    {[
+                      { rank: 1, name: 'Mother Russia Bleeds', engine: 'GameMaker', score: 12, badge: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300', bar: 'bg-emerald-500/70', txt: 'text-emerald-300' },
+                      { rank: 2, name: 'Hollow Knight', engine: 'Unity', score: 28, badge: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300', bar: 'bg-emerald-500/70', txt: 'text-emerald-300' },
+                      { rank: 3, name: 'Persona 5 Royal', engine: 'CRI CPK', score: 54, badge: 'bg-amber-500/20 border-amber-500/40 text-amber-300', bar: 'bg-amber-500/70', txt: 'text-amber-300' },
+                      { rank: 4, name: 'Cyberpunk 2077', engine: 'REDengine', score: 78, badge: 'bg-orange-500/20 border-orange-500/40 text-orange-300', bar: 'bg-orange-500/70', txt: 'text-orange-300' },
+                      { rank: 5, name: 'Starfield', engine: 'Creation 2', score: 91, badge: 'bg-red-500/20 border-red-500/40 text-red-300', bar: 'bg-red-500/70', txt: 'text-red-300' },
+                    ].map(g => (
+                      <div key={g.rank} className="flex items-center gap-2 text-2xs">
+                        <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-bold ${g.badge}`}>
+                          {g.rank}
+                        </div>
+                        <div className="flex-1 min-w-0 truncate font-semibold text-slate-200">{g.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{g.engine}</div>
+                        <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className={`h-full ${g.bar}`} style={{ width: `${g.score}%` }} />
+                        </div>
+                        <div className={`text-[10px] font-mono w-6 text-right ${g.txt}`}>{g.score}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Tip variant="info">
+                    Dove si trova: <NavLink href="/prediction-tool/ranking">/prediction-tool/ranking</NavLink>. Clicca un gioco nella lista per aprire direttamente il suo report P.T. completo.
+                  </Tip>
+                </CardContent>
+              </Card>
+
+              {/* ── CARD 4: "String it!" quick action ────────────────── */}
+              <Card className="border-indigo-500/30 bg-gradient-to-br from-indigo-950/20 to-slate-900/30">
+                <CardHeader className="py-2 px-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    "String it!" — Traduzione in un click
+                    <Badge variant="outline" className="ml-auto text-2xs border-indigo-500/40 text-indigo-300">v1.6.0</Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Bottone viola <Sparkles className="inline h-3 w-3 text-indigo-400" /> che appare in <em>hover</em> sulla game card: lancia direttamente il Translation Wizard precompilato con tutto ciò che serve (appid, engine, path).
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
             </div>
           </ScrollArea>
         </TabsContent>
