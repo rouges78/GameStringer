@@ -413,6 +413,37 @@ Unity游戏（Mono和IL2CPP）的**最佳方法**。
 - **创建自定义聊天室**：为项目或游戏创建专用聊天室
 - **自动登录**：通过GameStringer个人资料自动连接
 
+## v1.6.0 新功能
+
+### Bethesda 引擎补丁器
+- **支持游戏**: Skyrim LE/SE/AE、Fallout 3/NV/4、Oblivion、Starfield
+- **归档格式**: BSA v103/v104/v105 和 BA2 (GNRL + DX10)
+- **插件**: ESP/ESM 解析并提取可翻译记录
+- **本地化字符串**: STRINGS、DLSTRINGS、ILSTRINGS
+
+### CRI 中间件补丁器
+- **支持游戏**: 女神异闻录5皇家版、如龙、Tales of、七龙珠等 CRI 作品
+- **归档**: CPK 和 CRILAYLA 解压
+- **消息格式**: MSG、BMD、FTD
+
+### Unity Localization 包
+- 官方 Unity Localization 包的完整流水线 (Unity 2021.3+)
+- StringTable + SharedTableData、Addressables、Smart Strings
+- 占位符和复数形式验证器
+
+### 通用 PO 导出
+- 各补丁器的 gettext PO 导出（含完整元数据）
+- 兼容 Poedit、Weblate、Crowdin
+
+### 无障碍 WCAG 2.1 AA
+- aria-label、语义标题、focus-visible
+- 跳转链接、prefers-reduced-motion、Windows 高对比度
+
+### 设计系统和 OCR
+- 通过 cva 的 Card 变体、Button xs/icon-sm
+- 使用真实 Tauri Tesseract 后端替换 OCR 桩
+- 修复: 托盘模式下 Windows 控制台闪烁循环
+
 ---
 
-GameStringer v1.5.0 - 指南更新于 2026/03/24
+GameStringer v1.6.0 - 指南更新于 2026/04/04
