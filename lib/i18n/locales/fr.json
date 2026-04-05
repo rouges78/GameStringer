@@ -2439,7 +2439,9 @@
       "PROVIDER_MAP avec mappage automatique des modèles",
       "Chain presets avec fallback automatique entre providers",
       "Entièrement gratuit et hors ligne"
-    ]
+    ],
+    "stores": "Boutiques",
+    "autotranslate": "Traduction Auto"
   },
   "gamePatcher": {
     "title": "Game Patcher",

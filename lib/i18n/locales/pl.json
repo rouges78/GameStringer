@@ -1969,7 +1969,9 @@
     "subtitle": "Przewodniki użytkownika",
     "gettingStarted": "Wprowadzenie",
     "advanced": "Zaawansowane",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "stores": "Sklepy",
+    "autotranslate": "Auto-tłumaczenie"
   },
   "gamePatcher": {
     "title": "Patcher gier",

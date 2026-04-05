@@ -250,6 +250,7 @@ export default function GameDetailPage() {
     message: string;
   } | null>(null);
   const [isDismissingUpdate, setIsDismissingUpdate] = useState(false);
+  const [isUntrackingGame, setIsUntrackingGame] = useState(false);
   
   // Ref guards per StrictMode — traccia quale gameId è stato caricato
   const gameDataLoadedRef = useRef<string | null>(null);
@@ -695,6 +696,21 @@ export default function GameDetailPage() {
       setUpdateStatus(prev => prev ? { ...prev, update_detected: false, known_build_id: prev.current_build_id } : prev);
     } catch (e) { console.warn('[UpdateTracker] dismiss:', e); }
     finally { setIsDismissingUpdate(false); }
+  };
+
+  const untrackGame = async () => {
+    if (!game?.appid) return;
+    setIsUntrackingGame(true);
+    try {
+      await invoke<boolean>('remove_tracked_game', { appId: String(game.appid) });
+      setUpdateStatus(null);
+      toast.success('Monitoraggio disattivato per questo gioco');
+    } catch (e) {
+      console.warn('[UpdateTracker] untrack:', e);
+      toast.error('Impossibile disattivare il monitoraggio');
+    } finally {
+      setIsUntrackingGame(false);
+    }
   };
 
   // === UNREAL ENGINE LOCALIZATION STATE ===
@@ -1373,6 +1389,51 @@ export default function GameDetailPage() {
     }
   };
 
+  // ═══ STRING IT! — smart entry point con gate P.T. ═══
+  // Se il gioco non è stato ancora analizzato da P.T. (o la cache è scaduta),
+  // chiediamo all'utente se vuole eseguire prima l'analisi. Altrimenti parte diretto.
+  const handleStringIt = async () => {
+    if (!game?.installPath) {
+      toast.error('Percorso di installazione non disponibile');
+      return;
+    }
+    if (autoTranslateRunningRef.current || autoTranslateActive) return;
+
+    try {
+      const info = await invoke<{ cached: boolean; expired: boolean; age_minutes: number; difficulty_score: number | null }>(
+        'has_cached_prediction',
+        { installPath: game.installPath, gameTitle: game.title || game.name || '' }
+      );
+
+      if (info.cached && !info.expired) {
+        // Già analizzato di recente → parti diretto
+        startAutoTranslate();
+        return;
+      }
+
+      // Nessuna cache valida → chiedi conferma
+      const ptUrl = `/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`;
+      toast('Gioco non ancora analizzato con P.T.', {
+        description: info.expired
+          ? `Analisi precedente scaduta (${Math.floor(info.age_minutes / 60)}h fa). Rianalizzare migliora tempi e qualità stimate.`
+          : 'Eseguire prima P.T. permette di scegliere la chain LLM migliore e stimare tempi/costi.',
+        duration: 12000,
+        action: {
+          label: 'Esegui P.T. prima',
+          onClick: () => router.push(ptUrl),
+        },
+        cancel: {
+          label: 'String it! comunque',
+          onClick: () => startAutoTranslate(),
+        },
+      });
+    } catch (e) {
+      console.warn('[StringIt] cache check failed:', e);
+      // Fallback: parti diretto se il check fallisce
+      startAutoTranslate();
+    }
+  };
+
   // ═══ AUTO-TRANSLATE ONE-CLICK FLOW ═══
   const autoTranslateRunningRef = useRef(false);
   const startAutoTranslate = async () => {
@@ -1913,18 +1974,19 @@ export default function GameDetailPage() {
             )}
             <div className="flex flex-col items-stretch">
               <div className="flex items-stretch gap-0">
-                {/* ── Bottone STRING IT! ── */}
-                <button className="h-10 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-2xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 border-r-0 relative overflow-hidden group"
-                  onClick={startAutoTranslate}
+                {/* ── Bottone STRING IT! (HERO — azione principale) ── */}
+                <button className="h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all border border-indigo-400/30 border-r-0 relative overflow-hidden group"
+                  onClick={handleStringIt}
                   disabled={autoTranslateActive}
+                  title="Avvia la traduzione completa del gioco"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                  {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : 'String it!'}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                  {autoTranslateActive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : 'String it!'}
                 </button>
                 {/* ── Bandierina lingua target ── */}
                 <div className="relative" ref={langPickerRef}>
                   <button
-                    className="h-10 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-2xs font-bold uppercase tracking-wider shadow-lg shadow-purple-500/20 transition-all border border-purple-400/20 border-l-0"
+                    className="h-12 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-2xs font-bold uppercase tracking-wider shadow-xl shadow-purple-500/30 transition-all border border-purple-400/30 border-l-0"
                     onClick={() => setShowLangPicker(!showLangPicker)}
                     title={`Lingua: ${currentFlag.label}`}
                   >
@@ -1984,11 +2046,11 @@ export default function GameDetailPage() {
             <Play className="h-3.5 w-3.5 fill-current" /> Gioca
           </button>
         )}
-        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-indigo-600/90 text-white font-bold text-2xs uppercase tracking-wider"
-          onClick={startAutoTranslate}
+        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-gradient-to-r from-indigo-600 to-violet-500 text-white font-bold text-2xs uppercase tracking-wider shadow-lg shadow-indigo-500/30"
+          onClick={handleStringIt}
           disabled={autoTranslateActive}
         >
-          {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />} {autoTranslateActive ? '...' : 'String it!'}
+          {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? '...' : 'String it!'}
         </button>
         <button className="h-9 px-2 flex items-center gap-0.5 rounded-r-lg bg-violet-600/90 text-white text-xs font-bold"
           onClick={() => setShowLangPicker(!showLangPicker)}
@@ -2267,6 +2329,15 @@ export default function GameDetailPage() {
                     disabled={isDismissingUpdate}
                   >
                     {isDismissingUpdate ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Segna come visto
+                  </button>
+                  {/* Smetti di monitorare */}
+                  <button
+                    className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-300/80 hover:text-red-200 border border-red-500/20 transition-all"
+                    onClick={untrackGame}
+                    disabled={isUntrackingGame}
+                    title="Rimuovi questo gioco dal monitoraggio aggiornamenti/patch"
+                  >
+                    {isUntrackingGame ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Smetti di monitorare
                   </button>
                 </div>
               </div>

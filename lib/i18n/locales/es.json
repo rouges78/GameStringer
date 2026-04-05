@@ -2568,7 +2568,9 @@
       "PROVIDER_MAP con mapeo automático de modelos",
       "Chain presets con fallback automático entre providers",
       "Completamente gratuito y offline"
-    ]
+    ],
+    "stores": "Tiendas",
+    "autotranslate": "Traducción Automática"
   },
   "gamePatcher": {
     "title": "Game Patcher",

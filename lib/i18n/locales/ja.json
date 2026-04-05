@@ -2297,7 +2297,9 @@
       "PROVIDER_MAPによる自動モデルマッピング",
       "プロバイダー間の自動フォールバック付きチェーンプリセット",
       "完全無料でオフライン対応"
-    ]
+    ],
+    "stores": "ストア",
+    "autotranslate": "自動翻訳"
   },
   "gamePatcher": {
     "title": "Game Patcher",

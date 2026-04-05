@@ -2,6 +2,15 @@
 
 ## 🚀 v1.6.0 - 2026-04-04
 
+- Prediction Tool (P.T.): analisi traduzione per-gioco con difficulty score 0-100, DRM detection, encoding analysis, translation complexity, confidence score, LLM time estimates su 18 modelli, 5 chain Local/Cloud/Hybrid, export report
+- P.T.Rank / Classifica Rapida: ranking giochi per difficoltà con ordine suggerito di traduzione
+- Dry Run Scanner: scansione batch 800+ giochi senza modifica file (bottone + pannello nella library), categorizzazione ready/errori/unsupported, report JSON
+- Workflow Orchestrator: real execution engine con fast path universale per 6+ engine e progress real-time
+- "String it!" quick action: bottone one-click sulla game card (hover) per lanciare il Translation Wizard
+- "String it!" smart gate: nel dettaglio gioco controlla se il gioco è già stato analizzato da P.T. (cache 24h) e, se no, suggerisce di eseguire prima P.T. via toast con azioni "Esegui P.T. prima" / "String it! comunque"
+- Game Update Tracker: bottone "Smetti di monitorare" per disattivare il tracking di un gioco (comando backend `remove_tracked_game`), fix toast "patch danneggiata" ricorrente
+- P.T. upgrade: parsing reale stringhe, 20+ engine supportati, Gemma 4 (27B MoE A4B / E4B / E2B) nei time estimates e chains
+- Ollama Manager: auto-discovery modelli dal registry ollama.com + auto-refresh al focus/navigazione
 - Bethesda Engine Patcher: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield con parser BSA v103-105 + BA2 GNRL/DX10 + ESP/ESM (FULL/DESC/NAM1)
 - CRI Middleware Patcher: parser CPK + CRILAYLA + MSG/BMD/FTD (Persona 5 Royal, Yakuza, Tales of, Dragon Ball) con rilevamento Shift-JIS/UTF-8/UTF-16
 - Unity Localization Package pipeline: StringTable, SharedTableData, Addressables catalog, Smart Strings tokenizer + validator

@@ -2297,7 +2297,9 @@
       "PROVIDER_MAP自动模型映射",
       "提供商之间自动回退的链式预设",
       "完全免费且离线可用"
-    ]
+    ],
+    "stores": "商店",
+    "autotranslate": "自动翻译"
   },
   "gamePatcher": {
     "title": "Game Patcher",

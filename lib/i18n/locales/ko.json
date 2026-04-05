@@ -1970,7 +1970,9 @@
     "subtitle": "사용 가이드",
     "gettingStarted": "시작하기",
     "advanced": "고급",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "stores": "스토어",
+    "autotranslate": "자동 번역"
   },
   "gamePatcher": {
     "title": "게임 패처",

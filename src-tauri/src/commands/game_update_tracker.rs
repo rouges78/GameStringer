@@ -290,3 +290,15 @@ pub async fn get_all_tracked_games() -> Result<serde_json::Value, String> {
     let store = load_store();
     Ok(serde_json::json!(store.games))
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// COMMAND: Rimuove un gioco dal tracking (smette di monitorarlo)
+// ──────────────────────────────────────────────────────────────────────────────
+#[command]
+pub async fn remove_tracked_game(app_id: String) -> Result<bool, String> {
+    let mut store = load_store();
+    let game_key = format!("steam_{}", app_id);
+    let removed = store.games.remove(&game_key).is_some();
+    save_store(&store)?;
+    Ok(removed)
+}
