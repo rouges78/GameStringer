@@ -40,9 +40,18 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
 
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0.5
@@ -51,6 +60,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
           updaterJsonKeepUniversal: true
@@ -211,9 +221,17 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
 
       - name: Generate icons for Linux bundler
         run: |
@@ -246,6 +264,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
@@ -297,9 +316,17 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
 
       - name: Generate icons for macOS bundler
         run: |
@@ -334,6 +361,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
@@ -349,6 +377,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
