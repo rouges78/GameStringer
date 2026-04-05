@@ -1,14 +1,26 @@
 {
-  "version": "1.6.0",
+  "version": "1.6.1",
   "major": 1,
   "minor": 6,
-  "patch": 0,
+  "patch": 1,
   "prerelease": null,
-  "buildNumber": 122,
-  "buildDate": "2026-04-04T21:48:43.118Z",
-  "gitHash": "59f2b31",
+  "buildNumber": 123,
+  "buildDate": "2026-04-05T00:00:00.000Z",
+  "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.6.1": {
+      "date": "2026-04-05",
+      "type": "patch",
+      "changes": [
+        "CI/CD: merge job per unificare latest.json da tutte le piattaforme (Windows/Linux/macOS)",
+        "CI/CD: guard step che fallisce la build se il signing non produce firme minisign valide",
+        "CI/CD: step 'Locate latest.json' per rilevare immediatamente se tauri-action non genera il manifest updater",
+        "Auto-update: rotata la chiave minisign di signing (pubkey B61C7704C9F3B554) — la vecchia non ha mai firmato nulla in CI",
+        "Docs: aggiunta RELEASE_PROCESS.md con procedura completa (signer, secrets, verifica, rollback)",
+        "Rimosso latest.json orfano dalla root del repo (placeholder con firme vuote)"
+      ]
+    },
     "1.5.0": {
       "date": "2026-03-24",
       "type": "feature",
