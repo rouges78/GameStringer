@@ -27,6 +27,7 @@ use serde::{Serialize, Deserialize};
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
+use crate::commands::encoding_utils;
 
 // ── Global VBIN cache — avoids re-reading and decompressing 5MB+61MB on every paginated call ──
 
@@ -346,17 +347,18 @@ fn extract_strings_from_binary(data: &[u8]) -> Result<Vec<VisString>, String> {
                 continue;
             }
             
-            // Check if it looks like valid UTF-8 text (not binary garbage)
-            if let Ok(text) = std::str::from_utf8(bytes) {
-                let trimmed = text.trim_end_matches('\0');
-                
+            // Decode text with encoding auto-detection (supports UTF-8, Windows-1252, etc.)
+            let (decoded, enc_result) = encoding_utils::auto_decode(bytes);
+            if enc_result.confidence >= 0.1 {
+                let trimmed = decoded.trim_end_matches('\0');
+
                 // Extra safety: reject strings that still have embedded nulls
                 // (real text has nulls only at the end as terminator)
                 if trimmed.contains('\0') {
                     pos += 1;
                     continue;
                 }
-                
+
                 if is_translatable_vis_string(trimmed) {
                     strings.push(VisString {
                         index,

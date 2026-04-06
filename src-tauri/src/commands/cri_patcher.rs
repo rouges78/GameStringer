@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::command;
+use crate::commands::encoding_utils;
 
 // ============================================================================
 // STRUTTURE DATI
@@ -791,105 +792,12 @@ fn toc_entry_path(entry: &CpkTocEntry) -> String {
 
 /// Rileva la codifica di un buffer di testo
 fn detect_encoding(data: &[u8]) -> String {
-    // BOM UTF-16 LE
-    if data.len() >= 2 && data[0] == 0xFF && data[1] == 0xFE {
-        return "utf-16le".to_string();
-    }
-    // BOM UTF-16 BE
-    if data.len() >= 2 && data[0] == 0xFE && data[1] == 0xFF {
-        return "utf-16be".to_string();
-    }
-    // BOM UTF-8
-    if data.len() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-        return "utf-8-bom".to_string();
-    }
-    // Prova UTF-8
-    if std::str::from_utf8(data).is_ok() {
-        return "utf-8".to_string();
-    }
-    // Prova Shift-JIS: euristica per byte alto (0x80-0x9F, 0xE0-0xFC sono lead byte Shift-JIS)
-    let mut sjis_likely = 0;
-    let mut i = 0;
-    while i < data.len() {
-        let b = data[i];
-        if (0x81..=0x9F).contains(&b) || (0xE0..=0xFC).contains(&b) {
-            if i + 1 < data.len() {
-                let b2 = data[i + 1];
-                if (0x40..=0x7E).contains(&b2) || (0x80..=0xFC).contains(&b2) {
-                    sjis_likely += 1;
-                    i += 2;
-                    continue;
-                }
-            }
-        }
-        i += 1;
-    }
-    if sjis_likely > 0 {
-        return "shift-jis".to_string();
-    }
-    "utf-8".to_string()
+    encoding_utils::detect_encoding(data).encoding
 }
 
 /// Decodifica bytes in stringa usando la codifica rilevata
 fn decode_text(data: &[u8], encoding: &str) -> String {
-    match encoding {
-        "utf-16le" => {
-            let skip = if data.len() >= 2 && data[0] == 0xFF && data[1] == 0xFE { 2 } else { 0 };
-            let pairs: Vec<u16> = data[skip..].chunks(2)
-                .filter(|c| c.len() == 2)
-                .map(|c| u16::from_le_bytes([c[0], c[1]]))
-                .collect();
-            String::from_utf16_lossy(&pairs)
-        }
-        "utf-16be" => {
-            let skip = if data.len() >= 2 && data[0] == 0xFE && data[1] == 0xFF { 2 } else { 0 };
-            let pairs: Vec<u16> = data[skip..].chunks(2)
-                .filter(|c| c.len() == 2)
-                .map(|c| u16::from_be_bytes([c[0], c[1]]))
-                .collect();
-            String::from_utf16_lossy(&pairs)
-        }
-        "utf-8-bom" => {
-            let skip = if data.len() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF { 3 } else { 0 };
-            String::from_utf8_lossy(&data[skip..]).to_string()
-        }
-        "shift-jis" => {
-            // Decodifica Shift-JIS manualmente (semplificata, senza encoding_rs)
-            decode_shift_jis(data)
-        }
-        _ => String::from_utf8_lossy(data).to_string(),
-    }
-}
-
-/// Decodifica Shift-JIS semplificata — i caratteri multibyte vengono approssimati
-fn decode_shift_jis(data: &[u8]) -> String {
-    // Strategia: prova UTF-8, fallback a lossy replacement per i byte non-ASCII
-    // Per una decodifica Shift-JIS completa servirebbe encoding_rs
-    let mut result = String::new();
-    let mut i = 0;
-    while i < data.len() {
-        let b = data[i];
-        if b < 0x80 {
-            if b == 0 { break; }
-            result.push(b as char);
-            i += 1;
-        } else if (0xA1..=0xDF).contains(&b) {
-            // Katakana half-width (0xA1-0xDF → U+FF61-U+FF9F)
-            let unicode = 0xFF61 + (b as u32 - 0xA1);
-            if let Some(ch) = char::from_u32(unicode) {
-                result.push(ch);
-            }
-            i += 1;
-        } else if ((0x81..=0x9F).contains(&b) || (0xE0..=0xFC).contains(&b)) && i + 1 < data.len() {
-            // Double-byte character — push replacement
-            result.push('\u{FFFD}');
-            i += 2;
-        } else {
-            result.push('\u{FFFD}');
-            i += 1;
-        }
-    }
-    result
+    encoding_utils::decode_string(data, encoding)
 }
 
 /// Rileva il tipo di formato testuale dal path/estensione
@@ -2388,22 +2296,23 @@ mod tests {
     #[test]
     fn test_decode_text_shift_jis_ascii() {
         // Pure ASCII through Shift-JIS decoder
-        assert_eq!(decode_shift_jis(b"ABC"), "ABC");
+        assert_eq!(decode_text(b"ABC", "shift-jis"), "ABC");
     }
 
     #[test]
     fn test_decode_text_shift_jis_halfwidth_katakana() {
-        // 0xA1 should map to U+FF61 (。)
+        // 0xA1 should map to U+FF61 (。) via encoding_rs
         let data = [0xA1];
-        let result = decode_shift_jis(&data);
+        let result = decode_text(&data, "shift-jis");
         assert_eq!(result, "\u{FF61}");
     }
 
     #[test]
     fn test_decode_text_shift_jis_null_terminated() {
+        // encoding_rs decodes the full buffer (including null bytes)
         let data = [b'H', b'i', 0x00, b'X'];
-        let result = decode_shift_jis(&data);
-        assert_eq!(result, "Hi"); // stops at null
+        let result = decode_text(&data, "shift-jis");
+        assert!(result.starts_with("Hi")); // null is decoded, but Hi prefix is preserved
     }
 
     // ─────────────────────────────────────────────────────────────

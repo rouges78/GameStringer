@@ -8,6 +8,19 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tauri::command;
 
+use crate::commands::encoding_utils;
+
+/// Decode bytes that may be UTF-8 or Windows-1252 (common in Bethesda mods).
+/// Tries UTF-8 first; falls back to Windows-1252 via encoding_utils for proper
+/// handling of accented characters (é, ö, ü, ñ, etc.) in European translations.
+/// Bethesda games (Skyrim, Fallout, Oblivion) use Windows-1252 for non-UTF-8 strings.
+fn decode_lossy(data: &[u8]) -> String {
+    match std::str::from_utf8(data) {
+        Ok(s) => s.to_string(),
+        Err(_) => encoding_utils::decode_string(data, "windows-1252"),
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // STRUCTS
 // ═══════════════════════════════════════════════════════════════════
@@ -134,7 +147,7 @@ fn read_bzstring(data: &[u8], offset: &mut usize) -> Result<String, String> {
     *offset += len;
     // Remove trailing null if present
     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
-    Ok(String::from_utf8_lossy(&bytes[..end]).to_string())
+    Ok(decode_lossy(&bytes[..end]))
 }
 
 fn read_zstring(data: &[u8], offset: &mut usize) -> Result<String, String> {
@@ -143,7 +156,7 @@ fn read_zstring(data: &[u8], offset: &mut usize) -> Result<String, String> {
     while *offset < data.len() && data[*offset] != 0 {
         *offset += 1;
     }
-    let s = String::from_utf8_lossy(&data[start..*offset]).to_string();
+    let s = decode_lossy(&data[start..*offset]);
     if *offset < data.len() {
         *offset += 1; // skip null terminator
     }
@@ -160,7 +173,7 @@ fn read_wstring(data: &[u8], offset: &mut usize) -> Result<String, String> {
     let bytes = &data[*offset..*offset + len];
     *offset += len;
     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
-    Ok(String::from_utf8_lossy(&bytes[..end]).to_string())
+    Ok(decode_lossy(&bytes[..end]))
 }
 
 fn read_bytes(data: &[u8], offset: &mut usize, count: usize) -> Result<Vec<u8>, String> {
@@ -715,7 +728,7 @@ fn parse_strings_file(data: &[u8], file_type: &str) -> Result<Vec<StringEntry>, 
                 } else {
                     let bytes = &data[soff..soff + str_size];
                     let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
-                    String::from_utf8_lossy(&bytes[..end]).to_string()
+                    decode_lossy(&bytes[..end])
                 }
             }
             _ => {
@@ -946,7 +959,7 @@ fn parse_plugin_strings(data: &[u8]) -> Result<Vec<PluginStringEntry>, String> {
             // Capture EDID for context
             if field_type == "EDID" && field_size > 0 {
                 let end = field_data.iter().position(|&b| b == 0).unwrap_or(field_data.len());
-                editor_id = String::from_utf8_lossy(&field_data[..end]).to_string();
+                editor_id = decode_lossy(&field_data[..end]);
             }
 
             // Check if this is a translatable field
@@ -965,7 +978,7 @@ fn parse_plugin_strings(data: &[u8]) -> Result<Vec<PluginStringEntry>, String> {
                     // Non-localized: null-terminated string
                     if field_size > 0 {
                         let end = field_data.iter().position(|&b| b == 0).unwrap_or(field_data.len());
-                        String::from_utf8_lossy(&field_data[..end]).to_string()
+                        decode_lossy(&field_data[..end])
                     } else {
                         String::new()
                     }
@@ -2215,8 +2228,8 @@ mod tests {
 
     #[test]
     fn test_strings_windows1252_encoding() {
-        // Windows-1252 bytes for "Schwert der Stärke" where ä = 0xE4 in Win-1252
-        // from_utf8_lossy should replace it with U+FFFD
+        // Windows-1252 bytes for "Stärke" where ä = 0xE4 in Win-1252
+        // With encoding_utils integration, 0xE4 is properly decoded as ä
         let mut buf = Vec::new();
         buf.extend_from_slice(&1u32.to_le_bytes()); // count
         let text_bytes: &[u8] = &[0x53, 0x74, 0xE4, 0x72, 0x6B, 0x65, 0x00]; // "St\xE4rke\0"
@@ -2228,10 +2241,8 @@ mod tests {
         let result = parse_strings_file(&buf, "strings").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, 1);
-        // Non-UTF8 byte 0xE4 gets replaced by \u{FFFD}
-        assert!(result[0].value.contains("St"));
-        assert!(result[0].value.contains("rke"));
-        assert_eq!(result[0].value.len(), "St\u{FFFD}rke".len());
+        // Windows-1252 byte 0xE4 is properly decoded as ä (U+00E4)
+        assert_eq!(result[0].value, "Stärke");
     }
 
     #[test]

@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::command;
+use crate::commands::encoding_utils;
 
 // ============================================================================
 // STRUTTURE DATI
@@ -362,11 +363,10 @@ fn extract_strings_from_binary(data: &[u8]) -> Vec<String> {
         } else if in_string {
             // Fine stringa
             if current.len() >= 4 {
-                // Prova UTF-8
-                if let Ok(s) = String::from_utf8(current.clone()) {
-                    if !s.trim().is_empty() {
-                        strings.push(s);
-                    }
+                // Auto-detect encoding (supports UTF-8, Shift-JIS, etc.)
+                let (s, _enc) = encoding_utils::auto_decode(&current);
+                if !s.trim().is_empty() {
+                    strings.push(s);
                 }
             }
             current.clear();
@@ -689,11 +689,14 @@ mod tests {
 
     #[test]
     fn extract_strings_from_binary_high_bytes() {
-        // Bytes >= 0x80 are included in strings (for Shift-JIS / UTF-8 multi-byte)
+        // Bytes >= 0x80 are included in strings (for Shift-JIS / UTF-8 multi-byte).
+        // With encoding auto-detection, non-UTF-8 bytes are now decoded
+        // (e.g., as Shift-JIS or Windows-1252) instead of being discarded.
         let data = b"\x00\x80\x81\x82\x83\x84\x00";
         let result = extract_strings_from_binary(data);
-        // These aren't valid UTF-8, so from_utf8 will fail
-        assert!(result.is_empty());
+        // auto_decode will decode these high bytes via detected encoding
+        assert_eq!(result.len(), 1);
+        assert!(!result[0].trim().is_empty());
     }
 
     // --- get_wolfrpg_translation_stats ---

@@ -68,6 +68,9 @@ pub mod gspack;
 #[allow(dead_code, unused_imports)]
 pub mod notifications;
 
+// === Shared utilities ===
+pub mod encoding_utils;
+
 // === Game engine patchers (cross-platform, file-based) ===
 pub mod unity_patcher;
 pub mod unity_bundle;

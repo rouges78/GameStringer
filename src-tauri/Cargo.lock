@@ -1293,6 +1293,7 @@ dependencies = [
  "chrono",
  "crc32fast",
  "dirs",
+ "encoding_rs",
  "flate2",
  "futures",
  "hmac",

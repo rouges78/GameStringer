@@ -7,6 +7,7 @@ use std::fs;
 // std::io imports removed — patching uses extend_from_slice on Vec<u8>
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
+use crate::commands::encoding_utils;
 
 // ── Types ──
 
@@ -60,7 +61,8 @@ fn _write_u32_le(data: &mut [u8], pos: usize, val: u32) {
     data[pos..pos+4].copy_from_slice(&bytes);
 }
 
-/// Read a null-terminated UTF-8 string from data at given offset
+/// Read a length-prefixed string from data at given offset.
+/// GameMaker STRG strings may be UTF-8, Windows-1252, or Shift-JIS.
 fn read_gm_string(data: &[u8], offset: usize) -> String {
     if offset >= data.len() { return String::new(); }
     // GameMaker strings: 4-byte length prefix, then chars, then null terminator
@@ -68,7 +70,24 @@ fn read_gm_string(data: &[u8], offset: usize) -> String {
     let start = offset + 4;
     let end = (start + len).min(data.len());
     if start >= data.len() { return String::new(); }
-    String::from_utf8_lossy(&data[start..end]).to_string()
+    let bytes = &data[start..end];
+    // Try UTF-8 first (most common in modern GameMaker)
+    if let Ok(s) = std::str::from_utf8(bytes) {
+        return s.to_string();
+    }
+    // Non-UTF-8: detect encoding (Windows-1252, Shift-JIS, etc.)
+    // Note: STRG strings are never UTF-16, so we use detect_encoding but
+    // override any false-positive BOM detection (short byte sequences can
+    // coincidentally start with 0xFF 0xFE).
+    let enc_result = encoding_utils::detect_encoding(bytes);
+    let encoding = if enc_result.encoding.starts_with("utf-16") {
+        // STRG chunk strings are single-byte or multi-byte, never UTF-16;
+        // fall back to Windows-1252 which covers the full 0x00-0xFF range.
+        "windows-1252"
+    } else {
+        &enc_result.encoding
+    };
+    encoding_utils::decode_string(bytes, encoding)
 }
 
 /// Detect GM version from chunks present
@@ -1321,7 +1340,7 @@ mod tests {
         data.push(b'A');
         data.push(0);
         let result = read_gm_string(&data, 0);
-        // Should contain replacement chars but not panic
+        // Should decode non-UTF-8 bytes via encoding detection and not panic
         assert!(result.contains('A'));
     }
 

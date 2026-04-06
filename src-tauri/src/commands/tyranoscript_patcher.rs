@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use tauri::command;
+use crate::commands::encoding_utils;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TyranoGame {
@@ -316,7 +317,8 @@ fn scan_ks_header(
                     .and_then(|os| {
                         let off: u64 = os.parse().ok()?;
                         let d = read_asar_file(asar, doff, off, sz).ok()?;
-                        Some(count_ks_strings(&String::from_utf8(d).ok()?))
+                        let (text, _enc) = encoding_utils::auto_decode(&d);
+                        Some(count_ks_strings(&text))
                     }).unwrap_or(0);
                 files.push(TyranoScriptFile {
                     path: ep.to_string_lossy().replace('\\', "/"),
@@ -409,15 +411,15 @@ pub fn extract_tyrano_strings(
         let (hdr, doff) = read_asar_header(asar)?;
         for sf in &game.script_files {
             if let Some(data) = find_file_data(&hdr, asar, doff, &sf.path) {
-                if let Ok(text) = String::from_utf8(data) {
-                    all.extend(parse_ks_strings(&text, &sf.filename));
-                    done += 1;
-                }
+                let (text, _enc) = encoding_utils::auto_decode(&data);
+                all.extend(parse_ks_strings(&text, &sf.filename));
+                done += 1;
             }
         }
     } else {
         for sf in &game.script_files {
-            if let Ok(text) = fs::read_to_string(&sf.path) {
+            if let Ok(raw_bytes) = fs::read(&sf.path) {
+                let (text, _enc) = encoding_utils::auto_decode(&raw_bytes);
                 all.extend(parse_ks_strings(&text, &sf.filename));
                 done += 1;
             }

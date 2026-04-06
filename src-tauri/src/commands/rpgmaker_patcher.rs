@@ -7,6 +7,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::command;
 
+use crate::commands::encoding_utils;
+
 // ============================================================================
 // STRUTTURE DATI
 // ============================================================================
@@ -361,14 +363,17 @@ impl<'a> MarshalParser<'a> {
         Some(bytes)
     }
 
-    /// Read a Marshal string (length-prefixed bytes)
+    /// Read a Marshal string (length-prefixed bytes).
+    /// Uses encoding_utils::auto_decode for proper Shift-JIS support
+    /// (RPG Maker XP/VX/VXAce games are often Japanese).
     fn read_raw_string(&mut self) -> Option<String> {
         let len = self.read_marshal_long()? as usize;
         if len > self.remaining() {
             return None;
         }
         let bytes = self.read_bytes(len)?;
-        Some(String::from_utf8_lossy(&bytes).to_string())
+        let (decoded, _enc) = encoding_utils::auto_decode(&bytes);
+        Some(decoded)
     }
 
     /// Read a symbol
@@ -644,7 +649,8 @@ impl<'a> MarshalParser<'a> {
                     else if b > 4 { (b as i32 - 5) as usize }
                     else { return None; };
                 if pos + len > self.data.len() { return None; }
-                Some(String::from_utf8_lossy(&self.data[pos..pos + len]).to_string())
+                let (decoded, _enc) = encoding_utils::auto_decode(&self.data[pos..pos + len]);
+                Some(decoded)
             }
             b';' => {
                 // Symlink — reference by index
@@ -676,7 +682,8 @@ impl<'a> MarshalParser<'a> {
                         else if b > 4 { (b as i32 - 5) as usize }
                         else { return None; };
                     if pos + len > self.data.len() { return None; }
-                    Some(String::from_utf8_lossy(&self.data[pos..pos + len]).to_string())
+                    let (decoded, _enc) = encoding_utils::auto_decode(&self.data[pos..pos + len]);
+                    Some(decoded)
                 } else {
                     None
                 }

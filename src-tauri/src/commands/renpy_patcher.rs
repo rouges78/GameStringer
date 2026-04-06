@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::command;
-use regex::Regex;
+use crate::commands::encoding_utils;
 
 // ============================================================================
 // STRUTTURE DATI
@@ -241,9 +241,10 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
         return Err("File non trovato".to_string());
     }
     
-    let content = fs::read_to_string(&file_path)
+    let raw_bytes = fs::read(&file_path)
         .map_err(|e| format!("Errore lettura file: {}", e))?;
-    
+    let (content, _enc) = encoding_utils::auto_decode(&raw_bytes);
+
     let filename = path.file_name()
         .and_then(|n| n.to_str())
         .unwrap_or("unknown")
@@ -251,85 +252,214 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
     
     let mut strings = Vec::new();
     let mut id_counter = 0u32;
-    
-    // Pattern per dialoghi: character "text" o "text" (narrazione)
-    let dialogue_regex = Regex::new(r#"^\s*(\w+)?\s*"([^"]+)"#).unwrap();
-    // Pattern per menu
-    let menu_regex = Regex::new(r#"^\s*"([^"]+)":\s*$"#).unwrap();
-    
-    for (line_num, line) in content.lines().enumerate() {
+
+    // ── AST-lite state-machine parser ──────────────────────────────────
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    #[allow(dead_code)]
+    enum BlockKind { Normal, Python, Screen, Menu, Translate }
+
+    /// Track block context by indentation level
+    struct BlockCtx {
+        indent: usize,
+        kind: BlockKind,
+    }
+
+    let mut block_stack: Vec<BlockCtx> = Vec::new();
+    let lines: Vec<&str> = content.lines().collect();
+    let mut line_idx = 0;
+
+    // Screen-text keywords whose first quoted argument is user-visible text
+    let screen_text_kw: &[&str] = &["text ", "textbutton ", "label ", "vbox:", "hbox:"];
+
+    while line_idx < lines.len() {
+        let line = lines[line_idx];
         let trimmed = line.trim();
-        
-        // Salta commenti e linee vuote
+
+        // Measure indentation (spaces; treat tab as 4 spaces)
+        let indent: usize = line.chars().take_while(|c| c.is_whitespace())
+            .map(|c| if c == '\t' { 4 } else { 1 }).sum();
+
+        // Pop blocks that we have un-indented out of
+        while let Some(top) = block_stack.last() {
+            if indent <= top.indent { block_stack.pop(); } else { break; }
+        }
+
+        let in_python = block_stack.iter().any(|b| b.kind == BlockKind::Python);
+
+        // Skip comments and blank lines
         if trimmed.starts_with('#') || trimmed.is_empty() {
+            line_idx += 1;
             continue;
         }
-        
-        // Salta definizioni e codice
-        if trimmed.starts_with("define ") || 
-           trimmed.starts_with("init ") ||
-           trimmed.starts_with("python:") ||
-           trimmed.starts_with("$") ||
-           trimmed.starts_with("if ") ||
-           trimmed.starts_with("elif ") ||
-           trimmed.starts_with("else:") ||
-           trimmed.starts_with("label ") ||
-           trimmed.starts_with("jump ") ||
-           trimmed.starts_with("call ") ||
-           trimmed.starts_with("return") ||
-           trimmed.starts_with("show ") ||
-           trimmed.starts_with("hide ") ||
-           trimmed.starts_with("scene ") ||
-           trimmed.starts_with("play ") ||
-           trimmed.starts_with("stop ") ||
-           trimmed.starts_with("with ") {
+
+        // Skip if we are inside a python block
+        if in_python {
+            line_idx += 1;
             continue;
         }
-        
-        // Controlla menu
-        if let Some(caps) = menu_regex.captures(trimmed) {
-            if let Some(text) = caps.get(1) {
-                id_counter += 1;
-                strings.push(RenpyString {
-                    id: format!("{}_{}", filename.replace('.', "_"), id_counter),
-                    original: text.as_str().to_string(),
-                    translated: String::new(),
-                    file: filename.clone(),
-                    line_number: (line_num + 1) as u32,
-                    string_type: RenpyStringType::Menu,
-                    character: None,
-                });
+
+        // ── Detect new blocks ──────────────────────────────────────────
+        if trimmed.starts_with("python:") || trimmed.starts_with("init python:") || trimmed.starts_with("init ") && trimmed.contains("python:") {
+            block_stack.push(BlockCtx { indent, kind: BlockKind::Python });
+            line_idx += 1;
+            continue;
+        }
+        if trimmed.starts_with("screen ") {
+            block_stack.push(BlockCtx { indent, kind: BlockKind::Screen });
+            line_idx += 1;
+            continue;
+        }
+        if trimmed == "menu:" || trimmed.starts_with("menu ") {
+            block_stack.push(BlockCtx { indent, kind: BlockKind::Menu });
+            line_idx += 1;
+            continue;
+        }
+        if trimmed.starts_with("translate ") {
+            block_stack.push(BlockCtx { indent, kind: BlockKind::Translate });
+            line_idx += 1;
+            continue;
+        }
+
+        // ── Skip keywords that are not extractable ─────────────────────
+        let skip_keywords: &[&str] = &[
+            "define ", "init ", "$", "if ", "elif ", "else:", "label ",
+            "jump ", "call ", "return", "show ", "hide ", "scene ",
+            "play ", "stop ", "with ", "transform ", "style ",
+            "image ", "default ", "pause", "window ", "pass",
+        ];
+        let is_skip_keyword = skip_keywords.iter().any(|kw| trimmed.starts_with(kw));
+        // Don't skip if we are inside a screen/translate block and the
+        // line contains a quoted string we should extract
+        let in_screen = block_stack.iter().any(|b| b.kind == BlockKind::Screen);
+        let in_translate = block_stack.iter().any(|b| b.kind == BlockKind::Translate);
+
+        if is_skip_keyword && !in_screen && !in_translate {
+            line_idx += 1;
+            continue;
+        }
+
+        // ── Screen text: text "...", textbutton "...", action Notify("...") ─
+        if in_screen {
+            // Extract all quoted strings from screen-text keywords
+            let is_screen_text = screen_text_kw.iter().any(|kw| trimmed.starts_with(kw));
+            let has_notify = trimmed.contains("Notify(\"") || trimmed.contains("Notify('");
+
+            if is_screen_text || has_notify {
+                for extracted in extract_quoted_strings(trimmed) {
+                    if extracted.len() > 1 {
+                        id_counter += 1;
+                        strings.push(RenpyString {
+                            id: format!("{}_{}", filename.replace('.', "_"), id_counter),
+                            original: extracted,
+                            translated: String::new(),
+                            file: filename.clone(),
+                            line_number: (line_idx + 1) as u32,
+                            string_type: RenpyStringType::String,
+                            character: None,
+                        });
+                    }
+                }
+                line_idx += 1;
+                continue;
             }
+            // Other screen lines (action, style, etc.) -- skip
+            line_idx += 1;
             continue;
         }
-        
-        // Controlla dialoghi
-        if let Some(caps) = dialogue_regex.captures(trimmed) {
-            let character = caps.get(1).map(|m| m.as_str().to_string());
-            if let Some(text) = caps.get(2) {
-                let text_str = text.as_str().to_string();
-                
-                // Ignora stringhe troppo corte o che sembrano codice
-                if text_str.len() > 1 && !text_str.contains("\\") {
+
+        // ── Triple-quoted strings """...""" ─────────────────────────────
+        if trimmed.contains("\"\"\"") {
+            let (text, consumed) = parse_triple_quoted(trimmed, &lines, line_idx);
+            if let Some(text) = text {
+                if text.len() > 1 {
+                    // Detect character prefix before the triple quote
+                    let before_quote = trimmed.split("\"\"\"").next().unwrap_or("").trim();
+                    let character = if !before_quote.is_empty() && before_quote.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                        Some(before_quote.to_string())
+                    } else {
+                        None
+                    };
+
                     id_counter += 1;
                     let string_type = if character.is_some() {
                         RenpyStringType::Dialogue
                     } else {
                         RenpyStringType::Narration
                     };
-                    
                     strings.push(RenpyString {
                         id: format!("{}_{}", filename.replace('.', "_"), id_counter),
-                        original: text_str,
+                        original: text,
                         translated: String::new(),
                         file: filename.clone(),
-                        line_number: (line_num + 1) as u32,
+                        line_number: (line_idx + 1) as u32,
+                        string_type,
+                        character,
+                    });
+                }
+            }
+            line_idx += consumed;
+            continue;
+        }
+
+        // ── Menu choices: "text": ──────────────────────────────────────
+        if trimmed.ends_with("\":") || trimmed.ends_with("\": ") {
+            if let Some(text) = extract_first_quoted(trimmed) {
+                if text.len() > 1 {
+                    id_counter += 1;
+                    strings.push(RenpyString {
+                        id: format!("{}_{}", filename.replace('.', "_"), id_counter),
+                        original: text,
+                        translated: String::new(),
+                        file: filename.clone(),
+                        line_number: (line_idx + 1) as u32,
+                        string_type: RenpyStringType::Menu,
+                        character: None,
+                    });
+                }
+            }
+            line_idx += 1;
+            continue;
+        }
+
+        // ── Dialogue / Narration / Translate text ──────────────────────
+        if let Some(first_q) = trimmed.find('"') {
+            // Everything before the first quote is the potential character name
+            let before = trimmed[..first_q].trim();
+            // Extract the quoted string (handling escaped quotes)
+            if let Some(text) = extract_first_quoted(trimmed) {
+                if text.len() > 1 {
+                    let character = if !before.is_empty()
+                        && before.chars().all(|c| c.is_alphanumeric() || c == '_')
+                        && !is_skip_keyword
+                    {
+                        Some(before.to_string())
+                    } else {
+                        None
+                    };
+
+                    let string_type = if in_translate {
+                        RenpyStringType::Narration
+                    } else if character.is_some() {
+                        RenpyStringType::Dialogue
+                    } else {
+                        RenpyStringType::Narration
+                    };
+
+                    id_counter += 1;
+                    strings.push(RenpyString {
+                        id: format!("{}_{}", filename.replace('.', "_"), id_counter),
+                        original: text,
+                        translated: String::new(),
+                        file: filename.clone(),
+                        line_number: (line_idx + 1) as u32,
                         string_type,
                         character,
                     });
                 }
             }
         }
+
+        line_idx += 1;
     }
     
     let total_count = strings.len() as u32;
@@ -342,6 +472,89 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
         strings,
         total_count,
     })
+}
+
+/// Extract the first double-quoted string from a line, handling escaped quotes.
+fn extract_first_quoted(s: &str) -> Option<String> {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    // Find opening quote
+    while i < bytes.len() {
+        if bytes[i] == b'"' { break; }
+        i += 1;
+    }
+    if i >= bytes.len() { return None; }
+    i += 1; // skip opening quote
+    let mut result = String::new();
+    while i < bytes.len() {
+        if bytes[i] == b'\\' && i + 1 < bytes.len() {
+            // Keep escape sequences as-is in the extracted string
+            result.push('\\');
+            result.push(bytes[i + 1] as char);
+            i += 2;
+        } else if bytes[i] == b'"' {
+            return if result.is_empty() { None } else { Some(result) };
+        } else {
+            result.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+    None // unterminated string
+}
+
+/// Extract all double-quoted strings from a line.
+fn extract_quoted_strings(s: &str) -> Vec<String> {
+    let mut results = Vec::new();
+    let mut remaining = s;
+    while let Some(pos) = remaining.find('"') {
+        if let Some(text) = extract_first_quoted(&remaining[pos..]) {
+            results.push(text.clone());
+            // Advance past the closing quote
+            let skip = text.len() + 2; // opening quote + content + closing quote (approximate)
+            if pos + 1 + skip <= remaining.len() {
+                remaining = &remaining[pos + 1 + skip..];
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    results
+}
+
+/// Parse a triple-quoted string ("""..."""), potentially spanning multiple lines.
+/// Returns (Some(text), lines_consumed) or (None, 1) on failure.
+fn parse_triple_quoted(first_trimmed: &str, lines: &[&str], start_idx: usize) -> (Option<String>, usize) {
+    // Find the opening """
+    let open_pos = match first_trimmed.find("\"\"\"") {
+        Some(p) => p,
+        None => return (None, 1),
+    };
+    let after_open = &first_trimmed[open_pos + 3..];
+
+    // Check if closing """ is on the same line
+    if let Some(close_pos) = after_open.find("\"\"\"") {
+        let text = after_open[..close_pos].to_string();
+        return (Some(text), 1);
+    }
+
+    // Multi-line: collect until we find closing """
+    let mut parts = vec![after_open.to_string()];
+    let mut idx = start_idx + 1;
+    while idx < lines.len() {
+        let line = lines[idx];
+        if let Some(close_pos) = line.find("\"\"\"") {
+            let before_close = line[..close_pos].to_string();
+            // Trim the indentation from intermediate lines but keep the text
+            parts.push(before_close.trim().to_string());
+            let text = parts.join("\n");
+            return (Some(text.trim().to_string()), idx - start_idx + 1);
+        }
+        parts.push(line.trim().to_string());
+        idx += 1;
+    }
+    (None, 1) // unterminated
 }
 
 /// Estrai tutte le stringhe da un gioco Ren'Py
@@ -797,10 +1010,11 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_skips_strings_with_backslash() {
-        // Strings containing backslash are ignored
-        let result = write_rpy_and_extract(r#"    e "path\to\file""#);
-        assert_eq!(result.total_count, 0);
+    fn test_extract_keeps_strings_with_backslash() {
+        // Strings with escape sequences should NOT be filtered out
+        let result = write_rpy_and_extract(r#"    e "Hello\nWorld""#);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, r"Hello\nWorld");
     }
 
     #[test]
@@ -1181,5 +1395,165 @@ mod tests {
             let json = serde_json::to_string(&s).unwrap();
             let _: RenpyString = serde_json::from_str(&json).unwrap();
         }
+    }
+
+    // ── AST-lite parser: new capability tests ──────────────────────────
+
+    #[test]
+    fn test_extract_triple_quoted_single_line() {
+        let result = write_rpy_and_extract(r#"    e """Hello triple world!""""#);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Hello triple world!");
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Dialogue));
+        assert_eq!(result.strings[0].character, Some("e".to_string()));
+    }
+
+    #[test]
+    fn test_extract_triple_quoted_multiline() {
+        let content = "    \"\"\"\n    This is line one.\n    This is line two.\n    \"\"\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains("This is line one."));
+        assert!(result.strings[0].original.contains("This is line two."));
+    }
+
+    #[test]
+    fn test_extract_triple_quoted_narration() {
+        let result = write_rpy_and_extract(r#"    """Narration triple text""""#);
+        assert_eq!(result.total_count, 1);
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Narration));
+        assert_eq!(result.strings[0].character, None);
+    }
+
+    #[test]
+    fn test_extract_screen_text() {
+        let content = "screen settings():\n    text \"Settings\"\n    textbutton \"Save Game\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 2);
+        assert_eq!(result.strings[0].original, "Settings");
+        assert_eq!(result.strings[1].original, "Save Game");
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::String));
+    }
+
+    #[test]
+    fn test_extract_screen_notify() {
+        let content = "screen prefs():\n    textbutton \"Click\" action Notify(\"Saved!\")";
+        let result = write_rpy_and_extract(content);
+        // Should extract both "Click" and "Saved!"
+        assert!(result.total_count >= 2);
+        let texts: Vec<&str> = result.strings.iter().map(|s| s.original.as_str()).collect();
+        assert!(texts.contains(&"Click"));
+        assert!(texts.contains(&"Saved!"));
+    }
+
+    #[test]
+    fn test_extract_menu_choice_with_colon() {
+        let content = "menu:\n        \"Go to the park\":\n        \"Stay home\":";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 2);
+        assert_eq!(result.strings[0].original, "Go to the park");
+        assert_eq!(result.strings[1].original, "Stay home");
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Menu));
+        assert!(matches!(result.strings[1].string_type, RenpyStringType::Menu));
+    }
+
+    #[test]
+    fn test_extract_escape_sequences_preserved() {
+        // Escaped quotes inside dialogue
+        let result = write_rpy_and_extract(r#"    e "She said \"hello\" to me""#);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains("\\\"hello\\\""));
+    }
+
+    #[test]
+    fn test_extract_interpolation_preserved() {
+        let result = write_rpy_and_extract(r#"    e "Hello [player_name], welcome!""#);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains("[player_name]"));
+    }
+
+    #[test]
+    fn test_extract_renpy_tags_preserved() {
+        let result = write_rpy_and_extract(r#"    e "{b}Bold{/b} and {i}italic{/i} text""#);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains("{b}"));
+        assert!(result.strings[0].original.contains("{/b}"));
+        assert!(result.strings[0].original.contains("{i}"));
+    }
+
+    #[test]
+    fn test_extract_color_tags_preserved() {
+        let result = write_rpy_and_extract(r#"    e "{color=#ff0000}Red text{/color}""#);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains("{color=#ff0000}"));
+    }
+
+    #[test]
+    fn test_extract_translate_block() {
+        let content = "translate spanish start_abc:\n    \"Translated narration text here\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Translated narration text here");
+    }
+
+    #[test]
+    fn test_extract_skips_python_block() {
+        let content = "python:\n    x = \"not extractable\"\n    y = 42\n\n    e \"After python\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "After python");
+    }
+
+    #[test]
+    fn test_extract_skips_init_python_block() {
+        let content = "init python:\n    config.foo = \"bar\"\n\n    e \"After init python\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "After init python");
+    }
+
+    #[test]
+    fn test_extract_skips_transform_keyword() {
+        let result = write_rpy_and_extract("transform my_transform:");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_style_keyword() {
+        let result = write_rpy_and_extract("style my_style:");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_indentation_tracking() {
+        // Label keyword itself is skipped, but dialogue inside is extracted
+        let content = "label start:\n    e \"Inside label\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Inside label");
+    }
+
+    #[test]
+    fn test_extract_screen_label_text() {
+        let content = "screen info():\n    label \"Important Notice\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Important Notice");
+    }
+
+    #[test]
+    fn test_extract_newline_escape_in_dialogue() {
+        let result = write_rpy_and_extract(r#"    e "Line one\nLine two""#);
+        assert_eq!(result.total_count, 1);
+        assert!(result.strings[0].original.contains(r"\n"));
+    }
+
+    #[test]
+    fn test_extract_triple_quoted_with_character() {
+        let content = "    narrator \"\"\"A long speech\nthat spans lines.\"\"\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].character, Some("narrator".to_string()));
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Dialogue));
     }
 }
