@@ -1,234 +1,263 @@
-# GameStringer — Release Process
+# GameStringer -- Release Process
 
-Complete procedure to ship a new version **with working auto-update** on all platforms (Windows / macOS / Linux).
+Complete procedure to ship a new version **with working auto-update** on
+Windows, macOS, and Linux.
 
-> If auto-update is broken for end users, **90% of the time** the cause is in one of the first three sections below. Read them carefully.
+This document was rewritten after the v1.6.1 pipeline debugging marathon.
+Every section reflects a real failure mode we hit. Read it before your
+first release.
 
 ---
 
-## 1. Prerequisites (one-time setup)
+## 1. Prerequisites
 
-### 1.1 Minisign signing key
+### 1.1 Rust / Tauri crate versions
 
-Tauri's updater requires every release artifact to be signed with a minisign keypair. The private key lives only on the maintainer's machine + in GitHub Secrets; the public key is hardcoded in `src-tauri/tauri.conf.json`.
+| Dependency | Minimum | Why |
+|---|---|---|
+| `tauri` (Cargo) | 2.10.3 | Fixes `__TAURI_BUNDLE_TYPE` marker injection bug (tauri#14186) |
+| `tauri-build` (Cargo) | 2.10.3 | Must match the tauri crate |
+| `@tauri-apps/cli` (npm) | 2.10.1 | Must match the crate major.minor |
 
-**Generate (only once, ever):**
+### 1.2 tauri.conf.json -- updater bundle generation
 
-```bash
-npm run tauri -- signer generate -w ~/.tauri/gamestringer.key
+The bundle config **must** include `createUpdaterArtifacts`. Without it,
+`tauri-cli` will build installers but will **not** produce the updater
+bundles (`.nsis.zip`, `.app.tar.gz`, `.AppImage.tar.gz`) or their `.sig`
+signature files.
+
+```jsonc
+// src-tauri/tauri.conf.json
+"bundle": {
+  "createUpdaterArtifacts": "v1Compatible",
+  // ... other bundle settings
+}
 ```
 
-This produces:
-- `~/.tauri/gamestringer.key` — **private key** (password-protected). Keep offline. Back up.
-- `~/.tauri/gamestringer.key.pub` — public key.
+### 1.3 tauri-action version
 
-**Sync the public key** into the app so installed clients can verify updates:
+The GitHub Actions workflow must use **`tauri-apps/tauri-action@v0`**
+(currently resolves to v0.6.2+). Do **not** pin to `@v0.5` -- that older
+version has outdated file-name patterns and will fail with
+"Signature not found for the updater JSON".
+
+### 1.4 Minisign signing key
+
+Tauri's updater requires every release artifact to carry a minisign
+signature. The private key lives in GitHub Secrets; the public key is
+embedded in `src-tauri/tauri.conf.json`.
+
+Current pubkey ID: **`4A3AB8216DBA077E`**
+
+The key was generated with `rsign2` using the `-W` flag (no password),
+which avoids CI password-handling issues.
 
 ```jsonc
 // src-tauri/tauri.conf.json
 "plugins": {
   "updater": {
-    "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFDQTcwNjNGQTQzNjk4NjIKUldSaW1EYWtQd2FuSEpEYmFpMGRMblJZcjFYOEJBcFRtWDlWdGFiQ0VxTUV3WFdtOW96NmZXaVQK",
-    "endpoints": ["https://github.com/rouges78/GameStringer/releases/latest/download/latest.json"]
+    "pubkey": "<base64 public key>",
+    "endpoints": [
+      "https://github.com/rouges78/GameStringer/releases/latest/download/latest.json"
+    ]
   }
 }
 ```
 
-> ⚠️ If you regenerate the key you **break auto-update for all existing installs**. They will have to download the next version manually. Don't do this unless the old key is compromised.
+> WARNING: Regenerating the key breaks auto-update for every installed
+> copy. Users will have to download the next version manually. Only
+> rotate the key if the old one is compromised.
 
-### 1.2 GitHub repo secrets
-
-Go to **Settings → Secrets and variables → Actions → New repository secret** and create:
+### 1.5 GitHub Secrets
 
 | Secret | Value |
 |---|---|
-| `TAURI_SIGNING_PRIVATE_KEY` | Full content of `~/.tauri/gamestringer.key` (the whole file, multi-line) |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | The password you set during `signer generate` |
+| `TAURI_SIGNING_PRIVATE_KEY` | **Base64-encoded** content of the private key file |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty string (key has no password) |
 
-Without these two secrets, `tauri-action` will still build binaries but **will NOT emit `latest.json`**, and the release workflow will fail at the "Locate latest.json" step (by design — see Guardrails below).
-
-### 1.3 Verify pubkey/privkey match
-
-Before trusting anything, run a sanity check locally:
+**Critical detail:** the secret must contain the base64 encoding of the
+key file, not the raw multi-line text and not a file path. Upload via CLI
+to avoid any copy-paste or line-ending corruption:
 
 ```bash
-npm run tauri -- signer sign -k ~/.tauri/gamestringer.key some-file.txt
-# then verify the generated .sig matches the pubkey embedded in tauri.conf.json
+cat priv.key | base64 -w0 | gh secret set TAURI_SIGNING_PRIVATE_KEY
+printf '' | gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 ```
 
 ---
 
-## 2. Cutting a release
+## 2. Release Procedure
 
 ### 2.1 Bump versions
 
-Every release must update **all** of:
+Update **all four** files with the same SemVer string (e.g. `1.6.1`,
+no `v` prefix):
 
-- `package.json` → `version`
-- `src-tauri/Cargo.toml` → `[package] version`
-- `src-tauri/tauri.conf.json` → `version`
-- `CHANGELOG.md` → new section at the top
+- `package.json` -> `version`
+- `src-tauri/Cargo.toml` -> `[package] version`
+- `src-tauri/tauri.conf.json` -> `version`
+- `version.json`
 
-Use the same SemVer string everywhere (e.g. `1.6.1`, without the `v` prefix).
-
-### 2.2 Tag and dispatch
+### 2.2 Commit, tag, dispatch
 
 ```bash
 git commit -am "chore(release): v1.6.1"
+git push origin main
+
+# Create and push the tag BEFORE dispatching the workflow.
+# The workflow checks out by ref, so the tag must already exist.
 git tag v1.6.1
-git push origin main --tags
+git push origin v1.6.1
+
+# Dispatch
+gh workflow run release.yml -f version=v1.6.1
+
+# Monitor
+gh run list --workflow=release.yml -L 1          # grab the run ID
+gh run watch <run-id> --exit-status
 ```
-
-Then trigger the workflow:
-
-- **Actions → Release → Run workflow**
-- Input `version`: `v1.6.1` (with the `v`)
-- Leave `create_release` default
-
-The workflow runs three parallel jobs (Windows / Linux / macOS) + a final **merge-updater** job.
 
 ### 2.3 What the workflow does
 
 ```
-build-windows ─┐
-build-linux   ─┼──► merge-updater ──► uploads unified latest.json
-build-macos   ─┘
+build-windows --\
+build-linux   ---+--> merge-updater --> uploads unified latest.json
+build-macos   --/
 ```
 
-Each platform job:
-1. Builds binaries via `tauri-apps/tauri-action@v0.5`
-2. `tauri-action` signs each artifact with minisign and generates a **per-platform** `latest.json` in `src-tauri/target/**`
-3. A "Locate latest.json" step finds it and uploads it as a workflow artifact
+Each platform job builds binaries via `tauri-apps/tauri-action@v0`,
+which signs every artifact with minisign and produces a per-platform
+`latest.json`.
 
-The `merge-updater` job:
-1. Downloads all three per-platform updater files
-2. Merges their `platforms.*` keys into a single unified `latest.json`
-3. **Guard step**: fails the build if any required platform is missing OR has an empty signature OR has an invalid URL
-4. Uploads the unified `latest.json` to the GitHub release
-
-> Previously, each platform job uploaded its own `latest.json` to the same release, **overwriting** the others. That left end users with an updater manifest that only pointed at one OS (or none, depending on race conditions). The merge job eliminates that.
+The `merge-updater` job downloads the three per-platform files, merges
+their `platforms.*` keys into one unified `latest.json`, validates that
+every required platform has a non-empty signature and a valid URL, then
+uploads the result to the GitHub release.
 
 ---
 
-## 3. Post-release verification (MANDATORY)
+## 3. Post-Release Verification
 
-Do **all** of these before announcing the release. It takes 2 minutes and catches the exact class of bugs that caused the v1.6.0 outage.
+Do **all** of these before announcing. They take two minutes and catch
+every class of bug that broke v1.6.0 and v1.6.1 early builds.
 
 ### 3.1 Check all assets are present
 
 ```bash
-gh release view v1.6.1 --json assets -q '.assets[].name'
+gh release view v1.6.1
 ```
 
-You should see **at minimum**:
+Confirm the release contains installer binaries, their `.sig` files,
+updater bundles, and `latest.json`.
 
-- `GameStringer_1.6.1_x64-setup.exe`
-- `GameStringer_1.6.1_x64-setup.exe.sig`
-- `GameStringer_1.6.1_x64_en-US.msi`
-- `GameStringer_1.6.1_x64_en-US.msi.sig`
-- `GameStringer_1.6.1_x64-portable.zip`
-- `GameStringer_1.6.1_amd64.deb`
-- `GameStringer_1.6.1_amd64.AppImage`
-- `GameStringer_1.6.1_amd64.AppImage.tar.gz`
-- `GameStringer_1.6.1_amd64.AppImage.tar.gz.sig`
-- `GameStringer_1.6.1_amd64.rpm`
-- `GameStringer_1.6.1_aarch64.dmg`
-- `GameStringer_1.6.1_x64.dmg`
-- `GameStringer_1.6.1_universal.app.tar.gz` (or per-arch)
-- `*.app.tar.gz.sig`
-- **`latest.json`** ← non-negotiable
-
-If `latest.json` is missing or any `.sig` file is absent, **the release is broken** and auto-update will 404 for every existing user. Do not announce. Go to section 5.
-
-### 3.2 Fetch and inspect `latest.json`
+### 3.2 Inspect latest.json
 
 ```bash
-curl -sL https://github.com/rouges78/GameStringer/releases/latest/download/latest.json | jq .
+gh release download v1.6.1 -p latest.json -O -
 ```
 
-Expected shape:
+Verify all **four** platform entries exist and have non-empty signatures:
 
-```json
-{
-  "version": "1.6.1",
-  "notes": "...",
-  "pub_date": "2026-04-05T...",
-  "platforms": {
-    "windows-x86_64": { "signature": "dW50cnVzdGVkI...", "url": "https://.../GameStringer_1.6.1_x64-setup.exe" },
-    "linux-x86_64":   { "signature": "dW50cnVzdGVkI...", "url": "https://.../GameStringer_1.6.1_amd64.AppImage.tar.gz" },
-    "darwin-aarch64": { "signature": "dW50cnVzdGVkI...", "url": "https://.../GameStringer_1.6.1_aarch64.app.tar.gz" },
-    "darwin-x86_64":  { "signature": "dW50cnVzdGVkI...", "url": "https://.../GameStringer_1.6.1_x64.app.tar.gz" }
-  }
-}
-```
+| Platform key | Description |
+|---|---|
+| `darwin-aarch64` | macOS Apple Silicon |
+| `darwin-x86_64` | macOS Intel |
+| `linux-x86_64` | Linux x86_64 (AppImage) |
+| `windows-x86_64` | Windows x86_64 (NSIS) |
 
-**Red flags:**
-- Any `signature` is an empty string → CI secrets wrong, rebuild.
-- Any platform missing → merge job bug, open issue.
-- URL points to a file that returns 404 → asset upload raced with something; re-upload manually.
+Red flags:
+- Any `signature` is an empty string -> CI secrets are wrong; rebuild.
+- A platform is missing -> merge job bug; check workflow logs.
+- URL returns 404 -> asset upload race; re-upload the file manually.
 
 ### 3.3 End-to-end updater test
 
-On a machine with an **older** GameStringer version installed:
+On a machine with an older GameStringer installed:
 
 1. Launch the app.
-2. The in-app updater should detect v1.6.1 within a few seconds.
+2. The in-app updater should detect the new version within seconds.
 3. Click "Download & install".
-4. The app should download, verify minisign, install, and relaunch.
+4. The app downloads, verifies the minisign signature, installs, and
+   relaunches.
 5. Confirm the About screen shows the new version.
 
-If step 2 works but step 3 fails with a signature error → pubkey in `tauri.conf.json` doesn't match the private key that signed the release. Fix and ship `1.6.2`.
+If step 3 fails with a signature error, the pubkey baked into the
+installed app does not match the private key that signed the new release.
+The only fix is to ship a corrected point release.
 
 ---
 
-## 4. Rolling back
+## 4. Rollback
 
-If a release goes out and is broken (crash on launch, data loss, etc.):
+If a release is broken (crash on launch, data loss, etc.):
 
-1. **Mark the GitHub release as pre-release** (not draft — pre-release hides it from `/releases/latest`):
-   ```bash
-   gh release edit v1.6.1 --prerelease
-   ```
-   This immediately stops Tauri's updater endpoint from serving the broken `latest.json` (because the endpoint uses `/releases/latest/download/...` which skips pre-releases).
+```bash
+gh release edit v1.6.1 --prerelease
+```
 
-2. Existing users who already updated are stuck on the broken version — **there is no downgrade path**. Your only remedy is to ship a hotfix `1.6.2` ASAP.
+Marking as prerelease immediately hides it from `/releases/latest`,
+so the updater endpoint stops serving the broken `latest.json`.
 
-3. Do **not** delete the release or the tag. Deleting breaks `git bisect` and confuses users who linked to it.
+Existing users who already updated are stuck -- there is no downgrade
+path. Ship a hotfix (e.g. `1.6.2`) as fast as possible.
 
-4. After the hotfix ships and is verified, you may re-promote the bad release out of pre-release only if you've confirmed nothing still consumes it. In practice, just leave it marked as pre-release forever.
-
----
-
-## 5. Common failures and fixes
-
-### 5.1 "latest.json not produced by tauri-action"
-**Cause:** `TAURI_SIGNING_PRIVATE_KEY` or `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` secret is missing, empty, or wrong.
-**Fix:** Regenerate the secret from your local key file, re-run workflow.
-
-### 5.2 Release has binaries but no `latest.json`
-**Cause:** The merge-updater job failed or was skipped. Check the workflow logs for the guard step.
-**Fix:** Re-run just the failed job. If the guard flagged an empty signature, see 5.1.
-
-### 5.3 Users get "signature verification failed" on update
-**Cause:** Pubkey in `tauri.conf.json` of the **installed** app doesn't match the private key that signed the **new** release. This usually means someone regenerated the key.
-**Fix:** You cannot fix existing installs. Publish a blog post telling users to download the new version manually. Never rotate the key without a migration plan.
-
-### 5.4 Workflow succeeds but users don't get notified
-**Cause 1:** They're on an old version whose updater plugin is broken (e.g. they installed the very first release before the updater was wired up).
-**Cause 2:** The custom in-app notification (`hooks/use-update-check.ts`) hits the GitHub API which is rate-limited per-IP. Usually self-heals.
-**Fix:** Nothing actionable from our side. Document the manual download path in the release notes.
-
-### 5.5 Orphan `latest.json` in repo root
-We used to keep a hand-edited `latest.json` at the repo root. **This is no longer the case** — the file is generated by CI and lives only as a release asset. If you find one committed to the repo, delete it. It's a footgun.
+Do **not** delete the release or the tag. Deletion breaks `git bisect`
+and confuses anyone who linked to it. Leave the bad release marked as
+prerelease permanently.
 
 ---
 
-## 6. Reference
+## 5. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `__TAURI_BUNDLE_TYPE variable not found` | tauri crate < 2.10.3 | Upgrade `tauri` and `tauri-build` in Cargo.toml |
+| `Signature not found for the updater JSON` | tauri-action v0.5 file-pattern mismatch OR missing `createUpdaterArtifacts` | Upgrade to `@v0`; add `"createUpdaterArtifacts": "v1Compatible"` to bundle config |
+| `failed to decode base64 secret key: Invalid symbol 32` | Secret contains raw key text instead of base64 | Re-upload: `cat key \| base64 -w0 \| gh secret set TAURI_SIGNING_PRIVATE_KEY` |
+| `incorrect updater private key password` | Key was generated with `-W` (no password) but a password secret is set, or vice versa | Regenerate key with `-W`, clear the password secret |
+| No `.sig` files in build output | Missing `createUpdaterArtifacts` in tauri.conf.json | Add `"createUpdaterArtifacts": "v1Compatible"` to the `bundle` object |
+| Workflow fails at checkout | Tag does not exist yet when the workflow tries `ref: inputs.version` | Create and push the tag **before** dispatching the workflow |
+| `latest.json` missing from release | merge-updater job failed or was skipped | Check workflow logs; usually caused by one of the above issues |
+
+---
+
+## 6. Key Rotation Procedure
+
+Only rotate if the existing key is compromised. Rotation breaks
+auto-update for every installed copy.
+
+```bash
+# 1. Generate a new passwordless keypair
+rsign generate -p pub.key -s priv.key -W
+
+# 2. Upload private key to GitHub Secrets (base64-encoded)
+cat priv.key | base64 -w0 | gh secret set TAURI_SIGNING_PRIVATE_KEY
+
+# 3. Clear the password secret
+printf '' | gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+
+# 4. Update the pubkey in tauri.conf.json
+#    Copy the base64-encoded public key into plugins.updater.pubkey
+cat pub.key | base64 -w0
+# Paste the output into src-tauri/tauri.conf.json
+
+# 5. Commit, push, retag, and redispatch
+git commit -am "chore: rotate minisign key"
+git push origin main
+git tag -f v1.x.x
+git push origin v1.x.x --force
+gh workflow run release.yml -f version=v1.x.x
+```
+
+---
+
+## 7. Reference
 
 - Tauri updater docs: https://tauri.app/plugin/updater/
 - minisign: https://jedisct1.github.io/minisign/
+- rsign2: https://github.com/nickolasgaspar/rsign2
 - Workflow file: `.github/workflows/release.yml`
-- Updater hook (real): `hooks/use-tauri-updater.ts`
-- Updater hook (GH API fallback for notifications only): `hooks/use-update-check.ts`
+- Updater hook: `hooks/use-tauri-updater.ts`
+- Updater hook (GitHub API fallback for notifications): `hooks/use-update-check.ts`
 - Updater UI: `components/notifications/update-bell.tsx`
-- Current pubkey ID: `B61C7704C9F3B554` (rotated 2026-04-05 — the previous key `1CA7063FA4369862` was never actually usable because signing never worked in CI)
+- Current minisign pubkey ID: `4A3AB8216DBA077E`
