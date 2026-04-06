@@ -1414,3 +1414,1289 @@ pub fn extract_file_from_bsa(
         output_path, extracted.len()
     ))
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — Autoresearch harness for parser accuracy
+// ═══════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper: build a synthetic STRINGS file (null-terminated strings)
+    // ─────────────────────────────────────────────────────────────
+    fn build_strings_fixture(entries: &[(u32, &str)]) -> Vec<u8> {
+        let count = entries.len() as u32;
+        let mut string_data = Vec::new();
+        let mut offsets = Vec::new();
+
+        for (_id, text) in entries {
+            offsets.push(string_data.len() as u32);
+            string_data.extend_from_slice(text.as_bytes());
+            string_data.push(0); // null terminator
+        }
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&count.to_le_bytes());
+        buf.extend_from_slice(&(string_data.len() as u32).to_le_bytes());
+        for (i, (id, _)) in entries.iter().enumerate() {
+            buf.extend_from_slice(&id.to_le_bytes());
+            buf.extend_from_slice(&offsets[i].to_le_bytes());
+        }
+        buf.extend_from_slice(&string_data);
+        buf
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper: build a synthetic DLSTRINGS/ILSTRINGS file (size-prefixed)
+    // ─────────────────────────────────────────────────────────────
+    fn build_dlstrings_fixture(entries: &[(u32, &str)]) -> Vec<u8> {
+        let count = entries.len() as u32;
+        let mut string_data = Vec::new();
+        let mut offsets = Vec::new();
+
+        for (_id, text) in entries {
+            offsets.push(string_data.len() as u32);
+            let bytes = text.as_bytes();
+            let size = (bytes.len() + 1) as u32; // +1 for null
+            string_data.extend_from_slice(&size.to_le_bytes());
+            string_data.extend_from_slice(bytes);
+            string_data.push(0);
+        }
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&count.to_le_bytes());
+        buf.extend_from_slice(&(string_data.len() as u32).to_le_bytes());
+        for (i, (id, _)) in entries.iter().enumerate() {
+            buf.extend_from_slice(&id.to_le_bytes());
+            buf.extend_from_slice(&offsets[i].to_le_bytes());
+        }
+        buf.extend_from_slice(&string_data);
+        buf
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper: build a minimal BSA v104 archive
+    // ─────────────────────────────────────────────────────────────
+    fn build_bsa_v104_fixture(folders: &[(&str, &[&str])]) -> Vec<u8> {
+        // BSA v104 layout:
+        // Header (36 bytes)
+        // Folder records (folder_count * 16 bytes each for v104)
+        // For each folder: bzstring folder name + file records (count * 16 bytes each)
+        // File names block: zstrings
+
+        let folder_count = folders.len() as u32;
+        let file_count: u32 = folders.iter().map(|(_, files)| files.len() as u32).sum();
+
+        let mut total_folder_name_length = 0u32;
+        for (name, _) in folders {
+            total_folder_name_length += name.len() as u32 + 1; // +1 for length prefix byte in bzstring
+        }
+
+        let mut total_file_name_length = 0u32;
+        for (_, files) in folders {
+            for f in *files {
+                total_file_name_length += f.len() as u32 + 1; // +1 for null
+            }
+        }
+
+        let archive_flags: u32 = 1 | 2; // has directory names | has file names
+        let folder_record_offset = 36u32; // header size
+
+        let mut buf = Vec::new();
+
+        // Header
+        buf.extend_from_slice(&BSA_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&104u32.to_le_bytes()); // version
+        buf.extend_from_slice(&folder_record_offset.to_le_bytes());
+        buf.extend_from_slice(&archive_flags.to_le_bytes());
+        buf.extend_from_slice(&folder_count.to_le_bytes());
+        buf.extend_from_slice(&file_count.to_le_bytes());
+        buf.extend_from_slice(&total_folder_name_length.to_le_bytes());
+        buf.extend_from_slice(&total_file_name_length.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes()); // file_flags
+        buf.extend_from_slice(&0u16.to_le_bytes()); // padding
+
+        // Folder records (hash=0, count, offset=0 placeholder)
+        // For v104: 8 (hash) + 4 (count) + 4 (offset) = 16 bytes each
+        let folder_records_size = folder_count as usize * 16;
+        let mut folder_data_offset = folder_record_offset as usize + folder_records_size;
+
+        for (name, files) in folders {
+            buf.extend_from_slice(&0u64.to_le_bytes()); // name_hash (0 for test)
+            buf.extend_from_slice(&(files.len() as u32).to_le_bytes());
+            buf.extend_from_slice(&(folder_data_offset as u32).to_le_bytes());
+            // Advance: bzstring (1 + name.len() + 1 null) + file_records (count * 16)
+            folder_data_offset += 1 + name.len() + 1 + files.len() * 16;
+        }
+
+        // Folder names (bzstring) + file records
+        for (name, files) in folders {
+            // bzstring: length byte (includes null) + chars + null
+            let bz_len = (name.len() + 1) as u8;
+            buf.push(bz_len);
+            buf.extend_from_slice(name.as_bytes());
+            buf.push(0);
+
+            // File records
+            for _ in *files {
+                buf.extend_from_slice(&0u64.to_le_bytes()); // name_hash
+                buf.extend_from_slice(&100u32.to_le_bytes()); // size (uncompressed)
+                buf.extend_from_slice(&0u32.to_le_bytes()); // offset
+            }
+        }
+
+        // File names block (zstrings)
+        for (_, files) in folders {
+            for f in *files {
+                buf.extend_from_slice(f.as_bytes());
+                buf.push(0);
+            }
+        }
+
+        buf
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper: build a minimal ESP plugin with non-localized records
+    // ─────────────────────────────────────────────────────────────
+    fn build_esp_fixture(records: &[(&str, u32, &str, &[(&str, &str)])]) -> Vec<u8> {
+        // records: [(record_type, form_id, editor_id, [(field_type, value)])]
+        let mut buf = Vec::new();
+
+        // TES4 header (minimal, non-localized: flags = 0)
+        let tes4_type = b"TES4";
+        let tes4_data: Vec<u8> = Vec::new(); // empty TES4 data
+        buf.extend_from_slice(tes4_type);
+        buf.extend_from_slice(&(tes4_data.len() as u32).to_le_bytes()); // data_size
+        buf.extend_from_slice(&0u32.to_le_bytes()); // flags (not localized)
+        buf.extend_from_slice(&0u32.to_le_bytes()); // form_id
+        buf.extend_from_slice(&0u16.to_le_bytes()); // timestamp
+        buf.extend_from_slice(&0u16.to_le_bytes()); // version_control
+        buf.extend_from_slice(&0u16.to_le_bytes()); // internal_version
+        buf.extend_from_slice(&0u16.to_le_bytes()); // padding
+        buf.extend_from_slice(&tes4_data);
+
+        // Add each record
+        for (rec_type, form_id, editor_id, fields) in records {
+            let mut rec_data = Vec::new();
+
+            // EDID field
+            if !editor_id.is_empty() {
+                rec_data.extend_from_slice(b"EDID");
+                let edid_bytes: Vec<u8> = editor_id.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(edid_bytes.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&edid_bytes);
+            }
+
+            // Other fields
+            for (field_type, value) in *fields {
+                let ft_bytes = field_type.as_bytes();
+                rec_data.extend_from_slice(&ft_bytes[..4]);
+                let val_bytes: Vec<u8> = value.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(val_bytes.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&val_bytes);
+            }
+
+            // Record header
+            let mut rt = [0u8; 4];
+            rt.copy_from_slice(rec_type.as_bytes());
+            buf.extend_from_slice(&rt);
+            buf.extend_from_slice(&(rec_data.len() as u32).to_le_bytes());
+            buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+            buf.extend_from_slice(&form_id.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes()); // timestamp
+            buf.extend_from_slice(&0u16.to_le_bytes()); // vc
+            buf.extend_from_slice(&0u16.to_le_bytes()); // internal_ver
+            buf.extend_from_slice(&0u16.to_le_bytes()); // padding
+            buf.extend_from_slice(&rec_data);
+        }
+
+        buf
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper: build ESP with localized flag set
+    // ─────────────────────────────────────────────────────────────
+    fn build_esp_localized_fixture(records: &[(&str, u32, &str, &[(&str, u32)])]) -> Vec<u8> {
+        // fields contain (field_type, localized_string_index) instead of text
+        let mut buf = Vec::new();
+
+        // TES4 header with localized flag (0x80)
+        let tes4_data: Vec<u8> = Vec::new();
+        buf.extend_from_slice(b"TES4");
+        buf.extend_from_slice(&(tes4_data.len() as u32).to_le_bytes());
+        buf.extend_from_slice(&0x80u32.to_le_bytes()); // localized flag
+        buf.extend_from_slice(&0u32.to_le_bytes()); // form_id
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&tes4_data);
+
+        for (rec_type, form_id, editor_id, fields) in records {
+            let mut rec_data = Vec::new();
+
+            if !editor_id.is_empty() {
+                rec_data.extend_from_slice(b"EDID");
+                let edid_bytes: Vec<u8> = editor_id.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(edid_bytes.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&edid_bytes);
+            }
+
+            for (field_type, string_idx) in *fields {
+                let ft_bytes = field_type.as_bytes();
+                rec_data.extend_from_slice(&ft_bytes[..4]);
+                rec_data.extend_from_slice(&4u16.to_le_bytes()); // size = 4 (u32)
+                rec_data.extend_from_slice(&string_idx.to_le_bytes());
+            }
+
+            let mut rt = [0u8; 4];
+            rt.copy_from_slice(rec_type.as_bytes());
+            buf.extend_from_slice(&rt);
+            buf.extend_from_slice(&(rec_data.len() as u32).to_le_bytes());
+            buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+            buf.extend_from_slice(&form_id.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&rec_data);
+        }
+
+        buf
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // STRINGS PARSER TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_strings_basic() {
+        let fixture = build_strings_fixture(&[
+            (1, "Hello World"),
+            (2, "Iron Sword"),
+            (3, "Healing Potion"),
+        ]);
+        let result = parse_strings_file(&fixture, "strings").unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].id, 1);
+        assert_eq!(result[0].value, "Hello World");
+        assert_eq!(result[1].id, 2);
+        assert_eq!(result[1].value, "Iron Sword");
+        assert_eq!(result[2].id, 3);
+        assert_eq!(result[2].value, "Healing Potion");
+    }
+
+    #[test]
+    fn test_strings_empty_string() {
+        // A STRINGS entry with an empty string (just null terminator)
+        let fixture = build_strings_fixture(&[
+            (100, ""),
+            (101, "Non-empty"),
+        ]);
+        let result = parse_strings_file(&fixture, "strings").unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].id, 100);
+        assert_eq!(result[0].value, "");
+        assert_eq!(result[1].value, "Non-empty");
+    }
+
+    #[test]
+    fn test_strings_unicode() {
+        let fixture = build_strings_fixture(&[
+            (1, "Épée magique"),
+            (2, "Schild der Stärke"),
+            (3, "日本語テスト"),
+        ]);
+        let result = parse_strings_file(&fixture, "strings").unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].value, "Épée magique");
+        assert_eq!(result[1].value, "Schild der Stärke");
+        assert_eq!(result[2].value, "日本語テスト");
+    }
+
+    #[test]
+    fn test_strings_single_entry() {
+        let fixture = build_strings_fixture(&[(42, "Only one")]);
+        let result = parse_strings_file(&fixture, "strings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, 42);
+        assert_eq!(result[0].value, "Only one");
+    }
+
+    #[test]
+    fn test_strings_large_id() {
+        let fixture = build_strings_fixture(&[(0xFFFFFFFF, "Max ID")]);
+        let result = parse_strings_file(&fixture, "strings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, 0xFFFFFFFF);
+        assert_eq!(result[0].value, "Max ID");
+    }
+
+    #[test]
+    fn test_strings_too_small() {
+        let data = vec![0u8; 4]; // only 4 bytes, need at least 8
+        let result = parse_strings_file(&data, "strings");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_strings_unknown_type() {
+        let fixture = build_strings_fixture(&[(1, "test")]);
+        let result = parse_strings_file(&fixture, "badtype");
+        assert!(result.is_err());
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // DLSTRINGS PARSER TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_dlstrings_basic() {
+        let fixture = build_dlstrings_fixture(&[
+            (10, "This is a dialogue line."),
+            (20, "Another dialogue line."),
+        ]);
+        let result = parse_strings_file(&fixture, "dlstrings").unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].id, 10);
+        assert_eq!(result[0].value, "This is a dialogue line.");
+        assert_eq!(result[1].id, 20);
+        assert_eq!(result[1].value, "Another dialogue line.");
+    }
+
+    #[test]
+    fn test_dlstrings_empty() {
+        // DLSTRINGS with empty string: size=1 (just null), then null byte
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&1u32.to_le_bytes()); // count = 1
+        // string data: size(4)=1 + null(1) = 5 bytes
+        let string_data_size = 5u32;
+        buf.extend_from_slice(&string_data_size.to_le_bytes());
+        // directory entry
+        buf.extend_from_slice(&99u32.to_le_bytes()); // id
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset 0
+        // string data
+        buf.extend_from_slice(&1u32.to_le_bytes()); // size = 1 (just null)
+        buf.push(0); // null terminator
+
+        let result = parse_strings_file(&buf, "dlstrings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, 99);
+        assert_eq!(result[0].value, "");
+    }
+
+    #[test]
+    fn test_ilstrings_basic() {
+        let fixture = build_dlstrings_fixture(&[
+            (5, "Item description text"),
+        ]);
+        let result = parse_strings_file(&fixture, "ilstrings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Item description text");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ROUND-TRIP TESTS (build → parse → verify)
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_roundtrip_strings() {
+        let original = vec![
+            PatchedStringEntry { id: 1, value: "Hello".to_string() },
+            PatchedStringEntry { id: 2, value: "World".to_string() },
+            PatchedStringEntry { id: 3, value: "Test with spaces and symbols: @#$%".to_string() },
+        ];
+        let built = build_strings_data(&original, "strings").unwrap();
+        let parsed = parse_strings_file(&built, "strings").unwrap();
+        assert_eq!(parsed.len(), original.len());
+        for (p, o) in parsed.iter().zip(original.iter()) {
+            assert_eq!(p.id, o.id);
+            assert_eq!(p.value, o.value);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_dlstrings() {
+        let original = vec![
+            PatchedStringEntry { id: 100, value: "Dialogue line one".to_string() },
+            PatchedStringEntry { id: 200, value: "Dialogue line two".to_string() },
+        ];
+        let built = build_strings_data(&original, "dlstrings").unwrap();
+        let parsed = parse_strings_file(&built, "dlstrings").unwrap();
+        assert_eq!(parsed.len(), original.len());
+        for (p, o) in parsed.iter().zip(original.iter()) {
+            assert_eq!(p.id, o.id);
+            assert_eq!(p.value, o.value);
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_ilstrings() {
+        let original = vec![
+            PatchedStringEntry { id: 50, value: "Item text".to_string() },
+        ];
+        let built = build_strings_data(&original, "ilstrings").unwrap();
+        let parsed = parse_strings_file(&built, "ilstrings").unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].id, 50);
+        assert_eq!(parsed[0].value, "Item text");
+    }
+
+    #[test]
+    fn test_roundtrip_unicode() {
+        let original = vec![
+            PatchedStringEntry { id: 1, value: "Épée enchantée".to_string() },
+            PatchedStringEntry { id: 2, value: "火の剣".to_string() },
+            PatchedStringEntry { id: 3, value: "Щит силы".to_string() },
+        ];
+        for format in &["strings", "dlstrings", "ilstrings"] {
+            let built = build_strings_data(&original, format).unwrap();
+            let parsed = parse_strings_file(&built, format).unwrap();
+            assert_eq!(parsed.len(), original.len(), "format={}", format);
+            for (p, o) in parsed.iter().zip(original.iter()) {
+                assert_eq!(p.id, o.id, "format={}", format);
+                assert_eq!(p.value, o.value, "format={}", format);
+            }
+        }
+    }
+
+    #[test]
+    fn test_roundtrip_many_entries() {
+        let original: Vec<PatchedStringEntry> = (0..500)
+            .map(|i| PatchedStringEntry {
+                id: i,
+                value: format!("Entry number {} with text", i),
+            })
+            .collect();
+        let built = build_strings_data(&original, "strings").unwrap();
+        let parsed = parse_strings_file(&built, "strings").unwrap();
+        assert_eq!(parsed.len(), 500);
+        assert_eq!(parsed[0].value, "Entry number 0 with text");
+        assert_eq!(parsed[499].value, "Entry number 499 with text");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BSA PARSER TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_bsa_v104_basic() {
+        let fixture = build_bsa_v104_fixture(&[
+            ("meshes", &["sword.nif", "shield.nif"]),
+            ("textures", &["iron.dds"]),
+        ]);
+        let result = parse_bsa_contents(&fixture).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].path, "meshes\\sword.nif");
+        assert_eq!(result[1].path, "meshes\\shield.nif");
+        assert_eq!(result[2].path, "textures\\iron.dds");
+    }
+
+    #[test]
+    fn test_bsa_v104_single_folder() {
+        let fixture = build_bsa_v104_fixture(&[
+            ("strings", &["skyrim_english.strings"]),
+        ]);
+        let result = parse_bsa_contents(&fixture).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "strings\\skyrim_english.strings");
+        assert_eq!(result[0].compressed, false);
+    }
+
+    #[test]
+    fn test_bsa_invalid_magic() {
+        let mut data = vec![0u8; 100];
+        data[0..4].copy_from_slice(&0xDEADBEEFu32.to_le_bytes());
+        let result = parse_bsa_header(&data);
+        assert!(result.is_err());
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ESP/ESM PLUGIN PARSER TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_esp_nonlocalized_basic() {
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x000D0001, "IronSword", &[
+                ("FULL", "Iron Sword"),
+                ("DESC", "A simple iron sword."),
+            ]),
+            ("ARMO", 0x000D0002, "IronShield", &[
+                ("FULL", "Iron Shield"),
+            ]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].record_type, "WEAP");
+        assert_eq!(result[0].field_name, "FULL");
+        assert_eq!(result[0].value, "Iron Sword");
+        assert_eq!(result[0].editor_id, "IronSword");
+        assert_eq!(result[1].field_name, "DESC");
+        assert_eq!(result[1].value, "A simple iron sword.");
+        assert_eq!(result[2].record_type, "ARMO");
+        assert_eq!(result[2].value, "Iron Shield");
+    }
+
+    #[test]
+    fn test_esp_nonlocalized_all_record_types() {
+        let records: Vec<(&str, u32, &str, Vec<(&str, &str)>)> = vec![
+            ("BOOK", 0x100, "TestBook", vec![("FULL", "Book Name"), ("DESC", "Book text")]),
+            ("NPC_", 0x101, "TestNPC", vec![("FULL", "Guard")]),
+            ("QUST", 0x102, "TestQuest", vec![("FULL", "The Quest"), ("NNAM", "Next obj"), ("CNAM", "Complete")]),
+            ("MISC", 0x103, "TestMisc", vec![("FULL", "Gem"), ("DESC", "Shiny gem")]),
+            ("ALCH", 0x104, "TestAlch", vec![("FULL", "Potion"), ("DESC", "Heals you")]),
+            ("MESG", 0x105, "TestMsg", vec![("FULL", "Message"), ("DESC", "Info"), ("ITXT", "Button")]),
+            ("CELL", 0x106, "TestCell", vec![("FULL", "Dungeon")]),
+            ("WRLD", 0x107, "TestWorld", vec![("FULL", "Tamriel")]),
+        ];
+
+        let fixture_records: Vec<(&str, u32, &str, &[(&str, &str)])> = records
+            .iter()
+            .map(|(rt, fid, eid, fields)| {
+                (*rt, *fid, *eid, fields.as_slice())
+            })
+            .collect();
+        let fixture = build_esp_fixture(&fixture_records);
+        let result = parse_plugin_strings(&fixture).unwrap();
+
+        // Count expected: 2+1+3+2+2+3+1+1 = 15
+        assert_eq!(result.len(), 15, "Expected 15 translatable fields, got {}", result.len());
+    }
+
+    #[test]
+    fn test_esp_skips_nontranslatable() {
+        // LIGH record is not in TRANSLATABLE_FIELDS
+        let fixture = build_esp_fixture(&[
+            ("LIGH", 0x200, "TestLight", &[
+                ("FULL", "Torch"),
+            ]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 0, "LIGH should not be translatable");
+    }
+
+    #[test]
+    fn test_esp_skips_nontranslatable_field() {
+        // DATA field on WEAP is not translatable (only FULL and DESC)
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x300, "TestWeap", &[
+                ("FULL", "Sword"),
+                ("DATA", "some data"),
+            ]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Sword");
+    }
+
+    #[test]
+    fn test_esp_localized() {
+        let fixture = build_esp_localized_fixture(&[
+            ("WEAP", 0x400, "LocWeapon", &[
+                ("FULL", 12345),
+                ("DESC", 67890),
+            ]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].value, "[LOCALIZED:12345]");
+        assert_eq!(result[1].value, "[LOCALIZED:67890]");
+    }
+
+    #[test]
+    fn test_esp_too_small() {
+        let data = vec![0u8; 10];
+        let result = parse_plugin_strings(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_esp_bad_header() {
+        // Not starting with TES4
+        let mut buf = Vec::new();
+        buf.extend_from_slice(b"BADH");
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        let result = parse_plugin_strings(&buf);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("TES4"));
+    }
+
+    #[test]
+    fn test_esp_context_format() {
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x000ABCDE, "TestSword", &[
+                ("FULL", "My Sword"),
+            ]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(result[0].context.contains("WEAP"));
+        assert!(result[0].context.contains("FULL"));
+        assert!(result[0].context.contains("000ABCDE"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BINARY HELPERS TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_read_u32_le() {
+        let data = vec![0x78, 0x56, 0x34, 0x12];
+        let mut off = 0;
+        assert_eq!(read_u32_le(&data, &mut off).unwrap(), 0x12345678);
+        assert_eq!(off, 4);
+    }
+
+    #[test]
+    fn test_read_u32_le_eof() {
+        let data = vec![0x01, 0x02];
+        let mut off = 0;
+        assert!(read_u32_le(&data, &mut off).is_err());
+    }
+
+    #[test]
+    fn test_read_zstring() {
+        let data = b"Hello\0World\0";
+        let mut off = 0;
+        assert_eq!(read_zstring(data, &mut off).unwrap(), "Hello");
+        assert_eq!(off, 6);
+        assert_eq!(read_zstring(data, &mut off).unwrap(), "World");
+    }
+
+    #[test]
+    fn test_read_bzstring() {
+        // bzstring: length byte (includes null), then chars, then null
+        let mut data = Vec::new();
+        data.push(6); // length = 5 chars + 1 null
+        data.extend_from_slice(b"Hello\0");
+        let mut off = 0;
+        assert_eq!(read_bzstring(&data, &mut off).unwrap(), "Hello");
+    }
+
+    #[test]
+    fn test_read_wstring() {
+        // wstring: u16 length, then chars
+        let mut data = Vec::new();
+        data.extend_from_slice(&5u16.to_le_bytes());
+        data.extend_from_slice(b"Hello");
+        let mut off = 0;
+        assert_eq!(read_wstring(&data, &mut off).unwrap(), "Hello");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TRANSLATABLE FIELDS TESTS
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_is_translatable_record() {
+        assert!(is_translatable_record("BOOK"));
+        assert!(is_translatable_record("WEAP"));
+        assert!(is_translatable_record("NPC_"));
+        assert!(is_translatable_record("QUST"));
+        assert!(is_translatable_record("MESG"));
+        assert!(!is_translatable_record("LIGH"));
+        assert!(!is_translatable_record("STAT"));
+        assert!(!is_translatable_record("XXXX"));
+    }
+
+    #[test]
+    fn test_is_translatable_field() {
+        assert!(is_translatable_field("BOOK", "FULL"));
+        assert!(is_translatable_field("BOOK", "DESC"));
+        assert!(!is_translatable_field("BOOK", "DATA"));
+        assert!(is_translatable_field("QUST", "NNAM"));
+        assert!(is_translatable_field("QUST", "CNAM"));
+        assert!(is_translatable_field("MESG", "ITXT"));
+        assert!(!is_translatable_field("WEAP", "ITXT"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCORER — Precision / Recall metric for autoresearch
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Run all parse tests against expected data and compute precision/recall.
+    /// Returns (precision, recall, f1, total_tests, passed_tests)
+    #[allow(dead_code)]
+    fn compute_accuracy_score() -> (f64, f64, f64, usize, usize) {
+        let mut total = 0usize;
+        let mut passed = 0usize;
+
+        // Test suite: (description, test_fn_passes)
+        let tests: Vec<(&str, bool)> = vec![
+            ("strings_basic", {
+                let f = build_strings_fixture(&[(1, "Hello"), (2, "World")]);
+                let r = parse_strings_file(&f, "strings");
+                r.is_ok() && r.as_ref().unwrap().len() == 2
+                    && r.as_ref().unwrap()[0].value == "Hello"
+                    && r.as_ref().unwrap()[1].value == "World"
+            }),
+            ("strings_unicode", {
+                let f = build_strings_fixture(&[(1, "Épée"), (2, "日本語")]);
+                let r = parse_strings_file(&f, "strings");
+                r.is_ok() && r.as_ref().unwrap()[0].value == "Épée"
+                    && r.as_ref().unwrap()[1].value == "日本語"
+            }),
+            ("dlstrings_basic", {
+                let f = build_dlstrings_fixture(&[(10, "Dialogue")]);
+                let r = parse_strings_file(&f, "dlstrings");
+                r.is_ok() && r.as_ref().unwrap()[0].value == "Dialogue"
+            }),
+            ("roundtrip_strings", {
+                let orig = vec![
+                    PatchedStringEntry { id: 1, value: "A".to_string() },
+                    PatchedStringEntry { id: 2, value: "B".to_string() },
+                ];
+                let b = build_strings_data(&orig, "strings");
+                if let Ok(built) = b {
+                    let p = parse_strings_file(&built, "strings");
+                    p.is_ok() && p.as_ref().unwrap().len() == 2
+                        && p.as_ref().unwrap()[0].value == "A"
+                } else { false }
+            }),
+            ("roundtrip_dlstrings", {
+                let orig = vec![PatchedStringEntry { id: 1, value: "Test".to_string() }];
+                let b = build_strings_data(&orig, "dlstrings");
+                if let Ok(built) = b {
+                    let p = parse_strings_file(&built, "dlstrings");
+                    p.is_ok() && p.as_ref().unwrap()[0].value == "Test"
+                } else { false }
+            }),
+            ("esp_nonloc", {
+                let f = build_esp_fixture(&[("WEAP", 1, "Sw", &[("FULL", "Sword")])]);
+                let r = parse_plugin_strings(&f);
+                r.is_ok() && r.as_ref().unwrap().len() == 1
+                    && r.as_ref().unwrap()[0].value == "Sword"
+            }),
+            ("esp_localized", {
+                let f = build_esp_localized_fixture(&[("WEAP", 1, "Sw", &[("FULL", 42)])]);
+                let r = parse_plugin_strings(&f);
+                r.is_ok() && r.as_ref().unwrap()[0].value == "[LOCALIZED:42]"
+            }),
+            ("bsa_v104", {
+                let f = build_bsa_v104_fixture(&[("meshes", &["test.nif"])]);
+                let r = parse_bsa_contents(&f);
+                r.is_ok() && r.as_ref().unwrap().len() == 1
+                    && r.as_ref().unwrap()[0].path == "meshes\\test.nif"
+            }),
+            ("error_too_small", {
+                parse_strings_file(&[0; 4], "strings").is_err()
+            }),
+            ("error_bad_type", {
+                let f = build_strings_fixture(&[(1, "x")]);
+                parse_strings_file(&f, "bad").is_err()
+            }),
+        ];
+
+        for (_desc, pass) in &tests {
+            total += 1;
+            if *pass { passed += 1; }
+        }
+
+        let precision = if total > 0 { passed as f64 / total as f64 } else { 0.0 };
+        let recall = precision; // In this context, precision == recall (all tests are "expected true")
+        let f1 = if precision + recall > 0.0 { 2.0 * precision * recall / (precision + recall) } else { 0.0 };
+
+        (precision, recall, f1, total, passed)
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AUTORESEARCH ITERATION 1 — Edge Cases
+    // ═══════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_strings_windows1252_encoding() {
+        // Windows-1252 bytes for "Schwert der Stärke" where ä = 0xE4 in Win-1252
+        // from_utf8_lossy should replace it with U+FFFD
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&1u32.to_le_bytes()); // count
+        let text_bytes: &[u8] = &[0x53, 0x74, 0xE4, 0x72, 0x6B, 0x65, 0x00]; // "St\xE4rke\0"
+        buf.extend_from_slice(&(text_bytes.len() as u32).to_le_bytes()); // data size
+        buf.extend_from_slice(&1u32.to_le_bytes()); // id = 1
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset = 0
+        buf.extend_from_slice(text_bytes);
+
+        let result = parse_strings_file(&buf, "strings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, 1);
+        // Non-UTF8 byte 0xE4 gets replaced by \u{FFFD}
+        assert!(result[0].value.contains("St"));
+        assert!(result[0].value.contains("rke"));
+        assert_eq!(result[0].value.len(), "St\u{FFFD}rke".len());
+    }
+
+    #[test]
+    fn test_strings_embedded_null() {
+        // A string with a null byte in the middle: "Hello\0World"
+        // For STRINGS format (zstring), parsing should stop at first null
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&1u32.to_le_bytes()); // count
+        let text_bytes: &[u8] = b"Hello\0World\0"; // embedded null + terminator
+        buf.extend_from_slice(&(text_bytes.len() as u32).to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes()); // id
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset
+        buf.extend_from_slice(text_bytes);
+
+        let result = parse_strings_file(&buf, "strings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Hello"); // stops at first null
+    }
+
+    #[test]
+    fn test_dlstrings_zero_size() {
+        // DLSTRINGS entry where size field = 0 → should produce empty string
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&1u32.to_le_bytes()); // count
+        let string_data_size = 4u32; // just the size field (0)
+        buf.extend_from_slice(&string_data_size.to_le_bytes());
+        buf.extend_from_slice(&77u32.to_le_bytes()); // id
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset
+        buf.extend_from_slice(&0u32.to_le_bytes()); // size = 0
+
+        let result = parse_strings_file(&buf, "dlstrings").unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "");
+    }
+
+    #[test]
+    fn test_bsa_empty_archive() {
+        // BSA with 0 folders and 0 files
+        let fixture = build_bsa_v104_fixture(&[]);
+        let result = parse_bsa_contents(&fixture).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_bsa_many_files() {
+        // BSA with many files in one folder
+        let files: Vec<String> = (0..50).map(|i| format!("file_{}.nif", i)).collect();
+        let file_refs: Vec<&str> = files.iter().map(|s| s.as_str()).collect();
+        let fixture = build_bsa_v104_fixture(&[("data", &file_refs)]);
+        let result = parse_bsa_contents(&fixture).unwrap();
+        assert_eq!(result.len(), 50);
+        assert_eq!(result[0].path, "data\\file_0.nif");
+        assert_eq!(result[49].path, "data\\file_49.nif");
+    }
+
+    #[test]
+    fn test_ba2_gnrl_basic() {
+        // Build a minimal BA2 GNRL archive with a name table
+        let mut buf = Vec::new();
+
+        // Header (24 bytes)
+        buf.extend_from_slice(&BA2_MAGIC.to_le_bytes()); // BTDX
+        buf.extend_from_slice(&1u32.to_le_bytes()); // version
+        buf.extend_from_slice(b"GNRL"); // archive_type
+        buf.extend_from_slice(&1u32.to_le_bytes()); // file_count = 1
+
+        // name_table_offset: header(24) + file_entry(36) = 60
+        let name_table_offset = 24u64 + 36u64;
+        buf.extend_from_slice(&name_table_offset.to_le_bytes());
+
+        // GNRL file entry (36 bytes)
+        buf.extend_from_slice(&0x12345678u32.to_le_bytes()); // name_hash
+        buf.extend_from_slice(b"nif\0"); // ext
+        buf.extend_from_slice(&0xABCDu32.to_le_bytes()); // dir_hash
+        buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+        buf.extend_from_slice(&0u64.to_le_bytes()); // offset
+        buf.extend_from_slice(&0u32.to_le_bytes()); // packed_size (0 = uncompressed)
+        buf.extend_from_slice(&1024u32.to_le_bytes()); // unpacked_size
+        buf.extend_from_slice(&0u32.to_le_bytes()); // align
+
+        // Name table: u16 length + name bytes
+        let name = b"meshes\\test.nif";
+        buf.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        buf.extend_from_slice(name);
+
+        let result = parse_ba2_contents(&buf).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "meshes\\test.nif");
+        assert_eq!(result[0].size, 1024);
+        assert_eq!(result[0].compressed, false);
+    }
+
+    #[test]
+    fn test_ba2_gnrl_compressed() {
+        let mut buf = Vec::new();
+
+        // Header
+        buf.extend_from_slice(&BA2_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(b"GNRL");
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        let name_table_offset = 24u64 + 36u64;
+        buf.extend_from_slice(&name_table_offset.to_le_bytes());
+
+        // File entry with packed_size > 0 = compressed
+        buf.extend_from_slice(&0u32.to_le_bytes()); // name_hash
+        buf.extend_from_slice(b"dds\0"); // ext
+        buf.extend_from_slice(&0u32.to_le_bytes()); // dir_hash
+        buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+        buf.extend_from_slice(&0u64.to_le_bytes()); // offset
+        buf.extend_from_slice(&512u32.to_le_bytes()); // packed_size > 0
+        buf.extend_from_slice(&2048u32.to_le_bytes()); // unpacked_size
+        buf.extend_from_slice(&0u32.to_le_bytes()); // align
+
+        // Name table
+        let name = b"textures\\iron.dds";
+        buf.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        buf.extend_from_slice(name);
+
+        let result = parse_ba2_contents(&buf).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].compressed, true);
+        assert_eq!(result[0].size, 512); // packed_size when compressed
+    }
+
+    #[test]
+    fn test_ba2_invalid_type() {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&BA2_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(b"XXXX"); // invalid type
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&0u64.to_le_bytes());
+
+        let result = parse_ba2_contents(&buf);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("non supportato"));
+    }
+
+    #[test]
+    fn test_ba2_no_name_table() {
+        // BA2 with name_table_offset = 0 → should use hash-based names
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&BA2_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(b"GNRL");
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(&0u64.to_le_bytes()); // no name table
+
+        // File entry
+        buf.extend_from_slice(&0xDEADu32.to_le_bytes()); // name_hash
+        buf.extend_from_slice(b"nif\0");
+        buf.extend_from_slice(&0xBEEFu32.to_le_bytes()); // dir_hash
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&0u64.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes()); // not compressed
+        buf.extend_from_slice(&100u32.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+
+        let result = parse_ba2_contents(&buf).unwrap();
+        assert_eq!(result.len(), 1);
+        // Should contain hash-based name
+        assert!(result[0].path.contains("DEAD"));
+        assert!(result[0].path.contains("BEEF"));
+        assert!(result[0].path.contains("nif"));
+    }
+
+    #[test]
+    fn test_esp_multiple_records_same_type() {
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x001, "Sword1", &[("FULL", "Iron Sword")]),
+            ("WEAP", 0x002, "Sword2", &[("FULL", "Steel Sword")]),
+            ("WEAP", 0x003, "Sword3", &[("FULL", "Daedric Sword")]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].value, "Iron Sword");
+        assert_eq!(result[1].value, "Steel Sword");
+        assert_eq!(result[2].value, "Daedric Sword");
+    }
+
+    #[test]
+    fn test_esp_empty_editor_id() {
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x500, "", &[("FULL", "Unnamed Weapon")]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].editor_id, "");
+        assert_eq!(result[0].value, "Unnamed Weapon");
+    }
+
+    #[test]
+    fn test_esp_form_id_preserved() {
+        let fixture = build_esp_fixture(&[
+            ("ARMO", 0x00ABCDEF, "TestArmor", &[("FULL", "Shield")]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result[0].form_id, 0x00ABCDEF);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // AUTORESEARCH ITERATION 2 — Advanced Edge Cases
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Build a minimal ESP with a GRUP containing records
+    fn build_esp_with_grup(records: &[(&str, u32, &str, &[(&str, &str)])]) -> Vec<u8> {
+        let mut buf = Vec::new();
+
+        // TES4 header (non-localized)
+        buf.extend_from_slice(b"TES4");
+        buf.extend_from_slice(&0u32.to_le_bytes()); // data_size = 0
+        buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+        buf.extend_from_slice(&0u32.to_le_bytes()); // form_id
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+
+        // Build record data first to compute GRUP size
+        let mut record_bytes = Vec::new();
+        for (rec_type, form_id, editor_id, fields) in records {
+            let mut rec_data = Vec::new();
+
+            if !editor_id.is_empty() {
+                rec_data.extend_from_slice(b"EDID");
+                let edid_bytes: Vec<u8> = editor_id.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(edid_bytes.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&edid_bytes);
+            }
+
+            for (field_type, value) in *fields {
+                let ft_bytes = field_type.as_bytes();
+                rec_data.extend_from_slice(&ft_bytes[..4]);
+                let val_bytes: Vec<u8> = value.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(val_bytes.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&val_bytes);
+            }
+
+            let mut rt = [0u8; 4];
+            rt.copy_from_slice(rec_type.as_bytes());
+            record_bytes.extend_from_slice(&rt);
+            record_bytes.extend_from_slice(&(rec_data.len() as u32).to_le_bytes());
+            record_bytes.extend_from_slice(&0u32.to_le_bytes()); // flags
+            record_bytes.extend_from_slice(&form_id.to_le_bytes());
+            record_bytes.extend_from_slice(&0u16.to_le_bytes());
+            record_bytes.extend_from_slice(&0u16.to_le_bytes());
+            record_bytes.extend_from_slice(&0u16.to_le_bytes());
+            record_bytes.extend_from_slice(&0u16.to_le_bytes());
+            record_bytes.extend_from_slice(&rec_data);
+        }
+
+        // GRUP header: "GRUP" + group_size(4) + label(4) + group_type(4) + timestamp(2) + vc(2) + pad(4) = 24 bytes
+        let grup_total_size = 24 + record_bytes.len();
+        buf.extend_from_slice(b"GRUP");
+        buf.extend_from_slice(&(grup_total_size as u32).to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes()); // label
+        buf.extend_from_slice(&0u32.to_le_bytes()); // group_type
+        buf.extend_from_slice(&0u16.to_le_bytes()); // timestamp
+        buf.extend_from_slice(&0u16.to_le_bytes()); // vc
+        buf.extend_from_slice(&0u32.to_le_bytes()); // pad
+
+        buf.extend_from_slice(&record_bytes);
+        buf
+    }
+
+    #[test]
+    fn test_esp_with_grup() {
+        let fixture = build_esp_with_grup(&[
+            ("WEAP", 0x100, "GrupSword", &[("FULL", "Sword in GRUP")]),
+            ("ARMO", 0x101, "GrupArmor", &[("FULL", "Armor in GRUP")]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].value, "Sword in GRUP");
+        assert_eq!(result[1].value, "Armor in GRUP");
+    }
+
+    #[test]
+    fn test_esp_mixed_translatable_and_not() {
+        // Mix of translatable and non-translatable records
+        let fixture = build_esp_fixture(&[
+            ("WEAP", 0x01, "Sword", &[("FULL", "My Sword")]),
+            ("LIGH", 0x02, "Light", &[("FULL", "Torch")]),   // LIGH not translatable
+            ("ARMO", 0x03, "Shield", &[("FULL", "My Shield")]),
+            ("STAT", 0x04, "Rock", &[("FULL", "A Rock")]),    // STAT not translatable
+            ("BOOK", 0x05, "Tome", &[("FULL", "Magic Book"), ("DESC", "Ancient text")]),
+        ]);
+        let result = parse_plugin_strings(&fixture).unwrap();
+        // WEAP(1) + ARMO(1) + BOOK(2) = 4
+        assert_eq!(result.len(), 4);
+        assert_eq!(result[0].value, "My Sword");
+        assert_eq!(result[1].value, "My Shield");
+        assert_eq!(result[2].value, "Magic Book");
+        assert_eq!(result[3].value, "Ancient text");
+    }
+
+    #[test]
+    fn test_bsa_v105_fixture() {
+        // BSA v105 (Skyrim SE) has different folder record size (24 bytes instead of 16)
+        // v105: hash(8) + count(4) + padding(4) + offset(8) = 24
+        let folder_name = "meshes";
+        let file_name = "test.nif";
+
+        let mut buf = Vec::new();
+
+        // Header (36 bytes)
+        buf.extend_from_slice(&BSA_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&105u32.to_le_bytes()); // version 105
+        buf.extend_from_slice(&36u32.to_le_bytes()); // folder_record_offset
+        let archive_flags: u32 = 1 | 2; // has_directory_names | has_file_names
+        buf.extend_from_slice(&archive_flags.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes()); // folder_count
+        buf.extend_from_slice(&1u32.to_le_bytes()); // file_count
+        buf.extend_from_slice(&((folder_name.len() + 1) as u32).to_le_bytes()); // total_folder_name_length
+        buf.extend_from_slice(&((file_name.len() + 1) as u32).to_le_bytes()); // total_file_name_length
+        buf.extend_from_slice(&0u16.to_le_bytes()); // file_flags
+        buf.extend_from_slice(&0u16.to_le_bytes()); // padding
+
+        // Folder record v105 (24 bytes): hash(8) + count(4) + padding(4) + offset(8)
+        let folder_data_offset = 36 + 24; // header + 1 folder record
+        buf.extend_from_slice(&0u64.to_le_bytes()); // name_hash
+        buf.extend_from_slice(&1u32.to_le_bytes()); // count = 1
+        buf.extend_from_slice(&0u32.to_le_bytes()); // padding (v105)
+        buf.extend_from_slice(&(folder_data_offset as u64).to_le_bytes()); // offset
+
+        // Folder name (bzstring) + file record
+        let bz_len = (folder_name.len() + 1) as u8;
+        buf.push(bz_len);
+        buf.extend_from_slice(folder_name.as_bytes());
+        buf.push(0);
+
+        // File record: hash(8) + size(4) + offset(4)
+        buf.extend_from_slice(&0u64.to_le_bytes());
+        buf.extend_from_slice(&200u32.to_le_bytes()); // size
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset
+
+        // File names
+        buf.extend_from_slice(file_name.as_bytes());
+        buf.push(0);
+
+        let result = parse_bsa_contents(&buf).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "meshes\\test.nif");
+        assert_eq!(result[0].size, 200);
+    }
+
+    #[test]
+    fn test_ba2_dx10_basic() {
+        // Build a minimal DX10 BA2 (texture archive)
+        let mut buf = Vec::new();
+
+        // Header (24 bytes)
+        buf.extend_from_slice(&BA2_MAGIC.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(b"DX10");
+        buf.extend_from_slice(&1u32.to_le_bytes()); // file_count = 1
+
+        // DX10 entry starts at offset 24
+        // name_table will be after the entry + 1 chunk
+        // DX10 header: hash(4)+ext(4)+dirhash(4)+unk8(1)+numchunks(1)+chunkheadersize(2)
+        //              +height(2)+width(2)+nummips(1)+format(1)+tilemode(2) = 24 bytes
+        // Chunk: offset(8)+packed(4)+unpacked(4)+start_mip(2)+end_mip(2) = 20 bytes
+        let name_table_offset = 24u64 + 24u64 + 20u64; // header + dx10 entry + 1 chunk
+        buf.extend_from_slice(&name_table_offset.to_le_bytes());
+
+        // DX10 file entry
+        buf.extend_from_slice(&0xAAAAu32.to_le_bytes()); // name_hash
+        buf.extend_from_slice(b"dds\0"); // ext
+        buf.extend_from_slice(&0xBBBBu32.to_le_bytes()); // dir_hash
+        buf.push(0); // unk8
+        buf.push(1); // num_chunks = 1
+        buf.extend_from_slice(&24u16.to_le_bytes()); // chunk_header_size
+        buf.extend_from_slice(&512u16.to_le_bytes()); // height
+        buf.extend_from_slice(&512u16.to_le_bytes()); // width
+        buf.push(1); // num_mips
+        buf.push(0); // format
+        buf.extend_from_slice(&0u16.to_le_bytes()); // tile_mode
+
+        // Chunk record
+        buf.extend_from_slice(&0u64.to_le_bytes()); // chunk_offset
+        buf.extend_from_slice(&0u32.to_le_bytes()); // chunk_packed (0 = uncompressed)
+        buf.extend_from_slice(&4096u32.to_le_bytes()); // chunk_unpacked
+        buf.extend_from_slice(&0u16.to_le_bytes()); // start_mip
+        buf.extend_from_slice(&0u16.to_le_bytes()); // end_mip
+
+        // Name table
+        let name = b"textures\\sky.dds";
+        buf.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        buf.extend_from_slice(name);
+
+        let result = parse_ba2_contents(&buf).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].path, "textures\\sky.dds");
+        assert_eq!(result[0].size, 4096);
+        assert_eq!(result[0].compressed, false);
+    }
+
+    #[test]
+    fn test_bsa_multiple_folders() {
+        let fixture = build_bsa_v104_fixture(&[
+            ("meshes", &["a.nif", "b.nif"]),
+            ("textures", &["c.dds", "d.dds"]),
+            ("sound", &["e.wav"]),
+        ]);
+        let result = parse_bsa_contents(&fixture).unwrap();
+        assert_eq!(result.len(), 5);
+        assert_eq!(result[0].path, "meshes\\a.nif");
+        assert_eq!(result[1].path, "meshes\\b.nif");
+        assert_eq!(result[2].path, "textures\\c.dds");
+        assert_eq!(result[3].path, "textures\\d.dds");
+        assert_eq!(result[4].path, "sound\\e.wav");
+    }
+
+    #[test]
+    fn test_roundtrip_empty_list() {
+        let original: Vec<PatchedStringEntry> = vec![];
+        let built = build_strings_data(&original, "strings").unwrap();
+        let parsed = parse_strings_file(&built, "strings").unwrap();
+        assert_eq!(parsed.len(), 0);
+    }
+
+    #[test]
+    fn test_roundtrip_long_string() {
+        let long_text = "A".repeat(10000);
+        let original = vec![
+            PatchedStringEntry { id: 1, value: long_text.clone() },
+        ];
+        let built = build_strings_data(&original, "strings").unwrap();
+        let parsed = parse_strings_file(&built, "strings").unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].value, long_text);
+    }
+
+    #[test]
+    fn test_strings_directory_offset_out_of_bounds() {
+        // Create a strings file where an entry's offset points past end of data
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&2u32.to_le_bytes()); // count = 2
+        buf.extend_from_slice(&5u32.to_le_bytes()); // data_size = 5
+        // Entry 1: valid
+        buf.extend_from_slice(&1u32.to_le_bytes()); // id
+        buf.extend_from_slice(&0u32.to_le_bytes()); // offset 0
+        // Entry 2: offset way past end
+        buf.extend_from_slice(&2u32.to_le_bytes()); // id
+        buf.extend_from_slice(&9999u32.to_le_bytes()); // offset = 9999 (out of bounds)
+        // String data: only "test\0"
+        buf.extend_from_slice(b"test\0");
+
+        let result = parse_strings_file(&buf, "strings").unwrap();
+        // Entry 2 should be skipped (offset out of bounds)
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "test");
+    }
+
+    #[test]
+    fn test_accuracy_score() {
+        let (precision, _recall, f1, total, passed) = compute_accuracy_score();
+        println!("\n═══════════════════════════════════════════════");
+        println!("AUTORESEARCH SCORER — Bethesda Patcher");
+        println!("═══════════════════════════════════════════════");
+        println!("Tests: {}/{} passed", passed, total);
+        println!("Precision: {:.1}%", precision * 100.0);
+        println!("F1 Score:  {:.1}%", f1 * 100.0);
+        println!("═══════════════════════════════════════════════\n");
+        assert_eq!(passed, total, "Not all accuracy tests passed: {}/{}", passed, total);
+    }
+}
