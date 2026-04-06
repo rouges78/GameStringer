@@ -2190,18 +2190,26 @@ export default function GameDetailPage() {
                     <div className="px-5 py-4">
                       <p className="text-xs text-slate-300 mb-4 font-medium">Cosa vuoi fare ora?</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {/* Option 1: Create Project */}
+                        {/* Option 1: Review Translations */}
                         <button
                           onClick={() => {
-                            window.location.href = `/translator/pro?game=${encodeURIComponent(game.title || '')}&installDir=${encodeURIComponent(game.installPath || '')}&engine=${encodeURIComponent(game.engine || '')}`;
+                            setAutoTranslateActive(false);
+                            setAutoTranslateResult(null);
+                            // Scroll to translation section or open editor inline
+                            const translationSection = document.querySelector('[data-tutorial="translation-section"]');
+                            if (translationSection) {
+                              translationSection.scrollIntoView({ behavior: 'smooth' });
+                            } else {
+                              window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}`;
+                            }
                           }}
                           className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 hover:border-indigo-500/40 transition-all text-center"
                         >
                           <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <FolderOpen className="h-4.5 w-4.5 text-indigo-400" />
+                            <Edit3 className="h-4 w-4 text-indigo-400" />
                           </div>
-                          <span className="text-xs font-bold text-indigo-300">Apri Progetto</span>
-                          <span className="text-2xs text-slate-500 leading-tight">Rivedi, modifica e perfeziona le traduzioni nel Neural Translator</span>
+                          <span className="text-xs font-bold text-indigo-300">Rivedi Traduzioni</span>
+                          <span className="text-2xs text-slate-500 leading-tight">Controlla e modifica le stringhe tradotte nell'editor</span>
                         </button>
 
                         {/* Option 2: Test Game */}
