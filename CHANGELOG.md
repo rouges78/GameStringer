@@ -1,5 +1,16 @@
 # GameStringer Changelog
 
+## 🔧 v1.6.1 - 2026-04-06
+
+- Fix pipeline auto-update: firma binari con minisign + `latest.json` multipiattaforma (Windows/macOS/Linux)
+- Upgrade tauri 2.10.2 → 2.10.3 (fix `__TAURI_BUNDLE_TYPE` marker, issue #14186)
+- Upgrade tauri-action v0.5 → v0.6.2 (fix pattern matching `.sig` files)
+- Aggiunta config `createUpdaterArtifacts: "v1Compatible"` per generare updater bundles (.nsis.zip, .app.tar.gz, .AppImage.tar.gz)
+- Rimossi step custom `merge-updater` — tauri-action v0.6.2 gestisce `latest.json` nativamente
+- Versione portable Windows (.zip) inclusa nella release
+- 140 unit test per i parser Bethesda (54) e CRI Middleware (86): BSA/BA2, STRINGS, ESP/ESM, CPK, @UTF, CRILAYLA, MSG/BMD/JSON/XML/FTD
+- Documentazione `RELEASE_PROCESS.md` riscritta con tutte le lezioni apprese
+
 ## 🚀 v1.6.0 - 2026-04-04
 
 - Prediction Tool (P.T.): analisi traduzione per-gioco con difficulty score 0-100, DRM detection, encoding analysis, translation complexity, confidence score, LLM time estimates su 18 modelli, 5 chain Local/Cloud/Hybrid, export report
