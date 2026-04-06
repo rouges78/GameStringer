@@ -301,7 +301,6 @@ export default function GlossaryPage() {
   }
 
   return (
-    <MainLayout>
       <div className="p-4 space-y-4 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -862,6 +861,5 @@ export default function GlossaryPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
   );
 }
