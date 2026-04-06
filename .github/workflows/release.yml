@@ -162,25 +162,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Locate latest.json (Windows)
-        id: locate_updater_win
-        shell: pwsh
-        run: |
-          $file = Get-ChildItem -Path src-tauri/target -Filter latest.json -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $file) {
-            Write-Error "latest.json not produced by tauri-action (Windows). Check TAURI_SIGNING_PRIVATE_KEY secret."
-            exit 1
-          }
-          Write-Host "Found: $($file.FullName)"
-          Copy-Item $file.FullName -Destination "latest-windows.json"
-          Get-Content latest-windows.json
-
-      - name: Upload updater artifact (Windows)
-        uses: actions/upload-artifact@v4
-        with:
-          name: updater-windows
-          path: latest-windows.json
-          retention-days: 1
 
   build-linux:
     runs-on: ubuntu-22.04
@@ -273,23 +254,6 @@ jobs:
           includeDebug: false
           args: --bundles deb,appimage,rpm
 
-      - name: Locate latest.json (Linux)
-        run: |
-          file=$(find src-tauri/target -name latest.json -type f | head -n1)
-          if [ -z "$file" ]; then
-            echo "::error::latest.json not produced by tauri-action (Linux). Check TAURI_SIGNING_PRIVATE_KEY secret."
-            exit 1
-          fi
-          echo "Found: $file"
-          cp "$file" latest-linux.json
-          cat latest-linux.json
-
-      - name: Upload updater artifact (Linux)
-        uses: actions/upload-artifact@v4
-        with:
-          name: updater-linux
-          path: latest-linux.json
-          retention-days: 1
 
   build-macos:
     runs-on: macos-latest
@@ -386,121 +350,4 @@ jobs:
           includeDebug: false
           args: --target x86_64-apple-darwin
 
-      - name: Locate latest.json (macOS)
-        run: |
-          # tauri-action generates one latest.json per target; grab both if present
-          mkdir -p updater-mac
-          found=0
-          for f in $(find src-tauri/target -name latest.json -type f); do
-            case "$f" in
-              *aarch64-apple-darwin*) cp "$f" updater-mac/latest-macos-aarch64.json; found=1;;
-              *x86_64-apple-darwin*) cp "$f" updater-mac/latest-macos-x86_64.json; found=1;;
-              *) cp "$f" "updater-mac/latest-macos-$(basename $(dirname $(dirname $f))).json"; found=1;;
-            esac
-          done
-          if [ $found -eq 0 ]; then
-            echo "::error::latest.json not produced by tauri-action (macOS). Check TAURI_SIGNING_PRIVATE_KEY secret."
-            exit 1
-          fi
-          ls -la updater-mac
-          for f in updater-mac/*.json; do echo "--- $f ---"; cat "$f"; done
 
-      - name: Upload updater artifact (macOS)
-        uses: actions/upload-artifact@v4
-        with:
-          name: updater-macos
-          path: updater-mac/
-          retention-days: 1
-
-  merge-updater:
-    name: Merge latest.json and publish
-    needs: [build-windows, build-linux, build-macos]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Windows updater
-        uses: actions/download-artifact@v4
-        with:
-          name: updater-windows
-          path: updater/windows
-
-      - name: Download Linux updater
-        uses: actions/download-artifact@v4
-        with:
-          name: updater-linux
-          path: updater/linux
-
-      - name: Download macOS updater
-        uses: actions/download-artifact@v4
-        with:
-          name: updater-macos
-          path: updater/macos
-
-      - name: Merge platform entries into unified latest.json
-        run: |
-          set -euo pipefail
-          node <<'EOF'
-          const fs = require('fs');
-          const path = require('path');
-
-          const files = [
-            'updater/windows/latest-windows.json',
-            'updater/linux/latest-linux.json',
-            ...fs.readdirSync('updater/macos').map(f => path.join('updater/macos', f)),
-          ];
-
-          let base = null;
-          const platforms = {};
-
-          for (const file of files) {
-            if (!fs.existsSync(file)) {
-              console.error(`Missing: ${file}`);
-              process.exit(1);
-            }
-            const j = JSON.parse(fs.readFileSync(file, 'utf8'));
-            if (!base) base = { version: j.version, notes: j.notes, pub_date: j.pub_date };
-            for (const [k, v] of Object.entries(j.platforms || {})) {
-              platforms[k] = v;
-            }
-          }
-
-          const merged = { ...base, platforms };
-          fs.writeFileSync('latest.json', JSON.stringify(merged, null, 2));
-          console.log(JSON.stringify(merged, null, 2));
-          EOF
-
-      - name: Guard against empty signatures
-        run: |
-          set -euo pipefail
-          node <<'EOF'
-          const fs = require('fs');
-          const j = JSON.parse(fs.readFileSync('latest.json', 'utf8'));
-          const required = ['windows-x86_64', 'linux-x86_64', 'darwin-aarch64', 'darwin-x86_64'];
-          const missing = [];
-          const unsigned = [];
-          for (const key of required) {
-            const p = j.platforms?.[key];
-            if (!p) { missing.push(key); continue; }
-            if (!p.signature || p.signature.trim() === '') unsigned.push(key);
-            if (!p.url || !p.url.startsWith('http')) unsigned.push(key + ' (url)');
-          }
-          if (missing.length) {
-            console.error('::error::Missing platforms in latest.json: ' + missing.join(', '));
-          }
-          if (unsigned.length) {
-            console.error('::error::Empty signature or invalid URL for: ' + unsigned.join(', '));
-          }
-          if (missing.length || unsigned.length) {
-            console.error('Refusing to publish a broken updater manifest.');
-            process.exit(1);
-          }
-          console.log('All platforms signed OK:', Object.keys(j.platforms).join(', '));
-          EOF
-
-      - name: Upload unified latest.json to Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event.inputs.version }}
-          files: latest.json
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
