@@ -87,7 +87,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI2MUM3NzA0QzlGM0I1NTQKUldSVXRmUEpCSGNjdHVmcFUvVm5JajdOakRZcTRheGgzOUpwQ2VjcGNUdWFpY1JyOUdMZDFFaUMK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdDMjI1NTcyNzI3NDRBMjgKUldRb1NuUnljbFVpZlB5MlZXeFpqaVhpQk00cVJOY2gycURsaEp3Y1ZndHFVWlAzbXExTlIxejIK",
       "endpoints": [
         "https://github.com/rouges78/GameStringer/releases/latest/download/latest.json"
       ],
