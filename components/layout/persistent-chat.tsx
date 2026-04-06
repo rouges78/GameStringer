@@ -275,7 +275,7 @@ export function PersistentChat() {
   if (!enabled) return null;
 
   // Hide on community-hub page (has its own inline chat)
-  if (pathname === '/community-hub') return null;
+  if (pathname?.includes('community')) return null;
 
   const chatWidth = expanded ? 'w-[480px]' : 'w-[360px]';
   const chatHeight = expanded ? 'h-[600px]' : 'h-[420px]';
