@@ -594,7 +594,7 @@ fn find_ks_in_dir(dir: &Path, filename: &str) -> Option<PathBuf> {
     None
 }
 
-fn replace_ks_text(
+pub(crate) fn replace_ks_text(
     line: &str, original: &str, translated: &str,
     tag_re: &regex::Regex,
 ) -> String {
@@ -636,4 +636,682 @@ fn replace_ks_text(
     }
     // Fallback: return original line unchanged
     line.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write as IoWrite;
+
+    // ========================================================================
+    // count_ks_strings
+    // ========================================================================
+
+    #[test]
+    fn count_ks_strings_empty_input() {
+        assert_eq!(count_ks_strings(""), 0);
+    }
+
+    #[test]
+    fn count_ks_strings_only_comments_and_labels() {
+        let input = "; this is a comment\n; another comment\n*label1\n*label2\n";
+        assert_eq!(count_ks_strings(input), 0);
+    }
+
+    #[test]
+    fn count_ks_strings_skips_at_tags() {
+        let input = "@jump target=scene2\n@bg storage=bg1.jpg\n";
+        assert_eq!(count_ks_strings(input), 0);
+    }
+
+    #[test]
+    fn count_ks_strings_skips_bracket_tags() {
+        let input = "[cm]\n[p]\n[wait time=1000]\n";
+        assert_eq!(count_ks_strings(input), 0);
+    }
+
+    #[test]
+    fn count_ks_strings_counts_character_names() {
+        // #Name is counted when len > 1 (the '#' line itself: t.starts_with('#') || t.len() > 1)
+        let input = "#Alice\n#Bob\n";
+        assert_eq!(count_ks_strings(input), 2);
+    }
+
+    #[test]
+    fn count_ks_strings_counts_dialogue_lines() {
+        let input = "Hello, this is dialogue.\nAnother line of text.\n";
+        assert_eq!(count_ks_strings(input), 2);
+    }
+
+    #[test]
+    fn count_ks_strings_skips_empty_and_whitespace_lines() {
+        let input = "\n   \n\t\nHello\n";
+        assert_eq!(count_ks_strings(input), 1);
+    }
+
+    #[test]
+    fn count_ks_strings_mixed_content() {
+        let input = "\
+; comment
+*label
+@command
+[tag]
+#CharacterName
+Hello world!
+Another dialogue line.
+; another comment
+";
+        // #CharacterName = 1, Hello world! = 1, Another dialogue line. = 1
+        assert_eq!(count_ks_strings(input), 3);
+    }
+
+    #[test]
+    fn count_ks_strings_single_char_line_not_counted() {
+        // A line with exactly 1 char that is not '#' and doesn't start with special chars
+        // t.starts_with('#') || t.len() > 1 => for single char "x" (len=1): false || false = false
+        let input = "x\n";
+        assert_eq!(count_ks_strings(input), 0);
+    }
+
+    #[test]
+    fn count_ks_strings_hash_only_line() {
+        // "#" alone: starts_with('#') is true, len()>1 is false -> condition is true via starts_with
+        let input = "#\n";
+        assert_eq!(count_ks_strings(input), 1);
+    }
+
+    // ========================================================================
+    // parse_ks_strings
+    // ========================================================================
+
+    #[test]
+    fn parse_ks_strings_empty_input() {
+        let result = parse_ks_strings("", "test.ks");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_ks_strings_character_name() {
+        let input = "#Alice\nHello there!\n";
+        let result = parse_ks_strings(input, "scene.ks");
+        assert_eq!(result.len(), 2);
+
+        assert_eq!(result[0].original, "Alice");
+        assert_eq!(result[0].string_type, "name");
+        assert_eq!(result[0].line_number, 1);
+        assert!(result[0].character.is_none());
+
+        assert_eq!(result[1].original, "Hello there!");
+        assert_eq!(result[1].string_type, "dialogue");
+        assert_eq!(result[1].character, Some("Alice".to_string()));
+        assert_eq!(result[1].line_number, 2);
+    }
+
+    #[test]
+    fn parse_ks_strings_narration_without_character() {
+        let input = "This is narration text.\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].string_type, "narration");
+        assert!(result[0].character.is_none());
+    }
+
+    #[test]
+    fn parse_ks_strings_dialogue_after_character() {
+        let input = "#Bob\nFirst line of dialogue.\nSecond line.\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 3);
+        // Name
+        assert_eq!(result[0].string_type, "name");
+        // Both dialogue lines have Bob as character
+        assert_eq!(result[1].character, Some("Bob".to_string()));
+        assert_eq!(result[2].character, Some("Bob".to_string()));
+    }
+
+    #[test]
+    fn parse_ks_strings_choice_link() {
+        let input = "[link target=*choice1]Go to the park[endlink]\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].original, "Go to the park");
+        assert_eq!(result[0].string_type, "choice");
+    }
+
+    #[test]
+    fn parse_ks_strings_choice_short_text_ignored() {
+        // Choice text must be len > 1
+        let input = "[link target=*x]A[endlink]\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_ks_strings_skips_comments_labels_at_tags() {
+        let input = "; comment\n*label\n@jump target=x\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_ks_strings_inline_tags_stripped_from_text() {
+        let input = "Hello[wait time=500] world!\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].original, "Hello world!");
+    }
+
+    #[test]
+    fn parse_ks_strings_line_starting_with_bracket_has_text() {
+        // A line like "[r]Some text here" - starts with [, tag stripped, text remains
+        let input = "[r]Some important text\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].original, "Some important text");
+        assert_eq!(result[0].string_type, "dialogue");
+    }
+
+    #[test]
+    fn parse_ks_strings_id_format() {
+        let input = "#Alice\nHello!\n";
+        let result = parse_ks_strings(input, "scene01.ks");
+        // Dots in filename are replaced with underscores
+        assert_eq!(result[0].id, "scene01_ks_1");
+        assert_eq!(result[1].id, "scene01_ks_2");
+    }
+
+    #[test]
+    fn parse_ks_strings_empty_hash_name_skipped() {
+        // "# " (hash followed by only whitespace) => name is empty after trim => skipped
+        let input = "#   \nSome text line.\n";
+        let result = parse_ks_strings(input, "test.ks");
+        // # with whitespace-only name is skipped, text is narration (no char set)
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].string_type, "narration");
+    }
+
+    #[test]
+    fn parse_ks_strings_tag_only_bracket_line_skipped() {
+        // [cm] -> stripped = "" (len 0) -> skipped
+        let input = "[cm]\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_ks_strings_single_char_text_skipped() {
+        // clean text len must be > 1
+        let input = "x\n";
+        let result = parse_ks_strings(input, "test.ks");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_ks_strings_full_scene() {
+        let input = "\
+; Scene 1
+*start
+@bg storage=bg_school.jpg
+#Alice
+Nice to meet you!
+[p]
+#Bob
+Hello, Alice.
+[link target=*agree]I agree[endlink]
+";
+        let result = parse_ks_strings(input, "scene1.ks");
+        // #Alice (name), "Nice to meet you!" (dialogue, char=Alice),
+        // #Bob (name), "Hello, Alice." (dialogue, char=Bob),
+        // "I agree" (choice)
+        assert_eq!(result.len(), 5);
+        let types: Vec<&str> = result.iter().map(|s| s.string_type.as_str()).collect();
+        assert_eq!(types, vec!["name", "dialogue", "name", "dialogue", "choice"]);
+    }
+
+    // ========================================================================
+    // replace_ks_text
+    // ========================================================================
+
+    fn tag_regex() -> regex::Regex {
+        regex::Regex::new(r"\[[^\]]*\]").unwrap()
+    }
+
+    #[test]
+    fn replace_ks_text_direct_match() {
+        let re = tag_regex();
+        let result = replace_ks_text(
+            "Hello world!", "Hello world!", "Ciao mondo!", &re,
+        );
+        assert_eq!(result, "Ciao mondo!");
+    }
+
+    #[test]
+    fn replace_ks_text_partial_match() {
+        let re = tag_regex();
+        let result = replace_ks_text(
+            "She said Hello world! to him", "Hello world!", "Ciao mondo!", &re,
+        );
+        assert_eq!(result, "She said Ciao mondo! to him");
+    }
+
+    #[test]
+    fn replace_ks_text_with_tags_single_segment() {
+        let re = tag_regex();
+        // Line has tags, original is the stripped version
+        let result = replace_ks_text(
+            "[r]Hello world![p]", "Hello world!", "Ciao mondo!", &re,
+        );
+        assert_eq!(result, "[r]Ciao mondo![p]");
+    }
+
+    #[test]
+    fn replace_ks_text_no_match_returns_original() {
+        let re = tag_regex();
+        let result = replace_ks_text(
+            "Some unrelated text", "Not found", "Translation", &re,
+        );
+        assert_eq!(result, "Some unrelated text");
+    }
+
+    #[test]
+    fn replace_ks_text_empty_line() {
+        let re = tag_regex();
+        let result = replace_ks_text("", "hello", "ciao", &re);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn replace_ks_text_tag_only_line() {
+        let re = tag_regex();
+        // Line is only tags, clean text is empty, doesn't match "hello"
+        let result = replace_ks_text("[cm][p]", "hello", "ciao", &re);
+        assert_eq!(result, "[cm][p]");
+    }
+
+    #[test]
+    fn replace_ks_text_leading_tag_text() {
+        let re = tag_regex();
+        let result = replace_ks_text(
+            "[wait time=500]Good morning!", "Good morning!", "Buongiorno!", &re,
+        );
+        assert_eq!(result, "[wait time=500]Buongiorno!");
+    }
+
+    #[test]
+    fn replace_ks_text_text_between_tags() {
+        let re = tag_regex();
+        // text surrounded by tags, single text segment
+        let result = replace_ks_text(
+            "[font size=24]Hello there[resetfont]",
+            "Hello there",
+            "Salve",
+            &re,
+        );
+        assert_eq!(result, "[font size=24]Salve[resetfont]");
+    }
+
+    // ========================================================================
+    // get_tyrano_stats
+    // ========================================================================
+
+    #[test]
+    fn get_tyrano_stats_empty() {
+        let stats = get_tyrano_stats(vec![]);
+        assert_eq!(stats["total"], serde_json::json!(0));
+        assert_eq!(stats["translated"], serde_json::json!(0));
+        assert_eq!(stats["percentage"], serde_json::json!(0));
+    }
+
+    #[test]
+    fn get_tyrano_stats_with_translations() {
+        let strings = vec![
+            TyranoString {
+                id: "s1".into(), original: "Hello".into(),
+                translated: "Ciao".into(), file: "a.ks".into(),
+                line_number: 1, string_type: "dialogue".into(),
+                character: None,
+            },
+            TyranoString {
+                id: "s2".into(), original: "World".into(),
+                translated: "".into(), file: "a.ks".into(),
+                line_number: 2, string_type: "narration".into(),
+                character: None,
+            },
+            TyranoString {
+                id: "s3".into(), original: "Bye".into(),
+                translated: "Addio".into(), file: "b.ks".into(),
+                line_number: 1, string_type: "dialogue".into(),
+                character: Some("Alice".into()),
+            },
+        ];
+        let stats = get_tyrano_stats(strings);
+        assert_eq!(stats["total"], serde_json::json!(3));
+        assert_eq!(stats["translated"], serde_json::json!(2));
+        assert_eq!(stats["percentage"], serde_json::json!(66)); // 2*100/3 = 66
+        // by_type should have dialogue=2, narration=1
+        let by_type = stats["by_type"].as_object().unwrap();
+        assert_eq!(by_type["dialogue"], serde_json::json!(2));
+        assert_eq!(by_type["narration"], serde_json::json!(1));
+        // by_file should have a.ks=2, b.ks=1
+        let by_file = stats["by_file"].as_object().unwrap();
+        assert_eq!(by_file["a.ks"], serde_json::json!(2));
+        assert_eq!(by_file["b.ks"], serde_json::json!(1));
+    }
+
+    #[test]
+    fn get_tyrano_stats_all_translated() {
+        let strings = vec![
+            TyranoString {
+                id: "s1".into(), original: "A".into(),
+                translated: "B".into(), file: "x.ks".into(),
+                line_number: 1, string_type: "name".into(),
+                character: None,
+            },
+        ];
+        let stats = get_tyrano_stats(strings);
+        assert_eq!(stats["percentage"], serde_json::json!(100));
+    }
+
+    // ========================================================================
+    // ASAR round-trip: repack then read header
+    // ========================================================================
+
+    #[test]
+    fn asar_roundtrip_repack_and_read() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src_dir = tmp.path().join("src");
+        let sub_dir = src_dir.join("subdir");
+        std::fs::create_dir_all(&sub_dir).unwrap();
+
+        // Create some test files
+        std::fs::write(src_dir.join("hello.txt"), b"Hello World").unwrap();
+        std::fs::write(sub_dir.join("data.bin"), b"\x00\x01\x02\x03").unwrap();
+        std::fs::write(src_dir.join("scene.ks"), b"#Alice\nHello!\n").unwrap();
+
+        let asar_path = tmp.path().join("test.asar");
+        let count = repack_asar(&src_dir, &asar_path).unwrap();
+        assert_eq!(count, 3);
+
+        // Read back the header
+        let (hdr, doff) = read_asar_header(&asar_path).unwrap();
+        assert!(doff > 16); // header offset must be past the 16-byte preamble
+
+        // Verify header structure
+        let files = hdr.get("files").unwrap().as_object().unwrap();
+        assert!(files.contains_key("hello.txt"));
+        assert!(files.contains_key("scene.ks"));
+        assert!(files.contains_key("subdir"));
+
+        // Read back a file
+        let hello_entry = &files["hello.txt"];
+        let off: u64 = hello_entry["offset"].as_str().unwrap().parse().unwrap();
+        let sz = hello_entry["size"].as_u64().unwrap();
+        let data = read_asar_file(&asar_path, doff, off, sz).unwrap();
+        assert_eq!(data, b"Hello World");
+
+        // Read nested file
+        let sub_files = files["subdir"]["files"].as_object().unwrap();
+        let data_entry = &sub_files["data.bin"];
+        let off2: u64 = data_entry["offset"].as_str().unwrap().parse().unwrap();
+        let sz2 = data_entry["size"].as_u64().unwrap();
+        let data2 = read_asar_file(&asar_path, doff, off2, sz2).unwrap();
+        assert_eq!(data2, b"\x00\x01\x02\x03");
+    }
+
+    #[test]
+    fn asar_extract_all_roundtrip() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src_dir = tmp.path().join("pack_src");
+        std::fs::create_dir_all(src_dir.join("data/scenario")).unwrap();
+
+        let ks_content = "#Hero\nWelcome to the game!\n[p]\n";
+        std::fs::write(src_dir.join("data/scenario/main.ks"), ks_content).unwrap();
+        std::fs::write(src_dir.join("index.html"), b"<html></html>").unwrap();
+
+        // Pack
+        let asar_path = tmp.path().join("app.asar");
+        repack_asar(&src_dir, &asar_path).unwrap();
+
+        // Extract
+        let out_dir = tmp.path().join("extracted");
+        let extracted = extract_asar_all(&asar_path, &out_dir).unwrap();
+        assert_eq!(extracted, 2);
+
+        // Verify extracted content
+        let extracted_ks = std::fs::read_to_string(out_dir.join("data/scenario/main.ks")).unwrap();
+        assert_eq!(extracted_ks, ks_content);
+        let extracted_html = std::fs::read_to_string(out_dir.join("index.html")).unwrap();
+        assert_eq!(extracted_html, "<html></html>");
+    }
+
+    // ========================================================================
+    // find_file_data (via ASAR)
+    // ========================================================================
+
+    #[test]
+    fn find_file_data_locates_nested_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src_dir = tmp.path().join("src");
+        std::fs::create_dir_all(src_dir.join("scenario")).unwrap();
+        std::fs::write(src_dir.join("scenario/test.ks"), b"test content").unwrap();
+
+        let asar_path = tmp.path().join("test.asar");
+        repack_asar(&src_dir, &asar_path).unwrap();
+
+        let (hdr, doff) = read_asar_header(&asar_path).unwrap();
+        let data = find_file_data(&hdr, &asar_path, doff, "test.ks");
+        assert!(data.is_some());
+        assert_eq!(data.unwrap(), b"test content");
+    }
+
+    #[test]
+    fn find_file_data_returns_none_for_missing() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src_dir = tmp.path().join("src");
+        std::fs::create_dir_all(&src_dir).unwrap();
+        std::fs::write(src_dir.join("a.txt"), b"data").unwrap();
+
+        let asar_path = tmp.path().join("test.asar");
+        repack_asar(&src_dir, &asar_path).unwrap();
+
+        let (hdr, doff) = read_asar_header(&asar_path).unwrap();
+        let data = find_file_data(&hdr, &asar_path, doff, "nonexistent.ks");
+        assert!(data.is_none());
+    }
+
+    // ========================================================================
+    // read_asar_header error paths
+    // ========================================================================
+
+    #[test]
+    fn read_asar_header_nonexistent_file() {
+        let result = read_asar_header(Path::new("/nonexistent/path/app.asar"));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn read_asar_header_truncated_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("bad.asar");
+        // Write only 8 bytes (need 16 for the preamble)
+        std::fs::write(&path, &[0u8; 8]).unwrap();
+        let result = read_asar_header(&path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn read_asar_header_invalid_json() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("bad.asar");
+        let mut f = std::fs::File::create(&path).unwrap();
+        let bad_json = b"not json at all!";
+        let sz = bad_json.len() as u32;
+        // Write 4 ints then the bad json
+        f.write_all(&0u32.to_le_bytes()).unwrap();
+        f.write_all(&0u32.to_le_bytes()).unwrap();
+        f.write_all(&0u32.to_le_bytes()).unwrap();
+        f.write_all(&sz.to_le_bytes()).unwrap();
+        f.write_all(bad_json).unwrap();
+        let result = read_asar_header(&path);
+        assert!(result.is_err());
+    }
+
+    // ========================================================================
+    // find_ks_in_dir
+    // ========================================================================
+
+    #[test]
+    fn find_ks_in_dir_finds_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("a/b");
+        std::fs::create_dir_all(&sub).unwrap();
+        std::fs::write(sub.join("scene.ks"), b"content").unwrap();
+
+        let result = find_ks_in_dir(tmp.path(), "scene.ks");
+        assert!(result.is_some());
+        assert!(result.unwrap().ends_with("scene.ks"));
+    }
+
+    #[test]
+    fn find_ks_in_dir_returns_none_when_missing() {
+        let tmp = tempfile::tempdir().unwrap();
+        let result = find_ks_in_dir(tmp.path(), "missing.ks");
+        assert!(result.is_none());
+    }
+
+    // ========================================================================
+    // collect_files
+    // ========================================================================
+
+    #[test]
+    fn collect_files_gathers_with_forward_slashes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("dir1");
+        std::fs::create_dir_all(&sub).unwrap();
+        std::fs::write(sub.join("file.txt"), b"data").unwrap();
+        std::fs::write(tmp.path().join("root.txt"), b"root").unwrap();
+
+        let mut files = Vec::new();
+        collect_files(tmp.path(), tmp.path(), &mut files).unwrap();
+        files.sort_by(|a, b| a.0.cmp(&b.0));
+
+        assert_eq!(files.len(), 2);
+        // All paths should use forward slashes
+        for (path, _) in &files {
+            assert!(!path.contains('\\'), "path should use forward slashes: {}", path);
+        }
+        assert!(files.iter().any(|(p, _)| p == "dir1/file.txt"));
+        assert!(files.iter().any(|(p, _)| p == "root.txt"));
+    }
+
+    // ========================================================================
+    // Integration-style: parse then replace round-trip
+    // ========================================================================
+
+    #[test]
+    fn parse_and_replace_roundtrip() {
+        let content = "\
+; Opening scene
+*start
+@bg storage=bg_classroom.jpg
+#Alice
+Good morning, everyone!
+[p]
+#Bob
+Hello, Alice. How are you?
+[link target=*reply1]I'm fine, thanks![endlink]
+";
+        let strings = parse_ks_strings(content, "scene.ks");
+        // We should have: Alice(name), Good morning...(dialogue),
+        //                  Bob(name), Hello Alice...(dialogue), I'm fine...(choice)
+        assert_eq!(strings.len(), 5);
+
+        // Simulate translating
+        let re = tag_regex();
+        let lines: Vec<&str> = content.lines().collect();
+
+        // Translate "Good morning, everyone!" on line 5
+        let s = &strings[1];
+        assert_eq!(s.original, "Good morning, everyone!");
+        assert_eq!(s.line_number, 5);
+        let new_line = replace_ks_text(
+            lines[(s.line_number - 1) as usize],
+            &s.original,
+            "Buongiorno a tutti!",
+            &re,
+        );
+        assert_eq!(new_line, "Buongiorno a tutti!");
+
+        // Translate choice
+        let choice = &strings[4];
+        assert_eq!(choice.string_type, "choice");
+        assert_eq!(choice.original, "I'm fine, thanks!");
+        let choice_line = replace_ks_text(
+            lines[(choice.line_number - 1) as usize],
+            &choice.original,
+            "Sto bene, grazie!",
+            &re,
+        );
+        assert_eq!(choice_line, "[link target=*reply1]Sto bene, grazie![endlink]");
+    }
+
+    // ========================================================================
+    // Edge case: multiple character changes
+    // ========================================================================
+
+    #[test]
+    fn parse_ks_strings_character_switch() {
+        let input = "\
+#Alice
+Hello!
+#Bob
+Hi there!
+#Alice
+How's it going?
+";
+        let result = parse_ks_strings(input, "test.ks");
+        assert_eq!(result.len(), 6); // 3 names + 3 dialogues
+        // After second #Alice, character should be Alice again
+        assert_eq!(result[5].character, Some("Alice".to_string()));
+        assert_eq!(result[5].original, "How's it going?");
+    }
+
+    // ========================================================================
+    // Edge: ASAR with empty files (size=0 skipped in extract)
+    // ========================================================================
+
+    #[test]
+    fn asar_repack_empty_file_is_included() {
+        let tmp = tempfile::tempdir().unwrap();
+        let src_dir = tmp.path().join("src");
+        std::fs::create_dir_all(&src_dir).unwrap();
+        std::fs::write(src_dir.join("empty.txt"), b"").unwrap();
+        std::fs::write(src_dir.join("notempty.txt"), b"data").unwrap();
+
+        let asar_path = tmp.path().join("test.asar");
+        let count = repack_asar(&src_dir, &asar_path).unwrap();
+        // Both files are packed (including empty)
+        assert_eq!(count, 2);
+
+        // But extract_asar_all skips size=0 files
+        let out_dir = tmp.path().join("out");
+        let extracted = extract_asar_all(&asar_path, &out_dir).unwrap();
+        assert_eq!(extracted, 1); // Only notempty.txt
+    }
+
+    // ========================================================================
+    // Edge: replace_ks_text with multiple text segments
+    // ========================================================================
+
+    #[test]
+    fn replace_ks_text_multiple_text_segments_fallback() {
+        let re = tag_regex();
+        // "Hello[r]World" -> clean = "HelloWorld", two text segments
+        // The replace tries line.replace("HelloWorld", ...) but "HelloWorld" is not
+        // a substring of "Hello[r]World", so the line is returned unchanged.
+        // This is a known limitation of the multi-segment fallback path.
+        let result = replace_ks_text(
+            "Hello[r]World", "HelloWorld", "CiaoMondo", &re,
+        );
+        assert_eq!(result, "Hello[r]World");
+    }
 }

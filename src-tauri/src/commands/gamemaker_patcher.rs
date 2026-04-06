@@ -1174,3 +1174,728 @@ pub async fn gm_search_strings(
     
     Ok(results)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Helper: build a minimal IFF/FORM file with given chunks ──
+    fn build_form(chunks: &[(&[u8; 4], &[u8])]) -> Vec<u8> {
+        let mut body = Vec::new();
+        for (magic, data) in chunks {
+            body.extend_from_slice(*magic);
+            body.extend_from_slice(&(data.len() as u32).to_le_bytes());
+            body.extend_from_slice(data);
+        }
+        let mut out = Vec::new();
+        out.extend_from_slice(b"FORM");
+        out.extend_from_slice(&(body.len() as u32).to_le_bytes());
+        out.extend_from_slice(&body);
+        out
+    }
+
+    /// Build a STRG chunk body with the given strings.
+    /// Returns (full FORM file, strg_data_offset, strg_size).
+    fn build_strg_file(strings: &[&str]) -> (Vec<u8>, u64, u32) {
+        let count = strings.len();
+        let table_size = 4 + count * 4; // count + pointers
+
+        // The STRG chunk data offset inside FORM = 8 (FORM header) + 8 (STRG header)
+        let strg_data_abs = 16u32; // FORM(4)+size(4)+STRG(4)+size(4)
+
+        // First pass: compute string data
+        let mut string_data = Vec::new();
+        let mut offsets = Vec::new();
+        for s in strings {
+            let abs_offset = strg_data_abs + table_size as u32 + string_data.len() as u32;
+            offsets.push(abs_offset);
+            let bytes = s.as_bytes();
+            string_data.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+            string_data.extend_from_slice(bytes);
+            string_data.push(0); // null terminator
+        }
+
+        // Build STRG body: count, pointers, string data
+        let mut strg_body = Vec::new();
+        strg_body.extend_from_slice(&(count as u32).to_le_bytes());
+        for off in &offsets {
+            strg_body.extend_from_slice(&off.to_le_bytes());
+        }
+        strg_body.extend_from_slice(&string_data);
+
+        let form = build_form(&[(b"STRG", &strg_body)]);
+        let strg_data_offset = 16u64; // after FORM(8) + STRG magic(4) + STRG size(4)
+        let strg_size = strg_body.len() as u32;
+        (form, strg_data_offset, strg_size)
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // read_u32_le
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_read_u32_le_basic() {
+        let data = [0x01, 0x00, 0x00, 0x00];
+        assert_eq!(read_u32_le(&data, 0), 1);
+    }
+
+    #[test]
+    fn test_read_u32_le_large_value() {
+        let data = [0xFF, 0xFF, 0xFF, 0xFF];
+        assert_eq!(read_u32_le(&data, 0), u32::MAX);
+    }
+
+    #[test]
+    fn test_read_u32_le_offset() {
+        let data = [0x00, 0x00, 0x78, 0x56, 0x34, 0x12];
+        assert_eq!(read_u32_le(&data, 2), 0x12345678);
+    }
+
+    #[test]
+    fn test_read_u32_le_out_of_bounds() {
+        let data = [0x01, 0x02];
+        assert_eq!(read_u32_le(&data, 0), 0); // returns 0 when out of bounds
+    }
+
+    #[test]
+    fn test_read_u32_le_empty() {
+        let data: [u8; 0] = [];
+        assert_eq!(read_u32_le(&data, 0), 0);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // read_gm_string
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_read_gm_string_basic() {
+        // Format: 4-byte length prefix, then chars, then null
+        let mut data = Vec::new();
+        let text = b"Hello";
+        data.extend_from_slice(&(text.len() as u32).to_le_bytes());
+        data.extend_from_slice(text);
+        data.push(0);
+        assert_eq!(read_gm_string(&data, 0), "Hello");
+    }
+
+    #[test]
+    fn test_read_gm_string_empty_string() {
+        let mut data = Vec::new();
+        data.extend_from_slice(&0u32.to_le_bytes());
+        data.push(0);
+        assert_eq!(read_gm_string(&data, 0), "");
+    }
+
+    #[test]
+    fn test_read_gm_string_offset_beyond_data() {
+        let data = [0x00; 4];
+        assert_eq!(read_gm_string(&data, 100), "");
+    }
+
+    #[test]
+    fn test_read_gm_string_at_nonzero_offset() {
+        let mut data = vec![0xAA, 0xBB]; // garbage prefix
+        let text = b"Test";
+        data.extend_from_slice(&(text.len() as u32).to_le_bytes());
+        data.extend_from_slice(text);
+        data.push(0);
+        assert_eq!(read_gm_string(&data, 2), "Test");
+    }
+
+    #[test]
+    fn test_read_gm_string_length_exceeds_data() {
+        // Length says 100 but only 3 bytes available
+        let mut data = Vec::new();
+        data.extend_from_slice(&100u32.to_le_bytes());
+        data.extend_from_slice(b"abc");
+        // Should return "abc" (clamped to data.len())
+        assert_eq!(read_gm_string(&data, 0), "abc");
+    }
+
+    #[test]
+    fn test_read_gm_string_invalid_utf8_lossy() {
+        let mut data = Vec::new();
+        data.extend_from_slice(&3u32.to_le_bytes());
+        data.push(0xFF);
+        data.push(0xFE);
+        data.push(b'A');
+        data.push(0);
+        let result = read_gm_string(&data, 0);
+        // Should contain replacement chars but not panic
+        assert!(result.contains('A'));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // detect_version
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_detect_version_studio_23_seqn() {
+        let chunks = vec!["GEN8".to_string(), "SEQN".to_string(), "STRG".to_string()];
+        assert_eq!(detect_version(&chunks), "Studio 2.3+");
+    }
+
+    #[test]
+    fn test_detect_version_studio_23_feds() {
+        let chunks = vec!["FEDS".to_string()];
+        assert_eq!(detect_version(&chunks), "Studio 2.3+");
+    }
+
+    #[test]
+    fn test_detect_version_studio_2x() {
+        let chunks = vec!["GEN8".to_string(), "TGIN".to_string(), "STRG".to_string()];
+        assert_eq!(detect_version(&chunks), "Studio 2.x");
+    }
+
+    #[test]
+    fn test_detect_version_studio_1x() {
+        let chunks = vec!["GEN8".to_string(), "STRG".to_string()];
+        assert_eq!(detect_version(&chunks), "Studio 1.x");
+    }
+
+    #[test]
+    fn test_detect_version_empty_chunks() {
+        let chunks: Vec<String> = vec![];
+        assert_eq!(detect_version(&chunks), "Studio 1.x");
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // is_translatable
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_is_translatable_real_text_with_spaces() {
+        assert!(is_translatable("Hello world, this is a test"));
+        assert!(is_translatable("Choose your character"));
+        assert!(is_translatable("FRESH MEAT - gain a mysterious meat"));
+    }
+
+    #[test]
+    fn test_is_translatable_short_labels() {
+        assert!(is_translatable("Yes"));
+        assert!(is_translatable("Cancel"));
+        assert!(is_translatable("STAMINA"));
+    }
+
+    #[test]
+    fn test_is_translatable_empty_and_short() {
+        assert!(!is_translatable(""));
+        assert!(!is_translatable("ab"));
+        assert!(!is_translatable("  "));
+    }
+
+    #[test]
+    fn test_is_translatable_pure_numbers() {
+        assert!(!is_translatable("12345"));
+        assert!(!is_translatable("3.14"));
+        assert!(!is_translatable("-42"));
+    }
+
+    #[test]
+    fn test_is_translatable_file_paths() {
+        assert!(!is_translatable("sprites/player/idle.png"));
+        assert!(!is_translatable("sounds\\explosion.wav"));
+    }
+
+    #[test]
+    fn test_is_translatable_file_extensions() {
+        assert!(!is_translatable("music.ogg"));
+        assert!(!is_translatable("data.json"));
+        assert!(!is_translatable("config.ini"));
+        assert!(!is_translatable("script.gml"));
+        assert!(!is_translatable("project.yyp"));
+    }
+
+    #[test]
+    fn test_is_translatable_hex_colors() {
+        assert!(!is_translatable("#FF0000"));
+        assert!(!is_translatable("#abc"));
+        assert!(!is_translatable("#12345678"));
+    }
+
+    #[test]
+    fn test_is_translatable_no_letters() {
+        assert!(!is_translatable("---"));
+        assert!(!is_translatable("12345!!"));
+    }
+
+    #[test]
+    fn test_is_translatable_very_long_string() {
+        let long = "a ".repeat(3000);
+        assert!(!is_translatable(&long));
+    }
+
+    #[test]
+    fn test_is_translatable_gml_code() {
+        assert!(!is_translatable("var x = 10;"));
+        assert!(!is_translatable("function(arg)"));
+        assert!(!is_translatable("if (x > 0) {}"));
+        assert!(!is_translatable("a && b"));
+        assert!(!is_translatable("a || b"));
+        assert!(!is_translatable("a != b"));
+        assert!(!is_translatable("global.player_hp"));
+        assert!(!is_translatable("self.name"));
+    }
+
+    #[test]
+    fn test_is_translatable_gm_prefixes() {
+        assert!(!is_translatable("gml_Script_something"));
+        assert!(!is_translatable("scr_player_attack"));
+        assert!(!is_translatable("obj_player"));
+        assert!(!is_translatable("spr_hero_idle"));
+        assert!(!is_translatable("snd_explosion"));
+        assert!(!is_translatable("rm_title"));
+        assert!(!is_translatable("bg_sky"));
+        assert!(!is_translatable("fnt_main"));
+        assert!(!is_translatable("audiogroup_default"));
+    }
+
+    #[test]
+    fn test_is_translatable_internal_prefixes() {
+        assert!(!is_translatable("@@built_in"));
+        assert!(!is_translatable("$$global"));
+    }
+
+    #[test]
+    fn test_is_translatable_snake_case_no_spaces() {
+        assert!(!is_translatable("theme_combat"));
+        assert!(!is_translatable("select_god"));
+        assert!(!is_translatable("some_identifier_name"));
+    }
+
+    #[test]
+    fn test_is_translatable_camel_case() {
+        assert!(!is_translatable("camelCaseIdentifier"));
+        assert!(!is_translatable("playerHealth"));
+    }
+
+    #[test]
+    fn test_is_translatable_short_dot_extension() {
+        assert!(!is_translatable(".gml"));
+        assert!(!is_translatable(".txt"));
+    }
+
+    #[test]
+    fn test_is_translatable_identifier_list_with_spaces() {
+        // Space-separated identifiers that all contain underscores
+        assert!(!is_translatable("theme_combat select_god combat_win"));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // parse_chunks
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_parse_chunks_empty() {
+        assert!(parse_chunks(&[]).is_empty());
+    }
+
+    #[test]
+    fn test_parse_chunks_no_form_header() {
+        let data = b"NOTFORMdata";
+        assert!(parse_chunks(data).is_empty());
+    }
+
+    #[test]
+    fn test_parse_chunks_too_short() {
+        let data = b"FORM";
+        assert!(parse_chunks(data).is_empty());
+    }
+
+    #[test]
+    fn test_parse_chunks_single_chunk() {
+        let chunk_data = b"hello";
+        let form = build_form(&[(b"GEN8", chunk_data)]);
+        let chunks = parse_chunks(&form);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].0, "GEN8");
+        assert_eq!(chunks[0].1, 5); // size of "hello"
+    }
+
+    #[test]
+    fn test_parse_chunks_multiple_chunks() {
+        let form = build_form(&[
+            (b"GEN8", &[0; 4]),
+            (b"STRG", &[0; 8]),
+            (b"TXTR", &[0; 2]),
+        ]);
+        let chunks = parse_chunks(&form);
+        assert_eq!(chunks.len(), 3);
+        assert_eq!(chunks[0].0, "GEN8");
+        assert_eq!(chunks[1].0, "STRG");
+        assert_eq!(chunks[2].0, "TXTR");
+        assert_eq!(chunks[0].1, 4);
+        assert_eq!(chunks[1].1, 8);
+        assert_eq!(chunks[2].1, 2);
+    }
+
+    #[test]
+    fn test_parse_chunks_data_offsets_correct() {
+        let form = build_form(&[
+            (b"GEN8", &[0; 4]),
+            (b"STRG", &[0; 8]),
+        ]);
+        let chunks = parse_chunks(&form);
+        // First chunk data starts at offset 16 (FORM:4 + size:4 + GEN8:4 + size:4)
+        assert_eq!(chunks[0].2, 16);
+        // Second chunk data starts at 16 + 4 (GEN8 data) + 8 (STRG header)
+        assert_eq!(chunks[1].2, 16 + 4 + 8);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // extract_strings
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_extract_strings_basic() {
+        let (form, offset, size) = build_strg_file(&["Hello", "World"]);
+        let strings = extract_strings(&form, offset, size);
+        assert_eq!(strings.len(), 2);
+        assert_eq!(strings[0].original, "Hello");
+        assert_eq!(strings[1].original, "World");
+        assert_eq!(strings[0].index, 0);
+        assert_eq!(strings[1].index, 1);
+    }
+
+    #[test]
+    fn test_extract_strings_empty_strg() {
+        // STRG with count=0
+        let strg_body = 0u32.to_le_bytes().to_vec();
+        let form = build_form(&[(b"STRG", &strg_body)]);
+        let strings = extract_strings(&form, 16, strg_body.len() as u32);
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_offset_beyond_data() {
+        let data = [0u8; 16];
+        let strings = extract_strings(&data, 1000, 100);
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_preserves_length() {
+        let (form, offset, size) = build_strg_file(&["abc"]);
+        let strings = extract_strings(&form, offset, size);
+        assert_eq!(strings[0].length, 3);
+    }
+
+    #[test]
+    fn test_extract_strings_translatable_flag() {
+        let (form, offset, size) = build_strg_file(&[
+            "Hello world this is text",   // translatable (has spaces, real words)
+            "spr_player_idle",             // not translatable (gm prefix + snake_case)
+        ]);
+        let strings = extract_strings(&form, offset, size);
+        assert!(strings[0].is_translatable);
+        assert!(!strings[1].is_translatable);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // is_translatable_exe_string
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_exe_string_real_game_text() {
+        assert!(is_translatable_exe_string("Welcome to the dungeon adventurer"));
+        assert!(is_translatable_exe_string("Press any key to continue playing"));
+    }
+
+    #[test]
+    fn test_exe_string_too_short() {
+        assert!(!is_translatable_exe_string("short"));
+        assert!(!is_translatable_exe_string("ab cd"));
+    }
+
+    #[test]
+    fn test_exe_string_no_spaces() {
+        assert!(!is_translatable_exe_string("NoSpacesHereAtAll"));
+    }
+
+    #[test]
+    fn test_exe_string_no_letters() {
+        assert!(!is_translatable_exe_string("123 456 789 000"));
+    }
+
+    #[test]
+    fn test_exe_string_x86_gibberish() {
+        // Typical x86 decoded noise
+        assert!(!is_translatable_exe_string("L$ UVWATAUAVAWH"));
+        assert!(!is_translatable_exe_string("D$(9D$ }HcD$ H"));
+    }
+
+    #[test]
+    fn test_exe_string_format_strings() {
+        assert!(!is_translatable_exe_string("Error code: %d in module %s"));
+        assert!(!is_translatable_exe_string("Value: %f percent: %i"));
+    }
+
+    #[test]
+    fn test_exe_string_dos_program() {
+        assert!(!is_translatable_exe_string("This program cannot be run in dos mode"));
+    }
+
+    #[test]
+    fn test_exe_string_shader_code() {
+        assert!(!is_translatable_exe_string("#version 330 core output something"));
+        assert!(!is_translatable_exe_string("precision mediump float something else"));
+        assert!(!is_translatable_exe_string("uniform sampler2D some texture thing"));
+    }
+
+    #[test]
+    fn test_exe_string_dll_system() {
+        assert!(!is_translatable_exe_string("loading module kernel32.dll now please"));
+        assert!(!is_translatable_exe_string("something about user32.dll loading"));
+    }
+
+    #[test]
+    fn test_exe_string_gml_code() {
+        assert!(!is_translatable_exe_string("global.player with some data attached"));
+        assert!(!is_translatable_exe_string("var something = value; more stuff"));
+    }
+
+    #[test]
+    fn test_exe_string_runtime_errors() {
+        assert!(!is_translatable_exe_string("index out of bounds for array access"));
+        assert!(!is_translatable_exe_string("fatal error occurred during execution of something"));
+        assert!(!is_translatable_exe_string("stack overflow detected in recursive function"));
+        assert!(!is_translatable_exe_string("division by zero attempted in calculation"));
+    }
+
+    #[test]
+    fn test_exe_string_debug_messages() {
+        assert!(!is_translatable_exe_string("[debug] something happened here now"));
+        assert!(!is_translatable_exe_string("[error] something failed over here"));
+    }
+
+    #[test]
+    fn test_exe_string_ds_map() {
+        assert!(!is_translatable_exe_string("ds_map entry does not exist here"));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // extract_exe_strings
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_extract_exe_strings_finds_ascii_runs() {
+        // Put some readable text in binary noise
+        let mut data = vec![0x00; 10];
+        data.extend_from_slice(b"This is readable text in binary");
+        data.extend_from_slice(&[0x00; 10]);
+        data.extend_from_slice(b"Another readable string here");
+        data.extend_from_slice(&[0x00; 10]);
+
+        let strings = extract_exe_strings(&data, 8);
+        // Should find at least the two ASCII runs
+        assert!(strings.len() >= 2);
+        assert!(strings.iter().any(|s| s.original.contains("This is readable")));
+        assert!(strings.iter().any(|s| s.original.contains("Another readable")));
+    }
+
+    #[test]
+    fn test_extract_exe_strings_respects_min_len() {
+        let mut data = vec![0x00; 5];
+        data.extend_from_slice(b"Hi"); // too short for min_len=8
+        data.extend_from_slice(&[0x00; 5]);
+        data.extend_from_slice(b"This is long enough text");
+        data.extend_from_slice(&[0x00; 5]);
+
+        let strings = extract_exe_strings(&data, 8);
+        assert!(strings.iter().all(|s| s.original.len() >= 8));
+    }
+
+    #[test]
+    fn test_extract_exe_strings_empty_data() {
+        let strings = extract_exe_strings(&[], 8);
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn test_extract_exe_strings_all_binary() {
+        let data = vec![0x00, 0x01, 0x02, 0xFF, 0xFE, 0x80];
+        let strings = extract_exe_strings(&data, 4);
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn test_extract_exe_strings_indexes_sequential() {
+        let mut data = vec![0x00; 5];
+        data.extend_from_slice(b"First string here now");
+        data.extend_from_slice(&[0x00; 5]);
+        data.extend_from_slice(b"Second string here now");
+        data.extend_from_slice(&[0x00; 5]);
+
+        let strings = extract_exe_strings(&data, 8);
+        for (i, s) in strings.iter().enumerate() {
+            assert_eq!(s.index, i);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // _write_u32_le
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_write_u32_le_basic() {
+        let mut data = [0u8; 4];
+        _write_u32_le(&mut data, 0, 0x12345678);
+        assert_eq!(data, [0x78, 0x56, 0x34, 0x12]);
+    }
+
+    #[test]
+    fn test_write_u32_le_roundtrip() {
+        let mut data = [0u8; 8];
+        _write_u32_le(&mut data, 2, 42);
+        assert_eq!(read_u32_le(&data, 2), 42);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Edge cases for is_translatable
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_is_translatable_dot_prefix_short() {
+        assert!(!is_translatable(".png"));
+        assert!(!is_translatable(".csv"));
+    }
+
+    #[test]
+    fn test_is_translatable_whitespace_only() {
+        assert!(!is_translatable("   "));
+    }
+
+    #[test]
+    fn test_is_translatable_single_real_word() {
+        // Single words without underscores or camelCase should pass
+        assert!(is_translatable("ATTACK"));
+        assert!(is_translatable("Inventory"));
+    }
+
+    #[test]
+    fn test_is_translatable_known_combat_prefix() {
+        // These start with combat_ / select_ / theme_ etc - blocked even without camelCase/underscore
+        // Actually they contain underscores so blocked by snake_case rule
+        assert!(!is_translatable("combat_start"));
+        assert!(!is_translatable("select_hero"));
+        assert!(!is_translatable("theme_dark"));
+    }
+
+    #[test]
+    fn test_is_translatable_vk_prefix() {
+        assert!(!is_translatable("vk_enter"));
+        assert!(!is_translatable("mb_left"));
+        assert!(!is_translatable("buffer_grow"));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Integration: full STRG roundtrip
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_full_strg_roundtrip() {
+        let test_strings = &[
+            "Hello World",
+            "spr_player",
+            "This is translatable text here",
+            "obj_enemy_boss",
+            "42",
+        ];
+        let (form, offset, size) = build_strg_file(test_strings);
+
+        // Parse chunks
+        let chunks = parse_chunks(&form);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].0, "STRG");
+
+        // Extract strings
+        let strings = extract_strings(&form, offset, size);
+        assert_eq!(strings.len(), 5);
+        for (i, expected) in test_strings.iter().enumerate() {
+            assert_eq!(strings[i].original, *expected);
+        }
+
+        // Verify translatability
+        assert!(strings[0].is_translatable);  // "Hello World" — has space, real words
+        assert!(!strings[1].is_translatable); // "spr_player" — GM prefix
+        assert!(strings[2].is_translatable);  // "This is translatable text here"
+        assert!(!strings[3].is_translatable); // "obj_enemy_boss" — GM prefix
+        assert!(!strings[4].is_translatable); // "42" — too short / number
+    }
+
+    #[test]
+    fn test_parse_chunks_with_multiple_types() {
+        let form = build_form(&[
+            (b"GEN8", &[0; 4]),
+            (b"STRG", &[0; 4]),
+            (b"TGIN", &[0; 4]),
+            (b"SEQN", &[0; 4]),
+        ]);
+        let chunks = parse_chunks(&form);
+        let names: Vec<&str> = chunks.iter().map(|(n, _, _)| n.as_str()).collect();
+        assert_eq!(names, vec!["GEN8", "STRG", "TGIN", "SEQN"]);
+        assert_eq!(detect_version(&names.iter().map(|s| s.to_string()).collect::<Vec<_>>()), "Studio 2.3+");
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Edge cases for extract_strings with malformed data
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_extract_strings_count_exceeds_data() {
+        // STRG body claims 1000 strings but has no pointer data
+        let mut strg_body = Vec::new();
+        strg_body.extend_from_slice(&1000u32.to_le_bytes());
+        // Only 4 bytes of data — pointers will be out of bounds
+        let form = build_form(&[(b"STRG", &strg_body)]);
+        let strings = extract_strings(&form, 16, strg_body.len() as u32);
+        // Should not panic, just return what it can
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_pointer_beyond_file() {
+        // STRG with 1 string, but pointer points beyond file
+        let mut strg_body = Vec::new();
+        strg_body.extend_from_slice(&1u32.to_le_bytes()); // count = 1
+        strg_body.extend_from_slice(&0xFFFFFFFFu32.to_le_bytes()); // pointer way beyond
+        let form = build_form(&[(b"STRG", &strg_body)]);
+        let strings = extract_strings(&form, 16, strg_body.len() as u32);
+        // The string pointer is beyond data, so extract should skip it
+        // (read_gm_string returns empty for out-of-bounds offset)
+        // It may still push a GmString with empty original
+        for s in &strings {
+            assert_eq!(s.original, "");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // is_translatable_exe_string - more edge cases
+    // ═══════════════════════════════════════════════════════
+
+    #[test]
+    fn test_exe_string_low_letter_ratio() {
+        // Mostly symbols/numbers with a few letters
+        assert!(!is_translatable_exe_string("123 456 ab 789 000 cd 111"));
+    }
+
+    #[test]
+    fn test_exe_string_save_file_pattern() {
+        assert!(!is_translatable_exe_string("save file location for player data backup"));
+    }
+
+    #[test]
+    fn test_exe_string_copyright_microsoft() {
+        assert!(!is_translatable_exe_string("copyright reserved microsoft corporation year"));
+    }
+
+    #[test]
+    fn test_exe_string_shader_register() {
+        assert!(!is_translatable_exe_string("register(b0) constant buffer data here"));
+    }
+
+    #[test]
+    fn test_exe_string_comment_prefix() {
+        assert!(!is_translatable_exe_string("// this is some comment text here now"));
+    }
+}

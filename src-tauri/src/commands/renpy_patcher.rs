@@ -504,3 +504,682 @@ pub fn get_renpy_translation_stats(strings: Vec<RenpyString>) -> RenpyStats {
         by_type,
     }
 }
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    // ── extract_string_value ────────────────────────────────────────────
+
+    #[test]
+    fn test_extract_string_value_basic() {
+        let line = r#"define config.name = "My Game""#;
+        assert_eq!(extract_string_value(line), Some("My Game".to_string()));
+    }
+
+    #[test]
+    fn test_extract_string_value_with_spaces() {
+        let line = r#"define config.version = "1.2.3""#;
+        assert_eq!(extract_string_value(line), Some("1.2.3".to_string()));
+    }
+
+    #[test]
+    fn test_extract_string_value_no_quotes() {
+        let line = "define config.name = MyGame";
+        assert_eq!(extract_string_value(line), None);
+    }
+
+    #[test]
+    fn test_extract_string_value_single_quote_only() {
+        let line = "define config.name = 'MyGame'";
+        assert_eq!(extract_string_value(line), None);
+    }
+
+    #[test]
+    fn test_extract_string_value_empty_string() {
+        let line = r#"define config.name = """#;
+        assert_eq!(extract_string_value(line), Some("".to_string()));
+    }
+
+    #[test]
+    fn test_extract_string_value_empty_input() {
+        assert_eq!(extract_string_value(""), None);
+    }
+
+    #[test]
+    fn test_extract_string_value_one_quote_only() {
+        let line = r#"broken "unterminated"#;
+        assert_eq!(extract_string_value(line), None);
+    }
+
+    // ── escape_renpy_string ─────────────────────────────────────────────
+
+    #[test]
+    fn test_escape_renpy_string_no_special_chars() {
+        assert_eq!(escape_renpy_string("Hello world"), "Hello world");
+    }
+
+    #[test]
+    fn test_escape_renpy_string_backslash() {
+        assert_eq!(escape_renpy_string(r"path\to\file"), r"path\\to\\file");
+    }
+
+    #[test]
+    fn test_escape_renpy_string_double_quote() {
+        assert_eq!(escape_renpy_string(r#"She said "hi""#), r#"She said \"hi\""#);
+    }
+
+    #[test]
+    fn test_escape_renpy_string_newline() {
+        assert_eq!(escape_renpy_string("line1\nline2"), r"line1\nline2");
+    }
+
+    #[test]
+    fn test_escape_renpy_string_all_special() {
+        assert_eq!(
+            escape_renpy_string("a\\b\"c\nd"),
+            r#"a\\b\"c\nd"#
+        );
+    }
+
+    #[test]
+    fn test_escape_renpy_string_empty() {
+        assert_eq!(escape_renpy_string(""), "");
+    }
+
+    // ── get_renpy_translation_stats ─────────────────────────────────────
+
+    fn make_string(original: &str, translated: &str, stype: RenpyStringType) -> RenpyString {
+        RenpyString {
+            id: "test_1".to_string(),
+            original: original.to_string(),
+            translated: translated.to_string(),
+            file: "test.rpy".to_string(),
+            line_number: 1,
+            string_type: stype,
+            character: None,
+        }
+    }
+
+    #[test]
+    fn test_stats_empty() {
+        let stats = get_renpy_translation_stats(Vec::new());
+        assert_eq!(stats.total, 0);
+        assert_eq!(stats.translated, 0);
+        assert_eq!(stats.untranslated, 0);
+        assert_eq!(stats.percentage, 0);
+        assert!(stats.by_type.is_empty());
+    }
+
+    #[test]
+    fn test_stats_all_translated() {
+        let strings = vec![
+            make_string("Hello", "Ciao", RenpyStringType::Dialogue),
+            make_string("World", "Mondo", RenpyStringType::Narration),
+        ];
+        let stats = get_renpy_translation_stats(strings);
+        assert_eq!(stats.total, 2);
+        assert_eq!(stats.translated, 2);
+        assert_eq!(stats.untranslated, 0);
+        assert_eq!(stats.percentage, 100);
+    }
+
+    #[test]
+    fn test_stats_none_translated() {
+        let strings = vec![
+            make_string("Hello", "", RenpyStringType::Dialogue),
+            make_string("World", "", RenpyStringType::Menu),
+        ];
+        let stats = get_renpy_translation_stats(strings);
+        assert_eq!(stats.total, 2);
+        assert_eq!(stats.translated, 0);
+        assert_eq!(stats.untranslated, 2);
+        assert_eq!(stats.percentage, 0);
+    }
+
+    #[test]
+    fn test_stats_partial_translated() {
+        let strings = vec![
+            make_string("Hello", "Ciao", RenpyStringType::Dialogue),
+            make_string("World", "", RenpyStringType::Narration),
+            make_string("Yes", "Si", RenpyStringType::Menu),
+        ];
+        let stats = get_renpy_translation_stats(strings);
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.translated, 2);
+        assert_eq!(stats.untranslated, 1);
+        assert_eq!(stats.percentage, 66); // integer division: 2*100/3 = 66
+    }
+
+    #[test]
+    fn test_stats_by_type_counts() {
+        let strings = vec![
+            make_string("a", "", RenpyStringType::Dialogue),
+            make_string("b", "", RenpyStringType::Dialogue),
+            make_string("c", "", RenpyStringType::Menu),
+            make_string("d", "", RenpyStringType::Narration),
+            make_string("e", "", RenpyStringType::String),
+            make_string("f", "", RenpyStringType::Label),
+        ];
+        let stats = get_renpy_translation_stats(strings);
+        assert_eq!(stats.by_type.get("Dialoghi"), Some(&2));
+        assert_eq!(stats.by_type.get("Menu"), Some(&1));
+        assert_eq!(stats.by_type.get("Narrazione"), Some(&1));
+        assert_eq!(stats.by_type.get("Stringhe"), Some(&1));
+        assert_eq!(stats.by_type.get("Label"), Some(&1));
+    }
+
+    // ── extract_renpy_strings (file-based) ──────────────────────────────
+
+    fn write_rpy_and_extract(content: &str) -> RenpyExtractionResult {
+        let dir = TempDir::new().unwrap();
+        let file_path = dir.path().join("test.rpy");
+        fs::write(&file_path, content).unwrap();
+        extract_renpy_strings(file_path.to_string_lossy().to_string()).unwrap()
+    }
+
+    #[test]
+    fn test_extract_dialogue_with_character() {
+        let result = write_rpy_and_extract(r#"    e "Hello, world!""#);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Hello, world!");
+        assert_eq!(result.strings[0].character, Some("e".to_string()));
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Dialogue));
+    }
+
+    #[test]
+    fn test_extract_narration() {
+        let result = write_rpy_and_extract(r#"    "This is narration.""#);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "This is narration.");
+        assert_eq!(result.strings[0].character, None);
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Narration));
+    }
+
+    #[test]
+    fn test_extract_menu_choice() {
+        let result = write_rpy_and_extract(r#"        "Go to the park":"#);
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Go to the park");
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::Menu));
+    }
+
+    #[test]
+    fn test_extract_skips_comments() {
+        let result = write_rpy_and_extract("# This is a comment\n    e \"Hello\"");
+        assert_eq!(result.total_count, 1);
+        assert_eq!(result.strings[0].original, "Hello");
+    }
+
+    #[test]
+    fn test_extract_skips_empty_lines() {
+        let result = write_rpy_and_extract("\n\n    e \"Hello\"\n\n");
+        assert_eq!(result.total_count, 1);
+    }
+
+    #[test]
+    fn test_extract_skips_define() {
+        let result = write_rpy_and_extract("define e = Character(\"Eileen\")");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_label() {
+        let result = write_rpy_and_extract("label start:");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_jump() {
+        let result = write_rpy_and_extract("jump chapter2");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_call() {
+        let result = write_rpy_and_extract("call some_function");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_show_hide_scene() {
+        let content = "show eileen happy\nhide eileen\nscene bg room";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_play_stop() {
+        let content = "play music \"track.ogg\"\nstop music";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_control_flow() {
+        let content = "if flag:\n    e \"Hello\"\nelif other:\n    e \"World\"\nelse:\n    e \"Bye\"";
+        let result = write_rpy_and_extract(content);
+        // "if ", "elif ", "else:" lines are skipped; the dialogue lines under them are extracted
+        assert_eq!(result.total_count, 3);
+    }
+
+    #[test]
+    fn test_extract_skips_python_and_dollar() {
+        let content = "python:\n$ some_var = 1";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_init_with_return() {
+        let content = "init python:\nreturn";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_with() {
+        let result = write_rpy_and_extract("with dissolve");
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_short_strings() {
+        // Strings of length 1 are ignored
+        let result = write_rpy_and_extract(r#"    e "X""#);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_skips_strings_with_backslash() {
+        // Strings containing backslash are ignored
+        let result = write_rpy_and_extract(r#"    e "path\to\file""#);
+        assert_eq!(result.total_count, 0);
+    }
+
+    #[test]
+    fn test_extract_empty_file() {
+        let result = write_rpy_and_extract("");
+        assert_eq!(result.total_count, 0);
+        assert!(result.strings.is_empty());
+        assert!(result.success);
+    }
+
+    #[test]
+    fn test_extract_multiple_dialogues() {
+        let content = r#"    e "Hello!"
+    e "How are you?"
+    "This is narration."
+    "Choose yes":
+    "#;
+        let result = write_rpy_and_extract(content);
+        // 2 dialogues + 1 narration + 1 menu = 4
+        assert_eq!(result.total_count, 4);
+    }
+
+    #[test]
+    fn test_extract_line_numbers_are_1_based() {
+        let content = "# comment\n\n    e \"Hello\"";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.strings[0].line_number, 3);
+    }
+
+    #[test]
+    fn test_extract_ids_are_unique() {
+        let content = "    e \"Hello\"\n    e \"World\"";
+        let result = write_rpy_and_extract(content);
+        assert_ne!(result.strings[0].id, result.strings[1].id);
+    }
+
+    #[test]
+    fn test_extract_ids_use_filename() {
+        let result = write_rpy_and_extract(r#"    e "Hello!""#);
+        assert!(result.strings[0].id.starts_with("test_rpy_"));
+    }
+
+    #[test]
+    fn test_extract_nonexistent_file() {
+        let result = extract_renpy_strings("/nonexistent/path/to/file.rpy".to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_success_flag() {
+        let result = write_rpy_and_extract(r#"    e "Hi there""#);
+        assert!(result.success);
+    }
+
+    #[test]
+    fn test_extract_message_contains_count() {
+        let result = write_rpy_and_extract(r#"    e "Hi there""#);
+        assert!(result.message.contains("1"));
+    }
+
+    // ── detect_renpy_game ───────────────────────────────────────────────
+
+    #[test]
+    fn test_detect_nonexistent_path() {
+        let result = detect_renpy_game("/nonexistent/path".to_string());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("non esistente"));
+    }
+
+    #[test]
+    fn test_detect_no_game_folder() {
+        let dir = TempDir::new().unwrap();
+        let result = detect_renpy_game(dir.path().to_string_lossy().to_string());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Ren'Py"));
+    }
+
+    #[test]
+    fn test_detect_game_folder_but_no_rpy() {
+        let dir = TempDir::new().unwrap();
+        fs::create_dir_all(dir.path().join("game")).unwrap();
+        let result = detect_renpy_game(dir.path().to_string_lossy().to_string());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains(".rpy"));
+    }
+
+    #[test]
+    fn test_detect_valid_game() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+        fs::write(game_dir.join("script.rpy"), r#"    e "Hello""#).unwrap();
+
+        let result = detect_renpy_game(dir.path().to_string_lossy().to_string());
+        assert!(result.is_ok());
+        let game = result.unwrap();
+        assert_eq!(game.script_files.len(), 1);
+        assert_eq!(game.script_files[0].filename, "script.rpy");
+        assert!(!game.has_translations);
+        assert!(game.available_languages.is_empty());
+    }
+
+    #[test]
+    fn test_detect_game_with_options() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+        fs::write(game_dir.join("script.rpy"), r#"    e "Hello""#).unwrap();
+        fs::write(
+            game_dir.join("options.rpy"),
+            "define config.name = \"Test Game\"\ndefine config.version = \"2.0\"",
+        ).unwrap();
+
+        let game = detect_renpy_game(dir.path().to_string_lossy().to_string()).unwrap();
+        assert_eq!(game.title, "Test Game");
+        assert_eq!(game.version, Some("2.0".to_string()));
+    }
+
+    #[test]
+    fn test_detect_game_with_translations() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        let tl_dir = game_dir.join("tl");
+        fs::create_dir_all(tl_dir.join("italian")).unwrap();
+        fs::create_dir_all(tl_dir.join("french")).unwrap();
+        fs::create_dir_all(tl_dir.join("None")).unwrap(); // should be ignored
+        fs::create_dir_all(tl_dir.join("common")).unwrap(); // should be ignored
+        fs::write(game_dir.join("script.rpy"), r#"    e "Hello""#).unwrap();
+
+        let game = detect_renpy_game(dir.path().to_string_lossy().to_string()).unwrap();
+        assert!(game.has_translations);
+        assert_eq!(game.available_languages.len(), 2);
+        assert!(game.available_languages.contains(&"italian".to_string()));
+        assert!(game.available_languages.contains(&"french".to_string()));
+    }
+
+    #[test]
+    fn test_detect_game_ignores_tl_rpy_files() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        let tl_dir = game_dir.join("tl").join("italian");
+        fs::create_dir_all(&tl_dir).unwrap();
+        fs::write(game_dir.join("script.rpy"), r#"    e "Hello""#).unwrap();
+        fs::write(tl_dir.join("script_italian.rpy"), r#"old "Hello""#).unwrap();
+
+        let game = detect_renpy_game(dir.path().to_string_lossy().to_string()).unwrap();
+        // Only the main script, not the translation file
+        assert_eq!(game.script_files.len(), 1);
+        assert_eq!(game.script_files[0].filename, "script.rpy");
+    }
+
+    #[test]
+    fn test_detect_game_with_renpy_folder() {
+        // Some games have a "renpy" folder instead/alongside "game"
+        let dir = TempDir::new().unwrap();
+        let renpy_dir = dir.path().join("renpy");
+        fs::create_dir_all(&renpy_dir).unwrap();
+        // No game folder, but renpy folder exists - detection should pass the folder check
+        // but fail on no .rpy files since find_rpy_files falls back to root
+        // Actually it searches in root when no game folder
+        fs::write(dir.path().join("script.rpy"), r#"    e "Hello""#).unwrap();
+
+        let game = detect_renpy_game(dir.path().to_string_lossy().to_string()).unwrap();
+        assert_eq!(game.script_files.len(), 1);
+    }
+
+    // ── find_rpy_files ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_find_rpy_files_sorted() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+        fs::write(game_dir.join("z_script.rpy"), "").unwrap();
+        fs::write(game_dir.join("a_script.rpy"), "").unwrap();
+        fs::write(game_dir.join("m_script.rpy"), "").unwrap();
+
+        let files = find_rpy_files(&dir.path().to_string_lossy()).unwrap();
+        let names: Vec<&str> = files.iter().map(|f| f.filename.as_str()).collect();
+        assert_eq!(names, vec!["a_script.rpy", "m_script.rpy", "z_script.rpy"]);
+    }
+
+    #[test]
+    fn test_find_rpy_files_ignores_non_rpy() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+        fs::write(game_dir.join("script.rpy"), "").unwrap();
+        fs::write(game_dir.join("script.rpyc"), "").unwrap();
+        fs::write(game_dir.join("readme.txt"), "").unwrap();
+
+        let files = find_rpy_files(&dir.path().to_string_lossy()).unwrap();
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].filename, "script.rpy");
+    }
+
+    // ── save/load round-trip ────────────────────────────────────────────
+
+    #[test]
+    fn test_save_and_load_round_trip() {
+        let dir = TempDir::new().unwrap();
+        let file_path = dir.path().join("translations.json");
+
+        let strings = vec![
+            make_string("Hello", "Ciao", RenpyStringType::Dialogue),
+            make_string("World", "Mondo", RenpyStringType::Narration),
+        ];
+
+        let count = save_renpy_translations(
+            file_path.to_string_lossy().to_string(),
+            strings.clone(),
+        ).unwrap();
+        assert_eq!(count, 2);
+
+        let loaded = load_renpy_translations(file_path.to_string_lossy().to_string()).unwrap();
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].original, "Hello");
+        assert_eq!(loaded[0].translated, "Ciao");
+        assert_eq!(loaded[1].original, "World");
+        assert_eq!(loaded[1].translated, "Mondo");
+    }
+
+    #[test]
+    fn test_save_empty_translations() {
+        let dir = TempDir::new().unwrap();
+        let file_path = dir.path().join("empty.json");
+
+        let count = save_renpy_translations(
+            file_path.to_string_lossy().to_string(),
+            Vec::new(),
+        ).unwrap();
+        assert_eq!(count, 0);
+
+        let loaded = load_renpy_translations(file_path.to_string_lossy().to_string()).unwrap();
+        assert!(loaded.is_empty());
+    }
+
+    #[test]
+    fn test_load_nonexistent_file() {
+        let result = load_renpy_translations("/nonexistent/file.json".to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_load_invalid_json() {
+        let dir = TempDir::new().unwrap();
+        let file_path = dir.path().join("bad.json");
+        fs::write(&file_path, "not json at all").unwrap();
+
+        let result = load_renpy_translations(file_path.to_string_lossy().to_string());
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("parsing JSON"));
+    }
+
+    // ── generate_renpy_translation ──────────────────────────────────────
+
+    #[test]
+    fn test_generate_translation_creates_files() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+
+        let strings = vec![RenpyString {
+            id: "test_1".to_string(),
+            original: "Hello".to_string(),
+            translated: "Ciao".to_string(),
+            file: "script.rpy".to_string(),
+            line_number: 5,
+            string_type: RenpyStringType::Dialogue,
+            character: Some("e".to_string()),
+        }];
+
+        let result = generate_renpy_translation(
+            dir.path().to_string_lossy().to_string(),
+            "italian".to_string(),
+            strings,
+        ).unwrap();
+
+        assert!(result.contains("italian"));
+
+        let tl_file = game_dir.join("tl").join("italian").join("script_italian.rpy");
+        assert!(tl_file.exists());
+
+        let content = fs::read_to_string(&tl_file).unwrap();
+        assert!(content.contains("old \"Hello\""));
+        assert!(content.contains("new \"Ciao\""));
+        assert!(content.contains("translate italian strings"));
+    }
+
+    #[test]
+    fn test_generate_translation_skips_untranslated() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+
+        let strings = vec![RenpyString {
+            id: "test_1".to_string(),
+            original: "Hello".to_string(),
+            translated: "".to_string(), // not translated
+            file: "script.rpy".to_string(),
+            line_number: 5,
+            string_type: RenpyStringType::Dialogue,
+            character: None,
+        }];
+
+        generate_renpy_translation(
+            dir.path().to_string_lossy().to_string(),
+            "italian".to_string(),
+            strings,
+        ).unwrap();
+
+        let tl_file = game_dir.join("tl").join("italian").join("script_italian.rpy");
+        let content = fs::read_to_string(&tl_file).unwrap();
+        // Should NOT contain old/new for untranslated strings
+        assert!(!content.contains("old \"Hello\""));
+    }
+
+    #[test]
+    fn test_generate_translation_escapes_special_chars() {
+        let dir = TempDir::new().unwrap();
+        let game_dir = dir.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+
+        let strings = vec![RenpyString {
+            id: "test_1".to_string(),
+            original: "She said \"hello\"".to_string(),
+            translated: "Lei disse \"ciao\"".to_string(),
+            file: "script.rpy".to_string(),
+            line_number: 1,
+            string_type: RenpyStringType::Dialogue,
+            character: None,
+        }];
+
+        generate_renpy_translation(
+            dir.path().to_string_lossy().to_string(),
+            "italian".to_string(),
+            strings,
+        ).unwrap();
+
+        let tl_file = game_dir.join("tl").join("italian").join("script_italian.rpy");
+        let content = fs::read_to_string(&tl_file).unwrap();
+        assert!(content.contains(r#"old "She said \"hello\"""#));
+        assert!(content.contains(r#"new "Lei disse \"ciao\"""#));
+    }
+
+    // ── extract_game_info (via detect) ──────────────────────────────────
+
+    #[test]
+    fn test_extract_game_info_no_options_file() {
+        let dir = TempDir::new().unwrap();
+        let (title, version) = extract_game_info(&dir.path().to_string_lossy());
+        // Falls back to folder name
+        assert!(!title.is_empty());
+        assert!(version.is_none());
+    }
+
+    // ── Serialization round-trip for RenpyStringType ────────────────────
+
+    #[test]
+    fn test_string_type_serialization() {
+        let s = make_string("hi", "ciao", RenpyStringType::Dialogue);
+        let json = serde_json::to_string(&s).unwrap();
+        let deserialized: RenpyString = serde_json::from_str(&json).unwrap();
+        assert!(matches!(deserialized.string_type, RenpyStringType::Dialogue));
+    }
+
+    #[test]
+    fn test_all_string_types_serialize() {
+        let types = vec![
+            RenpyStringType::Dialogue,
+            RenpyStringType::Menu,
+            RenpyStringType::Narration,
+            RenpyStringType::String,
+            RenpyStringType::Label,
+        ];
+        for t in types {
+            let s = make_string("x", "y", t);
+            let json = serde_json::to_string(&s).unwrap();
+            let _: RenpyString = serde_json::from_str(&json).unwrap();
+        }
+    }
+}
