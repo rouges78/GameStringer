@@ -113,6 +113,10 @@ export function CommunityChat() {
   const [newRoomType, setNewRoomType] = useState<ChatRoom['type']>('general');
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+  const [autoTranslate, setAutoTranslate] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('gs_chat_auto_translate') === 'true';
+    return false;
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -282,6 +286,56 @@ export function CommunityChat() {
     }
   }, [language, translatedMessages]);
 
+  // ─── Auto-translate toggle ─────────────────────────────────
+
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslate(prev => {
+      const next = !prev;
+      localStorage.setItem('gs_chat_auto_translate', String(next));
+      return next;
+    });
+  }, []);
+
+  // Detect if text is likely in a different language (simple heuristic)
+  const detectLangTag = useCallback((text: string): string | null => {
+    // Cirillico → ru
+    if (/[\u0400-\u04FF]{3,}/.test(text)) return 'RU';
+    // CJK → zh/ja/ko
+    if (/[\u4E00-\u9FFF]{2,}/.test(text)) return 'ZH';
+    if (/[\u3040-\u309F\u30A0-\u30FF]{2,}/.test(text)) return 'JA';
+    if (/[\uAC00-\uD7AF]{2,}/.test(text)) return 'KO';
+    // Arabo
+    if (/[\u0600-\u06FF]{3,}/.test(text)) return 'AR';
+    // Thai
+    if (/[\u0E00-\u0E7F]{3,}/.test(text)) return 'TH';
+    // Per lingue latine, confronta con la lingua dell'app
+    const LANG_HINTS: Record<string, RegExp> = {
+      EN: /\b(the|and|this|that|with|have|from|they|what|your|will|would|could|should|about|there)\b/i,
+      ES: /\b(que|los|las|por|una|con|para|esta|pero|como|más|del|tiene|desde)\b/i,
+      DE: /\b(und|die|der|das|ist|nicht|ein|ich|sich|auf|für|mit|dem|den|auch)\b/i,
+      FR: /\b(les|des|une|que|est|pas|pour|dans|sur|avec|sont|cette|tout|mais)\b/i,
+      PT: /\b(que|não|para|com|uma|dos|está|isso|mais|por|seu|como|tem|são)\b/i,
+    };
+    const appLang = language.toUpperCase();
+    for (const [lang, re] of Object.entries(LANG_HINTS)) {
+      if (lang !== appLang && re.test(text)) return lang;
+    }
+    return null;
+  }, [language]);
+
+  // Auto-translate nuovi messaggi quando il toggle è attivo
+  useEffect(() => {
+    if (!autoTranslate || messages.length === 0) return;
+    for (const msg of messages) {
+      if (msg.deleted || msg.authorId === userId) continue;
+      if (translatedMessages[msg.id] || translatingIds.has(msg.id)) continue;
+      const lang = detectLangTag(msg.content);
+      if (lang) {
+        handleTranslateMessage(msg);
+      }
+    }
+  }, [autoTranslate, messages, userId, translatedMessages, translatingIds, detectLangTag, handleTranslateMessage]);
+
   // ─── Create room ────────────────────────────────────────────
 
   const handleCreateRoom = async () => {
@@ -432,6 +486,18 @@ export function CommunityChat() {
             {activeRoom.description && (
               <span className="text-[11px] text-slate-500 truncate ml-2">{activeRoom.description}</span>
             )}
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-7 px-2 gap-1.5 text-[11px] ${autoTranslate ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-500'}`}
+                onClick={toggleAutoTranslate}
+                title={autoTranslate ? 'Disattiva auto-traduzione' : 'Traduci automaticamente messaggi in altre lingue'}
+              >
+                <Languages className="h-3.5 w-3.5" />
+                <span>{autoTranslate ? 'Auto-Traduci ON' : 'Auto-Traduci'}</span>
+              </Button>
+            </div>
           </div>
         )}
 
@@ -475,6 +541,12 @@ export function CommunityChat() {
                         </span>
                         <span className="text-2xs text-slate-600">{formatTime(msg.createdAt)}</span>
                         {msg.edited && <span className="text-micro text-slate-600">(modificato)</span>}
+                        {(() => {
+                          const lang = detectLangTag(msg.content);
+                          return lang ? (
+                            <span className="text-micro px-1 py-0.5 rounded bg-slate-700/50 text-slate-400 font-mono">{lang}</span>
+                          ) : null;
+                        })()}
                       </div>
                     )}
 
