@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
+import Link from 'next/link';
 import {
   Film, FolderOpen, Search, Play, Download, Settings2,
   CheckCircle2, XCircle, Loader2, Info, HardDrive,
   Maximize2, Zap, FileVideo, ChevronDown, ChevronRight,
-  AlertTriangle, RefreshCw, Trash2, Eye
+  AlertTriangle, RefreshCw, Trash2, Eye, Gamepad2, Library
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -107,11 +109,22 @@ function getFormatColor(format: string): string {
 
 // ── Main Component ─────────────────────────────────────────────────────
 
+interface LibraryGame {
+  id: string;
+  app_id: string;
+  title: string;
+  install_dir?: string;
+  is_installed?: boolean;
+}
+
 export default function VideoExtractorPage() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
 
   // State
   const [gamePath, setGamePath] = useState('');
+  const [gameName, setGameName] = useState('');
+  const [gameId, setGameId] = useState('');
   const [scanResult, setScanResult] = useState<VideoScanResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [ffmpegAvailable, setFfmpegAvailable] = useState<boolean | null>(null);
@@ -141,6 +154,68 @@ export default function VideoExtractorPage() {
   const [upscaling, setUpscaling] = useState(false);
   const [upscaleModel, setUpscaleModel] = useState('realesrgan-x4plus');
   const [upscaleScale, setUpscaleScale] = useState(4);
+  const [libraryGames, setLibraryGames] = useState<LibraryGame[]>([]);
+  const [showGamePicker, setShowGamePicker] = useState(false);
+  const [gamePickerSearch, setGamePickerSearch] = useState('');
+
+  // Read query params on mount (when coming from game detail page)
+  const [autoScanDone, setAutoScanDone] = useState(false);
+  useEffect(() => {
+    const qGamePath = searchParams?.get('gamePath');
+    const qGameName = searchParams?.get('gameName');
+    const qGameId = searchParams?.get('gameId');
+    if (qGamePath) {
+      setGamePath(qGamePath);
+      if (qGameName) setGameName(qGameName);
+      if (qGameId) setGameId(qGameId);
+    }
+  }, [searchParams]);
+
+  // Auto-scan when arriving from game detail with a gamePath
+  useEffect(() => {
+    if (gamePath && !autoScanDone && !scanResult && !scanning && searchParams?.get('gamePath')) {
+      setAutoScanDone(true);
+      handleScan();
+    }
+  }, [gamePath, autoScanDone, scanResult, scanning]);
+
+  // Load library games for the picker
+  useEffect(() => {
+    loadLibraryGames();
+  }, []);
+
+  const loadLibraryGames = async () => {
+    try {
+      const games = await invoke<LibraryGame[]>('get_all_games');
+      if (games) {
+        setLibraryGames(games.filter(g => g.is_installed && g.install_dir));
+      }
+    } catch {
+      // Library not available
+    }
+  };
+
+  const selectGameFromLibrary = async (game: LibraryGame) => {
+    if (game.install_dir) {
+      try {
+        const path = await invoke<string>('find_game_install_path', { installDir: game.install_dir });
+        if (path) {
+          setGamePath(path);
+          setGameName(game.title);
+          setGameId(game.id || game.app_id);
+          setShowGamePicker(false);
+          setGamePickerSearch('');
+          return;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    setGameName(game.title);
+    setGameId(game.id || game.app_id);
+    setShowGamePicker(false);
+    setGamePickerSearch('');
+  };
 
   // Check FFmpeg on mount
   useEffect(() => {
@@ -372,9 +447,75 @@ export default function VideoExtractorPage() {
 
       {/* ── Scan Section ───────────────────────────────────────────── */}
       <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-4 space-y-4">
-        <div className="flex items-center gap-3">
-          <FolderOpen className="w-5 h-5 text-purple-400" />
-          <h2 className="font-semibold text-white">Scansiona Cartella Gioco</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FolderOpen className="w-5 h-5 text-purple-400" />
+            <h2 className="font-semibold text-white">Scansiona Cartella Gioco</h2>
+            {gameName && (
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                {gameName}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Link back to game detail */}
+            {gameId && (
+              <Link
+                href={`/library/?id=${encodeURIComponent(gameId)}&name=${encodeURIComponent(gameName)}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-all no-underline"
+              >
+                <Gamepad2 className="w-3.5 h-3.5" />
+                Scheda Gioco
+              </Link>
+            )}
+            {/* Game picker from library */}
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGamePicker(!showGamePicker)}
+                className="text-xs gap-1.5"
+              >
+                <Library className="w-3.5 h-3.5" />
+                Scegli dalla Libreria
+                <ChevronDown className={`w-3 h-3 transition-transform ${showGamePicker ? 'rotate-180' : ''}`} />
+              </Button>
+              {showGamePicker && (
+                <div className="absolute right-0 top-full mt-1 w-80 max-h-72 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <div className="p-2 border-b border-zinc-800">
+                    <Input
+                      value={gamePickerSearch}
+                      onChange={(e) => setGamePickerSearch(e.target.value)}
+                      placeholder="Cerca gioco installato..."
+                      className="h-7 text-xs bg-zinc-800/50 border-zinc-700"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-56 overflow-y-auto">
+                    {libraryGames
+                      .filter(g => !gamePickerSearch || g.title.toLowerCase().includes(gamePickerSearch.toLowerCase()))
+                      .slice(0, 50)
+                      .map(game => (
+                        <button
+                          key={game.id || game.app_id}
+                          className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-purple-500/10 hover:text-white transition-colors border-b border-zinc-800/50 last:border-0"
+                          onClick={() => selectGameFromLibrary(game)}
+                        >
+                          <div className="font-medium truncate">{game.title}</div>
+                          {game.install_dir && (
+                            <div className="text-[10px] text-zinc-500 truncate mt-0.5">{game.install_dir}</div>
+                          )}
+                        </button>
+                      ))
+                    }
+                    {libraryGames.filter(g => !gamePickerSearch || g.title.toLowerCase().includes(gamePickerSearch.toLowerCase())).length === 0 && (
+                      <div className="p-4 text-center text-xs text-zinc-500">Nessun gioco installato trovato</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-2">

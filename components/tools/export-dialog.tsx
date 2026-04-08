@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Download, FileSpreadsheet, FileCode, FileText, 
-  Database, Check, Loader2, FolderOpen, FileJson
+import {
+  Download, FileSpreadsheet, FileCode, FileText,
+  Database, Check, Loader2, FolderOpen, FileJson, Grid3X3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -22,6 +22,7 @@ import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
+import { exportToGridlyCsv, translationEntriesToGridly, getGridlyFileName } from '@/lib/gridly-format';
 
 interface TranslationEntry {
   id: string;
@@ -59,6 +60,7 @@ interface ExportDialogProps {
 
 const FORMAT_ICONS: Record<string, React.ReactNode> = {
   csv: <FileSpreadsheet className="h-5 w-5" />,
+  gridly: <Grid3X3 className="h-5 w-5" />,
   xliff: <FileCode className="h-5 w-5" />,
   xliff2: <FileCode className="h-5 w-5" />,
   po: <FileText className="h-5 w-5" />,
@@ -89,7 +91,20 @@ export function ExportDialog({
     const loadFormats = async () => {
       try {
         const fmts = await invoke<FormatInfo[]>('get_supported_formats');
-        setFormats(fmts.filter(f => f.supportsExport));
+        const exportFormats = fmts.filter(f => f.supportsExport);
+        // Add Gridly format (client-side, not from Tauri)
+        const hasGridly = exportFormats.some(f => f.id === 'gridly');
+        if (!hasGridly) {
+          exportFormats.splice(1, 0, {
+            id: 'gridly',
+            name: 'Gridly CSV',
+            extension: '.csv',
+            description: 'Formato multi-lingua compatibile Gridly/Lokalise/Crowdin — ID | source | target per ogni lingua',
+            supportsImport: true,
+            supportsExport: true,
+          });
+        }
+        setFormats(exportFormats);
       } catch (e) {
         console.error('[Export] Error loading formats:', e);
       }
@@ -123,6 +138,38 @@ export function ExportDialog({
       let exportResult: ExportResult;
 
       switch (selectedFormat) {
+        case 'gridly': {
+          // Client-side Gridly CSV export
+          const gridlyEntries = translationEntriesToGridly(entries, targetLang);
+          const csvContent = exportToGridlyCsv({
+            entries: gridlyEntries,
+            sourceLanguage: sourceLang,
+            targetLanguages: [targetLang],
+            includeContext,
+            includeNotes,
+            includeEmpty,
+          });
+          const gridlyPath = `${desktopPath}/${getGridlyFileName(defaultFileName, sourceLang, [targetLang])}`;
+          // Write via Tauri
+          try {
+            await invoke('write_text_file', { path: gridlyPath, content: '\uFEFF' + csvContent });
+          } catch {
+            // Fallback: try generic file write
+            await invoke('export_to_csv', {
+              entries,
+              outputPath: gridlyPath,
+              options: { ...options, format: 'csv' }
+            });
+          }
+          exportResult = {
+            success: true,
+            format: 'Gridly CSV',
+            path: gridlyPath,
+            entriesCount: entries.length,
+            fileSize: new Blob([csvContent]).size,
+          };
+          break;
+        }
         case 'csv':
           exportResult = await invoke<ExportResult>('export_to_csv', {
             entries,
