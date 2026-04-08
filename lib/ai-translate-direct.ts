@@ -1916,6 +1916,54 @@ export async function translateSingleWithFallback(
 }
 
 /**
+ * Traduzione leggera per messaggi di chat — usa Lingva (gratuito, no API key) come prima scelta,
+ * poi fallback su translateSingleWithFallback se configurato un provider.
+ */
+export async function translateChatMessage(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage?: string,
+): Promise<{ translated: string; provider: string }> {
+  // Mappa nomi lingua lunghi → codici ISO per Lingva
+  const LANG_TO_CODE: Record<string, string> = {
+    Italian: 'it', English: 'en', Spanish: 'es', German: 'de',
+    French: 'fr', Portuguese: 'pt', Japanese: 'ja', Chinese: 'zh',
+    Korean: 'ko', Russian: 'ru', Polish: 'pl', Dutch: 'nl',
+    Swedish: 'sv', Norwegian: 'no', Danish: 'da', Finnish: 'fi',
+    Czech: 'cs', Hungarian: 'hu', Romanian: 'ro', Turkish: 'tr',
+    Arabic: 'ar', Hindi: 'hi', Thai: 'th', Vietnamese: 'vi',
+    Ukrainian: 'uk', Greek: 'el', Hebrew: 'he', Indonesian: 'id',
+  };
+  const tgtCode = LANG_TO_CODE[targetLanguage] || targetLanguage.toLowerCase().slice(0, 2);
+  const srcCode = sourceLanguage ? (LANG_TO_CODE[sourceLanguage] || sourceLanguage.toLowerCase().slice(0, 2)) : 'auto';
+
+  // 1. Prova Lingva (gratuito, no API key)
+  try {
+    const encoded = encodeURIComponent(text.slice(0, 500));
+    const res = await fetch(`https://lingva.ml/api/v1/${srcCode}/${tgtCode}/${encoded}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.translation && data.translation !== text) {
+        return { translated: data.translation, provider: 'lingva' };
+      }
+    }
+  } catch {
+    // Lingva non disponibile, prova fallback
+  }
+
+  // 2. Fallback: prova con i provider configurati dall'utente
+  try {
+    return await translateSingleWithFallback(text, targetLanguage, sourceLanguage, 'Chat message');
+  } catch {
+    // Nessun provider disponibile
+  }
+
+  throw new Error('Nessun servizio di traduzione disponibile. Configura un provider AI nelle Impostazioni oppure riprova più tardi.');
+}
+
+/**
  * Traduzione con fallback + batching automatico.
  * Splitta testi in chunk di maxBatch per evitare 413/payload too large.
  * Esegue fino a PARALLEL_BATCHES batch in parallelo per velocità.
