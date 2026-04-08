@@ -123,6 +123,10 @@ export function PersistentChat() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+  const [autoTranslate, setAutoTranslate] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('gs_chat_auto_translate') === 'true';
+    return false;
+  });
   const { language } = useTranslation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -290,6 +294,45 @@ export function PersistentChat() {
     }
   }, [language, translatedMessages]);
 
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslate(prev => {
+      const next = !prev;
+      localStorage.setItem('gs_chat_auto_translate', String(next));
+      return next;
+    });
+  }, []);
+
+  const detectLangTag = useCallback((text: string): string | null => {
+    if (/[\u0400-\u04FF]{3,}/.test(text)) return 'RU';
+    if (/[\u4E00-\u9FFF]{2,}/.test(text)) return 'ZH';
+    if (/[\u3040-\u309F\u30A0-\u30FF]{2,}/.test(text)) return 'JA';
+    if (/[\uAC00-\uD7AF]{2,}/.test(text)) return 'KO';
+    if (/[\u0600-\u06FF]{3,}/.test(text)) return 'AR';
+    if (/[\u0E00-\u0E7F]{3,}/.test(text)) return 'TH';
+    const LANG_HINTS: Record<string, RegExp> = {
+      EN: /\b(the|and|this|that|with|have|from|they|what|your)\b/i,
+      ES: /\b(que|los|las|por|una|con|para|esta|pero|como)\b/i,
+      DE: /\b(und|die|der|das|ist|nicht|ein|ich|sich|auf)\b/i,
+      FR: /\b(les|des|une|que|est|pas|pour|dans|sur|avec)\b/i,
+      PT: /\b(que|não|para|com|uma|dos|está|isso|mais|por)\b/i,
+    };
+    const appLang = language.toUpperCase();
+    for (const [lang, re] of Object.entries(LANG_HINTS)) {
+      if (lang !== appLang && re.test(text)) return lang;
+    }
+    return null;
+  }, [language]);
+
+  useEffect(() => {
+    if (!autoTranslate || messages.length === 0) return;
+    for (const msg of messages) {
+      if (msg.deleted || msg.authorId === userId) continue;
+      if (translatedMessages[msg.id] || translatingIds.has(msg.id)) continue;
+      const lang = detectLangTag(msg.content);
+      if (lang) handleTranslateMessage(msg);
+    }
+  }, [autoTranslate, messages, userId, translatedMessages, translatingIds, detectLangTag, handleTranslateMessage]);
+
   // ─── Create room ────────────────────────────────────────────
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -414,7 +457,16 @@ export function PersistentChat() {
                 <span className="font-medium truncate max-w-[180px]">{activeRoom?.name || 'Stanze'}</span>
                 <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform ${showRooms ? 'rotate-180' : ''}`} />
               </button>
-              <Button variant="ghost" size="xs" className="w-6 p-0 ml-auto" onClick={() => setShowNewRoom(true)}>
+              <Button
+                variant="ghost"
+                size="xs"
+                className={`w-6 p-0 ml-auto ${autoTranslate ? 'text-cyan-400' : 'text-slate-500'}`}
+                onClick={toggleAutoTranslate}
+                title={autoTranslate ? 'Disattiva auto-traduzione' : 'Auto-traduci messaggi'}
+              >
+                <Languages className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="xs" className="w-6 p-0" onClick={() => setShowNewRoom(true)}>
                 <Plus className="h-3 w-3 text-slate-500" />
               </Button>
             </div>
@@ -476,6 +528,12 @@ export function PersistentChat() {
                               {msg.authorName || 'Utente'}
                             </span>
                             <span className="text-micro text-slate-600">{formatTime(msg.createdAt)}</span>
+                            {(() => {
+                              const lang = detectLangTag(msg.content);
+                              return lang ? (
+                                <span className="text-micro px-0.5 rounded bg-slate-700/50 text-slate-400 font-mono">{lang}</span>
+                              ) : null;
+                            })()}
                           </div>
                         )}
                         {msg.replyTo && (
