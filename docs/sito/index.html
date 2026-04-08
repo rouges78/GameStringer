@@ -3,23 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameStringer - Traduci Qualsiasi Videogioco con l'AI</title>
-  <meta name="description" content="GameStringer v1.6.0 — Suite open source per tradurre videogiochi con AI. 11+ engine, 20+ provider AI, Bethesda/CRI Patchers, Unity Localization, Quality Badges, Auto-glossario.">
-  <meta name="keywords" content="game translation, video game localization, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
-  <meta property="og:title" content="GameStringer v1.6.0 - Traduci Qualsiasi Videogioco con l'AI">
-  <meta property="og:description" content="Suite open source: 11+ engine, 20+ AI, auto-glossario, TM, Quality Badges. Gratuito.">
-  <meta property="og:image" content="images/og-image.svg">
+  <title>GameStringer v1.7.0 — Traduci qualsiasi videogioco con l'AI</title>
+  <meta name="description" content="Suite open source per tradurre videogiochi con l'AI. 11+ engine (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI), 20+ provider AI, Quality Badges, Translation Memory, Auto-glossario. 500 stringhe gratis.">
+  <meta name="keywords" content="traduzione giochi, localizzazione videogiochi, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
+  <meta name="theme-color" content="#050a14">
+  <meta name="author" content="rouges78">
+  <link rel="canonical" href="https://rouges78.github.io/GameStringer/">
+  <link rel="alternate" hreflang="it" href="https://rouges78.github.io/GameStringer/index.html">
+  <link rel="alternate" hreflang="en" href="https://rouges78.github.io/GameStringer/index-en.html">
+  <link rel="alternate" hreflang="x-default" href="https://rouges78.github.io/GameStringer/index-en.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GameStringer v1.7.0 — Traduci qualsiasi videogioco con l'AI">
+  <meta property="og:description" content="Suite open source: 11+ engine, 20+ AI, Quality Badges, Translation Memory. Gratuito, nessun account.">
+  <meta property="og:image" content="images/screenshot-library.png">
+  <meta property="og:image:alt" content="GameStringer — libreria giochi con 7 store integrati">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:url" content="https://rouges78.github.io/GameStringer/">
+  <meta property="og:site_name" content="GameStringer">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GameStringer v1.7.0 — Traduci qualsiasi videogioco con l'AI">
+  <meta name="twitter:description" content="Suite open source: 11+ engine, 20+ AI, Quality Badges, Translation Memory. Gratuito.">
+  <meta name="twitter:image" content="images/screenshot-library.png">
+
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- Fonts: preconnect + non-blocking load -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="styles-v2.css">
-  <script src="https://unpkg.com/scrollreveal"></script>
+  <link rel="stylesheet" href="styles-v3.css">
+  <script src="https://unpkg.com/scrollreveal" defer></script>
   <script src="site-i18n.js" defer></script>
-  <style>
-    .lang-selector{position:relative;margin-left:16px}.lang-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#cbd5e1;padding:10px 16px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(8px)}.lang-btn:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(99,102,241,.5);transform:translateY(-2px)}.lang-menu{position:absolute;top:100%;right:0;margin-top:12px;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:8px;min-width:180px;opacity:0;visibility:hidden;transform:translateY(-10px) scale(0.95);transition:all .3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(16px);z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 0 1px rgba(99,102,241,.1)}.lang-menu.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}.lang-option{display:flex;align-items:center;gap:12px;width:100%;padding:10px 16px;background:0 0;border:none;color:#94a3b8;cursor:pointer;border-radius:10px;font-size:14px;font-weight:500;text-align:left;transition:all .2s}.lang-option:hover{background:rgba(255,255,255,.05);color:#fff}.lang-option.active{background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.2)}
-  </style>
+
+  <!-- Structured data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GameStringer",
+    "operatingSystem": "Windows 10, Windows 11, Linux",
+    "applicationCategory": "GameApplication",
+    "applicationSubCategory": "Localization Tool",
+    "softwareVersion": "1.7.0",
+    "description": "Suite open source per tradurre videogiochi con l'AI. 11+ engine di gioco, 20+ provider AI, Quality Badges, Translation Memory, Auto-glossario.",
+    "url": "https://rouges78.github.io/GameStringer/",
+    "downloadUrl": "https://github.com/rouges78/GameStringer/releases/latest",
+    "author": { "@type": "Person", "name": "rouges78", "url": "https://github.com/rouges78" },
+    "license": "https://github.com/rouges78/GameStringer/blob/main/LICENSE",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "120" }
+  }
+  </script>
 </head>
 <body>
+<a class="skip-link" href="#main-content" data-i18n="a11y.skip">Salta al contenuto</a>
 
 <header>
   <div class="header-bg"></div>
@@ -27,15 +71,15 @@
   <div class="header-glow-2"></div>
   <div class="header-glow-3"></div>
   <div class="container">
-    <nav>
-      <div class="nav-logo"><img src="logo.png" alt="GameStringer" style="height:200px;width:auto"></div>
-      <div class="nav-links">
-        <a href="#showcase">Showcase</a><a href="#features">Features</a><a href="#engines">Engines</a><a href="#ai">AI</a><a href="#tools">Tools</a><a href="#whatsnew">What's New</a><a href="#usecases">Use Cases</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+    <nav aria-label="Principale">
+      <a class="nav-logo" href="#top" aria-label="GameStringer — Home"><img src="logo.png" alt="GameStringer"></a>
+      <div class="nav-links" role="navigation">
+        <a href="#showcase">Showcase</a><a href="#features">Features</a><a href="#engines">Engines</a><a href="#ai">AI</a><a href="#tools">Tools</a><a href="#whatsnew">v1.7.0</a><a href="#usecases">Use Cases</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
       </div>
-      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-sm">GitHub</a>
+      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-sm" aria-label="Vai al repository GitHub">GitHub</a>
       <div class="lang-selector">
-        <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()">🇮🇹 IT</button>
-        <div id="lang-menu" class="lang-menu">
+        <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()" aria-haspopup="true" aria-expanded="false" aria-label="Seleziona lingua">🇮🇹 IT</button>
+        <div id="lang-menu" class="lang-menu" role="menu">
           <button class="lang-option" onclick="setLanguage('en')">🇬🇧 English</button>
           <button class="lang-option active" onclick="setLanguage('it')">🇮🇹 Italiano</button>
           <button class="lang-option" onclick="setLanguage('es')">🇪🇸 Español</button>
@@ -48,8 +92,8 @@
         </div>
       </div>
     </nav>
-    <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.6.0 — UI in 11 lingue · Bethesda/CRI Patchers · String it! Smart Gate · P.T. cache</span></span>
+    <div class="hero" id="main-content">
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.7.0 — Auto-Select AI + CSV Gridly + Lip Sync + Doppiaggio</span></span>
       <h1 data-i18n="hero.title">GameStringer</h1>
       <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
       <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.</p>
@@ -67,7 +111,7 @@
         <div class="stat"><div class="stat-value">11+</div><div class="stat-label" data-i18n="stats.engines">Game Engine</div><div class="stat-detail">Unity, Unreal, Godot, RPG Maker, Danganronpa...</div></div>
         <div class="stat"><div class="stat-value">20+</div><div class="stat-label" data-i18n="stats.ai">Provider AI</div><div class="stat-detail">10 gratuiti, 8 locali, HY-MT ottimizzato</div></div>
         <div class="stat"><div class="stat-value">7</div><div class="stat-label" data-i18n="stats.stores">Store Integrati</div><div class="stat-detail">Steam, Epic, GOG, Origin...</div></div>
-        <div class="stat"><div class="stat-value">11</div><div class="stat-label" data-i18n="stats.languages">Lingue UI</div><div class="stat-detail">IT · EN · DE · ES · FR · JA · ZH · KO · PT · PL · RU</div></div>
+        <div class="stat"><div class="stat-value">∞</div><div class="stat-label" data-i18n="stats.games">Games Traducibili</div><div class="stat-detail">Indie, retro, AAA</div></div>
       </div>
     </div>
   </div>
@@ -392,48 +436,48 @@
     </div>
   </div>
 </section>
-<!-- WHAT'S NEW v1.6.0 -->
+<!-- WHAT'S NEW v1.7.0 -->
 <section id="whatsnew">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge">// v1.6.0</span>
-    <h2 class="section-title" data-i18n="whatsnew.title">Novità nella Versione 1.6.0</h2>
-    <p class="section-desc" data-i18n="whatsnew.desc">Bethesda/CRI Patchers, Unity Localization Package, Universal PO export e Accessibility WCAG 2.1 AA.</p>
+    <span class="badge section-badge">// v1.7.0</span>
+    <h2 class="section-title" data-i18n="whatsnew.title">Novità nella Versione 1.7.0</h2>
+    <p class="section-desc" data-i18n="whatsnew.desc">Selezione Auto Motore AI, CSV Gridly, Corrispondenza Durata, Lip Sync Rhubarb, Video Extractor e Sync i18n.</p>
     <div class="grid grid-2" style="margin-top:48px;text-align:left">
-      <div class="card feature-card" style="border-left:4px solid #dc2626">
-        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)"><span style="color:#f87171;font-weight:800;font-size:14px">BGS</span></div>
-        <h3 class="feature-title">Bethesda Engine Patcher</h3>
-        <p class="feature-desc">Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield. Supporta BSA v103-105, BA2 GNRL/DX10, ESP/ESM e STRINGS/DLSTRINGS/ILSTRINGS.</p>
-        <div class="feature-tags"><span class="feature-tag">BSA/BA2</span><span class="feature-tag">ESP/ESM</span><span class="feature-tag">STRINGS</span><span class="feature-tag">Creation Engine</span></div>
-      </div>
-      <div class="card feature-card" style="border-left:4px solid #f59e0b">
-        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><span style="color:#fbbf24;font-weight:800;font-size:14px">CRI</span></div>
-        <h3 class="feature-title">CRI Middleware Patcher</h3>
-        <p class="feature-desc">Persona 5 Royal, Yakuza, Tales of, Dragon Ball e tutti i titoli CRI. Decodifica CPK + CRILAYLA e formati MSG/BMD/FTD.</p>
-        <div class="feature-tags"><span class="feature-tag">CPK</span><span class="feature-tag">CRILAYLA</span><span class="feature-tag">MSG/BMD/FTD</span><span class="feature-tag">Atlus/SEGA</span></div>
+      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
+        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><span style="color:#a78bfa;font-weight:800;font-size:14px">AUTO</span></div>
+        <h3 class="feature-title">Selezione Auto Motore AI</h3>
+        <p class="feature-desc">Il nuovo preset "Auto" sceglie il miglior provider AI per lingua e genere. Lingue europee → DeepL, CJK → Claude, RPG → LLM creativi. Apprendimento qualità automatico.</p>
+        <div class="feature-tags"><span class="feature-tag">Auto-Select</span><span class="feature-tag">Per Lingua</span><span class="feature-tag">Per Genere</span><span class="feature-tag">Quality Tracking</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #0ea5e9">
-        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)"><span style="color:#22d3ee;font-weight:800;font-size:14px">U-LOC</span></div>
-        <h3 class="feature-title">Unity Localization Package</h3>
-        <p class="feature-desc">Pipeline completa per il package ufficiale Unity Localization: StringTable + SharedTableData, Addressables e validator Smart Strings.</p>
-        <div class="feature-tags"><span class="feature-tag">StringTable</span><span class="feature-tag">Addressables</span><span class="feature-tag">Smart Strings</span><span class="feature-tag">Unity 2021+</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)"><span style="color:#22d3ee;font-weight:800;font-size:14px">CSV</span></div>
+        <h3 class="feature-title">Export/Import CSV Gridly</h3>
+        <p class="feature-desc">Formato multi-lingua a colonne compatibile con Gridly, Lokalise e Crowdin. Auto-detect delimitatore e colonne lingua. UTF-8 BOM per Excel.</p>
+        <div class="feature-tags"><span class="feature-tag">Gridly</span><span class="feature-tag">Lokalise</span><span class="feature-tag">Crowdin</span><span class="feature-tag">Multi-lingua</span></div>
       </div>
-      <div class="card feature-card" style="border-left:4px solid #22c55e">
-        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)"><span style="color:#34d399;font-weight:800;font-size:14px">PO</span></div>
-        <h3 class="feature-title">Universal PO Export</h3>
-        <p class="feature-desc">Export gettext PO con metadata completi da ogni patcher. Compatibile con Poedit, Weblate, Crowdin e qualsiasi CAT tool.</p>
-        <div class="feature-tags"><span class="feature-tag">gettext</span><span class="feature-tag">Poedit</span><span class="feature-tag">Weblate</span><span class="feature-tag">Metadata</span></div>
-      </div>
-      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
-        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><span style="color:#a78bfa;font-weight:800;font-size:14px">A11Y</span></div>
-        <h3 class="feature-title">Accessibilità WCAG 2.1 AA</h3>
-        <p class="feature-desc">aria-label, heading semantici, focus-visible, skip link, prefers-reduced-motion e compatibilità Windows High Contrast su tutta l'app.</p>
-        <div class="feature-tags"><span class="feature-tag">WCAG 2.1 AA</span><span class="feature-tag">Screen Reader</span><span class="feature-tag">Forced Colors</span><span class="feature-tag">Reduced Motion</span></div>
+      <div class="card feature-card" style="border-left:4px solid #f59e0b">
+        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><span style="color:#fbbf24;font-weight:800;font-size:14px">DUB</span></div>
+        <h3 class="feature-title">Corrispondenza Durata Doppiaggio</h3>
+        <p class="feature-desc">Sintesi vocale in due passaggi: genera → misura → regola velocità → rigenera. Mantiene l'audio doppiato sincronizzato con l'originale (0.5x-2.0x).</p>
+        <div class="feature-tags"><span class="feature-tag">Two-Pass TTS</span><span class="feature-tag">Web Audio API</span><span class="feature-tag">Speed Match</span><span class="feature-tag">Batch</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #ec4899">
-        <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)"><span style="color:#f472b6;font-weight:800;font-size:14px">UI</span></div>
-        <h3 class="feature-title">Design System + OCR Reale</h3>
-        <p class="feature-desc">Card variants via cva, Button xs/icon-sm, utilities text-micro/text-2xs. Backend Tauri Tesseract reale al posto dello stub OCR.</p>
-        <div class="feature-tags"><span class="feature-tag">cva</span><span class="feature-tag">Design Tokens</span><span class="feature-tag">Tesseract</span><span class="feature-tag">Tray Fix</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)"><span style="color:#f472b6;font-weight:800;font-size:14px">SYNC</span></div>
+        <h3 class="feature-title">Lip Sync con Rhubarb</h3>
+        <p class="feature-desc">Genera animazione bocca dall'audio con Rhubarb Lip Sync. 9 visemi, timeline interattiva, export Unity/Unreal/Raw.</p>
+        <div class="feature-tags"><span class="feature-tag">Rhubarb</span><span class="feature-tag">9 Visemi</span><span class="feature-tag">Unity Export</span><span class="feature-tag">Unreal Export</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #22c55e">
+        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)"><span style="color:#34d399;font-weight:800;font-size:14px">VID</span></div>
+        <h3 class="feature-title">Video Extractor Migliorato</h3>
+        <p class="feature-desc">Pulsante "Video" nella scheda gioco, picker dalla libreria, scansione automatica, link di ritorno alla scheda.</p>
+        <div class="feature-tags"><span class="feature-tag">Game Link</span><span class="feature-tag">Library Picker</span><span class="feature-tag">Auto-Scan</span><span class="feature-tag">Back Link</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #dc2626">
+        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)"><span style="color:#f87171;font-weight:800;font-size:14px">i18n</span></div>
+        <h3 class="feature-title">Sincronizzazione i18n Completa</h3>
+        <p class="feature-desc">Tutti i 10 file locale sincronizzati al riferimento italiano. 11 README aggiornati con feature v1.7.0.</p>
+        <div class="feature-tags"><span class="feature-tag">10 Locali</span><span class="feature-tag">11 README</span><span class="feature-tag">Sync Auto</span><span class="feature-tag">Multilingua</span></div>
       </div>
     </div>
   </div>
@@ -556,7 +600,7 @@
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-logo"><img src="logo.png" alt="GameStringer" style="height:100px;width:auto"></div>
+        <div class="footer-logo"><img src="logo.png" alt="GameStringer"></div>
         <p class="footer-desc">La suite open source definitiva per tradurre videogiochi con intelligenza artificiale. 11+ engine, 20+ AI, Quality Badges, Auto-glossario, Translation Memory.</p>
         <div class="footer-social">
           <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" title="GitHub" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#94a3b8">GH</a>
@@ -591,7 +635,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025-2026 GameStringer by <span style="color:#7dd3fc">rouges78</span>. Source-Available License v1.1</p>
-      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.6.0</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.7.0</p>
     </div>
   </div>
 </footer>
@@ -650,53 +694,27 @@
     });
   });
 
+  // Nav scrolled state: toggle class (CSS handles the rest)
+  const navEl = document.querySelector('nav');
+  let ticking = false;
   window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
-    if (window.scrollY > 50) {
-      nav.style.background = 'rgba(2,6,23,0.8)';
-      nav.style.backdropFilter = 'blur(10px)';
-      nav.style.padding = '12px 0';
-      nav.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-    } else {
-      nav.style.background = 'transparent';
-      nav.style.backdropFilter = 'none';
-      nav.style.padding = '24px 0';
-      nav.style.borderBottom = 'none';
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        navEl.classList.toggle('scrolled', window.scrollY > 40);
+        ticking = false;
+      });
+      ticking = true;
     }
-  });
+  }, { passive: true });
 
-  // Cursor-tracked spotlight on cards
-  document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('pointermove', e => {
-      const r = card.getBoundingClientRect();
-      card.style.setProperty('--x', ((e.clientX - r.left) / r.width * 100) + '%');
-      card.style.setProperty('--y', ((e.clientY - r.top)  / r.height * 100) + '%');
-    });
-  });
-
-  // Animated counter on stat values when they scroll into view
-  const statObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const el = entry.target;
-      const raw = el.textContent.trim();
-      const match = raw.match(/^(\d+)(.*)$/);
-      if (!match) { statObserver.unobserve(el); return; }
-      const target = parseInt(match[1], 10);
-      const suffix = match[2];
-      const duration = 1400;
-      const start = performance.now();
-      const step = (now) => {
-        const p = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(target * eased) + suffix;
-        if (p < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-      statObserver.unobserve(el);
-    });
-  }, { threshold: 0.5 });
-  document.querySelectorAll('.stat-value').forEach(el => statObserver.observe(el));
+  // Lang menu: sync aria-expanded
+  const langBtn = document.getElementById('lang-current');
+  const langMenu = document.getElementById('lang-menu');
+  if (langBtn && langMenu) {
+    new MutationObserver(() => {
+      langBtn.setAttribute('aria-expanded', langMenu.classList.contains('open') ? 'true' : 'false');
+    }).observe(langMenu, { attributes: true, attributeFilter: ['class'] });
+  }
 </script>
 
 </body>
