@@ -6,7 +6,7 @@
   <title>GameStringer v1.7.0 — Traduci qualsiasi videogioco con l'AI</title>
   <meta name="description" content="Suite open source per tradurre videogiochi con l'AI. 11+ engine (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI), 20+ provider AI, Quality Badges, Translation Memory, Auto-glossario. 500 stringhe gratis.">
   <meta name="keywords" content="traduzione giochi, localizzazione videogiochi, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#050a14">
   <meta name="author" content="rouges78">
   <link rel="canonical" href="https://rouges78.github.io/GameStringer/">
   <link rel="alternate" hreflang="it" href="https://rouges78.github.io/GameStringer/index.html">
@@ -92,6 +92,8 @@
         <button class="lang-option" onclick="setLanguage('zh')">Chinese</button>
         <button class="lang-option" onclick="setLanguage('ko')">Korean</button>
         <button class="lang-option" onclick="setLanguage('pt')">Portugues</button>
+        <button class="lang-option" onclick="setLanguage('ru')">Russian</button>
+        <button class="lang-option" onclick="setLanguage('pl')">Polish</button>
       </div>
     </div>
   </div>
@@ -99,6 +101,11 @@
 
 <!-- HERO -->
 <section class="hero-section" id="main-content">
+  <!-- Floating glow orbs -->
+  <div class="hero-orb hero-orb--1"></div>
+  <div class="hero-orb hero-orb--2"></div>
+  <div class="hero-orb hero-orb--3"></div>
+
   <div class="hero-inner">
     <span class="hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.7.0 — Auto-Select AI + CSV Gridly + Lip Sync + Doppiaggio</span></span>
     <h1 class="hero-title" data-i18n="hero.title">GameStringer</h1>
@@ -107,6 +114,12 @@
     <div class="hero-buttons">
       <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-i18n="hero.download">Download Gratuito — Windows & Linux</a>
       <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-lg" data-i18n="hero.source">Codice Sorgente su GitHub</a>
+    </div>
+    <div class="hero-meta">
+      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Open Source</span>
+      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Nessun Account</span>
+      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> AI Locale Gratis</span>
+      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Windows & Linux</span>
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
@@ -135,17 +148,21 @@
     <span class="section-label">// Showcase</span>
     <h2 class="section-title" data-i18n="showcase.title">Interfaccia Moderna & Professionale</h2>
     <p class="section-desc" data-i18n="showcase.desc">Un'interfaccia intuitiva progettata per traduttori professionisti e appassionati. Dark theme, responsive, con ogni strumento a portata di click.</p>
-    <div class="showcase-grid">
-      <div class="showcase-card" onclick="openLightbox(this)">
-        <img src="images/screenshot-library.png" alt="GameStringer - Libreria Giochi" loading="lazy">
-        <div class="showcase-overlay">
-          <div class="showcase-label">
-            <h4>Libreria Giochi</h4>
-            <span class="showcase-tag" style="background:rgba(34,197,94,0.2);color:#4ade80">7 STORE</span>
-          </div>
-          <p class="showcase-desc">Scansione automatica Steam, Epic, GOG, EA, Ubisoft, Amazon, itch.io. Rilevamento engine e file traducibili.</p>
+
+    <!-- Hero screenshot — full width -->
+    <div class="showcase-hero" onclick="openLightbox(this)">
+      <img src="images/screenshot-library.png" alt="GameStringer - Libreria Giochi" loading="lazy">
+      <div class="showcase-overlay">
+        <div class="showcase-label">
+          <h4>Libreria Giochi</h4>
+          <span class="showcase-tag" style="background:rgba(34,197,94,0.2);color:#4ade80">7 STORE</span>
         </div>
+        <p class="showcase-desc">Scansione automatica Steam, Epic, GOG, EA, Ubisoft, Amazon, itch.io. Rilevamento engine e file traducibili.</p>
       </div>
+    </div>
+
+    <!-- 3 screenshots in a row -->
+    <div class="showcase-grid">
       <div class="showcase-card" onclick="openLightbox(this)">
         <img src="images/screenshot-translator.png" alt="GameStringer - AI Translator" loading="lazy">
         <div class="showcase-overlay">
@@ -201,7 +218,7 @@
         <p class="bento-desc">Un click: traduce, salva in TM, estrae glossario, crea file revisione e genera PAK/patch. Unity, Unreal, Godot, RPG Maker, Ren'Py.</p>
         <div class="bento-tags"><span class="bento-tag">TM + Glossario auto</span><span class="bento-tag">File revisione</span><span class="bento-tag">11 engine</span></div>
       </div>
-      <!-- Card 2 - span 2 (wraps to next row since grid is 3-col, this means it takes 2 of 3) -->
+      <!-- Card 2 -->
       <div class="glass-card bento-card">
         <div class="bento-number">02</div>
         <div class="bento-icon" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><span style="color:#a78bfa">QA</span></div>
@@ -217,7 +234,7 @@
         <p class="bento-desc">Glossario estratto automaticamente dall'AI. Translation Memory persistente con backend Rust. Import/export TMX standard.</p>
         <div class="bento-tags"><span class="bento-tag">Auto-extract AI</span><span class="bento-tag">TM Rust</span><span class="bento-tag">TMX</span></div>
       </div>
-      <!-- Card 4 -->
+      <!-- Card 4 - span 2 -->
       <div class="glass-card bento-card span-2">
         <div class="bento-number">04</div>
         <div class="bento-icon" style="background:linear-gradient(135deg,#d97706,#f59e0b)"><span style="color:#fbbf24">?</span></div>
@@ -640,39 +657,51 @@
     <div class="timeline">
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#8b5cf6"></div>
-        <h4 class="timeline-title">Selezione Auto Motore AI</h4>
-        <p class="timeline-desc">Il nuovo preset "Auto" sceglie il miglior provider AI per lingua e genere. Lingue europee &rarr; DeepL, CJK &rarr; Claude, RPG &rarr; LLM creativi. Apprendimento qualita automatico.</p>
-        <div class="timeline-tags"><span class="timeline-tag">Auto-Select</span><span class="timeline-tag">Per Lingua</span><span class="timeline-tag">Per Genere</span><span class="timeline-tag">Quality Tracking</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Selezione Auto Motore AI</h4>
+          <p class="timeline-desc">Il nuovo preset "Auto" sceglie il miglior provider AI per lingua e genere. Lingue europee &rarr; DeepL, CJK &rarr; Claude, RPG &rarr; LLM creativi. Apprendimento qualita automatico.</p>
+          <div class="timeline-tags"><span class="timeline-tag">Auto-Select</span><span class="timeline-tag">Per Lingua</span><span class="timeline-tag">Per Genere</span><span class="timeline-tag">Quality Tracking</span></div>
+        </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#06b6d4"></div>
-        <h4 class="timeline-title">Export/Import CSV Gridly</h4>
-        <p class="timeline-desc">Formato multi-lingua a colonne compatibile con Gridly, Lokalise e Crowdin. Auto-detect delimitatore e colonne lingua. UTF-8 BOM per Excel.</p>
-        <div class="timeline-tags"><span class="timeline-tag">Gridly</span><span class="timeline-tag">Lokalise</span><span class="timeline-tag">Crowdin</span><span class="timeline-tag">Multi-lingua</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Export/Import CSV Gridly</h4>
+          <p class="timeline-desc">Formato multi-lingua a colonne compatibile con Gridly, Lokalise e Crowdin. Auto-detect delimitatore e colonne lingua. UTF-8 BOM per Excel.</p>
+          <div class="timeline-tags"><span class="timeline-tag">Gridly</span><span class="timeline-tag">Lokalise</span><span class="timeline-tag">Crowdin</span><span class="timeline-tag">Multi-lingua</span></div>
+        </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#f59e0b"></div>
-        <h4 class="timeline-title">Corrispondenza Durata Doppiaggio</h4>
-        <p class="timeline-desc">Sintesi vocale in due passaggi: genera &rarr; misura &rarr; regola velocita &rarr; rigenera. Mantiene l'audio doppiato sincronizzato con l'originale (0.5x-2.0x).</p>
-        <div class="timeline-tags"><span class="timeline-tag">Two-Pass TTS</span><span class="timeline-tag">Web Audio API</span><span class="timeline-tag">Speed Match</span><span class="timeline-tag">Batch</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Corrispondenza Durata Doppiaggio</h4>
+          <p class="timeline-desc">Sintesi vocale in due passaggi: genera &rarr; misura &rarr; regola velocita &rarr; rigenera. Mantiene l'audio doppiato sincronizzato con l'originale (0.5x-2.0x).</p>
+          <div class="timeline-tags"><span class="timeline-tag">Two-Pass TTS</span><span class="timeline-tag">Web Audio API</span><span class="timeline-tag">Speed Match</span><span class="timeline-tag">Batch</span></div>
+        </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#ec4899"></div>
-        <h4 class="timeline-title">Lip Sync con Rhubarb</h4>
-        <p class="timeline-desc">Genera animazione bocca dall'audio con Rhubarb Lip Sync. 9 visemi, timeline interattiva, export Unity/Unreal/Raw.</p>
-        <div class="timeline-tags"><span class="timeline-tag">Rhubarb</span><span class="timeline-tag">9 Visemi</span><span class="timeline-tag">Unity Export</span><span class="timeline-tag">Unreal Export</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Lip Sync con Rhubarb</h4>
+          <p class="timeline-desc">Genera animazione bocca dall'audio con Rhubarb Lip Sync. 9 visemi, timeline interattiva, export Unity/Unreal/Raw.</p>
+          <div class="timeline-tags"><span class="timeline-tag">Rhubarb</span><span class="timeline-tag">9 Visemi</span><span class="timeline-tag">Unity Export</span><span class="timeline-tag">Unreal Export</span></div>
+        </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#22c55e"></div>
-        <h4 class="timeline-title">Video Extractor Migliorato</h4>
-        <p class="timeline-desc">Pulsante "Video" nella scheda gioco, picker dalla libreria, scansione automatica, link di ritorno alla scheda.</p>
-        <div class="timeline-tags"><span class="timeline-tag">Game Link</span><span class="timeline-tag">Library Picker</span><span class="timeline-tag">Auto-Scan</span><span class="timeline-tag">Back Link</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Video Extractor Migliorato</h4>
+          <p class="timeline-desc">Pulsante "Video" nella scheda gioco, picker dalla libreria, scansione automatica, link di ritorno alla scheda.</p>
+          <div class="timeline-tags"><span class="timeline-tag">Game Link</span><span class="timeline-tag">Library Picker</span><span class="timeline-tag">Auto-Scan</span><span class="timeline-tag">Back Link</span></div>
+        </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#ef4444"></div>
-        <h4 class="timeline-title">Sincronizzazione i18n Completa</h4>
-        <p class="timeline-desc">Tutti i 10 file locale sincronizzati al riferimento italiano. 11 README aggiornati con feature v1.7.0.</p>
-        <div class="timeline-tags"><span class="timeline-tag">10 Locali</span><span class="timeline-tag">11 README</span><span class="timeline-tag">Sync Auto</span><span class="timeline-tag">Multilingua</span></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Sincronizzazione i18n Completa</h4>
+          <p class="timeline-desc">Tutti i 10 file locale sincronizzati al riferimento italiano. 11 README aggiornati con feature v1.7.0.</p>
+          <div class="timeline-tags"><span class="timeline-tag">10 Locali</span><span class="timeline-tag">11 README</span><span class="timeline-tag">Sync Auto</span><span class="timeline-tag">Multilingua</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -686,21 +715,27 @@
     <div class="steps-row">
       <div class="step-item">
         <div class="step-circle">1</div>
-        <h3 class="step-title" data-i18n="howitworks.step1.title">Seleziona il Game</h3>
-        <p class="step-desc" data-i18n="howitworks.step1.desc">Scegli dalla libreria Steam, Epic, GOG o aggiungi manualmente. Auto-detect engine e file traducibili.</p>
-        <div class="step-detail">Auto-detect: Unity, Unreal, Godot, RPG Maker...</div>
+        <div class="step-card">
+          <h3 class="step-title" data-i18n="howitworks.step1.title">Seleziona il Game</h3>
+          <p class="step-desc" data-i18n="howitworks.step1.desc">Scegli dalla libreria Steam, Epic, GOG o aggiungi manualmente. Auto-detect engine e file traducibili.</p>
+          <div class="step-detail">Auto-detect: Unity, Unreal, Godot, RPG Maker...</div>
+        </div>
       </div>
       <div class="step-item">
         <div class="step-circle">2</div>
-        <h3 class="step-title" data-i18n="howitworks.step2.title">Configura la Traduzione</h3>
-        <p class="step-desc" data-i18n="howitworks.step2.desc">Scegli provider AI, lingua target, glossario e contesto. L'AI adatta il tono al genere del gioco.</p>
-        <div class="step-detail">Context-aware: JRPG, Horror, Visual Novel...</div>
+        <div class="step-card">
+          <h3 class="step-title" data-i18n="howitworks.step2.title">Configura la Traduzione</h3>
+          <p class="step-desc" data-i18n="howitworks.step2.desc">Scegli provider AI, lingua target, glossario e contesto. L'AI adatta il tono al genere del gioco.</p>
+          <div class="step-detail">Context-aware: JRPG, Horror, Visual Novel...</div>
+        </div>
       </div>
       <div class="step-item">
         <div class="step-circle">3</div>
-        <h3 class="step-title" data-i18n="howitworks.step3.title">Traduci e Gioca</h3>
-        <p class="step-desc" data-i18n="howitworks.step3.desc">Premi un bottone: traduzioni iniettate automaticamente. Quality Badge per ogni riga. Backup incluso.</p>
-        <div class="step-detail">Auto-patch: BepInEx, XUnity, UnrealLocres...</div>
+        <div class="step-card">
+          <h3 class="step-title" data-i18n="howitworks.step3.title">Traduci e Gioca</h3>
+          <p class="step-desc" data-i18n="howitworks.step3.desc">Premi un bottone: traduzioni iniettate automaticamente. Quality Badge per ogni riga. Backup incluso.</p>
+          <div class="step-detail">Auto-patch: BepInEx, XUnity, UnrealLocres...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -846,6 +881,10 @@
 <section>
   <div class="container">
     <div class="cta-section">
+      <!-- CTA floating orbs -->
+      <div class="cta-orb cta-orb--1"></div>
+      <div class="cta-orb cta-orb--2"></div>
+
       <h2 class="cta-title" data-i18n="cta.title">Pronto a Tradurre?</h2>
       <p class="cta-desc" data-i18n="cta.desc">Scarica GameStringer gratuitamente e inizia a giocare nella tua lingua. Nessun account, nessun abbonamento.</p>
       <div class="cta-buttons">
@@ -928,6 +967,7 @@
   sr.reveal('.hero-subtitle', { delay:400 });
   sr.reveal('.hero-desc', { delay:500 });
   sr.reveal('.hero-buttons', { delay:600 });
+  sr.reveal('.hero-meta', { delay:650 });
   sr.reveal('.hero-stats', { delay:700, interval:100 });
   sr.reveal('.section-label', { delay:200 });
   sr.reveal('.section-title', { delay:300 });
@@ -937,6 +977,7 @@
   sr.reveal('.tool-card', { interval:50 });
   sr.reveal('.usecase-card', { interval:150, origin:'left' });
   sr.reveal('.cta-section', { delay:200, scale:0.95 });
+  sr.reveal('.showcase-hero', { delay:200, distance:'40px', scale:0.98 });
   sr.reveal('.showcase-card', { interval:150, distance:'40px', scale:0.95 });
   sr.reveal('.timeline-entry', { interval:150, distance:'30px' });
   sr.reveal('.step-item', { interval:200, distance:'40px' });
@@ -957,24 +998,6 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
   window.openLightbox = openLightbox;
   window.closeLightbox = closeLightbox;
-
-  // Hover effects for showcase cards
-  document.querySelectorAll('.showcase-card').forEach(shot => {
-    shot.addEventListener('mouseenter', () => {
-      shot.style.transform = 'translateY(-8px)';
-      shot.style.boxShadow = '0 20px 40px rgba(6,182,212,0.12)';
-      shot.style.borderColor = 'rgba(6,182,212,0.4)';
-      const img = shot.querySelector('img');
-      if (img) img.style.transform = 'scale(1.04)';
-    });
-    shot.addEventListener('mouseleave', () => {
-      shot.style.transform = '';
-      shot.style.boxShadow = '';
-      shot.style.borderColor = '';
-      const img = shot.querySelector('img');
-      if (img) img.style.transform = '';
-    });
-  });
 
   // Nav scrolled state
   const navEl = document.querySelector('nav');
