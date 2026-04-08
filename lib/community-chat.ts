@@ -278,7 +278,15 @@ export async function fetchRooms(): Promise<ChatRoom[]> {
     .order('last_message_at', { ascending: false });
 
   if (error) throw new Error(`Errore caricamento stanze: ${error.message}`);
-  return (data || []).map(mapRoom);
+  // Deduplicate rooms by name (keep the one with most recent activity)
+  const mapped = (data || []).map(mapRoom);
+  const seen = new Map<string, ChatRoom>();
+  for (const room of mapped) {
+    if (!seen.has(room.name)) {
+      seen.set(room.name, room);
+    }
+  }
+  return Array.from(seen.values());
 }
 
 export async function createRoom(name: string, description: string, type: ChatRoom['type'], gameId?: string, gameName?: string): Promise<ChatRoom> {

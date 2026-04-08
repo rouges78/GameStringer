@@ -68,6 +68,9 @@ pub mod gspack;
 #[allow(dead_code, unused_imports)]
 pub mod notifications;
 
+// === Shared utilities ===
+pub mod encoding_utils;
+
 // === Game engine patchers (cross-platform, file-based) ===
 pub mod unity_patcher;
 pub mod unity_bundle;
@@ -120,6 +123,8 @@ pub mod cri_patcher;
 pub mod po_export;
 // Bethesda Engine patcher (BSA/BA2, STRINGS, ESP/ESM)
 pub mod bethesda_patcher;
+// Video Extractor (VMD, BIK, SMK, USM, ROQ — estrazione e conversione video da giochi)
+pub mod video_extractor;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]

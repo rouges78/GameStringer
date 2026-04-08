@@ -123,22 +123,18 @@ export default function Dashboard() {
     if (ollamaStarting || ollamaStatus?.running) return;
     setOllamaStarting(true);
     try {
-      // Prova ad avviare Ollama via comando di sistema
-      await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(1000) }).catch(() => {});
-      // Su Windows, prova a lanciare l'exe
-      try {
-        const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-        await tauriInvoke('start_ollama').catch(() => {});
-      } catch {}
-      // Attendi qualche secondo e riprova
+      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+      // Avvia Ollama via backend Tauri (bypassa CORS)
+      await tauriInvoke('start_ollama').catch(() => {});
+      // Attendi e controlla stato via backend
       setTimeout(async () => {
         try {
-          const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(5000) });
-          if (r.ok) {
-            const data = await r.json();
-            const models = data.models as unknown[];
-            setOllamaStatus({ running: true, models: models.length, bestModel: models[0]?.name || '' });
-          }
+          const status = await tauriInvoke<{ installed: boolean; running: boolean; models: string[] }>('check_ollama_status');
+          setOllamaStatus({
+            running: status.running,
+            models: status.models?.length || 0,
+            bestModel: status.models?.[0] || '',
+          });
         } catch {}
         setOllamaStarting(false);
       }, 4000);
@@ -160,16 +156,32 @@ export default function Dashboard() {
       setRssNews(items);
       setRssLoading(false);
     }).catch(() => setRssLoading(false));
-    // Ollama status
-    fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(3000) })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.models) {
-          const models = data.models as unknown[];
-          setOllamaStatus({ running: true, models: models.length, bestModel: models[0]?.name || '' });
+    // Ollama status — use Tauri backend to avoid CORS issues with direct fetch
+    (async () => {
+      try {
+        const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
+        const status = await tauriInvoke<{ installed: boolean; running: boolean; models: string[] }>('check_ollama_status');
+        setOllamaStatus({
+          running: status.running,
+          models: status.models?.length || 0,
+          bestModel: status.models?.[0] || '',
+        });
+      } catch {
+        // Fallback: try direct fetch (works if OLLAMA_ORIGINS is set)
+        try {
+          const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(3000) });
+          if (r.ok) {
+            const data = await r.json();
+            const models = data.models as unknown[];
+            setOllamaStatus({ running: true, models: models.length, bestModel: (models[0] as { name?: string })?.name || '' });
+          } else {
+            setOllamaStatus({ running: false, models: 0, bestModel: '' });
+          }
+        } catch {
+          setOllamaStatus({ running: false, models: 0, bestModel: '' });
         }
-      })
-      .catch(() => setOllamaStatus({ running: false, models: 0, bestModel: '' }));
+      }
+    })();
     // Ultimo benchmark
     const history = loadBenchmarkHistory();
     if (history.length > 0) setLastBenchmark(history[history.length - 1]);

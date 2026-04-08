@@ -695,3 +695,466 @@ pub async fn remove_godot_translation(game_path: String) -> Result<String, Strin
 
     Ok("Traduzione Godot rimossa con successo".into())
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS
+// ═══════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Binary helper tests ─────────────────────────────────────
+
+    #[test]
+    fn test_read_u32_valid() {
+        let data = 0x12345678u32.to_le_bytes();
+        let mut offset = 0;
+        assert_eq!(read_u32(&data, &mut offset).unwrap(), 0x12345678);
+        assert_eq!(offset, 4);
+    }
+
+    #[test]
+    fn test_read_u32_at_offset() {
+        let mut data = vec![0xAA, 0xBB];
+        data.extend_from_slice(&42u32.to_le_bytes());
+        let mut offset = 2;
+        assert_eq!(read_u32(&data, &mut offset).unwrap(), 42);
+        assert_eq!(offset, 6);
+    }
+
+    #[test]
+    fn test_read_u32_eof() {
+        let data = [0u8; 3]; // too short
+        let mut offset = 0;
+        let err = read_u32(&data, &mut offset).unwrap_err();
+        assert!(err.contains("EOF"), "Expected EOF error, got: {}", err);
+    }
+
+    #[test]
+    fn test_read_u32_eof_at_offset() {
+        let data = [0u8; 6];
+        let mut offset = 4;
+        let err = read_u32(&data, &mut offset).unwrap_err();
+        assert!(err.contains("EOF"));
+    }
+
+    #[test]
+    fn test_read_u64_valid() {
+        let data = 0xDEADBEEFCAFEBABEu64.to_le_bytes();
+        let mut offset = 0;
+        assert_eq!(read_u64(&data, &mut offset).unwrap(), 0xDEADBEEFCAFEBABE);
+        assert_eq!(offset, 8);
+    }
+
+    #[test]
+    fn test_read_u64_eof() {
+        let data = [0u8; 7];
+        let mut offset = 0;
+        assert!(read_u64(&data, &mut offset).is_err());
+    }
+
+    #[test]
+    fn test_write_u32_le() {
+        let mut buf = Vec::new();
+        write_u32_le(&mut buf, 0x04030201);
+        assert_eq!(buf, vec![0x01, 0x02, 0x03, 0x04]);
+    }
+
+    #[test]
+    fn test_write_u64_le() {
+        let mut buf = Vec::new();
+        write_u64_le(&mut buf, 0x0807060504030201);
+        assert_eq!(buf, vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]);
+    }
+
+    #[test]
+    fn test_pad_to_already_aligned() {
+        let mut buf = vec![0u8; 32];
+        pad_to(&mut buf, 32);
+        assert_eq!(buf.len(), 32);
+    }
+
+    #[test]
+    fn test_pad_to_needs_padding() {
+        let mut buf = vec![0u8; 33];
+        pad_to(&mut buf, 32);
+        assert_eq!(buf.len(), 64);
+    }
+
+    #[test]
+    fn test_pad_to_empty() {
+        let mut buf = Vec::new();
+        pad_to(&mut buf, 32);
+        assert_eq!(buf.len(), 0); // 0 % 32 == 0, no padding needed
+    }
+
+    #[test]
+    fn test_pad_to_small_alignment() {
+        let mut buf = vec![1, 2, 3];
+        pad_to(&mut buf, 4);
+        assert_eq!(buf.len(), 4);
+        assert_eq!(buf[3], 0); // padding byte is zero
+    }
+
+    // ── classify_godot_file tests ───────────────────────────────
+
+    #[test]
+    fn test_classify_translation_files() {
+        assert_eq!(classify_godot_file("res://locale/en.translation"), Some("translation"));
+        assert_eq!(classify_godot_file("res://locale/messages.po"), Some("translation"));
+        assert_eq!(classify_godot_file("res://locale/messages.pot"), Some("translation"));
+    }
+
+    #[test]
+    fn test_classify_csv() {
+        assert_eq!(classify_godot_file("res://data/strings.csv"), Some("csv"));
+        assert_eq!(classify_godot_file("res://data/STRINGS.CSV"), Some("csv"));
+    }
+
+    #[test]
+    fn test_classify_text_files() {
+        assert_eq!(classify_godot_file("res://readme.txt"), Some("text"));
+        assert_eq!(classify_godot_file("res://config.json"), Some("text"));
+        assert_eq!(classify_godot_file("res://project.cfg"), Some("text"));
+    }
+
+    #[test]
+    fn test_classify_scene() {
+        assert_eq!(classify_godot_file("res://scenes/main.tscn"), Some("scene"));
+    }
+
+    #[test]
+    fn test_classify_script() {
+        assert_eq!(classify_godot_file("res://scripts/dialog.gd"), Some("script"));
+    }
+
+    #[test]
+    fn test_classify_resource() {
+        assert_eq!(classify_godot_file("res://dialogue/talk.tres"), Some("resource"));
+    }
+
+    #[test]
+    fn test_classify_unknown() {
+        assert_eq!(classify_godot_file("res://icon.png"), None);
+        assert_eq!(classify_godot_file("res://music.ogg"), None);
+        assert_eq!(classify_godot_file("res://mesh.obj"), None);
+    }
+
+    #[test]
+    fn test_classify_case_insensitive() {
+        assert_eq!(classify_godot_file("res://LOCALE/EN.TRANSLATION"), Some("translation"));
+        assert_eq!(classify_godot_file("res://Scripts/Main.GD"), Some("script"));
+    }
+
+    #[test]
+    fn test_classify_ink_json_returns_text() {
+        // NOTE: The ink check (line ~565) is unreachable because .json is matched
+        // earlier by the "text" branch (line ~548). Ink JSON files are classified
+        // as "text" in practice. This test documents that actual behavior.
+        assert_eq!(classify_godot_file("res://ink/story.json"), Some("text"));
+        assert_eq!(classify_godot_file("res://stories/ink_dialogue.json"), Some("text"));
+    }
+
+    #[test]
+    fn test_classify_non_ink_json_is_text() {
+        assert_eq!(classify_godot_file("res://data/config.json"), Some("text"));
+    }
+
+    // ── find_pck_magic tests ────────────────────────────────────
+
+    #[test]
+    fn test_find_pck_magic_at_start() {
+        let mut data = PCK_MAGIC.to_le_bytes().to_vec();
+        data.extend_from_slice(&[0u8; 100]);
+        assert_eq!(find_pck_magic(&data), Some(0));
+    }
+
+    #[test]
+    fn test_find_pck_magic_embedded() {
+        // Simulate an exe with PCK magic embedded somewhere in the middle
+        let mut data = vec![0u8; 500];
+        let magic_bytes = PCK_MAGIC.to_le_bytes();
+        data[200..204].copy_from_slice(&magic_bytes);
+        assert_eq!(find_pck_magic(&data), Some(200));
+    }
+
+    #[test]
+    fn test_find_pck_magic_prefers_last_occurrence() {
+        // When scanning from the end, should find the last occurrence first
+        let mut data = vec![0u8; 500];
+        let magic_bytes = PCK_MAGIC.to_le_bytes();
+        data[100..104].copy_from_slice(&magic_bytes);
+        data[300..304].copy_from_slice(&magic_bytes);
+        // The function scans from end, so should find 300 first
+        assert_eq!(find_pck_magic(&data), Some(300));
+    }
+
+    #[test]
+    fn test_find_pck_magic_not_found() {
+        let data = vec![0u8; 500];
+        assert_eq!(find_pck_magic(&data), None);
+    }
+
+    #[test]
+    fn test_find_pck_magic_too_short() {
+        let data = vec![0u8; 3]; // shorter than magic
+        assert_eq!(find_pck_magic(&data), None);
+    }
+
+    #[test]
+    fn test_find_pck_magic_exact_4_bytes_match() {
+        let data = PCK_MAGIC.to_le_bytes().to_vec();
+        // 4 bytes exactly — the reverse scan range is empty (0..0), but fallback checks [0..4]
+        assert_eq!(find_pck_magic(&data), Some(0));
+    }
+
+    // ── PCK round-trip tests (create → read) ────────────────────
+
+    #[test]
+    fn test_create_pck_v1_directory_not_after_header() {
+        // BUG DOCUMENTATION: create_pck writes v1 PCKs with the directory
+        // AFTER file data, but read_pck expects the directory right after
+        // the header for v1 (no dir_offset field). This means v1 PCKs
+        // created by create_pck cannot be read back by read_pck.
+        // This only affects Godot 3.x; Godot 4.x (v2) works correctly.
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://test.txt", b"Hello Godot 3!"),
+        ];
+        let pck_data = create_pck(&files, 3, 5, 0);
+
+        // Verify header is valid (magic + version can be read)
+        let mut offset = 0;
+        assert_eq!(read_u32(&pck_data, &mut offset).unwrap(), PCK_MAGIC);
+        assert_eq!(read_u32(&pck_data, &mut offset).unwrap(), 1); // pack_version
+
+        // read_pck will succeed but find 0 files because the directory
+        // offset points to file data bytes, not the actual directory
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.pack_version, 1);
+        assert_eq!(info.godot_major, 3);
+        // file_count will be wrong (reads file data bytes as file_count)
+    }
+
+    #[test]
+    fn test_create_and_read_pck_v2_godot4() {
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://locale/en.po", b"msgid \"hello\"\nmsgstr \"Hello\""),
+            ("res://locale/it.po", b"msgid \"hello\"\nmsgstr \"Ciao\""),
+        ];
+        let pck_data = create_pck(&files, 4, 2, 1);
+
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.pack_version, 2);
+        assert_eq!(info.godot_major, 4);
+        assert_eq!(info.godot_minor, 2);
+        assert_eq!(info.godot_patch, 1);
+        assert_eq!(info.file_count, 2);
+        assert_eq!(info.files.len(), 2);
+        assert_eq!(info.files[0].path, "res://locale/en.po");
+        assert_eq!(info.files[1].path, "res://locale/it.po");
+    }
+
+    #[test]
+    fn test_roundtrip_file_content_readable() {
+        let content = b"This is translatable text content.";
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://data.txt", content),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+
+        let entry = &info.files[0];
+        // For v2 with REL_FILEBASE, entry.offset is already absolute
+        let start = entry.offset as usize;
+        let end = start + entry.size as usize;
+        assert!(end <= pck_data.len(), "File data should be within PCK bounds");
+        let extracted = &pck_data[start..end];
+        assert_eq!(extracted, content);
+    }
+
+    #[test]
+    fn test_roundtrip_file_content_godot4_multiple() {
+        // Test roundtrip with multiple files on v2 (Godot 4)
+        let content_a = b"First file content";
+        let content_b = b"Second file with different length data here";
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://a.gd", content_a),
+            ("res://b.gd", content_b),
+        ];
+        let pck_data = create_pck(&files, 4, 1, 0);
+        let info = read_pck(&pck_data).unwrap();
+
+        for (i, expected) in [content_a.as_slice(), content_b.as_slice()].iter().enumerate() {
+            let entry = &info.files[i];
+            let start = entry.offset as usize;
+            let end = start + entry.size as usize;
+            assert!(end <= pck_data.len());
+            assert_eq!(&pck_data[start..end], *expected);
+        }
+    }
+
+    #[test]
+    fn test_create_pck_empty_files() {
+        let files: Vec<(&str, &[u8])> = vec![];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.file_count, 0);
+        assert_eq!(info.files.len(), 0);
+    }
+
+    #[test]
+    fn test_create_pck_multiple_files_md5_differs() {
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://a.txt", b"aaa"),
+            ("res://b.txt", b"bbb"),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        // Different content should yield different MD5
+        assert_ne!(info.files[0].md5, info.files[1].md5);
+    }
+
+    #[test]
+    fn test_create_pck_same_content_same_md5() {
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://a.txt", b"same"),
+            ("res://b.txt", b"same"),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.files[0].md5, info.files[1].md5);
+    }
+
+    #[test]
+    fn test_pck_v2_has_rel_filebase_flag() {
+        let files: Vec<(&str, &[u8])> = vec![("res://f.txt", b"x")];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.flags & PACK_REL_FILEBASE, PACK_REL_FILEBASE);
+    }
+
+    #[test]
+    fn test_pck_v1_has_no_flags() {
+        let files: Vec<(&str, &[u8])> = vec![("res://f.txt", b"x")];
+        let pck_data = create_pck(&files, 3, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.flags, 0);
+    }
+
+    // ── read_pck error cases ────────────────────────────────────
+
+    #[test]
+    fn test_read_pck_empty_data() {
+        let data: &[u8] = &[];
+        assert!(read_pck(data).is_err());
+    }
+
+    #[test]
+    fn test_read_pck_wrong_magic() {
+        let mut data = vec![0u8; 100];
+        data[0..4].copy_from_slice(&0xDEADBEEFu32.to_le_bytes());
+        let err = read_pck(&data).unwrap_err();
+        assert!(err.contains("PCK"), "Error should mention PCK: {}", err);
+    }
+
+    #[test]
+    fn test_read_pck_truncated_header() {
+        // Valid magic but truncated after that
+        let data = PCK_MAGIC.to_le_bytes().to_vec();
+        assert!(read_pck(&data).is_err());
+    }
+
+    #[test]
+    fn test_read_pck_too_many_files() {
+        // Build a minimal valid header with file_count > 500_000
+        let mut buf = Vec::new();
+        write_u32_le(&mut buf, PCK_MAGIC);
+        write_u32_le(&mut buf, 1); // pack_version v1
+        write_u32_le(&mut buf, 3); // major
+        write_u32_le(&mut buf, 0); // minor
+        write_u32_le(&mut buf, 0); // patch
+        // reserved (16 x u32)
+        for _ in 0..16 {
+            write_u32_le(&mut buf, 0);
+        }
+        // file_count
+        write_u32_le(&mut buf, 999_999);
+
+        let err = read_pck(&buf).unwrap_err();
+        assert!(err.contains("Troppi file"), "Expected too-many-files error: {}", err);
+    }
+
+    // ── Large/edge-case file content ────────────────────────────
+
+    #[test]
+    fn test_roundtrip_empty_file_content() {
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://empty.txt", b""),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.files[0].size, 0);
+    }
+
+    #[test]
+    fn test_roundtrip_binary_content() {
+        let content: Vec<u8> = (0..=255).collect();
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://binary.dat", &content),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        let entry = &info.files[0];
+        let start = entry.offset as usize;
+        let end = start + entry.size as usize;
+        assert_eq!(&pck_data[start..end], content.as_slice());
+    }
+
+    #[test]
+    fn test_roundtrip_long_path() {
+        let long_path = format!("res://{}/file.txt", "a".repeat(200));
+        let files: Vec<(&str, &[u8])> = vec![
+            (&long_path, b"data"),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+        assert_eq!(info.files[0].path, long_path);
+    }
+
+    // ── PCK_MAGIC constant ──────────────────────────────────────
+
+    #[test]
+    fn test_pck_magic_is_gdpc() {
+        let bytes = PCK_MAGIC.to_le_bytes();
+        assert_eq!(&bytes, b"GDPC");
+    }
+
+    // ── Alignment / padding in created PCK ──────────────────────
+
+    #[test]
+    fn test_created_pck_file_offsets_are_aligned() {
+        let files: Vec<(&str, &[u8])> = vec![
+            ("res://a.txt", b"short"),
+            ("res://b.txt", b"another file with more content here"),
+            ("res://c.txt", b"c"),
+        ];
+        let pck_data = create_pck(&files, 4, 0, 0);
+        let info = read_pck(&pck_data).unwrap();
+
+        // In v2 with REL_FILEBASE, the entry offsets are absolute.
+        // The files_base itself should be 32-byte aligned, and each file
+        // starts at a 32-byte aligned boundary within the data section.
+        for entry in &info.files {
+            // The raw offset stored in the directory for v2 is relative to files_base,
+            // and files_base is aligned. After create_pck writes each file it pads to 32.
+            // So each file's data starts at a 32-byte boundary relative to files_base.
+            // The absolute offset should be aligned to 32.
+            assert_eq!(
+                entry.offset % 32, 0,
+                "File {} offset {} is not 32-byte aligned",
+                entry.path, entry.offset
+            );
+        }
+    }
+}

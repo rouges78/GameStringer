@@ -185,6 +185,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'CRI Middleware', href: '/cri-patcher', icon: Disc },
         ],
       },
+      { name: 'Video Extractor', href: '/video-extractor', icon: Film },
       { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',

@@ -23,6 +23,7 @@ import {
   Minimize2,
   Maximize2,
   ChevronDown,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 import {
   isChatEnabled,
   getCurrentUserId,
@@ -65,6 +67,7 @@ import {
   type ChatMessage,
   type UserPresence,
 } from '@/lib/community-chat';
+import { translateSingleWithFallback } from '@/lib/ai-translate-direct';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -118,6 +121,9 @@ export function PersistentChat() {
   const [newRoomType, setNewRoomType] = useState<ChatRoom['type']>('general');
   const [showRooms, setShowRooms] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+  const { language } = useTranslation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -254,6 +260,36 @@ export function PersistentChat() {
     }
   };
 
+  // ─── Translate message ──────────────────────────────────────
+  const handleTranslateMessage = useCallback(async (msg: ChatMessage) => {
+    if (translatedMessages[msg.id]) {
+      setTranslatedMessages(prev => {
+        const next = { ...prev };
+        delete next[msg.id];
+        return next;
+      });
+      return;
+    }
+    setTranslatingIds(prev => new Set(prev).add(msg.id));
+    try {
+      const LANG_MAP: Record<string, string> = {
+        it: 'Italian', en: 'English', es: 'Spanish', de: 'German',
+        fr: 'French', pt: 'Portuguese', ja: 'Japanese', zh: 'Chinese',
+        ko: 'Korean', ru: 'Russian', pl: 'Polish',
+      };
+      const targetLang = LANG_MAP[language] || 'Italian';
+      const { translated } = await translateSingleWithFallback(
+        msg.content, targetLang, undefined, 'Community chat message from a gaming community'
+      );
+      setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : 'Errore traduzione';
+      toast.error(errMsg);
+    } finally {
+      setTranslatingIds(prev => { const next = new Set(prev); next.delete(msg.id); return next; });
+    }
+  }, [language, translatedMessages]);
+
   // ─── Create room ────────────────────────────────────────────
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -275,7 +311,7 @@ export function PersistentChat() {
   if (!enabled) return null;
 
   // Hide on community-hub page (has its own inline chat)
-  if (pathname === '/community-hub') return null;
+  if (pathname?.includes('community')) return null;
 
   const chatWidth = expanded ? 'w-[480px]' : 'w-[360px]';
   const chatHeight = expanded ? 'h-[600px]' : 'h-[420px]';
@@ -448,22 +484,36 @@ export function PersistentChat() {
                           </div>
                         )}
                         <p className="text-[12px] text-slate-300 break-words leading-relaxed">{msg.content}</p>
+                        {translatedMessages[msg.id] && (
+                          <p className="text-[12px] text-cyan-300/80 break-words leading-relaxed mt-0.5 border-l-2 border-cyan-500/30 pl-2">
+                            {translatedMessages[msg.id]}
+                          </p>
+                        )}
                       </div>
-                      {isOwn && !msg.deleted && (
+                      {!msg.deleted && (
                         <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setEditingMsg(msg); setMessageInput(msg.content); inputRef.current?.focus(); }}>
-                            <Edit3 className="h-2.5 w-2.5 text-slate-500" />
+                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleTranslateMessage(msg)} title={translatedMessages[msg.id] ? 'Nascondi traduzione' : 'Traduci messaggio'}>
+                            {translatingIds.has(msg.id) ? (
+                              <Loader2 className="h-2.5 w-2.5 text-cyan-400 animate-spin" />
+                            ) : (
+                              <Languages className={`h-2.5 w-2.5 ${translatedMessages[msg.id] ? 'text-cyan-400' : 'text-slate-500'}`} />
+                            )}
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleDelete(msg)}>
-                            <Trash2 className="h-2.5 w-2.5 text-red-500/50" />
-                          </Button>
-                        </div>
-                      )}
-                      {!isOwn && !msg.deleted && (
-                        <div className="hidden group-hover:flex items-center flex-shrink-0">
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}>
-                            <Reply className="h-2.5 w-2.5 text-slate-500" />
-                          </Button>
+                          {isOwn && (
+                            <>
+                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setEditingMsg(msg); setMessageInput(msg.content); inputRef.current?.focus(); }}>
+                                <Edit3 className="h-2.5 w-2.5 text-slate-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleDelete(msg)}>
+                                <Trash2 className="h-2.5 w-2.5 text-red-500/50" />
+                              </Button>
+                            </>
+                          )}
+                          {!isOwn && (
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}>
+                              <Reply className="h-2.5 w-2.5 text-slate-500" />
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

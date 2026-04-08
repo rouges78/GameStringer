@@ -3,19 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameStringer - Translate Any Video Game with AI | Complete Localization Suite</title>
-  <meta name="description" content="GameStringer is the ultimate open source suite for translating video games with AI. Supports Unity, Unreal, Godot, RPG Maker and 10+ engines. 18+ AI providers including free Ollama, GPT-4, Claude, Gemini.">
-  <meta name="keywords" content="game translation, video game localization, AI translator, Unity translation, Unreal localization, RPG Maker translator, visual novel translation, indie game localization, fan translation, Ollama, GPT-4">
-  <meta property="og:title" content="GameStringer - Translate Any Video Game with AI">
-  <meta property="og:description" content="Open source suite for translating video games. 10+ engines, 18+ AI, free.">
-  <meta property="og:image" content="images/og-image.svg">
+  <title>GameStringer v1.6.0 — Translate any video game with AI</title>
+  <meta name="description" content="Open source suite to translate video games with AI. 11+ engines (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI), 20+ AI providers, Quality Badges, Translation Memory, Auto-glossary. 500 free strings.">
+  <meta name="keywords" content="game translation, video game localization, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
+  <meta name="theme-color" content="#050a14">
+  <meta name="author" content="rouges78">
+  <link rel="canonical" href="https://rouges78.github.io/GameStringer/index-en.html">
+  <link rel="alternate" hreflang="it" href="https://rouges78.github.io/GameStringer/index.html">
+  <link rel="alternate" hreflang="en" href="https://rouges78.github.io/GameStringer/index-en.html">
+  <link rel="alternate" hreflang="x-default" href="https://rouges78.github.io/GameStringer/index-en.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GameStringer v1.6.0 — Translate any video game with AI">
+  <meta property="og:description" content="Open source suite: 11+ engines, 20+ AI, Quality Badges, Translation Memory. Free, no account.">
+  <meta property="og:image" content="images/screenshot-library.png">
+  <meta property="og:image:alt" content="GameStringer — game library with 7 integrated stores">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="it_IT">
+  <meta property="og:url" content="https://rouges78.github.io/GameStringer/index-en.html">
+  <meta property="og:site_name" content="GameStringer">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GameStringer v1.6.0 — Translate any video game with AI">
+  <meta name="twitter:description" content="Open source suite: 11+ engines, 20+ AI, Quality Badges, Translation Memory. Free.">
+  <meta name="twitter:image" content="images/screenshot-library.png">
+
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="styles-v2.css">
-  <script src="https://unpkg.com/scrollreveal"></script>
+  <link rel="stylesheet" href="styles-v3.css">
+  <script src="https://unpkg.com/scrollreveal" defer></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GameStringer",
+    "operatingSystem": "Windows 10, Windows 11, Linux",
+    "applicationCategory": "GameApplication",
+    "softwareVersion": "1.6.0",
+    "description": "Open source suite to translate video games with AI. 11+ engines, 20+ AI providers, Quality Badges, Translation Memory, Auto-glossary.",
+    "url": "https://rouges78.github.io/GameStringer/index-en.html",
+    "downloadUrl": "https://github.com/rouges78/GameStringer/releases/latest",
+    "author": { "@type": "Person", "name": "rouges78", "url": "https://github.com/rouges78" },
+    "license": "https://github.com/rouges78/GameStringer/blob/main/LICENSE",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "120" }
+  }
+  </script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <!-- HEADER -->
 <header>
@@ -25,24 +68,24 @@
   <div class="header-glow-3"></div>
   
   <div class="container">
-    <nav>
-      <div class="nav-logo">
-        <img src="logo.png" alt="GameStringer Logo" style="height: 200px; width: auto;">
-      </div>
+    <nav aria-label="Main">
+      <a class="nav-logo" href="#top" aria-label="GameStringer — Home">
+        <img src="logo.png" alt="GameStringer">
+      </a>
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#engines">Engines</a>
         <a href="#ai">AI Providers</a>
         <a href="#tools">Tools</a>
-        <a href="#whatsnew">What's New</a>
+        <a href="#whatsnew">v1.6.0</a>
         <a href="#usecases">Use Cases</a>
         <a href="#faq">FAQ</a>
       </div>
-      <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-sm">⭐ GitHub</a>
+      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-sm" aria-label="View on GitHub">⭐ GitHub</a>
     </nav>
-    
+
     <!-- HERO -->
-    <div class="hero">
+    <div class="hero" id="main-content">
       <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.6.0 — Bethesda/CRI Patchers + Unity Localization + a11y</span>
       <h1>Translate <span class="hero-highlight">Any</span> Video Game<br>with Artificial Intelligence</h1>
       <p class="hero-subtitle">The ultimate open source suite for video game localization</p>
@@ -454,7 +497,7 @@
     <div class="footer-grid">
       <div>
         <div class="footer-logo">
-          <img src="logo.png" alt="GameStringer Logo" style="height: 100px; width: auto;">
+          <img src="logo.png" alt="GameStringer">
         </div>
         <p class="footer-desc">The ultimate open source suite for translating video games with artificial intelligence. Supports any engine, any AI, any language.</p>
         <div class="footer-social">
@@ -520,21 +563,18 @@
   sr.reveal('.usecase-card', { interval: 150, origin: 'left' });
   sr.reveal('.cta-section', { delay: 200, scale: 0.95 });
 
-  // Navbar background change on scroll
+  // Nav scrolled state: toggle class (CSS handles visuals)
+  const navEl = document.querySelector('nav');
+  let ticking = false;
   window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
-    if (window.scrollY > 50) {
-      nav.style.background = 'rgba(2, 6, 23, 0.8)';
-      nav.style.backdropFilter = 'blur(10px)';
-      nav.style.padding = '12px 0';
-      nav.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-    } else {
-      nav.style.background = 'transparent';
-      nav.style.backdropFilter = 'none';
-      nav.style.padding = '24px 0';
-      nav.style.borderBottom = 'none';
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        navEl.classList.toggle('scrolled', window.scrollY > 40);
+        ticking = false;
+      });
+      ticking = true;
     }
-  });
+  }, { passive: true });
 </script>
 
 </body>

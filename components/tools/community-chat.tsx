@@ -20,6 +20,7 @@ import {
   Loader2,
   WifiOff,
   LogIn,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ import {
   type ChatMessage,
   type UserPresence,
 } from '@/lib/community-chat';
+import { translateSingleWithFallback } from '@/lib/ai-translate-direct';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -93,7 +95,7 @@ function formatTime(iso: string): string {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────
 
 export function CommunityChat() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -109,6 +111,8 @@ export function CommunityChat() {
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomDesc, setNewRoomDesc] = useState('');
   const [newRoomType, setNewRoomType] = useState<ChatRoom['type']>('general');
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -239,6 +243,46 @@ export function CommunityChat() {
       toast.error(e.message || 'Errore eliminazione');
     }
   };
+
+  // ─── Translate message ──────────────────────────────────────
+
+  const handleTranslateMessage = useCallback(async (msg: ChatMessage) => {
+    // Toggle: se già tradotto, rimuovi
+    if (translatedMessages[msg.id]) {
+      setTranslatedMessages(prev => {
+        const next = { ...prev };
+        delete next[msg.id];
+        return next;
+      });
+      return;
+    }
+
+    setTranslatingIds(prev => new Set(prev).add(msg.id));
+    try {
+      const LANG_MAP: Record<string, string> = {
+        it: 'Italian', en: 'English', es: 'Spanish', de: 'German',
+        fr: 'French', pt: 'Portuguese', ja: 'Japanese', zh: 'Chinese',
+        ko: 'Korean', ru: 'Russian', pl: 'Polish',
+      };
+      const targetLang = LANG_MAP[language] || 'Italian';
+      const { translated } = await translateSingleWithFallback(
+        msg.content,
+        targetLang,
+        undefined,
+        'Community chat message from a gaming community'
+      );
+      setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : 'Errore traduzione';
+      toast.error(errMsg);
+    } finally {
+      setTranslatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(msg.id);
+        return next;
+      });
+    }
+  }, [language, translatedMessages]);
 
   // ─── Create room ────────────────────────────────────────────
 
@@ -444,46 +488,69 @@ export function CommunityChat() {
                     )}
 
                     <p className="text-[13px] text-slate-300 break-words leading-relaxed">{msg.content}</p>
+
+                    {/* Translated text */}
+                    {translatedMessages[msg.id] && (
+                      <p className="text-[13px] text-cyan-300/80 break-words leading-relaxed mt-0.5 border-l-2 border-cyan-500/30 pl-2">
+                        {translatedMessages[msg.id]}
+                      </p>
+                    )}
                   </div>
 
                   {/* Actions (hover) */}
-                  {isOwn && !msg.deleted && (
+                  {!msg.deleted && (
                     <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
+                      {/* Translate button — sempre visibile */}
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 p-0"
-                        onClick={() => {
-                          setEditingMsg(msg);
-                          setMessageInput(msg.content);
-                          inputRef.current?.focus();
-                        }}
+                        onClick={() => handleTranslateMessage(msg)}
+                        title={translatedMessages[msg.id] ? 'Nascondi traduzione' : 'Traduci messaggio'}
                       >
-                        <Edit3 className="h-3 w-3 text-slate-500" />
+                        {translatingIds.has(msg.id) ? (
+                          <Loader2 className="h-3 w-3 text-cyan-400 animate-spin" />
+                        ) : (
+                          <Languages className={`h-3 w-3 ${translatedMessages[msg.id] ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        onClick={() => handleDelete(msg)}
-                      >
-                        <Trash2 className="h-3 w-3 text-red-500/50" />
-                      </Button>
-                    </div>
-                  )}
-                  {!isOwn && !msg.deleted && (
-                    <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        onClick={() => {
-                          setReplyTo(msg);
-                          inputRef.current?.focus();
-                        }}
-                      >
-                        <Reply className="h-3 w-3 text-slate-500" />
-                      </Button>
+                      {isOwn && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => {
+                              setEditingMsg(msg);
+                              setMessageInput(msg.content);
+                              inputRef.current?.focus();
+                            }}
+                          >
+                            <Edit3 className="h-3 w-3 text-slate-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => handleDelete(msg)}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-500/50" />
+                          </Button>
+                        </>
+                      )}
+                      {!isOwn && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0"
+                          onClick={() => {
+                            setReplyTo(msg);
+                            inputRef.current?.focus();
+                          }}
+                        >
+                          <Reply className="h-3 w-3 text-slate-500" />
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

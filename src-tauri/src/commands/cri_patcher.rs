@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::command;
+use crate::commands::encoding_utils;
 
 // ============================================================================
 // STRUTTURE DATI
@@ -791,105 +792,12 @@ fn toc_entry_path(entry: &CpkTocEntry) -> String {
 
 /// Rileva la codifica di un buffer di testo
 fn detect_encoding(data: &[u8]) -> String {
-    // BOM UTF-16 LE
-    if data.len() >= 2 && data[0] == 0xFF && data[1] == 0xFE {
-        return "utf-16le".to_string();
-    }
-    // BOM UTF-16 BE
-    if data.len() >= 2 && data[0] == 0xFE && data[1] == 0xFF {
-        return "utf-16be".to_string();
-    }
-    // BOM UTF-8
-    if data.len() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF {
-        return "utf-8-bom".to_string();
-    }
-    // Prova UTF-8
-    if std::str::from_utf8(data).is_ok() {
-        return "utf-8".to_string();
-    }
-    // Prova Shift-JIS: euristica per byte alto (0x80-0x9F, 0xE0-0xFC sono lead byte Shift-JIS)
-    let mut sjis_likely = 0;
-    let mut i = 0;
-    while i < data.len() {
-        let b = data[i];
-        if (0x81..=0x9F).contains(&b) || (0xE0..=0xFC).contains(&b) {
-            if i + 1 < data.len() {
-                let b2 = data[i + 1];
-                if (0x40..=0x7E).contains(&b2) || (0x80..=0xFC).contains(&b2) {
-                    sjis_likely += 1;
-                    i += 2;
-                    continue;
-                }
-            }
-        }
-        i += 1;
-    }
-    if sjis_likely > 0 {
-        return "shift-jis".to_string();
-    }
-    "utf-8".to_string()
+    encoding_utils::detect_encoding(data).encoding
 }
 
 /// Decodifica bytes in stringa usando la codifica rilevata
 fn decode_text(data: &[u8], encoding: &str) -> String {
-    match encoding {
-        "utf-16le" => {
-            let skip = if data.len() >= 2 && data[0] == 0xFF && data[1] == 0xFE { 2 } else { 0 };
-            let pairs: Vec<u16> = data[skip..].chunks(2)
-                .filter(|c| c.len() == 2)
-                .map(|c| u16::from_le_bytes([c[0], c[1]]))
-                .collect();
-            String::from_utf16_lossy(&pairs)
-        }
-        "utf-16be" => {
-            let skip = if data.len() >= 2 && data[0] == 0xFE && data[1] == 0xFF { 2 } else { 0 };
-            let pairs: Vec<u16> = data[skip..].chunks(2)
-                .filter(|c| c.len() == 2)
-                .map(|c| u16::from_be_bytes([c[0], c[1]]))
-                .collect();
-            String::from_utf16_lossy(&pairs)
-        }
-        "utf-8-bom" => {
-            let skip = if data.len() >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF { 3 } else { 0 };
-            String::from_utf8_lossy(&data[skip..]).to_string()
-        }
-        "shift-jis" => {
-            // Decodifica Shift-JIS manualmente (semplificata, senza encoding_rs)
-            decode_shift_jis(data)
-        }
-        _ => String::from_utf8_lossy(data).to_string(),
-    }
-}
-
-/// Decodifica Shift-JIS semplificata — i caratteri multibyte vengono approssimati
-fn decode_shift_jis(data: &[u8]) -> String {
-    // Strategia: prova UTF-8, fallback a lossy replacement per i byte non-ASCII
-    // Per una decodifica Shift-JIS completa servirebbe encoding_rs
-    let mut result = String::new();
-    let mut i = 0;
-    while i < data.len() {
-        let b = data[i];
-        if b < 0x80 {
-            if b == 0 { break; }
-            result.push(b as char);
-            i += 1;
-        } else if (0xA1..=0xDF).contains(&b) {
-            // Katakana half-width (0xA1-0xDF → U+FF61-U+FF9F)
-            let unicode = 0xFF61 + (b as u32 - 0xA1);
-            if let Some(ch) = char::from_u32(unicode) {
-                result.push(ch);
-            }
-            i += 1;
-        } else if ((0x81..=0x9F).contains(&b) || (0xE0..=0xFC).contains(&b)) && i + 1 < data.len() {
-            // Double-byte character — push replacement
-            result.push('\u{FFFD}');
-            i += 2;
-        } else {
-            result.push('\u{FFFD}');
-            i += 1;
-        }
-    }
-    result
+    encoding_utils::decode_string(data, encoding)
 }
 
 /// Rileva il tipo di formato testuale dal path/estensione
@@ -1773,4 +1681,1046 @@ fn rebuild_toc_in_place(
     }
 
     Ok(())
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — Autoresearch harness for CRI parser accuracy
+// ═══════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ─────────────────────────────────────────────────────────────
+    // BINARY READ HELPERS
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_read_u8_at() {
+        let data = [0xAB];
+        let mut off = 0;
+        assert_eq!(read_u8_at(&data, &mut off).unwrap(), 0xAB);
+        assert_eq!(off, 1);
+    }
+
+    #[test]
+    fn test_read_u8_at_eof() {
+        let data = [];
+        let mut off = 0;
+        assert!(read_u8_at(&data, &mut off).is_err());
+    }
+
+    #[test]
+    fn test_read_u16_be() {
+        let data = [0x12, 0x34];
+        let mut off = 0;
+        assert_eq!(read_u16_be(&data, &mut off).unwrap(), 0x1234);
+        assert_eq!(off, 2);
+    }
+
+    #[test]
+    fn test_read_u32_be() {
+        let data = [0x12, 0x34, 0x56, 0x78];
+        let mut off = 0;
+        assert_eq!(read_u32_be(&data, &mut off).unwrap(), 0x12345678);
+    }
+
+    #[test]
+    fn test_read_u64_be() {
+        let data = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
+        let mut off = 0;
+        assert_eq!(read_u64_be(&data, &mut off).unwrap(), 0x0102030405060708);
+    }
+
+    #[test]
+    fn test_read_i32_be() {
+        // -1 in big endian = 0xFFFFFFFF
+        let data = [0xFF, 0xFF, 0xFF, 0xFF];
+        let mut off = 0;
+        assert_eq!(read_i32_be(&data, &mut off).unwrap(), -1);
+    }
+
+    #[test]
+    fn test_read_f32_be() {
+        // 1.0f32 in big endian
+        let data = 1.0f32.to_be_bytes();
+        let mut off = 0;
+        assert_eq!(read_f32_be(&data, &mut off).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn test_read_u32_le_cri() {
+        let data = [0x78, 0x56, 0x34, 0x12];
+        let mut off = 0;
+        assert_eq!(read_u32_le(&data, &mut off).unwrap(), 0x12345678);
+    }
+
+    #[test]
+    fn test_read_cstring() {
+        let data = b"Hello\0World\0";
+        let s = read_cstring(data, 0).unwrap();
+        assert_eq!(s, "Hello");
+        let s2 = read_cstring(data, 6).unwrap();
+        assert_eq!(s2, "World");
+    }
+
+    #[test]
+    fn test_read_cstring_eof() {
+        let data = b"NoNull";
+        let s = read_cstring(data, 0).unwrap();
+        assert_eq!(s, "NoNull");
+    }
+
+    #[test]
+    fn test_read_cstring_out_of_range() {
+        let data = [0x41];
+        assert!(read_cstring(&data, 5).is_err());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // UTF DATA TYPE & STORAGE TYPE
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_utf_data_type_from_flags() {
+        assert_eq!(UtfDataType::from_flags(0x00).unwrap(), UtfDataType::U8);
+        assert_eq!(UtfDataType::from_flags(0x01).unwrap(), UtfDataType::S8);
+        assert_eq!(UtfDataType::from_flags(0x02).unwrap(), UtfDataType::U16);
+        assert_eq!(UtfDataType::from_flags(0x04).unwrap(), UtfDataType::U32);
+        assert_eq!(UtfDataType::from_flags(0x06).unwrap(), UtfDataType::U64);
+        assert_eq!(UtfDataType::from_flags(0x08).unwrap(), UtfDataType::Float);
+        assert_eq!(UtfDataType::from_flags(0x09).unwrap(), UtfDataType::Double);
+        assert_eq!(UtfDataType::from_flags(0x0A).unwrap(), UtfDataType::StringRef);
+        assert_eq!(UtfDataType::from_flags(0x0B).unwrap(), UtfDataType::Data);
+    }
+
+    #[test]
+    fn test_utf_data_type_invalid() {
+        assert!(UtfDataType::from_flags(0x0C).is_err());
+        assert!(UtfDataType::from_flags(0x0F).is_err());
+    }
+
+    #[test]
+    fn test_utf_data_type_ignores_upper_bits() {
+        // Upper nibble should not affect data type
+        assert_eq!(UtfDataType::from_flags(0x14).unwrap(), UtfDataType::U32);
+        assert_eq!(UtfDataType::from_flags(0x3A).unwrap(), UtfDataType::StringRef);
+    }
+
+    #[test]
+    fn test_utf_storage_type_from_flags() {
+        assert_eq!(UtfStorageType::from_flags(0x04).unwrap(), UtfStorageType::PerRow);
+        assert_eq!(UtfStorageType::from_flags(0x14).unwrap(), UtfStorageType::Constant);
+        assert_eq!(UtfStorageType::from_flags(0x34).unwrap(), UtfStorageType::Zero);
+    }
+
+    #[test]
+    fn test_utf_storage_type_invalid() {
+        // Upper nibble 2 is not a valid storage type
+        assert!(UtfStorageType::from_flags(0x24).is_err());
+    }
+
+    #[test]
+    fn test_utf_data_type_byte_sizes() {
+        assert_eq!(UtfDataType::U8.byte_size(), 1);
+        assert_eq!(UtfDataType::S8.byte_size(), 1);
+        assert_eq!(UtfDataType::U16.byte_size(), 2);
+        assert_eq!(UtfDataType::U32.byte_size(), 4);
+        assert_eq!(UtfDataType::Float.byte_size(), 4);
+        assert_eq!(UtfDataType::StringRef.byte_size(), 4);
+        assert_eq!(UtfDataType::U64.byte_size(), 8);
+        assert_eq!(UtfDataType::Double.byte_size(), 8);
+        assert_eq!(UtfDataType::Data.byte_size(), 8);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // UTF VALUE CONVERSIONS
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_utf_value_as_u32() {
+        assert_eq!(UtfValue::U8(42).as_u32(), Some(42));
+        assert_eq!(UtfValue::U16(1000).as_u32(), Some(1000));
+        assert_eq!(UtfValue::U32(0xDEADBEEF).as_u32(), Some(0xDEADBEEF));
+        assert_eq!(UtfValue::S32(-1).as_u32(), Some(u32::MAX));
+        assert_eq!(UtfValue::StringRef("x".into()).as_u32(), None);
+    }
+
+    #[test]
+    fn test_utf_value_as_u64() {
+        assert_eq!(UtfValue::U32(100).as_u64(), Some(100));
+        assert_eq!(UtfValue::U64(0xDEADBEEF_CAFEBABE).as_u64(), Some(0xDEADBEEF_CAFEBABE));
+        assert_eq!(UtfValue::Float(1.0).as_u64(), None);
+    }
+
+    #[test]
+    fn test_utf_value_as_string() {
+        assert_eq!(UtfValue::StringRef("hello".into()).as_string(), Some("hello"));
+        assert_eq!(UtfValue::U32(42).as_string(), None);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // DEFAULT VALUES FOR TYPE
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_default_values() {
+        assert!(matches!(default_value_for_type(UtfDataType::U8), UtfValue::U8(0)));
+        assert!(matches!(default_value_for_type(UtfDataType::U32), UtfValue::U32(0)));
+        assert!(matches!(default_value_for_type(UtfDataType::Float), UtfValue::Float(v) if v == 0.0));
+        assert!(matches!(default_value_for_type(UtfDataType::StringRef), UtfValue::StringRef(ref s) if s.is_empty()));
+        assert!(matches!(default_value_for_type(UtfDataType::Data), UtfValue::Data(ref v) if v.is_empty()));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // @UTF TABLE BUILDER + PARSER
+    // ─────────────────────────────────────────────────────────────
+
+    /// Build a minimal @UTF table with PerRow columns
+    fn build_utf_table_fixture(
+        table_name: &str,
+        columns: &[(&str, UtfDataType)],
+        rows: &[Vec<Vec<u8>>],  // each row is Vec<raw_bytes_for_column>
+    ) -> Vec<u8> {
+        let mut buf = Vec::new();
+
+        // Build string table first
+        let mut string_table = Vec::new();
+        let mut string_offsets: HashMap<String, u32> = HashMap::new();
+
+        let mut add_string = |s: &str, table: &mut Vec<u8>, offsets: &mut HashMap<String, u32>| -> u32 {
+            if let Some(&off) = offsets.get(s) {
+                return off;
+            }
+            let off = table.len() as u32;
+            table.extend_from_slice(s.as_bytes());
+            table.push(0);
+            offsets.insert(s.to_string(), off);
+            off
+        };
+
+        let name_off = add_string(table_name, &mut string_table, &mut string_offsets);
+        let col_name_offsets: Vec<u32> = columns.iter()
+            .map(|(name, _)| add_string(name, &mut string_table, &mut string_offsets))
+            .collect();
+
+        // Schema: for each column: flags(1) + name_offset(4)
+        let num_columns = columns.len();
+        let schema_size = num_columns * 5; // 1+4 per column for PerRow
+
+        // Row length = sum of column byte sizes
+        let row_length: usize = columns.iter().map(|(_, dt)| dt.byte_size()).sum();
+
+        // Layout of the table body (after @UTF + table_size):
+        // UTF header: schema_off(4) + rows_off(4) + string_table_off(4) + data_off(4) +
+        //             name_string_off(4) + num_columns(2) + row_length(2) + num_rows(4) = 28
+        // schema_offset (relative to utf_data_start) = 28
+        // rows_offset = 28 + schema_size
+        // string_table_offset = 28 + schema_size + rows.len() * row_length
+        // data_offset = string_table_offset + string_table.len() (no data section used)
+        let header_size = 28usize; // 5*u32 + u16 + u16 + u32
+        let schema_offset = header_size;
+        let rows_offset = schema_offset + schema_size;
+        let string_table_offset = rows_offset + rows.len() * row_length;
+        let data_offset = string_table_offset + string_table.len();
+        let table_size = data_offset;
+
+        // Write magic
+        buf.extend_from_slice(b"@UTF");
+        // Write table_size
+        buf.extend_from_slice(&(table_size as u32).to_be_bytes());
+
+        let _utf_data_start_pos = buf.len(); // this is where relative offsets are measured from
+
+        // Header fields (all relative to utf_data_start)
+        buf.extend_from_slice(&(schema_offset as u32).to_be_bytes());
+        buf.extend_from_slice(&(rows_offset as u32).to_be_bytes());
+        buf.extend_from_slice(&(string_table_offset as u32).to_be_bytes());
+        buf.extend_from_slice(&(data_offset as u32).to_be_bytes());
+        buf.extend_from_slice(&(name_off as u32).to_be_bytes()); // name_string_offset
+        buf.extend_from_slice(&(num_columns as u16).to_be_bytes());
+        buf.extend_from_slice(&(row_length as u16).to_be_bytes());
+        buf.extend_from_slice(&(rows.len() as u32).to_be_bytes());
+
+        // Schema entries
+        for (i, (_, data_type)) in columns.iter().enumerate() {
+            let flags = 0x00 | (*data_type as u8); // PerRow (0x00 upper nibble) + data type
+            buf.push(flags);
+            buf.extend_from_slice(&col_name_offsets[i].to_be_bytes());
+        }
+
+        // Row data
+        for row in rows {
+            for col_data in row {
+                buf.extend_from_slice(col_data);
+            }
+        }
+
+        // String table
+        buf.extend_from_slice(&string_table);
+
+        buf
+    }
+
+    #[test]
+    fn test_utf_table_single_u32_column() {
+        let fixture = build_utf_table_fixture(
+            "TestTable",
+            &[("Value", UtfDataType::U32)],
+            &[
+                vec![42u32.to_be_bytes().to_vec()],
+                vec![100u32.to_be_bytes().to_vec()],
+            ],
+        );
+
+        let table = parse_utf_table(&fixture, 0).unwrap();
+        assert_eq!(table.name, "TestTable");
+        assert_eq!(table.columns.len(), 1);
+        assert_eq!(table.columns[0].name, "Value");
+        assert_eq!(table.rows.len(), 2);
+        assert_eq!(table.get_u32(0, "Value"), Some(42));
+        assert_eq!(table.get_u32(1, "Value"), Some(100));
+    }
+
+    #[test]
+    fn test_utf_table_multiple_columns() {
+        let fixture = build_utf_table_fixture(
+            "MultiCol",
+            &[
+                ("ID", UtfDataType::U32),
+                ("Size", UtfDataType::U64),
+            ],
+            &[
+                vec![
+                    1u32.to_be_bytes().to_vec(),
+                    1024u64.to_be_bytes().to_vec(),
+                ],
+            ],
+        );
+
+        let table = parse_utf_table(&fixture, 0).unwrap();
+        assert_eq!(table.columns.len(), 2);
+        assert_eq!(table.get_u32(0, "ID"), Some(1));
+        assert_eq!(table.get_u64(0, "Size"), Some(1024));
+    }
+
+    #[test]
+    fn test_utf_table_string_column() {
+        // For StringRef, the row data contains a u32 offset into the string table
+        // We need to know where our string will be in the string table
+        // The string table already has "TestTable\0" and "Name\0"
+        // "TestTable\0" at offset 0 (10 bytes)
+        // "Name\0" at offset 10 (5 bytes)
+        // Our string "Hello\0" would be at offset 15
+        // But the builder puts strings in insertion order...
+        // Let's add a custom string at a known offset
+
+        // Actually, we need to put the target string IN the string table
+        // and reference it. The fixture builder doesn't handle this.
+        // Let me build this one manually.
+
+        let mut buf = Vec::new();
+        // String table: "T\0" (table name) + "N\0" (col name) + "Hello\0" (value)
+        let string_table = b"T\0N\0Hello\0";
+
+        let schema_offset = 28u32; // header: 5*u32 + u16 + u16 + u32 = 28
+        let rows_offset = schema_offset + 5; // 1 col * 5 bytes
+        let string_table_offset = rows_offset + 4; // 1 row * 4 bytes (StringRef)
+        let data_offset = string_table_offset + string_table.len() as u32;
+        let table_size = data_offset;
+
+        buf.extend_from_slice(b"@UTF");
+        buf.extend_from_slice(&table_size.to_be_bytes());
+        buf.extend_from_slice(&schema_offset.to_be_bytes());
+        buf.extend_from_slice(&rows_offset.to_be_bytes());
+        buf.extend_from_slice(&string_table_offset.to_be_bytes());
+        buf.extend_from_slice(&data_offset.to_be_bytes());
+        buf.extend_from_slice(&0u32.to_be_bytes()); // name at string offset 0 = "T"
+        buf.extend_from_slice(&1u16.to_be_bytes()); // 1 column
+        buf.extend_from_slice(&4u16.to_be_bytes()); // row_length = 4
+        buf.extend_from_slice(&1u32.to_be_bytes()); // 1 row
+
+        // Schema: flags=0x0A (PerRow + StringRef), name_offset=2 (points to "N")
+        buf.push(0x0A);
+        buf.extend_from_slice(&2u32.to_be_bytes());
+
+        // Row data: string offset = 4 (points to "Hello")
+        buf.extend_from_slice(&4u32.to_be_bytes());
+
+        // String table
+        buf.extend_from_slice(string_table);
+
+        let table = parse_utf_table(&buf, 0).unwrap();
+        assert_eq!(table.name, "T");
+        assert_eq!(table.get_string(0, "N"), Some("Hello"));
+    }
+
+    #[test]
+    fn test_utf_table_empty() {
+        let fixture = build_utf_table_fixture(
+            "Empty",
+            &[("X", UtfDataType::U32)],
+            &[], // no rows
+        );
+        let table = parse_utf_table(&fixture, 0).unwrap();
+        assert_eq!(table.rows.len(), 0);
+        assert_eq!(table.columns.len(), 1);
+    }
+
+    #[test]
+    fn test_utf_table_bad_magic() {
+        let data = b"NOPE1234567890123456789012345678";
+        let result = parse_utf_table(data, 0);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("@UTF"));
+    }
+
+    #[test]
+    fn test_utf_table_too_small() {
+        let data = [0u8; 3];
+        assert!(parse_utf_table(&data, 0).is_err());
+    }
+
+    #[test]
+    fn test_utf_table_at_offset() {
+        // Place the table at a non-zero offset
+        let mut data = vec![0u8; 16]; // padding
+        let fixture = build_utf_table_fixture(
+            "Offset",
+            &[("Val", UtfDataType::U32)],
+            &[vec![99u32.to_be_bytes().to_vec()]],
+        );
+        data.extend_from_slice(&fixture);
+
+        let table = parse_utf_table(&data, 16).unwrap();
+        assert_eq!(table.get_u32(0, "Val"), Some(99));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CRILAYLA BIT READER
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_bit_reader_single_byte() {
+        let data = [0b10110100]; // byte value in binary
+        let mut reader = CrilaylaBitReader::new(&data);
+
+        // Reads from bit 0 of last byte (which is the only byte)
+        // bit 0 = 0
+        assert_eq!(reader.read_bits(1).unwrap(), 0);
+        // bit 1 = 0
+        assert_eq!(reader.read_bits(1).unwrap(), 0);
+        // bit 2 = 1
+        assert_eq!(reader.read_bits(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn test_bit_reader_full_byte() {
+        let data = [0xFF];
+        let mut reader = CrilaylaBitReader::new(&data);
+        // Reading 8 bits from 0xFF should give 0xFF
+        assert_eq!(reader.read_bits(8).unwrap(), 0xFF);
+    }
+
+    #[test]
+    fn test_bit_reader_cross_byte() {
+        // Two bytes: reader starts at last byte
+        let data = [0b00000001, 0b11111110];
+        let mut reader = CrilaylaBitReader::new(&data);
+        // byte[1] = 0b11111110
+        // Read 8 bits: bits 0-7 of byte[1]
+        // bit 0 = 0, bit 1 = 1, bit 2 = 1, ..., bit 7 = 1
+        let val = reader.read_bits(8).unwrap();
+        assert_eq!(val, 0b11111110);
+        // Now at byte[0], read 1 bit
+        // byte[0] = 0b00000001, bit 0 = 1
+        assert_eq!(reader.read_bits(1).unwrap(), 1);
+    }
+
+    #[test]
+    fn test_bit_reader_eof() {
+        let data = [0x00];
+        let mut reader = CrilaylaBitReader::new(&data);
+        // Read all 8 bits
+        let _ = reader.read_bits(8).unwrap();
+        // Now past the data — should error
+        assert!(reader.read_bits(1).is_err());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CRILAYLA DECOMPRESSION
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_crilayla_single_literal_byte() {
+        // Decompress a CRILAYLA blob containing a single literal byte: 0x41 ('A')
+        // The output after decompression should be [0x41]
+        //
+        // Layout:
+        //   "CRILAYLA" (8 bytes)
+        //   uncompressed_size = 1 (u32 LE)
+        //   compressed_size = 2 (u32 LE)
+        //   compressed_data = [0x00, 0x82] (2 bytes)
+        //   (no prefix)
+        //
+        // Bit stream (read from byte[1] backward):
+        //   byte[1]=0x82=0b10000010: flag=bit0=0 (literal), value bits 0-6
+        //   byte[0]=0x00: value bit 7=0
+        //   value = 0b01000001 = 0x41
+
+        let mut blob = Vec::new();
+        blob.extend_from_slice(b"CRILAYLA");
+        blob.extend_from_slice(&1u32.to_le_bytes());  // uncompressed_size
+        blob.extend_from_slice(&2u32.to_le_bytes());  // compressed_size
+        blob.extend_from_slice(&[0x00, 0x82]);        // compressed data
+
+        let result = decompress_crilayla(&blob, 0).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], 0x41);
+    }
+
+    #[test]
+    fn test_crilayla_with_prefix() {
+        // CRILAYLA with 0x100 prefix: the prefix is stored after compressed data
+        // and placed at the start of output
+
+        let prefix = vec![0xAA; 4]; // small prefix
+        let mut blob = Vec::new();
+        blob.extend_from_slice(b"CRILAYLA");
+        blob.extend_from_slice(&1u32.to_le_bytes());  // uncompressed_size = 1
+        blob.extend_from_slice(&2u32.to_le_bytes());  // compressed_size = 2
+        blob.extend_from_slice(&[0x00, 0x82]);        // compressed: literal 0x41
+        blob.extend_from_slice(&prefix);               // uncompressed prefix
+
+        let result = decompress_crilayla(&blob, 0).unwrap();
+        // total_size = prefix.len() + uncompressed_size = 4 + 1 = 5
+        assert_eq!(result.len(), 5);
+        // First 4 bytes should be the prefix
+        assert_eq!(&result[0..4], &[0xAA, 0xAA, 0xAA, 0xAA]);
+        // Decompressed byte at position 4
+        assert_eq!(result[4], 0x41);
+    }
+
+    #[test]
+    fn test_crilayla_bad_magic() {
+        let blob = b"NOTCRILAYLAXXXXXXXXXXXXXX";
+        assert!(decompress_crilayla(blob, 0).is_err());
+    }
+
+    #[test]
+    fn test_crilayla_truncated() {
+        let mut blob = Vec::new();
+        blob.extend_from_slice(b"CRILAYLA");
+        blob.extend_from_slice(&100u32.to_le_bytes()); // uncompressed_size
+        blob.extend_from_slice(&999u32.to_le_bytes()); // compressed_size > remaining
+        assert!(decompress_crilayla(&blob, 0).is_err());
+    }
+
+    #[test]
+    fn test_crilayla_at_offset() {
+        // Place CRILAYLA data at a non-zero offset
+        let mut blob = vec![0u8; 10]; // padding
+        blob.extend_from_slice(b"CRILAYLA");
+        blob.extend_from_slice(&1u32.to_le_bytes());
+        blob.extend_from_slice(&2u32.to_le_bytes());
+        blob.extend_from_slice(&[0x00, 0x82]);
+
+        let result = decompress_crilayla(&blob, 10).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], 0x41);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ENCODING DETECTION
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_detect_encoding_utf8() {
+        let data = b"Hello world";
+        assert_eq!(detect_encoding(data), "utf-8");
+    }
+
+    #[test]
+    fn test_detect_encoding_utf8_bom() {
+        let data = [0xEF, 0xBB, 0xBF, b'H', b'i'];
+        assert_eq!(detect_encoding(&data), "utf-8-bom");
+    }
+
+    #[test]
+    fn test_detect_encoding_utf16le_bom() {
+        let data = [0xFF, 0xFE, b'H', 0x00];
+        assert_eq!(detect_encoding(&data), "utf-16le");
+    }
+
+    #[test]
+    fn test_detect_encoding_utf16be_bom() {
+        let data = [0xFE, 0xFF, 0x00, b'H'];
+        assert_eq!(detect_encoding(&data), "utf-16be");
+    }
+
+    #[test]
+    fn test_detect_encoding_shift_jis() {
+        // 0x82 0x60 is a valid Shift-JIS sequence (ぁ)
+        let data = [0x82, 0x60, 0x82, 0x61];
+        assert_eq!(detect_encoding(&data), "shift-jis");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // DECODE TEXT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_decode_text_utf8() {
+        assert_eq!(decode_text(b"Hello", "utf-8"), "Hello");
+    }
+
+    #[test]
+    fn test_decode_text_utf8_bom() {
+        let data = [0xEF, 0xBB, 0xBF, b'O', b'K'];
+        assert_eq!(decode_text(&data, "utf-8-bom"), "OK");
+    }
+
+    #[test]
+    fn test_decode_text_utf16le() {
+        // "Hi" in UTF-16 LE with BOM
+        let data = [0xFF, 0xFE, b'H', 0x00, b'i', 0x00];
+        assert_eq!(decode_text(&data, "utf-16le"), "Hi");
+    }
+
+    #[test]
+    fn test_decode_text_utf16be() {
+        let data = [0xFE, 0xFF, 0x00, b'H', 0x00, b'i'];
+        assert_eq!(decode_text(&data, "utf-16be"), "Hi");
+    }
+
+    #[test]
+    fn test_decode_text_shift_jis_ascii() {
+        // Pure ASCII through Shift-JIS decoder
+        assert_eq!(decode_text(b"ABC", "shift-jis"), "ABC");
+    }
+
+    #[test]
+    fn test_decode_text_shift_jis_halfwidth_katakana() {
+        // 0xA1 should map to U+FF61 (。) via encoding_rs
+        let data = [0xA1];
+        let result = decode_text(&data, "shift-jis");
+        assert_eq!(result, "\u{FF61}");
+    }
+
+    #[test]
+    fn test_decode_text_shift_jis_null_terminated() {
+        // encoding_rs decodes the full buffer (including null bytes)
+        let data = [b'H', b'i', 0x00, b'X'];
+        let result = decode_text(&data, "shift-jis");
+        assert!(result.starts_with("Hi")); // null is decoded, but Hi prefix is preserved
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FORMAT DETECTION
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_detect_format_from_path() {
+        assert_eq!(detect_format_from_path("data/script.msg"), "msg");
+        assert_eq!(detect_format_from_path("data/dialog.bmd"), "bmd");
+        assert_eq!(detect_format_from_path("config.json"), "json");
+        assert_eq!(detect_format_from_path("strings.xml"), "xml");
+        assert_eq!(detect_format_from_path("table.ftd"), "ftd");
+        assert_eq!(detect_format_from_path("readme.txt"), "generic");
+        assert_eq!(detect_format_from_path("data.csv"), "generic");
+        assert_eq!(detect_format_from_path("unknown.xyz"), "generic");
+    }
+
+    #[test]
+    fn test_detect_format_case_insensitive() {
+        assert_eq!(detect_format_from_path("Script.MSG"), "msg");
+        assert_eq!(detect_format_from_path("DATA.JSON"), "json");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // GLOB PATTERN MATCHING
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_matches_any_pattern_ext() {
+        let patterns = vec!["*.msg".to_string(), "*.bmd".to_string()];
+        assert!(matches_any_pattern("data/script.msg", &patterns));
+        assert!(matches_any_pattern("folder/dialog.bmd", &patterns));
+        assert!(!matches_any_pattern("config.json", &patterns));
+    }
+
+    #[test]
+    fn test_matches_any_pattern_substring() {
+        let patterns = vec!["dialog".to_string()];
+        assert!(matches_any_pattern("data/dialog_01.txt", &patterns));
+        assert!(!matches_any_pattern("data/script.txt", &patterns));
+    }
+
+    #[test]
+    fn test_matches_any_pattern_empty() {
+        assert!(matches_any_pattern("anything.txt", &[])); // empty → match all
+    }
+
+    #[test]
+    fn test_matches_any_pattern_case_insensitive() {
+        let patterns = vec!["*.MSG".to_string()];
+        assert!(matches_any_pattern("data/Script.msg", &patterns));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — MSG FORMAT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_msg_basic() {
+        // MSG format: null-separated strings, skip control codes (0xF1-0xFF)
+        let data = b"Hello World\0Good morning\0";
+        let result = parse_msg_format(data).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].value, "Hello World");
+        assert_eq!(result[1].value, "Good morning");
+    }
+
+    #[test]
+    fn test_parse_msg_skips_short() {
+        // Strings shorter than 2 chars are filtered out
+        let data = b"A\0OK here\0B\0";
+        let result = parse_msg_format(data).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "OK here");
+    }
+
+    #[test]
+    fn test_parse_msg_control_codes() {
+        // Control codes (0xF1-0xFF) should be skipped
+        let mut data = Vec::new();
+        data.extend_from_slice(b"Text");
+        data.push(0xF1); // control code
+        data.push(0x80); // continuation byte
+        data.extend_from_slice(b"More");
+        data.push(0);
+
+        let result = parse_msg_format(&data).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(result[0].value.contains("Text"));
+    }
+
+    #[test]
+    fn test_parse_msg_empty() {
+        let data = [0u8; 4]; // only nulls
+        let result = parse_msg_format(&data).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_parse_msg_key_format() {
+        let data = b"Test message\0";
+        let result = parse_msg_format(data).unwrap();
+        assert_eq!(result[0].key, "msg_0000");
+        assert!(result[0].context.contains("0x"));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — BMD FORMAT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_bmd_msg1() {
+        // Build a minimal MSG1 BMD file
+        let mut data = Vec::new();
+        data.extend_from_slice(b"MSG1");
+        data.push(0); // msg_type = 0 (little endian)
+        data.extend_from_slice(&[0; 3]); // padding
+        data.extend_from_slice(&1u32.to_le_bytes()); // entry_count = 1
+
+        // Message offset table: msg_type_val(4) + msg_offset(4)
+        let msg_offset = data.len() as u32 + 8; // after this entry
+        data.extend_from_slice(&0u32.to_le_bytes()); // msg_type_val
+        data.extend_from_slice(&msg_offset.to_le_bytes());
+
+        // Message data: speaker name + null + text + null
+        data.extend_from_slice(b"Guard\0");
+        data.extend_from_slice(b"Halt! Who goes there?\0");
+
+        let result = parse_bmd_format(&data).unwrap();
+        assert!(result.len() >= 1);
+        // Should have extracted the speaker and/or text
+        let has_text = result.iter().any(|e| e.value.contains("Halt"));
+        assert!(has_text, "Should extract dialogue text");
+    }
+
+    #[test]
+    fn test_parse_bmd_fallback_to_msg() {
+        // Non-BMD data → should fall back to parse_msg_format
+        let data = b"Random text here\0Another line\0";
+        let result = parse_bmd_format(data).unwrap();
+        assert!(result.len() >= 1);
+    }
+
+    #[test]
+    fn test_parse_bmd_too_small() {
+        let data = [0u8; 8];
+        assert!(parse_bmd_format(&data).is_err());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — JSON FORMAT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_json_basic() {
+        let json = br#"{"name": "Iron Sword", "description": "A basic weapon"}"#;
+        let result = parse_json_text(json).unwrap();
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().any(|e| e.value == "Iron Sword"));
+        assert!(result.iter().any(|e| e.value == "A basic weapon"));
+    }
+
+    #[test]
+    fn test_parse_json_nested() {
+        let json = br#"{"items": [{"name": "Potion"}, {"name": "Elixir"}]}"#;
+        let result = parse_json_text(json).unwrap();
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().any(|e| e.value == "Potion"));
+        assert!(result.iter().any(|e| e.value == "Elixir"));
+    }
+
+    #[test]
+    fn test_parse_json_skips_short_strings() {
+        let json = br#"{"x": "A", "long": "Hello World"}"#;
+        let result = parse_json_text(json).unwrap();
+        // "A" is < 2 chars, should be skipped
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Hello World");
+    }
+
+    #[test]
+    fn test_parse_json_invalid() {
+        let data = b"not json {{{";
+        assert!(parse_json_text(data).is_err());
+    }
+
+    #[test]
+    fn test_parse_json_key_paths() {
+        let json = br#"{"dialogue": {"line1": "Hello there"}}"#;
+        let result = parse_json_text(json).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].key, "dialogue.line1");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — XML FORMAT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_xml_basic() {
+        let xml = b"<root><item>Iron Sword</item><desc>A sharp blade</desc></root>";
+        let result = parse_xml_text(xml).unwrap();
+        assert!(result.iter().any(|e| e.value == "Iron Sword"));
+        assert!(result.iter().any(|e| e.value == "A sharp blade"));
+    }
+
+    #[test]
+    fn test_parse_xml_skips_short() {
+        let xml = b"<a>X</a><b>Hello World</b>";
+        let result = parse_xml_text(xml).unwrap();
+        // "X" is < 2 chars, should be skipped
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Hello World");
+    }
+
+    #[test]
+    fn test_parse_xml_empty_tags() {
+        let xml = b"<a></a><b>Content</b>";
+        let result = parse_xml_text(xml).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Content");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — FTD FORMAT
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_ftd_basic() {
+        // FTD: header (16 bytes) + entries
+        let entry_size = 32u32;
+        let entry_count = 2u32;
+        let mut data = Vec::new();
+        data.extend_from_slice(&entry_count.to_le_bytes());
+        data.extend_from_slice(&entry_size.to_le_bytes());
+        data.extend_from_slice(&[0u8; 8]); // rest of header
+
+        // Entry 1: "Hello World" + padding
+        let mut entry1 = b"Hello World\0".to_vec();
+        entry1.resize(entry_size as usize, 0);
+        data.extend_from_slice(&entry1);
+
+        // Entry 2: "Test Entry" + padding
+        let mut entry2 = b"Test Entry\0".to_vec();
+        entry2.resize(entry_size as usize, 0);
+        data.extend_from_slice(&entry2);
+
+        let result = parse_ftd_format(&data).unwrap();
+        assert_eq!(result.len(), 2);
+        assert!(result[0].value.contains("Hello World"));
+        assert!(result[1].value.contains("Test Entry"));
+    }
+
+    #[test]
+    fn test_parse_ftd_invalid_falls_back() {
+        // entry_count > 100000 → falls back to generic parser
+        let mut data = Vec::new();
+        data.extend_from_slice(&200000u32.to_le_bytes()); // too many entries
+        data.extend_from_slice(&32u32.to_le_bytes());
+        data.extend_from_slice(&[0u8; 8]);
+        // Add some text for the fallback parser
+        data.extend_from_slice(b"Fallback text\n");
+
+        let result = parse_ftd_format(&data).unwrap();
+        // Should have fallen back to generic parser
+        assert!(result.iter().any(|e| e.value.contains("Fallback")));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TEXT PARSERS — GENERIC
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_generic_text() {
+        let data = b"First line\nSecond line\nThird line\n";
+        let result = parse_generic_text(data).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].value, "First line");
+        assert_eq!(result[1].value, "Second line");
+    }
+
+    #[test]
+    fn test_parse_generic_skips_nonalpha() {
+        let data = b"123456\nHello\n";
+        let result = parse_generic_text(data).unwrap();
+        // "123456" has no alphabetic chars, should be skipped
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "Hello");
+    }
+
+    #[test]
+    fn test_parse_generic_skips_short() {
+        let data = b"Hi\nHello World\n";
+        let result = parse_generic_text(data).unwrap();
+        // "Hi" is < 3 chars, should be skipped
+        assert_eq!(result.len(), 1);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // EXTRACT STRINGS FROM BLOCK
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_extract_strings_from_block() {
+        let block = b"Hello\0World\0";
+        let result = extract_strings_from_block(block);
+        assert!(result.contains("Hello"));
+        assert!(result.contains("World"));
+    }
+
+    #[test]
+    fn test_extract_strings_from_block_single_char_skipped() {
+        let block = b"A\0OK\0";
+        let result = extract_strings_from_block(block);
+        assert!(!result.contains("\nA\n")); // "A" < 2 chars, should be skipped
+        assert!(result.contains("OK"));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CPK PARSING
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_cpk_bad_magic() {
+        let data = b"NOT_CPK_FILE_1234";
+        assert!(parse_cpk(data).is_err());
+    }
+
+    #[test]
+    fn test_cpk_too_small() {
+        let data = b"CPK ";
+        assert!(parse_cpk(data).is_err());
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TOC ENTRY PATH
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_toc_entry_path_with_dir() {
+        let entry = CpkTocEntry {
+            dir_name: "data/scripts".to_string(),
+            file_name: "dialog.msg".to_string(),
+            file_size: 100,
+            extract_size: 100,
+            file_offset: 0,
+            id: 0,
+        };
+        assert_eq!(toc_entry_path(&entry), "data/scripts/dialog.msg");
+    }
+
+    #[test]
+    fn test_toc_entry_path_no_dir() {
+        let entry = CpkTocEntry {
+            dir_name: String::new(),
+            file_name: "readme.txt".to_string(),
+            file_size: 50,
+            extract_size: 50,
+            file_offset: 0,
+            id: 0,
+        };
+        assert_eq!(toc_entry_path(&entry), "readme.txt");
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PARSE_CRI_TEXT_FILE DISPATCH
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_cri_text_file_json() {
+        let json = br#"{"key": "value here"}"#.to_vec();
+        let result = parse_cri_text_file(json, "json".to_string()).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].value, "value here");
+    }
+
+    #[test]
+    fn test_parse_cri_text_file_generic() {
+        let data = b"Some generic text\n".to_vec();
+        let result = parse_cri_text_file(data, "generic".to_string()).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_cri_text_file_unknown_format() {
+        // Unknown format should fall back to generic
+        let data = b"Fallback text here\n".to_vec();
+        let result = parse_cri_text_file(data, "unknown_format".to_string()).unwrap();
+        assert!(result.len() >= 1);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SCORER — aggregate metric
+    // ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_cri_accuracy_score() {
+        // This test is a meta-test: counts how many of the above subtests
+        // conceptually pass. Since all are individual #[test], if this
+        // test runs, it means the suite compiled and this one runs.
+        // The real metric is: cargo test --lib commands::cri_patcher::tests
+        // should report 0 failed.
+        println!("\n═══════════════════════════════════════════════");
+        println!("AUTORESEARCH SCORER — CRI Patcher");
+        println!("═══════════════════════════════════════════════");
+        println!("If you see this, all CRI patcher tests compiled.");
+        println!("Check 'test result:' line for pass/fail counts.");
+        println!("═══════════════════════════════════════════════\n");
+    }
 }

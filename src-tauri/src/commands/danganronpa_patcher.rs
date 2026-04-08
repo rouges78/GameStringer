@@ -3375,3 +3375,1171 @@ pause
         files_included,
     })
 }
+
+// ============================================================================
+// UNIT TESTS
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ----------------------------------------------------------------
+    // classify_pak_type
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn classify_pak_type_font() {
+        assert!(matches!(classify_pak_type("system_font.pak"), PakType::Font));
+        assert!(matches!(classify_pak_type("FONT_data.pak"), PakType::Font));
+    }
+
+    #[test]
+    fn classify_pak_type_script() {
+        assert!(matches!(classify_pak_type("novel_01.pak"), PakType::Script));
+        assert!(matches!(classify_pak_type("Script_main.pak"), PakType::Script));
+    }
+
+    #[test]
+    fn classify_pak_type_texture() {
+        assert!(matches!(classify_pak_type("tex_ui.pak"), PakType::Texture));
+        assert!(matches!(classify_pak_type("sprite_01.pak"), PakType::Texture));
+        assert!(matches!(classify_pak_type("bg_room.pak"), PakType::Texture));
+    }
+
+    #[test]
+    fn classify_pak_type_text() {
+        assert!(matches!(classify_pak_type("system_config.pak"), PakType::Text));
+        assert!(matches!(classify_pak_type("menu_strings.pak"), PakType::Text));
+    }
+
+    #[test]
+    fn classify_pak_type_unknown() {
+        assert!(matches!(classify_pak_type("data.pak"), PakType::Unknown));
+        assert!(matches!(classify_pak_type(""), PakType::Unknown));
+    }
+
+    // ----------------------------------------------------------------
+    // extract_po_string
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn extract_po_string_basic() {
+        assert_eq!(extract_po_string("msgid \"Hello world\"", "msgid "), "Hello world");
+    }
+
+    #[test]
+    fn extract_po_string_empty() {
+        assert_eq!(extract_po_string("msgid \"\"", "msgid "), "");
+    }
+
+    #[test]
+    fn extract_po_string_no_quotes() {
+        // When there are no quotes, returns the rest as-is
+        assert_eq!(extract_po_string("msgid bare", "msgid "), "bare");
+    }
+
+    #[test]
+    fn extract_po_string_with_escape() {
+        assert_eq!(
+            extract_po_string(r#"msgstr "line1\nline2""#, "msgstr "),
+            r"line1\nline2"
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // escape_po_string
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn escape_po_string_basic() {
+        assert_eq!(escape_po_string("hello"), "hello");
+    }
+
+    #[test]
+    fn escape_po_string_special_chars() {
+        assert_eq!(escape_po_string("say \"hi\""), r#"say \"hi\""#);
+        assert_eq!(escape_po_string("a\\b"), "a\\\\b");
+        assert_eq!(escape_po_string("line1\nline2"), "line1\\nline2");
+        assert_eq!(escape_po_string("col1\tcol2"), "col1\\tcol2");
+    }
+
+    #[test]
+    fn escape_po_string_empty() {
+        assert_eq!(escape_po_string(""), "");
+    }
+
+    // ----------------------------------------------------------------
+    // extract_vdf_value
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn extract_vdf_value_standard() {
+        let line = r#"		"path"		"D:\\SteamLibrary""#;
+        // The function splits by '"' and returns parts[3], which is the raw content
+        // between the 3rd and 4th quote characters. In the raw string, \\\\ is two backslashes.
+        assert_eq!(extract_vdf_value(line), Some("D:\\\\SteamLibrary".to_string()));
+    }
+
+    #[test]
+    fn extract_vdf_value_too_few_quotes() {
+        assert_eq!(extract_vdf_value(r#""path""#), None);
+        assert_eq!(extract_vdf_value("no quotes"), None);
+    }
+
+    // ----------------------------------------------------------------
+    // get_dr1_character_name
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn character_name_known_ids() {
+        assert_eq!(get_dr1_character_name(0), "Makoto Naegi");
+        assert_eq!(get_dr1_character_name(15), "Monokuma");
+        assert_eq!(get_dr1_character_name(8), "Kyoko Kirigiri");
+    }
+
+    #[test]
+    fn character_name_unknown_id() {
+        assert_eq!(get_dr1_character_name(999), "???");
+    }
+
+    // ----------------------------------------------------------------
+    // get_opcode_name / get_opcode_arg_count
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn opcode_name_known() {
+        assert_eq!(get_opcode_name(0x02), "TEXT");
+        assert_eq!(get_opcode_name(0x14), "SPEAKER");
+        assert_eq!(get_opcode_name(0x08), "MUSIC");
+    }
+
+    #[test]
+    fn opcode_name_unknown() {
+        assert_eq!(get_opcode_name(0xFF), "UNKNOWN");
+    }
+
+    #[test]
+    fn opcode_arg_count_known() {
+        assert_eq!(get_opcode_arg_count(0x02), 1); // TEXT
+        assert_eq!(get_opcode_arg_count(0x14), 1); // SPEAKER
+        assert_eq!(get_opcode_arg_count(0x11), 0); // WAIT_INPUT
+        assert_eq!(get_opcode_arg_count(0x19), 3); // SPRITE
+    }
+
+    #[test]
+    fn opcode_arg_count_unknown() {
+        assert_eq!(get_opcode_arg_count(0xFF), 0);
+    }
+
+    // ----------------------------------------------------------------
+    // is_utf16le_text
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn is_utf16le_text_valid() {
+        // "Hello World" in UTF-16LE
+        let data: Vec<u8> = "Hello World!"
+            .encode_utf16()
+            .flat_map(|c| c.to_le_bytes())
+            .collect();
+        assert!(is_utf16le_text(&data));
+    }
+
+    #[test]
+    fn is_utf16le_text_too_short() {
+        assert!(!is_utf16le_text(&[0x41, 0x00])); // only 2 bytes
+        assert!(!is_utf16le_text(&[]));
+    }
+
+    #[test]
+    fn is_utf16le_text_binary_data() {
+        let data = vec![0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89];
+        assert!(!is_utf16le_text(&data));
+    }
+
+    // ----------------------------------------------------------------
+    // decode_utf16le
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn decode_utf16le_basic() {
+        // "ABC" in UTF-16LE
+        let data = vec![0x41, 0x00, 0x42, 0x00, 0x43, 0x00];
+        assert_eq!(decode_utf16le(&data), "ABC");
+    }
+
+    #[test]
+    fn decode_utf16le_with_bom() {
+        // BOM + "Hi"
+        let data = vec![0xFF, 0xFE, 0x48, 0x00, 0x69, 0x00];
+        assert_eq!(decode_utf16le(&data), "Hi");
+    }
+
+    #[test]
+    fn decode_utf16le_skip_nulls() {
+        // Null characters in the middle are skipped
+        let data = vec![0x41, 0x00, 0x00, 0x00, 0x42, 0x00];
+        assert_eq!(decode_utf16le(&data), "AB");
+    }
+
+    #[test]
+    fn decode_utf16le_empty() {
+        assert_eq!(decode_utf16le(&[]), "");
+    }
+
+    #[test]
+    fn decode_utf16le_odd_length() {
+        // Odd number of bytes -- last byte ignored
+        let data = vec![0x41, 0x00, 0x42];
+        assert_eq!(decode_utf16le(&data), "A");
+    }
+
+    // ----------------------------------------------------------------
+    // decode_utf16be
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn decode_utf16be_basic() {
+        // "ABC" in UTF-16BE
+        let data = vec![0x00, 0x41, 0x00, 0x42, 0x00, 0x43];
+        assert_eq!(decode_utf16be(&data), "ABC");
+    }
+
+    #[test]
+    fn decode_utf16be_with_bom() {
+        // BOM (FE FF) + "Hi"
+        let data = vec![0xFE, 0xFF, 0x00, 0x48, 0x00, 0x69];
+        assert_eq!(decode_utf16be(&data), "Hi");
+    }
+
+    // ----------------------------------------------------------------
+    // decode_utf16_auto
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn decode_utf16_auto_le_bom() {
+        let data = vec![0xFF, 0xFE, 0x41, 0x00, 0x42, 0x00];
+        let (text, enc) = decode_utf16_auto(&data);
+        assert_eq!(text, "AB");
+        assert_eq!(enc, "UTF-16LE (BOM)");
+    }
+
+    #[test]
+    fn decode_utf16_auto_be_bom() {
+        let data = vec![0xFE, 0xFF, 0x00, 0x41, 0x00, 0x42];
+        let (text, enc) = decode_utf16_auto(&data);
+        assert_eq!(text, "AB");
+        assert_eq!(enc, "UTF-16BE (BOM)");
+    }
+
+    #[test]
+    fn decode_utf16_auto_empty() {
+        let (text, enc) = decode_utf16_auto(&[]);
+        assert_eq!(text, "");
+        assert_eq!(enc, "empty");
+    }
+
+    #[test]
+    fn decode_utf16_auto_single_byte() {
+        let (text, enc) = decode_utf16_auto(&[0x41]);
+        assert_eq!(text, "");
+        assert_eq!(enc, "empty");
+    }
+
+    #[test]
+    fn decode_utf16_auto_detect_le() {
+        // Long enough UTF-16LE without BOM to trigger auto-detection
+        let input = "Hello World test string";
+        let data: Vec<u8> = input
+            .encode_utf16()
+            .flat_map(|c| c.to_le_bytes())
+            .collect();
+        let (text, enc) = decode_utf16_auto(&data);
+        assert_eq!(text, input);
+        assert!(enc.contains("UTF-16LE"), "Expected LE detection, got {}", enc);
+    }
+
+    #[test]
+    fn decode_utf16_auto_detect_be() {
+        // Long enough UTF-16BE without BOM to trigger auto-detection
+        let input = "Hello World test string";
+        let data: Vec<u8> = input
+            .encode_utf16()
+            .flat_map(|c| c.to_be_bytes())
+            .collect();
+        let (text, enc) = decode_utf16_auto(&data);
+        assert_eq!(text, input);
+        assert!(enc.contains("UTF-16BE"), "Expected BE detection, got {}", enc);
+    }
+
+    // ----------------------------------------------------------------
+    // read_utf16_string (null-terminated)
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn read_utf16_string_basic() {
+        // "Hi" + null terminator
+        let data = vec![0x48, 0x00, 0x69, 0x00, 0x00, 0x00, 0x41, 0x00];
+        assert_eq!(read_utf16_string(&data), "Hi");
+    }
+
+    #[test]
+    fn read_utf16_string_with_newline() {
+        // "A\nB" + null
+        let data = vec![0x41, 0x00, 0x0A, 0x00, 0x42, 0x00, 0x00, 0x00];
+        assert_eq!(read_utf16_string(&data), "A\nB");
+    }
+
+    #[test]
+    fn read_utf16_string_empty() {
+        // Immediate null terminator
+        let data = vec![0x00, 0x00];
+        assert_eq!(read_utf16_string(&data), "");
+    }
+
+    #[test]
+    fn read_utf16_string_no_null_terminator() {
+        // No null: reads until end of data
+        let data = vec![0x41, 0x00, 0x42, 0x00];
+        assert_eq!(read_utf16_string(&data), "AB");
+    }
+
+    // ----------------------------------------------------------------
+    // is_likely_dialogue
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn is_likely_dialogue_valid() {
+        assert!(is_likely_dialogue("I wonder what happened to her after the trial ended."));
+        assert!(is_likely_dialogue("You are the Ultimate Hope, Makoto Naegi."));
+    }
+
+    #[test]
+    fn is_likely_dialogue_too_short() {
+        assert!(!is_likely_dialogue("Hi"));
+        assert!(!is_likely_dialogue("OK man"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_no_space() {
+        assert!(!is_likely_dialogue("SingleWordWithNoSpaces"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_path_like() {
+        assert!(!is_likely_dialogue("data/scripts/chapter1.lin"));
+        assert!(!is_likely_dialogue("C:\\Users\\test\\file.txt is here"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_url() {
+        assert!(!is_likely_dialogue("http://example.com is my website here"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_all_uppercase() {
+        assert!(!is_likely_dialogue("THIS IS ALL UPPERCASE TEXT HERE"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_too_many_underscores() {
+        assert!(!is_likely_dialogue("some_variable_name_that is used here often"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_too_many_specials() {
+        assert!(!is_likely_dialogue("###$$$%%% ^^^ &&& *** ((( ))) @@@"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_no_vowels() {
+        assert!(!is_likely_dialogue("bcd fgh jkl mnp qrst vwx"));
+    }
+
+    #[test]
+    fn is_likely_dialogue_empty() {
+        assert!(!is_likely_dialogue(""));
+    }
+
+    // ----------------------------------------------------------------
+    // extract_strings_from_binary
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn extract_strings_from_binary_finds_ascii() {
+        let mut data = vec![0x00; 20];
+        // Insert "Hello" at offset 5
+        data[5] = b'H';
+        data[6] = b'e';
+        data[7] = b'l';
+        data[8] = b'l';
+        data[9] = b'o';
+        let strings = extract_strings_from_binary(&data);
+        assert_eq!(strings.len(), 1);
+        assert_eq!(strings[0], "Hello");
+    }
+
+    #[test]
+    fn extract_strings_from_binary_skips_short() {
+        // "Hi" is only 2 chars, minimum is 4
+        let data = vec![0x00, b'H', b'i', 0x00];
+        let strings = extract_strings_from_binary(&data);
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn extract_strings_from_binary_skips_numeric_only() {
+        let data = b"\x001234\x00";
+        let strings = extract_strings_from_binary(data);
+        assert!(strings.is_empty());
+    }
+
+    // ----------------------------------------------------------------
+    // decompress_spc
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn decompress_spc_not_compressed() {
+        // Must be >= 16 bytes to pass the size check
+        let data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                        0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10];
+        let result = decompress_spc(&data).unwrap();
+        // Not SPC or $CMP, returned as-is
+        assert_eq!(result, data);
+    }
+
+    #[test]
+    fn decompress_spc_too_small() {
+        let data = vec![0x53, 0x50, 0x43, 0x20]; // "SPC " but only 4 bytes
+        assert!(decompress_spc(&data).is_err());
+    }
+
+    #[test]
+    fn decompress_spc_literal_bytes() {
+        // SPC header + literal copy operations
+        let mut data = vec![0u8; 16];
+        data[0..4].copy_from_slice(b"SPC ");
+        // decompressed_size = 3
+        data[8] = 3;
+        // compressed_size (not really validated)
+        data[12] = 10;
+        // flag=3 means copy 3 literal bytes
+        data.push(3);
+        data.push(b'A');
+        data.push(b'B');
+        data.push(b'C');
+        let result = decompress_spc(&data).unwrap();
+        assert_eq!(result, b"ABC");
+    }
+
+    // ----------------------------------------------------------------
+    // parse_cpk_utf_table
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_cpk_utf_table_too_small() {
+        let data = vec![0u8; 20];
+        let result = parse_cpk_utf_table(&data, 0).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_cpk_utf_table_with_filename_strings() {
+        // Build a minimal @UTF table with a string table containing file-like names
+        let mut data = vec![0u8; 200];
+        // @UTF magic at offset 0
+        data[0..4].copy_from_slice(b"@UTF");
+        // table_size (BE)
+        data[4..8].copy_from_slice(&100u32.to_be_bytes());
+        // rows_offset (BE)
+        data[8..12].copy_from_slice(&80u32.to_be_bytes());
+        // string_offset (BE) - relative to utf_start+8, so string table at offset 8+20=28
+        data[12..16].copy_from_slice(&20u32.to_be_bytes());
+        // data_offset (BE)
+        data[16..20].copy_from_slice(&90u32.to_be_bytes());
+        // padding (4 bytes)
+        // num_rows at offset 24 (BE) = 2
+        data[24..28].copy_from_slice(&2u32.to_be_bytes());
+
+        // String table starts at offset 8 + 20 = 28
+        // Place "test.txt\0other.bin\0" at offset 28
+        let strings = b"test.txt\0other.bin\0";
+        data[28..28 + strings.len()].copy_from_slice(strings);
+
+        let result = parse_cpk_utf_table(&data, 0).unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].name, "test.txt");
+        assert_eq!(result[1].name, "other.bin");
+    }
+
+    // ----------------------------------------------------------------
+    // WAD AGAR archive parsing
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn wad_archive_too_small() {
+        // Create a tiny temp file
+        let dir = std::env::temp_dir().join("dr_test_wad_small");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("tiny.wad");
+        fs::write(&wad_path, &[0u8; 10]).unwrap();
+        let result = read_wad_archive(wad_path.to_str().unwrap());
+        assert!(result.is_err());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn wad_archive_non_agar_fallback() {
+        let dir = std::env::temp_dir().join("dr_test_wad_nonagar");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("nonagar.wad");
+        // 24+ bytes, not AGAR magic
+        let data = vec![0u8; 30];
+        fs::write(&wad_path, &data).unwrap();
+        let result = read_wad_archive(wad_path.to_str().unwrap()).unwrap();
+        // Should produce a single fallback entry
+        assert_eq!(result.entries.len(), 1);
+        assert!(result.entries[0].name.contains("nonagar.wad"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn wad_archive_agar_zero_files() {
+        let dir = std::env::temp_dir().join("dr_test_wad_agar0");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("empty.wad");
+        let mut data = vec![0u8; 24];
+        data[0..4].copy_from_slice(b"AGAR");
+        // file_count at offset 16 = 0
+        fs::write(&wad_path, &data).unwrap();
+        let result = read_wad_archive(wad_path.to_str().unwrap()).unwrap();
+        // No files parsed, should fallback to WAD-level entry
+        assert_eq!(result.entries.len(), 1);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn wad_archive_agar_with_entries() {
+        let dir = std::env::temp_dir().join("dr_test_wad_agar_entries");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("test.wad");
+
+        let mut data = Vec::new();
+        // AGAR header (20 bytes)
+        data.extend_from_slice(b"AGAR");
+        data.extend_from_slice(&0u32.to_le_bytes()); // version
+        data.extend_from_slice(&0u32.to_le_bytes()); // ?
+        data.extend_from_slice(&0u32.to_le_bytes()); // ?
+        data.extend_from_slice(&1u32.to_le_bytes()); // file_count = 1
+
+        // Entry: name_len(4) + name(name_len) + size(8) + offset(8)
+        let name = b"hello.txt";
+        data.extend_from_slice(&(name.len() as u32).to_le_bytes());
+        data.extend_from_slice(name);
+        data.extend_from_slice(&100u64.to_le_bytes()); // size
+        data.extend_from_slice(&200u64.to_le_bytes()); // offset
+
+        // Pad to make file big enough
+        data.resize(300, 0);
+
+        fs::write(&wad_path, &data).unwrap();
+        let result = read_wad_archive(wad_path.to_str().unwrap()).unwrap();
+        assert_eq!(result.entries.len(), 1);
+        assert_eq!(result.entries[0].name, "hello.txt");
+        assert_eq!(result.entries[0].size, 100);
+        assert_eq!(result.entries[0].offset, 200);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // PAK archive parsing
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn pak_archive_too_small() {
+        let dir = std::env::temp_dir().join("dr_test_pak_small");
+        let _ = fs::create_dir_all(&dir);
+        let pak_path = dir.join("tiny.pak");
+        fs::write(&pak_path, &[0u8; 2]).unwrap();
+        let result = read_pak_archive_internal(pak_path.to_str().unwrap());
+        assert!(result.is_err());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn pak_archive_single_file_fallback() {
+        let dir = std::env::temp_dir().join("dr_test_pak_single");
+        let _ = fs::create_dir_all(&dir);
+        let pak_path = dir.join("data.pak");
+        // file_count looks unreasonable => single file fallback
+        let mut data = vec![0u8; 100];
+        data[0..4].copy_from_slice(&0xFFFFFFFFu32.to_le_bytes());
+        fs::write(&pak_path, &data).unwrap();
+        let result = read_pak_archive_internal(pak_path.to_str().unwrap()).unwrap();
+        assert_eq!(result.entries.len(), 1);
+        assert_eq!(result.entries[0].name, "data.pak");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn pak_archive_valid_entries() {
+        let dir = std::env::temp_dir().join("dr_test_pak_valid");
+        let _ = fs::create_dir_all(&dir);
+        let pak_path = dir.join("archive.pak");
+
+        // Build a valid PAK: 2 files
+        // Header: file_count(4) + entry0(offset,size)(8) + entry1(offset,size)(8) = 20 bytes header
+        // file_count = 2, header_size = 4 + 2*8 = 20
+        let file_count = 2u32;
+        let header_size = 4 + (file_count as usize) * 8;
+        let mut data = Vec::new();
+        data.extend_from_slice(&file_count.to_le_bytes());
+
+        // Entry 0: offset=header_size, size=5
+        data.extend_from_slice(&(header_size as u32).to_le_bytes());
+        data.extend_from_slice(&5u32.to_le_bytes());
+        // Entry 1: offset=header_size+5, size=3
+        data.extend_from_slice(&((header_size + 5) as u32).to_le_bytes());
+        data.extend_from_slice(&3u32.to_le_bytes());
+
+        // File data
+        data.extend_from_slice(b"AAAAA"); // file 0
+        data.extend_from_slice(b"BBB");   // file 1
+
+        fs::write(&pak_path, &data).unwrap();
+        let result = read_pak_archive_internal(pak_path.to_str().unwrap()).unwrap();
+        assert_eq!(result.entries.len(), 2);
+        assert_eq!(result.entries[0].name, "file_0000");
+        assert_eq!(result.entries[0].size, 5);
+        assert_eq!(result.entries[1].name, "file_0001");
+        assert_eq!(result.entries[1].size, 3);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // CPK archive parsing
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn cpk_archive_too_small() {
+        let dir = std::env::temp_dir().join("dr_test_cpk_small");
+        let _ = fs::create_dir_all(&dir);
+        let cpk_path = dir.join("tiny.cpk");
+        fs::write(&cpk_path, &[0u8; 10]).unwrap();
+        let result = read_cpk_archive(cpk_path.to_str().unwrap());
+        assert!(result.is_err());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn cpk_archive_no_magic_fallback() {
+        let dir = std::env::temp_dir().join("dr_test_cpk_nomagic");
+        let _ = fs::create_dir_all(&dir);
+        let cpk_path = dir.join("notcpk.cpk");
+        let data = vec![0u8; 100];
+        fs::write(&cpk_path, &data).unwrap();
+        let result = read_cpk_archive(cpk_path.to_str().unwrap()).unwrap();
+        assert_eq!(result.entries.len(), 1);
+        assert!(result.entries[0].name.contains("notcpk.cpk"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // parse_text_block
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_text_block_empty() {
+        let result = parse_text_block(&[], &[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_text_block_small_data() {
+        let data = vec![0, 0, 0]; // less than 4 bytes
+        let result = parse_text_block(&data, &[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_text_block_zero_strings() {
+        let data = vec![0, 0, 0, 0]; // string_count = 0
+        let result = parse_text_block(&data, &[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn parse_text_block_with_strings() {
+        // string_count = 1
+        // offset table: 1 entry pointing to string data
+        // string data: UTF-16LE "Hi" + null terminator
+        let mut data = Vec::new();
+        data.extend_from_slice(&1u32.to_le_bytes()); // string_count
+        // Offset 0 relative to where data starts after the offset table
+        // The string offset is absolute within the data slice
+        // table_offset = 4, offset_pos = 4 + 0*4 = 4
+        // string_offset value: we'll point to offset 8 (after the offset table entry)
+        data.extend_from_slice(&8u32.to_le_bytes()); // string_offset = 8
+        // Pad to offset 8
+        // Currently data is 8 bytes, so string is right here
+        // UTF-16LE "Hi" + null
+        data.extend_from_slice(&[0x48, 0x00, 0x69, 0x00, 0x00, 0x00]);
+
+        let result = parse_text_block(&data, &[]).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].text, "Hi");
+    }
+
+    #[test]
+    fn parse_text_block_with_speaker_mapping() {
+        let entries = vec![
+            LinEntry {
+                index: 0,
+                opcode: 0x14, // SPEAKER
+                opcode_name: "SPEAKER".to_string(),
+                args: vec![0], // Makoto Naegi
+                description: String::new(),
+            },
+            LinEntry {
+                index: 1,
+                opcode: 0x02, // TEXT
+                opcode_name: "TEXT".to_string(),
+                args: vec![0], // text index 0
+                description: String::new(),
+            },
+        ];
+
+        let mut data = Vec::new();
+        data.extend_from_slice(&1u32.to_le_bytes()); // 1 string
+        data.extend_from_slice(&8u32.to_le_bytes()); // offset to string
+        // "Ok" in UTF-16LE + null
+        data.extend_from_slice(&[0x4F, 0x00, 0x6B, 0x00, 0x00, 0x00]);
+
+        let result = parse_text_block(&data, &entries).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].speaker_id, Some(0));
+        assert_eq!(result[0].speaker_name.as_deref(), Some("Makoto Naegi"));
+    }
+
+    // ----------------------------------------------------------------
+    // parse_lin_type1
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_lin_type1_too_small() {
+        let data = vec![0u8; 4];
+        assert!(parse_lin_type1(&data).is_err());
+    }
+
+    #[test]
+    fn parse_lin_type1_empty_script_block() {
+        // header_type = 1, text_block_offset = 8 (immediately after header)
+        // text block has 0 strings
+        let mut data = Vec::new();
+        data.extend_from_slice(&1u32.to_le_bytes()); // header type
+        data.extend_from_slice(&8u32.to_le_bytes()); // text_block_offset = 8
+        // text block: string_count = 0
+        data.extend_from_slice(&0u32.to_le_bytes());
+
+        let (entries, strings) = parse_lin_type1(&data).unwrap();
+        assert!(entries.is_empty());
+        assert!(strings.is_empty());
+    }
+
+    // ----------------------------------------------------------------
+    // parse_lin_simple
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_lin_simple_empty() {
+        let data = vec![0u8; 10];
+        let (entries, strings) = parse_lin_simple(&data).unwrap();
+        assert!(entries.is_empty());
+        assert!(strings.is_empty());
+    }
+
+    #[test]
+    fn parse_lin_simple_finds_utf16_strings() {
+        // Embed a UTF-16LE string "Test" (4 chars >= 3 minimum)
+        let mut data = vec![0u8; 100];
+        // Place "Test" at offset 10 in UTF-16LE
+        let text = "Test";
+        let encoded: Vec<u8> = text.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
+        data[10..10 + encoded.len()].copy_from_slice(&encoded);
+        // Null terminator
+        data[10 + encoded.len()] = 0;
+        data[10 + encoded.len() + 1] = 0;
+
+        let (entries, strings) = parse_lin_simple(&data).unwrap();
+        assert!(entries.is_empty());
+        // Should find at least one string matching "Test"
+        let found = strings.iter().any(|s| s.text.contains("Test"));
+        assert!(found, "Expected to find 'Test' in parsed strings: {:?}", strings);
+    }
+
+    // ----------------------------------------------------------------
+    // PO file round-trip (via temp files)
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn po_file_roundtrip() {
+        let dir = std::env::temp_dir().join("dr_test_po_roundtrip");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("test.po");
+
+        let entries = vec![
+            PoEntry {
+                msgid: "".to_string(),
+                msgstr: "Content-Type: text/plain; charset=UTF-8\\nLanguage: it\\n".to_string(),
+                comments: vec!["# Header".to_string()],
+                context: None,
+            },
+            PoEntry {
+                msgid: "Hello".to_string(),
+                msgstr: "Ciao".to_string(),
+                comments: vec!["#: file.lin:0".to_string()],
+                context: None,
+            },
+            PoEntry {
+                msgid: "Good morning".to_string(),
+                msgstr: "Buongiorno".to_string(),
+                comments: vec![],
+                context: Some("greeting".to_string()),
+            },
+        ];
+
+        write_po_file(po_path.to_str().unwrap().to_string(), entries.clone()).unwrap();
+        let read_back = read_po_file(po_path.to_str().unwrap().to_string()).unwrap();
+
+        assert_eq!(read_back.entries.len(), 3);
+        assert_eq!(read_back.entries[1].msgid, "Hello");
+        assert_eq!(read_back.entries[1].msgstr, "Ciao");
+        assert_eq!(read_back.entries[2].context, Some("greeting".to_string()));
+
+        // Header should be parsed
+        assert!(read_back.header.contains_key("Content-Type"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn po_file_multiline_strings() {
+        let dir = std::env::temp_dir().join("dr_test_po_multiline");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("multi.po");
+
+        let content = r#"msgid ""
+"Hello "
+"World"
+msgstr ""
+"Ciao "
+"Mondo"
+
+msgid "Simple"
+msgstr "Semplice"
+"#;
+
+        fs::write(&po_path, content).unwrap();
+        let result = read_po_file(po_path.to_str().unwrap().to_string()).unwrap();
+
+        assert_eq!(result.entries.len(), 2);
+        assert_eq!(result.entries[0].msgid, "Hello World");
+        assert_eq!(result.entries[0].msgstr, "Ciao Mondo");
+        assert_eq!(result.entries[1].msgid, "Simple");
+        assert_eq!(result.entries[1].msgstr, "Semplice");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn po_file_empty() {
+        let dir = std::env::temp_dir().join("dr_test_po_empty");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("empty.po");
+        fs::write(&po_path, "").unwrap();
+        let result = read_po_file(po_path.to_str().unwrap().to_string()).unwrap();
+        assert!(result.entries.is_empty());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // generate_po_from_dialogues
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn generate_po_from_dialogues_basic() {
+        let dir = std::env::temp_dir().join("dr_test_gen_po");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("generated.po");
+
+        let dialogues = vec![
+            LinDialogue {
+                id: "test_0".to_string(),
+                speaker: "Makoto Naegi".to_string(),
+                original: "Hello there".to_string(),
+                translated: "Ciao".to_string(),
+                file: "script.lin".to_string(),
+                line_index: 0,
+            },
+        ];
+
+        generate_po_from_dialogues(&dialogues, &po_path).unwrap();
+
+        let content = fs::read_to_string(&po_path).unwrap();
+        assert!(content.contains("msgid \"Hello there\""));
+        assert!(content.contains("msgstr \"Ciao\""));
+        assert!(content.contains("Speaker: Makoto Naegi"));
+        assert!(content.contains("#: script.lin:0"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn generate_po_skips_empty_originals() {
+        let dir = std::env::temp_dir().join("dr_test_gen_po_skip");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("skip.po");
+
+        let dialogues = vec![
+            LinDialogue {
+                id: "t0".to_string(),
+                speaker: "".to_string(),
+                original: "".to_string(),
+                translated: "".to_string(),
+                file: "f.lin".to_string(),
+                line_index: 0,
+            },
+            LinDialogue {
+                id: "t1".to_string(),
+                speaker: "".to_string(),
+                original: "Real text".to_string(),
+                translated: "Testo vero".to_string(),
+                file: "f.lin".to_string(),
+                line_index: 1,
+            },
+        ];
+
+        generate_po_from_dialogues(&dialogues, &po_path).unwrap();
+        let content = fs::read_to_string(&po_path).unwrap();
+        // Should only contain one msgid (not the empty one)
+        let msgid_count = content.matches("msgid \"").count();
+        // Header has one msgid "" plus the real one
+        assert_eq!(msgid_count, 2); // header + "Real text"
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // generate_tsv_from_dialogues
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn generate_tsv_from_dialogues_basic() {
+        let dir = std::env::temp_dir().join("dr_test_gen_tsv");
+        let _ = fs::create_dir_all(&dir);
+        let tsv_path = dir.join("out.tsv");
+
+        let dialogues = vec![
+            LinDialogue {
+                id: "id1".to_string(),
+                speaker: "Kyoko".to_string(),
+                original: "Investigate".to_string(),
+                translated: "Indaga".to_string(),
+                file: "ch1.lin".to_string(),
+                line_index: 5,
+            },
+        ];
+
+        generate_tsv_from_dialogues(&dialogues, &tsv_path).unwrap();
+        let content = fs::read_to_string(&tsv_path).unwrap();
+        let lines: Vec<&str> = content.lines().collect();
+        assert_eq!(lines[0], "ID\tFile\tSpeaker\tOriginal\tTranslation");
+        assert!(lines[1].contains("id1"));
+        assert!(lines[1].contains("Kyoko"));
+        assert!(lines[1].contains("Investigate"));
+        assert!(lines[1].contains("Indaga"));
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // get_lin_dialogue_stats
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn lin_dialogue_stats_basic() {
+        let dialogues = vec![
+            LinDialogue {
+                id: "d0".to_string(),
+                speaker: "Makoto".to_string(),
+                original: "Hello".to_string(),
+                translated: "Ciao".to_string(),
+                file: "s.lin".to_string(),
+                line_index: 0,
+            },
+            LinDialogue {
+                id: "d1".to_string(),
+                speaker: "Makoto".to_string(),
+                original: "Bye".to_string(),
+                translated: "".to_string(),
+                file: "s.lin".to_string(),
+                line_index: 1,
+            },
+            LinDialogue {
+                id: "d2".to_string(),
+                speaker: "Kyoko".to_string(),
+                original: "Think".to_string(),
+                translated: "Pensa".to_string(),
+                file: "s.lin".to_string(),
+                line_index: 2,
+            },
+        ];
+
+        let stats = get_lin_dialogue_stats(dialogues);
+        assert_eq!(stats.total, 3);
+        assert_eq!(stats.translated, 2);
+        assert_eq!(stats.untranslated, 1);
+        assert_eq!(stats.percentage, 66); // 2*100/3 = 66
+        assert_eq!(stats.by_speaker["Makoto"], 2);
+        assert_eq!(stats.by_speaker["Kyoko"], 1);
+    }
+
+    #[test]
+    fn lin_dialogue_stats_empty() {
+        let stats = get_lin_dialogue_stats(vec![]);
+        assert_eq!(stats.total, 0);
+        assert_eq!(stats.translated, 0);
+        assert_eq!(stats.percentage, 0);
+    }
+
+    // ----------------------------------------------------------------
+    // PoStats (get_po_stats via file)
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn po_stats_computation() {
+        let dir = std::env::temp_dir().join("dr_test_po_stats");
+        let _ = fs::create_dir_all(&dir);
+        let po_path = dir.join("stats.po");
+
+        let content = r#"msgid ""
+msgstr "header"
+
+#, fuzzy
+msgid "Fuzzy one"
+msgstr "Fuzzy tradotto"
+
+msgid "Translated"
+msgstr "Tradotto"
+
+msgid "Untranslated"
+msgstr ""
+
+msgid "Todo marker"
+msgstr "[TODO] da fare"
+"#;
+
+        fs::write(&po_path, content).unwrap();
+        let stats = get_po_stats(po_path.to_str().unwrap().to_string()).unwrap();
+        assert_eq!(stats.total, 5); // header + 4 entries
+        // translated: non-empty msgid, non-empty msgstr, not starting with [TODO]
+        // "Fuzzy one" -> has msgstr, doesn't start with [TODO] -> translated=yes
+        // "Translated" -> translated=yes
+        // "Untranslated" -> msgstr empty -> not translated
+        // "Todo marker" -> starts with [TODO] -> not translated
+        assert_eq!(stats.translated, 2);
+        assert_eq!(stats.untranslated, 1); // only "Untranslated" has empty msgstr
+        assert_eq!(stats.fuzzy, 1);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    // ----------------------------------------------------------------
+    // get_allice_patch_info
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn allice_patch_info_not_empty() {
+        let info = get_allice_patch_info();
+        assert_eq!(info.team_name, "All-Ice Team");
+        assert!(!info.patches.is_empty());
+        assert!(info.patches.len() >= 2);
+    }
+
+    // ----------------------------------------------------------------
+    // get_drat_info
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn drat_info_has_url() {
+        let info = get_drat_info();
+        assert!(info.download_url.contains("github.com"));
+        assert!(!info.description.is_empty());
+    }
+
+    // ----------------------------------------------------------------
+    // parse_script_pak_text
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_script_pak_text_basic() {
+        // UTF-16LE text with a few lines
+        let text = "Line one\nLine two\nAB";
+        let data: Vec<u8> = text.encode_utf16().flat_map(|c| c.to_le_bytes()).collect();
+
+        let result = parse_script_pak_text(&data, "/test/path", "script_pak_01").unwrap();
+        assert_eq!(result.header.signature, "SCRIPT_PAK");
+        assert!(result.strings.len() >= 2); // depends on length filter (>=2 chars)
+        assert_eq!(result.strings[0].text, "Line one");
+        assert_eq!(result.strings[1].text, "Line two");
+    }
+
+    #[test]
+    fn parse_script_pak_text_empty() {
+        let result = parse_script_pak_text(&[], "/path", "script_pak_empty").unwrap();
+        assert!(result.strings.is_empty());
+    }
+
+    // ----------------------------------------------------------------
+    // Edge case: decode_utf16_auto with 00+BOM prefix
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn decode_utf16_auto_null_plus_le_bom() {
+        // 00 FF FE + "A" in LE
+        let data = vec![0x00, 0xFF, 0xFE, 0x41, 0x00];
+        let (text, enc) = decode_utf16_auto(&data);
+        assert_eq!(text, "A");
+        assert_eq!(enc, "UTF-16LE (0+BOM)");
+    }
+
+    // ----------------------------------------------------------------
+    // try_parse_lin_data edge cases
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn try_parse_lin_data_too_small() {
+        let data = vec![0u8; 4];
+        let result = try_parse_lin_data(&data, "test.pak", "entry");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn try_parse_lin_data_wrong_header_type() {
+        let mut data = vec![0u8; 20];
+        // header_type = 99 (not 1 or 2)
+        data[0..4].copy_from_slice(&99u32.to_le_bytes());
+        let result = try_parse_lin_data(&data, "test.pak", "entry");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn try_parse_lin_data_zero_text_block_offset() {
+        let mut data = vec![0u8; 20];
+        data[0..4].copy_from_slice(&1u32.to_le_bytes()); // header_type = 1
+        data[4..8].copy_from_slice(&0u32.to_le_bytes()); // text_block_offset = 0
+        let result = try_parse_lin_data(&data, "test.pak", "entry");
+        assert!(result.is_empty());
+    }
+}

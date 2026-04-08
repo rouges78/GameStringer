@@ -1,0 +1,288 @@
+/* ==========================================================================
+   GameStringer Landing — styles-v3.css
+   Additive layer on top of styles-v2.css. Fixes a11y, logo sizing,
+   mobile nav, scroll state, focus-visible, reduced-motion, refined hero.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+  --yellow-400: #facc15;
+  --orange-400: #fb923c;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --grid-line: rgba(148, 163, 184, 0.06);
+}
+
+/* Subtle grid texture on body background (additive, non-intrusive) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 85%);
+}
+body > * { position: relative; z-index: 1; }
+
+/* Smooth scroll already in v2, but respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .header-glow-1, .header-glow-2, .header-glow-3 { animation: none !important; }
+}
+
+/* ---------- Skip link (a11y) ---------- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: #06b6d4;
+  color: #050a14;
+  padding: 12px 20px;
+  border-radius: 0 0 12px 0;
+  font-weight: 700;
+  z-index: 9999;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+  outline: 3px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+/* ---------- Focus-visible (a11y, WCAG 2.1 AA) ---------- */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+.btn:focus-visible,
+.lang-option:focus-visible,
+.faq-details:focus-within {
+  outline: 2px solid #22d3ee;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* ---------- NAV: sane logo sizes + scrolled state ---------- */
+.nav-logo img {
+  height: 56px !important;
+  width: auto;
+  filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.35));
+}
+.nav-logo img:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(0 0 18px rgba(6, 182, 212, 0.55));
+}
+@media (max-width: 768px) {
+  .nav-logo img { height: 44px !important; }
+}
+
+/* Sticky nav with scrolled state (JS toggles .scrolled) */
+nav {
+  position: sticky;
+  top: 0;
+  padding: 16px 0;
+  transition: padding 0.3s ease, background 0.3s ease, backdrop-filter 0.3s ease, border-color 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+nav.scrolled {
+  padding: 10px 0;
+  background: rgba(5, 10, 20, 0.82);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom-color: rgba(148, 163, 184, 0.1);
+}
+
+/* Mobile: show nav-links as wrap row instead of hiding entirely */
+@media (max-width: 860px) {
+  nav {
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .nav-links {
+    display: flex !important;
+    order: 3;
+    width: 100%;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+  }
+  .nav-links a { font-size: 13px; }
+}
+
+/* ---------- HERO refinements ---------- */
+header { min-height: auto !important; }
+.hero { padding-top: 60px !important; padding-bottom: 100px !important; }
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6.5vw, 5.5rem) !important;
+  letter-spacing: -0.035em !important;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 35%, #22d3ee 70%, #a78bfa 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: 0 0 80px rgba(34, 211, 238, 0.15);
+}
+
+.hero-highlight {
+  background: linear-gradient(135deg, #22d3ee, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-badge {
+  padding: 8px 18px !important;
+  font-size: 12px !important;
+}
+.hero-badge-new {
+  background: linear-gradient(135deg, #06b6d4, #8b5cf6) !important;
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.5);
+}
+
+.hero-meta-icon {
+  color: #4ade80 !important;
+  font-weight: 900;
+}
+
+/* ---------- Footer logo sane size ---------- */
+.footer-logo img {
+  height: 48px !important;
+  width: auto !important;
+}
+
+/* ---------- Cards: refined hover glow ---------- */
+.card {
+  transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+              border-color 0.3s ease,
+              box-shadow 0.4s ease,
+              background 0.3s ease !important;
+}
+.card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(34, 211, 238, 0.25),
+    0 0 40px rgba(34, 211, 238, 0.1) !important;
+}
+
+/* Recommended AI card: gradient border */
+.ai-card.recommended {
+  position: relative;
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)) padding-box,
+    linear-gradient(135deg, #22d3ee, #a78bfa) border-box !important;
+  border: 1px solid transparent !important;
+}
+
+/* ---------- Buttons: refined focus + tap target ---------- */
+.btn {
+  min-height: 44px;
+  letter-spacing: -0.005em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #0891b2, #06b6d4, #22d3ee) !important;
+  background-size: 200% 200% !important;
+  transition: background-position 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+.btn-primary:hover {
+  background-position: 100% 0 !important;
+}
+
+/* ---------- Language selector polish ---------- */
+.lang-selector { position: relative; margin-left: 12px; }
+.lang-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  padding: 9px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  min-height: 40px;
+}
+.lang-btn:hover {
+  background: rgba(34, 211, 238, 0.08);
+  border-color: rgba(34, 211, 238, 0.4);
+  color: #fff;
+}
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(5, 10, 20, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 14px;
+  padding: 6px;
+  min-width: 180px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  z-index: 1000;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+.lang-menu.open { opacity: 1; visibility: visible; transform: translateY(0); }
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s;
+}
+.lang-option:hover { background: rgba(34, 211, 238, 0.08); color: #fff; }
+.lang-option.active {
+  background: rgba(34, 211, 238, 0.12);
+  color: #22d3ee;
+}
+
+/* ---------- FAQ: richer details ---------- */
+.faq-details {
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.faq-details[open] {
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+/* ---------- Section spacing tighter on mobile ---------- */
+@media (max-width: 768px) {
+  section { padding: 72px 0 !important; }
+  .hero { padding-bottom: 64px !important; }
+  .section-title { font-size: 2rem !important; }
+  .section-desc { font-size: 1rem !important; margin-bottom: 40px !important; }
+  .card { padding: 22px !important; border-radius: 16px !important; }
+}
+
+/* ---------- Print: minimal sensible fallback ---------- */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .header-glow-1, .header-glow-2, .header-glow-3, nav, footer { display: none !important; }
+}

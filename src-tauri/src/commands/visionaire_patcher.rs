@@ -27,6 +27,7 @@ use serde::{Serialize, Deserialize};
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
+use crate::commands::encoding_utils;
 
 // ── Global VBIN cache — avoids re-reading and decompressing 5MB+61MB on every paginated call ──
 
@@ -215,6 +216,7 @@ fn find_vis_file(game_path: &str) -> Option<PathBuf> {
 // Instead of parsing entries, we scan the archive for the VBIN magic directly.
 // game.veb is the only VBIN block in a .vis archive.
 
+#[derive(Debug)]
 struct VbinLocation {
     offset: u64,         // absolute offset of VBIN header in .vis file
     _unknown: u32,       // unknown field at VBIN+4
@@ -345,17 +347,18 @@ fn extract_strings_from_binary(data: &[u8]) -> Result<Vec<VisString>, String> {
                 continue;
             }
             
-            // Check if it looks like valid UTF-8 text (not binary garbage)
-            if let Ok(text) = std::str::from_utf8(bytes) {
-                let trimmed = text.trim_end_matches('\0');
-                
+            // Decode text with encoding auto-detection (supports UTF-8, Windows-1252, etc.)
+            let (decoded, enc_result) = encoding_utils::auto_decode(bytes);
+            if enc_result.confidence >= 0.1 {
+                let trimmed = decoded.trim_end_matches('\0');
+
                 // Extra safety: reject strings that still have embedded nulls
                 // (real text has nulls only at the end as terminator)
                 if trimmed.contains('\0') {
                     pos += 1;
                     continue;
                 }
-                
+
                 if is_translatable_vis_string(trimmed) {
                     strings.push(VisString {
                         index,
@@ -841,4 +844,871 @@ pub async fn restore_vis_backup(game_path: String) -> Result<serde_json::Value, 
         "success": true,
         "message": "Archivio originale ripristinato",
     }))
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Unit Tests
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── Byte helper tests ──
+
+    #[test]
+    fn test_read_be_u32_basic() {
+        let data = [0x00, 0x00, 0x00, 0x0A]; // 10 in big-endian
+        assert_eq!(read_be_u32(&data, 0), 10);
+    }
+
+    #[test]
+    fn test_read_be_u32_large() {
+        let data = [0x01, 0x02, 0x03, 0x04];
+        assert_eq!(read_be_u32(&data, 0), 0x01020304);
+    }
+
+    #[test]
+    fn test_read_be_u32_offset() {
+        let data = [0xFF, 0xFF, 0x00, 0x00, 0x00, 0x05];
+        assert_eq!(read_be_u32(&data, 2), 5);
+    }
+
+    #[test]
+    fn test_read_be_u32_out_of_bounds() {
+        let data = [0x01, 0x02];
+        assert_eq!(read_be_u32(&data, 0), 0); // too short
+        assert_eq!(read_be_u32(&data, 5), 0); // way out of bounds
+    }
+
+    #[test]
+    fn test_read_be_u32_empty() {
+        let data: [u8; 0] = [];
+        assert_eq!(read_be_u32(&data, 0), 0);
+    }
+
+    #[test]
+    fn test_read_le_u32_basic() {
+        let data = [0x0A, 0x00, 0x00, 0x00]; // 10 in little-endian
+        assert_eq!(read_le_u32(&data, 0), 10);
+    }
+
+    #[test]
+    fn test_read_le_u32_large() {
+        let data = [0x04, 0x03, 0x02, 0x01];
+        assert_eq!(read_le_u32(&data, 0), 0x01020304);
+    }
+
+    #[test]
+    fn test_read_le_u32_out_of_bounds() {
+        let data = [0x01];
+        assert_eq!(read_le_u32(&data, 0), 0);
+    }
+
+    #[test]
+    fn test_read_le_i32_basic() {
+        // -1 in LE = [0xFF, 0xFF, 0xFF, 0xFF]
+        let data = [0xFF, 0xFF, 0xFF, 0xFF];
+        assert_eq!(read_le_i32(&data, 0), -1);
+    }
+
+    #[test]
+    fn test_read_le_i32_positive() {
+        let data = [0x2A, 0x00, 0x00, 0x00]; // 42
+        assert_eq!(read_le_i32(&data, 0), 42);
+    }
+
+    #[test]
+    fn test_read_le_i32_out_of_bounds() {
+        let data = [0x01, 0x02];
+        assert_eq!(read_le_i32(&data, 0), 0);
+    }
+
+    #[test]
+    fn test_write_le_u32() {
+        let mut buf = Vec::new();
+        write_le_u32(&mut buf, 42);
+        assert_eq!(buf, [0x2A, 0x00, 0x00, 0x00]);
+    }
+
+    #[test]
+    fn test_write_le_u32_zero() {
+        let mut buf = Vec::new();
+        write_le_u32(&mut buf, 0);
+        assert_eq!(buf, [0x00, 0x00, 0x00, 0x00]);
+    }
+
+    #[test]
+    fn test_write_le_u32_max() {
+        let mut buf = Vec::new();
+        write_le_u32(&mut buf, u32::MAX);
+        assert_eq!(buf, [0xFF, 0xFF, 0xFF, 0xFF]);
+    }
+
+    #[test]
+    fn test_write_le_u32_appends() {
+        let mut buf = vec![0xAA, 0xBB];
+        write_le_u32(&mut buf, 1);
+        assert_eq!(buf, [0xAA, 0xBB, 0x01, 0x00, 0x00, 0x00]);
+    }
+
+    // ── Joaat64 hash tests ──
+
+    #[test]
+    fn test_joaat64_hash_deterministic() {
+        let h1 = joaat64_hash("game.veb");
+        let h2 = joaat64_hash("game.veb");
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn test_joaat64_hash_case_insensitive() {
+        assert_eq!(joaat64_hash("GAME.VEB"), joaat64_hash("game.veb"));
+        assert_eq!(joaat64_hash("Game.Veb"), joaat64_hash("game.veb"));
+    }
+
+    #[test]
+    fn test_joaat64_hash_different_inputs() {
+        assert_ne!(joaat64_hash("game.veb"), joaat64_hash("other.veb"));
+    }
+
+    #[test]
+    fn test_joaat64_hash_empty() {
+        // Should not panic on empty input
+        let _ = joaat64_hash("");
+    }
+
+    // ── XOR encryption tests ──
+
+    #[test]
+    fn test_xor_decrypt_roundtrip() {
+        let key = get_xor_key();
+        let original = b"Hello, World!".to_vec();
+        let mut encrypted = original.clone();
+        xor_decrypt(&mut encrypted, &key);
+        assert_ne!(encrypted, original); // should change the data
+        xor_decrypt(&mut encrypted, &key); // decrypt = double encrypt with XOR
+        assert_eq!(encrypted, original);
+    }
+
+    #[test]
+    fn test_xor_decrypt_empty() {
+        let key = get_xor_key();
+        let mut data: Vec<u8> = vec![];
+        xor_decrypt(&mut data, &key);
+        assert!(data.is_empty());
+    }
+
+    #[test]
+    fn test_get_xor_key_length() {
+        let key = get_xor_key();
+        assert_eq!(key.len(), 16); // MD5 produces 16 bytes
+    }
+
+    #[test]
+    fn test_get_xor_key_deterministic() {
+        assert_eq!(get_xor_key(), get_xor_key());
+    }
+
+    // ── Filename XOR key tests ──
+
+    #[test]
+    fn test_get_filename_xor_key_strips_extension() {
+        let key1 = get_filename_xor_key("game.veb");
+        let key2 = get_filename_xor_key("game.vis");
+        // Both should be MD5 hex of "game"
+        assert_eq!(key1, key2);
+    }
+
+    #[test]
+    fn test_get_filename_xor_key_no_extension() {
+        let key1 = get_filename_xor_key("gamefile");
+        // MD5 hex of "gamefile" as bytes
+        let digest = md5::compute(b"gamefile");
+        let expected = format!("{:x}", digest).as_bytes().to_vec();
+        assert_eq!(key1, expected);
+    }
+
+    #[test]
+    fn test_get_filename_xor_key_is_hex() {
+        let key = get_filename_xor_key("test.dat");
+        // MD5 hex string is 32 chars, all hex digits
+        assert_eq!(key.len(), 32);
+        assert!(key.iter().all(|&b| b"0123456789abcdef".contains(&b)));
+    }
+
+    // ── is_translatable_vis_string tests ──
+
+    #[test]
+    fn test_translatable_dialogue() {
+        assert!(is_translatable_vis_string("Hello, how are you doing today?"));
+        assert!(is_translatable_vis_string("This is a complete sentence."));
+        assert!(is_translatable_vis_string("What do you want?"));
+        assert!(is_translatable_vis_string("I can't believe it!"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_short_strings() {
+        assert!(!is_translatable_vis_string("Hi"));
+        assert!(!is_translatable_vis_string("OK"));
+        assert!(!is_translatable_vis_string(""));
+        assert!(!is_translatable_vis_string("Hel"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_paths() {
+        assert!(!is_translatable_vis_string("some/path/to/file"));
+        assert!(!is_translatable_vis_string("C:\\Users\\file"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_file_extensions() {
+        assert!(!is_translatable_vis_string("background_music.ogg"));
+        assert!(!is_translatable_vis_string("texture_file.png"));
+        assert!(!is_translatable_vis_string("game_script.lua"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_engine_commands() {
+        assert!(!is_translatable_vis_string("play sound effects here"));
+        assert!(!is_translatable_vis_string("set variable to something"));
+        assert!(!is_translatable_vis_string("wait for animation complete"));
+        assert!(!is_translatable_vis_string("if condition then result"));
+        assert!(!is_translatable_vis_string("pause for dramatic effect now"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_identifiers() {
+        assert!(!is_translatable_vis_string("some_variable_name"));
+        assert!(!is_translatable_vis_string("another_ident with words"));
+        assert!(!is_translatable_vis_string("CONSTANT_VALUE"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_single_words() {
+        assert!(!is_translatable_vis_string("Inventory"));
+        assert!(!is_translatable_vis_string("Character"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_lua_code() {
+        assert!(!is_translatable_vis_string("function doSomething() return end"));
+        assert!(!is_translatable_vis_string("local x equals something"));
+        assert!(!is_translatable_vis_string("if active then do something"));
+        assert!(!is_translatable_vis_string("return value from function"));
+        assert!(!is_translatable_vis_string("getObject(something) is active"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_xml() {
+        assert!(!is_translatable_vis_string("<tag>content</tag>"));
+        assert!(!is_translatable_vis_string("self closing tag here/>"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_engine_links() {
+        assert!(!is_translatable_vis_string("This uses CharacterLink now here"));
+        assert!(!is_translatable_vis_string("ActionLink to something else here"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_starting_with_digit() {
+        assert!(!is_translatable_vis_string("1-003 cat meow sound"));
+        assert!(!is_translatable_vis_string("99-3-053b Coming Out Now"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_starting_special_chars() {
+        assert!(!is_translatable_vis_string("-some dashed entry here"));
+        assert!(!is_translatable_vis_string("!exclamation entry here"));
+        assert!(!is_translatable_vis_string(";comment line here thing"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_sequence_markers() {
+        assert!(!is_translatable_vis_string("692 >> double headline >> 693"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_all_uppercase_with_spaces() {
+        assert!(!is_translatable_vis_string("MAIN MENU SCREEN"));
+        assert!(!is_translatable_vis_string("GAME OVER 2"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_config_assignments() {
+        assert!(!is_translatable_vis_string("key=value"));
+        assert!(!is_translatable_vis_string("volume = 100; max"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_engine_prefixes() {
+        assert!(!is_translatable_vis_string("eshader light diffuse normal"));
+        assert!(!is_translatable_vis_string("action_walk_to something here"));
+        assert!(!is_translatable_vis_string("scene_forest_night_dark here"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_quoted_identifiers() {
+        assert!(!is_translatable_vis_string("Switch to scene 'deadnettle' now"));
+        assert!(!is_translatable_vis_string("Play animation 'pickup_waist_back' now"));
+    }
+
+    #[test]
+    fn test_translatable_short_without_punctuation() {
+        // Short strings without end punctuation and <= 4 words should be rejected
+        assert!(!is_translatable_vis_string("Main menu screen"));
+        // But with a colon it should be accepted (dialogue format)
+        assert!(is_translatable_vis_string("Bob: hello there"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_executed_keyword() {
+        assert!(!is_translatable_vis_string("action executed successfully here"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_lua_table_access() {
+        assert!(!is_translatable_vis_string("something[\"key\"] is accessed"));
+    }
+
+    // ── extract_strings_from_binary tests ──
+
+    /// Build a length-prefixed string entry as it appears in VBIN data
+    fn make_string_entry(s: &str) -> Vec<u8> {
+        let bytes = s.as_bytes();
+        let mut entry = Vec::new();
+        // Length prefix (LE u32) — includes the string bytes (no null terminator in length)
+        entry.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+        entry.extend_from_slice(bytes);
+        entry
+    }
+
+    #[test]
+    fn test_extract_strings_empty_data() {
+        let result = extract_strings_from_binary(&[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_too_short() {
+        let result = extract_strings_from_binary(&[0x01, 0x02, 0x03]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_finds_dialogue() {
+        // Create a binary payload with a translatable string embedded
+        let text = "Hello, how are you doing today?";
+        let mut data = vec![0u8; 32]; // some leading binary junk (non-matching)
+        data.extend_from_slice(&make_string_entry(text));
+        data.extend_from_slice(&[0u8; 16]); // trailing junk
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        assert!(result.iter().any(|s| s.text == text),
+            "Expected to find '{}' in {:?}", text, result);
+    }
+
+    #[test]
+    fn test_extract_strings_skips_binary_garbage() {
+        // Data that looks like a length prefix but points to binary garbage
+        let mut data = Vec::new();
+        // Length 10, followed by binary bytes with nulls
+        data.extend_from_slice(&10u32.to_le_bytes());
+        data.extend_from_slice(&[0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09]);
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_skips_control_chars() {
+        // String starting with control character should be skipped
+        let mut data = Vec::new();
+        data.extend_from_slice(&10u32.to_le_bytes());
+        data.extend_from_slice(&[0x01, b'H', b'e', b'l', b'l', b'o', b' ', b'W', b'o', b'r']);
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_sequential_index() {
+        // Multiple translatable strings should have sequential indices
+        let s1 = "This is the first dialogue sentence.";
+        let s2 = "And this is the second dialogue sentence.";
+        let mut data = Vec::new();
+        data.extend_from_slice(&make_string_entry(s1));
+        data.extend_from_slice(&make_string_entry(s2));
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        assert!(result.len() >= 2, "Expected at least 2 strings, got {}", result.len());
+        // Check indices are sequential
+        for (i, s) in result.iter().enumerate() {
+            assert_eq!(s.index, i);
+        }
+    }
+
+    #[test]
+    fn test_extract_strings_records_offset() {
+        let text = "What do you think about this situation?";
+        let prefix_len = 20;
+        let mut data = vec![0u8; prefix_len]; // some leading junk
+        data.extend_from_slice(&make_string_entry(text));
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        let found = result.iter().find(|s| s.text == text);
+        assert!(found.is_some(), "String not found");
+        // offset_in_veb should point to the length prefix
+        assert_eq!(found.unwrap().offset_in_veb, prefix_len);
+    }
+
+    #[test]
+    fn test_extract_strings_rejects_too_long_length() {
+        // A length of 20000 (> 10000 limit) should be skipped
+        let mut data = Vec::new();
+        data.extend_from_slice(&20000u32.to_le_bytes());
+        data.extend_from_slice(&vec![b'A'; 20000]);
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        // Should not extract a 20000-byte string
+        assert!(result.iter().all(|s| s.text.len() < 20000));
+    }
+
+    #[test]
+    fn test_extract_strings_rejects_too_short_length() {
+        // Length < 2 is rejected
+        let mut data = Vec::new();
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.push(b'A');
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_extract_strings_embedded_nulls_rejected() {
+        // String with embedded null should be rejected
+        let mut data = Vec::new();
+        let s = b"Hello\x00World, how are you!";
+        data.extend_from_slice(&(s.len() as u32).to_le_bytes());
+        data.extend_from_slice(s);
+
+        let result = extract_strings_from_binary(&data).unwrap();
+        // The string with embedded null should be rejected by early control check
+        assert!(result.iter().all(|r| !r.text.contains("Hello\x00World")));
+    }
+
+    // ── patch_vbin_strings tests ──
+
+    #[test]
+    fn test_patch_vbin_same_length() {
+        // Create a payload with a known translatable string
+        let original_text = "Hello, how are you doing today?";
+        let replacement = "Ciao, come stai facendo adesso?"; // same length (31 bytes)
+        assert_eq!(original_text.len(), replacement.len());
+
+        let payload = make_string_entry(original_text);
+        let original_vbin = payload.clone(); // not really used in same-length path
+
+        let mut translations = std::collections::HashMap::new();
+        translations.insert(0, replacement.to_string());
+
+        let result = patch_vbin_strings(&original_vbin, &payload, &translations).unwrap();
+
+        // Result should be a valid VBIN: magic + header + compressed data
+        assert_eq!(&result[0..4], VBIN_MAGIC);
+
+        // Decompress and verify the patched text
+        let uncompressed_size = read_le_u32(&result, 8) as usize;
+        let compressed_size = read_le_u32(&result, 12) as usize;
+        assert!(compressed_size > 0);
+
+        let compressed_data = &result[16..16 + compressed_size];
+        let mut decoder = ZlibDecoder::new(compressed_data);
+        let mut decompressed = Vec::new();
+        decoder.read_to_end(&mut decompressed).unwrap();
+
+        assert_eq!(decompressed.len(), uncompressed_size);
+        // The patched payload should contain the replacement text
+        let found = decompressed.windows(replacement.len())
+            .any(|w| w == replacement.as_bytes());
+        assert!(found, "Replacement text not found in patched output");
+    }
+
+    #[test]
+    fn test_patch_vbin_different_length() {
+        // String where the translation is longer
+        let original_text = "Hello, how are you doing today?";
+        let replacement = "Buongiorno, come stai facendo in questo bellissimo giorno?";
+
+        // Build payload with null terminator after string (as the rebuild path expects)
+        let mut payload = Vec::new();
+        let bytes = original_text.as_bytes();
+        let entry_len = bytes.len() + 1; // +1 for null terminator
+        payload.extend_from_slice(&(entry_len as u32).to_le_bytes());
+        payload.extend_from_slice(bytes);
+        payload.push(0); // null terminator
+
+        let mut translations = std::collections::HashMap::new();
+        translations.insert(0, replacement.to_string());
+
+        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+
+        // Verify VBIN structure
+        assert_eq!(&result[0..4], VBIN_MAGIC);
+
+        // Decompress and check
+        let compressed_size = read_le_u32(&result, 12) as usize;
+        let compressed_data = &result[16..16 + compressed_size];
+        let mut decoder = ZlibDecoder::new(compressed_data);
+        let mut decompressed = Vec::new();
+        decoder.read_to_end(&mut decompressed).unwrap();
+
+        let found = decompressed.windows(replacement.len())
+            .any(|w| w == replacement.as_bytes());
+        assert!(found, "Replacement text not found in rebuilt output");
+    }
+
+    #[test]
+    fn test_patch_vbin_no_translations() {
+        let original_text = "Hello, how are you doing today?";
+        let payload = make_string_entry(original_text);
+        let translations = std::collections::HashMap::new();
+
+        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        assert_eq!(&result[0..4], VBIN_MAGIC);
+
+        // Decompress and verify original text preserved
+        let compressed_size = read_le_u32(&result, 12) as usize;
+        let compressed_data = &result[16..16 + compressed_size];
+        let mut decoder = ZlibDecoder::new(compressed_data);
+        let mut decompressed = Vec::new();
+        decoder.read_to_end(&mut decompressed).unwrap();
+
+        assert_eq!(decompressed, payload);
+    }
+
+    #[test]
+    fn test_patch_vbin_output_structure() {
+        let payload = make_string_entry("This is a test sentence here.");
+        let translations = std::collections::HashMap::new();
+
+        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+
+        // VBIN header: magic(4) + unknown(4) + uncompressed_size(4) + compressed_size(4) + data
+        assert!(result.len() >= 16);
+        assert_eq!(&result[0..4], b"VBIN");
+        let unknown = read_le_u32(&result, 4);
+        assert_eq!(unknown, 0); // patching writes 0 for unknown field
+    }
+
+    // ── read_vis_header tests (using temp files) ──
+
+    #[test]
+    fn test_read_vis_header_vis5() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"VIS5");
+        data.extend_from_slice(&100u32.to_be_bytes()); // file count in BE
+
+        let tmp = std::env::temp_dir().join("test_vis5_header.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+
+        let (version, count) = read_vis_header(&mut file).unwrap();
+        assert_eq!(version, "VIS5");
+        assert_eq!(count, 100);
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_read_vis_header_vis3() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"VIS3");
+        data.extend_from_slice(&50u32.to_be_bytes());
+
+        let tmp = std::env::temp_dir().join("test_vis3_header.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+
+        let (version, count) = read_vis_header(&mut file).unwrap();
+        assert_eq!(version, "VIS3");
+        assert_eq!(count, 50);
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_read_vis_header_invalid_magic() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"XXXX");
+        data.extend_from_slice(&0u32.to_be_bytes());
+
+        let tmp = std::env::temp_dir().join("test_bad_header.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+
+        let result = read_vis_header(&mut file);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Magic non valido"));
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_read_vis_header_too_short() {
+        let data = b"VIS";
+        let tmp = std::env::temp_dir().join("test_short_header.vis");
+        fs::write(&tmp, data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+
+        let result = read_vis_header(&mut file);
+        assert!(result.is_err());
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    // ── find_vbin_in_file tests ──
+
+    #[test]
+    fn test_find_vbin_in_file_found() {
+        // Build a fake .vis file with a VBIN block at the end
+        let mut data = Vec::new();
+        data.extend_from_slice(b"VIS5");
+        data.extend_from_slice(&1u32.to_be_bytes());
+        // Pad to simulate archive data
+        data.extend_from_slice(&vec![0u8; 100]);
+
+        // Create a small zlib-compressed payload
+        let payload = b"test payload data for vbin";
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(payload).unwrap();
+        let compressed = encoder.finish().unwrap();
+
+        let vbin_offset = data.len();
+        // VBIN header
+        data.extend_from_slice(b"VBIN");
+        data.extend_from_slice(&42u32.to_le_bytes()); // unknown
+        data.extend_from_slice(&(payload.len() as u32).to_le_bytes()); // uncompressed
+        data.extend_from_slice(&(compressed.len() as u32).to_le_bytes()); // compressed
+        data.extend_from_slice(&compressed);
+
+        let tmp = std::env::temp_dir().join("test_find_vbin.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+        let file_size = file.seek(SeekFrom::End(0)).unwrap();
+
+        let loc = find_vbin_in_file(&mut file, file_size).unwrap();
+        assert_eq!(loc.offset, vbin_offset as u64);
+        assert_eq!(loc.uncompressed, payload.len());
+        assert_eq!(loc.compressed, compressed.len());
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_find_vbin_in_file_not_found() {
+        let data = vec![0u8; 200]; // no VBIN magic anywhere
+
+        let tmp = std::env::temp_dir().join("test_no_vbin.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+        let file_size = file.seek(SeekFrom::End(0)).unwrap();
+
+        let result = find_vbin_in_file(&mut file, file_size);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("VBIN non trovato"));
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_find_vbin_rejects_zero_compressed() {
+        // VBIN header with compressed=0 should be rejected
+        let mut data = vec![0u8; 100];
+        data.extend_from_slice(b"VBIN");
+        data.extend_from_slice(&0u32.to_le_bytes()); // unknown
+        data.extend_from_slice(&100u32.to_le_bytes()); // uncompressed
+        data.extend_from_slice(&0u32.to_le_bytes()); // compressed = 0 (invalid)
+        data.extend_from_slice(&vec![0u8; 50]);
+
+        let tmp = std::env::temp_dir().join("test_vbin_zero_comp.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+        let file_size = file.seek(SeekFrom::End(0)).unwrap();
+
+        let result = find_vbin_in_file(&mut file, file_size);
+        assert!(result.is_err());
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    // ── VBIN read + decompress roundtrip test ──
+
+    #[test]
+    fn test_read_vbin_payload_roundtrip() {
+        let payload = b"This is a test VBIN payload with some content.";
+
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(payload).unwrap();
+        let compressed = encoder.finish().unwrap();
+
+        let mut data = Vec::new();
+        data.extend_from_slice(b"VIS5");
+        data.extend_from_slice(&1u32.to_be_bytes());
+        data.extend_from_slice(&vec![0u8; 50]); // padding
+
+        let vbin_offset = data.len() as u64;
+        data.extend_from_slice(b"VBIN");
+        data.extend_from_slice(&0u32.to_le_bytes()); // unknown
+        data.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+        data.extend_from_slice(&(compressed.len() as u32).to_le_bytes());
+        data.extend_from_slice(&compressed);
+
+        let tmp = std::env::temp_dir().join("test_vbin_roundtrip.vis");
+        fs::write(&tmp, &data).unwrap();
+        let mut file = File::open(&tmp).unwrap();
+
+        let loc = VbinLocation {
+            offset: vbin_offset,
+            _unknown: 0,
+            uncompressed: payload.len(),
+            compressed: compressed.len(),
+        };
+
+        let result = read_vbin_payload(&mut file, &loc).unwrap();
+        assert_eq!(result, payload);
+
+        fs::remove_file(&tmp).ok();
+    }
+
+    // ── parse_vbin_strings test ──
+
+    #[test]
+    fn test_parse_vbin_strings_delegates_to_extract() {
+        let text = "Welcome to the adventure game, traveler!";
+        let payload = make_string_entry(text);
+        let result = parse_vbin_strings(&payload).unwrap();
+        assert!(result.iter().any(|s| s.text == text));
+    }
+
+    #[test]
+    fn test_parse_vbin_strings_empty() {
+        let result = parse_vbin_strings(&[]).unwrap();
+        assert!(result.is_empty());
+    }
+
+    // ── find_vis_file tests ──
+
+    #[test]
+    fn test_find_vis_file_not_a_directory() {
+        assert!(find_vis_file("/nonexistent/path/12345").is_none());
+    }
+
+    #[test]
+    fn test_find_vis_file_with_config_ini() {
+        let tmp_dir = std::env::temp_dir().join("test_vis_config_ini");
+        fs::create_dir_all(&tmp_dir).ok();
+
+        // Create a .vis file
+        let vis_file = tmp_dir.join("mygame.vis");
+        fs::write(&vis_file, b"VIS5\x00\x00\x00\x01").unwrap();
+
+        // Create config.ini pointing to it
+        let config = tmp_dir.join("config.ini");
+        fs::write(&config, "FILE=mygame.vis\n").unwrap();
+
+        let result = find_vis_file(tmp_dir.to_str().unwrap());
+        assert!(result.is_some());
+        assert!(result.unwrap().ends_with("mygame.vis"));
+
+        fs::remove_dir_all(&tmp_dir).ok();
+    }
+
+    #[test]
+    fn test_find_vis_file_fallback_scan() {
+        let tmp_dir = std::env::temp_dir().join("test_vis_scan_fallback");
+        fs::create_dir_all(&tmp_dir).ok();
+
+        // Create a .vis file with no config.ini
+        let vis_file = tmp_dir.join("fallback.vis");
+        fs::write(&vis_file, b"VIS5data").unwrap();
+
+        let result = find_vis_file(tmp_dir.to_str().unwrap());
+        assert!(result.is_some());
+
+        fs::remove_dir_all(&tmp_dir).ok();
+    }
+
+    #[test]
+    fn test_find_vis_file_empty_dir() {
+        let tmp_dir = std::env::temp_dir().join("test_vis_empty_dir");
+        fs::create_dir_all(&tmp_dir).ok();
+
+        let result = find_vis_file(tmp_dir.to_str().unwrap());
+        assert!(result.is_none());
+
+        fs::remove_dir_all(&tmp_dir).ok();
+    }
+
+    // ── Edge cases for is_translatable_vis_string ──
+
+    #[test]
+    fn test_translatable_with_ellipsis() {
+        assert!(is_translatable_vis_string("I wonder what happened\u{2026}"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_non_ascii_heavy() {
+        // More than 20% non-ASCII should be rejected
+        let s = "\u{FF01}\u{FF02}\u{FF03}\u{FF04}\u{FF05}\u{FF06}\u{FF07}\u{FF08} ab";
+        assert!(!is_translatable_vis_string(s));
+    }
+
+    #[test]
+    fn test_translatable_rejects_few_letters() {
+        assert!(!is_translatable_vis_string("1234 5678 9012"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_replace_item() {
+        assert!(!is_translatable_vis_string("replaceItem(something) here now"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_activate_voice() {
+        assert!(!is_translatable_vis_string("activate voice something here now"));
+    }
+
+    #[test]
+    fn test_translatable_rejects_click_behaviour() {
+        assert!(!is_translatable_vis_string("clickbehaviour setting value here"));
+    }
+
+    // ── Additional edge case: XOR with single-byte key ──
+
+    #[test]
+    fn test_xor_decrypt_single_byte_key() {
+        let key = vec![0xFF];
+        let mut data = vec![0x00, 0x01, 0x02];
+        xor_decrypt(&mut data, &key);
+        assert_eq!(data, vec![0xFF, 0xFE, 0xFD]);
+    }
+
+    // ── Boundary: read_be_u32 at exact boundary ──
+
+    #[test]
+    fn test_read_be_u32_exact_boundary() {
+        let data = [0x00, 0x00, 0x00, 0x01]; // exactly 4 bytes
+        assert_eq!(read_be_u32(&data, 0), 1);
+        assert_eq!(read_be_u32(&data, 1), 0); // pos+4 > len
+    }
+
+    #[test]
+    fn test_read_le_u32_exact_boundary() {
+        let data = [0x01, 0x00, 0x00, 0x00];
+        assert_eq!(read_le_u32(&data, 0), 1);
+        assert_eq!(read_le_u32(&data, 1), 0); // out of bounds
+    }
 }

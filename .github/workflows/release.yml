@@ -40,17 +40,27 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        shell: bash
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
+
       - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0.5
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
           updaterJsonKeepUniversal: true
@@ -152,6 +162,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
   build-linux:
     runs-on: ubuntu-22.04
     
@@ -191,9 +202,17 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
 
       - name: Generate icons for Linux bundler
         run: |
@@ -220,12 +239,13 @@ jobs:
           ls -la
 
       - name: Build Tauri App (Linux)
-        uses: tauri-apps/tauri-action@v0.5
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
@@ -233,6 +253,7 @@ jobs:
           prerelease: false
           includeDebug: false
           args: --bundles deb,appimage,rpm
+
 
   build-macos:
     runs-on: macos-latest
@@ -259,9 +280,17 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          prefix-key: v2-tauri-2.10-marker-fix
+          key: ${{ github.event.inputs.version }}
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Force rebuild tauri-build (ensure __TAURI_BUNDLE_TYPE marker)
+        run: |
+          cd src-tauri
+          cargo clean -p tauri-build || true
+          cargo clean -p gamestringer || true
 
       - name: Generate icons for macOS bundler
         run: |
@@ -290,12 +319,13 @@ jobs:
           ls -la
 
       - name: Build Tauri App (macOS Apple Silicon)
-        uses: tauri-apps/tauri-action@v0.5
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
@@ -305,12 +335,13 @@ jobs:
           args: --target aarch64-apple-darwin
 
       - name: Build Tauri App (macOS Intel)
-        uses: tauri-apps/tauri-action@v0.5
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tauriScript: npx tauri
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
@@ -318,3 +349,5 @@ jobs:
           prerelease: false
           includeDebug: false
           args: --target x86_64-apple-darwin
+
+
