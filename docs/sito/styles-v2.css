@@ -225,7 +225,7 @@ section.alt-bg { background: linear-gradient(180deg, rgba(30, 41, 59, 0.3) 0%, r
 /* AI PROVIDER CARDS */
 .ai-card { padding: 24px; position: relative; overflow: hidden; }
 .ai-card.recommended { border-color: var(--green-500); }
-.ai-card.recommended::before { content: '⭐ Consigliato'; position: absolute; top: 12px; right: -32px; background: var(--green-500); color: white; font-size: 10px; font-weight: 700; padding: 4px 40px; transform: rotate(45deg); }
+.ai-card.recommended::before { content: '⭐ Consigliato'; position: absolute; top: 8px; right: 8px; background: var(--green-500); color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 4px; transform: none; z-index: 2; }
 .ai-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 .ai-name { font-weight: 700; font-size: 1.1rem; }
 .ai-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
