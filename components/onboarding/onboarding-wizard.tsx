@@ -50,7 +50,7 @@ interface OnboardingStep {
 }
 
 const ONBOARDING_KEY = 'gamestringer_onboarding_completed';
-const ONBOARDING_VERSION = '3';
+const ONBOARDING_VERSION = 3; // Increment ONLY when onboarding content actually changes
 const TUTORIAL_KEY = 'gamestringer-tutorial-completed'; // Chiave condivisa con InteractiveTutorial
 
 export function OnboardingWizard() {
@@ -71,27 +71,30 @@ export function OnboardingWizard() {
 
   const checkOnboardingStatus = () => {
     if (typeof window === 'undefined') return;
-    
+
     const completed = localStorage.getItem(ONBOARDING_KEY);
-    if (completed !== ONBOARDING_VERSION) {
-      // Non mostrare se i Terms of Use non sono ancora stati accettati
-      const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
-      if (!tosAccepted) {
-        const retryInterval = setInterval(() => {
-          if (localStorage.getItem('gamestringer_tos_accepted')) {
-            clearInterval(retryInterval);
-            setTimeout(() => setIsOpen(true), 500);
-          }
-        }, 500);
-        return;
-      }
-      setIsOpen(true);
+    // Accept any version >= ONBOARDING_VERSION (don't re-show after app updates)
+    const completedVersion = completed ? parseInt(completed, 10) : 0;
+    if (!isNaN(completedVersion) && completedVersion >= ONBOARDING_VERSION) return;
+
+    // Non mostrare se i Terms of Use non sono ancora stati accettati
+    const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
+    if (!tosAccepted) {
+      const retryInterval = setInterval(() => {
+        if (localStorage.getItem('gamestringer_tos_accepted')) {
+          clearInterval(retryInterval);
+          setTimeout(() => setIsOpen(true), 500);
+        }
+      }, 500);
+      return;
     }
+    // Delay to avoid flash on startup
+    setTimeout(() => setIsOpen(true), 400);
   };
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(ONBOARDING_KEY, ONBOARDING_VERSION);
+      localStorage.setItem(ONBOARDING_KEY, String(ONBOARDING_VERSION));
       localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
       localStorage.setItem('gamestringer_preferences', JSON.stringify(preferences));
     }
@@ -100,7 +103,7 @@ export function OnboardingWizard() {
 
   const skipOnboarding = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(ONBOARDING_KEY, ONBOARDING_VERSION);
+      localStorage.setItem(ONBOARDING_KEY, String(ONBOARDING_VERSION));
       localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
     }
     setIsOpen(false);
