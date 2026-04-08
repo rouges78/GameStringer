@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain, ChevronDown
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain, ChevronDown, Film
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -2043,6 +2043,13 @@ export default function GameDetailPage() {
                 <Brain className="h-3 w-3" /> P.T.
               </Link>
             )}
+            {game.isInstalled && game.installPath && (
+              <Link href={`/video-extractor?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}&gameId=${encodeURIComponent(game.appid?.toString() || game.id || '')}`}
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 hover:text-fuchsia-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
+              >
+                <Film className="h-3 w-3" /> Video
+              </Link>
+            )}
           </motion.div>
         </div>
       </div>
@@ -2078,6 +2085,13 @@ export default function GameDetailPage() {
             className="h-9 w-9 flex items-center justify-center rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all no-underline"
           >
             <Brain className="h-3.5 w-3.5" />
+          </Link>
+        )}
+        {game.isInstalled && game.installPath && (
+          <Link href={`/video-extractor?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}&gameId=${encodeURIComponent(game.appid?.toString() || game.id || '')}`}
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 hover:text-fuchsia-300 transition-all no-underline"
+          >
+            <Film className="h-3.5 w-3.5" />
           </Link>
         )}
       </div>
