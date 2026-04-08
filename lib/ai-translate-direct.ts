@@ -1916,15 +1916,14 @@ export async function translateSingleWithFallback(
 }
 
 /**
- * Traduzione leggera per messaggi di chat — usa Lingva (gratuito, no API key) come prima scelta,
- * poi fallback su translateSingleWithFallback se configurato un provider.
+ * Traduzione leggera per messaggi di chat — usa API gratuite (no API key) con fallback multipli.
+ * Ordine: MyMemory → Lingva (mirror multipli) → provider configurati dall'utente.
  */
 export async function translateChatMessage(
   text: string,
   targetLanguage: string,
   sourceLanguage?: string,
 ): Promise<{ translated: string; provider: string }> {
-  // Mappa nomi lingua lunghi → codici ISO per Lingva
   const LANG_TO_CODE: Record<string, string> = {
     Italian: 'it', English: 'en', Spanish: 'es', German: 'de',
     French: 'fr', Portuguese: 'pt', Japanese: 'ja', Chinese: 'zh',
@@ -1937,30 +1936,51 @@ export async function translateChatMessage(
   const tgtCode = LANG_TO_CODE[targetLanguage] || targetLanguage.toLowerCase().slice(0, 2);
   const srcCode = sourceLanguage ? (LANG_TO_CODE[sourceLanguage] || sourceLanguage.toLowerCase().slice(0, 2)) : 'auto';
 
-  // 1. Prova Lingva (gratuito, no API key)
+  const truncated = text.slice(0, 500);
+
+  // 1. MyMemory — CORS-friendly, gratuito, nessuna API key (5000 char/giorno)
   try {
-    const encoded = encodeURIComponent(text.slice(0, 500));
-    const res = await fetch(`https://lingva.ml/api/v1/${srcCode}/${tgtCode}/${encoded}`, {
-      signal: AbortSignal.timeout(8000),
-    });
+    const langPair = `${srcCode === 'auto' ? 'autodetect' : srcCode}|${tgtCode}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncated)}&langpair=${langPair}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (res.ok) {
       const data = await res.json();
-      if (data?.translation && data.translation !== text) {
-        return { translated: data.translation, provider: 'lingva' };
+      const translated = data?.responseData?.translatedText;
+      if (translated && translated !== truncated && data?.responseStatus === 200) {
+        return { translated, provider: 'mymemory' };
       }
     }
   } catch {
-    // Lingva non disponibile, prova fallback
+    // MyMemory non disponibile
   }
 
-  // 2. Fallback: prova con i provider configurati dall'utente
+  // 2. Lingva — prova mirror multipli
+  const lingvaHosts = ['lingva.ml', 'lingva.thedaviddelta.com', 'translate.plausibility.cloud'];
+  for (const host of lingvaHosts) {
+    try {
+      const encoded = encodeURIComponent(truncated);
+      const res = await fetch(`https://${host}/api/v1/${srcCode}/${tgtCode}/${encoded}`, {
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.translation && data.translation !== truncated) {
+          return { translated: data.translation, provider: 'lingva' };
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // 3. Fallback: provider configurati dall'utente (OpenAI, Claude, DeepL, Ollama...)
   try {
     return await translateSingleWithFallback(text, targetLanguage, sourceLanguage, 'Chat message');
   } catch {
     // Nessun provider disponibile
   }
 
-  throw new Error('Nessun servizio di traduzione disponibile. Configura un provider AI nelle Impostazioni oppure riprova più tardi.');
+  throw new Error('Traduzione non disponibile. Riprova tra qualche secondo.');
 }
 
 /**
