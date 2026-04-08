@@ -13,7 +13,7 @@ import { VisuallyHidden } from 'radix-ui';
 import { useTranslation } from '@/lib/i18n';
 
 const TOS_KEY = 'gamestringer_tos_accepted';
-const TOS_VERSION = '2';
+const TOS_VERSION = 2; // Increment ONLY when TOS content actually changes
 
 export function TermsOfUse() {
   const { t } = useTranslation();
@@ -22,22 +22,27 @@ export function TermsOfUse() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const tosAccepted = localStorage.getItem(TOS_KEY);
-    if (tosAccepted !== TOS_VERSION) {
-      setIsOpen(true);
+    // Accept any version >= TOS_VERSION (don't re-show after app updates)
+    const acceptedVersion = tosAccepted ? parseInt(tosAccepted, 10) : 0;
+    if (isNaN(acceptedVersion) || acceptedVersion < TOS_VERSION) {
+      // Small delay to avoid flash on startup
+      const timer = setTimeout(() => setIsOpen(true), 300);
+      return () => clearTimeout(timer);
     }
   }, []);
 
   const handleAccept = () => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(TOS_KEY, TOS_VERSION);
+      localStorage.setItem(TOS_KEY, String(TOS_VERSION));
     }
     setIsOpen(false);
   };
 
   // Non può essere chiuso senza accettare
   const handleOpenChange = (open: boolean) => {
-    if (!open && localStorage.getItem(TOS_KEY) !== TOS_VERSION) {
-      return;
+    if (!open) {
+      const accepted = parseInt(localStorage.getItem(TOS_KEY) || '0', 10);
+      if (isNaN(accepted) || accepted < TOS_VERSION) return;
     }
     setIsOpen(open);
   };
