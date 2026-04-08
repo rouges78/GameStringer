@@ -434,17 +434,22 @@ export async function subscribeToPresence(onPresence: PresenceCallback): Promise
     .channel('online-users')
     .on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
+      const seen = new Set<string>();
       const users: UserPresence[] = [];
       for (const key of Object.keys(state)) {
         const presences = state[key] as unknown[];
         for (const p of presences) {
-          users.push({
-            userId: p.user_id,
-            username: p.username,
-            avatar: p.avatar,
-            status: 'online',
-            lastSeen: new Date().toISOString(),
-          });
+          const uid = p.user_id as string;
+          if (uid && !seen.has(uid)) {
+            seen.add(uid);
+            users.push({
+              userId: uid,
+              username: p.username,
+              avatar: p.avatar,
+              status: 'online',
+              lastSeen: new Date().toISOString(),
+            });
+          }
         }
       }
       onPresence(users);

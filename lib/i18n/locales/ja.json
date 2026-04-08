@@ -49,7 +49,8 @@
     "autoFixed": "自動修正",
     "reviewImproved": "レビュー改善",
     "totalTime": "合計時間",
-    "suggestions": "提案"
+    "suggestions": "提案",
+    "multistepHarvestTranslateQaAut": "マルチステップ: Harvest → Translate → QA → Auto-Fix → Review → Score"
   },
   "glossaryPage": {
     "autoGlossary": "自動用語集",
@@ -78,7 +79,11 @@
     "promptInjection": "プロンプト注入",
     "addToPrompt": "用語をプロンプトに追加",
     "autoExtract": "初回バッチで自動抽出",
-    "autoExtractDesc": "初回翻訳バッチから自動抽出"
+    "autoExtractDesc": "初回翻訳バッチから自動抽出",
+    "japanese": "日本語",
+    "chinese": "中国語",
+    "korean": "韓国語",
+    "impostazioniPerLestrazioneAuto": "自動抽出とプロンプトへのインジェクション設定"
   },
   "visualNovelPage": {
     "title": "ビジュアルノベルパッチャー",
@@ -101,7 +106,8 @@
     "extractLinFromWad": "DRATでWADから.LIN抽出",
     "texts": "テキスト",
     "script": "スクリプト",
-    "font": "フォント"
+    "font": "フォント",
+    "unknown": "不明"
   },
   "unityCsvPage": {
     "subtitle": "UnityゲームのSimpleLocalizationテーブルを抽出・翻訳",
@@ -119,7 +125,11 @@
     "injectInGame": "ゲームに注入",
     "resizeInjection": "リサイズ注入",
     "backupInfo": "元ファイルは.backupとして保存",
-    "injectionComplete": "注入完了！"
+    "injectionComplete": "注入完了！",
+    "cat": "カテゴリ",
+    "english": "英語",
+    "traduzione": "翻訳",
+    "file": "ファイル"
   },
   "contextHarvesterPage": {
     "subtitle": "AI翻訳の自動コンテキスト抽出",
@@ -134,7 +144,8 @@
     "contentType": "コンテンツタイプ",
     "uiConstraints": "UI制約",
     "noConstraints": "制約未検出",
-    "promptHint": "プロンプトヒント"
+    "promptHint": "プロンプトヒント",
+    "tag": "タグ"
   },
   "ollamaManagerPage": {
     "title": "Ollamaモデルマネージャー",
@@ -146,7 +157,8 @@
     "modelA": "モデルA",
     "modelB": "モデルB",
     "testText": "テストテキスト（EN → JA）",
-    "faster": "高速"
+    "faster": "高速",
+    "nessunModelloInstallatoScarica": "モデルがインストールされていません。下記の推奨モデルをダウンロードしてください。"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -159,7 +171,8 @@
     "lines": "行：",
     "time": "時間：",
     "loadImageFirst": "画像をロードしてOCR開始",
-    "engineDetails": "エンジン詳細"
+    "engineDetails": "エンジン詳細",
+    "caricaUnaposimmagineEAvviaLapo": "画像をアップロードしてOCRを開始します"
   },
   "workshopExportPage": {
     "title": "Steamワークショップエクスポート",
@@ -179,7 +192,8 @@
     "translatedFiles": "翻訳済みファイル",
     "clickToAdd": "クリックして追加",
     "supportedFormats": "JSON, CSV, PO, XML, YAML, .locres, .pak等",
-    "validation": "バリデーション"
+    "validation": "バリデーション",
+    "visibilitagrave": "公開範囲"
   },
   "renpyPatcherPage": {
     "title": "Ren'Pyパッチャー",
@@ -217,7 +231,8 @@
     "destLabel": "宛先：",
     "translationMemory": "翻訳メモリ",
     "selectString": "リストから文字列選択",
-    "noSelection": "未選択"
+    "noSelection": "未選択",
+    "traduciUnGiocoConNeuralTransla": "Neural Translatorでゲームを翻訳するとここに表示されます。"
   },
   "binaryPatcherPage": {
     "title": "バイナリ文字列パッチャー",
@@ -231,7 +246,8 @@
     "ruleBased": "ルールベース",
     "offlineDict": "オフライン辞書 — 高速だが基本品質",
     "aiPreset": "AIプリセット：",
-    "allCategories": "全カテゴリ"
+    "allCategories": "全カテゴリ",
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepLなど — 最高品質"
   },
   "blogPage": {
     "title": "ブログ管理",
@@ -239,17 +255,20 @@
     "dateHint": "日付（例：\"1月24日\"）",
     "titleHint": "タイトル（絵文字使用！）",
     "noPosts": "記事なし",
-    "createFirst": "「新規投稿」をクリックして作成"
+    "createFirst": "「新規投稿」をクリックして作成",
+    "tag": "タグ"
   },
   "advancedToolsPage": {
     "title": "高度なツール",
     "badge": "Next-Gen",
-    "subtitle": "GameStringerをユニークにする高度なツール。"
+    "subtitle": "GameStringerをユニークにする高度なツール。",
+    "loading": "読み込み中..."
   },
   "systemMonitorPage": {
     "title": "システムモニター＆AIセットアップ",
     "systemResources": "システムリソース",
-    "localAiSetup": "ローカルAIセットアップ"
+    "localAiSetup": "ローカルAIセットアップ",
+    "loading": "読み込み中..."
   },
   "settingsPage": {
     "apiKeys": "APIキー",
@@ -277,18 +296,84 @@
     "appDataMb": "アプリデータMB",
     "coverCacheMb": "カバーキャッシュMB",
     "savedCovers": "保存済みカバー",
-    "rss": "RSS"
+    "rss": "RSS",
+    "apiKeysFallback": "APIキー (フォールバック: Gemini → DeepSeek → OpenAI)",
+    "lmStudioLocale": "LM Studio (ローカル)",
+    "portaDefault1234": "デフォルトポート: 1234",
+    "freeTier15Rpm1mTpm": "無料枠: 15 RPM / 1M TPM —",
+    "gratuitoVelocissimo": "無料、超高速 —",
+    "payperuseGpt4o": "従量課金、GPT-4o —",
+    "payperuseClaudeSonnet": "従量課金、Claude Sonnet —",
+    "mistralAi": "Mistral AI",
+    "freeTier": "無料枠 —",
+    "freeTrial": "無料トライアル —",
+    "togetherAi": "Together AI",
+    "fireworksAi": "Fireworks AI",
+    "modelliGratuitiInclusi": "無料モデル付属 —",
+    "freeTierUltraveloce": "無料枠、超高速 —",
+    "qwen3AlibabaDashscope": "Qwen3 (Alibaba DashScope)",
+    "ratio": "比率",
+    "ver": "バージョン:",
+    "build": "ビルド:",
+    "git": "Git:",
+    "branch": "ブランチ:"
   },
   "translatorProPage": {
     "title": "Neural Translator Pro",
     "file": "ファイル",
-    "completed": "完了！",
     "translatedFiles": "翻訳済みファイル準備完了",
-    "backupOriginal": "元ファイルのバックアップ",
-    "showAllFiles": "全ファイル表示",
-    "clickFilePreview": "ファイルクリックでプレビュー",
     "fromMemory": "メモリから",
-    "loading": "読み込み中..."
+    "subtitle": "マルチステップパイプラインによる高度なニューラル翻訳",
+    "source": "ソース",
+    "target": "ターゲット",
+    "batchMode": "バッチモード",
+    "singleMode": "シングル",
+    "translating": "翻訳中...",
+    "results": "結果",
+    "score": "スコア",
+    "original": "原文",
+    "translation": "翻訳",
+    "copyAll": "すべてコピー",
+    "exportResults": "結果をエクスポート",
+    "noResults": "結果なし",
+    "pasteText": "翻訳するテキストを貼り付けてください",
+    "onePerLine": "1行に1文",
+    "provider": "プロバイダー",
+    "model": "モデル",
+    "temperature": "Temperature",
+    "maxTokens": "最大トークン",
+    "context": "コンテキスト",
+    "contextHint": "翻訳を改善するためのオプションのコンテキスト",
+    "gameContext": "ゲームコンテキスト",
+    "glossaryTerms": "用語集の用語",
+    "qualityCheck": "品質チェック",
+    "adaptiveMt": "アダプティブMT",
+    "history": "履歴",
+    "clearHistory": "履歴をクリア",
+    "stringhe": "文字列",
+    "providerAi": "AIプロバイダー",
+    "deepseekV3": "DeepSeek V3",
+    "gemini20Flash": "Gemini 2.0 Flash",
+    "gpt4oMini": "GPT-4o Mini",
+    "claude35Sonnet": "Claude 3.5 Sonnet",
+    "gpt4o": "GPT-4o",
+    "mistralLarge2": "Mistral Large 2",
+    "deeplPro": "DeepL Pro",
+    "googleTranslate": "Google Translate",
+    "apiKey": "APIキー",
+    "usaTranslationMemory": "Translation Memoryを使用",
+    "qualityChecks": "品質チェック",
+    "ultimeTraduzioni": "最近の翻訳",
+    "translationCompleted": "翻訳完了",
+    "translated": "翻訳済み",
+    "quality": "品質",
+    "cost": "コスト",
+    "tipo": "タイプ",
+    "qualità": "品質",
+    "ilPacchettoDiTraduzioneÈStatoS": "翻訳パッケージはデスクトップに保存されました:",
+    "ilPacchettoContiene": "パッケージの内容:",
+    "formatoXunityautotranslator": "XUnity.AutoTranslator形式",
+    "readmeConIstruzioni": "手順付きのREADME"
   },
   "injektOverlayConfigComp": {
     "appearance": "Appearance",
@@ -1008,7 +1093,6 @@
     "telltalePatcher": "Telltale Patcher",
     "retro": "レトロROM",
     "injector": "インジェクター",
-    "crawler": "クローラー",
     "fixer": "フィクサー",
     "overlay": "オーバーレイ",
     "manga": "マンガ",
@@ -1311,7 +1395,10 @@
     "back": "戻る",
     "verifyKey": "キーを確認",
     "resetPassword": "パスワードをリセット",
-    "done": "完了"
+    "done": "完了",
+    "accountLocked": "アカウントがロックされています。{seconds}秒後に再試行してください",
+    "attemptsRemaining": "残り試行回数: {count}",
+    "tooManyAttempts": "失敗回数が多すぎます。アカウントは5分間ロックされます。"
   },
   "onboarding": {
     "step": "ステップ {current}/{total}",
@@ -2076,7 +2163,11 @@
     "beFirstToPost": "最初のディスカッションを始めましょう！",
     "startDiscussion": "ディスカッション開始",
     "viewAllOnGitHub": "GitHubで全て表示",
-    "answered": "回答済み"
+    "answered": "回答済み",
+    "packNamePlaceholder": "例: 日本語完全翻訳",
+    "gameNamePlaceholder": "例: Hollow Knight",
+    "descriptionPlaceholder": "翻訳の説明を入力してください...",
+    "tagsPlaceholder": "例: 完全、校正済み、dlc"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",
@@ -2402,7 +2493,34 @@
     "completed": "完了！",
     "completedDesc": "ログの指示に従ってインストールを完了してください。",
     "error": "エラー",
-    "log": "ログ"
+    "log": "ログ",
+    "folderSelected": "フォルダーを選択しました",
+    "detecting": "ゲームを検出中...",
+    "existingPackFolder": "既存のPackフォルダーを検出しました(翻訳は既にインストール済みですか？)",
+    "backupFound": "既存のバックアップが見つかりました",
+    "platform": "プラットフォーム",
+    "platformNotDetected": "未検出",
+    "gameDetected": "ゲームを検出しました",
+    "gameNotRecognized": "ゲームを自動認識できませんでした",
+    "startingInstallation": "日本語翻訳のインストールを開始します...",
+    "downloadingTranslation": "翻訳をダウンロード中...",
+    "noteOneDrive": "注意: OneDriveからのダウンロードにはブラウザが必要です",
+    "checkingFiles": "既存ファイルを確認中...",
+    "gogVersionDetected": "GOG版を検出しました",
+    "importantNotes": "重要な注意事項:",
+    "instructionsCompleted": "手順が完了しました！",
+    "creatingBackup": "バックアップを作成中...",
+    "backupCreated": "バックアップを作成しました",
+    "restoringBackup": "バックアップを復元中...",
+    "backupRestored": "バックアップを正常に復元しました",
+    "verifyingInstallation": "インストールを検証中...",
+    "packFolderNotFound": "Packフォルダーが見つかりません",
+    "translationNotInstalled": "翻訳がインストールされていません",
+    "fileFound": "ファイルが見つかりました",
+    "verificationComplete": "検証完了",
+    "translationFilesFound": "個の翻訳ファイルが見つかりました",
+    "noLangdbFiles": "Packフォルダー内に.langdbファイルが見つかりません",
+    "extractFilesNote": "アーカイブからファイルを展開する必要があるかもしれません"
   },
   "qaCheck": {
     "title": "QAチェック",
@@ -2431,7 +2549,14 @@
     "info": "情報",
     "suggestion": "提案",
     "fixApplied": "修正を適用しました",
-    "enterBothTexts": "原文と翻訳を入力してください"
+    "enterBothTexts": "原文と翻訳を入力してください",
+    "glossary": "用語集",
+    "sourceTerm": "原語",
+    "targetTerm": "訳語",
+    "enterBothTerms": "用語と訳語を入力してください",
+    "termAdded": "用語を追加しました",
+    "noTerms": "用語がありません。整合性を確認するには用語を追加してください。",
+    "glossarySuggestion": "用語集に従って「{term}」を使用してください"
   },
   "unityBundle": {
     "title": "Unity Bundle Translator",
@@ -2624,7 +2749,10 @@
     "kofi": "Ko-fi",
     "github": "GitHub",
     "specialThanks": "特別な感謝",
-    "clodoThanks": "彼の貢献なしには、これの半分もできなかったでしょう。GameStringerを可能にしてくれてありがとう。"
+    "clodoThanks": "彼の貢献なしには、これの半分もできなかったでしょう。GameStringerを可能にしてくれてありがとう。",
+    "ver": "バージョン:",
+    "data": "日付:",
+    "tauri2": "Tauri 2"
   },
   "widget": {
     "recommendedToTranslate": "翻訳推奨",
@@ -2791,7 +2919,31 @@
     "loading": "読み込み中...",
     "tabFiles": "ファイル",
     "tabTranslations": "翻訳",
-    "tabPatch": "パッチ"
+    "tabPatch": "パッチ",
+    "translating": "翻訳中...",
+    "autoTranslateTitle": "自動翻訳",
+    "autoTranslateSubtitle": "GameStringerがゲームをあなたの言語に翻訳しています",
+    "translationComplete": "翻訳が完了しました！ゲームはあなたの言語で起動します。",
+    "translationError": "自動翻訳中にエラーが発生しました",
+    "close": "閉じる",
+    "stepDetectEngine": "エンジンとアーキテクチャの検出",
+    "stepScanFiles": "翻訳可能ファイルのスキャン",
+    "stepInstallPatch": "翻訳パッチのインストール",
+    "stepAiTranslation": "AI翻訳を実行中...",
+    "stepLaunchGame": "翻訳されたゲームを起動",
+    "analyzingFolder": "ゲームフォルダーを分析中...",
+    "engineNotDetected": "エンジンが検出されませんでした — 汎用翻訳",
+    "searchingFiles": "翻訳可能ファイルを検索中...",
+    "patchAlreadyInstalled": "パッチは既に存在します",
+    "patchNotNeeded": "パッチは不要です",
+    "configuringUnreal": "Unreal Engineを設定中...",
+    "directTranslation": "直接翻訳 (パッチなし)",
+    "noPatchNeeded": "パッチ不要 — 直接翻訳",
+    "connectingOllama": "Ollama AIに接続中...",
+    "xunityIntercept": "XUnityは初回起動時に文字列をインターセプトします",
+    "xunityConfigured": "XUnity AutoTranslatorが設定されました — ゲーム内で自動翻訳されます",
+    "launchingGame": "ゲームを起動中...",
+    "gameLaunched": "ゲームを起動しました！お楽しみください 🎮"
   },
   "notifications": {
     "profileSettings": "プロフィール通知設定",
@@ -2920,14 +3072,92 @@
     "scrollToRead": "スクロールしてお読みください"
   },
   "tutorial": {
-    "chooseTitle": "チュートリアルタイプを選択",
-    "chooseDesc": "お好みのチュートリアルタイプを選択してください。",
-    "normalTitle": "クイックチュートリアル",
-    "normalDesc": "主要機能の簡単な概要",
-    "guidedTitle": "ガイド付きチュートリアル",
-    "guidedDesc": "各セクションのインタラクティブなステップバイステップガイド",
-    "restarting": "チュートリアルを再開しています！ページをリロード中...",
-    "startingGuided": "ガイド付きチュートリアルを開始！ページをリロード中..."
+    "skip": "スキップ",
+    "back": "戻る",
+    "next": "次へ",
+    "finish": "開始！",
+    "stepOf": "{current} / {total}",
+    "pressSpace": "スペースキーで続行 • Escでスキップ",
+    "clickHighlight": "ハイライトされた要素をクリックして続行してください",
+    "steps": {
+      "welcome": {
+        "title": "GameStringerへようこそ！",
+        "description": "あらゆる言語にビデオゲームを翻訳するプロフェッショナルソフトウェア。"
+      },
+      "aiFeatures": {
+        "title": "高度なAI翻訳",
+        "description": "Ollamaをローカルで無料で使用、またはOpenAI、Claude、Gemini、DeepL、Lingvaを利用できます。最高品質のためのマルチステップAIパイプライン。"
+      },
+      "dashboard": {
+        "title": "ダッシュボード",
+        "description": "統計情報、最近のアクティビティ、クイックアクセスを含む全体概要。"
+      },
+      "library": {
+        "title": "ゲームライブラリ",
+        "description": "Steam、Epic、GOGなどのストアのすべてのゲーム。言語やエンジンでフィルタリング可能。"
+      },
+      "translator": {
+        "title": "AI翻訳ツール",
+        "description": "AIでファイルを翻訳します。JSON、CSV、PO、RESXなど多数のフォーマットに対応。"
+      },
+      "patcher": {
+        "title": "パッチャーエンジン",
+        "description": "Unity (BepInEx + XUnity)、Unreal Engine、Godot、RPG Maker、Ren'Pyの自動パッチ。"
+      },
+      "advancedTools": {
+        "title": "高度なツール",
+        "description": "MonoおよびIL2CPP向けUnity CSV Translator、OCRマルチエンジン(4エンジン)、Ollamaによるバッチ/オフライン翻訳。"
+      },
+      "community": {
+        "title": "コミュニティ",
+        "description": "コミュニティから翻訳パックをダウンロードしたり、自分のパックを共有したりできます。"
+      },
+      "settings": {
+        "title": "設定",
+        "description": "APIの設定、ストアの連携、プロファイルの管理、アプリのカスタマイズ。"
+      },
+      "complete": {
+        "title": "準備完了！",
+        "description": "ライブラリを探索するか、最初のゲームの翻訳をすぐに始めましょう！"
+      }
+    },
+    "menu": {
+      "available": "利用可能なチュートリアル",
+      "resetAll": "すべてのチュートリアルをリセット"
+    },
+    "guides": {
+      "dashboard-intro": {
+        "name": "GameStringerダッシュボード",
+        "description": "GameStringerのナビゲーションの基本を学びます"
+      },
+      "library-guide": {
+        "name": "ライブラリガイド",
+        "description": "ゲームライブラリの管理方法を学びます"
+      },
+      "neural-translator-guide": {
+        "name": "AI翻訳ツールガイド",
+        "description": "AIによるゲーム翻訳をマスターします"
+      },
+      "editor-guide": {
+        "name": "エディターガイド",
+        "description": "翻訳の編集と仕上げを学びます"
+      },
+      "patches-guide": {
+        "name": "パッチ管理",
+        "description": "翻訳パッチの作成と管理"
+      },
+      "settings-guide": {
+        "name": "設定",
+        "description": "最適なパフォーマンスのためにGameStringerを設定します"
+      }
+    },
+    "overlay": {
+      "skip": "スキップ",
+      "back": "戻る",
+      "forward": "次へ",
+      "done": "完了",
+      "hint": "スペースで進む · Escで閉じる"
+    }
   },
   "rss": {
     "title": "RSSフィード",
@@ -3063,5 +3293,82 @@
     "tierMinimal": "最小 (<2GB)",
     "tierCloud": "クラウドのみ",
     "batch": "バッチ"
+  },
+  "translationBridgePage": {
+    "title": "Translation Bridge",
+    "subtitle": "GameStringerを外部ツール(Weblate、Crowdin、OmegaT)と連携します",
+    "importFrom": "インポート元",
+    "exportTo": "エクスポート先",
+    "format": "フォーマット",
+    "sourceFile": "ソースファイル",
+    "preview": "プレビュー",
+    "convert": "変換",
+    "download": "ダウンロード",
+    "mapping": "フィールドマッピング",
+    "autoDetect": "自動検出",
+    "compatible": "互換",
+    "notCompatible": "非互換",
+    "richieste": "リクエスト",
+    "cacheHit": "キャッシュヒット",
+    "uptime": "稼働時間",
+    "testoDaCercare": "検索するテキスト",
+    "targetLanguage": "ターゲット言語",
+    "lingueAttive": "有効な言語:",
+    "tempoMedioRisposta": "平均応答時間",
+    "cacheHits": "キャッシュヒット",
+    "cacheMisses": "キャッシュミス",
+    "errori": "エラー"
+  },
+  "mtpePage": {
+    "sourceLanguage": "ソース言語",
+    "targetLanguage": "ターゲット言語",
+    "aiProvider": "AIプロバイダー",
+    "gemini20": "Gemini 2.0",
+    "claudeSonnet": "Claude Sonnet",
+    "gpt4o": "GPT-4o",
+    "googleTranslate": "Google Translate",
+    "libretranslateFree": "LibreTranslate (無料)",
+    "workflowCompletato": "ワークフローが完了しました！"
+  },
+  "translationWizardPage": {
+    "noGameTrovato": "ゲームが見つかりません",
+    "provaACercareConUnAltroTermine": "別のキーワードで検索してみてください",
+    "file": "ファイル",
+    "strategieAlternative": "代替戦略:",
+    "communityTranslationAvailable": "コミュニティ翻訳が利用可能です！",
+    "traduzioneCompletata": "翻訳完了！"
+  },
+  "libraryPage": {
+    "nessunaLinguaRilevata": "言語が検出されませんでした",
+    "shared": "共有済み",
+    "aggiornaDb": "DBを更新"
+  },
+  "unityBundlePage": {
+    "auto": "自動",
+    "fileOpenCtrlv": "File → Open → Ctrl+V",
+    "importDumpCtrlv": "Import Dump → Ctrl+V"
+  },
+  "activityPage": {
+    "filterBy": "フィルター:",
+    "noActivityRecorded": "アクティビティは記録されていません",
+    "yourActionsWillBeTrackedHere": "ここに操作が記録されます"
+  },
+  "storesPage": {
+    "familySharing": "Family Sharing",
+    "steamgriddbApiKey": "SteamGridDB APIキー"
+  },
+  "ocrTranslatorPage": {
+    "notaVlm": "VLM注記:",
+    "ctrlshiftt": "Ctrl+Shift+T"
+  },
+  "batchPage": {
+    "editor": "エディター",
+    "glossario": "用語集"
+  },
+  "qualityScoringPage": {
+    "qualityScoringHva": "品質スコアリング H/V/A"
+  },
+  "visionTranslatorPage": {
+    "caricamentoVisionLlm": "Vision LLMを読み込み中..."
   }
 }

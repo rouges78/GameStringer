@@ -49,7 +49,8 @@
     "autoFixed": "自动修复",
     "reviewImproved": "审校改进",
     "totalTime": "总时间",
-    "suggestions": "建议"
+    "suggestions": "建议",
+    "multistepHarvestTranslateQaAut": "多步骤：Harvest → Translate → QA → Auto-Fix → Review → Score"
   },
   "glossaryPage": {
     "autoGlossary": "自动术语表",
@@ -78,7 +79,11 @@
     "promptInjection": "提示注入",
     "addToPrompt": "将术语添加到提示中",
     "autoExtract": "首批自动提取",
-    "autoExtractDesc": "从首批翻译中自动提取术语"
+    "autoExtractDesc": "从首批翻译中自动提取术语",
+    "japanese": "日语",
+    "chinese": "中文",
+    "korean": "韩语",
+    "impostazioniPerLestrazioneAuto": "自动提取和注入到提示的设置"
   },
   "visualNovelPage": {
     "title": "视觉小说补丁工具",
@@ -101,7 +106,8 @@
     "extractLinFromWad": "用DRAT从WAD提取.LIN文件",
     "texts": "文本",
     "script": "脚本",
-    "font": "字体"
+    "font": "字体",
+    "unknown": "未知"
   },
   "unityCsvPage": {
     "subtitle": "从Unity游戏提取和翻译SimpleLocalization表",
@@ -119,7 +125,11 @@
     "injectInGame": "注入游戏",
     "resizeInjection": "调整大小注入",
     "backupInfo": "原始文件保存为.backup",
-    "injectionComplete": "注入完成！"
+    "injectionComplete": "注入完成！",
+    "cat": "类别",
+    "english": "英语",
+    "traduzione": "翻译",
+    "file": "文件"
   },
   "contextHarvesterPage": {
     "subtitle": "AI翻译自动上下文提取",
@@ -134,7 +144,8 @@
     "contentType": "内容类型",
     "uiConstraints": "UI约束",
     "noConstraints": "未检测到约束",
-    "promptHint": "提示建议"
+    "promptHint": "提示建议",
+    "tag": "标签"
   },
   "ollamaManagerPage": {
     "title": "Ollama模型管理器",
@@ -146,7 +157,8 @@
     "modelA": "模型A",
     "modelB": "模型B",
     "testText": "测试文本（EN → ZH）",
-    "faster": "更快"
+    "faster": "更快",
+    "nessunModelloInstallatoScarica": "未安装任何模型。请下载下方推荐的模型之一。"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -159,7 +171,8 @@
     "lines": "行：",
     "time": "时间：",
     "loadImageFirst": "加载图片并开始OCR",
-    "engineDetails": "引擎详情"
+    "engineDetails": "引擎详情",
+    "caricaUnaposimmagineEAvviaLapo": "上传图片并启动OCR"
   },
   "workshopExportPage": {
     "title": "Steam创意工坊导出",
@@ -179,7 +192,8 @@
     "translatedFiles": "已翻译文件",
     "clickToAdd": "点击添加文件",
     "supportedFormats": "JSON, CSV, PO, XML, YAML, .locres, .pak等",
-    "validation": "验证"
+    "validation": "验证",
+    "visibilitagrave": "可见性"
   },
   "renpyPatcherPage": {
     "title": "Ren'Py补丁工具",
@@ -217,7 +231,8 @@
     "destLabel": "目标：",
     "translationMemory": "翻译记忆",
     "selectString": "从列表选择字符串",
-    "noSelection": "未选择"
+    "noSelection": "未选择",
+    "traduciUnGiocoConNeuralTransla": "使用Neural Translator翻译一个游戏后即可在此处显示。"
   },
   "binaryPatcherPage": {
     "title": "二进制字符串补丁工具",
@@ -231,7 +246,8 @@
     "ruleBased": "基于规则",
     "offlineDict": "离线词典 — 快速但基本质量",
     "aiPreset": "AI预设：",
-    "allCategories": "所有类别"
+    "allCategories": "所有类别",
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepL等 — 更高质量"
   },
   "blogPage": {
     "title": "博客管理",
@@ -239,17 +255,20 @@
     "dateHint": "日期（例：\"1月24日\"）",
     "titleHint": "标题（用表情！）",
     "noPosts": "暂无文章",
-    "createFirst": "点击\"新建文章\"创建"
+    "createFirst": "点击\"新建文章\"创建",
+    "tag": "标签"
   },
   "advancedToolsPage": {
     "title": "高级工具",
     "badge": "Next-Gen",
-    "subtitle": "使GameStringer独一无二的高级工具。"
+    "subtitle": "使GameStringer独一无二的高级工具。",
+    "loading": "加载中..."
   },
   "systemMonitorPage": {
     "title": "系统监控和AI设置",
     "systemResources": "系统资源",
-    "localAiSetup": "本地AI设置"
+    "localAiSetup": "本地AI设置",
+    "loading": "加载中..."
   },
   "settingsPage": {
     "apiKeys": "API密钥",
@@ -277,18 +296,84 @@
     "appDataMb": "应用数据MB",
     "coverCacheMb": "封面缓存MB",
     "savedCovers": "已保存封面",
-    "rss": "RSS"
+    "rss": "RSS",
+    "apiKeysFallback": "API密钥（回退：Gemini → DeepSeek → OpenAI）",
+    "lmStudioLocale": "LM Studio（本地）",
+    "portaDefault1234": "默认端口：1234",
+    "freeTier15Rpm1mTpm": "免费额度：15 RPM / 1M TPM —",
+    "gratuitoVelocissimo": "免费，极速 —",
+    "payperuseGpt4o": "按量付费，GPT-4o —",
+    "payperuseClaudeSonnet": "按量付费，Claude Sonnet —",
+    "mistralAi": "Mistral AI",
+    "freeTier": "免费额度 —",
+    "freeTrial": "免费试用 —",
+    "togetherAi": "Together AI",
+    "fireworksAi": "Fireworks AI",
+    "modelliGratuitiInclusi": "包含免费模型 —",
+    "freeTierUltraveloce": "免费额度，超快速 —",
+    "qwen3AlibabaDashscope": "Qwen3（Alibaba DashScope）",
+    "ratio": "比例",
+    "ver": "版本：",
+    "build": "构建：",
+    "git": "Git：",
+    "branch": "分支："
   },
   "translatorProPage": {
     "title": "Neural Translator Pro",
     "file": "文件",
-    "completed": "完成！",
     "translatedFiles": "翻译文件准备就绪",
-    "backupOriginal": "原始文件备份",
-    "showAllFiles": "显示所有文件",
-    "clickFilePreview": "点击文件查看预览",
     "fromMemory": "来自内存",
-    "loading": "加载中..."
+    "subtitle": "采用多步骤管线的高级神经翻译",
+    "source": "源",
+    "target": "目标",
+    "batchMode": "批量模式",
+    "singleMode": "单条",
+    "translating": "翻译中...",
+    "results": "结果",
+    "score": "分数",
+    "original": "原文",
+    "translation": "翻译",
+    "copyAll": "全部复制",
+    "exportResults": "导出结果",
+    "noResults": "无结果",
+    "pasteText": "粘贴要翻译的文本",
+    "onePerLine": "每行一句",
+    "provider": "提供商",
+    "model": "模型",
+    "temperature": "Temperature",
+    "maxTokens": "最大Token",
+    "context": "上下文",
+    "contextHint": "可选的上下文以改进翻译",
+    "gameContext": "游戏上下文",
+    "glossaryTerms": "术语表词条",
+    "qualityCheck": "质量检查",
+    "adaptiveMt": "自适应MT",
+    "history": "历史记录",
+    "clearHistory": "清除历史",
+    "stringhe": "字符串",
+    "providerAi": "AI提供商",
+    "deepseekV3": "DeepSeek V3",
+    "gemini20Flash": "Gemini 2.0 Flash",
+    "gpt4oMini": "GPT-4o Mini",
+    "claude35Sonnet": "Claude 3.5 Sonnet",
+    "gpt4o": "GPT-4o",
+    "mistralLarge2": "Mistral Large 2",
+    "deeplPro": "DeepL Pro",
+    "googleTranslate": "Google Translate",
+    "apiKey": "API密钥",
+    "usaTranslationMemory": "使用Translation Memory",
+    "qualityChecks": "质量检查",
+    "ultimeTraduzioni": "最近翻译",
+    "translationCompleted": "翻译完成",
+    "translated": "已翻译",
+    "quality": "质量",
+    "cost": "成本",
+    "tipo": "类型",
+    "qualità": "质量",
+    "ilPacchettoDiTraduzioneÈStatoS": "翻译包已保存到你的桌面：",
+    "ilPacchettoContiene": "包中包含：",
+    "formatoXunityautotranslator": "XUnity.AutoTranslator格式",
+    "readmeConIstruzioni": "带说明的README"
   },
   "injektOverlayConfigComp": {
     "appearance": "Appearance",
@@ -1008,7 +1093,6 @@
     "telltalePatcher": "Telltale Patcher",
     "retro": "复古ROM",
     "injector": "注入器",
-    "crawler": "爬虫",
     "fixer": "修复器",
     "overlay": "覆盖层",
     "manga": "漫画",
@@ -1311,7 +1395,10 @@
     "back": "返回",
     "verifyKey": "验证密钥",
     "resetPassword": "重置密码",
-    "done": "完成"
+    "done": "完成",
+    "accountLocked": "账户已锁定。请在{seconds}秒后重试",
+    "attemptsRemaining": "剩余尝试次数：{count}",
+    "tooManyAttempts": "失败尝试次数过多。账户已锁定5分钟。"
   },
   "onboarding": {
     "step": "步骤 {current}/{total}",
@@ -2076,7 +2163,11 @@
     "beFirstToPost": "成为第一个发起讨论的人！",
     "startDiscussion": "发起讨论",
     "viewAllOnGitHub": "在GitHub上查看全部讨论",
-    "answered": "已回答"
+    "answered": "已回答",
+    "packNamePlaceholder": "例如：完整中文翻译",
+    "gameNamePlaceholder": "例如：Hollow Knight",
+    "descriptionPlaceholder": "描述你的翻译...",
+    "tagsPlaceholder": "例如：完整、已校对、dlc"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",
@@ -2402,7 +2493,34 @@
     "completed": "完成！",
     "completedDesc": "请按照日志中的说明完成安装。",
     "error": "错误",
-    "log": "日志"
+    "log": "日志",
+    "folderSelected": "已选择文件夹",
+    "detecting": "检测游戏中...",
+    "existingPackFolder": "检测到已存在的Pack文件夹（翻译是否已安装？）",
+    "backupFound": "找到已存在的备份",
+    "platform": "平台",
+    "platformNotDetected": "未检测到",
+    "gameDetected": "已检测到游戏",
+    "gameNotRecognized": "未能自动识别游戏",
+    "startingInstallation": "开始安装中文翻译...",
+    "downloadingTranslation": "下载翻译中...",
+    "noteOneDrive": "注意：从OneDrive下载需要浏览器",
+    "checkingFiles": "检查现有文件中...",
+    "gogVersionDetected": "检测到GOG版本",
+    "importantNotes": "重要提示：",
+    "instructionsCompleted": "说明已完成！",
+    "creatingBackup": "创建备份中...",
+    "backupCreated": "备份已创建",
+    "restoringBackup": "恢复备份中...",
+    "backupRestored": "备份恢复成功",
+    "verifyingInstallation": "验证安装中...",
+    "packFolderNotFound": "未找到Pack文件夹",
+    "translationNotInstalled": "翻译未安装",
+    "fileFound": "已找到文件",
+    "verificationComplete": "验证完成",
+    "translationFilesFound": "个翻译文件已找到",
+    "noLangdbFiles": "在Pack文件夹中未找到.langdb文件",
+    "extractFilesNote": "可能需要从压缩包中解压文件"
   },
   "qaCheck": {
     "title": "QA检查",
@@ -2431,7 +2549,14 @@
     "info": "信息",
     "suggestion": "建议",
     "fixApplied": "已应用修复",
-    "enterBothTexts": "请输入源文本和目标文本"
+    "enterBothTexts": "请输入源文本和目标文本",
+    "glossary": "术语表",
+    "sourceTerm": "原始术语",
+    "targetTerm": "翻译",
+    "enterBothTerms": "请输入术语和翻译",
+    "termAdded": "术语已添加",
+    "noTerms": "没有术语。添加术语以检查一致性。",
+    "glossarySuggestion": "按术语表使用\"{term}\""
   },
   "unityBundle": {
     "title": "Unity Bundle Translator",
@@ -2624,7 +2749,10 @@
     "kofi": "Ko-fi",
     "github": "GitHub",
     "specialThanks": "特别感谢",
-    "clodoThanks": "没有他的贡献，我连一半都做不到。感谢让GameStringer成为可能。"
+    "clodoThanks": "没有他的贡献，我连一半都做不到。感谢让GameStringer成为可能。",
+    "ver": "版本：",
+    "data": "日期：",
+    "tauri2": "Tauri 2"
   },
   "widget": {
     "recommendedToTranslate": "待翻译",
@@ -2791,7 +2919,31 @@
     "loading": "加载中...",
     "tabFiles": "文件",
     "tabTranslations": "翻译",
-    "tabPatch": "补丁"
+    "tabPatch": "补丁",
+    "translating": "翻译中...",
+    "autoTranslateTitle": "自动翻译",
+    "autoTranslateSubtitle": "GameStringer正在将游戏翻译成你的语言",
+    "translationComplete": "翻译完成！游戏将以你的语言启动。",
+    "translationError": "自动翻译时出错",
+    "close": "关闭",
+    "stepDetectEngine": "检测引擎和架构",
+    "stepScanFiles": "扫描可翻译文件",
+    "stepInstallPatch": "安装翻译补丁",
+    "stepAiTranslation": "AI翻译进行中...",
+    "stepLaunchGame": "启动已翻译游戏",
+    "analyzingFolder": "分析游戏文件夹中...",
+    "engineNotDetected": "未检测到引擎 — 通用翻译",
+    "searchingFiles": "搜索可翻译文件中...",
+    "patchAlreadyInstalled": "补丁已存在",
+    "patchNotNeeded": "无需补丁",
+    "configuringUnreal": "配置Unreal Engine中...",
+    "directTranslation": "直接翻译（无补丁）",
+    "noPatchNeeded": "无需补丁 — 直接翻译",
+    "connectingOllama": "连接Ollama AI中...",
+    "xunityIntercept": "XUnity将在首次启动时拦截字符串",
+    "xunityConfigured": "XUnity AutoTranslator已配置 — 游戏内自动翻译",
+    "launchingGame": "启动游戏中...",
+    "gameLaunched": "游戏已启动！祝你游戏愉快 🎮"
   },
   "notifications": {
     "profileSettings": "配置通知设置",
@@ -2920,14 +3072,92 @@
     "scrollToRead": "滚动阅读"
   },
   "tutorial": {
-    "chooseTitle": "选择教程类型",
-    "chooseDesc": "选择您偏好的教程类型。",
-    "normalTitle": "快速教程",
-    "normalDesc": "主要功能快速概览",
-    "guidedTitle": "引导教程",
-    "guidedDesc": "各部分的交互式分步指南",
-    "restarting": "教程正在重新开始！正在重新加载页面...",
-    "startingGuided": "开始引导教程！正在重新加载页面..."
+    "skip": "跳过",
+    "back": "上一步",
+    "next": "下一步",
+    "finish": "开始！",
+    "stepOf": "{current} / {total}",
+    "pressSpace": "按空格键继续 • Esc跳过",
+    "clickHighlight": "点击高亮元素以继续",
+    "steps": {
+      "welcome": {
+        "title": "欢迎使用GameStringer！",
+        "description": "用于将视频游戏翻译成任何语言的专业软件。"
+      },
+      "aiFeatures": {
+        "title": "高级AI翻译",
+        "description": "在本地免费使用Ollama，或使用OpenAI、Claude、Gemini、DeepL和Lingva。多步骤AI管线，实现最高质量。"
+      },
+      "dashboard": {
+        "title": "仪表板",
+        "description": "包含统计数据、最近活动和快速访问的完整概览。"
+      },
+      "library": {
+        "title": "游戏库",
+        "description": "来自Steam、Epic、GOG和其他商店的所有游戏。按语言或引擎筛选。"
+      },
+      "translator": {
+        "title": "AI翻译器",
+        "description": "用AI翻译文件。支持JSON、CSV、PO、RESX等多种格式。"
+      },
+      "patcher": {
+        "title": "补丁引擎",
+        "description": "为Unity（BepInEx + XUnity）、Unreal Engine、Godot、RPG Maker和Ren'Py自动生成补丁。"
+      },
+      "advancedTools": {
+        "title": "高级工具",
+        "description": "适用于Mono和IL2CPP的Unity CSV Translator、OCR多引擎（4个引擎）、通过Ollama的批量和离线翻译。"
+      },
+      "community": {
+        "title": "社区",
+        "description": "从社区下载翻译包或分享你自己的翻译包。"
+      },
+      "settings": {
+        "title": "设置",
+        "description": "配置API、连接商店、管理配置文件并自定义应用。"
+      },
+      "complete": {
+        "title": "一切就绪！",
+        "description": "探索游戏库或立即开始翻译你的第一个游戏！"
+      }
+    },
+    "menu": {
+      "available": "可用的教程",
+      "resetAll": "重置所有教程"
+    },
+    "guides": {
+      "dashboard-intro": {
+        "name": "GameStringer仪表板",
+        "description": "了解GameStringer导航的基础知识"
+      },
+      "library-guide": {
+        "name": "游戏库指南",
+        "description": "学习如何管理你的游戏库"
+      },
+      "neural-translator-guide": {
+        "name": "AI翻译器指南",
+        "description": "掌握AI驱动的游戏翻译"
+      },
+      "editor-guide": {
+        "name": "编辑器指南",
+        "description": "学习编辑和完善你的翻译"
+      },
+      "patches-guide": {
+        "name": "补丁管理",
+        "description": "创建和管理翻译补丁"
+      },
+      "settings-guide": {
+        "name": "设置配置",
+        "description": "配置GameStringer以获得最佳性能"
+      }
+    },
+    "overlay": {
+      "skip": "跳过",
+      "back": "上一步",
+      "forward": "下一步",
+      "done": "完成",
+      "hint": "按空格键前进 · Esc关闭"
+    }
   },
   "rss": {
     "title": "RSS订阅",
@@ -3063,5 +3293,82 @@
     "tierMinimal": "最小 (<2GB)",
     "tierCloud": "仅云端",
     "batch": "批量"
+  },
+  "translationBridgePage": {
+    "title": "Translation Bridge",
+    "subtitle": "将GameStringer连接到外部工具（Weblate、Crowdin、OmegaT）",
+    "importFrom": "从以下导入",
+    "exportTo": "导出到",
+    "format": "格式",
+    "sourceFile": "源文件",
+    "preview": "预览",
+    "convert": "转换",
+    "download": "下载",
+    "mapping": "字段映射",
+    "autoDetect": "自动检测",
+    "compatible": "兼容",
+    "notCompatible": "不兼容",
+    "richieste": "请求",
+    "cacheHit": "缓存命中",
+    "uptime": "运行时间",
+    "testoDaCercare": "要搜索的文本",
+    "targetLanguage": "目标语言",
+    "lingueAttive": "启用的语言：",
+    "tempoMedioRisposta": "平均响应时间",
+    "cacheHits": "缓存命中",
+    "cacheMisses": "缓存未命中",
+    "errori": "错误"
+  },
+  "mtpePage": {
+    "sourceLanguage": "源语言",
+    "targetLanguage": "目标语言",
+    "aiProvider": "AI提供商",
+    "gemini20": "Gemini 2.0",
+    "claudeSonnet": "Claude Sonnet",
+    "gpt4o": "GPT-4o",
+    "googleTranslate": "Google Translate",
+    "libretranslateFree": "LibreTranslate（免费）",
+    "workflowCompletato": "工作流已完成！"
+  },
+  "translationWizardPage": {
+    "noGameTrovato": "未找到游戏",
+    "provaACercareConUnAltroTermine": "尝试使用其他关键词搜索",
+    "file": "文件",
+    "strategieAlternative": "替代策略：",
+    "communityTranslationAvailable": "社区翻译可用！",
+    "traduzioneCompletata": "翻译完成！"
+  },
+  "libraryPage": {
+    "nessunaLinguaRilevata": "未检测到语言",
+    "shared": "已共享",
+    "aggiornaDb": "更新数据库"
+  },
+  "unityBundlePage": {
+    "auto": "自动",
+    "fileOpenCtrlv": "File → Open → Ctrl+V",
+    "importDumpCtrlv": "Import Dump → Ctrl+V"
+  },
+  "activityPage": {
+    "filterBy": "筛选：",
+    "noActivityRecorded": "未记录任何活动",
+    "yourActionsWillBeTrackedHere": "你的操作将在此处跟踪"
+  },
+  "storesPage": {
+    "familySharing": "Family Sharing",
+    "steamgriddbApiKey": "SteamGridDB API密钥"
+  },
+  "ocrTranslatorPage": {
+    "notaVlm": "VLM备注：",
+    "ctrlshiftt": "Ctrl+Shift+T"
+  },
+  "batchPage": {
+    "editor": "编辑器",
+    "glossario": "术语表"
+  },
+  "qualityScoringPage": {
+    "qualityScoringHva": "质量评分 H/V/A"
+  },
+  "visionTranslatorPage": {
+    "caricamentoVisionLlm": "正在加载Vision LLM..."
   }
 }

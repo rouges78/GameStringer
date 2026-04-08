@@ -20,6 +20,7 @@ import {
   Loader2,
   WifiOff,
   LogIn,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ import {
   type ChatMessage,
   type UserPresence,
 } from '@/lib/community-chat';
+import { translateChatMessage } from '@/lib/ai-translate-direct';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -93,7 +95,7 @@ function formatTime(iso: string): string {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────
 
 export function CommunityChat() {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -109,6 +111,12 @@ export function CommunityChat() {
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomDesc, setNewRoomDesc] = useState('');
   const [newRoomType, setNewRoomType] = useState<ChatRoom['type']>('general');
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+  const [autoTranslate, setAutoTranslate] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('gs_chat_auto_translate') === 'true';
+    return false;
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -178,6 +186,22 @@ export function CommunityChat() {
         unsubMessageRef.current = await subscribeToRoom(activeRoom.id, (newMsg) => {
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
+            // Suono notifica per messaggi altrui
+            if (newMsg.authorId !== userId) {
+              try {
+                const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.value = 0.08;
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+              } catch {}
+            }
             return [...prev, newMsg];
           });
         });
@@ -239,6 +263,94 @@ export function CommunityChat() {
       toast.error(e.message || 'Errore eliminazione');
     }
   };
+
+  // ─── Translate message ──────────────────────────────────────
+
+  const handleTranslateMessage = useCallback(async (msg: ChatMessage) => {
+    // Toggle: se già tradotto, rimuovi
+    if (translatedMessages[msg.id]) {
+      setTranslatedMessages(prev => {
+        const next = { ...prev };
+        delete next[msg.id];
+        return next;
+      });
+      return;
+    }
+
+    setTranslatingIds(prev => new Set(prev).add(msg.id));
+    try {
+      const LANG_MAP: Record<string, string> = {
+        it: 'Italian', en: 'English', es: 'Spanish', de: 'German',
+        fr: 'French', pt: 'Portuguese', ja: 'Japanese', zh: 'Chinese',
+        ko: 'Korean', ru: 'Russian', pl: 'Polish',
+      };
+      const targetLang = LANG_MAP[language] || 'Italian';
+      const { translated } = await translateChatMessage(
+        msg.content,
+        targetLang,
+      );
+      setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : 'Errore traduzione';
+      toast.error(errMsg);
+    } finally {
+      setTranslatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(msg.id);
+        return next;
+      });
+    }
+  }, [language, translatedMessages]);
+
+  // ─── Auto-translate toggle ─────────────────────────────────
+
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslate(prev => {
+      const next = !prev;
+      localStorage.setItem('gs_chat_auto_translate', String(next));
+      return next;
+    });
+  }, []);
+
+  // Detect if text is likely in a different language (simple heuristic)
+  const detectLangTag = useCallback((text: string): string | null => {
+    // Cirillico → ru
+    if (/[\u0400-\u04FF]{3,}/.test(text)) return 'RU';
+    // CJK → zh/ja/ko
+    if (/[\u4E00-\u9FFF]{2,}/.test(text)) return 'ZH';
+    if (/[\u3040-\u309F\u30A0-\u30FF]{2,}/.test(text)) return 'JA';
+    if (/[\uAC00-\uD7AF]{2,}/.test(text)) return 'KO';
+    // Arabo
+    if (/[\u0600-\u06FF]{3,}/.test(text)) return 'AR';
+    // Thai
+    if (/[\u0E00-\u0E7F]{3,}/.test(text)) return 'TH';
+    // Per lingue latine, confronta con la lingua dell'app
+    const LANG_HINTS: Record<string, RegExp> = {
+      EN: /\b(the|and|this|that|with|have|from|they|what|your|will|would|could|should|about|there)\b/i,
+      ES: /\b(que|los|las|por|una|con|para|esta|pero|como|más|del|tiene|desde)\b/i,
+      DE: /\b(und|die|der|das|ist|nicht|ein|ich|sich|auf|für|mit|dem|den|auch)\b/i,
+      FR: /\b(les|des|une|que|est|pas|pour|dans|sur|avec|sont|cette|tout|mais)\b/i,
+      PT: /\b(que|não|para|com|uma|dos|está|isso|mais|por|seu|como|tem|são)\b/i,
+    };
+    const appLang = language.toUpperCase();
+    for (const [lang, re] of Object.entries(LANG_HINTS)) {
+      if (lang !== appLang && re.test(text)) return lang;
+    }
+    return null;
+  }, [language]);
+
+  // Auto-translate nuovi messaggi quando il toggle è attivo
+  useEffect(() => {
+    if (!autoTranslate || messages.length === 0) return;
+    for (const msg of messages) {
+      if (msg.deleted || msg.authorId === userId) continue;
+      if (translatedMessages[msg.id] || translatingIds.has(msg.id)) continue;
+      const lang = detectLangTag(msg.content);
+      if (lang) {
+        handleTranslateMessage(msg);
+      }
+    }
+  }, [autoTranslate, messages, userId, translatedMessages, translatingIds, detectLangTag, handleTranslateMessage]);
 
   // ─── Create room ────────────────────────────────────────────
 
@@ -390,6 +502,18 @@ export function CommunityChat() {
             {activeRoom.description && (
               <span className="text-[11px] text-slate-500 truncate ml-2">{activeRoom.description}</span>
             )}
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-7 px-2 gap-1.5 text-[11px] ${autoTranslate ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-500'}`}
+                onClick={toggleAutoTranslate}
+                title={autoTranslate ? 'Disattiva auto-traduzione' : 'Traduci automaticamente messaggi in altre lingue'}
+              >
+                <Languages className="h-3.5 w-3.5" />
+                <span>{autoTranslate ? 'Auto-Traduci ON' : 'Auto-Traduci'}</span>
+              </Button>
+            </div>
           </div>
         )}
 
@@ -433,6 +557,12 @@ export function CommunityChat() {
                         </span>
                         <span className="text-2xs text-slate-600">{formatTime(msg.createdAt)}</span>
                         {msg.edited && <span className="text-micro text-slate-600">(modificato)</span>}
+                        {(() => {
+                          const lang = detectLangTag(msg.content);
+                          return lang ? (
+                            <span className="text-micro px-1 py-0.5 rounded bg-slate-700/50 text-slate-400 font-mono">{lang}</span>
+                          ) : null;
+                        })()}
                       </div>
                     )}
 
@@ -444,46 +574,69 @@ export function CommunityChat() {
                     )}
 
                     <p className="text-[13px] text-slate-300 break-words leading-relaxed">{msg.content}</p>
+
+                    {/* Translated text */}
+                    {translatedMessages[msg.id] && (
+                      <p className="text-[13px] text-cyan-300/80 break-words leading-relaxed mt-0.5 border-l-2 border-cyan-500/30 pl-2">
+                        {translatedMessages[msg.id]}
+                      </p>
+                    )}
                   </div>
 
                   {/* Actions (hover) */}
-                  {isOwn && !msg.deleted && (
+                  {!msg.deleted && (
                     <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
+                      {/* Translate button — sempre visibile */}
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-5 w-5 p-0"
-                        onClick={() => {
-                          setEditingMsg(msg);
-                          setMessageInput(msg.content);
-                          inputRef.current?.focus();
-                        }}
+                        onClick={() => handleTranslateMessage(msg)}
+                        title={translatedMessages[msg.id] ? 'Nascondi traduzione' : 'Traduci messaggio'}
                       >
-                        <Edit3 className="h-3 w-3 text-slate-500" />
+                        {translatingIds.has(msg.id) ? (
+                          <Loader2 className="h-3 w-3 text-cyan-400 animate-spin" />
+                        ) : (
+                          <Languages className={`h-3 w-3 ${translatedMessages[msg.id] ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        onClick={() => handleDelete(msg)}
-                      >
-                        <Trash2 className="h-3 w-3 text-red-500/50" />
-                      </Button>
-                    </div>
-                  )}
-                  {!isOwn && !msg.deleted && (
-                    <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        onClick={() => {
-                          setReplyTo(msg);
-                          inputRef.current?.focus();
-                        }}
-                      >
-                        <Reply className="h-3 w-3 text-slate-500" />
-                      </Button>
+                      {isOwn && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => {
+                              setEditingMsg(msg);
+                              setMessageInput(msg.content);
+                              inputRef.current?.focus();
+                            }}
+                          >
+                            <Edit3 className="h-3 w-3 text-slate-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0"
+                            onClick={() => handleDelete(msg)}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-500/50" />
+                          </Button>
+                        </>
+                      )}
+                      {!isOwn && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0"
+                          onClick={() => {
+                            setReplyTo(msg);
+                            inputRef.current?.focus();
+                          }}
+                        >
+                          <Reply className="h-3 w-3 text-slate-500" />
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

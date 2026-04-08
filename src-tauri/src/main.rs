@@ -997,6 +997,18 @@ fn main() {
             commands::audio_patcher::replace_audio_file,
             commands::audio_patcher::restore_audio_file,
 
+            // Video Extractor (VMD, BIK, SMK, USM, ROQ — game video extraction & conversion)
+            commands::video_extractor::scan_game_video_files,
+            commands::video_extractor::analyze_video_header,
+            commands::video_extractor::check_ffmpeg_available,
+            commands::video_extractor::convert_video_file,
+            commands::video_extractor::convert_video_batch,
+            commands::video_extractor::extract_video_thumbnail,
+            commands::video_extractor::extract_video_thumbnail_base64,
+            commands::video_extractor::get_conversion_presets,
+            commands::video_extractor::check_realesrgan_available,
+            commands::video_extractor::upscale_video_realesrgan,
+
             // Offline Translation (Ollama-based local LLM)
             commands::offline_translation::offline_translation_status,
             commands::offline_translation::offline_translation_models,
