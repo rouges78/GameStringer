@@ -136,10 +136,16 @@ export default function VideoExtractorPage() {
   const [headerInfo, setHeaderInfo] = useState<Record<string, VideoHeaderInfo>>({});
   const [filterFormat, setFilterFormat] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [thumbnails, setThumbnails] = useState<Record<string, string>>({});
+  const [realesrganAvailable, setRealesrganAvailable] = useState<boolean | null>(null);
+  const [upscaling, setUpscaling] = useState(false);
+  const [upscaleModel, setUpscaleModel] = useState('realesrgan-x4plus');
+  const [upscaleScale, setUpscaleScale] = useState(4);
 
   // Check FFmpeg on mount
   useEffect(() => {
     checkFfmpeg();
+    checkRealesrgan();
     loadPresets();
   }, []);
 
@@ -151,6 +157,46 @@ export default function VideoExtractorPage() {
       setFfmpegAvailable(false);
     }
   };
+
+  const checkRealesrgan = async () => {
+    try {
+      const available = await invoke<boolean>('check_realesrgan_available');
+      setRealesrganAvailable(available);
+    } catch {
+      setRealesrganAvailable(false);
+    }
+  };
+
+  const loadThumbnail = useCallback(async (filePath: string) => {
+    if (thumbnails[filePath] || !ffmpegAvailable) return;
+    try {
+      const b64 = await invoke<string>('extract_video_thumbnail_base64', { filePath });
+      setThumbnails(prev => ({ ...prev, [filePath]: b64 }));
+    } catch {
+      // Thumbnail non disponibile
+    }
+  }, [thumbnails, ffmpegAvailable]);
+
+  const handleUpscale = useCallback(async () => {
+    if (selectedFiles.size === 0) return;
+    setUpscaling(true);
+    setConversionResults([]);
+    const paths = Array.from(selectedFiles);
+    const results: ConversionResult[] = [];
+    for (const path of paths) {
+      try {
+        const result = await invoke<ConversionResult>('upscale_video_realesrgan', {
+          inputPath: path, scale: upscaleScale, model: upscaleModel,
+          outputDir: outputDir || null,
+        });
+        results.push(result);
+      } catch (e) {
+        results.push({ success: false, input_path: path, output_path: '', error: String(e), output_size: null });
+      }
+    }
+    setConversionResults(results);
+    setUpscaling(false);
+  }, [selectedFiles, upscaleScale, upscaleModel, outputDir]);
 
   const loadPresets = async () => {
     try {
@@ -446,6 +492,20 @@ export default function VideoExtractorPage() {
                         className="w-4 h-4 rounded border-zinc-600 text-purple-500 focus:ring-purple-500 bg-zinc-800"
                       />
 
+                      {/* Thumbnail */}
+                      <div
+                        className="w-12 h-8 rounded bg-zinc-800 border border-zinc-700 overflow-hidden flex-shrink-0 cursor-pointer"
+                        onClick={() => { loadThumbnail(file.path); }}
+                      >
+                        {thumbnails[file.path] ? (
+                          <img src={thumbnails[file.path]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <FileVideo className="w-3 h-3 text-zinc-600" />
+                          </div>
+                        )}
+                      </div>
+
                       {/* File Info */}
                       <div className="flex-1 min-w-0" onClick={() => analyzeHeader(file.path)}>
                         <div className="flex items-center gap-2">
@@ -634,6 +694,86 @@ export default function VideoExtractorPage() {
                     {conversionResults.filter(r => r.success).length} / {conversionResults.length} convertiti con successo
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ── AI Upscale Section ────────────────────────────────── */}
+          {selectedFiles.size > 0 && (
+            <div className="bg-zinc-900/50 rounded-lg border border-fuchsia-500/30 p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <Maximize2 className="w-5 h-5 text-fuchsia-400" />
+                <h2 className="font-semibold text-white">AI Upscaling (Real-ESRGAN)</h2>
+                {realesrganAvailable === true ? (
+                  <Badge className="bg-emerald-500/20 text-emerald-400">Disponibile</Badge>
+                ) : realesrganAvailable === false ? (
+                  <Badge className="bg-amber-500/20 text-amber-400">Non installato</Badge>
+                ) : null}
+              </div>
+
+              {realesrganAvailable === false && (
+                <div className="text-xs text-zinc-400 space-y-1">
+                  <p>Per usare l&apos;AI upscaling, scarica <a href="https://github.com/xinntao/Real-ESRGAN/releases" target="_blank" rel="noopener" className="text-fuchsia-400 underline">Real-ESRGAN ncnn Vulkan</a> e aggiungilo al PATH.</p>
+                  <p className="text-zinc-500">Funziona su GPU (Vulkan) — ideale per upscalare video FMV retro come Gabriel Knight 2.</p>
+                </div>
+              )}
+
+              {realesrganAvailable === true && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">Modello</label>
+                      <Select value={upscaleModel} onValueChange={setUpscaleModel}>
+                        <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="realesrgan-x4plus">RealESRGAN x4plus (generale)</SelectItem>
+                          <SelectItem value="realesrgan-x4plus-anime">RealESRGAN x4plus Anime</SelectItem>
+                          <SelectItem value="realesr-animevideov3">AnimVideo v3 (video)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">Scala</label>
+                      <Select value={String(upscaleScale)} onValueChange={(v) => setUpscaleScale(Number(v))}>
+                        <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2">2x</SelectItem>
+                          <SelectItem value="4">4x (consigliato per FMV retro)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">Directory Output</label>
+                      <Input
+                        value={outputDir}
+                        onChange={(e) => setOutputDir(e.target.value)}
+                        placeholder="Stessa cartella"
+                        className="bg-zinc-800/50 border-zinc-700"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleUpscale}
+                    disabled={upscaling || selectedFiles.size === 0}
+                    className="bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 px-6"
+                  >
+                    {upscaling ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Zap className="w-4 h-4 mr-2" />
+                    )}
+                    {upscaling ? 'Upscaling AI in corso...' : `Upscale ${selectedFiles.size} Video con AI`}
+                  </Button>
+
+                  <p className="text-[11px] text-zinc-500">
+                    Estrae i frame → upscale AI su GPU → riassembla in MP4 H.264. Può richiedere diversi minuti per video.
+                  </p>
+                </>
               )}
             </div>
           )}

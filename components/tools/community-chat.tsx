@@ -186,6 +186,22 @@ export function CommunityChat() {
         unsubMessageRef.current = await subscribeToRoom(activeRoom.id, (newMsg) => {
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
+            // Suono notifica per messaggi altrui
+            if (newMsg.authorId !== userId) {
+              try {
+                const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.value = 0.08;
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+              } catch {}
+            }
             return [...prev, newMsg];
           });
         });
