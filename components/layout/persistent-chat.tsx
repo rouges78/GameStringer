@@ -23,6 +23,7 @@ import {
   Minimize2,
   Maximize2,
   ChevronDown,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 import {
   isChatEnabled,
   getCurrentUserId,
@@ -65,6 +67,7 @@ import {
   type ChatMessage,
   type UserPresence,
 } from '@/lib/community-chat';
+import { translateChatMessage } from '@/lib/ai-translate-direct';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -118,6 +121,13 @@ export function PersistentChat() {
   const [newRoomType, setNewRoomType] = useState<ChatRoom['type']>('general');
   const [showRooms, setShowRooms] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+  const [autoTranslate, setAutoTranslate] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('gs_chat_auto_translate') === 'true';
+    return false;
+  });
+  const { language } = useTranslation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -186,8 +196,24 @@ export function PersistentChat() {
         unsubMessageRef.current = await subscribeToRoom(activeRoom.id, (newMsg) => {
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
-            // Increment unread if chat is closed
-            if (!open) setUnreadCount((c) => c + 1);
+            // Notifica per messaggi di altri utenti
+            if (newMsg.authorId !== userId) {
+              if (!open) setUnreadCount((c) => c + 1);
+              // Suono notifica (breve beep)
+              try {
+                const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.value = 0.08;
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+              } catch {}
+            }
             return [...prev, newMsg];
           });
         });
@@ -253,6 +279,75 @@ export function PersistentChat() {
       toast.error(errMsg);
     }
   };
+
+  // ─── Translate message ──────────────────────────────────────
+  const handleTranslateMessage = useCallback(async (msg: ChatMessage) => {
+    if (translatedMessages[msg.id]) {
+      setTranslatedMessages(prev => {
+        const next = { ...prev };
+        delete next[msg.id];
+        return next;
+      });
+      return;
+    }
+    setTranslatingIds(prev => new Set(prev).add(msg.id));
+    try {
+      const LANG_MAP: Record<string, string> = {
+        it: 'Italian', en: 'English', es: 'Spanish', de: 'German',
+        fr: 'French', pt: 'Portuguese', ja: 'Japanese', zh: 'Chinese',
+        ko: 'Korean', ru: 'Russian', pl: 'Polish',
+      };
+      const targetLang = LANG_MAP[language] || 'Italian';
+      const { translated } = await translateChatMessage(
+        msg.content, targetLang,
+      );
+      setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : 'Errore traduzione';
+      toast.error(errMsg);
+    } finally {
+      setTranslatingIds(prev => { const next = new Set(prev); next.delete(msg.id); return next; });
+    }
+  }, [language, translatedMessages]);
+
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslate(prev => {
+      const next = !prev;
+      localStorage.setItem('gs_chat_auto_translate', String(next));
+      return next;
+    });
+  }, []);
+
+  const detectLangTag = useCallback((text: string): string | null => {
+    if (/[\u0400-\u04FF]{3,}/.test(text)) return 'RU';
+    if (/[\u4E00-\u9FFF]{2,}/.test(text)) return 'ZH';
+    if (/[\u3040-\u309F\u30A0-\u30FF]{2,}/.test(text)) return 'JA';
+    if (/[\uAC00-\uD7AF]{2,}/.test(text)) return 'KO';
+    if (/[\u0600-\u06FF]{3,}/.test(text)) return 'AR';
+    if (/[\u0E00-\u0E7F]{3,}/.test(text)) return 'TH';
+    const LANG_HINTS: Record<string, RegExp> = {
+      EN: /\b(the|and|this|that|with|have|from|they|what|your)\b/i,
+      ES: /\b(que|los|las|por|una|con|para|esta|pero|como)\b/i,
+      DE: /\b(und|die|der|das|ist|nicht|ein|ich|sich|auf)\b/i,
+      FR: /\b(les|des|une|que|est|pas|pour|dans|sur|avec)\b/i,
+      PT: /\b(que|não|para|com|uma|dos|está|isso|mais|por)\b/i,
+    };
+    const appLang = language.toUpperCase();
+    for (const [lang, re] of Object.entries(LANG_HINTS)) {
+      if (lang !== appLang && re.test(text)) return lang;
+    }
+    return null;
+  }, [language]);
+
+  useEffect(() => {
+    if (!autoTranslate || messages.length === 0) return;
+    for (const msg of messages) {
+      if (msg.deleted || msg.authorId === userId) continue;
+      if (translatedMessages[msg.id] || translatingIds.has(msg.id)) continue;
+      const lang = detectLangTag(msg.content);
+      if (lang) handleTranslateMessage(msg);
+    }
+  }, [autoTranslate, messages, userId, translatedMessages, translatingIds, detectLangTag, handleTranslateMessage]);
 
   // ─── Create room ────────────────────────────────────────────
   const handleCreateRoom = async () => {
@@ -378,7 +473,16 @@ export function PersistentChat() {
                 <span className="font-medium truncate max-w-[180px]">{activeRoom?.name || 'Stanze'}</span>
                 <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform ${showRooms ? 'rotate-180' : ''}`} />
               </button>
-              <Button variant="ghost" size="xs" className="w-6 p-0 ml-auto" onClick={() => setShowNewRoom(true)}>
+              <Button
+                variant="ghost"
+                size="xs"
+                className={`w-6 p-0 ml-auto ${autoTranslate ? 'text-cyan-400' : 'text-slate-500'}`}
+                onClick={toggleAutoTranslate}
+                title={autoTranslate ? 'Disattiva auto-traduzione' : 'Auto-traduci messaggi'}
+              >
+                <Languages className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="xs" className="w-6 p-0" onClick={() => setShowNewRoom(true)}>
                 <Plus className="h-3 w-3 text-slate-500" />
               </Button>
             </div>
@@ -440,6 +544,12 @@ export function PersistentChat() {
                               {msg.authorName || 'Utente'}
                             </span>
                             <span className="text-micro text-slate-600">{formatTime(msg.createdAt)}</span>
+                            {(() => {
+                              const lang = detectLangTag(msg.content);
+                              return lang ? (
+                                <span className="text-micro px-0.5 rounded bg-slate-700/50 text-slate-400 font-mono">{lang}</span>
+                              ) : null;
+                            })()}
                           </div>
                         )}
                         {msg.replyTo && (
@@ -448,22 +558,36 @@ export function PersistentChat() {
                           </div>
                         )}
                         <p className="text-[12px] text-slate-300 break-words leading-relaxed">{msg.content}</p>
+                        {translatedMessages[msg.id] && (
+                          <p className="text-[12px] text-cyan-300/80 break-words leading-relaxed mt-0.5 border-l-2 border-cyan-500/30 pl-2">
+                            {translatedMessages[msg.id]}
+                          </p>
+                        )}
                       </div>
-                      {isOwn && !msg.deleted && (
+                      {!msg.deleted && (
                         <div className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setEditingMsg(msg); setMessageInput(msg.content); inputRef.current?.focus(); }}>
-                            <Edit3 className="h-2.5 w-2.5 text-slate-500" />
+                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleTranslateMessage(msg)} title={translatedMessages[msg.id] ? 'Nascondi traduzione' : 'Traduci messaggio'}>
+                            {translatingIds.has(msg.id) ? (
+                              <Loader2 className="h-2.5 w-2.5 text-cyan-400 animate-spin" />
+                            ) : (
+                              <Languages className={`h-2.5 w-2.5 ${translatedMessages[msg.id] ? 'text-cyan-400' : 'text-slate-500'}`} />
+                            )}
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleDelete(msg)}>
-                            <Trash2 className="h-2.5 w-2.5 text-red-500/50" />
-                          </Button>
-                        </div>
-                      )}
-                      {!isOwn && !msg.deleted && (
-                        <div className="hidden group-hover:flex items-center flex-shrink-0">
-                          <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}>
-                            <Reply className="h-2.5 w-2.5 text-slate-500" />
-                          </Button>
+                          {isOwn && (
+                            <>
+                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setEditingMsg(msg); setMessageInput(msg.content); inputRef.current?.focus(); }}>
+                                <Edit3 className="h-2.5 w-2.5 text-slate-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => handleDelete(msg)}>
+                                <Trash2 className="h-2.5 w-2.5 text-red-500/50" />
+                              </Button>
+                            </>
+                          )}
+                          {!isOwn && (
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0" onClick={() => { setReplyTo(msg); inputRef.current?.focus(); }}>
+                              <Reply className="h-2.5 w-2.5 text-slate-500" />
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

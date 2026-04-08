@@ -49,7 +49,8 @@
     "autoFixed": "Auto-Korrigiert",
     "reviewImproved": "Durch Review verbessert",
     "totalTime": "Gesamtzeit",
-    "suggestions": "Vorschläge"
+    "suggestions": "Vorschläge",
+    "multistepHarvestTranslateQaAut": "Mehrstufig: Harvest → Translate → QA → Auto-Fix → Review → Score"
   },
   "glossaryPage": {
     "autoGlossary": "Auto-Glossar",
@@ -78,7 +79,11 @@
     "promptInjection": "Prompt-Injection",
     "addToPrompt": "Glossar-Begriffe zu Prompts hinzufügen",
     "autoExtract": "Auto-Extraktion beim ersten Batch",
-    "autoExtractDesc": "Begriffe aus dem ersten übersetzten Batch extrahieren"
+    "autoExtractDesc": "Begriffe aus dem ersten übersetzten Batch extrahieren",
+    "japanese": "Japanisch",
+    "chinese": "Chinesisch",
+    "korean": "Koreanisch",
+    "impostazioniPerLestrazioneAuto": "Einstellungen für automatische Extraktion und Prompt-Injection"
   },
   "visualNovelPage": {
     "title": "Visual Novel Patcher",
@@ -101,7 +106,8 @@
     "extractLinFromWad": "Extrahiere .LIN-Dateien aus WAD mit DRAT",
     "texts": "Texte",
     "script": "Skript",
-    "font": "Schrift"
+    "font": "Schrift",
+    "unknown": "Unbekannt"
   },
   "unityCsvPage": {
     "subtitle": "Extrahiere und übersetze SimpleLocalization-Tabellen aus Unity-Spielen",
@@ -119,7 +125,11 @@
     "injectInGame": "Ins Spiel injizieren",
     "resizeInjection": "Resize-Injection",
     "backupInfo": "Originaldateien werden als .backup gespeichert",
-    "injectionComplete": "Injection abgeschlossen!"
+    "injectionComplete": "Injection abgeschlossen!",
+    "cat": "Kategorie",
+    "english": "Englisch",
+    "traduzione": "Übersetzung",
+    "file": "Datei"
   },
   "contextHarvesterPage": {
     "subtitle": "Automatische Kontextextraktion für KI-Übersetzung",
@@ -134,7 +144,8 @@
     "contentType": "Inhaltstyp",
     "uiConstraints": "UI-Einschränkungen",
     "noConstraints": "Keine Einschränkungen erkannt",
-    "promptHint": "Prompt-Hinweis"
+    "promptHint": "Prompt-Hinweis",
+    "tag": "Tag"
   },
   "ollamaManagerPage": {
     "title": "Ollama Modell-Manager",
@@ -146,7 +157,8 @@
     "modelA": "Modell A",
     "modelB": "Modell B",
     "testText": "Testtext (EN → DE)",
-    "faster": "Schneller"
+    "faster": "Schneller",
+    "nessunModelloInstallatoScarica": "Kein Modell installiert. Lade eines der unten empfohlenen herunter."
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -159,7 +171,8 @@
     "lines": "Zeilen:",
     "time": "Zeit:",
     "loadImageFirst": "Lade ein Bild und starte OCR",
-    "engineDetails": "Engine-Details"
+    "engineDetails": "Engine-Details",
+    "caricaUnaposimmagineEAvviaLapo": "Lade ein Bild hoch und starte OCR"
   },
   "workshopExportPage": {
     "title": "Steam Workshop Export",
@@ -179,7 +192,8 @@
     "translatedFiles": "Übersetzte Dateien",
     "clickToAdd": "Klicke um Dateien hinzuzufügen",
     "supportedFormats": "JSON, CSV, PO, XML, YAML, .locres, .pak, usw.",
-    "validation": "Validierung"
+    "validation": "Validierung",
+    "visibilitagrave": "Sichtbarkeit"
   },
   "renpyPatcherPage": {
     "title": "Ren'Py Patcher",
@@ -217,7 +231,8 @@
     "destLabel": "Ziel:",
     "translationMemory": "Übersetzungsspeicher",
     "selectString": "Wähle einen String aus der Liste",
-    "noSelection": "Keine Auswahl"
+    "noSelection": "Keine Auswahl",
+    "traduciUnGiocoConNeuralTransla": "Übersetze ein Spiel mit Neural Translator, um es hier zu füllen."
   },
   "binaryPatcherPage": {
     "title": "Binary String Patcher",
@@ -231,7 +246,8 @@
     "ruleBased": "Regelbasiert",
     "offlineDict": "Offline-Wörterbuch — schnell aber Basisqualität",
     "aiPreset": "KI-Preset:",
-    "allCategories": "Alle Kategorien"
+    "allCategories": "Alle Kategorien",
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL und weitere — höchste Qualität"
   },
   "blogPage": {
     "title": "Blog-Verwaltung",
@@ -239,17 +255,20 @@
     "dateHint": "Datum (z.B. \"24. Jan\")",
     "titleHint": "Titel (nutze Emoji!)",
     "noPosts": "Noch keine Beiträge",
-    "createFirst": "Klicke \"Neuer Post\" um den ersten Artikel zu erstellen"
+    "createFirst": "Klicke \"Neuer Post\" um den ersten Artikel zu erstellen",
+    "tag": "Tag"
   },
   "advancedToolsPage": {
     "title": "Erweiterte Werkzeuge",
     "badge": "Next-Gen",
-    "subtitle": "Erweiterte Tools die GameStringer einzigartig machen."
+    "subtitle": "Erweiterte Tools die GameStringer einzigartig machen.",
+    "loading": "Wird geladen..."
   },
   "systemMonitorPage": {
     "title": "Systemmonitor & KI-Setup",
     "systemResources": "Systemressourcen",
-    "localAiSetup": "Lokale KI-Einrichtung"
+    "localAiSetup": "Lokale KI-Einrichtung",
+    "loading": "Wird geladen..."
   },
   "settingsPage": {
     "apiKeys": "API-Schlüssel",
@@ -277,18 +296,84 @@
     "appDataMb": "MB App-Daten",
     "coverCacheMb": "MB Cover-Cache",
     "savedCovers": "Gespeicherte Cover",
-    "rss": "RSS"
+    "rss": "RSS",
+    "apiKeysFallback": "API-Schlüssel (Fallback: Gemini → DeepSeek → OpenAI)",
+    "lmStudioLocale": "LM Studio (Lokal)",
+    "portaDefault1234": "Standard-Port: 1234",
+    "freeTier15Rpm1mTpm": "Free Tier: 15 RPM / 1M TPM —",
+    "gratuitoVelocissimo": "Kostenlos, extrem schnell —",
+    "payperuseGpt4o": "Pay-per-use, GPT-4o —",
+    "payperuseClaudeSonnet": "Pay-per-use, Claude Sonnet —",
+    "mistralAi": "Mistral AI",
+    "freeTier": "Free Tier —",
+    "freeTrial": "Free Trial —",
+    "togetherAi": "Together AI",
+    "fireworksAi": "Fireworks AI",
+    "modelliGratuitiInclusi": "Kostenlose Modelle enthalten —",
+    "freeTierUltraveloce": "Free Tier, ultraschnell —",
+    "qwen3AlibabaDashscope": "Qwen3 (Alibaba DashScope)",
+    "ratio": "Verhältnis",
+    "ver": "Ver.:",
+    "build": "Build:",
+    "git": "Git:",
+    "branch": "Branch:"
   },
   "translatorProPage": {
     "title": "Neural Translator Pro",
     "file": "Datei",
-    "completed": "Abgeschlossen!",
     "translatedFiles": "Übersetzte Dateien bereit",
-    "backupOriginal": "Backup der Originaldateien",
-    "showAllFiles": "Alle Dateien anzeigen",
-    "clickFilePreview": "Klicken Sie auf eine Datei für die Vorschau",
     "fromMemory": "Aus Speicher",
-    "loading": "Laden..."
+    "subtitle": "Fortschrittliche neuronale Übersetzung mit mehrstufiger Pipeline",
+    "source": "Quelle",
+    "target": "Ziel",
+    "batchMode": "Batch-Modus",
+    "singleMode": "Einzeln",
+    "translating": "Übersetze...",
+    "results": "Ergebnisse",
+    "score": "Bewertung",
+    "original": "Original",
+    "translation": "Übersetzung",
+    "copyAll": "Alles kopieren",
+    "exportResults": "Ergebnisse exportieren",
+    "noResults": "Keine Ergebnisse",
+    "pasteText": "Text zum Übersetzen einfügen",
+    "onePerLine": "Ein Satz pro Zeile",
+    "provider": "Anbieter",
+    "model": "Modell",
+    "temperature": "Temperatur",
+    "maxTokens": "Max. Token",
+    "context": "Kontext",
+    "contextHint": "Optionaler Kontext zur Verbesserung der Übersetzung",
+    "gameContext": "Spielkontext",
+    "glossaryTerms": "Glossar-Begriffe",
+    "qualityCheck": "Qualitätsprüfung",
+    "adaptiveMt": "Adaptive MT",
+    "history": "Verlauf",
+    "clearHistory": "Verlauf leeren",
+    "stringhe": "Strings",
+    "providerAi": "KI-Anbieter",
+    "deepseekV3": "DeepSeek V3",
+    "gemini20Flash": "Gemini 2.0 Flash",
+    "gpt4oMini": "GPT-4o Mini",
+    "claude35Sonnet": "Claude 3.5 Sonnet",
+    "gpt4o": "GPT-4o",
+    "mistralLarge2": "Mistral Large 2",
+    "deeplPro": "DeepL Pro",
+    "googleTranslate": "Google Translate",
+    "apiKey": "API-Schlüssel",
+    "usaTranslationMemory": "Translation Memory verwenden",
+    "qualityChecks": "Qualitätsprüfungen",
+    "ultimeTraduzioni": "Letzte Übersetzungen",
+    "translationCompleted": "Übersetzung abgeschlossen",
+    "translated": "Übersetzt",
+    "quality": "Qualität",
+    "cost": "Kosten",
+    "tipo": "Typ",
+    "qualità": "Qualität",
+    "ilPacchettoDiTraduzioneÈStatoS": "Das Übersetzungspaket wurde auf deinem Desktop gespeichert:",
+    "ilPacchettoContiene": "Das Paket enthält:",
+    "formatoXunityautotranslator": "XUnity.AutoTranslator-Format",
+    "readmeConIstruzioni": "README mit Anleitungen"
   },
   "injektOverlayConfigComp": {
     "appearance": "Appearance",
@@ -1310,7 +1395,10 @@
     "back": "Zurück",
     "verifyKey": "Schlüssel überprüfen",
     "resetPassword": "Passwort zurücksetzen",
-    "done": "Fertig"
+    "done": "Fertig",
+    "accountLocked": "Konto gesperrt. Versuche es in {seconds} Sekunden erneut",
+    "attemptsRemaining": "Verbleibende Versuche: {count}",
+    "tooManyAttempts": "Zu viele fehlgeschlagene Versuche. Konto für 5 Minuten gesperrt."
   },
   "onboarding": {
     "step": "Schritt {current} von {total}",
@@ -1543,7 +1631,31 @@
     "loading": "Laden...",
     "tabFiles": "Dateien",
     "tabTranslations": "Übersetzungen",
-    "tabPatch": "Patch"
+    "tabPatch": "Patch",
+    "translating": "Übersetze...",
+    "autoTranslateTitle": "Automatische Übersetzung",
+    "autoTranslateSubtitle": "GameStringer übersetzt das Spiel in deine Sprache",
+    "translationComplete": "Übersetzung abgeschlossen! Das Spiel wird in deiner Sprache starten.",
+    "translationError": "Fehler bei der automatischen Übersetzung",
+    "close": "Schließen",
+    "stepDetectEngine": "Engine- und Architekturerkennung",
+    "stepScanFiles": "Scannen übersetzbarer Dateien",
+    "stepInstallPatch": "Übersetzungspatch wird installiert",
+    "stepAiTranslation": "KI-Übersetzung läuft...",
+    "stepLaunchGame": "Übersetztes Spiel starten",
+    "analyzingFolder": "Spielordner wird analysiert...",
+    "engineNotDetected": "Engine nicht erkannt — generische Übersetzung",
+    "searchingFiles": "Suche übersetzbare Dateien...",
+    "patchAlreadyInstalled": "Patch bereits vorhanden",
+    "patchNotNeeded": "Patch nicht erforderlich",
+    "configuringUnreal": "Unreal Engine wird konfiguriert...",
+    "directTranslation": "Direkte Übersetzung (kein Patch)",
+    "noPatchNeeded": "Kein Patch erforderlich — direkte Übersetzung",
+    "connectingOllama": "Verbinde mit Ollama AI...",
+    "xunityIntercept": "XUnity wird die Strings beim ersten Start abfangen",
+    "xunityConfigured": "XUnity AutoTranslator konfiguriert — automatische In-Game-Übersetzung",
+    "launchingGame": "Spiel wird gestartet...",
+    "gameLaunched": "Spiel gestartet! Viel Spaß 🎮"
   },
   "notifications": {
     "profileSettings": "Benachrichtigungseinstellungen",
@@ -1617,10 +1729,7 @@
     "lastModified": "Letzte Änderung",
     "export": "Exportieren",
     "delete": "Löschen",
-    "duplicate": "Duplizieren",
-    "projects": "Projekte",
-    "helpTitle": "Wofür ist das?",
-    "helpDescription": "Hier können Sie Übersetzungen überprüfen und bearbeiten, die mit Neural Translator Pro erstellt wurden. KI-Fehler korrigieren, Stil vereinheitlichen und im Translation Memory speichern."
+    "duplicate": "Duplizieren"
   },
   "heatmap": {
     "title": "Vertrauenskarte",
@@ -1723,15 +1832,12 @@
     "subscribed": "Abonniert",
     "subscribe": "Abonnieren",
     "unsubscribe": "Abmelden",
-    "downloads": "Downloads",
     "subscribers": "Abonnenten",
-    "updated": "Aktualisiert",
-    "author": "Autor",
-    "description": "Beschreibung",
-    "install": "Installieren",
     "installed": "Installiert",
-    "getStarted": "Loslegen",
-    "learnMore": "Mehr erfahren"
+    "searchResults": "Suchergebnisse",
+    "noResults": "Keine Ergebnisse",
+    "downloading": "Lädt herunter...",
+    "lastUpdated": "Zuletzt aktualisiert"
   },
   "subtitleOverlay": {
     "title": "Subtitle Overlay",
@@ -2337,7 +2443,11 @@
     "beFirstToPost": "Sei der Erste, der eine Diskussion startet!",
     "startDiscussion": "Diskussion Starten",
     "viewAllOnGitHub": "Alle Diskussionen auf GitHub ansehen",
-    "answered": "Beantwortet"
+    "answered": "Beantwortet",
+    "packNamePlaceholder": "z. B. Vollständige deutsche Übersetzung",
+    "gameNamePlaceholder": "z. B. Hollow Knight",
+    "descriptionPlaceholder": "Beschreibe deine Übersetzung...",
+    "tagsPlaceholder": "z. B. vollständig, überprüft, dlc"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",
@@ -2663,7 +2773,34 @@
     "completed": "Abgeschlossen!",
     "completedDesc": "Folgen Sie den Anweisungen im Log zur Fertigstellung.",
     "error": "Fehler",
-    "log": "Log"
+    "log": "Log",
+    "folderSelected": "Ordner ausgewählt",
+    "detecting": "Spielerkennung...",
+    "existingPackFolder": "Bestehender Pack-Ordner erkannt (Übersetzung bereits installiert?)",
+    "backupFound": "Bestehendes Backup gefunden",
+    "platform": "Plattform",
+    "platformNotDetected": "Nicht erkannt",
+    "gameDetected": "Spiel erkannt",
+    "gameNotRecognized": "Spiel nicht automatisch erkannt",
+    "startingInstallation": "Starte Installation der deutschen Übersetzung...",
+    "downloadingTranslation": "Übersetzung wird heruntergeladen...",
+    "noteOneDrive": "HINWEIS: Der Download von OneDrive erfordert einen Browser",
+    "checkingFiles": "Prüfe vorhandene Dateien...",
+    "gogVersionDetected": "GOG-VERSION ERKANNT",
+    "importantNotes": "WICHTIGE HINWEISE:",
+    "instructionsCompleted": "Anleitung abgeschlossen!",
+    "creatingBackup": "Backup wird erstellt...",
+    "backupCreated": "Backup erstellt",
+    "restoringBackup": "Backup wird wiederhergestellt...",
+    "backupRestored": "Backup erfolgreich wiederhergestellt",
+    "verifyingInstallation": "Installation wird überprüft...",
+    "packFolderNotFound": "Pack-Ordner nicht gefunden",
+    "translationNotInstalled": "Übersetzung nicht installiert",
+    "fileFound": "Datei gefunden",
+    "verificationComplete": "Überprüfung abgeschlossen",
+    "translationFilesFound": "Übersetzungsdateien gefunden",
+    "noLangdbFiles": "Keine .langdb-Dateien im Pack-Ordner gefunden",
+    "extractFilesNote": "Möglicherweise musst du die Dateien aus dem Archiv extrahieren"
   },
   "qaCheck": {
     "title": "QA Check",
@@ -2692,7 +2829,14 @@
     "info": "Info",
     "suggestion": "Vorschlag",
     "fixApplied": "Korrekturen angewendet",
-    "enterBothTexts": "Gib Quell- und Zieltext ein"
+    "enterBothTexts": "Gib Quell- und Zieltext ein",
+    "glossary": "Glossar",
+    "sourceTerm": "Originalbegriff",
+    "targetTerm": "Übersetzung",
+    "enterBothTerms": "Begriff und Übersetzung eingeben",
+    "termAdded": "Begriff hinzugefügt",
+    "noTerms": "Keine Begriffe. Füge Begriffe hinzu, um die Konsistenz zu prüfen.",
+    "glossarySuggestion": "Verwende \"{term}\" laut Glossar"
   },
   "unityBundle": {
     "title": "Unity Bundle Translator",
@@ -2885,7 +3029,10 @@
     "kofi": "Ko-fi",
     "github": "GitHub",
     "specialThanks": "Besonderer Dank",
-    "clodoThanks": "Ohne seinen Beitrag hätte ich nicht einmal die Hälfte davon geschafft. Danke, dass GameStringer möglich wurde."
+    "clodoThanks": "Ohne seinen Beitrag hätte ich nicht einmal die Hälfte davon geschafft. Danke, dass GameStringer möglich wurde.",
+    "ver": "Ver.:",
+    "data": "Datum:",
+    "tauri2": "Tauri 2"
   },
   "offlineTranslator": {
     "title": "Offline-Übersetzer",
@@ -3146,5 +3293,82 @@
     "tierMinimal": "Minimal (<2GB)",
     "tierCloud": "Nur Cloud",
     "batch": "Stapel"
+  },
+  "translationBridgePage": {
+    "title": "Translation Bridge",
+    "subtitle": "Verbinde GameStringer mit externen Tools (Weblate, Crowdin, OmegaT)",
+    "importFrom": "Importieren aus",
+    "exportTo": "Exportieren nach",
+    "format": "Format",
+    "sourceFile": "Quelldatei",
+    "preview": "Vorschau",
+    "convert": "Konvertieren",
+    "download": "Herunterladen",
+    "mapping": "Feldzuordnung",
+    "autoDetect": "Auto-Erkennen",
+    "compatible": "Kompatibel",
+    "notCompatible": "Nicht kompatibel",
+    "richieste": "Anfragen",
+    "cacheHit": "Cache-Treffer",
+    "uptime": "Uptime",
+    "testoDaCercare": "Zu suchender Text",
+    "targetLanguage": "Zielsprache",
+    "lingueAttive": "Aktive Sprachen:",
+    "tempoMedioRisposta": "Durchschnittliche Antwortzeit",
+    "cacheHits": "Cache-Treffer",
+    "cacheMisses": "Cache-Fehlschläge",
+    "errori": "Fehler"
+  },
+  "mtpePage": {
+    "sourceLanguage": "Quellsprache",
+    "targetLanguage": "Zielsprache",
+    "aiProvider": "KI-Anbieter",
+    "gemini20": "Gemini 2.0",
+    "claudeSonnet": "Claude Sonnet",
+    "gpt4o": "GPT-4o",
+    "googleTranslate": "Google Translate",
+    "libretranslateFree": "LibreTranslate (Kostenlos)",
+    "workflowCompletato": "Workflow abgeschlossen!"
+  },
+  "translationWizardPage": {
+    "noGameTrovato": "Kein Spiel gefunden",
+    "provaACercareConUnAltroTermine": "Versuche es mit einem anderen Suchbegriff",
+    "file": "Datei",
+    "strategieAlternative": "Alternative Strategien:",
+    "communityTranslationAvailable": "Community-Übersetzung verfügbar!",
+    "traduzioneCompletata": "Übersetzung abgeschlossen!"
+  },
+  "libraryPage": {
+    "nessunaLinguaRilevata": "Keine Sprache erkannt",
+    "shared": "Geteilt",
+    "aggiornaDb": "DB aktualisieren"
+  },
+  "unityBundlePage": {
+    "auto": "Auto",
+    "fileOpenCtrlv": "File → Open → Strg+V",
+    "importDumpCtrlv": "Import Dump → Strg+V"
+  },
+  "activityPage": {
+    "filterBy": "Filtern nach:",
+    "noActivityRecorded": "Keine Aktivität aufgezeichnet",
+    "yourActionsWillBeTrackedHere": "Deine Aktionen werden hier verfolgt"
+  },
+  "storesPage": {
+    "familySharing": "Family Sharing",
+    "steamgriddbApiKey": "SteamGridDB API-Schlüssel"
+  },
+  "ocrTranslatorPage": {
+    "notaVlm": "VLM-Hinweis:",
+    "ctrlshiftt": "Strg+Umschalt+T"
+  },
+  "batchPage": {
+    "editor": "Editor",
+    "glossario": "Glossar"
+  },
+  "qualityScoringPage": {
+    "qualityScoringHva": "Qualitäts-Scoring H/V/A"
+  },
+  "visionTranslatorPage": {
+    "caricamentoVisionLlm": "Vision LLM wird geladen..."
   }
 }

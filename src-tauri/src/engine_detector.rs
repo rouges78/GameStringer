@@ -50,6 +50,7 @@ pub enum GameEngine {
     Void,
     Platinum,
     Visionaire,
+    SierraSCI,
     Unknown,
 }
 
@@ -103,6 +104,7 @@ impl GameEngine {
             GameEngine::Void => "Void Engine",
             GameEngine::Platinum => "Platinum Engine",
             GameEngine::Visionaire => "Visionaire Studio",
+            GameEngine::SierraSCI => "Sierra SCI",
             GameEngine::Unknown => "Unknown",
         }
     }
@@ -152,7 +154,12 @@ pub fn detect_engine(game_path: &Path) -> GameEngine {
     if is_visionaire(game_path) {
         return GameEngine::Visionaire;
     }
-    
+
+    // 6.6. Sierra SCI (Gabriel Knight, Phantasmagoria, King's Quest, etc.)
+    if is_sierra_sci(game_path) {
+        return GameEngine::SierraSCI;
+    }
+
     // 7. Source Engine
     if is_source(game_path) {
         return GameEngine::Source;
@@ -527,6 +534,73 @@ fn is_visionaire(path: &Path) -> bool {
             }
         }
     }
+    false
+}
+
+fn is_sierra_sci(path: &Path) -> bool {
+    // Sierra SCI Engine — Gabriel Knight 1/2, Phantasmagoria, King's Quest, etc.
+    // Look for: RESOURCE.MAP, RESOURCE.000-999, *.VMD, *.RBT, *.DUK, SIERRA.EXE
+    let sci_markers = ["resource.map", "resource.cfg", "sierra.ini"];
+    let sci_extensions = ["vmd", "rbt", "duk"];
+
+    if let Ok(entries) = std::fs::read_dir(path) {
+        let mut has_resource_files = false;
+        let mut has_video_files = false;
+
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+
+            // Check per file marker SCI
+            if sci_markers.iter().any(|m| name == *m) {
+                has_resource_files = true;
+            }
+            // RESOURCE.000, RESOURCE.001, etc.
+            if name.starts_with("resource.") && name.len() > 9 {
+                if let Some(ext) = name.strip_prefix("resource.") {
+                    if ext.chars().all(|c| c.is_ascii_digit()) {
+                        has_resource_files = true;
+                    }
+                }
+            }
+            // Sierra video files (VMD, RBT, DUK)
+            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                if sci_extensions.iter().any(|e| ext.eq_ignore_ascii_case(e)) {
+                    has_video_files = true;
+                }
+            }
+            // SIERRA.EXE or SCIV.EXE
+            if name == "sierra.exe" || name == "sciv.exe" || name == "sciw.exe" || name == "dosbox.exe" {
+                has_resource_files = true;
+            }
+        }
+
+        // Se ha resource files SCI O una combinazione di video Sierra
+        if has_resource_files {
+            return true;
+        }
+        // Alcuni remaster (Steam) non hanno RESOURCE.MAP ma hanno VMD in sottocartelle
+        if has_video_files {
+            return true;
+        }
+    }
+
+    // Check ricorsivo per cartelle tipiche dei remaster Steam (es. Gabriel Knight 2)
+    let steam_subdirs = ["MOVIES", "movies", "VIDEO", "video", "Data", "data"];
+    for subdir in &steam_subdirs {
+        let sub = path.join(subdir);
+        if sub.exists() {
+            if let Ok(entries) = std::fs::read_dir(&sub) {
+                for entry in entries.flatten() {
+                    if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                        if sci_extensions.iter().any(|e| ext.eq_ignore_ascii_case(e)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     false
 }
 
