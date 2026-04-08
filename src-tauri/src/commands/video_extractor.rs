@@ -983,6 +983,158 @@ pub fn get_conversion_presets() -> Vec<(String, String, ConversionOptions)> {
     ]
 }
 
+/// Estrae un frame thumbnail e lo restituisce come base64 PNG (per preview nel frontend)
+#[command]
+pub async fn extract_video_thumbnail_base64(file_path: String) -> Result<String, String> {
+    let input = Path::new(&file_path);
+    if !input.exists() {
+        return Err("File video non trovato".to_string());
+    }
+
+    // Usa una temp dir per il thumbnail
+    let temp_dir = std::env::temp_dir().join("gamestringer_thumbs");
+    fs::create_dir_all(&temp_dir).map_err(|e| format!("Errore temp dir: {}", e))?;
+
+    let hash = format!("{:x}", md5::compute(file_path.as_bytes()));
+    let thumb_path = temp_dir.join(format!("{}.png", hash));
+
+    // Se il thumbnail è già in cache, restituiscilo
+    if thumb_path.exists() {
+        let data = fs::read(&thumb_path).map_err(|e| format!("Errore lettura thumbnail: {}", e))?;
+        use base64::{Engine as _, engine::general_purpose};
+        return Ok(format!("data:image/png;base64,{}", general_purpose::STANDARD.encode(&data)));
+    }
+
+    let thumb_str = thumb_path.to_string_lossy().to_string();
+    let output = std::process::Command::new("ffmpeg")
+        .args(["-y", "-i", &file_path, "-vframes", "1", "-vf", "scale=160:-1", "-f", "image2", &thumb_str])
+        .output()
+        .map_err(|e| format!("Errore FFmpeg: {}", e))?;
+
+    if !output.status.success() {
+        return Err("FFmpeg non è riuscito a estrarre il thumbnail".to_string());
+    }
+
+    let data = fs::read(&thumb_path).map_err(|e| format!("Errore lettura thumbnail: {}", e))?;
+    use base64::{Engine as _, engine::general_purpose};
+    Ok(format!("data:image/png;base64,{}", general_purpose::STANDARD.encode(&data)))
+}
+
+/// Verifica se Real-ESRGAN è disponibile nel sistema
+#[command]
+pub async fn check_realesrgan_available() -> Result<bool, String> {
+    // Prova diversi nomi dell'eseguibile
+    for name in &["realesrgan-ncnn-vulkan", "realesrgan-ncnn-vulkan.exe", "realesrgan"] {
+        if std::process::Command::new(name).arg("-h").output().is_ok() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// Upscale un video usando Real-ESRGAN (frame-by-frame) + FFmpeg per riassemblare
+#[command]
+pub async fn upscale_video_realesrgan(
+    input_path: String,
+    scale: u32,          // 2 o 4
+    model: String,       // "realesrgan-x4plus", "realesrgan-x4plus-anime", "realesr-animevideov3"
+    output_dir: Option<String>,
+) -> Result<ConversionResult, String> {
+    log::info!("🎨 AI Upscale: {} ({}x, modello: {})", input_path, scale, model);
+
+    let input = Path::new(&input_path);
+    if !input.exists() {
+        return Err("File video non trovato".to_string());
+    }
+
+    let stem = input.file_stem().and_then(|s| s.to_str()).unwrap_or("video");
+    let work_dir = std::env::temp_dir().join(format!("gs_upscale_{}", stem));
+    let frames_dir = work_dir.join("frames");
+    let upscaled_dir = work_dir.join("upscaled");
+    fs::create_dir_all(&frames_dir).map_err(|e| format!("Errore creazione dir: {}", e))?;
+    fs::create_dir_all(&upscaled_dir).map_err(|e| format!("Errore creazione dir: {}", e))?;
+
+    let out_dir = match &output_dir {
+        Some(d) => { let p = PathBuf::from(d); fs::create_dir_all(&p).ok(); p },
+        None => input.parent().unwrap_or(Path::new(".")).to_path_buf(),
+    };
+    let output_path = out_dir.join(format!("{}_upscaled_{}x.mp4", stem, scale));
+    let output_str = output_path.to_string_lossy().to_string();
+
+    // Step 1: Estrai frame con FFmpeg
+    log::info!("  Step 1/3: Estrazione frame...");
+    let extract = std::process::Command::new("ffmpeg")
+        .args(["-y", "-i", &input_path, "-qscale:v", "2", &frames_dir.join("frame_%06d.png").to_string_lossy()])
+        .output()
+        .map_err(|e| format!("FFmpeg errore estrazione frame: {}", e))?;
+
+    if !extract.status.success() {
+        let _ = fs::remove_dir_all(&work_dir);
+        return Ok(ConversionResult {
+            success: false, input_path, output_path: output_str,
+            error: Some(format!("Estrazione frame fallita: {}", String::from_utf8_lossy(&extract.stderr))),
+            output_size: None,
+        });
+    }
+
+    // Step 2: Upscale frame con Real-ESRGAN
+    log::info!("  Step 2/3: AI Upscaling con Real-ESRGAN...");
+    let esrgan_name = if cfg!(windows) { "realesrgan-ncnn-vulkan.exe" } else { "realesrgan-ncnn-vulkan" };
+    let upscale = std::process::Command::new(esrgan_name)
+        .args([
+            "-i", &frames_dir.to_string_lossy(),
+            "-o", &upscaled_dir.to_string_lossy(),
+            "-n", &model,
+            "-s", &scale.to_string(),
+            "-f", "png",
+        ])
+        .output()
+        .map_err(|e| format!("Real-ESRGAN errore: {}", e))?;
+
+    if !upscale.status.success() {
+        let _ = fs::remove_dir_all(&work_dir);
+        return Ok(ConversionResult {
+            success: false, input_path, output_path: output_str,
+            error: Some(format!("Real-ESRGAN fallito: {}", String::from_utf8_lossy(&upscale.stderr))),
+            output_size: None,
+        });
+    }
+
+    // Step 3: Riassembla in video con FFmpeg (copia audio dall'originale)
+    log::info!("  Step 3/3: Riassemblaggio video...");
+    let reassemble = std::process::Command::new("ffmpeg")
+        .args([
+            "-y",
+            "-framerate", "15",  // FMV tipicamente 15fps
+            "-i", &upscaled_dir.join("frame_%06d.png").to_string_lossy(),
+            "-i", &input_path,
+            "-map", "0:v", "-map", "1:a?",
+            "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p",
+            "-c:a", "aac",
+            "-shortest",
+            &output_str,
+        ])
+        .output()
+        .map_err(|e| format!("FFmpeg errore riassemblaggio: {}", e))?;
+
+    // Cleanup temp
+    let _ = fs::remove_dir_all(&work_dir);
+
+    if reassemble.status.success() {
+        let output_size = fs::metadata(&output_path).map(|m| m.len()).ok();
+        log::info!("✅ AI Upscale completato: {}", output_str);
+        Ok(ConversionResult {
+            success: true, input_path, output_path: output_str, error: None, output_size,
+        })
+    } else {
+        Ok(ConversionResult {
+            success: false, input_path, output_path: output_str,
+            error: Some(format!("Riassemblaggio fallito: {}", String::from_utf8_lossy(&reassemble.stderr))),
+            output_size: None,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

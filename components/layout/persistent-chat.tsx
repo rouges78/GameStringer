@@ -196,8 +196,24 @@ export function PersistentChat() {
         unsubMessageRef.current = await subscribeToRoom(activeRoom.id, (newMsg) => {
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
-            // Increment unread if chat is closed
-            if (!open) setUnreadCount((c) => c + 1);
+            // Notifica per messaggi di altri utenti
+            if (newMsg.authorId !== userId) {
+              if (!open) setUnreadCount((c) => c + 1);
+              // Suono notifica (breve beep)
+              try {
+                const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                osc.type = 'sine';
+                gain.gain.value = 0.08;
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+              } catch {}
+            }
             return [...prev, newMsg];
           });
         });

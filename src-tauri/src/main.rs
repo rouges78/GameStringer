@@ -1004,7 +1004,10 @@ fn main() {
             commands::video_extractor::convert_video_file,
             commands::video_extractor::convert_video_batch,
             commands::video_extractor::extract_video_thumbnail,
+            commands::video_extractor::extract_video_thumbnail_base64,
             commands::video_extractor::get_conversion_presets,
+            commands::video_extractor::check_realesrgan_available,
+            commands::video_extractor::upscale_video_realesrgan,
 
             // Offline Translation (Ollama-based local LLM)
             commands::offline_translation::offline_translation_status,
