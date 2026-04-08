@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.6.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.7.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -194,6 +194,7 @@ GameStringer prend en charge **20+ moteurs** avec différents niveaux de profond
 - **Context-aware** : comprend le genre du jeu, la voix du personnage, le ton, narration vs UI vs dialogue
 - **Translation Memory et Glossaire** : cohérence sur tout le projet avec extraction automatique de glossaire
 - **Multi-LLM Compare** : exécute plusieurs fournisseurs en parallèle, choisissez le meilleur résultat par chaîne
+- **Auto-Select Engine** (NEW v1.7.0) : preset `auto` qui classe dynamiquement les fournisseurs par langue cible + genre du jeu (DeepL pour les européennes, Claude pour CJK, boost basé sur le genre)
 - **Quality gates** : score QA automatique sur chaque chaîne traduite (0-100) avec ContentTypeBadge
 - **Vision LLM Translator** : utilise des captures en jeu pour le contexte (Ollama, Gemini, GPT-4o)
 - **Live Quality Preview** : voyez les scores de qualité en temps réel pendant la traduction par lot
@@ -228,7 +229,9 @@ GameStringer prend en charge **20+ moteurs** avec différents niveaux de profond
 - **Batch Translation** : traduisez des jeux ou dossiers entiers d'un coup
 - **Traducteur de sous-titres** : SRT, VTT, ASS/SSA avec préservation du timing
 - **OCR Translator** : extrait le texte de jeux rétro (presets 8-bit, 16-bit, DOS) avec vrai backend Tauri Tesseract
-- **Voice Pipeline** : speech-to-text → traduction → text-to-speech
+- **Voice Pipeline** : speech-to-text → traduction → text-to-speech avec **Duration Matching** (NEW v1.7.0) — ajuste automatiquement la vitesse pour correspondre à la durée de l'audio original
+- **Lip Sync** (NEW v1.7.0) : intégration Rhubarb pour la génération de visèmes, export pour Unity/Unreal
+- **Gridly CSV Export/Import** (NEW v1.7.0) : format multi-langue compatible avec Gridly/Lokalise/Crowdin
 - **Overlay temps réel** : voyez les traductions pendant que vous jouez via VR/screen overlay
 - **Auto-Translate Review** : bouton « Translate all untranslated » avec barre de progression
 - **Lore Assistant** : chat RAG qui connaît le lore et les dialogues du jeu
@@ -253,6 +256,7 @@ GameStringer prend en charge **20+ moteurs** avec différents niveaux de profond
 - **Ollama Setup Wizard** : installation pas à pas de l'IA locale
 - **Ollama Manager** : auto-discovery des modèles depuis le registre ollama.com + auto-refresh au focus/navigation
 - **Debug Console** : console intégrée avec interception de logs
+- **Video Extractor** (v1.7.0) : extraction et conversion de vidéo FMV depuis des jeux rétro/modernes avec upscaling IA
 - **Plugin System** : document de conception pour plugins tiers (voir `PLUGIN_SYSTEM.md`)
 - **Community Hub** : partagez et téléchargez des translation memories + intégration GitHub Discussions
 - **Public API v1** : endpoints REST pour l'intégration (`/api/v1/translate`, `/api/v1/batch`)
@@ -407,5 +411,5 @@ Voir [LICENSE](LICENSE) pour les détails. Des questions ? Ouvrez une [Discussio
 
 <p align="center">
   Fait avec ❤️ pour les joueurs qui veulent jouer dans leur propre langue<br>
-  <strong>GameStringer v1.6.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.7.0</strong> · © 2025-2026 GameStringer Team
 </p>
