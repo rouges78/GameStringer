@@ -67,7 +67,7 @@ import {
   type ChatMessage,
   type UserPresence,
 } from '@/lib/community-chat';
-import { translateSingleWithFallback } from '@/lib/ai-translate-direct';
+import { translateChatMessage } from '@/lib/ai-translate-direct';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -278,8 +278,8 @@ export function PersistentChat() {
         ko: 'Korean', ru: 'Russian', pl: 'Polish',
       };
       const targetLang = LANG_MAP[language] || 'Italian';
-      const { translated } = await translateSingleWithFallback(
-        msg.content, targetLang, undefined, 'Community chat message from a gaming community'
+      const { translated } = await translateChatMessage(
+        msg.content, targetLang,
       );
       setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
     } catch (e: unknown) {
