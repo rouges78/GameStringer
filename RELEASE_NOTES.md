@@ -1,3 +1,62 @@
+# 🎮 GameStringer v1.7.0
+
+> **Release Date**: April 8, 2026
+> **Type**: AI Intelligence + Professional Localization + Voice Dubbing + Lip Sync
+
+---
+
+## 🧠 Auto-Select Engine
+
+The new **Auto** chain preset intelligently picks the best AI translation provider based on your target language and game genre:
+
+- **European languages** (IT, DE, FR, ES, PT, NL, PL, RU) → DeepL first, then Claude
+- **CJK languages** (ZH, JA, KO) → Claude/Anthropic first (scores 4.82-4.92 in benchmarks)
+- **RPG/Adventure** games → Creative LLMs (Anthropic, OpenAI) get priority
+- **Action/Strategy** games → DeepL for technical accuracy
+- **Quality tracking**: learns from provider success/failure rates per language and reorders automatically
+
+## 📊 Gridly CSV Export/Import
+
+Professional localization workflow compatibility:
+
+- Multi-language column format: `string_id | source_en | target_it | target_de | ...`
+- Compatible with **Gridly**, **Lokalise**, and **Crowdin**
+- Auto-detect delimiter (comma, semicolon, tab) and language columns
+- UTF-8 BOM for Excel compatibility
+- Bidirectional conversion between single-target and multi-language formats
+
+## 🎙️ Duration Matching (Voice Dubbing)
+
+Keep dubbed audio in sync with the original:
+
+- **Two-pass synthesis**: generate → measure → adjust speed → regenerate
+- Automatic speed adjustment (0.5x - 2.0x) to match original audio duration
+- Web Audio API for precise duration measurement
+- UI toggle in Voice Translator with original vs. synthesized duration comparison
+- Batch support with per-dialogue target duration
+
+## 👄 Lip Sync (Rhubarb Integration)
+
+Generate mouth animation data from audio for game dubbing:
+
+- **Rhubarb Lip Sync** integration (open source, must be in PATH)
+- 9 viseme shapes (A-X): closed, open, rounded, puckered, teeth, tongue, idle
+- **Interactive timeline** with color-coded viseme bars and real-time playback sync
+- **Unity export**: blend shape keyframes compatible with Oculus LipSync
+- **Unreal export**: FaceFX phoneme data for MetaHuman
+- Raw export: JSON, XML, TSV
+- Statistics: cue count, average duration, speech/silence ratio
+- Phonetic (fast) and data-based (accurate) recognizers
+
+## 🎬 Video Extractor Improvements
+
+- Direct "Video" button on game detail page (desktop + mobile)
+- "Choose from Library" game picker dropdown
+- Auto-scan when arriving from game detail
+- "Game Card" back-link to return to game detail
+
+---
+
 # 🎮 GameStringer v1.6.0
 
 > **Release Date**: April 4, 2026

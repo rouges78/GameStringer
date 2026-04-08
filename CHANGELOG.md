@@ -1,5 +1,49 @@
 # GameStringer Changelog
 
+## 🚀 v1.7.0 - 2026-04-08
+
+### AI Translation Intelligence
+- **Auto-Select Engine (🧠)**: nuovo preset 'Auto' che seleziona dinamicamente i migliori provider AI in base alla lingua target e al genere del gioco
+- Ranking basato su benchmark reali: DeepL per lingue europee, Claude/Anthropic per CJK (cinese, giapponese, coreano), OpenAI come generalista
+- Boost genere: RPG/Adventure prioritizzano LLM creativi, Action/Strategy prioritizzano DeepL per accuratezza tecnica
+- Quality History: tracking qualità provider per sessione con riordino automatico della chain
+
+### Professional Localization Formats
+- **Gridly CSV Export/Import**: formato multi-lingua compatibile con Gridly, Lokalise e Crowdin
+- Struttura colonne: `string_id | source_en | context | target_it | target_de | ...`
+- Auto-detect delimiter (virgola, punto e virgola, tab) e colonne lingua
+- UTF-8 BOM per compatibilità Excel
+- Conversione bidirezionale tra formato single-target e multi-lingua
+
+### AI Voice Dubbing
+- **Duration Matching**: sintesi vocale con adattamento automatico velocità (0.5x-2.0x) per mantenere la durata dell'audio originale
+- Two-pass TTS: sintetizza → misura → calcola speed ratio → ri-sintetizza
+- Web Audio API per misurazione precisa durata audio
+- Toggle UI nel Voice Translator con confronto durata originale/sintetizzata
+- Supporto per batch synthesis con targetDuration per dialogo
+
+### Lip Sync (Rhubarb Integration)
+- **Rhubarb Lip Sync**: generazione dati visemi (A-X) da file audio con supporto WAV/OGG/MP3
+- Timeline visuale interattiva con barre colorate per ogni visema
+- Playback sync in tempo reale con playhead animato e display forma bocca attiva
+- Statistiche: durata, numero cue, media cue, rapporto parlato/silenzio
+- **Export Unity**: keyframe blend shapes compatibili con Oculus LipSync
+- **Export Unreal**: dati FaceFX phoneme per MetaHuman
+- Export raw in JSON, XML, TSV
+- Supporto recognizer fonetico (veloce) e data-based (preciso)
+- Dialog text hint per migliorare la precisione
+
+### Video Extractor Improvements
+- Link diretto "Video" nella scheda gioco (desktop + mobile) che apre il Video Extractor pre-compilato
+- Game picker "Scegli dalla Libreria" nel Video Extractor
+- Auto-scan quando si arriva dalla scheda gioco
+- Link "Scheda Gioco" per tornare alla pagina dettaglio
+
+### Navigation
+- Nuova pagina `/lip-sync` con pannello completo
+- Aggiunta voce "Lip Sync" nella sidebar sezione Tools
+- Bottone "Video" (fucsia) nella toolbar scheda gioco
+
 ## 🔧 v1.6.1 - 2026-04-06
 
 - Fix pipeline auto-update: firma binari con minisign + `latest.json` multipiattaforma (Windows/macOS/Linux)

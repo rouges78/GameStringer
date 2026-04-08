@@ -1,14 +1,28 @@
 {
-  "version": "1.6.1",
+  "version": "1.7.0",
   "major": 1,
-  "minor": 6,
-  "patch": 1,
+  "minor": 7,
+  "patch": 0,
   "prerelease": null,
-  "buildNumber": 123,
-  "buildDate": "2026-04-05T00:00:00.000Z",
+  "buildNumber": 124,
+  "buildDate": "2026-04-08T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.7.0": {
+      "date": "2026-04-08",
+      "type": "feature",
+      "changes": [
+        "Auto-Select Engine (🧠): nuovo preset 'Auto' che seleziona dinamicamente i migliori provider AI per lingua target e genere gioco — basato su benchmark reali (DeepL per europee, Claude per CJK, boost genere RPG/Adventure)",
+        "Quality History: tracking sessione qualità provider per lingua, riordino automatico chain in base a successi/fallimenti",
+        "Gridly CSV Export/Import: formato multi-lingua compatibile Gridly/Lokalise/Crowdin (ID | source | target per ogni lingua), auto-detect delimiter e colonne lingua",
+        "Duration Matching: sintesi vocale con adattamento automatico velocità per mantenere la durata dell'audio originale — two-pass TTS con Web Audio API measurement",
+        "Rhubarb Lip Sync: generazione dati lip-sync (visemi A-X) da audio con timeline visuale interattiva, export per Unity (blend shapes) e Unreal (FaceFX)",
+        "Video Extractor: link diretto dalla scheda gioco + game picker dalla libreria + auto-scan",
+        "Lip Sync Page: nuova pagina /lip-sync con pannello completo (recognizer, timeline, stats, export multi-engine)",
+        "Sidebar: aggiunta voce Lip Sync nella sezione Tools"
+      ]
+    },
     "1.6.1": {
       "date": "2026-04-05",
       "type": "patch",

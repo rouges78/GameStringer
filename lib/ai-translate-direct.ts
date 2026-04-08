@@ -1443,7 +1443,7 @@ async function translateWithNLLB(
 }
 
 /** Preset di chain selezionabili per costo/qualità */
-export type ChainPreset = 'free' | 'economy' | 'balanced' | 'quality' | 'max_quality';
+export type ChainPreset = 'free' | 'economy' | 'balanced' | 'quality' | 'max_quality' | 'auto';
 
 export interface ChainPresetInfo {
   id: ChainPreset;
@@ -1501,7 +1501,190 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     speed: '🚀 Veloce',
     providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'nllb', 'mymemory', 'lingva'],
   },
+  {
+    id: 'auto',
+    name: '🧠 Auto-Select',
+    description: 'Seleziona automaticamente i migliori provider per lingua target e genere gioco',
+    cost: 'Variabile',
+    quality: '⭐⭐⭐⭐⭐',
+    speed: '🚀 Adattiva',
+    providers: [], // Calcolato dinamicamente da getAutoProviderChain()
+  },
 ];
+
+// ── Auto-Select: ranking provider per lingua e genere ──────────────────────
+// Basato su benchmark reali (IntlPull 2026, Lokalise 2026):
+// - DeepL domina lingue europee (DE, FR, ES, IT, PT, NL, PL, RU)
+// - Claude/Anthropic eccelle CJK (ZH score 4.92, JA 4.82) e testi creativi
+// - OpenAI GPT-4o buono tuttofare, forte in KO e raro lingue
+// - Gemini competitivo su lingue asiatiche e gratis
+// - DeepSeek ottimo rapporto qualità/prezzo per ZH
+// - Qwen forte per ZH nativo
+
+/** Mappe di affinità lingua → provider (ordine = priorità) */
+const LANG_PROVIDER_AFFINITY: Record<string, string[]> = {
+  // Lingue europee occidentali — DeepL domina
+  IT: ['deepl', 'anthropic', 'modelwiz', 'openai', 'mistral', 'gemini', 'deepseek', 'qwen'],
+  DE: ['deepl', 'anthropic', 'modelwiz', 'openai', 'mistral', 'gemini', 'deepseek'],
+  FR: ['deepl', 'anthropic', 'modelwiz', 'mistral', 'openai', 'gemini', 'deepseek'],
+  ES: ['deepl', 'anthropic', 'modelwiz', 'openai', 'gemini', 'deepseek', 'mistral'],
+  PT: ['deepl', 'anthropic', 'modelwiz', 'openai', 'gemini', 'deepseek'],
+  NL: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini'],
+  // Lingue europee orientali
+  PL: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek'],
+  RU: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek'],
+  CS: ['deepl', 'anthropic', 'openai', 'gemini'],
+  HU: ['deepl', 'anthropic', 'openai', 'gemini'],
+  RO: ['deepl', 'anthropic', 'openai', 'gemini'],
+  BG: ['deepl', 'anthropic', 'openai', 'gemini'],
+  UK: ['deepl', 'anthropic', 'openai', 'gemini'],
+  // Nordiche
+  SV: ['deepl', 'anthropic', 'openai', 'gemini'],
+  DA: ['deepl', 'anthropic', 'openai', 'gemini'],
+  NO: ['deepl', 'anthropic', 'openai', 'gemini'],
+  FI: ['deepl', 'anthropic', 'openai', 'gemini'],
+  // CJK — Claude e LLM nativi eccellono
+  ZH: ['anthropic', 'qwen', 'deepseek', 'openai', 'modelwiz', 'gemini', 'deepl'],
+  JA: ['anthropic', 'openai', 'modelwiz', 'gemini', 'deepl', 'deepseek', 'qwen'],
+  KO: ['anthropic', 'openai', 'modelwiz', 'gemini', 'deepl', 'deepseek'],
+  // Altre asiatiche
+  TH: ['openai', 'anthropic', 'gemini', 'modelwiz', 'deepseek'],
+  VI: ['openai', 'anthropic', 'gemini', 'modelwiz', 'deepseek'],
+  ID: ['openai', 'anthropic', 'gemini', 'deepseek'],
+  // Medio Oriente
+  AR: ['anthropic', 'openai', 'gemini', 'modelwiz', 'deepseek'],
+  TR: ['deepl', 'anthropic', 'openai', 'gemini', 'deepseek'],
+  HE: ['openai', 'anthropic', 'gemini'],
+  // Indiche
+  HI: ['openai', 'anthropic', 'gemini', 'deepseek'],
+  // Greco
+  EL: ['deepl', 'anthropic', 'openai', 'gemini'],
+};
+
+/** Boost provider per genere gioco (i testi creativi funzionano meglio su LLM grandi) */
+const GENRE_PROVIDER_BOOST: Record<string, string[]> = {
+  rpg:       ['anthropic', 'openai'],     // Dialoghi complessi, lore profondo
+  adventure: ['anthropic', 'openai'],     // Narrativa, puzzle testuali
+  visual_novel: ['anthropic', 'deepl'],   // Testi lunghi, sfumature emotive
+  horror:    ['anthropic', 'openai'],     // Tono atmosferico, tensione
+  strategy:  ['deepl', 'openai'],         // Terminologia tecnica, UI
+  action:    ['deepl', 'gemini'],         // Testi brevi, UI, tutorial
+  simulation:['deepl', 'openai'],         // Terminologia tecnica
+  puzzle:    ['deepl', 'gemini'],         // Testi brevi, istruzioni
+  shooter:   ['deepl', 'gemini'],         // UI, comandi rapidi
+  sports:    ['deepl', 'gemini'],         // Terminologia sportiva
+};
+
+/** Normalizza codice lingua a 2 lettere maiuscole */
+function normalizeLangCode(lang: string): string {
+  const l = lang.toUpperCase().replace(/[-_].*/, '');
+  // Alias comuni
+  const aliases: Record<string, string> = {
+    'ITALIAN': 'IT', 'GERMAN': 'DE', 'FRENCH': 'FR', 'SPANISH': 'ES',
+    'PORTUGUESE': 'PT', 'RUSSIAN': 'RU', 'JAPANESE': 'JA', 'CHINESE': 'ZH',
+    'KOREAN': 'KO', 'POLISH': 'PL', 'DUTCH': 'NL', 'TURKISH': 'TR',
+    'ARABIC': 'AR', 'THAI': 'TH', 'VIETNAMESE': 'VI', 'HINDI': 'HI',
+    'CZECH': 'CS', 'HUNGARIAN': 'HU', 'ROMANIAN': 'RO', 'BULGARIAN': 'BG',
+    'UKRAINIAN': 'UK', 'SWEDISH': 'SV', 'DANISH': 'DA', 'NORWEGIAN': 'NO',
+    'FINNISH': 'FI', 'GREEK': 'EL', 'HEBREW': 'HE', 'INDONESIAN': 'ID',
+    'EN': 'EN', 'ENGLISH': 'EN',
+  };
+  return aliases[l] || l;
+}
+
+/**
+ * Costruisce la chain di provider ottimale per lingua e genere.
+ * Prende tutti i provider disponibili (con API key) e li riordina
+ * in base all'affinità lingua + boost genere + fallback gratuiti.
+ */
+export function getAutoProviderChain(targetLanguage: string, gameGenre?: GameGenre): string[] {
+  const lang = normalizeLangCode(targetLanguage);
+  const keys = getApiKeys();
+
+  // 1) Ottieni ranking base per lingua (o fallback generico balanced)
+  const langRanking = LANG_PROVIDER_AFFINITY[lang] ||
+    ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek', 'mistral', 'qwen'];
+
+  // 2) Applica boost genere: i provider nel boost salgono di 2 posizioni
+  let ranked = [...langRanking];
+  if (gameGenre) {
+    const genreKey = typeof gameGenre === 'string' ? gameGenre.toLowerCase().replace(/\s+/g, '_') : '';
+    const boostProviders = GENRE_PROVIDER_BOOST[genreKey] || [];
+    for (const bp of boostProviders) {
+      const idx = ranked.indexOf(bp);
+      if (idx > 0) {
+        // Sposta in su di 2 posizioni (ma non oltre la prima)
+        const newIdx = Math.max(0, idx - 2);
+        ranked.splice(idx, 1);
+        ranked.splice(newIdx, 0, bp);
+      }
+    }
+  }
+
+  // 3) Filtra solo provider disponibili (API key presente o free)
+  const available = ranked.filter(name => {
+    const info = PROVIDER_MAP[name];
+    if (!info) return false;
+    if (info.isBlocked()) return false;
+    if (info.needsKey) {
+      const key = info.getKey(keys);
+      if (!key) return false;
+    }
+    return true;
+  });
+
+  // 4) Aggiungi provider locali e gratuiti come fallback
+  const fallbacks = ['hymt', 'translategemma', 'groq-gptoss', 'groq', 'cerebras', 'cohere',
+                     'together', 'fireworks', 'openrouter', 'ollama', 'lmstudio', 'nllb', 'mymemory', 'lingva'];
+  for (const fb of fallbacks) {
+    if (!available.includes(fb)) {
+      const info = PROVIDER_MAP[fb];
+      if (info && !info.isBlocked()) {
+        if (!info.needsKey || info.getKey(keys)) {
+          available.push(fb);
+        }
+      }
+    }
+  }
+
+  console.log(`[Auto-Select] Lingua: ${lang}, Genere: ${gameGenre || 'n/a'} → Chain: [${available.join(', ')}]`);
+  return available;
+}
+
+/** Storico qualità provider per combinazione lingua+gioco (session-level) */
+const providerQualityHistory = new Map<string, { successes: number; failures: number; avgUnchangedRatio: number }>();
+
+/** Registra risultato provider per migliorare auto-select nelle prossime chiamate */
+export function recordProviderQuality(provider: string, targetLang: string, unchangedRatio: number, success: boolean) {
+  const key = `${provider}:${normalizeLangCode(targetLang)}`;
+  const prev = providerQualityHistory.get(key) || { successes: 0, failures: 0, avgUnchangedRatio: 0 };
+  const total = prev.successes + prev.failures;
+  prev.avgUnchangedRatio = total > 0 ? (prev.avgUnchangedRatio * total + unchangedRatio) / (total + 1) : unchangedRatio;
+  if (success) prev.successes++; else prev.failures++;
+  providerQualityHistory.set(key, prev);
+}
+
+/** Applica storico qualità per riordinare la chain (provider con molte failure scendono) */
+function applyQualityHistory(chain: string[], targetLang: string): string[] {
+  const lang = normalizeLangCode(targetLang);
+  return [...chain].sort((a, b) => {
+    const aKey = `${a}:${lang}`;
+    const bKey = `${b}:${lang}`;
+    const aHist = providerQualityHistory.get(aKey);
+    const bHist = providerQualityHistory.get(bKey);
+    if (!aHist && !bHist) return 0;
+    // Provider senza storico mantengono posizione
+    if (!aHist) return 0;
+    if (!bHist) return 0;
+    // Score: success ratio - unchanged ratio (più alto = meglio)
+    const aTotal = aHist.successes + aHist.failures;
+    const bTotal = bHist.successes + bHist.failures;
+    if (aTotal < 3 || bTotal < 3) return 0; // Dati insufficienti
+    const aScore = (aHist.successes / aTotal) - aHist.avgUnchangedRatio;
+    const bScore = (bHist.successes / bTotal) - bHist.avgUnchangedRatio;
+    return bScore - aScore; // Ordine decrescente
+  });
+}
 
 // Chain preset attivo (default: balanced)
 let activeChainPreset: ChainPreset = 'balanced';
@@ -1712,7 +1895,11 @@ export async function checkChainRequirements(presetId: ChainPreset): Promise<Pro
 }
 
 /** Controlla se almeno un provider della catena attiva è disponibile */
-export function hasAvailableProviders(): { available: boolean; providers: string[] } {
+export function hasAvailableProviders(targetLang?: string): { available: boolean; providers: string[] } {
+  if (activeChainPreset === 'auto' && targetLang) {
+    const chain = getAutoProviderChain(targetLang);
+    return { available: chain.length > 0, providers: chain };
+  }
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2];
   const available: string[] = [];
@@ -1756,11 +1943,16 @@ export async function translateWithFallback(
 
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2]; // balanced default
-  
+
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
   const skipped: string[] = [];
 
-  for (const providerName of preset.providers) {
+  // Auto-select: costruisci chain dinamica per lingua/genere
+  const providerList = activeChainPreset === 'auto'
+    ? applyQualityHistory(getAutoProviderChain(opts.targetLanguage, opts.gameGenre), opts.targetLanguage)
+    : preset.providers;
+
+  for (const providerName of providerList) {
     const info = PROVIDER_MAP[providerName];
     if (!info) { skipped.push(providerName); continue; }
     if (info.isBlocked()) { skipped.push(providerName); continue; }
@@ -1814,7 +2006,7 @@ export async function translateWithFallback(
     }
   }
 
-  console.log(`[translateWithFallback] ${preset.id}: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${preset.providers.length})${skipped.length ? ` | skipped: ${skipped.length}` : ''}`);
+  console.log(`[translateWithFallback] ${activeChainPreset}: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${providerList.length})${skipped.length ? ` | skipped: ${skipped.length}` : ''}`);
 
   for (const provider of providers) {
     const MAX_RETRIES = 3;
@@ -1839,8 +2031,10 @@ export async function translateWithFallback(
           const unchangedRatio = unchanged / translations.length;
           if (unchangedRatio > 0.7 && providers.length > 1) {
             console.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
+            recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, false);
             break; // esce dal retry loop, passa al prossimo provider
           }
+          recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, true);
           console.log(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni, ${translations.length - unchanged} modificate (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
           return { translations, provider: provider.name, success: true };
         }
@@ -1913,6 +2107,74 @@ export async function translateSingleWithFallback(
     translated: result.translations[0] || text,
     provider: result.provider,
   };
+}
+
+/**
+ * Traduzione leggera per messaggi di chat — usa API gratuite (no API key) con fallback multipli.
+ * Ordine: MyMemory → Lingva (mirror multipli) → provider configurati dall'utente.
+ */
+export async function translateChatMessage(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage?: string,
+): Promise<{ translated: string; provider: string }> {
+  const LANG_TO_CODE: Record<string, string> = {
+    Italian: 'it', English: 'en', Spanish: 'es', German: 'de',
+    French: 'fr', Portuguese: 'pt', Japanese: 'ja', Chinese: 'zh',
+    Korean: 'ko', Russian: 'ru', Polish: 'pl', Dutch: 'nl',
+    Swedish: 'sv', Norwegian: 'no', Danish: 'da', Finnish: 'fi',
+    Czech: 'cs', Hungarian: 'hu', Romanian: 'ro', Turkish: 'tr',
+    Arabic: 'ar', Hindi: 'hi', Thai: 'th', Vietnamese: 'vi',
+    Ukrainian: 'uk', Greek: 'el', Hebrew: 'he', Indonesian: 'id',
+  };
+  const tgtCode = LANG_TO_CODE[targetLanguage] || targetLanguage.toLowerCase().slice(0, 2);
+  const srcCode = sourceLanguage ? (LANG_TO_CODE[sourceLanguage] || sourceLanguage.toLowerCase().slice(0, 2)) : 'auto';
+
+  const truncated = text.slice(0, 500);
+
+  // 1. MyMemory — CORS-friendly, gratuito, nessuna API key (5000 char/giorno)
+  try {
+    const langPair = `${srcCode === 'auto' ? 'autodetect' : srcCode}|${tgtCode}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(truncated)}&langpair=${langPair}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = await res.json();
+      const translated = data?.responseData?.translatedText;
+      if (translated && translated !== truncated && data?.responseStatus === 200) {
+        return { translated, provider: 'mymemory' };
+      }
+    }
+  } catch {
+    // MyMemory non disponibile
+  }
+
+  // 2. Lingva — prova mirror multipli
+  const lingvaHosts = ['lingva.ml', 'lingva.thedaviddelta.com', 'translate.plausibility.cloud'];
+  for (const host of lingvaHosts) {
+    try {
+      const encoded = encodeURIComponent(truncated);
+      const res = await fetch(`https://${host}/api/v1/${srcCode}/${tgtCode}/${encoded}`, {
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.translation && data.translation !== truncated) {
+          return { translated: data.translation, provider: 'lingva' };
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // 3. Fallback: provider configurati dall'utente (OpenAI, Claude, DeepL, Ollama...)
+  try {
+    return await translateSingleWithFallback(text, targetLanguage, sourceLanguage, 'Chat message');
+  } catch {
+    // Nessun provider disponibile
+  }
+
+  throw new Error('Traduzione non disponibile. Riprova tra qualche secondo.');
 }
 
 /**
