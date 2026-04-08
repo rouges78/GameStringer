@@ -8,11 +8,11 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Pause, 
+import {
+  Mic,
+  MicOff,
+  Play,
+  Pause,
   Volume2,
   Languages,
   Wand2,
@@ -23,8 +23,11 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  FileAudio
+  FileAudio,
+  Timer
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback, getApiKeys } from '@/lib/ai-translate-direct';
 
@@ -57,7 +60,13 @@ interface VoiceTranslatorState {
   synthesizedAudioUrl: string | null;
   selectedVoice: string;
   speechSpeed: number;
-  
+
+  // Duration matching
+  durationMatchEnabled: boolean;
+  originalDuration: number; // Duration of original audio in seconds
+  synthesizedDuration: number; // Duration of synthesized audio
+  effectiveSpeed: number | null;
+
   // General
   error: string | null;
   step: 'idle' | 'recording' | 'transcribing' | 'translating' | 'synthesizing' | 'done';
@@ -105,6 +114,10 @@ export function VoiceTranslator() {
     synthesizedAudioUrl: null,
     selectedVoice: 'nova',
     speechSpeed: 1.0,
+    durationMatchEnabled: false,
+    originalDuration: 0,
+    synthesizedDuration: 0,
+    effectiveSpeed: null,
     error: null,
     step: 'idle'
   });
@@ -146,14 +159,16 @@ export function VoiceTranslator() {
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
-        
+        const duration = await measureDuration(audioBlob);
+
         setState(prev => ({
           ...prev,
           audioBlob,
           audioUrl,
+          originalDuration: duration,
           isRecording: false,
           step: 'idle'
         }));
@@ -197,15 +212,31 @@ export function VoiceTranslator() {
     }
   };
 
+  // Measure audio blob duration using Web Audio API
+  const measureDuration = async (blob: Blob): Promise<number> => {
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const duration = audioBuffer.duration;
+      await audioContext.close();
+      return duration;
+    } catch {
+      return 0;
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const audioUrl = URL.createObjectURL(file);
+    const duration = await measureDuration(file);
     setState(prev => ({
       ...prev,
       audioBlob: file,
       audioUrl,
+      originalDuration: duration,
       error: null
     }));
   };
@@ -303,11 +334,14 @@ export function VoiceTranslator() {
       const { openai: openaiKey } = getApiKeys();
       
       let ttsUrl = 'https://api.openai.com/v1/audio/speech';
+      // Calculate speed: if duration matching is enabled, auto-calculate
+      let effectiveSpeed = state.speechSpeed;
+
       let requestBody: Record<string, unknown> = {
         model: 'tts-1',
         input: state.translation,
         voice: state.selectedVoice,
-        speed: state.speechSpeed,
+        speed: effectiveSpeed,
         response_format: 'mp3',
       };
       let headers: Record<string, string> = {
@@ -367,12 +401,41 @@ export function VoiceTranslator() {
         throw new Error(err?.error?.message || `TTS errore ${response.status}`);
       }
 
-      const audioBlob = await response.blob();
+      let audioBlob = await response.blob();
+      let synthDuration = await measureDuration(audioBlob);
+
+      // Duration matching: if enabled and we have original duration, re-synthesize with adjusted speed
+      if (state.durationMatchEnabled && state.originalDuration > 0 && synthDuration > 0) {
+        const tolerance = 0.15; // 15%
+        const diff = Math.abs(synthDuration - state.originalDuration) / state.originalDuration;
+
+        if (diff > tolerance) {
+          const speedRatio = synthDuration / state.originalDuration;
+          effectiveSpeed = Math.max(0.5, Math.min(2.0, state.speechSpeed * speedRatio));
+
+          console.log(`[DurationMatch] Original: ${state.originalDuration.toFixed(2)}s, Synthesized: ${synthDuration.toFixed(2)}s → Speed: ${effectiveSpeed.toFixed(2)}x`);
+
+          // Re-synthesize with adjusted speed
+          requestBody.speed = effectiveSpeed;
+          const response2 = await fetch(ttsUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(requestBody)
+          });
+          if (response2.ok) {
+            audioBlob = await response2.blob();
+            synthDuration = await measureDuration(audioBlob);
+          }
+        }
+      }
+
       const synthesizedAudioUrl = URL.createObjectURL(audioBlob);
 
       setState(prev => ({
         ...prev,
         synthesizedAudioUrl,
+        synthesizedDuration: synthDuration,
+        effectiveSpeed: state.durationMatchEnabled ? effectiveSpeed : null,
         isSynthesizing: false,
         step: 'done'
       }));
@@ -670,6 +733,38 @@ export function VoiceTranslator() {
                   step={1}
                 />
               </div>
+
+              {/* Duration Matching Toggle */}
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/30 border border-slate-700/50">
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-amber-400" />
+                  <div>
+                    <Label htmlFor="duration-match" className="text-sm text-slate-300">Duration Matching</Label>
+                    <p className="text-[10px] text-slate-500">Adatta la velocità per mantenere la durata originale</p>
+                  </div>
+                </div>
+                <Switch
+                  id="duration-match"
+                  checked={state.durationMatchEnabled}
+                  onCheckedChange={(checked) => setState(prev => ({ ...prev, durationMatchEnabled: checked }))}
+                  disabled={state.originalDuration <= 0}
+                />
+              </div>
+              {state.durationMatchEnabled && state.originalDuration > 0 && (
+                <div className="flex items-center gap-3 text-xs text-slate-400 px-1">
+                  <span>Durata originale: <strong className="text-white">{state.originalDuration.toFixed(1)}s</strong></span>
+                  {state.synthesizedDuration > 0 && (
+                    <>
+                      <span>→ Sintetizzata: <strong className="text-white">{state.synthesizedDuration.toFixed(1)}s</strong></span>
+                      {state.effectiveSpeed && (
+                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/30">
+                          {state.effectiveSpeed.toFixed(2)}x
+                        </Badge>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Synthesize Button */}
               <Button

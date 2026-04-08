@@ -36,6 +36,10 @@ export interface SynthesisRequest {
   language?: string;
   emotion?: 'neutral' | 'happy' | 'sad' | 'angry' | 'fearful' | 'surprised';
   outputFormat?: 'mp3' | 'wav' | 'ogg';
+  /** Target duration in seconds — if set, speed will be auto-adjusted to match */
+  targetDuration?: number;
+  /** Tolerance for duration matching (default 0.15 = 15%) */
+  durationTolerance?: number;
 }
 
 export interface SynthesisResult {
@@ -44,6 +48,10 @@ export interface SynthesisResult {
   duration: number;
   characterCount: number;
   provider: string;
+  /** Speed that was actually used (may differ from profile if duration-matched) */
+  effectiveSpeed?: number;
+  /** Whether duration matching was applied */
+  durationMatched?: boolean;
 }
 
 // Preset voci per diversi tipi di personaggi
@@ -212,19 +220,102 @@ class VoiceCloneService {
     });
   }
 
-  async synthesize(request: SynthesisRequest): Promise<SynthesisResult> {
-    const { voiceProfile } = request;
-
-    switch (voiceProfile.provider) {
-      case 'openai':
-        return this.synthesizeWithOpenAI(request);
-      case 'elevenlabs':
-        return this.synthesizeWithElevenLabs(request);
-      case 'azure':
-        return this.synthesizeWithAzure(request);
-      default:
-        throw new Error(`Provider ${voiceProfile.provider} non supportato`);
+  /**
+   * Measure the actual duration of an audio blob using Web Audio API.
+   */
+  async measureAudioDuration(audioBlob: Blob): Promise<number> {
+    try {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const duration = audioBuffer.duration;
+      await audioContext.close();
+      return duration;
+    } catch (e) {
+      console.warn('[VoiceClone] Could not measure audio duration:', e);
+      return 0;
     }
+  }
+
+  /**
+   * Calculate the speed adjustment needed to match a target duration.
+   * speed > 1 = faster (shorter audio), speed < 1 = slower (longer audio)
+   * Clamps to provider limits (0.5 - 2.0 for most providers).
+   */
+  private calculateSpeedForDuration(actualDuration: number, targetDuration: number, currentSpeed: number): number {
+    if (actualDuration <= 0 || targetDuration <= 0) return currentSpeed;
+    // speed ratio: if audio is 10s and target is 8s, we need speed 10/8 = 1.25x
+    const ratio = actualDuration / targetDuration;
+    const newSpeed = currentSpeed * ratio;
+    // Clamp to safe range
+    return Math.max(0.5, Math.min(2.0, newSpeed));
+  }
+
+  /**
+   * Synthesize with automatic duration matching.
+   * If targetDuration is set, does a two-pass synthesis:
+   * 1. First pass at normal speed to measure actual duration
+   * 2. Second pass with adjusted speed to match target duration
+   */
+  async synthesize(request: SynthesisRequest): Promise<SynthesisResult> {
+    const { voiceProfile, targetDuration, durationTolerance = 0.15 } = request;
+
+    // Standard synthesis (no duration matching)
+    const doSynthesize = (req: SynthesisRequest) => {
+      switch (req.voiceProfile.provider) {
+        case 'openai': return this.synthesizeWithOpenAI(req);
+        case 'elevenlabs': return this.synthesizeWithElevenLabs(req);
+        case 'azure': return this.synthesizeWithAzure(req);
+        default: throw new Error(`Provider ${req.voiceProfile.provider} non supportato`);
+      }
+    };
+
+    // First pass
+    let result = await doSynthesize(request);
+
+    // Measure actual duration
+    const actualDuration = await this.measureAudioDuration(result.audioBlob);
+    result.duration = actualDuration;
+
+    // Duration matching: if target set and actual is too different, re-synthesize
+    if (targetDuration && targetDuration > 0 && actualDuration > 0) {
+      const diff = Math.abs(actualDuration - targetDuration) / targetDuration;
+
+      if (diff > durationTolerance) {
+        const currentSpeed = voiceProfile.settings.speed || 1.0;
+        const newSpeed = this.calculateSpeedForDuration(actualDuration, targetDuration, currentSpeed);
+
+        console.log(`[VoiceClone] Duration matching: actual=${actualDuration.toFixed(2)}s, target=${targetDuration.toFixed(2)}s, diff=${(diff * 100).toFixed(1)}% → speed ${currentSpeed.toFixed(2)} → ${newSpeed.toFixed(2)}`);
+
+        // Re-synthesize with adjusted speed
+        const adjustedProfile: VoiceProfile = {
+          ...voiceProfile,
+          settings: { ...voiceProfile.settings, speed: newSpeed },
+        };
+        const adjustedRequest: SynthesisRequest = {
+          ...request,
+          voiceProfile: adjustedProfile,
+          targetDuration: undefined, // Prevent infinite recursion
+        };
+
+        // Cleanup first result
+        if (result.audioUrl) URL.revokeObjectURL(result.audioUrl);
+
+        result = await doSynthesize(adjustedRequest);
+        const newDuration = await this.measureAudioDuration(result.audioBlob);
+        result.duration = newDuration;
+        result.effectiveSpeed = newSpeed;
+        result.durationMatched = true;
+
+        console.log(`[VoiceClone] Duration matched: ${newDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, diff: ${(Math.abs(newDuration - targetDuration) / targetDuration * 100).toFixed(1)}%)`);
+      } else {
+        result.effectiveSpeed = voiceProfile.settings.speed || 1.0;
+        result.durationMatched = false;
+        console.log(`[VoiceClone] Duration OK: ${actualDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, within ${(durationTolerance * 100).toFixed(0)}% tolerance)`);
+      }
+    }
+
+    return result;
   }
 
   private async synthesizeWithOpenAI(request: SynthesisRequest): Promise<SynthesisResult> {
@@ -365,15 +456,15 @@ class VoiceCloneService {
 
   // Batch synthesis per doppiaggio completo
   async synthesizeBatch(
-    dialogues: Array<{ id: string; text: string; character?: string }>,
+    dialogues: Array<{ id: string; text: string; character?: string; targetDuration?: number }>,
     voiceProfile: VoiceProfile,
     onProgress?: (progress: number, current: string) => void
   ): Promise<Map<string, SynthesisResult>> {
     const results = new Map<string, SynthesisResult>();
-    
+
     for (let i = 0; i < dialogues.length; i++) {
       const dialogue = dialogues[i];
-      
+
       if (onProgress) {
         onProgress((i / dialogues.length) * 100, dialogue.text.substring(0, 50));
       }
@@ -382,6 +473,7 @@ class VoiceCloneService {
         const result = await this.synthesize({
           text: dialogue.text,
           voiceProfile,
+          targetDuration: dialogue.targetDuration,
         });
         results.set(dialogue.id, result);
       } catch (error) {
