@@ -125,7 +125,7 @@ export default function NewsFeedsPage() {
               }`}
             >
               <span>{cat.icon}</span>
-              {language === 'it' ? cat.label_it : cat.label_en}
+              {cat.labels?.[language] || cat.labels?.['en'] || cat.id}
               <span className="text-2xs opacity-60">({enabledInCat}/{count})</span>
             </button>
           );
@@ -146,7 +146,7 @@ export default function NewsFeedsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm">{cat.icon}</span>
                 <span className="text-[11px] font-bold text-[#c6d4df] uppercase tracking-wider">
-                  {language === 'it' ? cat.label_it : cat.label_en}
+                  {cat.labels?.[language] || cat.labels?.['en'] || cat.id}
                 </span>
                 <span className="text-micro text-[#8f98a0]">
                   ({catSources.filter(s => s.enabled).length}/{catSources.length})

@@ -42,16 +42,28 @@ export interface NewsFeedItem {
   timestamp: number;
 }
 
-export const FEED_CATEGORIES: { id: NewsFeedCategory; label_it: string; label_en: string; icon: string; color: string }[] = [
-  { id: 'gaming_news', label_it: 'Notizie Gaming', label_en: 'Gaming News', icon: '🎮', color: '#1a9fff' },
-  { id: 'pc_gaming', label_it: 'PC Gaming', label_en: 'PC Gaming', icon: '🖥️', color: '#67c1f5' },
-  { id: 'indie', label_it: 'Indie & Dev', label_en: 'Indie & Dev', icon: '🕹️', color: '#a855f7' },
-  { id: 'console', label_it: 'Console', label_en: 'Console', icon: '🎯', color: '#22c55e' },
-  { id: 'tech', label_it: 'Tecnologia', label_en: 'Technology', icon: '💻', color: '#f59e0b' },
-  { id: 'retro', label_it: 'Retrogaming', label_en: 'Retrogaming', icon: '👾', color: '#ec4899' },
-  { id: 'esports', label_it: 'Esports', label_en: 'Esports', icon: '🏆', color: '#ef4444' },
-  { id: 'game_dev', label_it: 'Sviluppo Giochi', label_en: 'Game Development', icon: '🛠️', color: '#06b6d4' },
-  { id: 'translations', label_it: 'Traduzioni Fan', label_en: 'Fan Translations', icon: '🌍', color: '#8b5cf6' },
+export interface FeedCategoryDef {
+  id: NewsFeedCategory;
+  labels: Record<string, string>;
+  icon: string;
+  color: string;
+}
+
+/** Get localized category label */
+export function getCategoryLabel(cat: FeedCategoryDef, lang: string): string {
+  return cat.labels[lang] || cat.labels['en'] || cat.id;
+}
+
+export const FEED_CATEGORIES: FeedCategoryDef[] = [
+  { id: 'gaming_news', labels: { it: 'Notizie Gaming', en: 'Gaming News', es: 'Noticias Gaming', fr: 'Actualites Gaming', de: 'Gaming-Nachrichten', ja: 'ゲームニュース', zh: '游戏新闻', ko: '게임 뉴스', pt: 'Noticias Gaming', ru: 'Игровые новости', pl: 'Wiadomosci Gaming' }, icon: '🎮', color: '#1a9fff' },
+  { id: 'pc_gaming', labels: { it: 'PC Gaming', en: 'PC Gaming', es: 'PC Gaming', fr: 'PC Gaming', de: 'PC Gaming', ja: 'PCゲーム', zh: 'PC游戏', ko: 'PC 게임', pt: 'PC Gaming', ru: 'PC Gaming', pl: 'PC Gaming' }, icon: '🖥️', color: '#67c1f5' },
+  { id: 'indie', labels: { it: 'Indie & Dev', en: 'Indie & Dev', es: 'Indie & Dev', fr: 'Indie & Dev', de: 'Indie & Dev', ja: 'インディー＆開発', zh: '独立游戏', ko: '인디 & 개발', pt: 'Indie & Dev', ru: 'Инди и разработка', pl: 'Indie & Dev' }, icon: '🕹️', color: '#a855f7' },
+  { id: 'console', labels: { it: 'Console', en: 'Console', es: 'Consola', fr: 'Console', de: 'Konsole', ja: 'コンソール', zh: '主机', ko: '콘솔', pt: 'Console', ru: 'Консоли', pl: 'Konsole' }, icon: '🎯', color: '#22c55e' },
+  { id: 'tech', labels: { it: 'Tecnologia', en: 'Technology', es: 'Tecnologia', fr: 'Technologie', de: 'Technologie', ja: 'テクノロジー', zh: '科技', ko: '기술', pt: 'Tecnologia', ru: 'Технологии', pl: 'Technologia' }, icon: '💻', color: '#f59e0b' },
+  { id: 'retro', labels: { it: 'Retrogaming', en: 'Retrogaming', es: 'Retrogaming', fr: 'Retrogaming', de: 'Retrogaming', ja: 'レトロゲーム', zh: '复古游戏', ko: '레트로 게임', pt: 'Retrogaming', ru: 'Ретро-игры', pl: 'Retrogaming' }, icon: '👾', color: '#ec4899' },
+  { id: 'esports', labels: { it: 'Esports', en: 'Esports', es: 'Esports', fr: 'Esports', de: 'Esports', ja: 'eスポーツ', zh: '电竞', ko: 'e스포츠', pt: 'Esports', ru: 'Киберспорт', pl: 'Esports' }, icon: '🏆', color: '#ef4444' },
+  { id: 'game_dev', labels: { it: 'Sviluppo Giochi', en: 'Game Development', es: 'Desarrollo de Juegos', fr: 'Developpement', de: 'Spieleentwicklung', ja: 'ゲーム開発', zh: '游戏开发', ko: '게임 개발', pt: 'Desenvolvimento', ru: 'Разработка игр', pl: 'Tworzenie Gier' }, icon: '🛠️', color: '#06b6d4' },
+  { id: 'translations', labels: { it: 'Traduzioni Fan', en: 'Fan Translations', es: 'Traducciones Fan', fr: 'Traductions Fan', de: 'Fan-Ubersetzungen', ja: 'ファン翻訳', zh: '粉丝翻译', ko: '팬 번역', pt: 'Traducoes Fan', ru: 'Фанатские переводы', pl: 'Tlumaczenia Fanow' }, icon: '🌍', color: '#8b5cf6' },
 ];
 
 export const DEFAULT_FEED_SOURCES: NewsFeedSource[] = [

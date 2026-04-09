@@ -516,7 +516,7 @@ export default function Dashboard() {
                     <option value="all">{language === 'it' ? 'Tutte le categorie' : 'All categories'}</option>
                     {uniqueRssCategories.map(cat => {
                       const info = FEED_CATEGORIES.find(c => c.id === cat);
-                      return info ? <option key={cat} value={cat}>{info.icon} {language === 'it' ? info.label_it : info.label_en}</option> : null;
+                      return info ? <option key={cat} value={cat}>{info.icon} {info.labels?.[language] || info.labels?.['en'] || info.id}</option> : null;
                     })}
                   </>
                 ) : (
@@ -561,7 +561,7 @@ export default function Dashboard() {
                       <div className="relative flex-1 min-w-0 flex flex-col py-0.5">
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className="text-micro font-bold text-[#67c1f5] uppercase tracking-widest">{item.sourceName}</span>
-                          {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-2xs px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {language === 'it' ? ci.label_it : ci.label_en}</span> : null; })()}
+                          {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-2xs px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {ci.labels?.[language] || ci.labels?.['en'] || ci.id}</span> : null; })()}
                         </div>
                         <h3 className="text-[13px] font-bold text-[#e5e9ed] group-hover:text-white leading-snug transition-colors line-clamp-2">
                           {decode(item.title)}

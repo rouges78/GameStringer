@@ -412,15 +412,18 @@ class CommunityHubService {
    * Cerca pack di traduzioni — usa backend Supabase se disponibile, altrimenti fallback locale
    */
   async searchPacks(filters: PackSearchFilters = {}): Promise<{ packs: TranslationPack[]; total: number }> {
-    // Try Supabase backend first
+    // Try Supabase backend first (with 5s timeout to avoid blocking UI)
     try {
       const { isBackendEnabled, fetchPacks } = await import('./community-hub-backend');
       if (isBackendEnabled()) {
-        const result = await fetchPacks(filters);
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Supabase timeout')), 5000)
+        );
+        const result = await Promise.race([fetchPacks(filters), timeout]);
         return result;
       }
     } catch {
-      // Backend non disponibile, fallback locale
+      // Backend non disponibile o timeout, fallback locale
     }
 
     let results = [...this.localPacks];
@@ -695,11 +698,14 @@ class CommunityHubService {
    * Ottieni statistiche hub
    */
   async getHubStats(): Promise<HubStats> {
-    // Backend Supabase se disponibile
+    // Backend Supabase se disponibile (5s timeout)
     try {
       const { isBackendEnabled, fetchHubStats } = await import('./community-hub-backend');
       if (isBackendEnabled()) {
-        return await fetchHubStats();
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Stats timeout')), 5000)
+        );
+        return await Promise.race([fetchHubStats(), timeout]);
       }
     } catch {}
 
