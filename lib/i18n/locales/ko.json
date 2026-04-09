@@ -3476,5 +3476,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Vision LLM 로딩 중..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "실시간 번역 오버레이: 모든 게임 위에 투명 OCR 오버레이를 통한 실시간 번역 — 화면 캡처 → 멀티 엔진 OCR → AI 번역 (Groq/Cerebras) → 게이밍 스타일 오버레이. 단축키 Ctrl+Alt+O",
+      "1": "허브 마켓플레이스: 커뮤니티 번역 팩 공유 마켓플레이스 — 1클릭 설치, 평점, 리뷰, 관리, 평판 기반 사용자 프로필. Supabase 백엔드(10개 테이블 + RLS)",
+      "2": "번역 메모리 네트워크: 연합형 번역 메모리 네트워크 — 번역자가 글로벌 풀에 기여(옵트인, 개인정보 우선). 다음 사용자가 이미 번역된 문자열을 발견. 번역 파이프라인에 자동 통합",
+      "3": "AI 더빙 파이프라인: 자동 더빙을 위한 7단계 파이프라인 — 오디오 스캔 → Whisper STT → AI 번역 → 음성 매칭 TTS 음성 합성 → 길이 맞춤 → 오디오 파일 패칭 → Rhubarb 립싱크 → 자막 생성 SRT/VTT/ASS",
+      "4": "플러그인 시스템: 커뮤니티 제작 패처를 위한 PatcherPlugin 인터페이스 — 감지/추출/패치/검증/복원 라이프사이클. 플러그인 스캐폴드용 템플릿 생성기. Rust 컴파일 불필요",
+      "5": "보안: 강화된 CSP(unsafe-eval 제거), XSS 제거, AES-256-GCM 암호화 API 키 저장소, CSRF 보호, Zod 유효성 검사, 글로벌 속도 제한",
+      "6": "아키텍처: tsc+eslint+vitest+npm audit CI 파이프라인, 71개 새 테스트, 모놀리식 파일에서 18개 모듈 추출, 1197/1203 console.*을 구조화된 로거로 마이그레이션, 893개 catch 절 타입 지정",
+      "7": "리팩토링: ai-translate-direct.ts (-429줄, 5개 모듈), game-detail-client.tsx (-636줄, 8개 컴포넌트), translator/pro/page.tsx (-776줄, 5개 컴포넌트)",
+      "8": "의존성: 중복 react-hot-toast 및 vdf 제거, -42개 패키지"
+    }
   }
 }

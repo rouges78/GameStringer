@@ -3370,5 +3370,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Cargando Vision LLM..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Overlay de Traducción en Vivo: traducción en tiempo real mediante overlay OCR transparente sobre cualquier juego — captura de pantalla → OCR multi-motor → traducción IA (Groq/Cerebras) → overlay estilo gaming. Atajo Ctrl+Alt+O",
+      "1": "Hub Marketplace: marketplace para compartir paquetes de traducción comunitarios — instalación con 1 clic, puntuaciones, reseñas, moderación, perfiles de usuario con reputación. Backend Supabase con 10 tablas + RLS",
+      "2": "Red de Memoria de Traducción: red federada de memoria de traducción — los traductores contribuyen al pool global (opt-in, privacidad primero). El siguiente usuario encuentra cadenas ya traducidas. Auto-integrada en el pipeline de traducción",
+      "3": "Pipeline de Doblaje IA: pipeline de 7 pasos para doblaje automático — escanear audio → Whisper STT → traducción IA → síntesis de voz TTS con coincidencia de voz → coincidencia de duración → parcheo de archivo de audio → sincronización labial Rhubarb → generación de subtítulos SRT/VTT/ASS",
+      "4": "Sistema de Plugins: interfaz PatcherPlugin para patchers creados por la comunidad — ciclo de vida detectar/extraer/parchear/verificar/restaurar. Generador de plantillas para scaffold de plugins. Sin compilación Rust necesaria",
+      "5": "Seguridad: CSP reforzada (eliminado unsafe-eval), XSS eliminado, almacenamiento de claves API cifrado con AES-256-GCM, protección CSRF, validación Zod, limitación de tasa global",
+      "6": "Arquitectura: pipeline CI con tsc+eslint+vitest+npm audit, 71 nuevos tests, 18 módulos extraídos de archivos monolíticos, 1197/1203 console.* migrados a logger estructurado, 893 cláusulas catch tipadas",
+      "7": "Refactorización: ai-translate-direct.ts (-429 líneas, 5 módulos), game-detail-client.tsx (-636 líneas, 8 componentes), translator/pro/page.tsx (-776 líneas, 5 componentes)",
+      "8": "Dependencias: eliminados react-hot-toast y vdf duplicados, -42 paquetes"
+    }
   }
 }

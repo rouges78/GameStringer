@@ -3476,5 +3476,18 @@
     "errorDownload": "Errore download",
     "errorTranslation": "Errore traduzione",
     "errorBatch": "Errore batch"
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Overlay di Traduzione Live: traduzione in tempo reale tramite overlay OCR trasparente sopra qualsiasi gioco — cattura schermo → OCR multi-motore → traduzione IA (Groq/Cerebras) → overlay in stile gaming. Scorciatoia Ctrl+Alt+O",
+      "1": "Hub Marketplace: marketplace per condividere pacchetti di traduzione della community — installazione con 1 clic, valutazioni, recensioni, moderazione, profili utente con reputazione. Backend Supabase con 10 tabelle + RLS",
+      "2": "Rete di Memoria di Traduzione: rete federata di memoria di traduzione — i traduttori contribuiscono al pool globale (opt-in, privacy-first). L'utente successivo trova le stringhe già tradotte. Auto-integrata nella pipeline di traduzione",
+      "3": "Pipeline di Doppiaggio IA: pipeline a 7 fasi per il doppiaggio automatico — scansione audio → Whisper STT → traduzione IA → sintesi vocale TTS con corrispondenza voce → corrispondenza durata → patching file audio → lip sync Rhubarb → generazione sottotitoli SRT/VTT/ASS",
+      "4": "Sistema Plugin: interfaccia PatcherPlugin per patcher creati dalla community — ciclo di vita rileva/estrai/patcha/verifica/ripristina. Generatore di template per scaffold plugin. Nessuna compilazione Rust necessaria",
+      "5": "Sicurezza: CSP rafforzata (rimosso unsafe-eval), XSS eliminato, archiviazione chiavi API crittografata AES-256-GCM, protezione CSRF, validazione Zod, rate limiting globale",
+      "6": "Architettura: pipeline CI con tsc+eslint+vitest+npm audit, 71 nuovi test, 18 moduli estratti da file monolitici, 1197/1203 console.* migrati a logger strutturato, 893 clausole catch tipizzate",
+      "7": "Refactoring: ai-translate-direct.ts (-429 righe, 5 moduli), game-detail-client.tsx (-636 righe, 8 componenti), translator/pro/page.tsx (-776 righe, 5 componenti)",
+      "8": "Dipendenze: rimossi react-hot-toast e vdf duplicati, -42 pacchetti"
+    }
   }
 }

@@ -1159,7 +1159,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       {versionEntry.changes.map((change, changeIdx) => (
                         <div key={changeIdx} className="flex items-start gap-2">
                           <span className="text-blue-400 mt-1">•</span>
-                          <span className="text-sm text-gray-300">{change}</span>
+                          <span className="text-sm text-gray-300">{t(`changelog.v${versionEntry.version.replace(/\./g, '_')}.${changeIdx}` as string) !== `changelog.v${versionEntry.version.replace(/\./g, '_')}.${changeIdx}` ? t(`changelog.v${versionEntry.version.replace(/\./g, '_')}.${changeIdx}` as string) : change}</span>
                         </div>
                       ))}
                     </div>

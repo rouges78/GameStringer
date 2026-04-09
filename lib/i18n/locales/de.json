@@ -3370,5 +3370,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Vision LLM wird geladen..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Live-Übersetzungs-Overlay: Echtzeit-Übersetzung über transparentes OCR-Overlay auf jedem Spiel — Bildschirmaufnahme → Multi-Engine-OCR → KI-Übersetzung (Groq/Cerebras) → Gaming-Stil-Overlay. Tastenkürzel Ctrl+Alt+O",
+      "1": "Hub-Marktplatz: Marktplatz zum Teilen von Community-Übersetzungspaketen — 1-Klick-Installation, Bewertungen, Rezensionen, Moderation, Benutzerprofile mit Reputation. Supabase-Backend mit 10 Tabellen + RLS",
+      "2": "Übersetzungsspeicher-Netzwerk: föderiertes Übersetzungsspeicher-Netzwerk — Übersetzer tragen zum globalen Pool bei (Opt-in, Privacy-first). Der nächste Benutzer findet bereits übersetzte Strings. Automatisch in die Übersetzungs-Pipeline integriert",
+      "3": "KI-Synchronisations-Pipeline: 7-Stufen-Pipeline für automatische Synchronisation — Audio scannen → Whisper STT → KI-Übersetzung → TTS-Sprachsynthese mit Stimmabgleich → Dauerabgleich → Audio-Datei-Patching → Rhubarb-Lippensynchronisation → Untertitelgenerierung SRT/VTT/ASS",
+      "4": "Plugin-System: PatcherPlugin-Schnittstelle für community-erstellte Patcher — Erkennen/Extrahieren/Patchen/Verifizieren/Wiederherstellen-Lebenszyklus. Template-Generator für Plugin-Gerüst. Keine Rust-Kompilierung erforderlich",
+      "5": "Sicherheit: gehärtete CSP (unsafe-eval entfernt), XSS eliminiert, AES-256-GCM-verschlüsselte API-Schlüsselspeicherung, CSRF-Schutz, Zod-Validierung, globales Rate-Limiting",
+      "6": "Architektur: CI-Pipeline mit tsc+eslint+vitest+npm audit, 71 neue Tests, 18 Module aus monolithischen Dateien extrahiert, 1197/1203 console.* auf strukturierten Logger migriert, 893 Catch-Klauseln typisiert",
+      "7": "Refactoring: ai-translate-direct.ts (-429 Zeilen, 5 Module), game-detail-client.tsx (-636 Zeilen, 8 Komponenten), translator/pro/page.tsx (-776 Zeilen, 5 Komponenten)",
+      "8": "Abhängigkeiten: doppelte react-hot-toast und vdf entfernt, -42 Pakete"
+    }
   }
 }

@@ -3476,5 +3476,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Carregando Vision LLM..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Overlay de Tradução ao Vivo: tradução em tempo real via overlay OCR transparente sobre qualquer jogo — captura de tela → OCR multi-motor → tradução IA (Groq/Cerebras) → overlay estilo gaming. Atalho Ctrl+Alt+O",
+      "1": "Hub Marketplace: marketplace para compartilhar pacotes de tradução da comunidade — instalação com 1 clique, avaliações, resenhas, moderação, perfis de usuário com reputação. Backend Supabase com 10 tabelas + RLS",
+      "2": "Rede de Memória de Tradução: rede federada de memória de tradução — tradutores contribuem para o pool global (opt-in, privacidade em primeiro lugar). O próximo usuário encontra strings já traduzidas. Auto-integrada no pipeline de tradução",
+      "3": "Pipeline de Dublagem IA: pipeline de 7 etapas para dublagem automática — escanear áudio → Whisper STT → tradução IA → síntese de voz TTS com correspondência de voz → correspondência de duração → patching de arquivo de áudio → sincronização labial Rhubarb → geração de legendas SRT/VTT/ASS",
+      "4": "Sistema de Plugins: interface PatcherPlugin para patchers criados pela comunidade — ciclo de vida detectar/extrair/patchar/verificar/restaurar. Gerador de templates para scaffold de plugins. Sem compilação Rust necessária",
+      "5": "Segurança: CSP reforçada (unsafe-eval removido), XSS eliminado, armazenamento de chaves API criptografado AES-256-GCM, proteção CSRF, validação Zod, limitação de taxa global",
+      "6": "Arquitetura: pipeline CI com tsc+eslint+vitest+npm audit, 71 novos testes, 18 módulos extraídos de arquivos monolíticos, 1197/1203 console.* migrados para logger estruturado, 893 cláusulas catch tipadas",
+      "7": "Refatoração: ai-translate-direct.ts (-429 linhas, 5 módulos), game-detail-client.tsx (-636 linhas, 8 componentes), translator/pro/page.tsx (-776 linhas, 5 componentes)",
+      "8": "Dependências: removidos react-hot-toast e vdf duplicados, -42 pacotes"
+    }
   }
 }

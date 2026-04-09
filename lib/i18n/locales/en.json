@@ -3476,5 +3476,18 @@
     "errorDownload": "Download error",
     "errorTranslation": "Translation error",
     "errorBatch": "Batch error"
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Live Translation Overlay: real-time translation via transparent OCR overlay on top of any game — screen capture → multi-engine OCR → AI translation (Groq/Cerebras) → gaming-style overlay. Hotkey Ctrl+Alt+O",
+      "1": "Hub Marketplace: marketplace for sharing community translation packs — 1-click install, rating, reviews, moderation, user profiles with reputation. Supabase backend with 10 tables + RLS",
+      "2": "Translation Memory Network: federated translation memory network — translators contribute to global pool (opt-in, privacy-first). Next user finds strings already translated. Auto-integrated in translation pipeline",
+      "3": "AI Dubbing Pipeline: 7-step pipeline for automatic dubbing — scan audio → Whisper STT → AI translation → TTS voice synthesis with voice matching → duration matching → audio file patching → Rhubarb lip sync → subtitle generation SRT/VTT/ASS",
+      "4": "Plugin System: PatcherPlugin interface for community-created patchers — detect/extract/patch/verify/restore lifecycle. Template generator for plugin scaffold. No Rust compilation needed",
+      "5": "Security: hardened CSP (removed unsafe-eval), XSS eliminated, AES-256-GCM encrypted API key storage, CSRF protection, Zod validation, global rate limiting",
+      "6": "Architecture: CI pipeline with tsc+eslint+vitest+npm audit, 71 new tests, 18 modules extracted from monolithic files, 1197/1203 console.* migrated to structured logger, 893 catch clauses typed",
+      "7": "Refactoring: ai-translate-direct.ts (-429 lines, 5 modules), game-detail-client.tsx (-636 lines, 8 components), translator/pro/page.tsx (-776 lines, 5 components)",
+      "8": "Dependencies: removed duplicate react-hot-toast and vdf, -42 packages"
+    }
   }
 }

@@ -3370,5 +3370,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Chargement du Vision LLM..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Overlay de Traduction en Direct : traduction en temps réel via un overlay OCR transparent par-dessus n'importe quel jeu — capture d'écran → OCR multi-moteur → traduction IA (Groq/Cerebras) → overlay style gaming. Raccourci Ctrl+Alt+O",
+      "1": "Hub Marketplace : marketplace pour partager des packs de traduction communautaires — installation en 1 clic, notes, avis, modération, profils utilisateur avec réputation. Backend Supabase avec 10 tables + RLS",
+      "2": "Réseau de Mémoire de Traduction : réseau fédéré de mémoire de traduction — les traducteurs contribuent au pool global (opt-in, confidentialité d'abord). L'utilisateur suivant trouve les chaînes déjà traduites. Auto-intégré dans le pipeline de traduction",
+      "3": "Pipeline de Doublage IA : pipeline en 7 étapes pour le doublage automatique — scan audio → Whisper STT → traduction IA → synthèse vocale TTS avec correspondance de voix → correspondance de durée → patch de fichier audio → synchronisation labiale Rhubarb → génération de sous-titres SRT/VTT/ASS",
+      "4": "Système de Plugins : interface PatcherPlugin pour les patchers créés par la communauté — cycle de vie détecter/extraire/patcher/vérifier/restaurer. Générateur de modèles pour l'échafaudage de plugins. Aucune compilation Rust nécessaire",
+      "5": "Sécurité : CSP renforcée (unsafe-eval supprimé), XSS éliminé, stockage des clés API chiffré AES-256-GCM, protection CSRF, validation Zod, limitation de débit globale",
+      "6": "Architecture : pipeline CI avec tsc+eslint+vitest+npm audit, 71 nouveaux tests, 18 modules extraits de fichiers monolithiques, 1197/1203 console.* migrés vers un logger structuré, 893 clauses catch typées",
+      "7": "Refactoring : ai-translate-direct.ts (-429 lignes, 5 modules), game-detail-client.tsx (-636 lignes, 8 composants), translator/pro/page.tsx (-776 lignes, 5 composants)",
+      "8": "Dépendances : react-hot-toast et vdf en double supprimés, -42 paquets"
+    }
   }
 }

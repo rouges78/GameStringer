@@ -3476,5 +3476,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "Ładowanie Vision LLM..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "Nakładka Tłumaczenia na Żywo: tłumaczenie w czasie rzeczywistym przez przezroczystą nakładkę OCR na dowolnej grze — przechwytywanie ekranu → wielosilnikowe OCR → tłumaczenie AI (Groq/Cerebras) → nakładka w stylu gier. Skrót Ctrl+Alt+O",
+      "1": "Hub Marketplace: marketplace do udostępniania społecznościowych paczek tłumaczeń — instalacja jednym kliknięciem, oceny, recenzje, moderacja, profile użytkowników z reputacją. Backend Supabase z 10 tabelami + RLS",
+      "2": "Sieć Pamięci Tłumaczeń: sfederowana sieć pamięci tłumaczeń — tłumacze wnoszą wkład do globalnej puli (opt-in, prywatność przede wszystkim). Następny użytkownik znajduje już przetłumaczone ciągi. Automatycznie zintegrowana w pipeline tłumaczeń",
+      "3": "Pipeline Dubbingu AI: 7-etapowy pipeline automatycznego dubbingu — skanowanie audio → Whisper STT → tłumaczenie AI → synteza mowy TTS z dopasowaniem głosu → dopasowanie czasu trwania → łatanie pliku audio → synchronizacja ruchu warg Rhubarb → generowanie napisów SRT/VTT/ASS",
+      "4": "System Wtyczek: interfejs PatcherPlugin dla patcherów tworzonych przez społeczność — cykl życia wykryj/wyodrębnij/załataj/zweryfikuj/przywróć. Generator szablonów dla szkieletu wtyczek. Bez kompilacji Rust",
+      "5": "Bezpieczeństwo: wzmocnione CSP (usunięto unsafe-eval), XSS wyeliminowany, szyfrowane przechowywanie kluczy API AES-256-GCM, ochrona CSRF, walidacja Zod, globalne ograniczanie szybkości",
+      "6": "Architektura: pipeline CI z tsc+eslint+vitest+npm audit, 71 nowych testów, 18 modułów wyodrębnionych z monolitycznych plików, 1197/1203 console.* zmigrowanych do strukturalnego loggera, 893 klauzule catch z typami",
+      "7": "Refaktoryzacja: ai-translate-direct.ts (-429 linii, 5 modułów), game-detail-client.tsx (-636 linii, 8 komponentów), translator/pro/page.tsx (-776 linii, 5 komponentów)",
+      "8": "Zależności: usunięto zduplikowane react-hot-toast i vdf, -42 pakiety"
+    }
   }
 }

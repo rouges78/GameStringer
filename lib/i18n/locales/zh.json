@@ -3370,5 +3370,18 @@
   },
   "visionTranslatorPage": {
     "caricamentoVisionLlm": "正在加载Vision LLM..."
+  },
+  "changelog": {
+    "v1_8_0": {
+      "0": "实时翻译覆盖层：通过透明OCR覆盖层在任何游戏上进行实时翻译 — 屏幕捕获 → 多引擎OCR → AI翻译（Groq/Cerebras） → 游戏风格覆盖层。快捷键 Ctrl+Alt+O",
+      "1": "Hub 市场：社区翻译包共享市场 — 一键安装、评分、评论、审核、带声誉的用户档案。Supabase后端，10张表 + RLS",
+      "2": "翻译记忆网络：联合翻译记忆网络 — 译者贡献到全局池（选择加入，隐私优先）。下一个用户可找到已翻译的字符串。自动集成到翻译管道中",
+      "3": "AI配音管道：自动配音7步管道 — 扫描音频 → Whisper STT → AI翻译 → TTS语音合成（含声音匹配） → 时长匹配 → 音频文件修补 → Rhubarb口型同步 → 字幕生成 SRT/VTT/ASS",
+      "4": "插件系统：面向社区创建补丁程序的PatcherPlugin接口 — 检测/提取/修补/验证/恢复生命周期。插件脚手架模板生成器。无需Rust编译",
+      "5": "安全性：强化CSP（移除unsafe-eval）、消除XSS、AES-256-GCM加密API密钥存储、CSRF保护、Zod验证、全局速率限制",
+      "6": "架构：tsc+eslint+vitest+npm audit CI管道，71个新测试，从单体文件中提取18个模块，1197/1203个console.*迁移到结构化日志器，893个catch子句已类型化",
+      "7": "重构：ai-translate-direct.ts（-429行，5个模块）、game-detail-client.tsx（-636行，8个组件）、translator/pro/page.tsx（-776行，5个组件）",
+      "8": "依赖项：移除重复的react-hot-toast和vdf，减少42个包"
+    }
   }
 }
