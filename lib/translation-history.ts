@@ -53,8 +53,8 @@ class TranslationHistoryManager {
         this.records = JSON.parse(stored);
       }
       this.initialized = true;
-    } catch (e) {
-      console.error('[HISTORY] Errore init:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[HISTORY] Errore init:', e);
       this.records = [];
     }
   }
@@ -66,8 +66,8 @@ class TranslationHistoryManager {
         this.records = this.records.slice(-MAX_HISTORY_SIZE);
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.records));
-    } catch (e) {
-      console.error('[HISTORY] Errore save:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[HISTORY] Errore save:', e);
     }
   }
 
@@ -292,8 +292,8 @@ class TranslationHistoryManager {
       
       this.save();
       return added;
-    } catch (e) {
-      console.error('[HISTORY] Errore import:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[HISTORY] Errore import:', e);
       return 0;
     }
   }

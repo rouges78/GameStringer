@@ -48,7 +48,7 @@ export function VROverlayPanel() {
       } else {
         toast.error(t('vrOverlay.noHeadset'));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(t('vrOverlay.detectionError'));
     }
     setIsDetecting(false);

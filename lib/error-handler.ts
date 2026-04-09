@@ -179,7 +179,7 @@ export async function withRetry<T>(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
-    } catch (error) {
+    } catch (error: unknown) {
       lastError = error as Error;
       
       // Check if we should retry
@@ -402,7 +402,7 @@ export class ErrorHandler {
       //     headers: { 'Content-Type': 'application/json' },
       //     body: JSON.stringify(report)
       //   });
-      // } catch (err) {
+      // } catch (err: unknown) {
       //   console.error('Failed to send error report to monitoring service:', err);
       // }
       
@@ -465,7 +465,7 @@ export function withErrorHandler<T extends unknown[]>(
   return async (...args: T): Promise<NextResponse> => {
     try {
       return await handler(...args);
-    } catch (error) {
+    } catch (error: unknown) {
       const { response } = globalErrorHandler.handleServerError(
         error instanceof Error ? error : new Error('Unknown error')
       );

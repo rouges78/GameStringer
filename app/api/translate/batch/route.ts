@@ -80,7 +80,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
       totalTime
     } as BatchTranslationResponse);
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Batch translation failed', 'TRANSLATE_BATCH_API', { error });
     throw error;
   }
@@ -285,7 +285,7 @@ Return ONLY a JSON array: [{"index": 1, "translation": "..."}, ...]`;
     } catch {
       return texts.map(original => ({ original, translated: original, confidence: 0.5 }));
     }
-  } catch (error) {
+  } catch (error: unknown) {
     clearTimeout(timeout);
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Claude API timeout after 60 seconds');

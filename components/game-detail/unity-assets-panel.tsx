@@ -50,7 +50,7 @@ export function UnityAssetsPanel({
         ]);
         onStatusLoaded(status);
         onAssetsLoaded(files || []);
-      } catch (e) { clientLogger.error('[UABEA]', e); }
+      } catch (e: unknown) { clientLogger.error('[UABEA]', e); }
     }
   };
 

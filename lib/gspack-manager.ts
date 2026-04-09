@@ -10,6 +10,7 @@
  */
 
 import { safeGetItem, safeSetItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const PACKS_STORAGE_KEY = 'gspack_installed';
 
@@ -393,8 +394,8 @@ export async function saveGspackToFile(data: string, filename: string): Promise<
       return true;
     }
     return false;
-  } catch (e) {
-    console.error('[GsPack] Errore salvataggio:', e);
+  } catch (e: unknown) {
+    clientLogger.error('[GsPack] Errore salvataggio:', e);
     return false;
   }
 }
@@ -433,8 +434,8 @@ export async function loadGspackFromFile(): Promise<string | null> {
       return await readTextFile(filePath);
     }
     return null;
-  } catch (e) {
-    console.error('[GsPack] Errore caricamento:', e);
+  } catch (e: unknown) {
+    clientLogger.error('[GsPack] Errore caricamento:', e);
     return null;
   }
 }

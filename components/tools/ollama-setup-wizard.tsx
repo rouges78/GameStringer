@@ -66,7 +66,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       } else {
         setStep('done');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Impossibile verificare lo stato di Ollama');
     } finally {
       setLoading(false);

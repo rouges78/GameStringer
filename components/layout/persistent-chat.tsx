@@ -68,6 +68,7 @@ import {
   type UserPresence,
 } from '@/lib/community-chat';
 import { translateChatMessage } from '@/lib/ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -166,8 +167,8 @@ export function PersistentChat() {
             setOnlineUsers(users);
           });
         }
-      } catch (e) {
-        console.error('[PersistentChat] Init error:', e);
+      } catch (e: unknown) {
+        clientLogger.error('[PersistentChat] Init error:', e);
       } finally {
         setIsLoading(false);
       }
@@ -217,8 +218,8 @@ export function PersistentChat() {
             return [...prev, newMsg];
           });
         });
-      } catch (e) {
-        console.error('[PersistentChat] Load room error:', e);
+      } catch (e: unknown) {
+        clientLogger.error('[PersistentChat] Load room error:', e);
       }
     };
     loadRoom();

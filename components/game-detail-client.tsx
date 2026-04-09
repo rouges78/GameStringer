@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, Brain, ChevronDown, Film
+  Trash2, ArrowLeft, Languages, Info, Sparkles, Edit3, Image as ImageIcon, Cpu, Map, Globe, Clock, Brain, ChevronDown, Film
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -345,7 +345,7 @@ export default function GameDetailPage() {
       });
       setEngineInfo(result);
       setGame(prev => prev ? { ...prev, engine: result.engine } : null);
-    } catch (error) {
+    } catch (error: unknown) {
       // Fallback client-side: detection per nome
       const gameName = game.name || game.title;
       const fallbackEngine = detectEngineByName(gameName);
@@ -548,7 +548,7 @@ export default function GameDetailPage() {
           installPath = await invoke('find_game_install_path', { 
             installDir: game.install_dir || game.name || game.title
           });
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.error('Impossibile trovare cartella gioco:', e);
           setPatchStatus({ success: false, message: 'Cartella del gioco non trovata' });
           setIsInstallingPatch(false);
@@ -566,7 +566,7 @@ export default function GameDetailPage() {
           if (exeList && exeList.length > 0) {
             exeName = exeList[0];
           }
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn('[Patch] Impossibile trovare eseguibili, uso nome gioco:', e);
         }
       }
@@ -654,7 +654,7 @@ export default function GameDetailPage() {
         steamAppId: game.appid && game.appid > 0 ? String(game.appid) : null,
       });
       if (results?.length) setCommunityTranslations(results);
-    } catch (e) { clientLogger.warn('[GT.it]', e); }
+    } catch (e: unknown) { clientLogger.warn('[GT.it]', e); }
   };
 
   const installCommunityZip = async () => {
@@ -702,7 +702,7 @@ export default function GameDetailPage() {
         });
         setUpdateStatus((prev: unknown) => prev ? { ...prev, update_detected: false } : prev);
       }
-    } catch (e) { clientLogger.warn('[UpdateTracker]', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker]', e); }
   };
 
   const dismissUpdate = async () => {
@@ -715,7 +715,7 @@ export default function GameDetailPage() {
         patchIntact: updateStatus.patch_intact,
       });
       setUpdateStatus(prev => prev ? { ...prev, update_detected: false, known_build_id: prev.current_build_id } : prev);
-    } catch (e) { clientLogger.warn('[UpdateTracker] dismiss:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker] dismiss:', e); }
     finally { setIsDismissingUpdate(false); }
   };
 
@@ -726,7 +726,7 @@ export default function GameDetailPage() {
       await invoke<boolean>('remove_tracked_game', { appId: String(game.appid) });
       setUpdateStatus(null);
       toast.success('Monitoraggio disattivato per questo gioco');
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[UpdateTracker] untrack:', e);
       toast.error('Impossibile disattivare il monitoraggio');
     } finally {
@@ -752,7 +752,7 @@ export default function GameDetailPage() {
     try {
       const s = await invoke<unknown>('get_unreal_localization_status', { gamePath: game.installPath });
       setUeLocStatus(s);
-    } catch (e) { clientLogger.warn('[UE] localization status:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UE] localization status:', e); }
   };
 
   // Migliora con AI per giochi Unreal: extract → Ollama batch → _P.pak
@@ -839,7 +839,7 @@ export default function GameDetailPage() {
         last_used: string | null;
       }>('get_unreal_patch_status', { gamePath: game.installPath });
       setUnrealPatchStatus(status);
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Errore caricamento stato patch Unreal:', error);
     }
   };
@@ -1008,7 +1008,7 @@ export default function GameDetailPage() {
             invoke<T>(cmd, args),
             new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`Timeout ${cmd} (${timeoutMs}ms)`)), timeoutMs))
           ]);
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn(`[GameDetail] ${cmd}:`, e);
           return null;
         }
@@ -1187,7 +1187,7 @@ export default function GameDetailPage() {
             )).then(results => setDlcGames(results.filter(Boolean)));
           }
           return; // isLoading già settato a false sopra
-        } catch (error) {
+        } catch (error: unknown) {
           clientLogger.error('Errore:', error);
         } finally {
           clearTimeout(safetyTimer);
@@ -1259,7 +1259,7 @@ export default function GameDetailPage() {
         setGame((prev: unknown) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         setTranslatedDescription(desc);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[GameDetail] Steam description fetch failed:', e);
     }
   };
@@ -1285,7 +1285,7 @@ export default function GameDetailPage() {
       } else {
         clientLogger.warn(`[GameDetail] GOG details found but no description field:`, Object.keys(details || {}));
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[GameDetail] GOG description fetch failed:', e);
     }
   };
@@ -1301,7 +1301,7 @@ export default function GameDetailPage() {
         try {
           const settings = JSON.parse(savedSettings);
           apiKey = settings?.integrations?.steamGridDbApiKey || null;
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn('[GameDetail] Errore parsing impostazioni:', e);
         }
       }
@@ -1352,7 +1352,7 @@ export default function GameDetailPage() {
           clientLogger.warn('[GameDetail] GOG API cover failed:', e3);
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[GameDetail] SteamGridDB fallback failed:', e);
     }
   };
@@ -1368,7 +1368,7 @@ export default function GameDetailPage() {
       if (result?.translated_text && !result.translated_text.includes('MYMEMORY WARNING')) {
         setTranslatedDescription(result.translated_text);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.warn('Traduzione descrizione non disponibile:', error);
       // Fallback: mostra originale
     }
@@ -1448,7 +1448,7 @@ export default function GameDetailPage() {
           onClick: () => startAutoTranslate(),
         },
       });
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[StringIt] cache check failed:', e);
       // Fallback: parti diretto se il check fallisce
       startAutoTranslate();
@@ -2171,7 +2171,7 @@ export default function GameDetailPage() {
                       try {
                         const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
                         if (exeList?.length > 0) await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                      } catch (e) { clientLogger.error('[GameDetail] Errore avvio:', e); }
+                      } catch (e: unknown) { clientLogger.error('[GameDetail] Errore avvio:', e); }
                     }
                   } else if (route === '/unity-patcher') { handleInstallUnityPatch(); }
                   else { router.push(route); }

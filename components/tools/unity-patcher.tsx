@@ -242,7 +242,7 @@ export function UnityPatcher() {
       // Debug: clientLogger.debug(`[PATCHER] games con engine: ${allGamesWithEngine.length}`);
       setUnityGames(allGamesWithEngine);
       setHasSteamCredentials(true); // Non serve più, ma manteniamo per UI
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Games loading error:', err);
       setHasSteamCredentials(false);
       setUnityGames([]);
@@ -306,7 +306,7 @@ export function UnityPatcher() {
       try {
         const check = await invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string }>('check_game_engine', { gamePath: game.install_dir });
         setEngineCheck(check);
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error('Engine check error:', err);
       }
       
@@ -318,7 +318,7 @@ export function UnityPatcher() {
         } else {
           setExeName(guessExeName(getGameName(game)));
         }
-      } catch (err) {
+      } catch (err: unknown) {
         setExeName(guessExeName(getGameName(game)));
       }
     } else {
@@ -374,7 +374,7 @@ export function UnityPatcher() {
           } else {
             toast.warning(`⚠ ${t('gamePatcher.engineNotRecognized')}`);
           }
-        } catch (err) {
+        } catch (err: unknown) {
           clientLogger.error('Engine check error:', err);
         }
         
@@ -388,11 +388,11 @@ export function UnityPatcher() {
           } else {
             toast.warning(t('gamePatcher.noExeFound'));
           }
-        } catch (err) {
+        } catch (err: unknown) {
           clientLogger.error('Executable search error:', err);
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Folder selection error:', err);
       toast.error(t('gamePatcher.cannotOpenFolder'));
     }
@@ -486,7 +486,7 @@ export function UnityPatcher() {
         await invoke('launch_steam_game', { appId: String(appId) });
         toast.success(t('gamePatcher.gameLaunchedSteam'));
         return;
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error('Steam launch error:', err);
         // Continua con fallback
       }
@@ -500,7 +500,7 @@ export function UnityPatcher() {
         await invoke('launch_executable', { path: fullPath });
         toast.success(t('gamePatcher.gameLaunched'));
         return;
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error('Direct launch error:', err);
       }
     }

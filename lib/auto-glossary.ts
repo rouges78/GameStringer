@@ -12,6 +12,7 @@
 
 import { translateSmart, getApiKeys, type TranslateOptions } from './ai-translate-direct';
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -160,7 +161,7 @@ export async function initializeGlossaries(): Promise<void> {
       glossaryCache = data as Record<string, AutoGlossary>;
       // Sincronizza anche localStorage come cache veloce
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache)); } catch {}
-      console.log(`[AutoGlossary] Caricati ${Object.keys(glossaryCache).length} glossari da Tauri`);
+      clientLogger.debug(`[AutoGlossary] Caricati ${Object.keys(glossaryCache).length} glossari da Tauri`);
       return;
     }
   } catch {
@@ -428,8 +429,8 @@ export async function extractTerms(
     if (jsonMatch) {
       rawTerms = JSON.parse(jsonMatch[0]);
     }
-  } catch (err) {
-    console.warn('[AutoGlossary] Estrazione termini fallita:', err);
+  } catch (err: unknown) {
+    clientLogger.warn('[AutoGlossary] Estrazione termini fallita:', err);
     return { newTerms: [], duplicates: 0, total: 0, provider, timeMs: Date.now() - startTime };
   }
 
@@ -481,7 +482,7 @@ export async function extractTerms(
 
   saveGlossary(glossary);
 
-  console.log(
+  clientLogger.debug(
     `[AutoGlossary] Estratti ${newTerms.length} nuovi termini (${duplicates} duplicati) ` +
     `per ${gameName} via ${provider} in ${Date.now() - startTime}ms`
   );

@@ -140,7 +140,7 @@ export function useProgressOperations() {
               });
 
               return result;
-            } catch (error) {
+            } catch (error: unknown) {
               lastError = error as Error;
               
               if (attempt <= maxRetries) {

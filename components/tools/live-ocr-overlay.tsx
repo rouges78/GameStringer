@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface DetectedText {
   id: string;
@@ -172,8 +173,8 @@ export function LiveOcrOverlay() {
         await emit('ocr-translations', translatedTexts);
       }
 
-    } catch (error) {
-      console.error('OCR capture error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('OCR capture error:', error);
     }
   }, [isPaused, captureMode, captureRegion, sourceLanguage, targetLanguage, autoTranslate, showOverlay]);
 
@@ -205,8 +206,8 @@ export function LiveOcrOverlay() {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('open_ocr_overlay');
-      } catch (e) {
-        console.warn('Could not open overlay window:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('Could not open overlay window:', e);
       }
     }
   };
@@ -238,7 +239,7 @@ export function LiveOcrOverlay() {
       setCaptureRegion(region);
       setCaptureMode('region');
       toast.success(`Regione selezionata: ${region.width}x${region.height}`);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Selezione regione annullata');
     } finally {
       setIsSelectingRegion(false);

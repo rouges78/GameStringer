@@ -10,6 +10,7 @@ import { useProfiles } from '@/hooks/use-profiles';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 import { NotificationPreferences } from '@/types/notifications';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileNotificationSettingsProps {
   className?: string;
@@ -43,8 +44,8 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
         setLastSaved(new Date());
       }
       return success;
-    } catch (error) {
-      console.error('Error auto-saving preferences:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error auto-saving preferences:', error);
       return false;
     }
   };
@@ -61,8 +62,8 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
         setLastSaved(new Date());
       }
       return success;
-    } catch (error) {
-      console.error('Error resetting preferences:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error resetting preferences:', error);
       return false;
     }
   };

@@ -1,4 +1,5 @@
 import { safeSetItem, safeGetItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const PLUGINS_KEY = 'installed_plugins';
 
@@ -428,8 +429,8 @@ class PluginRegistry {
       const exports: Record<string, unknown> = {};
       fn(exports);
       return exports;
-    } catch (e) {
-      console.error('[PluginSystem] Errore valutazione plugin:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[PluginSystem] Errore valutazione plugin:', e);
       return null;
     }
   }
@@ -996,8 +997,8 @@ export function parseFile(content: string, extension: string): ParsedContent | n
   
   try {
     return parser.parse(content);
-  } catch (error) {
-    console.error(`Errore parsing ${extension}:`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`Errore parsing ${extension}:`, error);
     return null;
   }
 }
@@ -1011,8 +1012,8 @@ export function serializeContent(content: ParsedContent, extension: string): str
   
   try {
     return parser.serialize(content);
-  } catch (error) {
-    console.error(`Errore serializzazione ${extension}:`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`Errore serializzazione ${extension}:`, error);
     return null;
   }
 }

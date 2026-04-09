@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n"
+import { clientLogger } from '@/lib/client-logger';
 
 // Dati di esempio per demo
 const EXAMPLE_TRANSLATIONS: TranslationPair[] = [
@@ -242,8 +243,8 @@ export default function HeatmapPage() {
             setHeatmapData(data)
           }
         }
-      } catch (error) {
-        console.warn('[Heatmap] Errore parsing file:', error);
+      } catch (error: unknown) {
+        clientLogger.warn('[Heatmap] Errore parsing file:', error);
       }
       setIsAnalyzing(false)
     }

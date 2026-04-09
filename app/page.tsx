@@ -31,6 +31,7 @@ import { storageManager } from '@/lib/storage-manager';
 import { get } from 'idb-keyval';
 import { newsFeedService, type NewsFeedItem, FEED_CATEGORIES } from '@/lib/news-feeds';
 import { loadBenchmarkHistory, type BenchmarkEntry } from '@/lib/ai-pipeline';
+import { clientLogger } from '@/lib/client-logger';
 
 interface RecentActivityProps {
   color: string;
@@ -238,7 +239,7 @@ export default function Dashboard() {
             const steamGames = await invoke('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) as unknown[];
             if (steamGames && steamGames.length > 0) games = steamGames;
           } catch {
-            console.log('Dashboard: No games loaded');
+            clientLogger.debug('Dashboard: No games loaded');
           }
         }
       }
@@ -255,7 +256,7 @@ export default function Dashboard() {
         savedPatches = allActivities.filter((a: Activity) => 
           a.activity_type === 'patch' || a.title?.includes('Patch') || a.title?.includes('Applicat')
         );
-      } catch (e) {
+      } catch (e: unknown) {
         // Fallback: IndexedDB
         savedTranslations = await storageManager.getTranslations();
         savedPatches = await storageManager.getPatches();
@@ -268,8 +269,8 @@ export default function Dashboard() {
         if (tmList && Array.isArray(tmList)) {
           tmEntries = tmList.reduce((sum: number, tm: unknown) => sum + (tm.unit_count || tm.unitCount || 0), 0);
         }
-      } catch (e) {
-        console.log('Dashboard: TM not available', e);
+      } catch (e: unknown) {
+        clientLogger.debug('Dashboard: TM not available', e);
       }
       
       // Tempo risparmiato: ~2 min per entry TM (traduzione manuale) salvati con AI
@@ -336,7 +337,7 @@ export default function Dashboard() {
         if (savedLastScan) {
           lastScan = new Date(savedLastScan);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         // Ignora errore
       }
       
@@ -407,13 +408,13 @@ export default function Dashboard() {
           icon: activityIcons[a.activity_type]
         }));
         setActivities(recentActivities);
-      } catch (e) {
+      } catch (e: unknown) {
         setActivities([]);
       }
       setLastUpdate(new Date());
       setLoading(false);
-    } catch (error) {
-      console.error('Dashboard loading error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Dashboard loading error:', error);
       setLoading(false);
     }
   };

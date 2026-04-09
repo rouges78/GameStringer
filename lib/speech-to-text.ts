@@ -143,7 +143,7 @@ export class SpeechToTextEngine {
 
   private emit(event: STTEvent) {
     for (const listener of this.listeners) {
-      try { listener(event); } catch (e) { console.error('[STT] Listener error:', e); }
+      try { listener(event); } catch (e: unknown) { clientLogger.error('[STT] Listener error:', e); }
     }
   }
 
@@ -177,7 +177,7 @@ export class SpeechToTextEngine {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log(`[STT] 🎙️ Avvio con provider: ${this.config.provider}`);
+    clientLogger.debug(`[STT] 🎙️ Avvio con provider: ${this.config.provider}`);
     this.updateStatus({ isCapturing: true });
     this.emit({ type: 'started' });
 
@@ -192,9 +192,9 @@ export class SpeechToTextEngine {
           await this.startAudioCapture();
           break;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error('[STT] Errore avvio:', msg);
+      clientLogger.error('[STT] Errore avvio:', msg);
       this.emit({ type: 'error', error: msg });
       this.updateStatus({ isCapturing: false, lastError: msg });
       this.isRunning = false;
@@ -223,7 +223,7 @@ export class SpeechToTextEngine {
 
     this.updateStatus({ isCapturing: false, isProcessing: false });
     this.emit({ type: 'stopped' });
-    console.log(`[STT] 🛑 Fermato. ${this.status.segmentsProcessed} segmenti processati.`);
+    clientLogger.debug(`[STT] 🛑 Fermato. ${this.status.segmentsProcessed} segmenti processati.`);
   }
 
   clearSegments() {
@@ -278,7 +278,7 @@ export class SpeechToTextEngine {
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       if (event.error === 'no-speech' || event.error === 'aborted') return;
-      console.error('[STT-WebSpeech] Errore:', event.error);
+      clientLogger.error('[STT-WebSpeech] Errore:', event.error);
       this.emit({ type: 'error', error: `Web Speech: ${event.error}` });
     };
 
@@ -370,9 +370,9 @@ export class SpeechToTextEngine {
         } else {
           this.updateStatus({ isProcessing: false });
         }
-      } catch (err) {
+      } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        console.error('[STT-Whisper] Errore trascrizione:', msg);
+        clientLogger.error('[STT-Whisper] Errore trascrizione:', msg);
         this.updateStatus({ isProcessing: false, lastError: msg });
       }
 
@@ -529,8 +529,8 @@ export class SpeechToTextEngine {
         'Game dialogue / audio transcription'
       );
       segment.translatedText = result.translated;
-    } catch (err) {
-      console.error('[STT] Errore traduzione segmento:', err);
+    } catch (err: unknown) {
+      clientLogger.error('[STT] Errore traduzione segmento:', err);
       segment.translatedText = segment.originalText;
     }
   }

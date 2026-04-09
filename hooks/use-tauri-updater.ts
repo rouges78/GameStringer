@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface TauriUpdateState {
   update: Update | null;
@@ -35,14 +36,14 @@ export const useTauriUpdater = () => {
         isChecking: false 
       }));
       return update;
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Errore durante il controllo aggiornamenti';
       setState(prev => ({ 
         ...prev, 
         isChecking: false, 
         error: errorMsg 
       }));
-      console.warn('Update check failed:', error);
+      clientLogger.warn('Update check failed:', error);
       return null;
     }
   }, []);
@@ -82,7 +83,7 @@ export const useTauriUpdater = () => {
       // Riavvia l'app
       await relaunch();
       
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento';
       setState(prev => ({ 
         ...prev, 
@@ -91,7 +92,7 @@ export const useTauriUpdater = () => {
         error: errorMsg 
       }));
       toast.error(`Errore aggiornamento: ${errorMsg}`);
-      console.error('Update failed:', error);
+      clientLogger.error('Update failed:', error);
     }
   }, [state.update]);
 

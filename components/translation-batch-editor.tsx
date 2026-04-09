@@ -97,7 +97,7 @@ export function TranslationBatchEditor({
         title: 'Salvataggio completato',
         description: `${updates.length} traduzioni aggiornate con successo`
       });
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: 'error',
         description: 'Impossibile salvare le traduzioni',
@@ -125,7 +125,7 @@ export function TranslationBatchEditor({
         title: 'Suggerimenti generati',
         description: `Generati suggerimenti per ${selectedIds.size} traduzioni`
       });
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: 'error',
         description: 'Impossibile generare suggerimenti',
@@ -168,7 +168,7 @@ export function TranslationBatchEditor({
         title: 'Incollato',
         description: `Incollate ${Math.min(lines.length, selectedTranslations.length)} traduzioni`
       });
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: 'error',
         description: 'Impossibile incollare da appunti',

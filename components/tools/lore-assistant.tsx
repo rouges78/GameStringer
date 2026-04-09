@@ -76,7 +76,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         confidence: response.confidence,
       };
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err) {
+    } catch (err: unknown) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         role: 'assistant',

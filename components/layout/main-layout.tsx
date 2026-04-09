@@ -119,6 +119,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
 import { isChatEnabled, autoSyncGSToSupabase } from '@/lib/community-chat';
 import { PersistentChat } from '@/components/layout/persistent-chat';
+import { clientLogger } from '@/lib/client-logger';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -313,7 +314,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     // Auto-sync chat Supabase appena loggato (in background, non blocca l'UI)
     if (isChatEnabled()) {
       autoSyncGSToSupabase().then((uid) => {
-        if (uid) console.log('[MainLayout] Chat Supabase pronta, userId:', uid);
+        if (uid) clientLogger.debug('[MainLayout] Chat Supabase pronta, userId:', uid);
       }).catch(() => {});
     }
   }, []);
@@ -417,8 +418,8 @@ export function MainLayout({ children }: MainLayoutProps) {
       };
 
       setSystemStatus({ neuralEngine, steamApi, cache });
-    } catch (error) {
-      console.error('Error updating system status:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error updating system status:', error);
     }
   };
 
@@ -1205,8 +1206,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                 onClick={async () => {
                   try {
                     await invoke('close_app');
-                  } catch (e) {
-                    console.error('Error closing app:', e);
+                  } catch (e: unknown) {
+                    clientLogger.error('Error closing app:', e);
                   }
                 }}
               >

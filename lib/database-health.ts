@@ -64,7 +64,7 @@ export class DatabaseHealthMonitor {
     this.healthCheckInterval = setInterval(async () => {
       try {
         await this.performHealthCheck();
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Scheduled health check failed', 'DATABASE_HEALTH', { error });
       }
     }, intervalMs);
@@ -96,7 +96,7 @@ export class DatabaseHealthMonitor {
       await this.testBasicConnectivity();
       logger.debug('Database basic connectivity test passed', 'DATABASE_HEALTH');
 
-    } catch (error) {
+    } catch (error: unknown) {
       errors.push(`Connectivity test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       isHealthy = false;
       logger.error('Database connectivity test failed', 'DATABASE_HEALTH', { error });
@@ -113,7 +113,7 @@ export class DatabaseHealthMonitor {
         errors.push(`High query latency: ${queryLatency}ms`);
         isHealthy = false;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       errors.push(`Query performance test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       isHealthy = false;
       logger.error('Database query performance test failed', 'DATABASE_HEALTH', { error });
@@ -124,7 +124,7 @@ export class DatabaseHealthMonitor {
       await this.testTransactionCapability();
       logger.debug('Database transaction capability test passed', 'DATABASE_HEALTH');
 
-    } catch (error) {
+    } catch (error: unknown) {
       errors.push(`Transaction test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       isHealthy = false;
       logger.error('Database transaction capability test failed', 'DATABASE_HEALTH', { error });
@@ -146,14 +146,14 @@ export class DatabaseHealthMonitor {
     try {
       const version = await this.getDatabaseVersion();
       healthStatus.version = version;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn('Failed to get database version', 'DATABASE_HEALTH', { error });
     }
 
     try {
       const diskSpace = await this.getDiskSpaceInfo();
       healthStatus.diskSpace = diskSpace;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn('Failed to get disk space info', 'DATABASE_HEALTH', { error });
     }
 
@@ -223,7 +223,7 @@ export class DatabaseHealthMonitor {
         idle: 0,
         total: 1
       };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn('Failed to get connection info', 'DATABASE_HEALTH', { error });
       return {
         active: 0,
@@ -267,7 +267,7 @@ export class DatabaseHealthMonitor {
         available: 0,
         total: 0
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(`Failed to get disk space info: ${error}`);
     }
   }
@@ -290,7 +290,7 @@ export class DatabaseHealthMonitor {
       await this.prisma.$connect();
       
       logger.info('Database reconnection completed', 'DATABASE_HEALTH');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Database reconnection failed', 'DATABASE_HEALTH', { error });
       throw error;
     }
@@ -305,7 +305,7 @@ export class DatabaseHealthMonitor {
     try {
       await this.prisma.$disconnect();
       logger.info('Database health monitor cleanup completed', 'DATABASE_HEALTH');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Database health monitor cleanup failed', 'DATABASE_HEALTH', { error });
     }
   }
@@ -355,7 +355,7 @@ export class DatabaseHealthMonitor {
           slowQueries: avgQueryTime > 1000 ? 1 : 0
         }
       };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to get database stats', 'DATABASE_HEALTH', { error });
       throw error;
     }

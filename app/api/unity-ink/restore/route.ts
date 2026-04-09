@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
+import { clientLogger } from '@/lib/client-logger';
 
 export const POST = withErrorHandler(async function(req: NextRequest) {
   const { gameDir } = await req.json();
@@ -27,7 +28,7 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
       fs.copyFileSync(backupPath, originalPath);
       restored++;
     } catch (e: unknown) {
-      console.error(`Errore ripristino ${backup}: ${e.message}`);
+      clientLogger.error(`Errore ripristino ${backup}: ${e.message}`);
     }
   }
 

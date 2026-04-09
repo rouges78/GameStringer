@@ -36,7 +36,7 @@ export function buildTranslationPrompt(opts: TranslateOptions): string {
       if (ragPrompt) {
         prompt += `\n${ragPrompt}`;
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[RAG] Fallimento estrazione dinamica glossario', e);
     }
   }
@@ -65,7 +65,7 @@ export function buildTranslationPrompt(opts: TranslateOptions): string {
         gameName: undefined,
       }));
       harvestResult = harvestBatch(inputs);
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[ContextHarvester] Auto-harvest fallito:', e);
     }
   }
@@ -98,7 +98,7 @@ export function buildTranslationPrompt(opts: TranslateOptions): string {
     if (fewShot.prompt && fewShot.exampleCount > 0) {
       prompt += `\n\n${fewShot.prompt}`;
     }
-  } catch (e) {
+  } catch (e: unknown) {
     clientLogger.warn('[AdaptiveMT] Few-shot injection failed:', e);
   }
 

@@ -24,6 +24,7 @@ import {
   Zap
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
+import { clientLogger } from '@/lib/client-logger';
 
 interface BundleInfo {
   bundle_path: string;
@@ -125,8 +126,8 @@ export default function UnityBundlePage() {
         setCurrentStep(1);
         setStrings([]);
       }
-    } catch (e) {
-      console.error("error selezione:", e);
+    } catch (e: unknown) {
+      clientLogger.error("error selezione:", e);
     }
   };
 
@@ -145,7 +146,7 @@ export default function UnityBundlePage() {
       if (!res.success) {
         setError(res.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`error analisi: ${e}`);
     } finally {
       setAnalyzing(false);
@@ -173,7 +174,7 @@ export default function UnityBundlePage() {
       } else {
         setError(res.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`error estrazione: ${e}`);
     } finally {
       setExtracting(false);
@@ -197,11 +198,11 @@ export default function UnityBundlePage() {
         const entry = strings[i];
         
         try {
-          console.log(`[TRANSLATE] Provider: ${provider}, targetLang: ${targetLanguage}`);
+          clientLogger.debug(`[TRANSLATE] Provider: ${provider}, targetLang: ${targetLanguage}`);
           const result = await translateSingleSmart(entry.value, targetLanguage, 'en');
           
           if (!result?.translated) {
-            console.warn(`Translation failed for "${entry.value}"`);
+            clientLogger.warn(`Translation failed for "${entry.value}"`);
             consecutiveErrors++;
             
             // Se troppi errori consecutivi, ferma
@@ -218,8 +219,8 @@ export default function UnityBundlePage() {
             });
             consecutiveErrors = 0; // Reset errori
           }
-        } catch (err) {
-          console.error("error traduzione:", err);
+        } catch (err: unknown) {
+          clientLogger.error("error traduzione:", err);
           translatedStrings.push({ ...entry, translated: entry.value });
         }
         
@@ -242,7 +243,7 @@ export default function UnityBundlePage() {
       }
       
       setCurrentStep(3);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`error traduzione: ${e}`);
     } finally {
       setTranslating(false);
@@ -282,7 +283,7 @@ export default function UnityBundlePage() {
       setDumpPath(path);
       setUabeaStep(1);
       setCurrentStep(4);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`error export: ${e}`);
     } finally {
       setCreatingBundle(false);
@@ -293,7 +294,7 @@ export default function UnityBundlePage() {
     try {
       await invoke("open_uabea");
       setUabeaStep(2);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`error apertura UABEA: ${e}`);
     }
   };

@@ -155,7 +155,7 @@ class ToastManager {
         dismissible: true,
       });
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.update(id, {
         title: typeof messages.error === 'function' ? messages.error(error as Error) : messages.error,
         type: 'error',

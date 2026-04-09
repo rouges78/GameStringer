@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { createDatabaseHealthMonitor } from './database-health';
+import { clientLogger } from '@/lib/client-logger';
 
 // Aggiungiamo 'prisma' al tipo globale di NodeJS per evitare errori di tipo in sviluppo.
 declare global {
@@ -56,20 +57,20 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Gestione graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('Received SIGINT, closing database connections...');
+  clientLogger.debug('Received SIGINT, closing database connections...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM, closing database connections...');
+  clientLogger.debug('Received SIGTERM, closing database connections...');
   await prisma.$disconnect();
   process.exit(0);
 });
 
 // Database connection events - use process events instead of prisma.$on for Prisma 5.0+
 process.on('beforeExit', async () => {
-  console.log('Prisma is about to exit, cleaning up...');
+  clientLogger.debug('Prisma is about to exit, cleaning up...');
   await prisma.$disconnect();
 });
 

@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
+import { clientLogger } from '@/lib/client-logger';
   nexusModsService,
   type NexusMod,
   type NexusModFile,
@@ -176,8 +177,8 @@ export function NexusModsBrowser() {
     try {
       const filesData = await nexusModsService.getModFiles(result.gameId, result.mod.mod_id);
       setModFiles(filesData.files || []);
-    } catch (error) {
-      console.error('Error loading mod files:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading mod files:', error);
       setModFiles([]);
     } finally {
       setIsLoadingFiles(false);

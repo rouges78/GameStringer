@@ -4,6 +4,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Props {
   children: ReactNode;
@@ -33,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught:', error, errorInfo);
+      clientLogger.error('ErrorBoundary caught:', error, errorInfo);
     }
   }
 

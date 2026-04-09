@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useProfiles } from '@/hooks/use-profiles';
 import { useProfileSettings } from '@/hooks/use-profile-settings';
 import { UserProfile } from '@/types/profiles';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileAuthContextType {
   isAuthenticated: boolean;
@@ -33,8 +34,8 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   // Listen to auth changes from other hook instances and refresh local state
   useEffect(() => {
     const handler = () => {
-      console.log('🔔 ProfileAuthProvider: received profile-auth-changed -> refreshing profiles');
-      refreshProfiles().catch(err => console.warn('ProfileAuthProvider refreshProfiles error:', err));
+      clientLogger.debug('🔔 ProfileAuthProvider: received profile-auth-changed -> refreshing profiles');
+      refreshProfiles().catch(err => clientLogger.warn('ProfileAuthProvider refreshProfiles error:', err));
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('profile-auth-changed', handler);
@@ -82,8 +83,8 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   //           }
   //         }
   //       }
-  //     } catch (error) {
-  //       console.error('Error checking session status:', error);
+  //     } catch (error: unknown) {
+  //       clientLogger.error('Error checking session status:', error);
   //       // Non impostare expired=true per errori di connection
   //       // setIsSessionExpired(true);
   //     }
@@ -123,8 +124,8 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
       }
       
       return false;
-    } catch (error) {
-      console.error('Error renewing session:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error renewing session:', error);
       return false;
     }
   };
@@ -134,8 +135,8 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
       await profileLogout();
       setSessionTimeRemaining(null);
       setIsSessionExpired(false);
-    } catch (error) {
-      console.error('Error during logout:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error during logout:', error);
     }
   };
 
@@ -147,7 +148,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
 
   // Alert for authentication problems (keep for debugging critical issues)
   if (currentProfile && !isAuthenticated) {
-    console.error('Authentication issue: currentProfile present but isAuthenticated = false', {
+    clientLogger.error('Authentication issue: currentProfile present but isAuthenticated = false', {
       profileName: currentProfile.name,
       isSessionExpired,
       sessionTimeRemaining

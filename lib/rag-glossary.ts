@@ -35,8 +35,8 @@ export class RagGlossary {
           isRegex: d.isRegex || false
         }));
       }
-    } catch (e) {
-      console.warn('[RAG] Errore caricamento glossario dal local storage:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[RAG] Errore caricamento glossario dal local storage:', e);
     }
   }
 
@@ -59,7 +59,7 @@ export class RagGlossary {
           if (regex.test(combinedText)) {
             matchedEntries.add(entry);
           }
-        } catch (e) {
+        } catch (e: unknown) {
           // Ignora regex malformate
         }
       } else {

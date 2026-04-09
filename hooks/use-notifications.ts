@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useProfileAuth } from '@/lib/profile-auth';
+import { clientLogger } from '@/lib/client-logger';
 import {
   Notification,
   NotificationFilter,
@@ -141,8 +142,8 @@ export const useNotifications = (options?: {
         setHasMore(paginatedNotifications.length === limit && (offset + limit) < storedNotifications.length);
         setLastUpdated(new Date());
       }
-    } catch (err) {
-      console.error('Errore nel caricamento notifiche:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel caricamento notifiche:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
     } finally {
       if (!options.silent) {
@@ -194,8 +195,8 @@ export const useNotifications = (options?: {
           timestamp: Date.now()
         }));
       }
-    } catch (err) {
-      console.error('Errore nel caricamento conteggio notifiche:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel caricamento conteggio notifiche:', err);
     }
   }, [currentProfile]);
 
@@ -293,8 +294,8 @@ export const useNotifications = (options?: {
 
         return true;
       }
-    } catch (err) {
-      console.error('Errore nella creazione notifica:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nella creazione notifica:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -363,8 +364,8 @@ export const useNotifications = (options?: {
 
         return true;
       }
-    } catch (err) {
-      console.error('Errore nel marcare notifica come letta:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel marcare notifica come letta:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
 
       // Rollback in caso di errore
@@ -412,8 +413,8 @@ export const useNotifications = (options?: {
         await loadNotifications();
         return true;
       }
-    } catch (err) {
-      console.error('Errore nell\'eliminazione notifica:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nell\'eliminazione notifica:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -444,8 +445,8 @@ export const useNotifications = (options?: {
         await loadNotifications();
         return true;
       }
-    } catch (err) {
-      console.error('Errore nella pulizia notifiche:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nella pulizia notifiche:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -518,8 +519,8 @@ export const useNotifications = (options?: {
         localStorage.setItem(storageKey, JSON.stringify(updatedNotifications));
         return markedCount;
       }
-    } catch (err) {
-      console.error('Errore nel marcare notifiche come lette:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel marcare notifiche come lette:', err);
 
       // Rollback in caso di errore
       if (unreadIds.length > 0) {
@@ -579,8 +580,8 @@ export const useNotifications = (options?: {
         localStorage.setItem(storageKey, JSON.stringify(updatedNotifications));
         return markedCount;
       }
-    } catch (err) {
-      console.error('Errore nel marcare tutte le notifiche come lette:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel marcare tutte le notifiche come lette:', err);
 
       // Rollback in caso di errore
       setNotifications(prev => prev.map(n => {
@@ -706,8 +707,8 @@ export const useNotifications = (options?: {
           cleanup.push(unlistenCreated);
           cleanup.push(unlistenRead);
           cleanup.push(unlistenDeleted);
-        } catch (err) {
-          console.warn('Errore nel setup Tauri event listeners:', err);
+        } catch (err: unknown) {
+          clientLogger.warn('Errore nel setup Tauri event listeners:', err);
         }
       };
 

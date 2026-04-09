@@ -10,6 +10,7 @@ import { ExternalLink, Eye, EyeOff, AlertTriangle, Download, Terminal, CheckCirc
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface EpicModalProps {
   isOpen: boolean;
@@ -42,8 +43,8 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
     try {
       const status = await invoke('check_legendary_status');
       setLegendaryStatus(status);
-    } catch (error) {
-      console.error('Legendary check error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Legendary check error:', error);
       setLegendaryStatus({ installed: false, authenticated: false });
     }
   };
@@ -60,8 +61,8 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
       } else {
         toast.error(`❌ Installation error: ${result.error}`);
       }
-    } catch (error) {
-      console.error('Legendary installation error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Legendary installation error:', error);
       toast.error('❌ Error installing Legendary');
     } finally {
       setInstallLegendaryLoading(false);
@@ -80,8 +81,8 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
       } else {
         toast.error(`❌ Authentication error: ${result.error}`);
       }
-    } catch (error) {
-      console.error('Legendary authentication error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Legendary authentication error:', error);
       toast.error('❌ Error during Legendary authentication');
     } finally {
       setAuthLegendaryLoading(false);

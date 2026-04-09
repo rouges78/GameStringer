@@ -17,6 +17,7 @@ import {
   type WorkshopTranslatedFile,
 } from '@/lib/workshop-exporter';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const LANGUAGES = [
   { code: 'it', name: 'Italiano', flag: '\u{1F1EE}\u{1F1F9}' },
@@ -119,8 +120,8 @@ export default function WorkshopExportPage() {
       
       setExported(true);
       setTimeout(() => setExported(false), 3000);
-    } catch (err) {
-      console.error('Export failed:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Export failed:', err);
     }
     setExporting(false);
   };

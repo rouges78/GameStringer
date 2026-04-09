@@ -71,8 +71,8 @@ export function saveSnapshot(
   };
   try {
     localStorage.setItem(`${SNAPSHOT_PREFIX}${gameId}`, JSON.stringify(snapshot));
-  } catch (e) {
-    console.warn('[Incremental] Errore salvataggio snapshot:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[Incremental] Errore salvataggio snapshot:', e);
   }
 }
 

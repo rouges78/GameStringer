@@ -143,7 +143,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
 
     return NextResponse.json(response);
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Multi-LLM comparison failed', 'COMPARE_API', { error });
     throw error;
   }
@@ -197,7 +197,7 @@ async function translateWithProvider(
       latencyMs
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       provider,
       translatedText: '',

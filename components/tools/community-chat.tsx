@@ -65,6 +65,7 @@ import {
   type UserPresence,
 } from '@/lib/community-chat';
 import { translateChatMessage } from '@/lib/ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 // ─── Room icon helper ───────────────────────────────────────────
 
@@ -154,7 +155,7 @@ export function CommunityChat() {
           });
         }
       } catch (e: unknown) {
-        console.error('[Chat] Init error:', e);
+        clientLogger.error('[Chat] Init error:', e);
         toast.error(e.message || 'Errore inizializzazione chat');
       } finally {
         setIsLoading(false);
@@ -206,7 +207,7 @@ export function CommunityChat() {
           });
         });
       } catch (e: unknown) {
-        console.error('[Chat] Load room error:', e);
+        clientLogger.error('[Chat] Load room error:', e);
       }
     };
     loadRoom();

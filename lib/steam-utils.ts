@@ -36,7 +36,7 @@ function validateFilePath(basePath: string, targetPath: string): boolean {
     return !relativePath.startsWith('..') && 
            !relativePath.includes('..') && 
            normalizedTarget.startsWith(normalizedBase);
-  } catch (error) {
+  } catch (error: unknown) {
     logger.warn('[Security] Path validation failed:', error);
     return false;
   }
@@ -270,7 +270,7 @@ class SteamApiRateLimiter {
   async waitForNextRequest(endpoint: string): Promise<void> {
     const delay = this.getDelayUntilNextRequest(endpoint);
     if (delay > 0) {
-      console.info(`[RateLimit] Waiting ${delay}ms before next request to ${endpoint}`);
+      logger.info(`[RateLimit] Waiting ${delay}ms before next request to ${endpoint}`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -345,7 +345,7 @@ class AdvancedSteamCache {
     try {
       await fs.mkdir(this.persistentCacheDir, { recursive: true });
       logger.debug(`[AdvancedCache] Persistent cache initialized at: ${this.persistentCacheDir}`);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`[AdvancedCache] Failed to initialize persistent cache:`, error);
     }
   }
@@ -405,7 +405,7 @@ class AdvancedSteamCache {
           this.deletePersistent(key).catch(() => {});
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`[AdvancedCache] Failed to read from persistent cache:`, error);
     }
     
@@ -450,7 +450,7 @@ class AdvancedSteamCache {
           await this.deletePersistent(key).catch(() => {});
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`[AdvancedCache] Failed to invalidate pattern from persistent cache:`, error);
     }
   }
@@ -463,7 +463,7 @@ class AdvancedSteamCache {
     try {
       await fs.rmdir(this.persistentCacheDir, { recursive: true });
       await this.initializePersistentCache();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`[AdvancedCache] Failed to clear persistent cache:`, error);
     }
   }
@@ -478,7 +478,7 @@ class AdvancedSteamCache {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(content);
-    } catch (error) {
+    } catch (error: unknown) {
       return null;
     }
   }
@@ -669,7 +669,7 @@ async function processGameWithAdvancedCache(
     } else {
       return game;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`[getGameDetails] Errore durante il recupero dei dettagli per ${game.name}:`, error);
     return game;
   }
@@ -821,7 +821,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
       });
     });
     return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.warn('Impossibile trovare la chiave di registro di Steam in HKCU, tento con HKLM...');
     try {
         const regKey = new WinReg({
@@ -835,7 +835,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
             });
         });
         return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
-    } catch (err) {
+    } catch (err: unknown) {
         logger.error('Errore critico: Impossibile trovare il percorso di installazione di Steam nel registro.', err);
         return null;
     }
@@ -866,7 +866,7 @@ async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
             .forEach((val: unknown) => libraryFolders.push(val.path));
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.warn(`File libraryfolders.vdf non trovato o illeggibile. Verrà usata solo la libreria principale.`, error);
   }
 
@@ -1003,7 +1003,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
       logger.debug(`[findSteamGamePath] Trovato con Strategia 1 (ACF): ${foundGame.installDir}`);
       return foundGame.installDir;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.warn('[findSteamGamePath] Errore durante la Strategia 1 (ACF), procedo con fallback.', error);
   }
 
@@ -1040,7 +1040,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
         // Questa parte potrebbe essere migliorata con un mapping appId -> nome cartella.
         // Per ora, è un placeholder che dimostra la logica di fallback.
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`[findSteamGamePath] Impossibile leggere la cartella ${steamappsPath} durante la Strategia 2.`);
     }
   }

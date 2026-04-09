@@ -1,10 +1,10 @@
 /**
  * 👁️ File Watcher — Auto-trigger su file change
- * 
+ *
  * Monitora le cartelle dei giochi per cambiamenti nei file traducibili.
  * Quando un file cambia (es. aggiornamento gioco), notifica l'utente
  * e offre la ri-traduzione automatica.
- * 
+ *
  * Architettura:
  * - Usa il backend Tauri (notify/watcher) per monitorare il filesystem
  * - Polling fallback per ambienti senza fs watcher nativo
@@ -13,6 +13,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -124,7 +125,7 @@ export class FileWatcherEngine {
 
   private emit(event: WatcherEvent) {
     for (const listener of this.listeners) {
-      try { listener(event); } catch (e) { console.error('[FileWatcher] Listener error:', e); }
+      try { listener(event); } catch (e: unknown) { clientLogger.error('[FileWatcher] Listener error:', e); }
     }
   }
 
@@ -163,7 +164,7 @@ export class FileWatcherEngine {
     };
     this.watchedGames.set(config.gameId, watch);
     this.saveState();
-    console.log(`[FileWatcher] 👁️ Aggiunto watch: ${config.gameName} (${config.gamePath})`);
+    clientLogger.debug(`[FileWatcher] 👁️ Aggiunto watch: ${config.gameName} (${config.gamePath})`);
     return watch;
   }
 
@@ -198,7 +199,7 @@ export class FileWatcherEngine {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    console.log(`[FileWatcher] 🚀 Avviato — ${this.watchedGames.size} giochi monitorati`);
+    clientLogger.debug(`[FileWatcher] 🚀 Avviato — ${this.watchedGames.size} giochi monitorati`);
 
     // Primo check immediato
     this.pollAll();
@@ -218,7 +219,7 @@ export class FileWatcherEngine {
       this.pollTimer = null;
     }
 
-    console.log('[FileWatcher] 🛑 Fermato');
+    clientLogger.debug('[FileWatcher] 🛑 Fermato');
     this.emitStatus();
   }
 
@@ -248,8 +249,8 @@ export class FileWatcherEngine {
     for (const watch of enabledWatches) {
       try {
         await this.pollGame(watch);
-      } catch (err) {
-        console.error(`[FileWatcher] Errore poll ${watch.gameName}:`, err);
+      } catch (err: unknown) {
+        clientLogger.error(`[FileWatcher] Errore poll ${watch.gameName}:`, err);
       }
     }
   }
@@ -339,7 +340,7 @@ export class FileWatcherEngine {
 
     // Processa cambiamenti
     if (changes.length > 0) {
-      console.log(`[FileWatcher] 📝 ${watch.gameName}: ${changes.length} cambiamenti rilevati`);
+      clientLogger.debug(`[FileWatcher] 📝 ${watch.gameName}: ${changes.length} cambiamenti rilevati`);
       watch.changeCount += changes.length;
       watch.lastChange = new Date().toISOString();
       this.saveState();
@@ -379,7 +380,7 @@ export class FileWatcherEngine {
     };
 
     this.retranslationQueue.push(job);
-    console.log(`[FileWatcher] 🔄 Job ri-traduzione in coda: ${watch.gameName} (${filePaths.length} file)`);
+    clientLogger.debug(`[FileWatcher] 🔄 Job ri-traduzione in coda: ${watch.gameName} (${filePaths.length} file)`);
     this.emit({ type: 'retranslation_start', job });
     this.emitStatus();
 
@@ -416,13 +417,13 @@ export class FileWatcherEngine {
       job.completedAt = new Date().toISOString();
       job.stringsTranslated = result?.strings_translated || 0;
       
-      console.log(`[FileWatcher] ✅ Ri-traduzione completata: ${job.gameName} (${job.stringsTranslated} stringhe)`);
+      clientLogger.debug(`[FileWatcher] ✅ Ri-traduzione completata: ${job.gameName} (${job.stringsTranslated} stringhe)`);
       this.emit({ type: 'retranslation_done', job });
       return true;
-    } catch (err) {
+    } catch (err: unknown) {
       job.status = 'failed';
       job.error = err instanceof Error ? err.message : String(err);
-      console.error(`[FileWatcher] ❌ Ri-traduzione fallita: ${job.gameName}:`, job.error);
+      clientLogger.error(`[FileWatcher] ❌ Ri-traduzione fallita: ${job.gameName}:`, job.error);
       this.emit({ type: 'error', error: job.error });
       return false;
     } finally {

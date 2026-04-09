@@ -54,6 +54,7 @@ import { OllamaManager } from '@/components/settings/ollama-manager';
 import { VramSettingsCard } from '@/components/settings/vram-settings-card';
 import { invoke } from '@/lib/tauri-api';
 import { saveConfig as saveSupabaseConfig, isBackendEnabled as isSupabaseEnabled, SUPABASE_MIGRATION_SQL } from '@/lib/community-hub-backend';
+import { clientLogger } from '@/lib/client-logger';
 
 // Supabase Settings Component
 function SupabaseSettingsCard() {
@@ -194,8 +195,8 @@ function CacheStatsCard() {
       try {
         const result = await invoke<unknown>('get_cache_stats');
         setStats(result);
-      } catch (e) {
-        console.error('Error loading cache stats:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Error loading cache stats:', e);
       } finally {
         setLoading(false);
       }
@@ -395,8 +396,8 @@ export default function SettingsPage() {
           performance: { ...prev.performance, ...(parsed.performance || {}) },
           display: { ...prev.display, ...(parsed.display || {}) },
         }));
-      } catch (error) {
-        console.error('Error loading settings:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error loading settings:', error);
       }
     }
   }, []);
@@ -409,7 +410,7 @@ export default function SettingsPage() {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(t('common.error'));
     } finally {
       setIsSaving(false);
@@ -535,7 +536,7 @@ export default function SettingsPage() {
         addDebugResult('🏷️ Games with metadata: 315');
         addDebugResult('🥽 VR games detected: 23');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugResult(`❌ Error: ${error}`);
     } finally {
       setIsDebugging(false);

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface RealtimeStats {
   processId: number;
@@ -89,8 +90,8 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
         const data = await response.json();
         setStats(data);
       }
-    } catch (error) {
-      console.error('error Loading...atistiche:', error);
+    } catch (error: unknown) {
+      clientLogger.error('error Loading...atistiche:', error);
     }
   };
 

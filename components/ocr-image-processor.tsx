@@ -41,6 +41,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface OCRResult {
   id: string;
@@ -271,8 +272,8 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
       onTextExtracted(finalResult);
       
       toast.success(`Text extracted with ${result.confidence.toFixed(1)}% confidence`);
-    } catch (error) {
-      console.error('OCR error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('OCR error:', error);
       toast.error('Error during image processing');
     } finally {
       setIsProcessing(false);

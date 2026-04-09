@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
+import { logger } from '@/lib/logger';
 
 // Funzioni di utilità per localStorage (lato server simulato)
 const removeStoredAccount = (providerId: string) => {
   // Questa è una simulazione - nel vero sistema server-side
   // qui rimuoveremmo l'account dal database
-  console.log(`Account ${providerId} rimosso dal storage`);
+  logger.debug(`Account ${providerId} rimosso dal storage`);
 };
 
 export const POST = withErrorHandler(async function(request: NextRequest) {
@@ -18,41 +19,41 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
   }
 
   // Rimuovi account dal sistema di auth locale
-  console.log(`Disconnessione richiesta per provider: ${providerId}`);
+  logger.debug(`Disconnessione richiesta per provider: ${providerId}`);
 
   // Simulazione rimozione account per diversi provider
   switch (providerId) {
     case 'steam-credentials':
       removeStoredAccount(providerId);
-      console.log('Account Steam disconnesso');
+      logger.debug('Account Steam disconnesso');
       break;
     case 'epic-credentials':
       removeStoredAccount(providerId);
-      console.log('Account Epic Games disconnesso');
+      logger.debug('Account Epic Games disconnesso');
       break;
     case 'ubisoft-credentials':
       removeStoredAccount(providerId);
-      console.log('Account Ubisoft disconnesso');
+      logger.debug('Account Ubisoft disconnesso');
       break;
     case 'gog-credentials':
       removeStoredAccount(providerId);
-      console.log('Account GOG disconnesso');
+      logger.debug('Account GOG disconnesso');
       break;
     case 'origin-credentials':
       removeStoredAccount(providerId);
-      console.log('Account EA Origin disconnesso');
+      logger.debug('Account EA Origin disconnesso');
       break;
     case 'battlenet-credentials':
       removeStoredAccount(providerId);
-      console.log('Account Battle.net disconnesso');
+      logger.debug('Account Battle.net disconnesso');
       break;
     case 'itchio-credentials':
       removeStoredAccount(providerId);
-      console.log('Account itch.io disconnesso');
+      logger.debug('Account itch.io disconnesso');
       break;
     default:
       removeStoredAccount(providerId);
-      console.log(`Account ${providerId} disconnesso`);
+      logger.debug(`Account ${providerId} disconnesso`);
   }
 
   return NextResponse.json({

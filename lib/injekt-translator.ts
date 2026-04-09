@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface ProcessInfo {
   pid: number;
@@ -56,8 +57,8 @@ class InjektTranslator {
       // Usa il comando Tauri per trovare i processi
       const processes = await invoke<ProcessInfo[]>('find_processes');
       return processes;
-    } catch (error) {
-      console.error('Errore ricerca processi:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore ricerca processi:', error);
       return [];
     }
   }
@@ -87,8 +88,8 @@ class InjektTranslator {
       }
       
       return success;
-    } catch (error) {
-      console.error('Errore avvio injection:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore avvio injection:', error);
       throw error;
     }
   }
@@ -125,7 +126,7 @@ class InjektTranslator {
   // Attiva gli hooks
   private async activateHooks(): Promise<void> {
     for (const [address, hook] of this.activeHooks) {
-      console.log(`Activating hook at ${address} for ${hook.function}`);
+      clientLogger.debug(`Activating hook at ${address} for ${hook.function}`);
       // In produzione: installeremmo un detour/hook qui
     }
   }
@@ -146,8 +147,8 @@ class InjektTranslator {
           
           this.emit('stats-updated', this.stats);
         }
-      } catch (error) {
-        console.error('Errore recupero statistiche:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Errore recupero statistiche:', error);
       }
     }, 1000);
   }
@@ -215,7 +216,7 @@ class InjektTranslator {
 
   // Inietta la traduzione nel gioco
   private async injectTranslation(address: string, translatedText: string): Promise<void> {
-    console.log(`Injecting "${translatedText}" at ${address}`);
+    clientLogger.debug(`Injecting "${translatedText}" at ${address}`);
     
     // In produzione: scriveremmo nella memoria del processo
     // Per ora emettiamo un evento per l'UI
@@ -248,8 +249,8 @@ class InjektTranslator {
       this.stats.activeHooks = 0;
       
       this.emit('stopped', {});
-    } catch (error) {
-      console.error('Errore stop injection:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore stop injection:', error);
     }
   }
 
@@ -274,8 +275,8 @@ class InjektTranslator {
     try {
       const cache = await invoke<Record<string, string>>('export_cache');
       return cache || {};
-    } catch (error) {
-      console.error('Errore export cache:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore export cache:', error);
       return {};
     }
   }
@@ -290,8 +291,8 @@ class InjektTranslator {
       });
       await invoke('import_cache', { cacheData: cacheObj });
       this.stats.cachedTranslations = Object.keys(cache).length;
-    } catch (error) {
-      console.error('Errore import cache:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore import cache:', error);
     }
   }
   

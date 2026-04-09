@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, Zap } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ForceRefreshButtonProps {
   onRefreshComplete?: (games: unknown[]) => void;
@@ -15,18 +16,18 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
   const handleForceRefresh = async () => {
     try {
       setIsRefreshing(true);
-      console.log('🔄 Starting force refresh...');
+      clientLogger.debug('🔄 Starting force refresh...');
       
       try {
         // Try prima con Tauri force refresh
         const freshGames = await invoke('force_refresh_all_games');
-        console.log('✅ Force refresh completed con Tauri:', freshGames);
+        clientLogger.debug('✅ Force refresh completed con Tauri:', freshGames);
         
         if (onRefreshComplete) {
           onRefreshComplete(freshGames as unknown[]);
         }
       } catch (tauriError) {
-        console.error('❌ Force refresh Tauri failed:', tauriError);
+        clientLogger.error('❌ Force refresh Tauri failed:', tauriError);
         // In Tauri non abbiamo API routes come fallback
         // Mostra errore e suggerisci riavvio
         throw new Error('Refresh fallito. Riavvia l\'app e riprova.');
@@ -35,8 +36,8 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
       // Small delay per UI feedback
       await new Promise(resolve => setTimeout(resolve, 500));
       
-    } catch (error) {
-      console.error('❌ Force refresh failed completamente:', error);
+    } catch (error: unknown) {
+      clientLogger.error('❌ Force refresh failed completamente:', error);
       alert('Error refreshing games. Check console for details.');
     } finally {
       setIsRefreshing(false);

@@ -117,7 +117,7 @@ export default function UnityCsvTranslatorPage() {
     try {
       const result = await suggestImprovement({ original, translation, targetLang, sourceLang: 'en', genre });
       setPostEditSuggestion(result);
-    } catch (err) {
+    } catch (err: unknown) {
       log(`⚠️ Post-edit: ${err}`);
       setPostEditSuggestion(null);
     }
@@ -317,10 +317,10 @@ export default function UnityCsvTranslatorPage() {
           setInkScanned(true);
           log('ℹ️ Nessun blob Ink trovato');
         }
-      } catch (e) { log(`⚠️ Scan Ink: ${e}`); setInkScanned(true); }
+      } catch (e: unknown) { log(`⚠️ Scan Ink: ${e}`); setInkScanned(true); }
 
       setStatus('idle');
-    } catch (e) { log(`❌ ${e}`); setStatus('error'); }
+    } catch (e: unknown) { log(`❌ ${e}`); setStatus('error'); }
   }, [gamePath, gameName, log, getCheckpointKey, loadCheckpoint]);
 
   // Auto-scan after doScan is ready (triggered by sessionStorage auto-load)
@@ -358,7 +358,7 @@ export default function UnityCsvTranslatorPage() {
             // Save checkpoint every 10 CSV strings
             if (done % 10 === 0) await saveCheckpoint(scan.tables, inkStrings);
           }
-        } catch (err) { log(`⚠️ ${e.id}: ${err}`); }
+        } catch (err: unknown) { log(`⚠️ ${e.id}: ${err}`); }
       }
       // Save checkpoint after each table
       await saveCheckpoint(scan.tables, inkStrings);
@@ -386,7 +386,7 @@ export default function UnityCsvTranslatorPage() {
             if (r.startsWith('"') && r.endsWith('"')) r = r.slice(1, -1);
             s.translated = r; s.done = true; inkDone++;
           }
-        } catch (err) { log(`⚠️ Ink: ${err}`); }
+        } catch (err: unknown) { log(`⚠️ Ink: ${err}`); }
         if (inkDone % 100 === 0 && inkDone > 0) {
           log(`  Ink: ${inkDone}/${inkTodo.length}`);
           setInkStrings([...inkStrings]);
@@ -791,7 +791,7 @@ export default function UnityCsvTranslatorPage() {
                   setInjectResult(r);
                   const total = (r.ink_replaced || 0) + (r.level_replaced || 0);
                   log(r.success ? `✅ Completato: ${total} iniettate (Ink: ${r.ink_replaced}, Level: ${r.level_replaced})` : `❌ ${r.errors?.join(', ')}`);
-                } catch (e) { log(`❌ ${e}`); setInjectResult({ success: false, ink_replaced: 0, ink_files: 0, level_replaced: 0, level_files: 0, errors: [String(e)], output: '' }); }
+                } catch (e: unknown) { log(`❌ ${e}`); setInjectResult({ success: false, ink_replaced: 0, ink_files: 0, level_replaced: 0, level_files: 0, errors: [String(e)], output: '' }); }
                 setInjecting(false);
               }}
               disabled={injecting}
@@ -809,7 +809,7 @@ export default function UnityCsvTranslatorPage() {
                     : `${scan.gamePath}/${gameName}_Data`;
                   const r = await invoke('restore_unity_assets', { gameDir: dataDir }) as string;
                   log(`✅ ${r}`);
-                } catch (e) { log(`❌ ${e}`); }
+                } catch (e: unknown) { log(`❌ ${e}`); }
               }}
               variant="outline" size="sm" className="gap-1 h-8 text-xs"
             >

@@ -1,5 +1,6 @@
 // Database Utilities for UX Enhancements
 import { PrismaClient } from '@prisma/client';
+import { logger } from '@/lib/logger';
 import type { UserTutorialProgress } from '@/lib/types/tutorial';
 import type { TranslationMemoryEntry, GlossaryEntry, TranslationProject } from '@/lib/types/translation-memory';
 import type { BatchResult } from '@/lib/types/batch';
@@ -46,8 +47,8 @@ export class TutorialDatabase {
           skipAnimations: false
         }
       };
-    } catch (error) {
-      console.error('Error fetching tutorial progress:', error);
+    } catch (error: unknown) {
+      logger.error('Error fetching tutorial progress:', error);
       return null;
     }
   }
@@ -79,8 +80,8 @@ export class TutorialDatabase {
           completedAt: completed ? new Date() : null
         }
       });
-    } catch (error) {
-      console.error('Error updating tutorial progress:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating tutorial progress:', error);
       throw error;
     }
   }
@@ -103,8 +104,8 @@ export class TutorialDatabase {
           skipped: true
         }
       });
-    } catch (error) {
-      console.error('Error marking tutorial as skipped:', error);
+    } catch (error: unknown) {
+      logger.error('Error marking tutorial as skipped:', error);
       throw error;
     }
   }
@@ -155,8 +156,8 @@ export class TranslationMemoryDatabase {
       });
 
       return created.id;
-    } catch (error) {
-      console.error('Error adding translation memory entry:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding translation memory entry:', error);
       throw error;
     }
   }
@@ -203,8 +204,8 @@ export class TranslationMemoryDatabase {
         filePath: entry.filePath || undefined,
         tags: entry.tags ? JSON.parse(entry.tags) : undefined
       }));
-    } catch (error) {
-      console.error('Error searching translation memory:', error);
+    } catch (error: unknown) {
+      logger.error('Error searching translation memory:', error);
       return [];
     }
   }
@@ -218,8 +219,8 @@ export class TranslationMemoryDatabase {
           updatedAt: new Date()
         }
       });
-    } catch (error) {
-      console.error('Error incrementing usage count:', error);
+    } catch (error: unknown) {
+      logger.error('Error incrementing usage count:', error);
     }
   }
 }
@@ -244,8 +245,8 @@ export class GlossaryDatabase {
       });
 
       return created.id;
-    } catch (error) {
-      console.error('Error adding glossary term:', error);
+    } catch (error: unknown) {
+      logger.error('Error adding glossary term:', error);
       throw error;
     }
   }
@@ -289,8 +290,8 @@ export class GlossaryDatabase {
         approved: term.approved,
         notes: term.notes || undefined
       }));
-    } catch (error) {
-      console.error('Error searching glossary terms:', error);
+    } catch (error: unknown) {
+      logger.error('Error searching glossary terms:', error);
       return [];
     }
   }
@@ -312,8 +313,8 @@ export class BatchOperationDatabase {
       });
 
       return operation.id;
-    } catch (error) {
-      console.error('Error creating batch operation:', error);
+    } catch (error: unknown) {
+      logger.error('Error creating batch operation:', error);
       throw error;
     }
   }
@@ -335,8 +336,8 @@ export class BatchOperationDatabase {
           status: status || undefined
         }
       });
-    } catch (error) {
-      console.error('Error updating batch operation progress:', error);
+    } catch (error: unknown) {
+      logger.error('Error updating batch operation progress:', error);
     }
   }
 
@@ -356,8 +357,8 @@ export class BatchOperationDatabase {
           completedAt: new Date()
         }
       });
-    } catch (error) {
-      console.error('Error completing batch operation:', error);
+    } catch (error: unknown) {
+      logger.error('Error completing batch operation:', error);
     }
   }
 }
@@ -379,8 +380,8 @@ export class DatabaseMaintenance {
           }
         }
       });
-    } catch (error) {
-      console.error('Error cleaning up old batch operations:', error);
+    } catch (error: unknown) {
+      logger.error('Error cleaning up old batch operations:', error);
     }
   }
 
@@ -401,8 +402,8 @@ export class DatabaseMaintenance {
         totalGlossaryTerms: glossaryCount,
         totalProjects: projectCount
       };
-    } catch (error) {
-      console.error('Error getting memory stats:', error);
+    } catch (error: unknown) {
+      logger.error('Error getting memory stats:', error);
       return {
         totalEntries: 0,
         totalGlossaryTerms: 0,

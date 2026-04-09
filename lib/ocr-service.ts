@@ -3,6 +3,7 @@
  * Real OCR implementation for text extraction from images
  */
 import Tesseract from 'tesseract.js';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface OCRResult {
   text: string;
@@ -120,8 +121,8 @@ export async function recognizeText(
       lines,
       processingTime: Date.now() - startTime
     };
-  } catch (error) {
-    console.error('OCR Error:', error);
+  } catch (error: unknown) {
+    clientLogger.error('OCR Error:', error);
     throw new Error(`OCR failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -140,7 +141,7 @@ export async function recognizeTextFromCanvas(
       try {
         const result = await recognizeText(blob, language, onProgress);
         resolve(result);
-      } catch (error) {
+      } catch (error: unknown) {
         reject(error);
       }
     }, 'image/png');

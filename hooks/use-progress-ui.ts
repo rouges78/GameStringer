@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useProgress, useProgressEvents } from '@/components/progress/progress-provider';
 import { useProgressNotifications } from '@/components/progress/progress-notification';
 import type { ProgressEvent, OperationProgress } from '@/lib/types/progress';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Hook per gestire l'interfaccia utente del sistema di progresso
@@ -52,7 +53,7 @@ export function useProgressUI() {
             label: 'Visualizza risultato',
             action: () => {
               // Qui potresti aprire un modal con i risultati
-              console.log('Risultato:', operation.result);
+              clientLogger.debug('Risultato:', operation.result);
             }
           }] : undefined
         });
@@ -78,13 +79,13 @@ export function useProgressUI() {
             label: 'Riprova',
             action: () => {
               // Qui potresti implementare la logica di retry
-              console.log('Retry operazione:', event.operationId);
+              clientLogger.debug('Retry operazione:', event.operationId);
             }
           }, {
             label: 'Dettagli',
             action: () => {
               // Mostra dettagli errore
-              console.error('Errore dettagliato:', operation.error);
+              clientLogger.error('Errore dettagliato:', operation.error);
             }
           }]
         });

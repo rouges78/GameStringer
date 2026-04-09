@@ -55,8 +55,8 @@ class GlossaryManager {
       }
       
       this.initialized = true;
-    } catch (e) {
-      console.error('[GLOSSARY] Errore init:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[GLOSSARY] Errore init:', e);
     }
   }
 
@@ -64,8 +64,8 @@ class GlossaryManager {
     try {
       const data = Array.from(this.glossaries.values());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('[GLOSSARY] Errore save:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[GLOSSARY] Errore save:', e);
     }
   }
 
@@ -275,8 +275,8 @@ class GlossaryManager {
       this.glossaries.set(data.id, data);
       this.save();
       return data;
-    } catch (e) {
-      console.error('[GLOSSARY] Errore import:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[GLOSSARY] Errore import:', e);
       return null;
     }
   }

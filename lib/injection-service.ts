@@ -39,7 +39,7 @@ class InjectionService {
       const nativePath = require('path').join(process.cwd(), 'native', 'build', 'Release', 'gamestringer_injector.node');
       this.nativeModule = eval('require')(nativePath);
       clientLogger.debug('Modulo nativo caricato con successo da:', nativePath);
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.warn('Modulo nativo non disponibile, uso mock:', error);
       this.nativeModule = this.createMockModule();
     }
@@ -97,7 +97,7 @@ class InjectionService {
           }
           clientLogger.debug('Privilegi admin (fallback):', this.isAdmin);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('Errore verifica privilegi:', error);
         this.isAdmin = false;
       }
@@ -165,7 +165,7 @@ class InjectionService {
       
 
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Errore injection:', error);
       throw error;
     }
@@ -187,7 +187,7 @@ class InjectionService {
         is64Bit,
         isAdmin: this.isAdmin
       };
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Errore nel recupero info processo:', error);
       return null;
     }
@@ -205,7 +205,7 @@ class InjectionService {
         // 2. Tradurli automaticamente
         // 3. Iniettarli
         clientLogger.debug(`Monitoring processo ${processId}...`);
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('Errore monitoring:', error);
         this.stopMonitoring(processId);
       }
@@ -255,7 +255,7 @@ class InjectionService {
         // Questa è una semplificazione, in realtà servirebbe
         // logica più complessa per identificare stringhe valide
         clientLogger.debug(`Trovati ${results.length} potenziali testi`);
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('Errore scan pattern:', error);
       }
     }

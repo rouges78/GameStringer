@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import {
+import { clientLogger } from '@/lib/client-logger';
   Select,
   SelectContent,
   SelectItem,
@@ -265,7 +266,7 @@ export default function VideoExtractorPage() {
           outputDir: outputDir || null,
         });
         results.push(result);
-      } catch (e) {
+      } catch (e: unknown) {
         results.push({ success: false, input_path: path, output_path: '', error: String(e), output_size: null });
       }
     }
@@ -277,8 +278,8 @@ export default function VideoExtractorPage() {
     try {
       const p = await invoke<ConversionPreset[]>('get_conversion_presets');
       setPresets(p);
-    } catch (e) {
-      console.error('Errore caricamento preset:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento preset:', e);
     }
   };
 
@@ -295,8 +296,8 @@ export default function VideoExtractorPage() {
         gamePath: gamePath.trim(),
       });
       setScanResult(result);
-    } catch (e) {
-      console.error('Errore scansione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore scansione:', e);
     } finally {
       setScanning(false);
     }
@@ -314,8 +315,8 @@ export default function VideoExtractorPage() {
       });
       setHeaderInfo(prev => ({ ...prev, [filePath]: info }));
       setExpandedFile(filePath);
-    } catch (e) {
-      console.error('Errore analisi header:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore analisi header:', e);
     }
   }, [headerInfo, expandedFile]);
 
@@ -375,8 +376,8 @@ export default function VideoExtractorPage() {
       });
       setConversionResults(results);
       setConversionProgress(100);
-    } catch (e) {
-      console.error('Errore conversione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore conversione:', e);
     } finally {
       setConverting(false);
     }

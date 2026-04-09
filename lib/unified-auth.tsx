@@ -1,20 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 // Client-side clientLogger (console only)
 const clientLogger = {
   info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.info(`[${component || 'AUTH'}] ${message}`, metadata);
+    clientLogger.info(`[${component || 'AUTH'}] ${message}`, metadata);
   },
   warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.warn(`[${component || 'AUTH'}] ${message}`, metadata);
+    clientLogger.warn(`[${component || 'AUTH'}] ${message}`, metadata);
   },
   error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.error(`[${component || 'AUTH'}] ${message}`, metadata);
+    clientLogger.error(`[${component || 'AUTH'}] ${message}`, metadata);
   },
   debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.debug(`[${component || 'AUTH'}] ${message}`, metadata);
+    clientLogger.debug(`[${component || 'AUTH'}] ${message}`, metadata);
   }
 };
 
@@ -87,7 +88,7 @@ function getStorageItem<T>(key: string): T | null {
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : null;
-  } catch (error) {
+  } catch (error: unknown) {
     clientLogger.error('Failed to get storage item', 'UNIFIED_AUTH', { key, error });
     return null;
   }
@@ -97,7 +98,7 @@ function setStorageItem<T>(key: string, value: T): void {
   if (!isClient()) return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
+  } catch (error: unknown) {
     clientLogger.error('Failed to set storage item', 'UNIFIED_AUTH', { key, error });
   }
 }
@@ -106,7 +107,7 @@ function removeStorageItem(key: string): void {
   if (!isClient()) return;
   try {
     localStorage.removeItem(key);
-  } catch (error) {
+  } catch (error: unknown) {
     clientLogger.error('Failed to remove storage item', 'UNIFIED_AUTH', { key, error });
   }
 };
@@ -123,7 +124,7 @@ const setSessionCookie = (session: AuthSession): void => {
     });
     
     document.cookie = `gs_session=${cookieValue}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Strict`;
-  } catch (error) {
+  } catch (error: unknown) {
     clientLogger.error('Failed to set session cookie', 'UNIFIED_AUTH', { error });
   }
 };
@@ -132,7 +133,7 @@ const removeSessionCookie = (): void => {
   if (!isClient()) return;
   try {
     document.cookie = 'gs_session=; path=/; max-age=0';
-  } catch (error) {
+  } catch (error: unknown) {
     clientLogger.error('Failed to remove session cookie', 'UNIFIED_AUTH', { error });
   }
 };
@@ -249,7 +250,7 @@ export const useUnifiedAuth = (): AuthContextType => {
         
         clientLogger.info('No valid session found', 'UNIFIED_AUTH');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to update session', 'UNIFIED_AUTH', { error });
       setSession(null);
       setStatus('unauthenticated');
@@ -282,7 +283,7 @@ export const useUnifiedAuth = (): AuthContextType => {
       });
       
       return { success: true };
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error(`Sign in failed for ${provider}`, 'UNIFIED_AUTH', { provider, error });
       return { error: error instanceof Error ? error.message : 'Sign in failed' };
     }
@@ -309,7 +310,7 @@ export const useUnifiedAuth = (): AuthContextType => {
       }
       
       await updateSession();
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Sign out failed', 'UNIFIED_AUTH', { provider, error });
     }
   };

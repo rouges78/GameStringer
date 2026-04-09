@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { clientLogger } from '@/lib/client-logger';
 
 const GITHUB_REPO = 'rouges78/GameStringer';
 const DISCUSSIONS_URL = `https://github.com/${GITHUB_REPO}/discussions`;
@@ -176,8 +177,8 @@ export function GitHubDiscussions() {
       }
 
       setDiscussions([]);
-    } catch (err) {
-      console.error('Error fetching discussions:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error fetching discussions:', err);
       setDiscussions([]);
     } finally {
       setIsLoading(false);
@@ -191,7 +192,7 @@ export function GitHubDiscussions() {
   const openInGitHub = async (url: string) => {
     try {
       await open(url);
-    } catch (e) {
+    } catch (e: unknown) {
       // Fallback per browser
       window.open(url, '_blank', 'noopener,noreferrer');
     }

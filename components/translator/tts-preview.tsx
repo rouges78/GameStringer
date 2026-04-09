@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 // Voci disponibili per la Web Speech API
 const BROWSER_VOICES = [
@@ -168,7 +169,7 @@ export function TTSPreview({
     };
 
     utterance.onerror = (e) => {
-      console.error('TTS Error:', e);
+      clientLogger.error('TTS Error:', e);
       setIsPlaying(false);
       toast.error('Errore nella riproduzione vocale');
     };
@@ -240,8 +241,8 @@ export function TTSPreview({
       audioRef.current = audio;
       audio.play();
       
-    } catch (error) {
-      console.error('OpenAI TTS Error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('OpenAI TTS Error:', error);
       toast.error('Errore TTS OpenAI. Prova con la voce del browser.');
     } finally {
       setIsLoading(false);

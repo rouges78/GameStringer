@@ -78,8 +78,8 @@ class SmartContextManager {
           this.contexts.set(key, value as GameContext);
         });
       }
-    } catch (e) {
-      console.error('Errore caricamento Smart Context:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento Smart Context:', e);
     }
   }
 
@@ -91,8 +91,8 @@ class SmartContextManager {
         obj[key] = value;
       });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-    } catch (e) {
-      console.error('Errore salvataggio Smart Context:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore salvataggio Smart Context:', e);
     }
   }
 
@@ -402,8 +402,8 @@ class SmartContextManager {
         this.save();
         return true;
       }
-    } catch (e) {
-      console.error('Errore import context:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore import context:', e);
     }
     return false;
   }

@@ -353,8 +353,8 @@ class NexusModsService {
 
       this.setCache(cacheKey, results);
       return results;
-    } catch (error) {
-      console.error('Error searching Italian translations:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error searching Italian translations:', error);
       return [];
     }
   }

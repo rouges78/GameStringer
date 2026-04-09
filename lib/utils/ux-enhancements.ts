@@ -1,5 +1,6 @@
 // General utilities for UX enhancements
 import type { SystemEvent, ErrorInfo } from '@/lib/types/index';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Generate unique IDs for operations
@@ -251,8 +252,8 @@ export const LocalStorage = {
     
     try {
       localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Failed to save to localStorage:', error);
     }
   },
   
@@ -261,8 +262,8 @@ export const LocalStorage = {
     
     try {
       localStorage.removeItem(key);
-    } catch (error) {
-      console.warn('Failed to remove from localStorage:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Failed to remove from localStorage:', error);
     }
   }
 };
@@ -287,8 +288,8 @@ export const SessionStorage = {
     
     try {
       sessionStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn('Failed to save to sessionStorage:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Failed to save to sessionStorage:', error);
     }
   },
   
@@ -297,8 +298,8 @@ export const SessionStorage = {
     
     try {
       sessionStorage.removeItem(key);
-    } catch (error) {
-      console.warn('Failed to remove from sessionStorage:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Failed to remove from sessionStorage:', error);
     }
   }
 };

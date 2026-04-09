@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, RotateCcw, Zap, Hand } from 'lucide-react'
+import { clientLogger } from '@/lib/client-logger';
 
 interface RestartModalProps {
   isOpen: boolean
@@ -34,8 +35,8 @@ export default function RestartModal({
         setIsRestarting(false)
         onClose()
       }, 3000)
-    } catch (error) {
-      console.error('Error during automatic restart:', error)
+    } catch (error: unknown) {
+      clientLogger.error('Error during automatic restart:', error)
       setIsRestarting(false)
     }
   }

@@ -314,7 +314,7 @@ export default function StoresPage() {
       if (stored) {
         setUtilityPreferences(JSON.parse(stored));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Error loading utility preferences:', error);
     }
   }, []);
@@ -344,7 +344,7 @@ export default function StoresPage() {
         setLoadingProvider(null);
         return;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore durante l'attivazione di ${utilityId}`);
     }
     
@@ -360,7 +360,7 @@ export default function StoresPage() {
       localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
       setUtilityPreferences(newPrefs);
       toast.success(`${utilityId} disattivato con successo.`);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore durante la disattivazione di ${utilityId}`);
     }
     
@@ -375,7 +375,7 @@ export default function StoresPage() {
     if (providerId === 'epic') {
       try {
         await signIn('epicgames', { callbackUrl: '/stores' });
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('Epic Games auth error:', error);
         toast.error('error durante la connection con Epic Games. Verifica le Credentials OAuth.');
         setLoadingProvider(null);
@@ -430,7 +430,7 @@ export default function StoresPage() {
         try {
           await invoke('save_store_credentials', { store: providerId, username: '', password: '' });
           clientLogger.debug(`[STORES] 🗑️ Credenziali ${providerId} cancellate dal profilo Tauri`);
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn(`[STORES] ⚠️ Impossibile cancellare ${providerId} da Tauri:`, e);
         }
       }
@@ -544,7 +544,7 @@ export default function StoresPage() {
         setGenericCredentials({ email: '', password: '' });
         await update();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error(`${genericModalProvider} auth error:`, error);
       toast.error(`error durante la connection con ${genericModalProvider}.`);
     }
@@ -597,7 +597,7 @@ export default function StoresPage() {
         toast.success('Account itch.io collegato con successo!');
         await update();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('error durante la connection con itch.io');
       throw error;
     } finally {
@@ -640,7 +640,7 @@ export default function StoresPage() {
         setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
         toast.success('SteamGridDB funziona correttamente!');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Test fallito';
       if (error instanceof DOMException && error.name === 'AbortError') {
         setTestResults(prev => ({ ...prev, [utilityId]: { error: 'Timeout - servizio non raggiungibile' } }));
@@ -672,7 +672,7 @@ export default function StoresPage() {
       } else {
         toast.error(`Problema con ${providerId}: ${result.error || 'connection non riuscita'}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`error nel test di ${providerId}`);
       setTestResults(prev => ({ ...prev, [providerId]: { error: 'Test fallito' } }));
     }
@@ -883,7 +883,7 @@ export default function StoresPage() {
                       const result = await invoke<string>(autoDetectCommand);
                       setTestResults(prev => ({ ...prev, [store.id]: { connected: true, message: result } }));
                       toast.success(result);
-                    } catch (e) {
+                    } catch (e: unknown) {
                       const msg = String(e);
                       setTestResults(prev => ({ ...prev, [store.id]: { error: msg } }));
                       toast.error(msg);

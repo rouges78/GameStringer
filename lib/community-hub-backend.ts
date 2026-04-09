@@ -19,6 +19,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
  */
 
 import type { TranslationPack, CommunityAuthor, PackReview, PackSearchFilters, HubStats, PackFile } from './community-hub-service';
+import { clientLogger } from '@/lib/client-logger';
 
 // ─── CONFIG ──────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ export async function getSupabase(): Promise<SupabaseClient> {
     auth: { persistSession: true, autoRefreshToken: true },
   });
   _lastConfigHash = hash;
-  console.log('[Supabase] Client creato per:', cfg.url);
+  clientLogger.debug('[Supabase] Client creato per:', cfg.url);
   return _supabaseClient;
 }
 
@@ -265,7 +266,7 @@ export async function publishPack(pack: Partial<TranslationPack>, files: File[])
     const storagePath = `packs/${packData.id}/${file.name}`;
     const { error: uploadError } = await supabase.storage.from('translation-packs').upload(storagePath, file);
     if (uploadError) {
-      console.warn(`Upload fallito per ${file.name}:`, uploadError);
+      clientLogger.warn(`Upload fallito per ${file.name}:`, uploadError);
       continue;
     }
 

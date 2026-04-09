@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface GameContext {
   gameTitle: string;
@@ -209,8 +210,8 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
       setTranslations(prev => [translation, ...prev]);
       onTranslationComplete(translation);
       toast.success('Contextual translation completed');
-    } catch (error) {
-      console.error('Translation error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Translation error:', error);
       toast.error('Translation error');
     }
   };

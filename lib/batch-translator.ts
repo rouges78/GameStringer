@@ -298,7 +298,7 @@ export class BatchTranslator {
       this.job.completedAt = new Date().toISOString();
       this.emitStatusChange('completed');
 
-    } catch (error) {
+    } catch (error: unknown) {
       this.job.status = 'failed';
       this.job.error = error instanceof Error ? error.message : String(error);
       this.emitStatusChange('failed');
@@ -434,7 +434,7 @@ export class BatchTranslator {
 
       clientLogger.debug(`[BatchTranslator] Glossary extracted: ${result.newTerms.length} new terms (${result.duplicates} duplicates) via ${result.provider} in ${result.timeMs}ms`);
       this.job.progress.statusMessage = undefined;
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.warn('[BatchTranslator] Auto glossary extraction failed:', error);
       this.job.progress.statusMessage = undefined;
     }
@@ -585,7 +585,7 @@ export class BatchTranslator {
         }));
         harvestedContext = harvestBatch(harvestInputs);
         clientLogger.debug(`[BatchTranslator] Context harvested: ${harvestedContext.stats.stringsWithConstraints} constrained, ${harvestedContext.stats.stringsWithPlaceholders} with placeholders`);
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
       }
 
@@ -680,7 +680,7 @@ export class BatchTranslator {
         await this.retryFailedQuality(itemsToRetry, batchNum, totalBatches);
       }
       
-    } catch (error) {
+    } catch (error: unknown) {
       // Fallback: traduci uno alla volta se batch fallisce
       clientLogger.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single:`, error);
       
@@ -808,7 +808,7 @@ export class BatchTranslator {
 
         failedItems = stillFailing;
 
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.warn(`[BatchTranslator] Quality retry ${attempt} error:`, error);
         break;
       }
@@ -1055,7 +1055,7 @@ export class BatchTranslator {
           clientLogger.debug(`[BatchTranslator] Post-edit rejected (score not improved ${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.warn('[BatchTranslator] Auto post-edit failed:', error);
     }
 

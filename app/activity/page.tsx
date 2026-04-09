@@ -35,6 +35,7 @@ import {
   FileText,
 } from 'lucide-react';
 import {
+import { clientLogger } from '@/lib/client-logger';
   activityHistory,
   Activity,
   ActivityType,
@@ -85,8 +86,8 @@ export default function ActivityHistoryPage() {
         setPage(result.page);
         setHasMore(result.has_more);
       }
-    } catch (error) {
-      console.error('Error loading activities:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading activities:', error);
     } finally {
       setIsLoading(false);
     }

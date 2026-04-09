@@ -316,7 +316,7 @@ export default function AutoTranslatePage() {
         savedAt: Date.now(),
       })
       clientLogger.debug(`[Checkpoint] Salvato: ${totalDone} stringhe tradotte`)
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn('[Checkpoint] Errore salvataggio:', e)
     }
   }, [getCheckpointKey, gameInfo, targetLang, sourceLang, totalStrings])
@@ -529,7 +529,7 @@ export default function AutoTranslatePage() {
       } else {
         await loadFilesFromPaths(locFiles, installPath)
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('[AutoTranslate] Scan TOTALMENTE fallito:', err)
       setGameError(`Automatic scan failed: ${err instanceof Error ? err.message : String(err)}. You can load files manually.`)
     } finally {
@@ -601,7 +601,7 @@ export default function AutoTranslatePage() {
         setBepinexError(result.message || 'Installazione fallita')
         setBepinexStatus('error')
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err)
       setBepinexError(errMsg)
       setBepinexSteps(prev => [...prev, `❌ Errore: ${errMsg}`])
@@ -906,7 +906,7 @@ export default function AutoTranslatePage() {
               if (lastGood) setLastTranslatedPair({ original: lastGood.original, translation: lastGood.translation, provider: result.provider })
             }
           }
-        } catch (err) {
+        } catch (err: unknown) {
           errors.push(`${file.name} batch ${bi + 1}: ${err instanceof Error ? err.message : 'Errore'}`)
           for (const s of batch) {
             fileTranslations.push({ key: s.key, original: s.value, translation: '', qaScore: 0, qaPassed: false, isEdited: false })
@@ -1048,7 +1048,7 @@ export default function AutoTranslatePage() {
             updated.set(fileName, arr)
             setTranslatedStrings(new Map(updated))
           }
-        } catch (err) {
+        } catch (err: unknown) {
           clientLogger.warn(`[RetranslateUntranslated] Batch error:`, err)
         }
 
@@ -1104,7 +1104,7 @@ export default function AutoTranslatePage() {
         qualityScore: avgScore, includeReadme: true, includeManifest: true,
       })
       setPatchResult(result)
-    } catch (err) { clientLogger.error('[Patch] Error:', err) }
+    } catch (err: unknown) { clientLogger.error('[Patch] Error:', err) }
     finally { setIsGenerating(false) }
   }, [files, translatedStrings, gameTitle, sourceLang, targetLang, translator, patchVersion, avgScore])
 
@@ -1136,7 +1136,7 @@ export default function AutoTranslatePage() {
 
       // Fallback browser
       downloadBlob(blob, filename)
-    } catch (err) { clientLogger.error('[ZIP] Error:', err) }
+    } catch (err: unknown) { clientLogger.error('[ZIP] Error:', err) }
   }, [patchResult, gameTitle, targetLang, patchVersion])
 
   // ============================================================================
@@ -1192,7 +1192,7 @@ export default function AutoTranslatePage() {
         backups.set('__unreal_pak__', '__unreal__')
         setTestBackupPaths(new Map(backups))
         addTestLog('✅ Pronto per nuova patch')
-      } catch (err) {
+      } catch (err: unknown) {
         addTestLog(`❌ Errore fase cleanup: ${err}`)
         setTestPatchStatus('error')
         return
@@ -1316,7 +1316,7 @@ export default function AutoTranslatePage() {
             return
           }
         }
-      } catch (err) {
+      } catch (err: unknown) {
         addTestLog(`❌ Errore applicazione traduzione UE: ${err}`)
         setTestPatchStatus('error')
         return
@@ -1343,7 +1343,7 @@ export default function AutoTranslatePage() {
               addTestLog(`⚠️ File non esistente (nuovo): ${file.path}`)
               backups.set(fullPath, '__new__')
             }
-          } catch (err) {
+          } catch (err: unknown) {
             addTestLog(`❌ Errore backup ${file.path}: ${err}`)
             setTestPatchStatus('error')
             return
@@ -1351,7 +1351,7 @@ export default function AutoTranslatePage() {
         }
         setTestBackupPaths(new Map(backups))
         addTestLog(`Backup completato: ${backups.size} file salvati`)
-      } catch (err) {
+      } catch (err: unknown) {
         addTestLog(`❌ Errore fase backup: ${err}`)
         setTestPatchStatus('error')
         return
@@ -1366,7 +1366,7 @@ export default function AutoTranslatePage() {
           try {
             await invoke('write_text_file', { path: fullPath, content: file.content })
             addTestLog(`✅ Applicato: ${file.path}`)
-          } catch (err) {
+          } catch (err: unknown) {
             addTestLog(`❌ Errore scrittura ${file.path}: ${err}`)
             setTestPatchStatus('error')
             return
@@ -1374,7 +1374,7 @@ export default function AutoTranslatePage() {
         }
         setTestPatchApplied(true)
         addTestLog('Patch applicata con successo!')
-      } catch (err) {
+      } catch (err: unknown) {
         addTestLog(`❌ Errore fase applicazione: ${err}`)
         setTestPatchStatus('error')
         return
@@ -1404,7 +1404,7 @@ export default function AutoTranslatePage() {
       } else {
         addTestLog(`⚠️ Avvio gioco: ${launchResult.message}`)
       }
-    } catch (err) {
+    } catch (err: unknown) {
       addTestLog(`⚠️ Errore avvio gioco: ${err}`)
     }
 
@@ -1464,7 +1464,7 @@ export default function AutoTranslatePage() {
         addTestLog('Rimozione file traduzione...')
         const result = await invoke<string>('remove_unreal_translation', { gamePath: gameInfo?.installPath || '' })
         addTestLog(`✅ ${result}`)
-      } catch (err) {
+      } catch (err: unknown) {
         const errStr = String(err)
         if (errStr.includes('bloccati') || errStr.includes('os error 32') || errStr.includes('utilizzato da un altro processo')) {
           addTestLog(`⚠️ ${errStr}`)
@@ -1488,7 +1488,7 @@ export default function AutoTranslatePage() {
           try { await invoke('secure_delete_file', { filepath: backupPath }) } catch {}
           restored++
           addTestLog(`✅ Ripristinato: ${fullPath.split('\\').pop()}`)
-        } catch (err) {
+        } catch (err: unknown) {
           addTestLog(`❌ Errore ripristino ${fullPath}: ${err}`)
         }
       }

@@ -2,6 +2,7 @@
 
 import { Notification, NotificationPriority } from '@/types/notifications';
 import UIInterferenceDetector, { UIInterference } from './ui-interference-detector';
+import { clientLogger } from '@/lib/client-logger';
 
 import React from 'react';
 
@@ -77,7 +78,7 @@ class NotificationQueueManager {
     });
 
     if (this.options.debugMode) {
-      console.log('[NotificationQueueManager] Inizializzato con opzioni:', this.options);
+      clientLogger.debug('[NotificationQueueManager] Inizializzato con opzioni:', this.options);
     }
   }
 
@@ -94,7 +95,7 @@ class NotificationQueueManager {
 
   private handleInterferenceChange(interferences: UIInterference[]): void {
     if (this.options.debugMode) {
-      console.log('[NotificationQueueManager] Interferenze cambiate:', interferences.length);
+      clientLogger.debug('[NotificationQueueManager] Interferenze cambiate:', interferences.length);
     }
 
     // Se non ci sono più interferenze, prova a processare la coda immediatamente
@@ -175,10 +176,10 @@ class NotificationQueueManager {
       }
 
       if (this.options.debugMode) {
-        console.log('[NotificationQueueManager] Notifica mostrata:', notification.title);
+        clientLogger.debug('[NotificationQueueManager] Notifica mostrata:', notification.title);
       }
-    } catch (error) {
-      console.error('[NotificationQueueManager] Errore nel mostrare notifica:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[NotificationQueueManager] Errore nel mostrare notifica:', error);
       
       // Riprova se non ha superato il limite
       if (notification.attempts < notification.maxAttempts) {
@@ -214,7 +215,7 @@ class NotificationQueueManager {
     this.queue.push(updatedNotification);
 
     if (this.options.debugMode) {
-      console.log(`[NotificationQueueManager] Notifica rimessa in coda con delay ${delay}ms:`, 
+      clientLogger.debug(`[NotificationQueueManager] Notifica rimessa in coda con delay ${delay}ms:`, 
         notification.title);
     }
   }
@@ -233,8 +234,8 @@ class NotificationQueueManager {
     this.callbacks.forEach(callback => {
       try {
         callback(stats);
-      } catch (error) {
-        console.error('[NotificationQueueManager] Errore nel callback stats:', error);
+      } catch (error: unknown) {
+        clientLogger.error('[NotificationQueueManager] Errore nel callback stats:', error);
       }
     });
   }
@@ -255,7 +256,7 @@ class NotificationQueueManager {
       
       if (this.queue.length >= this.options.maxQueueSize) {
         if (this.options.debugMode) {
-          console.warn('[NotificationQueueManager] Coda piena, notifica scartata:', 
+          clientLogger.warn('[NotificationQueueManager] Coda piena, notifica scartata:', 
             notification.title);
         }
         return false;
@@ -265,7 +266,7 @@ class NotificationQueueManager {
     // Controlla se la notifica è già in coda
     if (this.queue.some(n => n.id === notification.id)) {
       if (this.options.debugMode) {
-        console.warn('[NotificationQueueManager] Notifica già in coda:', notification.title);
+        clientLogger.warn('[NotificationQueueManager] Notifica già in coda:', notification.title);
       }
       return false;
     }
@@ -288,7 +289,7 @@ class NotificationQueueManager {
     }
 
     if (this.options.debugMode) {
-      console.log('[NotificationQueueManager] Notifica accodata:', notification.title);
+      clientLogger.debug('[NotificationQueueManager] Notifica accodata:', notification.title);
     }
 
     // Notifica i callback del cambiamento
@@ -320,7 +321,7 @@ class NotificationQueueManager {
     if (oldestIndex >= 0) {
       const removed = this.queue.splice(oldestIndex, 1)[0];
       if (this.options.debugMode) {
-        console.log('[NotificationQueueManager] Notifica rimossa per spazio:', removed.title);
+        clientLogger.debug('[NotificationQueueManager] Notifica rimossa per spazio:', removed.title);
       }
     }
   }
@@ -337,7 +338,7 @@ class NotificationQueueManager {
       this.notifyStatsCallbacks();
 
       if (this.options.debugMode) {
-        console.log('[NotificationQueueManager] Notifica rimossa dalla coda:', removed.title);
+        clientLogger.debug('[NotificationQueueManager] Notifica rimossa dalla coda:', removed.title);
       }
       
       return true;
@@ -359,7 +360,7 @@ class NotificationQueueManager {
     this.notifyStatsCallbacks();
 
     if (this.options.debugMode) {
-      console.log(`[NotificationQueueManager] Coda svuotata: ${count} notifiche rimosse`);
+      clientLogger.debug(`[NotificationQueueManager] Coda svuotata: ${count} notifiche rimosse`);
     }
 
     return count;
@@ -425,7 +426,7 @@ class NotificationQueueManager {
     this.options = { ...this.options, ...newOptions };
     
     if (this.options.debugMode) {
-      console.log('[NotificationQueueManager] Opzioni aggiornate:', this.options);
+      clientLogger.debug('[NotificationQueueManager] Opzioni aggiornate:', this.options);
     }
   }
 
@@ -441,7 +442,7 @@ class NotificationQueueManager {
     this.callbacks.clear();
 
     if (this.options.debugMode) {
-      console.log('[NotificationQueueManager] Distrutto');
+      clientLogger.debug('[NotificationQueueManager] Distrutto');
     }
   }
 }

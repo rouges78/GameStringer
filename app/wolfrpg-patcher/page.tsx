@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
+import { clientLogger } from '@/lib/client-logger';
 
 interface WolfRpgGame {
   path: string;
@@ -113,8 +114,8 @@ export default function WolfRpgPatcherPage() {
     try {
       const info = await invoke<WolfTransInfo>('get_wolftrans_info');
       setToolInfo(info);
-    } catch (e) {
-      console.error('Errore caricamento info:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento info:', e);
     }
   };
 
@@ -122,8 +123,8 @@ export default function WolfRpgPatcherPage() {
     try {
       const newStats = await invoke<WolfRpgStats>('get_wolfrpg_translation_stats', { strings });
       setStats(newStats);
-    } catch (e) {
-      console.error('Errore calcolo stats:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore calcolo stats:', e);
     }
   };
 
@@ -145,7 +146,7 @@ export default function WolfRpgPatcherPage() {
         setSelectedFile(null);
         toast.success(`Rilevato: ${detected.title}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     } finally {
       setLoading(false);
@@ -169,7 +170,7 @@ export default function WolfRpgPatcherPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore estrazione: ${e}`);
     } finally {
       setExtracting(false);
@@ -190,7 +191,7 @@ export default function WolfRpgPatcherPage() {
         });
         toast.success(`Salvate ${count} traduzioni`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore salvataggio: ${e}`);
     }
   };
@@ -209,7 +210,7 @@ export default function WolfRpgPatcherPage() {
         setStrings(loaded);
         toast.success(`Caricate ${loaded.length} traduzioni`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore caricamento: ${e}`);
     }
   };
@@ -228,7 +229,7 @@ export default function WolfRpgPatcherPage() {
         });
         toast.success(`Esportate ${count} stringhe in CSV`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore esportazione: ${e}`);
     }
   };
@@ -247,7 +248,7 @@ export default function WolfRpgPatcherPage() {
         setStrings(imported);
         toast.success(`Importate ${imported.length} stringhe`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore importazione: ${e}`);
     }
   };

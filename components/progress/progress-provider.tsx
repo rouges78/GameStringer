@@ -14,6 +14,7 @@ import {
   createProgressUpdate 
 } from '@/lib/utils/progress-calculations';
 import { progressPersistence } from '@/lib/progress-persistence';
+import { clientLogger } from '@/lib/client-logger';
 
 // Actions for the reducer
 type ProgressAction =
@@ -174,8 +175,8 @@ function emitProgressEvent(type: ProgressEventType, operationId: string, data?: 
   eventListeners.forEach(listener => {
     try {
       listener(event);
-    } catch (error) {
-      console.error('Error in progress listener:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error in progress listener:', error);
     }
   });
 }
@@ -232,8 +233,8 @@ export function ProgressProvider({
     if (operation && 'onComplete' in operation) {
       try {
         (operation as unknown).onComplete?.(result);
-      } catch (error) {
-        console.error('Error in onComplete callback:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error in onComplete callback:', error);
       }
     }
   }, [state.operations]);
@@ -247,8 +248,8 @@ export function ProgressProvider({
     if (operation && 'onError' in operation) {
       try {
         (operation as unknown).onError?.(error);
-      } catch (err) {
-        console.error('Error in onError callback:', err);
+      } catch (err: unknown) {
+        clientLogger.error('Error in onError callback:', err);
       }
     }
   }, [state.operations]);
@@ -263,8 +264,8 @@ export function ProgressProvider({
       if ('onCancel' in operation) {
         try {
           (operation as unknown).onCancel?.();
-        } catch (error) {
-          console.error('Error in onCancel callback:', error);
+        } catch (error: unknown) {
+          clientLogger.error('Error in onCancel callback:', error);
         }
       }
     }
@@ -365,7 +366,7 @@ export const ProgressUtils = {
           try {
             const result = await processor(item, i);
             results.push({ success: true, result, item });
-          } catch (error) {
+          } catch (error: unknown) {
             results.push({ success: false, error, item });
           }
         }

@@ -5,6 +5,7 @@
  */
 
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface FeedbackEntry {
   id: string;
@@ -387,8 +388,8 @@ class PlayerFeedbackService {
 
       this.saveToStorage();
       return imported;
-    } catch (error) {
-      console.error('Errore importazione feedback:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore importazione feedback:', error);
       return 0;
     }
   }

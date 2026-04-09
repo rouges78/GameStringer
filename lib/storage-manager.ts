@@ -1,4 +1,5 @@
 import { get, set, del, clear } from 'idb-keyval';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Storage Manager
@@ -14,8 +15,8 @@ export const storageManager = {
     try {
       const data = await get('gameTranslations');
       return data || [];
-    } catch (e) {
-      console.error('[Storage] Errore lettura gameTranslations', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore lettura gameTranslations', e);
       return [];
     }
   },
@@ -23,8 +24,8 @@ export const storageManager = {
   async saveTranslations(data: unknown[]): Promise<void> {
     try {
       await set('gameTranslations', data);
-    } catch (e) {
-      console.error('[Storage] Errore salvataggio gameTranslations', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore salvataggio gameTranslations', e);
     }
   },
 
@@ -32,8 +33,8 @@ export const storageManager = {
     try {
       const data = await get('gamePatches');
       return data || [];
-    } catch (e) {
-      console.error('[Storage] Errore lettura gamePatches', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore lettura gamePatches', e);
       return [];
     }
   },
@@ -41,8 +42,8 @@ export const storageManager = {
   async savePatches(data: unknown[]): Promise<void> {
     try {
       await set('gamePatches', data);
-    } catch (e) {
-      console.error('[Storage] Errore salvataggio gamePatches', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore salvataggio gamePatches', e);
     }
   },
 
@@ -51,8 +52,8 @@ export const storageManager = {
   async getPartialTranslations(): Promise<any | null> {
     try {
       return await get('gamestringer_partial_translations');
-    } catch (e) {
-      console.error('[Storage] Errore lettura partial_translations', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore lettura partial_translations', e);
       return null;
     }
   },
@@ -60,24 +61,24 @@ export const storageManager = {
   async savePartialTranslations(data: unknown): Promise<void> {
     try {
       await set('gamestringer_partial_translations', data);
-    } catch (e) {
-      console.error('[Storage] Errore salvataggio partial_translations', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore salvataggio partial_translations', e);
     }
   },
 
   async clearPartialTranslations(): Promise<void> {
     try {
       await del('gamestringer_partial_translations');
-    } catch (e) {
-      console.error('[Storage] Errore cancellazione partial_translations', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore cancellazione partial_translations', e);
     }
   },
 
   async getEditorFile(): Promise<any | null> {
     try {
       return await get('editorFile');
-    } catch (e) {
-      console.error('[Storage] Errore lettura editorFile', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore lettura editorFile', e);
       return null;
     }
   },
@@ -85,16 +86,16 @@ export const storageManager = {
   async saveEditorFile(data: unknown): Promise<void> {
     try {
       await set('editorFile', data);
-    } catch (e) {
-      console.error('[Storage] Errore salvataggio editorFile', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore salvataggio editorFile', e);
     }
   },
 
   async clearEditorFile(): Promise<void> {
     try {
       await del('editorFile');
-    } catch (e) {
-      console.error('[Storage] Errore cancellazione editorFile', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore cancellazione editorFile', e);
     }
   },
 
@@ -117,9 +118,9 @@ export const storageManager = {
           try {
             await set(key, JSON.parse(localData));
             localStorage.removeItem(key);
-            console.log(`[Storage] Migrato ${key} da localStorage a IndexedDB`);
-          } catch (e) {
-            console.warn(`[Storage] Impossibile migrare ${key}`, e);
+            clientLogger.debug(`[Storage] Migrato ${key} da localStorage a IndexedDB`);
+          } catch (e: unknown) {
+            clientLogger.warn(`[Storage] Impossibile migrare ${key}`, e);
           }
         }
       }
@@ -130,11 +131,11 @@ export const storageManager = {
         try {
           await set('editorFile', JSON.parse(sessionEditorFile));
           sessionStorage.removeItem('editorFile');
-          console.log(`[Storage] Migrato editorFile da sessionStorage a IndexedDB`);
-        } catch (e) {}
+          clientLogger.debug(`[Storage] Migrato editorFile da sessionStorage a IndexedDB`);
+        } catch (e: unknown) {}
       }
-    } catch (e) {
-      console.error('[Storage] Errore durante la migrazione', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Storage] Errore durante la migrazione', e);
     }
   }
 };

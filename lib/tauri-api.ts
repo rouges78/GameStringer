@@ -1,4 +1,5 @@
 // Wrapper per l'API Tauri v2, reso più robusto per l'uso in ambienti ibridi (browser/Tauri)
+import { clientLogger } from '@/lib/client-logger';
 
 // Controlla una sola volta se l'app è in esecuzione all'interno di Tauri.
 const IS_TAURI = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ !== undefined;
@@ -16,7 +17,7 @@ let tauriInvoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unkno
 export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   if (!IS_TAURI) {
     const errorMsg = `Comando Tauri '${cmd}' bloccato: l'app non è in esecuzione in ambiente Tauri.`;
-    console.warn(errorMsg, args);
+    clientLogger.warn(errorMsg, args);
     throw new Error(errorMsg);
   }
 
@@ -25,8 +26,8 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
     try {
       const { invoke: coreInvoke } = await import('@tauri-apps/api/core');
       tauriInvoke = coreInvoke;
-    } catch (e) {
-      console.error("Impossibile caricare il modulo @tauri-apps/api/core:", e);
+    } catch (e: unknown) {
+      clientLogger.error("Impossibile caricare il modulo @tauri-apps/api/core:", e);
       throw new Error("Impossibile caricare il modulo API di Tauri.");
     }
   }
@@ -36,7 +37,7 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
     // Non serve normalizzazione manuale
     const safeArgs = args;
 
-    console.log(`Invocando comando Tauri: ${cmd}`, safeArgs);
+    clientLogger.debug(`Invocando comando Tauri: ${cmd}`, safeArgs);
     const result = await tauriInvoke(cmd, safeArgs);
     
     // Maschera password nei log per sicurezza
@@ -51,14 +52,14 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       }
       return sanitized;
     };
-    console.log(`Risultato comando ${cmd}:`, sanitizeForLog(result));
+    clientLogger.debug(`Risultato comando ${cmd}:`, sanitizeForLog(result));
     return result as T;
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     
     // Gestisci con messaggi carini gli errori di credenziali mancanti (sono normali)
     if (errorMessage.includes('Nessuna credenziale') || errorMessage.includes('salvata')) {
-      console.info(`💡 ${cmd}: Credenziali non configurate (normale al primo avvio). Vai su Settings per configurarle! 🎮`);
+      clientLogger.info(`💡 ${cmd}: Credenziali non configurate (normale al primo avvio). Vai su Settings per configurarle! 🎮`);
       
       // Crea un errore più carino per l'utente
       const friendlyError = new Error(`💡 Credenziali non configurate. Vai su Settings per configurare Steam! 🎮`);
@@ -66,7 +67,7 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       throw friendlyError;
     } else if (errorMessage.includes('Command') && errorMessage.includes('not found')) {
       // Gestisci comandi mancanti come warning (es. moduli disabilitati)
-      console.warn(`⚠️ Comando Tauri non disponibile: '${cmd}' (backend feature potrebbe essere disabilitata). Uso fallback locale.`);
+      clientLogger.warn(`⚠️ Comando Tauri non disponibile: '${cmd}' (backend feature potrebbe essere disabilitata). Uso fallback locale.`);
     } else if (errorMessage.includes('non trovato') || errorMessage.includes('not found')) {
       // Errori di ricerca "non trovato" sono normali, non loggare
     } else if (cmd === 'check_for_updates' && (errorMessage.includes('timeout') || errorMessage.includes('connection'))) {
@@ -77,9 +78,9 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       // Errori Steam API per lingue sono normali (rate limiting), non loggare
     } else if (errorMessage.includes('Credenziali corrotte') || errorMessage.includes('Riconnettiti a Steam')) {
       // Credenziali corrotte - messaggio già gestito, non loggare come errore
-      console.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');
+      clientLogger.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');
     } else {
-      console.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
+      clientLogger.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
     }
     
     throw error; // Rilancia l'errore originale per essere gestito dal chiamante.

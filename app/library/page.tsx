@@ -92,7 +92,7 @@ const flushCoverSaves = async () => {
   try {
     await invoke('save_batch_cover_cache', { covers: toSave });
     clientLogger.debug(`[Library] 💾 Batch cover cache salvata: ${Object.keys(toSave).length} cover`);
-  } catch (e) {
+  } catch (e: unknown) {
     clientLogger.warn('[Library] Batch cover save failed:', e);
     // Fallback: riprova singolarmente
     for (const [gameId, imageUrl] of Object.entries(toSave)) {
@@ -165,7 +165,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         try {
           const prefs = JSON.parse(utilityPrefs);
           apiKey = prefs?.steamgriddb?.apiKey || null;
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn('[Library] Cache localStorage corrotta, ripulizia:', e);
           localStorage.removeItem('gamestringer_utility_prefs');
         }
@@ -234,7 +234,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
           }
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
     } finally {
       setIsLoading(false);
@@ -536,7 +536,7 @@ function LibraryListView() {
             clientLogger.debug('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[Library] Cache non disponibile');
       }
     };
@@ -583,7 +583,7 @@ function LibraryListView() {
               is_installed: false
             });
           });
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn('[LIBRARY DEBUG] ⚠️ Steam API failed, using local files only');
         }
       }
@@ -661,7 +661,7 @@ function LibraryListView() {
       
       clientLogger.debug(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
       
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('[LIBRARY] ❌ error scan:', error);
       toast.error('Error during scan', {
         description: String(error),
@@ -714,7 +714,7 @@ function LibraryListView() {
           fetchGames(); // Aggiorna in background, UI già visibile
           return;
         }
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('Errore lettura cache IndexedDB libreria:', e);
       }
       
@@ -785,7 +785,7 @@ function LibraryListView() {
               steamId: creds.steam_id,
               forceRefresh: false
             }) as unknown[];
-          } catch (e) {
+          } catch (e: unknown) {
             clientLogger.warn('⚠️ Steam API failed:', e);
             return null;
           }
@@ -1020,7 +1020,7 @@ function LibraryListView() {
                 clientLogger.debug(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
               }
             }
-          } catch (e) {
+          } catch (e: unknown) {
             clientLogger.warn('[Library] Update check failed:', e);
           }
         };
@@ -1079,14 +1079,14 @@ function LibraryListView() {
                 setLanguagesCache(newCache);
                 clientLogger.debug(`[Library] 🌍 Salvate ${fetched} nuove lingue in cache`);
               }
-            } catch (e) {
+            } catch (e: unknown) {
               clientLogger.warn('[Library] Errore caricamento lingue:', e);
             }
           };
           loadLanguagesInBackground();
         }, 8000); // Aspetta 8s — dà tempo a Steam API di arrivare prima
 
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         clientLogger.error('❌ Library loading error:', errorMsg);
         setGamesWithValidation([]);
@@ -1633,7 +1633,7 @@ function LibraryListView() {
                   const updatedGames = Object.values(result as unknown) as Game[];
                   setGames(updatedGames);
                   toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
-                } catch (e) {
+                } catch (e: unknown) {
                   toast.error(lib.updateError + ': ' + e);
                 }
               }} 

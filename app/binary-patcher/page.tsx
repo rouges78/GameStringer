@@ -41,6 +41,7 @@ import {
   type ChainPreset,
 } from '@/lib/ai-translate-direct';
 import { addCorrection } from '@/lib/adaptive-mt';
+import { clientLogger } from '@/lib/client-logger';
 
 type Step = 'load' | 'extract' | 'translate' | 'review' | 'patch';
 
@@ -130,9 +131,9 @@ export default function BinaryPatcherPage() {
         translatedCount,
         savedAt: Date.now(),
       });
-      console.log(`[BinPatch Checkpoint] Salvato: ${translatedCount} stringhe tradotte`);
-    } catch (e) {
-      console.warn('[BinPatch Checkpoint] Errore salvataggio:', e);
+      clientLogger.debug(`[BinPatch Checkpoint] Salvato: ${translatedCount} stringhe tradotte`);
+    } catch (e: unknown) {
+      clientLogger.warn('[BinPatch Checkpoint] Errore salvataggio:', e);
     }
   }, [getCheckpointKey]);
 
@@ -147,7 +148,7 @@ export default function BinaryPatcherPage() {
         const saved = await get(key);
         if (saved?.project?.strings?.length > 0 && saved.translatedCount > 0) {
           setSavedCheckpoint(saved);
-          console.log(`[BinPatch Checkpoint] Trovato: ${saved.translatedCount}/${saved.totalCount} (${lang})`);
+          clientLogger.debug(`[BinPatch Checkpoint] Trovato: ${saved.translatedCount}/${saved.totalCount} (${lang})`);
           return;
         }
       } catch {}
@@ -296,7 +297,7 @@ export default function BinaryPatcherPage() {
           resolve();
         }, 50);
       });
-    } catch (err) {
+    } catch (err: unknown) {
       addLog(`❌ Errore: ${err instanceof Error ? err.message : String(err)}`);
       setStep('load');
     } finally {
@@ -349,8 +350,8 @@ export default function BinaryPatcherPage() {
 
       setStep('extract');
       setProgress({ current: 1, total: 1, label: 'File caricato!' });
-    } catch (err) {
-      console.error('Errore caricamento:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore caricamento:', err);
     } finally {
       setIsProcessing(false);
     }
@@ -522,7 +523,7 @@ export default function BinaryPatcherPage() {
           failed += batch.length;
           setTranslationLog(prev => [...prev, `⚠️ Batch ${bi + 1} fallito (provider: ${result.provider})`]);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         failed += batch.length;
         setTranslationLog(prev => [...prev, `❌ Batch ${bi + 1} errore: ${err instanceof Error ? err.message : String(err)}`]);
       }
@@ -612,8 +613,8 @@ export default function BinaryPatcherPage() {
       setFileName(proj.fileName);
       setTargetLang(proj.targetLang);
       setStep('review');
-    } catch (err) {
-      console.error('Errore import:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore import:', err);
     }
   }, []);
 

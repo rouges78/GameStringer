@@ -239,7 +239,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           gameName,
         });
         setRecommendation(result);
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error('Error loading recommendation:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -354,7 +354,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             idx === i ? { ...s, status: 'completed', progress: 100 } : s
           ),
         }));
-      } catch (err) {
+      } catch (err: unknown) {
         // Errore - ferma il processo
         const errorMsg = err instanceof Error ? err.message : 'Errore sconosciuto';
         setAutoState(prev => ({
@@ -448,7 +448,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             throw new Error(result.message || 'Installazione fallita');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           const errMsg = e instanceof Error ? e.message : String(e);
           if (errMsg.includes('già installato') || errMsg.includes('already')) {
             updateProgress(100, '✅ XUnity già presente');
@@ -547,7 +547,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '⚠️ Nessun file .pck trovato');
             toast.warning('Nessun file PCK trovato. Prova estrazione manuale con gdsdecomp.');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Usa gdsdecomp per estrarre il PCK manualmente');
           toast.info('Per Godot, usa gdsdecomp: https://github.com/bruvzg/gdsdecomp');
         }
@@ -577,7 +577,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             }
           } catch (ioErr) {
             iostoreError = ioErr instanceof Error ? ioErr.message : String(ioErr);
-            console.info('IoStore:', iostoreError);
+            clientLogger.info('IoStore:', iostoreError);
           }
           
           // 2. Fallback: estrazione standard da .pak
@@ -730,7 +730,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             throw new Error('Nessun .locres trovato automaticamente');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           const errMsg = e instanceof Error ? e.message : String(e);
           updateProgress(100, `❌ ${errMsg}`);
           toast.error(
@@ -764,7 +764,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '📦 Usa RPG Maker Trans per estrarre testi');
             toast.info('Per RPG Maker VX/Ace, usa RPG Maker Trans');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📝 Apri Neural Translator per traduzione manuale');
         }
         break;
@@ -807,7 +807,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun file Ren\'Py trovato');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Usa UnRPA per estrarre manualmente');
           toast.info('Per Ren\'Py, usa UnRPA: https://github.com/Lattyware/unrpa');
         }
@@ -839,7 +839,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun archivio XP3 trovato');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Estrazione manuale richiesta');
         }
         break;
@@ -1722,7 +1722,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                             content,
                           });
                           toast.success(`Esportato translations.${ext}`);
-                        } catch (err) {
+                        } catch (err: unknown) {
                           toast.error(`Errore export ${fmt}`);
                         }
                       }}

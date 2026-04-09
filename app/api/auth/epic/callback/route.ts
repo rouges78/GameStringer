@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
+import { clientLogger } from '@/lib/client-logger';
 
 export const GET = withErrorHandler(async function(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -7,15 +8,15 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
 
-  console.log('[EPIC OAUTH] Callback ricevuto:', { code, error, errorDescription });
+  clientLogger.debug('[EPIC OAUTH] Callback ricevuto:', { code, error, errorDescription });
 
   if (error) {
-    console.error('[EPIC OAUTH] Errore OAuth:', error, errorDescription);
+    clientLogger.error('[EPIC OAUTH] Errore OAuth:', error, errorDescription);
     return NextResponse.redirect(new URL('/store-manager?epic_error=' + encodeURIComponent(error), request.url));
   }
 
   if (!code) {
-    console.error('[EPIC OAUTH] Authorization code mancante');
+    clientLogger.error('[EPIC OAUTH] Authorization code mancante');
     return NextResponse.redirect(new URL('/store-manager?epic_error=no_code', request.url));
   }
 
@@ -24,7 +25,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   const redirectUrl = new URL('/store-manager', request.url);
   redirectUrl.searchParams.set('epic_code', code);
 
-  console.log('[EPIC OAUTH] Reindirizzamento a:', redirectUrl.toString());
+  clientLogger.debug('[EPIC OAUTH] Reindirizzamento a:', redirectUrl.toString());
 
   return NextResponse.redirect(redirectUrl);
 });

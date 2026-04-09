@@ -70,7 +70,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
       duration
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
     logger.error('Game library sync failed', 'LIBRARY_SYNC', { error, duration });
     throw error;
@@ -189,7 +189,7 @@ async function syncGamesToDatabase(
       duration: 0
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Database sync failed', 'LIBRARY_SYNC', { error });
     throw error;
   }
@@ -259,7 +259,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
       usage: 'POST /api/library/sync with { provider?, forceRefresh?, includeUninstalled? }'
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Library sync status request failed', 'LIBRARY_SYNC', { error });
     throw error;
   }

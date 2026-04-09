@@ -96,7 +96,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
         });
       }
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error fetching game library', 'GAMES_API', { error });
     throw error;
   }

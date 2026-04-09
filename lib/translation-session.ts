@@ -4,6 +4,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 /** Statistiche di una sessione di traduzione */
 export interface TranslationStats {
@@ -109,8 +110,8 @@ export async function saveCheckpoint(checkpoint: TranslationCheckpoint): Promise
       path: getCheckpointPath(checkpoint.gamePath),
       content: JSON.stringify(checkpoint, null, 2),
     });
-  } catch (err) {
-    console.warn('[Checkpoint] Errore salvataggio:', err);
+  } catch (err: unknown) {
+    clientLogger.warn('[Checkpoint] Errore salvataggio:', err);
   }
 }
 

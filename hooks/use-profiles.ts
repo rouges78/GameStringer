@@ -24,7 +24,7 @@ const dispatchAuthChanged = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('profile-auth-changed'));
     }
-  } catch (e) {
+  } catch (e: unknown) {
     clientLogger.warn('dispatchAuthChanged failed:', e);
   }
 };
@@ -72,7 +72,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore caricamento profili');
         setProfiles([]);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore caricamento profili:', err);
       setError('Backend Tauri non disponibile - attendere avvio completo');
       setProfiles([]);
@@ -97,7 +97,7 @@ export function useProfilesCore(): UseProfilesReturn {
         clientLogger.warn('⚠️ useProfiles: get_current_profile failed:', response.error);
         setCurrentProfile(null);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('❌ useProfiles: Errore caricamento profilo corrente:', err);
       setCurrentProfile(null);
     }
@@ -112,7 +112,7 @@ export function useProfilesCore(): UseProfilesReturn {
           loadProfiles(),
           loadCurrentProfile()
         ]);
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
         setError('Errore inizializzazione sistema profili');
       } finally {
@@ -159,7 +159,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore creazione profilo');
         return false;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore creazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
@@ -191,7 +191,7 @@ export function useProfilesCore(): UseProfilesReturn {
             const { sessionPersistence } = await import('@/lib/session-persistence');
             await sessionPersistence.syncWithBackend();
             clientLogger.debug('🔄 Session persistence sincronizzata');
-          } catch (error) {
+          } catch (error: unknown) {
             clientLogger.warn('⚠️ Errore sync session persistence:', error);
           }
         }, 100);
@@ -210,7 +210,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore autenticazione');
         return false;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('❌ useProfiles: Errore autenticazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
@@ -242,7 +242,7 @@ export function useProfilesCore(): UseProfilesReturn {
             const { sessionPersistence } = await import('@/lib/session-persistence');
             await sessionPersistence.syncWithBackend();
             clientLogger.debug('🔄 Session persistence sincronizzata dopo switch');
-          } catch (error) {
+          } catch (error: unknown) {
             clientLogger.warn('⚠️ Errore sync session persistence dopo switch:', error);
           }
         }, 100);
@@ -261,7 +261,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore cambio profilo');
         return false;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('❌ useProfiles: Errore cambio profilo:', err);
       setError('Errore di connessione al backend');
       return false;
@@ -288,7 +288,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore logout');
         return false;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore logout:', err);
       setError('Errore di connessione al backend');
       return false;
@@ -322,7 +322,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore eliminazione profilo');
         return false;
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore eliminazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
@@ -340,7 +340,7 @@ export function useProfilesCore(): UseProfilesReturn {
         return response.data;
       }
       return null;
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore recupero avatar:', err);
       return null;
     }
@@ -373,7 +373,7 @@ export function useProfilesCore(): UseProfilesReturn {
         return true;
       }
       return false;
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Errore aggiornamento avatar:', err);
       return false;
     }

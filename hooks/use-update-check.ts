@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface UpdateInfo {
   current_version: string;
@@ -34,8 +35,8 @@ export const useUpdateCheck = () => {
           }
         }
       }
-    } catch (error) {
-      console.warn('Update check failed:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Update check failed:', error);
     } finally {
       setIsChecking(false);
     }

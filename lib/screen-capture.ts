@@ -71,7 +71,7 @@ export async function captureScreen(options: CaptureOptions = {}): Promise<Captu
     } else {
       return await captureScreenBrowser(options);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Capture failed'
@@ -98,7 +98,7 @@ async function captureScreenNative(options: CaptureOptions): Promise<CaptureResu
       width: result.width,
       height: result.height
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Native capture failed'
@@ -157,7 +157,7 @@ async function captureScreenBrowser(options: CaptureOptions): Promise<CaptureRes
       width,
       height
     };
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.name === 'NotAllowedError') {
       return {
         success: false,
@@ -188,7 +188,7 @@ export async function captureWindow(windowTitle: string): Promise<CaptureResult>
       width: result.width,
       height: result.height
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Window capture not available'
@@ -250,7 +250,7 @@ export function createCaptureStream(
       if (running) {
         onCapture(result);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (running) {
         onError(error instanceof Error ? error : new Error('Capture failed'));
       }

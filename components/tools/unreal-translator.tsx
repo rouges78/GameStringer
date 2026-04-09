@@ -29,6 +29,7 @@ import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Unreal string extraction is wired into this translator.
 
@@ -138,8 +139,8 @@ export function UnrealTranslator() {
         }));
       
       setUnrealGames(unrealOnly);
-    } catch (err) {
-      console.error('Error loading games:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error loading games:', err);
       toast.error('Error loading Unreal games');
     } finally {
       setIsLoadingGames(false);
@@ -164,8 +165,8 @@ export function UnrealTranslator() {
           ) || exes[0];
           setExeName(mainExe.split('\\').pop() || mainExe.split('/').pop() || mainExe);
         }
-      } catch (err) {
-        console.error('Error finding executable:', err);
+      } catch (err: unknown) {
+        clientLogger.error('Error finding executable:', err);
       }
       
       // Check compatibility
@@ -179,8 +180,8 @@ export function UnrealTranslator() {
         gamePath: path
       });
       setCompatibility(result);
-    } catch (err) {
-      console.error('Compatibility check error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Compatibility check error:', err);
     }
   };
 
@@ -204,8 +205,8 @@ export function UnrealTranslator() {
           setExeName(exes[0].split('\\').pop() || exes[0]);
         }
       }
-    } catch (err) {
-      console.error('Folder selection error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Folder selection error:', err);
     }
   };
 
@@ -233,8 +234,8 @@ export function UnrealTranslator() {
       } else {
         toast.warning(result.message);
       }
-    } catch (err) {
-      console.error('Translator start error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Translator start error:', err);
       toast.error('Error starting translator');
     }
   };
@@ -247,8 +248,8 @@ export function UnrealTranslator() {
       
       setTranslatorState(result.state);
       toast.success('Translator stopped');
-    } catch (err) {
-      console.error('Translator stop error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Translator stop error:', err);
     }
   };
 
@@ -256,8 +257,8 @@ export function UnrealTranslator() {
     try {
       const newState = await invoke<UETranslatorState>('toggle_ue_translation');
       setTranslatorState(newState);
-    } catch (err) {
-      console.error('Toggle error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Toggle error:', err);
     }
   };
 
@@ -266,8 +267,8 @@ export function UnrealTranslator() {
       await invoke('clear_ue_cache');
       toast.success('Cache cleared');
       setCacheStats(null);
-    } catch (err) {
-      console.error('Cache clear error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Cache clear error:', err);
     }
   };
 

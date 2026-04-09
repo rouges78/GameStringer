@@ -3,6 +3,7 @@
  */
 
 import type { OperationProgress, ProgressEvent } from '@/lib/types/progress';
+import { clientLogger } from '@/lib/client-logger';
 
 // Chiave per localStorage
 const STORAGE_KEY = 'gamestringer_progress_operations';
@@ -128,8 +129,8 @@ export class ProgressPersistence {
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error('Errore nel salvare operazioni di progresso:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel salvare operazioni di progresso:', error);
     }
   }
 
@@ -147,7 +148,7 @@ export class ProgressPersistence {
       
       // Verifica versione
       if (data.version !== CURRENT_VERSION) {
-        console.warn('Versione dati progresso non compatibile, reset...');
+        clientLogger.warn('Versione dati progresso non compatibile, reset...');
         this.clearOperations();
         return new Map();
       }
@@ -166,8 +167,8 @@ export class ProgressPersistence {
       });
 
       return operations;
-    } catch (error) {
-      console.error('Errore nel caricare operazioni di progresso:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel caricare operazioni di progresso:', error);
       this.clearOperations();
       return new Map();
     }
@@ -183,8 +184,8 @@ export class ProgressPersistence {
       const operations = this.loadOperations();
       operations.delete(operationId);
       this.saveOperations(operations);
-    } catch (error) {
-      console.error('Errore nel rimuovere operazione:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel rimuovere operazione:', error);
     }
   }
 
@@ -196,8 +197,8 @@ export class ProgressPersistence {
 
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('Errore nel pulire operazioni:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel pulire operazioni:', error);
     }
   }
 
@@ -218,8 +219,8 @@ export class ProgressPersistence {
       }
 
       localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-    } catch (error) {
-      console.error('Errore nel salvare evento progresso:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel salvare evento progresso:', error);
     }
   }
 
@@ -232,8 +233,8 @@ export class ProgressPersistence {
     try {
       const stored = localStorage.getItem(EVENTS_STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Errore nel caricare eventi progresso:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel caricare eventi progresso:', error);
       return [];
     }
   }
@@ -254,8 +255,8 @@ export class ProgressPersistence {
       });
 
       localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(validEvents));
-    } catch (error) {
-      console.error('Errore nel pulire eventi:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel pulire eventi:', error);
     }
   }
 

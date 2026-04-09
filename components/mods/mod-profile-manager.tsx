@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ModProfile {
   id: string;
@@ -90,8 +91,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
       // Load installed mods
       const modsResult = await invoke('get_installed_mods', { gameId });
       setMods(modsResult as InstalledMod[]);
-    } catch (error) {
-      console.error('Error loading mod profiles:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading mod profiles:', error);
       toast.error('Error loading mod profiles');
     } finally {
       setLoading(false);
@@ -123,8 +124,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
       setShowCreateDialog(false);
       setNewProfileName('');
       setNewProfileDesc('');
-    } catch (error) {
-      console.error('Error creating profile:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error creating profile:', error);
       toast.error('Error creating profile');
     }
   };
@@ -147,8 +148,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
       setShowCloneDialog(false);
       setCloneSourceId('');
       setNewProfileName('');
-    } catch (error) {
-      console.error('Error cloning profile:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error cloning profile:', error);
       toast.error('Error cloning profile');
     }
   };
@@ -158,8 +159,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
       await invoke('activate_mod_profile', { gameId, profileId });
       setActiveProfileId(profileId);
       toast.success('Profile activated!');
-    } catch (error) {
-      console.error('Error activating profile:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error activating profile:', error);
       toast.error('Error activating profile');
     }
   };
@@ -169,8 +170,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
       await invoke('delete_mod_profile', { gameId, profileId });
       setProfiles(prev => prev.filter(p => p.id !== profileId));
       toast.success('Profile deleted');
-    } catch (error) {
-      console.error('Error deleting profile:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error deleting profile:', error);
       toast.error('Error deleting profile');
     }
   };
@@ -183,8 +184,8 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
           mod.id === modId ? { ...mod, enabled } : mod
         )
       );
-    } catch (error) {
-      console.error('Error toggling mod:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error toggling mod:', error);
       toast.error('Error toggling mod state');
     }
   };

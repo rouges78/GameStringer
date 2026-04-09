@@ -79,7 +79,7 @@ export class BatchProcessor {
             });
             completedCount++;
             this.callbacks.onItemComplete?.(item.id, result);
-          } catch (error) {
+          } catch (error: unknown) {
             results.push({
               itemId: item.id,
               success: false,
@@ -110,7 +110,7 @@ export class BatchProcessor {
       this.callbacks.onComplete?.(batchResult);
       return batchResult;
 
-    } catch (error) {
+    } catch (error: unknown) {
       this.callbacks.onError?.(error as Error);
       throw error;
     } finally {
@@ -150,7 +150,7 @@ export class BatchProcessor {
           processor(item),
           this.options.timeout
         );
-      } catch (error) {
+      } catch (error: unknown) {
         lastError = error as Error;
         
         if (attempt < this.options.retryAttempts) {

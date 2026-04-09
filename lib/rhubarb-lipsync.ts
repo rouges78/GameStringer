@@ -101,7 +101,7 @@ export async function generateLipSync(options: LipSyncOptions): Promise<LipSyncR
       recognizer,
     });
     return result;
-  } catch (e) {
+  } catch (e: unknown) {
     throw new Error(`Errore generazione lip sync: ${e}`);
   }
 }

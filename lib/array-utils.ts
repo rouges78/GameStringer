@@ -127,7 +127,7 @@ export function safeGet<T>(array: unknown, index: number): T | undefined {
  */
 export function validateArray(value: unknown, context: string = 'Unknown'): boolean {
   if (!Array.isArray(value)) {
-    console.warn(`[Array Validation] Expected array in ${context}, got:`, typeof value, value);
+    clientLogger.warn(`[Array Validation] Expected array in ${context}, got:`, typeof value, value);
     return false;
   }
   return true;
@@ -147,7 +147,7 @@ export function createSafeArraySetter<T>(
     const safeArray = ensureArray<T>(value);
     
     if (!validateArray(value, context)) {
-      console.warn(`[${context}] Converting non-array value to empty array`);
+      clientLogger.warn(`[${context}] Converting non-array value to empty array`);
     }
     
     setter(safeArray);

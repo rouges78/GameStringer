@@ -179,7 +179,7 @@ export default function TranslatorProPage() {
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[TranslatorPro] Error loading global settings:', e);
       }
     }
@@ -202,7 +202,7 @@ export default function TranslatorProPage() {
           setApiKey(parsed.translation.apiKey);
           return;
         }
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[TranslatorPro] Errore parsing impostazioni globali:', e);
       }
     }
@@ -315,7 +315,7 @@ export default function TranslatorProPage() {
           
           setGames(uniqueGames);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error('[TranslatorPro] Error loading games:', err);
       } finally {
         setLoading(false);
@@ -445,7 +445,7 @@ export default function TranslatorProPage() {
             }
           }
         }
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.debug('[TranslatorPro] Could not fetch game details:', err);
       }
     }
@@ -480,11 +480,11 @@ export default function TranslatorProPage() {
         try {
           const locInfo = await invoke<typeof localizationInfo>('detect_localization_files', { gamePath: foundPath });
           setLocalizationInfo(locInfo);
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.debug('[TranslatorPro] Could not detect localization files:', e);
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.debug('[TranslatorPro] Could not detect engine:', err);
     } finally {
       setIsCheckingEngine(false);
@@ -511,7 +511,7 @@ export default function TranslatorProPage() {
             parseResult
           });
         }
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.error(`Error parsing ${file.name}:`, err);
       }
     }
@@ -561,7 +561,7 @@ export default function TranslatorProPage() {
                 parseResult
               });
             }
-          } catch (err) {
+          } catch (err: unknown) {
             clientLogger.error(`Error parsing ${file.name}:`, err);
           }
         }
@@ -694,7 +694,7 @@ export default function TranslatorProPage() {
                 clientLogger.warn(`Skipping ${file.name}: not a valid translation file`, parseErr);
               }
             }
-          } catch (err) {
+          } catch (err: unknown) {
             clientLogger.error(`Error reading ${file.name}:`, err);
           }
         }
@@ -763,7 +763,7 @@ export default function TranslatorProPage() {
         // Fallback to file picker if no files found
         openFilePicker();
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Error searching game files:', err);
       // Fallback: apri il file picker
       openFilePicker();
@@ -796,7 +796,7 @@ export default function TranslatorProPage() {
               parseResult
             });
           }
-        } catch (err) {
+        } catch (err: unknown) {
           clientLogger.error(`Error parsing ${file.name}:`, err);
         }
       }
@@ -907,7 +907,7 @@ export default function TranslatorProPage() {
       }
       
       setCurrentStep('results');
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsTranslating(false);
@@ -942,7 +942,7 @@ export default function TranslatorProPage() {
       if (result.success) {
         alert(`✅ File salvato!\n${result.backup_path ? `Backup creato: ${result.backup_path}` : ''}`);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.error('Error saving file:', err);
       alert(`❌ error nel salvataggio: ${err}`);
     }
@@ -1114,7 +1114,7 @@ export default function TranslatorProPage() {
         description: 'Il pacchetto ZIP include file tradotti, backup e formato XUnity.AutoTranslator.',
       });
       
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('[ExportPatch] Error:', error);
       toast({
         title: 'error esportazione',
@@ -1188,7 +1188,7 @@ export default function TranslatorProPage() {
             title: '✅ Translation applied!',
             description: `File saved: ${savedPath.split(/[/\\]/).pop()}. Select the translated language in the game options.`,
           });
-        } catch (e) {
+        } catch (e: unknown) {
           throw new Error(`error salvataggio file: ${e}`);
         }
       }
@@ -1210,7 +1210,7 @@ export default function TranslatorProPage() {
               gameExeName: exeName,
               targetLang: targetLanguage 
             });
-          } catch (e) {
+          } catch (e: unknown) {
             clientLogger.warn('Installazione patcher fallita:', e);
           }
         }
@@ -1233,7 +1233,7 @@ export default function TranslatorProPage() {
             path: `${xunityPath}/_GameStringer.txt`, 
             content: dictionaryLines.join('\n') 
           });
-        } catch (e) {
+        } catch (e: unknown) {
           clientLogger.warn('Fallback a Translation Memory:', e);
         }
         
@@ -1254,7 +1254,7 @@ export default function TranslatorProPage() {
             clientLogger.debug('[ApplyToGame] Salvando:', targetPath);
             await invoke('write_text_file', { path: targetPath, content });
             savedCount++;
-          } catch (e) {
+          } catch (e: unknown) {
             clientLogger.warn('[ApplyToGame] error salvataggio file:', filename, e);
           }
         }
@@ -1304,7 +1304,7 @@ export default function TranslatorProPage() {
           timestamp: new Date().toISOString()
         });
         await set('gamePatches', savedPatches);
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('Errore salvataggio patch in IndexedDB:', e);
       }
       
@@ -1321,7 +1321,7 @@ export default function TranslatorProPage() {
         }
       });
       
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.error('error applicazione:', e);
       setApplyStatus('error');
       toast({
@@ -1512,7 +1512,7 @@ export default function TranslatorProPage() {
                   setSelectedFiles([{ name: localizationInfo.source_file.filename, path: localizationInfo.source_file.path, content, format: parseResult.format, parseResult }]);
                   toast({ title: '✓ Caricato!', description: `${parseResult.strings.length} stringhe` });
                 }
-              } catch (e) {
+              } catch (e: unknown) {
                 toast({ title: 'error', description: `${e}`, variant: 'destructive' });
               } finally {
                 setIsLoadingFiles(false);

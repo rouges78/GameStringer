@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SteamUser {
   steam_id: string;
@@ -60,14 +61,14 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               });
             }
           }
-        } catch (e) {
-          console.log('Could not load full profile with avatar');
+        } catch (e: unknown) {
+          clientLogger.debug('Could not load full profile with avatar');
         }
         setSteamUser(fullProfile);
         setAuthStep('success');
       }
-    } catch (e) {
-      console.log('No existing Steam auth');
+    } catch (e: unknown) {
+      clientLogger.debug('No existing Steam auth');
     }
     setCheckingAuth(false);
   };
@@ -97,8 +98,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           const settings = JSON.parse(settingsStr);
           apiKey = settings?.integrations?.steamApiKey || null;
         }
-      } catch (e) {
-        console.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[STEAM] Errore parsing impostazioni Steam:', e);
       }
       
       // Get user profile
@@ -148,8 +149,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           const settings = JSON.parse(settingsStr);
           apiKey = settings?.integrations?.steamApiKey || null;
         }
-      } catch (e) {
-        console.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[STEAM] Errore parsing impostazioni Steam:', e);
       }
       
       // Get user profile
@@ -191,7 +192,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           apiKey: apiKey.trim(),
           steamId: steamUser.steam_id
         });
-        console.log('✅ Credenziali Steam salvate nel profilo');
+        clientLogger.debug('✅ Credenziali Steam salvate nel profilo');
         
         await onSubmit(steamUser.steam_id);
         onClose();
@@ -209,8 +210,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       setSteamUser(null);
       setWishlist([]);
       setAuthStep('idle');
-    } catch (e) {
-      console.error('Logout error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Logout error:', e);
     }
   };
 

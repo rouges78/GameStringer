@@ -96,7 +96,7 @@ class SessionPersistence {
       } else {
         this.clearSession();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Error syncing session with backend:', error);
     }
   }
@@ -162,7 +162,7 @@ class SessionPersistence {
       await this.syncWithBackend();
       return true;
       
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('❌ Errore durante restore:', error);
       throw error;
     }
@@ -215,7 +215,7 @@ class SessionPersistence {
         if (session) {
           await this.syncWithBackend();
         }
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.error('❌ Errore sync session:', error);
       } finally {
         syncInProgress = false;
@@ -310,7 +310,7 @@ class SessionPersistence {
         localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(existing));
         clientLogger.debug(`[BOOT] 🔄 Store connections restored: ${existing.length} providers`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.warn('[BOOT] Errore ripristino store connections:', error);
     }
   }

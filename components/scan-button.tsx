@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 export function ScanButton() {
   const [isScanning, setIsScanning] = useState(false);
@@ -24,12 +25,12 @@ export function ScanButton() {
       
       while (retries < maxRetries) {
         if (typeof window !== 'undefined' && window.__TAURI__) {
-          console.log('Tauri API trovata dopo', retries * 100, 'ms');
+          clientLogger.debug('Tauri API trovata dopo', retries * 100, 'ms');
           break;
         }
         
         if (retries === 0) {
-          console.log('Aspettando che Tauri API sia disponibile...');
+          clientLogger.debug('Aspettando che Tauri API sia disponibile...');
         }
         
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -37,17 +38,17 @@ export function ScanButton() {
       }
       
       if (!window.__TAURI__) {
-        console.error('Tauri API non trovata dopo 5 secondi');
-        console.log('Chiavi window che contengono TAURI:', Object.keys(window).filter(k => k.includes('TAURI')));
+        clientLogger.error('Tauri API non trovata dopo 5 secondi');
+        clientLogger.debug('Chiavi window che contengono TAURI:', Object.keys(window).filter(k => k.includes('TAURI')));
         throw new Error('Tauri API non disponibile. Assicurati di eseguire l\'app in ambiente Tauri.');
       }
 
-      console.log('Invocando comando scan_games...');
+      clientLogger.debug('Invocando comando scan_games...');
       
       // Usa il comando Tauri per la scansione
       const scanResults = await invoke<unknown[]>('scan_games');
       
-      console.log('Scan results:', scanResults);
+      clientLogger.debug('Scan results:', scanResults);
       
       toast.success('Scan completed!', {
         description: `Found ${scanResults.length} games`,
@@ -56,8 +57,8 @@ export function ScanButton() {
       // Ricarica la pagina corrente per aggiornare i dati
       router.refresh();
 
-    } catch (err) {
-      console.error('Error during scan:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error during scan:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error.';
       toast.error('Scan failed', {
         description: errorMessage,

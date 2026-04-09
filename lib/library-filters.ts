@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { safeSetItem, safeGetItem, safeRemoveItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const FILTERS_KEY = 'library_filters';
 
@@ -35,8 +36,8 @@ export function saveLibraryFilters(filters: Partial<LibraryFilters>): void {
     const current = loadLibraryFilters();
     const updated = { ...current, ...filters };
     safeSetItem(FILTERS_KEY, updated);
-  } catch (error) {
-    console.warn('Errore salvataggio filtri library:', error);
+  } catch (error: unknown) {
+    clientLogger.warn('Errore salvataggio filtri library:', error);
   }
 }
 
@@ -49,8 +50,8 @@ export function loadLibraryFilters(): LibraryFilters {
     if (saved) {
       return { ...defaultFilters, ...saved };
     }
-  } catch (error) {
-    console.warn('Errore caricamento filtri library:', error);
+  } catch (error: unknown) {
+    clientLogger.warn('Errore caricamento filtri library:', error);
   }
   return defaultFilters;
 }

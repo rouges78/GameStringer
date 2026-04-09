@@ -1,5 +1,6 @@
 // Sistema di profili per giochi
 import { GameTranslation, genericTranslations, getTranslationsForProcess } from './game-translations';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface GameProfile {
   id: string;
@@ -39,8 +40,8 @@ export class GameProfileManager {
           Object.entries(data).forEach(([key, value]) => {
             this.profiles.set(key, value as GameProfile);
           });
-        } catch (e) {
-          console.error('Errore caricamento profili:', e);
+        } catch (e: unknown) {
+          clientLogger.error('Errore caricamento profili:', e);
         }
       }
     }
@@ -198,8 +199,8 @@ export class GameProfileManager {
         this.saveProfiles();
         return true;
       }
-    } catch (e) {
-      console.error('Errore importazione profilo:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore importazione profilo:', e);
     }
     return false;
   }

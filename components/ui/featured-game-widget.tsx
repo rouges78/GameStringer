@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Gamepad2, Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 interface FeaturedGameWidgetProps {
   collapsed?: boolean;
@@ -140,8 +141,8 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
           }
         }
         setGamesWithoutLang(filtered);
-      } catch (e) {
-        console.error('[FeaturedGameWidget] Errore:', e);
+      } catch (e: unknown) {
+        clientLogger.error('[FeaturedGameWidget] Errore:', e);
         setGamesWithoutLang([]);
       } finally {
         setIsLoading(false);

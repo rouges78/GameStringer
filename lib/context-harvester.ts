@@ -13,6 +13,7 @@
  */
 
 import { classifyContent, ContentClassification, ContentType } from './content-classifier';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -1103,8 +1104,8 @@ ${ambiguous.map((a, i) => `${i + 1}. ${a.key ? `[${a.key}] ` : ''}${a.text}`).jo
         inputs[idx]?.gameGenre,
       );
     }
-  } catch (e) {
-    console.warn('[ContextHarvester] AI enhancement failed, keeping rule-based contexts:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[ContextHarvester] AI enhancement failed, keeping rule-based contexts:', e);
   }
 
   return contexts;
@@ -1177,8 +1178,8 @@ export function saveHarvest(gameId: string, result: BatchHarvestResult, gameName
       contexts: result.contexts,
     } satisfies StoredHarvest;
     localStorage.setItem(HARVEST_STORAGE_KEY, JSON.stringify(allHarvests));
-  } catch (e) {
-    console.warn('[ContextHarvester] Save failed:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[ContextHarvester] Save failed:', e);
   }
 }
 

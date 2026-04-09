@@ -649,7 +649,7 @@ async function translateWithTranslateGemma(
       blockProvider('translategemma'); // Modello mancante → blocco permanente
       throw new Error('TranslateGemma non installato. Esegui: ollama pull translategemma');
     }
-  } catch (err) {
+  } catch (err: unknown) {
     blockProvider('translategemma', false); // Errore rete → cooldown 30s
     throw err;
   }
@@ -709,7 +709,7 @@ async function translateWithTranslateGemma(
     }
 
     return results;
-  } catch (err) {
+  } catch (err: unknown) {
     blockProvider('translategemma', false); // Errore runtime → cooldown 30s
     throw err;
   }
@@ -749,7 +749,7 @@ async function translateWithHYMT(
       blockProvider('hymt'); // Modello mancante → blocco permanente
       throw new Error('HY-MT1.5 non installato. Vai in Settings → Ollama e premi Pull su HY-MT');
     }
-  } catch (err) {
+  } catch (err: unknown) {
     blockProvider('hymt', false); // Errore rete → cooldown 30s
     throw err;
   }
@@ -907,7 +907,7 @@ async function translateWithLMStudio(
         throw new Error('Nessun modello caricato in LM Studio');
       }
     }
-  } catch (err) {
+  } catch (err: unknown) {
     blockProvider('lmstudio', false);
     throw err;
   }
@@ -953,7 +953,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         let translated = data?.choices?.[0]?.message?.content?.trim() || text;
         translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
         return translated;
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.warn(`[LM Studio] Errore traduzione:`, err);
         return text;
       }
@@ -984,7 +984,7 @@ async function translateWithModelWiz(
   try {
     const healthRes = await fetch(`${modelwizUrl}/api/health`, { signal: AbortSignal.timeout(3000) });
     if (!healthRes.ok) throw new Error(`ModelWiz non raggiungibile (${healthRes.status})`);
-  } catch (err) {
+  } catch (err: unknown) {
     // Fallback: prova endpoint root
     try {
       const rootRes = await fetch(modelwizUrl, { signal: AbortSignal.timeout(3000) });
@@ -1103,7 +1103,7 @@ async function translateWithOllamaGeneric(
       const specialized = available.find(n => n.includes('tower') || n.includes('aya') || n.includes('qwen') || n.includes('llama3'));
       selectedModel = specialized || available[0];
     }
-  } catch (err) {
+  } catch (err: unknown) {
     blockProvider('ollama', false); // Cooldown
     throw err;
   }
@@ -1221,7 +1221,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         }
         
         return translated;
-      } catch (err) {
+      } catch (err: unknown) {
         clientLogger.warn(`[Ollama] Errore traduzione stringa:`, err);
         return text; // Fallback all'originale
       }
@@ -1517,7 +1517,7 @@ export async function translateWithFallback(
         opts = { ...opts, tmContext: tmCtx };
         clientLogger.debug(`[TM-RAG] Auto-iniettate traduzioni simili nel prompt (${opts.texts.length} testi)`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       // TM non disponibile — procedi senza
     }
   }
@@ -1620,7 +1620,7 @@ export async function translateWithFallback(
           return { translations, provider: provider.name, success: true };
         }
         break;
-      } catch (err) {
+      } catch (err: unknown) {
         lastErr = err;
         const errMsg = err instanceof Error ? err.message : String(err);
         
@@ -2032,7 +2032,7 @@ Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, 
       const scores = Array.isArray(parsed.scores) ? parsed.scores.map(Number) : candidates.map(() => 50);
       return { winnerIndex: winnerIdx, scores };
     }
-  } catch (err) {
+  } catch (err: unknown) {
     clientLogger.warn('[Multi-LLM Judge] LLM judge failed:', err);
   }
 
@@ -2190,7 +2190,7 @@ export async function translateWithComparison(
 
       judgeUsed = 'heuristic+llm';
       clientLogger.debug(`[Multi-LLM] Giudice LLM applicato, vincitore index: ${judgeResult.winnerIndex}`);
-    } catch (err) {
+    } catch (err: unknown) {
       clientLogger.warn('[Multi-LLM] Giudice LLM fallito, uso solo euristico:', err);
     }
   }

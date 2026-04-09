@@ -92,7 +92,7 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
       toast.success('Avatar updated!');
       onOpenChange(false);
       setPreviewUrl(null);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error saving');
     } finally {
       setIsLoading(false);

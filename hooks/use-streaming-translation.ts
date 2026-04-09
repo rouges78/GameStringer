@@ -107,12 +107,12 @@ export function useStreamingTranslation() {
                 }));
                 break;
             }
-          } catch (e) {
+          } catch (e: unknown) {
             // Skip unparseable events
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') {
         // Request was cancelled, ignore
         return;

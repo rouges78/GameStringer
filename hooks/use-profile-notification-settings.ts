@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useProfiles } from './use-profiles';
 import { useNotificationPreferences } from './use-notification-preferences';
 import { 
+import { clientLogger } from '@/lib/client-logger';
   NotificationPreferences, 
   NotificationType,
   DEFAULT_NOTIFICATION_PREFERENCES 
@@ -110,8 +111,8 @@ export const useProfileNotificationSettings = (): UseProfileNotificationSettings
         setHasUnsavedChanges(false);
       }
       return success;
-    } catch (error) {
-      console.error('Errore nell\'aggiornamento delle preferenze:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nell\'aggiornamento delle preferenze:', error);
       return false;
     }
   }, [currentProfile, localPreferences, updatePrefs]);
@@ -128,8 +129,8 @@ export const useProfileNotificationSettings = (): UseProfileNotificationSettings
         setHasUnsavedChanges(false);
       }
       return success;
-    } catch (error) {
-      console.error('Errore nel reset delle preferenze:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel reset delle preferenze:', error);
       return false;
     }
   }, [currentProfile, resetPrefs]);

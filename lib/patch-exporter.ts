@@ -8,6 +8,7 @@
  */
 
 import JSZip from 'jszip';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface TranslatedFile {
   originalPath: string;      // Percorso originale nel gioco
@@ -240,8 +241,8 @@ function extractTranslationPairs(
         }
         break;
     }
-  } catch (e) {
-    console.warn('Error extracting translation pairs:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('Error extracting translation pairs:', e);
   }
   
   return pairs;

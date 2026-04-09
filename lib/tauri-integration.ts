@@ -1,20 +1,21 @@
 'use client';
 
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 // Client-side clientLogger (console only)
 const clientLogger = {
   info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.info(`[${component || 'TAURI'}] ${message}`, metadata);
+    clientLogger.info(`[${component || 'TAURI'}] ${message}`, metadata);
   },
   warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.warn(`[${component || 'TAURI'}] ${message}`, metadata);
+    clientLogger.warn(`[${component || 'TAURI'}] ${message}`, metadata);
   },
   error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.error(`[${component || 'TAURI'}] ${message}`, metadata);
+    clientLogger.error(`[${component || 'TAURI'}] ${message}`, metadata);
   },
   debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    console.debug(`[${component || 'TAURI'}] ${message}`, metadata);
+    clientLogger.debug(`[${component || 'TAURI'}] ${message}`, metadata);
   }
 };
 
@@ -103,7 +104,7 @@ export class TauriIntegration {
 
       this.isInitialized = true;
       clientLogger.info('Tauri integration initialized', 'TAURI_INTEGRATION');
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to initialize Tauri integration', 'TAURI_INTEGRATION', { error });
       throw error;
     }
@@ -127,7 +128,7 @@ export class TauriIntegration {
       const result = await invoke<T>(command, args);
       clientLogger.debug(`Tauri command completed: ${command}`, 'TAURI_INTEGRATION', { result });
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error(`Tauri command failed: ${command}`, 'TAURI_INTEGRATION', { error, args });
       throw error;
     }
@@ -156,7 +157,7 @@ export class TauriIntegration {
           : undefined,
         playtime: game.playtime_forever || 0
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to get Steam games', 'TAURI_INTEGRATION', { error });
       throw error;
     }
@@ -172,7 +173,7 @@ export class TauriIntegration {
       // This would require Steam ID - for now return empty array
       clientLogger.warn('Steam Web API integration not fully implemented', 'TAURI_INTEGRATION');
       return [];
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to get Steam games from Web API', 'TAURI_INTEGRATION', { error });
       throw error;
     }
@@ -192,7 +193,7 @@ export class TauriIntegration {
         error: result.error,
         lastSync: new Date().toISOString()
       };
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to test Steam connection', 'TAURI_INTEGRATION', { error });
       return {
         connected: false,
@@ -222,7 +223,7 @@ export class TauriIntegration {
         connected: true,
         lastSync: new Date().toISOString()
       };
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         connected: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -247,7 +248,7 @@ export class TauriIntegration {
         installed: game.is_installed || false,
         installPath: game.install_path
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to get Epic Games', 'TAURI_INTEGRATION', { error });
       throw error;
     }
@@ -270,7 +271,7 @@ export class TauriIntegration {
         error: result.error,
         lastSync: new Date().toISOString()
       };
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to test Epic connection', 'TAURI_INTEGRATION', { error });
       return {
         connected: false,
@@ -313,7 +314,7 @@ export class TauriIntegration {
       try {
         const games = await this.getGamesFromStore(store);
         allGames.push(...games);
-      } catch (error) {
+      } catch (error: unknown) {
         clientLogger.warn(`Failed to get games from ${store}`, 'TAURI_INTEGRATION', { error });
       }
     }
@@ -341,7 +342,7 @@ export class TauriIntegration {
         gamesCount: totalGames,
         errors
       };
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       errors.push(errorMessage);
       clientLogger.error('Failed to sync game library', 'TAURI_INTEGRATION', { error });
@@ -365,7 +366,7 @@ export class TauriIntegration {
 
     try {
       return await this.invokeCommand('get_system_info');
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to get system info', 'TAURI_INTEGRATION', { error });
       throw error;
     }
@@ -378,7 +379,7 @@ export class TauriIntegration {
 
     try {
       await this.invokeCommand('open_directory', { path: gamePath });
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to open game directory', 'TAURI_INTEGRATION', { error, gamePath });
       throw error;
     }
@@ -391,7 +392,7 @@ export class TauriIntegration {
 
     try {
       await this.invokeCommand('launch_game', { game_id: gameId });
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Failed to launch game', 'TAURI_INTEGRATION', { error, gameId });
       throw error;
     }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNotificationToast } from '@/components/notifications/notification-toast-provider';
 import { Notification, NotificationPreferences, shouldShowNotification } from '@/types/notifications';
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 interface UseNotificationToastIntegrationOptions {
   profileId?: string;
@@ -31,8 +32,8 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
         if ((result as unknown)?.success && (result as unknown)?.data) {
           setPreferences((result as unknown).data as NotificationPreferences);
         }
-      } catch (error) {
-        console.error('Errore nel caricamento delle preferenze notifiche:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Errore nel caricamento delle preferenze notifiche:', error);
       }
     };
 
@@ -99,7 +100,7 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
     // Controlla le preferenze se richiesto
     if (respectPreferences && preferences) {
       if (!shouldShowNotification(notification, preferences)) {
-        console.log('Notifica bloccata dalle preferenze:', notification.title);
+        clientLogger.debug('Notifica bloccata dalle preferenze:', notification.title);
         return false;
       }
     }
@@ -121,8 +122,8 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
         return true;
       }
       return false;
-    } catch (error) {
-      console.error('Errore nell\'aggiornamento delle preferenze:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nell\'aggiornamento delle preferenze:', error);
       return false;
     }
   }, [preferences]);

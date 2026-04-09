@@ -41,7 +41,7 @@ export function SupportButton({
     if (url) {
       try {
         await open(url);
-      } catch (e) {
+      } catch (e: unknown) {
         // Fallback per browser
         window.open(url, '_blank', 'noopener,noreferrer');
       }

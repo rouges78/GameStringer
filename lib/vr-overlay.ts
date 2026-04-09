@@ -253,8 +253,8 @@ class VROverlayService {
       // Fallback: check for common VR processes (Tauri backend)
       // This would use invoke() to check system processes
       return null;
-    } catch (error) {
-      console.error('Errore rilevamento headset:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore rilevamento headset:', error);
       return null;
     }
   }

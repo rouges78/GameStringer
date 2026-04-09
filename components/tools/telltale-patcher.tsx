@@ -25,6 +25,7 @@ import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Telltale .langdb extraction is wired into this patcher.
 
@@ -110,8 +111,8 @@ export function TelltalePatcher() {
         // Detect platform and game
         await detectGame(selected);
       }
-    } catch (error) {
-      console.error('Folder selection error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Folder selection error:', error);
       toast.error('Error selecting folder');
     }
   };

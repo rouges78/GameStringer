@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { safeSetItem, safeGetItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const OFFLINE_QUEUE_KEY = 'offline_action_queue';
 const OFFLINE_CACHE_KEY = 'offline_data_cache';
@@ -187,14 +188,14 @@ export function useOfflineMode() {
         // Esegui l'azione in base al tipo
         await executeOfflineAction(action);
         removeFromQueue(action.id);
-      } catch (error) {
-        console.error(`Errore sync azione ${action.id}:`, error);
+      } catch (error: unknown) {
+        clientLogger.error(`Errore sync azione ${action.id}:`, error);
         if (action.retries < 3) {
           incrementRetry(action.id);
         } else {
           // Troppi retry, rimuovi
           removeFromQueue(action.id);
-          console.warn(`Azione ${action.id} rimossa dopo 3 tentativi falliti`);
+          clientLogger.warn(`Azione ${action.id} rimossa dopo 3 tentativi falliti`);
         }
       }
     }
@@ -234,17 +235,17 @@ async function executeOfflineAction(action: OfflineAction): Promise<void> {
   switch (action.type) {
     case 'translation':
       // Riprendi traduzione
-      console.log('Ripresa traduzione offline:', action.payload);
+      clientLogger.debug('Ripresa traduzione offline:', action.payload);
       break;
       
     case 'save':
       // Salva dati
-      console.log('Salvataggio dati offline:', action.payload);
+      clientLogger.debug('Salvataggio dati offline:', action.payload);
       break;
       
     case 'sync':
       // Sincronizza con server
-      console.log('Sincronizzazione:', action.payload);
+      clientLogger.debug('Sincronizzazione:', action.payload);
       break;
       
     case 'backup':
@@ -253,7 +254,7 @@ async function executeOfflineAction(action: OfflineAction): Promise<void> {
       break;
       
     default:
-      console.warn('Tipo azione sconosciuto:', action.type);
+      clientLogger.warn('Tipo azione sconosciuto:', action.type);
   }
 }
 

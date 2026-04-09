@@ -169,7 +169,7 @@ class ClientLogger {
       if (!response.ok) {
         console.error('Failed to send logs to remote endpoint:', response.statusText);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending logs to remote endpoint:', error);
     }
   }
@@ -362,7 +362,7 @@ export function withClientPerformanceLogging<T extends unknown[]>(
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(
@@ -391,7 +391,7 @@ export function withClientAsyncPerformanceLogging<T extends unknown[]>(
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(

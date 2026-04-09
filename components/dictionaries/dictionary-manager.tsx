@@ -16,6 +16,7 @@ import { useTranslation } from '@/lib/i18n';
 import { listInstalledDictionaries, deleteDictionary, searchInDictionary, addTranslationToDictionary, getDictionariesStats, importDictionaryAuto, exportDictionarySimple, applyDictionaryToXUnity, formatFileSize, formatDate, getLanguageName, getLanguageFlag, type DictionaryInfo, type DictionariesStats } from '@/lib/game-dictionaries';
 import { invoke } from '@/lib/tauri-api';
 import { open } from '@tauri-apps/plugin-dialog';
+import { clientLogger } from '@/lib/client-logger';
 
 export function DictionaryManager() {
   const [dictionaries, setDictionaries] = useState<DictionaryInfo[]>([]);
@@ -41,7 +42,7 @@ export function DictionaryManager() {
     try {
       const [dicts, s] = await Promise.all([listInstalledDictionaries(), getDictionariesStats()]);
       setDictionaries(dicts); setStats(s);
-    } catch (e) { console.error(e); }
+    } catch (e: unknown) { clientLogger.error(e); }
     finally { setLoading(false); }
   }, []);
 
@@ -142,14 +143,14 @@ export function DictionaryManager() {
     try {
       const f = await open({ filters: [{ name: 'JSON', extensions: ['json'] }] });
       if (f) setImportFilePath(f as string);
-    } catch (e) { console.error(e); }
+    } catch (e: unknown) { clientLogger.error(e); }
   };
 
   const pickFolder = async () => {
     try {
       const f = await open({ directory: true });
       if (f) setGamePath(f as string);
-    } catch (e) { console.error(e); }
+    } catch (e: unknown) { clientLogger.error(e); }
   };
 
   return (

@@ -62,8 +62,8 @@ class GameTranslationProfileManager {
           Object.entries(data).forEach(([id, profile]) => {
             this.profiles.set(id, profile as TranslationProfile);
           });
-        } catch (error) {
-          console.error('Errore caricamento profili:', error);
+        } catch (error: unknown) {
+          clientLogger.error('Errore caricamento profili:', error);
         }
       }
     }
@@ -279,8 +279,8 @@ class GameTranslationProfileManager {
       const profile = JSON.parse(jsonData) as TranslationProfile;
       const id = this.createProfile(profile);
       return id;
-    } catch (error) {
-      console.error('Errore importazione profilo:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore importazione profilo:', error);
       return null;
     }
   }

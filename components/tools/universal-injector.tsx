@@ -23,6 +23,7 @@ import {
   Gamepad2
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface InjectionTool {
   name: string;
@@ -109,8 +110,8 @@ export function UniversalInjector() {
         setInjectionResult(null);
         setError(null);
       }
-    } catch (e) {
-      console.error('Folder selection error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Folder selection error:', e);
     }
   };
 
@@ -127,7 +128,7 @@ export function UniversalInjector() {
         gamePath
       });
       setDetectionResult(result);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Detection error: ${e}`);
     } finally {
       setIsDetecting(false);
@@ -147,7 +148,7 @@ export function UniversalInjector() {
         createBackup
       });
       setInjectionResult(result);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Injection error: ${e}`);
     } finally {
       setIsInjecting(false);

@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface AudioTranscription {
   id: string;
@@ -157,8 +158,8 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
         setAudioDevices(devices.filter(device => 
           device.kind === 'audioinput' || device.kind === 'audiooutput'
         ));
-      } catch (error) {
-        console.error('Error retrieving audio devices:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error retrieving audio devices:', error);
       }
     };
 
@@ -267,8 +268,8 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
       mediaRecorderRef.current.start();
       setIsRecording(true);
       toast.success('Recording started');
-    } catch (error) {
-      console.error('Error starting recording:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error starting recording:', error);
       toast.error('Cannot start recording');
     }
   };
@@ -302,8 +303,8 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
       }
 
       toast.success('Audio processed successfully');
-    } catch (error) {
-      console.error('Audio processing error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Audio processing error:', error);
       toast.error('Audio processing error');
     } finally {
       setIsProcessing(false);
@@ -335,8 +336,8 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
       setTranslations(prev => [translation, ...prev]);
       onTranslationComplete(translation);
       toast.success('Translation completed');
-    } catch (error) {
-      console.error('Translation error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Translation error:', error);
       toast.error('Translation error');
     } finally {
       setIsProcessing(false);

@@ -28,6 +28,7 @@ import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 // Glossary term interface
 interface GlossaryTerm {
@@ -95,8 +96,8 @@ export function QAChecker() {
       if (saved) {
         setGlossary(JSON.parse(saved));
       }
-    } catch (e) {
-      console.warn('Failed to load glossary:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('Failed to load glossary:', e);
     }
   }, []);
 
@@ -188,8 +189,8 @@ export function QAChecker() {
           description: `${errors} ${t('qaCheck.errors')}, ${warnings} ${t('qaCheck.warnings')}`
         });
       }
-    } catch (e) {
-      console.error('[QA] Check error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[QA] Check error:', e);
       toast({ title: 'Errore', description: String(e), variant: 'destructive' });
     } finally {
       setIsChecking(false);
@@ -206,7 +207,7 @@ export function QAChecker() {
       toast({ title: `✨ ${t('qaCheck.fixApplied')}` });
       // Re-run check
       setTimeout(runCheck, 100);
-    } catch (e) {
+    } catch (e: unknown) {
       toast({ title: 'Errore', description: String(e), variant: 'destructive' });
     }
   }, [target, toast, runCheck]);

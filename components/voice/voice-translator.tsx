@@ -30,6 +30,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback, getApiKeys } from '@/lib/ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranscriptionSegment {
   start: number;
@@ -195,7 +196,7 @@ export function VoiceTranslator() {
         step: 'recording'
       }));
 
-    } catch (error) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
         error: 'Unable to access microphone. Check permissions.'
@@ -414,7 +415,7 @@ export function VoiceTranslator() {
           const speedRatio = synthDuration / state.originalDuration;
           effectiveSpeed = Math.max(0.5, Math.min(2.0, state.speechSpeed * speedRatio));
 
-          console.log(`[DurationMatch] Original: ${state.originalDuration.toFixed(2)}s, Synthesized: ${synthDuration.toFixed(2)}s → Speed: ${effectiveSpeed.toFixed(2)}x`);
+          clientLogger.debug(`[DurationMatch] Original: ${state.originalDuration.toFixed(2)}s, Synthesized: ${synthDuration.toFixed(2)}s → Speed: ${effectiveSpeed.toFixed(2)}x`);
 
           // Re-synthesize with adjusted speed
           requestBody.speed = effectiveSpeed;

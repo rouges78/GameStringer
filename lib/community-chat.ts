@@ -147,7 +147,7 @@ function getGSSession(): GSSessionInfo | null {
 
     clientLogger.debug('[Chat Bridge] Nessuna sessione GS trovata in localStorage');
     return null;
-  } catch (e) {
+  } catch (e: unknown) {
     clientLogger.error('[Chat Bridge] Errore lettura sessione GS:', e);
     return null;
   }
@@ -259,7 +259,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
       } else {
         clientLogger.debug('[Chat Bridge] Profilo già esistente per:', authenticatedUserId);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.error('[Chat Bridge] Errore verifica/creazione profilo:', e);
     }
   }

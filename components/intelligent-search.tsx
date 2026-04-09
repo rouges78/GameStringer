@@ -16,6 +16,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import {
+import { clientLogger } from '@/lib/client-logger';
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -80,8 +81,8 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
     if (savedHistory) {
       try {
         setSearchHistory(JSON.parse(savedHistory));
-      } catch (error) {
-        console.error('Error loading search history:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error loading search history:', error);
       }
     }
   }, []);

@@ -4,6 +4,7 @@
  */
 
 import { translateSingleWithFallback } from './ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface CharacterProfile {
   id: string;
@@ -661,8 +662,8 @@ class CharacterVoiceService {
         translated,
         suggestions: []
       };
-    } catch (error) {
-      console.error('Character translation failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Character translation failed:', error);
       return { translated: text, suggestions: ['Traduzione fallita'] };
     }
   }

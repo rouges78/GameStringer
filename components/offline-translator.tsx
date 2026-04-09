@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
+import { clientLogger } from '@/lib/client-logger';
   WifiOff, Download, CheckCircle2, XCircle, Loader2,
   ArrowRightLeft, Trash2, Copy, Plus, ChevronDown, Cpu, Zap
 } from 'lucide-react';
@@ -75,8 +76,8 @@ export default function OfflineTranslator() {
       if (s.recommended_model && !selectedModel) {
         setSelectedModel(s.recommended_model);
       }
-    } catch (err) {
-      console.error('Errore status offline:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore status offline:', err);
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +93,7 @@ export default function OfflineTranslator() {
       await invoke<string>('start_ollama');
       toast.success(t('offlineTranslator.ollamaStarted'));
       await refreshStatus();
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error(t('offlineTranslator.errorStartOllama'), { description: String(err) });
     }
   };
@@ -104,7 +105,7 @@ export default function OfflineTranslator() {
       await invoke<string>('pull_ollama_model', { modelName });
       toast.success(`${modelName} ${t('offlineTranslator.installed')}`, { id: `pull-${modelName}` });
       await refreshStatus();
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error(`${t('offlineTranslator.errorDownload')} ${modelName}`, { description: String(err), id: `pull-${modelName}` });
     } finally {
       setIsPulling('');
@@ -132,7 +133,7 @@ export default function OfflineTranslator() {
       });
       setResults(prev => [result, ...prev]);
       toast.success(`${t('offlineTranslator.translatedIn')} ${result.duration_ms}ms`);
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error(t('offlineTranslator.errorTranslation'), { description: String(err) });
     } finally {
       setIsTranslating(false);
@@ -157,7 +158,7 @@ export default function OfflineTranslator() {
       });
       setResults(prev => [...batchResults.reverse(), ...prev]);
       toast.success(`${t('offlineTranslator.batchComplete')} ${batchResults.length} ${t('offlineTranslator.textsTranslated')}`, { id: toastId });
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error(t('offlineTranslator.errorBatch'), { description: String(err), id: toastId });
     } finally {
       setIsTranslating(false);

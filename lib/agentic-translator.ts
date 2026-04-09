@@ -10,6 +10,7 @@
  */
 
 import { getApiKeys } from './ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface AgenticOptions {
   text: string;
@@ -53,7 +54,7 @@ export class AgenticTranslator {
       // Preferisci modelli istruiti per compiti complessi come il QA
       const specialized = available.find(n => n.includes('tower') || n.includes('qwen') || n.includes('llama3') || n.includes('mistral'));
       return specialized || available[0];
-    } catch (e) {
+    } catch (e: unknown) {
       return 'llama3'; // Fallback teorico
     }
   }
@@ -180,7 +181,7 @@ If there are issues, reply with a short, direct instruction to the translator on
         attempt++;
         if (attempt > maxAttempts) break;
 
-        console.log(`[Agentic QA] Attempt ${attempt - 1} failed. Feedback: ${feedback}`);
+        clientLogger.debug(`[Agentic QA] Attempt ${attempt - 1} failed. Feedback: ${feedback}`);
 
         const correctionPrompt = `Your previous translation had issues.
 Source text: "${opts.text}"
@@ -196,7 +197,7 @@ Provide the corrected translation. Output ONLY the corrected text.`;
       }
 
     } catch (e: unknown) {
-      console.error('[Agentic Pipeline] Error:', e);
+      clientLogger.error('[Agentic Pipeline] Error:', e);
       // Fallback
       if (!currentTranslation) currentTranslation = opts.text; 
     }

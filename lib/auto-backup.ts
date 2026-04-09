@@ -4,6 +4,7 @@
  */
 
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface BackupConfig {
   enabled: boolean;
@@ -86,7 +87,7 @@ class AutoBackupService {
       this.createBackup('auto');
     }, intervalMs);
 
-    console.log(`[AutoBackup] Started with interval: ${this.config.intervalMinutes} min`);
+    clientLogger.debug(`[AutoBackup] Started with interval: ${this.config.intervalMinutes} min`);
   }
 
   /**
@@ -107,13 +108,13 @@ class AutoBackupService {
     description?: string
   ): Promise<BackupEntry | null> {
     if (!this.getProjectDataFn || !this.currentProjectId) {
-      console.warn('[AutoBackup] No project data getter configured');
+      clientLogger.warn('[AutoBackup] No project data getter configured');
       return null;
     }
 
     const data = this.getProjectDataFn();
     if (!data) {
-      console.warn('[AutoBackup] No project data to backup');
+      clientLogger.warn('[AutoBackup] No project data to backup');
       return null;
     }
 
@@ -138,10 +139,10 @@ class AutoBackupService {
       
       this.saveBackupList();
       
-      console.log(`[AutoBackup] Created ${type} backup: ${entry.id}`);
+      clientLogger.debug(`[AutoBackup] Created ${type} backup: ${entry.id}`);
       return entry;
-    } catch (error) {
-      console.error('[AutoBackup] Failed to create backup:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AutoBackup] Failed to create backup:', error);
       return null;
     }
   }
@@ -153,15 +154,15 @@ class AutoBackupService {
     try {
       const backupJson = localStorage.getItem(`backup_${backupId}`);
       if (!backupJson) {
-        console.error('[AutoBackup] Backup not found:', backupId);
+        clientLogger.error('[AutoBackup] Backup not found:', backupId);
         return null;
       }
 
       const data = JSON.parse(backupJson) as BackupData;
-      console.log(`[AutoBackup] Restored backup: ${backupId}`);
+      clientLogger.debug(`[AutoBackup] Restored backup: ${backupId}`);
       return data;
-    } catch (error) {
-      console.error('[AutoBackup] Failed to restore backup:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AutoBackup] Failed to restore backup:', error);
       return null;
     }
   }
@@ -267,8 +268,8 @@ class AutoBackupService {
       if (stored) {
         this.backups = JSON.parse(stored);
       }
-    } catch (error) {
-      console.error('[AutoBackup] Failed to load backup list:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AutoBackup] Failed to load backup list:', error);
     }
   }
 
@@ -288,8 +289,8 @@ class AutoBackupService {
       if (stored) {
         this.config = { ...DEFAULT_CONFIG, ...JSON.parse(stored) };
       }
-    } catch (error) {
-      console.error('[AutoBackup] Failed to load config:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AutoBackup] Failed to load config:', error);
     }
   }
 

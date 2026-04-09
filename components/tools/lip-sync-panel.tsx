@@ -104,7 +104,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
         recognizer,
       });
       setResult(lipSync);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setGenerating(false);
@@ -136,7 +136,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
       const ext = exportFormat === 'json' ? '.json' : exportFormat === 'xml' ? '.xml' : '.tsv';
       const outputPath = `${desktopPath}/${baseName}_lipsync${ext}`;
       await exportLipSync(result, outputPath, exportFormat);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     }
   }, [result, audioPath, exportFormat, exportEngine]);

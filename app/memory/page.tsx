@@ -33,6 +33,7 @@ import { translationMemory, type TranslationUnit, type TMStats } from '@/lib/tra
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
 import { ExportDialog } from '@/components/tools/export-dialog';
+import { clientLogger } from '@/lib/client-logger';
 
 // Cache per i nomi dei games
 const gameNameCache: Record<string, string> = {};
@@ -61,8 +62,8 @@ export default function MemoryPage() {
         setUnits(memory.units);
         setStats(memory.stats);
       }
-    } catch (e) {
-      console.error('TM loading error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('TM loading error:', e);
     } finally {
       setLoading(false);
     }
@@ -148,8 +149,8 @@ export default function MemoryPage() {
             gameNameCache[gameId] = gameId;
           }
         }
-      } catch (e) {
-        console.error('Game name resolution error:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Game name resolution error:', e);
         // Fallback per tutti gli ID non risolti
         for (const gameId of idsToResolve) {
           if (gameId && !gameNameCache[gameId]) {
@@ -189,7 +190,7 @@ export default function MemoryPage() {
       });
       toast({ title: `✅ ${t('dictionary.translationUpdated')}` });
       loadData();
-    } catch (e) {
+    } catch (e: unknown) {
       toast({ title: 'Error', description: String(e), variant: 'destructive' });
     }
     setEditingId(null);
@@ -202,7 +203,7 @@ export default function MemoryPage() {
       await translationMemory.delete(unitToDelete.id);
       toast({ title: `🗑️ ${t('dictionary.translationDeleted')}` });
       loadData();
-    } catch (e) {
+    } catch (e: unknown) {
       toast({ title: 'Error', description: String(e), variant: 'destructive' });
     }
     setDeleteDialogOpen(false);

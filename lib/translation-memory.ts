@@ -1,12 +1,14 @@
 /**
  * 🧠 Translation Memory System
- * 
+ *
  * Sistema professionale di memoria traduttiva per GameStringer.
  * Salva e riutilizza traduzioni per:
  * - Risparmiare costi API
  * - Garantire coerenza terminologica
  * - Velocizzare traduzioni ripetitive
  */
+
+import { clientLogger } from '@/lib/client-logger';
 
 import { translateSingleWithFallback } from './ai-translate-direct';
 
@@ -175,7 +177,7 @@ export class TranslationMemoryManager {
       if (saved) {
         this.memory = saved;
         this.rebuildIndex();
-        console.log(`[TM] Caricata memoria con ${this.memory.units.length} unità`);
+        clientLogger.debug(`[TM] Caricata memoria con ${this.memory.units.length} unità`);
       } else {
         // Crea nuova memoria
         this.memory = {
@@ -188,12 +190,12 @@ export class TranslationMemoryManager {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        console.log('[TM] Creata nuova memoria traduttiva');
+        clientLogger.debug('[TM] Creata nuova memoria traduttiva');
       }
 
       this.initialized = true;
-    } catch (error) {
-      console.error('[TM] Errore inizializzazione:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TM] Errore inizializzazione:', error);
       // Fallback a memoria locale
       this.memory = {
         id: `tm_${sourceLang}_${targetLang}_${Date.now()}`,
@@ -413,7 +415,7 @@ export class TranslationMemoryManager {
       await this.save();
     }
 
-    console.log(`[TM] Aggiunte ${added} nuove traduzioni in batch`);
+    clientLogger.debug(`[TM] Aggiunte ${added} nuove traduzioni in batch`);
     return added;
   }
 
@@ -504,12 +506,12 @@ export class TranslationMemoryManager {
    */
   async save(): Promise<void> {
     if (!this.memory) {
-      console.warn('[TM] Tentativo di salvataggio senza memoria inizializzata');
+      clientLogger.warn('[TM] Tentativo di salvataggio senza memoria inizializzata');
       return;
     }
 
     try {
-      console.log('[TM] Inizio processo di salvataggio...');
+      clientLogger.debug('[TM] Inizio processo di salvataggio...');
 
       // Calcola statistiche fresche per sicurezza
       const calculatedStats = this.calculateStats(this.memory.units);
@@ -533,28 +535,28 @@ export class TranslationMemoryManager {
         updatedAt: new Date().toISOString()
       };
 
-      console.log('[TM] Payload pronto. Stats:', JSON.stringify(memoryPayload.stats));
+      clientLogger.debug('[TM] Payload pronto. Stats:', JSON.stringify(memoryPayload.stats));
 
       await invoke('save_translation_memory', {
         memory: memoryPayload
       });
       
-      console.log(`[TM] ✅ Salvataggio completato con successo (${this.memory.units.length} unità)`);
+      clientLogger.debug(`[TM] ✅ Salvataggio completato con successo (${this.memory.units.length} unità)`);
       
       // Aggiorna stato locale
       this.memory.updatedAt = memoryPayload.updatedAt;
       this.memory.stats = calculatedStats;
       
-    } catch (error) {
-      console.error('[TM] ❌ CRITICAL ERROR saving memory:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TM] ❌ CRITICAL ERROR saving memory:', error);
       
       // Fallback: salva in localStorage
       try {
         const key = `tm_${this.memory.sourceLanguage}_${this.memory.targetLanguage}`;
         localStorage.setItem(key, JSON.stringify(this.memory));
-        console.log(`[TM] ✅ Salvato in localStorage come fallback (key: ${key})`);
-      } catch (e) {
-        console.error('[TM] Fallback localStorage fallito:', e);
+        clientLogger.debug(`[TM] ✅ Salvato in localStorage come fallback (key: ${key})`);
+      } catch (e: unknown) {
+        clientLogger.error('[TM] Fallback localStorage fallito:', e);
       }
     }
   }
@@ -573,7 +575,7 @@ export class TranslationMemoryManager {
     this.memory = data;
     this.rebuildIndex();
     await this.save();
-    console.log(`[TM] Importata memoria con ${data.units.length} unità`);
+    clientLogger.debug(`[TM] Importata memoria con ${data.units.length} unità`);
   }
 
   /**
@@ -710,7 +712,7 @@ export async function translateWithMemory(
       // Incrementa uso
       await translationMemory.incrementUsage(match.unit.id);
       
-      console.log(`[TM] Match trovato (${match.similarity}%): "${text}" → "${match.unit.targetText}"`);
+      clientLogger.debug(`[TM] Match trovato (${match.similarity}%): "${text}" → "${match.unit.targetText}"`);
       
       return {
         translation: match.unit.targetText,
@@ -725,11 +727,11 @@ export async function translateWithMemory(
   // RAG: recupera traduzioni simili dalla TM come contesto per il prompt LLM
   const tmContext = translationMemory.getRelevantTMContext([text], { gameIdFilter: gameId });
   if (tmContext) {
-    console.log(`[TM-RAG] Iniettate traduzioni simili nel prompt per coerenza`);
+    clientLogger.debug(`[TM-RAG] Iniettate traduzioni simili nel prompt per coerenza`);
   }
 
   // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
-  console.log(`[TM] Nessun match esatto, chiamo API con fallback`);
+  clientLogger.debug(`[TM] Nessun match esatto, chiamo API con fallback`);
   
   const result = await translateSingleWithFallback(text, targetLang, sourceLang, context, tmContext || undefined);
   
@@ -808,8 +810,8 @@ export async function translateBatchWithMemory(
       } else {
         fromApi++;
       }
-    } catch (error) {
-      console.error(`[TM] Errore traduzione "${text}":`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`[TM] Errore traduzione "${text}":`, error);
       translations.push({
         source: text,
         target: text, // Fallback: testo originale

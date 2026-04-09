@@ -35,6 +35,7 @@ import { WadExtractor } from '@/components/tools/wad-extractor';
 import { useTranslation } from '@/lib/i18n';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
+import { clientLogger } from '@/lib/client-logger';
 
 interface DanganronpaGame {
   path: string;
@@ -208,8 +209,8 @@ export default function DanganronpaPatcherPage() {
     try {
       const info = await invoke<DratInfo>('get_drat_info');
       setDratInfo(info);
-    } catch (e) {
-      console.error('Errore caricamento info DRAT:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento info DRAT:', e);
     }
   };
 
@@ -217,8 +218,8 @@ export default function DanganronpaPatcherPage() {
     try {
       const info = await invoke<AllIcePatchInfo>('get_allice_patch_info');
       setAlliceInfo(info);
-    } catch (e) {
-      console.error('Errore caricamento info All-Ice:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento info All-Ice:', e);
     }
   };
 
@@ -230,8 +231,8 @@ export default function DanganronpaPatcherPage() {
         setSelectedSteamGame(games[0]);
         loadBackups(games[0].path);
       }
-    } catch (e) {
-      console.error('Errore ricerca giochi Steam:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore ricerca giochi Steam:', e);
     }
   };
 
@@ -239,8 +240,8 @@ export default function DanganronpaPatcherPage() {
     try {
       const backupList = await invoke<WadFileInfo[]>('list_danganronpa_backups', { gamePath });
       setBackups(backupList);
-    } catch (e) {
-      console.error('Errore caricamento backup:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore caricamento backup:', e);
     }
   };
 
@@ -275,7 +276,7 @@ export default function DanganronpaPatcherPage() {
           toast.error(result.message);
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     } finally {
       setApplyingPatch(false);
@@ -298,7 +299,7 @@ export default function DanganronpaPatcherPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore ripristino: ${e}`);
     } finally {
       setApplyingPatch(false);
@@ -337,7 +338,7 @@ export default function DanganronpaPatcherPage() {
         });
         toast.success(`ZIP creato! ${result.zip_size_mb.toFixed(1)} MB`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore export: ${e}`);
     } finally {
       setExporting(false);
@@ -365,7 +366,7 @@ export default function DanganronpaPatcherPage() {
           toast.error(result.message);
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore estrazione LIN: ${e}`);
     } finally {
       setExtractingLin(false);
@@ -376,8 +377,8 @@ export default function DanganronpaPatcherPage() {
     try {
       const stats = await invoke<LinDialogueStats>('get_lin_dialogue_stats', { dialogues });
       setLinStats(stats);
-    } catch (e) {
-      console.error('Errore calcolo stats LIN:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore calcolo stats LIN:', e);
     }
   };
 
@@ -396,7 +397,7 @@ export default function DanganronpaPatcherPage() {
         });
         toast.success(`Salvati ${count} dialoghi`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore salvataggio: ${e}`);
     }
   };
@@ -435,7 +436,7 @@ export default function DanganronpaPatcherPage() {
         updateLinStats(dialogues);
         toast.success(`Caricati ${dialogues.length} dialoghi`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore caricamento: ${e}`);
     }
   };
@@ -509,7 +510,7 @@ export default function DanganronpaPatcherPage() {
       }
       
       toast.success(`Tradotti ${translatedCount} dialoghi con AI`);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore traduzione: ${e}`);
     } finally {
       setLoading(false);
@@ -545,7 +546,7 @@ export default function DanganronpaPatcherPage() {
           toast.warning(result.message);
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore import: ${e}`);
     }
   };
@@ -578,7 +579,7 @@ export default function DanganronpaPatcherPage() {
         setPoFile(null);
         toast.success(`Rilevato: ${getGameTypeName(detected.game_type)}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     } finally {
       setLoading(false);
@@ -600,7 +601,7 @@ export default function DanganronpaPatcherPage() {
       const archive = await invoke<PakArchive>('read_pak_archive', { pakPath });
       setSelectedPak(archive);
       toast.success(`PAK caricato: ${archive.entries.length} file`);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore lettura PAK: ${e}`);
     } finally {
       setLoading(false);
@@ -624,7 +625,7 @@ export default function DanganronpaPatcherPage() {
         });
         toast.success(`Estratti ${count} file`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore estrazione: ${e}`);
     } finally {
       setLoading(false);
@@ -646,7 +647,7 @@ export default function DanganronpaPatcherPage() {
         setPoStats(stats);
         toast.success(`PO caricato: ${po.entries.length} entry`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore lettura PO: ${e}`);
     } finally {
       setLoading(false);
@@ -667,7 +668,7 @@ export default function DanganronpaPatcherPage() {
       setPoStats(stats);
       
       toast.success('File PO salvato');
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore salvataggio: ${e}`);
     } finally {
       setLoading(false);

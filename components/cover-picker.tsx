@@ -11,6 +11,7 @@ import { Loader2, Check, Image as ImageIcon, Grid3X3, Sparkles, Type, AlertCircl
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Cover {
   id: number;
@@ -68,7 +69,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       try {
         const settings = JSON.parse(savedSettings);
         return settings?.integrations?.steamGridDbApiKey || null;
-      } catch (e) {}
+      } catch (e: unknown) {}
     }
     // Fallback a utility prefs
     const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
@@ -76,7 +77,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       try {
         const prefs = JSON.parse(utilityPrefs);
         return prefs?.steamgriddb?.apiKey || null;
-      } catch (e) {}
+      } catch (e: unknown) {}
     }
     return null;
   }, []);
@@ -86,7 +87,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
     const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
     let prefs = {};
     if (utilityPrefs) {
-      try { prefs = JSON.parse(utilityPrefs); } catch (e) {}
+      try { prefs = JSON.parse(utilityPrefs); } catch (e: unknown) {}
     }
     const newPrefs = { ...prefs, steamgriddb: { enabled: true, apiKey: key } };
     localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
@@ -99,7 +100,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
         settings.integrations = settings.integrations || {};
         settings.integrations.steamGridDbApiKey = key;
         localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
-      } catch (e) {}
+      } catch (e: unknown) {}
     }
   };
 
@@ -156,8 +157,8 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       } else {
         setError(result.error || 'Errore durante la ricerca');
       }
-    } catch (e) {
-      console.error('CoverPicker fetch error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('CoverPicker fetch error:', e);
       setError('Errore di connessione a SteamGridDB');
     } finally {
       setLoading(false);
@@ -185,8 +186,8 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       onCoverSelected(selectedCover.url);
       toast.success('Cover aggiornata con successo!');
       onClose();
-    } catch (e) {
-      console.error('Error saving cover:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Error saving cover:', e);
       toast.error('Errore nel salvare la cover');
     } finally {
       setSaving(false);
@@ -228,8 +229,8 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       onCoverSelected(customUrlPreview);
       toast.success('Cover personalizzata salvata!');
       onClose();
-    } catch (e) {
-      console.error('Error saving custom cover:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Error saving custom cover:', e);
       toast.error('Errore nel salvare la cover');
     } finally {
       setSaving(false);
@@ -260,7 +261,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
         setIgdbError(result.error || 'Errore durante la ricerca su IGDB');
       }
     } catch (e: unknown) {
-      console.error('IGDB fetch error:', e);
+      clientLogger.error('IGDB fetch error:', e);
       // Se il comando non esiste, mostra messaggio appropriato
       if (e.toString().includes('not found') || e.toString().includes('command')) {
         setIgdbError('Ricerca IGDB non ancora configurata. Usa URL manuale.');

@@ -1,6 +1,6 @@
 /**
  * SafeStorage - Wrapper robusto per localStorage con protezione anti-corruzione
- * 
+ *
  * Caratteristiche:
  * - Validazione JSON prima della scrittura
  * - Backup automatico prima di modifiche
@@ -8,6 +8,8 @@
  * - Checksum per rilevare corruzione
  * - Versioning automatico
  */
+
+import { clientLogger } from '@/lib/client-logger';
 
 const BACKUP_SUFFIX = '_backup';
 const META_SUFFIX = '_meta';
@@ -79,7 +81,7 @@ export function safeSetItem<T>(key: string, value: T, version: number = 1): bool
   } catch (error: unknown) {
     // Gestione quota exceeded
     if (error.name === 'QuotaExceededError' || error.code === 22) {
-      console.warn(`[SafeStorage] Quota exceeded per "${key}", tentativo cleanup...`);
+      clientLogger.warn(`[SafeStorage] Quota exceeded per "${key}", tentativo cleanup...`);
       cleanupOldData();
       
       // Riprova una volta
@@ -87,12 +89,12 @@ export function safeSetItem<T>(key: string, value: T, version: number = 1): bool
         localStorage.setItem(key, JSON.stringify(value));
         return true;
       } catch {
-        console.error(`[SafeStorage] Impossibile salvare "${key}" anche dopo cleanup`);
+        clientLogger.error(`[SafeStorage] Impossibile salvare "${key}" anche dopo cleanup`);
         return false;
       }
     }
     
-    console.error(`[SafeStorage] Errore salvando "${key}":`, error);
+    clientLogger.error(`[SafeStorage] Errore salvando "${key}":`, error);
     return false;
   }
 }
@@ -116,12 +118,12 @@ export function safeGetItem<T>(key: string, defaultValue: T | null = null): T | 
         
         // Verifica integrità
         if (meta.checksum !== currentChecksum) {
-          console.warn(`[SafeStorage] Checksum mismatch per "${key}", tentativo recovery...`);
+          clientLogger.warn(`[SafeStorage] Checksum mismatch per "${key}", tentativo recovery...`);
           return recoverFromBackup<T>(key, defaultValue);
         }
       } catch {
         // Metadata corrotti, ma i dati potrebbero essere ok
-        console.warn(`[SafeStorage] Metadata corrotti per "${key}"`);
+        clientLogger.warn(`[SafeStorage] Metadata corrotti per "${key}"`);
       }
     }
     
@@ -129,8 +131,8 @@ export function safeGetItem<T>(key: string, defaultValue: T | null = null): T | 
     const parsed = JSON.parse(data) as T;
     return parsed;
     
-  } catch (error) {
-    console.error(`[SafeStorage] Errore leggendo "${key}":`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`[SafeStorage] Errore leggendo "${key}":`, error);
     return recoverFromBackup<T>(key, defaultValue);
   }
 }
@@ -143,7 +145,7 @@ function recoverFromBackup<T>(key: string, defaultValue: T | null): T | null {
     const backup = localStorage.getItem(key + BACKUP_SUFFIX);
     if (backup) {
       const parsed = JSON.parse(backup) as T;
-      console.log(`[SafeStorage] Recuperato "${key}" da backup`);
+      clientLogger.debug(`[SafeStorage] Recuperato "${key}" da backup`);
       
       // Ripristina il backup come dato principale
       localStorage.setItem(key, backup);
@@ -151,7 +153,7 @@ function recoverFromBackup<T>(key: string, defaultValue: T | null): T | null {
       return parsed;
     }
   } catch {
-    console.error(`[SafeStorage] Anche il backup di "${key}" è corrotto`);
+    clientLogger.error(`[SafeStorage] Anche il backup di "${key}" è corrotto`);
   }
   
   // Pulisci dati corrotti
@@ -169,8 +171,8 @@ export function safeRemoveItem(key: string): void {
     localStorage.removeItem(key);
     localStorage.removeItem(key + BACKUP_SUFFIX);
     localStorage.removeItem(key + META_SUFFIX);
-  } catch (error) {
-    console.error(`[SafeStorage] Errore rimuovendo "${key}":`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`[SafeStorage] Errore rimuovendo "${key}":`, error);
   }
 }
 
@@ -259,7 +261,7 @@ function cleanupOldData(): void {
   for (const item of items.slice(0, 5)) {
     try {
       localStorage.removeItem(item.key);
-      console.warn(`[SafeStorage] Rimosso "${item.key}" (${item.size} chars) per liberare spazio`);
+      clientLogger.warn(`[SafeStorage] Rimosso "${item.key}" (${item.size} chars) per liberare spazio`);
     } catch { /* ignora */ }
   }
 }
@@ -335,11 +337,11 @@ export function repairCorruptedData(): number {
           JSON.parse(backup);
           localStorage.setItem(key, backup);
           repaired++;
-          console.log(`[SafeStorage] Riparato "${key}" da backup`);
+          clientLogger.debug(`[SafeStorage] Riparato "${key}" da backup`);
         } catch {
           // Anche backup corrotto, rimuovi tutto
           safeRemoveItem(key);
-          console.log(`[SafeStorage] Rimosso "${key}" (irrecuperabile)`);
+          clientLogger.debug(`[SafeStorage] Rimosso "${key}" (irrecuperabile)`);
         }
       } else {
         safeRemoveItem(key);

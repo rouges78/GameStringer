@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { safeInvoke } from '@/lib/tauri-wrapper';
 import { 
+import { clientLogger } from '@/lib/client-logger';
   ProfileSettings, 
   GlobalSettings, 
   UseProfileSettingsReturn,
@@ -29,8 +30,8 @@ export function useProfileSettings(): UseProfileSettingsReturn {
         setError(response.error || 'Errore caricamento settings');
         setSettings(DEFAULT_PROFILE_SETTINGS);
       }
-    } catch (err) {
-      console.error('Errore caricamento settings profilo:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore caricamento settings profilo:', err);
       setError('Errore di connessione al backend');
       setSettings(DEFAULT_PROFILE_SETTINGS);
     }
@@ -46,8 +47,8 @@ export function useProfileSettings(): UseProfileSettingsReturn {
       } else {
         setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
       }
-    } catch (err) {
-      console.error('Errore caricamento settings globali:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore caricamento settings globali:', err);
       setGlobalSettings(DEFAULT_GLOBAL_SETTINGS);
     }
   }, []);
@@ -85,8 +86,8 @@ export function useProfileSettings(): UseProfileSettingsReturn {
         setError(response.error || 'Errore salvataggio settings');
         return false;
       }
-    } catch (err) {
-      console.error('Errore aggiornamento settings:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore aggiornamento settings:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -109,8 +110,8 @@ export function useProfileSettings(): UseProfileSettingsReturn {
         setError(response.error || 'Errore salvataggio settings globali');
         return false;
       }
-    } catch (err) {
-      console.error('Errore aggiornamento settings globali:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore aggiornamento settings globali:', err);
       setError('Errore di connessione al backend');
       return false;
     }

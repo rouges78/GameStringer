@@ -192,7 +192,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
 
     return NextResponse.json({ ...translationResult, cached: false });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Translation request failed', 'TRANSLATE_API', { error });
     throw error;
   }
@@ -271,7 +271,7 @@ async function translateWithOpenAI(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('OpenAI translation failed', 'TRANSLATE_API', { error });
     throw new Error(`OpenAI translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -286,7 +286,7 @@ async function translateWithGemini(
 ): Promise<TranslationResponse> {
   const apiKey = userApiKey || secretsManager.get('GEMINI_API_KEY');
   
-  console.log('[GEMINI] API Key source:', userApiKey ? 'user-provided' : 'secrets');
+  logger.debug('[GEMINI] API Key source:', userApiKey ? 'user-provided' : 'secrets');
   
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Set GEMINI_API_KEY in settings.');
@@ -311,7 +311,7 @@ async function translateWithGemini(
     };
   }
 
-  console.log('[GEMINI SINGLE] Translating:', sanitizedText.substring(0, 50), '...');
+  logger.debug('[GEMINI SINGLE] Translating:', sanitizedText.substring(0, 50), '...');
 
   try {
     const systemPrompt = `You are a professional translator specializing in video game localization. 
@@ -356,7 +356,7 @@ async function translateWithGemini(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[GEMINI] Errore API:', response.status, JSON.stringify(errorData));
+      logger.error('[GEMINI] Errore API:', response.status, JSON.stringify(errorData));
       throw new Error(`Gemini API error: ${response.status} - ${errorData?.error?.message || JSON.stringify(errorData)}`);
     }
 
@@ -380,7 +380,7 @@ async function translateWithGemini(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('OpenRouter translation failed', 'TRANSLATE_API', { error });
     throw new Error(`OpenRouter translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -450,7 +450,7 @@ async function translateWithGPT5(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('GPT-5 translation failed', 'TRANSLATE_API', { error });
     throw new Error(`GPT-5 translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -523,7 +523,7 @@ async function translateWithClaude(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Claude translation failed', 'TRANSLATE_API', { error });
     throw new Error(`Claude translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -596,7 +596,7 @@ async function translateWithOpenRouter(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('OpenRouter translation failed', 'TRANSLATE_API', { error });
     throw new Error(`OpenRouter translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -668,7 +668,7 @@ async function translateWithDeepSeek(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('DeepSeek translation failed', 'TRANSLATE_API', { error });
     throw new Error(`DeepSeek translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -740,7 +740,7 @@ async function translateWithMistral(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Mistral translation failed', 'TRANSLATE_API', { error });
     throw new Error(`Mistral translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -851,7 +851,7 @@ async function translateWithGoogle(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Google Translate failed', 'TRANSLATE_API', { error });
     throw new Error(`Google Translate failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -997,7 +997,7 @@ async function translateWithLibre(
       targetLanguage,
       cached: false
     };
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('LibreTranslate failed', 'TRANSLATE_API', { error });
     throw new Error(`LibreTranslate failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1067,7 +1067,7 @@ async function translateWithQwen3(
       cached: false
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Qwen3 translation failed', 'TRANSLATE_API', { error });
     throw new Error(`Qwen3 failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1129,7 +1129,7 @@ async function translateWithNLLB(
     const data = await response.json();
     return { translatedText: data[0]?.translation_text || text, confidence: 0.85, suggestions: [], provider: 'nllb', sourceLanguage, targetLanguage, cached: false };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('NLLB translation failed', 'TRANSLATE_API', { error });
     throw new Error(`NLLB failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1175,7 +1175,7 @@ async function translateWithOllama(
 
     return { translatedText, confidence: 0.85, suggestions: [], provider: 'ollama', sourceLanguage, targetLanguage, cached: false };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Ollama translation failed', 'TRANSLATE_API', { error });
     throw new Error(`Ollama failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1220,7 +1220,7 @@ async function translateWithLMStudioAPI(
 
     return { translatedText, confidence: 0.85, suggestions: [], provider: 'lmstudio', sourceLanguage, targetLanguage, cached: false };
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('LM Studio translation failed', 'TRANSLATE_API', { error });
     throw new Error(`LM Studio failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1256,7 +1256,7 @@ export const GET = withRateLimit(withErrorHandler(async function(request: NextRe
 
     return NextResponse.json({ message: 'Translation API', availableActions: ['providers', 'cache'] });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Translation API GET failed', 'TRANSLATE_API', { error });
     throw error;
   }
@@ -1285,7 +1285,7 @@ export const DELETE = withRateLimit(withErrorHandler(async function(request: Nex
       error: 'Invalid action. Use ?action=cache to clear cache'
     }, { status: 400 });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Translation API DELETE request failed', 'TRANSLATE_API', { error });
     throw error;
   }

@@ -3,6 +3,7 @@
 import { ErrorBoundary } from './ui/error-boundary';
 import { ErrorFallback, ApiErrorFallback, LoadingErrorFallback } from './ui/error-fallback';
 import { useErrorHandler } from '@/lib/error-handler';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ErrorBoundaryWrapperProps {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export function ErrorBoundaryWrapper({
   const { handleError } = useErrorHandler();
 
   const onError = (error: Error, errorInfo: React.ErrorInfo) => {
-    console.error(`${context} Error:`, error, errorInfo);
+    clientLogger.error(`${context} Error:`, error, errorInfo);
     handleError(error, errorInfo);
   };
 

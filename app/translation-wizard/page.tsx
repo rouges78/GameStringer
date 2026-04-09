@@ -107,7 +107,7 @@ export default function TranslationWizardPage() {
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.error('Error loading settings:', e);
       }
     }
@@ -162,7 +162,7 @@ export default function TranslationWizardPage() {
                 autoGame.install_path = match.install_path;
                 autoGame.engine = match.engine || undefined;
               }
-            } catch (e) {
+            } catch (e: unknown) {
               clientLogger.warn('[Wizard] Fallback scan per install_path fallito:', e);
             }
             clientLogger.debug('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
@@ -175,7 +175,7 @@ export default function TranslationWizardPage() {
           setTimeout(() => analyzeGame(autoGame), 300);
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       clientLogger.error('[Wizard] Errore auto-start:', e);
     }
   }, []);
@@ -227,7 +227,7 @@ export default function TranslationWizardPage() {
         setGames(installedGames);
         setFilteredGames(installedGames);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Error loading games:', error);
       toast({ title: 'error', description: 'Impossibile caricare i games', variant: 'destructive' });
     } finally {
@@ -265,7 +265,7 @@ export default function TranslationWizardPage() {
         engineDetails = await invoke<unknown>('check_game_engine', { gamePath: installPath });
         engine = engineDetails?.engine_name || 'Unknown';
         clientLogger.debug('[Wizard] Rust engine detection:', engine, engineDetails);
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[Wizard] check_game_engine failed, falling back to JS:', e);
         engine = await detectGameEngine(installPath);
       }
@@ -277,7 +277,7 @@ export default function TranslationWizardPage() {
       try {
         locInfo = await invoke<unknown>('detect_localization_files', { gamePath: installPath });
         clientLogger.debug('[Wizard] Rust loc detection:', locInfo);
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[Wizard] detect_localization_files failed:', e);
       }
 
@@ -288,7 +288,7 @@ export default function TranslationWizardPage() {
       try {
         rustRecommendation = await invoke<unknown>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
         clientLogger.debug('[Wizard] Rust recommendation:', rustRecommendation);
-      } catch (e) {
+      } catch (e: unknown) {
         clientLogger.warn('[Wizard] get_translation_recommendation failed:', e);
       }
 
@@ -415,7 +415,7 @@ export default function TranslationWizardPage() {
         setIsAnalyzing(false);
       }, 500);
 
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Analysis error:', error);
       toast({ 
         title: 'Errore analisi', 
@@ -526,7 +526,7 @@ export default function TranslationWizardPage() {
       // Sort by size descending (larger files more likely to be main localization)
       locFiles.sort((a, b) => b.size - a.size);
       
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('[Wizard] Scan error:', error);
     }
 
@@ -786,7 +786,7 @@ export default function TranslationWizardPage() {
       setIsTranslating(false);
       setStep('complete');
 
-    } catch (error) {
+    } catch (error: unknown) {
       log(`\n❌ Errore fatale: ${error}`);
       setIsTranslating(false);
     }
@@ -816,7 +816,7 @@ export default function TranslationWizardPage() {
       let content: string;
       try {
         content = await invoke<string>('read_text_file', { path: file.path, maxBytes: 2000000 });
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Impossibile leggere: ${e}`);
         continue;
       }
@@ -845,7 +845,7 @@ export default function TranslationWizardPage() {
           try { await invoke('save_file_with_backup', { filePath: file.path, content: content, createBackup: true }); } catch {}
           await invoke('write_text_file', { path: file.path, content: newContent });
           log(`  ✅ ${translated.size} stringhe tradotte e salvate`);
-        } catch (e) { log(`  ❌ Errore salvataggio: ${e}`); }
+        } catch (e: unknown) { log(`  ❌ Errore salvataggio: ${e}`); }
       }
     }
     log(`\n🏁 File di testo: ${translatedStrings}/${totalStrings} stringhe tradotte`);
@@ -906,7 +906,7 @@ export default function TranslationWizardPage() {
       const buf = await resp.arrayBuffer();
       fileBytes = new Uint8Array(buf);
       log(`  📐 Dimensione: ${(fileBytes.length / 1024 / 1024).toFixed(1)} MB`);
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Impossibile leggere: ${e}`);
       return;
     }
@@ -1059,7 +1059,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Batch ${batchNum}: ${e}`);
       }
 
@@ -1091,7 +1091,7 @@ export default function TranslationWizardPage() {
           if (patchResult.errors.length > 0) {
             log(`  ⚠️ ${patchResult.errors.length} errori (vedi console)`);
           }
-        } catch (e) {
+        } catch (e: unknown) {
           log(`  ❌ Errore salvataggio: ${e}`);
         }
       } else {
@@ -1174,7 +1174,7 @@ export default function TranslationWizardPage() {
       } else {
         log(`  ⚠️ Risultato: ${JSON.stringify(result)}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore installazione: ${e}`);
       log('  💡 Prova ad installare manualmente BepInEx dal sito ufficiale');
     }
@@ -1211,7 +1211,7 @@ export default function TranslationWizardPage() {
               }
               log(`  ✅ ${saved} stringhe tradotte e salvate`);
             }
-          } catch (e) { log(`  ⚠️ Errore traduzione: ${e}`); }
+          } catch (e: unknown) { log(`  ⚠️ Errore traduzione: ${e}`); }
         } else {
           log('  ✅ Tutte le stringhe sono già tradotte');
         }
@@ -1306,7 +1306,7 @@ export default function TranslationWizardPage() {
         try {
           await invoke('write_text_file', { path: tlPath, content: tlContent });
           log(`  ✅ Salvato tl/${targetLanguage}/${fileName}`);
-        } catch (e) { log(`  ❌ Errore: ${e}`); }
+        } catch (e: unknown) { log(`  ❌ Errore: ${e}`); }
       }
     }
 
@@ -1328,7 +1328,7 @@ export default function TranslationWizardPage() {
         log(`  ✅ Estratte ${extraction.entries.length} stringhe`);
         log(`  📄 Sorgente: ${extraction.message || extraction.source_file}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ⚠️ extract_unreal_localization: ${e}`);
     }
 
@@ -1341,7 +1341,7 @@ export default function TranslationWizardPage() {
           log(`  ✅ IoStore: ${extraction.entries.length} stringhe`);
           log(`  📄 ${extraction.message}`);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ extract_iostore_localization: ${e}`);
       }
     }
@@ -1407,7 +1407,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch ${Math.floor(bi / BATCH) + 1}: ${e}`);
       }
 
@@ -1448,7 +1448,7 @@ export default function TranslationWizardPage() {
       } else {
         log(`  ⚠️ Risultato: ${JSON.stringify(pakResult)}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore creazione .pak: ${e}`);
       log('  💡 Prova ad usare il UE Translator dedicato per più opzioni');
     }
@@ -1468,7 +1468,7 @@ export default function TranslationWizardPage() {
     let extraction: unknown = null;
     try {
       extraction = await invoke<unknown>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore estrazione: ${e}`);
     }
 
@@ -1510,7 +1510,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch ${Math.floor(bi / BATCH) + 1}: ${e}`);
       }
 
@@ -1579,7 +1579,7 @@ export default function TranslationWizardPage() {
         content: poLines.join('\n'),
       });
       log(`  💾 danganronpa_translation.po salvato`);
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ⚠️ Errore salvataggio: ${e}`);
     }
 
@@ -1616,7 +1616,7 @@ export default function TranslationWizardPage() {
             if (i < result.translations!.length) translated.set(s.key, result.translations![i]);
           });
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch: ${e}`);
       }
 
@@ -1777,7 +1777,7 @@ export default function TranslationWizardPage() {
         targetLanguage: targetLanguage
       }));
       window.location.href = '/editor';
-    } catch (error) {
+    } catch (error: unknown) {
       clientLogger.error('Error reading file:', error);
       toast({
         title: 'error',

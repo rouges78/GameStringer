@@ -137,8 +137,8 @@ export default function UnityLocalizationPage() {
         setError("");
         setStep(1);
       }
-    } catch (e) {
-      console.error("Errore selezione cartella:", e);
+    } catch (e: unknown) {
+      clientLogger.error("Errore selezione cartella:", e);
     }
   };
 
@@ -168,7 +168,7 @@ export default function UnityLocalizationPage() {
       } else {
         setError("Nessuna StringTable trovata nella cartella selezionata.");
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore analisi: ${e}`);
     } finally {
       setAnalyzing(false);
@@ -191,7 +191,7 @@ export default function UnityLocalizationPage() {
       setLoadedTable(match);
       setEntries(match.entries.map((e) => ({ ...e })));
       setStep(3);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore caricamento tabella: ${e}`);
     }
   };
@@ -226,7 +226,7 @@ export default function UnityLocalizationPage() {
 
       setEntries(result.entries);
       setProgress(100);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore traduzione: ${e}`);
     } finally {
       setTranslating(false);
@@ -273,7 +273,7 @@ export default function UnityLocalizationPage() {
           return { ...entry, translationStatus: "validated" as const, validationErrors: [] };
         })
       );
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore validazione: ${e}`);
     } finally {
       setValidating(false);
@@ -350,7 +350,7 @@ export default function UnityLocalizationPage() {
       } else {
         setError(result.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore creazione bundle: ${e}`);
     } finally {
       setExporting(false);
@@ -986,6 +986,7 @@ export default function UnityLocalizationPage() {
 // ---------------------------------------------------------------------------
 
 import React from "react";
+import { clientLogger } from '@/lib/client-logger';
 
 const EntryRow = React.memo(function EntryRow({
   entry,

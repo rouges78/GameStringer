@@ -55,7 +55,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
       await updateSettings(localSettings);
       toast.success('Settings saved');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error saving settings');
     } finally {
       setIsSaving(false);

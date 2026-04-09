@@ -26,6 +26,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface OverlayConfig {
   enabled: boolean;
@@ -139,8 +140,8 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
           const imported = JSON.parse(e.target?.result as string);
           setLocalConfig(imported);
           onConfigChange(imported);
-        } catch (error) {
-          console.error('error importazione configurazione:', error);
+        } catch (error: unknown) {
+          clientLogger.error('error importazione configurazione:', error);
         }
       };
       reader.readAsText(file);

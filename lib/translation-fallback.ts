@@ -104,7 +104,7 @@ class TranslationFallbackManager {
    */
   markRateLimited(provider: string, retryAfterMs: number = 60000): void {
     this.rateLimitedProviders.set(provider, Date.now() + retryAfterMs);
-    console.log(`⏳ Provider ${provider} rate limited per ${retryAfterMs / 1000}s`);
+    clientLogger.debug(`⏳ Provider ${provider} rate limited per ${retryAfterMs / 1000}s`);
   }
 
   /**
@@ -170,7 +170,7 @@ class TranslationFallbackManager {
       }
     });
 
-    console.log(`📦 Cache hits: ${cacheHits.size}/${texts.length}`);
+    clientLogger.debug(`📦 Cache hits: ${cacheHits.size}/${texts.length}`);
 
     // Traduci solo testi non in cache
     let newTranslations: Array<{ original: string; translated: string; confidence: number }> = [];
@@ -187,7 +187,7 @@ class TranslationFallbackManager {
         if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('rate limit')) {
           // Rate limit - usa solo cache
           this.markRateLimited(provider, 60000);
-          console.warn(`⚠️ Rate limit su ${provider}, usando solo cache`);
+          clientLogger.warn(`⚠️ Rate limit su ${provider}, usando solo cache`);
 
           // Ritorna cache hits + placeholder per non tradotti
           textsToTranslate.forEach(text => {
@@ -235,10 +235,10 @@ class TranslationFallbackManager {
       if (stored) {
         const parsed = JSON.parse(stored);
         this.cache = new Map(Object.entries(parsed));
-        console.log(`📦 Caricata cache traduzioni: ${this.cache.size} entry`);
+        clientLogger.debug(`📦 Caricata cache traduzioni: ${this.cache.size} entry`);
       }
-    } catch (e) {
-      console.warn('Errore caricamento cache traduzioni:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('Errore caricamento cache traduzioni:', e);
     }
   }
 
@@ -249,8 +249,8 @@ class TranslationFallbackManager {
     try {
       const obj = Object.fromEntries(this.cache);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
-    } catch (e) {
-      console.warn('Errore salvataggio cache traduzioni:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('Errore salvataggio cache traduzioni:', e);
     }
   }
 
@@ -260,7 +260,7 @@ class TranslationFallbackManager {
   clearCache(): void {
     this.cache.clear();
     localStorage.removeItem(STORAGE_KEY);
-    console.log('🗑️ Cache traduzioni pulita');
+    clientLogger.debug('🗑️ Cache traduzioni pulita');
   }
 
   /**

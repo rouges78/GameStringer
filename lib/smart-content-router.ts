@@ -11,6 +11,7 @@
 
 import { classifyBatch, classifyContent, type ContentType, type ContentClassification } from './content-classifier';
 import { type TranslateOptions, type TranslateResult, getApiKeys, translateWithFallback } from './ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -265,9 +266,9 @@ export async function translateWithSmartRouting(
   const routedTexts: Record<string, number> = {};
   const classificationSummary: Record<ContentType, number> = {} as Record<ContentType, number>;
 
-  console.log(`[SmartRouter] 🧠 ${batches.length} gruppi per ${texts.length} stringhe:`);
+  clientLogger.debug(`[SmartRouter] 🧠 ${batches.length} gruppi per ${texts.length} stringhe:`);
   for (const batch of batches) {
-    console.log(`  → ${batch.provider}: ${batch.texts.length} stringhe (${batch.contentType}) — ${batch.reason}`);
+    clientLogger.debug(`  → ${batch.provider}: ${batch.texts.length} stringhe (${batch.contentType}) — ${batch.reason}`);
     routedTexts[batch.provider] = (routedTexts[batch.provider] || 0) + batch.texts.length;
     classificationSummary[batch.contentType] = (classificationSummary[batch.contentType] || 0) + batch.texts.length;
   }
@@ -346,12 +347,12 @@ export async function translateWithGeminiLongContext(
 ): Promise<TranslateResult> {
   const keys = getApiKeys();
   if (!keys.gemini) {
-    console.warn('[GeminiLongContext] Nessuna API key Gemini — fallback a chain standard');
+    clientLogger.warn('[GeminiLongContext] Nessuna API key Gemini — fallback a chain standard');
     return translateWithFallback({ texts, targetLanguage, sourceLanguage: options?.sourceLanguage });
   }
 
   const totalChars = texts.reduce((sum, t) => sum + t.length, 0);
-  console.log(`[GeminiLongContext] 📜 Traduzione documento intero: ${texts.length} stringhe, ${totalChars} caratteri`);
+  clientLogger.debug(`[GeminiLongContext] 📜 Traduzione documento intero: ${texts.length} stringhe, ${totalChars} caratteri`);
 
   const srcLang = options?.sourceLanguage || 'en';
   const model = options?.model || 'gemini-2.0-flash';
@@ -428,15 +429,15 @@ CRITICAL RULES:
       }
     }
 
-    console.log(`[GeminiLongContext] ✅ ${translated}/${texts.length} tradotte con ${model}`);
+    clientLogger.debug(`[GeminiLongContext] ✅ ${translated}/${texts.length} tradotte con ${model}`);
 
     return {
       translations,
       provider: `gemini-longctx:${model}`,
       success: translated > texts.length * 0.5,
     };
-  } catch (err) {
-    console.error('[GeminiLongContext] ❌ Errore:', err);
+  } catch (err: unknown) {
+    clientLogger.error('[GeminiLongContext] ❌ Errore:', err);
     return translateWithFallback({ texts, targetLanguage, sourceLanguage: srcLang });
   }
 }

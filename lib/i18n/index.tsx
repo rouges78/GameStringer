@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { translations, Language, TranslationKeys } from './translations';
 import { applyDocumentDirection } from '@/lib/rtl';
+import { clientLogger } from '@/lib/client-logger';
 
 interface I18nContextType {
   language: Language;
@@ -20,8 +21,8 @@ const getCurrentProfileId = (): string | null => {
       const profile = JSON.parse(profileData);
       return profile.id || null;
     }
-  } catch (e) {
-    console.warn('[I18N] Errore parsing profilo corrente:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[I18N] Errore parsing profilo corrente:', e);
   }
   return null;
 };
@@ -52,8 +53,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
             setLanguageState(settings.system.language as Language);
           }
         }
-      } catch (e) {
-        console.warn('Failed to load language setting:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('Failed to load language setting:', e);
       }
     };
     
@@ -92,8 +93,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const settings = savedSettings ? JSON.parse(savedSettings) : {};
       settings.system = { ...settings.system, language: lang };
       localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
-    } catch (e) {
-      console.warn('Failed to save language setting:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('Failed to save language setting:', e);
     }
   }, []);
 

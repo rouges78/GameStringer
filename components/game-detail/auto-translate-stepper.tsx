@@ -210,7 +210,7 @@ export function AutoTranslateStepper({
                       });
                       toast.success('Patch creata!');
                       await tauriInvoke('open_path', { path: patchPath }).catch(() => {});
-                    } catch (e) {
+                    } catch (e: unknown) {
                       toast.error(`Errore creazione patch: ${e}`);
                     }
                   }}

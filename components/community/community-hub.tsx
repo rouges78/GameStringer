@@ -39,6 +39,7 @@ import {
   type CommunityPackage
 } from '@/lib/community-hub';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const LANGUAGE_FLAGS: Record<string, string> = {
   'en': '🇬🇧',
@@ -93,8 +94,8 @@ export function CommunityHub() {
       setTrending(trendingPkgs);
       setRecent(recentPkgs);
       setStats(communityStats);
-    } catch (error) {
-      console.error('Failed to load community data:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to load community data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -137,8 +138,8 @@ export function CommunityHub() {
       
       // Refresh to update download count
       loadData();
-    } catch (error) {
-      console.error('Download failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Download failed:', error);
     } finally {
       setDownloadingId(null);
     }

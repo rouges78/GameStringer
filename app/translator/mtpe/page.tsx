@@ -10,6 +10,7 @@ import { ArrowLeft, Upload, Play, FileText, Download, Sparkles } from 'lucide-re
 import Link from 'next/link';
 import { MTPEWorkflow } from '@/components/translator/mtpe-workflow';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 type Phase = 'input' | 'translate' | 'review' | 'complete';
 
@@ -63,8 +64,8 @@ export default function MTPEPage() {
         }
         setProgress(Math.round(((i + 1) / lines.length) * 100));
       }
-    } catch (error) {
-      console.error('Translation error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Translation error:', error);
     }
 
     setTranslations(translated);

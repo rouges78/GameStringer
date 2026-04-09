@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { useToast } from '@/hooks/use-toast';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface AutoBackupConfig {
   enabled: boolean;
@@ -54,8 +55,8 @@ export function useAutoBackup() {
     try {
       const cfg = await invoke<AutoBackupConfig>('load_autobackup_config');
       setConfig(cfg);
-    } catch (e) {
-      console.error('[AutoBackup] Errore caricamento config:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore caricamento config:', e);
     }
   }, []);
 
@@ -65,8 +66,8 @@ export function useAutoBackup() {
       await invoke('save_autobackup_config', { config: newConfig });
       setConfig(newConfig);
       toast({ title: '✅ Configurazione Auto-Backup salvata' });
-    } catch (e) {
-      console.error('[AutoBackup] Errore salvataggio config:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore salvataggio config:', e);
       toast({ title: 'Errore', description: String(e), variant: 'destructive' });
     }
   }, [toast]);
@@ -76,8 +77,8 @@ export function useAutoBackup() {
     try {
       const list = await invoke<AutoBackupInfo[]>('list_auto_backups');
       setBackups(list);
-    } catch (e) {
-      console.error('[AutoBackup] Errore caricamento backups:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore caricamento backups:', e);
     }
   }, []);
 
@@ -104,8 +105,8 @@ export function useAutoBackup() {
           variant: 'destructive'
         });
       }
-    } catch (e) {
-      console.error('[AutoBackup] Errore esecuzione backup:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore esecuzione backup:', e);
       toast({ title: 'Errore backup', description: String(e), variant: 'destructive' });
     } finally {
       setIsRunning(false);
@@ -119,11 +120,11 @@ export function useAutoBackup() {
     try {
       const shouldRun = await invoke<boolean>('should_run_auto_backup');
       if (shouldRun) {
-        console.log('[AutoBackup] Avvio backup automatico...');
+        clientLogger.debug('[AutoBackup] Avvio backup automatico...');
         await runBackup();
       }
-    } catch (e) {
-      console.error('[AutoBackup] Errore verifica backup:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore verifica backup:', e);
     }
   }, [isRunning, runBackup]);
 
@@ -139,8 +140,8 @@ export function useAutoBackup() {
         description: `${restored} elementi ripristinati`
       });
       return restored;
-    } catch (e) {
-      console.error('[AutoBackup] Errore ripristino:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[AutoBackup] Errore ripristino:', e);
       toast({ title: 'Errore ripristino', description: String(e), variant: 'destructive' });
       throw e;
     }

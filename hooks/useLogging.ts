@@ -106,7 +106,7 @@ export function useLogging(options: UseLoggingOptions = {}) {
         componentLogger.current.logPerformance(operation, duration);
         
         return result;
-      } catch (error) {
+      } catch (error: unknown) {
         const duration = performance.now() - start;
         
         if (enableErrorLogging) {
@@ -139,7 +139,7 @@ export function useLogging(options: UseLoggingOptions = {}) {
         componentLogger.current.logPerformance(operation, duration);
         
         return result;
-      } catch (error) {
+      } catch (error: unknown) {
         const duration = performance.now() - start;
         
         if (enableErrorLogging) {
@@ -204,7 +204,7 @@ export function useApiLogging() {
       logApiCall(method, url, 200, duration, { requestData });
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       // Try to extract status code from error
@@ -269,7 +269,7 @@ export function usePerformanceLogging(component?: string) {
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(
@@ -295,7 +295,7 @@ export function usePerformanceLogging(component?: string) {
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(

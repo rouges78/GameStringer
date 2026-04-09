@@ -201,7 +201,7 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
           targetLanguage
         })}\n\n`));
 
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`));
       } finally {
