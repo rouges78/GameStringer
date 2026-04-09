@@ -34,8 +34,8 @@ import {
   Package,
   FileText,
 } from 'lucide-react';
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   activityHistory,
   Activity,
   ActivityType,

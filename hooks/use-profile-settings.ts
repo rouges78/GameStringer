@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { safeInvoke } from '@/lib/tauri-wrapper';
-import { 
 import { clientLogger } from '@/lib/client-logger';
-  ProfileSettings, 
+import {
+  ProfileSettings,
   GlobalSettings, 
   UseProfileSettingsReturn,
   ProfileResponse,

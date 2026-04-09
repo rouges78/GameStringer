@@ -16,8 +16,8 @@ import {
   BookOpen, Shield, RefreshCw, Copy, ChevronRight, Package,
   Swords, ScrollText, Users, MessageSquare, Archive,
 } from 'lucide-react'
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   type BethesdaGameInfo,
   type PluginInfo,
   type StringTableFile,

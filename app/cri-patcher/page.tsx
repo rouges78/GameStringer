@@ -15,8 +15,8 @@ import {
   Loader2, Download, ArrowRight, Sparkles, Search, FileText,
   Archive, User, ChevronRight, Copy, RefreshCw, Filter, HardDrive,
 } from 'lucide-react';
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   type CriGameInfo,
   type CpkFileInfo,
   type CpkEntry,

@@ -42,8 +42,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   nexusModsService,
   type NexusMod,
   type NexusModFile,

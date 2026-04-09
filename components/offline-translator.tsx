@@ -5,8 +5,8 @@ import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   WifiOff, Download, CheckCircle2, XCircle, Loader2,
   ArrowRightLeft, Trash2, Copy, Plus, ChevronDown, Cpu, Zap
 } from 'lucide-react';

@@ -15,8 +15,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,

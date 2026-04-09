@@ -47,8 +47,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
-import {
 import { clientLogger } from '@/lib/client-logger';
+import {
   SubtitleFile,
   SubtitleEntry,
   parseSubtitles,
