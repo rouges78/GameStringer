@@ -1813,4 +1813,43 @@ La Chat Community è una funzionalità di messaggistica in tempo reale integrata
 
 ---
 
-GameStringer v1.6.0 - Guida aggiornata al 04/04/2026
+## Novità v1.8.0
+
+### Overlay Traduzione in Tempo Reale
+- Vai alla pagina **/live-translate** o premi **Ctrl+Alt+O**
+- Seleziona lingua sorgente/destinazione e provider AI
+- Clicca **Avvia** — l'overlay appare sopra il gioco
+- Il testo viene catturato tramite OCR ogni 2 secondi
+- Le traduzioni appaiono come box overlay trasparenti
+- Il rilevamento delle differenze salta il testo invariato (risparmia chiamate API)
+
+### Marketplace dell'Hub
+- Vai al **Community Hub** per esplorare i pacchetti di traduzione
+- **Installazione con 1 clic**: scarica → valida → importa
+- Valuta e recensisci i pacchetti della community
+- Pubblica le tue traduzioni come file **.gspack**
+- Profili utente con reputazione e badge
+
+### Rete Translation Memory
+- Attiva in **Impostazioni → Rete TM**
+- Opt-in: le tue traduzioni di alta qualità contribuiscono al pool globale
+- Privacy first: testo sorgente hashato, nessun dato utente condiviso
+- L'utente successivo che traduce lo stesso gioco riceve suggerimenti pre-compilati
+- Integrazione automatica nella pipeline di traduzione
+
+### Pipeline Doppiaggio AI
+- Vai alla pagina **/dubbing**
+- Seleziona la cartella del gioco e configura lingue/voce
+- Pipeline a 7 step: scansione → trascrizione → traduzione → sintesi → patch → sincronizzazione labiale → sottotitoli
+- Il matching della durata mantiene l'audio tradotto della stessa lunghezza dell'originale
+- Profili vocali dei personaggi con 16 archetipi
+
+### Sistema Plugin
+- La community può creare nuovi patcher per motori di gioco in JavaScript
+- Nessuna compilazione Rust necessaria
+- Il generatore di template crea uno scaffold completo del plugin
+- I plugin vengono distribuiti come pacchetti **.gsplugin**
+
+---
+
+GameStringer v1.8.0 - Guida aggiornata al 09/04/2026

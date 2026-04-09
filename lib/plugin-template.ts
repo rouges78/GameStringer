@@ -44,7 +44,7 @@ export function generatePatcherTemplate(config: PluginTemplateConfig): Generated
     type: 'engine',
     description: config.description || `GameStringer patcher plugin for ${config.engineName} engine`,
     author: config.author,
-    minAppVersion: '1.7.0',
+    minAppVersion: '1.8.0',
     homepage: config.homepage || '',
     license: config.license || 'MIT',
     entrypoint: 'plugin.js',

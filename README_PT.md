@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.6.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.8.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ O GameStringer suporta **20+ motores** com diferentes níveis de profundidade:
 ---
 
 ## ✨ Recursos
+
+### 🆕 Novidades na v1.8.0
+
+- **Live Translation Overlay** — Tradução do jogo em tempo real com overlay OCR transparente
+- **Hub Marketplace** — Marketplace comunitário de pacotes de tradução com instalação em um clique
+- **Translation Memory Network** — Compartilhamento federado de traduções da comunidade
+- **AI Dubbing Pipeline** — Dublagem de voz completa para jogos (STT → Traduzir → TTS → Patch)
+- **Plugin System** — Plugins extensíveis pela comunidade para os patchers de motores de jogo
 
 ### 🤖 Tradução por IA
 
@@ -407,5 +415,5 @@ Veja [LICENSE](LICENSE) para detalhes. Dúvidas? Abra uma [Discussion](https://g
 
 <p align="center">
   Feito com ❤️ para gamers que querem jogar no seu próprio idioma<br>
-  <strong>GameStringer v1.6.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.8.0</strong> · © 2025-2026 GameStringer Team
 </p>

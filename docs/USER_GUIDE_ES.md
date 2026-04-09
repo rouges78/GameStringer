@@ -446,4 +446,43 @@ Chat en tiempo real integrado en el Community Hub, impulsado por Supabase Realti
 
 ---
 
-GameStringer v1.6.0 - Guía actualizada 04/04/2026
+## Novedades v1.8.0
+
+### Overlay de Traducción en Vivo
+- Ve a la página **/live-translate** o presiona **Ctrl+Alt+O**
+- Selecciona idioma origen/destino y proveedor AI
+- Haz clic en **Iniciar** — el overlay aparece sobre el juego
+- El texto se captura mediante OCR cada 2 segundos
+- Las traducciones aparecen como cajas de overlay transparentes
+- La detección de diferencias omite texto sin cambios (ahorra llamadas API)
+
+### Mercado del Hub
+- Ve al **Community Hub** para explorar paquetes de traducción
+- **Instalación con 1 clic**: descargar → validar → importar
+- Califica y reseña los paquetes de la comunidad
+- Publica tus propias traducciones como archivos **.gspack**
+- Perfiles de usuario con reputación e insignias
+
+### Red de Memoria de Traducción
+- Activa en **Ajustes → Red TM**
+- Opt-in: tus traducciones de alta calidad contribuyen al pool global
+- Privacidad primero: texto fuente hasheado, sin datos de usuario compartidos
+- El siguiente usuario que traduzca el mismo juego recibe sugerencias pre-rellenadas
+- Integrado automáticamente en el pipeline de traducción
+
+### Pipeline de Doblaje AI
+- Ve a la página **/dubbing**
+- Selecciona la carpeta del juego y configura idiomas/voz
+- Pipeline de 7 pasos: escanear → transcribir → traducir → sintetizar → parchear → sincronización labial → subtítulos
+- El ajuste de duración mantiene el audio traducido con la misma longitud que el original
+- Perfiles de voz de personaje con 16 arquetipos
+
+### Sistema de Plugins
+- La comunidad puede crear nuevos parcheadores de motores de juego en JavaScript
+- No se necesita compilación de Rust
+- El generador de plantillas crea un andamiaje completo del plugin
+- Los plugins se distribuyen como paquetes **.gsplugin**
+
+---
+
+GameStringer v1.8.0 - Guía actualizada 09/04/2026

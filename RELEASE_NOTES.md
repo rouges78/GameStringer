@@ -1,3 +1,140 @@
+# 🎮 GameStringer v1.8.0
+
+> **Release Date**: April 9, 2026
+> **Type**: Live Translation Overlay + Hub Marketplace + Translation Memory Network + AI Dubbing Pipeline + Plugin System
+
+---
+
+## 👁️ Live Translation Overlay
+
+Real-time game translation via a transparent on-screen overlay:
+
+- **Hotkey `Ctrl+Alt+O`** to toggle the overlay on/off
+- Pipeline: screen capture → multi-engine OCR (Tesseract / OneOCR / PaddleOCR) → AI translation (Groq / Cerebras for speed) → gaming-style overlay
+- **Diff detection**: skips unchanged text between frames — no wasted API calls
+- **Translation cache**: instant replay of previously seen text
+- Designed for minimal performance impact during gameplay
+
+## 🏪 Hub Marketplace
+
+Community translation pack marketplace with 1-click install:
+
+- Supabase backend with 10 tables (packs, reviews, comments, followers, moderation)
+- **User profiles** with reputation system
+- Status workflow: `draft` → `published` → `verified` → `featured`
+- Browse, search, review, and install community translation packs
+
+## 🌐 Translation Memory Network
+
+Federated Translation Memory sharing across the community:
+
+- High-quality translations (confidence > 0.8) auto-contributed to a global pool (**opt-in, privacy-first**)
+- Source text **hashed** for privacy — no raw strings leave your machine
+- Auto-integrated into the `translateWithFallback()` pipeline
+- Game-scoped entries to avoid cross-contamination between titles
+
+## 🎬 AI Dubbing Pipeline
+
+Full 7-step dubbing pipeline — from raw audio to lip-synced dubbed output:
+
+1. **Scan audio** files in the game
+2. **Whisper STT** — speech-to-text transcription
+3. **AI translation** of the transcript
+4. **TTS synthesis** with character voices (OpenAI / ElevenLabs / Azure)
+5. **Duration matching** — speed adjustment to fit original timing
+6. **Audio patching** with automatic backup of originals
+7. **Rhubarb lip sync** + subtitle generation (SRT / VTT / ASS)
+
+- 16 character archetypes for distinct voice profiles
+- Pause / resume / abort support for long-running pipelines
+
+## 🧩 Plugin System
+
+Community-created game engine patchers via a `PatcherPlugin` interface:
+
+- Full lifecycle: `detect` → `extract` → `patch` → `verify` → `restore`
+- **Template generator** for quick plugin scaffolding
+- No Rust compilation needed — plugins run via **sandboxed JavaScript eval**
+- Distributed as `.gsplugin` packages
+
+## 🔒 Security Hardening
+
+- **CSP rinforzata**: removed `unsafe-eval`, restricted `img-src` / `connect-src` to specific domains
+- **XSS fix**: removed `dangerouslySetInnerHTML` in intelligent search
+- **AES-256-GCM** encrypted API key storage (Rust backend + TypeScript client)
+- **CSRF protection**: Origin validation + `X-GS-Client` header
+- **Zod input validation** on 4 API routes
+- **Rate limiting**: global middleware, per-route configurable
+- All **42/42 API routes** use `withErrorHandler`
+
+## 🏗️ Architecture & Code Quality
+
+- CI pipeline: added `frontend-checks` job (tsc, eslint, vitest, npm audit)
+- ESLint config: `no-console`, `no-explicit-any`, `no-unused-vars` rules
+- **71 new unit tests** (api-schemas, middleware, translation modules)
+- **18 modules** extracted from 3 monolithic files (-1841 lines total)
+- 1197/1203 `console.*` calls migrated to structured `clientLogger` / `logger` (99.5%)
+- 893 catch clauses typed with `: unknown`
+- 25+ TypeScript `any` types eliminated
+- Removed duplicate deps: react-hot-toast, vdf (-42 packages)
+
+---
+
+## 📥 Downloads
+
+| File | Description |
+|------|-------------|
+| `GameStringer-1.8.0-Setup.exe` | Windows Installer (recommended) |
+| `GameStringer-1.8.0-Portable.zip` | Portable version (no install) |
+| `checksums-sha256.txt` | SHA256 checksums for verification |
+
+### System Requirements
+
+- Windows 10/11 (64-bit)
+- 4GB RAM (8GB+ recommended for local AI)
+- 500MB disk space
+
+---
+
+## 🔧 Installation
+
+### Setup (Recommended)
+
+1. Download `GameStringer-1.8.0-Setup.exe`
+2. Run the installer
+3. Follow the installation wizard
+4. Launch GameStringer from Start Menu
+
+### Portable
+
+1. Download `GameStringer-1.8.0-Portable.zip`
+2. Extract to any folder
+3. Run `GameStringer.exe`
+
+---
+
+## 📖 Documentation
+
+User guides available in 11 languages:
+
+| Language | Guide |
+|----------|-------|
+| Italian | [GUIDA_UTENTE.md](docs/GUIDA_UTENTE.md) |
+| English | [USER_GUIDE_EN.md](docs/USER_GUIDE_EN.md) |
+| Spanish | [USER_GUIDE_ES.md](docs/USER_GUIDE_ES.md) |
+| French | [USER_GUIDE_FR.md](docs/USER_GUIDE_FR.md) |
+| German | [USER_GUIDE_DE.md](docs/USER_GUIDE_DE.md) |
+| Japanese | [USER_GUIDE_JA.md](docs/USER_GUIDE_JA.md) |
+| Chinese | [USER_GUIDE_ZH.md](docs/USER_GUIDE_ZH.md) |
+| Korean | [USER_GUIDE_KO.md](docs/USER_GUIDE_KO.md) |
+| Portuguese | [USER_GUIDE_PT.md](docs/USER_GUIDE_PT.md) |
+| Russian | [USER_GUIDE_RU.md](docs/USER_GUIDE_RU.md) |
+| Polish | [USER_GUIDE_PL.md](docs/USER_GUIDE_PL.md) |
+
+---
+
+---
+
 # 🎮 GameStringer v1.7.0
 
 > **Release Date**: April 8, 2026

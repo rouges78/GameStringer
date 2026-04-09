@@ -1,8 +1,43 @@
-# GameStringer - Architettura del Progetto
+# GameStringer - Architettura del Progetto (v1.8.0)
 
 ## Visione
 
-Software desktop professionale per la localizzazione di videogiochi che analizza automaticamente i giochi installati e suggerisce il metodo di traduzione migliore.
+Software desktop professionale per la localizzazione di videogiochi che analizza automaticamente i giochi installati e suggerisce il metodo di traduzione migliore. Include traduzione live overlay, dubbing AI, marketplace community, e sistema plugin estensibile.
+
+---
+
+## Nuovi Moduli v1.8.0
+
+### LIVE TRANSLATION OVERLAY
+- **Engine**: `lib/live-translation-engine.ts` — Loop cattura→OCR→diff→traduci→overlay
+- **UI**: `app/live-translate/page.tsx` — Pannello di controllo
+- **Overlay**: `app/ocr-overlay/page.tsx` — Finestra trasparente con traduzioni
+
+### HUB MARKETPLACE
+- **Backend**: `lib/community-hub-backend.ts` — Supabase CRUD (pack, review, commenti, moderazione)
+- **Installer**: `lib/marketplace-installer.ts` — Download→validate→import 1-click
+- **Schema**: `docs/supabase-schema.sql` — 10 tabelle PostgreSQL + RLS
+
+### TRANSLATION MEMORY NETWORK
+- **Network**: `lib/tm-network.ts` — Pull/push/lookup federato via Supabase
+- **Integrazione**: auto-inject in `lib/ai-translate-direct.ts` → `translateWithFallback()`
+
+### AI DUBBING PIPELINE
+- **Pipeline**: `lib/dubbing-pipeline.ts` — 7 step: scan→STT→translate→TTS→patch→lipsync→subtitles
+- **UI**: `app/dubbing/page.tsx` — Configurazione e monitoraggio
+
+### PLUGIN SYSTEM
+- **Registry**: `lib/plugin-system.ts` — PatcherPlugin interface + template generator
+- **Template**: `lib/plugin-template.ts` — Scaffold per nuovi plugin community
+
+### MODULI ESTRATTI (Refactoring)
+- `lib/translation/language-mappings.ts` — Mappe codici lingua
+- `lib/translation/chain-presets.ts` — Catene provider
+- `lib/translation/provider-blocking.ts` — Blocco/cooldown provider
+- `lib/translation/provider-quality-tracker.ts` — Tracking qualita
+- `lib/translation/prompt-builder.ts` — Costruzione prompt AI
+- `components/game-detail/` — 8 sub-componenti estratti
+- `components/translator-pro/` — 4 sub-componenti + cost calculator
 
 ---
 
