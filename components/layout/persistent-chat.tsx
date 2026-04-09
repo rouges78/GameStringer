@@ -150,22 +150,25 @@ export function PersistentChat() {
     }
 
     const init = async () => {
+      const timeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+        Promise.race([promise, new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
       try {
-        let uid = await getCurrentUserId();
+        let uid = await timeout(getCurrentUserId(), 5000).catch(() => null);
         if (!uid) {
-          uid = await autoSyncGSToSupabase();
+          uid = await timeout(autoSyncGSToSupabase(), 5000).catch(() => null);
         }
         setUserId(uid);
-        const chatRooms = await fetchRooms();
+        const chatRooms = await timeout(fetchRooms(), 5000).catch(() => [] as ChatRoom[]);
         setRooms(chatRooms);
         if (chatRooms.length > 0) {
           setActiveRoom(chatRooms[0]);
         }
         if (uid) {
-          updatePresence('online');
-          unsubPresenceRef.current = await subscribeToPresence((users) => {
+          updatePresence('online').catch(() => {});
+          unsubPresenceRef.current = await timeout(subscribeToPresence((users) => {
             setOnlineUsers(users);
-          });
+          }), 5000).catch(() => null);
         }
       } catch (e: unknown) {
         clientLogger.error('[PersistentChat] Init error:', e);
