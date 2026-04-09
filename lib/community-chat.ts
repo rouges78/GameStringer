@@ -12,6 +12,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import { clientLogger } from '@/lib/client-logger';
 import { getSupabase as getSharedSupabase } from './community-hub-backend';
 
 // ─── TYPES ──────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ function getGSSession(): GSSessionInfo | null {
       if (p?.id || p?.name) {
         const id = p.id || p.name;
         const email = p.email || `gs_${id}@gamestringer.local`;
-        console.log('[Chat Bridge] Sessione GS trovata da gamestringer_current_profile:', id, p.name);
+        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gamestringer_current_profile:', id, p.name);
         return { id, email, name: p.name || id, image: p.avatar_url || p.avatar_path || undefined };
       }
     }
@@ -115,7 +116,7 @@ function getGSSession(): GSSessionInfo | null {
       if (session?.user?.id) {
         const u = session.user;
         const email = u.email || `gs_${u.id}@gamestringer.local`;
-        console.log('[Chat Bridge] Sessione GS trovata da gs_session:', u.id, u.name);
+        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_session:', u.id, u.name);
         return { id: u.id, email, name: u.name || u.id, image: u.image };
       }
     }
@@ -126,7 +127,7 @@ function getGSSession(): GSSessionInfo | null {
       const u = JSON.parse(rawUser);
       if (u?.id) {
         const email = u.email || `gs_${u.id}@gamestringer.local`;
-        console.log('[Chat Bridge] Sessione GS trovata da gs_user:', u.id, u.name);
+        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_user:', u.id, u.name);
         return { id: u.id, email, name: u.name || u.id, image: u.image };
       }
     }
@@ -139,15 +140,15 @@ function getGSSession(): GSSessionInfo | null {
         const acc = accounts[0];
         const id = acc.userId || acc.id || 'unknown';
         const email = acc.email || `gs_${id}@gamestringer.local`;
-        console.log('[Chat Bridge] Sessione GS trovata da gs_accounts:', id, acc.name);
+        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_accounts:', id, acc.name);
         return { id, email, name: acc.name || id, image: acc.image };
       }
     }
 
-    console.log('[Chat Bridge] Nessuna sessione GS trovata in localStorage');
+    clientLogger.debug('[Chat Bridge] Nessuna sessione GS trovata in localStorage');
     return null;
-  } catch (e) {
-    console.error('[Chat Bridge] Errore lettura sessione GS:', e);
+  } catch (e: unknown) {
+    clientLogger.error('[Chat Bridge] Errore lettura sessione GS:', e);
     return null;
   }
 }
@@ -175,7 +176,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
   // 1. Check if already signed in
   const { data: current } = await supabase.auth.getUser();
   if (current?.user?.id) {
-    console.log('[Chat Bridge] Già autenticato su Supabase:', current.user.id);
+    clientLogger.debug('[Chat Bridge] Già autenticato su Supabase:', current.user.id);
     authenticatedUserId = current.user.id;
   }
 
@@ -187,11 +188,11 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
     });
 
     if (signInData?.user?.id) {
-      console.log('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
+      clientLogger.debug('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
       authenticatedUserId = signInData.user.id;
     } else if (signInError) {
       // 3. If sign-in fails, try sign up (new user)
-      console.log('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
+      clientLogger.debug('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: gs.email!,
         password,
@@ -206,12 +207,12 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
       });
 
       if (signUpError) {
-        console.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
+        clientLogger.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
         return null;
       }
 
       if (signUpData?.user?.id) {
-        console.log('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
+        clientLogger.debug('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
         authenticatedUserId = signUpData.user.id;
       }
     }
@@ -228,7 +229,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
 
       if (!existingProfile) {
         const username = gs.name || `gs_${gs.id.substring(0, 8)}`;
-        console.log('[Chat Bridge] Profilo mancante, creo via RPC per:', authenticatedUserId, username);
+        clientLogger.debug('[Chat Bridge] Profilo mancante, creo via RPC per:', authenticatedUserId, username);
 
         // Try RPC first (SECURITY DEFINER, bypasses RLS)
         const { error: rpcErr } = await supabase.rpc('ensure_user_profile', {
@@ -239,7 +240,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
         });
 
         if (rpcErr) {
-          console.warn('[Chat Bridge] RPC ensure_user_profile fallita:', rpcErr.message, '- provo INSERT diretto');
+          clientLogger.warn('[Chat Bridge] RPC ensure_user_profile fallita:', rpcErr.message, '- provo INSERT diretto');
           // Fallback: direct insert
           const { error: insertErr } = await supabase.from('user_profiles').insert({
             id: authenticatedUserId,
@@ -248,18 +249,18 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
             avatar_url: gs.image || '',
           });
           if (insertErr) {
-            console.error('[Chat Bridge] INSERT user_profiles fallita:', insertErr.message, insertErr.code);
+            clientLogger.error('[Chat Bridge] INSERT user_profiles fallita:', insertErr.message, insertErr.code);
           } else {
-            console.log('[Chat Bridge] Profilo creato via INSERT diretto');
+            clientLogger.debug('[Chat Bridge] Profilo creato via INSERT diretto');
           }
         } else {
-          console.log('[Chat Bridge] Profilo creato via RPC');
+          clientLogger.debug('[Chat Bridge] Profilo creato via RPC');
         }
       } else {
-        console.log('[Chat Bridge] Profilo già esistente per:', authenticatedUserId);
+        clientLogger.debug('[Chat Bridge] Profilo già esistente per:', authenticatedUserId);
       }
-    } catch (e) {
-      console.error('[Chat Bridge] Errore verifica/creazione profilo:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Chat Bridge] Errore verifica/creazione profilo:', e);
     }
   }
 

@@ -25,6 +25,7 @@ import {
 import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SecretInfo {
   key: string;
@@ -81,8 +82,8 @@ export function SecretsDashboard() {
         timestamp: new Date().toISOString()
       };
       setData(secretsData);
-    } catch (error) {
-      console.error('Error fetching secrets status:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error fetching secrets status:', error);
       toast.error('Failed to load secrets status');
     } finally {
       setIsLoading(false);
@@ -98,8 +99,8 @@ export function SecretsDashboard() {
       const isValid = value.length > 10;
       setValidationResult({ isValid, message: isValid ? 'Key appears valid' : 'Key too short' });
       logUserAction('validate_secret', { key });
-    } catch (error) {
-      console.error('Error validating secret:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error validating secret:', error);
       toast.error('Failed to validate secret');
     } finally {
       setIsValidating(false);
@@ -116,8 +117,8 @@ export function SecretsDashboard() {
       setGeneratedKey(generated);
       logUserAction('generate_secret_key', { length });
       toast.success('Secret key generated successfully');
-    } catch (error) {
-      console.error('Error generating secret key:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error generating secret key:', error);
       toast.error('Failed to generate secret key');
     }
   };
@@ -126,8 +127,8 @@ export function SecretsDashboard() {
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Copied to clipboard');
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to copy to clipboard:', error);
       toast.error('Failed to copy to clipboard');
     }
   };

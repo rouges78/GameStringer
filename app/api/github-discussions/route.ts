@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
+import { clientLogger } from '@/lib/client-logger';
 
 const GITHUB_REPO_OWNER = 'rouges78';
 const GITHUB_REPO_NAME = 'GameStringer';
@@ -121,8 +122,8 @@ async function scrapeDiscussions() {
 
     return NextResponse.json(discussions);
 
-  } catch (error) {
-    console.error('Error scraping discussions:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Error scraping discussions:', error);
     return NextResponse.json([]);
   }
 }

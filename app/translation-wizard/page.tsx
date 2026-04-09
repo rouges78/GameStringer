@@ -26,6 +26,7 @@ import { detectStrategy, getAlternativeStrategies, type TranslationStrategy, typ
 import { findCommunityTranslation, type CommunityTranslation } from '@/lib/community-translations';
 import { translateSmart } from '@/lib/ai-translate-direct';
 import { extractStringsFromBuffer, fitToByteLength, applyPatch, detectAntiCheat, detectLanguage, type BinaryString } from '@/lib/binary-string-patcher';
+import { clientLogger } from '@/lib/client-logger';
 
 // --- Types ---
 interface Game {
@@ -84,7 +85,7 @@ export default function TranslationWizardPage() {
   // Error boundary effect
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error('[TranslationWizard] Render error:', event.error);
+      clientLogger.error('[TranslationWizard] Render error:', event.error);
       setRenderError(event.message);
     };
     window.addEventListener('error', handleError);
@@ -106,8 +107,8 @@ export default function TranslationWizardPage() {
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
-      } catch (e) {
-        console.error('Error loading settings:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Error loading settings:', e);
       }
     }
   }, []);
@@ -161,21 +162,21 @@ export default function TranslationWizardPage() {
                 autoGame.install_path = match.install_path;
                 autoGame.engine = match.engine || undefined;
               }
-            } catch (e) {
-              console.warn('[Wizard] Fallback scan per install_path fallito:', e);
+            } catch (e: unknown) {
+              clientLogger.warn('[Wizard] Fallback scan per install_path fallito:', e);
             }
-            console.log('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
+            clientLogger.debug('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
             setSelectedGame(autoGame);
             analyzeGame(autoGame);
           })();
         } else {
-          console.log('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
+          clientLogger.debug('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
           setSelectedGame(autoGame);
           setTimeout(() => analyzeGame(autoGame), 300);
         }
       }
-    } catch (e) {
-      console.error('[Wizard] Errore auto-start:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Wizard] Errore auto-start:', e);
     }
   }, []);
 
@@ -184,10 +185,10 @@ export default function TranslationWizardPage() {
     if (step === 'results' && autoTranslateRef.current && analysisResult && strategy) {
       autoTranslateRef.current = false;
       if (strategy.id === 'ocr' || strategy.id === 'telltale' || strategy.id === 'community-patch' || !strategy.canDoInline) {
-        console.log(`[Wizard] Auto-translate: strategia ${strategy.id} → mostro risultati (serve azione utente)`);
+        clientLogger.debug(`[Wizard] Auto-translate: strategia ${strategy.id} → mostro risultati (serve azione utente)`);
         return;
       }
-      console.log('[Wizard] Auto-translate: analisi completata, avvio traduzione...');
+      clientLogger.debug('[Wizard] Auto-translate: analisi completata, avvio traduzione...');
       setTimeout(() => startTranslation(), 500);
     }
   }, [step, analysisResult, strategy]);
@@ -226,8 +227,8 @@ export default function TranslationWizardPage() {
         setGames(installedGames);
         setFilteredGames(installedGames);
       }
-    } catch (error) {
-      console.error('Error loading games:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading games:', error);
       toast({ title: 'error', description: 'Impossibile caricare i games', variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -263,9 +264,9 @@ export default function TranslationWizardPage() {
       try {
         engineDetails = await invoke<unknown>('check_game_engine', { gamePath: installPath });
         engine = engineDetails?.engine_name || 'Unknown';
-        console.log('[Wizard] Rust engine detection:', engine, engineDetails);
-      } catch (e) {
-        console.warn('[Wizard] check_game_engine failed, falling back to JS:', e);
+        clientLogger.debug('[Wizard] Rust engine detection:', engine, engineDetails);
+      } catch (e: unknown) {
+        clientLogger.warn('[Wizard] check_game_engine failed, falling back to JS:', e);
         engine = await detectGameEngine(installPath);
       }
 
@@ -275,9 +276,9 @@ export default function TranslationWizardPage() {
       let locInfo: unknown = null;
       try {
         locInfo = await invoke<unknown>('detect_localization_files', { gamePath: installPath });
-        console.log('[Wizard] Rust loc detection:', locInfo);
-      } catch (e) {
-        console.warn('[Wizard] detect_localization_files failed:', e);
+        clientLogger.debug('[Wizard] Rust loc detection:', locInfo);
+      } catch (e: unknown) {
+        clientLogger.warn('[Wizard] detect_localization_files failed:', e);
       }
 
       // Step 4: Get full recommendation from Rust backend
@@ -286,9 +287,9 @@ export default function TranslationWizardPage() {
       let rustRecommendation: unknown = null;
       try {
         rustRecommendation = await invoke<unknown>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
-        console.log('[Wizard] Rust recommendation:', rustRecommendation);
-      } catch (e) {
-        console.warn('[Wizard] get_translation_recommendation failed:', e);
+        clientLogger.debug('[Wizard] Rust recommendation:', rustRecommendation);
+      } catch (e: unknown) {
+        clientLogger.warn('[Wizard] get_translation_recommendation failed:', e);
       }
 
       // Step 5: Also scan with JS for additional file types the Rust backend might miss
@@ -404,18 +405,18 @@ export default function TranslationWizardPage() {
       // If Rust recommended specific tools, consider them as alternatives
       if (rustRecommendation?.tools?.length) {
         const rustToolIds = new Set(rustRecommendation.tools.filter((t: unknown) => t.available).map((t: unknown) => t.id));
-        console.log(`[Wizard] Rust tools: ${[...rustToolIds].join(', ')}`);
+        clientLogger.debug(`[Wizard] Rust tools: ${[...rustToolIds].join(', ')}`);
       }
 
-      console.log(`[Wizard] Strategy: ${detected.id} (${detected.name}) | Engine: ${engine}`);
+      clientLogger.debug(`[Wizard] Strategy: ${detected.id} (${detected.name}) | Engine: ${engine}`);
       
       setTimeout(() => {
         setStep('results');
         setIsAnalyzing(false);
       }, 500);
 
-    } catch (error) {
-      console.error('Analysis error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Analysis error:', error);
       toast({ 
         title: 'Errore analisi', 
         description: error instanceof Error ? error.message : 'Errore durante l\'analisi',
@@ -480,7 +481,7 @@ export default function TranslationWizardPage() {
         maxDepth: 10  // Increased depth for Unity _Data subfolders
       });
 
-      console.log('[Wizard] Scan results:', results?.length || 0, 'files');
+      clientLogger.debug('[Wizard] Scan results:', results?.length || 0, 'files');
 
       if (Array.isArray(results)) {
         for (const file of results) {
@@ -525,8 +526,8 @@ export default function TranslationWizardPage() {
       // Sort by size descending (larger files more likely to be main localization)
       locFiles.sort((a, b) => b.size - a.size);
       
-    } catch (error) {
-      console.error('[Wizard] Scan error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[Wizard] Scan error:', error);
     }
 
     // If no files found, check for Unity/Unreal assets
@@ -785,7 +786,7 @@ export default function TranslationWizardPage() {
       setIsTranslating(false);
       setStep('complete');
 
-    } catch (error) {
+    } catch (error: unknown) {
       log(`\n❌ Errore fatale: ${error}`);
       setIsTranslating(false);
     }
@@ -815,7 +816,7 @@ export default function TranslationWizardPage() {
       let content: string;
       try {
         content = await invoke<string>('read_text_file', { path: file.path, maxBytes: 2000000 });
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Impossibile leggere: ${e}`);
         continue;
       }
@@ -844,7 +845,7 @@ export default function TranslationWizardPage() {
           try { await invoke('save_file_with_backup', { filePath: file.path, content: content, createBackup: true }); } catch {}
           await invoke('write_text_file', { path: file.path, content: newContent });
           log(`  ✅ ${translated.size} stringhe tradotte e salvate`);
-        } catch (e) { log(`  ❌ Errore salvataggio: ${e}`); }
+        } catch (e: unknown) { log(`  ❌ Errore salvataggio: ${e}`); }
       }
     }
     log(`\n🏁 File di testo: ${translatedStrings}/${totalStrings} stringhe tradotte`);
@@ -905,7 +906,7 @@ export default function TranslationWizardPage() {
       const buf = await resp.arrayBuffer();
       fileBytes = new Uint8Array(buf);
       log(`  📐 Dimensione: ${(fileBytes.length / 1024 / 1024).toFixed(1)} MB`);
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Impossibile leggere: ${e}`);
       return;
     }
@@ -1058,7 +1059,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Batch ${batchNum}: ${e}`);
       }
 
@@ -1090,7 +1091,7 @@ export default function TranslationWizardPage() {
           if (patchResult.errors.length > 0) {
             log(`  ⚠️ ${patchResult.errors.length} errori (vedi console)`);
           }
-        } catch (e) {
+        } catch (e: unknown) {
           log(`  ❌ Errore salvataggio: ${e}`);
         }
       } else {
@@ -1173,7 +1174,7 @@ export default function TranslationWizardPage() {
       } else {
         log(`  ⚠️ Risultato: ${JSON.stringify(result)}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore installazione: ${e}`);
       log('  💡 Prova ad installare manualmente BepInEx dal sito ufficiale');
     }
@@ -1210,7 +1211,7 @@ export default function TranslationWizardPage() {
               }
               log(`  ✅ ${saved} stringhe tradotte e salvate`);
             }
-          } catch (e) { log(`  ⚠️ Errore traduzione: ${e}`); }
+          } catch (e: unknown) { log(`  ⚠️ Errore traduzione: ${e}`); }
         } else {
           log('  ✅ Tutte le stringhe sono già tradotte');
         }
@@ -1305,7 +1306,7 @@ export default function TranslationWizardPage() {
         try {
           await invoke('write_text_file', { path: tlPath, content: tlContent });
           log(`  ✅ Salvato tl/${targetLanguage}/${fileName}`);
-        } catch (e) { log(`  ❌ Errore: ${e}`); }
+        } catch (e: unknown) { log(`  ❌ Errore: ${e}`); }
       }
     }
 
@@ -1327,7 +1328,7 @@ export default function TranslationWizardPage() {
         log(`  ✅ Estratte ${extraction.entries.length} stringhe`);
         log(`  📄 Sorgente: ${extraction.message || extraction.source_file}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ⚠️ extract_unreal_localization: ${e}`);
     }
 
@@ -1340,7 +1341,7 @@ export default function TranslationWizardPage() {
           log(`  ✅ IoStore: ${extraction.entries.length} stringhe`);
           log(`  📄 ${extraction.message}`);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ extract_iostore_localization: ${e}`);
       }
     }
@@ -1406,7 +1407,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch ${Math.floor(bi / BATCH) + 1}: ${e}`);
       }
 
@@ -1447,7 +1448,7 @@ export default function TranslationWizardPage() {
       } else {
         log(`  ⚠️ Risultato: ${JSON.stringify(pakResult)}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore creazione .pak: ${e}`);
       log('  💡 Prova ad usare il UE Translator dedicato per più opzioni');
     }
@@ -1467,7 +1468,7 @@ export default function TranslationWizardPage() {
     let extraction: unknown = null;
     try {
       extraction = await invoke<unknown>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ❌ Errore estrazione: ${e}`);
     }
 
@@ -1509,7 +1510,7 @@ export default function TranslationWizardPage() {
             translatedCount++;
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch ${Math.floor(bi / BATCH) + 1}: ${e}`);
       }
 
@@ -1578,7 +1579,7 @@ export default function TranslationWizardPage() {
         content: poLines.join('\n'),
       });
       log(`  💾 danganronpa_translation.po salvato`);
-    } catch (e) {
+    } catch (e: unknown) {
       log(`  ⚠️ Errore salvataggio: ${e}`);
     }
 
@@ -1615,7 +1616,7 @@ export default function TranslationWizardPage() {
             if (i < result.translations!.length) translated.set(s.key, result.translations![i]);
           });
         }
-      } catch (e) {
+      } catch (e: unknown) {
         log(`  ⚠️ Errore batch: ${e}`);
       }
 
@@ -1776,8 +1777,8 @@ export default function TranslationWizardPage() {
         targetLanguage: targetLanguage
       }));
       window.location.href = '/editor';
-    } catch (error) {
-      console.error('Error reading file:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error reading file:', error);
       toast({
         title: 'error',
         description: 'Impossibile leggere il file',

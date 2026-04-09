@@ -1,6 +1,7 @@
 import { BatchProcessor, BatchItem, createBatchProcessor } from './batch-processor';
 import { BatchResult, BatchOperationType, BatchOperationStatus } from '@/lib/types/batch-operations';
 import { prisma } from './prisma';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface BatchOperationManagerOptions {
   persistResults?: boolean;
@@ -195,8 +196,8 @@ export class BatchOperationManager {
           status: progress > 0 ? 'running' : 'pending'
         }
       });
-    } catch (error) {
-      console.error('Failed to update operation progress:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to update operation progress:', error);
     }
   }
 
@@ -216,8 +217,8 @@ export class BatchOperationManager {
           results: JSON.stringify(result)
         }
       });
-    } catch (error) {
-      console.error('Failed to complete operation:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to complete operation:', error);
     }
   }
 
@@ -234,8 +235,8 @@ export class BatchOperationManager {
           completedAt: new Date()
         }
       });
-    } catch (error) {
-      console.error('Failed to update operation error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to update operation error:', error);
     }
   }
 
@@ -251,8 +252,8 @@ export class BatchOperationManager {
           completedAt: status === 'cancelled' ? new Date() : undefined
         }
       });
-    } catch (error) {
-      console.error('Failed to update operation status:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to update operation status:', error);
     }
   }
 }

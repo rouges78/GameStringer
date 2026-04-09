@@ -244,8 +244,8 @@ class QualityScoringService {
         const data = JSON.parse(stored);
         this.projects = new Map(Object.entries(data));
       }
-    } catch (e) {
-      console.error('[QualityScoring] Error loading:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[QualityScoring] Error loading:', e);
     }
   }
 
@@ -253,8 +253,8 @@ class QualityScoringService {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(this.projects)));
-    } catch (e) {
-      console.error('[QualityScoring] Error saving:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[QualityScoring] Error saving:', e);
     }
   }
 

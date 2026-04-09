@@ -24,6 +24,7 @@ import {
 import { CHARACTER_PRESETS, type CharacterProfile, getQualityCategory } from '@/lib/translation-quality';
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback } from '@/lib/ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationResult {
   provider: string;
@@ -136,8 +137,8 @@ export function MultiLLMCompare() {
       const best = results.length > 0 ? results.reduce((a, b) => (a.qualityScore.overall > b.qualityScore.overall ? a : b), results[0]) : null;
       const data: CompareResponse = { sourceText, sourceLanguage: sourceLanguage || 'en', targetLanguage, results, bestResult: best, consensusTranslation: results.length > 1 ? results[0].translatedText : null, processingTimeMs };
       setResponse(data);
-    } catch (error) {
-      console.error('Compare error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Compare error:', error);
     } finally {
       setIsLoading(false);
     }

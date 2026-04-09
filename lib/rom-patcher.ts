@@ -203,7 +203,7 @@ export function applyBPS(romData: Uint8Array, patchData: Uint8Array): PatchResul
       (patchData[patchData.length - 10] << 16) | (patchData[patchData.length - 9] << 24)) >>> 0;
     const srcCrcCalc = crc32(romData);
     if (srcCrcStored !== srcCrcCalc) {
-      console.warn(`[BPS] CRC32 sorgente non corrisponde: atteso ${srcCrcStored.toString(16)}, calcolato ${srcCrcCalc.toString(16)}`);
+      clientLogger.warn(`[BPS] CRC32 sorgente non corrisponde: atteso ${srcCrcStored.toString(16)}, calcolato ${srcCrcCalc.toString(16)}`);
       // Non bloccare: potrebbe essere una ROM con header diverso
     }
 
@@ -260,7 +260,7 @@ export function applyBPS(romData: Uint8Array, patchData: Uint8Array): PatchResul
       (patchData[patchData.length - 6] << 16) | (patchData[patchData.length - 5] << 24)) >>> 0;
     const tgtCrcCalc = crc32(output);
     if (tgtCrcStored !== tgtCrcCalc) {
-      console.warn(`[BPS] CRC32 output non corrisponde: atteso ${tgtCrcStored.toString(16)}, calcolato ${tgtCrcCalc.toString(16)}`);
+      clientLogger.warn(`[BPS] CRC32 output non corrisponde: atteso ${tgtCrcStored.toString(16)}, calcolato ${tgtCrcCalc.toString(16)}`);
     }
 
     return { success: true, output, outputSize: output.length, format: 'bps', recordsApplied: records };

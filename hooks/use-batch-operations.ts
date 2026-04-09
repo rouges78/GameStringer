@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { BatchResult, BatchOperationType, BatchOperationStatus } from '@/lib/types/batch-operations';
 import { batchOperationManager } from '@/lib/batch-operation-manager';
 import { BatchItem } from '@/lib/batch-processor';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface UseBatchOperationsOptions {
   autoRefresh?: boolean;
@@ -40,8 +41,8 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
     try {
       const operations = await batchOperationManager.listActiveOperations();
       setActiveOperations(operations);
-    } catch (error) {
-      console.error('Failed to refresh active operations:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to refresh active operations:', error);
     }
   }, []);
 
@@ -49,8 +50,8 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
     try {
       const history = await batchOperationManager.getOperationHistory();
       setOperationHistory(history);
-    } catch (error) {
-      console.error('Failed to refresh operation history:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to refresh operation history:', error);
     }
   }, []);
 
@@ -113,7 +114,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
 
       refreshActiveOperations();
       return operationId;
-    } catch (error) {
+    } catch (error: unknown) {
       setOperationState(prev => ({
         ...prev,
         isRunning: false,
@@ -136,8 +137,8 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
         refreshActiveOperations();
       }
       return success;
-    } catch (error) {
-      console.error('Failed to cancel operation:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to cancel operation:', error);
       return false;
     }
   }, [refreshActiveOperations]);
@@ -145,8 +146,8 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
   const getOperationStatus = useCallback(async (operationId: string): Promise<BatchOperationStatus | null> => {
     try {
       return await batchOperationManager.getOperationStatus(operationId);
-    } catch (error) {
-      console.error('Failed to get operation status:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to get operation status:', error);
       return null;
     }
   }, []);
@@ -226,7 +227,7 @@ export function useTranslationBatchOperations() {
         // This would be replaced with actual translation API call
         const response = await fetch('/api/translations/translate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
             targetLanguage: item.data.targetLanguage,
@@ -258,7 +259,7 @@ export function useTranslationBatchOperations() {
       async (item) => {
         const response = await fetch('/api/translations/export', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationIds: [item.id],
             format: item.data.format
@@ -289,7 +290,7 @@ export function useTranslationBatchOperations() {
       async (item) => {
         const response = await fetch('/api/translations/update-status', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
             status: item.data.status

@@ -5,6 +5,7 @@
  */
 
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface CommunityPackage {
   id: string;
@@ -136,8 +137,8 @@ export async function getCommunityPackages(filters?: {
       sortBy: filters?.sortBy || null,
     });
     return backendPackages.map(toFrontendPackage);
-  } catch (error) {
-    console.error('Failed to load packages from backend:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Failed to load packages from backend:', error);
     // Nessun backend disponibile — ritorna vuoto
     return [];
   }
@@ -173,8 +174,8 @@ export async function uploadPackage(
       authorName,
     });
     return toFrontendPackage(backendPkg);
-  } catch (error) {
-    console.error('Failed to upload package:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Failed to upload package:', error);
     throw error;
   }
 }
@@ -188,8 +189,8 @@ export async function downloadPackageEntries(packageId: string): Promise<Transla
       packageId,
     });
     return entries;
-  } catch (error) {
-    console.error('Failed to download entries:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Failed to download entries:', error);
     // Nessun backend disponibile — ritorna vuoto
     return [];
   }
@@ -201,8 +202,8 @@ export async function downloadPackageEntries(packageId: string): Promise<Transla
 export async function ratePackage(packageId: string, rating: number): Promise<void> {
   try {
     await invoke('community_rate_package', { packageId, rating });
-  } catch (error) {
-    console.error('Failed to rate package:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Failed to rate package:', error);
   }
 }
 
@@ -319,8 +320,8 @@ export async function getCommunityStats(): Promise<{
       totalEntries: stats.total_entries,
       topLanguages: stats.top_languages,
     };
-  } catch (error) {
-    console.error('Failed to get stats:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Failed to get stats:', error);
     // Fallback
     const packages = await getCommunityPackages();
     return {

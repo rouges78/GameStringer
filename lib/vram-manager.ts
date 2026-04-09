@@ -1,4 +1,5 @@
 import { safeGetItem, safeSetItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const VRAM_CONFIG_KEY = 'vram_manager_config';
 const POLL_INTERVAL_MS = 10_000; // Poll ogni 10 secondi
@@ -271,8 +272,8 @@ class VramManager {
       }
 
       return stats;
-    } catch (e) {
-      console.warn('[VramManager] Poll failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[VramManager] Poll failed:', e);
       return null;
     }
   }

@@ -6,6 +6,7 @@
  */
 
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 // Types matching Rust backend
 export interface BridgeStats {
@@ -52,8 +53,8 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<string>>('translation_bridge_start');
       this.isConnected = response.success;
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to start:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to start:', error);
       return false;
     }
   }
@@ -66,8 +67,8 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<string>>('translation_bridge_stop');
       this.isConnected = false;
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to stop:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to stop:', error);
       return false;
     }
   }
@@ -80,8 +81,8 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<boolean>>('translation_bridge_status');
       this.isConnected = response.data ?? false;
       return this.isConnected;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to check status:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to check status:', error);
       return false;
     }
   }
@@ -93,8 +94,8 @@ export class TranslationBridgeClient {
     try {
       const response = await invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats');
       return response.data;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to get stats:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to get stats:', error);
       return null;
     }
   }
@@ -106,8 +107,8 @@ export class TranslationBridgeClient {
     try {
       const response = await invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats');
       return response.data;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to get dictionary stats:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to get dictionary stats:', error);
       return null;
     }
   }
@@ -129,8 +130,8 @@ export class TranslationBridgeClient {
         },
       });
       return response.data ?? 0;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to load translations:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to load translations:', error);
       return 0;
     }
   }
@@ -144,8 +145,8 @@ export class TranslationBridgeClient {
         path,
       });
       return response.data ?? 0;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to load JSON:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to load JSON:', error);
       return 0;
     }
   }
@@ -160,8 +161,8 @@ export class TranslationBridgeClient {
         target,
       });
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to set languages:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to set languages:', error);
       return false;
     }
   }
@@ -176,8 +177,8 @@ export class TranslationBridgeClient {
         translated,
       });
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to add translation:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to add translation:', error);
       return false;
     }
   }
@@ -191,8 +192,8 @@ export class TranslationBridgeClient {
         text,
       });
       return response.data;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to get translation:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to get translation:', error);
       return null;
     }
   }
@@ -206,8 +207,8 @@ export class TranslationBridgeClient {
         path,
       });
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to export JSON:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to export JSON:', error);
       return false;
     }
   }
@@ -219,8 +220,8 @@ export class TranslationBridgeClient {
     try {
       const response = await invoke<BridgeResponse<string>>('translation_bridge_clear');
       return response.success;
-    } catch (error) {
-      console.error('[TranslationBridge] Failed to clear:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[TranslationBridge] Failed to clear:', error);
       return false;
     }
   }

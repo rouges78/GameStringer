@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileSecurityDialogProps {
   open: boolean;
@@ -114,7 +115,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
         toast.error(response.error || 'Incorrect password');
       }
     } catch (error: unknown) {
-      console.error('Delete profile error:', error);
+      clientLogger.error('Delete profile error:', error);
       toast.error(error?.message || 'Error during deletion');
     } finally {
       setIsDeletingProfile(false);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { safeSetItem, safeGetItem, safeRemoveItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const PROGRESS_KEY = 'translation_progress';
 
@@ -32,8 +33,8 @@ const defaultState: TranslationProgressState = {
 export function saveTranslationProgress(state: TranslationProgressState): void {
   try {
     safeSetItem(PROGRESS_KEY, state);
-  } catch (error) {
-    console.warn('Errore salvataggio progress traduzioni:', error);
+  } catch (error: unknown) {
+    clientLogger.warn('Errore salvataggio progress traduzioni:', error);
   }
 }
 
@@ -52,8 +53,8 @@ export function loadTranslationProgress(): TranslationProgressState {
       );
       return saved;
     }
-  } catch (error) {
-    console.warn('Errore caricamento progress traduzioni:', error);
+  } catch (error: unknown) {
+    clientLogger.warn('Errore caricamento progress traduzioni:', error);
   }
   return defaultState;
 }

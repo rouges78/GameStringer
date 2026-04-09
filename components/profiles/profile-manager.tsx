@@ -11,6 +11,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileManagerProps {
   onClose?: () => void;
@@ -116,8 +117,8 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
         setIsUploading(false);
       };
       reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Avatar upload error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Avatar upload error:', error);
       toast({
         title: 'Error',
         description: 'An error occurred during upload',

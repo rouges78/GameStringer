@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { clientLogger } from '@/lib/client-logger';
 
 const GITHUB_REPO = 'rouges78/GameStringer';
 const DISCUSSIONS_URL = `https://github.com/${GITHUB_REPO}/discussions`;
@@ -103,12 +104,17 @@ export function GitHubDiscussions() {
     
     try {
       // REST API pubblica (no token richiesto per repo pubblici)
+      // Load GitHub token from secure storage
+      let ghToken: string | null = null;
+      try {
+        const { getSecureKey } = await import('@/lib/secure-key-store');
+        ghToken = await getSecureKey('GITHUB_TOKEN');
+      } catch {}
+
       const restResponse = await fetch('https://api.github.com/repos/rouges78/GameStringer/discussions?per_page=30', {
-        headers: { 
+        headers: {
           'Accept': 'application/vnd.github+json',
-          ...(typeof window !== 'undefined' && localStorage.getItem('github_token') 
-            ? { 'Authorization': `Bearer ${localStorage.getItem('github_token')}` } 
-            : {})
+          ...(ghToken ? { 'Authorization': `Bearer ${ghToken}` } : {})
         }
       });
       
@@ -134,7 +140,7 @@ export function GitHubDiscussions() {
       }
 
       // Fallback: GraphQL API (richiede token)
-      const token = typeof window !== 'undefined' ? localStorage.getItem('github_token') : null;
+      const token = ghToken;
       if (token) {
         const graphqlQuery = {
           query: `query {
@@ -171,8 +177,8 @@ export function GitHubDiscussions() {
       }
 
       setDiscussions([]);
-    } catch (err) {
-      console.error('Error fetching discussions:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error fetching discussions:', err);
       setDiscussions([]);
     } finally {
       setIsLoading(false);
@@ -186,7 +192,7 @@ export function GitHubDiscussions() {
   const openInGitHub = async (url: string) => {
     try {
       await open(url);
-    } catch (e) {
+    } catch (e: unknown) {
       // Fallback per browser
       window.open(url, '_blank', 'noopener,noreferrer');
     }

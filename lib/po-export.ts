@@ -91,13 +91,13 @@ export interface GenericStringEntry {
 export interface FormatConverter {
   engineName: string
   /** Convert engine-specific entries to generic format */
-  toGeneric: (data: any[]) => GenericStringEntry[]
+  toGeneric: (data: Record<string, unknown>[]) => GenericStringEntry[]
   /** Apply generic entries back to engine-specific format */
-  fromGeneric: (entries: GenericStringEntry[], originalData: any[]) => any[]
+  fromGeneric: (entries: GenericStringEntry[], originalData: Record<string, unknown>[]) => Record<string, unknown>[]
   /** Build a PO msgctxt from an engine-specific entry */
-  contextBuilder: (entry: any) => string
+  contextBuilder: (entry: Record<string, unknown>) => string
   /** Build a PO #: reference from an engine-specific entry */
-  referenceBuilder: (entry: any) => string
+  referenceBuilder: (entry: Record<string, unknown>) => string
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -796,7 +796,7 @@ function poEntryToGeneric(e: PoEntry): GenericStringEntry {
  * if the engine is not recognized.
  */
 export function entriesToGeneric(
-  entries: any[],
+  entries: Record<string, unknown>[],
   engine: string
 ): GenericStringEntry[] {
   const converter = CONVERTERS[engine]
@@ -822,8 +822,8 @@ export function entriesToGeneric(
 export function genericToEntries(
   generic: GenericStringEntry[],
   engine: string,
-  originalEntries: any[]
-): any[] {
+  originalEntries: Record<string, unknown>[]
+): Record<string, unknown>[] {
   const converter = CONVERTERS[engine]
   if (converter) {
     return converter.fromGeneric(generic, originalEntries)

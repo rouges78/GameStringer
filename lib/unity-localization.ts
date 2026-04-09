@@ -369,7 +369,7 @@ export async function translateStringTable(
         entry.translated = translated[idx] ?? '';
         entry.translationStatus = translated[idx] ? 'translated' : 'error';
       });
-    } catch (err) {
+    } catch (err: unknown) {
       batch.forEach((entry) => {
         entry.translationStatus = 'error';
         entry.validationErrors = [(err as Error).message];
@@ -409,7 +409,7 @@ export async function translateStringTable(
 
           translatedLiterals = result.translations ?? result.results ?? [];
         }
-      } catch (err) {
+      } catch (err: unknown) {
         batch.forEach((entry) => {
           entry.translationStatus = 'error';
           entry.validationErrors = [(err as Error).message];
@@ -472,7 +472,7 @@ export async function translateStringTable(
           entry.translated = translated[idx] ?? '';
           entry.translationStatus = translated[idx] ? 'translated' : 'error';
         });
-      } catch (err) {
+      } catch (err: unknown) {
         batch.forEach((entry) => {
           entry.translationStatus = 'error';
           entry.validationErrors = [(err as Error).message];

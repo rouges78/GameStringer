@@ -35,6 +35,7 @@ import { InjektOverlayConfig, OverlayConfig } from '@/components/injekt-overlay-
 import { TranslationProfileManager } from '@/components/translation-profile-manager';
 import { translationProfileManager, TranslationProfile } from '@/lib/game-translation-profiles';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Process {
   pid: number;
@@ -134,8 +135,8 @@ export function InjektUIEnhanced() {
       const { invoke } = await import('@/lib/tauri-api');
       const result = await invoke('list_running_processes') as unknown;
       setProcesses(result?.processes || result || []);
-    } catch (error) {
-      console.error('Error loading processes:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading processes:', error);
       setProcesses([]);
     }
   };
@@ -186,8 +187,8 @@ export function InjektUIEnhanced() {
         alert(data.message || 'Error during injection');
         setIsInjecting(false);
       }
-    } catch (error) {
-      console.error('Injection error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Injection error:', error);
       setIsInjecting(false);
     }
   };
@@ -204,8 +205,8 @@ export function InjektUIEnhanced() {
         clearInterval(monitoringInterval);
         setMonitoringInterval(null);
       }
-    } catch (error) {
-      console.error('Stop injection error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Stop injection error:', error);
     }
   };
 

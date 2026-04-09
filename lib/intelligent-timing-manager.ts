@@ -2,6 +2,7 @@
 
 import { NotificationPriority } from '@/types/notifications';
 import UIInterferenceDetector from './ui-interference-detector';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Gestisce il timing intelligente per il dismissal automatico delle notifiche
@@ -109,7 +110,7 @@ class IntelligentTimingManager {
     }
 
     if (this.options.debugMode) {
-      console.log('[IntelligentTimingManager] Inizializzato con opzioni:', this.options);
+      clientLogger.debug('[IntelligentTimingManager] Inizializzato con opzioni:', this.options);
     }
   }
 
@@ -227,7 +228,7 @@ class IntelligentTimingManager {
     timeout = Math.max(rule.minTimeout, Math.min(rule.maxTimeout, timeout));
 
     if (this.options.debugMode) {
-      console.log(`[IntelligentTimingManager] Timeout calcolato per ${priority}:`, {
+      clientLogger.debug(`[IntelligentTimingManager] Timeout calcolato per ${priority}:`, {
         base: rule.baseTimeout,
         calculated: timeout,
         context
@@ -255,14 +256,14 @@ class IntelligentTimingManager {
       onDismiss();
       
       if (this.options.debugMode) {
-        console.log(`[IntelligentTimingManager] Auto-dismiss eseguito per ${notificationId}`);
+        clientLogger.debug(`[IntelligentTimingManager] Auto-dismiss eseguito per ${notificationId}`);
       }
     }, timeout);
 
     this.activeTimers.set(notificationId, timer);
 
     if (this.options.debugMode) {
-      console.log(`[IntelligentTimingManager] Timer schedulato per ${notificationId}: ${timeout}ms`);
+      clientLogger.debug(`[IntelligentTimingManager] Timer schedulato per ${notificationId}: ${timeout}ms`);
     }
   }
 
@@ -273,7 +274,7 @@ class IntelligentTimingManager {
       this.activeTimers.delete(notificationId);
       
       if (this.options.debugMode) {
-        console.log(`[IntelligentTimingManager] Timer cancellato per ${notificationId}`);
+        clientLogger.debug(`[IntelligentTimingManager] Timer cancellato per ${notificationId}`);
       }
       
       return true;
@@ -315,7 +316,7 @@ class IntelligentTimingManager {
       this.activeTimers.set(notificationId, newTimer);
       
       if (this.options.debugMode) {
-        console.log(`[IntelligentTimingManager] Timeout esteso per ${notificationId}: +${additionalTime}ms`);
+        clientLogger.debug(`[IntelligentTimingManager] Timeout esteso per ${notificationId}: +${additionalTime}ms`);
       }
       
       return true;
@@ -338,7 +339,7 @@ class IntelligentTimingManager {
     };
 
     if (this.options.debugMode) {
-      console.log(`[IntelligentTimingManager] Regola aggiornata per ${priority}:`, 
+      clientLogger.debug(`[IntelligentTimingManager] Regola aggiornata per ${priority}:`, 
         this.timingRules[priority]);
     }
   }
@@ -363,7 +364,7 @@ class IntelligentTimingManager {
     this.options = { ...this.options, ...newOptions };
     
     if (this.options.debugMode) {
-      console.log('[IntelligentTimingManager] Opzioni aggiornate:', this.options);
+      clientLogger.debug('[IntelligentTimingManager] Opzioni aggiornate:', this.options);
     }
   }
 
@@ -377,7 +378,7 @@ class IntelligentTimingManager {
     this.activityListeners = [];
 
     if (this.options.debugMode) {
-      console.log('[IntelligentTimingManager] Distrutto');
+      clientLogger.debug('[IntelligentTimingManager] Distrutto');
     }
   }
 }

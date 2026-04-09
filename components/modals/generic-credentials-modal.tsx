@@ -108,7 +108,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
     try {
       await onSubmit(credentials.email, credentials.password);
       handleClose();
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Connection error.');
     }
   };

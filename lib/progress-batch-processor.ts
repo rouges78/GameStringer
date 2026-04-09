@@ -5,6 +5,7 @@
 import { BatchProcessor, BatchProcessorOptions, BatchItem } from './batch-processor';
 import { BatchOperationType, BatchResult } from '@/lib/types/batch-operations';
 import type { ProgressConfig } from '@/lib/types/progress';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface ProgressBatchProcessorOptions extends BatchProcessorOptions {
   progressConfig?: Partial<ProgressConfig>;
@@ -67,7 +68,7 @@ export class ProgressBatchProcessor {
 
       this.progressState.completeOperation(operationId, result);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.progressState.failOperation(operationId, error as Error);
       throw error;
     }
@@ -101,7 +102,7 @@ export class ProgressBatchProcessor {
 
   private handleItemError(itemId: string, error: Error, attempt: number) {
     // Potresti aggiungere logging degli errori qui
-    console.warn(`Errore nell'elaborazione di ${itemId} (tentativo ${attempt}):`, error);
+    clientLogger.warn(`Errore nell'elaborazione di ${itemId} (tentativo ${attempt}):`, error);
   }
 
   private handleComplete(result: BatchResult) {

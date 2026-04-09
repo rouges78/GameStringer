@@ -35,8 +35,8 @@ export function notify(
   options?: NotificationOptions
 ) {
   if (!toastFn) {
-    console.warn('Notifications not initialized. Call initNotifications first.');
-    console.log(`[${type.toUpperCase()}] ${message}`);
+    clientLogger.warn('Notifications not initialized. Call initNotifications first.');
+    clientLogger.debug(`[${type.toUpperCase()}] ${message}`);
     return;
   }
 
@@ -97,7 +97,7 @@ export const notifications = {
         : messages.success;
       notify('success', successMsg);
       return result;
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMsg = typeof messages.error === 'function'
         ? messages.error(err as Error)
         : messages.error;

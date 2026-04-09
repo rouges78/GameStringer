@@ -10,6 +10,7 @@
  */
 
 import { translateSmart } from './ai-translate-direct';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -428,7 +429,7 @@ export async function filterDanganronpaDialogues(
   const localResult = localFilter(dialogues, options);
   onProgress?.('local', localResult.filtered.length, dialogues.length);
 
-  console.log(`[DanganronpaFilter] Locale: ${dialogues.length} → ${localResult.filtered.length} (rimossi ${localResult.removed.length})`);
+  clientLogger.debug(`[DanganronpaFilter] Locale: ${dialogues.length} → ${localResult.filtered.length} (rimossi ${localResult.removed.length})`);
 
   // Fase 2: Classificazione AI (opzionale)
   if (options.useAIClassification && localResult.filtered.length > 500) {
@@ -440,7 +441,7 @@ export async function filterDanganronpaDialogues(
       (current, total) => onProgress?.('ai', current, total)
     );
 
-    console.log(`[DanganronpaFilter] AI: ${localResult.filtered.length} → ${aiResult.filtered.length} (rimossi ${aiResult.removed.length})`);
+    clientLogger.debug(`[DanganronpaFilter] AI: ${localResult.filtered.length} → ${aiResult.filtered.length} (rimossi ${aiResult.removed.length})`);
 
     // Combina stats
     return {

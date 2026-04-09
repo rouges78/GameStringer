@@ -271,7 +271,7 @@ export async function translateCriEntries(
           result[entryIdx].translated = translated[batchIdx] ?? '';
           result[entryIdx].translationStatus = translated[batchIdx] ? 'translated' : 'error';
         });
-      } catch (err) {
+      } catch (err: unknown) {
         batchIndices.forEach((entryIdx) => {
           result[entryIdx].translationStatus = 'error';
           result[entryIdx].validationErrors = [(err as Error).message];

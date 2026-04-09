@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ErrorReportContext {
   component?: string;
@@ -49,7 +50,7 @@ export function useErrorReporting() {
       
       return result.errorId;
     } catch (reportError) {
-      console.error('Failed to send error report:', reportError);
+      clientLogger.error('Failed to send error report:', reportError);
       
       // Show error notification
       toast.error('Failed to send error report. Please try again.');
@@ -64,7 +65,7 @@ export function useErrorReporting() {
   ) => {
     try {
       return await asyncOperation();
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error) {
         await reportError(error, context);
       }
@@ -79,7 +80,7 @@ export function useErrorReporting() {
     return (...args: T) => {
       try {
         return fn(...args);
-      } catch (error) {
+      } catch (error: unknown) {
         if (error instanceof Error) {
           reportError(error, context);
         }
@@ -95,7 +96,7 @@ export function useErrorReporting() {
     return async (...args: T) => {
       try {
         return await fn(...args);
-      } catch (error) {
+      } catch (error: unknown) {
         if (error instanceof Error) {
           await reportError(error, context);
         }
@@ -141,7 +142,7 @@ export function useApiErrorReporting() {
   ): Promise<T> => {
     try {
       return await apiCall();
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error) {
         await reportApiError(error, endpoint, method, requestData);
       }

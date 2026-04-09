@@ -144,7 +144,8 @@ Answer based ONLY on the dialogues above. If you can identify character names, r
     } catch {}
 
     // 2. Gemini (free)
-    const geminiKey = typeof window !== 'undefined' ? localStorage.getItem('k.gemini') : null;
+    const { getSecureKey } = await import('@/lib/secure-key-store');
+    const geminiKey = await getSecureKey('GEMINI_API_KEY');
     if (geminiKey) {
       try {
         const resp = await fetch(

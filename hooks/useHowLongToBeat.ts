@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { clientLogger } from '@/lib/client-logger';
 
 interface HltbData {
   found: boolean;
@@ -35,8 +36,8 @@ export function useHowLongToBeat(gameName: string | undefined, enabled = true) {
         const result = await invoke<HltbData>('get_howlongtobeat_info', { gameName });
         hltbCache.set(gameName, result);
         setData(result);
-      } catch (err) {
-        console.error('HLTB error:', err);
+      } catch (err: unknown) {
+        clientLogger.error('HLTB error:', err);
         const notFound = { found: false };
         hltbCache.set(gameName, notFound);
         setData(notFound);

@@ -182,7 +182,7 @@ export default function GodotTranslatorPage() {
       }
 
       setStatus('idle');
-    } catch (e) {
+    } catch (e: unknown) {
       log(`❌ ${e}`);
       setStatus('error');
     }
@@ -223,7 +223,7 @@ export default function GodotTranslatorPage() {
             file.doneCount++;
             done++;
           }
-        } catch (err) {
+        } catch (err: unknown) {
           log(`⚠️ ${entry.key}: ${err}`);
         }
       }

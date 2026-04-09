@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 import { withErrorHandler } from '@/lib/error-handler';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * 🔍 API per scansione file traducibili
@@ -185,8 +186,8 @@ async function scanDirectory(
         }
       }
     }
-  } catch (err) {
-    console.error(`Error scanning ${dirPath}:`, err);
+  } catch (err: unknown) {
+    clientLogger.error(`Error scanning ${dirPath}:`, err);
   }
 
   return scanned;

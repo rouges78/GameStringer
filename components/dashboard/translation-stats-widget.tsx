@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationStats {
   totalTranslations: number;
@@ -134,8 +135,8 @@ export function TranslationStatsWidget() {
         recentActivity,
         estimatedTimeRemaining,
       });
-    } catch (error) {
-      console.error('error Loading...atistiche:', error);
+    } catch (error: unknown) {
+      clientLogger.error('error Loading...atistiche:', error);
     } finally {
       setIsLoading(false);
     }

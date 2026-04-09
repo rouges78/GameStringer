@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Clock, Target, Trophy, Gamepad2, ExternalLink, Loader2, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { clientLogger } from '@/lib/client-logger';
 
 interface HltbData {
   found: boolean;
@@ -49,13 +50,13 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
       setError(null);
       
       try {
-        console.log('[HLTB] Fetching for:', gameName);
+        clientLogger.debug('[HLTB] Fetching for:', gameName);
         const result = await invoke<HltbData>('get_howlongtobeat_info', { gameName });
-        console.log('[HLTB] Result:', JSON.stringify(result));
+        clientLogger.debug('[HLTB] Result:', JSON.stringify(result));
         _hltbCache.set(gameName, result);
         if (!cancelled) setData(result);
-      } catch (e) {
-        console.warn('[HLTB] Fetch failed:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[HLTB] Fetch failed:', e);
         if (!cancelled) setError('Impossibile caricare i dati');
       } finally {
         if (!cancelled) setLoading(false);

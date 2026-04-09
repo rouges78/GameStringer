@@ -6,6 +6,7 @@ import { X, Download, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { open } from '@tauri-apps/plugin-shell';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface UpdateInfo {
   current_version: string;
@@ -36,7 +37,7 @@ export function UpdateNotification() {
     
     try {
       const info = await invoke<UpdateInfo>('check_for_updates');
-      console.log('Update info received:', info);
+      clientLogger.debug('Update info received:', info);
       if (info && info.update_available) {
         setUpdateInfo(info);
         // Salva in localStorage per non mostrare troppo spesso
@@ -45,8 +46,8 @@ export function UpdateNotification() {
           setDismissed(true);
         }
       }
-    } catch (error) {
-      console.warn('Update check failed:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Update check failed:', error);
     } finally {
       setChecking(false);
     }

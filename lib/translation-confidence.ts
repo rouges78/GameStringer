@@ -814,7 +814,7 @@ export async function calculateBatchConfidenceWithTM(
     const summary = generateSummary(pairs, results)
     
     return { pairs, results, summary }
-  } catch (error) {
+  } catch (error: unknown) {
     // Fallback a calcolo senza TM
     return calculateBatchConfidence(pairs)
   }

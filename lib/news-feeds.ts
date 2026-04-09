@@ -307,8 +307,8 @@ class NewsFeedService {
           timestamp,
         });
       });
-    } catch (e) {
-      console.warn(`Parse error for ${source.name}:`, e);
+    } catch (e: unknown) {
+      clientLogger.warn(`Parse error for ${source.name}:`, e);
     }
     return items;
   }
@@ -337,8 +337,8 @@ class NewsFeedService {
         try {
           const xml = await this.fetchWithProxy(source.rssUrl);
           return this.parseRSS(xml, source);
-        } catch (e) {
-          console.warn(`Feed error ${source.name}:`, e);
+        } catch (e: unknown) {
+          clientLogger.warn(`Feed error ${source.name}:`, e);
           return [];
         }
       })

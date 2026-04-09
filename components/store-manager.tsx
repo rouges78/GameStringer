@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, RefreshCw, Plug, Unplug } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface StoreStatus {
   id: string;
@@ -94,8 +95,8 @@ export function StoreManager({ stores }: StoreManagerProps) {
       }
       
       return { connected: true };
-    } catch (error) {
-      console.error(`Connection test error ${storeId}:`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`Connection test error ${storeId}:`, error);
       return { 
         connected: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -130,7 +131,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
       } else {
         toast.error(`${storeStatuses[storeId]?.name || storeId}: ${result.error || 'Connection failed'}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setStoreStatuses(prev => ({
         ...prev,
         [storeId]: {
@@ -153,7 +154,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
       const promises = stores.map(store => refreshStoreStatus(store.id));
       await Promise.all(promises);
       toast.success('All stores status updated');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error updating stores');
     } finally {
       setGlobalLoading(false);
@@ -192,7 +193,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
         // Connect store - should actually open a modal or auth process
         await refreshStoreStatus(storeId);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setStoreStatuses(prev => ({
         ...prev,
         [storeId]: { ...prev[storeId], loading: false }

@@ -36,6 +36,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface DetectedBalloon {
   id: string;
@@ -263,12 +264,12 @@ export function MangaTranslator() {
 
   const exportPage = () => {
     // Export logica
-    console.log('Exporting page:', currentPage);
+    clientLogger.debug('Exporting page:', currentPage);
   };
 
   const exportAll = () => {
     // Export all pages
-    console.log('Exporting all pages:', pages);
+    clientLogger.debug('Exporting all pages:', pages);
   };
 
   return (

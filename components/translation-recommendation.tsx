@@ -75,6 +75,7 @@ import { open } from '@tauri-apps/plugin-shell';
 import { TranslationMemoryManager } from '@/lib/translation-memory';
 import { extractTerms, loadGlossaryConfig } from '@/lib/auto-glossary';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface AlternativeMethod {
   method: string;
@@ -238,8 +239,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           gameName,
         });
         setRecommendation(result);
-      } catch (err) {
-        console.error('Error loading recommendation:', err);
+      } catch (err: unknown) {
+        clientLogger.error('Error loading recommendation:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setIsLoading(false);
@@ -353,7 +354,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             idx === i ? { ...s, status: 'completed', progress: 100 } : s
           ),
         }));
-      } catch (err) {
+      } catch (err: unknown) {
         // Errore - ferma il processo
         const errorMsg = err instanceof Error ? err.message : 'Errore sconosciuto';
         setAutoState(prev => ({
@@ -447,7 +448,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             throw new Error(result.message || 'Installazione fallita');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           const errMsg = e instanceof Error ? e.message : String(e);
           if (errMsg.includes('già installato') || errMsg.includes('already')) {
             updateProgress(100, '✅ XUnity già presente');
@@ -466,9 +467,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           const errCount = validation.issues.filter(i => i.severity === 'error').length;
           const warnCount = validation.issues.filter(i => i.severity === 'warning').length;
           updateProgress(100, `QA: ${validation.score}/100 — ${errCount} errori, ${warnCount} warning su ${validation.totalChecked} stringhe`);
-          console.log(`[QA] Score: ${validation.score}/100, errori: ${errCount}, warning: ${warnCount}, totale: ${validation.totalChecked}`);
+          clientLogger.debug(`[QA] Score: ${validation.score}/100, errori: ${errCount}, warning: ${warnCount}, totale: ${validation.totalChecked}`);
           if (validation.issues.length > 0) {
-            console.log(`[QA] Primi 5 problemi:`, validation.issues.slice(0, 5));
+            clientLogger.debug(`[QA] Primi 5 problemi:`, validation.issues.slice(0, 5));
           }
         } else {
           updateProgress(100, 'Nessuna traduzione da validare');
@@ -546,7 +547,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '⚠️ Nessun file .pck trovato');
             toast.warning('Nessun file PCK trovato. Prova estrazione manuale con gdsdecomp.');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Usa gdsdecomp per estrarre il PCK manualmente');
           toast.info('Per Godot, usa gdsdecomp: https://github.com/bruvzg/gdsdecomp');
         }
@@ -576,7 +577,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             }
           } catch (ioErr) {
             iostoreError = ioErr instanceof Error ? ioErr.message : String(ioErr);
-            console.info('IoStore:', iostoreError);
+            clientLogger.info('IoStore:', iostoreError);
           }
           
           // 2. Fallback: estrazione standard da .pak
@@ -602,7 +603,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               .filter(e => e.value.trim().length > 0)
               .map(e => e.value);
             
-            console.log(`[Unreal] Entries: ${extractResult.entries.length}, con testo non vuoto: ${textsToTranslate.length}`);
+            clientLogger.debug(`[Unreal] Entries: ${extractResult.entries.length}, con testo non vuoto: ${textsToTranslate.length}`);
             if (textsToTranslate.length > 0) {
               updateProgress(60, `Traducendo ${textsToTranslate.length} stringhe...`);
               const trResult = await translateWithFallbackBatched({
@@ -615,9 +616,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               });
               
               // Log diagnostico traduzione
-              console.log(`[Unreal] Traduzione completata: provider=${trResult.provider}, success=${trResult.success}, risultati=${trResult.translations.length}`);
+              clientLogger.debug(`[Unreal] Traduzione completata: provider=${trResult.provider}, success=${trResult.success}, risultati=${trResult.translations.length}`);
               if (trResult.translations.length > 0) {
-                console.log(`[Unreal] Campione: "${textsToTranslate[0]?.substring(0, 50)}" → "${trResult.translations[0]?.substring(0, 50)}"`);
+                clientLogger.debug(`[Unreal] Campione: "${textsToTranslate[0]?.substring(0, 50)}" → "${trResult.translations[0]?.substring(0, 50)}"`);
               }
               
               // Salva coppie per QA nello step 'quality'
@@ -669,10 +670,10 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 if (tmBatch.length > 0) {
                   await tm.addBatch(tmBatch);
                   await tm.save();
-                  console.log(`[Unreal] ✅ TM: salvate ${tmBatch.length} traduzioni`);
+                  clientLogger.debug(`[Unreal] ✅ TM: salvate ${tmBatch.length} traduzioni`);
                 }
               } catch (tmErr) {
-                console.warn('[Unreal] TM salvataggio fallito:', tmErr);
+                clientLogger.warn('[Unreal] TM salvataggio fallito:', tmErr);
               }
 
               // === AUTO-GLOSSARIO: estrai termini dal gioco ===
@@ -688,11 +689,11 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                     'it',
                   );
                   if (extraction.newTerms.length > 0) {
-                    console.log(`[Unreal] ✅ Glossario: ${extraction.newTerms.length} termini estratti (${extraction.duplicates} duplicati)`);
+                    clientLogger.debug(`[Unreal] ✅ Glossario: ${extraction.newTerms.length} termini estratti (${extraction.duplicates} duplicati)`);
                   }
                 }
               } catch (glErr) {
-                console.warn('[Unreal] Glossario estrazione fallita:', glErr);
+                clientLogger.warn('[Unreal] Glossario estrazione fallita:', glErr);
               }
 
               // === SALVA FILE JSON PER REVISIONI FUTURE ===
@@ -718,9 +719,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 const revisionPath = `${gamePath}/GameStringer/translation_session.json`;
                 await invoke('ensure_directory', { path: `${gamePath}/GameStringer` });
                 await invoke('write_text_file', { path: revisionPath, content: revisionJson });
-                console.log(`[Unreal] ✅ Revisione: salvata in ${revisionPath}`);
+                clientLogger.debug(`[Unreal] ✅ Revisione: salvata in ${revisionPath}`);
               } catch (revErr) {
-                console.warn('[Unreal] Salvataggio revisione fallito:', revErr);
+                clientLogger.warn('[Unreal] Salvataggio revisione fallito:', revErr);
               }
 
               updateProgress(100, `✅ ${pakResult.message}`);
@@ -729,7 +730,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             throw new Error('Nessun .locres trovato automaticamente');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           const errMsg = e instanceof Error ? e.message : String(e);
           updateProgress(100, `❌ ${errMsg}`);
           toast.error(
@@ -763,7 +764,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '📦 Usa RPG Maker Trans per estrarre testi');
             toast.info('Per RPG Maker VX/Ace, usa RPG Maker Trans');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📝 Apri Neural Translator per traduzione manuale');
         }
         break;
@@ -806,7 +807,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun file Ren\'Py trovato');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Usa UnRPA per estrarre manualmente');
           toast.info('Per Ren\'Py, usa UnRPA: https://github.com/Lattyware/unrpa');
         }
@@ -838,7 +839,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun archivio XP3 trovato');
           }
-        } catch (e) {
+        } catch (e: unknown) {
           updateProgress(100, '📦 Estrazione manuale richiesta');
         }
         break;
@@ -862,7 +863,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           // Step 0: Verifica provider disponibili nella catena attiva
           updateProgress(8, '🔑 Verifica provider disponibili...');
           const { available, providers: availableProviders } = hasAvailableProviders();
-          console.log(`[DANGANRONPA] Chain: ${getChainPreset()}, provider disponibili: [${availableProviders.join(', ')}]`);
+          clientLogger.debug(`[DANGANRONPA] Chain: ${getChainPreset()}, provider disponibili: [${availableProviders.join(', ')}]`);
           
           if (!available) {
             updateProgress(100, '⚠️ Nessun provider disponibile');
@@ -922,7 +923,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           const totalStrings = dialogues.length;
           const fs = filterResult.stats;
           
-          console.log(`[Danganronpa] Filtro: ${fs.totalInput} → ${fs.afterLocalFilter} (rimossi: ${fs.removedEmpty} vuoti, ${fs.removedDuplicate} duplicati, ${fs.removedSystemText} sistema, ${fs.removedShort} corti, ${fs.removedNonDialogue} non-dialogo)`);
+          clientLogger.debug(`[Danganronpa] Filtro: ${fs.totalInput} → ${fs.afterLocalFilter} (rimossi: ${fs.removedEmpty} vuoti, ${fs.removedDuplicate} duplicati, ${fs.removedSystemText} sistema, ${fs.removedShort} corti, ${fs.removedNonDialogue} non-dialogo)`);
           
           updateProgress(22, `✅ Filtrate ${totalStrings} stringhe rilevanti (da ${totalRawStrings})`);
           toast.info(
@@ -970,14 +971,14 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             resumeIndex = existingCheckpoint.nextBatchIndex;
             translatedDialogues = existingCheckpoint.dialogues;
             const alreadyDone = existingCheckpoint.stats.translatedStrings;
-            console.log(`[Resume] Ripresa da batch index ${resumeIndex}, ${alreadyDone} già tradotte`);
+            clientLogger.debug(`[Resume] Ripresa da batch index ${resumeIndex}, ${alreadyDone} già tradotte`);
             toast.info(`🔄 Ripresa traduzione da stringa ${alreadyDone}/${totalStrings}`, { duration: 4000 });
           }
           
           // Carica glossario per il gioco (se esiste)
           const glossary = loadGlossary(gameId || gameName);
           if (glossary && glossary.entries.length > 0) {
-            console.log(`[Glossario] ${glossary.entries.length} voci caricate per ${gameName}`);
+            clientLogger.debug(`[Glossario] ${glossary.entries.length} voci caricate per ${gameName}`);
           }
           
           // Step 3: Traduci direttamente con Gemini API (no API routes Next.js)
@@ -1059,7 +1060,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   };
                   await saveCheckpoint(checkpoint);
                   stringsSinceBackup = 0;
-                  console.log(`💾 Checkpoint salvato: ${translated}/${totalStrings}`);
+                  clientLogger.debug(`💾 Checkpoint salvato: ${translated}/${totalStrings}`);
                 }
                 
                 // Check limite gratuito durante traduzione
@@ -1075,7 +1076,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                     stats: { ...sessionStats, translatedStrings: translated },
                   });
                   
-                  console.log(`☕ Limite ${midGate.limit} raggiunto — mostra donazione`);
+                  clientLogger.debug(`☕ Limite ${midGate.limit} raggiunto — mostra donazione`);
                   setShowDonationDialog(true);
                   updateProgress(
                     25 + Math.floor((i / dialogues.length) * 65),
@@ -1085,20 +1086,20 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   while (!canTranslate().allowed) {
                     await new Promise(r => setTimeout(r, 1000));
                   }
-                  console.log(`🎉 Supporter sbloccato — riprendo traduzione`);
+                  clientLogger.debug(`🎉 Supporter sbloccato — riprendo traduzione`);
                   setShowDonationDialog(false);
                 }
-                console.log(`✅ Batch tradotto via ${result.provider}`);
+                clientLogger.debug(`✅ Batch tradotto via ${result.provider}`);
               } else {
                 retryCount++;
                 if (retryCount > maxRetries) {
-                  console.warn('⚠️ Troppi errori, continuo con le prossime');
+                  clientLogger.warn('⚠️ Troppi errori, continuo con le prossime');
                   sessionStats.failedStrings += texts.length;
                   retryCount = 0;
                   continue;
                 }
                 const waitTime = Math.min(30000 * retryCount, 120000);
-                console.log(`⏳ Tutti i provider falliti, aspetto ${waitTime/1000}s... (retry ${retryCount}/${maxRetries})`);
+                clientLogger.debug(`⏳ Tutti i provider falliti, aspetto ${waitTime/1000}s... (retry ${retryCount}/${maxRetries})`);
                 updateProgress(
                   25 + Math.floor((i / dialogues.length) * 65),
                   `⏳ Provider falliti, aspetto ${waitTime/1000}s...`
@@ -1108,7 +1109,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 continue;
               }
             } catch (batchErr) {
-              console.warn('Batch translation error:', batchErr);
+              clientLogger.warn('Batch translation error:', batchErr);
               sessionStats.failedStrings += texts.length;
             }
             
@@ -1721,7 +1722,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                             content,
                           });
                           toast.success(`Esportato translations.${ext}`);
-                        } catch (err) {
+                        } catch (err: unknown) {
                           toast.error(`Errore export ${fmt}`);
                         }
                       }}

@@ -374,8 +374,8 @@ class TranslationAnalytics {
         const parsed = JSON.parse(data);
         this.dailyActivity = parsed.dailyActivity || [];
       }
-    } catch (error) {
-      console.error('[Analytics] Load failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[Analytics] Load failed:', error);
     }
   }
 
@@ -385,8 +385,8 @@ class TranslationAnalytics {
       localStorage.setItem(ANALYTICS_KEY, JSON.stringify({
         dailyActivity: this.dailyActivity.slice(-90), // Keep 90 days
       }));
-    } catch (error) {
-      console.error('[Analytics] Save failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[Analytics] Save failed:', error);
     }
   }
 
@@ -404,6 +404,7 @@ export const translationAnalytics = new TranslationAnalytics();
 
 // React hook
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useTranslationAnalytics() {
   const [, forceUpdate] = useState({});

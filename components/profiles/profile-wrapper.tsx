@@ -10,6 +10,7 @@ import { sessionPersistence } from '@/lib/session-persistence';
 import { isProtectedRoute } from '@/lib/route-config';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileWrapperProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   useEffect(() => {
     const initialize = async () => {
       try {
-        console.log('🔄 ProfileWrapper: Inizializzazione...');
+        clientLogger.debug('🔄 ProfileWrapper: Inizializzazione...');
         
         // ✅ RIABILITATO con protezione anti-loop
         try {
@@ -44,17 +45,17 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
           // Ripristina le connessioni store dal backend Rust
           sessionPersistence.restoreStoreConnections().catch(() => {});
           
-          console.log('✅ ProfileWrapper: Session persistence riabilitato con successo');
+          clientLogger.debug('✅ ProfileWrapper: Session persistence riabilitato con successo');
         } catch (sessionError) {
-          console.warn('⚠️ ProfileWrapper: Session persistence fallito, continuando senza:', sessionError);
+          clientLogger.warn('⚠️ ProfileWrapper: Session persistence fallito, continuando senza:', sessionError);
           // Non bloccare l'inizializzazione se la session persistence fallisce
         }
         
-        console.log('✅ ProfileWrapper: Inizializzazione completata');
-      } catch (error) {
-        console.error('❌ ProfileWrapper: Error initializing:', error);
+        clientLogger.debug('✅ ProfileWrapper: Inizializzazione completata');
+      } catch (error: unknown) {
+        clientLogger.error('❌ ProfileWrapper: Error initializing:', error);
       } finally {
-        console.log('🏁 ProfileWrapper: setIsInitializing(false)');
+        clientLogger.debug('🏁 ProfileWrapper: setIsInitializing(false)');
         setIsInitializing(false);
       }
     };

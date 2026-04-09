@@ -48,6 +48,7 @@ import {
 } from '@/types/glossary';
 import { GameContextEditor } from './game-context-editor';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface GlossaryManagerProps {
   gameId: string;
@@ -92,8 +93,8 @@ export function GlossaryManager({
       const result = await invoke<GameGlossary | null>('get_glossary', { gameId });
       setGlossary(result);
       onGlossaryChange?.(result);
-    } catch (error) {
-      console.error('Error loading glossary:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading glossary:', error);
     } finally {
       setIsLoading(false);
     }
@@ -110,9 +111,9 @@ export function GlossaryManager({
       setGlossary(result);
       onGlossaryChange?.(result);
       toast.success('Glossary created!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error creating glossary');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -136,9 +137,9 @@ export function GlossaryManager({
       setNewEntry({ original: '', translation: '', caseSensitive: false, context: '', notes: '' });
       setShowAddDialog(false);
       toast.success('Entry added!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error adding entry');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -159,9 +160,9 @@ export function GlossaryManager({
       await loadGlossary();
       setEditingEntry(null);
       toast.success('Entry updated!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error updating entry');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -170,9 +171,9 @@ export function GlossaryManager({
       await invoke('delete_glossary_entry', { gameId, entryId });
       await loadGlossary();
       toast.success('Entry deleted');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Error deleting entry');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -187,9 +188,9 @@ export function GlossaryManager({
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Glossary exported!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Export error');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -203,9 +204,9 @@ export function GlossaryManager({
       setGlossary(result);
       onGlossaryChange?.(result);
       toast.success(`Glossary imported: ${result.entries.length} entries`);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Import error');
-      console.error(error);
+      clientLogger.error(error);
     }
   };
 
@@ -229,8 +230,8 @@ export function GlossaryManager({
       };
       setGlossary(updatedGlossary);
       onGlossaryChange?.(updatedGlossary);
-    } catch (error) {
-      console.error('Error updating metadata:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error updating metadata:', error);
     }
   };
 

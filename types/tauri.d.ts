@@ -4,11 +4,11 @@ declare global {
   interface Window {
     __TAURI__?: {
       tauri: {
-        invoke: (command: string, args?: any) => Promise<any>;
+        invoke: <T = unknown>(command: string, args?: Record<string, unknown>) => Promise<T>;
       };
       event: {
-        listen: (event: string, handler: (event: any) => void) => Promise<() => void>;
-        emit: (event: string, payload?: any) => Promise<void>;
+        listen: (event: string, handler: (event: { payload: unknown }) => void) => Promise<() => void>;
+        emit: (event: string, payload?: unknown) => Promise<void>;
       };
       notification: {
         sendNotification: (options: {

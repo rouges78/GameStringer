@@ -234,7 +234,7 @@ export async function batchImportProcessor(
       });
       successCount++;
 
-    } catch (error) {
+    } catch (error: unknown) {
       results.push({
         itemId: item.id || `unknown-${Date.now()}`,
         success: false,
@@ -519,7 +519,7 @@ export const translationBatchOperations: BatchOperation[] = [
             result
           });
           successCount++;
-        } catch (error) {
+        } catch (error: unknown) {
           results.push({
             itemId: item.id,
             success: false,
@@ -597,7 +597,7 @@ export const translationBatchOperations: BatchOperation[] = [
             result
           });
           successCount++;
-        } catch (error) {
+        } catch (error: unknown) {
           results.push({
             itemId: item.id,
             success: false,
@@ -643,7 +643,7 @@ export const translationBatchOperations: BatchOperation[] = [
             result
           });
           successCount++;
-        } catch (error) {
+        } catch (error: unknown) {
           results.push({
             itemId: item.id,
             success: false,

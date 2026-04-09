@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SecurityDialogProps {
   open: boolean;
@@ -99,8 +100,8 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
     if (saved) {
       try {
         setSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error loading security settings:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Error loading security settings:', e);
       }
     }
   };
@@ -120,8 +121,8 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
           timestamp: new Date(log.timestamp)
         }));
         setActivityLogs(logs);
-      } catch (e) {
-        console.error('Error loading activity logs:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Error loading activity logs:', e);
       }
     } else {
       // Generate some mock logs for demo

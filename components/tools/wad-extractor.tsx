@@ -123,7 +123,7 @@ export function WadExtractor() {
           }
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     } finally {
       setLoading(false);
@@ -159,7 +159,7 @@ export function WadExtractor() {
           toast.error('Errore salvataggio');
         }
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     }
   }, [entries]);
@@ -246,7 +246,7 @@ export function WadExtractor() {
       }
 
       toast.success(`Tradotte ${translatedCount} stringhe con AI`);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore traduzione: ${e}`);
     } finally {
       setTranslating(false);

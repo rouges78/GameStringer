@@ -196,7 +196,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
       );
       setTranslatedText(result.translated);
       toast.success('Traduzione completata!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Errore nella traduzione');
     } finally {
       setIsTranslating(false);

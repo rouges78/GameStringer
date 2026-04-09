@@ -76,6 +76,13 @@ import { BatchInsightsSummary, QualityScoreBadge, ContentTypeBadge } from '@/com
 import { classifyContent } from '@/lib/content-classifier';
 import { calculateQualityScore } from '@/lib/translation-quality';
 
+// Extracted sub-components
+import { GameSelector } from '@/components/translator-pro/game-selector';
+import { FileSelector } from '@/components/translator-pro/file-selector';
+import { TranslationProgress } from '@/components/translator-pro/translation-progress';
+import { ReviewStep } from '@/components/translator-pro/review-step';
+import { getRecommendedProvider, computeCostEstimate } from '@/lib/translator-pro/cost-calculator';
+
 // Mappa codici lingua a codici paese per bandierine
 const langToCountry: Record<string, string> = {
   'en': 'GB', 'it': 'IT', 'de': 'DE', 'fr': 'FR', 'es': 'ES',
@@ -112,6 +119,7 @@ type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'result
 // ============================================================================
 
 import { storageManager } from '@/lib/storage-manager';
+import { clientLogger } from '@/lib/client-logger';
 
 export default function TranslatorProPage() {
   const { toast } = useToast();
@@ -171,8 +179,8 @@ export default function TranslatorProPage() {
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
-      } catch (e) {
-        console.warn('[TranslatorPro] Error loading global settings:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[TranslatorPro] Error loading global settings:', e);
       }
     }
   }, []);
@@ -194,8 +202,8 @@ export default function TranslatorProPage() {
           setApiKey(parsed.translation.apiKey);
           return;
         }
-      } catch (e) {
-        console.warn('[TranslatorPro] Errore parsing impostazioni globali:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[TranslatorPro] Errore parsing impostazioni globali:', e);
       }
     }
     setApiKey('');
@@ -307,8 +315,8 @@ export default function TranslatorProPage() {
           
           setGames(uniqueGames);
         }
-      } catch (err) {
-        console.error('[TranslatorPro] Error loading games:', err);
+      } catch (err: unknown) {
+        clientLogger.error('[TranslatorPro] Error loading games:', err);
       } finally {
         setLoading(false);
       }
@@ -322,7 +330,7 @@ export default function TranslatorProPage() {
     if (wizardApplied || loading || games.length === 0) return;
     
     if (wizardGameId && wizardGameName) {
-      console.log('[TranslatorPro] Applying Wizard params:', { wizardGameId, wizardGameName, wizardInstallPath });
+      clientLogger.debug('[TranslatorPro] Applying Wizard params:', { wizardGameId, wizardGameName, wizardInstallPath });
       
       // Find the game in the list or create a temporary one
       let game = games.find(g => g.id === wizardGameId || g.name === wizardGameName);
@@ -346,7 +354,7 @@ export default function TranslatorProPage() {
           setTargetLanguage(wizardTargetLang);
         }
         
-        console.log('[TranslatorPro] Game pre-selected from Wizard:', game.name);
+        clientLogger.debug('[TranslatorPro] Game pre-selected from Wizard:', game.name);
       }
       
       setWizardApplied(true);
@@ -383,9 +391,9 @@ export default function TranslatorProPage() {
       // Save API key via API route
       fetch('/api/secrets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ key: keyName, value: apiKey })
-      }).catch(err => console.error('Failed to save API key:', err));
+      }).catch(err => clientLogger.error('Failed to save API key:', err));
     }
   }, [apiKey, provider]);
   
@@ -408,103 +416,11 @@ export default function TranslatorProPage() {
   
   // Sistema di raccomandazione provider basato sul contenuto
   const recommendedProvider = useMemo(() => {
-    if (checkedFiles.length === 0) return null;
-    
-    const allText = checkedFiles.flatMap(f => 
-      f.parseResult.strings.map(s => s.value)
-    ).join(' ').toLowerCase();
-    
-    const avgLength = allText.length / Math.max(1, totalStrings);
-    const hasVariables = /%[sd@]|{\w+}|\$\w+|\[\w+\]/i.test(allText);
-    const hasHtml = /<[^>]+>/i.test(allText);
-    const hasEmoji = /[\u{1F300}-\u{1F9FF}]/u.test(allText);
-    
-    // Analisi tipo contenuto
-    const isUI = avgLength < 30 && (
-      /button|menu|settings|options|save|load|exit|quit|start|continue/i.test(allText)
-    );
-    const isDialogue = avgLength > 50 && /said|asked|replied|"/i.test(allText);
-    const isCreative = /story|tale|legend|hero|adventure|quest/i.test(allText);
-    const isTechnical = /error|warning|failed|success|loading|connecting/i.test(allText);
-    
-    // Lingue target speciali
-    const isAsianTarget = ['zh', 'ja', 'ko', 'cn'].includes(targetLanguage);
-    const isEuropeanTarget = ['de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'cs', 'hr'].includes(targetLanguage);
-    const isRareLanguage = ['ar', 'hi', 'th', 'vi', 'id', 'tr'].includes(targetLanguage);
-    
-    // Raccomandazioni basate su ricerca
-    // Claude: migliore per documenti lunghi, coerenza, 78% output "good" (Lokalise 2025)
-    // GPT-4: gold standard per consistenza, 50+ lingue
-    // Gemini: ottimo per lingue regionali (Telugu), veloce
-    // DeepSeek: eccellente per Cinese↔Inglese, tecnico
-    // Mistral: open source, buono per privacy, multilingua
-    
-    if (isCreative || isDialogue) {
-      return {
-        provider: 'claude',
-        reason: 'Claude eccelle in traduzioni creative e dialoghi lunghi con coerenza stilistica',
-        confidence: 0.9
-      };
-    }
-    
-    if (isAsianTarget || (isTechnical && isAsianTarget)) {
-      return {
-        provider: 'deepseek',
-        reason: 'DeepSeek V3 è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici',
-        confidence: 0.85
-      };
-    }
-    
-    if (isUI && hasVariables) {
-      return {
-        provider: 'gemini',
-        reason: 'Gemini gestisce bene variabili e stringhe UI corte, rispetta la Translation Memory',
-        confidence: 0.8
-      };
-    }
-    
-    if (totalStrings > 500) {
-      return {
-        provider: 'claude',
-        reason: 'Claude ha context window enorme, ideale per progetti grandi con terminologia consistente',
-        confidence: 0.85
-      };
-    }
-    
-    if (isEuropeanTarget && isUI) {
-      return {
-        provider: 'gpt5',
-        reason: 'GPT-4o è il gold standard per lingue europee ad alta risorsa',
-        confidence: 0.85
-      };
-    }
-    
-    if (isRareLanguage) {
-      return {
-        provider: 'openrouter',
-        reason: 'OpenRouter permette di scegliere modelli specializzati per lingue meno comuni',
-        confidence: 0.7
-      };
-    }
-    
-    // Default: GPT-4o per bilanciamento qualità/costo
-    return {
-      provider: 'gpt5',
-      reason: 'GPT-4o offre il miglior bilanciamento qualità/consistenza per la maggior parte dei casi',
-      confidence: 0.75
-    };
+    return getRecommendedProvider(checkedFiles, totalStrings, targetLanguage);
   }, [checkedFiles, totalStrings, targetLanguage]);
   
   const costEstimate = useMemo(() => {
-    if (checkedFiles.length === 0) return null;
-    const allStrings = checkedFiles.flatMap(f => 
-      f.parseResult.strings.map(s => ({ text: s.value }))
-    );
-    return estimateBatchCost(allStrings, {
-      provider,
-      useTranslationMemory,
-      tmHitRate: tmStats ? 0.3 : 0
-    });
+    return computeCostEstimate({ checkedFiles, provider, useTranslationMemory, tmStats });
   }, [selectedFiles, provider, useTranslationMemory, tmStats]);
   
   // === HANDLERS ===
@@ -529,8 +445,8 @@ export default function TranslatorProPage() {
             }
           }
         }
-      } catch (err) {
-        console.log('[TranslatorPro] Could not fetch game details:', err);
+      } catch (err: unknown) {
+        clientLogger.debug('[TranslatorPro] Could not fetch game details:', err);
       }
     }
     
@@ -564,12 +480,12 @@ export default function TranslatorProPage() {
         try {
           const locInfo = await invoke<typeof localizationInfo>('detect_localization_files', { gamePath: foundPath });
           setLocalizationInfo(locInfo);
-        } catch (e) {
-          console.log('[TranslatorPro] Could not detect localization files:', e);
+        } catch (e: unknown) {
+          clientLogger.debug('[TranslatorPro] Could not detect localization files:', e);
         }
       }
-    } catch (err) {
-      console.log('[TranslatorPro] Could not detect engine:', err);
+    } catch (err: unknown) {
+      clientLogger.debug('[TranslatorPro] Could not detect engine:', err);
     } finally {
       setIsCheckingEngine(false);
     }
@@ -595,8 +511,8 @@ export default function TranslatorProPage() {
             parseResult
           });
         }
-      } catch (err) {
-        console.error(`Error parsing ${file.name}:`, err);
+      } catch (err: unknown) {
+        clientLogger.error(`Error parsing ${file.name}:`, err);
       }
     }
     
@@ -645,8 +561,8 @@ export default function TranslatorProPage() {
                 parseResult
               });
             }
-          } catch (err) {
-            console.error(`Error parsing ${file.name}:`, err);
+          } catch (err: unknown) {
+            clientLogger.error(`Error parsing ${file.name}:`, err);
           }
         }
         
@@ -665,7 +581,7 @@ export default function TranslatorProPage() {
     setIsLoadingFiles(true);
     try {
       const fullPath = await invoke<string>('find_game_install_path', { installDir: selectedGame.installPath });
-      console.log('[TranslatorPro] Scanning path:', fullPath);
+      clientLogger.debug('[TranslatorPro] Scanning path:', fullPath);
       
       // Use same scan command as Translation Wizard
       const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
@@ -675,7 +591,7 @@ export default function TranslatorProPage() {
         maxDepth: 10
       });
       
-      console.log('[TranslatorPro] Found files:', scannedFiles?.length || 0);
+      clientLogger.debug('[TranslatorPro] Found files:', scannedFiles?.length || 0);
       
       if (Array.isArray(scannedFiles) && scannedFiles.length > 0) {
         const newFiles: SelectedFile[] = [];
@@ -748,7 +664,7 @@ export default function TranslatorProPage() {
           return isLocFile || (isTextFormat && file.size > sizeThreshold);
         });
         
-        console.log(`[TranslatorPro] Filtered: ${scannedFiles.length} -> ${locFiles.length} files (excluded ${scannedFiles.length - locFiles.length} system files)`);
+        clientLogger.debug(`[TranslatorPro] Filtered: ${scannedFiles.length} -> ${locFiles.length} files (excluded ${scannedFiles.length - locFiles.length} system files)`);
         
         // Read and parse each file
         for (const file of locFiles.slice(0, 20)) { // Limit to 20 files
@@ -761,7 +677,7 @@ export default function TranslatorProPage() {
             if (content) {
               try {
                 const parseResult = parseFile(content, file.name);
-                console.log(`[TranslatorPro] Parsed ${file.name}: ${parseResult.strings.length} strings, format: ${parseResult.format}`);
+                clientLogger.debug(`[TranslatorPro] Parsed ${file.name}: ${parseResult.strings.length} strings, format: ${parseResult.format}`);
                 
                 if (parseResult.strings.length > 0) {
                   newFiles.push({
@@ -772,14 +688,14 @@ export default function TranslatorProPage() {
                     parseResult
                   });
                 } else {
-                  console.warn(`[TranslatorPro] ${file.name}: 0 strings found, skipping`);
+                  clientLogger.warn(`[TranslatorPro] ${file.name}: 0 strings found, skipping`);
                 }
               } catch (parseErr) {
-                console.warn(`Skipping ${file.name}: not a valid translation file`, parseErr);
+                clientLogger.warn(`Skipping ${file.name}: not a valid translation file`, parseErr);
               }
             }
-          } catch (err) {
-            console.error(`Error reading ${file.name}:`, err);
+          } catch (err: unknown) {
+            clientLogger.error(`Error reading ${file.name}:`, err);
           }
         }
         
@@ -843,12 +759,12 @@ export default function TranslatorProPage() {
             configFiles: []
           });
         }
-        console.warn('[TranslatorPro] No files found, opening file picker');
+        clientLogger.warn('[TranslatorPro] No files found, opening file picker');
         // Fallback to file picker if no files found
         openFilePicker();
       }
-    } catch (err) {
-      console.error('Error searching game files:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error searching game files:', err);
       // Fallback: apri il file picker
       openFilePicker();
     }
@@ -880,8 +796,8 @@ export default function TranslatorProPage() {
               parseResult
             });
           }
-        } catch (err) {
-          console.error(`Error parsing ${file.name}:`, err);
+        } catch (err: unknown) {
+          clientLogger.error(`Error parsing ${file.name}:`, err);
         }
       }
       
@@ -906,13 +822,13 @@ export default function TranslatorProPage() {
     setTranslatedFiles(new Map());
     setTranslatedItems([]); // Reset results accumulati
     
-    console.log('[Neural Translator] Starting translation with provider:', provider);
-    console.log('[Neural Translator] Files to translate:', filesToTranslate.length);
-    console.log('[Neural Translator] API Key present:', !!apiKey);
+    clientLogger.debug('[Neural Translator] Starting translation with provider:', provider);
+    clientLogger.debug('[Neural Translator] Files to translate:', filesToTranslate.length);
+    clientLogger.debug('[Neural Translator] API Key present:', !!apiKey);
     
     try {
       for (const file of filesToTranslate) {
-        console.log('[Neural Translator] Translating file:', file.name);
+        clientLogger.debug('[Neural Translator] Translating file:', file.name);
         const result = await translateFile(file.content, file.name, {
           sourceLanguage,
           targetLanguage,
@@ -923,7 +839,7 @@ export default function TranslatorProPage() {
           runQualityChecks,
           apiKey, // Passa l'API key inserita dall'utente
           onProgress: (p) => {
-            console.log('[Neural Translator] Progress:', p.completed, '/', p.total);
+            clientLogger.debug('[Neural Translator] Progress:', p.completed, '/', p.total);
             setProgress(p);
           },
           onItemComplete: (item) => {
@@ -986,12 +902,12 @@ export default function TranslatorProPage() {
         
         if (tmBatch.length > 0) {
           await translationMemory.addBatch(tmBatch);
-          console.log(`[Neural Translator] ✅ saved ${tmBatch.length} traduzioni in TM`);
+          clientLogger.debug(`[Neural Translator] ✅ saved ${tmBatch.length} traduzioni in TM`);
         }
       }
       
       setCurrentStep('results');
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsTranslating(false);
@@ -1026,8 +942,8 @@ export default function TranslatorProPage() {
       if (result.success) {
         alert(`✅ File salvato!\n${result.backup_path ? `Backup creato: ${result.backup_path}` : ''}`);
       }
-    } catch (err) {
-      console.error('Error saving file:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Error saving file:', err);
       alert(`❌ error nel salvataggio: ${err}`);
     }
   };
@@ -1071,7 +987,7 @@ export default function TranslatorProPage() {
   
   // === EXPORT PATCH ZIP ===
   const handleExportPatch = async () => {
-    console.log('[ExportPatch] Clicked! selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
+    clientLogger.debug('[ExportPatch] Clicked! selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
     
     if (!selectedGame || translatedFiles.size === 0) {
       toast({
@@ -1117,12 +1033,12 @@ export default function TranslatorProPage() {
       };
       
       // Chiama API per generare ZIP
-      console.log('[ExportPatch] Calling API with', files.length, 'files');
-      console.log('[ExportPatch] Metadata:', metadata);
+      clientLogger.debug('[ExportPatch] Calling API with', files.length, 'files');
+      clientLogger.debug('[ExportPatch] Metadata:', metadata);
       
       const response = await fetch('/api/export/patch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({
           files,
           metadata,
@@ -1136,18 +1052,18 @@ export default function TranslatorProPage() {
         })
       });
       
-      console.log('[ExportPatch] Response status:', response.status);
+      clientLogger.debug('[ExportPatch] Response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[ExportPatch] API Error:', errorText);
+        clientLogger.error('[ExportPatch] API Error:', errorText);
         throw new Error(`error nella generazione del pacchetto: ${response.status}`);
       }
       
       // Scarica il file ZIP usando Tauri save dialog
-      console.log('[ExportPatch] Creating blob...');
+      clientLogger.debug('[ExportPatch] Creating blob...');
       const blob = await response.blob();
-      console.log('[ExportPatch] Blob size:', blob.size);
+      clientLogger.debug('[ExportPatch] Blob size:', blob.size);
       
       const filename = `${selectedGame.name.replace(/[^a-zA-Z0-9]/g, '_')}_${targetLanguage}_patch.zip`;
       
@@ -1172,7 +1088,7 @@ export default function TranslatorProPage() {
           base64Content: base64
         });
         
-        console.log('[ExportPatch] File saved to:', fullPath);
+        clientLogger.debug('[ExportPatch] File saved to:', fullPath);
         
         // Mostra dialog di conferma
         setExportedFilePath(fullPath);
@@ -1181,7 +1097,7 @@ export default function TranslatorProPage() {
         
       } catch (tauriError) {
         // Fallback per browser normale
-        console.log('[ExportPatch] Tauri not available, using browser download:', tauriError);
+        clientLogger.debug('[ExportPatch] Tauri not available, using browser download:', tauriError);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1191,15 +1107,15 @@ export default function TranslatorProPage() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
-      console.log('[ExportPatch] Download completed!');
+      clientLogger.debug('[ExportPatch] Download completed!');
       
       toast({
         title: '✅ Patch esportata!',
         description: 'Il pacchetto ZIP include file tradotti, backup e formato XUnity.AutoTranslator.',
       });
       
-    } catch (error) {
-      console.error('[ExportPatch] Error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ExportPatch] Error:', error);
       toast({
         title: 'error esportazione',
         description: error instanceof Error ? error.message : 'error sconosciuto',
@@ -1210,9 +1126,9 @@ export default function TranslatorProPage() {
   
   // === APPLY TO GAME (ONE-CLICK MAGIC) ===
   const handleApplyToGame = async () => {
-    console.log('[ApplyToGame] Inizio - selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
+    clientLogger.debug('[ApplyToGame] Inizio - selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
     if (!selectedGame || translatedFiles.size === 0) {
-      console.log('[ApplyToGame] Uscita anticipata - No game o file');
+      clientLogger.debug('[ApplyToGame] Uscita anticipata - No game o file');
       return;
     }
     
@@ -1250,13 +1166,13 @@ export default function TranslatorProPage() {
       }
       
       setApplyStatus('applying');
-      console.log('[ApplyToGame] gamePath:', currentGamePath);
-      console.log('[ApplyToGame] localizationInfo:', localizationInfo);
-      console.log('[ApplyToGame] engineInfo:', engineInfo);
+      clientLogger.debug('[ApplyToGame] gamePath:', currentGamePath);
+      clientLogger.debug('[ApplyToGame] localizationInfo:', localizationInfo);
+      clientLogger.debug('[ApplyToGame] engineInfo:', engineInfo);
       
       // METODO 1: File di localizzazione diretti (preferito se disponibili)
       if (localizationInfo?.has_localization && localizationInfo.can_add_language) {
-        console.log('[ApplyToGame] Usando METODO 1 - File localizzazione diretti');
+        clientLogger.debug('[ApplyToGame] Usando METODO 1 - File localizzazione diretti');
         // Prendi il primo file tradotto
         const [filename, translatedContent] = Array.from(translatedFiles.entries())[0];
         
@@ -1272,13 +1188,13 @@ export default function TranslatorProPage() {
             title: '✅ Translation applied!',
             description: `File saved: ${savedPath.split(/[/\\]/).pop()}. Select the translated language in the game options.`,
           });
-        } catch (e) {
+        } catch (e: unknown) {
           throw new Error(`error salvataggio file: ${e}`);
         }
       }
       // METODO 2: XUnity AutoTranslator (per Unity senza file loc diretti)
       else if (engineInfo?.is_unity || engineInfo?.can_patch) {
-        console.log('[ApplyToGame] Usando METODO 2 - XUnity AutoTranslator');
+        clientLogger.debug('[ApplyToGame] Usando METODO 2 - XUnity AutoTranslator');
         setApplyStatus('checking');
         const hasPatcher = engineInfo?.has_bepinex && engineInfo?.has_xunity;
         
@@ -1294,8 +1210,8 @@ export default function TranslatorProPage() {
               gameExeName: exeName,
               targetLang: targetLanguage 
             });
-          } catch (e) {
-            console.warn('Installazione patcher fallita:', e);
+          } catch (e: unknown) {
+            clientLogger.warn('Installazione patcher fallita:', e);
           }
         }
         
@@ -1317,8 +1233,8 @@ export default function TranslatorProPage() {
             path: `${xunityPath}/_GameStringer.txt`, 
             content: dictionaryLines.join('\n') 
           });
-        } catch (e) {
-          console.warn('Fallback a Translation Memory:', e);
+        } catch (e: unknown) {
+          clientLogger.warn('Fallback a Translation Memory:', e);
         }
         
         setApplyStatus('done');
@@ -1329,17 +1245,17 @@ export default function TranslatorProPage() {
       }
       // METODO 3: Nessun metodo disponibile - fallback a salvataggio diretto
       else {
-        console.log('[ApplyToGame] METODO 3 - Fallback salvataggio diretto');
+        clientLogger.debug('[ApplyToGame] METODO 3 - Fallback salvataggio diretto');
         // Salva i file tradotti direttamente nella cartella del game
         let savedCount = 0;
         for (const [filename, content] of translatedFiles.entries()) {
           try {
             const targetPath = `${currentGamePath}/${filename}`;
-            console.log('[ApplyToGame] Salvando:', targetPath);
+            clientLogger.debug('[ApplyToGame] Salvando:', targetPath);
             await invoke('write_text_file', { path: targetPath, content });
             savedCount++;
-          } catch (e) {
-            console.warn('[ApplyToGame] error salvataggio file:', filename, e);
+          } catch (e: unknown) {
+            clientLogger.warn('[ApplyToGame] error salvataggio file:', filename, e);
           }
         }
         
@@ -1371,7 +1287,7 @@ export default function TranslatorProPage() {
       
       if (tmBatch.length > 0) {
         await translationMemory.addBatch(tmBatch);
-        console.log(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
+        clientLogger.debug(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
       }
       
       // Salva statistica patch per dashboard in IndexedDB
@@ -1388,8 +1304,8 @@ export default function TranslatorProPage() {
           timestamp: new Date().toISOString()
         });
         await set('gamePatches', savedPatches);
-      } catch (e) {
-        console.warn('Errore salvataggio patch in IndexedDB:', e);
+      } catch (e: unknown) {
+        clientLogger.warn('Errore salvataggio patch in IndexedDB:', e);
       }
       
       // Traccia attività patch per sincronizzazione
@@ -1405,8 +1321,8 @@ export default function TranslatorProPage() {
         }
       });
       
-    } catch (e) {
-      console.error('error applicazione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('error applicazione:', e);
       setApplyStatus('error');
       toast({
         title: 'error',
@@ -1540,419 +1456,72 @@ export default function TranslatorProPage() {
         
         {/* Step 1: Select Game */}
         {currentStep === 'select-game' && (
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                aria-label="Cerca" placeholder="Cerca tra i tuoi games..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10"
-              />
-            </div>
-            
-            <div className="text-sm text-muted-foreground px-1">
-              {filteredGames.length} games trovati
-            </div>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
-              {filteredGames.slice(0, 20).map((game) => (
-                <button
-                  key={game.id}
-                  onClick={() => handleGameSelect(game)}
-                  className={cn(
-                    "group flex items-center gap-2 p-2 rounded-lg border transition-all",
-                    "hover:border-blue-500/40 hover:bg-blue-500/10",
-                    "text-left w-full"
-                  )}
-                >
-                  <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
-                    {game.coverUrl ? (
-                      <Image 
-                        src={game.coverUrl} 
-                        alt={game.name} 
-                        fill 
-                        className="object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : null}
-                    <div className="absolute inset-0 flex items-center justify-center -z-10">
-                      <span className="text-xs font-bold text-white/50">{game.name?.charAt(0)?.toUpperCase() || '?'}</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-xs truncate group-hover:text-blue-400">
-                      {game.name}
-                    </h3>
-                  </div>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                </button>
-              ))}
-            </div>
-            {filteredGames.length > 20 && (
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Usa la ricerca per trovare altri {filteredGames.length - 20} games
-              </p>
-            )}
-          </div>
+          <GameSelector
+            games={filteredGames}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onGameSelect={handleGameSelect}
+          />
         )}
         
         {/* Step 2: Select Files */}
         {currentStep === 'select-files' && (
-          <div className="space-y-3">
-            {/* Wizard Banner */}
-            {wizardGameId && wizardMethod && (
-              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-blue-400" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-300">
-                    Arrivi dal Translation Wizard
-                  </p>
-                  <p className="text-xs text-blue-400/70">
-                    Metodo consigliato: {wizardMethod === 'file' ? '📁 Modifica File' : wizardMethod === 'bridge' ? '🔌 Translation Bridge' : '🔧 Manuale'}
-                    {wizardTargetLang && ` • Lingua: ${wizardTargetLang.toUpperCase()}`}
-                  </p>
-                </div>
-              </div>
-            )}
-            
-            <Button variant="ghost" size="sm" onClick={() => setCurrentStep('select-game')} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Cambia game
-            </Button>
-            
-            {/* Selected Game - Compact */}
-            {selectedGame && (
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 border">
-                <div className="relative w-10 h-10 rounded overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex-shrink-0">
-                  {selectedGame.coverUrl ? (
-                    <Image 
-                      src={selectedGame.coverUrl} 
-                      alt={selectedGame.name} 
-                      fill 
-                      className="object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 flex items-center justify-center -z-10">
-                    <span className="text-sm font-bold text-white/50">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-sm font-semibold truncate">{selectedGame.name}</h2>
-                  {selectedGame.supportedLanguages && (
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <LanguageFlags supportedLanguages={selectedGame.supportedLanguages} maxFlags={20} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Engine + Localization Info - COMPACT */}
-            {(isCheckingEngine || engineInfo || localizationInfo?.has_localization) && (
-              <div className="p-2 rounded-lg border text-xs bg-muted/30 space-y-1.5">
-                {isCheckingEngine ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Analisi game...
-                  </div>
-                ) : (
-                  <>
-                    {/* Engine row */}
-                    {engineInfo && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <Cpu className="h-3 w-3 text-muted-foreground" />
-                          <span className="font-medium">{engineInfo.engine_name}</span>
-                          {engineInfo.has_bepinex && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-green-500/20">BepInEx</Badge>}
-                          {engineInfo.has_xunity && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-blue-500/20">XUnity</Badge>}
-                        </div>
-                        <span className={cn("text-2xs", engineInfo.can_patch ? "text-green-500" : "text-amber-500")}>
-                          {engineInfo.can_patch ? "✓ Compatibile" : "⚠ Tool esterni"}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Localization row */}
-                    {localizationInfo?.has_localization && (
-                      <>
-                        <div className="flex items-center justify-between border-t border-border/50 pt-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="h-3 w-3 text-muted-foreground" />
-                            <span>{localizationInfo.available_languages.length} lingue</span>
-                            <Badge variant="outline" className="text-2xs h-3.5 px-1">{localizationInfo.format.toUpperCase()}</Badge>
-                          </div>
-                          <span className={cn("text-2xs", localizationInfo.missing_italian ? "text-amber-500" : "text-green-500")}>
-                            {localizationInfo.missing_italian ? "⚠ IT mancante" : "✓ IT presente"}
-                          </span>
-                        </div>
-                        
-                        {/* Quick load button */}
-                        {localizationInfo.source_file && localizationInfo.missing_italian && (
-                          <Button
-                            size="sm"
-                            className="w-full h-7 gap-1.5 text-xs bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                            onClick={async () => {
-                              if (!localizationInfo.source_file) return;
-                              setIsLoadingFiles(true);
-                              try {
-                                const content = await invoke<string>('read_file_content', { filePath: localizationInfo.source_file.path });
-                                const parseResult = parseFile(content, localizationInfo.source_file.filename);
-                                if (parseResult.strings.length > 0) {
-                                  setSelectedFiles([{ name: localizationInfo.source_file.filename, path: localizationInfo.source_file.path, content, format: parseResult.format, parseResult }]);
-                                  toast({ title: '✓ Caricato!', description: `${parseResult.strings.length} stringhe` });
-                                }
-                              } catch (e) {
-                                toast({ title: 'error', description: `${e}`, variant: 'destructive' });
-                              } finally {
-                                setIsLoadingFiles(false);
-                              }
-                            }}
-                            disabled={isLoadingFiles}
-                          >
-                            <Rocket className="h-3 w-3" />
-                            Carica EN → Traduci IT
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-            
-            {/* Search Game Files Button - Compact */}
-            <Button
-              variant="default"
-              size="default"
-              className="w-full h-10 gap-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              onClick={handleSearchGameFiles}
-              disabled={isLoadingFiles}
-            >
-              {isLoadingFiles ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Ricerca...
-                </>
-              ) : (
-                <>
-                  <Search className="h-4 w-4" />
-                  Cerca file di traduzione
-                </>
-              )}
-            </Button>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">oppure carica manualmente</span>
-              </div>
-            </div>
-            
-            {/* File Upload - Compact */}
-            <div className="border border-dashed rounded-lg p-3 text-center">
-              <input
-                type="file"
-                multiple
-                accept=".json,.po,.pot,.xliff,.xlf,.resx,.strings,.ini,.csv,.properties,.txt"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer flex items-center justify-center gap-2">
-                <Upload className="h-4 w-4 text-muted-foreground/50" />
-                <span className="text-xs text-muted-foreground">Trascina o clicca • {SUPPORTED_FORMATS.join(', ')}</span>
-              </label>
-            </div>
-            
-            {/* ⚠️ Warning per file config o mancanti */}
-            {filesWarning && (
-              <div className={cn(
-                "p-4 rounded-lg border",
-                filesWarning.type === 'xunity_suggested' 
-                  ? "bg-purple-500/10 border-purple-500/30" 
-                  : filesWarning.type === 'config'
-                    ? "bg-yellow-500/10 border-yellow-500/30"
-                    : "bg-blue-500/10 border-blue-500/30"
-              )}>
-                <p className="text-sm font-medium mb-2">{filesWarning.message}</p>
-                {filesWarning.type === 'xunity_suggested' && engineInfo?.is_unity && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      XUnity AutoTranslator intercetta il testo del game in tempo reale e permette di tradurlo.
-                    </p>
-                    <Button 
-                      size="sm" 
-                      className="bg-purple-600 hover:bg-purple-700"
-                      onClick={() => {
-                        // Naviga a Unity Patcher
-                        window.location.href = `/unity-patcher?gameId=${selectedGame?.id}&gameName=${encodeURIComponent(selectedGame?.name || '')}`;
-                      }}
-                    >
-                      <Zap className="h-3 w-3 mr-1" />
-                      Vai a Unity Patcher
-                    </Button>
-                  </div>
-                )}
-                {filesWarning.configFiles.length > 0 && (
-                  <details className="mt-2">
-                    <summary className="text-xs text-muted-foreground cursor-pointer">
-                      File esclusi ({filesWarning.configFiles.length})
-                    </summary>
-                    <ul className="text-xs text-muted-foreground mt-1 ml-4 list-disc">
-                      {filesWarning.configFiles.slice(0, 5).map(f => <li key={f}>{f}</li>)}
-                      {filesWarning.configFiles.length > 5 && <li>...e altri {filesWarning.configFiles.length - 5}</li>}
-                    </ul>
-                  </details>
-                )}
-              </div>
-            )}
-
-            {/* Selected Files */}
-            {selectedFiles.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium">
-                    File da tradurre ({selectedFiles.filter(f => f.checked !== false).length}/{selectedFiles.length})
-                  </h3>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedFiles(prev => prev.map(f => ({ ...f, checked: true })));
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Tutti
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedFiles(prev => prev.map(f => ({ ...f, checked: false })));
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      <Square className="h-3 w-3 mr-1" />
-                      Nessuno
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Elimina i file NON selezionati (checked = false)
-                        const checkedFiles = selectedFiles.filter(f => f.checked !== false);
-                        if (checkedFiles.length > 0) {
-                          setSelectedFiles(checkedFiles);
-                        } else {
-                          setSelectedFiles([]);
-                        }
-                        setPreviewFile(null);
-                      }}
-                      className="h-7 text-xs text-destructive hover:text-destructive"
-                    >
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Remove unselected
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* File List */}
-                  <div className="space-y-2">
-                    {selectedFiles.map((file, index) => (
-                      <div 
-                        key={file.path || `${file.name}-${index}`} 
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-pointer transition-all",
-                          file.checked === false ? "opacity-50 border-dashed" : "",
-                          previewFile?.name === file.name ? "border-purple-500 bg-purple-500/5" : "hover:border-purple-500/50"
-                        )}
-                        onClick={() => setPreviewFile(file)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={file.checked !== false}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setSelectedFiles(prev => prev.map(f => 
-                              f.name === file.name ? { ...f, checked: e.target.checked } : f
-                            ));
-                          }}
-                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                        />
-                        <FileCode className="h-5 w-5 text-purple-500" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {FORMAT_DESCRIPTIONS[file.format]} • {file.parseResult.strings.length} stringhe
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(file.name); }}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          ✕
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* File Preview */}
-                  <div className="border rounded-xl p-4 bg-muted/30">
-                    {previewFile ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">{previewFile.name}</h4>
-                          <Badge variant="secondary">{previewFile.format.toUpperCase()}</Badge>
-                        </div>
-                        <ScrollArea className="h-[300px]">
-                          <div className="space-y-2">
-                            {previewFile.parseResult.strings.slice(0, 50).map((str, i) => (
-                              <div key={i} className="p-2 rounded bg-background border text-xs">
-                                <p className="font-mono text-muted-foreground truncate">{str.key}</p>
-                                <p className="mt-1">{str.value}</p>
-                              </div>
-                            ))}
-                            {previewFile.parseResult.strings.length > 50 && (
-                              <p className="text-xs text-muted-foreground text-center py-2">
-                                ... e altre {previewFile.parseResult.strings.length - 50} stringhe
-                              </p>
-                            )}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-                        <FileText className="h-10 w-10 mb-3 opacity-50" />
-                        <p className="text-sm">{t('translatorProPage.clickFilePreview')}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Totale: <strong>{totalStrings}</strong> stringhe da tradurre
-                  </p>
-                  <Button onClick={() => setCurrentStep('configure')} disabled={checkedFiles.length === 0}>
-                    Continua
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          <FileSelector
+            selectedGame={selectedGame}
+            selectedFiles={selectedFiles}
+            previewFile={previewFile}
+            isLoadingFiles={isLoadingFiles}
+            isCheckingEngine={isCheckingEngine}
+            engineInfo={engineInfo}
+            localizationInfo={localizationInfo}
+            filesWarning={filesWarning}
+            totalStrings={totalStrings}
+            checkedFilesCount={checkedFiles.length}
+            wizardGameId={wizardGameId}
+            wizardMethod={wizardMethod}
+            wizardTargetLang={wizardTargetLang}
+            onGoBack={() => setCurrentStep('select-game')}
+            onSearchGameFiles={handleSearchGameFiles}
+            onFileUpload={handleFileUpload}
+            onRemoveFile={handleRemoveFile}
+            onPreviewFile={setPreviewFile}
+            onToggleFileChecked={(filename, checked) => {
+              setSelectedFiles(prev => prev.map(f =>
+                f.name === filename ? { ...f, checked } : f
+              ));
+            }}
+            onSelectAll={() => {
+              setSelectedFiles(prev => prev.map(f => ({ ...f, checked: true })));
+            }}
+            onSelectNone={() => {
+              setSelectedFiles(prev => prev.map(f => ({ ...f, checked: false })));
+            }}
+            onRemoveUnselected={() => {
+              const checked = selectedFiles.filter(f => f.checked !== false);
+              setSelectedFiles(checked.length > 0 ? checked : []);
+              setPreviewFile(null);
+            }}
+            onContinue={() => setCurrentStep('configure')}
+            onLoadSourceFile={async () => {
+              if (!localizationInfo?.source_file) return;
+              setIsLoadingFiles(true);
+              try {
+                const content = await invoke<string>('read_file_content', { filePath: localizationInfo.source_file.path });
+                const parseResult = parseFile(content, localizationInfo.source_file.filename);
+                if (parseResult.strings.length > 0) {
+                  setSelectedFiles([{ name: localizationInfo.source_file.filename, path: localizationInfo.source_file.path, content, format: parseResult.format, parseResult }]);
+                  toast({ title: '✓ Caricato!', description: `${parseResult.strings.length} stringhe` });
+                }
+              } catch (e: unknown) {
+                toast({ title: 'error', description: `${e}`, variant: 'destructive' });
+              } finally {
+                setIsLoadingFiles(false);
+              }
+            }}
+            onGoToUnityPatcher={() => {
+              window.location.href = `/unity-patcher?gameId=${selectedGame?.id}&gameName=${encodeURIComponent(selectedGame?.name || '')}`;
+            }}
+          />
         )}
         
         {/* Step 3: Configure */}
@@ -2270,494 +1839,149 @@ export default function TranslatorProPage() {
         
         {/* Step 4: Translate */}
         {currentStep === 'translate' && (
-          <div className="space-y-6">
-            <div className="text-center py-8">
-              {isTranslating ? (
-                <>
-                  <div className="relative w-20 h-20 mx-auto mb-4">
-                    <div className={cn(
-                      "absolute inset-0 rounded-full animate-pulse transition-colors duration-500",
-                      progress?.isRateLimited 
-                        ? "bg-amber-500" 
-                        : "bg-gradient-to-r from-sky-500 to-blue-500"
-                    )} />
-                    <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
-                      {progress?.isRateLimited ? (
-                        <Clock className="h-8 w-8 text-amber-500 animate-pulse" />
-                      ) : (
-                        <Brain className="h-8 w-8 text-purple-500 animate-pulse" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Nome del game */}
-                  {selectedGame && (
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
-                        {selectedGame.coverUrl && (
-                          <img 
-                            src={selectedGame.coverUrl} 
-                            alt={selectedGame.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        )}
-                        <div className="absolute inset-0 flex items-center justify-center -z-10">
-                          <span className="text-xs font-bold text-white/50">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
-                        </div>
-                      </div>
-                      <span className="text-lg font-medium text-purple-400">
-                        {selectedGame.name}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <h2 className="text-xl font-semibold mb-2">
-                    {progress?.isRateLimited ? 'In attesa API...' : 'Traduzione in corso...'}
-                  </h2>
-                  
-                  {progress?.statusMessage && (
-                    <div className={cn(
-                      "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-4",
-                      progress.isRateLimited 
-                        ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-                        : "bg-muted text-muted-foreground"
-                    )}>
-                      {progress.isRateLimited && <AlertTriangle className="h-3 w-3" />}
-                      {progress.statusMessage}
-                    </div>
-                  )}
+          <TranslationProgress
+            isTranslating={isTranslating}
+            progress={progress}
+            error={error}
+            elapsedTime={elapsedTime}
+            translatedItems={translatedItems}
+            selectedGame={selectedGame}
+            targetLanguage={targetLanguage}
+            onSavePartialResults={() => {
+              setIsTranslating(false);
 
-                  {progress && (
-                    <div className="max-w-md mx-auto space-y-3">
-                      <Progress 
-                        value={progress.percentage} 
-                        className={cn(
-                          "h-2 transition-all",
-                          progress.isRateLimited ? "[&>div]:bg-amber-500" : ""
-                        )} 
-                      />
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>{progress.completed}/{progress.total} strings</span>
-                        <span>{progress.fromMemory} from memory</span>
-                      </div>
-                      {progress.startTime && (
-                        <p className="text-xs text-muted-foreground">
-                          Elapsed: {formatTimeRemaining(elapsedTime)}
-                        </p>
-                      )}
-                      {progress.estimatedTimeRemaining && (
-                        <p className="text-sm text-muted-foreground">
-                          Remaining: ~{formatTimeRemaining(progress.estimatedTimeRemaining)}
-                        </p>
-                      )}
-                      {progress.currentItem && !progress.isRateLimited && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          "{progress.currentItem}..."
-                        </p>
-                      )}
-                      
-                      {/* Live Quality Preview */}
-                      {translatedItems.length > 0 && (
-                        <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-2xs font-semibold text-muted-foreground uppercase">{t('translatorProPage.ultimeTraduzioni')}</span>
-                            <span className="text-2xs text-muted-foreground">{translatedItems.length} completate</span>
-                          </div>
-                          <div className="divide-y divide-border/30">
-                            {translatedItems.slice(-3).reverse().map((item, idx) => {
-                              const qs = calculateQualityScore(item.sourceText, item.translatedText, targetLanguage);
-                              return (
-                                <div key={idx} className="flex items-center gap-2 py-1.5 text-[11px]">
-                                  <span className="truncate flex-1 text-muted-foreground">{item.sourceText}</span>
-                                  <span className="text-xs">→</span>
-                                  <span className={cn("truncate flex-1", item.fromMemory ? "text-blue-400" : "")}>{item.translatedText}</span>
-                                  <QualityScoreBadge score={qs.overall} size="sm" />
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Action buttons */}
-                      <div className="flex flex-col gap-2 mt-4">
-                        {/* Save partial results button - show when rate limited or has progress */}
-                        {progress.completed > 0 && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="border-green-500/50 text-green-500 hover:bg-green-500/10"
-                            onClick={() => {
-                              setIsTranslating(false);
-                              
-                              // Salva i results parziali in localStorage per persistenza
-                              if (translatedItems.length > 0 && selectedFiles.length > 0) {
-                                const partialResults = {
-                                  timestamp: Date.now(),
-                                  gameId: selectedGame?.id,
-                                  gameName: selectedGame?.name,
-                                  items: translatedItems,
-                                };
-                                
-                                set('gamestringer_partial_translations', partialResults).catch(e => console.warn('Errore IndexedDB:', e));
-                                console.log('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in IndexedDB');
-                                
-                                // Genera i file tradotti dai results parziali
-                                const newTranslatedFiles = new Map<string, string>();
-                                for (const file of selectedFiles) {
-                                  // Trova le traduzioni per questo file
-                                  const fileItems = translatedItems.filter(item => 
-                                    item.metadata?.filename === file.name || 
-                                    item.metadata?.filePath === file.path
-                                  );
-                                  
-                                  if (fileItems.length > 0) {
-                                    // Ricostruisci il contenuto tradotto
-                                    let translatedContent = file.content;
-                                    for (const item of fileItems) {
-                                      if (item.translatedText && item.sourceText) {
-                                        // Sostituisci il testo originale con la traduzione
-                                        translatedContent = translatedContent.replace(
-                                          item.sourceText,
-                                          item.translatedText
-                                        );
-                                      }
-                                    }
-                                    newTranslatedFiles.set(file.name, translatedContent);
-                                  } else {
-                                    // Se non ci sono traduzioni specifiche, usa il contenuto originale
-                                    newTranslatedFiles.set(file.name, file.content);
-                                  }
-                                }
-                                setTranslatedFiles(newTranslatedFiles);
-                                
-                                // Crea un job parziale per mostrare i results
-                                const fromMemory = translatedItems.filter(i => i.fromMemory).length;
-                                const partialJob: BatchTranslationJob = {
-                                  id: `partial_${Date.now()}`,
-                                  name: `Traduzione parziale - ${selectedGame?.name || 'Sconosciuto'}`,
-                                  gameId: selectedGame?.id,
-                                  gameName: selectedGame?.name,
-                                  sourceLanguage,
-                                  targetLanguage,
-                                  provider,
-                                  status: 'completed',
-                                  items: [],
-                                  progress: {
-                                    total: progress.total,
-                                    completed: progress.completed,
-                                    failed: 0,
-                                    skipped: 0,
-                                    fromMemory,
-                                    percentage: (progress.completed / progress.total) * 100,
-                                  },
-                                  options: {
-                                    useTranslationMemory: true,
-                                    saveToMemory: true,
-                                    runQualityChecks: false,
-                                    minQualityScore: 70,
-                                    stopOnQualityFail: false,
-                                    classifyContent: false,
-                                    skipLowPriority: false,
-                                    batchSize: 10,
-                                    delayBetweenBatches: 500,
-                                    parallelBatches: 3,
-                                    maxRetries: 3,
-                                    retryDelay: 1000,
-                                    timeoutPerItem: 30000,
-                                  },
-                                  results: {
-                                    totalItems: progress.total,
-                                    translatedItems: progress.completed,
-                                    failedItems: 0,
-                                    skippedItems: progress.total - progress.completed,
-                                    fromMemoryItems: fromMemory,
-                                    averageQualityScore: 85,
-                                    totalTokensUsed: 0,
-                                    estimatedCost: 0,
-                                    qualityIssues: [],
-                                  },
-                                  createdAt: new Date().toISOString(),
-                                  startedAt: new Date().toISOString(),
-                                  completedAt: new Date().toISOString(),
-                                };
-                                setCurrentJob(partialJob);
-                              } else {
-                                console.warn('[Neural Translator] No results da salvare:', translatedItems.length);
-                              }
-                              
-                              setCurrentStep('results');
-                              toast({
-                                title: 'results parziali salvati',
-                                description: `${progress.completed} stringhe tradotte su ${progress.total}. Puoi riprendere più tardi.`,
-                              });
-                            }}
-                          >
-                            <Save className="mr-2 h-3 w-3" />
-                            Salva results parziali ({progress.completed}/{progress.total})
-                          </Button>
-                        )}
-                        
-                        {/* Cancel button */}
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10"
-                          onClick={() => {
-                            setIsTranslating(false);
-                            setError('Traduzione annullata dall\'utente');
-                          }}
-                        >
-                          <Square className="mr-2 h-3 w-3" />
-                          Annulla traduzione
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : error ? (
-                <>
-                  <AlertTriangle className="h-16 w-16 mx-auto text-destructive mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">error</h2>
-                  <p className="text-muted-foreground mb-4">{error}</p>
-                  <Button onClick={() => setCurrentStep('configure')}>
-                    <RotateCcw className="mr-2 h-4 w-4" />
-                    Riprova
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">{t('translatorProPage.completed')}</h2>
-                  <Button onClick={() => setCurrentStep('results')}>
-                    Vedi results
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
+              // Save partial results to IndexedDB for persistence
+              if (translatedItems.length > 0 && selectedFiles.length > 0 && progress) {
+                const partialResults = {
+                  timestamp: Date.now(),
+                  gameId: selectedGame?.id,
+                  gameName: selectedGame?.name,
+                  items: translatedItems,
+                };
+
+                set('gamestringer_partial_translations', partialResults).catch(e => clientLogger.warn('Errore IndexedDB:', e));
+                clientLogger.debug('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in IndexedDB');
+
+                // Generate translated files from partial results
+                const newTranslatedFiles = new Map<string, string>();
+                for (const file of selectedFiles) {
+                  const fileItems = translatedItems.filter(item =>
+                    item.metadata?.filename === file.name ||
+                    item.metadata?.filePath === file.path
+                  );
+
+                  if (fileItems.length > 0) {
+                    let translatedContent = file.content;
+                    for (const item of fileItems) {
+                      if (item.translatedText && item.sourceText) {
+                        translatedContent = translatedContent.replace(
+                          item.sourceText,
+                          item.translatedText
+                        );
+                      }
+                    }
+                    newTranslatedFiles.set(file.name, translatedContent);
+                  } else {
+                    newTranslatedFiles.set(file.name, file.content);
+                  }
+                }
+                setTranslatedFiles(newTranslatedFiles);
+
+                // Create partial job for results view
+                const fromMemory = translatedItems.filter(i => i.fromMemory).length;
+                const partialJob: BatchTranslationJob = {
+                  id: `partial_${Date.now()}`,
+                  name: `Traduzione parziale - ${selectedGame?.name || 'Sconosciuto'}`,
+                  gameId: selectedGame?.id,
+                  gameName: selectedGame?.name,
+                  sourceLanguage,
+                  targetLanguage,
+                  provider,
+                  status: 'completed',
+                  items: [],
+                  progress: {
+                    total: progress.total,
+                    completed: progress.completed,
+                    failed: 0,
+                    skipped: 0,
+                    fromMemory,
+                    percentage: (progress.completed / progress.total) * 100,
+                  },
+                  options: {
+                    useTranslationMemory: true,
+                    saveToMemory: true,
+                    runQualityChecks: false,
+                    minQualityScore: 70,
+                    stopOnQualityFail: false,
+                    classifyContent: false,
+                    skipLowPriority: false,
+                    batchSize: 10,
+                    delayBetweenBatches: 500,
+                    parallelBatches: 3,
+                    maxRetries: 3,
+                    retryDelay: 1000,
+                    timeoutPerItem: 30000,
+                  },
+                  results: {
+                    totalItems: progress.total,
+                    translatedItems: progress.completed,
+                    failedItems: 0,
+                    skippedItems: progress.total - progress.completed,
+                    fromMemoryItems: fromMemory,
+                    averageQualityScore: 85,
+                    totalTokensUsed: 0,
+                    estimatedCost: 0,
+                    qualityIssues: [],
+                  },
+                  createdAt: new Date().toISOString(),
+                  startedAt: new Date().toISOString(),
+                  completedAt: new Date().toISOString(),
+                };
+                setCurrentJob(partialJob);
+              } else {
+                clientLogger.warn('[Neural Translator] No results da salvare:', translatedItems.length);
+              }
+
+              setCurrentStep('results');
+              toast({
+                title: 'results parziali salvati',
+                description: `${progress?.completed || 0} stringhe tradotte su ${progress?.total || 0}. Puoi riprendere più tardi.`,
+              });
+            }}
+            onCancelTranslation={() => {
+              setIsTranslating(false);
+              setError('Traduzione annullata dall\'utente');
+            }}
+            onRetry={() => setCurrentStep('configure')}
+            onViewResults={() => setCurrentStep('results')}
+          />
         )}
         
         {/* Step 5: Results */}
         {currentStep === 'results' && currentJob && (
-          <div className="space-y-6">
-            {/* Game Info Header */}
-            {selectedGame && (
-              <div className="flex items-center justify-center gap-3 py-2">
-                <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 shadow-lg flex-shrink-0">
-                  {selectedGame.coverUrl && (
-                    <img 
-                      src={selectedGame.coverUrl} 
-                      alt={selectedGame.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center -z-10">
-                    <span className="text-sm font-bold text-white/50">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-purple-400">{selectedGame.name}</h3>
-                  <p className="text-xs text-muted-foreground">{t('translatorProPage.translationCompleted')}</p>
-                </div>
-              </div>
-            )}
-            
-            {/* Stats with glow effects */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="group p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center transition-all duration-300 hover:bg-green-500/15 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-[1.02]">
-                <p className="text-2xl font-bold text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">{currentJob.results.translatedItems}</p>
-                <p className="text-xs text-muted-foreground">{t('translatorProPage.translated')}</p>
-              </div>
-              <div className="group p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center transition-all duration-300 hover:bg-blue-500/15 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-[1.02]">
-                <p className="text-2xl font-bold text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">{currentJob.results.fromMemoryItems}</p>
-                <p className="text-xs text-muted-foreground">{t('translatorProPage.fromMemory')}</p>
-              </div>
-              <div className="group p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center transition-all duration-300 hover:bg-purple-500/15 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:scale-[1.02]">
-                <p className="text-2xl font-bold text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">{currentJob.results.averageQualityScore}%</p>
-                <p className="text-xs text-muted-foreground">{t('translatorProPage.quality')}</p>
-              </div>
-              <div className="group p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center transition-all duration-300 hover:bg-amber-500/15 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02]">
-                <p className="text-2xl font-bold text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">${currentJob.results.estimatedCost.toFixed(4)}</p>
-                <p className="text-xs text-muted-foreground">{t('translatorProPage.cost')}</p>
-              </div>
-            </div>
-            
-            {/* Files */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">{t('translatorProPage.translatedFiles')}</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleSaveAllFiles}>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Save all (with backup)
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownloadAll}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download all
-                  </Button>
-                  <Button variant="default" size="sm" onClick={handleExportPatch} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                    <Package className="mr-2 h-4 w-4" />
-                    Esporta Patch
-                  </Button>
-                </div>
-              </div>
-              
-              {Array.from(translatedFiles.entries()).map(([filename, content]) => (
-                <div key={filename} className="group flex items-center gap-3 p-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:bg-card hover:border-green-500/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                  <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                    <FileCode className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm group-hover:text-green-400 transition-colors">{targetLanguage}_{filename}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(content.length / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                  <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="sm" onClick={() => handleOpenInEditor(filename)} title="Apri nell'Editor" className="hover:bg-blue-500/20 hover:text-blue-400">
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleSaveFile(filename)} title="Salva con backup" className="hover:bg-green-500/20 hover:text-green-400">
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDownloadFile(filename)} title="Scarica" className="hover:bg-purple-500/20 hover:text-purple-400">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Per-Row Translation Detail with Quality Badges */}
-            {translatedItems.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-purple-400" />
-                    Dettaglio traduzioni ({translatedItems.length})
-                  </h3>
-                  <Badge variant="outline" className="text-2xs">
-                    {translatedItems.filter(i => i.fromMemory).length} da memoria
-                  </Badge>
-                </div>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 bg-muted/30 text-2xs font-semibold text-muted-foreground uppercase">
-                    <span>{t('translatorProPage.original')}</span>
-                    <span>{t('translatorProPage.translation')}</span>
-                    <span>{t('translatorProPage.tipo')}</span>
-                    <span className="text-right">{t('translatorProPage.qualità')}</span>
-                  </div>
-                  <ScrollArea className="max-h-[400px]">
-                    <div className="divide-y divide-border/50">
-                      {translatedItems.slice(0, 200).map((item, idx) => {
-                        const classification = classifyContent(item.sourceText);
-                        const qualityScore = calculateQualityScore(item.sourceText, item.translatedText, targetLanguage);
-                        return (
-                          <div key={item.id || idx} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 items-center hover:bg-muted/20 text-xs">
-                            <span className="truncate text-muted-foreground" title={item.sourceText}>
-                              {item.sourceText}
-                            </span>
-                            <span className={cn("truncate", item.fromMemory ? "text-blue-400" : "")} title={item.translatedText}>
-                              {item.fromMemory && <Database className="inline h-3 w-3 mr-1 opacity-60" />}
-                              {item.translatedText}
-                            </span>
-                            <ContentTypeBadge type={classification.type} size="sm" />
-                            <div className="flex justify-end">
-                              <QualityScoreBadge score={qualityScore.overall} size="sm" />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                  {translatedItems.length > 200 && (
-                    <div className="px-3 py-2 text-center text-2xs text-muted-foreground bg-muted/20 border-t">
-                      Mostrate 200 di {translatedItems.length} righe
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Quality Issues */}
-            {currentJob.results.qualityIssues.length > 0 && (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <h3 className="font-medium flex items-center gap-2 mb-3">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  Problemi di qualità ({currentJob.results.qualityIssues.length})
-                </h3>
-                <ScrollArea className="h-32">
-                  {currentJob.results.qualityIssues.slice(0, 10).map((issue, i) => (
-                    <div key={i} className="text-sm mb-2">
-                      <p className="font-mono text-xs truncate">"{issue.sourceText}"</p>
-                      <p className="text-amber-600 text-xs">{issue.issues.join(', ')}</p>
-                    </div>
-                  ))}
-                </ScrollArea>
-              </div>
-            )}
-            
-            {/* Actions */}
-            <div className="flex justify-between items-center pt-4">
-              <Button variant="outline" onClick={() => {
-                setCurrentStep('select-game');
-                setSelectedGame(null);
-                setSelectedFiles([]);
-                setTranslatedFiles(new Map());
-                setCurrentJob(null);
-              }}>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Nuova traduzione
-              </Button>
-              
-              {/* ONE-CLICK APPLY - The Magic Button */}
-              <Button 
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-green-500/25 transition-all"
-                onClick={handleApplyToGame}
-                disabled={isApplying || translatedFiles.size === 0}
-              >
-                {isApplying ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    {applyStatus === 'finding' && 'Cerco game...'}
-                    {applyStatus === 'checking' && 'Verifico...'}
-                    {applyStatus === 'installing' && 'Installo patcher...'}
-                    {applyStatus === 'applying' && 'Applico...'}
-                  </>
-                ) : applyStatus === 'done' ? (
-                  <>
-                    <CheckCircle className="h-5 w-5" />
-                    Applicato!
-                  </>
-                ) : (
-                  <>
-                    <Rocket className="h-5 w-5" />
-                    Applica al game
-                  </>
-                )}
-              </Button>
-              
-              {/* PLAY BUTTON - Sempre visibile se c'è un game Steam */}
-              {selectedGame?.id?.startsWith('steam_') && (
-                <a 
-                  href={`steam://rungameid/${selectedGame.id.replace('steam_', '')}`}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-md bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/25 transition-all text-white"
-                >
-                  <Play className="h-5 w-5" />
-                  Gioca
-                </a>
-              )}
-            </div>
-          </div>
+          <ReviewStep
+            currentJob={currentJob}
+            selectedGame={selectedGame}
+            targetLanguage={targetLanguage}
+            translatedFiles={translatedFiles}
+            translatedItems={translatedItems}
+            isApplying={isApplying}
+            applyStatus={applyStatus}
+            onSaveAllFiles={handleSaveAllFiles}
+            onDownloadAll={handleDownloadAll}
+            onExportPatch={handleExportPatch}
+            onOpenInEditor={handleOpenInEditor}
+            onSaveFile={handleSaveFile}
+            onDownloadFile={handleDownloadFile}
+            onNewTranslation={() => {
+              setCurrentStep('select-game');
+              setSelectedGame(null);
+              setSelectedFiles([]);
+              setTranslatedFiles(new Map());
+              setCurrentJob(null);
+            }}
+            onApplyToGame={handleApplyToGame}
+          />
         )}
       </div>
       

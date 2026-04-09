@@ -8,6 +8,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface HotkeyEvent {
   action: string;
@@ -38,9 +39,9 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
     try {
       await invoke('init_global_hotkeys');
       setIsInitialized(true);
-      console.log('[HOTKEY] Sistema inizializzato');
-    } catch (e) {
-      console.error('[HOTKEY] Errore inizializzazione:', e);
+      clientLogger.debug('[HOTKEY] Sistema inizializzato');
+    } catch (e: unknown) {
+      clientLogger.error('[HOTKEY] Errore inizializzazione:', e);
     }
   }, []);
 
@@ -54,10 +55,10 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       });
       
       setRegisteredHotkeys(prev => new Map(prev).set(id, config.action));
-      console.log(`[HOTKEY] Registrata: ${config.modifiers.join('+')}+${config.key} -> ${config.action}`);
+      clientLogger.debug(`[HOTKEY] Registrata: ${config.modifiers.join('+')}+${config.key} -> ${config.action}`);
       return id;
-    } catch (e) {
-      console.error('[HOTKEY] Errore registrazione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[HOTKEY] Errore registrazione:', e);
       return null;
     }
   }, []);
@@ -72,8 +73,8 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
         return next;
       });
       return true;
-    } catch (e) {
-      console.error('[HOTKEY] Errore rimozione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[HOTKEY] Errore rimozione:', e);
       return false;
     }
   }, []);
@@ -87,8 +88,8 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       if (saved) {
         hotkeys = JSON.parse(saved);
       }
-    } catch (e) {
-      console.warn('[HOTKEY] Errore caricamento hotkeys salvate, uso default:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[HOTKEY] Errore caricamento hotkeys salvate, uso default:', e);
     }
 
     for (const config of hotkeys) {
@@ -100,8 +101,8 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
   const saveHotkeyConfig = useCallback((hotkeys: HotkeyConfig[]) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hotkeys));
-    } catch (e) {
-      console.warn('[HOTKEY] Errore salvataggio configurazione hotkeys:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[HOTKEY] Errore salvataggio configurazione hotkeys:', e);
       toast.error('Impossibile salvare la configurazione delle hotkey');
     }
   }, []);
@@ -113,7 +114,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
     const setupListener = async () => {
       unlisten = await listen<HotkeyEvent>('global-hotkey', (event) => {
         const { action } = event.payload;
-        console.log(`[HOTKEY] Evento: ${action}`);
+        clientLogger.debug(`[HOTKEY] Evento: ${action}`);
         
         if (handlers[action]) {
           handlers[action]();

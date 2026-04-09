@@ -94,7 +94,7 @@ export class RequestLogger {
         } else if (contentType?.includes('application/x-www-form-urlencoded')) {
           body = await request.formData();
         }
-      } catch (error) {
+      } catch (error: unknown) {
         // Body parsing failed, continue without body
       }
     }
@@ -244,7 +244,7 @@ export function withRequestLogging(handler: (request: NextRequest) => Promise<Ne
       const response = await handler(request);
       requestLogger.logResponse(requestId, response);
       return response;
-    } catch (error) {
+    } catch (error: unknown) {
       requestLogger.logError(requestId, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }

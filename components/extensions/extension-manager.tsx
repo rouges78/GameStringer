@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Extension {
   id: string;
@@ -93,8 +94,8 @@ export function ExtensionManager() {
       
       const result = await invoke('get_installed_extensions');
       setExtensions(result as Extension[]);
-    } catch (error) {
-      console.error('Error loading extensions:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading extensions:', error);
       toast.error('Error loading extensions');
     } finally {
       setLoading(false);
@@ -114,8 +115,8 @@ export function ExtensionManager() {
         )
       );
       toast.success(enabled ? 'Extension enabled' : 'Extension disabled');
-    } catch (error) {
-      console.error('Error toggling extension:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error toggling extension:', error);
       toast.error('Error toggling extension state');
     }
   };
@@ -125,8 +126,8 @@ export function ExtensionManager() {
       await invoke('uninstall_extension', { extensionId });
       setExtensions(prev => prev.filter(ext => ext.id !== extensionId));
       toast.success('Extension uninstalled');
-    } catch (error) {
-      console.error('Error uninstalling:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error uninstalling:', error);
       toast.error('Error during uninstallation');
     }
   };
@@ -151,8 +152,8 @@ export function ExtensionManager() {
       
       // Reload extensions
       await loadExtensions();
-    } catch (error) {
-      console.error('Error creating template:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error creating template:', error);
       toast.error('Error creating template');
     }
   };

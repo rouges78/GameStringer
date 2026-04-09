@@ -107,7 +107,7 @@ export default function TranslationBridgePage() {
         }
       }
       await refreshStats();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);
@@ -121,7 +121,7 @@ export default function TranslationBridgePage() {
       await translationBridge.setLanguages(sourceLang, targetLang);
       setSuccess(`Lingue impostate: ${sourceLang} → ${targetLang}`);
       await refreshStats();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);
@@ -139,7 +139,7 @@ export default function TranslationBridgePage() {
       setNewOriginal('');
       setNewTranslated('');
       await refreshStats();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);
@@ -186,7 +186,7 @@ export default function TranslationBridgePage() {
       setSuccess(`loaded ${count} traduzioni`);
       setBulkTranslations('');
       await refreshStats();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);
@@ -201,7 +201,7 @@ export default function TranslationBridgePage() {
     try {
       const result = await translationBridge.getTranslation(testInput);
       setTestResult(result || '(nessuna traduzione trovata)');
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);
@@ -217,7 +217,7 @@ export default function TranslationBridgePage() {
       await translationBridge.clear();
       setSuccess('Dizionario cancellato');
       await refreshStats();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setIsLoading(false);

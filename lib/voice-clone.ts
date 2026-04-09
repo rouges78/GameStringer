@@ -226,13 +226,14 @@ class VoiceCloneService {
   async measureAudioDuration(audioBlob: Blob): Promise<number> {
     try {
       const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       const duration = audioBuffer.duration;
       await audioContext.close();
       return duration;
-    } catch (e) {
-      console.warn('[VoiceClone] Could not measure audio duration:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[VoiceClone] Could not measure audio duration:', e);
       return 0;
     }
   }
@@ -285,7 +286,7 @@ class VoiceCloneService {
         const currentSpeed = voiceProfile.settings.speed || 1.0;
         const newSpeed = this.calculateSpeedForDuration(actualDuration, targetDuration, currentSpeed);
 
-        console.log(`[VoiceClone] Duration matching: actual=${actualDuration.toFixed(2)}s, target=${targetDuration.toFixed(2)}s, diff=${(diff * 100).toFixed(1)}% → speed ${currentSpeed.toFixed(2)} → ${newSpeed.toFixed(2)}`);
+        clientLogger.debug(`[VoiceClone] Duration matching: actual=${actualDuration.toFixed(2)}s, target=${targetDuration.toFixed(2)}s, diff=${(diff * 100).toFixed(1)}% → speed ${currentSpeed.toFixed(2)} → ${newSpeed.toFixed(2)}`);
 
         // Re-synthesize with adjusted speed
         const adjustedProfile: VoiceProfile = {
@@ -307,11 +308,11 @@ class VoiceCloneService {
         result.effectiveSpeed = newSpeed;
         result.durationMatched = true;
 
-        console.log(`[VoiceClone] Duration matched: ${newDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, diff: ${(Math.abs(newDuration - targetDuration) / targetDuration * 100).toFixed(1)}%)`);
+        clientLogger.debug(`[VoiceClone] Duration matched: ${newDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, diff: ${(Math.abs(newDuration - targetDuration) / targetDuration * 100).toFixed(1)}%)`);
       } else {
         result.effectiveSpeed = voiceProfile.settings.speed || 1.0;
         result.durationMatched = false;
-        console.log(`[VoiceClone] Duration OK: ${actualDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, within ${(durationTolerance * 100).toFixed(0)}% tolerance)`);
+        clientLogger.debug(`[VoiceClone] Duration OK: ${actualDuration.toFixed(2)}s (target: ${targetDuration.toFixed(2)}s, within ${(durationTolerance * 100).toFixed(0)}% tolerance)`);
       }
     }
 
@@ -476,8 +477,8 @@ class VoiceCloneService {
           targetDuration: dialogue.targetDuration,
         });
         results.set(dialogue.id, result);
-      } catch (error) {
-        console.error(`Errore sintesi per ${dialogue.id}:`, error);
+      } catch (error: unknown) {
+        clientLogger.error(`Errore sintesi per ${dialogue.id}:`, error);
       }
 
       // Rate limiting

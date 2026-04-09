@@ -446,4 +446,43 @@ Echtzeit-Community-Chat im Community Hub, betrieben mit Supabase Realtime.
 
 ---
 
-GameStringer v1.6.0 - Anleitung aktualisiert am 04.04.2026
+## Neu in v1.8.0
+
+### Live-Übersetzungs-Overlay
+- Gehen Sie zur Seite **/live-translate** oder drücken Sie **Strg+Alt+O**
+- Wählen Sie Quell-/Zielsprache und AI-Anbieter
+- Klicken Sie auf **Start** — das Overlay erscheint über dem Spiel
+- Text wird alle 2 Sekunden per OCR erfasst
+- Übersetzungen erscheinen als transparente Overlay-Boxen
+- Diff-Erkennung überspringt unveränderten Text (spart API-Aufrufe)
+
+### Hub-Marktplatz
+- Gehen Sie zum **Community Hub**, um Übersetzungspakete zu durchsuchen
+- **1-Klick-Installation**: Herunterladen → Validieren → Importieren
+- Bewerten und rezensieren Sie Community-Pakete
+- Veröffentlichen Sie Ihre eigenen Übersetzungen als **.gspack**-Dateien
+- Benutzerprofile mit Reputation und Abzeichen
+
+### Translation-Memory-Netzwerk
+- Aktivieren Sie es unter **Einstellungen → TM-Netzwerk**
+- Opt-in: Ihre hochwertigen Übersetzungen fließen in den globalen Pool ein
+- Datenschutz zuerst: Quelltext gehasht, keine Benutzerdaten geteilt
+- Der nächste Benutzer, der dasselbe Spiel übersetzt, erhält vorausgefüllte Vorschläge
+- Automatisch in die Übersetzungspipeline integriert
+
+### AI-Synchronisations-Pipeline
+- Gehen Sie zur Seite **/dubbing**
+- Wählen Sie den Spieleordner und konfigurieren Sie Sprachen/Stimme
+- 7-Schritt-Pipeline: Scannen → Transkribieren → Übersetzen → Synthetisieren → Patchen → Lippensynchronisation → Untertitel
+- Längenanpassung hält die übersetzte Audiodatei genauso lang wie das Original
+- Charakter-Stimmprofile mit 16 Archetypen
+
+### Plugin-System
+- Die Community kann neue Spiel-Engine-Patcher in JavaScript erstellen
+- Keine Rust-Kompilierung erforderlich
+- Vorlagen-Generator erstellt vollständiges Plugin-Gerüst
+- Plugins werden als **.gsplugin**-Pakete verteilt
+
+---
+
+GameStringer v1.8.0 - Anleitung aktualisiert am 09.04.2026

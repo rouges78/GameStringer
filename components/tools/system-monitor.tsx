@@ -16,6 +16,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SystemStats {
   cpu_usage_percent: number;
@@ -57,8 +58,8 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
       setLoading(true);
       const result = await invoke('get_system_stats') as SystemStats;
       setStats(result);
-    } catch (err) {
-      console.warn('System monitor not available:', err);
+    } catch (err: unknown) {
+      clientLogger.warn('System monitor not available:', err);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { clientLogger } from '@/lib/client-logger';
 
 export type Locale = 'en' | 'it' | 'es' | 'de' | 'fr' | 'ja' | 'zh' | 'ko' | 'pt' | 'ru' | 'pl';
 
@@ -81,8 +82,8 @@ export const useI18n = create<I18nState>()(
         try {
           const translations = await import(`../locales/${locale}/common.json`);
           set({ translations: translations.default || translations });
-        } catch (error) {
-          console.error(`Failed to load translations for ${locale}:`, error);
+        } catch (error: unknown) {
+          clientLogger.error(`Failed to load translations for ${locale}:`, error);
           if (locale !== 'en') {
             const fallback = await import('../locales/en/common.json');
             set({ translations: fallback.default || fallback });

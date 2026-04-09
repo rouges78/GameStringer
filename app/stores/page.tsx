@@ -16,7 +16,7 @@ import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2,
 import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { useSession, signIn, signOut, isProviderConnected, getConnectedAccount } from '@/lib/auth';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
 import { ItchioModal } from '@/components/modals/itchio-modal';
 import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
@@ -24,6 +24,7 @@ import { SteamModal } from '@/components/modals/steam-modal';
 import { SteamFamilySharing } from '@/components/steam-family-sharing';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { open as shellOpen } from '@tauri-apps/plugin-shell';
+import { clientLogger } from '@/lib/client-logger';
 
 // Define a type for the store object for better type safety
 type Store = {
@@ -95,9 +96,9 @@ export default function StoresPage() {
           if (creds && creds.steam_id && creds.steam_id.length > 0) {
             existingAccounts.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
             changed = true;
-            console.log('[STORES] ✅ Steam credentials restored from backend:', creds.steam_id);
+            clientLogger.debug('[STORES] ✅ Steam credentials restored from backend:', creds.steam_id);
           }
-        } catch { console.log('[STORES] Steam: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Steam: nessuna credenziale salvata'); }
       }
 
       // Epic — credenziali in file standalone
@@ -107,9 +108,9 @@ export default function StoresPage() {
           if (creds && creds.username_encrypted) {
             existingAccounts.push({ provider: 'epicgames', userId: 'epic-user' });
             changed = true;
-            console.log('[STORES] ✅ Epic credentials restored from backend');
+            clientLogger.debug('[STORES] ✅ Epic credentials restored from backend');
           }
-        } catch { console.log('[STORES] Epic: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Epic: nessuna credenziale salvata'); }
       }
 
       // GOG — credenziali in file standalone
@@ -119,9 +120,9 @@ export default function StoresPage() {
           if (creds && (creds.email || creds.username)) {
             existingAccounts.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
             changed = true;
-            console.log('[STORES] ✅ GOG credentials restored from backend:', creds.username);
+            clientLogger.debug('[STORES] ✅ GOG credentials restored from backend:', creds.username);
           }
-        } catch { console.log('[STORES] GOG: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] GOG: nessuna credenziale salvata'); }
       }
 
       // Ubisoft
@@ -133,10 +134,10 @@ export default function StoresPage() {
             setUbisoftConnected(true);
             _storesCache.ubisoftConnected = true;
             changed = true;
-            console.log('[STORES] ✅ Ubisoft credentials restored from backend:', creds.email);
+            clientLogger.debug('[STORES] ✅ Ubisoft credentials restored from backend:', creds.email);
           }
         } catch {
-          console.log('[STORES] Ubisoft: nessuna credenziale salvata');
+          clientLogger.debug('[STORES] Ubisoft: nessuna credenziale salvata');
           setUbisoftConnected(false);
         }
       } else {
@@ -152,9 +153,9 @@ export default function StoresPage() {
           if (res?.success && res?.data?.username) {
             existingAccounts.push({ provider: 'origin-credentials', userId: res.data.username });
             changed = true;
-            console.log('[STORES] ✅ Origin credentials restored from Tauri profile');
+            clientLogger.debug('[STORES] ✅ Origin credentials restored from Tauri profile');
           }
-        } catch { console.log('[STORES] Origin: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Origin: nessuna credenziale salvata'); }
       }
 
       // Battle.net — credenziali dal profilo Tauri
@@ -164,9 +165,9 @@ export default function StoresPage() {
           if (res?.success && res?.data?.username) {
             existingAccounts.push({ provider: 'battlenet-credentials', userId: res.data.username });
             changed = true;
-            console.log('[STORES] ✅ Battle.net credentials restored from Tauri profile');
+            clientLogger.debug('[STORES] ✅ Battle.net credentials restored from Tauri profile');
           }
-        } catch { console.log('[STORES] Battle.net: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Battle.net: nessuna credenziale salvata'); }
       }
 
       // Rockstar — credenziali dal profilo Tauri
@@ -176,9 +177,9 @@ export default function StoresPage() {
           if (res?.success && res?.data?.username) {
             existingAccounts.push({ provider: 'rockstar-credentials', userId: res.data.username });
             changed = true;
-            console.log('[STORES] ✅ Rockstar credentials restored from Tauri profile');
+            clientLogger.debug('[STORES] ✅ Rockstar credentials restored from Tauri profile');
           }
-        } catch { console.log('[STORES] Rockstar: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Rockstar: nessuna credenziale salvata'); }
       }
 
       // Amazon — credenziali dal profilo Tauri
@@ -188,9 +189,9 @@ export default function StoresPage() {
           if (res?.success && res?.data?.username) {
             existingAccounts.push({ provider: 'amazon-credentials', userId: res.data.username });
             changed = true;
-            console.log('[STORES] ✅ Amazon credentials restored from Tauri profile');
+            clientLogger.debug('[STORES] ✅ Amazon credentials restored from Tauri profile');
           }
-        } catch { console.log('[STORES] Amazon: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] Amazon: nessuna credenziale salvata'); }
       }
 
       // itch.io — credenziali dal profilo Tauri
@@ -200,14 +201,14 @@ export default function StoresPage() {
           if (res?.success && res?.data?.username) {
             existingAccounts.push({ provider: 'itchio-credentials', userId: res.data.username });
             changed = true;
-            console.log('[STORES] ✅ itch.io credentials restored from Tauri profile');
+            clientLogger.debug('[STORES] ✅ itch.io credentials restored from Tauri profile');
           }
-        } catch { console.log('[STORES] itch.io: nessuna credenziale salvata'); }
+        } catch { clientLogger.debug('[STORES] itch.io: nessuna credenziale salvata'); }
       }
 
       if (changed) {
         localStorage.setItem('gameStringer_connectedAccounts', JSON.stringify(existingAccounts));
-        console.log('[STORES] 🔄 connectedAccounts aggiornati:', existingAccounts.length, 'provider');
+        clientLogger.debug('[STORES] 🔄 connectedAccounts aggiornati:', existingAccounts.length, 'provider');
         // Aggiorna la sessione auth per riflettere i nuovi account
         await update();
       }
@@ -313,8 +314,8 @@ export default function StoresPage() {
       if (stored) {
         setUtilityPreferences(JSON.parse(stored));
       }
-    } catch (error) {
-      console.error('Error loading utility preferences:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading utility preferences:', error);
     }
   }, []);
 
@@ -343,7 +344,7 @@ export default function StoresPage() {
         setLoadingProvider(null);
         return;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore durante l'attivazione di ${utilityId}`);
     }
     
@@ -359,7 +360,7 @@ export default function StoresPage() {
       localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
       setUtilityPreferences(newPrefs);
       toast.success(`${utilityId} disattivato con successo.`);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore durante la disattivazione di ${utilityId}`);
     }
     
@@ -374,8 +375,8 @@ export default function StoresPage() {
     if (providerId === 'epic') {
       try {
         await signIn('epicgames', { callbackUrl: '/stores' });
-      } catch (error) {
-        console.error('Epic Games auth error:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Epic Games auth error:', error);
         toast.error('error durante la connection con Epic Games. Verifica le Credentials OAuth.');
         setLoadingProvider(null);
       }
@@ -420,7 +421,7 @@ export default function StoresPage() {
       if (providerId === 'ubisoft') {
         await invoke('clear_ubisoft_credentials');
         setUbisoftConnected(false);
-        console.log('[UBISOFT] Credentials cancellate dal backend');
+        clientLogger.debug('[UBISOFT] Credentials cancellate dal backend');
       }
 
       // Cancella credenziali dal profilo Tauri per store generici
@@ -428,15 +429,15 @@ export default function StoresPage() {
       if (tauriStores.includes(providerId)) {
         try {
           await invoke('save_store_credentials', { store: providerId, username: '', password: '' });
-          console.log(`[STORES] 🗑️ Credenziali ${providerId} cancellate dal profilo Tauri`);
-        } catch (e) {
-          console.warn(`[STORES] ⚠️ Impossibile cancellare ${providerId} da Tauri:`, e);
+          clientLogger.debug(`[STORES] 🗑️ Credenziali ${providerId} cancellate dal profilo Tauri`);
+        } catch (e: unknown) {
+          clientLogger.warn(`[STORES] ⚠️ Impossibile cancellare ${providerId} da Tauri:`, e);
         }
       }
       
       const response = await fetch('/api/auth/disconnect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ providerId: backendProviderId }),
       });
 
@@ -456,7 +457,7 @@ export default function StoresPage() {
         toast.error(`error durante la disconnection: ${result.error}`);
       }
     } catch (error: unknown) {
-      console.error('Disconnect error:', error);
+      clientLogger.error('Disconnect error:', error);
       toast.error(error?.message || 'error durante la disconnection');
     }
     setLoadingProvider(null);
@@ -471,7 +472,7 @@ export default function StoresPage() {
     try {
       // Chiama il backend Tauri per autenticare e salvare le Credentials criptate
       const backendResult = await invoke<string>('connect_ubisoft', { email, password });
-      console.log('[UBISOFT] Backend result:', backendResult);
+      clientLogger.debug('[UBISOFT] Backend result:', backendResult);
       
       // Salva anche in localStorage per la sessione frontend
       const result = await signIn('ubisoft-credentials', {
@@ -492,7 +493,7 @@ export default function StoresPage() {
         await update();
       }
     } catch (error: unknown) {
-      console.error('Ubisoft auth error:', error);
+      clientLogger.error('Ubisoft auth error:', error);
       toast.error(error?.message || error || 'error durante la connection con Ubisoft. Verifica le Credentials.');
     }
     setLoadingProvider(null);
@@ -514,9 +515,9 @@ export default function StoresPage() {
           username: email,
           password: password,
         });
-        console.log(`[STORES] ✅ Credenziali ${genericModalProvider} salvate nel profilo Tauri`);
+        clientLogger.debug(`[STORES] ✅ Credenziali ${genericModalProvider} salvate nel profilo Tauri`);
       } catch (tauriErr) {
-        console.warn(`[STORES] ⚠️ Fallback: impossibile salvare ${genericModalProvider} in Tauri:`, tauriErr);
+        clientLogger.warn(`[STORES] ⚠️ Fallback: impossibile salvare ${genericModalProvider} in Tauri:`, tauriErr);
       }
 
       // 2. Salva anche in session/localStorage per il frontend
@@ -543,8 +544,8 @@ export default function StoresPage() {
         setGenericCredentials({ email: '', password: '' });
         await update();
       }
-    } catch (error) {
-      console.error(`${genericModalProvider} auth error:`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`${genericModalProvider} auth error:`, error);
       toast.error(`error durante la connection con ${genericModalProvider}.`);
     }
     setLoadingProvider(null);
@@ -579,9 +580,9 @@ export default function StoresPage() {
           username: 'itchio-api-key',
           password: apiKey,
         });
-        console.log('[STORES] ✅ itch.io API key salvata nel profilo Tauri');
+        clientLogger.debug('[STORES] ✅ itch.io API key salvata nel profilo Tauri');
       } catch (tauriErr) {
-        console.warn('[STORES] ⚠️ Fallback: impossibile salvare itch.io in Tauri:', tauriErr);
+        clientLogger.warn('[STORES] ⚠️ Fallback: impossibile salvare itch.io in Tauri:', tauriErr);
       }
 
       const result = await signIn('itchio-credentials', {
@@ -596,7 +597,7 @@ export default function StoresPage() {
         toast.success('Account itch.io collegato con successo!');
         await update();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('error durante la connection con itch.io');
       throw error;
     } finally {
@@ -639,7 +640,7 @@ export default function StoresPage() {
         setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
         toast.success('SteamGridDB funziona correttamente!');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Test fallito';
       if (error instanceof DOMException && error.name === 'AbortError') {
         setTestResults(prev => ({ ...prev, [utilityId]: { error: 'Timeout - servizio non raggiungibile' } }));
@@ -659,7 +660,7 @@ export default function StoresPage() {
       const backendProviderId = getBackendProviderId(providerId);
       const response = await fetch('/api/stores/test-connection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ provider: backendProviderId }),
       });
       
@@ -671,7 +672,7 @@ export default function StoresPage() {
       } else {
         toast.error(`Problema con ${providerId}: ${result.error || 'connection non riuscita'}`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`error nel test di ${providerId}`);
       setTestResults(prev => ({ ...prev, [providerId]: { error: 'Test fallito' } }));
     }
@@ -882,7 +883,7 @@ export default function StoresPage() {
                       const result = await invoke<string>(autoDetectCommand);
                       setTestResults(prev => ({ ...prev, [store.id]: { connected: true, message: result } }));
                       toast.success(result);
-                    } catch (e) {
+                    } catch (e: unknown) {
                       const msg = String(e);
                       setTestResults(prev => ({ ...prev, [store.id]: { error: msg } }));
                       toast.error(msg);

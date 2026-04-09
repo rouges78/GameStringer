@@ -123,7 +123,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
       
       setOriginalContent(sampleContent);
       setCurrentStep('translate-editor');
-    } catch (error) {
+    } catch (error: unknown) {
       setTranslatorError('Error loading file');
     } finally {
       setIsLoadingFile(false);
@@ -151,7 +151,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
       
       setTranslatedContent(mockTranslated);
       setCurrentStep('complete');
-    } catch (error) {
+    } catch (error: unknown) {
       setTranslatorError('Error during translation: ' + error);
     } finally {
       setIsTranslating(false);

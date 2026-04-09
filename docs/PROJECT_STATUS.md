@@ -1,10 +1,31 @@
 # Stato del Progetto GameStringer
 
-## Ultimo Aggiornamento: 04/04/2026 - v1.6.0
+## Ultimo Aggiornamento: 09/04/2026 - v1.8.0
 
-### PROGETTO v1.6.0 RILASCIATO
+### PROGETTO v1.8.0 RILASCIATO
 
-**GameStringer**: Suite completa di localizzazione videogiochi con AI. 20+ provider AI, 10+ engine supportati, 200+ lingue, 11 lingue UI.
+**GameStringer**: Suite completa di localizzazione videogiochi con AI. 20+ provider AI, 20+ engine supportati, 200+ lingue, 11 lingue UI. Live Translation Overlay, Hub Marketplace, AI Dubbing, Plugin System.
+
+---
+
+### Nuove Feature v1.8.0
+
+- **Live Translation Overlay**: Traduzione in tempo reale via OCR overlay trasparente sopra qualsiasi gioco. Cattura schermo → OCR multi-engine → AI (Groq/Cerebras) → overlay gaming-style. Hotkey Ctrl+Alt+O. Diff detection + translation cache.
+- **Hub Marketplace**: Marketplace community per translation pack con 1-click install. Supabase backend (10 tabelle, RLS, moderazione). Profili utente con reputazione e badge. Rating, recensioni, commenti.
+- **Translation Memory Network**: Rete federata di TM via Supabase. Contributi anonymizzati (opt-in, privacy-first). Source text hashato. Auto-integrato nel pipeline translateWithFallback(). Game-scoped.
+- **AI Dubbing Pipeline**: Pipeline 7-step: scan audio → Whisper STT → traduzione AI → TTS (OpenAI/ElevenLabs/Azure) con voice matching → duration matching → patch audio → Rhubarb lip sync → sottotitoli SRT/VTT/ASS. 16 archetipi personaggio.
+- **Plugin System**: PatcherPlugin interface per patcher community. Lifecycle: detect→extract→patch→verify→restore. Template generator. JavaScript sandboxed, no compilazione Rust.
+- **Sicurezza**: CSP senza unsafe-eval, XSS eliminato, AES-256-GCM key storage, CSRF, Zod validation, rate limiting globale, 42/42 routes con error handler.
+- **Architettura**: CI con tsc+eslint+vitest+npm audit. 71 nuovi test. 18 moduli estratti. 1197/1203 console migrati. 893 catch tipizzati.
+- **Refactoring**: -1841 righe da 3 file monolitici. Rimossi react-hot-toast e vdf (-42 pacchetti).
+
+### Nuove Feature v1.7.0
+
+- **Auto-Select Engine**: preset 'Auto' che seleziona provider AI per lingua/genere
+- **Quality History**: tracking qualita provider per sessione
+- **Gridly CSV**: export/import multi-lingua compatibile Gridly/Lokalise/Crowdin
+- **Duration Matching**: TTS con adattamento durata audio originale
+- **Rhubarb Lip Sync**: visemi A-X con export Unity/Unreal
 
 ---
 

@@ -420,8 +420,8 @@ class AdvancedStringSearch {
       if (recentData) {
         this.recentSearches = JSON.parse(recentData);
       }
-    } catch (error) {
-      console.error('[AdvancedSearch] Load failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AdvancedSearch] Load failed:', error);
     }
   }
 
@@ -431,8 +431,8 @@ class AdvancedStringSearch {
     try {
       localStorage.setItem(SAVED_SEARCHES_KEY, JSON.stringify(this.savedSearches));
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(this.recentSearches));
-    } catch (error) {
-      console.error('[AdvancedSearch] Save failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[AdvancedSearch] Save failed:', error);
     }
   }
 
@@ -454,6 +454,7 @@ export const advancedSearch = new AdvancedStringSearch();
 
 // React hook
 import { useState, useCallback, useMemo } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useAdvancedSearch(strings: TranslationString[]) {
   const [options, setOptions] = useState<SearchOptions>(advancedSearch.getDefaultOptions());

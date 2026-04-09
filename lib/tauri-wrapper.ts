@@ -14,7 +14,7 @@ export async function safeInvoke<T>(command: string, args?: Record<string, unkno
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       return await invoke<T>(command, args);
-    } catch (error) {
+    } catch (error: unknown) {
       // Per i comandi di test connessione, non loggare come errore bloccante
       const isConnectivityTest = /^test_.*_connection$/.test(command);
       const logger = isConnectivityTest ? console.warn : console.error;
@@ -23,7 +23,7 @@ export async function safeInvoke<T>(command: string, args?: Record<string, unkno
     }
   } else {
     // Ambiente web - usa fallback o mock
-    console.warn(`[WEB] Chiamata Tauri ${command} non disponibile in ambiente web`);
+    clientLogger.warn(`[WEB] Chiamata Tauri ${command} non disponibile in ambiente web`);
     return getMockResponse<T>(command, args);
   }
 }

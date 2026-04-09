@@ -1,6 +1,7 @@
 'use client';
 
 import { UIInterference } from './ui-interference-detector';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Algoritmo avanzato per il posizionamento ottimale delle notifiche
@@ -87,7 +88,7 @@ class OptimalPositioningAlgorithm {
     scoredCandidates.sort((a, b) => b.score - a.score);
 
     if (this.debugMode) {
-      console.log('[OptimalPositioningAlgorithm] Candidati valutati:', scoredCandidates.slice(0, 5));
+      clientLogger.debug('[OptimalPositioningAlgorithm] Candidati valutati:', scoredCandidates.slice(0, 5));
     }
 
     return scoredCandidates[0] || this.getFallbackPosition(toastDimensions, viewport);
@@ -177,7 +178,7 @@ class OptimalPositioningAlgorithm {
     }
 
     if (this.debugMode) {
-      console.log('[OptimalPositioningAlgorithm] Layout ottimizzato con punteggio:', bestScore);
+      clientLogger.debug('[OptimalPositioningAlgorithm] Layout ottimizzato con punteggio:', bestScore);
     }
 
     return bestConfiguration;

@@ -110,8 +110,8 @@ function saveCorrections(corrections: HumanCorrection[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(corrections));
-  } catch (e) {
-    console.warn('[AdaptiveMT] Save failed:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[AdaptiveMT] Save failed:', e);
   }
 }
 
@@ -243,7 +243,7 @@ export function addCorrection(input: {
   }
 
   saveCorrections(corrections);
-  console.log(`[AdaptiveMT] Correction saved: "${input.sourceText.substring(0, 40)}..." (total: ${corrections.length})`);
+  clientLogger.debug(`[AdaptiveMT] Correction saved: "${input.sourceText.substring(0, 40)}..." (total: ${corrections.length})`);
 
   return correction;
 }
@@ -587,8 +587,8 @@ export function importCorrections(jsonData: string, overwrite = false): number {
 
     saveCorrections(existing);
     return added;
-  } catch (e) {
-    console.error('[AdaptiveMT] Import failed:', e);
+  } catch (e: unknown) {
+    clientLogger.error('[AdaptiveMT] Import failed:', e);
     return 0;
   }
 }

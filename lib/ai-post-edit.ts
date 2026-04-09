@@ -6,6 +6,7 @@
  */
 
 import { getGenreConfig, type GameGenre } from './genre-prompts';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface PostEditSuggestion {
   improved: string;
@@ -118,8 +119,8 @@ export async function suggestImprovement(req: PostEditRequest): Promise<PostEdit
         if (result) return result;
       }
     }
-  } catch (e) {
-    console.warn('[PostEdit] Ollama non disponibile:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[PostEdit] Ollama non disponibile:', e);
   }
 
   // Fallback: Gemini API
@@ -144,8 +145,8 @@ export async function suggestImprovement(req: PostEditRequest): Promise<PostEdit
         if (result) return result;
       }
     }
-  } catch (e) {
-    console.warn('[PostEdit] Gemini non disponibile:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('[PostEdit] Gemini non disponibile:', e);
   }
 
   // Nessun provider disponibile
@@ -170,8 +171,8 @@ export async function suggestBatchImprovements(
       if (suggestion.changes.length > 0 && suggestion.improved !== items[i].translation) {
         results.set(i, suggestion);
       }
-    } catch (e) {
-      console.warn(`[PostEdit] Errore su item ${i}:`, e);
+    } catch (e: unknown) {
+      clientLogger.warn(`[PostEdit] Errore su item ${i}:`, e);
     }
   }
 

@@ -1,14 +1,29 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "major": 1,
-  "minor": 7,
+  "minor": 8,
   "patch": 0,
   "prerelease": null,
-  "buildNumber": 124,
-  "buildDate": "2026-04-08T00:00:00.000Z",
+  "buildNumber": 125,
+  "buildDate": "2026-04-09T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.8.0": {
+      "date": "2026-04-09",
+      "type": "feature",
+      "changes": [
+        "Live Translation Overlay: traduzione in tempo reale via OCR overlay trasparente sopra qualsiasi gioco — cattura schermo → OCR multi-engine → traduzione AI (Groq/Cerebras) → overlay con animazioni gaming-style. Hotkey Ctrl+Alt+O",
+        "Hub Marketplace: marketplace per condividere translation pack della community — 1-click install, rating, recensioni, moderazione, profili utente con reputazione. Backend Supabase con 10 tabelle + RLS",
+        "Translation Memory Network: rete federata di memorie di traduzione — chi traduce contribuisce al pool globale (opt-in, privacy-first). Il prossimo utente trova stringhe gia tradotte. Integrazione automatica nel pipeline di traduzione",
+        "AI Dubbing Pipeline: pipeline 7-step per doppiaggio automatico — scan audio → Whisper STT → traduzione AI → sintesi vocale TTS con voice matching → duration matching → patch file audio → lip sync Rhubarb → generazione sottotitoli SRT/VTT/ASS",
+        "Plugin System: interfaccia PatcherPlugin per patcher community-created — detect/extract/patch/verify/restore lifecycle. Template generator per scaffold plugin. Nessuna ricompilazione Rust necessaria",
+        "Sicurezza: CSP rinforzata (rimosso unsafe-eval), XSS eliminato, storage API key crittografato AES-256-GCM, protezione CSRF, validazione Zod, rate limiting globale",
+        "Architettura: CI pipeline con tsc+eslint+vitest+npm audit, 71 nuovi test, 18 moduli estratti da file monolitici, 1197/1203 console.* migrati a logger strutturato, 893 catch tipizzati con :unknown",
+        "Refactoring: ai-translate-direct.ts (-429 righe, 5 moduli), game-detail-client.tsx (-636 righe, 8 componenti), translator/pro/page.tsx (-776 righe, 5 componenti)",
+        "Dipendenze: rimossi react-hot-toast e vdf duplicati, -42 pacchetti"
+      ]
+    },
     "1.7.0": {
       "date": "2026-04-08",
       "type": "feature",

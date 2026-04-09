@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { SubtitleTranslator } from "@/components/translator/subtitle-translator";
 import { useTranslation } from "@/lib/i18n";
+import { clientLogger } from '@/lib/client-logger';
 
 export default function SubtitlesPage() {
   const { t } = useTranslation();
@@ -39,8 +40,8 @@ export default function SubtitlesPage() {
         } else {
           translations.push(text);
         }
-      } catch (error) {
-        console.error("Translation error:", error);
+      } catch (error: unknown) {
+        clientLogger.error("Translation error:", error);
         translations.push(text);
       }
     }

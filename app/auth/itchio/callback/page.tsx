@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { signIn } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 export default function ItchioCallbackPage() {
   const { t } = useTranslation();
@@ -26,13 +27,13 @@ export default function ItchioCallbackPage() {
           router.push('/stores');
         } else {
           // Handle sign-in error
-          console.error('Failed to sign in with itch.io credentials:', result?.error);
+          clientLogger.error('Failed to sign in with itch.io credentials:', result?.error);
           router.push('/stores?error=ItchioAuthFailed');
         }
       });
     } else {
       // No access token found in URL
-      console.error('No access_token found in callback URL.');
+      clientLogger.error('No access_token found in callback URL.');
       router.push('/stores?error=ItchioAuthFailed');
     }
   }, [router]);

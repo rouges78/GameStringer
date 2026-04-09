@@ -35,6 +35,7 @@ import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
 import { getAvatarGradient, getInitials } from '@/lib/avatar-utils';
 import { AlphabetBackground } from '@/components/ui/alphabet-background';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileSelectorProps {
   onCreateProfile: () => void;
@@ -145,8 +146,8 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
         setIsUpdatingAvatar(false);
       };
       reader.readAsDataURL(file);
-    } catch (err) {
-      console.error('Avatar change error:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Avatar change error:', err);
       setAuthError(t('profile.avatarChangeError'));
       setIsUpdatingAvatar(false);
     }
@@ -164,7 +165,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
     const success = await authenticateProfile(profile.name, password);
     
     if (success) {
-      console.log('✅ Login successful for:', profile.name);
+      clientLogger.debug('✅ Login successful for:', profile.name);
       // Persist current profile for community chat bridge
       try {
         localStorage.setItem('gamestringer_current_profile', JSON.stringify({
@@ -535,7 +536,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
         authenticateProfile(profile.name, password).then(success => {
           setIsAutoLoggingIn(false);
           if (success) {
-            console.log('✅ Auto-login completed after language change');
+            clientLogger.debug('✅ Auto-login completed after language change');
           }
         });
       }

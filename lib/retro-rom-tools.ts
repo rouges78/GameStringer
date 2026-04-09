@@ -435,7 +435,7 @@ export function textToBytes(text: string, table: TableFile): Uint8Array | null {
   for (const char of text) {
     const byte = charToHex.get(char);
     if (byte === undefined) {
-      console.warn(`Character '${char}' not found in table`);
+      clientLogger.warn(`Character '${char}' not found in table`);
       return null;
     }
     bytes.push(byte);

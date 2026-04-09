@@ -524,10 +524,10 @@ export function parseJSON(content: string): ParseResult {
         flattenJSON(data, '', strings);
       }
     }
-  } catch (e) {
+  } catch (e: unknown) {
     // Invalid JSON, return empty result instead of throwing
     const errorMessage = e instanceof Error ? e.message : String(e);
-    console.warn(`JSON parse error: ${errorMessage}. Content snippet: ${content.substring(0, 50)}...`);
+    clientLogger.warn(`JSON parse error: ${errorMessage}. Content snippet: ${content.substring(0, 50)}...`);
   }
   
   return { format: 'json', strings, metadata };

@@ -4,6 +4,7 @@ import React from 'react';
 import { NotificationPriority } from '@/types/notifications';
 import OptimalPositioningAlgorithm, { PositionCandidate, ToastDimensions } from './optimal-positioning-algorithm';
 import { UIInterference } from './ui-interference-detector';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Gestisce lo stack di notifiche multiple con posizionamento ottimale
@@ -462,8 +463,8 @@ class NotificationStackManager {
     this.callbacks.forEach(callback => {
       try {
         callback(stats);
-      } catch (error) {
-        console.error('[NotificationStackManager] Errore nel callback:', error);
+      } catch (error: unknown) {
+        clientLogger.error('[NotificationStackManager] Errore nel callback:', error);
       }
     });
   }

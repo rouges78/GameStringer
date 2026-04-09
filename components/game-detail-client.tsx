@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
 
@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain, ChevronDown, Film
+  Trash2, ArrowLeft, Languages, Info, Sparkles, Edit3, Image as ImageIcon, Cpu, Map, Globe, Clock, Brain, ChevronDown, Film
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -31,6 +31,17 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 
 import AudioPatcher from '@/components/audio-patcher';
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
+import { clientLogger } from '@/lib/client-logger';
+import {
+  ScreenshotGallery,
+  ScreenshotLightbox,
+  AutoTranslateStepper,
+  CommunityTranslationsBanner,
+  GameUpdateBanner,
+  GameToolsPanel,
+  UnrealLocalizationPanel,
+  UnityAssetsPanel,
+} from '@/components/game-detail';
 
 // Game interface based on mock data structure
 interface Game {
@@ -56,24 +67,24 @@ interface Game {
   headerUrl?: string; // Alternative naming
   heroUrl?: string;
   coverImage?: string; // Alternative naming
-  screenshots?: string[] | any[];
+  screenshots?: string[] | { id: number; path_thumbnail: string; path_full: string }[];
   movies?: string[];
-  metacritic?: any;
-  achievements?: any;
+  metacritic?: { score: number; url?: string } | null;
+  achievements?: { total: number; highlighted?: { name: string; path: string }[] } | null;
   background?: string;
   website?: string;
   legalNotice?: string;
   recommendations?: number | { total: number };
   developers?: string[];
   publishers?: string[];
-  releaseDate?: any;
-  release_date?: any; // Alternative naming
+  releaseDate?: string | { coming_soon: boolean; date: string };
+  release_date?: string | { coming_soon: boolean; date: string }; // Alternative naming
   genres?: string[];
   categories?: string[];
   supportedLanguages?: string;
-  pcRequirements?: any;
+  pcRequirements?: { minimum?: string; recommended?: string } | null;
   isFree?: boolean;
-  dlc?: any;
+  dlc?: number[] | null;
   executableName?: string;
   install_dir?: string; // Alternative naming
   source?: string;
@@ -334,7 +345,7 @@ export default function GameDetailPage() {
       });
       setEngineInfo(result);
       setGame(prev => prev ? { ...prev, engine: result.engine } : null);
-    } catch (error) {
+    } catch (error: unknown) {
       // Fallback client-side: detection per nome
       const gameName = game.name || game.title;
       const fallbackEngine = detectEngineByName(gameName);
@@ -417,7 +428,7 @@ export default function GameDetailPage() {
       } else if (eng.includes('tyrano') || eng.includes('nw.js') || eng.includes('electron')) {
         // TyranoScript / NW.js / Electron: detect app.asar or app/ folder
         try {
-          const tyranoInfo: any = await invoke('detect_tyrano_game', { gamePath: game.installPath });
+          const tyranoInfo = await invoke<{ total_strings?: number; script_files?: string[]; engine_variant?: string }>('detect_tyrano_game', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || 'TyranoScript',
             method: 'tyranoscript',
@@ -434,8 +445,8 @@ export default function GameDetailPage() {
       } else if (eng.includes('rpg maker') || eng.includes('rpgmaker')) {
         // RPG Maker MV/MZ: JSON-based data files
         try {
-          const rpgInfo: any = await invoke('detect_rpgmaker_game', { gamePath: game.installPath });
-          const extraction: any = await invoke('extract_all_rpgmaker_strings', { gamePath: game.installPath });
+          const rpgInfo = await invoke<{ version?: string; data_files?: string[] }>('detect_rpgmaker_game', { gamePath: game.installPath });
+          const extraction = await invoke<{ total_count?: number }>('extract_all_rpgmaker_strings', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || `RPG Maker ${rpgInfo?.version || ''}`.trim(),
             method: 'rpgmaker',
@@ -450,7 +461,7 @@ export default function GameDetailPage() {
       } else if (eng.includes('wolf') && eng.includes('rpg')) {
         // Wolf RPG Editor
         try {
-          const wolfInfo: any = await invoke('detect_wolfrpg_game', { gamePath: game.installPath });
+          const wolfInfo = await invoke<{ encrypted?: boolean; data_files?: string[] }>('detect_wolfrpg_game', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || 'Wolf RPG',
             method: 'wolfrpg',
@@ -537,8 +548,8 @@ export default function GameDetailPage() {
           installPath = await invoke('find_game_install_path', { 
             installDir: game.install_dir || game.name || game.title
           });
-        } catch (e) {
-          console.error('Impossibile trovare cartella gioco:', e);
+        } catch (e: unknown) {
+          clientLogger.error('Impossibile trovare cartella gioco:', e);
           setPatchStatus({ success: false, message: 'Cartella del gioco non trovata' });
           setIsInstallingPatch(false);
           return;
@@ -547,16 +558,16 @@ export default function GameDetailPage() {
       
       // Cerca l'eseguibile principale nella cartella
       let exeName = game.detectedFiles?.find((f: string) => f.endsWith('.exe'));
-      console.log('[Patch] detectedFiles exe:', exeName);
+      clientLogger.debug('[Patch] detectedFiles exe:', exeName);
       if (!exeName) {
         try {
           const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: installPath });
-          console.log('[Patch] exeList trovati:', exeList);
+          clientLogger.debug('[Patch] exeList trovati:', exeList);
           if (exeList && exeList.length > 0) {
             exeName = exeList[0];
           }
-        } catch (e) {
-          console.warn('[Patch] Impossibile trovare eseguibili, uso nome gioco:', e);
+        } catch (e: unknown) {
+          clientLogger.warn('[Patch] Impossibile trovare eseguibili, uso nome gioco:', e);
         }
       }
       // Fallback al nome del gioco
@@ -564,8 +575,8 @@ export default function GameDetailPage() {
         exeName = `${(game.name || game.title || 'Game').replace(/[^a-zA-Z0-9]/g, '')}.exe`;
       }
       
-      console.log('[Patch] Installazione con:', { gamePath: installPath, gameExeName: exeName });
-      console.log('[Patch] Chiamata install_unity_autotranslator...');
+      clientLogger.debug('[Patch] Installazione con:', { gamePath: installPath, gameExeName: exeName });
+      clientLogger.debug('[Patch] Chiamata install_unity_autotranslator...');
       
       const result: unknown = await invoke('install_unity_autotranslator', { 
         gamePath: installPath,
@@ -574,7 +585,7 @@ export default function GameDetailPage() {
         translationMode: 'google' // Usa Google Translate per traduzione automatica
       });
       
-      console.log('[Patch] Risultato:', result);
+      clientLogger.debug('[Patch] Risultato:', result);
       
       setPatchStatus({
         success: result.success,
@@ -582,7 +593,7 @@ export default function GameDetailPage() {
       });
       
       if (result.success) {
-        console.log('[Patch] Installazione completata con successo!');
+        clientLogger.debug('[Patch] Installazione completata con successo!');
         // Traccia attività
         await activityHistory.trackPatch(
           game.name || game.title,
@@ -593,7 +604,7 @@ export default function GameDetailPage() {
         scanGameFiles();
       }
     } catch (error: unknown) {
-      console.error('Errore installazione patch:', error);
+      clientLogger.error('Errore installazione patch:', error);
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore sconosciuto durante l\'installazione'
@@ -616,7 +627,7 @@ export default function GameDetailPage() {
       
       setPatchStatus(result);
     } catch (error: unknown) {
-      console.error('Errore rimozione patch Unity:', error);
+      clientLogger.error('Errore rimozione patch Unity:', error);
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante la rimozione'
@@ -643,7 +654,7 @@ export default function GameDetailPage() {
         steamAppId: game.appid && game.appid > 0 ? String(game.appid) : null,
       });
       if (results?.length) setCommunityTranslations(results);
-    } catch (e) { console.warn('[GT.it]', e); }
+    } catch (e: unknown) { clientLogger.warn('[GT.it]', e); }
   };
 
   const installCommunityZip = async () => {
@@ -691,7 +702,7 @@ export default function GameDetailPage() {
         });
         setUpdateStatus((prev: unknown) => prev ? { ...prev, update_detected: false } : prev);
       }
-    } catch (e) { console.warn('[UpdateTracker]', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker]', e); }
   };
 
   const dismissUpdate = async () => {
@@ -704,7 +715,7 @@ export default function GameDetailPage() {
         patchIntact: updateStatus.patch_intact,
       });
       setUpdateStatus(prev => prev ? { ...prev, update_detected: false, known_build_id: prev.current_build_id } : prev);
-    } catch (e) { console.warn('[UpdateTracker] dismiss:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker] dismiss:', e); }
     finally { setIsDismissingUpdate(false); }
   };
 
@@ -715,8 +726,8 @@ export default function GameDetailPage() {
       await invoke<boolean>('remove_tracked_game', { appId: String(game.appid) });
       setUpdateStatus(null);
       toast.success('Monitoraggio disattivato per questo gioco');
-    } catch (e) {
-      console.warn('[UpdateTracker] untrack:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[UpdateTracker] untrack:', e);
       toast.error('Impossibile disattivare il monitoraggio');
     } finally {
       setIsUntrackingGame(false);
@@ -741,7 +752,7 @@ export default function GameDetailPage() {
     try {
       const s = await invoke<unknown>('get_unreal_localization_status', { gamePath: game.installPath });
       setUeLocStatus(s);
-    } catch (e) { console.warn('[UE] localization status:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UE] localization status:', e); }
   };
 
   // Migliora con AI per giochi Unreal: extract → Ollama batch → _P.pak
@@ -807,7 +818,7 @@ export default function GameDetailPage() {
       toast.success(`✅ ${result?.message || `PAK creato con ${translated.filter(e => e.translated !== e.original).length} stringhe`}`);
 
     } catch (e: unknown) {
-      console.error('[UE AI]', e);
+      clientLogger.error('[UE AI]', e);
       toast.error(`Errore traduzione UE: ${e?.toString?.() || 'sconosciuto'}`);
     } finally {
       setIsUeAiUpgrading(false);
@@ -828,8 +839,8 @@ export default function GameDetailPage() {
         last_used: string | null;
       }>('get_unreal_patch_status', { gamePath: game.installPath });
       setUnrealPatchStatus(status);
-    } catch (error) {
-      console.error('Errore caricamento stato patch Unreal:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore caricamento stato patch Unreal:', error);
     }
   };
 
@@ -860,7 +871,7 @@ export default function GameDetailPage() {
       );
       await loadUnrealPatchStatus();
     } catch (error: unknown) {
-      console.error('Errore installazione patch Unreal:', error);
+      clientLogger.error('Errore installazione patch Unreal:', error);
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante l\'installazione'
@@ -883,7 +894,7 @@ export default function GameDetailPage() {
       setPatchStatus({ success: true, message: result });
       setUnrealPatchStatus(null);
     } catch (error: unknown) {
-      console.error('Errore rimozione patch Unreal:', error);
+      clientLogger.error('Errore rimozione patch Unreal:', error);
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante la rimozione'
@@ -914,7 +925,7 @@ export default function GameDetailPage() {
       
       setPatchStatus({ success: true, message: 'Gioco avviato con traduttore!' });
     } catch (error: unknown) {
-      console.error('Errore avvio gioco:', error);
+      clientLogger.error('Errore avvio gioco:', error);
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore avvio gioco'
@@ -935,7 +946,7 @@ export default function GameDetailPage() {
       setXunityTranslations(entries);
       setShowTranslationEditor(true);
     } catch (error: unknown) {
-      console.error('Errore caricamento traduzioni:', error);
+      clientLogger.error('Errore caricamento traduzioni:', error);
       alert(typeof error === 'string' ? error : 'Errore caricamento traduzioni');
     } finally {
       setIsLoadingTranslations(false);
@@ -959,7 +970,7 @@ export default function GameDetailPage() {
       );
       setEditingEntry(null);
     } catch (error: unknown) {
-      console.error('Errore salvataggio:', error);
+      clientLogger.error('Errore salvataggio:', error);
       alert('Errore salvataggio traduzione');
     }
   };
@@ -971,21 +982,21 @@ export default function GameDetailPage() {
   );
 
   useEffect(() => {
-    console.log('[GameDetail] useEffect triggered — gameId:', gameId, 'ref:', gameDataLoadedRef.current, 'url:', window.location.search);
+    clientLogger.debug('[GameDetail] useEffect triggered — gameId:', gameId, 'ref:', gameDataLoadedRef.current, 'url:', window.location.search);
     if (!gameId) {
-      console.warn('[GameDetail] gameId è vuoto — stop loading');
+      clientLogger.warn('[GameDetail] gameId è vuoto — stop loading');
       setIsLoading(false);
       return;
     }
     if (gameDataLoadedRef.current === gameId) {
-      console.log('[GameDetail] Skipping fetch — already loaded for gameId:', gameId);
+      clientLogger.debug('[GameDetail] Skipping fetch — already loaded for gameId:', gameId);
       return;
     }
     gameDataLoadedRef.current = gameId;
 
     // Safety timeout: se dopo 25s isLoading è ancora true, forza false
     const safetyTimer = setTimeout(() => {
-      console.warn('[GameDetail] Safety timeout raggiunto — forzo isLoading=false');
+      clientLogger.warn('[GameDetail] Safety timeout raggiunto — forzo isLoading=false');
       setIsLoading(false);
     }, 25000);
 
@@ -997,8 +1008,8 @@ export default function GameDetailPage() {
             invoke<T>(cmd, args),
             new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`Timeout ${cmd} (${timeoutMs}ms)`)), timeoutMs))
           ]);
-        } catch (e) {
-          console.warn(`[GameDetail] ${cmd}:`, e);
+        } catch (e: unknown) {
+          clientLogger.warn(`[GameDetail] ${cmd}:`, e);
           return null;
         }
       };
@@ -1045,7 +1056,7 @@ export default function GameDetailPage() {
               if (foundAppId && foundAppId > 0) appId = foundAppId;
             }
           }
-          console.log('[GameDetail] appId:', appId, 'gameId:', gameId);
+          clientLogger.debug('[GameDetail] appId:', appId, 'gameId:', gameId);
           
           // === FASE 1: Carica Steam API + install path IN PARALLELO (max 8s) ===
           const [steamApiData, installPathResult] = await Promise.all([
@@ -1136,7 +1147,7 @@ export default function GameDetailPage() {
             is_free: steamApiData?.is_free || false,
           };
 
-          console.log('[GameDetail] ===== GAME LOADED =====', enhancedGame.title);
+          clientLogger.debug('[GameDetail] ===== GAME LOADED =====', enhancedGame.title);
           setGame(enhancedGame);
           setSteamDetails(steamApiData);
           setIsLoading(false); // UI visibile SUBITO
@@ -1176,8 +1187,8 @@ export default function GameDetailPage() {
             )).then(results => setDlcGames(results.filter(Boolean)));
           }
           return; // isLoading già settato a false sopra
-        } catch (error) {
-          console.error('Errore:', error);
+        } catch (error: unknown) {
+          clientLogger.error('Errore:', error);
         } finally {
           clearTimeout(safetyTimer);
           setIsLoading(false);
@@ -1248,8 +1259,8 @@ export default function GameDetailPage() {
         setGame((prev: unknown) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         setTranslatedDescription(desc);
       }
-    } catch (e) {
-      console.warn('[GameDetail] Steam description fetch failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[GameDetail] Steam description fetch failed:', e);
     }
   };
 
@@ -1261,21 +1272,21 @@ export default function GameDetailPage() {
       // NON usare game.appid perché è 0 per giochi GOG
       const gogId = gameId.startsWith('gog_') ? gameId.replace('gog_', '') 
         : (game.storeId?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '');
-      console.log(`[GameDetail] GOG fetch: gameId=${gameId}, gogId=${gogId}, title=${game.title || game.name}`);
+      clientLogger.debug(`[GameDetail] GOG fetch: gameId=${gameId}, gogId=${gogId}, title=${game.title || game.name}`);
       if (!gogId || gogId === '0') return;
       
       const details = await invoke<unknown>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
-      console.log(`[GameDetail] GOG details response:`, details);
+      clientLogger.debug(`[GameDetail] GOG details response:`, details);
       if (details?.description) {
         const desc = details.description.replace(/<[^>]*>?/gm, '');
         setGame((prev: unknown) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         translateDescription(desc);
-        console.log(`[GameDetail] ✅ GOG description loaded for ${game.title || game.name}`);
+        clientLogger.debug(`[GameDetail] ✅ GOG description loaded for ${game.title || game.name}`);
       } else {
-        console.warn(`[GameDetail] GOG details found but no description field:`, Object.keys(details || {}));
+        clientLogger.warn(`[GameDetail] GOG details found but no description field:`, Object.keys(details || {}));
       }
-    } catch (e) {
-      console.warn('[GameDetail] GOG description fetch failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[GameDetail] GOG description fetch failed:', e);
     }
   };
 
@@ -1290,8 +1301,8 @@ export default function GameDetailPage() {
         try {
           const settings = JSON.parse(savedSettings);
           apiKey = settings?.integrations?.steamGridDbApiKey || null;
-        } catch (e) {
-          console.warn('[GameDetail] Errore parsing impostazioni:', e);
+        } catch (e: unknown) {
+          clientLogger.warn('[GameDetail] Errore parsing impostazioni:', e);
         }
       }
       
@@ -1304,11 +1315,11 @@ export default function GameDetailPage() {
       if (result) {
         setFallbackImage(result);
         coverFound = true;
-        console.log('[GameDetail] SteamGridDB fallback:', result);
+        clientLogger.debug('[GameDetail] SteamGridDB fallback:', result);
         // Salva in cache per la libreria
         const cacheId = game.appid ? String(game.appid) : (game.id || game.title);
         await invoke('save_cover_cache', { gameId: cacheId, imageUrl: result });
-        console.log('[GameDetail] Cover salvata in cache:', cacheId);
+        clientLogger.debug('[GameDetail] Cover salvata in cache:', cacheId);
       } else if (game.appid && game.appid > 0) {
         // Fallback: scraping pagina Steam Store per og:image
         try {
@@ -1316,12 +1327,12 @@ export default function GameDetailPage() {
           if (storeImage) {
             setFallbackImage(storeImage);
             coverFound = true;
-            console.log('[GameDetail] Steam Store scraping fallback:', storeImage);
+            clientLogger.debug('[GameDetail] Steam Store scraping fallback:', storeImage);
             const cacheId = String(game.appid);
             await invoke('save_cover_cache', { gameId: cacheId, imageUrl: storeImage });
           }
         } catch (e2) {
-          console.warn('[GameDetail] Steam Store scraping failed:', e2);
+          clientLogger.warn('[GameDetail] Steam Store scraping failed:', e2);
         }
       }
       // Fallback GOG: usa API pubblica GOG per copertina
@@ -1332,17 +1343,17 @@ export default function GameDetailPage() {
             const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId, gameName: game.title || game.name || null });
             if (gogCover) {
               setFallbackImage(gogCover);
-              console.log('[GameDetail] ✅ GOG API cover:', gogCover);
+              clientLogger.debug('[GameDetail] ✅ GOG API cover:', gogCover);
               const cacheId = game.id || gameId;
               await invoke('save_cover_cache', { gameId: cacheId, imageUrl: gogCover });
             }
           }
         } catch (e3) {
-          console.warn('[GameDetail] GOG API cover failed:', e3);
+          clientLogger.warn('[GameDetail] GOG API cover failed:', e3);
         }
       }
-    } catch (e) {
-      console.warn('[GameDetail] SteamGridDB fallback failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[GameDetail] SteamGridDB fallback failed:', e);
     }
   };
 
@@ -1357,8 +1368,8 @@ export default function GameDetailPage() {
       if (result?.translated_text && !result.translated_text.includes('MYMEMORY WARNING')) {
         setTranslatedDescription(result.translated_text);
       }
-    } catch (error) {
-      console.warn('Traduzione descrizione non disponibile:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('Traduzione descrizione non disponibile:', error);
       // Fallback: mostra originale
     }
   };
@@ -1389,7 +1400,7 @@ export default function GameDetailPage() {
       }
     } catch (error: unknown) {
       clearInterval(progressInterval);
-      console.error('[GameDetail] Errore scansione:', error);
+      clientLogger.error('[GameDetail] Errore scansione:', error);
       toast.error(`Errore scansione: ${error}`);
     } finally {
       setTimeout(() => {
@@ -1437,8 +1448,8 @@ export default function GameDetailPage() {
           onClick: () => startAutoTranslate(),
         },
       });
-    } catch (e) {
-      console.warn('[StringIt] cache check failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[StringIt] cache check failed:', e);
       // Fallback: parti diretto se il check fallisce
       startAutoTranslate();
     }
@@ -1591,7 +1602,7 @@ export default function GameDetailPage() {
       });
 
     } catch (error: unknown) {
-      console.error('[AutoTranslate] Workflow execution failed:', error);
+      clientLogger.error('[AutoTranslate] Workflow execution failed:', error);
       setAutoTranslateError(error?.toString?.() || 'Errore durante l\'esecuzione del workflow');
       toast.error('❌ Errore durante la traduzione automatica');
       // Cleanup workflow listener on error too
@@ -1669,10 +1680,10 @@ export default function GameDetailPage() {
       });
 
       toast.success(`✅ Traduzione AI completata! ${translated.filter(e => e.translated !== e.original).length} stringhe scritte.`);
-      console.log('[AiUpgrade] File scritto:', resultPath);
+      clientLogger.debug('[AiUpgrade] File scritto:', resultPath);
 
     } catch (e: unknown) {
-      console.error('[AiUpgrade] Errore:', e);
+      clientLogger.error('[AiUpgrade] Errore:', e);
       toast.error(`Errore traduzione AI: ${e?.toString?.() || 'sconosciuto'}`);
     } finally {
       setIsAiUpgrading(false);
@@ -2102,186 +2113,15 @@ export default function GameDetailPage() {
 
           {/* ═══ AUTO-TRANSLATE STEPPER PANEL ═══ */}
           {autoTranslateActive && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="rounded-xl border border-indigo-500/20 bg-gradient-to-b from-indigo-950/40 to-[#0e1419] overflow-hidden"
-            >
-              <div className="max-w-[800px] mx-auto px-6 py-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-indigo-400" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
-                    <span className="text-2xs text-indigo-400/70">{`String it! → ${currentFlag.label}`}</span>
-                  </div>
-                  {autoTranslateSteps.every(s => s.status === 'done') && (
-                    <button className="ml-auto text-micro font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
-                      onClick={() => setAutoTranslateActive(false)}
-                    >
-                      {t('gameDetails.close') || 'Close'}
-                    </button>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  {autoTranslateSteps.map((step, i) => (
-                    <div key={i} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ${
-                      step.status === 'running' ? 'bg-indigo-500/10 border border-indigo-500/20' :
-                      step.status === 'done' ? 'bg-white/[0.02]' :
-                      step.status === 'error' ? 'bg-red-500/10 border border-red-500/20' :
-                      'opacity-40'
-                    }`}>
-                      <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-                        {step.status === 'running' && <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" />}
-                        {step.status === 'done' && <CheckCircle className="h-4 w-4 text-emerald-400" />}
-                        {step.status === 'error' && <AlertTriangle className="h-4 w-4 text-red-400" />}
-                        {step.status === 'pending' && <div className="w-2 h-2 rounded-full bg-slate-600" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className={`text-[11px] font-semibold block ${
-                          step.status === 'running' ? 'text-indigo-300' :
-                          step.status === 'done' ? 'text-slate-300' :
-                          step.status === 'error' ? 'text-red-300' :
-                          'text-slate-600'
-                        }`}>{step.label}</span>
-                        {step.detail && (
-                          <span className={`text-micro block mt-0.5 ${
-                            step.status === 'running' ? 'text-indigo-400/60' :
-                            step.status === 'done' ? 'text-slate-500' :
-                            'text-red-400/60'
-                          }`}>{step.detail}</span>
-                        )}
-                      </div>
-                      {step.status === 'running' && (
-                        <div className="w-16 h-1 rounded-full bg-slate-800 overflow-hidden">
-                          <div className="h-full bg-indigo-500 rounded-full animate-pulse" style={{ width: '60%' }} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {autoTranslateError && (
-                  <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-2xs text-red-300">
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                    <span>{autoTranslateError}</span>
-                    <button className="ml-auto text-micro font-bold text-red-400 hover:text-red-300 uppercase tracking-wider" onClick={() => setAutoTranslateActive(false)}>Chiudi</button>
-                  </div>
-                )}
-
-                {/* ═══ POST-TRANSLATION COMPLETION WIZARD ═══ */}
-                {autoTranslateResult && autoTranslateSteps.every(s => s.status === 'done') && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    className="mt-4 rounded-xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/50 overflow-hidden"
-                  >
-                    {/* Summary Header */}
-                    <div className="px-5 py-4 border-b border-emerald-500/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                          <CheckCircle className="h-5 w-5 text-emerald-400" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-sm font-bold text-emerald-300">
-                            Traduzione completata al {(autoTranslateResult.successRate * 100).toFixed(0)}%
-                            {autoTranslateResult.errors === 0 ? ' con 0 errori' : ` con ${autoTranslateResult.errors} errori`}
-                          </h3>
-                          <p className="text-2xs text-slate-400 mt-0.5">
-                            {autoTranslateResult.stringsTranslated > 0 && `${autoTranslateResult.stringsTranslated} stringhe tradotte | `}
-                            Engine: {autoTranslateResult.engine} |
-                            Tempo: {autoTranslateResult.duration.toFixed(1)} min |
-                            Lingua: {autoTranslateResult.targetLang.toUpperCase()} |
-                            {autoTranslateResult.deliverables} file generati
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Prompt */}
-                    <div className="px-5 py-4">
-                      <p className="text-xs text-slate-300 mb-4 font-medium">Cosa vuoi fare ora?</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {/* Option 1: Review Translations */}
-                        <button
-                          onClick={() => {
-                            setAutoTranslateActive(false);
-                            setAutoTranslateResult(null);
-                            // Scroll to translation section or open editor inline
-                            const translationSection = document.querySelector('[data-tutorial="translation-section"]');
-                            if (translationSection) {
-                              translationSection.scrollIntoView({ behavior: 'smooth' });
-                            } else {
-                              window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}`;
-                            }
-                          }}
-                          className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 hover:border-indigo-500/40 transition-all text-center"
-                        >
-                          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Edit3 className="h-4 w-4 text-indigo-400" />
-                          </div>
-                          <span className="text-xs font-bold text-indigo-300">Rivedi Traduzioni</span>
-                          <span className="text-2xs text-slate-500 leading-tight">Controlla e modifica le stringhe tradotte nell'editor</span>
-                        </button>
-
-                        {/* Option 2: Test Game */}
-                        <button
-                          onClick={async () => {
-                            try {
-                              if (game.appid) {
-                                window.open(`steam://run/${game.appid}`, '_blank');
-                                toast.info('Avvio gioco da Steam per test...');
-                              } else if (game.installPath) {
-                                const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                                await tauriInvoke('open_path', { path: game.installPath });
-                                toast.info('Cartella gioco aperta — avvia il gioco per testare');
-                              }
-                            } catch {
-                              toast.error('Impossibile avviare il gioco');
-                            }
-                          }}
-                          className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-center"
-                        >
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Play className="h-4.5 w-4.5 text-emerald-400" />
-                          </div>
-                          <span className="text-xs font-bold text-emerald-300">Testa il Gioco</span>
-                          <span className="text-2xs text-slate-500 leading-tight">Avvia il gioco per verificare le traduzioni in-game</span>
-                        </button>
-
-                        {/* Option 3: Create Patch */}
-                        <button
-                          onClick={async () => {
-                            try {
-                              const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                              toast.info('Creazione patch in corso...');
-                              const patchPath = await tauriInvoke<string>('export_translation_patch', {
-                                installPath: game.installPath,
-                                gameTitle: game.title || game.name || 'Game',
-                                targetLang: autoTranslateResult?.targetLang || 'it',
-                              });
-                              toast.success('Patch creata!');
-                              await tauriInvoke('open_path', { path: patchPath }).catch(() => {});
-                            } catch (e) {
-                              toast.error(`Errore creazione patch: ${e}`);
-                            }
-                          }}
-                          className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 transition-all text-center"
-                        >
-                          <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Package className="h-4.5 w-4.5 text-amber-400" />
-                          </div>
-                          <span className="text-xs font-bold text-amber-300">Crea Patch</span>
-                          <span className="text-2xs text-slate-500 leading-tight">Esporta un pacchetto pronto da condividere nella community</span>
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
+            <AutoTranslateStepper
+              steps={autoTranslateSteps}
+              error={autoTranslateError}
+              result={autoTranslateResult}
+              currentFlagLabel={currentFlag.label}
+              onClose={() => setAutoTranslateActive(false)}
+              onClearResult={() => setAutoTranslateResult(null)}
+              game={{ title: game.title, name: game.name, installPath: game.installPath, appid: game.appid }}
+            />
           )}
 
           {/* Descrizione */}
@@ -2300,24 +2140,10 @@ export default function GameDetailPage() {
           <HltbStats gameName={game.title || game.name || ''} />
 
           {/* ═══ SCREENSHOT GALLERY — horizontal scroll ═══ */}
-          {game.screenshots?.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><ImageIcon className="h-3 w-3" /> Screenshot</span>
-                <span className="text-2xs text-slate-600">{game.screenshots.length} immagini</span>
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar snap-x snap-mandatory">
-                {game.screenshots.slice(0, 12).map((screenshot: unknown, index: number) => (
-                  <div key={index} className="relative shrink-0 w-[280px] aspect-video bg-slate-950 rounded-xl overflow-hidden cursor-pointer ring-1 ring-white/[0.06] hover:ring-2 hover:ring-indigo-500/40 transition-all duration-300 group snap-start"
-                    onClick={() => setSelectedScreenshotIndex(index)}
-                  >
-                    <img src={screenshot.path_full || screenshot.path_thumbnail} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 pointer-events-none" />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          <ScreenshotGallery
+            screenshots={game.screenshots || []}
+            onScreenshotClick={setSelectedScreenshotIndex}
+          />
 
           {/* Scan progress */}
           {isScanning && (
@@ -2345,7 +2171,7 @@ export default function GameDetailPage() {
                       try {
                         const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
                         if (exeList?.length > 0) await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                      } catch (e) { console.error('[GameDetail] Errore avvio:', e); }
+                      } catch (e: unknown) { clientLogger.error('[GameDetail] Errore avvio:', e); }
                     }
                   } else if (route === '/unity-patcher') { handleInstallUnityPatch(); }
                   else { router.push(route); }
@@ -2355,460 +2181,86 @@ export default function GameDetailPage() {
           )}
 
           {/* ═══ BANNER TRADUZIONE COMUNITARIA (gamestranslator.it) ═══ */}
-          {communityTranslations.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
-            >
-              <div className="flex items-start gap-2.5">
-                <Globe className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-semibold text-emerald-300">
-                    Traduzione italiana disponibile su GameTranslator.it
-                  </p>
-                  <div className="mt-1.5 space-y-1.5">
-                    {communityTranslations.slice(0, 3).map((tr) => (
-                      <div key={tr.id} className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] text-[#c6d4df] font-medium truncate max-w-[220px]">{tr.title}</span>
-                        {tr.state && (
-                          <span className={`text-micro font-bold px-1.5 py-0.5 rounded-full border ${
-                            tr.state === '100%' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
-                            : 'bg-amber-500/20 border-amber-500/30 text-amber-300'
-                          }`}>{tr.state}</span>
-                        )}
-                        {tr.revision && <span className="text-micro text-[#8f98a0]">rev. {tr.revision}</span>}
-                        {tr.author && <span className="text-micro text-[#8f98a0]">by {tr.author}</span>}
-                        <div className="flex items-center gap-1 ml-auto shrink-0">
-                          <button
-                            className="h-5 px-2 rounded text-2xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 transition-all flex items-center gap-1"
-                            onClick={() => invoke('open_gamestranslator_page', { url: tr.page_url }).catch(() => window.open(tr.page_url, '_blank'))}
-                          >
-                            <ExternalLink className="h-2.5 w-2.5" /> Scarica
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {game.installPath && (
-                    <button
-                      className="mt-2 h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all flex items-center gap-1.5"
-                      onClick={installCommunityZip}
-                      disabled={isInstallingCommunityZip}
-                    >
-                      {isInstallingCommunityZip ? <Loader2 className="h-3 w-3 animate-spin" /> : <FolderOpen className="h-3 w-3" />}
-                      Installa ZIP scaricato...
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
+          <CommunityTranslationsBanner
+            translations={communityTranslations}
+            installPath={game.installPath}
+            isInstallingZip={isInstallingCommunityZip}
+            onInstallZip={installCommunityZip}
+          />
 
           {/* ═══ BANNER AGGIORNAMENTO GIOCO ═══ */}
           {updateStatus && (updateStatus.update_detected || (!updateStatus.patch_intact && updateStatus.patch_type !== 'none')) && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className={`rounded-xl border p-3 flex items-start gap-3 ${
-                !updateStatus.patch_intact && updateStatus.patch_type !== 'none'
-                  ? 'bg-red-500/[0.08] border-red-500/25'
-                  : 'bg-amber-500/[0.08] border-amber-500/25'
-              }`}
-            >
-              <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${!updateStatus.patch_intact && updateStatus.patch_type !== 'none' ? 'text-red-400' : 'text-amber-400'}`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-[12px] font-semibold ${!updateStatus.patch_intact && updateStatus.patch_type !== 'none' ? 'text-red-300' : 'text-amber-300'}`}>
-                  {!updateStatus.patch_intact && updateStatus.patch_type !== 'none'
-                    ? 'Patch di traduzione danneggiata'
-                    : 'Gioco aggiornato — verifica traduzione'}
-                </p>
-                <p className="text-[11px] text-[#8f98a0] mt-0.5">{updateStatus.message}</p>
-                {updateStatus.patch_details.length > 0 && (
-                  <div className="mt-1.5 space-y-0.5">
-                    {updateStatus.patch_details.map((d, i) => (
-                      <p key={i} className="text-2xs text-[#8f98a0]/70">{d}</p>
-                    ))}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  {/* Riapplica patch */}
-                  {updateStatus.patch_type === 'bepinex' && game.installPath && (
-                    <button
-                      className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/20 transition-all flex items-center gap-1"
-                      onClick={async () => {
-                        try {
-                          let exeName = '';
-                          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath }).catch(() => [] as string[]);
-                          if (exeList?.length) exeName = exeList[0];
-                          await invoke('install_unity_autotranslator', { gamePath: game.installPath, gameExeName: exeName, targetLang: targetLang || 'it', translationMode: 'google' });
-                          toast.success('Patch BepInEx riapplicata!');
-                          await loadUpdateStatus();
-                        } catch (e: unknown) { toast.error(String(e)); }
-                      }}
-                    >
-                      <Download className="h-3 w-3" /> Riapplica BepInEx
-                    </button>
-                  )}
-                  {updateStatus.patch_type === 'unreal_pak' && game.installPath && (
-                    <button
-                      className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/20 transition-all flex items-center gap-1"
-                      onClick={upgradeUEWithAI}
-                      disabled={isUeAiUpgrading}
-                    >
-                      <Cpu className="h-3 w-3" /> Rigenera _P.pak
-                    </button>
-                  )}
-                  {/* Segna come visto */}
-                  <button
-                    className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all"
-                    onClick={dismissUpdate}
-                    disabled={isDismissingUpdate}
-                  >
-                    {isDismissingUpdate ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Segna come visto
-                  </button>
-                  {/* Smetti di monitorare */}
-                  <button
-                    className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-300/80 hover:text-red-200 border border-red-500/20 transition-all"
-                    onClick={untrackGame}
-                    disabled={isUntrackingGame}
-                    title="Rimuovi questo gioco dal monitoraggio aggiornamenti/patch"
-                  >
-                    {isUntrackingGame ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Smetti di monitorare
-                  </button>
-                </div>
-              </div>
-              <span className="text-micro font-mono text-[#8f98a0]/50 shrink-0">build {updateStatus.current_build_id}</span>
-            </motion.div>
+            <GameUpdateBanner
+              updateStatus={updateStatus}
+              installPath={game.installPath}
+              targetLang={targetLang}
+              isDismissing={isDismissingUpdate}
+              isUntracking={isUntrackingGame}
+              isUeAiUpgrading={isUeAiUpgrading}
+              onDismiss={dismissUpdate}
+              onUntrack={untrackGame}
+              onUpgradeUEWithAI={upgradeUEWithAI}
+            />
           )}
 
           {/* ═══ DETTAGLI & STRUMENTI ═══ */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="space-y-3"
-          >
-            {/* ── ROW 1: Quick tools ── */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] border border-[#1a9fff]/20 transition-all" onClick={scanGameFiles} disabled={isScanning}>
-                {isScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} {t('gameDetails.scan')}
-              </button>
-              {(engineInfo?.engine?.toLowerCase().includes('unreal') || game.engine?.toLowerCase().includes('unreal')) && game.installPath && (
-                <button
-                  className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
-                  onClick={upgradeUEWithAI}
-                  disabled={isUeAiUpgrading}
-                  title="Estrae stringhe .locres, le traduce con Ollama AI e crea un _P.pak di override"
-                >
-                  {isUeAiUpgrading ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ueAiProgress ? `${ueAiProgress.current}/${ueAiProgress.total}` : '...'}</>
-                  ) : (
-                    <><Cpu className="h-3.5 w-3.5" />Migliora con AI UE</>
-                  )}
-                </button>
-              )}
-              {(engineInfo?.engine?.toLowerCase().includes('unity') || game.engine?.toLowerCase().includes('unity')) && game.installPath && (
-                <button
-                  className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all disabled:opacity-50"
-                  onClick={upgradeWithAI}
-                  disabled={isAiUpgrading}
-                  title="Traduce le stringhe catturate da XUnity con Ollama AI e scrive il file di traduzione statica"
-                >
-                  {isAiUpgrading ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      {aiUpgradeProgress ? `${aiUpgradeProgress.current}/${aiUpgradeProgress.total}` : '...'}
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-3.5 w-3.5" />
-                      Migliora con AI
-                    </>
-                  )}
-                </button>
-              )}
-              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-[#2a475e]/20 hover:bg-[#2a475e]/40 text-[#8f98a0] border border-[#2a475e]/30 transition-all" onClick={() => setIsCoverPickerOpen(true)}>
-                <ImageIcon className="h-3.5 w-3.5" /> Cover
-              </button>
-              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={() => setShowGspackExport(true)}>
-                <Package className="h-3 w-3" /> {t('gspack.exportBtn')}
-              </button>
-              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all" onClick={() => setShowGspackImport(true)}>
-                <Upload className="h-3 w-3" /> {t('gspack.importBtn')}
-              </button>
-              {game.platform === 'Steam' && game.appid > 0 && (
-                <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-[#67c1f5] hover:bg-[#2a475e]/30 transition-all">
-                  <Globe className="h-3 w-3" /> Steam
-                </a>
-              )}
-              {game.installPath && (
-                <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
-                  onClick={async () => { try { await invoke('open_folder_in_explorer', { folderPath: game.installPath }); } catch { toast.error('Impossibile aprire la cartella'); } }}
-                >
-                  <FolderOpen className="h-3 w-3" /> Cartella
-                </button>
-              )}
+          <GameToolsPanel
+            game={game}
+            gameId={gameId}
+            engineInfo={engineInfo}
+            patchStatus={patchStatus}
+            isScanning={isScanning}
+            isInstallingPatch={isInstallingPatch}
+            isAiUpgrading={isAiUpgrading}
+            isUeAiUpgrading={isUeAiUpgrading}
+            aiUpgradeProgress={aiUpgradeProgress}
+            ueAiProgress={ueAiProgress}
+            dlcGames={dlcGames}
+            onScan={scanGameFiles}
+            onInstallUnityPatch={handleInstallUnityPatch}
+            onInstallUnrealPatch={handleInstallUnrealPatch}
+            onUpgradeWithAI={upgradeWithAI}
+            onUpgradeUEWithAI={upgradeUEWithAI}
+            onOpenCoverPicker={() => setIsCoverPickerOpen(true)}
+            onOpenGspackExport={() => setShowGspackExport(true)}
+            onOpenGspackImport={() => setShowGspackImport(true)}
+          />
+
+          {/* ── Unreal Localization Panel ── */}
+          {(game.engine === 'Unreal Engine' || engineInfo?.engine?.toLowerCase().includes('unreal')) && game.installPath && (
+            <UnrealLocalizationPanel
+              installPath={game.installPath}
+              ueLocStatus={ueLocStatus}
+              showPanel={showUeLocPanel}
+              isUeAiUpgrading={isUeAiUpgrading}
+              ueAiProgress={ueAiProgress}
+              onTogglePanel={() => setShowUeLocPanel(v => !v)}
+              onLoadStatus={loadUeLocStatus}
+              onUpgradeUEWithAI={upgradeUEWithAI}
+            />
+          )}
+
+          {/* ── Unity Assets Panel ── */}
+          {(game.engine === 'Unity' || engineInfo?.engine?.toLowerCase().includes('unity')) && game.installPath && (
+            <UnityAssetsPanel
+              installPath={game.installPath}
+              uabeaStatus={uabeaStatus}
+              assetsFiles={assetsFiles}
+              showPanel={showAssetsPanel}
+              isDownloadingUabea={isDownloadingUabea}
+              onTogglePanel={() => setShowAssetsPanel(v => !v)}
+              onStatusLoaded={setUabeaStatus}
+              onAssetsLoaded={setAssetsFiles}
+              onDownloadingChange={setIsDownloadingUabea}
+            />
+          )}
+
+          {/* ── GameMaker Translator ── */}
+          {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
+            <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
+              <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name} />
             </div>
-
-            {/* ── ROW 2: File rilevati + Patch status ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {/* File traducibili */}
-              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabFiles')}</span>
-                  {(game.detectedFiles?.length || 0) > 0 && (
-                    <span className="text-2xs font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles.length} file</span>
-                  )}
-                </div>
-                {(game.detectedFiles?.length || 0) > 0 ? (
-                  <div className="max-h-[140px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
-                    {(game.detectedFiles || []).map((file: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] hover:bg-[#2a475e]/20 transition-all group cursor-pointer"
-                        onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
-                        <FileText className="h-3 w-3 text-[#8f98a0]/40 shrink-0" />
-                        <span className="truncate flex-1 text-[#8f98a0] group-hover:text-[#c6d4df] transition-colors">{file}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-[11px] text-[#8f98a0]/60 mb-2">{t('gameDetails.noFilesDetected')}</p>
-                    <button className="text-2xs font-semibold text-[#67c1f5] hover:text-[#1a9fff] transition-colors" onClick={scanGameFiles} disabled={isScanning}>
-                      {t('gameDetails.searchTranslatableFiles')}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Patch & Engine info */}
-              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
-                <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5 mb-2"><Zap className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabPatch')}</span>
-                <div className="space-y-2">
-                  {game.engine === 'Unity' && (
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-sky-500/[0.06] border border-sky-500/15">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-3.5 w-3.5 text-sky-400" />
-                        <div><span className="text-[11px] font-bold text-sky-300">XUnity AutoTranslator</span></div>
-                      </div>
-                      <Button size="xs" className="text-micro font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
-                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
-                      </Button>
-                    </div>
-                  )}
-                  {game.engine === 'Unreal Engine' && (
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-violet-500/[0.06] border border-violet-500/15">
-                      <div className="flex items-center gap-2">
-                        <Cpu className="h-3.5 w-3.5 text-violet-400" />
-                        <div><span className="text-[11px] font-bold text-violet-300">Unreal Translator</span></div>
-                      </div>
-                      <Button size="xs" className="text-micro font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
-                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
-                      </Button>
-                    </div>
-                  )}
-                  {patchStatus && (
-                    <div className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${patchStatus.success ? 'bg-emerald-500/[0.06] border border-emerald-500/15 text-emerald-300' : 'bg-red-500/[0.06] border border-red-500/15 text-red-300'}`}>
-                      {patchStatus.success ? <CheckCircle className="h-3.5 w-3.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
-                      <span className="font-medium">{patchStatus.message}</span>
-                    </div>
-                  )}
-
-                  {/* Info compatte */}
-                  <div className="space-y-1.5 pt-1 border-t border-[#2a475e]/30">
-                    {game.developers?.[0] && (
-                      <div className="flex items-center justify-between text-2xs">
-                        <span className="text-[#8f98a0]/60">Sviluppatore</span>
-                        <span className="text-[#c6d4df] font-medium">{game.developers.join(', ')}</span>
-                      </div>
-                    )}
-                    {(game.release_date?.date || game.releaseDate) && (
-                      <div className="flex items-center justify-between text-2xs">
-                        <span className="text-[#8f98a0]/60">Uscita</span>
-                        <span className="text-[#c6d4df] font-medium">{game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                      </div>
-                    )}
-                    {showEngine && (
-                      <div className="flex items-center justify-between text-2xs">
-                        <span className="text-[#8f98a0]/60">Engine</span>
-                        <span className="text-sky-400 font-bold flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {engineLabel}</span>
-                      </div>
-                    )}
-                    {game.metacritic?.score && (
-                      <div className="flex items-center justify-between text-2xs">
-                        <span className="text-[#8f98a0]/60">Metacritic</span>
-                        <a
-                          href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`font-bold hover:underline ${game.metacritic.score >= 80 ? 'text-emerald-400' : game.metacritic.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}
-                        >
-                          {game.metacritic.score}
-                        </a>
-                      </div>
-                    )}
-                    {game.playtime_forever > 0 && (
-                      <div className="flex items-center justify-between text-2xs">
-                        <span className="text-[#8f98a0]/60">Giocato</span>
-                        <span className="text-[#c6d4df] font-medium">{Math.round(game.playtime_forever / 60)}h</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* DLC compatti */}
-                  {dlcGames.length > 0 && (
-                    <div className="pt-1 border-t border-[#2a475e]/30">
-                      <span className="text-micro text-[#8f98a0]/60">DLC: {dlcGames.length}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ── ROW 3: Unreal Localization Panel ── */}
-            {(game.engine === 'Unreal Engine' || engineInfo?.engine?.toLowerCase().includes('unreal')) && game.installPath && (
-              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
-                    <Cpu className="h-3.5 w-3.5 text-violet-400" /> Unreal Localizzazione (.locres)
-                  </span>
-                  <button className="text-2xs font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
-                    onClick={async () => { setShowUeLocPanel(v => !v); if (!ueLocStatus) await loadUeLocStatus(); }}>
-                    {showUeLocPanel ? '▲ Chiudi' : '▼ Espandi'}
-                  </button>
-                </div>
-                {showUeLocPanel && (
-                  <div className="space-y-2">
-                    <div className={`flex items-center justify-between p-2 rounded-lg text-[11px] ${
-                      ueLocStatus?.has_gs_pak ? 'bg-emerald-500/[0.06] border border-emerald-500/20'
-                      : ueLocStatus?.has_locres ? 'bg-violet-500/[0.06] border border-violet-500/20'
-                      : 'bg-[#2a475e]/20 border border-[#2a475e]/30'
-                    }`}>
-                      <span className={ueLocStatus?.has_gs_pak ? 'text-emerald-300' : ueLocStatus?.has_locres ? 'text-violet-300' : 'text-[#8f98a0]'}>
-                        {ueLocStatus === null ? 'Caricamento...' : ueLocStatus.message}
-                      </span>
-                      {ueLocStatus?.has_gs_pak && (
-                        <button
-                          className="text-micro font-bold px-1.5 py-0.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all"
-                          onClick={async () => {
-                            try {
-                              await invoke('remove_unreal_translation', { gamePath: game.installPath });
-                              await loadUeLocStatus();
-                              toast.success('Patch rimossa');
-                            } catch (e: unknown) { toast.error(String(e)); }
-                          }}
-                        >Rimuovi</button>
-                      )}
-                    </div>
-                    {ueLocStatus?.has_locres && !ueLocStatus?.has_gs_pak && (
-                      <button
-                        className="w-full h-8 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
-                        onClick={upgradeUEWithAI}
-                        disabled={isUeAiUpgrading}
-                      >
-                        {isUeAiUpgrading ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" />{ueAiProgress ? `${ueAiProgress.current}/${ueAiProgress.total}` : '...'}</>) : (<><Zap className="h-3.5 w-3.5" />Migliora con AI — crea _P.pak</>)}
-                      </button>
-                    )}
-                    {ueLocStatus?.paks_dir && (
-                      <p className="text-2xs text-[#8f98a0]/60">Paks: {ueLocStatus.paks_dir}</p>
-                    )}
-                    <p className="text-2xs text-[#8f98a0]/50">Il _P.pak di override viene caricato automaticamente da UE4/UE5 senza modificare i file originali.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── ROW 3: UABEA Unity Assets (solo giochi Unity) ── */}
-            {(game.engine === 'Unity' || engineInfo?.engine?.toLowerCase().includes('unity')) && game.installPath && (
-              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
-                    <HardDrive className="h-3.5 w-3.5 text-amber-400" /> Unity Assets (.assets)
-                  </span>
-                  <button
-                    className="text-2xs font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
-                    onClick={async () => {
-                      setShowAssetsPanel(v => !v);
-                      if (!showAssetsPanel && !uabeaStatus) {
-                        try {
-                          const [status, files] = await Promise.all([
-                            invoke<unknown>('check_uabea_installed'),
-                            invoke<unknown[]>('find_unity_assets_files', { gamePath: game.installPath }),
-                          ]);
-                          setUabeaStatus(status);
-                          setAssetsFiles(files || []);
-                        } catch (e) { console.error('[UABEA]', e); }
-                      }
-                    }}
-                  >
-                    {showAssetsPanel ? '▲ Chiudi' : '▼ Espandi'}
-                  </button>
-                </div>
-
-                {showAssetsPanel && (
-                  <div className="space-y-2">
-                    {/* UABEA status */}
-                    <div className={`flex items-center justify-between p-2 rounded-lg text-[11px] ${uabeaStatus?.installed ? 'bg-emerald-500/[0.06] border border-emerald-500/20' : 'bg-amber-500/[0.06] border border-amber-500/20'}`}>
-                      <span className={uabeaStatus?.installed ? 'text-emerald-300' : 'text-amber-300'}>
-                        {uabeaStatus === null ? 'Verifica...' : uabeaStatus.installed ? '✓ UABEA installato' : '⚠ UABEA non installato'}
-                      </span>
-                      {!uabeaStatus?.installed && (
-                        <button
-                          className="text-2xs font-bold px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/20 transition-all disabled:opacity-50"
-                          disabled={isDownloadingUabea}
-                          onClick={async () => {
-                            setIsDownloadingUabea(true);
-                            try {
-                              await invoke('download_uabea');
-                              const status = await invoke<unknown>('check_uabea_installed');
-                              setUabeaStatus(status);
-                              toast.success('UABEA installato!');
-                            } catch (e: unknown) {
-                              toast.error(`Errore: ${e?.toString?.()}`);
-                            } finally { setIsDownloadingUabea(false); }
-                          }}
-                        >
-                          {isDownloadingUabea ? <Loader2 className="h-3 w-3 animate-spin inline" /> : <Download className="h-3 w-3 inline mr-1" />}
-                          Installa UABEA
-                        </button>
-                      )}
-                    </div>
-
-                    {/* File .assets trovati */}
-                    {assetsFiles.length > 0 ? (
-                      <div className="space-y-1">
-                        <span className="text-2xs text-[#8f98a0]/60">{assetsFiles.length} file .assets trovati</span>
-                        <div className="max-h-[120px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
-                          {assetsFiles.map((af: unknown, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/30 transition-all">
-                              <span className="text-[11px] text-[#c6d4df] truncate flex-1">{af.file_name}</span>
-                              <span className="text-2xs text-[#8f98a0]/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
-                              {uabeaStatus?.installed && (
-                                <button
-                                  className="ml-2 text-micro font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 transition-all shrink-0"
-                                  onClick={() => invoke('open_assets_with_uabea', { assetsFile: af.path }).catch(e => toast.error(String(e)))}
-                                >
-                                  Apri
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-[#8f98a0]/60 text-center py-2">Nessun file .assets trovato nella cartella del gioco</p>
-                    )}
-
-                    <p className="text-2xs text-[#8f98a0]/50">
-                      UABEA permette di tradurre testi e texture incorporati nei file .assets Unity (come il pacchetto immagini di Blue Prince).
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── ROW: GameMaker Translator (solo giochi GameMaker) ── */}
-            {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
-              <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
-                <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name} />
-              </div>
-            )}
-          </motion.div>
+          )}
         </div>
       </div>
 
@@ -2825,99 +2277,13 @@ export default function GameDetailPage() {
       )}
 
       {/* Screenshot Lightbox */}
-      {selectedScreenshotIndex !== null && game?.screenshots && typeof document !== 'undefined' && createPortal(
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center"
-          onClick={() => setSelectedScreenshotIndex(null)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setSelectedScreenshotIndex(null);
-            if (e.key === 'ArrowRight' && selectedScreenshotIndex < game.screenshots.length - 1) {
-              setSelectedScreenshotIndex(selectedScreenshotIndex + 1);
-            }
-            if (e.key === 'ArrowLeft' && selectedScreenshotIndex > 0) {
-              setSelectedScreenshotIndex(selectedScreenshotIndex - 1);
-            }
-          }}
-          tabIndex={0}
-          ref={(el) => el?.focus()}
-        >
-          {/* Container con immagine e controlli */}
-          <motion.div
-            key={selectedScreenshotIndex}
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.15 }}
-            className="relative flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Immagine con controlli attaccati */}
-            <div className="relative">
-              <img
-                src={game.screenshots[selectedScreenshotIndex]?.path_full || game.screenshots[selectedScreenshotIndex]?.path_thumbnail}
-                alt={`Screenshot ${selectedScreenshotIndex + 1}`}
-                className="max-w-[85vw] max-h-[75vh] object-contain rounded-lg shadow-xl"
-              />
-              
-              {/* X chiudi - angolo alto destra della foto */}
-              <button 
-                className="absolute -top-2 -right-2 w-7 h-7 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-slate-300 hover:text-white transition-all shadow-lg"
-                onClick={() => setSelectedScreenshotIndex(null)}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              
-              {/* Freccia sinistra - bordo sinistro della foto */}
-              {selectedScreenshotIndex > 0 && (
-                <button
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 flex items-center justify-center text-slate-300 hover:text-white transition-all"
-                  onClick={(e) => { e.stopPropagation(); setSelectedScreenshotIndex(selectedScreenshotIndex - 1); }}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Freccia destra - bordo destro della foto */}
-              {selectedScreenshotIndex < game.screenshots.length - 1 && (
-                <button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 flex items-center justify-center text-slate-300 hover:text-white transition-all"
-                  onClick={(e) => { e.stopPropagation(); setSelectedScreenshotIndex(selectedScreenshotIndex + 1); }}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            
-            {/* Thumbnails sotto */}
-            <div className="flex items-center gap-1.5 mt-3">
-              {game.screenshots.slice(0, 10).map((screenshot: unknown, index: number) => (
-                <button
-                  key={index}
-                  className={`w-12 h-7 rounded overflow-hidden transition-all border ${
-                    index === selectedScreenshotIndex 
-                      ? 'border-purple-500 scale-105' 
-                      : 'border-transparent opacity-50 hover:opacity-80'
-                  }`}
-                  onClick={(e) => { e.stopPropagation(); setSelectedScreenshotIndex(index); }}
-                >
-                  <img src={screenshot.path_thumbnail} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-            <div className="text-slate-500 text-xs mt-1.5">
-              {selectedScreenshotIndex + 1} / {game.screenshots.length}
-            </div>
-          </motion.div>
-        </motion.div>,
-        document.body
+      {selectedScreenshotIndex !== null && game?.screenshots && (
+        <ScreenshotLightbox
+          screenshots={game.screenshots}
+          selectedIndex={selectedScreenshotIndex}
+          onClose={() => setSelectedScreenshotIndex(null)}
+          onNavigate={setSelectedScreenshotIndex}
+        />
       )}
 
       {/* Cover Picker (Supporta giochi Steam e non-Steam) */}
@@ -2940,7 +2306,7 @@ export default function GameDetailPage() {
                     toast.success('Copertina aggiornata con successo');
                   });
                 })
-                .catch(err => console.error('Errore salvataggio cover:', err));
+                .catch(err => clientLogger.error('Errore salvataggio cover:', err));
             });
           }}
         />

@@ -348,8 +348,7 @@ export async function listInstalledModels(): Promise<OllamaModel[]> {
   const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error('Ollama non raggiungibile');
   const data = await res.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data.models || []).map((m: any) => ({
+  return (data.models || []).map((m: { name: string; size?: number; digest?: string; modified_at?: string; details?: unknown }) => ({
     name: m.name,
     size: m.size || 0,
     digest: m.digest || '',

@@ -360,8 +360,8 @@ class StringTagsManager {
       if (presetsData) {
         this.presets = JSON.parse(presetsData);
       }
-    } catch (error) {
-      console.error('[StringTags] Load failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[StringTags] Load failed:', error);
     }
   }
 
@@ -372,8 +372,8 @@ class StringTagsManager {
       localStorage.setItem(TAGS_KEY, JSON.stringify(Array.from(this.tags.values())));
       localStorage.setItem(TAGGED_STRINGS_KEY, JSON.stringify(Object.fromEntries(this.taggedStrings)));
       localStorage.setItem(PRESETS_KEY, JSON.stringify(this.presets));
-    } catch (error) {
-      console.error('[StringTags] Save failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[StringTags] Save failed:', error);
     }
   }
 
@@ -425,6 +425,7 @@ export const stringTagsManager = new StringTagsManager();
 
 // React hook
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useStringTags(stringId?: string) {
   const [, forceUpdate] = useState({});

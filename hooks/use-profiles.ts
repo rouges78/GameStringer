@@ -12,6 +12,7 @@ import {
 import { ensureArray } from '@/lib/array-utils';
 import { profileCache } from '@/lib/profile-cache';
 import { profilePreloader } from '@/lib/profile-preloader';
+import { clientLogger } from '@/lib/client-logger';
 
 export const ProfilesContext = createContext<UseProfilesReturn | null>(null);
 
@@ -23,8 +24,8 @@ const dispatchAuthChanged = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('profile-auth-changed'));
     }
-  } catch (e) {
-    console.warn('dispatchAuthChanged failed:', e);
+  } catch (e: unknown) {
+    clientLogger.warn('dispatchAuthChanged failed:', e);
   }
 };
 
@@ -71,8 +72,8 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore caricamento profili');
         setProfiles([]);
       }
-    } catch (err) {
-      console.error('Errore caricamento profili:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore caricamento profili:', err);
       setError('Backend Tauri non disponibile - attendere avvio completo');
       setProfiles([]);
     }
@@ -93,11 +94,11 @@ export function useProfilesCore(): UseProfilesReturn {
       if (response.success) {
         setCurrentProfile(response.data || null);
       } else {
-        console.warn('⚠️ useProfiles: get_current_profile failed:', response.error);
+        clientLogger.warn('⚠️ useProfiles: get_current_profile failed:', response.error);
         setCurrentProfile(null);
       }
-    } catch (err) {
-      console.error('❌ useProfiles: Errore caricamento profilo corrente:', err);
+    } catch (err: unknown) {
+      clientLogger.error('❌ useProfiles: Errore caricamento profilo corrente:', err);
       setCurrentProfile(null);
     }
   }, []);
@@ -111,8 +112,8 @@ export function useProfilesCore(): UseProfilesReturn {
           loadProfiles(),
           loadCurrentProfile()
         ]);
-      } catch (error) {
-        console.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
+      } catch (error: unknown) {
+        clientLogger.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
         setError('Errore inizializzazione sistema profili');
       } finally {
         setIsLoading(false);
@@ -125,7 +126,7 @@ export function useProfilesCore(): UseProfilesReturn {
   // Listen for auth changes from other instances and refresh current profile
   useEffect(() => {
     const handler = () => {
-      loadCurrentProfile().catch(err => console.warn('useProfiles loadCurrentProfile error:', err));
+      loadCurrentProfile().catch(err => clientLogger.warn('useProfiles loadCurrentProfile error:', err));
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('profile-auth-changed', handler);
@@ -141,9 +142,9 @@ export function useProfilesCore(): UseProfilesReturn {
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
     try {
       setError(null);
-      console.log('Creazione profilo con request:', request);
+      clientLogger.debug('Creazione profilo con request:', request);
       const response = await invoke<ProfileResponse<UserProfile>>('create_profile', { request });
-      console.log('Risposta creazione profilo:', response);
+      clientLogger.debug('Risposta creazione profilo:', response);
       
       if (response.success && response.data) {
         // Ricarica lista profili
@@ -154,12 +155,12 @@ export function useProfilesCore(): UseProfilesReturn {
         dispatchAuthChanged();
         return true;
       } else {
-        console.error('Errore creazione profilo:', response.error);
+        clientLogger.error('Errore creazione profilo:', response.error);
         setError(response.error || 'Errore creazione profilo');
         return false;
       }
-    } catch (err) {
-      console.error('Errore creazione profilo:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore creazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -169,7 +170,7 @@ export function useProfilesCore(): UseProfilesReturn {
   const authenticateProfile = useCallback(async (name: string, password: string): Promise<boolean> => {
     try {
       setError(null);
-      console.log('🔐 useProfiles: Tentativo autenticazione per:', name);
+      clientLogger.debug('🔐 useProfiles: Tentativo autenticazione per:', name);
       
       const response = await invoke<ProfileResponse<UserProfile>>('authenticate_profile', { 
         name, 
@@ -177,7 +178,7 @@ export function useProfilesCore(): UseProfilesReturn {
       });
       
       if (response.success && response.data) {
-        console.log('✅ useProfiles: Autenticazione riuscita per:', response.data.name);
+        clientLogger.debug('✅ useProfiles: Autenticazione riuscita per:', response.data.name);
         
         // Transizione fluida - aggiorna stato senza ricaricare tutto
         setCurrentProfile(response.data);
@@ -189,28 +190,28 @@ export function useProfilesCore(): UseProfilesReturn {
           try {
             const { sessionPersistence } = await import('@/lib/session-persistence');
             await sessionPersistence.syncWithBackend();
-            console.log('🔄 Session persistence sincronizzata');
-          } catch (error) {
-            console.warn('⚠️ Errore sync session persistence:', error);
+            clientLogger.debug('🔄 Session persistence sincronizzata');
+          } catch (error: unknown) {
+            clientLogger.warn('⚠️ Errore sync session persistence:', error);
           }
         }, 100);
         
         // Ricarica profili in background senza bloccare UI
         setTimeout(() => {
           loadProfiles().catch(error => {
-            console.warn('⚠️ Errore ricarica profili in background:', error);
+            clientLogger.warn('⚠️ Errore ricarica profili in background:', error);
           });
         }, 500);
         
-        console.log('🔄 useProfiles: Transizione completata, currentProfile impostato');
+        clientLogger.debug('🔄 useProfiles: Transizione completata, currentProfile impostato');
         return true;
       } else {
-        console.error('❌ useProfiles: Autenticazione fallita:', response.error);
+        clientLogger.error('❌ useProfiles: Autenticazione fallita:', response.error);
         setError(response.error || 'Errore autenticazione');
         return false;
       }
-    } catch (err) {
-      console.error('❌ useProfiles: Errore autenticazione profilo:', err);
+    } catch (err: unknown) {
+      clientLogger.error('❌ useProfiles: Errore autenticazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -220,7 +221,7 @@ export function useProfilesCore(): UseProfilesReturn {
   const switchProfile = useCallback(async (name: string, password: string): Promise<boolean> => {
     try {
       setError(null);
-      console.log('🔄 useProfiles: Cambio profilo a:', name);
+      clientLogger.debug('🔄 useProfiles: Cambio profilo a:', name);
       
       const response = await invoke<ProfileResponse<UserProfile>>('switch_profile', { 
         name, 
@@ -228,7 +229,7 @@ export function useProfilesCore(): UseProfilesReturn {
       });
       
       if (response.success && response.data) {
-        console.log('✅ useProfiles: Cambio profilo riuscito per:', response.data.name);
+        clientLogger.debug('✅ useProfiles: Cambio profilo riuscito per:', response.data.name);
         
         // Transizione fluida - aggiorna stato immediatamente
         setCurrentProfile(response.data);
@@ -240,28 +241,28 @@ export function useProfilesCore(): UseProfilesReturn {
           try {
             const { sessionPersistence } = await import('@/lib/session-persistence');
             await sessionPersistence.syncWithBackend();
-            console.log('🔄 Session persistence sincronizzata dopo switch');
-          } catch (error) {
-            console.warn('⚠️ Errore sync session persistence dopo switch:', error);
+            clientLogger.debug('🔄 Session persistence sincronizzata dopo switch');
+          } catch (error: unknown) {
+            clientLogger.warn('⚠️ Errore sync session persistence dopo switch:', error);
           }
         }, 100);
         
         // Ricarica lista in background per aggiornare last_accessed
         setTimeout(() => {
           loadProfiles().catch(error => {
-            console.warn('⚠️ Errore ricarica profili dopo switch:', error);
+            clientLogger.warn('⚠️ Errore ricarica profili dopo switch:', error);
           });
         }, 500);
         
-        console.log('🔄 useProfiles: Switch completato senza riavvio');
+        clientLogger.debug('🔄 useProfiles: Switch completato senza riavvio');
         return true;
       } else {
-        console.error('❌ useProfiles: Errore cambio profilo:', response.error);
+        clientLogger.error('❌ useProfiles: Errore cambio profilo:', response.error);
         setError(response.error || 'Errore cambio profilo');
         return false;
       }
-    } catch (err) {
-      console.error('❌ useProfiles: Errore cambio profilo:', err);
+    } catch (err: unknown) {
+      clientLogger.error('❌ useProfiles: Errore cambio profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -287,8 +288,8 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore logout');
         return false;
       }
-    } catch (err) {
-      console.error('Errore logout:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore logout:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -321,8 +322,8 @@ export function useProfilesCore(): UseProfilesReturn {
         setError(response.error || 'Errore eliminazione profilo');
         return false;
       }
-    } catch (err) {
-      console.error('Errore eliminazione profilo:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore eliminazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -339,8 +340,8 @@ export function useProfilesCore(): UseProfilesReturn {
         return response.data;
       }
       return null;
-    } catch (err) {
-      console.error('Errore recupero avatar:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore recupero avatar:', err);
       return null;
     }
   }, []);
@@ -372,8 +373,8 @@ export function useProfilesCore(): UseProfilesReturn {
         return true;
       }
       return false;
-    } catch (err) {
-      console.error('Errore aggiornamento avatar:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore aggiornamento avatar:', err);
       return false;
     }
   }, [loadProfiles, currentProfile, loadCurrentProfile]);

@@ -28,7 +28,7 @@ export function DebugPanel() {
       addDebugResult('🔍 Testing raw Steam API...');
       const result = await invoke('debug_steam_api_raw');
       addDebugResult(`✅ Raw API result: ${result}`);
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugResult(`❌ Raw API error: ${error}`);
     } finally {
       setIsLoading(false);
@@ -47,7 +47,7 @@ export function DebugPanel() {
       const lastGames = games.slice(-5).map(g => g.name);
       addDebugResult(`📋 Last 5 games: ${lastGames.join(', ')}`);
       
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugResult(`❌ Force refresh error: ${error}`);
     } finally {
       setIsLoading(false);
@@ -75,7 +75,7 @@ export function DebugPanel() {
       const recentGames = games.slice(-10).map(g => g.title);
       addDebugResult(`📋 Last 10 games: ${recentGames.join(', ')}`);
       
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugResult(`❌ Search error: ${error}`);
     } finally {
       setIsLoading(false);

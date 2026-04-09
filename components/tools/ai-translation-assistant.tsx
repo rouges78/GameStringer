@@ -38,6 +38,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { 
+import { clientLogger } from '@/lib/client-logger';
   aiTranslationService, 
   type AIProvider, 
   type GameTranslationContext,
@@ -125,8 +126,8 @@ export function AITranslationAssistant() {
           setSelectedModel(localProvider.models[0]);
         }
       }
-    } catch (error) {
-      console.error('Error checking providers:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error checking providers:', error);
     } finally {
       setIsCheckingProviders(false);
     }

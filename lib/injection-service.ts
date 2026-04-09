@@ -1,4 +1,5 @@
 import { exec } from 'child_process';
+import { clientLogger } from '@/lib/client-logger';
 import { promisify } from 'util';
 import path from 'path';
 import { gameProfileManager } from './game-profiles';
@@ -37,9 +38,9 @@ class InjectionService {
       // Usa eval per evitare che Webpack processi il modulo nativo
       const nativePath = require('path').join(process.cwd(), 'native', 'build', 'Release', 'gamestringer_injector.node');
       this.nativeModule = eval('require')(nativePath);
-      console.log('Modulo nativo caricato con successo da:', nativePath);
-    } catch (error) {
-      console.warn('Modulo nativo non disponibile, uso mock:', error);
+      clientLogger.debug('Modulo nativo caricato con successo da:', nativePath);
+    } catch (error: unknown) {
+      clientLogger.warn('Modulo nativo non disponibile, uso mock:', error);
       this.nativeModule = this.createMockModule();
     }
   }
@@ -47,7 +48,7 @@ class InjectionService {
   private createMockModule() {
     return {
       injectTranslations: (processId: number, translations: Translation[]) => {
-        console.log(`[MOCK] Injecting ${translations.length} translations into process ${processId}`);
+        clientLogger.debug(`[MOCK] Injecting ${translations.length} translations into process ${processId}`);
         return {
           success: true,
           injectedCount: translations.length,
@@ -59,7 +60,7 @@ class InjectionService {
         };
       },
       monitorProcess: (processId: number) => {
-        console.log(`[MOCK] Monitoring process ${processId}`);
+        clientLogger.debug(`[MOCK] Monitoring process ${processId}`);
         return { success: true, message: 'Mock monitoring started' };
       },
       getProcessModules: (processId: number) => {
@@ -84,7 +85,7 @@ class InjectionService {
         // Controlla se il modulo nativo ha una funzione per verificare i privilegi
         if (this.nativeModule && this.nativeModule.hasAdminPrivileges) {
           this.isAdmin = this.nativeModule.hasAdminPrivileges();
-          console.log('Privilegi admin (dal modulo nativo):', this.isAdmin);
+          clientLogger.debug('Privilegi admin (dal modulo nativo):', this.isAdmin);
         } else {
           // Fallback: usa un metodo sincrono
           const { execSync } = require('child_process');
@@ -94,10 +95,10 @@ class InjectionService {
           } catch {
             this.isAdmin = false;
           }
-          console.log('Privilegi admin (fallback):', this.isAdmin);
+          clientLogger.debug('Privilegi admin (fallback):', this.isAdmin);
         }
-      } catch (error) {
-        console.error('Errore verifica privilegi:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Errore verifica privilegi:', error);
         this.isAdmin = false;
       }
     }
@@ -126,9 +127,9 @@ class InjectionService {
       // Usa traduzioni dal profilo se non specificate
       const translationsToUse = translations || gameProfileManager.getAllTranslations(processName);
       
-      console.log(`[INJEKT] Processo ${processId} - ${processName}`);
-      console.log(`[INJEKT] Gioco riconosciuto: ${gameInfo?.gameName || 'Sconosciuto'}`);
-      console.log(`[INJEKT] Traduzioni disponibili: ${Object.keys(translationsToUse).length}`);
+      clientLogger.debug(`[INJEKT] Processo ${processId} - ${processName}`);
+      clientLogger.debug(`[INJEKT] Gioco riconosciuto: ${gameInfo?.gameName || 'Sconosciuto'}`);
+      clientLogger.debug(`[INJEKT] Traduzioni disponibili: ${Object.keys(translationsToUse).length}`);
       
       // Converti l'oggetto traduzioni in array per il modulo nativo
       const translationsArray = Object.entries(translationsToUse).map(([original, translated]) => ({
@@ -156,7 +157,7 @@ class InjectionService {
         });
       }
       
-      console.log('[INJEKT] Injection completata:', {
+      clientLogger.debug('[INJEKT] Injection completata:', {
         success: result.success,
         injectedCount: result.injectedCount,
         totalInjections: profile.totalInjections + (result.injectedCount || 0)
@@ -164,8 +165,8 @@ class InjectionService {
       
 
       return result;
-    } catch (error) {
-      console.error('Errore injection:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore injection:', error);
       throw error;
     }
   }
@@ -186,8 +187,8 @@ class InjectionService {
         is64Bit,
         isAdmin: this.isAdmin
       };
-    } catch (error) {
-      console.error('Errore nel recupero info processo:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel recupero info processo:', error);
       return null;
     }
   }
@@ -203,9 +204,9 @@ class InjectionService {
         // 1. Cercare nuovi testi nel processo
         // 2. Tradurli automaticamente
         // 3. Iniettarli
-        console.log(`Monitoring processo ${processId}...`);
-      } catch (error) {
-        console.error('Errore monitoring:', error);
+        clientLogger.debug(`Monitoring processo ${processId}...`);
+      } catch (error: unknown) {
+        clientLogger.error('Errore monitoring:', error);
         this.stopMonitoring(processId);
       }
     }, 5000); // Check ogni 5 secondi
@@ -253,9 +254,9 @@ class InjectionService {
         // Analizza i risultati per estrarre testi
         // Questa è una semplificazione, in realtà servirebbe
         // logica più complessa per identificare stringhe valide
-        console.log(`Trovati ${results.length} potenziali testi`);
-      } catch (error) {
-        console.error('Errore scan pattern:', error);
+        clientLogger.debug(`Trovati ${results.length} potenziali testi`);
+      } catch (error: unknown) {
+        clientLogger.error('Errore scan pattern:', error);
       }
     }
 

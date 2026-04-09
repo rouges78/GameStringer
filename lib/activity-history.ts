@@ -6,6 +6,7 @@
  */
 
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 // Tipi di attività
 export type ActivityType = 
@@ -125,8 +126,8 @@ export class ActivityHistoryClient {
         }
       });
       return response.data;
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to add activity:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to add activity:', error);
       return null;
     }
   }
@@ -145,8 +146,8 @@ export class ActivityHistoryClient {
         }
       });
       return response.data;
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to get activities:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to get activities:', error);
       return null;
     }
   }
@@ -171,8 +172,8 @@ export class ActivityHistoryClient {
       const data = response.data ?? [];
       this._recentCache.set(limit, { data, ts: Date.now() });
       return data;
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to get recent activities:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to get recent activities:', error);
       return [];
     }
   }
@@ -184,8 +185,8 @@ export class ActivityHistoryClient {
     try {
       const response = await invoke<ActivityResponse<Record<string, number>>>('activity_count_by_type');
       return response.data ?? {};
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to count activities:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to count activities:', error);
       return {};
     }
   }
@@ -199,8 +200,8 @@ export class ActivityHistoryClient {
         id,
       });
       return response.data ?? false;
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to delete activity:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to delete activity:', error);
       return false;
     }
   }
@@ -212,8 +213,8 @@ export class ActivityHistoryClient {
     try {
       const response = await invoke<ActivityResponse<string>>('activity_clear');
       return response.success;
-    } catch (error) {
-      console.error('[ActivityHistory] Failed to clear activities:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[ActivityHistory] Failed to clear activities:', error);
       return false;
     }
   }

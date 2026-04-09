@@ -27,10 +27,11 @@ class ClientLogger {
   private flushTimer?: NodeJS.Timeout;
 
   private constructor() {
+    const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
     this.config = {
-      level: 'info',
-      enableConsole: true,
-      enableRemote: true,
+      level: isDev ? 'debug' : 'warn',
+      enableConsole: isDev,
+      enableRemote: !isDev,
       bufferSize: 100,
       flushInterval: 10000, // 10 seconds
       remoteEndpoint: '/api/logs',
@@ -168,7 +169,7 @@ class ClientLogger {
       if (!response.ok) {
         console.error('Failed to send logs to remote endpoint:', response.statusText);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending logs to remote endpoint:', error);
     }
   }
@@ -361,7 +362,7 @@ export function withClientPerformanceLogging<T extends unknown[]>(
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(
@@ -390,7 +391,7 @@ export function withClientAsyncPerformanceLogging<T extends unknown[]>(
       clientLogger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = performance.now() - start;
       
       clientLogger.logError(

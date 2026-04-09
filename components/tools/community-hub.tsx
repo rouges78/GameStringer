@@ -102,6 +102,7 @@ import {
 } from '@/lib/community-hub-backend';
 import { GitHubDiscussions } from './github-discussions';
 import { CommunityChat } from './community-chat';
+import { clientLogger } from '@/lib/client-logger';
 
 const languages = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
@@ -243,8 +244,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       ]);
       setPacks(packsResult.packs);
       setStats(hubStats);
-    } catch (error) {
-      console.error('Error loading hub data:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading hub data:', error);
       toast.error(t('communityHub.errorLoading'));
     } finally {
       setIsLoading(false);
@@ -255,8 +256,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     try {
       const result = await communityHubService.searchPacks(filters);
       setPacks(result.packs);
-    } catch (error) {
-      console.error('Error searching packs:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error searching packs:', error);
     }
   };
 
@@ -264,7 +265,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     try {
       const data = await fetchLeaderboard(20);
       setLeaderboard(data);
-    } catch (e) { console.error('Leaderboard error:', e); }
+    } catch (e: unknown) { clientLogger.error('Leaderboard error:', e); }
   };
 
   const loadNotifications = async () => {
@@ -272,7 +273,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       const [notifs, count] = await Promise.all([fetchNotifications(20), getUnreadCount()]);
       setNotifications(notifs);
       setUnreadCount(count);
-    } catch (e) { console.error('Notifications error:', e); }
+    } catch (e: unknown) { clientLogger.error('Notifications error:', e); }
   };
 
   const loadFavorites = async () => {
@@ -280,7 +281,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       const favs = await getFavorites();
       setFavoritePacks(favs);
       setFavoriteIds(new Set(favs.map(p => p.id)));
-    } catch (e) { console.error('Favorites error:', e); }
+    } catch (e: unknown) { clientLogger.error('Favorites error:', e); }
   };
 
   const handleToggleFavorite = async (packId: string) => {
@@ -300,7 +301,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     try {
       const data = await fetchComments(packId);
       setComments(data);
-    } catch (e) { console.error('Comments error:', e); }
+    } catch (e: unknown) { clientLogger.error('Comments error:', e); }
   };
 
   const handlePostComment = async (packId: string, parentId?: string) => {
@@ -336,7 +337,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       await markAllNotificationsRead();
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch (e) { console.error(e); }
+    } catch (e: unknown) { clientLogger.error(e); }
   };
 
   const handleViewPack = async (pack: TranslationPack) => {

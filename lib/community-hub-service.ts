@@ -6,6 +6,7 @@
  */
 
 import { invoke } from '@/lib/tauri-api';
+import { clientLogger } from '@/lib/client-logger';
 
 export type RetroPlatform =
   | 'nes' | 'snes' | 'n64' | 'gb' | 'gbc' | 'gba' | 'nds' | '3ds'
@@ -391,8 +392,8 @@ class CommunityHubService {
         this.localPacks = getShowcasePacks();
         this.saveLocalData();
       }
-    } catch (error) {
-      console.error('Error loading community hub data:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading community hub data:', error);
     }
   }
 
@@ -402,8 +403,8 @@ class CommunityHubService {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.localPacks));
       localStorage.setItem(INSTALLED_PACKS_KEY, JSON.stringify(Object.fromEntries(this.installedPacks)));
-    } catch (error) {
-      console.error('Error saving community hub data:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error saving community hub data:', error);
     }
   }
 

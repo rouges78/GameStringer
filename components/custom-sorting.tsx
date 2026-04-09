@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { clientLogger } from '@/lib/client-logger';
 
 interface Game {
   id: string;
@@ -155,8 +156,8 @@ const CustomSorting: React.FC<CustomSortingProps> = ({
       try {
         const parsed = JSON.parse(savedPresets);
         setPresets([...defaultPresets, ...parsed]);
-      } catch (error) {
-        console.error('Error loading presets:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error loading presets:', error);
       }
     }
     

@@ -253,8 +253,8 @@ class FavoritesManager {
 
       const recData = localStorage.getItem(RECENT_KEY);
       if (recData) this.recentGames = JSON.parse(recData);
-    } catch (error) {
-      console.error('[FavoritesManager] Failed to load:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[FavoritesManager] Failed to load:', error);
     }
   }
 
@@ -265,8 +265,8 @@ class FavoritesManager {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(this.favorites));
       localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(this.collections));
       localStorage.setItem(RECENT_KEY, JSON.stringify(this.recentGames));
-    } catch (error) {
-      console.error('[FavoritesManager] Failed to save:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[FavoritesManager] Failed to save:', error);
     }
   }
 
@@ -301,8 +301,8 @@ class FavoritesManager {
       this.save();
       this.notify();
       return true;
-    } catch (error) {
-      console.error('[FavoritesManager] Import failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[FavoritesManager] Import failed:', error);
       return false;
     }
   }
@@ -313,6 +313,7 @@ export const favoritesManager = new FavoritesManager();
 
 // React hook
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useFavorites() {
   const [, forceUpdate] = useState({});

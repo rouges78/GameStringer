@@ -38,6 +38,7 @@ import {
 } from "@/lib/ocr-engines"
 import type { OCRLanguage } from "@/lib/ocr-service"
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const LANGUAGE_OPTIONS: { code: OCRLanguage; name: string }[] = [
   { code: "eng", name: "English" },
@@ -89,8 +90,8 @@ export default function OCREnginesPage() {
       const [probes, infos] = await Promise.all([probeAllEngines(), getEngineInfoList()])
       setProbeResults(probes)
       setEngineInfos(infos)
-    } catch (e) {
-      console.error("[OCR] Probe failed:", e)
+    } catch (e: unknown) {
+      clientLogger.error("[OCR] Probe failed:", e)
     } finally {
       setIsProbing(false)
     }
@@ -122,8 +123,8 @@ export default function OCREnginesPage() {
         onProgress: (p) => setProgress(p.status),
       })
       setOcrResult(result)
-    } catch (e) {
-      console.error("[OCR] Error:", e)
+    } catch (e: unknown) {
+      clientLogger.error("[OCR] Error:", e)
       setProgress(`Errore: ${e instanceof Error ? e.message : "Sconosciuto"}`)
     } finally {
       setIsProcessing(false)

@@ -16,6 +16,7 @@ import {
   Archive, User, ChevronRight, Copy, RefreshCw, Filter, HardDrive,
 } from 'lucide-react';
 import {
+import { clientLogger } from '@/lib/client-logger';
   type CriGameInfo,
   type CpkFileInfo,
   type CpkEntry,
@@ -124,8 +125,8 @@ export default function CriPatcherPage() {
         setError('');
         setStep(1);
       }
-    } catch (e) {
-      console.error('Errore selezione cartella:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore selezione cartella:', e);
     }
   };
 
@@ -149,7 +150,7 @@ export default function CriPatcherPage() {
       } else {
         setError('Nessun file CPK/PAR trovato nella cartella selezionata.');
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore analisi: ${e}`);
     } finally {
       setAnalyzing(false);
@@ -177,7 +178,7 @@ export default function CriPatcherPage() {
         }
       }
       setSelectedTextFiles(autoSelected);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore lettura CPK: ${e}`);
     } finally {
       setLoadingContents(false);
@@ -207,8 +208,8 @@ export default function CriPatcherPage() {
               context: `${tf.internal_path} | ${entry.context}`,
             });
           }
-        } catch (e) {
-          console.warn(`Errore parsing ${tf.internal_path}:`, e);
+        } catch (e: unknown) {
+          clientLogger.warn(`Errore parsing ${tf.internal_path}:`, e);
         }
       }
 
@@ -218,7 +219,7 @@ export default function CriPatcherPage() {
       } else {
         setError('Nessuna stringa di testo trovata nei file selezionati.');
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore estrazione: ${e}`);
     } finally {
       setExtracting(false);
@@ -257,7 +258,7 @@ export default function CriPatcherPage() {
       const translated = await translateCriEntries(entries, options);
       setEntries(translated);
       setProgress(100);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore traduzione: ${e}`);
     } finally {
       setTranslating(false);
@@ -367,7 +368,7 @@ export default function CriPatcherPage() {
       const result = await buildPatchedCpk(selectedCpk.path, patches, outputPath);
       setExportResult(result);
       setStep(4);
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore creazione CPK patchato: ${e}`);
     } finally {
       setExporting(false);
@@ -407,7 +408,7 @@ export default function CriPatcherPage() {
         setEntries(updated);
       };
       input.click();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore importazione CSV: ${e}`);
     }
   };
@@ -425,7 +426,7 @@ export default function CriPatcherPage() {
         setEntries(updated);
       };
       input.click();
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore importazione PO: ${e}`);
     }
   };

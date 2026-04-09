@@ -2,6 +2,7 @@
 // Gestisce cache intelligente per API calls e dati computazionalmente costosi
 
 import React from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 interface CacheEntry<T> {
   data: T;
@@ -124,7 +125,7 @@ class CacheManager {
       const data = await fetcher();
       this.set(key, data, ttl);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       // Non cachare errori
       throw error;
     }
@@ -154,7 +155,7 @@ if (typeof window !== 'undefined') {
   setInterval(() => {
     const removed = cacheManager.cleanup();
     if (removed > 0) {
-      console.log(`🧹 Cache cleanup: rimossi ${removed} entry scaduti`);
+      clientLogger.debug(`🧹 Cache cleanup: rimossi ${removed} entry scaduti`);
     }
   }, 5 * 60 * 1000);
 }
@@ -177,5 +178,5 @@ export const useCacheStats = () => {
 // 📊 Debug cache in sviluppo
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as unknown as Record<string, unknown>).gameStringerCache = cacheManager;
-  console.log('🔧 GameStringer Cache Manager disponibile in window.gameStringerCache');
+  clientLogger.debug('🔧 GameStringer Cache Manager disponibile in window.gameStringerCache');
 }

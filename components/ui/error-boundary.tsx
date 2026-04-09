@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -57,7 +58,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
+      clientLogger.error('ErrorBoundary caught an error:', error, errorInfo);
     }
 
     // Call custom error handler if provided
@@ -83,7 +84,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     // Send to monitoring service (replace with actual service)
     if (process.env.NODE_ENV === 'production') {
       // Example: Sentry, LogRocket, etc.
-      console.error('Error Report:', errorReport);
+      clientLogger.error('Error Report:', errorReport);
     }
   };
 
@@ -242,7 +243,7 @@ export function useErrorHandler() {
   const { t } = useTranslation();
   return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
     // Log error
-    console.error('useErrorHandler:', error, errorInfo);
+    clientLogger.error('useErrorHandler:', error, errorInfo);
 
     // You can also throw the error to be caught by the nearest ErrorBoundary
     throw error;
@@ -271,7 +272,7 @@ interface ApiErrorBoundaryProps extends ErrorBoundaryProps {
 
 export function ApiErrorBoundary({ endpoint, children, ...props }: ApiErrorBoundaryProps) {
   const handleError = React.useCallback((error: Error, errorInfo: React.ErrorInfo) => {
-    console.error(`API Error in ${endpoint}:`, error, errorInfo);
+    clientLogger.error(`API Error in ${endpoint}:`, error, errorInfo);
     
     // Custom API error handling
     if (props.onError) {
@@ -289,7 +290,7 @@ export function ApiErrorBoundary({ endpoint, children, ...props }: ApiErrorBound
 // Componente per errori di routing
 export function RouteErrorBoundary({ children, ...props }: ErrorBoundaryProps) {
   const handleError = React.useCallback((error: Error, errorInfo: React.ErrorInfo) => {
-    console.error('Route Error:', error, errorInfo);
+    clientLogger.error('Route Error:', error, errorInfo);
     
     if (props.onError) {
       props.onError(error, errorInfo);

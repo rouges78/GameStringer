@@ -13,6 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import { VlmTranslator } from '@/lib/vlm-translator';
 import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { rawPixelsToBase64 } from '@/lib/image-utils';
+import { clientLogger } from '@/lib/client-logger';
 
 interface DetectedText {
   text: string;
@@ -115,7 +116,7 @@ export default function OcrTranslatorPage() {
     // Carica traduzioni salvate all'avvio
     invoke<number>('load_ocr_translations').then(count => {
       if (count > 0) {
-        console.log(`[OCR] Caricate ${count} traduzioni salvate`);
+        clientLogger.debug(`[OCR] Caricate ${count} traduzioni salvate`);
         toast.success(`Caricate ${count} traduzioni salvate`);
       }
     }).catch(() => {});
@@ -140,7 +141,7 @@ export default function OcrTranslatorPage() {
     setLastTranslationTime(now);
     
     pendingTranslations.add(text);
-    console.log('[OCR] Traduzione con provider:', ocrProvider);
+    clientLogger.debug('[OCR] Traduzione con provider:', ocrProvider);
     try {
       // Per Ollama con deepseek-ocr, usa l'endpoint locale
       if (ocrProvider === 'ollama') {
@@ -181,8 +182,8 @@ export default function OcrTranslatorPage() {
       } else {
         setTranslationError('Translation failed — check API key or provider settings');
       }
-    } catch (e) {
-      console.error('[OCR] error traduzione:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[OCR] error traduzione:', e);
       setTranslationError(`Error: ${e}`);
     } finally {
       pendingTranslations.delete(text);
@@ -229,7 +230,7 @@ export default function OcrTranslatorPage() {
           }
         }
       } catch (e: unknown) {
-        console.error('[VLM Loop] Errore:', e);
+        clientLogger.error('[VLM Loop] Errore:', e);
         setTranslationError(e.message || String(e));
       } finally {
         setIsTranslating(false);
@@ -271,8 +272,8 @@ export default function OcrTranslatorPage() {
           
           setDetectedTexts(texts);
         });
-      } catch (e) {
-        console.warn('[OCR] Impossibile setup event listener Tauri', e);
+      } catch (e: unknown) {
+        clientLogger.warn('[OCR] Impossibile setup event listener Tauri', e);
       }
     };
     
@@ -301,7 +302,7 @@ export default function OcrTranslatorPage() {
         setIsRunning(true);
         toast.success(t('ocrTranslator.startCapture'));
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Error: ${e}`);
     }
   };
@@ -341,7 +342,7 @@ export default function OcrTranslatorPage() {
       }
       setScreenshotTexts(results);
       toast.success(`${results.length} righe estratte e tradotte`);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`OCR errore: ${e}`);
     }
     setScreenshotProcessing(false);
@@ -710,7 +711,7 @@ export default function OcrTranslatorPage() {
                     await invoke('toggle_ocr_overlay', { show: !overlayOpen });
                     setOverlayOpen(!overlayOpen);
                     toast.success(overlayOpen ? t('ocrTranslator.overlayClosed') : t('ocrTranslator.overlayOpened'));
-                  } catch (e) {
+                  } catch (e: unknown) {
                     toast.error(`error overlay: ${e}`);
                   }
                 }}

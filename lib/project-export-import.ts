@@ -207,7 +207,7 @@ ${translations.filter(t => t.target).map(t => `    <tu tuid="${t.id}">
           errors: 0,
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
       return {
         success: false,
         stats: { imported: 0, skipped: 0, errors: 1 },
@@ -242,7 +242,7 @@ ${translations.filter(t => t.target).map(t => `    <tu tuid="${t.id}">
             notes: parts[5],
           });
         }
-      } catch (error) {
+      } catch (error: unknown) {
         errors.push(`Line ${i + 1}: ${(error as Error).message}`);
       }
     }
@@ -274,7 +274,7 @@ ${translations.filter(t => t.target).map(t => `    <tu tuid="${t.id}">
           target,
           status: this.xliffStateToStatus(state),
         });
-      } catch (error) {
+      } catch (error: unknown) {
         errors.push(`Unit ${index}: ${(error as Error).message}`);
       }
     });

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface OllamaStatus {
   installed: boolean;
@@ -86,8 +87,8 @@ export function OllamaManager() {
           setStatus({ installed: false, running: false, version: '', models: [], install_path: '' });
         }
       }
-    } catch (error) {
-      console.error('[OllamaManager] Check status error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[OllamaManager] Check status error:', error);
       setStatus({ installed: false, running: false, version: '', models: [], install_path: '' });
     } finally {
       setLoading(false);
@@ -128,8 +129,8 @@ export function OllamaManager() {
           { name: 'llama3.3:70b', size: '~40 GB', description: 'Meta Llama 3.3 70B — Top assoluto. Richiede 48GB+ VRAM.' },
         ]);
       }
-    } catch (error) {
-      console.error('[OllamaManager] Load models error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[OllamaManager] Load models error:', error);
     }
   }, []);
 
@@ -161,8 +162,8 @@ export function OllamaManager() {
               }, 2000);
             }
           }) as unknown as () => void;
-        } catch (e) {
-          console.error('Failed to setup Tauri listeners:', e);
+        } catch (e: unknown) {
+          clientLogger.error('Failed to setup Tauri listeners:', e);
         }
       }
     };
@@ -184,7 +185,7 @@ export function OllamaManager() {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke<string>('download_ollama');
       toast.success('Installer Ollama avviato!');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore download: ${error}`);
     } finally {
       setActionLoading(null);
@@ -203,7 +204,7 @@ export function OllamaManager() {
         toast.error('Avvia Ollama manualmente: ollama serve');
       }
       await checkStatus();
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore avvio: ${error}`);
     } finally {
       setActionLoading(null);
@@ -219,7 +220,7 @@ export function OllamaManager() {
         toast.success(result);
       }
       await checkStatus();
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore arresto: ${error}`);
     } finally {
       setActionLoading(null);
@@ -237,7 +238,7 @@ export function OllamaManager() {
       await invoke<string>('pull_ollama_model', { modelName });
       toast.success(`Modello ${modelName} installato!`);
       await checkStatus();
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error(`Errore pull: ${error}`);
     } finally {
       setActionLoading(null);

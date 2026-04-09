@@ -1,7 +1,8 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { parse } from 'vdf';
+import { parse } from 'vdf-parser';
+import { clientLogger } from '@/lib/client-logger';
 
 // Define a type for the parsed libraryfolders.vdf content
 interface LibraryFolders {
@@ -48,8 +49,8 @@ export async function getInstalledSteamAppIds(): Promise<Set<number>> {
                     }
                 });
             }
-        } catch (error) {
-            console.warn(`[SteamUtils] Could not read or parse libraryfolders.vdf. Only the main library will be scanned.`, error);
+        } catch (error: unknown) {
+            clientLogger.warn(`[SteamUtils] Could not read or parse libraryfolders.vdf. Only the main library will be scanned.`, error);
         }
 
         // 3. Scan each library folder for appmanifest files
@@ -63,16 +64,16 @@ export async function getInstalledSteamAppIds(): Promise<Set<number>> {
                         installedAppIds.add(parseInt(match[1], 10));
                     }
                 });
-            } catch (error) {
+            } catch (error: unknown) {
                 // This is expected if a library folder is on a disconnected drive, for example.
-                console.warn(`[SteamUtils] Could not read directory: ${steamAppsFolder}. It might be on a disconnected drive.`);
+                clientLogger.warn(`[SteamUtils] Could not read directory: ${steamAppsFolder}. It might be on a disconnected drive.`);
             }
         }
 
-    } catch (error) {
-        console.error('[SteamUtils] Failed to get installed Steam games:', error);
+    } catch (error: unknown) {
+        clientLogger.error('[SteamUtils] Failed to get installed Steam games:', error);
     }
 
-    console.log(`[API/STEAM/GAMES] Found ${installedAppIds.size} installed games on local drives.`);
+    clientLogger.debug(`[API/STEAM/GAMES] Found ${installedAppIds.size} installed games on local drives.`);
     return installedAppIds;
 }

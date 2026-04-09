@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SharedAccount {
   steamId: string;
@@ -75,8 +76,8 @@ export function SteamFamilySharing() {
           setManualAccounts(savedIds);
           setSharedAccounts(savedIds.map(steamId => ({ steamId })));
         }
-      } catch (err) {
-        console.log('Nessun ID salvato o errore nel caricamento');
+      } catch (err: unknown) {
+        clientLogger.debug('Nessun ID salvato o errore nel caricamento');
       }
     };
     loadSavedIds();
@@ -113,7 +114,7 @@ export function SteamFamilySharing() {
         setError("Nessun utente Steam trovato. Assicurati di essere loggato su Steam.");
         toast.warning('Nessun utente Steam trovato.');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);
       toast.error('Rilevamento automatico fallito', {
@@ -136,7 +137,7 @@ export function SteamFamilySharing() {
       } else {
         toast.info('Nessun gioco condiviso trovato. Verifica che il Family Sharing sia abilitato.');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error('Errore nel caricamento dei giochi condivisi', {
         description: errorMessage,
@@ -171,7 +172,7 @@ export function SteamFamilySharing() {
         toast.warning('File caricato ma nessun gioco condiviso trovato');
       }
 
-    } catch (err) {
+    } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);
       toast.error('Errore nell\'analisi del file', {

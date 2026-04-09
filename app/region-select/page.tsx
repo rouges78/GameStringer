@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface SelectionRect {
   startX: number;
@@ -54,8 +55,8 @@ export default function RegionSelectPage() {
         width: Math.round(width),
         height: Math.round(height),
       });
-    } catch (err) {
-      console.error('Errore conferma regione:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore conferma regione:', err);
     }
   }, [isDragging, selection]);
 
@@ -65,8 +66,8 @@ export default function RegionSelectPage() {
       if (e.key === 'Escape') {
         try {
           await invoke('cancel_region_selection');
-        } catch (err) {
-          console.error('Errore annullamento:', err);
+        } catch (err: unknown) {
+          clientLogger.error('Errore annullamento:', err);
         }
       }
     };

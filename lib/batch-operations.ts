@@ -168,7 +168,7 @@ class BatchOperationsManager {
             operation.failedCount++;
             operation.errors.push({ stringId, error: 'Processing failed' });
           }
-        } catch (error) {
+        } catch (error: unknown) {
           operation.failedCount++;
           operation.errors.push({ 
             stringId, 
@@ -194,7 +194,7 @@ class BatchOperationsManager {
       operation.completedAt = Date.now();
       operation.progress = 100;
 
-    } catch (error) {
+    } catch (error: unknown) {
       operation.status = 'failed';
       operation.completedAt = Date.now();
     }

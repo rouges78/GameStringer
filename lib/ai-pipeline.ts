@@ -21,6 +21,7 @@ import { translateSmart, type TranslateOptions, type TranslateResult } from './a
 import { runQualityGates, type QualityReport, type QualityCheck } from './quality-gates';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
 import { buildRelevantGlossaryHint } from './auto-glossary';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -147,7 +148,7 @@ async function translateWithAgent(
   const srcLang = opts.sourceLanguage || 'en';
   const tgtLang = opts.targetLanguage || 'it';
 
-  console.log(`[Multi-Agent] Using agent model: ${model} (${agent.label || 'custom'})`);
+  clientLogger.debug(`[Multi-Agent] Using agent model: ${model} (${agent.label || 'custom'})`);
 
   try {
     // Verifica che il modello sia disponibile
@@ -157,7 +158,7 @@ async function translateWithAgent(
     const available = (tagsData.models || []).map((m: { name: string }) => m.name) as string[];
     
     if (!available.some(m => m.startsWith(model) || m === model)) {
-      console.warn(`[Multi-Agent] Model ${model} not found in Ollama, falling back to translateSmart`);
+      clientLogger.warn(`[Multi-Agent] Model ${model} not found in Ollama, falling back to translateSmart`);
       return translateSmart(opts);
     }
 
@@ -197,8 +198,8 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
           let translated = data?.message?.content?.trim() || text;
           translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
           return translated;
-        } catch (err) {
-          console.warn(`[Multi-Agent] ${model} error:`, err);
+        } catch (err: unknown) {
+          clientLogger.warn(`[Multi-Agent] ${model} error:`, err);
           return text;
         }
       });
@@ -206,8 +207,8 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
     }
 
     return { translations: results, provider: `ollama:${model}`, success: true };
-  } catch (err) {
-    console.warn(`[Multi-Agent] Agent ${model} failed, falling back to translateSmart:`, err);
+  } catch (err: unknown) {
+    clientLogger.warn(`[Multi-Agent] Agent ${model} failed, falling back to translateSmart:`, err);
     return translateSmart(opts);
   }
 }
@@ -494,7 +495,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
           placeholders: harvestedContext.stats.stringsWithPlaceholders,
         }
       });
-    } catch (e) {
+    } catch (e: unknown) {
       updateStep('harvest', { status: 'failed', error: String(e) });
       // Non blocca la pipeline
     }
@@ -530,7 +531,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       status: 'completed',
       result: { provider, count: translations.length }
     });
-  } catch (e) {
+  } catch (e: unknown) {
     updateStep('translate', { status: 'failed', error: String(e) });
     // Pipeline fallisce se la traduzione fallisce
     return buildResult(texts, translations, provider, steps, qaReports, harvestedContext, fixedCount, passedFirstTime, improvedByReview, pipelineStart);
@@ -664,7 +665,7 @@ Return ONLY the corrected translations as a JSON array.`;
             }
           } catch {
             // Un tentativo di fix fallito non blocca la pipeline
-            console.warn(`[Pipeline] Auto-fix attempt ${attempt + 1} failed`);
+            clientLogger.warn(`[Pipeline] Auto-fix attempt ${attempt + 1} failed`);
           }
         }
 
@@ -673,11 +674,11 @@ Return ONLY the corrected translations as a JSON array.`;
           status: 'completed',
           result: { fixed: totalFixed, remaining: failedIndices.length }
         });
-      } catch (e) {
+      } catch (e: unknown) {
         updateStep('auto_fix', { status: 'failed', error: String(e) });
       }
     }
-  } catch (e) {
+  } catch (e: unknown) {
     updateStep('qa_check', { status: 'failed', error: String(e) });
   }
 
@@ -743,7 +744,7 @@ ${reviewTexts.map((src, i) => `${i + 1}. SOURCE: "${src}"\n   TRANSLATION: "${re
             }
           }
         } catch {
-          console.warn('[Pipeline] Review step failed, keeping current translations');
+          clientLogger.warn('[Pipeline] Review step failed, keeping current translations');
         }
       }
 
@@ -751,7 +752,7 @@ ${reviewTexts.map((src, i) => `${i + 1}. SOURCE: "${src}"\n   TRANSLATION: "${re
         status: 'completed',
         result: { reviewed: reviewIndices.length, improved: improvedByReview }
       });
-    } catch (e) {
+    } catch (e: unknown) {
       updateStep('review', { status: 'failed', error: String(e) });
     }
   }

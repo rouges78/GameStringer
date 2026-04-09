@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import archiver from 'archiver';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import { clientLogger } from '@/lib/client-logger';
 
 const execAsync = promisify(exec);
 
@@ -148,16 +149,16 @@ class PatchManager {
         try {
           const data = await fs.readFile(metadataPath, 'utf-8');
           patches.push(JSON.parse(data));
-        } catch (error) {
-          console.error(`Errore nel leggere patch ${dir}:`, error);
+        } catch (error: unknown) {
+          clientLogger.error(`Errore nel leggere patch ${dir}:`, error);
         }
       }
 
       return patches.sort((a, b) => 
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
-    } catch (error) {
-      console.error('Errore nel recuperare le patch:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel recuperare le patch:', error);
       return [];
     }
   }
@@ -168,8 +169,8 @@ class PatchManager {
       const metadataPath = path.join(this.patchesDir, patchId, 'metadata.json');
       const data = await fs.readFile(metadataPath, 'utf-8');
       return JSON.parse(data);
-    } catch (error) {
-      console.error(`Errore nel leggere patch ${patchId}:`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`Errore nel leggere patch ${patchId}:`, error);
       return null;
     }
   }
@@ -236,7 +237,7 @@ class PatchManager {
       await fs.rm(exportDir, { recursive: true, force: true });
 
       return outputPath;
-    } catch (error) {
+    } catch (error: unknown) {
       // Pulisci in caso di errore
       await fs.rm(exportDir, { recursive: true, force: true });
       throw error;
@@ -293,8 +294,8 @@ class PatchManager {
       });
 
       return true;
-    } catch (error) {
-      console.error('Errore nell\'applicare la patch:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nell\'applicare la patch:', error);
       
       // Ripristina il backup in caso di errore
       if (backup) {
@@ -310,8 +311,8 @@ class PatchManager {
     try {
       // Ripristina dal backup
       return await this.restoreBackup(gameDir, patchId);
-    } catch (error) {
-      console.error('Errore nel rimuovere la patch:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Errore nel rimuovere la patch:', error);
       return false;
     }
   }
@@ -337,7 +338,7 @@ class PatchManager {
       }
 
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       return false;
     }
   }
@@ -482,7 +483,7 @@ Creato con GameStringer
 
   private async signPackage(packagePath: string, certificate: string): Promise<void> {
     // Implementa firma digitale
-    console.log(`Firma digitale di ${packagePath} con certificato ${certificate}`);
+    clientLogger.debug(`Firma digitale di ${packagePath} con certificato ${certificate}`);
   }
 
   private async createBackup(gameDir: string, patchId: string): Promise<void> {
@@ -490,7 +491,7 @@ Creato con GameStringer
     await fs.mkdir(backupDir, { recursive: true });
     
     // Implementa logica di backup
-    console.log(`Backup creato in ${backupDir}`);
+    clientLogger.debug(`Backup creato in ${backupDir}`);
   }
 
   private async restoreBackup(gameDir: string, patchId: string): Promise<boolean> {
@@ -498,9 +499,9 @@ Creato con GameStringer
     
     try {
       // Implementa logica di ripristino
-      console.log(`Ripristino backup da ${backupDir}`);
+      clientLogger.debug(`Ripristino backup da ${backupDir}`);
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       return false;
     }
   }

@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface ErrorFallbackProps {
   error: Error;
@@ -71,8 +72,8 @@ ${errorReport.componentStack || 'Not available'}
       await navigator.clipboard.writeText(reportText);
       setReportCopied(true);
       setTimeout(() => setReportCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy error report:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Failed to copy error report:', err);
     }
   }, [errorReport]);
 

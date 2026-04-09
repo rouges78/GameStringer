@@ -3,6 +3,7 @@
 import { invoke } from '@/lib/tauri-api';
 import type { ProfileResponse, UserProfile } from '@/types/profiles';
 import { safeSetItem, safeGetItem, safeRemoveItem } from '@/lib/safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface SessionData {
   profileId: string;
@@ -95,8 +96,8 @@ class SessionPersistence {
       } else {
         this.clearSession();
       }
-    } catch (error) {
-      console.error('Error syncing session with backend:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error syncing session with backend:', error);
     }
   }
 
@@ -129,7 +130,7 @@ class SessionPersistence {
       // Try to restore the session in the backend
       const canAuthResp = await invoke<ProfileResponse<boolean>>('can_authenticate', { name: session.profileName });
       if (!(canAuthResp?.success && canAuthResp.data)) {
-        console.log(' Backend non può autenticare');
+        clientLogger.debug(' Backend non può autenticare');
         this.clearSession();
         return false;
       }
@@ -138,31 +139,31 @@ class SessionPersistence {
       const expiredResp = await invoke<ProfileResponse<boolean>>('is_session_expired', { timeoutSeconds: 1800 });
       const isExpired = expiredResp?.success ? !!expiredResp.data : true;
       if (isExpired) {
-        console.log(' Session scaduta, tentativo rinnovo...');
+        clientLogger.debug(' Session scaduta, tentativo rinnovo...');
         
         // Try to renew if recent activity
         if (this.shouldRenewSession()) {
           const renewedResp = await invoke<ProfileResponse<boolean>>('renew_session');
           const renewed = renewedResp?.success && !!renewedResp.data;
           if (renewed) {
-            console.log('✅ Session rinnovata');
+            clientLogger.debug('✅ Session rinnovata');
             await this.syncWithBackend();
             return true;
           }
         }
         
-        console.log('❌ Impossibile rinnovare session');
+        clientLogger.debug('❌ Impossibile rinnovare session');
         this.clearSession();
         return false;
       }
 
       // Session is valid, sync with backend
-      console.log('✅ Session valida, sync con backend...');
+      clientLogger.debug('✅ Session valida, sync con backend...');
       await this.syncWithBackend();
       return true;
       
-    } catch (error) {
-      console.error('❌ Errore durante restore:', error);
+    } catch (error: unknown) {
+      clientLogger.error('❌ Errore durante restore:', error);
       throw error;
     }
   }
@@ -171,11 +172,11 @@ class SessionPersistence {
   setupActivityTracking(): void {
     // Evita setup multipli
     if ((window as unknown as Record<string, unknown>).__sessionTrackingSetup) {
-      console.log('🔄 Session tracking già configurato, skip');
+      clientLogger.debug('🔄 Session tracking già configurato, skip');
       return;
     }
     
-    console.log('🔄 Configurazione session tracking...');
+    clientLogger.debug('🔄 Configurazione session tracking...');
     
     // Track user activity con debouncing
     const events = ['mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
@@ -204,7 +205,7 @@ class SessionPersistence {
     let syncInProgress = false;
     const syncInterval = setInterval(async () => {
       if (syncInProgress) {
-        console.log('🔄 Sync già in corso, skip');
+        clientLogger.debug('🔄 Sync già in corso, skip');
         return;
       }
       
@@ -214,8 +215,8 @@ class SessionPersistence {
         if (session) {
           await this.syncWithBackend();
         }
-      } catch (error) {
-        console.error('❌ Errore sync session:', error);
+      } catch (error: unknown) {
+        clientLogger.error('❌ Errore sync session:', error);
       } finally {
         syncInProgress = false;
       }
@@ -223,7 +224,7 @@ class SessionPersistence {
 
     // Cleanup function globale
     (window as unknown as Record<string, unknown>).__sessionTrackingCleanup = () => {
-      console.log('🧹 Cleanup session tracking...');
+      clientLogger.debug('🧹 Cleanup session tracking...');
       if (activityTimeout) clearTimeout(activityTimeout);
       clearInterval(syncInterval);
       listeners.forEach(cleanup => cleanup());
@@ -233,7 +234,7 @@ class SessionPersistence {
     
     // Marca come configurato
     (window as unknown as Record<string, unknown>).__sessionTrackingSetup = true;
-    console.log('✅ Session tracking configurato');
+    clientLogger.debug('✅ Session tracking configurato');
   }
 
   // Clean up expired sessions
@@ -264,7 +265,7 @@ class SessionPersistence {
           if (creds?.steam_id && creds.steam_id.length > 0) {
             existing.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
             changed = true;
-            console.log('[BOOT] ✅ Steam credentials restored');
+            clientLogger.debug('[BOOT] ✅ Steam credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -276,7 +277,7 @@ class SessionPersistence {
           if (creds?.username_encrypted) {
             existing.push({ provider: 'epicgames', userId: 'epic-user' });
             changed = true;
-            console.log('[BOOT] ✅ Epic credentials restored');
+            clientLogger.debug('[BOOT] ✅ Epic credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -288,7 +289,7 @@ class SessionPersistence {
           if (creds?.email || creds?.username) {
             existing.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
             changed = true;
-            console.log('[BOOT] ✅ GOG credentials restored');
+            clientLogger.debug('[BOOT] ✅ GOG credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -300,17 +301,17 @@ class SessionPersistence {
           if (creds?.email) {
             existing.push({ provider: 'ubisoft-credentials', userId: creds.email });
             changed = true;
-            console.log('[BOOT] ✅ Ubisoft credentials restored');
+            clientLogger.debug('[BOOT] ✅ Ubisoft credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
 
       if (changed) {
         localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(existing));
-        console.log(`[BOOT] 🔄 Store connections restored: ${existing.length} providers`);
+        clientLogger.debug(`[BOOT] 🔄 Store connections restored: ${existing.length} providers`);
       }
-    } catch (error) {
-      console.warn('[BOOT] Errore ripristino store connections:', error);
+    } catch (error: unknown) {
+      clientLogger.warn('[BOOT] Errore ripristino store connections:', error);
     }
   }
 }

@@ -88,7 +88,7 @@ export function AutoBackupSettings() {
     try {
       await restoreBackup(restoreDialog.path, restoreDialog.backupType);
       setRestoreDialog(null);
-    } catch (e) {
+    } catch (e: unknown) {
       // Toast già gestito nell'hook
     }
   };

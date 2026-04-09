@@ -284,8 +284,8 @@ class TranslationValidator {
         if (issue) {
           issues.push(issue);
         }
-      } catch (error) {
-        console.error(`[Validator] Rule "${rule.id}" failed:`, error);
+      } catch (error: unknown) {
+        clientLogger.error(`[Validator] Rule "${rule.id}" failed:`, error);
       }
     }
 
@@ -407,6 +407,7 @@ export const translationValidator = new TranslationValidator();
 
 // React hook for real-time validation
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useTranslationValidation(
   source: string,

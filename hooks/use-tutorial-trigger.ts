@@ -6,6 +6,7 @@ import { useTutorial } from '@/components/tutorial/tutorial-provider';
 import { getTutorialsForPage, getTutorial } from '@/lib/tutorial-configs';
 import { TutorialDatabase } from '@/lib/utils/database';
 import { LocalStorage } from '@/lib/utils/ux-enhancements';
+import { clientLogger } from '@/lib/client-logger';
 
 interface UseTutorialTriggerOptions {
   userId?: string;
@@ -62,8 +63,8 @@ export function useTutorialTrigger({
         if (progress?.completedTutorials.includes(tutorialId)) {
           return false;
         }
-      } catch (error) {
-        console.error('Error checking tutorial progress:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error checking tutorial progress:', error);
       }
     } else {
       // For non-authenticated users, check localStorage
@@ -98,7 +99,7 @@ export function useTutorialTrigger({
     if (tutorial) {
       startTutorial(tutorial);
     } else {
-      console.warn(`Tutorial not found: ${tutorialId}`);
+      clientLogger.warn(`Tutorial not found: ${tutorialId}`);
     }
   }, [startTutorial]);
 
@@ -177,13 +178,13 @@ export function useTutorialSettings(userId?: string) {
     try {
       if (tutorialId) {
         // Reset specific tutorial (would need database method)
-        console.log(`Resetting tutorial: ${tutorialId}`);
+        clientLogger.debug(`Resetting tutorial: ${tutorialId}`);
       } else {
         // Reset all tutorials (would need database method)
-        console.log('Resetting all tutorials');
+        clientLogger.debug('Resetting all tutorials');
       }
-    } catch (error) {
-      console.error('Error resetting tutorial progress:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error resetting tutorial progress:', error);
     }
   }, [userId]);
 
@@ -202,8 +203,8 @@ export function useTutorialSettings(userId?: string) {
         currentTutorial: progress?.currentTutorial,
         hasVisited: true
       };
-    } catch (error) {
-      console.error('Error getting tutorial progress:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error getting tutorial progress:', error);
       return {
         completedTutorials: [],
         hasVisited: false

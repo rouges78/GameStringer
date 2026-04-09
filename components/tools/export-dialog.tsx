@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
 import { exportToGridlyCsv, translationEntriesToGridly, getGridlyFileName } from '@/lib/gridly-format';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationEntry {
   id: string;
@@ -105,8 +106,8 @@ export function ExportDialog({
           });
         }
         setFormats(exportFormats);
-      } catch (e) {
-        console.error('[Export] Error loading formats:', e);
+      } catch (e: unknown) {
+        clientLogger.error('[Export] Error loading formats:', e);
       }
     };
     if (open) {
@@ -209,8 +210,8 @@ export function ExportDialog({
         title: '✅ Export completato!',
         description: `${exportResult.entriesCount} traduzioni esportate in ${exportResult.format}`
       });
-    } catch (e) {
-      console.error('[Export] Error:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[Export] Error:', e);
       toast({
         title: 'Errore export',
         description: String(e),

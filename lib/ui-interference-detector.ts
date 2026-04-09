@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Sistema per rilevare interferenze UI e gestire il posizionamento delle notifiche
@@ -74,7 +75,7 @@ class UIInterferenceDetector {
     window.addEventListener('scroll', this.handleWindowChange, true);
 
     if (this.options.debugMode) {
-      console.log('[UIInterferenceDetector] Inizializzato con opzioni:', this.options);
+      clientLogger.debug('[UIInterferenceDetector] Inizializzato con opzioni:', this.options);
     }
   }
 
@@ -203,7 +204,7 @@ class UIInterferenceDetector {
       this.notifyCallbacks();
       
       if (this.options.debugMode) {
-        console.log('[UIInterferenceDetector] Interferenze rilevate:', 
+        clientLogger.debug('[UIInterferenceDetector] Interferenze rilevate:', 
           Array.from(newInterferences.values()));
       }
     }
@@ -398,8 +399,8 @@ class UIInterferenceDetector {
     this.callbacks.forEach(callback => {
       try {
         callback(interferences);
-      } catch (error) {
-        console.error('[UIInterferenceDetector] Errore nel callback:', error);
+      } catch (error: unknown) {
+        clientLogger.error('[UIInterferenceDetector] Errore nel callback:', error);
       }
     });
   }
@@ -594,7 +595,7 @@ class UIInterferenceDetector {
     this.callbacks.clear();
 
     if (this.options.debugMode) {
-      console.log('[UIInterferenceDetector] Distrutto');
+      clientLogger.debug('[UIInterferenceDetector] Distrutto');
     }
   }
 }

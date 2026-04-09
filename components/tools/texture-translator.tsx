@@ -38,6 +38,7 @@ import {
   Save
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface DetectedTextRegion {
   id: string;
@@ -328,11 +329,11 @@ export function TextureTranslator() {
   };
 
   const exportTexture = () => {
-    console.log('Exporting texture:', currentTexture);
+    clientLogger.debug('Exporting texture:', currentTexture);
   };
 
   const exportAll = () => {
-    console.log('Exporting all textures:', textures);
+    clientLogger.debug('Exporting all textures:', textures);
   };
 
   const filteredTextures = textures.filter(tex => 

@@ -446,7 +446,7 @@ REGOLE IMPORTANTI:
         model: this.currentModel,
         processingTime: Date.now() - startTime
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(`Ollama translation failed: ${error}`);
     }
   }
@@ -491,7 +491,7 @@ REGOLE IMPORTANTI:
         model: this.currentModel,
         processingTime: Date.now() - startTime
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error(`LM Studio translation failed: ${error}`);
     }
   }
@@ -545,7 +545,7 @@ REGOLE IMPORTANTI:
           text: texts[i]
         });
         results.push(result);
-      } catch (error) {
+      } catch (error: unknown) {
         results.push({
           translation: texts[i],
           alternatives: [],
@@ -737,9 +737,9 @@ Includi solo termini gaming-specific o importanti per la consistenza.`;
       
       job.status = 'completed';
       job.completedAt = Date.now();
-    } catch (error) {
+    } catch (error: unknown) {
       job.status = 'failed';
-      console.error('Batch job failed:', error);
+      clientLogger.error('Batch job failed:', error);
     }
   }
 

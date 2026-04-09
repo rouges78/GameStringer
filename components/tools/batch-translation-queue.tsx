@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 // Types for translation queue
 export interface TranslationJob {
@@ -109,8 +110,8 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
         setQueue(prev => [...prev, ...newJobs]);
         toast.success(`${newJobs.length} ${t('batch.filesInQueue')}`);
       }
-    } catch (error) {
-      console.error('File selection error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('File selection error:', error);
       toast.error(t('common.error'));
     }
   }, [targetLanguage]);
@@ -155,8 +156,8 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           toast.info(t('batch.noFiles'));
         }
       }
-    } catch (error) {
-      console.error('Folder scan error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Folder scan error:', error);
       toast.error(t('common.error'));
     }
   }, [targetLanguage]);
@@ -193,8 +194,8 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           stringCount = await invoke<number>('count_translatable_strings', {
             filePath: job.filePath
           });
-        } catch (e) {
-          console.warn('Unable to count strings, using default:', e);
+        } catch (e: unknown) {
+          clientLogger.warn('Unable to count strings, using default:', e);
         }
 
         setQueue(prev => prev.map(j => 
@@ -237,7 +238,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
         }
 
       } catch (error: unknown) {
-        console.error('Translation error:', error);
+        clientLogger.error('Translation error:', error);
         setQueue(prev => prev.map(j => 
           j.id === job.id ? { 
             ...j, 

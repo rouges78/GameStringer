@@ -6,6 +6,7 @@ import { Search, Loader2, Music, Undo2, PlayCircle, HardDrive } from 'lucide-rea
 import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface AudioFile {
   name: string;
@@ -45,7 +46,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
         toast.success(`Trovati ${files.length} file audio.`);
       }
     } catch (err: unknown) {
-      console.error('Errore durante la scansione audio:', err);
+      clientLogger.error('Errore durante la scansione audio:', err);
       toast.error('Errore durante la scansione audio', { description: err.toString() });
     } finally {
       setIsScanning(false);
@@ -81,7 +82,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
       toast.success('File audio patchato con successo! Backup originale creato.', { id: toastId });
       setXttsText(''); // Pulisci l'input
     } catch (err: unknown) {
-      console.error('Errore patch audio:', err);
+      clientLogger.error('Errore patch audio:', err);
       toast.error('Errore durante la patch audio', { description: err.toString(), id: toastId });
     } finally {
       setIsPatching(false);
@@ -96,7 +97,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
       await invoke('restore_audio_file', { originalPath: selectedFile.path });
       toast.success('File originale ripristinato con successo.');
     } catch (err: unknown) {
-      console.error('Errore restore audio:', err);
+      clientLogger.error('Errore restore audio:', err);
       toast.error('Errore durante il ripristino del file audio', { description: err.toString() });
     } finally {
       setIsRestoring(false);

@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
+import { clientLogger } from '@/lib/client-logger';
 
 interface RenpyGame {
   path: string;
@@ -97,8 +98,8 @@ export default function RenpyPatcherPage() {
     try {
       const newStats = await invoke<RenpyStats>('get_renpy_translation_stats', { strings });
       setStats(newStats);
-    } catch (e) {
-      console.error('Errore calcolo stats:', e);
+    } catch (e: unknown) {
+      clientLogger.error('Errore calcolo stats:', e);
     }
   };
 
@@ -119,7 +120,7 @@ export default function RenpyPatcherPage() {
         setStats(null);
         toast.success(`Rilevato: ${detected.title}`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore: ${e}`);
     } finally {
       setLoading(false);
@@ -141,7 +142,7 @@ export default function RenpyPatcherPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore estrazione: ${e}`);
     } finally {
       setExtracting(false);
@@ -159,7 +160,7 @@ export default function RenpyPatcherPage() {
         strings,
       });
       toast.success(result);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore generazione: ${e}`);
     } finally {
       setGenerating(false);
@@ -180,7 +181,7 @@ export default function RenpyPatcherPage() {
         });
         toast.success(`Salvate ${count} traduzioni`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore salvataggio: ${e}`);
     }
   };
@@ -199,7 +200,7 @@ export default function RenpyPatcherPage() {
         setStrings(loaded);
         toast.success(`Caricate ${loaded.length} traduzioni`);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`Errore caricamento: ${e}`);
     }
   };

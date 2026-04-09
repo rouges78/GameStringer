@@ -259,8 +259,8 @@ export function listPakFiles(buffer: ArrayBuffer): PakEntry[] {
     }
 
     return entries;
-  } catch (e) {
-    console.error('[PakParser] Error reading index:', e);
+  } catch (e: unknown) {
+    clientLogger.error('[PakParser] Error reading index:', e);
     return [];
   }
 }
@@ -304,7 +304,7 @@ export function parseLocres(buffer: ArrayBuffer): LocresData | null {
   // Check magic
   const magic = reader.readUint32();
   if (magic !== LOCRES_MAGIC) {
-    console.error(`[LocresParser] Invalid magic: 0x${magic.toString(16)}`);
+    clientLogger.error(`[LocresParser] Invalid magic: 0x${magic.toString(16)}`);
     return null;
   }
 

@@ -89,8 +89,8 @@ export default function DryRunScanner() {
       const result = await invoke('dry_run_scan_all_games') as DryRunReport;
       setReport(result);
       toast.success(`✅ Scansione completata: ${result.ready}/${result.scanned} giochi pronti`);
-    } catch (err: any) {
-      toast.error(`❌ Errore: ${err?.toString() || 'Scansione fallita'}`);
+    } catch (err: unknown) {
+      toast.error(`❌ Errore: ${err instanceof Error ? err.message : 'Scansione fallita'}`);
     } finally {
       setRunning(false);
     }

@@ -16,6 +16,7 @@ import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { rawPixelsToBase64 } from '@/lib/image-utils';
 import Link from 'next/link';
 import { RETRO_PLATFORMS, type RetroPlatform } from '@/lib/community-hub-service';
+import { clientLogger } from '@/lib/client-logger';
 
 interface WindowInfo {
   hwnd: number;
@@ -143,8 +144,8 @@ export default function EmulatorTranslatorPage() {
         translationCache.current.set(clean, result.translated);
         return result.translated;
       }
-    } catch (e) {
-      console.warn('[EmuTranslator]', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[EmuTranslator]', e);
     }
     return null;
   }, [targetLang, sourceLang]);
@@ -260,7 +261,7 @@ export default function EmulatorTranslatorPage() {
       }
       setScreenshotTexts(results);
       toast.success(`${results.length} righe estratte e tradotte`);
-    } catch (e) {
+    } catch (e: unknown) {
       toast.error(`OCR errore: ${e}`);
     }
     setScreenshotProcessing(false);

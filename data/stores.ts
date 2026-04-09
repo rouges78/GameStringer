@@ -1,7 +1,7 @@
 export interface Store {
   id: string;
   name: string;
-  icon?: any; // O un tipo più specifico se usi una libreria di icone
+  icon?: React.ComponentType<{ className?: string }>;
   testCommand: string; // Nome del comando Tauri per testare la connessione
 }
 

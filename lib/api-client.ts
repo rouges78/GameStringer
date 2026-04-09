@@ -5,6 +5,26 @@
 
 import { notifications } from './notifications';
 
+/**
+ * Secure fetch wrapper that adds CSRF protection headers for local API calls.
+ * Use this instead of raw fetch() for any request to /api/* endpoints.
+ */
+export function secureFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const isLocalApi = url.startsWith('/api/') || url.startsWith('/api');
+  const method = (options.method || 'GET').toUpperCase();
+  const needsCsrf = isLocalApi && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+
+  if (needsCsrf) {
+    options.headers = {
+      'Content-Type': 'application/json',
+      'X-GS-Client': 'gamestringer',
+      ...(options.headers || {}),
+    };
+  }
+
+  return fetch(url, options);
+}
+
 interface RequestOptions extends Omit<RequestInit, 'cache'> {
   retry?: number;
   retryDelay?: number;
@@ -62,6 +82,7 @@ export async function apiRequest<T = unknown>(
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
+          'X-GS-Client': 'gamestringer',
           ...fetchOptions.headers,
         },
       });
@@ -92,10 +113,11 @@ export async function apiRequest<T = unknown>(
 
       return { data, error: null, status: response.status };
     } catch (err: unknown) {
-      if (err.name === 'AbortError') {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (error.name === 'AbortError') {
         lastError = 'Request timeout';
       } else {
-        lastError = err.message || 'Network error';
+        lastError = error.message || 'Network error';
       }
       
       if (attempt < retry) {

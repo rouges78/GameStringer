@@ -30,6 +30,7 @@ import {
   type AutoGlossaryConfig,
 } from '@/lib/auto-glossary';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const TIER_COLORS: Record<GlossaryTier, string> = {
   locked: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -232,9 +233,9 @@ export default function GlossaryPage() {
       }
 
       refreshGlossaries();
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error('Errore durante l\'estrazione');
-      console.error(err);
+      clientLogger.error(err);
     } finally {
       setExtracting(false);
     }

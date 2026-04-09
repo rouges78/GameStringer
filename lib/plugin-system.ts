@@ -1,4 +1,5 @@
 import { safeSetItem, safeGetItem } from './safe-storage';
+import { clientLogger } from '@/lib/client-logger';
 
 const PLUGINS_KEY = 'installed_plugins';
 
@@ -44,6 +45,56 @@ export interface EnginePlugin extends PluginDefinition {
   injectStrings: (filePath: string, original: string, translated: ParsedContent) => string;
   icon?: string;
   website?: string;
+}
+
+/**
+ * Plugin per patcher di gioco — estende EnginePlugin con ciclo completo
+ * detect → extract → translate → patch → verify → restore
+ */
+export interface PatcherPlugin extends EnginePlugin {
+  /** Detect if this patcher can handle the game at the given path */
+  detectGame: (gamePath: string) => Promise<PatcherDetectionResult>;
+  /** Extract all translatable strings from the game */
+  extractAll: (gamePath: string) => Promise<PatcherExtractionResult>;
+  /** Apply translated strings back to the game files */
+  applyPatch: (gamePath: string, translations: TranslationEntry[]) => Promise<PatcherPatchResult>;
+  /** Verify patch integrity after application */
+  verifyPatch?: (gamePath: string) => Promise<PatcherVerifyResult>;
+  /** Restore original files from backup */
+  restoreBackup?: (gamePath: string) => Promise<{ success: boolean; message: string }>;
+}
+
+export interface PatcherDetectionResult {
+  detected: boolean;
+  engineName: string;
+  engineVersion?: string;
+  gameTitle?: string;
+  localizationFiles: string[];
+  totalStrings: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface PatcherExtractionResult {
+  success: boolean;
+  entries: TranslationEntry[];
+  files: Array<{ path: string; format: string; stringCount: number }>;
+  totalStrings: number;
+  error?: string;
+}
+
+export interface PatcherPatchResult {
+  success: boolean;
+  patchedFiles: number;
+  totalFiles: number;
+  backupCreated: boolean;
+  method: string;
+  error?: string;
+}
+
+export interface PatcherVerifyResult {
+  success: boolean;
+  integrityOk: boolean;
+  issues: string[];
 }
 
 /**
@@ -100,6 +151,7 @@ class PluginRegistry {
   private plugins: Map<string, PluginDefinition> = new Map();
   private formatParsers: Map<string, FormatPlugin> = new Map();
   private enginePlugins: Map<string, EnginePlugin> = new Map();
+  private patcherPlugins: Map<string, PatcherPlugin> = new Map();
   private listeners: Array<(event: string, plugin: PluginDefinition) => void> = [];
   
   constructor() {
@@ -353,6 +405,40 @@ class PluginRegistry {
     return Array.from(this.enginePlugins.values());
   }
 
+  /** Registra un patcher plugin (superset di engine plugin) */
+  registerPatcherPlugin(plugin: PatcherPlugin): void {
+    this.plugins.set(plugin.id, plugin);
+    this.patcherPlugins.set(plugin.engineName.toLowerCase(), plugin);
+    this.enginePlugins.set(plugin.engineName.toLowerCase(), plugin);
+    this.savePlugins();
+    this.emit('registered', plugin);
+    clientLogger.info(`[PluginSystem] Patcher registrato: ${plugin.engineName}`, 'PLUGINS');
+  }
+
+  /** Ottiene patcher plugin per engine name */
+  getPatcherPlugin(engineName: string): PatcherPlugin | null {
+    return this.patcherPlugins.get(engineName.toLowerCase()) || null;
+  }
+
+  /** Rileva patcher per un gioco specifico */
+  async detectPatcherForGame(gamePath: string): Promise<PatcherPlugin | null> {
+    for (const plugin of this.patcherPlugins.values()) {
+      if (!plugin.enabled) continue;
+      try {
+        const result = await plugin.detectGame(gamePath);
+        if (result.detected) return plugin;
+      } catch {
+        // Try next plugin
+      }
+    }
+    return null;
+  }
+
+  /** Lista patcher plugins */
+  listPatcherPlugins(): PatcherPlugin[] {
+    return Array.from(this.patcherPlugins.values());
+  }
+
   /**
    * Carica un plugin esterno da manifest JSON
    * Il manifest contiene le definizioni, l'entrypoint è un modulo JS inline
@@ -415,6 +501,34 @@ class PluginRegistry {
         return { success: true, pluginId: manifest.id };
       }
 
+      // Patcher plugin: full game patching lifecycle
+      if (manifest.type === 'engine' && pluginModule.detectGame && pluginModule.extractAll && pluginModule.applyPatch) {
+        const patcherPlugin: PatcherPlugin = {
+          id: manifest.id,
+          name: manifest.name,
+          version: manifest.version,
+          type: 'engine',
+          description: manifest.description,
+          author: manifest.author,
+          enabled: true,
+          engineName: pluginModule.engineName || manifest.name,
+          supportedExtensions: pluginModule.supportedExtensions || [],
+          detectEngine: pluginModule.detectEngine || (() => false),
+          extractStrings: pluginModule.extractStrings || (() => ({ entries: [] })),
+          injectStrings: pluginModule.injectStrings || (() => ''),
+          detectGame: pluginModule.detectGame,
+          extractAll: pluginModule.extractAll,
+          applyPatch: pluginModule.applyPatch,
+          verifyPatch: pluginModule.verifyPatch,
+          restoreBackup: pluginModule.restoreBackup,
+          icon: pluginModule.icon,
+          website: manifest.homepage,
+          config: manifest.config,
+        };
+        this.registerPatcherPlugin(patcherPlugin);
+        return { success: true, pluginId: manifest.id };
+      }
+
       return { success: false, error: `Tipo plugin '${manifest.type}' non supportato o modulo incompleto` };
     } catch (e: unknown) {
       return { success: false, error: e.message };
@@ -428,8 +542,8 @@ class PluginRegistry {
       const exports: Record<string, unknown> = {};
       fn(exports);
       return exports;
-    } catch (e) {
-      console.error('[PluginSystem] Errore valutazione plugin:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[PluginSystem] Errore valutazione plugin:', e);
       return null;
     }
   }
@@ -996,8 +1110,8 @@ export function parseFile(content: string, extension: string): ParsedContent | n
   
   try {
     return parser.parse(content);
-  } catch (error) {
-    console.error(`Errore parsing ${extension}:`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`Errore parsing ${extension}:`, error);
     return null;
   }
 }
@@ -1011,8 +1125,8 @@ export function serializeContent(content: ParsedContent, extension: string): str
   
   try {
     return parser.serialize(content);
-  } catch (error) {
-    console.error(`Errore serializzazione ${extension}:`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`Errore serializzazione ${extension}:`, error);
     return null;
   }
 }

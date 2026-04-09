@@ -39,7 +39,7 @@ export class VlmTranslator {
         m.includes('pixtral') ||
         m.includes('vision')
       );
-    } catch (e) {
+    } catch (e: unknown) {
       clearTimeout(timeoutId);
       return [];
     }
@@ -106,8 +106,8 @@ ${opts.context ? `Context: ${opts.context}` : ''}`;
         .replace(/^["']|["']$/g, '');
 
       return translated;
-    } catch (e) {
-      console.error('[VLM] Errore elaborazione immagine:', e);
+    } catch (e: unknown) {
+      clientLogger.error('[VLM] Errore elaborazione immagine:', e);
       throw e;
     }
   }

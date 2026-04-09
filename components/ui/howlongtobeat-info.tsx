@@ -41,7 +41,7 @@ export function HowLongToBeatInfo({ gameName, currentPlaytime = 0 }: HowLongToBe
         }
         
         setData(result);
-      } catch (err) {
+      } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);

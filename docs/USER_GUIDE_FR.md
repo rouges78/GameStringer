@@ -446,4 +446,43 @@ Chat en temps réel intégré au Community Hub, propulsé par Supabase Realtime.
 
 ---
 
-GameStringer v1.6.0 - Guide mise à jour le 04/04/2026
+## Nouveautés v1.8.0
+
+### Overlay de Traduction en Direct
+- Allez sur la page **/live-translate** ou appuyez sur **Ctrl+Alt+O**
+- Sélectionnez la langue source/cible et le fournisseur AI
+- Cliquez sur **Démarrer** — l'overlay apparaît par-dessus le jeu
+- Le texte est capturé par OCR toutes les 2 secondes
+- Les traductions apparaissent sous forme de boîtes d'overlay transparentes
+- La détection des différences ignore le texte inchangé (économise les appels API)
+
+### Marketplace du Hub
+- Allez au **Community Hub** pour parcourir les packs de traduction
+- **Installation en 1 clic** : télécharger → valider → importer
+- Notez et évaluez les packs de la communauté
+- Publiez vos propres traductions sous forme de fichiers **.gspack**
+- Profils utilisateur avec réputation et badges
+
+### Réseau de Mémoire de Traduction
+- Activez dans **Paramètres → Réseau TM**
+- Opt-in : vos traductions de haute qualité contribuent au pool global
+- Confidentialité d'abord : texte source haché, aucune donnée utilisateur partagée
+- L'utilisateur suivant traduisant le même jeu reçoit des suggestions pré-remplies
+- Intégré automatiquement dans le pipeline de traduction
+
+### Pipeline de Doublage AI
+- Allez sur la page **/dubbing**
+- Sélectionnez le dossier du jeu et configurez les langues/voix
+- Pipeline en 7 étapes : scan → transcrire → traduire → synthétiser → patcher → synchronisation labiale → sous-titres
+- L'ajustement de durée maintient l'audio traduit à la même longueur que l'original
+- Profils vocaux de personnage avec 16 archétypes
+
+### Système de Plugins
+- La communauté peut créer de nouveaux patchers de moteurs de jeu en JavaScript
+- Aucune compilation Rust nécessaire
+- Le générateur de modèles crée un squelette complet de plugin
+- Les plugins sont distribués sous forme de paquets **.gsplugin**
+
+---
+
+GameStringer v1.8.0 - Guide mise à jour le 09/04/2026

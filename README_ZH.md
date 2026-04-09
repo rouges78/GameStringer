@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.7.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.8.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ GameStringer 支持具有不同深度级别的 **20+ 引擎**:
 ---
 
 ## ✨ 功能
+
+### 🆕 v1.8.0 新增功能
+
+- **Live Translation Overlay** — 实时游戏翻译,配备透明 OCR 叠加层
+- **Hub Marketplace** — 社区翻译包市场,一键安装
+- **Translation Memory Network** — 联邦式社区翻译共享
+- **AI Dubbing Pipeline** — 端到端游戏语音配音(STT → 翻译 → TTS → 补丁)
+- **Plugin System** — 社区可扩展的游戏引擎补丁器插件
 
 ### 🤖 AI 翻译
 
@@ -411,5 +419,6 @@ Rust 后端:`cd src-tauri && cargo check` 以验证 Tauri 命令在您的平台�
 
 <p align="center">
   用 ❤️ 为想用自己语言玩游戏的玩家制作<br>
+  <strong>GameStringer v1.8.0</strong> · © 2025-2026 GameStringer Team
   <strong>GameStringer v1.7.0</strong> · © 2025-2026 GameStringer Team
 </p>

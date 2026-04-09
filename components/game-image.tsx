@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Gamepad2 } from 'lucide-react';
 import IntelligentPlaceholder from './intelligent-placeholder';
+import { clientLogger } from '@/lib/client-logger';
 
 interface GameImageProps {
   src: string;
@@ -28,7 +29,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   // Debug: log quando src è vuoto o mancante
   useEffect(() => {
     if (!src || src === '') {
-      console.log(`[GameImage] ⚠️ Empty src for ${gameName} (appId: ${appId}), fallback: ${fallbackSrc?.substring(0, 40) || 'none'}`);
+      clientLogger.debug(`[GameImage] ⚠️ Empty src for ${gameName} (appId: ${appId}), fallback: ${fallbackSrc?.substring(0, 40) || 'none'}`);
     }
   }, [src, gameName, appId, fallbackSrc]);
 
@@ -64,7 +65,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   useEffect(() => {
     if (!isVisible || triedSteamGridDb || !appId || !gameName) return;
     if (!currentSrc || currentSrc === '') {
-      console.log(`[GameImage] 🔍 No src, fetching SteamGridDB for ${gameName}`);
+      clientLogger.debug(`[GameImage] 🔍 No src, fetching SteamGridDB for ${gameName}`);
       fetchSteamGridDbImage();
       return;
     }
@@ -75,7 +76,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
       // Immagine caricata correttamente, niente da fare
     };
     img.onerror = () => {
-      console.log(`[GameImage] 🔍 Image failed to load for ${gameName}, trying SteamGridDB`);
+      clientLogger.debug(`[GameImage] 🔍 Image failed to load for ${gameName}, trying SteamGridDB`);
       if (!triedSteamGridDb) {
         fetchSteamGridDbImage();
       }
@@ -106,7 +107,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
         try {
           const prefs = JSON.parse(utilityPrefs);
           apiKey = prefs?.steamgriddb?.apiKey || null;
-        } catch (e) {}
+        } catch (e: unknown) {}
       }
       
       const result = await invoke<string | null>('fetch_steamgriddb_image', {
@@ -122,8 +123,8 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
       } else {
         setHasError(true);
       }
-    } catch (e) {
-      console.warn('[GameImage] SteamGridDB fallback failed:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('[GameImage] SteamGridDB fallback failed:', e);
       setHasError(true);
     } finally {
       setIsLoadingSteamGridDb(false);
@@ -131,21 +132,21 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   };
 
   const handleError = async () => {
-    console.log(`[GameImage] onError triggered for ${gameName} (appId: ${appId}), currentSrc: ${currentSrc?.substring(0, 50)}...`);
+    clientLogger.debug(`[GameImage] onError triggered for ${gameName} (appId: ${appId}), currentSrc: ${currentSrc?.substring(0, 50)}...`);
     
     // Prima prova il fallback locale
     if (currentSrc !== fallbackSrc && fallbackSrc) {
-      console.log(`[GameImage] Trying fallback for ${gameName}: ${fallbackSrc?.substring(0, 50)}...`);
+      clientLogger.debug(`[GameImage] Trying fallback for ${gameName}: ${fallbackSrc?.substring(0, 50)}...`);
       setCurrentSrc(fallbackSrc);
       return;
     }
     
     // Poi prova SteamGridDB
     if (!triedSteamGridDb && appId && gameName) {
-      console.log(`[GameImage] Trying SteamGridDB for ${gameName} (appId: ${appId})`);
+      clientLogger.debug(`[GameImage] Trying SteamGridDB for ${gameName} (appId: ${appId})`);
       await fetchSteamGridDbImage();
     } else {
-      console.log(`[GameImage] No more fallbacks for ${gameName}, showing placeholder`);
+      clientLogger.debug(`[GameImage] No more fallbacks for ${gameName}, showing placeholder`);
       setHasError(true);
     }
   };

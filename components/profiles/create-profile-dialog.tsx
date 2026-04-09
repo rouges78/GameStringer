@@ -37,6 +37,7 @@ interface CreateProfileDialogProps {
 
 import { AVATAR_GRADIENTS, getAvatarGradient, getInitials } from '@/lib/avatar-utils';
 import { IT, GB, ES, FR, DE, JP, CN, KR, PT, RU, PL } from 'country-flag-icons/react/3x2';
+import { clientLogger } from '@/lib/client-logger';
 
 const LANGUAGES: { code: Language; name: string; Flag: React.ComponentType<{ className?: string }> }[] = [
   { code: 'it', name: 'Italiano', Flag: IT },
@@ -160,7 +161,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     const success = await createProfile(request);
     
     if (success) {
-      console.log('✅ Profile created successfully:', request.name);
+      clientLogger.debug('✅ Profile created successfully:', request.name);
       
       // Genera Recovery Key
       const newRecoveryKey = generateRecoveryKey();
@@ -173,7 +174,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
       setPendingProfileId(request.name);
       setShowRecoveryKey(true);
     } else {
-      console.error('❌ Error during profile creation');
+      clientLogger.error('❌ Error during profile creation');
       setError(t('profile.errorCreatingProfile'));
     }
     
@@ -188,8 +189,8 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     // Salva lingua per il nuovo profilo
     try {
       localStorage.setItem(`gs_language_${pendingProfileId}`, formData.language);
-    } catch (e) {
-      console.warn('Failed to save language for profile:', e);
+    } catch (e: unknown) {
+      clientLogger.warn('Failed to save language for profile:', e);
     }
     
     setFormData({

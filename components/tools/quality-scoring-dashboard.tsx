@@ -25,6 +25,7 @@ import {
   type TranslationEntry
 } from '@/lib/quality-scoring';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 // ─── Quality Bar Component ───────────────────────────────────
 
@@ -359,8 +360,8 @@ export function QualityScoringDashboard() {
         if (project) {
           loadProjects();
         }
-      } catch (err) {
-        console.error('Import failed:', err);
+      } catch (err: unknown) {
+        clientLogger.error('Import failed:', err);
       }
       setImporting(false);
     };

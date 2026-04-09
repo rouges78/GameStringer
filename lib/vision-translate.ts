@@ -106,7 +106,8 @@ async function translateWithOpenAIVision(
   prompt: string, 
   imageBase64?: string
 ): Promise<VisionTranslateResult> {
-  const apiKey = typeof window !== 'undefined' ? localStorage.getItem('k.openai') : null;
+  const { getSecureKey } = await import('@/lib/secure-key-store');
+  const apiKey = await getSecureKey('OPENAI_API_KEY');
   if (!apiKey) throw new Error('OpenAI API key not configured');
 
   const messages: unknown[] = [
@@ -157,7 +158,8 @@ async function translateWithGeminiVision(
   prompt: string, 
   imageBase64?: string
 ): Promise<VisionTranslateResult> {
-  const apiKey = typeof window !== 'undefined' ? localStorage.getItem('k.gemini') : null;
+  const { getSecureKey } = await import('@/lib/secure-key-store');
+  const apiKey = await getSecureKey('GEMINI_API_KEY');
   if (!apiKey) throw new Error('Gemini API key not configured');
 
   const parts: unknown[] = [{ text: `${VISION_SYSTEM_PROMPT}\n\n${prompt}` }];

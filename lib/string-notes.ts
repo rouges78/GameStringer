@@ -316,8 +316,8 @@ class StringNotesManager {
         const parsed = JSON.parse(historyData);
         this.history = new Map(Object.entries(parsed));
       }
-    } catch (error) {
-      console.error('[StringNotes] Load failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[StringNotes] Load failed:', error);
     }
   }
 
@@ -330,8 +330,8 @@ class StringNotesManager {
 
       const historyObj = Object.fromEntries(this.history);
       localStorage.setItem(HISTORY_KEY, JSON.stringify(historyObj));
-    } catch (error) {
-      console.error('[StringNotes] Save failed:', error);
+    } catch (error: unknown) {
+      clientLogger.error('[StringNotes] Save failed:', error);
     }
   }
 
@@ -386,6 +386,7 @@ export const stringNotesManager = new StringNotesManager();
 
 // React hooks
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 export function useStringNotes(stringId?: string) {
   const [, forceUpdate] = useState({});

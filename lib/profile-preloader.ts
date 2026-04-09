@@ -4,6 +4,7 @@
 
 import { invoke } from '@/lib/tauri-api';
 import { profileCache, ProfileMetadata } from './profile-cache';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface PreloadedProfile {
   id: string;
@@ -38,8 +39,8 @@ class ProfilePreloader {
         // Carica profili dal backend se cache non disponibile
         await this.preloadFromBackend();
       }
-    } catch (error) {
-      console.error('Error during profile preloading:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error during profile preloading:', error);
     } finally {
       this.isPreloading = false;
     }
@@ -101,8 +102,8 @@ class ProfilePreloader {
       }));
 
       profileCache.updateCache(metadata);
-    } catch (error) {
-      console.error('Error preloading from backend:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error preloading from backend:', error);
     }
   }
 
@@ -149,8 +150,8 @@ class ProfilePreloader {
       preloaded.isReady = true;
       this.preloadedProfiles.set(profileId, preloaded);
 
-    } catch (error) {
-      console.error(`Error preloading profile ${profileId}:`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`Error preloading profile ${profileId}:`, error);
       
       const preloaded = this.preloadedProfiles.get(profileId);
       if (preloaded) {
@@ -245,8 +246,8 @@ class ProfilePreloader {
       await this.preloadProfile(profileId, metadata);
       return this.preloadedProfiles.get(profileId) || null;
 
-    } catch (error) {
-      console.error(`Error in priority preload for ${profileId}:`, error);
+    } catch (error: unknown) {
+      clientLogger.error(`Error in priority preload for ${profileId}:`, error);
       return null;
     }
   }

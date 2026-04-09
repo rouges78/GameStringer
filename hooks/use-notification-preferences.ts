@@ -10,6 +10,7 @@ import {
   UseNotificationPreferencesReturn
 } from '@/types/notifications';
 import { useProfiles } from './use-profiles';
+import { clientLogger } from '@/lib/client-logger';
 
 export const useNotificationPreferences = (profileId?: string): UseNotificationPreferencesReturn => {
   // Se non viene fornito un profileId, usa il profilo corrente
@@ -84,14 +85,14 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
           profile_id: activeProfileId,
           preferences: updatedPreferences
         });
-      } catch (e) {
+      } catch (e: unknown) {
         // Se il comando specifico fallisce, prova quello generico
         try {
           response = await invoke('update_notification_preferences', {
             preferences: updatedPreferences
           });
         } catch (innerError) {
-          console.warn('Backend notifiche non disponibile, uso salvataggio locale:', innerError);
+          clientLogger.warn('Backend notifiche non disponibile, uso salvataggio locale:', innerError);
           // Fallback locale: simula successo e salva in localStorage se possibile
           localStorage.setItem(`notification_prefs_${activeProfileId}`, JSON.stringify(updatedPreferences));
           response = { success: true };
@@ -105,8 +106,8 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
         setError(response?.error || 'Errore nel salvataggio delle preferenze');
         return false;
       }
-    } catch (err) {
-      console.error('Errore nell\'aggiornamento delle preferenze:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nell\'aggiornamento delle preferenze:', err);
       // Fallback finale
       localStorage.setItem(`notification_prefs_${activeProfileId}`, JSON.stringify(updatedPreferences));
       setPreferences(updatedPreferences);
@@ -135,8 +136,8 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
         response = await invoke('update_notification_preferences', {
           preferences: defaultPrefs
         });
-      } catch (e) {
-        console.warn('Backend notifiche non disponibile per reset, uso locale');
+      } catch (e: unknown) {
+        clientLogger.warn('Backend notifiche non disponibile per reset, uso locale');
         localStorage.removeItem(`notification_prefs_${activeProfileId}`);
         response = { success: true };
       }
@@ -148,8 +149,8 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
         setError(response?.error || 'Errore nel reset delle preferenze');
         return false;
       }
-    } catch (err) {
-      console.error('Errore nel reset delle preferenze:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Errore nel reset delle preferenze:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }

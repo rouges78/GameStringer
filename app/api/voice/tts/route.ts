@@ -68,7 +68,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
 
     return NextResponse.json(result);
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('TTS failed', 'VOICE_API', { error });
     throw error;
   }

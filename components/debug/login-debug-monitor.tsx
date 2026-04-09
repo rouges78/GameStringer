@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { clientLogger } from '@/lib/client-logger';
 
 export function LoginDebugMonitor() {
   const [logs, setLogs] = useState<string[]>([]);
@@ -50,8 +51,8 @@ export function LoginDebugMonitor() {
     
     // Monitora eventi di navigazione
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      console.error('🚨 ATTENZIONE: La pagina sta per essere ricaricata/chiusa!');
-      console.error('Stack trace:', new Error().stack);
+      clientLogger.error('🚨 ATTENZIONE: La pagina sta per essere ricaricata/chiusa!');
+      clientLogger.error('Stack trace:', new Error().stack);
       // Previeni il reload per debug
       e.preventDefault();
       e.returnValue = '';
@@ -65,12 +66,12 @@ export function LoginDebugMonitor() {
     const originalReplaceState = history.replaceState;
     
     history.pushState = function(...args) {
-      console.log('🔄 history.pushState chiamato:', args);
+      clientLogger.debug('🔄 history.pushState chiamato:', args);
       return originalPushState.apply(history, args);
     };
     
     history.replaceState = function(...args) {
-      console.log('🔄 history.replaceState chiamato:', args);
+      clientLogger.debug('🔄 history.replaceState chiamato:', args);
       return originalReplaceState.apply(history, args);
     };
     
@@ -84,7 +85,7 @@ export function LoginDebugMonitor() {
             return originalLocation;
           },
           set(value) {
-            console.warn('🚫 [LoginDebugMonitor] Tentativo di modificare window.location bloccato:', value);
+            clientLogger.warn('🚫 [LoginDebugMonitor] Tentativo di modificare window.location bloccato:', value);
             setLogs(prev => [...prev, `[WARN] ${new Date().toISOString()}: Tentativo di modificare window.location: ${value}`]);
             // Non permettere la modifica
             return originalLocation;
@@ -92,8 +93,8 @@ export function LoginDebugMonitor() {
           configurable: true
         });
       }
-    } catch (e) {
-      console.log('⚠️ [LoginDebugMonitor] Non posso intercettare window.location:', e.message);
+    } catch (e: unknown) {
+      clientLogger.debug('⚠️ [LoginDebugMonitor] Non posso intercettare window.location:', e.message);
       setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: Non posso intercettare window.location: ${e.message}`]);
     }
     

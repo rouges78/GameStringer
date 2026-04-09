@@ -1,35 +1,63 @@
-# GameStringer v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase
+# GameStringer v1.8.0 — Live Translation Overlay, Hub Marketplace, TM Network, AI Dubbing Pipeline, Plugin System
 
-## Migrazione Radix UI
+## Live Translation Overlay
 
-- **37 componenti migrati** da `@radix-ui/react-*` a `radix-ui`
-- **27 pacchetti rimossi** dalle dipendenze, bundle più leggero
-- Nessun cambiamento visivo — stessa UI, meno dipendenze
+- **Overlay OCR in tempo reale**: traduzione live del gioco tramite overlay trasparente
+- Pipeline: cattura schermo → OCR multi-engine (Tesseract/OneOCR/PaddleOCR) → traduzione AI (Groq/Cerebras) → overlay stile gaming
+- Hotkey `Ctrl+Alt+O` per attivare/disattivare
+- Diff detection: salta il testo invariato tra frame successivi
+- Cache traduzioni per replay istantaneo
 
-## Quality Badge nel Traduttore Pro
+## Hub Marketplace
 
-- **QualityScoreBadge**: punteggio qualità 0-100 per ogni riga tradotta (🟢 ≥80, 🟡 ≥60, 🔴 <60)
-- **ContentTypeBadge**: tipo contenuto (UI, Dialogo, Narrativa, Sistema, Tutorial)
-- **Live Preview**: anteprima qualità in tempo reale durante la traduzione batch
-- **Tabella Dettaglio**: fino a 200 righe con originale, traduzione, tipo e qualità
+- **Marketplace community**: piattaforma pacchetti traduzione con installazione 1-click
+- Backend Supabase con 10 tabelle (packs, reviews, commenti, follower, moderazione)
+- Profili utente con sistema di reputazione
+- Workflow stato: draft → published → verified → featured
 
-## Nuove Feature
+## Translation Memory Network
 
-- **Supporto RTL**: rilevamento automatico direzione testo per lingue arabe/ebraiche
-- **Ollama Generico**: `translateWithOllamaGeneric` con chain presets e fallback automatico
+- **TM federata**: condivisione Translation Memory via Supabase
+- Traduzioni ad alta qualità (confidence > 0.8) contribuite al pool globale (opt-in, privacy-first)
+- Testo sorgente hashato per protezione privacy
+- Auto-integrata nella pipeline `translateWithFallback()`
+- Entry con scope per gioco
 
-## Ottimizzazione & Fix
+## AI Dubbing Pipeline
 
-- **Bundle ottimizzato**: `optimizePackageImports` con radix-ui, framer-motion, recharts, cmdk
-- **0 errori TypeScript** nei sorgenti (da ~15)
-- Fix regex type casting in translation-quality e translation-validator
-- Fix props opzionali mancanti in NotificationToast, TutorialProvider, CreateNotificationRequest
-- Fix TranslationMemoryEntry.usageCount reso opzionale
+- **Pipeline doppiaggio a 7 step**: scan audio → Whisper STT → traduzione AI → sintesi TTS con voci personaggio (OpenAI/ElevenLabs/Azure) → duration matching → patching audio con backup → Rhubarb lip sync → sottotitoli (SRT/VTT/ASS)
+- 16 archetipi personaggio per voci caratterizzate
+- Supporto pausa/ripresa/annullamento
 
-## Guide aggiornate
+## Plugin System
 
-- Documentazione v1.4.0 in 7 lingue: IT, EN, ES, FR, DE, JA, ZH
+- **PatcherPlugin interface**: plugin per patcher engine creati dalla community
+- Ciclo di vita: detect → extract → patch → verify → restore
+- Template generator per scaffolding plugin
+- Nessuna compilazione Rust — plugin via JavaScript eval sandboxed
+- Distribuzione come pacchetti `.gsplugin`
+
+## Security
+
+- CSP rinforzata: rimosso `unsafe-eval`, `img-src`/`connect-src` ristretti a domini specifici
+- Fix XSS nella ricerca intelligente (rimosso `dangerouslySetInnerHTML`)
+- Storage chiavi API criptato con AES-256-GCM (backend Rust + client TypeScript)
+- Protezione CSRF: validazione Origin + header `X-GS-Client`
+- Validazione input Zod su 4 route API
+- Rate limiting globale middleware (configurabile per-route)
+- Tutte le 42/42 route API usano `withErrorHandler`
+
+## Architettura & Qualità Codice
+
+- CI pipeline: aggiunto job `frontend-checks` (tsc, eslint, vitest, npm audit)
+- ESLint config: regole `no-console`, `no-explicit-any`, `no-unused-vars`
+- 71 nuovi unit test (api-schemas, middleware, moduli traduzione)
+- 18 moduli estratti da 3 file monolitici (-1841 righe totali)
+- 1197/1203 chiamate `console.*` migrate a `clientLogger`/`logger` strutturato (99.5%)
+- 893 clausole catch tipizzate con `: unknown`
+- 25+ tipi TypeScript `any` eliminati
+- Rimosse dipendenze duplicate: react-hot-toast, vdf (-42 pacchetti)
 
 ---
 
-**Download**: Scegli `GameStringer-1.4.0-Setup.exe` (installer) o `GameStringer-1.4.0-Portable.zip`
+**Download**: Scegli `GameStringer-1.8.0-Setup.exe` (installer) o `GameStringer-1.8.0-Portable.zip`

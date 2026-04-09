@@ -8,6 +8,7 @@ import {
   ArrowLeftRight, LayoutPanelLeft, X, HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { clientLogger } from '@/lib/client-logger';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -345,7 +346,7 @@ export default function EditorPage() {
               // Genera nomi lingue basati sul numero di colonne trovate
               const defaultLangs = ['Francese', 'Inglese', 'Tedesco', 'Spagnolo', 'Polacco', 'Cinese', 'Giapponese', 'Coreano', 'Russo', 'Portoghese'];
               setDetectedLanguages(defaultLangs.slice(0, Math.min(langCount, defaultLangs.length)));
-              console.log(`[Editor] Rilevate ${langCount} lingue nel file multi-lingua`);
+              clientLogger.debug(`[Editor] Rilevate ${langCount} lingue nel file multi-lingua`);
             }
           }
           
@@ -387,8 +388,8 @@ export default function EditorPage() {
               : `${data.filename} - ${parsedLines.length} stringhe trovate`,
           });
           setIsLoading(false);
-        } catch (err) {
-          console.error('Error loading editor file:', err);
+        } catch (err: unknown) {
+          clientLogger.error('Error loading editor file:', err);
           await storageManager.clearEditorFile();
         }
       }
@@ -402,7 +403,7 @@ export default function EditorPage() {
       const data = await storageManager.getPartialTranslations();
       if (data) {
         try {
-          console.log('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
+          clientLogger.debug('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
           
           // Crea traduzioni dall'array di items
           if (data.items && data.items.length > 0) {
@@ -441,8 +442,8 @@ export default function EditorPage() {
             // await storageManager.clearPartialTranslations();
           }
           setIsLoading(false);
-        } catch (err) {
-          console.error('[Editor] Error loading partial translations:', err);
+        } catch (err: unknown) {
+          clientLogger.error('[Editor] Error loading partial translations:', err);
         }
       }
     };
@@ -473,8 +474,8 @@ export default function EditorPage() {
           coverUrl: g.header_image || g.coverUrl
         })));
       }
-    } catch (error) {
-      console.error('Error loading games:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading games:', error);
     }
   };
 
@@ -516,7 +517,7 @@ export default function EditorPage() {
           });
         }
       } catch (dictError) {
-        console.warn('[Editor] Dizionari non disponibili:', dictError);
+        clientLogger.warn('[Editor] Dizionari non disponibili:', dictError);
       }
       
       // Carica anche dai games con traduzioni saved (API Next.js come fallback)
@@ -545,7 +546,7 @@ export default function EditorPage() {
           }
         }
       } catch (transError) {
-        console.warn('[Editor] Traduzioni non disponibili:', transError);
+        clientLogger.warn('[Editor] Traduzioni non disponibili:', transError);
       }
       
       // Se non ci sono progetti, mostra i games dalla library che hanno file di localizzazione
@@ -581,13 +582,13 @@ export default function EditorPage() {
             }
           }
         } catch (gamesError) {
-          console.warn('[Editor] games non disponibili:', gamesError);
+          clientLogger.warn('[Editor] games non disponibili:', gamesError);
         }
       }
       
       setGameProjects(Array.from(projectsMap.values()));
-    } catch (error) {
-      console.error('Error loading game projects:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading game projects:', error);
     } finally {
       setIsLoading(false);
     }
@@ -609,8 +610,8 @@ export default function EditorPage() {
           if (updated) setSelectedTranslation(updated);
         }
       }
-    } catch (error) {
-      console.error('Error loading translations:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading translations:', error);
       toast({ title: 'error', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -650,15 +651,15 @@ export default function EditorPage() {
               translated: updates.translatedText
             })
           });
-          console.log('[Editor] Traduzione salvata nel dizionario');
+          clientLogger.debug('[Editor] Traduzione salvata nel dizionario');
         } catch (dictError) {
-          console.warn('[Editor] Impossibile salvare nel dizionario:', dictError);
+          clientLogger.warn('[Editor] Impossibile salvare nel dizionario:', dictError);
         }
       }
       
       toast({ title: 'Salvato', description: 'Traduzione updated e salvata nel dizionario' });
-    } catch (error) {
-      console.error('Error saving translation:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error saving translation:', error);
       toast({ title: 'error', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
     } finally {
       setIsSaving(false);
@@ -719,7 +720,7 @@ export default function EditorPage() {
         }
         notifications.success(`${suggestions.length} suggerimenti trovati`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       notifications.error('Impossibile generare suggerimenti');
     } finally {
       setIsGeneratingSuggestions(false);
@@ -802,7 +803,7 @@ export default function EditorPage() {
           existingData.items = updatedItems;
           existingData.timestamp = Date.now();
           await set('gamestringer_partial_translations', existingData);
-          console.log('[Editor] saved modifiche manuali in IndexedDB:', translatedLines.length);
+          clientLogger.debug('[Editor] saved modifiche manuali in IndexedDB:', translatedLines.length);
         } else {
           // Crea nuova struttura
           const newData = {
@@ -816,10 +817,10 @@ export default function EditorPage() {
             })),
           };
           await set('gamestringer_partial_translations', newData);
-          console.log('[Editor] Creati nuovi dati in IndexedDB:', translatedLines.length);
+          clientLogger.debug('[Editor] Creati nuovi dati in IndexedDB:', translatedLines.length);
         }
-      } catch (err) {
-        console.error('[Editor] error salvataggio IndexedDB:', err);
+      } catch (err: unknown) {
+        clientLogger.error('[Editor] error salvataggio IndexedDB:', err);
       }
       
       setHasUnsavedChanges(false);
@@ -853,13 +854,13 @@ export default function EditorPage() {
   const deleteTranslation = async (id: string) => {
     if (!confirm('Eliminare questa traduzione?')) return;
     try {
-      const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE', headers: { 'X-GS-Client': 'gamestringer' } });
       if (response.ok) {
         setTranslations(prev => prev.filter(t => t.id !== id));
         if (selectedTranslation?.id === id) setSelectedTranslation(null);
         toast({ title: 'Eliminata', description: 'Traduzione rimossa' });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast({ title: 'error', description: 'Impossibile eliminare', variant: 'destructive' });
     }
   };
@@ -894,7 +895,7 @@ export default function EditorPage() {
         
         toast({ title: 'Esportazione completata', description: `Traduzioni esportate in ${format.toUpperCase()}` });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast({ title: 'error', description: 'Impossibile esportare', variant: 'destructive' });
     }
   };

@@ -19,6 +19,7 @@ import {
   Shield
 } from 'lucide-react';
 import { formatRecoveryKeyForDisplay, recoveryKeyToString } from '@/lib/recovery-key';
+import { clientLogger } from '@/lib/client-logger';
 
 interface RecoveryKeyDisplayProps {
   open: boolean;
@@ -46,8 +47,8 @@ export function RecoveryKeyDisplay({
       await navigator.clipboard.writeText(keyString);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch (err: unknown) {
+      clientLogger.error('Failed to copy:', err);
     }
   };
 

@@ -109,6 +109,7 @@ export {
 import { parseFile, writeFile, ParseResult, SUPPORTED_FORMATS } from '../file-parsers';
 import { BatchTranslator, BatchOptions, BatchProgress, BatchTranslationJob, BatchTranslationItem } from '../batch-translator';
 import { translationMemory } from '../translation-memory';
+import { clientLogger } from '@/lib/client-logger';
 
 /**
  * Traduce un file completo
@@ -197,7 +198,7 @@ export async function initializeNeuralTranslator(
   targetLanguage: string = 'it'
 ): Promise<void> {
   await translationMemory.initialize(sourceLanguage, targetLanguage);
-  console.log('[Neural Translator] Sistema inizializzato');
+  clientLogger.debug('[Neural Translator] Sistema inizializzato');
 }
 
 /**

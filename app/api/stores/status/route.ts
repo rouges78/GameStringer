@@ -94,7 +94,7 @@ const testStoreConnection = async (storeId: string): Promise<{ connected: boolea
         };
       }
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`Store connection test failed: ${storeId}`, 'STORES_API', { error });
     return { 
       connected: false, 
@@ -119,7 +119,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
     const result = await testStoreConnection(storeId);
     
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error during store connection test', 'STORES_API', { error });
     throw error;
   }
@@ -229,7 +229,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
           error: 'Azione non supportata. Azioni disponibili: connect, disconnect, refresh, sync'
         }, { status: 400 });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error during store operation', 'STORES_API', { error });
     throw error;
   }

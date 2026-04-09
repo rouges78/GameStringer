@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useLogging } from '@/hooks/useLogging';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface LogEntry {
   timestamp: string;
@@ -127,8 +128,8 @@ export function LoggingDashboard() {
       
       setStats({ total, byLevel, byComponent, recentErrors });
       
-    } catch (error) {
-      console.error('Failed to fetch logs:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to fetch logs:', error);
     } finally {
       setIsLoading(false);
     }
@@ -141,8 +142,8 @@ export function LoggingDashboard() {
       setLogs([]);
       setStats({ total: 0, byLevel: {}, byComponent: {}, recentErrors: 0 });
       logUserAction('clear_logs');
-    } catch (error) {
-      console.error('Failed to clear logs:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Failed to clear logs:', error);
     }
   };
 

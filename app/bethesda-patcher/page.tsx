@@ -17,6 +17,7 @@ import {
   Swords, ScrollText, Users, MessageSquare, Archive,
 } from 'lucide-react'
 import {
+import { clientLogger } from '@/lib/client-logger';
   type BethesdaGameInfo,
   type PluginInfo,
   type StringTableFile,
@@ -151,8 +152,8 @@ export default function BethesdaPatcherPage() {
         setError('')
         setStep(1)
       }
-    } catch (e) {
-      console.error('Errore selezione cartella:', e)
+    } catch (e: unknown) {
+      clientLogger.error('Errore selezione cartella:', e)
     }
   }, [])
 
@@ -175,7 +176,7 @@ export default function BethesdaPatcherPage() {
       } else {
         setError('Nessun plugin o string table trovato nella cartella selezionata.')
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore analisi: ${e}`)
     } finally {
       setAnalyzing(false)
@@ -226,7 +227,7 @@ export default function BethesdaPatcherPage() {
       setPluginEntries([])
       setEditorMode('strings')
       setStep(3)
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore caricamento string table: ${e}`)
     } finally {
       setLoading(false)
@@ -245,7 +246,7 @@ export default function BethesdaPatcherPage() {
       setStringEntries([])
       setEditorMode('plugin')
       setStep(3)
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore estrazione stringhe plugin: ${e}`)
     } finally {
       setLoading(false)
@@ -280,7 +281,7 @@ export default function BethesdaPatcherPage() {
         setPluginEntries(result)
       }
       setProgress(100)
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore traduzione: ${e}`)
     } finally {
       setTranslating(false)
@@ -391,7 +392,7 @@ export default function BethesdaPatcherPage() {
       const result = await buildPatchedStrings(allEntries, outputPath, format)
       setExportResult(result)
       setStep(4)
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore esportazione: ${e}`)
     } finally {
       setExporting(false)
@@ -454,7 +455,7 @@ export default function BethesdaPatcherPage() {
       if (editorMode === 'strings') {
         setStringEntries(importStringsFromCSV(csv, stringEntries))
       }
-    } catch (e) {
+    } catch (e: unknown) {
       setError(`Errore importazione CSV: ${e}`)
     }
   }, [editorMode, stringEntries])

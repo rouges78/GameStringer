@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import { useNotifications } from '@/hooks/use-notifications';
+import { clientLogger } from '@/lib/client-logger';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 // Rimossa dipendenza da useProfileAuth per evitare dipendenza circolare
 import { NotificationToastProvider } from './notification-toast-provider';
@@ -221,10 +222,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           break;
 
         default:
-          console.log('Unhandled system event:', eventType, data);
+          clientLogger.debug('Unhandled system event:', eventType, data);
       }
-    } catch (error) {
-      console.error('Error handling system event:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error handling system event:', error);
     }
   };
 
@@ -317,10 +318,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           break;
 
         default:
-          console.log('Unhandled profile event:', eventType, profileId, data);
+          clientLogger.debug('Unhandled profile event:', eventType, profileId, data);
       }
-    } catch (error) {
-      console.error('Error handling profile event:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error handling profile event:', error);
     }
   };
 
@@ -353,7 +354,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     const initializeNotificationSystem = async () => {
       try {
-        console.log('Initializing notification system for profile:', currentProfileId);
+        clientLogger.debug('Initializing notification system for profile:', currentProfileId);
 
         // Initialize Tauri notification system if available
         if (typeof window !== 'undefined') {
@@ -364,9 +365,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
               await invoke('initialize_notification_system', {
                 profile_id: currentProfileId
               });
-              console.log('Tauri notification system initialized');
-            } catch (error) {
-              console.warn('Error initializing Tauri notification system:', error);
+              clientLogger.debug('Tauri notification system initialized');
+            } catch (error: unknown) {
+              clientLogger.warn('Error initializing Tauri notification system:', error);
             }
           }
         }
@@ -384,8 +385,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         }
 
         initializationRef.current = true;
-      } catch (error) {
-        console.error('Error initializing notification system:', error);
+      } catch (error: unknown) {
+        clientLogger.error('Error initializing notification system:', error);
       }
     };
 
@@ -479,8 +480,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
               });
               cleanup.push(unlistenProfile);
             }
-          } catch (error) {
-            console.warn('Error setting up Tauri event listeners:', error);
+          } catch (error: unknown) {
+            clientLogger.warn('Error setting up Tauri event listeners:', error);
           }
         };
 
@@ -505,7 +506,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
         if (invoke) {
           invoke('cleanup_notification_system').catch((error: unknown) => {
-            console.warn('Error cleaning up notification system:', error);
+            clientLogger.warn('Error cleaning up notification system:', error);
           });
         }
       }
@@ -557,10 +558,10 @@ export const useNotificationActions = () => {
   if (context === undefined) {
     // Fallback se il provider non è disponibile
     return {
-      showSuccess: (title: string, message: string) => console.log('Success:', title, message),
-      showError: (title: string, message: string) => console.log('Error:', title, message),
-      showInfo: (title: string, message: string) => console.log('Info:', title, message),
-      showWarning: (title: string, message: string) => console.log('Warning:', title, message)
+      showSuccess: (title: string, message: string) => clientLogger.debug('Success:', title, message),
+      showError: (title: string, message: string) => clientLogger.debug('Error:', title, message),
+      showInfo: (title: string, message: string) => clientLogger.debug('Info:', title, message),
+      showWarning: (title: string, message: string) => clientLogger.debug('Warning:', title, message)
     };
   }
   

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationImportDialogProps {
   open: boolean;
@@ -74,7 +75,7 @@ export function TranslationImportDialog({
         sourceLanguage: t.sourceLanguage || 'en',
         context: t.context
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       throw new Error('Invalid JSON format');
     }
   };
@@ -139,8 +140,8 @@ export function TranslationImportDialog({
       // Reset form
       setSelectedGame('');
       setSelectedFile(null);
-    } catch (error) {
-      console.error('Import error:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Import error:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Error during import',

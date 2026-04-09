@@ -103,12 +103,54 @@ export async function patch(gamePath, translations, options) {
 2. **Da GitHub**: URL del repository, download automatico
 3. **Da Community Hub**: Browser integrato dei plugin condivisi
 
+## PatcherPlugin Interface (v1.8.0)
+
+A partire da v1.8.0, i plugin possono implementare il ciclo completo di patching:
+
+```typescript
+interface PatcherPlugin {
+  // Metadata
+  engineName: string;
+  supportedExtensions: string[];
+  
+  // Lifecycle
+  detectGame(gamePath: string): Promise<PatcherDetectionResult>;
+  extractAll(gamePath: string): Promise<PatcherExtractionResult>;
+  applyPatch(gamePath: string, translations: TranslationEntry[]): Promise<PatcherPatchResult>;
+  verifyPatch?(gamePath: string): Promise<PatcherVerifyResult>;
+  restoreBackup?(gamePath: string): Promise<{ success: boolean; message: string }>;
+}
+```
+
+### Template Generator
+
+Genera un plugin completo con un comando:
+
+```typescript
+import { generatePatcherTemplate } from '@/lib/plugin-template';
+
+const template = generatePatcherTemplate({
+  engineName: 'MyEngine',
+  author: 'CommunityDev',
+  extensions: ['.dat', '.bin'],
+});
+// Returns: { manifest, entrypoint, readme }
+```
+
+### Distribuzione
+
+I plugin vengono distribuiti come cartelle `.gsplugin` contenenti:
+- `manifest.json` — Metadata e configurazione
+- `plugin.js` — Codice del patcher
+- `README.md` — Documentazione
+
 ## Roadmap
 
-- **v1.5.0**: Scaffold base, caricamento plugin, API detect
-- **v1.6.0**: API extract/patch complete, sandbox QuickJS
-- **v1.7.0**: Community Hub plugin browser, firma e verifica
+- **v1.5.0**: ✅ Scaffold base, caricamento plugin, API detect
+- **v1.6.0**: ✅ API extract/patch complete, sandbox
+- **v1.7.0**: ✅ Community Hub plugin browser
+- **v1.8.0**: ✅ PatcherPlugin interface completa, template generator, distribuzione .gsplugin
 
 ---
 
-*GameStringer Plugin System — Draft v0.1 — 03/03/2026*
+*GameStringer Plugin System — v1.0 — 09/04/2026*

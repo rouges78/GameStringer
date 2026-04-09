@@ -48,6 +48,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
 import {
+import { clientLogger } from '@/lib/client-logger';
   SubtitleFile,
   SubtitleEntry,
   parseSubtitles,
@@ -168,8 +169,8 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
       const translatedFile = applyTranslations(subtitleFile, translations);
       setSubtitleFile(translatedFile);
       setProgress(100);
-    } catch (error) {
-      console.error("Translation error:", error);
+    } catch (error: unknown) {
+      clientLogger.error("Translation error:", error);
     } finally {
       setIsTranslating(false);
     }

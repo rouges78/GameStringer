@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 
 // Tipi per compatibilità con NextAuth
 type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -55,8 +56,8 @@ const setStoredAccounts = (accounts: ConnectedAccount[]) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(CONNECTED_ACCOUNTS_KEY, JSON.stringify(accounts));
-  } catch (error) {
-    console.error('Errore nel salvare gli account:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Errore nel salvare gli account:', error);
   }
 };
 
@@ -78,8 +79,8 @@ const setStoredSession = (session: Session | null) => {
     } else {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     }
-  } catch (error) {
-    console.error('Errore nel salvare la sessione:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Errore nel salvare la sessione:', error);
   }
 };
 
@@ -122,7 +123,7 @@ export const useSession = (): UseSessionReturn => {
 
 // Funzione per il login
 export const signIn = async (provider: string, options?: Record<string, unknown>): Promise<SignInResult> => {
-  console.log(`Auth locale: tentativo di login con ${provider}`, options);
+  clientLogger.debug(`Auth locale: tentativo di login con ${provider}`, options);
   
   try {
     const accounts = getStoredAccounts();
@@ -141,17 +142,17 @@ export const signIn = async (provider: string, options?: Record<string, unknown>
     const updatedAccounts = [...filteredAccounts, newAccount];
     setStoredAccounts(updatedAccounts);
     
-    console.log(`Account ${provider} collegato con successo:`, newAccount);
+    clientLogger.debug(`Account ${provider} collegato con successo:`, newAccount);
     return { error: null, ok: true };
-  } catch (error) {
-    console.error(`Errore nel collegare ${provider}:`, error);
+  } catch (error: unknown) {
+    clientLogger.error(`Errore nel collegare ${provider}:`, error);
     return { error: 'Errore nel collegamento', ok: false };
   }
 };
 
 // Funzione per il logout
 export const signOut = async (provider?: string) => {
-  console.log('Auth locale: logout', provider ? `per ${provider}` : 'completo');
+  clientLogger.debug('Auth locale: logout', provider ? `per ${provider}` : 'completo');
   
   try {
     if (provider) {
@@ -159,15 +160,15 @@ export const signOut = async (provider?: string) => {
       const accounts = getStoredAccounts();
       const filteredAccounts = accounts.filter(acc => acc.provider !== provider);
       setStoredAccounts(filteredAccounts);
-      console.log(`Provider ${provider} disconnesso`);
+      clientLogger.debug(`Provider ${provider} disconnesso`);
     } else {
       // Disconnetti tutto
       setStoredAccounts([]);
       setStoredSession(null);
-      console.log('Logout completo');
+      clientLogger.debug('Logout completo');
     }
-  } catch (error) {
-    console.error('Errore nel logout:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Errore nel logout:', error);
   }
 };
 

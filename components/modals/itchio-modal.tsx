@@ -32,7 +32,7 @@ export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: It
       await onSubmit(apiKey);
       setApiKey('');
       onClose();
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Connection error. Check API key.');
     }
   };

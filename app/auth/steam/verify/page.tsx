@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from '@/lib/auth';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 export default function SteamVerifyPage() {
   const { t } = useTranslation();
@@ -15,7 +16,7 @@ export default function SteamVerifyPage() {
   useEffect(() => {
     if (error) {
       // Handle error if the backend redirect with an error
-      console.error('Error during Steam verification:', error);
+      clientLogger.error('Error during Steam verification:', error);
       // Redirect to a safe page with an error message
       router.push('/stores?error=SteamLoginFailed');
       return;
@@ -34,13 +35,13 @@ export default function SteamVerifyPage() {
           router.refresh(); // Force a refresh to update session state
         } else {
           // Handle sign-in failure
-          console.error('NextAuth signIn failed:', result?.error);
+          clientLogger.error('NextAuth signIn failed:', result?.error);
           router.push(`/stores?error=${result?.error || 'SignInFailed'}`);
         }
       });
     } else {
         // If steamId is missing, it's an invalid state
-        console.error('SteamVerifyPage: steamId is missing from URL.');
+        clientLogger.error('SteamVerifyPage: steamId is missing from URL.');
         router.push('/stores?error=InvalidState');
     }
   }, [steamId, router, error]);

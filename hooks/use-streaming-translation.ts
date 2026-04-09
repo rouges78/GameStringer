@@ -49,7 +49,7 @@ export function useStreamingTranslation() {
     try {
       const response = await fetch('/api/translate/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify(options),
         signal: abortControllerRef.current.signal
       });
@@ -107,12 +107,12 @@ export function useStreamingTranslation() {
                 }));
                 break;
             }
-          } catch (e) {
+          } catch (e: unknown) {
             // Skip unparseable events
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') {
         // Request was cancelled, ignore
         return;

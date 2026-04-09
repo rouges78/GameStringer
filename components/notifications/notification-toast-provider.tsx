@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import ToastContainer from './toast-container';
 import { Notification, NotificationPriority, NotificationType } from '@/types/notifications';
+import { clientLogger } from '@/lib/client-logger';
 
 interface NotificationToastContextType {
   showToast: (notification: Notification) => void;
@@ -250,11 +251,11 @@ export const useToast = () => {
   if (context === undefined) {
     // Fallback se il provider non è disponibile
     return {
-      showToast: (notification: Notification) => console.log('Toast:', notification),
-      showSuccessToast: (title: string, message: string) => console.log('Success:', title, message),
-      showErrorToast: (title: string, message: string) => console.log('Error:', title, message),
-      showInfoToast: (title: string, message: string) => console.log('Info:', title, message),
-      showWarningToast: (title: string, message: string) => console.log('Warning:', title, message)
+      showToast: (notification: Notification) => clientLogger.debug('Toast:', notification),
+      showSuccessToast: (title: string, message: string) => clientLogger.debug('Success:', title, message),
+      showErrorToast: (title: string, message: string) => clientLogger.debug('Error:', title, message),
+      showInfoToast: (title: string, message: string) => clientLogger.debug('Info:', title, message),
+      showWarningToast: (title: string, message: string) => clientLogger.debug('Warning:', title, message)
     };
   }
   

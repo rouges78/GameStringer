@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { CHARACTER_PRESETS, type CharacterProfile } from '@/lib/translation-quality';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const PRESET_ICONS: Record<string, React.ElementType> = {
   pirate: Swords,
@@ -84,8 +85,8 @@ export function CharacterProfileManager({
     if (saved) {
       try {
         setCustomProfiles(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load character profiles:', e);
+      } catch (e: unknown) {
+        clientLogger.error('Failed to load character profiles:', e);
       }
     }
   }, []);

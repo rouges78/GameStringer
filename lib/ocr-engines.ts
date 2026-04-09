@@ -26,6 +26,7 @@
  */
 
 import { recognizeText, type OCRResult, type OCRWord, type OCRLine, type BoundingBox, type OCRProgress, type OCRLanguage } from './ocr-service';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -208,7 +209,7 @@ async function probeEngine(engineId: OCREngineId, timeout = 3000): Promise<Engin
     }
 
     return { engine: engineId, available: false, latencyMs, error: `HTTP ${res.status}` };
-  } catch (e) {
+  } catch (e: unknown) {
     return {
       engine: engineId,
       available: false,
@@ -545,13 +546,13 @@ export async function recognizeMultiEngine(
 
       // Se il risultato è vuoto o ha confidenza troppo bassa, prova il prossimo
       if (!result.text.trim() || result.confidence < 10) {
-        console.warn(`[OCR] ${engineId} returned empty/low-confidence result, trying next...`);
+        clientLogger.warn(`[OCR] ${engineId} returned empty/low-confidence result, trying next...`);
         continue;
       }
 
       return { ...result, engine: engineId };
-    } catch (e) {
-      console.warn(`[OCR] ${engineId} failed:`, e instanceof Error ? e.message : e);
+    } catch (e: unknown) {
+      clientLogger.warn(`[OCR] ${engineId} failed:`, e instanceof Error ? e.message : e);
       continue;
     }
   }

@@ -1,15 +1,17 @@
 /**
  * ⏯️ Workflow Control — Pause/Resume/Cancel
- * 
+ *
  * Sistema di controllo per workflow di traduzione lunghi.
  * Permette all'utente di:
  * - Mettere in pausa la traduzione (mantiene lo stato)
  * - Riprendere da dove si era fermato
  * - Cancellare completamente
  * - Monitorare il progresso in tempo reale
- * 
+ *
  * Funziona come "signal" globale che il backend/frontend possono controllare.
  */
+
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -107,7 +109,7 @@ export class WorkflowController {
       ...extra,
     };
     for (const listener of this.listeners) {
-      try { listener(event); } catch (e) { console.error('[WorkflowCtrl] Listener error:', e); }
+      try { listener(event); } catch (e: unknown) { clientLogger.error('[WorkflowCtrl] Listener error:', e); }
     }
   }
 
@@ -128,7 +130,7 @@ export class WorkflowController {
       startedAt: new Date().toISOString(),
     };
     this.emit('state_change');
-    console.log(`[WorkflowCtrl] ▶️ Avviato: ${stringsTotal} stringhe, ${totalStages} stadi`);
+    clientLogger.debug(`[WorkflowCtrl] ▶️ Avviato: ${stringsTotal} stringhe, ${totalStages} stadi`);
   }
 
   /**
@@ -142,7 +144,7 @@ export class WorkflowController {
     this.progress.state = 'paused';
     this.progress.pausedAt = new Date().toISOString();
     this.emit('state_change');
-    console.log(`[WorkflowCtrl] ⏸️ In pausa a ${this.progress.stringsProcessed}/${this.progress.stringsTotal}`);
+    clientLogger.debug(`[WorkflowCtrl] ⏸️ In pausa a ${this.progress.stringsProcessed}/${this.progress.stringsTotal}`);
   }
 
   /**
@@ -162,7 +164,7 @@ export class WorkflowController {
     }
     
     this.emit('state_change');
-    console.log(`[WorkflowCtrl] ▶️ Ripreso`);
+    clientLogger.debug(`[WorkflowCtrl] ▶️ Ripreso`);
   }
 
   /**
@@ -182,7 +184,7 @@ export class WorkflowController {
       this.pausePromiseResolve = null;
     }
     
-    console.log(`[WorkflowCtrl] ❌ Cancellazione richiesta`);
+    clientLogger.debug(`[WorkflowCtrl] ❌ Cancellazione richiesta`);
   }
 
   /**
@@ -195,7 +197,7 @@ export class WorkflowController {
     this.progress.percentComplete = 100;
     this.updateElapsed();
     this.emit('state_change');
-    console.log(`[WorkflowCtrl] ✅ Completato in ${Math.round(this.progress.elapsedMs / 1000)}s`);
+    clientLogger.debug(`[WorkflowCtrl] ✅ Completato in ${Math.round(this.progress.elapsedMs / 1000)}s`);
   }
 
   /**
@@ -207,7 +209,7 @@ export class WorkflowController {
     this.progress.errors.push(error);
     this.updateElapsed();
     this.emit('error', { error });
-    console.error(`[WorkflowCtrl] 💥 Errore: ${error}`);
+    clientLogger.error(`[WorkflowCtrl] 💥 Errore: ${error}`);
   }
 
   // ── Pause Points ──────────────────────────────────────────────
@@ -337,7 +339,7 @@ export class WorkflowController {
       localStorage.setItem(`gs_workflow_checkpoint_${this.workflowId}`, JSON.stringify(checkpoint));
     } catch {}
 
-    console.log(`[WorkflowCtrl] 💾 Checkpoint salvato: ${stageName} (${this.progress.stringsProcessed} stringhe)`);
+    clientLogger.debug(`[WorkflowCtrl] 💾 Checkpoint salvato: ${stageName} (${this.progress.stringsProcessed} stringhe)`);
     return checkpoint;
   }
 

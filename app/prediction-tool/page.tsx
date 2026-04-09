@@ -1112,7 +1112,7 @@ export default function PredictionToolPage() {
         targetLang,
       });
       setResult(res);
-    } catch (err) {
+    } catch (err: unknown) {
       setError(err as string);
     } finally {
       setLoading(false);
@@ -1130,7 +1130,7 @@ export default function PredictionToolPage() {
         outputPath: 'C:\\Users\\Public\\Documents\\GameStringer\\Reports'
       });
       alert(message);
-    } catch (err) {
+    } catch (err: unknown) {
       setError(`Errore export: ${err}`);
     } finally {
       setExporting(false);

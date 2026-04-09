@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import type { Translation, Game, AISuggestion } from '@prisma/client';
+import { clientLogger } from '@/lib/client-logger';
 
 // Tipi ottimizzati per query performance
 export interface TranslationWithSuggestions extends Translation {
@@ -306,8 +307,8 @@ export async function checkDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return { status: 'connected', timestamp: new Date() };
-  } catch (error) {
-    console.error('Database connection check failed:', error);
+  } catch (error: unknown) {
+    clientLogger.error('Database connection check failed:', error);
     return { status: 'disconnected', error: error.message, timestamp: new Date() };
   }
 }

@@ -48,6 +48,7 @@ import {
   type BenchmarkEntry,
 } from "@/lib/ai-pipeline"
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 const STEP_ICONS: Record<PipelineStepId, any> = {
   harvest: Sparkles,
@@ -196,8 +197,8 @@ export default function AIPipelinePage() {
       const entry = buildBenchmarkEntry(pipelineResult, agentConfig, activePresetId, presetName, sourceLang, targetLang);
       saveBenchmarkEntry(entry);
       setBenchmarkHistory(loadBenchmarkHistory());
-    } catch (e) {
-      console.error("[Pipeline] Error:", e)
+    } catch (e: unknown) {
+      clientLogger.error("[Pipeline] Error:", e)
     } finally {
       setIsRunning(false)
     }

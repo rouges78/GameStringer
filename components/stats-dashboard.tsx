@@ -15,6 +15,7 @@ import {
   Download
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationStats {
   totalWordsTranslated: number;
@@ -65,8 +66,8 @@ export function StatsDashboard() {
       if (savedDaily) {
         setDailyStats(JSON.parse(savedDaily));
       }
-    } catch (error) {
-      console.error('Error loading stats:', error);
+    } catch (error: unknown) {
+      clientLogger.error('Error loading stats:', error);
     } finally {
       setIsLoading(false);
     }
@@ -310,8 +311,8 @@ export function updateTranslationStats(
     
     localStorage.setItem('daily_translation_stats', JSON.stringify(filtered));
 
-  } catch (error) {
-    console.error('error update statistiche:', error);
+  } catch (error: unknown) {
+    clientLogger.error('error update statistiche:', error);
   }
 }
 

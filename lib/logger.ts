@@ -168,7 +168,7 @@ class Logger {
       const formatted = this.formatFileOutput(entry);
 
       appendFileSync(filepath, formatted);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to write to log file:', error);
     }
   }
@@ -188,7 +188,7 @@ class Logger {
       if (!response.ok) {
         console.error('Failed to send log to remote endpoint:', response.statusText);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending log to remote endpoint:', error);
     }
   }
@@ -223,7 +223,7 @@ class Logger {
           await this.logToRemote(entry);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error flushing log buffer:', error);
       // Re-add entries to buffer if flush failed
       this.logBuffer.unshift(...entries);
@@ -408,7 +408,7 @@ export function withLogging<T extends unknown[]>(
       logger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = Date.now() - start;
       
       logger.logError(error instanceof Error ? error : new Error(String(error)), component, {
@@ -437,7 +437,7 @@ export function withAsyncLogging<T extends unknown[]>(
       logger.logPerformance(operation, duration, component);
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = Date.now() - start;
       
       logger.logError(error instanceof Error ? error : new Error(String(error)), component, {

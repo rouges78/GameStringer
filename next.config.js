@@ -13,11 +13,13 @@ const nextConfig = {
     distDir: 'out',
   }),
   eslint: {
-    // Disabilita ESLint durante il build per velocizzare la compilazione
+    // TODO: impostare a false quando gli errori ESLint saranno risolti
+    // CI esegue lint separatamente come quality gate
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Disabilita type checking durante il build per velocizzare la compilazione
+    // TODO: impostare a false quando gli errori TS saranno risolti
+    // CI esegue tsc --noEmit separatamente come quality gate
     ignoreBuildErrors: true,
   },
   // Bundle size optimizations

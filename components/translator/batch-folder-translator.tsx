@@ -49,6 +49,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useTranslation } from "@/lib/i18n";
+import { clientLogger } from '@/lib/client-logger';
 
 interface BatchFile {
   path: string;
@@ -148,8 +149,8 @@ export function BatchFolderTranslator() {
         // Seleziona tutti i file di default
         setSelectedFiles(new Set(result.files.map(f => f.path)));
       }
-    } catch (error) {
-      console.error("Scan error:", error);
+    } catch (error: unknown) {
+      clientLogger.error("Scan error:", error);
     } finally {
       setIsScanning(false);
     }
@@ -250,7 +251,7 @@ export function BatchFolderTranslator() {
           next.set(file.path, { path: file.path, status: "completed", progress: 100 });
           return next;
         });
-      } catch (error) {
+      } catch (error: unknown) {
         setFileStatuses(prev => {
           const next = new Map(prev);
           next.set(file.path, { 
