@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useProfiles } from './use-profiles';
 import { useNotificationPreferences } from './use-notification-preferences';
-import { 
 import { clientLogger } from '@/lib/client-logger';
-  NotificationPreferences, 
+import {
+  NotificationPreferences,
   NotificationType,
   DEFAULT_NOTIFICATION_PREFERENCES 
 } from '@/types/notifications';

@@ -37,9 +37,9 @@ import {
 } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
-import { 
 import { clientLogger } from '@/lib/client-logger';
-  aiTranslationService, 
+import {
+  aiTranslationService,
   type AIProvider, 
   type GameTranslationContext,
   type AITranslationResult 
