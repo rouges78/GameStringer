@@ -269,6 +269,74 @@ CREATE POLICY "Users follow" ON user_followers FOR INSERT WITH CHECK (follower_i
 CREATE POLICY "Users unfollow" ON user_followers FOR DELETE USING (follower_id = auth.uid());
 CREATE POLICY "Users report packs" ON pack_reports FOR INSERT WITH CHECK (reporter_id = auth.uid());
 
+-- ── Shared Translation Memory (TM Network) ────────────────
+
+CREATE TABLE IF NOT EXISTS shared_tm (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_hash TEXT NOT NULL UNIQUE,
+  source_text TEXT NOT NULL,
+  target_text TEXT NOT NULL,
+  source_language TEXT NOT NULL,
+  target_language TEXT NOT NULL,
+  game_app_id INTEGER,
+  game_name TEXT,
+  context TEXT,
+  confidence REAL DEFAULT 0.8,
+  verified BOOLEAN DEFAULT false,
+  contributor_count INTEGER DEFAULT 1,
+  usage_count INTEGER DEFAULT 0,
+  contributor_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_shared_tm_hash ON shared_tm(source_hash);
+CREATE INDEX idx_shared_tm_game ON shared_tm(game_app_id);
+CREATE INDEX idx_shared_tm_game_name ON shared_tm(game_name);
+CREATE INDEX idx_shared_tm_langs ON shared_tm(source_language, target_language);
+CREATE INDEX idx_shared_tm_confidence ON shared_tm(confidence DESC);
+CREATE INDEX idx_shared_tm_contributors ON shared_tm(contributor_count DESC);
+
+-- RLS
+ALTER TABLE shared_tm ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read shared TM" ON shared_tm FOR SELECT USING (true);
+CREATE POLICY "Authenticated insert shared TM" ON shared_tm FOR INSERT WITH CHECK (true);
+CREATE POLICY "Authenticated update shared TM" ON shared_tm FOR UPDATE USING (true);
+
+-- Upsert trigger: when same source_hash is inserted, increment contributor_count
+-- and update target_text if new confidence is higher
+CREATE OR REPLACE FUNCTION handle_shared_tm_upsert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If entry already exists with same hash, merge
+  IF EXISTS (SELECT 1 FROM shared_tm WHERE source_hash = NEW.source_hash AND id != NEW.id) THEN
+    UPDATE shared_tm SET
+      contributor_count = contributor_count + 1,
+      -- Keep the translation with highest confidence
+      target_text = CASE WHEN NEW.confidence > confidence THEN NEW.target_text ELSE target_text END,
+      confidence = GREATEST(confidence, NEW.confidence),
+      verified = verified OR NEW.verified,
+      updated_at = now()
+    WHERE source_hash = NEW.source_hash;
+    RETURN NULL; -- Prevent insert, we updated instead
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER shared_tm_upsert_trigger
+  BEFORE INSERT ON shared_tm
+  FOR EACH ROW
+  EXECUTE FUNCTION handle_shared_tm_upsert();
+
+-- Increment usage count when a shared TM entry is downloaded
+CREATE OR REPLACE FUNCTION increment_tm_usage(tm_hash TEXT)
+RETURNS void AS $$
+BEGIN
+  UPDATE shared_tm SET usage_count = usage_count + 1 WHERE source_hash = tm_hash;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ── Storage Bucket ─────────────────────────────────────────
 -- Run this separately in Supabase Dashboard > Storage:
 -- CREATE BUCKET "translation-packs" (public: true, file size limit: 50MB)

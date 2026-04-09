@@ -1522,6 +1522,46 @@ export async function translateWithFallback(
     }
   }
 
+  // Auto-lookup shared TM Network for pre-translated strings
+  if (opts.texts.length > 0 && opts.texts.length <= 100) {
+    try {
+      const { lookupSharedTM, getTMNetworkConfig } = await import('./tm-network');
+      const tmConfig = getTMNetworkConfig();
+      if (tmConfig.enabled && tmConfig.pullOnTranslate) {
+        const shared = await lookupSharedTM(
+          opts.texts,
+          opts.sourceLanguage || 'en',
+          opts.targetLanguage,
+          undefined // gameAppId — could be passed via opts in future
+        );
+        if (shared.size > 0) {
+          // Pre-fill translations from network — remaining texts go to AI
+          const prefilled = new Map(shared);
+          const remainingTexts = opts.texts.filter(t => !prefilled.has(t));
+          if (remainingTexts.length === 0) {
+            // All texts found in shared TM — return directly
+            return {
+              translations: opts.texts.map(t => prefilled.get(t)?.targetText || t),
+              provider: 'tm-network',
+              success: true,
+            };
+          }
+          // Inject shared TM context for remaining texts
+          const sharedContext = Array.from(shared.values())
+            .slice(0, 10)
+            .map(e => `"${e.sourceText}" → "${e.targetText}"`)
+            .join('\n');
+          if (sharedContext && !opts.tmContext) {
+            opts = { ...opts, tmContext: `[Community TM]\n${sharedContext}` };
+          }
+          clientLogger.debug(`[TM-Network] ${shared.size}/${opts.texts.length} testi trovati nel network condiviso`);
+        }
+      }
+    } catch {
+      // TM Network non disponibile — procedi normalmente
+    }
+  }
+
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2]; // balanced default
 
