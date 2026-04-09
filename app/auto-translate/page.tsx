@@ -69,6 +69,7 @@ import {
 } from "@/lib/patch-generator"
 import { exportTMX, exportXLIFF, exportPO, type TranslatedFile, type PatchMetadata } from "@/lib/patch-exporter"
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 // ============================================================================
 // TYPES
@@ -314,9 +315,9 @@ export default function AutoTranslatePage() {
         translatedCount: totalDone,
         savedAt: Date.now(),
       })
-      console.log(`[Checkpoint] Salvato: ${totalDone} stringhe tradotte`)
+      clientLogger.debug(`[Checkpoint] Salvato: ${totalDone} stringhe tradotte`)
     } catch (e) {
-      console.warn('[Checkpoint] Errore salvataggio:', e)
+      clientLogger.warn('[Checkpoint] Errore salvataggio:', e)
     }
   }, [getCheckpointKey, gameInfo, targetLang, sourceLang, totalStrings])
 
@@ -442,7 +443,7 @@ export default function AutoTranslatePage() {
             stringCount = Object.keys(translations || {}).length
           } catch {}
         }
-        console.log(`[AutoTranslate] Unity game detected (${il2cpp ? 'IL2CPP' : 'Mono'}, BepInEx: ${hasBepInEx}, strings: ${stringCount}) → showing Unity panel`)
+        clientLogger.debug(`[AutoTranslate] Unity game detected (${il2cpp ? 'IL2CPP' : 'Mono'}, BepInEx: ${hasBepInEx}, strings: ${stringCount}) → showing Unity panel`)
         setIsLoadingGame(false)
         setGameError(null)
         setUnityDetected(true)
@@ -453,35 +454,35 @@ export default function AutoTranslatePage() {
       }
 
       // Step 1: scan_translatable_files (walkdir ricorsivo con estensioni note)
-      console.log('[AutoTranslate] Scanning:', installPath)
+      clientLogger.debug('[AutoTranslate] Scanning:', installPath)
       let locFiles: string[] = []
       try {
         locFiles = await invoke<string[]>('scan_translatable_files', { gamePath: installPath })
-        console.log('[AutoTranslate] scan_translatable_files result:', locFiles?.length, 'files')
+        clientLogger.debug('[AutoTranslate] scan_translatable_files result:', locFiles?.length, 'files')
       } catch (e1) {
-        console.warn('[AutoTranslate] scan_translatable_files failed:', e1)
+        clientLogger.warn('[AutoTranslate] scan_translatable_files failed:', e1)
         // Prova con snake_case (fallback per comandi senza rename_all)
         try {
           locFiles = await invoke<string[]>('scan_translatable_files', { game_path: installPath })
-          console.log('[AutoTranslate] scan_translatable_files (snake) result:', locFiles?.length, 'files')
+          clientLogger.debug('[AutoTranslate] scan_translatable_files (snake) result:', locFiles?.length, 'files')
         } catch (e2) {
-          console.warn('[AutoTranslate] scan_translatable_files (snake) also failed:', e2)
+          clientLogger.warn('[AutoTranslate] scan_translatable_files (snake) also failed:', e2)
         }
       }
 
       if (!locFiles || locFiles.length === 0) {
         // Step 2: fallback scan_localization_files
-        console.log('[AutoTranslate] No files from scan_translatable_files, trying scan_localization_files...')
+        clientLogger.debug('[AutoTranslate] No files from scan_translatable_files, trying scan_localization_files...')
         const fallbackExts = ['json', 'csv', 'po', 'pot', 'xlf', 'resx', 'strings', 'ini', 'xml', 'properties', 'yaml', 'yml', 'txt', 'lua', 'rpy', 'cfg', 'lang', 'loc', 'langdb', 'landb', 'dlog', 'ttarch', 'ttarch2']
         let allFiles: string[] = []
         try {
           const scanned = await invoke<{ path: string; name: string; size: number; extension: string }[]>(
             'scan_localization_files', { path: installPath, extensions: fallbackExts, maxDepth: 5 }
           )
-          console.log('[AutoTranslate] scan_localization_files result:', scanned?.length, 'files')
+          clientLogger.debug('[AutoTranslate] scan_localization_files result:', scanned?.length, 'files')
           allFiles = (scanned || []).map(f => f.path)
         } catch (e3) {
-          console.warn('[AutoTranslate] scan_localization_files failed:', e3)
+          clientLogger.warn('[AutoTranslate] scan_localization_files failed:', e3)
           // Ultimo fallback: sottocartelle comuni
           for (const subdir of ['localization', 'lang', 'languages', 'data', 'text', 'strings', 'www/data', 'game/tl', 'Pack']) {
             try {
@@ -529,7 +530,7 @@ export default function AutoTranslatePage() {
         await loadFilesFromPaths(locFiles, installPath)
       }
     } catch (err) {
-      console.error('[AutoTranslate] Scan TOTALMENTE fallito:', err)
+      clientLogger.error('[AutoTranslate] Scan TOTALMENTE fallito:', err)
       setGameError(`Automatic scan failed: ${err instanceof Error ? err.message : String(err)}. You can load files manually.`)
     } finally {
       setIsLoadingGame(false)
@@ -646,7 +647,7 @@ export default function AutoTranslatePage() {
     // Ren'Py: .rpy in images/, audio/, screens/, displayables/, tl/ contengono definizioni risorse/UI o traduzioni esistenti
     const renpyResourceDirs = /[/\\](images|audio|screens|displayables|tl)[/\\].*\.rpy$/i
     const filtered = filePaths.filter(fp => !excludedPatterns.some(rx => rx.test(fp)) && !binaryExts.test(fp) && !renpyResourceDirs.test(fp))
-    console.log(`[AutoTranslate] loadFilesFromPaths: ${filePaths.length} trovati, ${filtered.length} dopo filtro`)
+    clientLogger.debug(`[AutoTranslate] loadFilesFromPaths: ${filePaths.length} trovati, ${filtered.length} dopo filtro`)
     const loaded: LoadedFile[] = []
 
     // Lettura parallela con concurrency 10 (invece di sequenziale)
@@ -683,13 +684,13 @@ export default function AutoTranslatePage() {
       const results = await Promise.all(chunk.map(processFile))
       for (const r of results) { if (r) loaded.push(r) }
     }
-    console.log(`[AutoTranslate] ⚡ ${toRead.length} file letti in parallelo (batch ${CONCURRENCY})`)
+    clientLogger.debug(`[AutoTranslate] ⚡ ${toRead.length} file letti in parallelo (batch ${CONCURRENCY})`)
 
     if (loaded.length > 0) {
       setFiles(loaded)
-      console.log(`[AutoTranslate] ✅ Caricati ${loaded.length} file, ${loaded.reduce((s, f) => s + f.parsed.strings.length, 0)} stringhe totali`)
+      clientLogger.debug(`[AutoTranslate] ✅ Caricati ${loaded.length} file, ${loaded.reduce((s, f) => s + f.parsed.strings.length, 0)} stringhe totali`)
     } else {
-      console.warn('[AutoTranslate] ⚠️ Nessun file con stringhe traducibili')
+      clientLogger.warn('[AutoTranslate] ⚠️ Nessun file con stringhe traducibili')
       setGameError('No files with translatable strings found. You can load files manually.')
     }
   }
@@ -732,7 +733,7 @@ export default function AutoTranslatePage() {
   const handleStopTranslation = useCallback(() => {
     abortRef.current = true
     setStoppedByUser(true)
-    console.log('[AutoTranslate] Stop richiesto dall\'utente')
+    clientLogger.debug('[AutoTranslate] Stop richiesto dall\'utente')
   }, [])
 
   const handleStartTranslation = useCallback(async (resumeFromCheckpoint = false) => {
@@ -761,7 +762,7 @@ export default function AutoTranslatePage() {
         arr.forEach(t => { if (t.translation) existingKeys.add(t.key) })
       })
       globalTranslated = existingKeys.size
-      console.log(`[Resume] Ripresa da checkpoint: ${existingKeys.size} stringhe già tradotte`)
+      clientLogger.debug(`[Resume] Ripresa da checkpoint: ${existingKeys.size} stringhe già tradotte`)
     } else {
       allTranslated = new Map()
       await clearCheckpoint()
@@ -776,7 +777,7 @@ export default function AutoTranslatePage() {
       const existingFile = allTranslated.get(file.name)
       if (existingFile && existingFile.length === strings.length && existingFile.every(t => t.translation)) {
         globalTranslated = Math.max(globalTranslated, existingFile.filter(t => t.translation).length + (globalTranslated - existingKeys.size))
-        console.log(`[Resume] File ${file.name} già completo, skip`)
+        clientLogger.debug(`[Resume] File ${file.name} già completo, skip`)
         continue
       }
 
@@ -801,7 +802,7 @@ export default function AutoTranslatePage() {
         return false // già tradotta e invariata
       })
       if (pendingStrings.length === 0) {
-        console.log(`[Resume] File ${file.name}: tutte le stringhe già tradotte`)
+        clientLogger.debug(`[Resume] File ${file.name}: tutte le stringhe già tradotte`)
         continue
       }
       const totalBatches = Math.ceil(pendingStrings.length / batchSize)
@@ -821,7 +822,7 @@ export default function AutoTranslatePage() {
 
         // Check abort
         if (abortRef.current) {
-          console.log(`[AutoTranslate] Fermato dall'utente a ${globalTranslated} stringhe`)
+          clientLogger.debug(`[AutoTranslate] Fermato dall'utente a ${globalTranslated} stringhe`)
           break
         }
 
@@ -857,7 +858,7 @@ export default function AutoTranslatePage() {
           // Se il provider ha fallito completamente (success: false), auto-stop rapido
           if (!result.success) {
             consecutiveFailedBatches++
-            console.warn(`[AutoTranslate] Batch fallito (${consecutiveFailedBatches}/3) — provider: ${result.provider}, success: false`)
+            clientLogger.warn(`[AutoTranslate] Batch fallito (${consecutiveFailedBatches}/3) — provider: ${result.provider}, success: false`)
             for (const s of batch) {
               fileTranslations.push({ key: s.key, original: s.value, translation: '', qaScore: 0, qaPassed: false, isEdited: false })
               globalTranslated++
@@ -865,7 +866,7 @@ export default function AutoTranslatePage() {
             if (consecutiveFailedBatches >= 3) {
               errors.push('Tutti i provider di traduzione sono bloccati o non configurati. Traduzione fermata automaticamente.')
               abortRef.current = true
-              console.error('[AutoTranslate] Auto-stop: 3 batch consecutivi senza traduzioni')
+              clientLogger.error('[AutoTranslate] Auto-stop: 3 batch consecutivi senza traduzioni')
             }
           } else {
             let batchHasOutput = 0
@@ -892,11 +893,11 @@ export default function AutoTranslatePage() {
             // Auto-stop solo se il provider non restituisce NULLA (tutte le traduzioni vuote)
             if (batchHasOutput === 0) {
               consecutiveFailedBatches++
-              console.warn(`[AutoTranslate] Batch con 0 output (${consecutiveFailedBatches}/5) — provider: ${result.provider}`)
+              clientLogger.warn(`[AutoTranslate] Batch con 0 output (${consecutiveFailedBatches}/5) — provider: ${result.provider}`)
               if (consecutiveFailedBatches >= 5) {
                 errors.push('Tutti i provider di traduzione sono bloccati o non configurati. Traduzione fermata automaticamente.')
                 abortRef.current = true
-                console.error('[AutoTranslate] Auto-stop: 5 batch consecutivi senza output')
+                clientLogger.error('[AutoTranslate] Auto-stop: 5 batch consecutivi senza output')
               }
             } else {
               consecutiveFailedBatches = 0
@@ -1048,7 +1049,7 @@ export default function AutoTranslatePage() {
             setTranslatedStrings(new Map(updated))
           }
         } catch (err) {
-          console.warn(`[RetranslateUntranslated] Batch error:`, err)
+          clientLogger.warn(`[RetranslateUntranslated] Batch error:`, err)
         }
 
         doneCount += batch.length
@@ -1103,7 +1104,7 @@ export default function AutoTranslatePage() {
         qualityScore: avgScore, includeReadme: true, includeManifest: true,
       })
       setPatchResult(result)
-    } catch (err) { console.error('[Patch] Error:', err) }
+    } catch (err) { clientLogger.error('[Patch] Error:', err) }
     finally { setIsGenerating(false) }
   }, [files, translatedStrings, gameTitle, sourceLang, targetLang, translator, patchVersion, avgScore])
 
@@ -1126,16 +1127,16 @@ export default function AutoTranslatePage() {
         const desktopPath = await invoke<string>('get_desktop_path')
         const fullPath = `${desktopPath}\\${filename}`
         await invoke('save_binary_file', { filePath: fullPath, base64Content: base64 })
-        console.log('[ZIP] Salvato su Desktop:', fullPath)
+        clientLogger.debug('[ZIP] Salvato su Desktop:', fullPath)
         alert(`ZIP salvato sul Desktop:\n${fullPath}`)
         return
       } catch (tauriErr) {
-        console.log('[ZIP] Tauri non disponibile, fallback browser:', tauriErr)
+        clientLogger.debug('[ZIP] Tauri non disponibile, fallback browser:', tauriErr)
       }
 
       // Fallback browser
       downloadBlob(blob, filename)
-    } catch (err) { console.error('[ZIP] Error:', err) }
+    } catch (err) { clientLogger.error('[ZIP] Error:', err) }
   }, [patchResult, gameTitle, targetLang, patchVersion])
 
   // ============================================================================
@@ -1145,7 +1146,7 @@ export default function AutoTranslatePage() {
   const addTestLog = useCallback((msg: string) => {
     const ts = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     setTestPatchLogs(prev => [...prev, `[${ts}] ${msg}`])
-    console.log(`[TestPatch] ${msg}`)
+    clientLogger.debug(`[TestPatch] ${msg}`)
   }, [])
 
   // Rileva se il gioco è Unreal Engine (controlla se esiste una sottocartella con Content/Paks)
@@ -1226,7 +1227,7 @@ export default function AutoTranslatePage() {
             addTestLog(`Letto translation_session.json: ${session.entries.length} entries, ${translations.length} tradotte`)
           }
         } catch (sessionErr) {
-          console.warn('[TestPatch] translation_session.json non trovato, fallback a translatedStrings:', sessionErr)
+          clientLogger.warn('[TestPatch] translation_session.json non trovato, fallback a translatedStrings:', sessionErr)
         }
 
         // Fallback: usa translatedStrings del wizard (se non trovato il session file)

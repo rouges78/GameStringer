@@ -235,7 +235,7 @@ export class SpeechToTextEngine {
   // ── Web Speech API (browser-native) ───────────────────────────
 
   private async startWebSpeech(): Promise<void> {
-    const win = window as any;
+    const win = window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition };
     const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognitionClass) {
@@ -625,7 +625,7 @@ export async function checkSTTProviders(): Promise<STTProviderInfo[]> {
   const hasGroqKey = !!settings?.translation?.groqApiKey;
 
   // Check Web Speech API
-  const win = window as any;
+  const win = window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition };
   const hasWebSpeech = !!(win.SpeechRecognition || win.webkitSpeechRecognition);
 
   // Check Ollama

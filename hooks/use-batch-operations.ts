@@ -226,7 +226,7 @@ export function useTranslationBatchOperations() {
         // This would be replaced with actual translation API call
         const response = await fetch('/api/translations/translate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
             targetLanguage: item.data.targetLanguage,
@@ -258,7 +258,7 @@ export function useTranslationBatchOperations() {
       async (item) => {
         const response = await fetch('/api/translations/export', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationIds: [item.id],
             format: item.data.format
@@ -289,7 +289,7 @@ export function useTranslationBatchOperations() {
       async (item) => {
         const response = await fetch('/api/translations/update-status', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
             status: item.data.status

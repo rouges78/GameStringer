@@ -214,7 +214,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <Label className="text-xs text-zinc-500 mb-1 block">Recognizer</Label>
-            <Select value={recognizer} onValueChange={(v) => setRecognizer(v as any)}>
+            <Select value={recognizer} onValueChange={(v) => setRecognizer(v as 'phonetic' | 'dataBased')}>
               <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
                 <SelectValue />
               </SelectTrigger>
@@ -366,7 +366,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-[10px] text-zinc-500 mb-1 block">Engine Target</Label>
-                <Select value={exportEngine} onValueChange={(v) => setExportEngine(v as any)}>
+                <Select value={exportEngine} onValueChange={(v) => setExportEngine(v as 'raw' | 'unity' | 'unreal')}>
                   <SelectTrigger className="bg-zinc-800/50 border-zinc-700 h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -381,7 +381,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
               {exportEngine === 'raw' && (
                 <div>
                   <Label className="text-[10px] text-zinc-500 mb-1 block">Formato</Label>
-                  <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as any)}>
+                  <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as 'json' | 'xml' | 'tsv')}>
                     <SelectTrigger className="bg-zinc-800/50 border-zinc-700 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>

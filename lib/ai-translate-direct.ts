@@ -1,8 +1,47 @@
-import { RagGlossary } from './rag-glossary';
 import { AgenticTranslator } from './agentic-translator';
-import { harvestBatch, batchContextToPromptHint, type BatchHarvestResult, type HarvestInput } from './context-harvester';
-import { buildFewShotBlock } from './adaptive-mt';
-import { buildGenrePromptBlock, type GameGenre } from './genre-prompts';
+import { type BatchHarvestResult, type HarvestInput } from './context-harvester';
+import { type GameGenre } from './genre-prompts';
+import { clientLogger } from '@/lib/client-logger';
+
+// Extracted modules
+import {
+  LANG_NAMES,
+  NLLB_LANG_MAP,
+  LANG_TO_CODE,
+  LANG_PROVIDER_AFFINITY,
+  GENRE_PROVIDER_BOOST,
+  normalizeLangCode,
+  PROVIDER_LABELS,
+  OLLAMA_PROVIDERS,
+  API_KEY_URLS,
+} from './translation/language-mappings';
+import {
+  blockProvider,
+  isProviderBlocked,
+  resetProviderBlocks,
+  FREE_PROVIDERS,
+  LANG_SENSITIVE_PROVIDERS,
+  setCooldown,
+} from './translation/provider-blocking';
+import {
+  type ChainPreset,
+  type ChainPresetInfo,
+  CHAIN_PRESETS,
+  setChainPreset,
+  getChainPreset,
+  getActiveChainPreset,
+  getAutoProviderChain as _getAutoProviderChain,
+} from './translation/chain-presets';
+import {
+  recordProviderQuality,
+  applyQualityHistory,
+} from './translation/provider-quality-tracker';
+import { buildTranslationPrompt } from './translation/prompt-builder';
+
+// Re-export everything for backwards compatibility
+export { resetProviderBlocks } from './translation/provider-blocking';
+export { type ChainPreset, type ChainPresetInfo, CHAIN_PRESETS, setChainPreset, getChainPreset } from './translation/chain-presets';
+export { recordProviderQuality } from './translation/provider-quality-tracker';
 
 /**
  * AI Translation - Chiamate dirette API (NO API routes Next.js)
@@ -30,43 +69,6 @@ export interface TranslateResult {
   success: boolean;
 }
 
-// Session-level flags: skip provider dopo errore fatale (permanente) o rate-limit (cooldown)
-const blockedProviders = new Set<string>();
-const cooldownProviders = new Map<string, number>(); // provider → timestamp sblocco
-const cooldownFailCount = new Map<string, number>(); // provider → contatore fallimenti consecutivi
-
-const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'nllb', 'gemini', 'hymt', 'translategemma', 'ollama', 'lmstudio']);
-
-// Provider che richiedono sourceLanguage corretto (web API con traduzione letterale)
-const LANG_SENSITIVE_PROVIDERS = new Set(['mymemory', 'lingva']);
-
-function blockProvider(name: string, permanent = true) {
-  if (permanent) {
-    blockedProviders.add(name);
-    console.warn(`[Session] ${name} bloccato permanentemente (errore fatale)`);
-  } else {
-    // Cooldown escalation: 5min → 15min → 1h dopo fallimenti ripetuti
-    const fails = (cooldownFailCount.get(name) || 0) + 1;
-    cooldownFailCount.set(name, fails);
-    const baseCooldown = FREE_PROVIDERS.has(name) ? 300000 : 30000;
-    const escalation = Math.min(fails, 3); // max 3 livelli: 1x, 3x, 12x
-    const multiplier = escalation === 1 ? 1 : escalation === 2 ? 3 : 12;
-    const cooldownMs = baseCooldown * multiplier;
-    const unblockAt = Date.now() + cooldownMs;
-    cooldownProviders.set(name, unblockAt);
-    console.warn(`[Session] ${name} in cooldown ${Math.round(cooldownMs / 1000)}s (rate-limit, fail #${fails})`);
-  }
-}
-
-function isProviderBlocked(name: string): boolean {
-  if (blockedProviders.has(name)) return true;
-  const cooldownUntil = cooldownProviders.get(name);
-  if (cooldownUntil) {
-    if (Date.now() < cooldownUntil) return true;
-    cooldownProviders.delete(name); // Cooldown scaduto, riprova
-  }
-  return false;
-}
 
 /**
  * Rileva la lingua dominante di un batch di testi.
@@ -88,13 +90,6 @@ function detectBatchLanguage(texts: string[]): string | null {
   if (ptMarkers === max) return 'pt';
   if (esMarkers === max) return 'es';
   return 'en';
-}
-
-/** Reset provider blocks (es. quando si cambia API key) */
-export function resetProviderBlocks() {
-  blockedProviders.clear();
-  cooldownProviders.clear();
-  cooldownFailCount.clear();
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -125,95 +120,6 @@ export function getApiKeys() {
   }
 }
 
-/** Costruisce il prompt di traduzione con RAG/glossario opzionale */
-function buildTranslationPrompt(opts: TranslateOptions): string {
-  const srcLang = opts.sourceLanguage || 'en';
-  
-  // Genre-aware prompt: inietta istruzioni di stile specifiche per genere
-  const genreBlock = opts.gameGenre ? buildGenrePromptBlock(opts.gameGenre, opts.targetLanguage) : '';
-  let prompt = genreBlock
-    ? `${genreBlock}\n\nTranslate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`
-    : `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`;
-  
-  // RAG Dinamico: Estrae i termini dal glossario e li inietta nel prompt SOLO se rilevanti per questo blocco di testo
-  if (opts.gameId) {
-    try {
-      const rag = new RagGlossary();
-      rag.loadFromStorage(opts.gameId);
-      const ragPrompt = rag.getRelevantContext(opts.texts);
-      if (ragPrompt) {
-        prompt += `\n${ragPrompt}`;
-      }
-    } catch (e) {
-      console.warn('[RAG] Fallimento estrazione dinamica glossario', e);
-    }
-  }
-
-  // RAG Translation Memory: traduzioni simili come riferimento stile/terminologia
-  if (opts.tmContext) {
-    prompt += `\n${opts.tmContext}`;
-  }
-
-  // Glossario/Hint manuale passato da fuori
-  if (opts.glossaryHint) {
-    prompt += `\n\n${opts.glossaryHint}`;
-  }
-  
-  if (opts.context) {
-    prompt += ` Context: ${opts.context}`;
-  }
-
-  // Context Harvester: estrai contesto automatico dalle stringhe
-  let harvestResult = opts.harvestedContext;
-  if (!harvestResult && opts.texts.length > 0) {
-    try {
-      const inputs: HarvestInput[] = opts.harvestInputs || opts.texts.map(t => ({
-        text: t,
-        gameGenre: undefined,
-        gameName: undefined,
-      }));
-      harvestResult = harvestBatch(inputs);
-    } catch (e) {
-      console.warn('[ContextHarvester] Auto-harvest fallito:', e);
-    }
-  }
-  if (harvestResult) {
-    const contextHint = batchContextToPromptHint(harvestResult);
-    if (contextHint) {
-      prompt += `\n\n${contextHint}`;
-    }
-    // Aggiungi hint per-stringa dove significativo
-    const perStringHints: string[] = [];
-    for (let i = 0; i < Math.min(harvestResult.contexts.length, opts.texts.length); i++) {
-      const ctx = harvestResult.contexts[i];
-      if (ctx.promptHint && ctx.screenConfidence >= 0.3) {
-        perStringHints.push(`${i + 1}. ${ctx.promptHint}`);
-      }
-    }
-    if (perStringHints.length > 0) {
-      prompt += `\n\n[PER-STRING CONTEXT]\n${perStringHints.join('\n')}`;
-    }
-  }
-  
-  // Adaptive MT: inietta few-shot examples dalle correzioni umane
-  try {
-    const fewShot = buildFewShotBlock(
-      opts.texts,
-      opts.sourceLanguage || 'en',
-      opts.targetLanguage,
-      { gameId: opts.gameId }
-    );
-    if (fewShot.prompt && fewShot.exampleCount > 0) {
-      prompt += `\n\n${fewShot.prompt}`;
-    }
-  } catch (e) {
-    console.warn('[AdaptiveMT] Few-shot injection failed:', e);
-  }
-
-  prompt += `\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
-  
-  return prompt;
-}
 
 /** Traduzione con Gemini API */
 async function translateWithGemini(
@@ -392,7 +298,7 @@ async function translateWithOpenAI(
   // Usa proxy server-side per evitare CORS
   const res = await fetch('/api/llm-proxy', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
     body: JSON.stringify({
       endpoint: 'https://api.openai.com/v1/chat/completions',
       apiKey,
@@ -809,17 +715,6 @@ async function translateWithTranslateGemma(
   }
 }
 
-// Mappa codici lingua → nomi completi per HY-MT
-const LANG_NAMES: Record<string, string> = {
-  en: 'English', it: 'Italian', de: 'German', fr: 'French', es: 'Spanish',
-  pt: 'Portuguese', ru: 'Russian', ja: 'Japanese', ko: 'Korean', zh: 'Chinese',
-  'zh-Hans': 'Simplified Chinese', 'zh-Hant': 'Traditional Chinese',
-  pl: 'Polish', nl: 'Dutch', sv: 'Swedish', da: 'Danish', fi: 'Finnish',
-  no: 'Norwegian', cs: 'Czech', hu: 'Hungarian', ro: 'Romanian', tr: 'Turkish',
-  ar: 'Arabic', th: 'Thai', vi: 'Vietnamese', id: 'Indonesian', uk: 'Ukrainian',
-  el: 'Greek', bg: 'Bulgarian', hr: 'Croatian', sk: 'Slovak', sl: 'Slovenian',
-  'pt-BR': 'Brazilian Portuguese', 'es-419': 'Latin American Spanish',
-};
 
 /** HY-MT1.5 (Tencent) — via Ollama, #1 WMT25, batte Google Translate in 30/31 lingue */
 async function translateWithHYMT(
@@ -859,7 +754,7 @@ async function translateWithHYMT(
     throw err;
   }
 
-  console.log(`[HY-MT] Usando modello: ${modelName} (${srcLang} → ${tgtLang})`);
+  clientLogger.debug(`[HY-MT] Usando modello: ${modelName} (${srcLang} → ${tgtLang})`);
 
   // Traduzione singola con richieste parallele (5 alla volta) per affidabilità + velocità
   const CONCURRENCY = 3;
@@ -973,7 +868,7 @@ Rules:
     await Promise.all(batch.map((text, j) => translateOne(text, i + j)));
   }
 
-  console.log(`[HY-MT] Completate ${results.length} traduzioni (es: "${opts.texts[0]}" → "${results[0]}")`);
+  clientLogger.debug(`[HY-MT] Completate ${results.length} traduzioni (es: "${opts.texts[0]}" → "${results[0]}")`);
   return results;
 }
 
@@ -1017,7 +912,7 @@ async function translateWithLMStudio(
     throw err;
   }
 
-  console.log(`[LM Studio] Usando modello: ${selectedModel} @ ${lmStudioUrl}`);
+  clientLogger.debug(`[LM Studio] Usando modello: ${selectedModel} @ ${lmStudioUrl}`);
 
   const systemPrompt = `You are an expert video game localizer. Translate from ${srcLang} to ${tgtLang}.
 Rules:
@@ -1059,7 +954,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
         return translated;
       } catch (err) {
-        console.warn(`[LM Studio] Errore traduzione:`, err);
+        clientLogger.warn(`[LM Studio] Errore traduzione:`, err);
         return text;
       }
     });
@@ -1100,7 +995,7 @@ async function translateWithModelWiz(
     }
   }
 
-  console.log(`[ModelWiz] Traduzione ${opts.texts.length} testi ${srcLang}→${tgtLang} via ${modelwizUrl}`);
+  clientLogger.debug(`[ModelWiz] Traduzione ${opts.texts.length} testi ${srcLang}→${tgtLang} via ${modelwizUrl}`);
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (modelwizKey) {
@@ -1159,7 +1054,7 @@ async function translateWithModelWiz(
       // Fallback: prova formato LibreTranslate-compatibile (una stringa alla volta)
       if (err.message?.includes('RateLimit')) throw err;
 
-      console.warn(`[ModelWiz] Batch fallito, provo singolarmente:`, err.message);
+      clientLogger.warn(`[ModelWiz] Batch fallito, provo singolarmente:`, err.message);
       for (const text of batch) {
         try {
           const res = await fetch(`${modelwizUrl}/api/translate`, {
@@ -1255,7 +1150,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
 
   // Se l'utente ha richiesto la pipeline agentica (QA LLM) ed è disponibile Ollama
   if (opts.useAgenticPipeline) {
-    console.log(`[Ollama] Eseguo Pipeline Agentica (Traduttore + QA) su ${opts.texts.length} testi...`);
+    clientLogger.debug(`[Ollama] Eseguo Pipeline Agentica (Traduttore + QA) su ${opts.texts.length} testi...`);
     const results: string[] = [];
     
     // La pipeline agentica va stringa per stringa per garantire il QA individuale
@@ -1327,7 +1222,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         
         return translated;
       } catch (err) {
-        console.warn(`[Ollama] Errore traduzione stringa:`, err);
+        clientLogger.warn(`[Ollama] Errore traduzione stringa:`, err);
         return text; // Fallback all'originale
       }
     });
@@ -1394,23 +1289,6 @@ async function translateWithLingva(
 }
 
 /** NLLB-200 (Meta) — 200 lingue via HuggingFace Inference API (gratuito) */
-const NLLB_LANG_MAP: Record<string, string> = {
-  en: 'eng_Latn', it: 'ita_Latn', de: 'deu_Latn', fr: 'fra_Latn', es: 'spa_Latn',
-  pt: 'por_Latn', ru: 'rus_Cyrl', zh: 'zho_Hans', ja: 'jpn_Jpan', ko: 'kor_Hang',
-  th: 'tha_Thai', vi: 'vie_Latn', id: 'ind_Latn', ar: 'arb_Arab', hi: 'hin_Deva',
-  tr: 'tur_Latn', uk: 'ukr_Cyrl', pl: 'pol_Latn', nl: 'nld_Latn', sv: 'swe_Latn',
-  da: 'dan_Latn', fi: 'fin_Latn', no: 'nob_Latn', cs: 'ces_Latn', el: 'ell_Grek',
-  hu: 'hun_Latn', ro: 'ron_Latn', bg: 'bul_Cyrl', hr: 'hrv_Latn', sk: 'slk_Latn',
-  sl: 'slv_Latn', lt: 'lit_Latn', lv: 'lvs_Latn', et: 'est_Latn', ms: 'zsm_Latn',
-  bn: 'ben_Beng', ta: 'tam_Taml', te: 'tel_Telu', sw: 'swh_Latn', am: 'amh_Ethi',
-  ka: 'kat_Geor', hy: 'hye_Armn', he: 'heb_Hebr', fa: 'pes_Arab', ur: 'urd_Arab',
-  my: 'mya_Mymr', km: 'khm_Khmr', lo: 'lao_Laoo', ne: 'npi_Deva', si: 'sin_Sinh',
-  ga: 'gle_Latn', cy: 'cym_Latn', eu: 'eus_Latn', gl: 'glg_Latn', ca: 'cat_Latn',
-  af: 'afr_Latn', sq: 'als_Latn', mk: 'mkd_Cyrl', bs: 'bos_Latn', is: 'isl_Latn',
-  mt: 'mlt_Latn', lb: 'ltz_Latn', tl: 'tgl_Latn', mn: 'khk_Cyrl', uz: 'uzn_Latn',
-  kk: 'kaz_Cyrl', az: 'azj_Latn', ky: 'kir_Cyrl', tg: 'tgk_Cyrl',
-};
-
 async function translateWithNLLB(
   _key: string,
   opts: TranslateOptions
@@ -1442,263 +1320,13 @@ async function translateWithNLLB(
   return results;
 }
 
-/** Preset di chain selezionabili per costo/qualità */
-export type ChainPreset = 'free' | 'economy' | 'balanced' | 'quality' | 'max_quality' | 'auto';
 
-export interface ChainPresetInfo {
-  id: ChainPreset;
-  name: string;
-  description: string;
-  cost: string;
-  quality: string;
-  speed: string;
-  providers: string[];
-}
-
-export const CHAIN_PRESETS: ChainPresetInfo[] = [
-  {
-    id: 'free',
-    name: '🆓 Gratis',
-    description: 'Solo provider gratuiti — HY-MT + TranslateGemma locali, Groq, Cerebras, OpenRouter free',
-    cost: '$0',
-    quality: '⭐⭐⭐⭐',
-    speed: '🏎 Media',
-    providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'nllb', 'mymemory', 'lingva'],
-  },
-  {
-    id: 'economy',
-    name: '💰 Economica',
-    description: 'HY-MT/TranslateGemma locali + Gemini free + DeepSeek economico + fallback',
-    cost: '~$0.10',
-    quality: '⭐⭐⭐⭐',
-    speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'nllb', 'mymemory', 'lingva'],
-  },
-  {
-    id: 'balanced',
-    name: '⚖️ Bilanciata',
-    description: 'Miglior rapporto qualità/prezzo — HY-MT locale + tutti i provider cloud',
-    cost: '~$0.25',
-    quality: '⭐⭐⭐⭐',
-    speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'modelwiz', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'nllb', 'mymemory', 'lingva'],
-  },
-  {
-    id: 'quality',
-    name: '✨ Qualità',
-    description: 'AI premium — Anthropic, OpenAI, Mistral come priorità',
-    cost: '~$0.50',
-    quality: '⭐⭐⭐⭐⭐',
-    speed: '🚀 Veloce',
-    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
-  },
-  {
-    id: 'max_quality',
-    name: '👑 Massima Qualità',
-    description: 'Tutti i 16 provider — mai senza traduzione',
-    cost: '~$1.00+',
-    quality: '⭐⭐⭐⭐⭐',
-    speed: '🚀 Veloce',
-    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'nllb', 'mymemory', 'lingva'],
-  },
-  {
-    id: 'auto',
-    name: '🧠 Auto-Select',
-    description: 'Seleziona automaticamente i migliori provider per lingua target e genere gioco',
-    cost: 'Variabile',
-    quality: '⭐⭐⭐⭐⭐',
-    speed: '🚀 Adattiva',
-    providers: [], // Calcolato dinamicamente da getAutoProviderChain()
-  },
-];
-
-// ── Auto-Select: ranking provider per lingua e genere ──────────────────────
-// Basato su benchmark reali (IntlPull 2026, Lokalise 2026):
-// - DeepL domina lingue europee (DE, FR, ES, IT, PT, NL, PL, RU)
-// - Claude/Anthropic eccelle CJK (ZH score 4.92, JA 4.82) e testi creativi
-// - OpenAI GPT-4o buono tuttofare, forte in KO e raro lingue
-// - Gemini competitivo su lingue asiatiche e gratis
-// - DeepSeek ottimo rapporto qualità/prezzo per ZH
-// - Qwen forte per ZH nativo
-
-/** Mappe di affinità lingua → provider (ordine = priorità) */
-const LANG_PROVIDER_AFFINITY: Record<string, string[]> = {
-  // Lingue europee occidentali — DeepL domina
-  IT: ['deepl', 'anthropic', 'modelwiz', 'openai', 'mistral', 'gemini', 'deepseek', 'qwen'],
-  DE: ['deepl', 'anthropic', 'modelwiz', 'openai', 'mistral', 'gemini', 'deepseek'],
-  FR: ['deepl', 'anthropic', 'modelwiz', 'mistral', 'openai', 'gemini', 'deepseek'],
-  ES: ['deepl', 'anthropic', 'modelwiz', 'openai', 'gemini', 'deepseek', 'mistral'],
-  PT: ['deepl', 'anthropic', 'modelwiz', 'openai', 'gemini', 'deepseek'],
-  NL: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini'],
-  // Lingue europee orientali
-  PL: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek'],
-  RU: ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek'],
-  CS: ['deepl', 'anthropic', 'openai', 'gemini'],
-  HU: ['deepl', 'anthropic', 'openai', 'gemini'],
-  RO: ['deepl', 'anthropic', 'openai', 'gemini'],
-  BG: ['deepl', 'anthropic', 'openai', 'gemini'],
-  UK: ['deepl', 'anthropic', 'openai', 'gemini'],
-  // Nordiche
-  SV: ['deepl', 'anthropic', 'openai', 'gemini'],
-  DA: ['deepl', 'anthropic', 'openai', 'gemini'],
-  NO: ['deepl', 'anthropic', 'openai', 'gemini'],
-  FI: ['deepl', 'anthropic', 'openai', 'gemini'],
-  // CJK — Claude e LLM nativi eccellono
-  ZH: ['anthropic', 'qwen', 'deepseek', 'openai', 'modelwiz', 'gemini', 'deepl'],
-  JA: ['anthropic', 'openai', 'modelwiz', 'gemini', 'deepl', 'deepseek', 'qwen'],
-  KO: ['anthropic', 'openai', 'modelwiz', 'gemini', 'deepl', 'deepseek'],
-  // Altre asiatiche
-  TH: ['openai', 'anthropic', 'gemini', 'modelwiz', 'deepseek'],
-  VI: ['openai', 'anthropic', 'gemini', 'modelwiz', 'deepseek'],
-  ID: ['openai', 'anthropic', 'gemini', 'deepseek'],
-  // Medio Oriente
-  AR: ['anthropic', 'openai', 'gemini', 'modelwiz', 'deepseek'],
-  TR: ['deepl', 'anthropic', 'openai', 'gemini', 'deepseek'],
-  HE: ['openai', 'anthropic', 'gemini'],
-  // Indiche
-  HI: ['openai', 'anthropic', 'gemini', 'deepseek'],
-  // Greco
-  EL: ['deepl', 'anthropic', 'openai', 'gemini'],
-};
-
-/** Boost provider per genere gioco (i testi creativi funzionano meglio su LLM grandi) */
-const GENRE_PROVIDER_BOOST: Record<string, string[]> = {
-  rpg:       ['anthropic', 'openai'],     // Dialoghi complessi, lore profondo
-  adventure: ['anthropic', 'openai'],     // Narrativa, puzzle testuali
-  visual_novel: ['anthropic', 'deepl'],   // Testi lunghi, sfumature emotive
-  horror:    ['anthropic', 'openai'],     // Tono atmosferico, tensione
-  strategy:  ['deepl', 'openai'],         // Terminologia tecnica, UI
-  action:    ['deepl', 'gemini'],         // Testi brevi, UI, tutorial
-  simulation:['deepl', 'openai'],         // Terminologia tecnica
-  puzzle:    ['deepl', 'gemini'],         // Testi brevi, istruzioni
-  shooter:   ['deepl', 'gemini'],         // UI, comandi rapidi
-  sports:    ['deepl', 'gemini'],         // Terminologia sportiva
-};
-
-/** Normalizza codice lingua a 2 lettere maiuscole */
-function normalizeLangCode(lang: string): string {
-  const l = lang.toUpperCase().replace(/[-_].*/, '');
-  // Alias comuni
-  const aliases: Record<string, string> = {
-    'ITALIAN': 'IT', 'GERMAN': 'DE', 'FRENCH': 'FR', 'SPANISH': 'ES',
-    'PORTUGUESE': 'PT', 'RUSSIAN': 'RU', 'JAPANESE': 'JA', 'CHINESE': 'ZH',
-    'KOREAN': 'KO', 'POLISH': 'PL', 'DUTCH': 'NL', 'TURKISH': 'TR',
-    'ARABIC': 'AR', 'THAI': 'TH', 'VIETNAMESE': 'VI', 'HINDI': 'HI',
-    'CZECH': 'CS', 'HUNGARIAN': 'HU', 'ROMANIAN': 'RO', 'BULGARIAN': 'BG',
-    'UKRAINIAN': 'UK', 'SWEDISH': 'SV', 'DANISH': 'DA', 'NORWEGIAN': 'NO',
-    'FINNISH': 'FI', 'GREEK': 'EL', 'HEBREW': 'HE', 'INDONESIAN': 'ID',
-    'EN': 'EN', 'ENGLISH': 'EN',
-  };
-  return aliases[l] || l;
-}
-
-/**
- * Costruisce la chain di provider ottimale per lingua e genere.
- * Prende tutti i provider disponibili (con API key) e li riordina
- * in base all'affinità lingua + boost genere + fallback gratuiti.
- */
+/** Wrapper for getAutoProviderChain that passes PROVIDER_MAP and keys */
 export function getAutoProviderChain(targetLanguage: string, gameGenre?: GameGenre): string[] {
-  const lang = normalizeLangCode(targetLanguage);
   const keys = getApiKeys();
-
-  // 1) Ottieni ranking base per lingua (o fallback generico balanced)
-  const langRanking = LANG_PROVIDER_AFFINITY[lang] ||
-    ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek', 'mistral', 'qwen'];
-
-  // 2) Applica boost genere: i provider nel boost salgono di 2 posizioni
-  let ranked = [...langRanking];
-  if (gameGenre) {
-    const genreKey = typeof gameGenre === 'string' ? gameGenre.toLowerCase().replace(/\s+/g, '_') : '';
-    const boostProviders = GENRE_PROVIDER_BOOST[genreKey] || [];
-    for (const bp of boostProviders) {
-      const idx = ranked.indexOf(bp);
-      if (idx > 0) {
-        // Sposta in su di 2 posizioni (ma non oltre la prima)
-        const newIdx = Math.max(0, idx - 2);
-        ranked.splice(idx, 1);
-        ranked.splice(newIdx, 0, bp);
-      }
-    }
-  }
-
-  // 3) Filtra solo provider disponibili (API key presente o free)
-  const available = ranked.filter(name => {
-    const info = PROVIDER_MAP[name];
-    if (!info) return false;
-    if (info.isBlocked()) return false;
-    if (info.needsKey) {
-      const key = info.getKey(keys);
-      if (!key) return false;
-    }
-    return true;
-  });
-
-  // 4) Aggiungi provider locali e gratuiti come fallback
-  const fallbacks = ['hymt', 'translategemma', 'groq-gptoss', 'groq', 'cerebras', 'cohere',
-                     'together', 'fireworks', 'openrouter', 'ollama', 'lmstudio', 'nllb', 'mymemory', 'lingva'];
-  for (const fb of fallbacks) {
-    if (!available.includes(fb)) {
-      const info = PROVIDER_MAP[fb];
-      if (info && !info.isBlocked()) {
-        if (!info.needsKey || info.getKey(keys)) {
-          available.push(fb);
-        }
-      }
-    }
-  }
-
-  console.log(`[Auto-Select] Lingua: ${lang}, Genere: ${gameGenre || 'n/a'} → Chain: [${available.join(', ')}]`);
-  return available;
+  return _getAutoProviderChain(targetLanguage, gameGenre, PROVIDER_MAP, keys as unknown as Record<string, string>);
 }
 
-/** Storico qualità provider per combinazione lingua+gioco (session-level) */
-const providerQualityHistory = new Map<string, { successes: number; failures: number; avgUnchangedRatio: number }>();
-
-/** Registra risultato provider per migliorare auto-select nelle prossime chiamate */
-export function recordProviderQuality(provider: string, targetLang: string, unchangedRatio: number, success: boolean) {
-  const key = `${provider}:${normalizeLangCode(targetLang)}`;
-  const prev = providerQualityHistory.get(key) || { successes: 0, failures: 0, avgUnchangedRatio: 0 };
-  const total = prev.successes + prev.failures;
-  prev.avgUnchangedRatio = total > 0 ? (prev.avgUnchangedRatio * total + unchangedRatio) / (total + 1) : unchangedRatio;
-  if (success) prev.successes++; else prev.failures++;
-  providerQualityHistory.set(key, prev);
-}
-
-/** Applica storico qualità per riordinare la chain (provider con molte failure scendono) */
-function applyQualityHistory(chain: string[], targetLang: string): string[] {
-  const lang = normalizeLangCode(targetLang);
-  return [...chain].sort((a, b) => {
-    const aKey = `${a}:${lang}`;
-    const bKey = `${b}:${lang}`;
-    const aHist = providerQualityHistory.get(aKey);
-    const bHist = providerQualityHistory.get(bKey);
-    if (!aHist && !bHist) return 0;
-    // Provider senza storico mantengono posizione
-    if (!aHist) return 0;
-    if (!bHist) return 0;
-    // Score: success ratio - unchanged ratio (più alto = meglio)
-    const aTotal = aHist.successes + aHist.failures;
-    const bTotal = bHist.successes + bHist.failures;
-    if (aTotal < 3 || bTotal < 3) return 0; // Dati insufficienti
-    const aScore = (aHist.successes / aTotal) - aHist.avgUnchangedRatio;
-    const bScore = (bHist.successes / bTotal) - bHist.avgUnchangedRatio;
-    return bScore - aScore; // Ordine decrescente
-  });
-}
-
-// Chain preset attivo (default: balanced)
-let activeChainPreset: ChainPreset = 'balanced';
-
-export function setChainPreset(preset: ChainPreset) {
-  activeChainPreset = preset;
-  // Reset blocks quando si cambia chain
-  resetProviderBlocks();
-  console.log(`[Chain] Preset impostato: ${preset}`);
-}
-
-export function getChainPreset(): ChainPreset {
-  return activeChainPreset;
-}
 
 /** Mappa nome provider → funzione + blocked flag */
 const PROVIDER_MAP: Record<string, {
@@ -1742,53 +1370,6 @@ export interface ProviderRequirement {
   links: { label: string; url: string }[];
 }
 
-/** Provider → nome leggibile */
-const PROVIDER_LABELS: Record<string, string> = {
-  translategemma: 'TranslateGemma (locale)',
-  hymt: 'HY-MT1.5 Tencent (locale, #1 WMT25)',
-  gemini: 'Google Gemini',
-  groq: 'Groq (Llama 3.3 70B)',
-  'groq-gptoss': 'Groq (GPT-OSS 120B)',
-  deepseek: 'DeepSeek',
-  openai: 'OpenAI',
-  anthropic: 'Anthropic Claude',
-  mistral: 'Mistral AI',
-  cohere: 'Cohere',
-  together: 'Together AI',
-  fireworks: 'Fireworks AI',
-  openrouter: 'OpenRouter',
-  cerebras: 'Cerebras',
-  deepl: 'DeepL',
-  qwen: 'Qwen3 (Alibaba)',
-  mymemory: 'MyMemory',
-  lingva: 'Lingva Translate',
-  ollama: 'Ollama (qualsiasi modello)',
-  lmstudio: 'LM Studio (locale, OpenAI-compatible)',
-  modelwiz: 'Alocai ModelWiz (MT gaming)',
-  nllb: 'NLLB-200 Meta (200 lingue, gratis)',
-};
-
-/** Provider che richiedono Ollama */
-const OLLAMA_PROVIDERS = ['translategemma', 'hymt', 'ollama'];
-
-/** Provider → URL per ottenere API key */
-const API_KEY_URLS: Record<string, string> = {
-  gemini: 'https://aistudio.google.com/app/apikey',
-  groq: 'https://console.groq.com/keys',
-  'groq-gptoss': 'https://console.groq.com/keys',
-  deepseek: 'https://platform.deepseek.com/api_keys',
-  openai: 'https://platform.openai.com/api-keys',
-  anthropic: 'https://console.anthropic.com/settings/keys',
-  mistral: 'https://console.mistral.ai/api-keys',
-  cohere: 'https://dashboard.cohere.com/api-keys',
-  together: 'https://api.together.xyz/settings/api-keys',
-  fireworks: 'https://fireworks.ai/account/api-keys',
-  openrouter: 'https://openrouter.ai/keys',
-  cerebras: 'https://cloud.cerebras.ai/platform',
-  deepl: 'https://www.deepl.com/pro-api',
-  qwen: 'https://dashscope.console.aliyun.com/apiKey',
-  modelwiz: 'https://www.alocai.com/download-modelwiz',
-};
 
 /** Controlla requisiti mancanti per un preset chain */
 export async function checkChainRequirements(presetId: ChainPreset): Promise<ProviderRequirement[]> {
@@ -1896,12 +1477,12 @@ export async function checkChainRequirements(presetId: ChainPreset): Promise<Pro
 
 /** Controlla se almeno un provider della catena attiva è disponibile */
 export function hasAvailableProviders(targetLang?: string): { available: boolean; providers: string[] } {
-  if (activeChainPreset === 'auto' && targetLang) {
+  if (getActiveChainPreset() === 'auto' && targetLang) {
     const chain = getAutoProviderChain(targetLang);
     return { available: chain.length > 0, providers: chain };
   }
   const keys = getApiKeys();
-  const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2];
+  const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2];
   const available: string[] = [];
   for (const name of preset.providers) {
     const info = PROVIDER_MAP[name];
@@ -1934,7 +1515,7 @@ export async function translateWithFallback(
       });
       if (tmCtx) {
         opts = { ...opts, tmContext: tmCtx };
-        console.log(`[TM-RAG] Auto-iniettate traduzioni simili nel prompt (${opts.texts.length} testi)`);
+        clientLogger.debug(`[TM-RAG] Auto-iniettate traduzioni simili nel prompt (${opts.texts.length} testi)`);
       }
     } catch (e) {
       // TM non disponibile — procedi senza
@@ -1942,13 +1523,13 @@ export async function translateWithFallback(
   }
 
   const keys = getApiKeys();
-  const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2]; // balanced default
+  const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2]; // balanced default
 
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
   const skipped: string[] = [];
 
   // Auto-select: costruisci chain dinamica per lingua/genere
-  const providerList = activeChainPreset === 'auto'
+  const providerList = getActiveChainPreset() === 'auto'
     ? applyQualityHistory(getAutoProviderChain(opts.targetLanguage, opts.gameGenre), opts.targetLanguage)
     : preset.providers;
 
@@ -1985,7 +1566,7 @@ export async function translateWithFallback(
       return true;
     });
     if (removed.length > 0 && filtered.length > 0) {
-      console.log(`[translateWithFallback] Lingua rilevata: ${detectedLang} (dichiarata: ${declaredLang}) → skip ${removed.join(', ')}`);
+      clientLogger.debug(`[translateWithFallback] Lingua rilevata: ${detectedLang} (dichiarata: ${declaredLang}) → skip ${removed.join(', ')}`);
       providers.length = 0;
       providers.push(...filtered);
     }
@@ -2000,13 +1581,13 @@ export async function translateWithFallback(
     const beforeLen = providers.length;
     const filteredNoLingva = providers.filter(p => p.name !== 'lingva');
     if (filteredNoLingva.length > 0 && filteredNoLingva.length < beforeLen) {
-      console.log(`[translateWithFallback] ${problematicCount}/${opts.texts.length} stringhe con placeholder → skip lingva`);
+      clientLogger.debug(`[translateWithFallback] ${problematicCount}/${opts.texts.length} stringhe con placeholder → skip lingva`);
       providers.length = 0;
       providers.push(...filteredNoLingva);
     }
   }
 
-  console.log(`[translateWithFallback] ${activeChainPreset}: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${providerList.length})${skipped.length ? ` | skipped: ${skipped.length}` : ''}`);
+  clientLogger.debug(`[translateWithFallback] ${getActiveChainPreset()}: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${providerList.length})${skipped.length ? ` | skipped: ${skipped.length}` : ''}`);
 
   for (const provider of providers) {
     const MAX_RETRIES = 3;
@@ -2020,7 +1601,7 @@ export async function translateWithFallback(
           // Validazione: se il provider ha restituito meno traduzioni degli input,
           // completa con i testi originali per evitare stringhe mancanti
           if (translations.length < opts.texts.length) {
-            console.warn(`[translateWithFallback] ${provider.name}: ricevute ${translations.length}/${opts.texts.length} traduzioni, padding con originali`);
+            clientLogger.warn(`[translateWithFallback] ${provider.name}: ricevute ${translations.length}/${opts.texts.length} traduzioni, padding con originali`);
             translations = [
               ...translations,
               ...opts.texts.slice(translations.length),
@@ -2030,12 +1611,12 @@ export async function translateWithFallback(
           const unchanged = translations.filter((t, i) => t.trim() === opts.texts[i]?.trim()).length;
           const unchangedRatio = unchanged / translations.length;
           if (unchangedRatio > 0.7 && providers.length > 1) {
-            console.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
+            clientLogger.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
             recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, false);
             break; // esce dal retry loop, passa al prossimo provider
           }
           recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, true);
-          console.log(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni, ${translations.length - unchanged} modificate (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
+          clientLogger.debug(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni, ${translations.length - unchanged} modificate (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
           return { translations, provider: provider.name, success: true };
         }
         break;
@@ -2047,18 +1628,18 @@ export async function translateWithFallback(
           const isFree = FREE_PROVIDERS.has(provider.name);
           if (isFree) {
             // Provider gratuiti: quota giornaliera, retry inutile → skip subito
-            console.warn(`[translateWithFallback] ${provider.name} rate-limited (free) → skip`);
+            clientLogger.warn(`[translateWithFallback] ${provider.name} rate-limited (free) → skip`);
             blockProvider(provider.name, false);
             break;
           }
           const delay = Math.pow(2, retries) * 2000; // 2s, 4s, 8s
-          console.warn(`[translateWithFallback] ${provider.name} rate-limited, retry ${retries + 1}/${MAX_RETRIES} in ${delay}ms`);
+          clientLogger.warn(`[translateWithFallback] ${provider.name} rate-limited, retry ${retries + 1}/${MAX_RETRIES} in ${delay}ms`);
           await sleep(delay);
           retries++;
           continue;
         }
         
-        console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
+        clientLogger.warn(`[translateWithFallback] ${provider.name} failed:`, err);
         const isFreeProvider = FREE_PROVIDERS.has(provider.name);
         if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
           // Rate-limit/payload o provider gratuito: cooldown temporaneo (mai blocco permanente)
@@ -2073,16 +1654,16 @@ export async function translateWithFallback(
     
     // Se dopo tutti i retry è ancora RateLimit, cooldown lungo (5 min) — quota chiaramente esaurita
     if (lastErr instanceof Error && lastErr.message === 'RateLimit' && retries >= MAX_RETRIES) {
-      console.warn(`[translateWithFallback] ${provider.name} in cooldown lungo dopo ${MAX_RETRIES} retry`);
+      clientLogger.warn(`[translateWithFallback] ${provider.name} in cooldown lungo dopo ${MAX_RETRIES} retry`);
       // Forza cooldown 5 min indipendentemente dal tipo di provider
       const unblockAt = Date.now() + 300000;
-      cooldownProviders.set(provider.name, unblockAt);
-      console.warn(`[Session] ${provider.name} in cooldown 300s (retry esauriti)`);
+      setCooldown(provider.name, unblockAt);
+      clientLogger.warn(`[Session] ${provider.name} in cooldown 300s (retry esauriti)`);
     }
   }
 
   // Nessun provider disponibile, ritorna originali
-  console.error(`[translateWithFallback] ❌ NESSUN provider riuscito! ${opts.texts.length} stringhe NON tradotte (restituite come originali)`);
+  clientLogger.error(`[translateWithFallback] ❌ NESSUN provider riuscito! ${opts.texts.length} stringhe NON tradotte (restituite come originali)`);
   return { translations: opts.texts, provider: 'none', success: false };
 }
 
@@ -2118,15 +1699,6 @@ export async function translateChatMessage(
   targetLanguage: string,
   sourceLanguage?: string,
 ): Promise<{ translated: string; provider: string }> {
-  const LANG_TO_CODE: Record<string, string> = {
-    Italian: 'it', English: 'en', Spanish: 'es', German: 'de',
-    French: 'fr', Portuguese: 'pt', Japanese: 'ja', Chinese: 'zh',
-    Korean: 'ko', Russian: 'ru', Polish: 'pl', Dutch: 'nl',
-    Swedish: 'sv', Norwegian: 'no', Danish: 'da', Finnish: 'fi',
-    Czech: 'cs', Hungarian: 'hu', Romanian: 'ro', Turkish: 'tr',
-    Arabic: 'ar', Hindi: 'hi', Thai: 'th', Vietnamese: 'vi',
-    Ukrainian: 'uk', Greek: 'el', Hebrew: 'he', Indonesian: 'id',
-  };
   const tgtCode = LANG_TO_CODE[targetLanguage] || targetLanguage.toLowerCase().slice(0, 2);
   const srcCode = sourceLanguage ? (LANG_TO_CODE[sourceLanguage] || sourceLanguage.toLowerCase().slice(0, 2)) : 'auto';
 
@@ -2205,7 +1777,7 @@ export async function translateWithFallbackBatched(
     chunks.push({ index: chunks.length, start: i, texts: texts.slice(i, i + maxBatch) });
   }
   
-  console.log(`[Batched] Inizio traduzione: ${texts.length} stringhe in ${chunks.length} batch da ${maxBatch} (${PARALLEL_BATCHES} paralleli)`);
+  clientLogger.debug(`[Batched] Inizio traduzione: ${texts.length} stringhe in ${chunks.length} batch da ${maxBatch} (${PARALLEL_BATCHES} paralleli)`);
   
   // Esegui batch in gruppi paralleli
   for (let g = 0; g < chunks.length; g += PARALLEL_BATCHES) {
@@ -2229,7 +1801,7 @@ export async function translateWithFallbackBatched(
         anySuccess = true;
         lastProvider = result.provider;
       } else {
-        console.warn(`[Batched] ⚠️ Batch ${chunk.index + 1}/${chunks.length} FALLITO — stringhe non tradotte`);
+        clientLogger.warn(`[Batched] ⚠️ Batch ${chunk.index + 1}/${chunks.length} FALLITO — stringhe non tradotte`);
       }
       doneCount += chunk.texts.length;
     }
@@ -2461,7 +2033,7 @@ Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, 
       return { winnerIndex: winnerIdx, scores };
     }
   } catch (err) {
-    console.warn('[Multi-LLM Judge] LLM judge failed:', err);
+    clientLogger.warn('[Multi-LLM Judge] LLM judge failed:', err);
   }
 
   return { winnerIndex: 0, scores: candidates.map(() => 50) };
@@ -2475,7 +2047,7 @@ export async function translateWithComparison(
 ): Promise<ComparisonResult> {
   const startTime = Date.now();
   const keys = getApiKeys();
-  const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2];
+  const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2];
 
   // Seleziona i provider disponibili
   const availableProviders: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
@@ -2584,7 +2156,7 @@ export async function translateWithComparison(
 
   // Se nessun candidato riuscito, fallback
   if (candidates.filter(c => !c.error).length === 0) {
-    console.warn('[Multi-LLM] Nessun candidato riuscito, fallback a translateWithFallback');
+    clientLogger.warn('[Multi-LLM] Nessun candidato riuscito, fallback a translateWithFallback');
     const fallback = await translateWithFallback(opts);
     return {
       winner: { provider: fallback.provider, label: PROVIDER_LABELS[fallback.provider] || fallback.provider, translations: fallback.translations, score: 50, scoreDetails: { lengthSimilarity: 12, noArtifacts: 12, punctuation: 12, noUntranslated: 12, llmScore: null }, timeMs: Date.now() - startTime },
@@ -2617,9 +2189,9 @@ export async function translateWithComparison(
       }
 
       judgeUsed = 'heuristic+llm';
-      console.log(`[Multi-LLM] Giudice LLM applicato, vincitore index: ${judgeResult.winnerIndex}`);
+      clientLogger.debug(`[Multi-LLM] Giudice LLM applicato, vincitore index: ${judgeResult.winnerIndex}`);
     } catch (err) {
-      console.warn('[Multi-LLM] Giudice LLM fallito, uso solo euristico:', err);
+      clientLogger.warn('[Multi-LLM] Giudice LLM fallito, uso solo euristico:', err);
     }
   }
 
@@ -2627,7 +2199,7 @@ export async function translateWithComparison(
   const sorted = [...successCandidates].sort((a, b) => b.score - a.score);
   const winner = sorted[0];
 
-  console.log(
+  clientLogger.debug(
     `[Multi-LLM] Confronto completato: ${successCandidates.length}/${selectedProviders.length} candidati | ` +
     `Vincitore: ${winner.label} (${winner.score}pts) | ` +
     `Tempo: ${Date.now() - startTime}ms | Giudice: ${judgeUsed}`

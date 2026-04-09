@@ -49,7 +49,7 @@ export function useStreamingTranslation() {
     try {
       const response = await fetch('/api/translate/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify(options),
         signal: abortControllerRef.current.signal
       });

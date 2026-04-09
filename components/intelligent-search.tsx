@@ -42,7 +42,7 @@ interface SearchResult {
   game: Game;
   score: number;
   matchedFields: string[];
-  highlightedName: string;
+  highlightedName: React.ReactNode[];
 }
 
 interface SearchSuggestion {
@@ -257,12 +257,24 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
     return { score, matchedFields };
   };
 
-  // Highlight matching text
-  const highlightMatch = (text: string, query: string): string => {
-    if (!query) return text;
-    
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
+  // Escape regex special characters to prevent ReDoS and injection
+  const escapeRegex = (str: string): string => {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
+  // Highlight matching text - returns React elements instead of HTML string
+  const highlightMatch = (text: string, query: string): React.ReactNode[] => {
+    if (!query) return [text];
+
+    const escapedQuery = escapeRegex(query);
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, i) =>
+      regex.test(part)
+        ? React.createElement('mark', { key: i }, part)
+        : part
+    );
   };
 
   // Perform search
@@ -443,11 +455,7 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
                     >
                       <div className="flex items-center justify-between w-full">
                         <div className="flex flex-col gap-1">
-                          <span 
-                            dangerouslySetInnerHTML={{ 
-                              __html: result.highlightedName 
-                            }} 
-                          />
+                          <span>{result.highlightedName}</span>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span>{result.game.store}</span>
                             {result.game.genre && (

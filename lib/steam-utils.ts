@@ -1,4 +1,5 @@
 import 'server-only';
+import { logger } from '@/lib/logger';
 // Preferiamo usare steam-locate per individuare i giochi installati
 import { getInstalledSteamAppsSync } from 'steam-locate';
 import fs from 'fs/promises';
@@ -36,7 +37,7 @@ function validateFilePath(basePath: string, targetPath: string): boolean {
            !relativePath.includes('..') && 
            normalizedTarget.startsWith(normalizedBase);
   } catch (error) {
-    console.warn('[Security] Path validation failed:', error);
+    logger.warn('[Security] Path validation failed:', error);
     return false;
   }
 }
@@ -207,13 +208,13 @@ class SteamApiRateLimiter {
     );
     
     if (recentRequests.length >= this.maxRequestsPerSecond) {
-      console.warn(`[RateLimit] Burst limit exceeded for ${endpoint}: ${recentRequests.length}/${this.maxRequestsPerSecond} per second`);
+      logger.warn(`[RateLimit] Burst limit exceeded for ${endpoint}: ${recentRequests.length}/${this.maxRequestsPerSecond} per second`);
       return false;
     }
     
     // Check minute limit
     if (validRequests.length >= this.maxRequestsPerMinute) {
-      console.warn(`[RateLimit] Minute limit exceeded for ${endpoint}: ${validRequests.length}/${this.maxRequestsPerMinute} per minute`);
+      logger.warn(`[RateLimit] Minute limit exceeded for ${endpoint}: ${validRequests.length}/${this.maxRequestsPerMinute} per minute`);
       return false;
     }
     
@@ -343,9 +344,9 @@ class AdvancedSteamCache {
   private async initializePersistentCache(): Promise<void> {
     try {
       await fs.mkdir(this.persistentCacheDir, { recursive: true });
-      console.log(`[AdvancedCache] Persistent cache initialized at: ${this.persistentCacheDir}`);
+      logger.debug(`[AdvancedCache] Persistent cache initialized at: ${this.persistentCacheDir}`);
     } catch (error) {
-      console.warn(`[AdvancedCache] Failed to initialize persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to initialize persistent cache:`, error);
     }
   }
   
@@ -369,7 +370,7 @@ class AdvancedSteamCache {
     
     // Set in persistent cache (async, don't wait)
     this.setPersistent(key, cacheEntry).catch(error => {
-      console.warn(`[AdvancedCache] Failed to write to persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to write to persistent cache:`, error);
     });
     
     this.stats.writes++;
@@ -405,7 +406,7 @@ class AdvancedSteamCache {
         }
       }
     } catch (error) {
-      console.warn(`[AdvancedCache] Failed to read from persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to read from persistent cache:`, error);
     }
     
     this.stats.misses++;
@@ -450,7 +451,7 @@ class AdvancedSteamCache {
         }
       }
     } catch (error) {
-      console.warn(`[AdvancedCache] Failed to invalidate pattern from persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to invalidate pattern from persistent cache:`, error);
     }
   }
   
@@ -463,7 +464,7 @@ class AdvancedSteamCache {
       await fs.rmdir(this.persistentCacheDir, { recursive: true });
       await this.initializePersistentCache();
     } catch (error) {
-      console.warn(`[AdvancedCache] Failed to clear persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to clear persistent cache:`, error);
     }
   }
   
@@ -545,14 +546,14 @@ async function processSteamGamesInBatches(games: InstalledGame[]): Promise<Insta
   
   const results: InstalledGame[] = [];
   
-  console.log(`[BatchProcessor] Processing ${games.length} games in batches of ${batchSize}`);
+  logger.debug(`[BatchProcessor] Processing ${games.length} games in batches of ${batchSize}`);
   
   // PERFORMANCE FIX: Pre-populate cache with common games data
   await prePopulateCommonGamesCache(games, advancedCache);
   
   for (let i = 0; i < games.length; i += batchSize) {
     const batch = games.slice(i, i + batchSize);
-    console.log(`[BatchProcessor] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(games.length / batchSize)} (${batch.length} games)`);
+    logger.debug(`[BatchProcessor] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(games.length / batchSize)} (${batch.length} games)`);
     
     const batchResults = await Promise.all(
       batch.map(async (game) => {
@@ -564,13 +565,13 @@ async function processSteamGamesInBatches(games: InstalledGame[]): Promise<Insta
     
     // Wait between batches to respect rate limits
     if (i + batchSize < games.length) {
-      console.log(`[BatchProcessor] Waiting ${batchDelay}ms before next batch...`);
+      logger.debug(`[BatchProcessor] Waiting ${batchDelay}ms before next batch...`);
       await new Promise(resolve => setTimeout(resolve, batchDelay));
     }
   }
   
   const cacheStats = advancedCache.getStats();
-  console.log(`[BatchProcessor] Completed processing ${results.length} games. Memory cache: ${cacheStats.memorySize}, Hit rate: ${cacheStats.hitRate.toFixed(1)}%`);
+  logger.debug(`[BatchProcessor] Completed processing ${results.length} games. Memory cache: ${cacheStats.memorySize}, Hit rate: ${cacheStats.hitRate.toFixed(1)}%`);
   
   return results;
 }
@@ -587,7 +588,7 @@ async function processGameWithAdvancedCache(
   try {
     // SECURITY FIX: Validate App ID before processing
     if (!validateSteamAppId(game.appId)) {
-      console.warn(`[Security] Invalid App ID for processing: ${game.appId}`);
+      logger.warn(`[Security] Invalid App ID for processing: ${game.appId}`);
       return game;
     }
     
@@ -596,7 +597,7 @@ async function processGameWithAdvancedCache(
     // PERFORMANCE FIX: Check advanced cache first (memory + persistent)
     const cachedData = await advancedCache.get(cacheKey);
     if (cachedData) {
-      console.log(`[AdvancedCache] Cache hit for ${game.name} (${game.appId})`);
+      logger.debug(`[AdvancedCache] Cache hit for ${game.name} (${game.appId})`);
       return {
         ...game,
         supportedLanguages: cachedData.supportedLanguages,
@@ -609,7 +610,7 @@ async function processGameWithAdvancedCache(
     
     // SECURITY FIX: Check rate limit before making request
     if (!rateLimiter.isRequestAllowed(endpoint)) {
-      console.warn(`[RateLimit] Request blocked for ${game.name} (appId: ${game.appId})`);
+      logger.warn(`[RateLimit] Request blocked for ${game.name} (appId: ${game.appId})`);
       return game;
     }
     
@@ -619,14 +620,14 @@ async function processGameWithAdvancedCache(
     const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appId}&l=italian`);
     
     if (response.status === 429) {
-      console.warn(`[getGameDetails] Rate limit per appId: ${game.appId}.`);
+      logger.warn(`[getGameDetails] Rate limit per appId: ${game.appId}.`);
       // PERFORMANCE FIX: Shorter wait for batch processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       return game;
     }
     
     if (!response.ok) {
-      console.warn(`[getGameDetails] Impossibile recuperare i dettagli per ${game.name} (appId: ${game.appId}). Status: ${response.status}`);
+      logger.warn(`[getGameDetails] Impossibile recuperare i dettagli per ${game.name} (appId: ${game.appId}). Status: ${response.status}`);
       return game;
     }
     
@@ -669,7 +670,7 @@ async function processGameWithAdvancedCache(
       return game;
     }
   } catch (error) {
-    console.error(`[getGameDetails] Errore durante il recupero dei dettagli per ${game.name}:`, error);
+    logger.error(`[getGameDetails] Errore durante il recupero dei dettagli per ${game.name}:`, error);
     return game;
   }
 }
@@ -738,7 +739,7 @@ async function prePopulateCommonGamesCache(games: InstalledGame[], advancedCache
   }
   
   if (cacheHits > 0) {
-    console.log(`[PreCache] Pre-populated cache with ${cacheHits} common games`);
+    logger.debug(`[PreCache] Pre-populated cache with ${cacheHits} common games`);
   }
 }
 
@@ -754,7 +755,7 @@ export class SteamCacheManager {
    */
   static async invalidateGame(appId: string): Promise<void> {
     await this.cache.invalidate(`game_details_${appId}`);
-    console.log(`[CacheManager] Invalidated cache for game ${appId}`);
+    logger.debug(`[CacheManager] Invalidated cache for game ${appId}`);
   }
   
   /**
@@ -762,7 +763,7 @@ export class SteamCacheManager {
    */
   static async invalidateGames(pattern: string): Promise<void> {
     await this.cache.invalidatePattern(pattern);
-    console.log(`[CacheManager] Invalidated cache for pattern: ${pattern}`);
+    logger.debug(`[CacheManager] Invalidated cache for pattern: ${pattern}`);
   }
   
   /**
@@ -770,7 +771,7 @@ export class SteamCacheManager {
    */
   static async clearAllCache(): Promise<void> {
     await this.cache.clear();
-    console.log(`[CacheManager] Cleared all Steam API cache`);
+    logger.debug(`[CacheManager] Cleared all Steam API cache`);
   }
   
   /**
@@ -784,7 +785,7 @@ export class SteamCacheManager {
    * Warm up cache with specific games
    */
   static async warmupCache(games: InstalledGame[]): Promise<void> {
-    console.log(`[CacheManager] Warming up cache for ${games.length} games`);
+    logger.debug(`[CacheManager] Warming up cache for ${games.length} games`);
     await prePopulateCommonGamesCache(games, this.cache);
   }
   
@@ -821,7 +822,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
     });
     return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
   } catch (error) {
-    console.warn('Impossibile trovare la chiave di registro di Steam in HKCU, tento con HKLM...');
+    logger.warn('Impossibile trovare la chiave di registro di Steam in HKCU, tento con HKLM...');
     try {
         const regKey = new WinReg({
             hive: WinReg.HKLM,
@@ -835,7 +836,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
         });
         return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
     } catch (err) {
-        console.error('Errore critico: Impossibile trovare il percorso di installazione di Steam nel registro.', err);
+        logger.error('Errore critico: Impossibile trovare il percorso di installazione di Steam nel registro.', err);
         return null;
     }
   }
@@ -866,7 +867,7 @@ async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
     }
 
   } catch (error) {
-    console.warn(`File libraryfolders.vdf non trovato o illeggibile. Verrà usata solo la libreria principale.`, error);
+    logger.warn(`File libraryfolders.vdf non trovato o illeggibile. Verrà usata solo la libreria principale.`, error);
   }
 
   return [...new Set(libraryFolders)]; // Rimuove duplicati
@@ -882,28 +883,28 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
   try {
     const apps = getInstalledSteamAppsSync();
     if (apps && apps.length > 0) {
-      console.log(`[getInstalledGames] Recuperati ${apps.length} giochi tramite steam-locate.`);
+      logger.debug(`[getInstalledGames] Recuperati ${apps.length} giochi tramite steam-locate.`);
       return apps.map(app => ({
         appId: app.appId,
         name: app.name ?? `App ${app.appId}`,
         installDir: app.installDir ?? '',
       }));
     } else {
-      console.warn('[getInstalledGames] steam-locate non ha restituito giochi, procedo con fallback legacy.');
+      logger.warn('[getInstalledGames] steam-locate non ha restituito giochi, procedo con fallback legacy.');
     }
   } catch (locErr) {
-    console.warn('[getInstalledGames] steam-locate non disponibile o ha fallito, procedo con fallback legacy.', locErr);
+    logger.warn('[getInstalledGames] steam-locate non disponibile o ha fallito, procedo con fallback legacy.', locErr);
   }
-  console.log('[getInstalledGames] Inizio scansione giochi installati...');
+  logger.debug('[getInstalledGames] Inizio scansione giochi installati...');
   const steamPath = await getSteamInstallPathFromRegistry();
 
   if (!steamPath) {
-    console.error("[getInstalledGames] Impossibile determinare il percorso di installazione di Steam. La scansione è interrotta.");
+    logger.error("[getInstalledGames] Impossibile determinare il percorso di installazione di Steam. La scansione è interrotta.");
     return [];
   }
 
   const libraryFolders = await getSteamLibraryFolders(steamPath);
-  console.log(`[getInstalledGames] Trovate ${libraryFolders.length} librerie di Steam.`);
+  logger.debug(`[getInstalledGames] Trovate ${libraryFolders.length} librerie di Steam.`);
   const allGames: InstalledGame[] = [];
 
   for (const library of libraryFolders) {
@@ -915,13 +916,13 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
       for (const file of acfFiles) {
         // SECURITY FIX: Validate ACF filename before processing
         if (!validateSteamACFFilename(file)) {
-          console.warn(`[Security] Invalid ACF filename blocked: ${file}`);
+          logger.warn(`[Security] Invalid ACF filename blocked: ${file}`);
           continue;
         }
 
         // SECURITY FIX: Validate file path before reading
         if (!validateFilePath(steamappsPath, file)) {
-          console.warn(`[Security] Invalid file path blocked: ${file}`);
+          logger.warn(`[Security] Invalid file path blocked: ${file}`);
           continue;
         }
 
@@ -935,7 +936,7 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
             // SECURITY FIX: Sanitize install directory name
             const sanitizedInstallDir = sanitizeInstallDir(appState.installdir);
             if (!sanitizedInstallDir) {
-              console.warn(`[Security] Invalid install directory blocked: ${appState.installdir}`);
+              logger.warn(`[Security] Invalid install directory blocked: ${appState.installdir}`);
               continue;
             }
 
@@ -943,7 +944,7 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
             
             // SECURITY FIX: Final path validation
             if (!validateFilePath(path.join(steamappsPath, 'common'), sanitizedInstallDir)) {
-              console.warn(`[Security] Install path validation failed for: ${sanitizedInstallDir}`);
+              logger.warn(`[Security] Install path validation failed for: ${sanitizedInstallDir}`);
               continue;
             }
 
@@ -953,23 +954,23 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
               installDir: gameInstallPath,
             });
           } else {
-            console.warn(`[Parser ACF] Dati incompleti nel file ${file}. Salto.`);
+            logger.warn(`[Parser ACF] Dati incompleti nel file ${file}. Salto.`);
           }
         } catch (parseError) {
-          console.warn(`[Parser ACF] Impossibile analizzare il file ${file}. Potrebbe essere corrotto. Salto.`, parseError);
+          logger.warn(`[Parser ACF] Impossibile analizzare il file ${file}. Potrebbe essere corrotto. Salto.`, parseError);
         }
       }
     } catch (dirError) {
-      console.warn(`[Scanner Libreria] Impossibile leggere la cartella ${steamappsPath}. Salto.`, dirError);
+      logger.warn(`[Scanner Libreria] Impossibile leggere la cartella ${steamappsPath}. Salto.`, dirError);
     }
   }
 
-  console.log(`[getInstalledGames] Recupero dettagli da Steam API per ${allGames.length} giochi...`);
+  logger.debug(`[getInstalledGames] Recupero dettagli da Steam API per ${allGames.length} giochi...`);
 
   // PERFORMANCE FIX: Implement batched API calls with intelligent caching
   const gamesWithDetails = await processSteamGamesInBatches(allGames);
 
-  console.log(`[getInstalledGames] Scansione e arricchimento dati completati. Trovati ${gamesWithDetails.length} giochi.`);
+  logger.debug(`[getInstalledGames] Scansione e arricchimento dati completati. Trovati ${gamesWithDetails.length} giochi.`);
   return gamesWithDetails;
 }
 
@@ -981,37 +982,37 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
 export async function findSteamGamePath(gameId: string): Promise<string | null> {
   // SECURITY FIX: Validate Steam App ID format
   if (!validateSteamAppId(gameId)) {
-    console.error(`[Security] Invalid Steam App ID format: ${gameId}`);
+    logger.error(`[Security] Invalid Steam App ID format: ${gameId}`);
     throw new Error('Invalid Steam App ID format');
   }
 
   // SECURITY FIX: Sanitize gameId for logging
   const sanitizedGameId = sanitizeStringInput(gameId, 20);
   if (!sanitizedGameId) {
-    console.error(`[Security] Failed to sanitize game ID: ${gameId}`);
+    logger.error(`[Security] Failed to sanitize game ID: ${gameId}`);
     throw new Error('Invalid game ID input');
   }
 
-  console.log(`[findSteamGamePath] Inizio ricerca per gameId: ${sanitizedGameId}`);
+  logger.debug(`[findSteamGamePath] Inizio ricerca per gameId: ${sanitizedGameId}`);
 
   // Strategia 1: Cerca tra i giochi installati tramite file .acf
   try {
     const installedGames = await getInstalledGames();
     const foundGame = installedGames.find(g => g.appId === sanitizedGameId);
     if (foundGame && foundGame.installDir) {
-      console.log(`[findSteamGamePath] Trovato con Strategia 1 (ACF): ${foundGame.installDir}`);
+      logger.debug(`[findSteamGamePath] Trovato con Strategia 1 (ACF): ${foundGame.installDir}`);
       return foundGame.installDir;
     }
   } catch (error) {
-    console.warn('[findSteamGamePath] Errore durante la Strategia 1 (ACF), procedo con fallback.', error);
+    logger.warn('[findSteamGamePath] Errore durante la Strategia 1 (ACF), procedo con fallback.', error);
   }
 
-  console.log('[findSteamGamePath] Strategia 1 fallita, avvio Strategia 2 (Scansione Directory)...');
+  logger.debug('[findSteamGamePath] Strategia 1 fallita, avvio Strategia 2 (Scansione Directory)...');
 
   // Strategia 2: Scansione manuale delle cartelle di libreria
   const steamPath = await getSteamInstallPathFromRegistry();
   if (!steamPath) {
-    console.error('[findSteamGamePath] Impossibile trovare il percorso di Steam per la Strategia 2.');
+    logger.error('[findSteamGamePath] Impossibile trovare il percorso di Steam per la Strategia 2.');
     return null;
   }
 
@@ -1021,7 +1022,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
     
     // SECURITY FIX: Validate library path before accessing
     if (!validateFilePath(steamPath, library)) {
-      console.warn(`[Security] Invalid library path blocked: ${library}`);
+      logger.warn(`[Security] Invalid library path blocked: ${library}`);
       continue;
     }
 
@@ -1031,7 +1032,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
       // SECURITY FIX: Validate each game directory
       for (const gameDir of gameDirs) {
         if (!validateFilePath(steamappsPath, gameDir)) {
-          console.warn(`[Security] Invalid game directory blocked: ${gameDir}`);
+          logger.warn(`[Security] Invalid game directory blocked: ${gameDir}`);
           continue;
         }
         
@@ -1040,10 +1041,10 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
         // Per ora, è un placeholder che dimostra la logica di fallback.
       }
     } catch (error) {
-      console.warn(`[findSteamGamePath] Impossibile leggere la cartella ${steamappsPath} durante la Strategia 2.`);
+      logger.warn(`[findSteamGamePath] Impossibile leggere la cartella ${steamappsPath} durante la Strategia 2.`);
     }
   }
 
-  console.log(`[findSteamGamePath] Ricerca completata. Gioco non trovato.`);
+  logger.debug(`[findSteamGamePath] Ricerca completata. Gioco non trovato.`);
   return null;
 }

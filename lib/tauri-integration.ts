@@ -18,12 +18,14 @@ const clientLogger = {
   }
 };
 
-// Client-side secrets access
-const getSecret = (key: string): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(`gs_secret_${key}`);
+// Client-side secrets access via secure storage
+const getSecret = async (key: string): Promise<string | null> => {
+  try {
+    const { getSecureKey } = await import('@/lib/secure-key-store');
+    return await getSecureKey(key);
+  } catch {
+    return null;
   }
-  return null;
 };
 
 export interface TauriError {

@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
-import { parse } from 'vdf';
+import { parse } from 'vdf-parser';
 
 // Define a type for the parsed libraryfolders.vdf content
 interface LibraryFolders {

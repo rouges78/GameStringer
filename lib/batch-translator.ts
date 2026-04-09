@@ -6,6 +6,7 @@
  */
 
 import { translationMemory, translateWithMemory, TranslationUnit } from './translation-memory';
+import { clientLogger } from '@/lib/client-logger';
 import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from './quality-gates';
 import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
 import { translateSmart } from './ai-translate-direct';
@@ -418,7 +419,7 @@ export class BatchTranslator {
 
       if (sampleTexts.length < 5) return; // Troppo pochi testi per un'estrazione utile
 
-      console.log(`[BatchTranslator] Auto-extracting glossary for game "${this.job.gameName}" (${sampleTexts.length} sample texts)`);
+      clientLogger.debug(`[BatchTranslator] Auto-extracting glossary for game "${this.job.gameName}" (${sampleTexts.length} sample texts)`);
       this.job.progress.statusMessage = 'Extracting glossary terms...';
       this.updateProgress();
 
@@ -431,10 +432,10 @@ export class BatchTranslator {
         this.job.gameGenre
       );
 
-      console.log(`[BatchTranslator] Glossary extracted: ${result.newTerms.length} new terms (${result.duplicates} duplicates) via ${result.provider} in ${result.timeMs}ms`);
+      clientLogger.debug(`[BatchTranslator] Glossary extracted: ${result.newTerms.length} new terms (${result.duplicates} duplicates) via ${result.provider} in ${result.timeMs}ms`);
       this.job.progress.statusMessage = undefined;
     } catch (error) {
-      console.warn('[BatchTranslator] Auto glossary extraction failed:', error);
+      clientLogger.warn('[BatchTranslator] Auto glossary extraction failed:', error);
       this.job.progress.statusMessage = undefined;
     }
   }
@@ -490,7 +491,7 @@ export class BatchTranslator {
           this.job.results.fromMemoryItems++;
           translationMemory.incrementUsage(fuzzyMatch.unit.id).catch(() => {});
           this.onItemCompleteCallback?.(item);
-          console.log(`[BatchTranslator] Fuzzy TM match (${fuzzyMatch.similarity}%): "${item.sourceText.substring(0, 40)}..."`);
+          clientLogger.debug(`[BatchTranslator] Fuzzy TM match (${fuzzyMatch.similarity}%): "${item.sourceText.substring(0, 40)}..."`);
           continue;
         }
       }
@@ -505,7 +506,7 @@ export class BatchTranslator {
     const PARALLEL_BATCHES = this.job.options.parallelBatches || 3;
     const totalBatches = Math.ceil(itemsNeedingApi.length / BATCH_SIZE);
     
-    console.log(`[BatchTranslator] Starting parallel translation: ${totalBatches} batches, ${PARALLEL_BATCHES} in parallel`);
+    clientLogger.debug(`[BatchTranslator] Starting parallel translation: ${totalBatches} batches, ${PARALLEL_BATCHES} in parallel`);
     
     // Processa batch in parallelo
     for (let batchGroup = 0; batchGroup < itemsNeedingApi.length; batchGroup += BATCH_SIZE * PARALLEL_BATCHES) {
@@ -560,7 +561,7 @@ export class BatchTranslator {
     if (!this.job) return;
     
     try {
-      console.log(`[BatchTranslator] Calling AI API with fallback for batch ${batchNum}/${totalBatches}, ${batchTexts.length} items`);
+      clientLogger.debug(`[BatchTranslator] Calling AI API with fallback for batch ${batchNum}/${totalBatches}, ${batchTexts.length} items`);
       
       // Costruisci glossaryHint se c'è un gameId
       const glossaryHint = this.job.gameId
@@ -583,9 +584,9 @@ export class BatchTranslator {
           gameName: this.job?.gameName,
         }));
         harvestedContext = harvestBatch(harvestInputs);
-        console.log(`[BatchTranslator] Context harvested: ${harvestedContext.stats.stringsWithConstraints} constrained, ${harvestedContext.stats.stringsWithPlaceholders} with placeholders`);
+        clientLogger.debug(`[BatchTranslator] Context harvested: ${harvestedContext.stats.stringsWithConstraints} constrained, ${harvestedContext.stats.stringsWithPlaceholders} with placeholders`);
       } catch (e) {
-        console.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
+        clientLogger.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
       }
 
       // RAG: inietta traduzioni simili dalla TM come contesto per coerenza terminologica
@@ -622,7 +623,7 @@ export class BatchTranslator {
       }
       
       const translations = result.translations;
-      console.log(`[BatchTranslator] Translated via ${result.provider}`);
+      clientLogger.debug(`[BatchTranslator] Translated via ${result.provider}`);
       
       
       // Applica traduzioni e controlla qualità inline
@@ -681,7 +682,7 @@ export class BatchTranslator {
       
     } catch (error) {
       // Fallback: traduci uno alla volta se batch fallisce
-      console.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single:`, error);
+      clientLogger.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single:`, error);
       
       for (const item of batchItems) {
         // Skip items already processed before the batch error
@@ -721,7 +722,7 @@ export class BatchTranslator {
       if (failedItems.length === 0) break;
       if (this.isCancelled) break;
 
-      console.log(`[BatchTranslator] Quality retry attempt ${attempt}/${maxAttempts} for ${failedItems.length} items (batch ${batchNum}/${totalBatches})`);
+      clientLogger.debug(`[BatchTranslator] Quality retry attempt ${attempt}/${maxAttempts} for ${failedItems.length} items (batch ${batchNum}/${totalBatches})`);
 
       this.job.progress.statusMessage = `Quality retry ${attempt}/${maxAttempts} (${failedItems.length} items)`;
       this.updateProgress();
@@ -754,7 +755,7 @@ export class BatchTranslator {
         });
 
         if (!result.success) {
-          console.warn(`[BatchTranslator] Quality retry ${attempt} failed — all providers down`);
+          clientLogger.warn(`[BatchTranslator] Quality retry ${attempt} failed — all providers down`);
           break;
         }
 
@@ -808,7 +809,7 @@ export class BatchTranslator {
         failedItems = stillFailing;
 
       } catch (error) {
-        console.warn(`[BatchTranslator] Quality retry ${attempt} error:`, error);
+        clientLogger.warn(`[BatchTranslator] Quality retry ${attempt} error:`, error);
         break;
       }
 
@@ -981,7 +982,7 @@ export class BatchTranslator {
 
     if (this.isCancelled) return;
 
-    console.log(`[BatchTranslator] Auto post-editing ${failedItems.length} items with QA issues`);
+    clientLogger.debug(`[BatchTranslator] Auto post-editing ${failedItems.length} items with QA issues`);
     this.job.progress.statusMessage = `Post-editing ${failedItems.length} items...`;
     this.updateProgress();
 
@@ -1011,7 +1012,7 @@ export class BatchTranslator {
         const { item } = failedItems[idx];
 
         if (suggestion.confidence < MIN_POST_EDIT_CONFIDENCE) {
-          console.log(`[BatchTranslator] Post-edit skipped (confidence ${suggestion.confidence}): "${item.sourceText.substring(0, 40)}..."`);
+          clientLogger.debug(`[BatchTranslator] Post-edit skipped (confidence ${suggestion.confidence}): "${item.sourceText.substring(0, 40)}..."`);
           return;
         }
 
@@ -1049,13 +1050,13 @@ export class BatchTranslator {
             }).catch(() => {});
           }
 
-          console.log(`[BatchTranslator] Post-edit applied (${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
+          clientLogger.debug(`[BatchTranslator] Post-edit applied (${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
         } else {
-          console.log(`[BatchTranslator] Post-edit rejected (score not improved ${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
+          clientLogger.debug(`[BatchTranslator] Post-edit rejected (score not improved ${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
         }
       });
     } catch (error) {
-      console.warn('[BatchTranslator] Auto post-edit failed:', error);
+      clientLogger.warn('[BatchTranslator] Auto post-edit failed:', error);
     }
 
     this.job.progress.statusMessage = undefined;

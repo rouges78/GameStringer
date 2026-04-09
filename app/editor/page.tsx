@@ -853,7 +853,7 @@ export default function EditorPage() {
   const deleteTranslation = async (id: string) => {
     if (!confirm('Eliminare questa traduzione?')) return;
     try {
-      const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE', headers: { 'X-GS-Client': 'gamestringer' } });
       if (response.ok) {
         setTranslations(prev => prev.filter(t => t.id !== id));
         if (selectedTranslation?.id === id) setSelectedTranslation(null);

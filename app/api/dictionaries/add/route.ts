@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addTranslationToDictionary } from '@/lib/game-dictionaries';
-import { withErrorHandler } from '@/lib/error-handler';
+import { withErrorHandler, ValidationError } from '@/lib/error-handler';
+import { dictionaryAddSchema, validateBody } from '@/lib/api-schemas';
 
 export const POST = withErrorHandler(async function(request: NextRequest) {
-  const body = await request.json();
-  const { gameId, targetLanguage, original, translated } = body;
-
-  if (!original || !translated) {
+  const rawBody = await request.json();
+  const validated = validateBody(dictionaryAddSchema, rawBody);
+  if (!validated.success) {
     return NextResponse.json(
-      { error: 'Missing original or translated text' },
+      { error: validated.error },
       { status: 400 }
     );
   }
 
-  // Usa il gameId come identificatore del dizionario
+  const { gameId, targetLanguage, original, translated } = validated.data;
   const dictionaryId = gameId || 'default';
-  const targetLang = targetLanguage || 'it';
+  const targetLang = targetLanguage;
 
   const result = await addTranslationToDictionary(
     dictionaryId,

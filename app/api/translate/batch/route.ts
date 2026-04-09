@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler, ValidationError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
 import { secretsManager } from '@/lib/secrets-manager';
-
-interface BatchTranslationRequest {
-  texts: string[];
-  targetLanguage: string;
-  sourceLanguage?: string;
-  provider?: string;
-  context?: string;
-  apiKey?: string;
-}
+import { batchTranslateRequestSchema, validateBody } from '@/lib/api-schemas';
 
 interface BatchTranslationResponse {
   translations: Array<{
@@ -24,20 +16,14 @@ interface BatchTranslationResponse {
 
 export const POST = withErrorHandler(async function(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
-    const body: BatchTranslationRequest = await request.json();
-    const { texts, targetLanguage, sourceLanguage = 'auto', provider = 'openai', context, apiKey: userApiKey } = body;
-
-    if (!texts || !Array.isArray(texts) || texts.length === 0) {
-      throw new ValidationError('Missing required field: texts (array)');
+    const rawBody = await request.json();
+    const validated = validateBody(batchTranslateRequestSchema, rawBody);
+    if (!validated.success) {
+      throw new ValidationError(validated.error);
     }
-    if (!targetLanguage) {
-      throw new ValidationError('Missing required field: targetLanguage');
-    }
-
-    // Limita a 20 stringhe per batch per evitare timeout
-    const batchTexts = texts.slice(0, 20);
+    const { texts: batchTexts, targetLanguage, sourceLanguage, provider, context, apiKey: userApiKey } = validated.data;
 
     logger.info('Batch translation request', 'TRANSLATE_BATCH_API', {
       count: batchTexts.length,
@@ -53,13 +39,13 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
         translations = await translateBatchOpenAI(batchTexts, targetLanguage, sourceLanguage, context, provider === 'gpt5');
         break;
       case 'gemini':
-        console.log('[BATCH API] Calling Gemini with', batchTexts.length, 'texts, apiKey present:', !!userApiKey);
-        console.log('[BATCH API] First text sample:', batchTexts[0]?.substring(0, 100));
+        logger.debug('[BATCH API] Calling Gemini with', batchTexts.length, 'texts, apiKey present:', !!userApiKey);
+        logger.debug('[BATCH API] First text sample:', batchTexts[0]?.substring(0, 100));
         try {
           translations = await translateBatchGemini(batchTexts, targetLanguage, sourceLanguage, context, userApiKey);
-          console.log('[BATCH API] Gemini success:', translations.length, 'translations');
+          logger.debug('[BATCH API] Gemini success:', translations.length, 'translations');
         } catch (geminiError: unknown) {
-          console.error('[BATCH API] Gemini error details:', {
+          logger.error('[BATCH API] Gemini error details:', {
             message: geminiError?.message,
             stack: geminiError?.stack?.substring(0, 500),
             name: geminiError?.name
@@ -191,7 +177,7 @@ async function translateBatchGemini(
 
   const numberedTexts = sanitizedTexts.map((t, i) => `[${i + 1}] ${t}`).join('\n');
   
-  console.log('[GEMINI BATCH] Translating', texts.length, 'texts, first:', sanitizedTexts[0]?.substring(0, 30));
+  logger.debug('[GEMINI BATCH] Translating', texts.length, 'texts, first:', sanitizedTexts[0]?.substring(0, 30));
   
   const prompt = `You are a professional video game translator. Translate these numbered texts from ${sourceLanguage} to ${targetLanguage}.
 ${context ? `Context: ${context}` : ''}
@@ -216,12 +202,12 @@ ${numberedTexts}`;
 
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error('[GEMINI BATCH] API Error:', response.status, errorBody);
+    logger.error('[GEMINI BATCH] API Error:', response.status, errorBody);
     throw new Error(`Gemini API error: ${response.status} - ${errorBody}`);
   }
 
   const data = await response.json();
-  console.log('[GEMINI BATCH] Response received, candidates:', data.candidates?.length);
+  logger.debug('[GEMINI BATCH] Response received, candidates:', data.candidates?.length);
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   try {

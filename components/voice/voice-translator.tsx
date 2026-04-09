@@ -216,7 +216,8 @@ export function VoiceTranslator() {
   const measureDuration = async (blob: Blob): Promise<number> => {
     try {
       const arrayBuffer = await blob.arrayBuffer();
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       const duration = audioBuffer.duration;
       await audioContext.close();

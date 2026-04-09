@@ -52,6 +52,7 @@ pub mod image_cache;
 pub mod backup;
 pub mod audit_log;
 pub mod secure_delete;
+pub mod secure_storage;
 pub mod two_factor;
 pub mod security;
 pub mod global_hotkeys;

@@ -27,10 +27,11 @@ class ClientLogger {
   private flushTimer?: NodeJS.Timeout;
 
   private constructor() {
+    const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
     this.config = {
-      level: 'info',
-      enableConsole: true,
-      enableRemote: true,
+      level: isDev ? 'debug' : 'warn',
+      enableConsole: isDev,
+      enableRemote: !isDev,
       bufferSize: 100,
       flushInterval: 10000, // 10 seconds
       remoteEndpoint: '/api/logs',

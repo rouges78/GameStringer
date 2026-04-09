@@ -3,15 +3,7 @@ import { withErrorHandler, ValidationError } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
 import { secretsManager } from '@/lib/secrets-manager';
 import { withRateLimit, rateLimiters } from '@/lib/rate-limiter';
-
-interface TranslationRequest {
-  text: string;
-  targetLanguage: string;
-  sourceLanguage?: string;
-  provider?: string;
-  context?: string;
-  apiKey?: string; // API key passata dall'interfaccia utente
-}
+import { translateRequestSchema, validateBody } from '@/lib/api-schemas';
 
 interface TranslationResponse {
   translatedText: string;
@@ -44,7 +36,8 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 2)
       }
       return response;
     } catch (e: unknown) {
-      if (e.name === 'AbortError' || e.message.includes('fetch failed')) {
+      const err = e instanceof Error ? e : new Error(String(e));
+      if (err.name === 'AbortError' || err.message.includes('fetch failed')) {
         attempt++;
         logger.warn(`Fetch error. Retrying in ${2000 * attempt}ms... (Attempt ${attempt}/${maxRetries})`);
         await new Promise(res => setTimeout(res, 2000 * attempt));
@@ -59,12 +52,12 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 2)
 // Rate limiter rimosso per supportare OCR real-time
 export const POST = withErrorHandler(async function(request: NextRequest) {
   try {
-    const body: TranslationRequest = await request.json();
-    const { text, targetLanguage, sourceLanguage = 'auto', provider = 'openai', context, apiKey: userApiKey } = body;
-
-    if (!text || !targetLanguage) {
-      throw new ValidationError('Missing required fields: text, targetLanguage');
+    const rawBody = await request.json();
+    const validated = validateBody(translateRequestSchema, rawBody);
+    if (!validated.success) {
+      throw new ValidationError(validated.error);
     }
+    const { text, targetLanguage, sourceLanguage, provider, context, apiKey: userApiKey } = validated.data;
 
     logger.info('Translation request received', 'TRANSLATE_API', {
       textLength: text.length,

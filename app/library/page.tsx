@@ -23,6 +23,7 @@ import { enrichGameTitle } from '@/lib/game-names-db';
 import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download, Languages, Sparkles, FolderOpen, Monitor, Wrench, Brain } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
+import { clientLogger } from '@/lib/client-logger';
 
 // Guard globale: sopravvive a HMR/Fast Refresh e doppio mount React 18
 const _g = globalThis as unknown as Record<string, unknown>;
@@ -90,9 +91,9 @@ const flushCoverSaves = async () => {
   if (Object.keys(toSave).length === 0) return;
   try {
     await invoke('save_batch_cover_cache', { covers: toSave });
-    console.log(`[Library] 💾 Batch cover cache salvata: ${Object.keys(toSave).length} cover`);
+    clientLogger.debug(`[Library] 💾 Batch cover cache salvata: ${Object.keys(toSave).length} cover`);
   } catch (e) {
-    console.warn('[Library] Batch cover save failed:', e);
+    clientLogger.warn('[Library] Batch cover save failed:', e);
     // Fallback: riprova singolarmente
     for (const [gameId, imageUrl] of Object.entries(toSave)) {
       try { await invoke('save_cover_cache', { gameId, imageUrl }); } catch {}
@@ -154,7 +155,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
     setTriedSteamGridDb(true);
     setIsLoading(true);
     
-    console.log(`[Library] 🔍 Fetching SteamGridDB for: ${game.title} (id: ${game.id}, app_id: ${game.app_id})`);
+    clientLogger.debug(`[Library] 🔍 Fetching SteamGridDB for: ${game.title} (id: ${game.id}, app_id: ${game.app_id})`);
     
     try {
       // Cerca API key in gamestringer_utility_prefs (dove viene salvata dalla pagina stores)
@@ -165,7 +166,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
           const prefs = JSON.parse(utilityPrefs);
           apiKey = prefs?.steamgriddb?.apiKey || null;
         } catch (e) {
-          console.warn('[Library] Cache localStorage corrotta, ripulizia:', e);
+          clientLogger.warn('[Library] Cache localStorage corrotta, ripulizia:', e);
           localStorage.removeItem('gamestringer_utility_prefs');
         }
       }
@@ -180,7 +181,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
       if (result) {
         setSteamGridDbImage(result);
         queueCoverSave(game.app_id, result);
-        console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
+        clientLogger.debug(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
       } else {
         // Fallback 1: usa Steam API appdetails per ottenere header_image
         let found = false;
@@ -191,12 +192,12 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
             if (details?.header_image) {
               setSteamGridDbImage(details.header_image);
               queueCoverSave(game.app_id, details.header_image);
-              console.log(`[Library] ✅ Steam API header fallback for ${game.title}: ${details.header_image}`);
+              clientLogger.debug(`[Library] ✅ Steam API header fallback for ${game.title}: ${details.header_image}`);
               found = true;
             }
           }
         } catch (e2) {
-          console.warn(`[Library] Steam API fallback failed for ${game.title}:`, e2);
+          clientLogger.warn(`[Library] Steam API fallback failed for ${game.title}:`, e2);
         }
         // Fallback 2: scraping pagina Steam Store per og:image
         if (!found) {
@@ -207,12 +208,12 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
               if (storeImage) {
                 setSteamGridDbImage(storeImage);
                 queueCoverSave(game.app_id, storeImage);
-                console.log(`[Library] ✅ Steam Store scraping fallback for ${game.title}: ${storeImage}`);
+                clientLogger.debug(`[Library] ✅ Steam Store scraping fallback for ${game.title}: ${storeImage}`);
                 found = true;
               }
             }
           } catch (e3) {
-            console.warn(`[Library] Steam Store scraping failed for ${game.title}:`, e3);
+            clientLogger.warn(`[Library] Steam Store scraping failed for ${game.title}:`, e3);
           }
         }
         // Fallback 3: GOG API per giochi GOG
@@ -224,17 +225,17 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
               if (gogCover) {
                 setSteamGridDbImage(gogCover);
                 queueCoverSave(game.app_id, gogCover);
-                console.log(`[Library] ✅ GOG API cover for ${game.title}: ${gogCover}`);
+                clientLogger.debug(`[Library] ✅ GOG API cover for ${game.title}: ${gogCover}`);
                 found = true;
               }
             }
           } catch (e4) {
-            console.warn(`[Library] GOG API cover failed for ${game.title}:`, e4);
+            clientLogger.warn(`[Library] GOG API cover failed for ${game.title}:`, e4);
           }
         }
       }
     } catch (e) {
-      console.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
+      clientLogger.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
     } finally {
       setIsLoading(false);
     }
@@ -432,7 +433,7 @@ function LibraryListView() {
     const validGames = ensureArray<Game>(value);
     
     if (!validateArray(value, 'LibraryPage.setGames')) {
-      console.error('[LibraryPage] Attempt to set games with non-array value:', typeof value, value);
+      clientLogger.error('[LibraryPage] Attempt to set games with non-array value:', typeof value, value);
     }
     
     setGames(validGames);
@@ -506,7 +507,7 @@ function LibraryListView() {
             _libCache.cover.data = coverCacheData;
             _libCache.cover.loaded = true;
             setCoverCache(coverCacheData);
-            console.log('[Library] 📷 Cover cache caricata:', Object.keys(coverCacheData).length, 'immagini');
+            clientLogger.debug('[Library] 📷 Cover cache caricata:', Object.keys(coverCacheData).length, 'immagini');
           }
         }
 
@@ -519,7 +520,7 @@ function LibraryListView() {
             _libCache.dates.data = addedDates;
             _libCache.dates.loaded = true;
             setAddedDatesCache(addedDates);
-            console.log('[Library] 📅 Date aggiunta caricate:', Object.keys(addedDates).length, 'giochi');
+            clientLogger.debug('[Library] 📅 Date aggiunta caricate:', Object.keys(addedDates).length, 'giochi');
           }
         }
 
@@ -532,11 +533,11 @@ function LibraryListView() {
             _libCache.lang.data = langCache;
             _libCache.lang.loaded = true;
             setLanguagesCache(langCache);
-            console.log('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
+            clientLogger.debug('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
           }
         }
       } catch (e) {
-        console.warn('[Library] Cache non disponibile');
+        clientLogger.warn('[Library] Cache non disponibile');
       }
     };
     loadCaches();
@@ -544,7 +545,7 @@ function LibraryListView() {
 
   // 🚀 SCAN COMPLETO - Combina API Steam + File Locali
   const testFamilySharing = async () => {
-    console.log('[LIBRARY DEBUG] 🚀 SCAN COMPLETO Steam...');
+    clientLogger.debug('[LIBRARY DEBUG] 🚀 SCAN COMPLETO Steam...');
     setIsLoading(true);
     
     try {
@@ -553,7 +554,7 @@ function LibraryListView() {
       const apiGames: Map<string, Game> = new Map();
       
       if (!credentials) {
-        console.warn('[LIBRARY] ⚠️ Credenziali Steam non configurate - mostro solo giochi installati');
+        clientLogger.warn('[LIBRARY] ⚠️ Credenziali Steam non configurate - mostro solo giochi installati');
         toast.warning('Credenziali Steam non configurate', {
           description: 'Vai in Impostazioni → Stores per vedere tutti i tuoi giochi',
           duration: 8000,
@@ -568,7 +569,7 @@ function LibraryListView() {
             forceRefresh: false
           }) as unknown[];
           
-          console.log(`[LIBRARY DEBUG] 📊 Steam API: ${apiResult.length} games with names`);
+          clientLogger.debug(`[LIBRARY DEBUG] 📊 Steam API: ${apiResult.length} games with names`);
           
           apiResult.forEach((g: unknown) => {
             apiGames.set(String(g.appid), {
@@ -583,7 +584,7 @@ function LibraryListView() {
             });
           });
         } catch (e) {
-          console.warn('[LIBRARY DEBUG] ⚠️ Steam API failed, using local files only');
+          clientLogger.warn('[LIBRARY DEBUG] ⚠️ Steam API failed, using local files only');
         }
       }
       
@@ -602,7 +603,7 @@ function LibraryListView() {
         added_date: number | null;
       }>;
       
-      console.log(`[LIBRARY DEBUG] 📂 Local files: ${localGames.length} games found`);
+      clientLogger.debug(`[LIBRARY DEBUG] 📂 Local files: ${localGames.length} games found`);
       
       // 3️⃣ Combina: usa nomi API dove disponibili, altrimenti usa dati locali
       const finalGames: Game[] = [];
@@ -658,10 +659,10 @@ function LibraryListView() {
         duration: 5000,
       });
       
-      console.log(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
+      clientLogger.debug(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
       
     } catch (error) {
-      console.error('[LIBRARY] ❌ error scan:', error);
+      clientLogger.error('[LIBRARY] ❌ error scan:', error);
       toast.error('Error during scan', {
         description: String(error),
       });
@@ -684,37 +685,37 @@ function LibraryListView() {
         const cachedGames = await get<Game[]>('gs_library_games');
         const lastScan = await get<string>('lastSteamScan');
         const cacheAge = lastScan ? Date.now() - new Date(lastScan).getTime() : Infinity;
-        console.log(`[Cache] games=${cachedGames?.length ?? 0}, lastScan=${lastScan}, age=${Math.round(cacheAge/1000)}s`);
+        clientLogger.debug(`[Cache] games=${cachedGames?.length ?? 0}, lastScan=${lastScan}, age=${Math.round(cacheAge/1000)}s`);
         
         if (cachedGames && Array.isArray(cachedGames) && cachedGames.length > 0 && cacheAge < CACHE_STALE_TTL_MS) {
           // Cache trovata! Mostra subito i giochi (UI istantanea)
           const epicCount = cachedGames.filter(g => g.platform === 'Epic Games').length;
           const gogCount = cachedGames.filter(g => g.platform === 'GOG').length;
-          console.log(`⚡ Libreria da cache IndexedDB: ${cachedGames.length} giochi (Epic: ${epicCount}, GOG: ${gogCount}, age: ${Math.round(cacheAge/1000)}s)`);
+          clientLogger.debug(`⚡ Libreria da cache IndexedDB: ${cachedGames.length} giochi (Epic: ${epicCount}, GOG: ${gogCount}, age: ${Math.round(cacheAge/1000)}s)`);
           setGamesWithValidation(cachedGames);
           setIsLoading(false);
           
           // Se la cache manca di giochi non-Steam, forza revalidate (cache incompleta)
           const hasNonSteamGames = cachedGames.some(g => g.platform !== 'Steam');
           if (!hasNonSteamGames || epicCount <= 1) {
-            console.log(`⚠️ Cache incompleta (Epic: ${epicCount}, nonSteam: ${hasNonSteamGames}), forzo revalidate...`);
+            clientLogger.debug(`⚠️ Cache incompleta (Epic: ${epicCount}, nonSteam: ${hasNonSteamGames}), forzo revalidate...`);
             fetchGames();
             return;
           }
           
           if (cacheAge < CACHE_FRESH_TTL_MS) {
             // Cache fresca (<15min): nessun aggiornamento necessario
-            console.log(`✅ Cache fresca (${Math.round(cacheAge/1000)}s), skip revalidate`);
+            clientLogger.debug(`✅ Cache fresca (${Math.round(cacheAge/1000)}s), skip revalidate`);
             return;
           }
           
           // Cache stale (>15min): aggiorna in background senza bloccare UI
-          console.log(`🔄 Cache stale (${Math.round(cacheAge/1000)}s), revalidate in background...`);
+          clientLogger.debug(`🔄 Cache stale (${Math.round(cacheAge/1000)}s), revalidate in background...`);
           fetchGames(); // Aggiorna in background, UI già visibile
           return;
         }
       } catch (e) {
-        console.warn('Errore lettura cache IndexedDB libreria:', e);
+        clientLogger.warn('Errore lettura cache IndexedDB libreria:', e);
       }
       
       // Nessuna cache: fetch completo (primo avvio)
@@ -728,7 +729,7 @@ function LibraryListView() {
           setIsLoading(true);
         }
         const t0 = performance.now();
-        console.log('🚀 FAST LIBRARY LOADING (parallel)...');
+        clientLogger.debug('🚀 FAST LIBRARY LOADING (parallel)...');
 
         // Blacklist software (condivisa)
         const softwareBlacklist = [
@@ -748,7 +749,7 @@ function LibraryListView() {
         // FASE 1: Lancia TUTTE le chiamate in parallelo
         // ═══════════════════════════════════════════════════════════
         const localScanPromise = invoke('scan_all_steam_games_fast').catch(e => {
-          console.warn('⚠️ Local scan failed:', e);
+          clientLogger.warn('⚠️ Local scan failed:', e);
           return [] as unknown[];
         }) as Promise<Array<{
           id: string; title: string; platform: string; install_path: string | null;
@@ -764,7 +765,7 @@ function LibraryListView() {
           invoke('scan_games'),
           new Promise<unknown[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
         ]).catch(e => {
-          console.warn('⚠️ Other stores scan failed:', e);
+          clientLogger.warn('⚠️ Other stores scan failed:', e);
           return [] as unknown[];
         }) as Promise<Array<{
           id: string; title: string; platform: string; path: string;
@@ -778,14 +779,14 @@ function LibraryListView() {
           const creds = credentials as { api_key_encrypted?: string; steam_id?: string } | null;
           if (!creds?.api_key_encrypted || !creds?.steam_id) return null;
           try {
-            console.log('🔑 Calling Steam API (background)...');
+            clientLogger.debug('🔑 Calling Steam API (background)...');
             return await invoke('get_steam_games', {
               apiKey: creds.api_key_encrypted,
               steamId: creds.steam_id,
               forceRefresh: false
             }) as unknown[];
           } catch (e) {
-            console.warn('⚠️ Steam API failed:', e);
+            clientLogger.warn('⚠️ Steam API failed:', e);
             return null;
           }
         });
@@ -798,7 +799,7 @@ function LibraryListView() {
 
         const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null; install_path?: string | null }> = new Map();
         const relevantGames = (scanResult || []).filter(g => g.is_installed || g.is_shared);
-        console.log(`📂 Local scan: ${relevantGames.length} relevant games (of ${(scanResult || []).length} total)`);
+        clientLogger.debug(`📂 Local scan: ${relevantGames.length} relevant games (of ${(scanResult || []).length} total)`);
 
         for (const g of relevantGames) {
           const appId = g.steam_app_id ? String(g.steam_app_id) : g.id.replace('steam_', '').replace('steam_shared_', '');
@@ -842,7 +843,7 @@ function LibraryListView() {
           return !isSoftware(g.title);
         });
         if (nonSteamGames.length > 0) {
-          console.log(`🎮 Other stores: ${nonSteamGames.length} games found`);
+          clientLogger.debug(`🎮 Other stores: ${nonSteamGames.length} games found`);
           for (const g of nonSteamGames) {
             const gameId = g.id || `${g.platform}_${g.app_id || g.title}`;
             if (!finalGamesMap.has(gameId)) {
@@ -869,7 +870,7 @@ function LibraryListView() {
         // FASE 3: UI SBLOCCATA! Mostra giochi locali + altri store
         // ═══════════════════════════════════════════════════════════
         const quickGames = Array.from(finalGamesMap.values());
-        console.log(`⚡ Quick render in ${Math.round(performance.now() - t0)}ms: ${quickGames.length} giochi (locali + altri store)`);
+        clientLogger.debug(`⚡ Quick render in ${Math.round(performance.now() - t0)}ms: ${quickGames.length} giochi (locali + altri store)`);
         setGamesWithValidation(quickGames);
         setIsLoading(false); // UI sbloccata!
 
@@ -880,7 +881,7 @@ function LibraryListView() {
         steamApiPromise.then(apiResult => {
           if (!apiResult || apiResult.length === 0) return;
 
-          console.log(`📊 Steam API arrived: ${apiResult.length} owned games`);
+          clientLogger.debug(`📊 Steam API arrived: ${apiResult.length} owned games`);
           let added = 0;
           let enriched = 0;
 
@@ -927,13 +928,13 @@ function LibraryListView() {
 
           // Aggiorna UI con la lista completa
           const fullGames = Array.from(finalGamesMap.values());
-          console.log(`✅ Steam API enrichment: +${added} new, ${enriched} enriched → ${fullGames.length} total (${Math.round(performance.now() - t0)}ms)`);
+          clientLogger.debug(`✅ Steam API enrichment: +${added} new, ${enriched} enriched → ${fullGames.length} total (${Math.round(performance.now() - t0)}ms)`);
           setGamesWithValidation(fullGames);
 
           // Salva la lista completa in IndexedDB
           set('gs_library_games', fullGames).catch(() => {});
           set('lastSteamScan', new Date().toISOString()).catch(() => {});
-        }).catch(e => console.warn('⚠️ Steam API enrichment failed:', e));
+        }).catch(e => clientLogger.warn('⚠️ Steam API enrichment failed:', e));
 
         // ═══════════════════════════════════════════════════════════
         // FASE 5: Operazioni deferred (non bloccano il rendering)
@@ -943,7 +944,7 @@ function LibraryListView() {
         const epicCount = initialGames.filter(g => g.platform === 'Epic Games').length;
         const otherCount = initialGames.filter(g => g.platform !== 'Steam' && g.platform !== 'Epic Games').length;
         const installedCount = initialGames.filter(g => g.is_installed).length;
-        console.log(`📋 Initial: ${initialGames.length} games (Steam: ${steamCount}, Epic: ${epicCount}, Other: ${otherCount}, Installed: ${installedCount})`);
+        clientLogger.debug(`📋 Initial: ${initialGames.length} games (Steam: ${steamCount}, Epic: ${epicCount}, Other: ${otherCount}, Installed: ${installedCount})`);
 
         // Deferred: salva cache e date in background
         const deferWork = async () => {
@@ -959,7 +960,7 @@ function LibraryListView() {
           invoke<Record<string, number>>('save_batch_added_dates', { gameIds }).then(updatedDates => {
             if (updatedDates) {
               setAddedDatesCache(updatedDates);
-              console.log('[Library] 📅 Date aggiunta aggiornate:', Object.keys(updatedDates).length, 'giochi');
+              clientLogger.debug('[Library] 📅 Date aggiunta aggiornate:', Object.keys(updatedDates).length, 'giochi');
             }
           }).catch(() => {});
 
@@ -1016,11 +1017,11 @@ function LibraryListView() {
                   description: parts.join('\n'),
                   duration: 12000,
                 });
-                console.log(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
+                clientLogger.debug(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
               }
             }
           } catch (e) {
-            console.warn('[Library] Update check failed:', e);
+            clientLogger.warn('[Library] Update check failed:', e);
           }
         };
 
@@ -1043,7 +1044,7 @@ function LibraryListView() {
 
               if (gamesToFetch.length === 0) return;
 
-              console.log(`[Library] 🌍 Caricamento lingue per ${gamesToFetch.length} giochi in background...`);
+              clientLogger.debug(`[Library] 🌍 Caricamento lingue per ${gamesToFetch.length} giochi in background...`);
               const newCache = { ...existingCache };
               let fetched = 0;
               let consecutiveErrors = 0;
@@ -1076,10 +1077,10 @@ function LibraryListView() {
               if (fetched > 0) {
                 await invoke('save_languages_cache', { languages: newCache });
                 setLanguagesCache(newCache);
-                console.log(`[Library] 🌍 Salvate ${fetched} nuove lingue in cache`);
+                clientLogger.debug(`[Library] 🌍 Salvate ${fetched} nuove lingue in cache`);
               }
             } catch (e) {
-              console.warn('[Library] Errore caricamento lingue:', e);
+              clientLogger.warn('[Library] Errore caricamento lingue:', e);
             }
           };
           loadLanguagesInBackground();
@@ -1087,7 +1088,7 @@ function LibraryListView() {
 
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error('❌ Library loading error:', errorMsg);
+        clientLogger.error('❌ Library loading error:', errorMsg);
         setGamesWithValidation([]);
         setError(`Unable to load games: ${errorMsg}`);
         setIsLoading(false);
@@ -1098,7 +1099,7 @@ function LibraryListView() {
   }, []); // Carica solo una volta all'avvio
 
   const handleForceRefresh = (freshGames: Game[]) => {
-    console.log('🔄 Force refresh completed, updating games list:', freshGames);
+    clientLogger.debug('🔄 Force refresh completed, updating games list:', freshGames);
     
     // Aggiungi platform: 'Steam' a tutti i games se mancante
     const safeFreshGames = ensureArray<Game>(freshGames);
@@ -1112,7 +1113,7 @@ function LibraryListView() {
     // Debug: conta giochi con nomi validi vs invalidi
     const validNames = gamesWithPlatform.filter(g => g.title && !g.title.match(/^(Game|Shared Game) \d+$/));
     const invalidNames = gamesWithPlatform.filter(g => !g.title || g.title.match(/^(Game|Shared Game) \d+$/));
-    console.log(`📊 Giochi con nome valido: ${validNames.length}, senza nome: ${invalidNames.length}`);
+    clientLogger.debug(`📊 Giochi con nome valido: ${validNames.length}, senza nome: ${invalidNames.length}`);
     
     setGamesWithValidation(gamesWithPlatform);
   };

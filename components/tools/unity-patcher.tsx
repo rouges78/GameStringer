@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -152,7 +153,7 @@ export function UnityPatcher() {
     }
     
     if (matchedGame) {
-      console.log('[UnityPatcher] Game preselected from URL:', getGameName(matchedGame));
+      clientLogger.debug('[UnityPatcher] Game preselected from URL:', getGameName(matchedGame));
       // Seleziona il game direttamente
       setSelectedGame(matchedGame);
       setStatus('idle');
@@ -166,7 +167,7 @@ export function UnityPatcher() {
             if (exes && exes.length > 0) {
               const mainExe = exes.find(e => !e.toLowerCase().includes('launcher')) || exes[0];
               setExeName(mainExe);
-              console.log('[UnityPatcher] Executable found:', mainExe);
+              clientLogger.debug('[UnityPatcher] Executable found:', mainExe);
             } else {
               setExeName(guessExeName(getGameName(matchedGame)));
             }
@@ -177,11 +178,11 @@ export function UnityPatcher() {
         // Verifica motore
         invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string; has_bepinex?: boolean; has_xunity?: boolean }>('check_game_engine', { gamePath: matchedGame.install_dir })
           .then(check => setEngineCheck(check))
-          .catch(err => console.error('Engine verification error:', err));
+          .catch(err => clientLogger.error('Engine verification error:', err));
       }
       toast.success(`🎮 "${getGameName(matchedGame)}" ${t('gamePatcher.gameSelectedAuto')}`);
     } else {
-      console.log('[UnityPatcher] Game not found in Unity list:', urlGameId, urlGameName);
+      clientLogger.debug('[UnityPatcher] Game not found in Unity list:', urlGameId, urlGameName);
       toast.info(`"${urlGameName}" ${t('gamePatcher.gameNotFound')}`);
     }
     
@@ -206,7 +207,7 @@ export function UnityPatcher() {
       
       // Filtra solo games INSTALLATI (hanno install_path)
       const installedGames = localGames.filter(g => g.is_installed && g.install_path);
-      // Debug: console.log(`[UNITY PATCHER] games installati: ${installedGames.length}`);
+      // Debug: clientLogger.debug(`[UNITY PATCHER] games installati: ${installedGames.length}`);
       
       // Debug: mostra i motori rilevati
       const engines = installedGames.reduce((acc, g) => {
@@ -214,7 +215,7 @@ export function UnityPatcher() {
         acc[eng] = (acc[eng] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      // Debug: console.log(`[UNITY PATCHER] Motori rilevati:`, engines);
+      // Debug: clientLogger.debug(`[UNITY PATCHER] Motori rilevati:`, engines);
       
       // Mostra tutti i games con engine noto, ordinati per engine
       const allGamesWithEngine = installedGames
@@ -238,11 +239,11 @@ export function UnityPatcher() {
           return getGameName(a).localeCompare(getGameName(b));
         });
       
-      // Debug: console.log(`[PATCHER] games con engine: ${allGamesWithEngine.length}`);
+      // Debug: clientLogger.debug(`[PATCHER] games con engine: ${allGamesWithEngine.length}`);
       setUnityGames(allGamesWithEngine);
       setHasSteamCredentials(true); // Non serve più, ma manteniamo per UI
     } catch (err) {
-      console.error('Games loading error:', err);
+      clientLogger.error('Games loading error:', err);
       setHasSteamCredentials(false);
       setUnityGames([]);
     } finally {
@@ -306,7 +307,7 @@ export function UnityPatcher() {
         const check = await invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string }>('check_game_engine', { gamePath: game.install_dir });
         setEngineCheck(check);
       } catch (err) {
-        console.error('Engine check error:', err);
+        clientLogger.error('Engine check error:', err);
       }
       
       try {
@@ -338,7 +339,7 @@ export function UnityPatcher() {
       } catch (err: unknown) {
         // Ignora rate limit silenziosamente - non è critico
         if (!String(err).includes('Rate limit')) {
-          console.error('Languages loading error:', err);
+          clientLogger.error('Languages loading error:', err);
         }
       } finally {
         setIsLoadingLanguages(false);
@@ -374,7 +375,7 @@ export function UnityPatcher() {
             toast.warning(`⚠ ${t('gamePatcher.engineNotRecognized')}`);
           }
         } catch (err) {
-          console.error('Engine check error:', err);
+          clientLogger.error('Engine check error:', err);
         }
         
         // Search for executables in selected folder
@@ -388,11 +389,11 @@ export function UnityPatcher() {
             toast.warning(t('gamePatcher.noExeFound'));
           }
         } catch (err) {
-          console.error('Executable search error:', err);
+          clientLogger.error('Executable search error:', err);
         }
       }
     } catch (err) {
-      console.error('Folder selection error:', err);
+      clientLogger.error('Folder selection error:', err);
       toast.error(t('gamePatcher.cannotOpenFolder'));
     }
   };
@@ -465,7 +466,7 @@ export function UnityPatcher() {
       }
 
     } catch (err: unknown) {
-      console.error('Patching error:', err);
+      clientLogger.error('Patching error:', err);
       setStatus('error');
       setErrorMessage(err.toString());
       setLogs(prev => [...prev, `❌ Error: ${err}`]);
@@ -481,12 +482,12 @@ export function UnityPatcher() {
     // Metodo 1: Steam via Tauri command
     if (appId) {
       try {
-        // console.log('[LAUNCH] Avvio via Steam:', appId);
+        // clientLogger.debug('[LAUNCH] Avvio via Steam:', appId);
         await invoke('launch_steam_game', { appId: String(appId) });
         toast.success(t('gamePatcher.gameLaunchedSteam'));
         return;
       } catch (err) {
-        console.error('Steam launch error:', err);
+        clientLogger.error('Steam launch error:', err);
         // Continua con fallback
       }
     }
@@ -494,13 +495,13 @@ export function UnityPatcher() {
     // Metodo 2: Eseguibile diretto (fallback)
     if (gamePath && exeName) {
       const fullPath = `${gamePath}\\${exeName}`;
-      // console.log('[LAUNCH] Avvio eseguibile diretto:', fullPath);
+      // clientLogger.debug('[LAUNCH] Avvio eseguibile diretto:', fullPath);
       try {
         await invoke('launch_executable', { path: fullPath });
         toast.success(t('gamePatcher.gameLaunched'));
         return;
       } catch (err) {
-        console.error('Direct launch error:', err);
+        clientLogger.error('Direct launch error:', err);
       }
     }
     
@@ -521,7 +522,7 @@ export function UnityPatcher() {
         toast.success(result.message);
       }
     } catch (err: unknown) {
-      console.error('Patch removal error:', err);
+      clientLogger.error('Patch removal error:', err);
       toast.error(t('gamePatcher.patchRemoveError'));
     }
   };

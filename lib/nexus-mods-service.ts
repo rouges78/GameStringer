@@ -128,7 +128,12 @@ class NexusModsService {
 
   private loadApiKey(): void {
     if (typeof window === 'undefined') return;
-    this.apiKey = localStorage.getItem(STORAGE_KEY);
+    // Load from secure storage asynchronously
+    import('@/lib/secure-key-store').then(({ getSecureKey }) => {
+      getSecureKey('NEXUS_API_KEY').then(key => {
+        if (key) this.apiKey = key;
+      });
+    }).catch(() => {});
   }
 
   private loadCache(): void {
@@ -173,7 +178,9 @@ class NexusModsService {
   setApiKey(key: string): void {
     this.apiKey = key;
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, key);
+      import('@/lib/secure-key-store').then(({ setSecureKey }) => {
+        setSecureKey('NEXUS_API_KEY', key);
+      }).catch(() => {});
     }
     this.userInfo = null;
   }

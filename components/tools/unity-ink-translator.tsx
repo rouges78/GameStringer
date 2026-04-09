@@ -194,7 +194,7 @@ export function UnityInkTranslator() {
     try {
       const resp = await fetch('/api/unity-ink/detect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ gameDir })
       });
       const data = await resp.json();
@@ -221,7 +221,7 @@ export function UnityInkTranslator() {
     try {
       const resp = await fetch('/api/unity-ink/extract', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ gameDir })
       });
       const data = await resp.json();
@@ -250,7 +250,7 @@ export function UnityInkTranslator() {
     try {
       const resp = await fetch('/api/unity-ink/translate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ 
           gameDir, 
           targetLang, 
