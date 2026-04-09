@@ -810,11 +810,11 @@ export default function Dashboard() {
             <div className="rounded-lg bg-[#1b2838] border border-[#2a475e]/50 overflow-hidden">
               <div className="flex items-center gap-2 px-3 py-2 bg-[#15202e] border-b border-[#2a475e]/50">
                 <Cpu className="h-3.5 w-3.5 text-[#67c1f5]" />
-                <h3 className="text-[11px] font-bold text-[#e5e9ed] uppercase tracking-wider">AI Engine</h3>
+                <h3 className="text-[11px] font-bold text-[#e5e9ed] uppercase tracking-wider">{t('settings.ollamaSettings') || 'AI Engine'}</h3>
                 {ollamaStatus && (
                   <button
                     onClick={!ollamaStatus.running ? startOllama : undefined}
-                    title={ollamaStatus.running ? `Ollama attivo — ${ollamaStatus.models} modelli` : 'Premi per avviare Ollama'}
+                    title={ollamaStatus.running ? `Ollama — ${ollamaStatus.models} ${t('settings.availableModels') || 'models'}` : t('settings.startOllama') || 'Start Ollama'}
                     className={`ml-auto h-2 w-2 rounded-full transition-all ${ollamaStatus.running ? 'bg-emerald-400' : ollamaStarting ? 'bg-yellow-400 animate-pulse' : 'bg-red-400 hover:bg-red-300 cursor-pointer hover:scale-125'}`}
                   />
                 )}
@@ -825,17 +825,17 @@ export default function Dashboard() {
                     <span className="text-2xs text-[#8f98a0]">Ollama</span>
                     {ollamaStarting ? (
                       <span className="text-2xs font-bold text-yellow-400 flex items-center gap-1">
-                        <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Avvio...
+                        <RefreshCw className="h-2.5 w-2.5 animate-spin" /> {t('common.loading') || 'Starting...'}
                       </span>
                     ) : ollamaStatus.running ? (
-                      <span className="text-2xs font-bold text-emerald-400">{ollamaStatus.models} modelli</span>
+                      <span className="text-2xs font-bold text-emerald-400">{ollamaStatus.models} {t('settings.availableModels') || 'models'}</span>
                     ) : (
                       <button
                         onClick={startOllama}
-                        title="Premi per avviare Ollama"
+                        title={t('settings.startOllama') || 'Start Ollama'}
                         className="text-2xs font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                       >
-                        Offline — Avvia ↗
+                        Offline — {t('settings.startOllama') || 'Start'} ↗
                       </button>
                     )}
                   </div>

@@ -85,19 +85,28 @@ export const activityColors: Record<ActivityType, string> = {
   other: 'slate',
 };
 
-// Nomi italiani per tipo
-export const activityNames: Record<ActivityType, string> = {
-  translation: 'Traduzione',
-  patch: 'Patch',
-  steam_sync: 'Sincronizzazione Steam',
-  game_added: 'Gioco Aggiunto',
-  game_launched: 'Gioco Avviato',
-  profile_created: 'Profilo Creato',
-  settings_changed: 'Impostazioni',
-  import_export: 'Import/Export',
-  translation_bridge: 'Translation Bridge',
-  other: 'Altro',
+// Localized activity type names
+const activityNamesI18n: Record<string, Record<ActivityType, string>> = {
+  it: { translation: 'Traduzione', patch: 'Patch', steam_sync: 'Sincronizzazione Steam', game_added: 'Gioco Aggiunto', game_launched: 'Gioco Avviato', profile_created: 'Profilo Creato', settings_changed: 'Impostazioni', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Altro' },
+  en: { translation: 'Translation', patch: 'Patch', steam_sync: 'Steam Sync', game_added: 'Game Added', game_launched: 'Game Launched', profile_created: 'Profile Created', settings_changed: 'Settings', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Other' },
+  es: { translation: 'Traduccion', patch: 'Parche', steam_sync: 'Sincronizacion Steam', game_added: 'Juego Agregado', game_launched: 'Juego Iniciado', profile_created: 'Perfil Creado', settings_changed: 'Ajustes', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Otro' },
+  fr: { translation: 'Traduction', patch: 'Patch', steam_sync: 'Synchronisation Steam', game_added: 'Jeu Ajoute', game_launched: 'Jeu Lance', profile_created: 'Profil Cree', settings_changed: 'Parametres', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Autre' },
+  de: { translation: 'Ubersetzung', patch: 'Patch', steam_sync: 'Steam-Synchronisierung', game_added: 'Spiel Hinzugefugt', game_launched: 'Spiel Gestartet', profile_created: 'Profil Erstellt', settings_changed: 'Einstellungen', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Sonstiges' },
+  ja: { translation: '翻訳', patch: 'パッチ', steam_sync: 'Steam同期', game_added: 'ゲーム追加', game_launched: 'ゲーム起動', profile_created: 'プロファイル作成', settings_changed: '設定', import_export: 'インポート/エクスポート', translation_bridge: 'Translation Bridge', other: 'その他' },
+  zh: { translation: '翻译', patch: '补丁', steam_sync: 'Steam同步', game_added: '游戏添加', game_launched: '游戏启动', profile_created: '配置文件创建', settings_changed: '设置', import_export: '导入/导出', translation_bridge: 'Translation Bridge', other: '其他' },
+  ko: { translation: '번역', patch: '패치', steam_sync: 'Steam 동기화', game_added: '게임 추가', game_launched: '게임 실행', profile_created: '프로필 생성', settings_changed: '설정', import_export: '가져오기/내보내기', translation_bridge: 'Translation Bridge', other: '기타' },
+  pt: { translation: 'Traducao', patch: 'Patch', steam_sync: 'Sincronizacao Steam', game_added: 'Jogo Adicionado', game_launched: 'Jogo Iniciado', profile_created: 'Perfil Criado', settings_changed: 'Configuracoes', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Outro' },
+  ru: { translation: 'Перевод', patch: 'Патч', steam_sync: 'Синхронизация Steam', game_added: 'Игра добавлена', game_launched: 'Игра запущена', profile_created: 'Профиль создан', settings_changed: 'Настройки', import_export: 'Импорт/Экспорт', translation_bridge: 'Translation Bridge', other: 'Другое' },
+  pl: { translation: 'Tlumaczenie', patch: 'Patch', steam_sync: 'Synchronizacja Steam', game_added: 'Gra Dodana', game_launched: 'Gra Uruchomiona', profile_created: 'Profil Utworzony', settings_changed: 'Ustawienia', import_export: 'Import/Export', translation_bridge: 'Translation Bridge', other: 'Inne' },
 };
+
+// Default (Italian fallback)
+export const activityNames: Record<ActivityType, string> = activityNamesI18n.it;
+
+/** Get localized activity name */
+export function getLocalizedActivityName(type: ActivityType, lang: string = 'it'): string {
+  return (activityNamesI18n[lang] || activityNamesI18n.en)?.[type] || activityNamesI18n.en[type] || type;
+}
 
 /**
  * Activity History Client
@@ -283,12 +292,27 @@ export class ActivityHistoryClient {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes} min ago`;
-    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-    if (days < 7) return `${days} ${days === 1 ? 'day' : 'days'} ago`;
-    
-    return date.toLocaleDateString('en-US', {
+    // Localized relative time
+    const lang = typeof localStorage !== 'undefined'
+      ? (localStorage.getItem('gamestringer_language') || 'it')
+      : 'it';
+    const locale = lang === 'ja' ? 'ja-JP' : lang === 'zh' ? 'zh-CN' : lang === 'ko' ? 'ko-KR' : lang;
+
+    try {
+      const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+      if (minutes < 1) return rtf.format(0, 'minute');
+      if (minutes < 60) return rtf.format(-minutes, 'minute');
+      if (hours < 24) return rtf.format(-hours, 'hour');
+      if (days < 7) return rtf.format(-days, 'day');
+    } catch {
+      // Fallback
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes} min ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+    }
+
+    return date.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
