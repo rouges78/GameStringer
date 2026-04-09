@@ -1,9 +1,9 @@
 // GameStringer Website i18n — 11 languages
-// v1.6.0 — Bethesda/CRI Patchers + Unity Localization + a11y
+// v1.7.0 — Auto-Select AI + Gridly CSV + Lip Sync + Dubbing
 
 const translations = {
   it: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI Patchers + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Select AI + CSV Gridly + Lip Sync + Doppiaggio',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
     'hero.desc': 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.',
@@ -54,6 +54,8 @@ const translations = {
     'faq.q6': 'La qualità è paragonabile a traduzioni pro?',
     'faq.q7': 'Supporta giochi retro/DOS?',
     'faq.q8': 'Posso contribuire al progetto?',
+    'whatsnew.title': 'Novità nella Versione 1.7.0',
+    'whatsnew.desc': 'Selezione Auto Motore AI, CSV Gridly, Corrispondenza Durata, Lip Sync Rhubarb, Video Extractor e Sync i18n.',
     'cta.title': 'Pronto a Tradurre?',
     'cta.desc': 'Scarica GameStringer gratuitamente e inizia a giocare nella tua lingua. Nessun account, nessun abbonamento.',
     'cta.download': '⬇️ Download per Windows & Linux',
@@ -65,7 +67,7 @@ const translations = {
   },
 
   en: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI Patchers + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Select AI + Gridly CSV + Lip Sync + Dubbing',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize video games with AI. Open source. Free.',
     'hero.desc': 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-line (0-100), AI Auto-glossary, persistent Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then pay-what-you-want.',
@@ -116,6 +118,8 @@ const translations = {
     'faq.q6': 'Is quality comparable to professional translations?',
     'faq.q7': 'Does it support retro/DOS games?',
     'faq.q8': 'Can I contribute to the project?',
+    'whatsnew.title': 'What\'s New in Version 1.7.0',
+    'whatsnew.desc': 'Auto-Select AI Engine, Gridly CSV, Duration Matching, Rhubarb Lip Sync, Video Extractor and i18n Sync.',
     'cta.title': 'Ready to Translate?',
     'cta.desc': 'Download GameStringer for free and start playing in your language. No account, no subscription.',
     'cta.download': '⬇️ Download for Windows & Linux',
@@ -127,7 +131,7 @@ const translations = {
   },
 
   es: {
-    'hero.badge': 'v1.6.0 — Parcheadores Bethesda/CRI + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Selección AI + CSV Gridly + Lip Sync + Doblaje',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localiza videojuegos con IA. Open source. Gratuito.',
     'hero.desc': 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) y <strong>20+ proveedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por línea (0-100), Auto-glosario IA, Translation Memory persistente, Tutorial interactivo. <strong>500 cadenas gratis</strong>, luego donación libre.',
@@ -178,6 +182,8 @@ const translations = {
     'faq.q6': '¿La calidad es comparable a traducciones profesionales?',
     'faq.q7': '¿Soporta juegos retro/DOS?',
     'faq.q8': '¿Puedo contribuir al proyecto?',
+    'whatsnew.title': 'Novedades en la Versión 1.7.0',
+    'whatsnew.desc': 'Selección Automática Motor AI, CSV Gridly, Coincidencia Duración, Lip Sync Rhubarb, Video Extractor y Sincronización i18n.',
     'cta.title': '¿Listo para Traducir?',
     'cta.desc': 'Descarga GameStringer gratis y empieza a jugar en tu idioma.',
     'cta.download': '⬇️ Descarga para Windows y Linux',
@@ -189,7 +195,7 @@ const translations = {
   },
 
   de: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI Patcher + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Select AI + Gridly CSV + Lip Sync + Synchronisation',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
     'hero.desc': 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> pro Zeile (0-100), KI-Auto-Glossar, persistenter Translation Memory, Interaktives Tutorial. <strong>500 Strings kostenlos</strong>, dann freiwillige Spende.',
@@ -240,6 +246,8 @@ const translations = {
     'faq.q6': 'Ist die Qualität vergleichbar mit professionellen Übersetzungen?',
     'faq.q7': 'Unterstützt es Retro/DOS-Spiele?',
     'faq.q8': 'Kann ich zum Projekt beitragen?',
+    'whatsnew.title': 'Neuigkeiten in Version 1.7.0',
+    'whatsnew.desc': 'Auto-Auswahl AI Engine, Gridly CSV, Daueranpassung, Rhubarb Lip Sync, Video Extractor und i18n-Synchronisation.',
     'cta.title': 'Bereit zum Übersetzen?',
     'cta.desc': 'Lade GameStringer kostenlos herunter und spiele in deiner Sprache.',
     'cta.download': '⬇️ Download für Windows & Linux',
@@ -251,7 +259,7 @@ const translations = {
   },
 
   fr: {
-    'hero.badge': 'v1.6.0 — Patcheurs Bethesda/CRI + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Sélection AI + CSV Gridly + Lip Sync + Doublage',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localisez les jeux vidéo avec l\'IA. Open source. Gratuit.',
     'hero.desc': 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> par ligne (0-100), Auto-glossaire IA, Translation Memory persistante, Tutoriel interactif. <strong>500 chaînes gratuites</strong>, puis don libre.',
@@ -302,6 +310,8 @@ const translations = {
     'faq.q6': 'La qualité est-elle comparable aux traductions pro ?',
     'faq.q7': 'Supporte-t-il les jeux rétro/DOS ?',
     'faq.q8': 'Puis-je contribuer au projet ?',
+    'whatsnew.title': 'Nouveautés de la Version 1.7.0',
+    'whatsnew.desc': 'Auto-Sélection Moteur AI, CSV Gridly, Correspondance Durée, Lip Sync Rhubarb, Video Extractor et Synchronisation i18n.',
     'cta.title': 'Prêt à Traduire ?',
     'cta.desc': 'Téléchargez GameStringer gratuitement et jouez dans votre langue.',
     'cta.download': '⬇️ Télécharger pour Windows & Linux',
@@ -313,7 +323,7 @@ const translations = {
   },
 
   ja: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI パッチャー + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — AI自動選択 + Gridly CSV + リップシンク + 吹替',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AIでビデオゲームをローカライズ。オープンソース。無料。',
     'hero.desc': '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>ダンガンロンパ</strong>...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。行ごとの<strong>品質バッジ</strong>（0-100）、AI自動用語集、永続的翻訳メモリ、インタラクティブチュートリアル。<strong>500文字列無料</strong>、その後は任意の寄付。',
@@ -364,6 +374,8 @@ const translations = {
     'faq.q6': 'プロの翻訳と比べて品質は？',
     'faq.q7': 'レトロ/DOSゲームに対応？',
     'faq.q8': 'プロジェクトに貢献できる？',
+    'whatsnew.title': 'バージョン 1.7.0 の新機能',
+    'whatsnew.desc': 'AI自動選択エンジン、Gridly CSV、吹替時間一致、Rhubarbリップシンク、ビデオエクストラクタ、i18n同期。',
     'cta.title': '翻訳の準備はできた？',
     'cta.desc': 'GameStringerを無料でダウンロードして、あなたの言語でプレイしよう。',
     'cta.download': '⬇️ Windows & Linux用ダウンロード',
@@ -375,7 +387,7 @@ const translations = {
   },
 
   zh: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI 补丁器 + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — AI自动选择 + Gridly CSV + 口型同步 + 配音',
     'hero.title': 'GameStringer',
     'hero.subtitle': '用AI本地化电子游戏。开源。免费。',
     'hero.desc': '支持<strong>11+引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>弹丸论破</strong>...）和<strong>20+ AI提供商</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。逐行<strong>质量徽章</strong>（0-100）、AI自动术语表、持久化翻译记忆、交互式教程。<strong>500条字符串免费</strong>，之后自愿捐赠。',
@@ -426,6 +438,8 @@ const translations = {
     'faq.q6': '质量能与专业翻译相比吗？',
     'faq.q7': '支持复古/DOS游戏吗？',
     'faq.q8': '可以为项目做贡献吗？',
+    'whatsnew.title': '版本 1.7.0 新功能',
+    'whatsnew.desc': 'AI自动选择引擎、Gridly CSV、配音时长匹配、Rhubarb口型同步、视频提取器和i18n同步。',
     'cta.title': '准备好翻译了吗？',
     'cta.desc': '免费下载GameStringer，用你的语言开始游戏。',
     'cta.download': '⬇️ Windows和Linux下载',
@@ -437,7 +451,7 @@ const translations = {
   },
 
   ko: {
-    'hero.badge': 'v1.6.0 — Bethesda/CRI 패처 + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — AI 자동선택 + Gridly CSV + 립싱크 + 더빙',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AI로 비디오 게임을 현지화하세요. 오픈 소스. 무료.',
     'hero.desc': '<strong>11개 이상의 엔진</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>단간론파</strong>...)과 <strong>20개 이상의 AI 제공업체</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 행별 <strong>품질 배지</strong> (0-100), AI 자동 용어집, 영구 번역 메모리, 인터랙티브 튜토리얼. <strong>500개 문자열 무료</strong>, 이후 자유 기부.',
@@ -488,6 +502,8 @@ const translations = {
     'faq.q6': '품질이 전문 번역과 비교할 수 있나요?',
     'faq.q7': '레트로/DOS 게임을 지원하나요?',
     'faq.q8': '프로젝트에 기여할 수 있나요?',
+    'whatsnew.title': '버전 1.7.0 새로운 기능',
+    'whatsnew.desc': 'AI 자동선택 엔진, Gridly CSV, 더빙 길이 매칭, Rhubarb 립싱크, 비디오 추출기 및 i18n 동기화.',
     'cta.title': '번역할 준비가 되셨나요?',
     'cta.desc': 'GameStringer를 무료로 다운로드하고 당신의 언어로 플레이하세요.',
     'cta.download': '⬇️ Windows & Linux 다운로드',
@@ -499,7 +515,7 @@ const translations = {
   },
 
   pt: {
-    'hero.badge': 'v1.6.0 — Patchers Bethesda/CRI + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Seleção AI + CSV Gridly + Lip Sync + Dublagem',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize videogames com IA. Open source. Gratuito.',
     'hero.desc': 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por linha (0-100), Auto-glossário IA, Translation Memory persistente, Tutorial interativo. <strong>500 strings grátis</strong>, depois doação livre.',
@@ -550,6 +566,8 @@ const translations = {
     'faq.q6': 'A qualidade é comparável a traduções profissionais?',
     'faq.q7': 'Suporta jogos retro/DOS?',
     'faq.q8': 'Posso contribuir com o projeto?',
+    'whatsnew.title': 'Novidades na Versão 1.7.0',
+    'whatsnew.desc': 'Auto-Seleção Motor AI, CSV Gridly, Correspondência Duração, Lip Sync Rhubarb, Video Extractor e Sincronização i18n.',
     'cta.title': 'Pronto para Traduzir?',
     'cta.desc': 'Baixe GameStringer gratuitamente e comece a jogar no seu idioma.',
     'cta.download': '⬇️ Download para Windows & Linux',
@@ -561,7 +579,7 @@ const translations = {
   },
 
   ru: {
-    'hero.badge': 'v1.6.0 — Патчеры Bethesda/CRI + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Авто-выбор AI + CSV Gridly + Lip Sync + Дубляж',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Локализуйте видеоигры с ИИ. Открытый код. Бесплатно.',
     'hero.desc': 'Поддержка <strong>11+ движков</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) и <strong>20+ провайдеров ИИ</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> построчно (0-100), авто-глоссарий ИИ, постоянная память переводов, интерактивный учебник. <strong>500 строк бесплатно</strong>, затем свободные пожертвования.',
@@ -599,6 +617,8 @@ const translations = {
     'faq.q6': 'Качество сравнимо с профессиональным переводом?',
     'faq.q7': 'Поддерживает ли ретро/DOS игры?',
     'faq.q8': 'Могу ли я помочь проекту?',
+    'whatsnew.title': 'Новое в версии 1.7.0',
+    'whatsnew.desc': 'Авто-выбор AI движка, Gridly CSV, Совпадение длительности, Rhubarb Lip Sync, Видео экстрактор и Синхронизация i18n.',
     'cta.title': 'Готовы переводить?',
     'cta.desc': 'Скачайте GameStringer бесплатно и начните играть на своём языке.',
     'cta.download': '⬇️ Скачать для Windows и Linux',
@@ -610,7 +630,7 @@ const translations = {
   },
 
   pl: {
-    'hero.badge': 'v1.6.0 — Patchery Bethesda/CRI + Unity Localization + a11y',
+    'hero.badge': 'v1.7.0 — Auto-Wybór AI + CSV Gridly + Lip Sync + Dubbing',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalizuj gry wideo z AI. Open source. Za darmo.',
     'hero.desc': 'Obsługa <strong>11+ silników</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) i <strong>20+ dostawców AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> na wiersz (0-100), auto-glosariusz AI, trwała pamięć tłumaczeń, interaktywny samouczek. <strong>500 ciągów za darmo</strong>, potem dobrowolna donacja.',
@@ -648,6 +668,8 @@ const translations = {
     'faq.q6': 'Czy jakość jest porównywalna z profesjonalnym tłumaczeniem?',
     'faq.q7': 'Czy obsługuje gry retro/DOS?',
     'faq.q8': 'Czy mogę pomóc w projekcie?',
+    'whatsnew.title': 'Nowości w wersji 1.7.0',
+    'whatsnew.desc': 'Auto-Wybór silnika AI, CSV Gridly, Dopasowanie czasu trwania, Rhubarb Lip Sync, Video Extractor i synchronizacja i18n.',
     'cta.title': 'Gotowy do tłumaczenia?',
     'cta.desc': 'Pobierz GameStringer za darmo i zacznij grać w swoim języku.',
     'cta.download': '⬇️ Pobierz dla Windows i Linux',
