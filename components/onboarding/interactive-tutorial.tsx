@@ -14,7 +14,7 @@ import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
 
 const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
-const TUTORIAL_VERSION = '5'; // Versione 5: aggiornati step con feature attuali
+const TUTORIAL_VERSION = 5; // Increment ONLY when tutorial content actually changes
 
 interface TutorialStep {
   id: string;
@@ -134,7 +134,9 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
       const tutorialCompleted = localStorage.getItem(TUTORIAL_KEY);
       
       // Mostra tutorial se non è stato completato
-      if (tutorialCompleted === TUTORIAL_VERSION) {
+      // Accept any version >= TUTORIAL_VERSION (don't re-show after app updates)
+      const completedVer = tutorialCompleted ? parseInt(tutorialCompleted, 10) : 0;
+      if (!isNaN(completedVer) && completedVer >= TUTORIAL_VERSION) {
         return;
       }
 
@@ -194,7 +196,7 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
   };
 
   const handleComplete = () => {
-    localStorage.setItem(TUTORIAL_KEY, TUTORIAL_VERSION);
+    localStorage.setItem(TUTORIAL_KEY, String(TUTORIAL_VERSION));
     localStorage.setItem('tutorial-completed', 'true');
     setIsVisible(false);
     onComplete?.();

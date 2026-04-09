@@ -202,6 +202,7 @@ GameStringer unterstützt **20+ Engines** mit unterschiedlichem Tiefgang:
 - **Context-aware**: versteht Spielgenre, Charakterstimme, Ton, Erzählung vs. UI vs. Dialog
 - **Translation Memory & Glossar**: Konsistenz im gesamten Projekt mit automatischer Glossar-Extraktion
 - **Multi-LLM Compare**: führt mehrere Anbieter parallel aus, wähle das beste Ergebnis pro String
+- **Auto-Select Engine** (NEW v1.7.0): Voreinstellung, die Anbieter dynamisch nach Zielsprache + Spielgenre bewertet
 - **Quality Gates**: automatisches QA-Scoring für jeden übersetzten String (0-100) mit ContentTypeBadge
 - **Vision LLM Translator**: nutzt In-Game-Screenshots für Kontext (Ollama, Gemini, GPT-4o)
 - **Live Quality Preview**: sieh Qualitätsbewertungen in Echtzeit während der Batch-Übersetzung
@@ -236,7 +237,9 @@ GameStringer unterstützt **20+ Engines** mit unterschiedlichem Tiefgang:
 - **Batch Translation**: ganze Spiele oder Ordner auf einmal übersetzen
 - **Untertitel-Übersetzer**: SRT, VTT, ASS/SSA mit Timing-Erhaltung
 - **OCR Translator**: extrahiert Text aus Retro-Spielen (8-Bit-, 16-Bit-, DOS-Presets) mit echtem Tauri-Tesseract-Backend
-- **Voice Pipeline**: speech-to-text → übersetzen → text-to-speech
+- **Voice Pipeline**: speech-to-text → übersetzen → text-to-speech mit **Duration Matching** (NEW v1.7.0) — passt Geschwindigkeit automatisch an die Dauer des Originalaudio an
+- **Lip Sync** (NEW v1.7.0): Rhubarb-Integration zur Viseme-Generierung, Export für Unity/Unreal
+- **Gridly CSV Export/Import** (NEW v1.7.0): mehrsprachiges Format kompatibel mit Gridly/Lokalise/Crowdin
 - **Echtzeit-Overlay**: siehe Übersetzungen beim Spielen via VR/Screen-Overlay
 - **Auto-Translate Review**: „Translate all untranslated"-Schaltfläche mit Fortschrittsbalken
 - **Lore Assistant**: RAG-Chat, der Lore und Dialoge des Spiels kennt
@@ -261,6 +264,7 @@ GameStringer unterstützt **20+ Engines** mit unterschiedlichem Tiefgang:
 - **Ollama Setup Wizard**: schrittweise Installation der lokalen KI
 - **Ollama Manager**: Auto-Discovery von Modellen aus dem ollama.com-Register + Auto-Refresh bei Fokus/Navigation
 - **Debug Console**: integrierte Konsole mit Log-Intercept
+- **Video Extractor** (v1.7.0): Extrahierung und Konvertierung von FMV-Videos aus Retro-/modernen Spielen mit KI-Upscaling
 - **Plugin System**: Design-Dokument für Drittanbieter-Plugins (siehe `PLUGIN_SYSTEM.md`)
 - **Community Hub**: Teile und lade Translation Memories herunter + GitHub Discussions-Integration
 - **Public API v1**: REST-Endpunkte zur Integration (`/api/v1/translate`, `/api/v1/batch`)
@@ -416,4 +420,5 @@ Siehe [LICENSE](LICENSE) für Details. Fragen? Öffne eine [Discussion](https://
 <p align="center">
   Mit ❤️ gemacht für Gamer, die in ihrer eigenen Sprache spielen wollen<br>
   <strong>GameStringer v1.8.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.7.0</strong> · © 2025-2026 GameStringer Team
 </p>

@@ -202,6 +202,7 @@ GameStringer поддерживает **20+ движков** с различны
 - **Context-aware**: понимает жанр игры, голос персонажа, тон, повествование vs UI vs диалог
 - **Translation Memory и глоссарий**: согласованность во всём проекте с автоматическим извлечением глоссария
 - **Multi-LLM Compare**: запуск нескольких провайдеров параллельно, выбор лучшего результата для каждой строки
+- **Auto-Select Engine** (NEW v1.7.0): пресет, который динамически ранжирует провайдеров по целевому языку + жанру игры
 - **Quality gates**: автоматическая QA-оценка для каждой переведённой строки (0-100) с ContentTypeBadge
 - **Vision LLM Translator**: использует внутриигровые скриншоты для контекста (Ollama, Gemini, GPT-4o)
 - **Live Quality Preview**: видите оценки качества в реальном времени во время пакетного перевода
@@ -236,7 +237,9 @@ GameStringer поддерживает **20+ движков** с различны
 - **Batch Translation**: переводите целые игры или папки сразу
 - **Переводчик субтитров**: SRT, VTT, ASS/SSA с сохранением тайминга
 - **OCR Translator**: извлекает текст из ретро-игр (пресеты 8-бит, 16-бит, DOS) с реальным бэкендом Tauri Tesseract
-- **Voice Pipeline**: speech-to-text → перевод → text-to-speech
+- **Voice Pipeline**: speech-to-text → перевод → text-to-speech с **Duration Matching** (NEW v1.7.0) — автоматически подстраивает скорость под длительность оригинального аудио
+- **Lip Sync** (NEW v1.7.0): интеграция Rhubarb для генерации визем, экспорт для Unity/Unreal
+- **Gridly CSV Export/Import** (NEW v1.7.0): мультиязычный формат, совместимый с Gridly/Lokalise/Crowdin
 - **Оверлей в реальном времени**: видите переводы во время игры через VR/экранный оверлей
 - **Auto-Translate Review**: кнопка «Translate all untranslated» с индикатором прогресса
 - **Lore Assistant**: RAG-чат, который знает лор и диалоги игры
@@ -261,6 +264,7 @@ GameStringer поддерживает **20+ движков** с различны
 - **Ollama Setup Wizard**: пошаговая установка локального ИИ
 - **Ollama Manager**: автообнаружение моделей из реестра ollama.com + автообновление при фокусе/навигации
 - **Debug Console**: интегрированная консоль с перехватом логов
+- **Video Extractor** (v1.7.0): извлечение и конвертация FMV-видео из ретро/современных игр с ИИ-апскейлингом
 - **Plugin System**: проектный документ для сторонних плагинов (см. `PLUGIN_SYSTEM.md`)
 - **Community Hub**: делитесь и скачивайте Translation Memories + интеграция с GitHub Discussions
 - **Public API v1**: REST-эндпоинты для интеграции (`/api/v1/translate`, `/api/v1/batch`)
@@ -416,4 +420,5 @@ Rust-бэкенд: `cd src-tauri && cargo check`, чтобы проверить,
 <p align="center">
   Сделано с ❤️ для геймеров, которые хотят играть на своём родном языке<br>
   <strong>GameStringer v1.8.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.7.0</strong> · © 2025-2026 GameStringer Team
 </p>

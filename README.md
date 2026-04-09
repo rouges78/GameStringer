@@ -200,6 +200,7 @@ GameStringer supports **20+ engines** with varying levels of depth:
 - **20+ providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, DeepL, Ollama (local), LM Studio, TranslateGemma, HY-MT, Qwen 3, NLLB-200, Cerebras, Together AI, Fireworks, OpenRouter, Cohere, Lingva, MyMemory
 - **Context-aware**: understands game genre, character voice, tone, narrative vs UI vs dialogue
 - **Translation Memory & Glossary**: consistency across the project with auto-glossary extraction
+- **Auto-Select Engine** (NEW v1.7.0): `auto` preset that dynamically ranks providers by target language + game genre (DeepL for European, Claude for CJK, genre-aware boost)
 - **Multi-LLM Compare**: run multiple providers in parallel, pick the best result per string
 - **Quality gates**: automatic QA scoring on every translated string (0-100) with ContentTypeBadge
 - **Vision LLM Translator**: uses in-game screenshots for context (Ollama, Gemini, GPT-4o)
@@ -235,7 +236,9 @@ GameStringer supports **20+ engines** with varying levels of depth:
 - **Batch Translation**: translate entire games or folders at once
 - **Subtitle Translator**: SRT, VTT, ASS/SSA with timing preservation
 - **OCR Translator**: extract text from retro games (8-bit, 16-bit, DOS presets) with real Tauri Tesseract backend
-- **Voice Pipeline**: speech-to-text → translate → text-to-speech
+- **Voice Pipeline**: speech-to-text → translate → text-to-speech with **Duration Matching** (NEW v1.7.0) — auto-adjusts speed to match original audio duration
+- **Lip Sync** (NEW v1.7.0): Rhubarb integration for viseme generation (A-X), interactive timeline, export for Unity (blend shapes) and Unreal (FaceFX)
+- **Gridly CSV Export/Import** (NEW v1.7.0): multi-language column format compatible with Gridly, Lokalise, and Crowdin
 - **Real-time Overlay**: see translations while playing via VR/screen overlay
 - **Auto-Translate Review**: "Translate all untranslated" button with progress bar
 - **Lore Assistant**: RAG chat that knows the game's lore and dialogues
@@ -260,6 +263,7 @@ GameStringer supports **20+ engines** with varying levels of depth:
 - **Ollama Setup Wizard**: step-by-step local AI installation
 - **Ollama Manager**: auto-discovery of models from the ollama.com registry + auto-refresh on focus/navigation
 - **Debug Console**: integrated console with log intercept
+- **Video Extractor** (v1.7.0): extract and convert FMV video from retro/modern games (VMD, BIK, SMK, USM, ROQ) with AI upscaling (Real-ESRGAN), direct link from game detail page
 - **Plugin System**: design doc for third-party plugins (see `PLUGIN_SYSTEM.md`)
 - **Community Hub**: share and download translation memories + GitHub Discussions integration
 - **Public API v1**: REST endpoints for integration (`/api/v1/translate`, `/api/v1/batch`)
@@ -415,4 +419,5 @@ See [LICENSE](LICENSE) for details. Questions? Open a [Discussion](https://githu
 <p align="center">
   Made with ❤️ for gamers who want to play in their own language<br>
   <strong>GameStringer v1.8.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.7.0</strong> · © 2025-2026 GameStringer Team
 </p>
