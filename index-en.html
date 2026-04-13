@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameStringer v1.7.0 — Translate any video game with AI</title>
+  <title>GameStringer v1.8.1 — Translate any video game with AI</title>
   <meta name="description" content="Open source suite to translate video games with AI. 11+ engines (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI), 20+ AI providers, Quality Badges, Translation Memory, Auto-glossary. 500 free strings.">
   <meta name="keywords" content="game translation, video game localization, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
   <meta name="theme-color" content="#050a14">
@@ -14,7 +14,7 @@
   <link rel="alternate" hreflang="x-default" href="https://rouges78.github.io/GameStringer/index-en.html">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="GameStringer v1.7.0 — Translate any video game with AI">
+  <meta property="og:title" content="GameStringer v1.8.1 — Translate any video game with AI">
   <meta property="og:description" content="Open source suite: 11+ engines, 20+ AI, Quality Badges, Translation Memory. Free, no account.">
   <meta property="og:image" content="images/screenshot-library.png">
   <meta property="og:image:alt" content="GameStringer — game library with 7 integrated stores">
@@ -25,7 +25,7 @@
   <meta property="og:site_name" content="GameStringer">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="GameStringer v1.7.0 — Translate any video game with AI">
+  <meta name="twitter:title" content="GameStringer v1.8.1 — Translate any video game with AI">
   <meta name="twitter:description" content="Open source suite: 11+ engines, 20+ AI, Quality Badges, Translation Memory. Free.">
   <meta name="twitter:image" content="images/screenshot-library.png">
 
@@ -47,7 +47,7 @@
     "name": "GameStringer",
     "operatingSystem": "Windows 10, Windows 11, Linux",
     "applicationCategory": "GameApplication",
-    "softwareVersion": "1.7.0",
+    "softwareVersion": "1.8.1",
     "description": "Open source suite to translate video games with AI. 11+ engines, 20+ AI providers, Quality Badges, Translation Memory, Auto-glossary.",
     "url": "https://rouges78.github.io/GameStringer/index-en.html",
     "downloadUrl": "https://github.com/rouges78/GameStringer/releases/latest",
@@ -78,7 +78,7 @@
         <a href="#engines">Engines</a>
         <a href="#ai">AI Providers</a>
         <a href="#tools">Tools</a>
-        <a href="#whatsnew">v1.7.0</a>
+        <a href="#whatsnew">v1.8.1</a>
         <a href="#usecases">Use Cases</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -87,7 +87,8 @@
 
     <!-- HERO -->
     <div class="hero" id="main-content">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.7.0 — Auto-Select AI + Gridly CSV + Lip Sync + Dubbing</span>
+      <img src="logo.png" alt="GameStringer Logo" width="120" height="120" style="margin-bottom:24px;filter:drop-shadow(0 0 40px rgba(139,92,246,.4))">
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System</span>
       <h1>Translate <span class="hero-highlight">Any</span> Video Game<br>with Artificial Intelligence</h1>
       <p class="hero-subtitle">The ultimate open source suite for video game localization</p>
       <p class="hero-desc">Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, Danganronpa...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-row (0-100), Auto-glossary AI, Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then free donation.</p>
@@ -364,48 +365,48 @@
   </div>
 </section>
 
-<!-- WHAT'S NEW v1.7.0 -->
+<!-- WHAT'S NEW v1.8.1 -->
 <section id="whatsnew">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 What's New in v1.7.0</span>
+    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 What's New in v1.8.1</span>
     <h2 class="section-title">Latest Release Highlights</h2>
-    <p class="section-desc">Auto-Select AI Engine, Gridly CSV, Duration Matching, Lip Sync with Rhubarb, Video Extractor and Full i18n Sync.</p>
+    <p class="section-desc">Live Overlay, Hub Marketplace, AI Dubbing Pipeline, Plugin System, Code Quality Audit &amp; Performance.</p>
     <div class="grid grid-2" style="margin-top:48px;text-align:left">
       <div class="card feature-card" style="border-left:4px solid #8b5cf6">
-        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)">🤖</div>
-        <h3 class="feature-title">Auto-Select AI Engine</h3>
-        <p class="feature-desc">The new "Auto" preset picks the best AI provider per language and genre. European languages → DeepL, CJK → Claude, RPG → creative LLMs. Automatic quality learning.</p>
-        <div class="feature-tags"><span class="feature-tag">Auto-Select</span><span class="feature-tag">Per Language</span><span class="feature-tag">Per Genre</span><span class="feature-tag">Quality Tracking</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)">👁️</div>
+        <h3 class="feature-title">Live Translation Overlay</h3>
+        <p class="feature-desc">Real-time game translation with transparent OCR overlay. Ctrl+Alt+O hotkey, multi-engine OCR (Tesseract/OneOCR/PaddleOCR), diff detection, translation cache. Minimal performance impact.</p>
+        <div class="feature-tags"><span class="feature-tag">Overlay</span><span class="feature-tag">OCR</span><span class="feature-tag">Real-time</span><span class="feature-tag">Hotkey</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #0ea5e9">
-        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)">📊</div>
-        <h3 class="feature-title">Gridly CSV Export/Import</h3>
-        <p class="feature-desc">Multi-language column format compatible with Gridly, Lokalise and Crowdin. Auto-detect delimiter and language columns. UTF-8 BOM for Excel.</p>
-        <div class="feature-tags"><span class="feature-tag">Gridly</span><span class="feature-tag">Lokalise</span><span class="feature-tag">Crowdin</span><span class="feature-tag">Multi-language</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)">🏪</div>
+        <h3 class="feature-title">Hub Marketplace</h3>
+        <p class="feature-desc">Community translation pack marketplace. User profiles with reputation system, status workflow (draft → published → verified → featured). Browse, search, review &amp; 1-click install.</p>
+        <div class="feature-tags"><span class="feature-tag">Community</span><span class="feature-tag">1-Click Install</span><span class="feature-tag">Supabase</span><span class="feature-tag">Reputation</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #f59e0b">
-        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)">🎙️</div>
-        <h3 class="feature-title">Duration Matching (Dubbing)</h3>
-        <p class="feature-desc">Two-pass voice synthesis: generate → measure → adjust speed → regenerate. Keeps dubbed audio in sync with the original (0.5x-2.0x).</p>
-        <div class="feature-tags"><span class="feature-tag">Two-Pass TTS</span><span class="feature-tag">Web Audio API</span><span class="feature-tag">Speed Match</span><span class="feature-tag">Batch</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)">🎬</div>
+        <h3 class="feature-title">AI Dubbing Pipeline</h3>
+        <p class="feature-desc">Full 7-step pipeline: scan audio → Whisper STT → AI translation → TTS (OpenAI/ElevenLabs/Azure) → duration matching → audio patching → lip sync + subtitles.</p>
+        <div class="feature-tags"><span class="feature-tag">Whisper</span><span class="feature-tag">TTS</span><span class="feature-tag">Lip Sync</span><span class="feature-tag">7 Steps</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #ec4899">
-        <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)">👄</div>
-        <h3 class="feature-title">Lip Sync with Rhubarb</h3>
-        <p class="feature-desc">Generate mouth animation data from audio with Rhubarb Lip Sync. 9 visemes, interactive timeline, export Unity/Unreal/Raw.</p>
-        <div class="feature-tags"><span class="feature-tag">Rhubarb</span><span class="feature-tag">9 Visemes</span><span class="feature-tag">Unity Export</span><span class="feature-tag">Unreal Export</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)">🧩</div>
+        <h3 class="feature-title">Plugin System</h3>
+        <p class="feature-desc">Community-extensible game engine patchers via PatcherPlugin interface. Full lifecycle: detect → extract → patch → verify → restore. Template generator, JS sandbox, distributed as .gsplugin.</p>
+        <div class="feature-tags"><span class="feature-tag">Plugin API</span><span class="feature-tag">.gsplugin</span><span class="feature-tag">Sandbox</span><span class="feature-tag">Template</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #22c55e">
-        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)">🎬</div>
-        <h3 class="feature-title">Video Extractor Improved</h3>
-        <p class="feature-desc">Direct video button on game detail, library picker, auto-scan, back link to game card.</p>
-        <div class="feature-tags"><span class="feature-tag">Game Link</span><span class="feature-tag">Library Picker</span><span class="feature-tag">Auto-Scan</span><span class="feature-tag">Back Link</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#10b981)">🌐</div>
+        <h3 class="feature-title">Translation Memory Network</h3>
+        <p class="feature-desc">Federated community translation sharing. Auto-contribute high-quality translations (confidence &gt; 0.8), privacy-first hashing, integrated into translateWithFallback() pipeline.</p>
+        <div class="feature-tags"><span class="feature-tag">Federated</span><span class="feature-tag">Privacy</span><span class="feature-tag">Opt-in</span><span class="feature-tag">Auto-Share</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #dc2626">
-        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)">🌐</div>
-        <h3 class="feature-title">Full i18n Sync</h3>
-        <p class="feature-desc">All 10 locale files synced to Italian reference. 11 READMEs updated with v1.7.0 features.</p>
-        <div class="feature-tags"><span class="feature-tag">10 Locales</span><span class="feature-tag">11 READMEs</span><span class="feature-tag">Auto Sync</span><span class="feature-tag">Multilingual</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)">🔧</div>
+        <h3 class="feature-title">Quality Audit &amp; Performance</h3>
+        <p class="feature-desc">ESLint 1218→20, TypeScript 2427→2 errors, npm audit 39→2 vulnerabilities. 11 unused deps removed, dynamic imports on heavy pages (-86 kB). 380+ files cleaned.</p>
+        <div class="feature-tags"><span class="feature-tag">ESLint</span><span class="feature-tag">TypeScript</span><span class="feature-tag">Security</span><span class="feature-tag">Bundle -86kB</span></div>
       </div>
     </div>
   </div>
@@ -534,7 +535,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025-2026 GameStringer by <a href="https://github.com/rouges78" style="color: #7dd3fc;">rouges78</a>. Source-Available License.</p>
-      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.7.0</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.8.1</p>
     </div>
   </div>
 </footer>
