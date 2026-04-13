@@ -266,19 +266,21 @@ export default function Dashboard() {
       try {
         const tmList = await invoke('list_translation_memories') as unknown[];
         if (tmList && Array.isArray(tmList)) {
-          tmEntries = tmList.reduce((sum: number, tm: unknown) => sum + (tm.unit_count || tm.unitCount || 0), 0);
+          tmEntries = tmList.reduce((sum: number, tm: unknown) => sum + ((tm as Record<string, number>).unit_count || (tm as Record<string, number>).unitCount || 0), 0);
         }
       } catch (e: unknown) {
-        clientLogger.debug('Dashboard: TM not available', e);
+        clientLogger.debug(`Dashboard: TM not available ${String(e)}`);
       }
       
       // Tempo risparmiato: ~2 min per entry TM (traduzione manuale) salvati con AI
       const timeSavedMinutes = tmEntries * 2 + savedTranslations.length * 15;
       
       // Conta giochi per piattaforma/store dai dati reali
+      type GameRecord = Record<string, unknown>;
       const platformCount: Record<string, number> = {};
-      games.forEach((g: unknown) => {
-        const p = (g.platform || g.source || 'Steam').toLowerCase();
+      games.forEach((_g: unknown) => {
+        const g = _g as GameRecord;
+        const p = (String(g.platform || g.source || 'Steam')).toLowerCase();
         const key = p.includes('steam') ? 'steam'
           : p.includes('epic') ? 'epic'
           : p.includes('gog') ? 'gog'
@@ -288,7 +290,7 @@ export default function Dashboard() {
           : p.includes('itch') ? 'itchio'
           : 'steam';
         // Anche dall'id del gioco (es. 'gog_123')
-        const idKey = (g.id || g.app_id || '').toString().split('_')[0];
+        const idKey = String(g.id || g.app_id || '').split('_')[0];
         const resolvedKey = idKey === 'gog' ? 'gog' : idKey === 'epic' ? 'epic' : key;
         platformCount[resolvedKey] = (platformCount[resolvedKey] || 0) + 1;
       });
@@ -304,20 +306,23 @@ export default function Dashboard() {
       };
       
       const engineStats: Record<string, number> = {};
-      games.forEach((g: unknown) => {
-        const engine = g.engine || 'Unknown';
+      games.forEach((_g: unknown) => {
+        const g = _g as GameRecord;
+        const engine = String(g.engine || 'Unknown');
         engineStats[engine] = (engineStats[engine] || 0) + 1;
       });
-      
+
       const platformStats: Record<string, number> = {};
-      games.forEach((g: unknown) => {
-        const platform = g.platform || 'Unknown';
+      games.forEach((_g: unknown) => {
+        const g = _g as GameRecord;
+        const platform = String(g.platform || 'Unknown');
         platformStats[platform] = (platformStats[platform] || 0) + 1;
       });
       
-      const completedTranslations = savedTranslations.filter((t: unknown) => 
-        t.status === 'completed' || t.title?.includes('completata')
-      ).length || savedTranslations.length;
+      const completedTranslations = savedTranslations.filter((_t: unknown) => {
+        const t = _t as Record<string, unknown>;
+        return t.status === 'completed' || (typeof t.title === 'string' && t.title.includes('completata'));
+      }).length || savedTranslations.length;
       
       // Risparmio stimato vs localizzazione professionale
       // ~$0.10/parola, ~8 parole/entry TM, ~$150 per file tradotto
@@ -327,7 +332,7 @@ export default function Dashboard() {
         total: savedTranslations.length,
         completed: completedTranslations,
         pending: savedTranslations.length - completedTranslations,
-        edited: savedTranslations.filter((t: unknown) => t.status === 'edited').length
+        edited: savedTranslations.filter((_t: unknown) => (_t as Record<string, unknown>).status === 'edited').length
       };
       
       let lastScan = new Date(Date.now());
@@ -384,7 +389,7 @@ export default function Dashboard() {
 
       setStats({
         totalGames: games.length,
-        installedGames: games.filter((g: unknown) => g.is_installed).length,
+        installedGames: games.filter((g: unknown) => (g as GameRecord).is_installed).length,
         translations: savedTranslations.length,
         patches: savedPatches.length,
         tmEntries,
@@ -413,7 +418,7 @@ export default function Dashboard() {
       setLastUpdate(new Date());
       setLoading(false);
     } catch (error: unknown) {
-      clientLogger.error('Dashboard loading error:', error);
+      clientLogger.error(`Dashboard loading error: ${String(error)}`);
       setLoading(false);
     }
   };

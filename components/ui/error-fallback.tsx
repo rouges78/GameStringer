@@ -294,6 +294,7 @@ export function AuthErrorFallback({
   onLogin,
   ...props
 }: AuthErrorFallbackProps) {
+  const { t } = useTranslation();
   const title = `Authentication Error`;
   const description = `Your session has expired or you don't have the required permissions.`;
 

@@ -5,6 +5,8 @@
  * Permette di vedere statistiche, esportare e reimportare traduzioni.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface TranslationRecord {
   id: string;
   source: string;
@@ -268,8 +270,8 @@ class TranslationHistoryManager {
               target: parts[2].replace(/^"|"$/g, '').replace(/""/g, '"'),
               sourceLanguage: parts[3],
               targetLanguage: parts[4],
-              provider: parts[5] as unknown,
-              tool: parts[6] as unknown,
+              provider: parts[5] as TranslationRecord['provider'],
+              tool: parts[6] as TranslationRecord['tool'],
               gameName: parts[7] || undefined,
             });
           }

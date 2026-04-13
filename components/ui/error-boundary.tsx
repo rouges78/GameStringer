@@ -58,7 +58,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      clientLogger.error('ErrorBoundary caught an error:', error, errorInfo);
+      clientLogger.error('ErrorBoundary caught an error:', error, errorInfo as unknown as Record<string, unknown>);
     }
 
     // Call custom error handler if provided
@@ -153,6 +153,7 @@ function DefaultErrorFallback({
   onReload,
   onGoHome
 }: DefaultErrorFallbackProps) {
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = React.useState(false);
 
   return (
@@ -243,7 +244,7 @@ export function useErrorHandler() {
   const { t: _t } = useTranslation();
   return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
     // Log error
-    clientLogger.error('useErrorHandler:', error, errorInfo);
+    clientLogger.error('useErrorHandler:', error, errorInfo as unknown as Record<string, unknown>);
 
     // You can also throw the error to be caught by the nearest ErrorBoundary
     throw error;
@@ -272,7 +273,7 @@ interface ApiErrorBoundaryProps extends ErrorBoundaryProps {
 
 export function ApiErrorBoundary({ endpoint, children, ...props }: ApiErrorBoundaryProps) {
   const handleError = React.useCallback((error: Error, errorInfo: React.ErrorInfo) => {
-    clientLogger.error(`API Error in ${endpoint}:`, error, errorInfo);
+    clientLogger.error(`API Error in ${endpoint}:`, error, errorInfo as unknown as Record<string, unknown>);
     
     // Custom API error handling
     if (props.onError) {
@@ -290,7 +291,7 @@ export function ApiErrorBoundary({ endpoint, children, ...props }: ApiErrorBound
 // Componente per errori di routing
 export function RouteErrorBoundary({ children, ...props }: ErrorBoundaryProps) {
   const handleError = React.useCallback((error: Error, errorInfo: React.ErrorInfo) => {
-    clientLogger.error('Route Error:', error, errorInfo);
+    clientLogger.error('Route Error:', error, errorInfo as unknown as Record<string, unknown>);
     
     if (props.onError) {
       props.onError(error, errorInfo);

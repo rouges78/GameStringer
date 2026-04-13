@@ -52,7 +52,18 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   });
 });
 
-function exportToCSV(translations: unknown[]): string {
+interface TranslationRecord {
+  id: string;
+  originalText?: string;
+  translatedText?: string;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  status?: string;
+  confidence?: number;
+  filePath?: string;
+}
+
+function exportToCSV(translations: TranslationRecord[]): string {
   const headers = ['id', 'originalText', 'translatedText', 'sourceLanguage', 'targetLanguage', 'status', 'confidence'];
   const rows = translations.map(t => [
     t.id,
@@ -67,7 +78,7 @@ function exportToCSV(translations: unknown[]): string {
   return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }
 
-function exportToPO(translations: unknown[]): string {
+function exportToPO(translations: TranslationRecord[]): string {
   const header = `# Translation file exported from GameStringer
 # Generated: ${new Date().toISOString()}
 msgid ""

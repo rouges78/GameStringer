@@ -58,7 +58,7 @@ class InjektTranslator {
       const processes = await invoke<ProcessInfo[]>('find_processes');
       return processes;
     } catch (error: unknown) {
-      clientLogger.error('Errore ricerca processi:', error);
+      clientLogger.error(`Errore ricerca processi: ${String(error)}`);
       return [];
     }
   }
@@ -89,7 +89,7 @@ class InjektTranslator {
       
       return success;
     } catch (error: unknown) {
-      clientLogger.error('Errore avvio injection:', error);
+      clientLogger.error(`Errore avvio injection: ${String(error)}`);
       throw error;
     }
   }
@@ -138,8 +138,8 @@ class InjektTranslator {
       
       try {
         // Ottieni statistiche dal backend Tauri
-        const stats = await invoke<unknown>('get_stats');
-        
+        const stats = await invoke<{ activeHooks?: number; translationsApplied?: number; cachedTranslations?: number }>('get_stats');
+
         if (stats) {
           this.stats.activeHooks = stats.activeHooks || 0;
           this.stats.translationsApplied = stats.translationsApplied || 0;
@@ -148,7 +148,7 @@ class InjektTranslator {
           this.emit('stats-updated', this.stats);
         }
       } catch (error: unknown) {
-        clientLogger.error('Errore recupero statistiche:', error);
+        clientLogger.error(`Errore recupero statistiche: ${String(error)}`);
       }
     }, 1000);
   }
@@ -250,7 +250,7 @@ class InjektTranslator {
       
       this.emit('stopped', {});
     } catch (error: unknown) {
-      clientLogger.error('Errore stop injection:', error);
+      clientLogger.error(`Errore stop injection: ${String(error)}`);
     }
   }
 
@@ -276,7 +276,7 @@ class InjektTranslator {
       const cache = await invoke<Record<string, string>>('export_cache');
       return cache || {};
     } catch (error: unknown) {
-      clientLogger.error('Errore export cache:', error);
+      clientLogger.error(`Errore export cache: ${String(error)}`);
       return {};
     }
   }
@@ -292,7 +292,7 @@ class InjektTranslator {
       await invoke('import_cache', { cacheData: cacheObj });
       this.stats.cachedTranslations = Object.keys(cache).length;
     } catch (error: unknown) {
-      clientLogger.error('Errore import cache:', error);
+      clientLogger.error(`Errore import cache: ${String(error)}`);
     }
   }
   
@@ -333,8 +333,8 @@ export function useInjektTranslator() {
       setStats(injektTranslator.getStatistics());
     };
 
-    const handleTranslation = (event: unknown) => {
-      setTranslations(prev => [...prev.slice(-9), event.detail]);
+    const handleTranslation = (event: Event) => {
+      setTranslations(prev => [...prev.slice(-9), (event as CustomEvent).detail]);
     };
 
     // Aggiorna statistiche ogni secondo

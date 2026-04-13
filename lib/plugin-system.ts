@@ -456,12 +456,15 @@ class PluginRegistry {
       }
 
       // Esegui l'entrypoint in sandbox limitata
-      const pluginModule = this.evaluatePluginCode(manifest.entrypoint);
+      const pluginModule = this.evaluatePluginCode(manifest.entrypoint) as Record<string, unknown> | null;
       if (!pluginModule) {
         return { success: false, error: 'Errore nel codice del plugin' };
       }
 
-      if (manifest.type === 'engine' && pluginModule.detectEngine && pluginModule.extractStrings) {
+      // Type-safe accessor for plugin module properties
+      const pm = pluginModule as Record<string, unknown>;
+
+      if (manifest.type === 'engine' && pm.detectEngine && pm.extractStrings) {
         const enginePlugin: EnginePlugin = {
           id: manifest.id,
           name: manifest.name,
@@ -470,12 +473,12 @@ class PluginRegistry {
           description: manifest.description,
           author: manifest.author,
           enabled: true,
-          engineName: pluginModule.engineName || manifest.name,
-          supportedExtensions: pluginModule.supportedExtensions || [],
-          detectEngine: pluginModule.detectEngine,
-          extractStrings: pluginModule.extractStrings,
-          injectStrings: pluginModule.injectStrings || (() => ''),
-          icon: pluginModule.icon,
+          engineName: (pm.engineName as string) || manifest.name,
+          supportedExtensions: (pm.supportedExtensions as string[]) || [],
+          detectEngine: pm.detectEngine as EnginePlugin['detectEngine'],
+          extractStrings: pm.extractStrings as EnginePlugin['extractStrings'],
+          injectStrings: (pm.injectStrings as EnginePlugin['injectStrings']) || (() => ''),
+          icon: pm.icon as string | undefined,
           website: manifest.homepage,
           config: manifest.config,
         };
@@ -483,7 +486,7 @@ class PluginRegistry {
         return { success: true, pluginId: manifest.id };
       }
 
-      if (manifest.type === 'format' && pluginModule.parse && pluginModule.serialize) {
+      if (manifest.type === 'format' && pm.parse && pm.serialize) {
         const formatPlugin: FormatPlugin = {
           id: manifest.id,
           name: manifest.name,
@@ -492,17 +495,17 @@ class PluginRegistry {
           description: manifest.description,
           author: manifest.author,
           enabled: true,
-          extensions: pluginModule.extensions || [],
-          parse: pluginModule.parse,
-          serialize: pluginModule.serialize,
-          validate: pluginModule.validate,
+          extensions: (pm.extensions as string[]) || [],
+          parse: pm.parse as FormatPlugin['parse'],
+          serialize: pm.serialize as FormatPlugin['serialize'],
+          validate: pm.validate as FormatPlugin['validate'],
         };
         this.registerFormatPlugin(formatPlugin);
         return { success: true, pluginId: manifest.id };
       }
 
       // Patcher plugin: full game patching lifecycle
-      if (manifest.type === 'engine' && pluginModule.detectGame && pluginModule.extractAll && pluginModule.applyPatch) {
+      if (manifest.type === 'engine' && pm.detectGame && pm.extractAll && pm.applyPatch) {
         const patcherPlugin: PatcherPlugin = {
           id: manifest.id,
           name: manifest.name,
@@ -511,17 +514,17 @@ class PluginRegistry {
           description: manifest.description,
           author: manifest.author,
           enabled: true,
-          engineName: pluginModule.engineName || manifest.name,
-          supportedExtensions: pluginModule.supportedExtensions || [],
-          detectEngine: pluginModule.detectEngine || (() => false),
-          extractStrings: pluginModule.extractStrings || (() => ({ entries: [] })),
-          injectStrings: pluginModule.injectStrings || (() => ''),
-          detectGame: pluginModule.detectGame,
-          extractAll: pluginModule.extractAll,
-          applyPatch: pluginModule.applyPatch,
-          verifyPatch: pluginModule.verifyPatch,
-          restoreBackup: pluginModule.restoreBackup,
-          icon: pluginModule.icon,
+          engineName: (pm.engineName as string) || manifest.name,
+          supportedExtensions: (pm.supportedExtensions as string[]) || [],
+          detectEngine: (pm.detectEngine as EnginePlugin['detectEngine']) || (() => false),
+          extractStrings: (pm.extractStrings as EnginePlugin['extractStrings']) || (() => ({ entries: [] })),
+          injectStrings: (pm.injectStrings as EnginePlugin['injectStrings']) || (() => ''),
+          detectGame: pm.detectGame as PatcherPlugin['detectGame'],
+          extractAll: pm.extractAll as PatcherPlugin['extractAll'],
+          applyPatch: pm.applyPatch as PatcherPlugin['applyPatch'],
+          verifyPatch: pm.verifyPatch as PatcherPlugin['verifyPatch'],
+          restoreBackup: pm.restoreBackup as PatcherPlugin['restoreBackup'],
+          icon: pm.icon as string | undefined,
           website: manifest.homepage,
           config: manifest.config,
         };
@@ -531,19 +534,19 @@ class PluginRegistry {
 
       return { success: false, error: `Tipo plugin '${manifest.type}' non supportato o modulo incompleto` };
     } catch (e: unknown) {
-      return { success: false, error: e.message };
+      return { success: false, error: e instanceof Error ? e.message : String(e) };
     }
   }
 
   /** Valuta codice plugin in modo sicuro (sandbox limitata) */
-  private evaluatePluginCode(code: string): unknown {
+  private evaluatePluginCode(code: string): Record<string, unknown> | null {
     try {
       const fn = new Function('exports', code);
       const exports: Record<string, unknown> = {};
       fn(exports);
       return exports;
     } catch (e: unknown) {
-      clientLogger.error('[PluginSystem] Errore valutazione plugin:', e);
+      clientLogger.error(`[PluginSystem] Errore valutazione plugin: ${String(e)}`);
       return null;
     }
   }
@@ -621,19 +624,19 @@ function parseJSON(content: string): ParsedContent {
   const data = JSON.parse(content);
   const entries: TranslationEntry[] = [];
   
-  function extractStrings(obj: unknown, prefix: string = '') {
+  function extractStrings(obj: Record<string, unknown>, prefix: string = '') {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
       
       if (typeof value === 'string') {
         entries.push({ key: fullKey, source: value });
       } else if (typeof value === 'object' && value !== null) {
-        extractStrings(value, fullKey);
+        extractStrings(value as Record<string, unknown>, fullKey);
       }
     }
   }
-  
-  extractStrings(data);
+
+  extractStrings(data as Record<string, unknown>);
   return { entries, metadata: { format: 'json' } };
 }
 
@@ -646,7 +649,7 @@ function serializeJSON(content: ParsedContent): string {
     
     for (let i = 0; i < keys.length - 1; i++) {
       if (!current[keys[i]]) current[keys[i]] = {};
-      current = current[keys[i]];
+      current = current[keys[i]] as Record<string, unknown>;
     }
     
     current[keys[keys.length - 1]] = entry.target || entry.source;
@@ -660,7 +663,7 @@ function validateJSON(content: string): ValidationResult {
     JSON.parse(content);
     return { valid: true, errors: [], warnings: [] };
   } catch (e: unknown) {
-    return { valid: false, errors: [e.message], warnings: [] };
+    return { valid: false, errors: [e instanceof Error ? e.message : String(e)], warnings: [] };
   }
 }
 
@@ -894,16 +897,16 @@ function parseTelltale(content: string): ParsedContent {
   try {
     const data = JSON.parse(content);
     if (typeof data === 'object') {
-      const extractStrings = (obj: unknown, prefix = ''): void => {
+      const extractStrings = (obj: Record<string, unknown>, prefix = ''): void => {
         for (const [key, value] of Object.entries(obj)) {
           if (typeof value === 'string' && value.length > 0) {
             entries.push({ key: prefix ? `${prefix}.${key}` : key, source: value });
           } else if (typeof value === 'object' && value !== null) {
-            extractStrings(value, prefix ? `${prefix}.${key}` : key);
+            extractStrings(value as Record<string, unknown>, prefix ? `${prefix}.${key}` : key);
           }
         }
       };
-      extractStrings(data);
+      extractStrings(data as Record<string, unknown>);
     }
   } catch {
     // Not JSON, try text patterns
@@ -956,7 +959,7 @@ function parseGodot(content: string): ParsedContent {
   // msgid "Hello"
   // msgstr "Ciao"
   const gettextRegex = /msgid\s+"([^"]+)"\s*\nmsgstr\s+"([^"]*)"/g;
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = gettextRegex.exec(content)) !== null) {
     if (match[1]) {
       entries.push({ key: match[1], source: match[1], target: match[2] || undefined });
@@ -979,19 +982,21 @@ function parseGodot(content: string): ParsedContent {
   // text = "Button Text"
   const tscnTextRegex = /text\s*=\s*"([^"]+)"/g;
   while ((match = tscnTextRegex.exec(content)) !== null) {
-    const existing = entries.find(e => e.source === match[1]);
-    if (!existing && match[1].length > 1) {
-      entries.push({ key: `text_${entries.length}`, source: match[1] });
+    const m3 = match;
+    const existing = entries.find(e => e.source === m3[1]);
+    if (!existing && m3[1].length > 1) {
+      entries.push({ key: `text_${entries.length}`, source: m3[1] });
     }
   }
-  
+
   // Pattern 4: tr() function calls
   // tr("Hello")
   const trRegex = /tr\s*\(\s*"([^"]+)"\s*\)/g;
   while ((match = trRegex.exec(content)) !== null) {
-    const existing = entries.find(e => e.source === match[1]);
+    const m4 = match;
+    const existing = entries.find(e => e.source === m4[1]);
     if (!existing) {
-      entries.push({ key: match[1], source: match[1] });
+      entries.push({ key: m4[1], source: m4[1] });
     }
   }
   
@@ -1111,7 +1116,7 @@ export function parseFile(content: string, extension: string): ParsedContent | n
   try {
     return parser.parse(content);
   } catch (error: unknown) {
-    clientLogger.error(`Errore parsing ${extension}:`, error);
+    clientLogger.error(`Errore parsing ${extension}: ${String(error)}`);
     return null;
   }
 }
@@ -1126,7 +1131,7 @@ export function serializeContent(content: ParsedContent, extension: string): str
   try {
     return parser.serialize(content);
   } catch (error: unknown) {
-    clientLogger.error(`Errore serializzazione ${extension}:`, error);
+    clientLogger.error(`Errore serializzazione ${extension}: ${String(error)}`);
     return null;
   }
 }
@@ -1149,6 +1154,6 @@ export function validateFile(content: string, extension: string): ValidationResu
     parser.parse(content);
     return { valid: true, errors: [], warnings: [] };
   } catch (e: unknown) {
-    return { valid: false, errors: [e.message], warnings: [] };
+    return { valid: false, errors: [e instanceof Error ? e.message : String(e)], warnings: [] };
   }
 }

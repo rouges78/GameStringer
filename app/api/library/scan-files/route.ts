@@ -187,7 +187,7 @@ async function scanDirectory(
       }
     }
   } catch (err: unknown) {
-    clientLogger.error(`Error scanning ${dirPath}:`, err);
+    clientLogger.error(`Error scanning ${dirPath}`, 'SCAN_FILES', { error: err instanceof Error ? err.message : String(err) });
   }
 
   return scanned;

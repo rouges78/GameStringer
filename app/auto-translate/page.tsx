@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef, useEffect } from "react"
+import { useState, useCallback, useRef, useEffect, type ComponentType } from "react"
 import { get, set, del } from 'idb-keyval'
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -309,7 +309,7 @@ export default function AutoTranslatePage() {
       })
       clientLogger.debug(`[Checkpoint] Salvato: ${totalDone} stringhe tradotte`)
     } catch (e: unknown) {
-      clientLogger.warn('[Checkpoint] Errore salvataggio:', e)
+      clientLogger.warn(`[Checkpoint] Errore salvataggio: ${String(e)}`)
     }
   }, [getCheckpointKey, gameInfo, targetLang, sourceLang, totalStrings])
 
@@ -450,15 +450,15 @@ export default function AutoTranslatePage() {
       let locFiles: string[] = []
       try {
         locFiles = await invoke<string[]>('scan_translatable_files', { gamePath: installPath })
-        clientLogger.debug('[AutoTranslate] scan_translatable_files result:', locFiles?.length, 'files')
+        clientLogger.debug(`[AutoTranslate] scan_translatable_files result: ${locFiles?.length} files`)
       } catch (e1) {
-        clientLogger.warn('[AutoTranslate] scan_translatable_files failed:', e1)
+        clientLogger.warn(`[AutoTranslate] scan_translatable_files failed: ${String(e1)}`)
         // Prova con snake_case (fallback per comandi senza rename_all)
         try {
           locFiles = await invoke<string[]>('scan_translatable_files', { game_path: installPath })
-          clientLogger.debug('[AutoTranslate] scan_translatable_files (snake) result:', locFiles?.length, 'files')
+          clientLogger.debug(`[AutoTranslate] scan_translatable_files (snake) result: ${locFiles?.length} files`)
         } catch (e2) {
-          clientLogger.warn('[AutoTranslate] scan_translatable_files (snake) also failed:', e2)
+          clientLogger.warn(`[AutoTranslate] scan_translatable_files (snake) also failed: ${String(e2)}`)
         }
       }
 
@@ -471,10 +471,10 @@ export default function AutoTranslatePage() {
           const scanned = await invoke<{ path: string; name: string; size: number; extension: string }[]>(
             'scan_localization_files', { path: installPath, extensions: fallbackExts, maxDepth: 5 }
           )
-          clientLogger.debug('[AutoTranslate] scan_localization_files result:', scanned?.length, 'files')
+          clientLogger.debug(`[AutoTranslate] scan_localization_files result: ${scanned?.length} files`)
           allFiles = (scanned || []).map(f => f.path)
         } catch (e3) {
-          clientLogger.warn('[AutoTranslate] scan_localization_files failed:', e3)
+          clientLogger.warn(`[AutoTranslate] scan_localization_files failed: ${String(e3)}`)
           // Ultimo fallback: sottocartelle comuni
           for (const subdir of ['localization', 'lang', 'languages', 'data', 'text', 'strings', 'www/data', 'game/tl', 'Pack']) {
             try {
@@ -522,7 +522,7 @@ export default function AutoTranslatePage() {
         await loadFilesFromPaths(locFiles, installPath)
       }
     } catch (err: unknown) {
-      clientLogger.error('[AutoTranslate] Scan TOTALMENTE fallito:', err)
+      clientLogger.error(`[AutoTranslate] Scan TOTALMENTE fallito: ${String(err)}`)
       setGameError(`Automatic scan failed: ${err instanceof Error ? err.message : String(err)}. You can load files manually.`)
     } finally {
       setIsLoadingGame(false)
@@ -1041,7 +1041,7 @@ export default function AutoTranslatePage() {
             setTranslatedStrings(new Map(updated))
           }
         } catch (err: unknown) {
-          clientLogger.warn(`[RetranslateUntranslated] Batch error:`, err)
+          clientLogger.warn(`[RetranslateUntranslated] Batch error: ${String(err)}`)
         }
 
         doneCount += batch.length
@@ -1096,7 +1096,7 @@ export default function AutoTranslatePage() {
         qualityScore: avgScore, includeReadme: true, includeManifest: true,
       })
       setPatchResult(result)
-    } catch (err: unknown) { clientLogger.error('[Patch] Error:', err) }
+    } catch (err: unknown) { clientLogger.error(`[Patch] Error: ${String(err)}`) }
     finally { setIsGenerating(false) }
   }, [files, translatedStrings, gameTitle, sourceLang, targetLang, translator, patchVersion, avgScore])
 
@@ -1119,16 +1119,16 @@ export default function AutoTranslatePage() {
         const desktopPath = await invoke<string>('get_desktop_path')
         const fullPath = `${desktopPath}\\${filename}`
         await invoke('save_binary_file', { filePath: fullPath, base64Content: base64 })
-        clientLogger.debug('[ZIP] Salvato su Desktop:', fullPath)
+        clientLogger.debug(`[ZIP] Salvato su Desktop: ${fullPath}`)
         alert(`ZIP salvato sul Desktop:\n${fullPath}`)
         return
       } catch (tauriErr) {
-        clientLogger.debug('[ZIP] Tauri non disponibile, fallback browser:', tauriErr)
+        clientLogger.debug(`[ZIP] Tauri non disponibile, fallback browser: ${String(tauriErr)}`)
       }
 
       // Fallback browser
       downloadBlob(blob, filename)
-    } catch (err: unknown) { clientLogger.error('[ZIP] Error:', err) }
+    } catch (err: unknown) { clientLogger.error(`[ZIP] Error: ${String(err)}`) }
   }, [patchResult, gameTitle, targetLang, patchVersion])
 
   // ============================================================================
@@ -1219,7 +1219,7 @@ export default function AutoTranslatePage() {
             addTestLog(`Letto translation_session.json: ${session.entries.length} entries, ${translations.length} tradotte`)
           }
         } catch (sessionErr) {
-          clientLogger.warn('[TestPatch] translation_session.json non trovato, fallback a translatedStrings:', sessionErr)
+          clientLogger.warn(`[TestPatch] translation_session.json non trovato, fallback a translatedStrings: ${String(sessionErr)}`)
         }
 
         // Fallback: usa translatedStrings del wizard (se non trovato il session file)
@@ -1527,7 +1527,7 @@ export default function AutoTranslatePage() {
   // STEP INDICATOR
   // ============================================================================
 
-  const wizardSteps: { id: WizardStep; label: string; icon: unknown }[] = [
+  const wizardSteps: { id: WizardStep; label: string; icon: ComponentType<{ className?: string }> }[] = [
     { id: 'select_game', label: t('autoTranslatePage.selectGame'), icon: Gamepad2 },
     { id: 'translating', label: t('autoTranslatePage.translating'), icon: Sparkles },
     { id: 'review', label: t('autoTranslatePage.toReview'), icon: Eye },

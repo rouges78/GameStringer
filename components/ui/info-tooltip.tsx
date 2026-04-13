@@ -59,7 +59,7 @@ export function InfoTooltip({
   className,
   iconSize = 'md',
 }: InfoTooltipProps) {
-  const { t: _t } = useTranslation();
+  const { t } = useTranslation();
   const styles = variantStyles[variant];
   const Icon = styles.icon;
 
@@ -94,6 +94,7 @@ export function InfoTooltip({
 
 // Pre-built tooltips for common use cases
 export function TranslationTooltip() {
+  const { t } = useTranslation();
   return (
     <InfoTooltip
       variant="info"
@@ -111,6 +112,7 @@ export function TranslationTooltip() {
 }
 
 export function PatcherTooltip() {
+  const { t } = useTranslation();
   return (
     <InfoTooltip
       variant="tip"
@@ -128,6 +130,7 @@ export function PatcherTooltip() {
 }
 
 export function BatchTooltip() {
+  const { t } = useTranslation();
   return (
     <InfoTooltip
       variant="info"
@@ -145,6 +148,7 @@ export function BatchTooltip() {
 }
 
 export function ApiKeyTooltip() {
+  const { t } = useTranslation();
   return (
     <InfoTooltip
       variant="warning"

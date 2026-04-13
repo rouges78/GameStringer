@@ -947,7 +947,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
         return translated;
       } catch (err: unknown) {
-        clientLogger.warn(`[LM Studio] Errore traduzione:`, err);
+        clientLogger.warn(`[LM Studio] Errore traduzione: ${String(err)}`, 'TRANSLATE');
         return text;
       }
     });
@@ -1033,7 +1033,7 @@ async function translateWithModelWiz(
       } else if (Array.isArray(data.results)) {
         translated = data.results.map((r: Record<string, unknown>) => typeof r === 'string' ? r : r.text || r.translation || '');
       } else if (Array.isArray(data)) {
-        translated = data.map((r: Record<string, unknown>) => typeof r === 'string' ? r : r.text || r.translation || '');
+        translated = data.map((r: Record<string, unknown>) => typeof r === 'string' ? r : String(r.text || r.translation || ''));
       } else if (data.translation) {
         translated = [data.translation];
       }
@@ -1045,9 +1045,9 @@ async function translateWithModelWiz(
 
     } catch (err: unknown) {
       // Fallback: prova formato LibreTranslate-compatibile (una stringa alla volta)
-      if (err.message?.includes('RateLimit')) throw err;
+      if (err instanceof Error && err.message?.includes('RateLimit')) throw err;
 
-      clientLogger.warn(`[ModelWiz] Batch fallito, provo singolarmente:`, err.message);
+      clientLogger.warn(`[ModelWiz] Batch fallito, provo singolarmente: ${err instanceof Error ? err.message : String(err)}`, 'TRANSLATE');
       for (const text of batch) {
         try {
           const res = await fetch(`${modelwizUrl}/api/translate`, {
@@ -1215,7 +1215,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
         
         return translated;
       } catch (err: unknown) {
-        clientLogger.warn(`[Ollama] Errore traduzione stringa:`, err);
+        clientLogger.warn(`[Ollama] Errore traduzione stringa: ${String(err)}`, 'TRANSLATE');
         return text; // Fallback all'originale
       }
     });
@@ -1262,9 +1262,10 @@ async function translateWithLingva(
       const translated = data?.translation || truncated;
       results.push(text.length > MAX_TEXT_LEN ? translated + text.slice(MAX_TEXT_LEN) : translated);
     } catch (err: unknown) {
-      if (err?.message === 'RateLimit') throw err;
+      const errObj = err instanceof Error ? err : null;
+      if (errObj?.message === 'RateLimit') throw err;
       // CORS o network error (es. 429 senza CORS headers) → rate limit
-      if (err?.message?.includes('CORS') || err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+      if (errObj?.message?.includes('CORS') || errObj?.message?.includes('Failed to fetch') || errObj?.name === 'TypeError') {
         blockProvider('lingva', false);
         throw new Error('RateLimit');
       }
@@ -1317,7 +1318,7 @@ async function translateWithNLLB(
 /** Wrapper for getAutoProviderChain that passes PROVIDER_MAP and keys */
 export function getAutoProviderChain(targetLanguage: string, gameGenre?: GameGenre): string[] {
   const keys = getApiKeys();
-  return _getAutoProviderChain(targetLanguage, gameGenre, PROVIDER_MAP, keys as unknown as Record<string, string>);
+  return _getAutoProviderChain(targetLanguage, gameGenre, PROVIDER_MAP as unknown as Record<string, { getKey: (keys: Record<string, string>) => string; isBlocked: () => boolean; needsKey: boolean }>, keys as unknown as Record<string, string>);
 }
 
 
@@ -1671,7 +1672,7 @@ export async function translateWithFallback(
           continue;
         }
         
-        clientLogger.warn(`[translateWithFallback] ${provider.name} failed:`, err);
+        clientLogger.warn(`[translateWithFallback] ${provider.name} failed: ${String(err)}`, 'TRANSLATE');
         const isFreeProvider = FREE_PROVIDERS.has(provider.name);
         if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
           // Rate-limit/payload o provider gratuito: cooldown temporaneo (mai blocco permanente)
@@ -2065,7 +2066,7 @@ Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, 
       return { winnerIndex: winnerIdx, scores };
     }
   } catch (err: unknown) {
-    clientLogger.warn('[Multi-LLM Judge] LLM judge failed:', err);
+    clientLogger.warn(`[Multi-LLM Judge] LLM judge failed: ${String(err)}`, 'TRANSLATE');
   }
 
   return { winnerIndex: 0, scores: candidates.map(() => 50) };
@@ -2139,7 +2140,7 @@ export async function translateWithComparison(
         label: PROVIDER_LABELS[provider.name] || provider.name,
         translations: [] as string[],
         timeMs: Date.now() - provStart,
-        error: err?.message || 'Unknown error',
+        error: err instanceof Error ? err.message : 'Unknown error',
       };
     }
   });
@@ -2223,7 +2224,7 @@ export async function translateWithComparison(
       judgeUsed = 'heuristic+llm';
       clientLogger.debug(`[Multi-LLM] Giudice LLM applicato, vincitore index: ${judgeResult.winnerIndex}`);
     } catch (err: unknown) {
-      clientLogger.warn('[Multi-LLM] Giudice LLM fallito, uso solo euristico:', err);
+      clientLogger.warn(`[Multi-LLM] Giudice LLM fallito, uso solo euristico: ${String(err)}`, 'TRANSLATE');
     }
   }
 

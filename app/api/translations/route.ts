@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
 
+interface TranslationEntry {
+  id: string;
+  gameId: string;
+  filePath: string;
+  originalText: string;
+  translatedText: string;
+  targetLanguage: string;
+  sourceLanguage: string;
+  status: string;
+  confidence: number;
+  isManualEdit: boolean;
+  context: string;
+  updatedAt: string;
+  game: { id: string; title: string; platform: string };
+  suggestions: unknown[];
+  [key: string]: unknown;
+}
+
 // In-memory storage for translations (in production, use a database)
-const translations: unknown[] = [];
+const translations: TranslationEntry[] = [];
 
 // GET /api/translations - Get all translations with optional filters
 export const GET = withErrorHandler(async function(request: NextRequest) {
@@ -93,7 +111,7 @@ export const PUT = withErrorHandler(async function(request: NextRequest) {
 
   translations[index] = {
     ...translations[index],
-    ...updates,
+    ...(updates as Partial<TranslationEntry>),
     updatedAt: new Date().toISOString()
   };
 

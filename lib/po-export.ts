@@ -84,6 +84,10 @@ export interface GenericStringEntry {
 // FORMAT CONVERTER INTERFACE
 // ═══════════════════════════════════════════════════════════════════
 
+/** A loosely-typed record whose values can be used as strings via || chains. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyRecord = Record<string, any>
+
 /**
  * Each supported game engine provides a converter that transforms
  * its native string data to/from GenericStringEntry.
@@ -91,13 +95,13 @@ export interface GenericStringEntry {
 export interface FormatConverter {
   engineName: string
   /** Convert engine-specific entries to generic format */
-  toGeneric: (data: Record<string, unknown>[]) => GenericStringEntry[]
+  toGeneric: (data: AnyRecord[]) => GenericStringEntry[]
   /** Apply generic entries back to engine-specific format */
-  fromGeneric: (entries: GenericStringEntry[], originalData: Record<string, unknown>[]) => Record<string, unknown>[]
+  fromGeneric: (entries: GenericStringEntry[], originalData: AnyRecord[]) => AnyRecord[]
   /** Build a PO msgctxt from an engine-specific entry */
-  contextBuilder: (entry: Record<string, unknown>) => string
+  contextBuilder: (entry: AnyRecord) => string
   /** Build a PO #: reference from an engine-specific entry */
-  referenceBuilder: (entry: Record<string, unknown>) => string
+  referenceBuilder: (entry: AnyRecord) => string
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -796,7 +800,7 @@ function poEntryToGeneric(e: PoEntry): GenericStringEntry {
  * if the engine is not recognized.
  */
 export function entriesToGeneric(
-  entries: Record<string, unknown>[],
+  entries: AnyRecord[],
   engine: string
 ): GenericStringEntry[] {
   const converter = CONVERTERS[engine]
@@ -822,8 +826,8 @@ export function entriesToGeneric(
 export function genericToEntries(
   generic: GenericStringEntry[],
   engine: string,
-  originalEntries: Record<string, unknown>[]
-): Record<string, unknown>[] {
+  originalEntries: AnyRecord[]
+): AnyRecord[] {
   const converter = CONVERTERS[engine]
   if (converter) {
     return converter.fromGeneric(generic, originalEntries)

@@ -233,7 +233,7 @@ export default function GlossaryPage() {
       refreshGlossaries();
     } catch (err: unknown) {
       toast.error('Errore durante l\'estrazione');
-      clientLogger.error(err);
+      clientLogger.error(String(err));
     } finally {
       setExtracting(false);
     }

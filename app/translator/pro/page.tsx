@@ -16,7 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { set } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -162,11 +162,11 @@ export default function TranslatorProPage() {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
       } catch (e: unknown) {
-        clientLogger.warn('[TranslatorPro] Error loading global settings:', e);
+        clientLogger.warn(`[TranslatorPro] Error loading global settings: ${String(e)}`);
       }
     }
   }, []);
-  
+
   // Carica API key salvata quando cambia provider (fallback per provider specifico)
   useEffect(() => {
     // First controlla se c'è una key specifica per questo provider
@@ -185,7 +185,7 @@ export default function TranslatorProPage() {
           return;
         }
       } catch (e: unknown) {
-        clientLogger.warn('[TranslatorPro] Errore parsing impostazioni globali:', e);
+        clientLogger.warn(`[TranslatorPro] Errore parsing impostazioni globali: ${String(e)}`);
       }
     }
     setApiKey('');
@@ -280,11 +280,22 @@ export default function TranslatorProPage() {
       try {
         const cachedGames = await invoke('load_steam_games_cache');
         if (Array.isArray(cachedGames)) {
-          const installedGames = (cachedGames as unknown[])
-            .filter((g: unknown) => g.is_installed && g.title?.trim())
-            .map((g: unknown) => ({
+          interface CachedGame {
+            is_installed?: boolean;
+            title?: string;
+            steam_app_id?: string | number;
+            id?: string | number;
+            platform?: string;
+            header_image?: string;
+            image_url?: string;
+            install_path?: string;
+            supported_languages?: string;
+          }
+          const installedGames = (cachedGames as CachedGame[])
+            .filter((g) => g.is_installed && g.title?.trim())
+            .map((g) => ({
               id: String(g.steam_app_id || g.id),
-              name: g.title,
+              name: g.title!,
               provider: g.platform || 'steam',
               coverUrl: g.header_image || g.image_url,
               installPath: g.install_path,
@@ -298,7 +309,7 @@ export default function TranslatorProPage() {
           setGames(uniqueGames);
         }
       } catch (err: unknown) {
-        clientLogger.error('[TranslatorPro] Error loading games:', err);
+        clientLogger.error(`[TranslatorPro] Error loading games: ${String(err)}`);
       } finally {
         setLoading(false);
       }
@@ -312,7 +323,7 @@ export default function TranslatorProPage() {
     if (wizardApplied || loading || games.length === 0) return;
     
     if (wizardGameId && wizardGameName) {
-      clientLogger.debug('[TranslatorPro] Applying Wizard params:', { wizardGameId, wizardGameName, wizardInstallPath });
+      clientLogger.debug('[TranslatorPro] Applying Wizard params:', undefined, { wizardGameId: wizardGameId ?? '', wizardGameName: wizardGameName ?? '', wizardInstallPath: wizardInstallPath ?? '' });
       
       // Find the game in the list or create a temporary one
       let game = games.find(g => g.id === wizardGameId || g.name === wizardGameName);
@@ -375,7 +386,7 @@ export default function TranslatorProPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
         body: JSON.stringify({ key: keyName, value: apiKey })
-      }).catch(err => clientLogger.error('Failed to save API key:', err));
+      }).catch((err: unknown) => clientLogger.error(`Failed to save API key: ${String(err)}`));
     }
   }, [apiKey, provider]);
   
@@ -421,14 +432,14 @@ export default function TranslatorProPage() {
         if (!isNaN(appId)) {
           const details = await invoke('fetch_steam_game_details', { appId });
           if (details && typeof details === 'object' && 'supported_languages' in details) {
-            const langs = (details as unknown).supported_languages;
+            const langs = (details as Record<string, unknown>).supported_languages as string | undefined;
             if (langs) {
               setSelectedGame(prev => prev ? { ...prev, supportedLanguages: langs } : prev);
             }
           }
         }
       } catch (err: unknown) {
-        clientLogger.debug('[TranslatorPro] Could not fetch game details:', err);
+        clientLogger.debug(`[TranslatorPro] Could not fetch game details: ${String(err)}`);
       }
     }
     
@@ -463,11 +474,11 @@ export default function TranslatorProPage() {
           const locInfo = await invoke<typeof localizationInfo>('detect_localization_files', { gamePath: foundPath });
           setLocalizationInfo(locInfo);
         } catch (e: unknown) {
-          clientLogger.debug('[TranslatorPro] Could not detect localization files:', e);
+          clientLogger.debug(`[TranslatorPro] Could not detect localization files: ${String(e)}`);
         }
       }
     } catch (err: unknown) {
-      clientLogger.debug('[TranslatorPro] Could not detect engine:', err);
+      clientLogger.debug(`[TranslatorPro] Could not detect engine: ${String(err)}`);
     } finally {
       setIsCheckingEngine(false);
     }
@@ -494,10 +505,10 @@ export default function TranslatorProPage() {
           });
         }
       } catch (err: unknown) {
-        clientLogger.error(`Error parsing ${file.name}:`, err);
+        clientLogger.error(`Error parsing ${file.name}: ${String(err)}`);
       }
     }
-    
+
     setSelectedFiles(prev => {
           const existingNames = new Set(prev.map(f => f.name));
           const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
@@ -528,7 +539,7 @@ export default function TranslatorProPage() {
         for (const file of Array.from(files)) {
           // Filtra solo i file di traduzione
           const ext = file.name.split('.').pop()?.toLowerCase();
-          if (!ext || !SUPPORTED_FORMATS.includes(ext as unknown)) continue;
+          if (!ext || !SUPPORTED_FORMATS.includes(ext as FileFormat)) continue;
           
           try {
             const content = await file.text();
@@ -544,10 +555,10 @@ export default function TranslatorProPage() {
               });
             }
           } catch (err: unknown) {
-            clientLogger.error(`Error parsing ${file.name}:`, err);
+            clientLogger.error(`Error parsing ${file.name}: ${String(err)}`);
           }
         }
-        
+
         setSelectedFiles(prev => {
           const existingNames = new Set(prev.map(f => f.name));
           const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
@@ -573,13 +584,14 @@ export default function TranslatorProPage() {
         maxDepth: 10
       });
       
-      clientLogger.debug('[TranslatorPro] Found files:', scannedFiles?.length || 0);
+      clientLogger.debug(`[TranslatorPro] Found files: ${scannedFiles?.length || 0}`);
       
       if (Array.isArray(scannedFiles) && scannedFiles.length > 0) {
         const newFiles: SelectedFile[] = [];
         
         // Filter for likely localization files (o mostra tutti se showAllFiles è attivo)
-        const locFiles = scannedFiles.filter(file => {
+        interface ScannedFile { name: string; path: string; extension?: string; size: number; }
+        const locFiles = (scannedFiles as ScannedFile[]).filter((file) => {
           const fileName = (file.name || '').toLowerCase();
           const filePath = (file.path || '').toLowerCase();
           
@@ -672,15 +684,15 @@ export default function TranslatorProPage() {
                 } else {
                   clientLogger.warn(`[TranslatorPro] ${file.name}: 0 strings found, skipping`);
                 }
-              } catch (parseErr) {
-                clientLogger.warn(`Skipping ${file.name}: not a valid translation file`, parseErr);
+              } catch (parseErr: unknown) {
+                clientLogger.warn(`Skipping ${file.name}: not a valid translation file - ${String(parseErr)}`);
               }
             }
           } catch (err: unknown) {
-            clientLogger.error(`Error reading ${file.name}:`, err);
+            clientLogger.error(`Error reading ${file.name}: ${String(err)}`);
           }
         }
-        
+
         // 🔍 Analizza se i file sono config/sistema invece di localizzazione reale
         const CONFIG_FILE_PATTERNS = [
           'doorstop_config', 'runtimeinitialize', 'scriptingassemblies',
@@ -746,7 +758,7 @@ export default function TranslatorProPage() {
         openFilePicker();
       }
     } catch (err: unknown) {
-      clientLogger.error('Error searching game files:', err);
+      clientLogger.error(`Error searching game files: ${String(err)}`);
       // Fallback: apri il file picker
       openFilePicker();
     }
@@ -779,10 +791,10 @@ export default function TranslatorProPage() {
             });
           }
         } catch (err: unknown) {
-          clientLogger.error(`Error parsing ${file.name}:`, err);
+          clientLogger.error(`Error parsing ${file.name}: ${String(err)}`);
         }
       }
-      
+
       setSelectedFiles(prev => {
         const existingNames = new Set(prev.map(f => f.name));
         const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
@@ -804,9 +816,9 @@ export default function TranslatorProPage() {
     setTranslatedFiles(new Map());
     setTranslatedItems([]); // Reset results accumulati
     
-    clientLogger.debug('[Neural Translator] Starting translation with provider:', provider);
-    clientLogger.debug('[Neural Translator] Files to translate:', filesToTranslate.length);
-    clientLogger.debug('[Neural Translator] API Key present:', !!apiKey);
+    clientLogger.debug(`[Neural Translator] Starting translation with provider: ${provider}`);
+    clientLogger.debug(`[Neural Translator] Files to translate: ${filesToTranslate.length}`);
+    clientLogger.debug(`[Neural Translator] API Key present: ${!!apiKey}`);
     
     try {
       for (const file of filesToTranslate) {
@@ -821,7 +833,7 @@ export default function TranslatorProPage() {
           runQualityChecks,
           apiKey, // Passa l'API key inserita dall'utente
           onProgress: (p) => {
-            clientLogger.debug('[Neural Translator] Progress:', p.completed, '/', p.total);
+            clientLogger.debug(`[Neural Translator] Progress: ${p.completed}/${p.total}`);
             setProgress(p);
           },
           onItemComplete: (item) => {
@@ -925,7 +937,7 @@ export default function TranslatorProPage() {
         alert(`✅ File salvato!\n${result.backup_path ? `Backup creato: ${result.backup_path}` : ''}`);
       }
     } catch (err: unknown) {
-      clientLogger.error('Error saving file:', err);
+      clientLogger.error(`Error saving file: ${String(err)}`);
       alert(`❌ error nel salvataggio: ${err}`);
     }
   };
@@ -969,7 +981,7 @@ export default function TranslatorProPage() {
   
   // === EXPORT PATCH ZIP ===
   const handleExportPatch = async () => {
-    clientLogger.debug('[ExportPatch] Clicked! selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
+    clientLogger.debug(`[ExportPatch] Clicked! selectedGame: ${selectedGame?.name}, translatedFiles: ${translatedFiles.size}`);
     
     if (!selectedGame || translatedFiles.size === 0) {
       toast({
@@ -1015,8 +1027,8 @@ export default function TranslatorProPage() {
       };
       
       // Chiama API per generare ZIP
-      clientLogger.debug('[ExportPatch] Calling API with', files.length, 'files');
-      clientLogger.debug('[ExportPatch] Metadata:', metadata);
+      clientLogger.debug(`[ExportPatch] Calling API with ${files.length} files`);
+      clientLogger.debug(`[ExportPatch] Metadata: ${JSON.stringify(metadata)}`);
       
       const response = await fetch('/api/export/patch', {
         method: 'POST',
@@ -1034,7 +1046,7 @@ export default function TranslatorProPage() {
         })
       });
       
-      clientLogger.debug('[ExportPatch] Response status:', response.status);
+      clientLogger.debug(`[ExportPatch] Response status: ${response.status}`);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -1045,7 +1057,7 @@ export default function TranslatorProPage() {
       // Scarica il file ZIP usando Tauri save dialog
       clientLogger.debug('[ExportPatch] Creating blob...');
       const blob = await response.blob();
-      clientLogger.debug('[ExportPatch] Blob size:', blob.size);
+      clientLogger.debug(`[ExportPatch] Blob size: ${blob.size}`);
       
       const filename = `${selectedGame.name.replace(/[^a-zA-Z0-9]/g, '_')}_${targetLanguage}_patch.zip`;
       
@@ -1079,7 +1091,7 @@ export default function TranslatorProPage() {
         
       } catch (tauriError) {
         // Fallback per browser normale
-        clientLogger.debug('[ExportPatch] Tauri not available, using browser download:', tauriError);
+        clientLogger.debug(`[ExportPatch] Tauri not available, using browser download: ${String(tauriError)}`);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1097,7 +1109,7 @@ export default function TranslatorProPage() {
       });
       
     } catch (error: unknown) {
-      clientLogger.error('[ExportPatch] Error:', error);
+      clientLogger.error(`[ExportPatch] Error: ${String(error)}`);
       toast({
         title: 'error esportazione',
         description: error instanceof Error ? error.message : 'error sconosciuto',
@@ -1108,7 +1120,7 @@ export default function TranslatorProPage() {
   
   // === APPLY TO GAME (ONE-CLICK MAGIC) ===
   const handleApplyToGame = async () => {
-    clientLogger.debug('[ApplyToGame] Inizio - selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
+    clientLogger.debug(`[ApplyToGame] Inizio - selectedGame: ${selectedGame?.name}, translatedFiles: ${translatedFiles.size}`);
     if (!selectedGame || translatedFiles.size === 0) {
       clientLogger.debug('[ApplyToGame] Uscita anticipata - No game o file');
       return;
@@ -1149,8 +1161,8 @@ export default function TranslatorProPage() {
       
       setApplyStatus('applying');
       clientLogger.debug('[ApplyToGame] gamePath:', currentGamePath);
-      clientLogger.debug('[ApplyToGame] localizationInfo:', localizationInfo);
-      clientLogger.debug('[ApplyToGame] engineInfo:', engineInfo);
+      clientLogger.debug(`[ApplyToGame] localizationInfo: ${JSON.stringify(localizationInfo)}`);
+      clientLogger.debug(`[ApplyToGame] engineInfo: ${JSON.stringify(engineInfo)}`);
       
       // METODO 1: File di localizzazione diretti (preferito se disponibili)
       if (localizationInfo?.has_localization && localizationInfo.can_add_language) {
@@ -1193,7 +1205,7 @@ export default function TranslatorProPage() {
               targetLang: targetLanguage 
             });
           } catch (e: unknown) {
-            clientLogger.warn('Installazione patcher fallita:', e);
+            clientLogger.warn(`Installazione patcher fallita: ${String(e)}`);
           }
         }
         
@@ -1216,7 +1228,7 @@ export default function TranslatorProPage() {
             content: dictionaryLines.join('\n') 
           });
         } catch (e: unknown) {
-          clientLogger.warn('Fallback a Translation Memory:', e);
+          clientLogger.warn(`Fallback a Translation Memory: ${String(e)}`);
         }
         
         setApplyStatus('done');
@@ -1237,7 +1249,7 @@ export default function TranslatorProPage() {
             await invoke('write_text_file', { path: targetPath, content });
             savedCount++;
           } catch (e: unknown) {
-            clientLogger.warn('[ApplyToGame] error salvataggio file:', filename, e);
+            clientLogger.warn(`[ApplyToGame] error salvataggio file: ${filename} - ${String(e)}`);
           }
         }
         
@@ -1287,7 +1299,7 @@ export default function TranslatorProPage() {
         });
         await set('gamePatches', savedPatches);
       } catch (e: unknown) {
-        clientLogger.warn('Errore salvataggio patch in IndexedDB:', e);
+        clientLogger.warn(`Errore salvataggio patch in IndexedDB: ${String(e)}`);
       }
       
       // Traccia attività patch per sincronizzazione
@@ -1304,7 +1316,7 @@ export default function TranslatorProPage() {
       });
       
     } catch (e: unknown) {
-      clientLogger.error('error applicazione:', e);
+      clientLogger.error(`error applicazione: ${String(e)}`);
       setApplyStatus('error');
       toast({
         title: 'error',
@@ -1559,7 +1571,7 @@ export default function TranslatorProPage() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setProvider(recommendedProvider.provider as unknown)}
+                        onClick={() => setProvider(recommendedProvider.provider as typeof provider)}
                         className="gap-2"
                       >
                         <CheckCircle className="h-3 w-3" />
@@ -1587,7 +1599,7 @@ export default function TranslatorProPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t('translatorProPage.providerAi')}</Label>
-                  <Select value={provider} onValueChange={(v: unknown) => setProvider(v)}>
+                  <Select value={provider} onValueChange={(v) => setProvider(v as typeof provider)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -1841,8 +1853,8 @@ export default function TranslatorProPage() {
                   items: translatedItems,
                 };
 
-                set('gamestringer_partial_translations', partialResults).catch(e => clientLogger.warn('Errore IndexedDB:', e));
-                clientLogger.debug('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in IndexedDB');
+                set('gamestringer_partial_translations', partialResults).catch((e: unknown) => clientLogger.warn(`Errore IndexedDB: ${String(e)}`));
+                clientLogger.debug(`[Neural Translator] Salvati ${partialResults.items.length} results parziali in IndexedDB`);
 
                 // Generate translated files from partial results
                 const newTranslatedFiles = new Map<string, string>();
@@ -1887,6 +1899,8 @@ export default function TranslatorProPage() {
                     failed: 0,
                     skipped: 0,
                     fromMemory,
+                    retried: 0,
+                    postEdited: 0,
                     percentage: (progress.completed / progress.total) * 100,
                   },
                   options: {
@@ -1910,6 +1924,7 @@ export default function TranslatorProPage() {
                     failedItems: 0,
                     skippedItems: progress.total - progress.completed,
                     fromMemoryItems: fromMemory,
+                    postEditedItems: 0,
                     averageQualityScore: 85,
                     totalTokensUsed: 0,
                     estimatedCost: 0,
@@ -1921,7 +1936,7 @@ export default function TranslatorProPage() {
                 };
                 setCurrentJob(partialJob);
               } else {
-                clientLogger.warn('[Neural Translator] No results da salvare:', translatedItems.length);
+                clientLogger.warn(`[Neural Translator] No results da salvare: ${translatedItems.length}`);
               }
 
               setCurrentStep('results');

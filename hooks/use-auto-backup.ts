@@ -56,7 +56,7 @@ export function useAutoBackup() {
       const cfg = await invoke<AutoBackupConfig>('load_autobackup_config');
       setConfig(cfg);
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore caricamento config:', e);
+      clientLogger.error(`[AutoBackup] Errore caricamento config: ${String(e)}`);
     }
   }, []);
 
@@ -67,7 +67,7 @@ export function useAutoBackup() {
       setConfig(newConfig);
       toast({ title: '✅ Configurazione Auto-Backup salvata' });
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore salvataggio config:', e);
+      clientLogger.error(`[AutoBackup] Errore salvataggio config: ${String(e)}`);
       toast({ title: 'Errore', description: String(e), variant: 'destructive' });
     }
   }, [toast]);
@@ -78,7 +78,7 @@ export function useAutoBackup() {
       const list = await invoke<AutoBackupInfo[]>('list_auto_backups');
       setBackups(list);
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore caricamento backups:', e);
+      clientLogger.error(`[AutoBackup] Errore caricamento backups: ${String(e)}`);
     }
   }, []);
 
@@ -106,7 +106,7 @@ export function useAutoBackup() {
         });
       }
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore esecuzione backup:', e);
+      clientLogger.error(`[AutoBackup] Errore esecuzione backup: ${String(e)}`);
       toast({ title: 'Errore backup', description: String(e), variant: 'destructive' });
     } finally {
       setIsRunning(false);
@@ -124,7 +124,7 @@ export function useAutoBackup() {
         await runBackup();
       }
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore verifica backup:', e);
+      clientLogger.error(`[AutoBackup] Errore verifica backup: ${String(e)}`);
     }
   }, [isRunning, runBackup]);
 
@@ -141,7 +141,7 @@ export function useAutoBackup() {
       });
       return restored;
     } catch (e: unknown) {
-      clientLogger.error('[AutoBackup] Errore ripristino:', e);
+      clientLogger.error(`[AutoBackup] Errore ripristino: ${String(e)}`);
       toast({ title: 'Errore ripristino', description: String(e), variant: 'destructive' });
       throw e;
     }

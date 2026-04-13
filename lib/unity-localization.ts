@@ -364,7 +364,7 @@ export async function translateStringTable(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
-      const translated = result.translations ?? result.results ?? [];
+      const translated = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {
         entry.translated = translated[idx] ?? '';
         entry.translationStatus = translated[idx] ? 'translated' : 'error';
@@ -407,7 +407,7 @@ export async function translateStringTable(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
-          translatedLiterals = result.translations ?? result.results ?? [];
+          translatedLiterals = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
         }
       } catch (err: unknown) {
         batch.forEach((entry) => {
@@ -467,7 +467,7 @@ export async function translateStringTable(
           model: options?.model,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
-        const translated = result.translations ?? result.results ?? [];
+        const translated = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
         batch.forEach((entry, idx) => {
           entry.translated = translated[idx] ?? '';
           entry.translationStatus = translated[idx] ? 'translated' : 'error';

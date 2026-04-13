@@ -37,14 +37,16 @@ export const GET = withErrorHandler(async function(
   }
 
   // If translations are included, add summary stats
-  if (includeTranslations && game.translations) {
+  const gameAny = game as Record<string, unknown>;
+  const translations = gameAny.translations as Array<{ status: string; confidence: number }> | undefined;
+  if (includeTranslations && translations) {
     const stats = {
-      total: game.translations.length,
-      completed: game.translations.filter((t: unknown) => t.status === 'completed').length,
-      pending: game.translations.filter((t: unknown) => t.status === 'pending').length,
-      reviewed: game.translations.filter((t: unknown) => t.status === 'reviewed').length,
-      edited: game.translations.filter((t: unknown) => t.status === 'edited').length,
-      averageConfidence: game.translations.reduce((sum, t) => sum + t.confidence, 0) / game.translations.length || 0
+      total: translations.length,
+      completed: translations.filter((t) => t.status === 'completed').length,
+      pending: translations.filter((t) => t.status === 'pending').length,
+      reviewed: translations.filter((t) => t.status === 'reviewed').length,
+      edited: translations.filter((t) => t.status === 'edited').length,
+      averageConfidence: translations.reduce((sum, t) => sum + t.confidence, 0) / translations.length || 0
     };
 
     return NextResponse.json({

@@ -247,7 +247,7 @@ export function AdvancedFilters({
                 ].map((status) => (
                   <Badge
                     key={status.id}
-                    variant={filter.translationStatus.includes(status.id as unknown) ? 'default' : 'outline'}
+                    variant={filter.translationStatus.includes(status.id as 'none' | 'partial' | 'complete') ? 'default' : 'outline'}
                     className="cursor-pointer gap-1"
                     onClick={() => toggleArrayItem(
                       filter.translationStatus,
@@ -349,11 +349,21 @@ export function AdvancedFilters({
   );
 }
 
-export function useGameFilter(games: unknown[]) {
+interface FilterableGame {
+  name?: string;
+  store?: string;
+  engine?: string;
+  playtimeHours?: number;
+  genres?: string[];
+  lastPlayed?: string | number;
+  translationProgress?: number;
+}
+
+export function useGameFilter(games: FilterableGame[]) {
   const [filter, setFilter] = useState<GameFilter>(DEFAULT_FILTER);
 
   const filteredGames = useMemo(() => {
-    return games.filter(game => {
+    return games.filter((game: FilterableGame) => {
       // Search
       if (filter.search) {
         const search = filter.search.toLowerCase();
@@ -364,14 +374,14 @@ export function useGameFilter(games: unknown[]) {
 
       // Stores
       if (filter.stores.length > 0) {
-        if (!filter.stores.includes(game.store?.toLowerCase())) {
+        if (!filter.stores.includes(game.store?.toLowerCase() ?? '')) {
           return false;
         }
       }
 
       // Engines
       if (filter.engines.length > 0) {
-        if (!filter.engines.includes(game.engine?.toLowerCase())) {
+        if (!filter.engines.includes(game.engine?.toLowerCase() ?? '')) {
           return false;
         }
       }
@@ -395,9 +405,9 @@ export function useGameFilter(games: unknown[]) {
   }, [games, filter]);
 
   const sortedGames = useMemo(() => {
-    return [...filteredGames].sort((a, b) => {
+    return [...filteredGames].sort((a: FilterableGame, b: FilterableGame) => {
       let comparison = 0;
-      
+
       switch (filter.sortBy) {
         case 'name':
           comparison = (a.name || '').localeCompare(b.name || '');

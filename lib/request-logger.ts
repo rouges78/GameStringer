@@ -59,7 +59,7 @@ export class RequestLogger {
       return body;
     }
 
-    const sanitized = Array.isArray(body) ? [...body] : { ...body };
+    const sanitized: Record<string, unknown> = Array.isArray(body) ? [...body] as unknown as Record<string, unknown> : { ...(body as Record<string, unknown>) };
     const sensitiveFields = ['password', 'apiKey', 'token', 'secret', 'key'];
 
     for (const key in sanitized) {
@@ -85,14 +85,14 @@ export class RequestLogger {
     });
 
     // Parse body if present
-    let body: Record<string, unknown> = undefined;
+    let body: Record<string, unknown> | undefined = undefined;
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       try {
         const contentType = request.headers.get('content-type');
         if (contentType?.includes('application/json')) {
           body = await request.json();
         } else if (contentType?.includes('application/x-www-form-urlencoded')) {
-          body = await request.formData();
+          body = Object.fromEntries(await request.formData());
         }
       } catch {
         // Body parsing failed, continue without body

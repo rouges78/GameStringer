@@ -156,7 +156,7 @@ export function AITranslationAssistant() {
         sourceLanguage,
         targetLanguage,
         context: gameContext.gameTitle ? gameContext : undefined,
-        textType: textType as unknown,
+        textType: textType as "system" | "ui" | "dialogue" | "item" | "tutorial" | "lore" | "quest",
         speaker: speaker || undefined,
         maxLength,
         alternatives: generateAlternatives ? 3 : undefined
@@ -445,7 +445,7 @@ export function AITranslationAssistant() {
                     <Label>{t('aiTranslation.genre')}</Label>
                     <Select 
                       value={gameContext.genre} 
-                      onValueChange={(value: unknown) => setGameContext(prev => ({ ...prev, genre: value }))}
+                      onValueChange={(value: string) => setGameContext(prev => ({ ...prev, genre: value as typeof prev.genre }))}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -464,7 +464,7 @@ export function AITranslationAssistant() {
                     <Label>{t('aiTranslation.tone')}</Label>
                     <Select 
                       value={gameContext.tone} 
-                      onValueChange={(value: unknown) => setGameContext(prev => ({ ...prev, tone: value }))}
+                      onValueChange={(value: string) => setGameContext(prev => ({ ...prev, tone: value as typeof prev.tone }))}
                     >
                       <SelectTrigger>
                         <SelectValue />

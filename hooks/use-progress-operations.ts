@@ -50,7 +50,7 @@ export function useProgressOperations() {
         operationId,
         config,
         items,
-        processor
+        processor as (item: unknown, index: number) => Promise<unknown>
       ) as Promise<Array<{ success: boolean; result?: R; error?: Error; item: T }>>;
     },
     [progressState, generateOperationId]

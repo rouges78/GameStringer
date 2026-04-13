@@ -25,7 +25,7 @@ export function ScanButton() {
       
       while (retries < maxRetries) {
         if (typeof window !== 'undefined' && window.__TAURI__) {
-          clientLogger.debug('Tauri API trovata dopo', retries * 100, 'ms');
+          clientLogger.debug(`Tauri API trovata dopo ${retries * 100}ms`);
           break;
         }
         

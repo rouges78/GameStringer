@@ -80,7 +80,7 @@ export function safeSetItem<T>(key: string, value: T, version: number = 1): bool
     return true;
   } catch (error: unknown) {
     // Gestione quota exceeded
-    if (error.name === 'QuotaExceededError' || error.code === 22) {
+    if ((error as { name?: string; code?: number }).name === 'QuotaExceededError' || (error as { code?: number }).code === 22) {
       clientLogger.warn(`[SafeStorage] Quota exceeded per "${key}", tentativo cleanup...`);
       cleanupOldData();
       

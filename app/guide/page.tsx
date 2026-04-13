@@ -87,7 +87,7 @@ export default function GuidePage() {
   const { version } = useVersion();
   const [activeTab, setActiveTab] = useState('quickstart');
 
-  const _guideTrans = (translations[language] as unknown)?.guidePage || (translations.it as Record<string, unknown>)?.guidePage;
+  const _guideTrans = (translations[language] as Record<string, unknown>)?.guidePage || (translations.it as Record<string, unknown>)?.guidePage;
   const g = getGuideTranslations(language);
   const registry = useMemo(() => getToolsRegistry(), []);
 

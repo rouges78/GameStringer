@@ -3,6 +3,8 @@
  * Gestisce fallback locale quando le API sono in rate limit
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 interface CachedTranslation {
   original: string;
   translated: string;
@@ -184,7 +186,8 @@ class TranslationFallbackManager {
           this.cacheTranslation(t.original, t.translated, targetLang, provider, t.confidence);
         });
       } catch (error: unknown) {
-        if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('rate limit')) {
+        const errObj = error as { status?: number; message?: string };
+        if (errObj?.status === 429 || errObj?.message?.includes('429') || errObj?.message?.includes('rate limit')) {
           // Rate limit - usa solo cache
           this.markRateLimited(provider, 60000);
           clientLogger.warn(`⚠️ Rate limit su ${provider}, usando solo cache`);

@@ -5,6 +5,8 @@
  * Supporta: PO/POT, XLIFF, RESX, Strings, JSON, INI, CSV, XML
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -322,9 +324,9 @@ export function writeXLIFF(
 `;
   
   for (const str of result.strings) {
-    const source = str.metadata?.source || str.value;
+    const source = (str.metadata?.source as string) || str.value;
     const target = translations.get(str.key) || str.value;
-    
+
     xml += `      <trans-unit id="${encodeXML(str.key)}">
         <source>${encodeXML(source)}</source>
         <target>${encodeXML(target)}</target>
@@ -537,7 +539,7 @@ export function parseJSON(content: string): ParseResult {
  * Appiattisce JSON annidato
  */
 function flattenJSON(obj: unknown, prefix: string, strings: ParsedString[]): void {
-  for (const [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     
     if (typeof value === 'string') {
@@ -558,18 +560,18 @@ export function writeJSON(
 ): string {
   if (options.nested) {
     // Reconstruct nested structure
-    const obj: unknown = {};
-    
+    const obj: Record<string, unknown> = {};
+
     for (const str of result.strings) {
       const translation = translations.get(str.key) || str.value;
       const parts = str.key.split('.');
-      let current = obj;
-      
+      let current: Record<string, unknown> = obj;
+
       for (let i = 0; i < parts.length - 1; i++) {
         if (!current[parts[i]]) current[parts[i]] = {};
-        current = current[parts[i]];
+        current = current[parts[i]] as Record<string, unknown>;
       }
-      
+
       current[parts[parts.length - 1]] = translation;
     }
     

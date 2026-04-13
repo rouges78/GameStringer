@@ -86,12 +86,12 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
 
     const unsub = vramManager.on((event, data) => {
       if (event === 'stats-update') {
-        setStats(data.stats);
+        setStats((data as { stats: typeof stats }).stats);
         setTier(vramManager.getCurrentTier());
         setModelInfo(vramManager.getActiveModel());
       }
       if (event === 'tier-change') {
-        setTier(data.to);
+        setTier((data as { to: typeof tier }).to);
       }
     });
 

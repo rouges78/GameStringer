@@ -272,7 +272,7 @@ ${translations.filter(t => t.target).map(t => `    <tu tuid="${t.id}">
           id,
           source,
           target,
-          status: this.xliffStateToStatus(state),
+          status: this.xliffStateToStatus(state ?? null),
         });
       } catch (error: unknown) {
         errors.push(`Unit ${index}: ${(error as Error).message}`);

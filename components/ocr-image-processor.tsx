@@ -373,7 +373,7 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
                 <Label>Detection Mode</Label>
                 <Select 
                   value={settings.textDetectionMode} 
-                  onValueChange={(value: unknown) => setSettings(prev => ({ ...prev, textDetectionMode: value }))}
+                  onValueChange={(value: string) => setSettings(prev => ({ ...prev, textDetectionMode: value as typeof prev.textDetectionMode }))}
                 >
                   <SelectTrigger>
                     <SelectValue />

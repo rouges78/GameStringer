@@ -3,6 +3,8 @@
  * Gestisce posizionamento 3D, tracking e rendering di sottotitoli in VR
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface VROverlayConfig {
   id: string;
   name: string;
@@ -235,7 +237,7 @@ class VROverlayService {
     try {
       // Check for WebXR support
       if ('xr' in navigator) {
-        const xr = (navigator as unknown).xr;
+        const xr = (navigator as unknown as Record<string, { isSessionSupported: (type: string) => Promise<boolean> }>).xr;
         const isSupported = await xr.isSessionSupported('immersive-vr');
         
         if (isSupported) {

@@ -231,7 +231,7 @@ export function ProgressProvider({
     const operation = state.operations.get(id);
     if (operation && 'onComplete' in operation) {
       try {
-        (operation as unknown).onComplete?.(result);
+        (operation as unknown as Record<string, ((r?: unknown) => void) | undefined>).onComplete?.(result);
       } catch (error: unknown) {
         clientLogger.error('Error in onComplete callback:', error);
       }
@@ -246,7 +246,7 @@ export function ProgressProvider({
     const operation = state.operations.get(id);
     if (operation && 'onError' in operation) {
       try {
-        (operation as unknown).onError?.(error);
+        (operation as unknown as Record<string, ((e: Error) => void) | undefined>).onError?.(error);
       } catch (err: unknown) {
         clientLogger.error('Error in onError callback:', err);
       }
@@ -262,7 +262,7 @@ export function ProgressProvider({
       // Execute callback if present
       if ('onCancel' in operation) {
         try {
-          (operation as unknown).onCancel?.();
+          (operation as unknown as Record<string, (() => void) | undefined>).onCancel?.();
         } catch (error: unknown) {
           clientLogger.error('Error in onCancel callback:', error);
         }

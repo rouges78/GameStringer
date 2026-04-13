@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { clientLogger } from '@/lib/client-logger';
+
 // Web Speech API type declarations (non incluse in tutti i tsconfig)
 interface SpeechRecognitionEvent extends Event { results: SpeechRecognitionResultList; resultIndex: number; }
 interface SpeechRecognitionErrorEvent extends Event { error: string; message: string; }
@@ -235,7 +237,7 @@ export class SpeechToTextEngine {
   // ── Web Speech API (browser-native) ───────────────────────────
 
   private async startWebSpeech(): Promise<void> {
-    const win = window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition };
+    const win = window as Window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
     const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognitionClass) {
@@ -625,7 +627,7 @@ export async function checkSTTProviders(): Promise<STTProviderInfo[]> {
   const hasGroqKey = !!settings?.translation?.groqApiKey;
 
   // Check Web Speech API
-  const win = window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition };
+  const win = window as Window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition };
   const hasWebSpeech = !!(win.SpeechRecognition || win.webkitSpeechRecognition);
 
   // Check Ollama

@@ -132,7 +132,7 @@ function countStrings(content: string, format: string): { total: number; transla
     if (format === 'json') {
       const data = JSON.parse(content);
       const count = (obj: unknown) => {
-        for (const val of Object.values(obj)) {
+        for (const val of Object.values(obj as Record<string, unknown>)) {
           if (typeof val === 'string') { total++; if (val.trim()) translated++; }
           else if (typeof val === 'object' && val !== null) count(val);
         }
@@ -309,7 +309,7 @@ export function importGspack(rawContent: string): ImportResult {
       warnings,
     };
   } catch (e: unknown) {
-    return { success: false, error: `Errore lettura pack: ${e.message}`, warnings };
+    return { success: false, error: `Errore lettura pack: ${e instanceof Error ? e.message : String(e)}`, warnings };
   }
 }
 

@@ -59,7 +59,7 @@ export async function listInstalledDictionaries(): Promise<DictionaryInfo[]> {
   try {
     return await invoke<DictionaryInfo[]>('list_installed_dictionaries');
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore lista dizionari:', error);
+    clientLogger.error(`[GameDictionaries] Errore lista dizionari: ${String(error)}`, 'DICT');
     return [];
   }
 }
@@ -74,7 +74,7 @@ export async function loadDictionary(gameId: string, targetLang: string): Promis
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore caricamento dizionario:', error);
+    clientLogger.error(`[GameDictionaries] Errore caricamento dizionario: ${String(error)}`, 'DICT');
     return null;
   }
 }
@@ -86,7 +86,7 @@ export async function saveDictionary(dictionary: GameDictionary): Promise<Dictio
   try {
     return await invoke<DictionaryResult>('save_dictionary', { dictionary });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore salvataggio dizionario:', error);
+    clientLogger.error(`[GameDictionaries] Errore salvataggio dizionario: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -103,7 +103,7 @@ export async function importDictionaryAuto(filePath: string): Promise<Dictionary
       filePath: filePath,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore importazione auto:', error);
+    clientLogger.error(`[GameDictionaries] Errore importazione auto: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -130,7 +130,7 @@ export async function importDictionaryFromFile(
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore importazione:', error);
+    clientLogger.error(`[GameDictionaries] Errore importazione: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -153,7 +153,7 @@ export async function exportDictionarySimple(
       outputPath,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore esportazione:', error);
+    clientLogger.error(`[GameDictionaries] Errore esportazione: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -171,7 +171,7 @@ export async function deleteDictionary(gameId: string, targetLang: string): Prom
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore eliminazione:', error);
+    clientLogger.error(`[GameDictionaries] Errore eliminazione: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -189,7 +189,7 @@ export async function getDictionaryStatus(gameId: string, targetLang: string): P
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore status dizionario:', error);
+    clientLogger.error(`[GameDictionaries] Errore status dizionario: ${String(error)}`, 'DICT');
     return {
       installed: false,
       entries_count: 0,
@@ -214,7 +214,7 @@ export async function searchInDictionary(
       limit,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore ricerca:', error);
+    clientLogger.error(`[GameDictionaries] Errore ricerca: ${String(error)}`, 'DICT');
     return [];
   }
 }
@@ -236,7 +236,7 @@ export async function addTranslationToDictionary(
       translated,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore aggiunta traduzione:', error);
+    clientLogger.error(`[GameDictionaries] Errore aggiunta traduzione: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -259,7 +259,7 @@ export async function mergeDictionaries(
       mergeFilePath,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore merge:', error);
+    clientLogger.error(`[GameDictionaries] Errore merge: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -282,7 +282,7 @@ export async function applyDictionaryToXUnity(
       gamePath,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore applicazione XUnity:', error);
+    clientLogger.error(`[GameDictionaries] Errore applicazione XUnity: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -303,7 +303,7 @@ export async function extractXUnityTranslations(
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore estrazione XUnity:', error);
+    clientLogger.error(`[GameDictionaries] Errore estrazione XUnity: ${String(error)}`, 'DICT');
     return {};
   }
 }
@@ -325,7 +325,7 @@ export async function importFromXUnity(
       targetLang,
     });
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore import da XUnity:', error);
+    clientLogger.error(`[GameDictionaries] Errore import da XUnity: ${String(error)}`, 'DICT');
     return {
       success: false,
       message: `Errore: ${error}`,
@@ -340,7 +340,7 @@ export async function getDictionariesStats(): Promise<DictionariesStats | null> 
   try {
     return await invoke<DictionariesStats>('get_dictionaries_stats');
   } catch (error: unknown) {
-    clientLogger.error('[GameDictionaries] Errore statistiche:', error);
+    clientLogger.error(`[GameDictionaries] Errore statistiche: ${String(error)}`, 'DICT');
     return null;
   }
 }

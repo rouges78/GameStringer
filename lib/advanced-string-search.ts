@@ -148,7 +148,7 @@ class AdvancedStringSearch {
   private matchesFilters(str: TranslationString, filters: SearchFilter): boolean {
     // Status filter
     if (filters.status && filters.status.length > 0) {
-      if (!filters.status.includes(str.status as unknown)) return false;
+      if (!filters.status.includes(str.status as typeof filters.status[number])) return false;
     }
 
     // Tags filter

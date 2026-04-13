@@ -40,7 +40,7 @@ class ProfilePreloader {
         await this.preloadFromBackend();
       }
     } catch (error: unknown) {
-      clientLogger.error('Error during profile preloading:', error);
+      clientLogger.error(`Error during profile preloading: ${String(error)}`);
     } finally {
       this.isPreloading = false;
     }
@@ -64,46 +64,46 @@ class ProfilePreloader {
    */
   private async preloadFromBackend(): Promise<void> {
     try {
-      const response = await invoke<unknown>('list_profiles');
+      const response = await invoke<Record<string, unknown>>('list_profiles');
       if (!response.success) return;
 
-      const profiles = response.data || [];
+      const profiles = (response.data || []) as Record<string, unknown>[];
       const sortedProfiles = profiles
-        .sort((a: unknown, b: unknown) => {
-            const timeA = a.last_accessed ? new Date(a.last_accessed).getTime() : 0;
-            const timeB = b.last_accessed ? new Date(b.last_accessed).getTime() : 0;
+        .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+            const timeA = a.last_accessed ? new Date(a.last_accessed as string).getTime() : 0;
+            const timeB = b.last_accessed ? new Date(b.last_accessed as string).getTime() : 0;
             return timeB - timeA;
         })
         .slice(0, 3);
 
-      const preloadPromises = sortedProfiles.map((profile: unknown) => 
-        this.preloadProfile(profile.id, {
-          id: profile.id,
-          name: profile.name,
-          avatar: profile.avatar_path,
-          lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
-          isLocked: profile.is_locked || false,
-          hasCredentials: profile.has_credentials || false,
-          settingsVersion: profile.settings_version || 1
+      const preloadPromises = sortedProfiles.map((profile: Record<string, unknown>) =>
+        this.preloadProfile(profile.id as string, {
+          id: profile.id as string,
+          name: profile.name as string,
+          avatar: profile.avatar_path as string | undefined,
+          lastAccess: profile.last_accessed ? new Date(profile.last_accessed as string).getTime() : 0,
+          isLocked: (profile.is_locked as boolean) || false,
+          hasCredentials: (profile.has_credentials as boolean) || false,
+          settingsVersion: (profile.settings_version as number) || 1
         })
       );
 
       await Promise.allSettled(preloadPromises);
 
       // Aggiorna cache con i nuovi dati
-      const metadata: ProfileMetadata[] = sortedProfiles.map((profile: unknown) => ({
-        id: profile.id,
-        name: profile.name,
-        avatar: profile.avatar_path,
-        lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
-        isLocked: profile.is_locked || false,
-        hasCredentials: profile.has_credentials || false,
-        settingsVersion: profile.settings_version || 1
+      const metadata: ProfileMetadata[] = sortedProfiles.map((profile: Record<string, unknown>) => ({
+        id: profile.id as string,
+        name: profile.name as string,
+        avatar: profile.avatar_path as string | undefined,
+        lastAccess: profile.last_accessed ? new Date(profile.last_accessed as string).getTime() : 0,
+        isLocked: (profile.is_locked as boolean) || false,
+        hasCredentials: (profile.has_credentials as boolean) || false,
+        settingsVersion: (profile.settings_version as number) || 1
       }));
 
       profileCache.updateCache(metadata);
     } catch (error: unknown) {
-      clientLogger.error('Error preloading from backend:', error);
+      clientLogger.error(`Error preloading from backend: ${String(error)}`);
     }
   }
 
@@ -151,7 +151,7 @@ class ProfilePreloader {
       this.preloadedProfiles.set(profileId, preloaded);
 
     } catch (error: unknown) {
-      clientLogger.error(`Error preloading profile ${profileId}:`, error);
+      clientLogger.error(`Error preloading profile ${profileId}: ${String(error)}`);
       
       const preloaded = this.preloadedProfiles.get(profileId);
       if (preloaded) {
@@ -229,25 +229,25 @@ class ProfilePreloader {
       if (existing?.isReady) return existing;
 
       // Carica metadati dal backend
-      const response = await invoke<unknown>('get_profile_info', { profileId });
+      const response = await invoke<Record<string, unknown>>('get_profile_info', { profileId });
       if (!response.success) return null;
 
-      const profile = response.data;
+      const profile = response.data as Record<string, unknown>;
       const metadata: ProfileMetadata = {
-        id: profile.id,
-        name: profile.name,
-        avatar: profile.avatar_path,
-        lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
-        isLocked: profile.is_locked || false,
-        hasCredentials: profile.has_credentials || false,
-        settingsVersion: profile.settings_version || 1
+        id: profile.id as string,
+        name: profile.name as string,
+        avatar: profile.avatar_path as string | undefined,
+        lastAccess: profile.last_accessed ? new Date(profile.last_accessed as string).getTime() : 0,
+        isLocked: (profile.is_locked as boolean) || false,
+        hasCredentials: (profile.has_credentials as boolean) || false,
+        settingsVersion: (profile.settings_version as number) || 1
       };
 
       await this.preloadProfile(profileId, metadata);
       return this.preloadedProfiles.get(profileId) || null;
 
     } catch (error: unknown) {
-      clientLogger.error(`Error in priority preload for ${profileId}:`, error);
+      clientLogger.error(`Error in priority preload for ${profileId}: ${String(error)}`);
       return null;
     }
   }

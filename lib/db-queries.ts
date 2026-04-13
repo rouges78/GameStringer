@@ -309,7 +309,7 @@ export async function checkDatabaseConnection() {
     return { status: 'connected', timestamp: new Date() };
   } catch (error: unknown) {
     clientLogger.error('Database connection check failed:', error);
-    return { status: 'disconnected', error: error.message, timestamp: new Date() };
+    return { status: 'disconnected', error: error instanceof Error ? error.message : String(error), timestamp: new Date() };
   }
 }
 

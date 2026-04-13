@@ -42,7 +42,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
       const operations = await batchOperationManager.listActiveOperations();
       setActiveOperations(operations);
     } catch (error: unknown) {
-      clientLogger.error('Failed to refresh active operations:', error);
+      clientLogger.error(`Failed to refresh active operations: ${String(error)}`);
     }
   }, []);
 
@@ -51,7 +51,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
       const history = await batchOperationManager.getOperationHistory();
       setOperationHistory(history);
     } catch (error: unknown) {
-      clientLogger.error('Failed to refresh operation history:', error);
+      clientLogger.error(`Failed to refresh operation history: ${String(error)}`);
     }
   }, []);
 
@@ -138,7 +138,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
       }
       return success;
     } catch (error: unknown) {
-      clientLogger.error('Failed to cancel operation:', error);
+      clientLogger.error(`Failed to cancel operation: ${String(error)}`);
       return false;
     }
   }, [refreshActiveOperations]);
@@ -147,7 +147,7 @@ export function useBatchOperations(options: UseBatchOperationsOptions = {}) {
     try {
       return await batchOperationManager.getOperationStatus(operationId);
     } catch (error: unknown) {
-      clientLogger.error('Failed to get operation status:', error);
+      clientLogger.error(`Failed to get operation status: ${String(error)}`);
       return null;
     }
   }, []);
@@ -230,8 +230,8 @@ export function useTranslationBatchOperations() {
           headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
-            targetLanguage: item.data.targetLanguage,
-            sourceLanguage: item.data.sourceLanguage
+            targetLanguage: (item.data as Record<string, unknown>).targetLanguage,
+            sourceLanguage: (item.data as Record<string, unknown>).sourceLanguage
           })
         });
 
@@ -262,7 +262,7 @@ export function useTranslationBatchOperations() {
           headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationIds: [item.id],
-            format: item.data.format
+            format: (item.data as Record<string, unknown>).format
           })
         });
 
@@ -293,7 +293,7 @@ export function useTranslationBatchOperations() {
           headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
           body: JSON.stringify({
             translationId: item.id,
-            status: item.data.status
+            status: (item.data as Record<string, unknown>).status
           })
         });
 

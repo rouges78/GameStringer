@@ -58,6 +58,90 @@ interface AnalysisResult {
   hasItalian: boolean;
 }
 
+// Backend response types for invoke() calls
+interface SteamGameInfo {
+  steam_app_id?: number;
+  id?: string;
+  title?: string;
+  install_path?: string;
+  engine?: string;
+  platform?: string;
+  header_image?: string;
+  is_installed?: boolean;
+}
+
+interface EngineDetails {
+  engine_name?: string;
+  engine_version?: string;
+  has_bepinex?: boolean;
+  has_xunity?: boolean;
+  anti_cheat?: string;
+}
+
+interface LocFileInfo {
+  path: string;
+  name?: string;
+  size?: number;
+  extension?: string;
+  languages?: string[];
+  string_count?: number;
+  has_italian?: boolean;
+}
+
+interface LocDetectionResult {
+  files?: LocFileInfo[];
+  available_languages?: string[];
+  missing_italian?: boolean;
+}
+
+interface RustRecommendation {
+  primary_method?: string;
+  summary?: string;
+  recommendation?: string;
+  difficulty?: string;
+  method?: 'file' | 'bridge' | 'manual';
+  estimated_strings?: number;
+  tips?: string[];
+  tools?: Array<{ id: string; available: boolean }>;
+}
+
+interface ScannedFile {
+  path: string;
+  name: string;
+  size: number;
+  extension?: string;
+}
+
+interface UnityInstallResult {
+  success?: boolean;
+  status?: string;
+  steps?: string[];
+}
+
+interface XUnityTranslation {
+  original: string;
+  translation?: string;
+}
+
+interface UnrealExtractionResult {
+  success?: boolean;
+  entries?: Array<{ namespace: string; key: string; source_hash: number; value: string }>;
+  message?: string;
+  source_file?: string;
+}
+
+interface UnrealPakResult {
+  success?: boolean;
+  pak_path?: string;
+  entries_count?: number;
+}
+
+interface DanganronpaExtractionResult {
+  success?: boolean;
+  dialogues?: Array<{ id: string; speaker: string; original: string; translated: string; file: string; line_index: number }>;
+  output_path?: string;
+}
+
 type WizardStep = 'select-game' | 'analyzing' | 'results' | 'translate' | 'complete';
 
 // Language display names — native names, language-neutral
@@ -104,8 +188,8 @@ export default function TranslationWizardPage() {
         if (parsed.translation?.defaultTargetLang) {
           setTargetLanguage(parsed.translation.defaultTargetLang);
         }
-      } catch (e: unknown) {
-        clientLogger.error('Error loading settings:', e);
+      } catch (e) {
+        clientLogger.error('Error loading settings:', String(e));
       }
     }
   }, []);
@@ -150,8 +234,8 @@ export default function TranslationWizardPage() {
         if (!autoGame.install_path) {
           (async () => {
             try {
-              const allGames = await invoke('scan_all_steam_games_fast') as unknown[];
-              const match = allGames?.find((sg: unknown) =>
+              const allGames = await invoke<SteamGameInfo[]>('scan_all_steam_games_fast');
+              const match = allGames?.find((sg) =>
                 (sg.steam_app_id && String(sg.steam_app_id) === String(g.steam_app_id)) ||
                 (sg.title && sg.title.toLowerCase() === g.title?.toLowerCase())
               );
@@ -159,21 +243,21 @@ export default function TranslationWizardPage() {
                 autoGame.install_path = match.install_path;
                 autoGame.engine = match.engine || undefined;
               }
-            } catch (e: unknown) {
-              clientLogger.warn('[Wizard] Fallback scan per install_path fallito:', e);
+            } catch (e) {
+              clientLogger.warn('[Wizard] Fallback scan per install_path fallito:', String(e));
             }
-            clientLogger.debug('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
+            clientLogger.debug(`[Wizard] Auto-start da library: ${autoGame.title} ${autoGame.install_path}`);
             setSelectedGame(autoGame);
             analyzeGame(autoGame);
           })();
         } else {
-          clientLogger.debug('[Wizard] Auto-start da library:', autoGame.title, autoGame.install_path);
+          clientLogger.debug(`[Wizard] Auto-start da library: ${autoGame.title} ${autoGame.install_path}`);
           setSelectedGame(autoGame);
           setTimeout(() => analyzeGame(autoGame), 300);
         }
       }
-    } catch (e: unknown) {
-      clientLogger.error('[Wizard] Errore auto-start:', e);
+    } catch (e) {
+      clientLogger.error('[Wizard] Errore auto-start:', String(e));
     }
   }, []);
 
@@ -206,13 +290,13 @@ export default function TranslationWizardPage() {
     setIsLoading(true);
     try {
       // Usa scan_all_steam_games_fast per avere dati completi su motori e immagini
-      const allGames = await invoke('scan_all_steam_games_fast');
+      const allGames = await invoke<SteamGameInfo[]>('scan_all_steam_games_fast');
       if (Array.isArray(allGames)) {
         const installedGames = allGames
-          .filter((g: unknown) => g.is_installed && g.title && g.install_path)
-          .map((g: unknown) => ({
+          .filter((g) => g.is_installed && g.title && g.install_path)
+          .map((g) => ({
             id: String(g.steam_app_id || g.id),
-            title: g.title,
+            title: g.title!,
             steam_app_id: g.steam_app_id,
             install_path: g.install_path,
             engine: g.engine || undefined,
@@ -220,12 +304,12 @@ export default function TranslationWizardPage() {
             header_image: g.header_image || (g.steam_app_id ? `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.steam_app_id}/header.jpg` : undefined)
           }))
           .sort((a: Game, b: Game) => a.title.localeCompare(b.title));
-        
+
         setGames(installedGames);
         setFilteredGames(installedGames);
       }
-    } catch (error: unknown) {
-      clientLogger.error('Error loading games:', error);
+    } catch (error) {
+      clientLogger.error('Error loading games:', String(error));
       toast({ title: 'error', description: 'Impossibile caricare i games', variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -257,36 +341,36 @@ export default function TranslationWizardPage() {
       setAnalysisProgress(15);
       setAnalysisStatus('Analisi profonda del motore di gioco...');
       let engine = 'Unknown';
-      let engineDetails: unknown = null;
+      let engineDetails: EngineDetails | null = null;
       try {
-        engineDetails = await invoke<unknown>('check_game_engine', { gamePath: installPath });
+        engineDetails = await invoke<EngineDetails>('check_game_engine', { gamePath: installPath });
         engine = engineDetails?.engine_name || 'Unknown';
-        clientLogger.debug('[Wizard] Rust engine detection:', engine, engineDetails);
-      } catch (e: unknown) {
-        clientLogger.warn('[Wizard] check_game_engine failed, falling back to JS:', e);
+        clientLogger.debug(`[Wizard] Rust engine detection: ${engine}`, undefined, engineDetails ? { engineDetails } : undefined);
+      } catch (e) {
+        clientLogger.warn('[Wizard] check_game_engine failed, falling back to JS:', String(e));
         engine = await detectGameEngine(installPath);
       }
 
       // Step 3: DEEP localization scan via Rust
       setAnalysisProgress(30);
       setAnalysisStatus('Scansione profonda file di localizzazione...');
-      let locInfo: unknown = null;
+      let locInfo: LocDetectionResult | null = null;
       try {
-        locInfo = await invoke<unknown>('detect_localization_files', { gamePath: installPath });
-        clientLogger.debug('[Wizard] Rust loc detection:', locInfo);
-      } catch (e: unknown) {
-        clientLogger.warn('[Wizard] detect_localization_files failed:', e);
+        locInfo = await invoke<LocDetectionResult>('detect_localization_files', { gamePath: installPath });
+        clientLogger.debug('[Wizard] Rust loc detection', undefined, locInfo ? { locInfo } : undefined);
+      } catch (e) {
+        clientLogger.warn('[Wizard] detect_localization_files failed:', String(e));
       }
 
       // Step 4: Get full recommendation from Rust backend
       setAnalysisProgress(50);
       setAnalysisStatus('Generazione raccomandazione intelligente...');
-      let rustRecommendation: unknown = null;
+      let rustRecommendation: RustRecommendation | null = null;
       try {
-        rustRecommendation = await invoke<unknown>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
-        clientLogger.debug('[Wizard] Rust recommendation:', rustRecommendation);
-      } catch (e: unknown) {
-        clientLogger.warn('[Wizard] get_translation_recommendation failed:', e);
+        rustRecommendation = await invoke<RustRecommendation>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
+        clientLogger.debug('[Wizard] Rust recommendation', undefined, rustRecommendation ? { rustRecommendation } : undefined);
+      } catch (e) {
+        clientLogger.warn('[Wizard] get_translation_recommendation failed:', String(e));
       }
 
       // Step 5: Also scan with JS for additional file types the Rust backend might miss
@@ -296,7 +380,7 @@ export default function TranslationWizardPage() {
       const analyzedFiles = await analyzeFileContents(jsLocFiles);
 
       // Merge Rust loc info with JS scan results
-      if (locInfo?.files?.length) {
+      if (locInfo?.files && locInfo.files.length > 0) {
         for (const rustFile of locInfo.files) {
           const already = analyzedFiles.some(f => f.path === rustFile.path);
           if (!already) {
@@ -304,7 +388,7 @@ export default function TranslationWizardPage() {
               path: rustFile.path,
               name: rustFile.name || rustFile.path.split(/[\\/]/).pop() || '',
               size: rustFile.size || 0,
-              type: (rustFile.extension || 'unknown') as unknown,
+              type: (rustFile.extension || 'unknown') as LocalizationFile['type'],
               languages: rustFile.languages || [],
               stringCount: rustFile.string_count || 0,
               hasItalian: rustFile.has_italian || false,
@@ -321,8 +405,8 @@ export default function TranslationWizardPage() {
         ...analyzedFiles.flatMap(f => f.languages),
         ...(locInfo?.available_languages || []),
       ])];
-      const hasItalian = existingLanguages.includes('it') || existingLanguages.includes('italian') || 
-                         (locInfo && !locInfo.missing_italian);
+      const hasItalian = existingLanguages.includes('it') || existingLanguages.includes('italian') ||
+                         !!(locInfo && !locInfo.missing_italian);
       const totalStrings = Math.max(
         analyzedFiles.reduce((sum, f) => sum + f.stringCount, 0),
         rustRecommendation?.estimated_strings || 0
@@ -401,7 +485,7 @@ export default function TranslationWizardPage() {
       
       // If Rust recommended specific tools, consider them as alternatives
       if (rustRecommendation?.tools?.length) {
-        const rustToolIds = new Set(rustRecommendation.tools.filter((t: unknown) => t.available).map((t: unknown) => t.id));
+        const rustToolIds = new Set(rustRecommendation.tools.filter((t) => t.available).map((t) => t.id));
         clientLogger.debug(`[Wizard] Rust tools: ${[...rustToolIds].join(', ')}`);
       }
 
@@ -412,10 +496,10 @@ export default function TranslationWizardPage() {
         setIsAnalyzing(false);
       }, 500);
 
-    } catch (error: unknown) {
-      clientLogger.error('Analysis error:', error);
-      toast({ 
-        title: 'Errore analisi', 
+    } catch (error) {
+      clientLogger.error('Analysis error:', String(error));
+      toast({
+        title: 'Errore analisi',
         description: error instanceof Error ? error.message : 'Errore durante l\'analisi',
         variant: 'destructive' 
       });
@@ -472,13 +556,13 @@ export default function TranslationWizardPage() {
       // Use the new scan_localization_files command with deeper search
       const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
       
-      const results = await invoke<unknown[]>('scan_localization_files', { 
+      const results = await invoke<ScannedFile[]>('scan_localization_files', {
         path: installPath,
         extensions,
         maxDepth: 10  // Increased depth for Unity _Data subfolders
       });
 
-      clientLogger.debug('[Wizard] Scan results:', results?.length || 0, 'files');
+      clientLogger.debug(`[Wizard] Scan results: ${results?.length || 0} files`);
 
       if (Array.isArray(results)) {
         for (const file of results) {
@@ -511,7 +595,7 @@ export default function TranslationWizardPage() {
               path: file.path,
               name: file.name,
               size: file.size,
-              type: (file.extension || 'unknown') as unknown,
+              type: (file.extension || 'unknown') as LocalizationFile['type'],
               languages: [],
               stringCount: 0,
               hasItalian: false
@@ -523,8 +607,8 @@ export default function TranslationWizardPage() {
       // Sort by size descending (larger files more likely to be main localization)
       locFiles.sort((a, b) => b.size - a.size);
       
-    } catch (error: unknown) {
-      clientLogger.error('[Wizard] Scan error:', error);
+    } catch (error) {
+      clientLogger.error('[Wizard] Scan error:', String(error));
     }
 
     // If no files found, check for Unity/Unreal assets
@@ -857,13 +941,13 @@ export default function TranslationWizardPage() {
     // Find exe/dll files
     let binaryFiles: string[] = [];
     try {
-      const allFiles = await invoke<unknown[]>('scan_localization_files', { 
-        path: gameCtx.installPath, extensions: ['exe', 'dll'], maxDepth: 3 
+      const allFiles = await invoke<ScannedFile[]>('scan_localization_files', {
+        path: gameCtx.installPath, extensions: ['exe', 'dll'], maxDepth: 3
       });
       binaryFiles = (allFiles || [])
-        .filter((f: unknown) => f.size > 50000 && f.size < 200000000) // 50KB - 200MB
-        .sort((a: unknown, b: unknown) => b.size - a.size)
-        .map((f: unknown) => f.path);
+        .filter((f) => f.size > 50000 && f.size < 200000000) // 50KB - 200MB
+        .sort((a, b) => b.size - a.size)
+        .map((f) => f.path);
     } catch {
       // Fallback: try to find main exe
       try {
@@ -1146,7 +1230,7 @@ export default function TranslationWizardPage() {
     setTranslateProgress(20);
 
     try {
-      const result = await invoke<unknown>('install_unity_autotranslator', {
+      const result = await invoke<UnityInstallResult>('install_unity_autotranslator', {
         gamePath: gameCtx.installPath,
         gameExeName: exeName,
         targetLang: targetLanguage,
@@ -1179,14 +1263,14 @@ export default function TranslationWizardPage() {
     // Check if there are already captured strings to translate
     setTranslateProgress(90);
     try {
-      const translations = await invoke<unknown[]>('read_xunity_translations', { gamePath: gameCtx.installPath });
+      const translations = await invoke<XUnityTranslation[]>('read_xunity_translations', { gamePath: gameCtx.installPath });
       if (translations && translations.length > 0) {
         log(`\n  📝 ${translations.length} stringhe già catturate trovate!`);
         log('  🤖 Traduzione automatica...');
 
-        const untranslated = translations.filter((t: unknown) => !t.translation || t.translation === t.original);
+        const untranslated = translations.filter((t) => !t.translation || t.translation === t.original);
         if (untranslated.length > 0) {
-          const texts = untranslated.slice(0, 200).map((t: unknown) => t.original);
+          const texts = untranslated.slice(0, 200).map((t) => t.original);
           try {
             const result = await translateSmart({
               texts,
@@ -1229,10 +1313,10 @@ export default function TranslationWizardPage() {
     // Find .rpy files
     let rpyFiles: string[] = [];
     try {
-      const files = await invoke<unknown[]>('scan_localization_files', {
+      const files = await invoke<ScannedFile[]>('scan_localization_files', {
         path: gameCtx.installPath, extensions: ['rpy'], maxDepth: 5
       });
-      rpyFiles = (files || []).filter((f: unknown) => f.size > 100).map((f: unknown) => f.path);
+      rpyFiles = (files || []).filter((f) => f.size > 100).map((f) => f.path);
     } catch {}
 
     if (rpyFiles.length === 0) {
@@ -1318,14 +1402,14 @@ export default function TranslationWizardPage() {
     setTranslateStatus('Estrazione stringhe Unreal...');
 
     // Step 1: Try extract_unreal_localization (handles loose .locres + .pak)
-    let extraction: unknown = null;
+    let extraction: UnrealExtractionResult | null = null;
     try {
-      extraction = await invoke<unknown>('extract_unreal_localization', { gamePath: gameCtx.installPath });
-      if (extraction?.success && extraction?.entries?.length > 0) {
+      extraction = await invoke<UnrealExtractionResult>('extract_unreal_localization', { gamePath: gameCtx.installPath });
+      if (extraction?.success && extraction?.entries?.length) {
         log(`  ✅ Estratte ${extraction.entries.length} stringhe`);
         log(`  📄 Sorgente: ${extraction.message || extraction.source_file}`);
       }
-    } catch (e: unknown) {
+    } catch (e) {
       log(`  ⚠️ extract_unreal_localization: ${e}`);
     }
 
@@ -1333,12 +1417,12 @@ export default function TranslationWizardPage() {
     if (!extraction?.success || !extraction?.entries?.length) {
       log('  🔄 Provo estrazione IoStore (UE5)...');
       try {
-        extraction = await invoke<unknown>('extract_iostore_localization', { gamePath: gameCtx.installPath });
-        if (extraction?.success && extraction?.entries?.length > 0) {
+        extraction = await invoke<UnrealExtractionResult>('extract_iostore_localization', { gamePath: gameCtx.installPath });
+        if (extraction?.success && extraction?.entries?.length) {
           log(`  ✅ IoStore: ${extraction.entries.length} stringhe`);
           log(`  📄 ${extraction.message}`);
         }
-      } catch (e: unknown) {
+      } catch (e) {
         log(`  ⚠️ extract_iostore_localization: ${e}`);
       }
     }
@@ -1353,7 +1437,7 @@ export default function TranslationWizardPage() {
       return;
     }
 
-    const entries: Array<{ namespace: string; key: string; source_hash: number; value: string }> = extraction.entries;
+    const entries: Array<{ namespace: string; key: string; source_hash: number; value: string }> = extraction!.entries!;
     
     // Filter: only translatable strings (skip empty, very short, or code-like strings)
     const translatable = entries.filter(e => {
@@ -1429,7 +1513,7 @@ export default function TranslationWizardPage() {
     log('\n  📦 Creazione .pak tradotto...');
 
     try {
-      const pakResult = await invoke<unknown>('apply_unreal_translation', {
+      const pakResult = await invoke<UnrealPakResult>('apply_unreal_translation', {
         gamePath: gameCtx.installPath,
         translations,
         targetLanguage,
@@ -1462,10 +1546,10 @@ export default function TranslationWizardPage() {
     setTranslateStatus('Estrazione dialoghi Danganronpa...');
 
     // Step 1: Extract dialogues via backend
-    let extraction: unknown = null;
+    let extraction: DanganronpaExtractionResult | null = null;
     try {
-      extraction = await invoke<unknown>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
-    } catch (e: unknown) {
+      extraction = await invoke<DanganronpaExtractionResult>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
+    } catch (e) {
       log(`  ❌ Errore estrazione: ${e}`);
     }
 
@@ -1476,9 +1560,9 @@ export default function TranslationWizardPage() {
       return;
     }
 
-    const dialogues: Array<{ id: string; speaker: string; original: string; translated: string; file: string; line_index: number }> = extraction.dialogues;
+    const dialogues: Array<{ id: string; speaker: string; original: string; translated: string; file: string; line_index: number }> = extraction!.dialogues!;
     log(`  ✅ ${dialogues.length} dialoghi estratti`);
-    log(`  📁 Output: ${extraction.output_path}`);
+    log(`  📁 Output: ${extraction!.output_path}`);
     setTranslateProgress(15);
 
     // Step 2: Translate in batches
@@ -1533,7 +1617,7 @@ export default function TranslationWizardPage() {
     try {
       const translationsJson = JSON.stringify(dialogues, null, 2);
       await invoke('write_text_file', {
-        path: `${extraction.output_path}\\translations.json`,
+        path: `${extraction!.output_path}\\translations.json`,
         content: translationsJson,
       });
       log(`  💾 translations.json salvato`);
@@ -1546,7 +1630,7 @@ export default function TranslationWizardPage() {
         }
       }
       await invoke('write_text_file', {
-        path: `${extraction.output_path}\\translations.tsv`,
+        path: `${extraction!.output_path}\\translations.tsv`,
         content: tsvLines.join('\n'),
       });
       log(`  💾 translations.tsv salvato`);
@@ -1572,7 +1656,7 @@ export default function TranslationWizardPage() {
         }
       }
       await invoke('write_text_file', {
-        path: `${extraction.output_path}\\danganronpa_translation.po`,
+        path: `${extraction!.output_path}\\danganronpa_translation.po`,
         content: poLines.join('\n'),
       });
       log(`  💾 danganronpa_translation.po salvato`);
@@ -1581,7 +1665,7 @@ export default function TranslationWizardPage() {
     }
 
     setTranslateProgress(95);
-    log(`\n  📁 Tutti i file in: ${extraction.output_path}`);
+    log(`\n  📁 Tutti i file in: ${extraction!.output_path}`);
     log(`\n🏁 Danganronpa: ${translatedCount} dialoghi tradotti e salvati`);
   };
 
@@ -1717,7 +1801,7 @@ export default function TranslationWizardPage() {
         } else if (Array.isArray(o)) {
           return o.map((item, i) => apply(item, `${path}[${i}]`));
         } else if (o && typeof o === 'object') {
-          const result: unknown = {};
+          const result: Record<string, unknown> = {};
           for (const [k, v] of Object.entries(o)) {
             result[k] = apply(v, path ? `${path}.${k}` : k);
           }
@@ -1774,8 +1858,8 @@ export default function TranslationWizardPage() {
         targetLanguage: targetLanguage
       }));
       window.location.href = '/editor';
-    } catch (error: unknown) {
-      clientLogger.error('Error reading file:', error);
+    } catch (error) {
+      clientLogger.error('Error reading file:', String(error));
       toast({
         title: 'error',
         description: 'Impossibile leggere il file',

@@ -48,7 +48,7 @@ export function VramSettingsCard() {
 
     const unsub = vramManager.on((event, data) => {
       if (event === 'stats-update') {
-        setStats(data.stats);
+        setStats((data as { stats: typeof stats }).stats);
         setTier(vramManager.getCurrentTier());
       }
     });
@@ -201,7 +201,7 @@ export function VramSettingsCard() {
 
           <div className="space-y-2">
             <Label className="text-xs">{t('vramManager.cloudFallback')}</Label>
-            <Select value={config.cloudProvider} onValueChange={(v) => updateConfig({ cloudProvider: v as string })}>
+            <Select value={config.cloudProvider} onValueChange={(v) => updateConfig({ cloudProvider: v as "openai" | "auto" | "claude" | "deepseek" })}>
               <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="auto">{t('vramManager.cloudAuto')}</SelectItem>

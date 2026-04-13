@@ -714,7 +714,7 @@ function getOverlayPosition(position: string, offset: { x: number; y: number }) 
     'bottom-right': { bottom: 20, right: 20 },
   };
 
-  const style = { ...base[position] };
+  const style = { ...(base[position] as Record<string, unknown>) };
   
   // Apply offset
   if (style.left !== undefined && typeof style.left === 'number') {

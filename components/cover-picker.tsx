@@ -457,7 +457,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             )}
           </div>
         ) : (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "grid" | "hero" | "logo")} className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between">
             <TabsList className="grid grid-cols-4 w-fit">
               <TabsTrigger value="grid" className="gap-1">

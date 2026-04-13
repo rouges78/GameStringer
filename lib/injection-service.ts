@@ -18,8 +18,17 @@ interface Translation {
   translated: string;
 }
 
+interface NativeModule {
+  injectTranslations: (processId: number, translations: Translation[]) => InjectionResult | Promise<InjectionResult>;
+  monitorProcess?: (processId: number) => { success: boolean; message: string };
+  getProcessModules?: (processId: number) => Array<{ name: string; base: number; size: number }>;
+  isProcess64Bit?: (processId: number) => boolean;
+  scanMemory?: (processId: number, pattern: number[], mask: string) => Array<{ address: number; region: number; size: number }>;
+  hasAdminPrivileges?: () => boolean;
+}
+
 class InjectionService {
-  private nativeModule: unknown;
+  private nativeModule: NativeModule | null = null;
   private isAdmin: boolean = false;
   private activeInjections: Map<number, NodeJS.Timeout> = new Map();
 
@@ -32,18 +41,18 @@ class InjectionService {
     try {
       // Usa eval per evitare che Webpack processi il modulo nativo
       const nativePath = require('path').join(process.cwd(), 'native', 'build', 'Release', 'gamestringer_injector.node');
-      this.nativeModule = eval('require')(nativePath);
+      this.nativeModule = eval('require')(nativePath) as NativeModule;
       clientLogger.debug('Modulo nativo caricato con successo da:', nativePath);
     } catch (error: unknown) {
-      clientLogger.warn('Modulo nativo non disponibile, uso mock:', error);
-      this.nativeModule = this.createMockModule();
+      clientLogger.warn(`Modulo nativo non disponibile, uso mock: ${String(error)}`);
+      this.nativeModule = this.createMockModule() as NativeModule;
     }
   }
 
   private createMockModule() {
     return {
       injectTranslations: (_processId: number, translations: Translation[]) => {
-        clientLogger.debug(`[MOCK] Injecting ${translations.length} translations into process ${processId}`);
+        clientLogger.debug(`[MOCK] Injecting ${translations.length} translations into process ${_processId}`);
         return {
           success: true,
           injectedCount: translations.length,
@@ -80,7 +89,7 @@ class InjectionService {
         // Controlla se il modulo nativo ha una funzione per verificare i privilegi
         if (this.nativeModule && this.nativeModule.hasAdminPrivileges) {
           this.isAdmin = this.nativeModule.hasAdminPrivileges();
-          clientLogger.debug('Privilegi admin (dal modulo nativo):', this.isAdmin);
+          clientLogger.debug(`Privilegi admin (dal modulo nativo): ${this.isAdmin}`);
         } else {
           // Fallback: usa un metodo sincrono
           const { execSync } = require('child_process');
@@ -90,10 +99,10 @@ class InjectionService {
           } catch {
             this.isAdmin = false;
           }
-          clientLogger.debug('Privilegi admin (fallback):', this.isAdmin);
+          clientLogger.debug(`Privilegi admin (fallback): ${this.isAdmin}`);
         }
       } catch (error: unknown) {
-        clientLogger.error('Errore verifica privilegi:', error);
+        clientLogger.error(`Errore verifica privilegi: ${String(error)}`);
         this.isAdmin = false;
       }
     }
@@ -142,7 +151,7 @@ class InjectionService {
         gameProfileManager.incrementInjectionCount(processName, result.injectedCount);
         
         // Salva indirizzi di memoria per future injection più veloci
-        result.injected?.forEach((item: unknown) => {
+        result.injected?.forEach((item: { address: number; original: string; translated: string }) => {
           gameProfileManager.addMemoryAddress(
             processName,
             item.address,
@@ -152,16 +161,12 @@ class InjectionService {
         });
       }
       
-      clientLogger.debug('[INJEKT] Injection completata:', {
-        success: result.success,
-        injectedCount: result.injectedCount,
-        totalInjections: profile.totalInjections + (result.injectedCount || 0)
-      });
+      clientLogger.debug(`[INJEKT] Injection completata: success=${result.success}, injectedCount=${result.injectedCount}, totalInjections=${profile.totalInjections + (result.injectedCount || 0)}`);
       
 
       return result;
     } catch (error: unknown) {
-      clientLogger.error('Errore injection:', error);
+      clientLogger.error(`Errore injection: ${String(error)}`);
       throw error;
     }
   }
@@ -169,11 +174,11 @@ class InjectionService {
   public async getProcessInfo(processId: number) {
     try {
       // Usa funzioni mock se non disponibili nel modulo nativo
-      const modules = this.nativeModule.getProcessModules ? 
+      const modules = this.nativeModule?.getProcessModules ?
         this.nativeModule.getProcessModules(processId) :
         [{ name: 'game.exe', base: 0x400000, size: 0x100000 }];
-      
-      const is64Bit = this.nativeModule.isProcess64Bit ?
+
+      const is64Bit = this.nativeModule?.isProcess64Bit ?
         this.nativeModule.isProcess64Bit(processId) : true;
       
       return {
@@ -183,7 +188,7 @@ class InjectionService {
         isAdmin: this.isAdmin
       };
     } catch (error: unknown) {
-      clientLogger.error('Errore nel recupero info processo:', error);
+      clientLogger.error(`Errore nel recupero info processo: ${String(error)}`);
       return null;
     }
   }
@@ -201,7 +206,7 @@ class InjectionService {
         // 3. Iniettarli
         clientLogger.debug(`Monitoring processo ${processId}...`);
       } catch (error: unknown) {
-        clientLogger.error('Errore monitoring:', error);
+        clientLogger.error(`Errore monitoring: ${String(error)}`);
         this.stopMonitoring(processId);
       }
     }, 5000); // Check ogni 5 secondi
@@ -240,7 +245,7 @@ class InjectionService {
 
     for (const pattern of commonPatterns) {
       try {
-        const results = await this.nativeModule.scanMemory(
+        const results = await this.nativeModule!.scanMemory!(
           processId,
           pattern.pattern,
           pattern.mask
@@ -251,7 +256,7 @@ class InjectionService {
         // logica più complessa per identificare stringhe valide
         clientLogger.debug(`Trovati ${results.length} potenziali testi`);
       } catch (error: unknown) {
-        clientLogger.error('Errore scan pattern:', error);
+        clientLogger.error(`Errore scan pattern: ${String(error)}`);
       }
     }
 

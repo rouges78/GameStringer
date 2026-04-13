@@ -290,9 +290,9 @@ async function ocrWithOneOCR(
 
   if (data.lines) {
     for (const line of data.lines) {
-      const lineWords: OCRWord[] = (line.words || []).map((w: unknown) => ({
-        text: w.text,
-        confidence: w.confidence ?? 90,
+      const lineWords: OCRWord[] = (line.words || []).map((w: Record<string, unknown>) => ({
+        text: w.text as string,
+        confidence: (w.confidence as number) ?? 90,
         bbox: normalizeBbox(w.bounding_box || w.bbox),
       }));
       words.push(...lineWords);
@@ -467,12 +467,13 @@ async function ocrWithRapidOCR(
 
 function normalizeBbox(bbox: unknown): BoundingBox {
   if (!bbox) return { x0: 0, y0: 0, x1: 0, y1: 0 };
-  if (bbox.x0 !== undefined) return bbox;
-  if (bbox.left !== undefined) {
-    return { x0: bbox.left, y0: bbox.top, x1: bbox.right || bbox.left + bbox.width, y1: bbox.bottom || bbox.top + bbox.height };
+  const b = bbox as Record<string, number | undefined>;
+  if (b.x0 !== undefined) return bbox as BoundingBox;
+  if (b.left !== undefined) {
+    return { x0: b.left!, y0: b.top!, x1: b.right || b.left! + (b.width || 0), y1: b.bottom || b.top! + (b.height || 0) };
   }
-  if (bbox.x !== undefined) {
-    return { x0: bbox.x, y0: bbox.y, x1: bbox.x + (bbox.w || bbox.width || 0), y1: bbox.y + (bbox.h || bbox.height || 0) };
+  if (b.x !== undefined) {
+    return { x0: b.x!, y0: b.y!, x1: b.x! + (b.w || b.width || 0), y1: b.y! + (b.h || b.height || 0) };
   }
   return { x0: 0, y0: 0, x1: 0, y1: 0 };
 }
@@ -552,7 +553,7 @@ export async function recognizeMultiEngine(
 
       return { ...result, engine: engineId };
     } catch (e: unknown) {
-      clientLogger.warn(`[OCR] ${engineId} failed:`, e instanceof Error ? e.message : e);
+      clientLogger.warn(`[OCR] ${engineId} failed: ${e instanceof Error ? e.message : String(e)}`);
       continue;
     }
   }

@@ -297,7 +297,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Umore</Label>
-                      <Select value={formMood} onValueChange={(v: unknown) => setFormMood(v)}>
+                      <Select value={formMood} onValueChange={(v: string) => setFormMood(v as "mysterious" | "serious" | "cheerful" | "aggressive" | "calm" | "nervous")}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -313,7 +313,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                     </div>
                     <div className="space-y-2">
                       <Label>Età</Label>
-                      <Select value={formAge} onValueChange={(v: unknown) => setFormAge(v)}>
+                      <Select value={formAge} onValueChange={(v: string) => setFormAge(v as "child" | "teen" | "adult" | "elderly")}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -331,7 +331,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Formalità</Label>
-                      <Select value={formFormality} onValueChange={(v: unknown) => setFormFormality(v)}>
+                      <Select value={formFormality} onValueChange={(v: string) => setFormFormality(v as "formal" | "informal" | "neutral" | "very_formal" | "very_informal")}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -346,7 +346,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                     </div>
                     <div className="space-y-2">
                       <Label>Vocabolario</Label>
-                      <Select value={formVocabulary} onValueChange={(v: unknown) => setFormVocabulary(v)}>
+                      <Select value={formVocabulary} onValueChange={(v: string) => setFormVocabulary(v as "simple" | "archaic" | "sophisticated" | "standard" | "slang" | "technical")}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

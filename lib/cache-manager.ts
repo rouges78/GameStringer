@@ -47,7 +47,7 @@ class CacheManager {
     }
 
     this.stats.hits++;
-    return entry.data;
+    return entry.data as T;
   }
 
   // 💾 Salva dati in cache con TTL automatico o personalizzato

@@ -75,7 +75,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: unknown) {
-      toast.error(error?.message || 'Error changing password');
+      toast.error((error as Error)?.message || 'Error changing password');
     } finally {
       setIsChangingPassword(false);
     }
@@ -96,16 +96,16 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
     try {
       const profileId = currentProfile!.id;
       const pwd = currentPassword;
-      
+
       // Logout FIRST - backend doesn't allow deleting active profile
       await logout();
-      
+
       // Use invoke directly - hook may not work after logout
       const response = await invoke<{ success: boolean; error?: string }>('delete_profile', {
         profileId,
         password: pwd
       });
-      
+
       if (response.success) {
         toast.success('Profile deleted');
         onOpenChange(false);
@@ -114,7 +114,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
       }
     } catch (error: unknown) {
       clientLogger.error('Delete profile error:', error);
-      toast.error(error?.message || 'Error during deletion');
+      toast.error((error as Error)?.message || 'Error during deletion');
     } finally {
       setIsDeletingProfile(false);
     }

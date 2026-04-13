@@ -16,6 +16,8 @@
  * - String table with namespace/key/value entries
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 // ─── PAK Types ───────────────────────────────────────────────
 
 export interface PakInfo {

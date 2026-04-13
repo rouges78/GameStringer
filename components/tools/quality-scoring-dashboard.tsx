@@ -68,6 +68,7 @@ function TagBadge({ tag }: { tag: QualityTag }) {
 // ─── Stats Cards ─────────────────────────────────────────────
 
 function StatsCards({ stats }: { stats: QualityStats }) {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
       <Card className="bg-zinc-900/50 border-zinc-800">
@@ -178,6 +179,7 @@ function ProjectDetail({
   onBack: () => void;
   onRefresh: () => void;
 }) {
+  const { t } = useTranslation();
   const [filterTag, setFilterTag] = useState<QualityTag | 'all'>('all');
   const [search, setSearch] = useState('');
 

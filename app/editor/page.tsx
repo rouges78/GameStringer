@@ -33,6 +33,56 @@ import { get, set } from 'idb-keyval';
 import { loadGlossary, type AutoGlossaryEntry } from '@/lib/auto-glossary';
 import { BookOpen, FolderTree, Globe } from 'lucide-react';
 
+// --- API / invoke result types ---
+interface DictEntry {
+  id?: string;
+  game_id?: string;
+  game_name?: string;
+  updated_at?: string;
+  entries_count?: number;
+  target_language?: string;
+  source_language?: string;
+  file_path?: string;
+}
+
+interface TransApiItem {
+  gameId?: string;
+  game?: { title?: string; platform?: string };
+  updatedAt?: string;
+  status?: string;
+}
+
+interface GameApiItem {
+  id: string;
+  title: string;
+  platform?: string;
+  header_image?: string;
+  coverUrl?: string;
+  install_path?: string;
+  updatedAt?: string;
+  translationStats?: { total: number; completed: number };
+}
+
+interface PartialItem {
+  id?: string;
+  sourceText: string;
+  translatedText?: string;
+  fromMemory?: boolean;
+  metadata?: { key?: string; lineNumber?: number };
+}
+
+interface PartialTranslationsData {
+  items: PartialItem[];
+  timestamp: number;
+  gameId?: string;
+  gameName?: string;
+  completed?: number;
+  total?: number;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  files?: { path?: string }[];
+}
+
 // --- Types ---
 interface Game {
   id: string;
@@ -389,7 +439,7 @@ export default function EditorPage() {
           });
           setIsLoading(false);
         } catch (err: unknown) {
-          clientLogger.error('Error loading editor file:', err);
+          clientLogger.error(`Error loading editor file: ${String(err)}`);
           await storageManager.clearEditorFile();
         }
       }
@@ -403,11 +453,11 @@ export default function EditorPage() {
       const data = await storageManager.getPartialTranslations();
       if (data) {
         try {
-          clientLogger.debug('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
-          
+          clientLogger.debug(`[Editor] Loading...sultati parziali: ${String(data.items?.length)} traduzioni`);
+
           // Crea traduzioni dall'array di items
           if (data.items && data.items.length > 0) {
-            const partialTranslations: Translation[] = data.items.map((item: unknown, index: number) => ({
+            const partialTranslations: Translation[] = (data.items as PartialItem[]).map((item: PartialItem, index: number) => ({
               id: `partial-${index}-${item.id}`,
               gameId: data.gameId || 'unknown',
               filePath: data.files?.[0]?.path || 'Neural Translator',
@@ -443,7 +493,7 @@ export default function EditorPage() {
           }
           setIsLoading(false);
         } catch (err: unknown) {
-          clientLogger.error('[Editor] Error loading partial translations:', err);
+          clientLogger.error(`[Editor] Error loading partial translations: ${String(err)}`);
         }
       }
     };
@@ -467,7 +517,7 @@ export default function EditorPage() {
       const response = await fetch('/api/games');
       if (response.ok) {
         const data = await response.json();
-        setGames(ensureArray(data).map((g: unknown) => ({
+        setGames((ensureArray(data) as GameApiItem[]).map((g) => ({
           id: g.id,
           title: g.title,
           platform: 'Unknown',
@@ -475,7 +525,7 @@ export default function EditorPage() {
         })));
       }
     } catch (error: unknown) {
-      clientLogger.error('Error loading games:', error);
+      clientLogger.error(`Error loading games: ${String(error)}`);
     }
   };
 
@@ -488,7 +538,7 @@ export default function EditorPage() {
       // Carica dizionari da Tauri
       try {
         const dictData = await invoke<unknown[]>('list_installed_dictionaries');
-        for (const dict of ensureArray(dictData) as unknown[]) {
+        for (const dict of ensureArray(dictData) as DictEntry[]) {
           const gameId = dict.game_id || dict.id || 'unknown';
           const gameName = dict.game_name || 'game sconosciuto';
           
@@ -516,8 +566,8 @@ export default function EditorPage() {
             lastUpdated: dict.updated_at || new Date().toISOString()
           });
         }
-      } catch (dictError) {
-        clientLogger.warn('[Editor] Dizionari non disponibili:', dictError);
+      } catch (dictError: unknown) {
+        clientLogger.warn(`[Editor] Dizionari non disponibili: ${String(dictError)}`);
       }
       
       // Carica anche dai games con traduzioni saved (API Next.js come fallback)
@@ -525,10 +575,10 @@ export default function EditorPage() {
         const transResponse = await fetch('/api/translations');
         const transData = transResponse.ok ? await transResponse.json() : [];
         
-        for (const trans of ensureArray(transData) as unknown[]) {
+        for (const trans of ensureArray(transData) as TransApiItem[]) {
           const gameId = trans.gameId || 'unknown';
           const gameName = trans.game?.title || 'game sconosciuto';
-          
+
           if (!projectsMap.has(gameId)) {
             projectsMap.set(gameId, {
               game: { id: gameId, title: gameName, platform: trans.game?.platform || 'unknown' },
@@ -545,8 +595,8 @@ export default function EditorPage() {
             project.completedStrings += 1;
           }
         }
-      } catch (transError) {
-        clientLogger.warn('[Editor] Traduzioni non disponibili:', transError);
+      } catch (transError: unknown) {
+        clientLogger.warn(`[Editor] Traduzioni non disponibili: ${String(transError)}`);
       }
       
       // Se non ci sono progetti, mostra i games dalla library che hanno file di localizzazione
@@ -556,12 +606,12 @@ export default function EditorPage() {
           const gamesData = gamesResponse.ok ? await gamesResponse.json() : [];
           
           // Filtra games con traduzioni (quelli che hanno translationStats)
-          for (const game of ensureArray(gamesData) as unknown[]) {
+          for (const game of ensureArray(gamesData) as GameApiItem[]) {
             if (game.translationStats && game.translationStats.total > 0) {
               projectsMap.set(game.id, {
-                game: { 
-                  id: game.id, 
-                  title: game.title, 
+                game: {
+                  id: game.id,
+                  title: game.title,
                   platform: game.platform || 'steam',
                   coverUrl: game.header_image
                 },
@@ -581,14 +631,14 @@ export default function EditorPage() {
               });
             }
           }
-        } catch (gamesError) {
-          clientLogger.warn('[Editor] games non disponibili:', gamesError);
+        } catch (gamesError: unknown) {
+          clientLogger.warn(`[Editor] games non disponibili: ${String(gamesError)}`);
         }
       }
       
       setGameProjects(Array.from(projectsMap.values()));
     } catch (error: unknown) {
-      clientLogger.error('Error loading game projects:', error);
+      clientLogger.error(`Error loading game projects: ${String(error)}`);
     } finally {
       setIsLoading(false);
     }
@@ -611,7 +661,7 @@ export default function EditorPage() {
         }
       }
     } catch (error: unknown) {
-      clientLogger.error('Error loading translations:', error);
+      clientLogger.error(`Error loading translations: ${String(error)}`);
       toast({ title: 'error', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -653,13 +703,13 @@ export default function EditorPage() {
           });
           clientLogger.debug('[Editor] Traduzione salvata nel dizionario');
         } catch (dictError) {
-          clientLogger.warn('[Editor] Impossibile salvare nel dizionario:', dictError);
+          clientLogger.warn(`[Editor] Impossibile salvare nel dizionario: ${String(dictError)}`);
         }
       }
       
       toast({ title: 'Salvato', description: 'Traduzione updated e salvata nel dizionario' });
     } catch (error: unknown) {
-      clientLogger.error('Error saving translation:', error);
+      clientLogger.error(`Error saving translation: ${String(error)}`);
       toast({ title: 'error', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
     } finally {
       setIsSaving(false);
@@ -782,10 +832,10 @@ export default function EditorPage() {
       
       // Salva anche in IndexedDB per persistenza
       try {
-        const existingData = await get<unknown>('gamestringer_partial_translations');
+        const existingData = await get<PartialTranslationsData>('gamestringer_partial_translations');
         if (existingData) {
-          const updatedItems = existingData.items.filter((item: unknown) => 
-            !translatedLines.some(l => 
+          const updatedItems = existingData.items.filter((item: PartialItem) =>
+            !translatedLines.some(l =>
               (item.metadata?.key === l.key && item.metadata?.lineNumber === l.lineNumber) ||
               item.sourceText === l.originalText
             )
@@ -803,7 +853,7 @@ export default function EditorPage() {
           existingData.items = updatedItems;
           existingData.timestamp = Date.now();
           await set('gamestringer_partial_translations', existingData);
-          clientLogger.debug('[Editor] saved modifiche manuali in IndexedDB:', translatedLines.length);
+          clientLogger.debug(`[Editor] saved modifiche manuali in IndexedDB: ${translatedLines.length}`);
         } else {
           // Crea nuova struttura
           const newData = {
@@ -817,10 +867,10 @@ export default function EditorPage() {
             })),
           };
           await set('gamestringer_partial_translations', newData);
-          clientLogger.debug('[Editor] Creati nuovi dati in IndexedDB:', translatedLines.length);
+          clientLogger.debug(`[Editor] Creati nuovi dati in IndexedDB: ${translatedLines.length}`);
         }
       } catch (err: unknown) {
-        clientLogger.error('[Editor] error salvataggio IndexedDB:', err);
+        clientLogger.error(`[Editor] error salvataggio IndexedDB: ${String(err)}`);
       }
       
       setHasUnsavedChanges(false);
@@ -986,7 +1036,7 @@ export default function EditorPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Select onValueChange={(format) => exportTranslations(format as string)}>
+                    <Select onValueChange={(format) => exportTranslations(format as 'json' | 'csv' | 'po')}>
                       <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg flex items-center justify-center [&>svg]:hidden">
                         <Download className="h-3.5 w-3.5" />
                       </SelectTrigger>

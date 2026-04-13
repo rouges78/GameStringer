@@ -23,14 +23,14 @@ export function ErrorBoundaryWrapper({
   const { handleError } = useErrorHandler();
 
   const onError = (error: Error, errorInfo: React.ErrorInfo) => {
-    clientLogger.error(`${context} Error:`, error, errorInfo);
+    clientLogger.error(`${context} Error:`, error, errorInfo as unknown as Record<string, unknown>);
     handleError(error, errorInfo);
   };
 
   const getFallbackComponent = () => {
     switch (fallbackType) {
       case 'api': {
-        const ApiFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+        const ApiFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: React.ErrorInfo | undefined; resetError: () => void; errorId: string }) => (
           <ApiErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -43,7 +43,7 @@ export function ErrorBoundaryWrapper({
         return ApiFallbackComponent;
       }
       case 'loading': {
-        const LoadingFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+        const LoadingFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: React.ErrorInfo | undefined; resetError: () => void; errorId: string }) => (
           <LoadingErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -56,7 +56,7 @@ export function ErrorBoundaryWrapper({
         return LoadingFallbackComponent;
       }
       default: {
-        const DefaultFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+        const DefaultFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: React.ErrorInfo | undefined; resetError: () => void; errorId: string }) => (
           <ErrorFallback
             error={error}
             errorInfo={errorInfo}

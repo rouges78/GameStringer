@@ -79,7 +79,7 @@ export default function PluginsPage() {
         toast.error(result.error || t('plugins.installError'));
       }
     } catch (e: unknown) {
-      toast.error(e.message);
+      toast.error((e as Error).message);
     }
     setInstalling(false);
   };

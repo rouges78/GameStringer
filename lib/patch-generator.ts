@@ -153,19 +153,20 @@ function applyToJSON(content: string, translations: Map<string, string>): string
 }
 
 function applyToObject(obj: unknown, translations: Map<string, string>, prefix: string): void {
-  for (const key of Object.keys(obj)) {
+  const record = obj as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
-    if (typeof obj[key] === 'string') {
+    if (typeof record[key] === 'string') {
       // Cerca per chiave completa o per valore
       const byKey = translations.get(fullKey);
-      const byValue = translations.get(obj[key]);
+      const byValue = translations.get(record[key] as string);
       if (byKey !== undefined) {
-        obj[key] = byKey;
+        record[key] = byKey;
       } else if (byValue !== undefined) {
-        obj[key] = byValue;
+        record[key] = byValue;
       }
-    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-      applyToObject(obj[key], translations, fullKey);
+    } else if (typeof record[key] === 'object' && record[key] !== null) {
+      applyToObject(record[key], translations, fullKey);
     }
   }
 }

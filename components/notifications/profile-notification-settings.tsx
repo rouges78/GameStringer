@@ -136,7 +136,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
         {/* Contenuto principale */}
         <div className="p-3">
           <NotificationSettings
-            preferences={preferences}
+            preferences={preferences!}
             onPreferencesChange={handleUpdatePreferences}
             isLoading={preferencesLoading}
             className="space-y-2"

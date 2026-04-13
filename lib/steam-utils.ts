@@ -37,7 +37,7 @@ function validateFilePath(basePath: string, targetPath: string): boolean {
            !relativePath.includes('..') && 
            normalizedTarget.startsWith(normalizedBase);
   } catch (error: unknown) {
-    logger.warn('[Security] Path validation failed:', error);
+    logger.warn(`[Security] Path validation failed: ${String(error)}`);
     return false;
   }
 }
@@ -325,7 +325,7 @@ class AdvancedSteamCache {
       await fs.mkdir(this.persistentCacheDir, { recursive: true });
       logger.debug(`[AdvancedCache] Persistent cache initialized at: ${this.persistentCacheDir}`);
     } catch (error: unknown) {
-      logger.warn(`[AdvancedCache] Failed to initialize persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to initialize persistent cache: ${String(error)}`);
     }
   }
   
@@ -349,7 +349,7 @@ class AdvancedSteamCache {
     
     // Set in persistent cache (async, don't wait)
     this.setPersistent(key, cacheEntry).catch(error => {
-      logger.warn(`[AdvancedCache] Failed to write to persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to write to persistent cache: ${String(error)}`);
     });
     
     this.stats.writes++;
@@ -385,7 +385,7 @@ class AdvancedSteamCache {
         }
       }
     } catch (error: unknown) {
-      logger.warn(`[AdvancedCache] Failed to read from persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to read from persistent cache: ${String(error)}`);
     }
     
     this.stats.misses++;
@@ -430,7 +430,7 @@ class AdvancedSteamCache {
         }
       }
     } catch (error: unknown) {
-      logger.warn(`[AdvancedCache] Failed to invalidate pattern from persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to invalidate pattern from persistent cache: ${String(error)}`);
     }
   }
   
@@ -443,7 +443,7 @@ class AdvancedSteamCache {
       await fs.rmdir(this.persistentCacheDir, { recursive: true });
       await this.initializePersistentCache();
     } catch (error: unknown) {
-      logger.warn(`[AdvancedCache] Failed to clear persistent cache:`, error);
+      logger.warn(`[AdvancedCache] Failed to clear persistent cache: ${String(error)}`);
     }
   }
   
@@ -649,7 +649,7 @@ async function processGameWithAdvancedCache(
       return game;
     }
   } catch (error: unknown) {
-    logger.error(`[getGameDetails] Errore durante il recupero dei dettagli per ${game.name}:`, error);
+    logger.error(`[getGameDetails] Errore durante il recupero dei dettagli per ${game.name}: ${String(error)}`);
     return game;
   }
 }
@@ -794,7 +794,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
       key:  '\\Software\\Valve\\Steam'
     });
     const steamPathValue = await new Promise((resolve, reject) => {
-      regKey.get('SteamPath', (err: unknown, item: unknown) => {
+      regKey.get('SteamPath', (err: unknown, item: Record<string, unknown>) => {
         if (err) return reject(err);
         resolve(item.value);
       });
@@ -808,14 +808,14 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
             key:  '\\SOFTWARE\\Wow6432Node\\Valve\\Steam'
         });
         const steamPathValue = await new Promise((resolve, reject) => {
-            regKey.get('InstallPath', (err: unknown, item: unknown) => {
+            regKey.get('InstallPath', (err: unknown, item: Record<string, unknown>) => {
                 if (err) return reject(err);
                 resolve(item.value);
             });
         });
         return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
     } catch (err: unknown) {
-        logger.error('Errore critico: Impossibile trovare il percorso di installazione di Steam nel registro.', err);
+        logger.error(`Errore critico: Impossibile trovare il percorso di installazione di Steam nel registro. ${String(err)}`);
         return null;
     }
   }
@@ -832,21 +832,21 @@ async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
 
   try {
     const content = await fs.readFile(libraryFoldersVdfPath, 'utf-8');
-    const data: unknown = vdf.parse(content);
+    const data = vdf.parse(content) as Record<string, unknown>;
 
     if (data.LibraryFolders) {
-        Object.values(data.LibraryFolders as unknown)
-            .filter((val: unknown) => typeof val === 'object' && val.path)
-            .forEach((val: unknown) => libraryFolders.push(val.path));
+        Object.values(data.LibraryFolders as Record<string, unknown>)
+            .filter((val): val is Record<string, unknown> => typeof val === 'object' && val !== null && 'path' in val)
+            .forEach((val) => libraryFolders.push(val.path as string));
     } else {
         // Fallback per un formato alternativo del file VDF
-        Object.values(data as unknown)
-            .filter((val: unknown) => typeof val === 'object' && val.path)
-            .forEach((val: unknown) => libraryFolders.push(val.path));
+        Object.values(data)
+            .filter((val): val is Record<string, unknown> => typeof val === 'object' && val !== null && 'path' in val)
+            .forEach((val) => libraryFolders.push(val.path as string));
     }
 
   } catch (error: unknown) {
-    logger.warn(`File libraryfolders.vdf non trovato o illeggibile. Verrà usata solo la libreria principale.`, error);
+    logger.warn(`File libraryfolders.vdf non trovato o illeggibile. Verrà usata solo la libreria principale. ${String(error)}`);
   }
 
   return [...new Set(libraryFolders)]; // Rimuove duplicati
@@ -872,7 +872,7 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
       logger.warn('[getInstalledGames] steam-locate non ha restituito giochi, procedo con fallback legacy.');
     }
   } catch (locErr) {
-    logger.warn('[getInstalledGames] steam-locate non disponibile o ha fallito, procedo con fallback legacy.', locErr);
+    logger.warn(`[getInstalledGames] steam-locate non disponibile o ha fallito, procedo con fallback legacy. ${String(locErr)}`);
   }
   logger.debug('[getInstalledGames] Inizio scansione giochi installati...');
   const steamPath = await getSteamInstallPathFromRegistry();
@@ -908,7 +908,7 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
         const filePath = path.join(steamappsPath, file);
         try {
           const content = await fs.readFile(filePath, 'utf-8');
-          const data: unknown = vdf.parse(content);
+          const data = vdf.parse(content) as Record<string, Record<string, string>>;
           const appState = data.AppState;
 
           if (appState && appState.appid && appState.name && appState.installdir) {
@@ -936,11 +936,11 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
             logger.warn(`[Parser ACF] Dati incompleti nel file ${file}. Salto.`);
           }
         } catch (parseError) {
-          logger.warn(`[Parser ACF] Impossibile analizzare il file ${file}. Potrebbe essere corrotto. Salto.`, parseError);
+          logger.warn(`[Parser ACF] Impossibile analizzare il file ${file}. Potrebbe essere corrotto. Salto. ${String(parseError)}`);
         }
       }
     } catch (dirError) {
-      logger.warn(`[Scanner Libreria] Impossibile leggere la cartella ${steamappsPath}. Salto.`, dirError);
+      logger.warn(`[Scanner Libreria] Impossibile leggere la cartella ${steamappsPath}. Salto. ${String(dirError)}`);
     }
   }
 
@@ -983,7 +983,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
       return foundGame.installDir;
     }
   } catch (error: unknown) {
-    logger.warn('[findSteamGamePath] Errore durante la Strategia 1 (ACF), procedo con fallback.', error);
+    logger.warn(`[findSteamGamePath] Errore durante la Strategia 1 (ACF), procedo con fallback. ${String(error)}`);
   }
 
   logger.debug('[findSteamGamePath] Strategia 1 fallita, avvio Strategia 2 (Scansione Directory)...');

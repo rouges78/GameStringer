@@ -6,6 +6,8 @@
  * e tradurre il testo contestualmente in un singolo passaggio.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface VlmTranslateOptions {
   imageBase64: string;
   sourceLanguage: string;

@@ -1,5 +1,7 @@
 'use client';
 
+import { clientLogger } from '@/lib/client-logger';
+
 // Wrapper per gestire le chiamate Tauri in ambiente web e desktop
 
 // Funzione per rilevare se siamo in ambiente Tauri

@@ -54,7 +54,14 @@ export function TranslationProfileManager({
     translated: '',
     category: 'general'
   });
-  const [statistics, setStatistics] = useState<unknown>(null);
+  const [statistics, setStatistics] = useState<{
+    totalProfiles: number;
+    officialProfiles: number;
+    totalTranslations: number;
+    averageTranslationsPerProfile: number;
+    totalGames: number;
+    totalLanguages: number;
+  } | null>(null);
 
   // Form state per nuovo profilo
   const [newProfile, setNewProfile] = useState({

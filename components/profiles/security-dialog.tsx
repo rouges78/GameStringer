@@ -116,9 +116,9 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
     const saved = localStorage.getItem(`activity_${profileId}`);
     if (saved) {
       try {
-        const logs = JSON.parse(saved).map((log: unknown) => ({
+        const logs = JSON.parse(saved).map((log: Record<string, unknown>) => ({
           ...log,
-          timestamp: new Date(log.timestamp)
+          timestamp: new Date(log.timestamp as string)
         }));
         setActivityLogs(logs);
       } catch (e: unknown) {

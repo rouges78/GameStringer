@@ -99,9 +99,9 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           apiKey = settings?.integrations?.steamApiKey || null;
         }
       } catch (e: unknown) {
-        clientLogger.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+        clientLogger.warn(`[STEAM] Errore parsing impostazioni Steam: ${String(e)}`);
       }
-      
+
       // Get user profile
       const profile = await invoke<SteamUser>('steam_get_user_profile', { steamId, apiKey });
       
@@ -118,7 +118,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       await onSubmit(steamId);
       
     } catch (err: unknown) {
-      setError(err?.message || 'Errore durante il login Steam');
+      setError(err instanceof Error ? err.message : 'Errore durante il login Steam');
       setAuthStep('idle');
     }
   };
@@ -150,13 +150,13 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           apiKey = settings?.integrations?.steamApiKey || null;
         }
       } catch (e: unknown) {
-        clientLogger.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+        clientLogger.warn(`[STEAM] Errore parsing impostazioni Steam: ${String(e)}`);
       }
-      
+
       // Get user profile
-      const profile = await invoke<SteamUser>('steam_get_user_profile', { 
+      const profile = await invoke<SteamUser>('steam_get_user_profile', {
         steamId,
-        apiKey 
+        apiKey
       });
       
       // Save auth
@@ -172,7 +172,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       await onSubmit(steamId);
       
     } catch (err: unknown) {
-      setError(err?.message || 'Verifica fallita');
+      setError(err instanceof Error ? err.message : 'Verifica fallita');
       setVerifying(false);
     }
   };
@@ -197,7 +197,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
         await onSubmit(steamUser.steam_id);
         onClose();
       } catch (err: unknown) {
-        setError(err?.message || 'Errore durante il salvataggio delle credenziali');
+        setError(err instanceof Error ? err.message : 'Errore durante il salvataggio delle credenziali');
       } finally {
         setSavingCredentials(false);
       }
@@ -211,7 +211,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       setWishlist([]);
       setAuthStep('idle');
     } catch (e: unknown) {
-      clientLogger.error('Logout error:', e);
+      clientLogger.error(`Logout error: ${String(e)}`);
     }
   };
 
@@ -222,15 +222,15 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       // Carica API key dalle credenziali salvate
       let apiKey: string | null = null;
       try {
-        const creds = await invoke<unknown>('load_steam_credentials');
+        const creds = await invoke<Record<string, unknown>>('load_steam_credentials');
         if (creds?.api_key_encrypted) {
-          apiKey = creds.api_key_encrypted;
+          apiKey = creds.api_key_encrypted as string;
         }
       } catch {}
       const list = await invoke<unknown[]>('steam_get_wishlist', { steamId: steamUser.steam_id, apiKey });
       setWishlist(list);
     } catch (e: unknown) {
-      setError(typeof e === 'string' ? e : (e?.message || 'Errore importazione wishlist'));
+      setError(typeof e === 'string' ? e : (e instanceof Error ? e.message : 'Errore importazione wishlist'));
     }
     setLoadingWishlist(false);
   };
@@ -340,9 +340,10 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               
               {wishlist.length > 0 && (
                 <div className="max-h-32 overflow-y-auto bg-muted/30 rounded p-2 mb-2 text-xs">
-                  {wishlist.slice(0, 10).map((g: unknown) => (
-                    <div key={g.app_id} className="truncate py-0.5">{g.name}</div>
-                  ))}
+                  {wishlist.slice(0, 10).map((g: unknown, idx: number) => {
+                    const game = g as Record<string, unknown>;
+                    return <div key={(game.app_id as string) || idx} className="truncate py-0.5">{game.name as string}</div>;
+                  })}
                   {wishlist.length > 10 && (
                     <div className="text-muted-foreground">...e altri {wishlist.length - 10}</div>
                   )}

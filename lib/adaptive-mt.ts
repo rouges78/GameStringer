@@ -14,6 +14,8 @@
  * 5. Feedback loop: più correzioni = traduzioni migliori
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 // ============================================================================
 // TYPES
 // ============================================================================

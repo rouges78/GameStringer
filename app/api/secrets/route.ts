@@ -24,7 +24,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
   }
 
   // Set the secret
-  secretsManager.set(key, value);
+  secretsManager.set(key, value ?? '');
 
   logger.info(`API key ${key} updated via UI`, 'SECRETS_API');
 

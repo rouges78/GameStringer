@@ -316,7 +316,7 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
               <Label>Text Type</Label>
               <Select 
                 value={translationContext.textType} 
-                onValueChange={(value: unknown) => setTranslationContext(prev => ({ ...prev, textType: value }))}
+                onValueChange={(value: string) => setTranslationContext(prev => ({ ...prev, textType: value as typeof prev.textType }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -352,7 +352,7 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
               <Label>Formalità</Label>
               <Select 
                 value={translationContext.formality || 'neutral'} 
-                onValueChange={(value: unknown) => setTranslationContext(prev => ({ ...prev, formality: value }))}
+                onValueChange={(value: string) => setTranslationContext(prev => ({ ...prev, formality: value as typeof prev.formality }))}
               >
                 <SelectTrigger>
                   <SelectValue />

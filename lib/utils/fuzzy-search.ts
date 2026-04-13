@@ -98,7 +98,7 @@ export function fuzzySearchMemory(
         confidence: entry.confidence,
         similarity,
         context: options.includeContext ? entry.context : undefined,
-        usageCount: entry.usageCount,
+        usageCount: entry.usageCount ?? 0,
         lastUsed: entry.updatedAt,
         type: similarity === 1 ? 'exact' : 'fuzzy'
       });
@@ -110,12 +110,12 @@ export function fuzzySearchMemory(
     if (a.similarity !== b.similarity) {
       return b.similarity - a.similarity;
     }
-    
+
     if (options.preferRecent) {
       return b.lastUsed.getTime() - a.lastUsed.getTime();
     }
-    
-    return b.usageCount - a.usageCount;
+
+    return (b.usageCount ?? 0) - (a.usageCount ?? 0);
   });
 
   return suggestions.slice(0, options.maxResults);
@@ -141,7 +141,7 @@ export function findExactMatches(
       confidence: entry.confidence,
       similarity: 1,
       context: entry.context,
-      usageCount: entry.usageCount,
+      usageCount: entry.usageCount ?? 0,
       lastUsed: entry.updatedAt,
       type: 'exact' as const
     }))

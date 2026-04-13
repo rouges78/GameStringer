@@ -193,8 +193,8 @@ class NotificationQueueManager {
 
   private showNotification(notification: QueuedNotification): void {
     // Usa il sistema di toast esistente
-    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).showNotificationToast) {
-      (window as unknown as Record<string, unknown>).showNotificationToast(notification);
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, (...args: unknown[]) => void>).showNotificationToast) {
+      (window as unknown as Record<string, (...args: unknown[]) => void>).showNotificationToast(notification);
       
       if (notification.onShow) {
         notification.onShow();

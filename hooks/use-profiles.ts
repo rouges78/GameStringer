@@ -25,7 +25,7 @@ const dispatchAuthChanged = () => {
       window.dispatchEvent(new Event('profile-auth-changed'));
     }
   } catch (e: unknown) {
-    clientLogger.warn('dispatchAuthChanged failed:', e);
+    clientLogger.warn(`dispatchAuthChanged failed: ${String(e)}`);
   }
 };
 
@@ -73,7 +73,7 @@ export function useProfilesCore(): UseProfilesReturn {
         setProfiles([]);
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore caricamento profili:', err);
+      clientLogger.error(`Errore caricamento profili: ${String(err)}`);
       setError('Backend Tauri non disponibile - attendere avvio completo');
       setProfiles([]);
     }
@@ -94,11 +94,11 @@ export function useProfilesCore(): UseProfilesReturn {
       if (response.success) {
         setCurrentProfile(response.data || null);
       } else {
-        clientLogger.warn('⚠️ useProfiles: get_current_profile failed:', response.error);
+        clientLogger.warn(`⚠️ useProfiles: get_current_profile failed: ${response.error}`);
         setCurrentProfile(null);
       }
     } catch (err: unknown) {
-      clientLogger.error('❌ useProfiles: Errore caricamento profilo corrente:', err);
+      clientLogger.error(`❌ useProfiles: Errore caricamento profilo corrente: ${String(err)}`);
       setCurrentProfile(null);
     }
   }, []);
@@ -113,7 +113,7 @@ export function useProfilesCore(): UseProfilesReturn {
           loadCurrentProfile()
         ]);
       } catch (error: unknown) {
-        clientLogger.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
+        clientLogger.error(`❌ useProfiles: Errore durante inizializzazione sistema profili: ${String(error)}`);
         setError('Errore inizializzazione sistema profili');
       } finally {
         setIsLoading(false);
@@ -126,7 +126,7 @@ export function useProfilesCore(): UseProfilesReturn {
   // Listen for auth changes from other instances and refresh current profile
   useEffect(() => {
     const handler = () => {
-      loadCurrentProfile().catch(err => clientLogger.warn('useProfiles loadCurrentProfile error:', err));
+      loadCurrentProfile().catch(err => clientLogger.warn(`useProfiles loadCurrentProfile error: ${String(err)}`));
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('profile-auth-changed', handler);
@@ -142,9 +142,9 @@ export function useProfilesCore(): UseProfilesReturn {
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
     try {
       setError(null);
-      clientLogger.debug('Creazione profilo con request:', request);
+      clientLogger.debug(`Creazione profilo con request: ${JSON.stringify(request)}`);
       const response = await invoke<ProfileResponse<UserProfile>>('create_profile', { request });
-      clientLogger.debug('Risposta creazione profilo:', response);
+      clientLogger.debug(`Risposta creazione profilo: ${JSON.stringify(response)}`);
       
       if (response.success && response.data) {
         // Ricarica lista profili
@@ -155,12 +155,12 @@ export function useProfilesCore(): UseProfilesReturn {
         dispatchAuthChanged();
         return true;
       } else {
-        clientLogger.error('Errore creazione profilo:', response.error);
+        clientLogger.error(`Errore creazione profilo: ${response.error}`);
         setError(response.error || 'Errore creazione profilo');
         return false;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore creazione profilo:', err);
+      clientLogger.error(`Errore creazione profilo: ${String(err)}`);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -192,26 +192,26 @@ export function useProfilesCore(): UseProfilesReturn {
             await sessionPersistence.syncWithBackend();
             clientLogger.debug('🔄 Session persistence sincronizzata');
           } catch (error: unknown) {
-            clientLogger.warn('⚠️ Errore sync session persistence:', error);
+            clientLogger.warn(`⚠️ Errore sync session persistence: ${String(error)}`);
           }
         }, 100);
         
         // Ricarica profili in background senza bloccare UI
         setTimeout(() => {
           loadProfiles().catch(error => {
-            clientLogger.warn('⚠️ Errore ricarica profili in background:', error);
+            clientLogger.warn(`⚠️ Errore ricarica profili in background: ${String(error)}`);
           });
         }, 500);
         
         clientLogger.debug('🔄 useProfiles: Transizione completata, currentProfile impostato');
         return true;
       } else {
-        clientLogger.error('❌ useProfiles: Autenticazione fallita:', response.error);
+        clientLogger.error(`❌ useProfiles: Autenticazione fallita: ${response.error}`);
         setError(response.error || 'Errore autenticazione');
         return false;
       }
     } catch (err: unknown) {
-      clientLogger.error('❌ useProfiles: Errore autenticazione profilo:', err);
+      clientLogger.error(`❌ useProfiles: Errore autenticazione profilo: ${String(err)}`);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -243,26 +243,26 @@ export function useProfilesCore(): UseProfilesReturn {
             await sessionPersistence.syncWithBackend();
             clientLogger.debug('🔄 Session persistence sincronizzata dopo switch');
           } catch (error: unknown) {
-            clientLogger.warn('⚠️ Errore sync session persistence dopo switch:', error);
+            clientLogger.warn(`⚠️ Errore sync session persistence dopo switch: ${String(error)}`);
           }
         }, 100);
         
         // Ricarica lista in background per aggiornare last_accessed
         setTimeout(() => {
           loadProfiles().catch(error => {
-            clientLogger.warn('⚠️ Errore ricarica profili dopo switch:', error);
+            clientLogger.warn(`⚠️ Errore ricarica profili dopo switch: ${String(error)}`);
           });
         }, 500);
         
         clientLogger.debug('🔄 useProfiles: Switch completato senza riavvio');
         return true;
       } else {
-        clientLogger.error('❌ useProfiles: Errore cambio profilo:', response.error);
+        clientLogger.error(`❌ useProfiles: Errore cambio profilo: ${response.error}`);
         setError(response.error || 'Errore cambio profilo');
         return false;
       }
     } catch (err: unknown) {
-      clientLogger.error('❌ useProfiles: Errore cambio profilo:', err);
+      clientLogger.error(`❌ useProfiles: Errore cambio profilo: ${String(err)}`);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -289,7 +289,7 @@ export function useProfilesCore(): UseProfilesReturn {
         return false;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore logout:', err);
+      clientLogger.error(`Errore logout: ${String(err)}`);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -323,7 +323,7 @@ export function useProfilesCore(): UseProfilesReturn {
         return false;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore eliminazione profilo:', err);
+      clientLogger.error(`Errore eliminazione profilo: ${String(err)}`);
       setError('Errore di connessione al backend');
       return false;
     }
@@ -341,7 +341,7 @@ export function useProfilesCore(): UseProfilesReturn {
       }
       return null;
     } catch (err: unknown) {
-      clientLogger.error('Errore recupero avatar:', err);
+      clientLogger.error(`Errore recupero avatar: ${String(err)}`);
       return null;
     }
   }, []);
@@ -361,7 +361,7 @@ export function useProfilesCore(): UseProfilesReturn {
         // Se il profilo aggiornato è quello corrente, ricaricalo
         if (currentProfile && currentProfile.id === profileId) {
           // Aggiornamento ottimistico locale per feedback immediato
-          setCurrentProfile(prev => prev ? { ...prev, avatar_path: avatarPath } : null);
+          setCurrentProfile(prev => prev ? { ...prev, avatar_path: avatarPath ?? undefined } : null);
           
           // Ricarica completa in background per sicurezza
           loadCurrentProfile().catch(console.warn);
@@ -374,7 +374,7 @@ export function useProfilesCore(): UseProfilesReturn {
       }
       return false;
     } catch (err: unknown) {
-      clientLogger.error('Errore aggiornamento avatar:', err);
+      clientLogger.error(`Errore aggiornamento avatar: ${String(err)}`);
       return false;
     }
   }, [loadProfiles, currentProfile, loadCurrentProfile]);

@@ -6,6 +6,8 @@
  * o che non devono essere tradotti affatto (es. nomi propri).
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface GlossaryEntry {
   id: string;
   source: string;           // Termine originale

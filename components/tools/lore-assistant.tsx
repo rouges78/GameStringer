@@ -143,7 +143,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
             </div>
             {stats.speakers.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
-                {stats.speakers.slice(0, 10).map((s: string) => (
+                {stats.speakers.filter(Boolean).slice(0, 10).map((s) => (
                   <Badge key={s} variant="outline" className="text-2xs px-1 py-0 h-3.5 border-amber-500/20 text-amber-400/70">
                     {s}
                   </Badge>

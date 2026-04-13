@@ -7,6 +7,14 @@ import { BatchOperationType, BatchResult } from '@/lib/types/batch-operations';
 import type { ProgressConfig } from '@/lib/types/progress';
 import { clientLogger } from '@/lib/client-logger';
 
+interface ProgressStateApi {
+  startOperation(id: string, config: ProgressConfig): void;
+  completeOperation(id: string, result: BatchResult): void;
+  failOperation(id: string, error: Error): void;
+  updateProgress(id: string, progress: number, status: string): void;
+  getOperation(id: string): { progress: number } | null;
+}
+
 export interface ProgressBatchProcessorOptions extends BatchProcessorOptions {
   progressConfig?: Partial<ProgressConfig>;
   showNotifications?: boolean;
@@ -15,8 +23,12 @@ export interface ProgressBatchProcessorOptions extends BatchProcessorOptions {
 
 export class ProgressBatchProcessor {
   private batchProcessor: BatchProcessor;
-  private progressState: unknown; // Sarà iniettato dal hook
+  private progressState: unknown;
   private options: ProgressBatchProcessorOptions;
+
+  private get ps(): ProgressStateApi {
+    return this.progressState as ProgressStateApi;
+  }
 
   constructor(
     progressState: unknown,
@@ -57,7 +69,7 @@ export class ProgressBatchProcessor {
     };
 
     // Avvia operazione con progresso
-    this.progressState.startOperation(operationId, progressConfig);
+    this.ps.startOperation(operationId, progressConfig);
 
     try {
       const result = await this.batchProcessor.processBatch(
@@ -66,10 +78,10 @@ export class ProgressBatchProcessor {
         operationType
       );
 
-      this.progressState.completeOperation(operationId, result);
+      this.ps.completeOperation(operationId, result);
       return result;
     } catch (error: unknown) {
-      this.progressState.failOperation(operationId, error as Error);
+      this.ps.failOperation(operationId, error as Error);
       throw error;
     }
   }
@@ -77,7 +89,7 @@ export class ProgressBatchProcessor {
   private handleProgress(progress: number, status: string) {
     const operationId = this.batchProcessor.getCurrentOperationId();
     if (operationId) {
-      this.progressState.updateProgress(operationId, progress, status);
+      this.ps.updateProgress(operationId, progress, status);
     }
   }
 
@@ -85,9 +97,9 @@ export class ProgressBatchProcessor {
     // Opzionalmente, potresti aggiornare lo status con l'item corrente
     const operationId = this.batchProcessor.getCurrentOperationId();
     if (operationId) {
-      const operation = this.progressState.getOperation(operationId);
+      const operation = this.ps.getOperation(operationId);
       if (operation) {
-        this.progressState.updateProgress(
+        this.ps.updateProgress(
           operationId,
           operation.progress,
           `Elaborazione: ${itemId}`

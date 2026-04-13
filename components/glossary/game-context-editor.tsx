@@ -325,7 +325,7 @@ export function GameContextEditor({
                         <Label>{t('gameContextEditorComp.gender')}</Label>
                         <Select
                           value={characterForm.gender}
-                          onValueChange={(v: unknown) => setCharacterForm({...characterForm, gender: v})}
+                          onValueChange={(v: string) => setCharacterForm({...characterForm, gender: v as "unknown" | "neutral" | "male" | "female"})}
                         >
                           <SelectTrigger>
                             <SelectValue />

@@ -34,9 +34,9 @@ export function getConnectionStatus(): ConnectionStatus {
   if (!navigator.onLine) return 'offline';
   
   // Controlla se la connessione è lenta
-  const connection = (navigator as unknown as Record<string, unknown>).connection;
+  const connection = (navigator as unknown as Record<string, Record<string, unknown>>).connection;
   if (connection) {
-    const effectiveType = connection.effectiveType;
+    const effectiveType = connection.effectiveType as string;
     if (effectiveType === 'slow-2g' || effectiveType === '2g') {
       return 'slow';
     }
@@ -132,7 +132,7 @@ export function incrementRetry(actionId: string): void {
  */
 export function cacheForOffline(key: keyof OfflineCache, data: unknown): void {
   const cache = getOfflineCache();
-  cache[key] = data;
+  (cache as unknown as Record<string, unknown>)[key] = data;
   cache.lastSyncedAt = Date.now();
   safeSetItem(OFFLINE_CACHE_KEY, cache);
 }

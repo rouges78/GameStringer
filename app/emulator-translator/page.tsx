@@ -166,8 +166,8 @@ export default function EmulatorTranslatorPage() {
 
       // Use Tesseract OCR
       const { recognizeText } = await import('@/lib/ocr-service');
-      const ocrLangMap: Record<string, unknown> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
-      const ocrLang = ocrLangMap[sourceLang] || 'eng';
+      const ocrLangMap: Record<string, string> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
+      const ocrLang = (ocrLangMap[sourceLang] || 'eng') as import('@/lib/ocr-service').OCRLanguage;
       const ocrResult = await recognizeText(`data:image/png;base64,${base64}`, ocrLang);
 
       const lines = (ocrResult.lines || [])
@@ -194,7 +194,7 @@ export default function EmulatorTranslatorPage() {
         }, ...prev].slice(0, 100));
       }
     } catch (e: unknown) {
-      setErrorMsg(e?.message || String(e));
+      setErrorMsg((e as Error)?.message || String(e));
     } finally {
       setIsTranslating(false);
     }
@@ -236,8 +236,8 @@ export default function EmulatorTranslatorPage() {
     setScreenshotProcessing(true);
     try {
       const { recognizeText } = await import('@/lib/ocr-service');
-      const ocrLangMap: Record<string, unknown> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
-      const ocrLang = ocrLangMap[sourceLang] || 'eng';
+      const ocrLangMap: Record<string, string> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
+      const ocrLang = (ocrLangMap[sourceLang] || 'eng') as import('@/lib/ocr-service').OCRLanguage;
       const ocrResult = await recognizeText(imageDataUrl, ocrLang);
       
       if (!ocrResult.lines || ocrResult.lines.length === 0) {

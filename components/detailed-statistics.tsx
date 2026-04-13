@@ -237,7 +237,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Detailed Statistics</h2>
         <div className="flex items-center gap-4">
-          <Select value={selectedPeriod} onValueChange={(value: unknown) => setSelectedPeriod(value)}>
+          <Select value={selectedPeriod} onValueChange={(value: string) => setSelectedPeriod(value as "all" | "year" | "month" | "week")}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
             </SelectTrigger>

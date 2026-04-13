@@ -79,7 +79,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   // Estrai opzioni uniche dai games
   const extractOptions = () => {
     const stores = [...new Set(games.map(g => g.store).filter(Boolean))];
-    const genres = [...new Set(games.map(g => g.genre).filter(Boolean))];
+    const genres = [...new Set(games.map(g => g.genre).filter((g): g is string => Boolean(g)))];
     const engines = [...new Set(games.map(g => g.engine).filter(Boolean))];
     const tags = [...new Set(games.flatMap(g => g.tags || []))];
     const languages = [...new Set(games.flatMap(g => g.supportedLanguages || []))];

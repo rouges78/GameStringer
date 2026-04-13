@@ -511,7 +511,7 @@ export function UnrealTranslator() {
                 <Button 
                   className="flex-1 bg-emerald-600 hover:bg-emerald-500"
                   onClick={handleStartTranslator}
-                  disabled={!gamePath || !exeName || (compatibility && !compatibility.is_compatible)}
+                  disabled={!gamePath || !exeName || !!(compatibility && !compatibility.is_compatible)}
                 >
                   <Play className="h-4 w-4 mr-2" />
                   {t('ueTranslator.startTranslator')}

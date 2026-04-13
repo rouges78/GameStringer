@@ -67,13 +67,14 @@ function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPG
       entries.push(...extractRPGMakerStrings(data[i], filename, `${path}[${i}]`));
     }
   } else if (typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
     // Known translatable string fields in RPG Maker
     const textFields = ['name', 'description', 'message1', 'message2', 'message3', 'message4', 'nickname', 'profile', 'note'];
-    
+
     for (const field of textFields) {
-      if (typeof data[field] === 'string' && data[field].trim().length > 0) {
+      if (typeof obj[field] === 'string' && (obj[field] as string).trim().length > 0) {
         // Skip if it looks like a code/formula
-        const val = data[field].trim();
+        const val = (obj[field] as string).trim();
         if (val.length < 2 || /^[<\[{].*[>\]}]$/.test(val) || /^\d+$/.test(val)) continue;
         entries.push({
           key: `${path}.${field}`,
@@ -84,10 +85,10 @@ function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPG
         });
       }
     }
-    
+
     // Event commands: code 401 = Show Text, code 102 = Show Choices, code 320 = Change Name
-    if (data.code === 401 || data.code === 405) {
-      const params = data.parameters;
+    if (obj.code === 401 || obj.code === 405) {
+      const params = obj.parameters;
       if (Array.isArray(params) && typeof params[0] === 'string' && params[0].trim()) {
         entries.push({
           key: `${path}.parameters[0]`,
@@ -98,11 +99,11 @@ function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPG
         });
       }
     }
-    
+
     // Show Choices
-    if (data.code === 102 && Array.isArray(data.parameters?.[0])) {
-      for (let ci = 0; ci < data.parameters[0].length; ci++) {
-        const choice = data.parameters[0][ci];
+    if (obj.code === 102 && Array.isArray((obj.parameters as unknown[])?.[0])) {
+      for (let ci = 0; ci < ((obj.parameters as unknown[])[0] as unknown[]).length; ci++) {
+        const choice = ((obj.parameters as unknown[])[0] as unknown[])[ci];
         if (typeof choice === 'string' && choice.trim()) {
           entries.push({
             key: `${path}.parameters[0][${ci}]`,
@@ -114,12 +115,12 @@ function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPG
         }
       }
     }
-    
+
     // Recurse into known container fields
     const containerFields = ['events', 'pages', 'list', 'parameters'];
     for (const field of containerFields) {
-      if (data[field] && typeof data[field] === 'object') {
-        entries.push(...extractRPGMakerStrings(data[field], filename, `${path}.${field}`));
+      if (obj[field] && typeof obj[field] === 'object') {
+        entries.push(...extractRPGMakerStrings(obj[field], filename, `${path}.${field}`));
       }
     }
   }

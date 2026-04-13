@@ -140,10 +140,10 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
     if (!isActive) return;
 
     const target = enableGlobalShortcuts ? document : document.body;
-    target.addEventListener('keydown', handleKeyDown);
-    
+    target.addEventListener('keydown', handleKeyDown as EventListener);
+
     return () => {
-      target.removeEventListener('keydown', handleKeyDown);
+      target.removeEventListener('keydown', handleKeyDown as EventListener);
     };
   }, [handleKeyDown, isActive, enableGlobalShortcuts]);
 

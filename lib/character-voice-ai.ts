@@ -470,7 +470,7 @@ export const ARCHETYPE_PRESETS: Record<CharacterArchetype, Partial<CharacterProf
     personality: {
       archetype: 'custom',
       traits: [],
-      mood: 'neutral' as unknown,
+      mood: 'calm',
       age: 'adult',
       gender: 'neutral'
     },

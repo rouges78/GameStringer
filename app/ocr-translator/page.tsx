@@ -230,7 +230,7 @@ export default function OcrTranslatorPage() {
         }
       } catch (e: unknown) {
         clientLogger.error('[VLM Loop] Errore:', e);
-        setTranslationError(e.message || String(e));
+        setTranslationError((e as Error).message || String(e));
       } finally {
         setIsTranslating(false);
         isProcessing = false;
@@ -314,8 +314,8 @@ export default function OcrTranslatorPage() {
     try {
       // Import Tesseract OCR
       const { recognizeText } = await import('@/lib/ocr-service');
-      const ocrLangMap: Record<string, unknown> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
-      const ocrLang = ocrLangMap[config.language] || 'eng';
+      const ocrLangMap: Record<string, string> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
+      const ocrLang = (ocrLangMap[config.language] || 'eng') as import('@/lib/ocr-service').OCRLanguage;
       const ocrResult = await recognizeText(imageDataUrl, ocrLang);
       
       if (!ocrResult.lines || ocrResult.lines.length === 0) {
@@ -620,7 +620,7 @@ export default function OcrTranslatorPage() {
                   <select 
                     className="w-full h-9 px-2 rounded-lg border bg-background text-sm"
                     value={ocrProvider}
-                    onChange={(e) => setOcrProvider(e.target.value as string)}
+                    onChange={(e) => setOcrProvider(e.target.value as "gemini" | "libre" | "ollama" | "vlm")}
                     disabled={isRunning}
                   >
                     <option value="libre">� Lingva (Gratis/Veloce)</option>

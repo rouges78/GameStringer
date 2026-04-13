@@ -109,7 +109,7 @@ export function GlossaryManager({
       toast.success('Glossary created!');
     } catch (error: unknown) {
       toast.error('Error creating glossary');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 
@@ -135,7 +135,7 @@ export function GlossaryManager({
       toast.success('Entry added!');
     } catch (error: unknown) {
       toast.error('Error adding entry');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 
@@ -158,7 +158,7 @@ export function GlossaryManager({
       toast.success('Entry updated!');
     } catch (error: unknown) {
       toast.error('Error updating entry');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 
@@ -169,7 +169,7 @@ export function GlossaryManager({
       toast.success('Entry deleted');
     } catch (error: unknown) {
       toast.error('Error deleting entry');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 
@@ -186,7 +186,7 @@ export function GlossaryManager({
       toast.success('Glossary exported!');
     } catch (error: unknown) {
       toast.error('Export error');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 
@@ -202,7 +202,7 @@ export function GlossaryManager({
       toast.success(`Glossary imported: ${result.entries.length} entries`);
     } catch (error: unknown) {
       toast.error('Import error');
-      clientLogger.error(error);
+      clientLogger.error(String(error));
     }
   };
 

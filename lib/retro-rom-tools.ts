@@ -16,6 +16,8 @@
  * - ROM expansion per testi più lunghi
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface RomInfo {
   platform: RomPlatform;
   title: string;

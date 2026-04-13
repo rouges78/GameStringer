@@ -1079,7 +1079,7 @@ export function UnityInkTranslator() {
                     </div>
                     <select
                       value={previewFilter}
-                      onChange={(e) => { setPreviewFilter(e.target.value as string); loadPreview(0, previewSearch); }}
+                      onChange={(e) => { setPreviewFilter(e.target.value as "all" | "translated" | "untranslated"); loadPreview(0, previewSearch); }}
                       className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-2 py-1.5 text-xs text-slate-300"
                     >
                       <option value="all">Tutte</option>

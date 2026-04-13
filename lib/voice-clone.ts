@@ -3,6 +3,8 @@
  * Supporta ElevenLabs, OpenAI TTS, e modelli locali
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface VoiceProfile {
   id: string;
   name: string;

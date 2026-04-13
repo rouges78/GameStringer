@@ -57,7 +57,7 @@ export function useProgressBatch() {
       return executeBatch(
         items,
         async (item) => {
-          const { text, targetLanguage } = item.data;
+          const { text, targetLanguage } = item.data as { text: string; targetLanguage: string };
           const translatedText = await translator(text, targetLanguage);
           return { translatedText, originalText: text };
         },
@@ -149,7 +149,8 @@ export function useProgressBatch() {
       return executeBatch(
         batchItems,
         async (item) => {
-          await updater(item.data.id, item.data.status);
+          const { id, status } = item.data as { id: string; status: string };
+          await updater(id, status);
           return { updated: true };
         },
         'status_update',
@@ -180,7 +181,8 @@ export function useProgressBatch() {
       return executeBatch(
         batchItems,
         async (item) => {
-          await deleter(item.data.id);
+          const { id } = item.data as { id: string };
+          await deleter(id);
           return { deleted: true };
         },
         'delete',
@@ -211,7 +213,8 @@ export function useProgressBatch() {
       return executeBatch(
         batchItems,
         async (item) => {
-          await approver(item.data.id);
+          const { id } = item.data as { id: string };
+          await approver(id);
           return { approved: true };
         },
         'approve',
@@ -270,7 +273,7 @@ export function useSimpleBatch() {
       return executeBatch(
         batchItems,
         async (batchItem) => {
-          const { item, index } = batchItem.data;
+          const { item, index } = batchItem.data as { item: T; index: number };
           return processor(item, index);
         },
         'translate', // Tipo di default

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNotificationToast } from '@/components/notifications/notification-toast-provider';
-import { Notification, NotificationPreferences, shouldShowNotification } from '@/types/notifications';
+import { Notification, NotificationPreferences, NotificationType, NotificationPriority, shouldShowNotification } from '@/types/notifications';
 import { invoke } from '@/lib/tauri-api';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -28,9 +28,9 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
     const loadPreferences = async () => {
       try {
         // Usa wrapper invoke (gestisce ambiente Tauri/web). In web può lanciare: gestiamo con try/catch
-        const result = await invoke('get_notification_preferences', { profile_id: profileId });
-        if ((result as unknown)?.success && (result as unknown)?.data) {
-          setPreferences((result as unknown).data as NotificationPreferences);
+        const result = await invoke<{ success?: boolean; data?: NotificationPreferences }>('get_notification_preferences', { profile_id: profileId });
+        if (result?.success && result?.data) {
+          setPreferences(result.data);
         }
       } catch (error: unknown) {
         clientLogger.error('Errore nel caricamento delle preferenze notifiche:', error);
@@ -73,12 +73,13 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
     // Ascolta eventi Tauri se disponibili (con guardie)
     let unlistenPromise: Promise<(() => void) | void> | null = null;
     if (typeof window !== 'undefined') {
-      const tauri: unknown = (window as unknown as Record<string, unknown>).__TAURI__;
-      const listenFn = tauri?.event?.listen as
-        | ((event: string, cb: (e: unknown) => void) => Promise<() => void>)
+      const tauri = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
+      const tauriEvent = tauri?.event as Record<string, unknown> | undefined;
+      const listenFn = tauriEvent?.listen as
+        | ((event: string, cb: (e: { payload?: unknown }) => void) => Promise<() => void>)
         | undefined;
       if (listenFn) {
-        unlistenPromise = listenFn('notification-created', (evt: unknown) => {
+        unlistenPromise = listenFn('notification-created', (evt: { payload?: unknown }) => {
           const notification = evt?.payload as Notification;
           handleNewNotification(new CustomEvent('new-notification', { detail: notification }));
         });
@@ -117,7 +118,7 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
         preferences: updatedPreferences
       });
 
-      if ((result as unknown)?.success) {
+      if ((result as { success?: boolean })?.success) {
         setPreferences(updatedPreferences as NotificationPreferences);
         return true;
       }
@@ -130,14 +131,14 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
 
   // Funzione per testare una notifica
   const testNotification = useCallback((type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
-    const testNotifications = {
+    const testNotifications: Record<string, Notification> = {
       success: {
         id: `test-success-${Date.now()}`,
         profileId,
-        type: 'Profile' as unknown,
+        type: NotificationType.PROFILE,
         title: 'Test Successo',
         message: 'Questa è una notifica di test per verificare il funzionamento del sistema.',
-        priority: 'Normal' as unknown,
+        priority: NotificationPriority.NORMAL,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -148,10 +149,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       error: {
         id: `test-error-${Date.now()}`,
         profileId,
-        type: 'Security' as unknown,
+        type: NotificationType.SECURITY,
         title: 'Test Errore',
         message: 'Questa è una notifica di errore di test.',
-        priority: 'High' as unknown,
+        priority: NotificationPriority.HIGH,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -162,10 +163,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       info: {
         id: `test-info-${Date.now()}`,
         profileId,
-        type: 'System' as unknown,
+        type: NotificationType.SYSTEM,
         title: 'Test Informazione',
         message: 'Questa è una notifica informativa di test.',
-        priority: 'Normal' as unknown,
+        priority: NotificationPriority.NORMAL,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -176,10 +177,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       warning: {
         id: `test-warning-${Date.now()}`,
         profileId,
-        type: 'System' as unknown,
+        type: NotificationType.SYSTEM,
         title: 'Test Avviso',
         message: 'Questa è una notifica di avviso di test.',
-        priority: 'High' as unknown,
+        priority: NotificationPriority.HIGH,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',

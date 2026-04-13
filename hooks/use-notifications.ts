@@ -13,6 +13,15 @@ import {
   NotificationPriority
 } from '@/types/notifications';
 
+interface TauriApi {
+  tauri?: {
+    invoke?: (...args: unknown[]) => Promise<unknown>;
+  };
+  event?: {
+    listen?: (event: string, handler: (...args: unknown[]) => void) => Promise<() => void>;
+  };
+}
+
 export const useNotifications = (options?: {
   autoRefresh?: boolean;
   refreshInterval?: number;
@@ -59,22 +68,22 @@ export const useNotifications = (options?: {
       };
 
       // Prova prima con Tauri API
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
         // Mappa il filtro in snake_case per il backend Rust
-        const snakeCaseFilter: unknown = {
-          notification_type: (finalFilter as unknown).type ?? undefined,
+        const snakeCaseFilter = {
+          notification_type: finalFilter.type ?? undefined,
           priority: finalFilter.priority ?? undefined,
-          unread_only: (finalFilter as unknown).unreadOnly ?? undefined,
+          unread_only: finalFilter.unreadOnly ?? undefined,
           category: finalFilter.category ?? undefined,
           limit: finalFilter.limit ?? undefined,
           offset: finalFilter.offset ?? undefined
         };
-        const result: NotificationResponse<Notification[]> = await invoke('get_notifications', {
+        const result = await invoke('get_notifications', {
           profile_id: currentProfile.id,
           filter: snakeCaseFilter
-        });
+        }) as NotificationResponse<Notification[]>;
 
         if (result.success && result.data) {
           const newNotifications = result.data;
@@ -143,7 +152,7 @@ export const useNotifications = (options?: {
         setLastUpdated(new Date());
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nel caricamento notifiche:', err);
+      clientLogger.error('Errore nel caricamento notifiche:', String(err));
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
     } finally {
       if (!options.silent) {
@@ -157,12 +166,12 @@ export const useNotifications = (options?: {
     if (!currentProfile) return;
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<number> = await invoke('get_unread_notifications_count', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('get_unread_notifications_count', {
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<number>;
 
         if (result.success && typeof result.data === 'number') {
           setUnreadCount(result.data);
@@ -196,7 +205,7 @@ export const useNotifications = (options?: {
         }));
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nel caricamento conteggio notifiche:', err);
+      clientLogger.error('Errore nel caricamento conteggio notifiche:', String(err));
     }
   }, [currentProfile]);
 
@@ -211,11 +220,11 @@ export const useNotifications = (options?: {
         priority: request.priority || NotificationPriority.NORMAL
       };
 
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
         // Mappa la richiesta in snake_case per il backend Rust
-        const snakeCaseRequest: unknown = {
+        const snakeCaseRequest = {
           profile_id: fullRequest.profileId,
           notification_type: fullRequest.type,
           title: fullRequest.title,
@@ -229,13 +238,13 @@ export const useNotifications = (options?: {
                 source: fullRequest.metadata.source,
                 category: fullRequest.metadata.category,
                 tags: fullRequest.metadata.tags,
-                custom_data: (fullRequest.metadata as unknown).customData ?? undefined
+                custom_data: (fullRequest.metadata as unknown as Record<string, unknown>).customData ?? undefined
               }
             : undefined
         };
-        const result: NotificationResponse<Notification> = await invoke('create_notification', {
+        const result = await invoke('create_notification', {
           request: snakeCaseRequest
-        });
+        }) as NotificationResponse<Notification>;
 
         if (result.success && result.data) {
           // Aggiorna lo stato locale immediatamente per UX migliore
@@ -295,7 +304,7 @@ export const useNotifications = (options?: {
         return true;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nella creazione notifica:', err);
+      clientLogger.error('Errore nella creazione notifica:', String(err));
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -317,13 +326,13 @@ export const useNotifications = (options?: {
     }
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<void> = await invoke('mark_notification_as_read', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('mark_notification_as_read', {
           notification_id: notificationId,
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<void>;
 
         if (result.success) {
           // Emetti evento per sincronizzazione
@@ -365,7 +374,7 @@ export const useNotifications = (options?: {
         return true;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nel marcare notifica come letta:', err);
+      clientLogger.error('Errore nel marcare notifica come letta:', String(err));
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
 
       // Rollback in caso di errore
@@ -387,13 +396,13 @@ export const useNotifications = (options?: {
     if (!currentProfile) return false;
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<boolean> = await invoke('delete_notification', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('delete_notification', {
           notification_id: notificationId,
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<boolean>;
 
         if (result.success) {
           await loadNotifications();
@@ -414,7 +423,7 @@ export const useNotifications = (options?: {
         return true;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nell\'eliminazione notifica:', err);
+      clientLogger.error('Errore nell\'eliminazione notifica:', String(err));
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -425,12 +434,12 @@ export const useNotifications = (options?: {
     if (!currentProfile) return false;
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<number> = await invoke('clear_all_notifications', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('clear_all_notifications', {
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<number>;
 
         if (result.success) {
           await loadNotifications();
@@ -446,7 +455,7 @@ export const useNotifications = (options?: {
         return true;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nella pulizia notifiche:', err);
+      clientLogger.error('Errore nella pulizia notifiche:', String(err));
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       return false;
     }
@@ -488,13 +497,13 @@ export const useNotifications = (options?: {
     }
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<number> = await invoke('mark_multiple_notifications_as_read', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('mark_multiple_notifications_as_read', {
           notification_ids: notificationIds,
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<number>;
 
         if (result.success) {
           return result.data || 0;
@@ -520,7 +529,7 @@ export const useNotifications = (options?: {
         return markedCount;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nel marcare notifiche come lette:', err);
+      clientLogger.error('Errore nel marcare notifiche come lette:', String(err));
 
       // Rollback in caso di errore
       if (unreadIds.length > 0) {
@@ -550,12 +559,12 @@ export const useNotifications = (options?: {
     setUnreadCount(0);
 
     try {
-      const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
+      const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
       if (tauri?.tauri?.invoke) {
-        const invoke = (tauri.tauri.invoke as unknown);
-        const result: NotificationResponse<number> = await invoke('mark_all_notifications_as_read', {
+        const invoke = tauri.tauri.invoke as (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+        const result = await invoke('mark_all_notifications_as_read', {
           profile_id: currentProfile.id
-        });
+        }) as NotificationResponse<number>;
 
         if (result.success) {
           return result.data || 0;
@@ -581,7 +590,7 @@ export const useNotifications = (options?: {
         return markedCount;
       }
     } catch (err: unknown) {
-      clientLogger.error('Errore nel marcare tutte le notifiche come lette:', err);
+      clientLogger.error('Errore nel marcare tutte le notifiche come lette:', String(err));
 
       // Rollback in caso di errore
       setNotifications(prev => prev.map(n => {
@@ -695,20 +704,21 @@ export const useNotifications = (options?: {
     });
 
     // Setup Tauri event listeners se disponibili
-    const tauri = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).__TAURI__ : undefined;
-    const event = tauri?.event;
-    if (event?.listen) {
+    const tauri = typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriApi }).__TAURI__ : undefined;
+    const tauriListen = tauri?.event?.listen;
+    if (tauriListen) {
+      const listen = tauriListen;
       const setupTauriListeners = async () => {
         try {
-          const unlistenCreated = await event.listen('notification-created', handleNewNotification);
-          const unlistenRead = await event.listen('notification-read', handleNotificationRead);
-          const unlistenDeleted = await event.listen('notification-deleted', handleNotificationDeleted);
+          const unlistenCreated = await listen('notification-created', handleNewNotification as (...args: unknown[]) => void);
+          const unlistenRead = await listen('notification-read', handleNotificationRead as (...args: unknown[]) => void);
+          const unlistenDeleted = await listen('notification-deleted', handleNotificationDeleted as (...args: unknown[]) => void);
 
           cleanup.push(unlistenCreated);
           cleanup.push(unlistenRead);
           cleanup.push(unlistenDeleted);
         } catch (err: unknown) {
-          clientLogger.warn('Errore nel setup Tauri event listeners:', err);
+          clientLogger.warn('Errore nel setup Tauri event listeners:', String(err));
         }
       };
 

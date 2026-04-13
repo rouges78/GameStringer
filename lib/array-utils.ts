@@ -5,6 +5,8 @@
  * when working with potentially undefined, null, or non-array values.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 /**
  * Ensures that a value is always returned as an array
  * @param value - The value to convert to an array
@@ -127,7 +129,7 @@ export function safeGet<T>(array: unknown, index: number): T | undefined {
  */
 export function validateArray(value: unknown, context: string = 'Unknown'): boolean {
   if (!Array.isArray(value)) {
-    clientLogger.warn(`[Array Validation] Expected array in ${context}, got:`, typeof value, value);
+    clientLogger.warn(`[Array Validation] Expected array in ${context}, got:`, typeof value, value as Record<string, unknown>);
     return false;
   }
   return true;

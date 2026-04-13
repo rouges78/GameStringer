@@ -3,22 +3,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 
-// Client-side clientLogger (console only)
-const clientLogger = {
-  info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.info(`[${component || 'AUTH'}] ${message}`, metadata);
-  },
-  warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.warn(`[${component || 'AUTH'}] ${message}`, metadata);
-  },
-  error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.error(`[${component || 'AUTH'}] ${message}`, metadata);
-  },
-  debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.debug(`[${component || 'AUTH'}] ${message}`, metadata);
-  }
-};
-
 // Unified auth types
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -167,7 +151,21 @@ const isSessionValid = (session: AuthSession | null): boolean => {
 };
 
 // Account management
-const createAccount = (provider: string, data: unknown): ConnectedAccount => {
+interface AccountData {
+  userId?: string;
+  id?: string;
+  email?: string;
+  name?: string;
+  image?: string;
+  steamId?: string;
+  steamid?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  metadata?: Record<string, unknown>;
+}
+
+const createAccount = (provider: string, data: AccountData): ConnectedAccount => {
   return {
     provider,
     userId: data.userId || data.id || generateId(),
@@ -267,7 +265,7 @@ export const useUnifiedAuth = (): AuthContextType => {
       const filteredAccounts = accounts.filter(acc => acc.provider !== provider);
       
       // Create new account
-      const newAccount = createAccount(provider, options);
+      const newAccount = createAccount(provider, options as AccountData);
       const updatedAccounts = [...filteredAccounts, newAccount];
       
       // Save accounts
@@ -387,7 +385,7 @@ export const signIn = async (provider: string, options?: Record<string, unknown>
   // In practice, you should use the useAuth hook
   const accounts = getStorageItem<ConnectedAccount[]>(STORAGE_KEYS.ACCOUNTS) || [];
   const filteredAccounts = accounts.filter(acc => acc.provider !== provider);
-  const newAccount = createAccount(provider, options || {});
+  const newAccount = createAccount(provider, (options || {}) as AccountData);
   const updatedAccounts = [...filteredAccounts, newAccount];
   
   setStorageItem(STORAGE_KEYS.ACCOUNTS, updatedAccounts);

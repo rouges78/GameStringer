@@ -14,6 +14,13 @@ import { clientLogger } from '@/lib/client-logger';
 
 type Phase = 'input' | 'translate' | 'review' | 'complete';
 
+interface MtpeResult {
+  source: string;
+  machineTranslation: string;
+  editedTranslation?: string;
+  status: 'pending' | 'approved' | 'edited' | 'rejected' | 'skipped';
+}
+
 export default function MTPEPage() {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('input');
@@ -33,7 +40,7 @@ export default function MTPEPage() {
     }
   }, []);
   const [translations, setTranslations] = useState<Array<{ source: string; translation: string }>>([]);
-  const [results, setResults] = useState<unknown[]>([]);
+  const [results, setResults] = useState<MtpeResult[]>([]);
   const [_isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -65,7 +72,7 @@ export default function MTPEPage() {
         setProgress(Math.round(((i + 1) / lines.length) * 100));
       }
     } catch (error: unknown) {
-      clientLogger.error('Translation error:', error);
+      clientLogger.error(`Translation error: ${error}`);
     }
 
     setTranslations(translated);
@@ -73,14 +80,14 @@ export default function MTPEPage() {
     setPhase('review');
   };
 
-  const handleComplete = (reviewedItems: unknown[]) => {
+  const handleComplete = (reviewedItems: MtpeResult[]) => {
     setResults(reviewedItems);
     setPhase('complete');
   };
 
   const handleExport = () => {
-    const approved = results.filter(r => r.status === 'approved' || r.status === 'edited');
-    const content = approved.map(r => 
+    const approved = results.filter((r: MtpeResult) => r.status === 'approved' || r.status === 'edited');
+    const content = approved.map((r: MtpeResult) =>
       `${r.source}\t${r.editedTranslation || r.machineTranslation}`
     ).join('\n');
     

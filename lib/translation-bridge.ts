@@ -54,7 +54,7 @@ export class TranslationBridgeClient {
       this.isConnected = response.success;
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to start:', error);
+      clientLogger.error(`[TranslationBridge] Failed to start: ${String(error)}`);
       return false;
     }
   }
@@ -68,7 +68,7 @@ export class TranslationBridgeClient {
       this.isConnected = false;
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to stop:', error);
+      clientLogger.error(`[TranslationBridge] Failed to stop: ${String(error)}`);
       return false;
     }
   }
@@ -82,7 +82,7 @@ export class TranslationBridgeClient {
       this.isConnected = response.data ?? false;
       return this.isConnected;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to check status:', error);
+      clientLogger.error(`[TranslationBridge] Failed to check status: ${String(error)}`);
       return false;
     }
   }
@@ -95,7 +95,7 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats');
       return response.data;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to get stats:', error);
+      clientLogger.error(`[TranslationBridge] Failed to get stats: ${String(error)}`);
       return null;
     }
   }
@@ -108,7 +108,7 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats');
       return response.data;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to get dictionary stats:', error);
+      clientLogger.error(`[TranslationBridge] Failed to get dictionary stats: ${String(error)}`);
       return null;
     }
   }
@@ -131,7 +131,7 @@ export class TranslationBridgeClient {
       });
       return response.data ?? 0;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to load translations:', error);
+      clientLogger.error(`[TranslationBridge] Failed to load translations: ${String(error)}`);
       return 0;
     }
   }
@@ -146,7 +146,7 @@ export class TranslationBridgeClient {
       });
       return response.data ?? 0;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to load JSON:', error);
+      clientLogger.error(`[TranslationBridge] Failed to load JSON: ${String(error)}`);
       return 0;
     }
   }
@@ -162,7 +162,7 @@ export class TranslationBridgeClient {
       });
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to set languages:', error);
+      clientLogger.error(`[TranslationBridge] Failed to set languages: ${String(error)}`);
       return false;
     }
   }
@@ -178,7 +178,7 @@ export class TranslationBridgeClient {
       });
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to add translation:', error);
+      clientLogger.error(`[TranslationBridge] Failed to add translation: ${String(error)}`);
       return false;
     }
   }
@@ -193,7 +193,7 @@ export class TranslationBridgeClient {
       });
       return response.data;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to get translation:', error);
+      clientLogger.error(`[TranslationBridge] Failed to get translation: ${String(error)}`);
       return null;
     }
   }
@@ -208,7 +208,7 @@ export class TranslationBridgeClient {
       });
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to export JSON:', error);
+      clientLogger.error(`[TranslationBridge] Failed to export JSON: ${String(error)}`);
       return false;
     }
   }
@@ -221,7 +221,7 @@ export class TranslationBridgeClient {
       const response = await invoke<BridgeResponse<string>>('translation_bridge_clear');
       return response.success;
     } catch (error: unknown) {
-      clientLogger.error('[TranslationBridge] Failed to clear:', error);
+      clientLogger.error(`[TranslationBridge] Failed to clear: ${String(error)}`);
       return false;
     }
   }

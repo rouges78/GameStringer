@@ -196,7 +196,7 @@ export async function translateStringEntries(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
-      const translated = res.translations ?? res.results ?? [];
+      const translated = res.translations ?? (res as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {
         entry.translated = translated[idx] ?? '';
         entry.translationStatus = translated[idx] ? 'translated' : 'error';
@@ -241,7 +241,7 @@ export async function translatePluginEntries(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
-      const translated = res.translations ?? res.results ?? [];
+      const translated = res.translations ?? (res as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {
         entry.translated = translated[idx] ?? '';
         entry.translationStatus = translated[idx] ? 'translated' : 'error';

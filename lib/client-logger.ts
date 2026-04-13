@@ -65,10 +65,10 @@ class ClientLogger {
       return data;
     }
 
-    const sanitized = Array.isArray(data) ? [...data] : { ...data };
+    const sanitized: Record<string, unknown> = Array.isArray(data) ? [...data] as unknown as Record<string, unknown> : { ...(data as Record<string, unknown>) };
 
     for (const key in sanitized) {
-      if (this.config.sensitiveFields.some(field => 
+      if (this.config.sensitiveFields.some(field =>
         key.toLowerCase().includes(field.toLowerCase())
       )) {
         sanitized[key] = '[REDACTED]';
@@ -95,7 +95,7 @@ class ClientLogger {
       userAgent: navigator.userAgent,
       sessionId: this.getSessionId(),
       userId: this.getUserId(),
-      metadata: metadata ? this.sanitizeData(metadata) : undefined
+      metadata: metadata ? this.sanitizeData(metadata) as Record<string, unknown> : undefined
     };
   }
 
@@ -202,24 +202,51 @@ class ClientLogger {
     this.addToBuffer(entry);
   }
 
-  public debug(message: string, component?: string, metadata?: Record<string, unknown>): void {
-    this.log('debug', message, component, metadata);
+  /**
+   * Normalize variadic args: callers may pass (msg), (msg, component),
+   * (msg, component, metadata), or (msg, errorOrUnknown).
+   * When the second arg is not a string we treat it as metadata context.
+   */
+  private normalizeArgs(
+    args: [string, ...unknown[]]
+  ): [string, string | undefined, Record<string, unknown> | undefined] {
+    const [message, second, third] = args;
+    if (second === undefined) return [message, undefined, undefined];
+    if (typeof second === 'string') {
+      return [message, second, third as Record<string, unknown> | undefined];
+    }
+    // second is an error or unknown object — wrap as metadata
+    const meta: Record<string, unknown> = second instanceof Error
+      ? { error: { name: second.name, message: second.message, stack: second.stack } }
+      : typeof second === 'object' && second !== null
+        ? second as Record<string, unknown>
+        : { detail: String(second) };
+    return [message, undefined, meta];
   }
 
-  public info(message: string, component?: string, metadata?: Record<string, unknown>): void {
-    this.log('info', message, component, metadata);
+  public debug(message: string, componentOrCtx?: unknown, metadata?: Record<string, unknown>): void {
+    const [msg, comp, meta] = this.normalizeArgs([message, componentOrCtx, metadata]);
+    this.log('debug', msg, comp, meta);
   }
 
-  public warn(message: string, component?: string, metadata?: Record<string, unknown>): void {
-    this.log('warn', message, component, metadata);
+  public info(message: string, componentOrCtx?: unknown, metadata?: Record<string, unknown>): void {
+    const [msg, comp, meta] = this.normalizeArgs([message, componentOrCtx, metadata]);
+    this.log('info', msg, comp, meta);
   }
 
-  public error(message: string, component?: string, metadata?: Record<string, unknown>): void {
-    this.log('error', message, component, metadata);
+  public warn(message: string, componentOrCtx?: unknown, metadata?: Record<string, unknown>): void {
+    const [msg, comp, meta] = this.normalizeArgs([message, componentOrCtx, metadata]);
+    this.log('warn', msg, comp, meta);
   }
 
-  public fatal(message: string, component?: string, metadata?: Record<string, unknown>): void {
-    this.log('fatal', message, component, metadata);
+  public error(message: string, componentOrCtx?: unknown, metadata?: Record<string, unknown>): void {
+    const [msg, comp, meta] = this.normalizeArgs([message, componentOrCtx, metadata]);
+    this.log('error', msg, comp, meta);
+  }
+
+  public fatal(message: string, componentOrCtx?: unknown, metadata?: Record<string, unknown>): void {
+    const [msg, comp, meta] = this.normalizeArgs([message, componentOrCtx, metadata]);
+    this.log('fatal', msg, comp, meta);
   }
 
   public logError(error: Error, component?: string, metadata?: Record<string, unknown>): void {

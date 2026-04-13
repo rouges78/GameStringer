@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
-import { progressMap } from '../translate/route';
+import { getProgressMap } from '../translate/route';
 
 export const GET = withErrorHandler(async function(req: NextRequest) {
   const gameDir = req.nextUrl.searchParams.get('gameDir');
@@ -12,7 +12,7 @@ export const GET = withErrorHandler(async function(req: NextRequest) {
   }
 
   // Check in-memory progress first
-  const memProgress = progressMap.get(gameDir);
+  const memProgress = getProgressMap().get(gameDir);
   if (memProgress) {
     return NextResponse.json(memProgress);
   }

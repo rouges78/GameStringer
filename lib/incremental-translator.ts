@@ -8,6 +8,8 @@
  * e confronta con la versione corrente per produrre un diff.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface StringEntry {
   key: string;
   value: string;

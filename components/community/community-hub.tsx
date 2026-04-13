@@ -288,7 +288,7 @@ export function CommunityHub() {
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-orange-500" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.totalPackages}</p>
+                  <p className="text-2xl font-bold">{stats!.totalPackages}</p>
                   <p className="text-xs text-muted-foreground">{t('communityHubComp.pacchetti')}</p>
                 </div>
               </div>
@@ -299,7 +299,7 @@ export function CommunityHub() {
               <div className="flex items-center gap-2">
                 <Download className="h-5 w-5 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold">{formatNumber(stats.totalDownloads)}</p>
+                  <p className="text-2xl font-bold">{formatNumber(stats!.totalDownloads)}</p>
                   <p className="text-xs text-muted-foreground">{t('communityHubComp.download')}</p>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export function CommunityHub() {
               <div className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">{formatNumber(stats.totalEntries)}</p>
+                  <p className="text-2xl font-bold">{formatNumber(stats!.totalEntries)}</p>
                   <p className="text-xs text-muted-foreground">{t('communityHubComp.traduzioni')}</p>
                 </div>
               </div>
@@ -321,7 +321,7 @@ export function CommunityHub() {
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-500" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.topLanguages[0]?.lang.toUpperCase() || 'IT'}</p>
+                  <p className="text-2xl font-bold">{stats!.topLanguages[0]?.lang.toUpperCase() || 'IT'}</p>
                   <p className="text-xs text-muted-foreground">{t('communityHubComp.topLingua')}</p>
                 </div>
               </div>
@@ -366,7 +366,7 @@ export function CommunityHub() {
               </select>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as string)}
+                onChange={(e) => setSortBy(e.target.value as "downloads" | "rating" | "recent")}
                 className="h-10 px-3 rounded-md border bg-background text-sm"
               >
                 <option value="downloads">{t('communityHubComp.mostDownloaded')}</option>

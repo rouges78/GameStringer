@@ -423,7 +423,7 @@ export function RomPatcherUI() {
               {/* Format select */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Formato Patch</Label>
-                <Select value={createFormat} onValueChange={(v) => setCreateFormat(v as string)}>
+                <Select value={createFormat} onValueChange={(v) => setCreateFormat(v as "auto" | "ips" | "bps")}>
                   <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>

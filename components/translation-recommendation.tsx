@@ -232,7 +232,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         });
         setRecommendation(result);
       } catch (err: unknown) {
-        clientLogger.error('Error loading recommendation:', err);
+        clientLogger.error('Error loading recommendation: ' + String(err));
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setIsLoading(false);
@@ -461,7 +461,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           updateProgress(100, `QA: ${validation.score}/100 — ${errCount} errori, ${warnCount} warning su ${validation.totalChecked} stringhe`);
           clientLogger.debug(`[QA] Score: ${validation.score}/100, errori: ${errCount}, warning: ${warnCount}, totale: ${validation.totalChecked}`);
           if (validation.issues.length > 0) {
-            clientLogger.debug(`[QA] Primi 5 problemi:`, validation.issues.slice(0, 5));
+            clientLogger.debug(`[QA] Primi 5 problemi: ${JSON.stringify(validation.issues.slice(0, 5))}`);
           }
         } else {
           updateProgress(100, 'Nessuna traduzione da validare');
@@ -552,16 +552,17 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         try {
           // 1. Prova IoStore (UTOC/UCAS + Oodle) — giochi moderni UE4.25+/UE5
           updateProgress(15, 'Analisi container IoStore (UTOC/UCAS)...');
-          let extractResult: {
+          type ExtractResult = {
             success: boolean;
             entries: Array<{ namespace: string; key: string; source_hash: number; value: string }>;
             message: string;
             locres_path?: string;
-          } | null = null;
-          
+          };
+          let extractResult: ExtractResult | null = null;
+
           let iostoreError = '';
           try {
-            extractResult = await invoke<typeof extractResult>('extract_iostore_localization', { gamePath });
+            extractResult = await invoke<ExtractResult | null>('extract_iostore_localization', { gamePath });
             if (extractResult && extractResult.success) {
               updateProgress(30, `IoStore: ${extractResult.message}`);
             } else {
@@ -576,7 +577,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           if (!extractResult) {
             updateProgress(20, 'Analisi file .pak e .locres...');
             try {
-              extractResult = await invoke<typeof extractResult>('extract_unreal_localization', { gamePath });
+              extractResult = await invoke<ExtractResult | null>('extract_unreal_localization', { gamePath });
             } catch (pakErr) {
               const pakError = pakErr instanceof Error ? pakErr.message : String(pakErr);
               // Combina errori IoStore + PAK per messaggio completo
@@ -665,7 +666,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   clientLogger.debug(`[Unreal] ✅ TM: salvate ${tmBatch.length} traduzioni`);
                 }
               } catch (tmErr) {
-                clientLogger.warn('[Unreal] TM salvataggio fallito:', tmErr);
+                clientLogger.warn('[Unreal] TM salvataggio fallito: ' + String(tmErr));
               }
 
               // === AUTO-GLOSSARIO: estrai termini dal gioco ===
@@ -685,7 +686,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   }
                 }
               } catch (glErr) {
-                clientLogger.warn('[Unreal] Glossario estrazione fallita:', glErr);
+                clientLogger.warn('[Unreal] Glossario estrazione fallita: ' + String(glErr));
               }
 
               // === SALVA FILE JSON PER REVISIONI FUTURE ===
@@ -713,7 +714,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 await invoke('write_text_file', { path: revisionPath, content: revisionJson });
                 clientLogger.debug(`[Unreal] ✅ Revisione: salvata in ${revisionPath}`);
               } catch (revErr) {
-                clientLogger.warn('[Unreal] Salvataggio revisione fallito:', revErr);
+                clientLogger.warn('[Unreal] Salvataggio revisione fallito: ' + String(revErr));
               }
 
               updateProgress(100, `✅ ${pakResult.message}`);
@@ -1101,7 +1102,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 continue;
               }
             } catch (batchErr) {
-              clientLogger.warn('Batch translation error:', batchErr);
+              clientLogger.warn('Batch translation error: ' + String(batchErr));
               sessionStats.failedStrings += texts.length;
             }
             

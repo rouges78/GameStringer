@@ -77,8 +77,8 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
         let games: unknown[] = [];
         
         try {
-          const result = await invoke<unknown>('scan_steam_with_steamlocate');
-          games = result?.games || result?.installed_games || result || [];
+          const result = await invoke<Record<string, unknown>>('scan_steam_with_steamlocate');
+          games = (result?.games || result?.installed_games || result || []) as unknown[];
         } catch {
           // Fallback: prova get_steam_games
           try {
@@ -104,10 +104,12 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
         
         // Ordina per: 1) giocati di recente, 2) più ore di gioco, 3) random
         const sorted = [...games].sort((a, b) => {
-          const aLastPlayed = a.last_played || a.rtime_last_played || 0;
-          const bLastPlayed = b.last_played || b.rtime_last_played || 0;
-          const aPlaytime = a.playtime_forever || a.playtime || 0;
-          const bPlaytime = b.playtime_forever || b.playtime || 0;
+          const aRec = a as Record<string, unknown>;
+          const bRec = b as Record<string, unknown>;
+          const aLastPlayed = (aRec.last_played || aRec.rtime_last_played || 0) as number;
+          const bLastPlayed = (bRec.last_played || bRec.rtime_last_played || 0) as number;
+          const aPlaytime = (aRec.playtime_forever || aRec.playtime || 0) as number;
+          const bPlaytime = (bRec.playtime_forever || bRec.playtime || 0) as number;
           
           // Prima ordina per data ultimo gioco (più recente = prima)
           if (bLastPlayed !== aLastPlayed) return bLastPlayed - aLastPlayed;
@@ -117,20 +119,21 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
           return Math.random() - 0.5;
         }).slice(0, 50); // Controlla top 50 giochi più rilevanti
         
-        for (const g of sorted) {
+        for (const gRaw of sorted) {
+          const g = gRaw as Record<string, unknown>;
           // Supporta sia formato {id, title} che {appid, name}
-          const gameAppId = parseInt(g.id) || g.appid || g.app_id || g.steam_appid;
-          const gameName = g.title || g.name;
+          const gameAppId = parseInt(String(g.id)) || (g.appid as number) || (g.app_id as number) || (g.steam_appid as number);
+          const gameName = (g.title || g.name) as string;
           if (!gameAppId || gameAppId <= 0) continue;
           
           try {
-            const details = await invoke<unknown>('fetch_steam_game_details', { appId: gameAppId });
+            const details = await invoke<Record<string, unknown>>('fetch_steam_game_details', { appId: gameAppId });
             if (details && details.supported_languages) {
-              const hasLang = gameHasLanguage(details.supported_languages, targetLang);
+              const hasLang = gameHasLanguage(details.supported_languages as string, targetLang);
               if (!hasLang) {
                 filtered.push({
                   appid: gameAppId,
-                  name: details.name || gameName,
+                  name: (details.name as string) || gameName,
                   cover: `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${gameAppId}/header.jpg`,
                 });
                 if (filtered.length >= 10) break;
@@ -142,7 +145,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
         }
         setGamesWithoutLang(filtered);
       } catch (e: unknown) {
-        clientLogger.error('[FeaturedGameWidget] Errore:', e);
+        clientLogger.error('[FeaturedGameWidget] Errore: ' + String(e));
         setGamesWithoutLang([]);
       } finally {
         setIsLoading(false);

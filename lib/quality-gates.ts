@@ -485,8 +485,8 @@ export function runQualityGates(options: QualityOptions): QualityReport {
     if (!check.passed && check.severity !== 'info') {
       switch (check.id) {
         case 'length_check':
-          if (check.details?.overflow > 0) {
-            suggestions.push(`Accorcia la traduzione di ${check.details.overflow} caratteri`);
+          if ((check.details?.overflow as number) > 0) {
+            suggestions.push(`Accorcia la traduzione di ${check.details!.overflow} caratteri`);
           }
           break;
         case 'placeholder_check':

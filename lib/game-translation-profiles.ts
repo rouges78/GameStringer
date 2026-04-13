@@ -1,3 +1,5 @@
+import { clientLogger } from '@/lib/client-logger';
+
 // Sistema di profili di traduzione per giochi
 export interface TranslationProfile {
   id: string;

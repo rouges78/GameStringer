@@ -62,23 +62,27 @@ interface Game {
   headerUrl?: string; // Alternative naming
   heroUrl?: string;
   coverImage?: string; // Alternative naming
-  screenshots?: string[] | { id: number; path_thumbnail: string; path_full: string }[];
+  screenshots?: { id?: number; path_thumbnail: string; path_full: string }[];
   movies?: string[];
   metacritic?: { score: number; url?: string } | null;
   achievements?: { total: number; highlighted?: { name: string; path: string }[] } | null;
   background?: string;
   website?: string;
   legalNotice?: string;
-  recommendations?: number | { total: number };
+  legal_notice?: string; // Alternative naming
+  recommendations?: number | { total: number } | null;
   developers?: string[];
   publishers?: string[];
   releaseDate?: string | { coming_soon: boolean; date: string };
-  release_date?: string | { coming_soon: boolean; date: string }; // Alternative naming
-  genres?: string[];
+  release_date?: string | { coming_soon: boolean; date: string } | null; // Alternative naming
+  genres?: (string | {id?: string; description: string})[];
   categories?: string[];
   supportedLanguages?: string;
+  supported_languages?: string; // Alternative naming
   pcRequirements?: { minimum?: string; recommended?: string } | null;
+  pc_requirements?: { minimum?: string; recommended?: string } | null; // Alternative naming
   isFree?: boolean;
+  is_free?: boolean; // Alternative naming
   dlc?: number[] | null;
   executableName?: string;
   install_dir?: string; // Alternative naming
@@ -116,11 +120,11 @@ export default function GameDetailPage() {
   }, [searchParams, params.id]);
   
   const [game, setGame] = useState<Game | null>(null);
-  const [_translations, setTranslations] = useState<unknown[]>([]);
+  const [_translations, setTranslations] = useState<{id: string; gameId: string; filePath: string; status: string; confidence: number; timestamp: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [dlcGames, setDlcGames] = useState<unknown[]>([]);
+  const [dlcGames, setDlcGames] = useState<Record<string, unknown>[]>([]);
   const [showTranslation, setShowTranslation] = useState(false);
   const [_steamDetails, setSteamDetails] = useState<unknown>(null);
   const [_imageError, setImageError] = useState(false);
@@ -251,7 +255,7 @@ export default function GameDetailPage() {
 
   // UABEA — Unity Assets panel
   const [uabeaStatus, setUabeaStatus] = useState<{installed: boolean; path?: string} | null>(null);
-  const [assetsFiles, setAssetsFiles] = useState<unknown[]>([]);
+  const [assetsFiles, setAssetsFiles] = useState<{file_name: string; path: string; size_bytes: number}[]>([]);
   const [isDownloadingUabea, setIsDownloadingUabea] = useState(false);
   const [showAssetsPanel, setShowAssetsPanel] = useState(false);
 
@@ -372,11 +376,11 @@ export default function GameDetailPage() {
       if (eng.includes('gamemaker') || eng.includes('game maker')) {
         // GameMaker: check for .jn files or data.win
         try {
-          const gmInfo = await invoke<unknown>('gm_scan_data_win', { gamePath: game.installPath });
+          const gmInfo = await invoke<{has_language_files?: boolean; language_file_count?: number; translatable_strings?: number; is_yyc?: boolean}>('gm_scan_data_win', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || 'GameMaker',
             method: 'gamemaker',
-            detail: gmInfo?.has_language_files 
+            detail: gmInfo?.has_language_files
               ? `${gmInfo.language_file_count} file .jn — ${gmInfo.translatable_strings} stringhe`
               : gmInfo?.is_yyc
                 ? `YYC EXE — ${gmInfo.translatable_strings} stringhe`
@@ -392,7 +396,7 @@ export default function GameDetailPage() {
         setTranslationStrategy({ engine: detectedEngine, method: 'unity', detail: 'BepInEx + XUnity AutoTranslator', fileCount: 0, stringCount: 0, ready: true });
       } else if (eng.includes('unreal')) {
         try {
-          const locStatus: unknown = await invoke('get_unreal_localization_status', { gamePath: game.installPath });
+          const locStatus = await invoke<{has_gs_pak?: boolean; translated_entries?: number; has_locres?: boolean; locres_count?: number; total_entries?: number}>('get_unreal_localization_status', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine,
             method: 'unreal',
@@ -406,12 +410,12 @@ export default function GameDetailPage() {
         }
       } else if (eng.includes('visionaire')) {
         try {
-          const visInfo: unknown = await invoke('scan_vis_strings', { gamePath: game.installPath });
+          const visInfo = await invoke<{total_strings?: number; version?: string; file_count?: number}>('scan_vis_strings', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || 'Visionaire Studio',
             method: 'visionaire',
-            detail: visInfo?.total_strings > 0 
-              ? `${visInfo.version} — ${visInfo.total_strings} stringhe in game.veb`
+            detail: (visInfo?.total_strings ?? 0) > 0
+              ? `${visInfo?.version} — ${visInfo?.total_strings} stringhe in game.veb`
               : `${visInfo?.version || 'VIS5'} — scansione al click`,
             fileCount: visInfo?.file_count || 0,
             stringCount: visInfo?.total_strings || 0,
@@ -427,7 +431,7 @@ export default function GameDetailPage() {
           setTranslationStrategy({
             engine: detectedEngine || 'TyranoScript',
             method: 'tyranoscript',
-            detail: tyranoInfo?.total_strings > 0
+            detail: (tyranoInfo?.total_strings ?? 0) > 0
               ? `${tyranoInfo.script_files?.length || 0} file .ks — ${tyranoInfo.total_strings} stringhe`
               : `${tyranoInfo?.engine_variant || 'TyranoScript'} — ${tyranoInfo?.script_files?.length || 0} file .ks`,
             fileCount: tyranoInfo?.script_files?.length || 0,
@@ -540,11 +544,11 @@ export default function GameDetailPage() {
       let installPath = game.installPath;
       if (!installPath) {
         try {
-          installPath = await invoke('find_game_install_path', { 
+          installPath = await invoke<string>('find_game_install_path', {
             installDir: game.install_dir || game.name || game.title
           });
         } catch (e: unknown) {
-          clientLogger.error('Impossibile trovare cartella gioco:', e);
+          clientLogger.error('Impossibile trovare cartella gioco:', String(e));
           setPatchStatus({ success: false, message: 'Cartella del gioco non trovata' });
           setIsInstallingPatch(false);
           return;
@@ -553,16 +557,16 @@ export default function GameDetailPage() {
       
       // Cerca l'eseguibile principale nella cartella
       let exeName = game.detectedFiles?.find((f: string) => f.endsWith('.exe'));
-      clientLogger.debug('[Patch] detectedFiles exe:', exeName);
+      clientLogger.debug('[Patch] detectedFiles exe:', String(exeName));
       if (!exeName) {
         try {
           const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: installPath });
-          clientLogger.debug('[Patch] exeList trovati:', exeList);
+          clientLogger.debug('[Patch] exeList trovati:', String(exeList));
           if (exeList && exeList.length > 0) {
             exeName = exeList[0];
           }
         } catch (e: unknown) {
-          clientLogger.warn('[Patch] Impossibile trovare eseguibili, uso nome gioco:', e);
+          clientLogger.warn('[Patch] Impossibile trovare eseguibili, uso nome gioco:', String(e));
         }
       }
       // Fallback al nome del gioco
@@ -570,23 +574,23 @@ export default function GameDetailPage() {
         exeName = `${(game.name || game.title || 'Game').replace(/[^a-zA-Z0-9]/g, '')}.exe`;
       }
       
-      clientLogger.debug('[Patch] Installazione con:', { gamePath: installPath, gameExeName: exeName });
+      clientLogger.debug('[Patch] Installazione con:', `gamePath=${installPath}, gameExeName=${exeName}`);
       clientLogger.debug('[Patch] Chiamata install_unity_autotranslator...');
       
-      const result: unknown = await invoke('install_unity_autotranslator', { 
+      const result = await invoke<{success: boolean; message: string}>('install_unity_autotranslator', {
         gamePath: installPath,
         gameExeName: exeName,
         targetLang: 'it',
         translationMode: 'google' // Usa Google Translate per traduzione automatica
       });
-      
-      clientLogger.debug('[Patch] Risultato:', result);
-      
+
+      clientLogger.debug('[Patch] Risultato:', String(result));
+
       setPatchStatus({
         success: result.success,
         message: result.message
       });
-      
+
       if (result.success) {
         clientLogger.debug('[Patch] Installazione completata con successo!');
         // Traccia attività
@@ -599,7 +603,7 @@ export default function GameDetailPage() {
         scanGameFiles();
       }
     } catch (error: unknown) {
-      clientLogger.error('Errore installazione patch:', error);
+      clientLogger.error('Errore installazione patch:', String(error));
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore sconosciuto durante l\'installazione'
@@ -622,7 +626,7 @@ export default function GameDetailPage() {
       
       setPatchStatus(result);
     } catch (error: unknown) {
-      clientLogger.error('Errore rimozione patch Unity:', error);
+      clientLogger.error('Errore rimozione patch Unity:', String(error));
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante la rimozione'
@@ -644,12 +648,15 @@ export default function GameDetailPage() {
     if (!game?.title || communitySearchDone) return;
     setCommunitySearchDone(true);
     try {
-      const results = await invoke<unknown[]>('search_gamestranslator', {
+      const results = await invoke<Array<{
+        id: string; title: string; author: string; state: string; revision: string;
+        version: string; steam_app_id: string | null; page_url: string; download_url: string; updated_at: string;
+      }>>('search_gamestranslator', {
         gameName: game.title,
         steamAppId: game.appid && game.appid > 0 ? String(game.appid) : null,
       });
       if (results?.length) setCommunityTranslations(results);
-    } catch (e: unknown) { clientLogger.warn('[GT.it]', e); }
+    } catch (e: unknown) { clientLogger.warn('[GT.it]', String(e)); }
   };
 
   const installCommunityZip = async () => {
@@ -666,7 +673,7 @@ export default function GameDetailPage() {
       const engine = game?.engine?.toLowerCase().includes('unreal') ? 'unreal'
         : game?.engine?.toLowerCase().includes('unity') ? 'unity' : 'auto';
 
-      const result: unknown = await invoke('install_translation_from_zip', {
+      const result = await invoke<{message: string; installed?: string[]}>('install_translation_from_zip', {
         zipPath: selected,
         gamePath: game?.installPath || '',
         engine,
@@ -683,7 +690,10 @@ export default function GameDetailPage() {
   const loadUpdateStatus = async () => {
     if (!game?.installPath || !game?.appid || game.appid <= 0) return;
     try {
-      const result = await invoke<unknown>('check_game_update', {
+      const result = await invoke<{
+        current_build_id: string; known_build_id: string; update_detected: boolean;
+        patch_intact: boolean; patch_type: string; patch_details: string[]; message: string;
+      }>('check_game_update', {
         appId: String(game.appid),
         gamePath: game.installPath,
       });
@@ -695,9 +705,9 @@ export default function GameDetailPage() {
           buildId: result.current_build_id,
           patchIntact: result.patch_intact,
         });
-        setUpdateStatus((prev: unknown) => prev ? { ...prev, update_detected: false } : prev);
+        setUpdateStatus(prev => prev ? { ...prev, update_detected: false } : prev);
       }
-    } catch (e: unknown) { clientLogger.warn('[UpdateTracker]', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker]', String(e)); }
   };
 
   const dismissUpdate = async () => {
@@ -710,7 +720,7 @@ export default function GameDetailPage() {
         patchIntact: updateStatus.patch_intact,
       });
       setUpdateStatus(prev => prev ? { ...prev, update_detected: false, known_build_id: prev.current_build_id } : prev);
-    } catch (e: unknown) { clientLogger.warn('[UpdateTracker] dismiss:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UpdateTracker] dismiss:', String(e)); }
     finally { setIsDismissingUpdate(false); }
   };
 
@@ -722,7 +732,7 @@ export default function GameDetailPage() {
       setUpdateStatus(null);
       toast.success('Monitoraggio disattivato per questo gioco');
     } catch (e: unknown) {
-      clientLogger.warn('[UpdateTracker] untrack:', e);
+      clientLogger.warn('[UpdateTracker] untrack:', String(e));
       toast.error('Impossibile disattivare il monitoraggio');
     } finally {
       setIsUntrackingGame(false);
@@ -745,9 +755,12 @@ export default function GameDetailPage() {
   const loadUeLocStatus = async () => {
     if (!game?.installPath) return;
     try {
-      const s = await invoke<unknown>('get_unreal_localization_status', { gamePath: game.installPath });
+      const s = await invoke<{
+        has_locres: boolean; has_gs_pak: boolean; gs_pak_path?: string;
+        translated_entries: number; paks_dir?: string; message: string;
+      }>('get_unreal_localization_status', { gamePath: game.installPath });
       setUeLocStatus(s);
-    } catch (e: unknown) { clientLogger.warn('[UE] localization status:', e); }
+    } catch (e: unknown) { clientLogger.warn('[UE] localization status:', String(e)); }
   };
 
   // Migliora con AI per giochi Unreal: extract → Ollama batch → _P.pak
@@ -762,14 +775,15 @@ export default function GameDetailPage() {
 
       // 1. Estrai stringhe di localizzazione dal gioco
       toast.info('Estrazione stringhe di localizzazione Unreal...');
-      const extracted: unknown = await invoke('extract_unreal_localization', { gamePath: game.installPath });
+      interface UeEntry { namespace: string; key: string; source_hash: string; value: string; }
+      const extracted = await invoke<{entries?: UeEntry[]}>('extract_unreal_localization', { gamePath: game.installPath });
 
       if (!extracted?.entries?.length) {
         toast.error('Nessuna stringa di localizzazione trovata. Verifica che il gioco abbia file .locres o .pak.');
         return;
       }
 
-      const entries: unknown[] = extracted.entries;
+      const entries = extracted.entries;
       const toTranslate = entries.filter(e => e.value && e.value.trim().length > 0);
       const total = toTranslate.length;
       setUeAiProgress({ current: 0, total });
@@ -778,16 +792,16 @@ export default function GameDetailPage() {
 
       // 2. Traduci in batch da 15
       const BATCH = 15;
-      const translated: unknown[] = [];
+      const translated: {namespace: string; key: string; source_hash: string; original: string; translated: string}[] = [];
 
       for (let i = 0; i < toTranslate.length; i += BATCH) {
         const batch = toTranslate.slice(i, i + BATCH);
-        const combined = batch.map((e: unknown) => e.value).join('\n||||\n');
+        const combined = batch.map(e => e.value).join('\n||||\n');
 
         try {
           const result = await invoke<string>('translate_text_simple', { text: combined, targetLang: lang });
           const parts = result ? result.split('\n||||\n') : [];
-          batch.forEach((e: unknown, idx: number) => {
+          batch.forEach((e, idx) => {
             translated.push({
               namespace: e.namespace,
               key: e.key,
@@ -797,13 +811,13 @@ export default function GameDetailPage() {
             });
           });
         } catch {
-          batch.forEach((e: unknown) => translated.push({ namespace: e.namespace, key: e.key, source_hash: e.source_hash, original: e.value, translated: e.value }));
+          batch.forEach(e => translated.push({ namespace: e.namespace, key: e.key, source_hash: e.source_hash, original: e.value, translated: e.value }));
         }
         setUeAiProgress({ current: Math.min(i + BATCH, total), total });
       }
 
       // 3. Crea _P.pak con traduzioni
-      const result: unknown = await invoke('auto_translate_unreal', {
+      const result = await invoke<{message?: string}>('auto_translate_unreal', {
         gamePath: game.installPath,
         translations: translated,
         targetLanguage: lang,
@@ -813,8 +827,8 @@ export default function GameDetailPage() {
       toast.success(`✅ ${result?.message || `PAK creato con ${translated.filter(e => e.translated !== e.original).length} stringhe`}`);
 
     } catch (e: unknown) {
-      clientLogger.error('[UE AI]', e);
-      toast.error(`Errore traduzione UE: ${e?.toString?.() || 'sconosciuto'}`);
+      clientLogger.error('[UE AI]', String(e));
+      toast.error(`Errore traduzione UE: ${String(e) || 'sconosciuto'}`);
     } finally {
       setIsUeAiUpgrading(false);
       setUeAiProgress(null);
@@ -835,7 +849,7 @@ export default function GameDetailPage() {
       }>('get_unreal_patch_status', { gamePath: game.installPath });
       setUnrealPatchStatus(status);
     } catch (error: unknown) {
-      clientLogger.error('Errore caricamento stato patch Unreal:', error);
+      clientLogger.error('Errore caricamento stato patch Unreal:', String(error));
     }
   };
 
@@ -866,7 +880,7 @@ export default function GameDetailPage() {
       );
       await loadUnrealPatchStatus();
     } catch (error: unknown) {
-      clientLogger.error('Errore installazione patch Unreal:', error);
+      clientLogger.error('Errore installazione patch Unreal:', String(error));
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante l\'installazione'
@@ -889,7 +903,7 @@ export default function GameDetailPage() {
       setPatchStatus({ success: true, message: result });
       setUnrealPatchStatus(null);
     } catch (error: unknown) {
-      clientLogger.error('Errore rimozione patch Unreal:', error);
+      clientLogger.error('Errore rimozione patch Unreal:', String(error));
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore durante la rimozione'
@@ -920,7 +934,7 @@ export default function GameDetailPage() {
       
       setPatchStatus({ success: true, message: 'Gioco avviato con traduttore!' });
     } catch (error: unknown) {
-      clientLogger.error('Errore avvio gioco:', error);
+      clientLogger.error('Errore avvio gioco:', String(error));
       setPatchStatus({
         success: false,
         message: typeof error === 'string' ? error : 'Errore avvio gioco'
@@ -941,7 +955,7 @@ export default function GameDetailPage() {
       setXunityTranslations(entries);
       setShowTranslationEditor(true);
     } catch (error: unknown) {
-      clientLogger.error('Errore caricamento traduzioni:', error);
+      clientLogger.error('Errore caricamento traduzioni:', String(error));
       alert(typeof error === 'string' ? error : 'Errore caricamento traduzioni');
     } finally {
       setIsLoadingTranslations(false);
@@ -965,7 +979,7 @@ export default function GameDetailPage() {
       );
       setEditingEntry(null);
     } catch (error: unknown) {
-      clientLogger.error('Errore salvataggio:', error);
+      clientLogger.error('Errore salvataggio:', String(error));
       alert('Errore salvataggio traduzione');
     }
   };
@@ -977,7 +991,7 @@ export default function GameDetailPage() {
   );
 
   useEffect(() => {
-    clientLogger.debug('[GameDetail] useEffect triggered — gameId:', gameId, 'ref:', gameDataLoadedRef.current, 'url:', window.location.search);
+    clientLogger.debug(`[GameDetail] useEffect triggered — gameId: ${gameId}, ref: ${gameDataLoadedRef.current}, url: ${window.location.search}`);
     if (!gameId) {
       clientLogger.warn('[GameDetail] gameId è vuoto — stop loading');
       setIsLoading(false);
@@ -1004,7 +1018,7 @@ export default function GameDetailPage() {
             new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`Timeout ${cmd} (${timeoutMs}ms)`)), timeoutMs))
           ]);
         } catch (e: unknown) {
-          clientLogger.warn(`[GameDetail] ${cmd}:`, e);
+          clientLogger.warn(`[GameDetail] ${cmd}: ${String(e)}`);
           return null;
         }
       };
@@ -1051,13 +1065,37 @@ export default function GameDetailPage() {
               if (foundAppId && foundAppId > 0) appId = foundAppId;
             }
           }
-          clientLogger.debug('[GameDetail] appId:', appId, 'gameId:', gameId);
+          clientLogger.debug(`[GameDetail] appId: ${appId}, gameId: ${gameId}`);
           
           // === FASE 1: Carica Steam API + install path IN PARALLELO (max 8s) ===
+          interface SteamApiData {
+            name?: string;
+            short_description?: string;
+            detailed_description?: string;
+            about_the_game?: string;
+            header_image?: string;
+            screenshots?: {id: number; path_thumbnail: string; path_full: string}[];
+            movies?: string[];
+            metacritic?: {score: number; url?: string} | null;
+            achievements?: {total: number; highlighted?: {name: string; path: string}[]} | null;
+            background?: string;
+            website?: string;
+            legal_notice?: string;
+            recommendations?: {total: number} | null;
+            developers?: string[];
+            publishers?: string[];
+            release_date?: {coming_soon: boolean; date: string} | null;
+            genres?: {id: string; description: string}[];
+            categories?: string[];
+            supported_languages?: string;
+            pc_requirements?: {minimum?: string; recommended?: string} | null;
+            is_free?: boolean;
+            dlc?: number[];
+          }
           const [steamApiData, installPathResult] = await Promise.all([
             // Steam API details
-            (!isNonSteamGame && appId && appId > 0) 
-              ? safeInvoke('fetch_steam_game_details', { appId }, 8000) 
+            (!isNonSteamGame && appId && appId > 0)
+              ? safeInvoke<SteamApiData>('fetch_steam_game_details', { appId }, 8000)
               : Promise.resolve(null),
             // Install path (prova installDir, poi appId)
             (async () => {
@@ -1092,8 +1130,8 @@ export default function GameDetailPage() {
           // Engine detection (non-bloccante, con timeout breve)
           let detectedEngine: string | null = null;
           if (realInstallPath) {
-            const engineResult = await safeInvoke<unknown>('detect_engine_for_game', { 
-              gameName: data.name || 'Unknown', installPath: realInstallPath 
+            const engineResult = await safeInvoke<{engine?: string}>('detect_engine_for_game', {
+              gameName: data.name || 'Unknown', installPath: realInstallPath
             }, 5000);
             if (engineResult?.engine) detectedEngine = engineResult.engine;
           }
@@ -1143,16 +1181,16 @@ export default function GameDetailPage() {
           };
 
           clientLogger.debug('[GameDetail] ===== GAME LOADED =====', enhancedGame.title);
-          setGame(enhancedGame);
+          setGame(enhancedGame as Game);
           setSteamDetails(steamApiData);
           setIsLoading(false); // UI visibile SUBITO
 
           // === FASE 2: Dati secondari in background (non bloccano la UI) ===
           // Activity history
           activityHistory.getRecent(100).then(allActivities => {
-            const gameTranslations = allActivities
-              .filter((a: unknown) => a.activity_type === 'translation' && (a.game_id === gameId || a.game_name === enhancedGame.title))
-              .map((a: unknown) => ({ id: a.id, gameId: a.game_id, filePath: a.description || a.title, status: 'completed', confidence: 0.95, timestamp: a.timestamp }));
+            const gameTranslations = (allActivities as Array<{activity_type: string; game_id: string; game_name: string; id: string; description?: string; title: string; timestamp: string}>)
+              .filter(a => a.activity_type === 'translation' && (a.game_id === gameId || a.game_name === enhancedGame.title))
+              .map(a => ({ id: a.id, gameId: a.game_id, filePath: a.description || a.title, status: 'completed', confidence: 0.95, timestamp: a.timestamp }));
             setTranslations(gameTranslations);
           }).catch(() => setTranslations([]));
           
@@ -1178,12 +1216,12 @@ export default function GameDetailPage() {
           // DLC in background
           if (steamApiData?.dlc && steamApiData.dlc.length > 0) {
             Promise.all(steamApiData.dlc.slice(0, 5).map((dlcId: number) =>
-              safeInvoke('fetch_steam_game_details', { appId: dlcId }, 8000)
-            )).then(results => setDlcGames(results.filter(Boolean)));
+              safeInvoke<Record<string, unknown>>('fetch_steam_game_details', { appId: dlcId }, 8000)
+            )).then(results => setDlcGames(results.filter((r): r is Record<string, unknown> => r != null)));
           }
           return; // isLoading già settato a false sopra
         } catch (error: unknown) {
-          clientLogger.error('Errore:', error);
+          clientLogger.error('Errore:', String(error));
         } finally {
           clearTimeout(safetyTimer);
           setIsLoading(false);
@@ -1251,11 +1289,11 @@ export default function GameDetailPage() {
       const data = await response.json();
       if (data[game.appid]?.success && data[game.appid]?.data?.short_description) {
         const desc = data[game.appid].data.short_description.replace(/<[^>]*>?/gm, '');
-        setGame((prev: unknown) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
+        setGame(prev => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         setTranslatedDescription(desc);
       }
     } catch (e: unknown) {
-      clientLogger.warn('[GameDetail] Steam description fetch failed:', e);
+      clientLogger.warn('[GameDetail] Steam description fetch failed:', String(e));
     }
   };
 
@@ -1270,18 +1308,18 @@ export default function GameDetailPage() {
       clientLogger.debug(`[GameDetail] GOG fetch: gameId=${gameId}, gogId=${gogId}, title=${game.title || game.name}`);
       if (!gogId || gogId === '0') return;
       
-      const details = await invoke<unknown>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
-      clientLogger.debug(`[GameDetail] GOG details response:`, details);
+      const details = await invoke<{description?: string}>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
+      clientLogger.debug(`[GameDetail] GOG details response: ${JSON.stringify(details)}`);
       if (details?.description) {
         const desc = details.description.replace(/<[^>]*>?/gm, '');
-        setGame((prev: unknown) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
+        setGame(prev => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         translateDescription(desc);
-        clientLogger.debug(`[GameDetail] ✅ GOG description loaded for ${game.title || game.name}`);
+        clientLogger.debug(`[GameDetail] GOG description loaded for ${game.title || game.name}`);
       } else {
-        clientLogger.warn(`[GameDetail] GOG details found but no description field:`, Object.keys(details || {}));
+        clientLogger.warn(`[GameDetail] GOG details found but no description field: ${Object.keys(details || {}).join(',')}`);
       }
     } catch (e: unknown) {
-      clientLogger.warn('[GameDetail] GOG description fetch failed:', e);
+      clientLogger.warn('[GameDetail] GOG description fetch failed:', String(e));
     }
   };
 
@@ -1297,7 +1335,7 @@ export default function GameDetailPage() {
           const settings = JSON.parse(savedSettings);
           apiKey = settings?.integrations?.steamGridDbApiKey || null;
         } catch (e: unknown) {
-          clientLogger.warn('[GameDetail] Errore parsing impostazioni:', e);
+          clientLogger.warn('[GameDetail] Errore parsing impostazioni:', String(e));
         }
       }
       
@@ -1327,7 +1365,7 @@ export default function GameDetailPage() {
             await invoke('save_cover_cache', { gameId: cacheId, imageUrl: storeImage });
           }
         } catch (e2) {
-          clientLogger.warn('[GameDetail] Steam Store scraping failed:', e2);
+          clientLogger.warn('[GameDetail] Steam Store scraping failed:', String(e2));
         }
       }
       // Fallback GOG: usa API pubblica GOG per copertina
@@ -1344,11 +1382,11 @@ export default function GameDetailPage() {
             }
           }
         } catch (e3) {
-          clientLogger.warn('[GameDetail] GOG API cover failed:', e3);
+          clientLogger.warn('[GameDetail] GOG API cover failed:', String(e3));
         }
       }
     } catch (e: unknown) {
-      clientLogger.warn('[GameDetail] SteamGridDB fallback failed:', e);
+      clientLogger.warn('[GameDetail] SteamGridDB fallback failed:', String(e));
     }
   };
 
@@ -1364,7 +1402,7 @@ export default function GameDetailPage() {
         setTranslatedDescription(result.translated_text);
       }
     } catch (error: unknown) {
-      clientLogger.warn('Traduzione descrizione non disponibile:', error);
+      clientLogger.warn('Traduzione descrizione non disponibile:', String(error));
       // Fallback: mostra originale
     }
   };
@@ -1395,7 +1433,7 @@ export default function GameDetailPage() {
       }
     } catch (error: unknown) {
       clearInterval(progressInterval);
-      clientLogger.error('[GameDetail] Errore scansione:', error);
+      clientLogger.error('[GameDetail] Errore scansione:', String(error));
       toast.error(`Errore scansione: ${error}`);
     } finally {
       setTimeout(() => {
@@ -1444,7 +1482,7 @@ export default function GameDetailPage() {
         },
       });
     } catch (e: unknown) {
-      clientLogger.warn('[StringIt] cache check failed:', e);
+      clientLogger.warn('[StringIt] cache check failed:', String(e));
       // Fallback: parti diretto se il check fallisce
       startAutoTranslate();
     }
@@ -1488,7 +1526,15 @@ export default function GameDetailPage() {
       // ── STEP 1: Complete Analysis ──
       updateStep(0, 'running', 'Analisi predittiva avanzata...');
       
-      const predictionResult: unknown = await invoke('analyze_game_translation', {
+      interface PredictionResult {
+        engine?: string;
+        selectedTools?: {primary_text_tool?: {name?: string}};
+        llmChains?: unknown[];
+        multimediaAnalysis?: {audioStats?: {totalAudioFiles?: number}; graphicsStats?: {totalGraphicsFiles?: number}};
+        backupStrategy?: {estimatedBackupSizeMb?: number; recommendedBackupType?: string};
+        workflowPlan?: {recommendedApproach?: string; workflowStages?: unknown[]};
+      }
+      const predictionResult = await invoke<PredictionResult>('analyze_game_translation', {
         installPath: game.installPath,
         gameTitle: game.title || game.name || 'Unknown Game',
         engine: game.engine || undefined,
@@ -1549,17 +1595,21 @@ export default function GameDetailPage() {
         });
       } catch { /* non-Tauri env */ }
 
-      const executionResult: unknown = await invoke('execute_complete_workflow', {
+      const executionResult = await invoke<{
+        successRate?: number; totalDurationMinutes?: number; finalStatus?: string;
+        deliverables?: unknown[]; errors?: unknown[];
+        translatedStrings?: number; totalStrings?: number;
+      }>('execute_complete_workflow', {
         installPath: game.installPath,
         gameTitle: game.title || game.name || 'Unknown Game',
         engine: game.engine || undefined,
         sourceLang: 'en',
         targetLang: targetLang || 'it',
       });
-      
+
       // Cleanup listener
       if (unlistenWorkflow) unlistenWorkflow();
-      
+
       const success = executionResult?.successRate || 0;
       const duration = executionResult?.totalDurationMinutes || 0;
       const _finalStatus = executionResult?.finalStatus;
@@ -1597,8 +1647,8 @@ export default function GameDetailPage() {
       });
 
     } catch (error: unknown) {
-      clientLogger.error('[AutoTranslate] Workflow execution failed:', error);
-      setAutoTranslateError(error?.toString?.() || 'Errore durante l\'esecuzione del workflow');
+      clientLogger.error('[AutoTranslate] Workflow execution failed:', String(error));
+      setAutoTranslateError(String(error) || 'Errore durante l\'esecuzione del workflow');
       toast.error('❌ Errore durante la traduzione automatica');
       // Cleanup workflow listener on error too
       if (unlistenWorkflow) unlistenWorkflow();
@@ -1618,7 +1668,8 @@ export default function GameDetailPage() {
       const lang = language || 'it';
 
       // 1. Leggi stringhe catturate
-      const captured: unknown[] = await invoke('read_captured_translations', {
+      interface CapturedEntry { original: string; translated: string; line_number: number; }
+      const captured = await invoke<CapturedEntry[]>('read_captured_translations', {
         gamePath: game.installPath,
         lang,
       });
@@ -1638,7 +1689,7 @@ export default function GameDetailPage() {
 
       // 3. Traduci in batch da 15 stringhe alla volta
       const BATCH = 15;
-      const translated: { original: string; translated: string; line_number: number }[] = [...alreadyTranslated];
+      const translated: CapturedEntry[] = [...alreadyTranslated];
 
       for (let i = 0; i < toTranslate.length; i += BATCH) {
         const batch = toTranslate.slice(i, i + BATCH);
@@ -1678,8 +1729,8 @@ export default function GameDetailPage() {
       clientLogger.debug('[AiUpgrade] File scritto:', resultPath);
 
     } catch (e: unknown) {
-      clientLogger.error('[AiUpgrade] Errore:', e);
-      toast.error(`Errore traduzione AI: ${e?.toString?.() || 'sconosciuto'}`);
+      clientLogger.error('[AiUpgrade] Errore:', String(e));
+      toast.error(`Errore traduzione AI: ${String(e) || 'sconosciuto'}`);
     } finally {
       setIsAiUpgrading(false);
       setAiUpgradeProgress(null);
@@ -1769,7 +1820,8 @@ export default function GameDetailPage() {
 
   // Determina colore gradiente in base al genere
   const getGenreGradient = () => {
-    const genre = game?.genres?.[0]?.description?.toLowerCase() || '';
+    const firstGenre = game?.genres?.[0];
+    const genre = (typeof firstGenre === 'string' ? firstGenre : firstGenre?.description)?.toLowerCase() || '';
     if (genre.includes('horror') || genre.includes('survival')) {
       return {
         border: 'border-red-500/20',
@@ -1881,7 +1933,7 @@ export default function GameDetailPage() {
         </Link>
 
         {/* Metacritic score (floating top-right) — cliccabile se URL disponibile */}
-        {game?.metacritic?.score > 0 && (
+        {game?.metacritic && game.metacritic.score > 0 && (
           <a
             href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
             target="_blank"
@@ -1955,21 +2007,21 @@ export default function GameDetailPage() {
             <div className="flex items-center gap-2 text-xs text-slate-400">
               {game.developers?.[0] && <span className="font-semibold text-slate-300">{game.developers[0]}</span>}
               {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && <><span className="text-slate-600">|</span><span>{game.publishers[0]}</span></>}
-              {(game.release_date?.date || game.releaseDate) && <><span className="text-slate-600">|</span><span>{game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short' })}</span></>}
+              {((typeof game.release_date === 'object' && game.release_date?.date) || game.releaseDate) && <><span className="text-slate-600">|</span><span>{(typeof game.release_date === 'object' ? game.release_date?.date : game.release_date) || (typeof game.releaseDate === 'string' ? game.releaseDate : game.releaseDate ? new Date(Number(game.releaseDate) * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short' }) : '')}</span></>}
             </div>
 
             {/* Genre pills + scores inline */}
             <div className="flex items-center gap-2 flex-wrap">
-              {game.genres?.filter((g: unknown) => g?.description).slice(0, 4).map((genre: unknown, i: number) => (
-                <span key={i} className="text-2xs font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
+              {game.genres?.filter(g => typeof g === 'object' && g?.description).slice(0, 4).map((genre, i) => (
+                <span key={i} className="text-2xs font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{typeof genre === 'object' ? genre.description : genre}</span>
               ))}
-              {typeof game.recommendations === 'object' && game.recommendations?.total > 0 && (
-                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
+              {typeof game.recommendations === 'object' && game.recommendations != null && (game.recommendations.total ?? 0) > 0 && (
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {(game.recommendations.total ?? 0).toLocaleString()}</span>
               ) || typeof game.recommendations === 'number' && game.recommendations > 0 && (
                 <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.toLocaleString()}</span>
               )}
-              {game.playtime_forever > 0 && (
-                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(game.playtime_forever / 60)}h</span>
+              {(game.playtime_forever ?? 0) > 0 && (
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round((game.playtime_forever ?? 0) / 60)}h</span>
               )}
             </div>
           </motion.div>
@@ -1983,7 +2035,7 @@ export default function GameDetailPage() {
           >
             {game.isInstalled && (
               <button className="h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all border border-emerald-400/20 group"
-                onClick={async () => { if (game.appid > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
+                onClick={async () => { if ((game.appid ?? 0) > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
               >
                 <Play className="h-4 w-4 fill-current group-hover:scale-110 transition-transform" /> Gioca
               </button>
@@ -2035,7 +2087,7 @@ export default function GameDetailPage() {
                 </div>
               )}
             </div>
-            {game.platform === 'Steam' && game.appid > 0 && (
+            {game.platform === 'Steam' && (game.appid ?? 0) > 0 && (
               <button className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all"
                 onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
               >
@@ -2064,7 +2116,7 @@ export default function GameDetailPage() {
       <div className="flex lg:hidden gap-2 px-4 py-2.5 bg-[#0a0e14]/95 border-t border-white/[0.04] shrink-0">
         {game.isInstalled && (
           <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 text-white font-bold text-2xs uppercase tracking-wider"
-            onClick={async () => { if (game.appid > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
+            onClick={async () => { if ((game.appid ?? 0) > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
           >
             <Play className="h-3.5 w-3.5 fill-current" /> Gioca
           </button>
@@ -2166,7 +2218,7 @@ export default function GameDetailPage() {
                       try {
                         const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
                         if (exeList?.length > 0) await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                      } catch (e: unknown) { clientLogger.error('[GameDetail] Errore avvio:', e); }
+                      } catch (e: unknown) { clientLogger.error('[GameDetail] Errore avvio:', String(e)); }
                     }
                   } else if (route === '/unity-patcher') { handleInstallUnityPatch(); }
                   else { router.push(route); }
@@ -2200,7 +2252,8 @@ export default function GameDetailPage() {
 
           {/* ═══ DETTAGLI & STRUMENTI ═══ */}
           <GameToolsPanel
-            game={game}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            game={game as any}
             gameId={gameId}
             engineInfo={engineInfo}
             patchStatus={patchStatus}
@@ -2253,7 +2306,7 @@ export default function GameDetailPage() {
           {/* ── GameMaker Translator ── */}
           {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
             <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
-              <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name} />
+              <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name || ''} />
             </div>
           )}
         </div>
@@ -2261,12 +2314,12 @@ export default function GameDetailPage() {
 
       {/* ═══ MODALS & DIALOGS (outside scroll container) ═══ */}
       {showTranslation && game && (
-        <InlineTranslator gameId={game.appid.toString()} gameName={game.name} gamePath={game.installPath} onClose={() => setShowTranslation(false)} />
+        <InlineTranslator gameId={(game.appid ?? 0).toString()} gameName={game.name || game.title} gamePath={game.installPath} onClose={() => setShowTranslation(false)} />
       )}
 
       {game && (
         <>
-          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} />
+          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name || ''} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} />
           <GspackImportDialog open={showGspackImport} onOpenChange={setShowGspackImport} />
         </>
       )}
@@ -2287,7 +2340,7 @@ export default function GameDetailPage() {
           isOpen={isCoverPickerOpen}
           onClose={() => setIsCoverPickerOpen(false)}
           appId={game.appid || 0}
-          gameName={game.title || game.name}
+          gameName={game.title || game.name || ''}
           onCoverSelected={(url) => {
             // Salva la nuova cover
             import('@tauri-apps/api/core').then(({ invoke }) => {

@@ -3,6 +3,8 @@
  * Centralizza tutte le notifiche dell'app (toast, alerts, etc.)
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
 interface NotificationOptions {

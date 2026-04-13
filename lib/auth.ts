@@ -133,10 +133,10 @@ export const signIn = async (provider: string, options?: Record<string, unknown>
     
     // Aggiungi nuovo account
     const newAccount: ConnectedAccount = {
+      ...(options ? Object.fromEntries(Object.entries(options)) : {}),
       provider,
-      userId: options?.userId || options?.steamid || `${provider}-user`,
-      ...(options?.steamid && { steamId: options.steamid }),
-      ...options
+      userId: (options?.userId || options?.steamid || `${provider}-user`) as string,
+      ...(options?.steamid ? { steamId: options.steamid as string } : {}),
     };
     
     const updatedAccounts = [...filteredAccounts, newAccount];

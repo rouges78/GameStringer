@@ -79,16 +79,16 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
     try {
       setError(null);
 
-      let response;
+      let response: { success?: boolean; error?: string };
       try {
-        response = await invoke('auto_save_notification_preferences', {
+        response = await invoke<{ success?: boolean; error?: string }>('auto_save_notification_preferences', {
           profile_id: activeProfileId,
           preferences: updatedPreferences
         });
       } catch (e: unknown) {
         // Se il comando specifico fallisce, prova quello generico
         try {
-          response = await invoke('update_notification_preferences', {
+          response = await invoke<{ success?: boolean; error?: string }>('update_notification_preferences', {
             preferences: updatedPreferences
           });
         } catch (innerError) {
@@ -131,9 +131,9 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
         updatedAt: new Date().toISOString()
       };
 
-      let response;
+      let response: { success?: boolean; error?: string };
       try {
-        response = await invoke('update_notification_preferences', {
+        response = await invoke<{ success?: boolean; error?: string }>('update_notification_preferences', {
           preferences: defaultPrefs
         });
       } catch (e: unknown) {

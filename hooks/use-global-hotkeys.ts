@@ -41,7 +41,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       setIsInitialized(true);
       clientLogger.debug('[HOTKEY] Sistema inizializzato');
     } catch (e: unknown) {
-      clientLogger.error('[HOTKEY] Errore inizializzazione:', e);
+      clientLogger.error(`[HOTKEY] Errore inizializzazione: ${String(e)}`);
     }
   }, []);
 
@@ -58,7 +58,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       clientLogger.debug(`[HOTKEY] Registrata: ${config.modifiers.join('+')}+${config.key} -> ${config.action}`);
       return id;
     } catch (e: unknown) {
-      clientLogger.error('[HOTKEY] Errore registrazione:', e);
+      clientLogger.error(`[HOTKEY] Errore registrazione: ${String(e)}`);
       return null;
     }
   }, []);
@@ -74,7 +74,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       });
       return true;
     } catch (e: unknown) {
-      clientLogger.error('[HOTKEY] Errore rimozione:', e);
+      clientLogger.error(`[HOTKEY] Errore rimozione: ${String(e)}`);
       return false;
     }
   }, []);
@@ -89,7 +89,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
         hotkeys = JSON.parse(saved);
       }
     } catch (e: unknown) {
-      clientLogger.warn('[HOTKEY] Errore caricamento hotkeys salvate, uso default:', e);
+      clientLogger.warn(`[HOTKEY] Errore caricamento hotkeys salvate, uso default: ${String(e)}`);
     }
 
     for (const config of hotkeys) {

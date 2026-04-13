@@ -17,6 +17,8 @@
  * - 1.0-1.4: Needs Review
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 // ─── Types ───────────────────────────────────────────────────
 
 export type QualityTag = 'H' | 'V' | 'A' | 'C';

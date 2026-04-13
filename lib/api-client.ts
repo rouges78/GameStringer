@@ -66,7 +66,7 @@ export async function apiRequest<T = unknown>(
   if (useCache && (!fetchOptions.method || fetchOptions.method === 'GET')) {
     const cached = cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < cacheTime) {
-      return { data: cached.data, error: null, status: 200 };
+      return { data: cached.data as T, error: null, status: 200 };
     }
   }
 

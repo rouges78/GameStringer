@@ -109,11 +109,11 @@ export default function MemoryPage() {
       
       try {
         // Carica tutti i games una sola volta
-        const games = await invoke<unknown[]>('get_games_fast');
-        
+        const games = await invoke<Array<{ id: string; name: string }>>('get_games_fast');
+
         for (const gameId of idsToResolve) {
           if (!gameId) continue;
-          
+
           // Cerca il game con varie strategie
           const game = games?.find(g => {
             if (!g?.id) return false;
@@ -128,7 +128,7 @@ export default function MemoryPage() {
             if (match && match[1] === gameId) return true;
             return false;
           });
-          
+
           if (game?.name) {
             gameNameCache[gameId] = game.name;
           } else if (/^\d+$/.test(gameId)) {

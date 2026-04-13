@@ -660,13 +660,13 @@ export async function importGSTranslation(
   
   return {
     metadata: data.metadata,
-    files: data.files.map((f: unknown) => ({
-      originalPath: f.originalPath,
-      relativePath: f.path,
-      content: f.content,
-      originalContent: f.originalContent,
-      format: f.format,
-      stringCount: f.stringCount
+    files: data.files.map((f: Record<string, unknown>) => ({
+      originalPath: f.originalPath as string,
+      relativePath: f.path as string,
+      content: f.content as string,
+      originalContent: f.originalContent as string,
+      format: f.format as string,
+      stringCount: f.stringCount as number
     }))
   };
 }

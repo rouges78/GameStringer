@@ -8,10 +8,10 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
 
-  clientLogger.debug('[EPIC OAUTH] Callback ricevuto:', { code, error, errorDescription });
+  clientLogger.debug('[EPIC OAUTH] Callback ricevuto', 'EPIC_OAUTH', { code: code ?? undefined, error: error ?? undefined, errorDescription: errorDescription ?? undefined });
 
   if (error) {
-    clientLogger.error('[EPIC OAUTH] Errore OAuth:', error, errorDescription);
+    clientLogger.error('[EPIC OAUTH] Errore OAuth', 'EPIC_OAUTH', { error, errorDescription });
     return NextResponse.redirect(new URL('/store-manager?epic_error=' + encodeURIComponent(error), request.url));
   }
 
@@ -25,7 +25,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   const redirectUrl = new URL('/store-manager', request.url);
   redirectUrl.searchParams.set('epic_code', code);
 
-  clientLogger.debug('[EPIC OAUTH] Reindirizzamento a:', redirectUrl.toString());
+  clientLogger.debug(`[EPIC OAUTH] Reindirizzamento a: ${redirectUrl.toString()}`, 'EPIC_OAUTH');
 
   return NextResponse.redirect(redirectUrl);
 });

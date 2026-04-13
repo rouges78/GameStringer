@@ -47,7 +47,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
       }
     } catch (err: unknown) {
       clientLogger.error('Errore durante la scansione audio:', err);
-      toast.error('Errore durante la scansione audio', { description: err.toString() });
+      toast.error('Errore durante la scansione audio', { description: (err as Error).message });
     } finally {
       setIsScanning(false);
     }
@@ -83,7 +83,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
       setXttsText(''); // Pulisci l'input
     } catch (err: unknown) {
       clientLogger.error('Errore patch audio:', err);
-      toast.error('Errore durante la patch audio', { description: err.toString(), id: toastId });
+      toast.error('Errore durante la patch audio', { description: (err as Error).message, id: toastId });
     } finally {
       setIsPatching(false);
     }
@@ -98,7 +98,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
       toast.success('File originale ripristinato con successo.');
     } catch (err: unknown) {
       clientLogger.error('Errore restore audio:', err);
-      toast.error('Errore durante il ripristino del file audio', { description: err.toString() });
+      toast.error('Errore durante il ripristino del file audio', { description: (err as Error).message });
     } finally {
       setIsRestoring(false);
     }

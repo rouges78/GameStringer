@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
     
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      clientLogger.error('ErrorBoundary caught:', error, errorInfo);
+      clientLogger.error('ErrorBoundary caught:', error, errorInfo as unknown as Record<string, unknown>);
     }
   }
 

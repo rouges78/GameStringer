@@ -359,7 +359,7 @@ export function ProfileHeader() {
           <DropdownMenuSeparator />
           
           {/* Import/Export */}
-          <DropdownMenuItem onClick={() => exportProfile(currentProfile, settings)}>
+          <DropdownMenuItem onClick={() => exportProfile(currentProfile as unknown as Record<string, unknown>, settings as unknown as Record<string, unknown>)}>
             <Download className="mr-2 h-4 w-4" />
             <span>{t('profile.exportProfile')}</span>
           </DropdownMenuItem>

@@ -331,7 +331,7 @@ export function LiveOcrOverlay() {
             {/* Modalità cattura */}
             <div className="space-y-2">
               <Label className="text-xs">Modalità cattura</Label>
-              <Select value={captureMode} onValueChange={(v: unknown) => setCaptureMode(v)}>
+              <Select value={captureMode} onValueChange={(v: string) => setCaptureMode(v as "region" | "window" | "fullscreen")}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>

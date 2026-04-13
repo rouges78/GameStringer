@@ -68,7 +68,7 @@ export function useTutorialTrigger({
       }
     } else {
       // For non-authenticated users, check localStorage
-      const completedTutorials = LocalStorage.get('completed_tutorials', []);
+      const completedTutorials = LocalStorage.get('completed_tutorials', []) as string[];
       if (completedTutorials.includes(tutorialId)) {
         return false;
       }

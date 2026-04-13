@@ -26,7 +26,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
   const [_errors, setErrors] = useState<Record<string, string>>({});
   
   // Stati per Legendary
-  const [legendaryStatus, setLegendaryStatus] = useState<unknown>(null);
+  const [legendaryStatus, setLegendaryStatus] = useState<{ installed: boolean; authenticated: boolean } | null>(null);
   const [_legendaryLoading, setLegendaryLoading] = useState(false);
   const [installLegendaryLoading, setInstallLegendaryLoading] = useState(false);
   const [authLegendaryLoading, setAuthLegendaryLoading] = useState(false);
@@ -40,10 +40,10 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
 
   const checkLegendaryStatus = async () => {
     try {
-      const status = await invoke('check_legendary_status');
+      const status = await invoke<{ installed: boolean; authenticated: boolean }>('check_legendary_status');
       setLegendaryStatus(status);
     } catch (error: unknown) {
-      clientLogger.error('Legendary check error:', error);
+      clientLogger.error('Legendary check error: ' + String(error));
       setLegendaryStatus({ installed: false, authenticated: false });
     }
   };
@@ -52,8 +52,8 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
     setInstallLegendaryLoading(true);
     try {
       toast.info('🔧 Installing Legendary...');
-      const result = await invoke('install_legendary');
-      
+      const result = await invoke<{ success: boolean; error?: string }>('install_legendary');
+
       if (result.success) {
         toast.success('✅ Legendary installed successfully!');
         await checkLegendaryStatus(); // Ricontrolla lo stato
@@ -61,7 +61,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
         toast.error(`❌ Installation error: ${result.error}`);
       }
     } catch (error: unknown) {
-      clientLogger.error('Legendary installation error:', error);
+      clientLogger.error('Legendary installation error: ' + String(error));
       toast.error('❌ Error installing Legendary');
     } finally {
       setInstallLegendaryLoading(false);
@@ -72,8 +72,8 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
     setAuthLegendaryLoading(true);
     try {
       toast.info('🔐 Starting Legendary authentication...');
-      const result = await invoke('authenticate_legendary');
-      
+      const result = await invoke<{ success: boolean; error?: string }>('authenticate_legendary');
+
       if (result.success) {
         toast.success('✅ Legendary authenticated successfully!');
         await checkLegendaryStatus(); // Ricontrolla lo stato
@@ -81,7 +81,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: 
         toast.error(`❌ Authentication error: ${result.error}`);
       }
     } catch (error: unknown) {
-      clientLogger.error('Legendary authentication error:', error);
+      clientLogger.error('Legendary authentication error: ' + String(error));
       toast.error('❌ Error during Legendary authentication');
     } finally {
       setAuthLegendaryLoading(false);

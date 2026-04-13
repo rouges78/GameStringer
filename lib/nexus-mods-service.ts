@@ -5,6 +5,8 @@
  * Richiede API key da nexusmods.com/users/myaccount?tab=api+access
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 const NEXUS_API_BASE = 'https://api.nexusmods.com/v1';
 
 export interface NexusMod {

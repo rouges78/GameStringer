@@ -40,11 +40,11 @@ export function DebugPanel() {
     try {
       addDebugResult('🔄 Testing force refresh...');
       const result = await invoke('force_refresh_steam_games');
-      const games = result as unknown[];
+      const games = result as Record<string, unknown>[];
       addDebugResult(`✅ Force refresh returned ${games.length} games`);
-      
+
       // Show sample games
-      const lastGames = games.slice(-5).map(g => g.name);
+      const lastGames = games.slice(-5).map((g: Record<string, unknown>) => g.name);
       addDebugResult(`📋 Last 5 games: ${lastGames.join(', ')}`);
       
     } catch (error: unknown) {
@@ -59,20 +59,20 @@ export function DebugPanel() {
     try {
       addDebugResult('🎮 Getting all games and analyzing library...');
       const result = await invoke('get_games');
-      const games = result as unknown[];
-      
+      const games = result as Record<string, unknown>[];
+
       addDebugResult(`📊 Total games loaded: ${games.length}`);
-      
+
       // Show game statistics
-      const platforms = games.reduce((acc, game) => {
-        acc[game.platform] = (acc[game.platform] || 0) + 1;
+      const platforms = games.reduce((acc: Record<string, number>, game: Record<string, unknown>) => {
+        acc[game.platform as string] = (acc[game.platform as string] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      
+
       addDebugResult(`🎯 Games by platform: ${JSON.stringify(platforms)}`);
-      
+
       // Show recent games
-      const recentGames = games.slice(-10).map(g => g.title);
+      const recentGames = games.slice(-10).map((g: Record<string, unknown>) => g.title);
       addDebugResult(`📋 Last 10 games: ${recentGames.join(', ')}`);
       
     } catch (error: unknown) {

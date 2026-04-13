@@ -23,6 +23,15 @@ import { CoverPicker } from '@/components/cover-picker';
 import { clientLogger } from '@/lib/client-logger';
 
 // Guard globale: sopravvive a HMR/Fast Refresh e doppio mount React 18
+interface LibCacheEntry<T> { loaded: boolean; data: T }
+interface LibCache {
+  fetchStarted: boolean;
+  cachesLoadStarted: boolean;
+  cover: LibCacheEntry<Record<string, string>>;
+  dates: LibCacheEntry<Record<string, number>>;
+  lang: LibCacheEntry<Record<string, string[]>>;
+  games: LibCacheEntry<Game[]>;
+}
 const _g = globalThis as unknown as Record<string, unknown>;
 if (!_g.__gsLibCache) {
   _g.__gsLibCache = {
@@ -31,10 +40,10 @@ if (!_g.__gsLibCache) {
     cover: { loaded: false, data: {} as Record<string, string> },
     dates: { loaded: false, data: {} as Record<string, number> },
     lang: { loaded: false, data: {} as Record<string, string[]> },
-    games: { loaded: false, data: [] as unknown[] },
+    games: { loaded: false, data: [] as Game[] },
   };
 }
-const _libCache = _g.__gsLibCache;
+const _libCache = _g.__gsLibCache as LibCache;
 // Assicura campi aggiunti in HMR successivi
 if (_libCache.cachesLoadStarted === undefined) _libCache.cachesLoadStarted = false;
 if (!_libCache.games) _libCache.games = { loaded: false, data: [] };
@@ -77,8 +86,8 @@ const getGameDetailUrl = (game: Game): string => {
 // Dedup globale per fetch SteamGridDB (globalThis sopravvive a HMR)
 if (!_g.__gsFetchedCovers) _g.__gsFetchedCovers = new Set<string>();
 if (!_g.__gsPendingCoverSaves) _g.__gsPendingCoverSaves = {} as Record<string, string>;
-const _fetchedCovers: Set<string> = _g.__gsFetchedCovers;
-const _pendingCoverSaves: Record<string, string> = _g.__gsPendingCoverSaves;
+const _fetchedCovers = _g.__gsFetchedCovers as Set<string>;
+const _pendingCoverSaves = _g.__gsPendingCoverSaves as Record<string, string>;
 let _coverSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 const flushCoverSaves = async () => {
@@ -90,7 +99,7 @@ const flushCoverSaves = async () => {
     await invoke('save_batch_cover_cache', { covers: toSave });
     clientLogger.debug(`[Library] 💾 Batch cover cache salvata: ${Object.keys(toSave).length} cover`);
   } catch (e: unknown) {
-    clientLogger.warn('[Library] Batch cover save failed:', e);
+    clientLogger.warn('[Library] Batch cover save failed:', String(e));
     // Fallback: riprova singolarmente
     for (const [gameId, imageUrl] of Object.entries(toSave)) {
       try { await invoke('save_cover_cache', { gameId, imageUrl }); } catch {}
@@ -163,7 +172,7 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
           const prefs = JSON.parse(utilityPrefs);
           apiKey = prefs?.steamgriddb?.apiKey || null;
         } catch (e: unknown) {
-          clientLogger.warn('[Library] Cache localStorage corrotta, ripulizia:', e);
+          clientLogger.warn('[Library] Cache localStorage corrotta, ripulizia:', String(e));
           localStorage.removeItem('gamestringer_utility_prefs');
         }
       }
@@ -185,7 +194,7 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
         try {
           const steamAppId = parseInt(game.app_id.replace('steam_', '')) || 0;
           if (steamAppId > 0) {
-            const details = await invoke<unknown>('fetch_steam_game_details', { appId: steamAppId });
+            const details = await invoke<{ header_image?: string }>('fetch_steam_game_details', { appId: steamAppId });
             if (details?.header_image) {
               setSteamGridDbImage(details.header_image);
               queueCoverSave(game.app_id, details.header_image);
@@ -194,7 +203,7 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
             }
           }
         } catch (e2) {
-          clientLogger.warn(`[Library] Steam API fallback failed for ${game.title}:`, e2);
+          clientLogger.warn(`[Library] Steam API fallback failed for ${game.title}: ${String(e2)}`);
         }
         // Fallback 2: scraping pagina Steam Store per og:image
         if (!found) {
@@ -210,7 +219,7 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
               }
             }
           } catch (e3) {
-            clientLogger.warn(`[Library] Steam Store scraping failed for ${game.title}:`, e3);
+            clientLogger.warn(`[Library] Steam Store scraping failed for ${game.title}: ${String(e3)}`);
           }
         }
         // Fallback 3: GOG API per giochi GOG
@@ -227,12 +236,12 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
               }
             }
           } catch (e4) {
-            clientLogger.warn(`[Library] GOG API cover failed for ${game.title}:`, e4);
+            clientLogger.warn(`[Library] GOG API cover failed for ${game.title}: ${String(e4)}`);
           }
         }
       }
     } catch (e: unknown) {
-      clientLogger.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
+      clientLogger.warn(`[Library] SteamGridDB failed for ${game.title}: ${String(e)}`);
     } finally {
       setIsLoading(false);
     }
@@ -430,7 +439,7 @@ function LibraryListView() {
     const validGames = ensureArray<Game>(value);
     
     if (!validateArray(value, 'LibraryPage.setGames')) {
-      clientLogger.error('[LibraryPage] Attempt to set games with non-array value:', typeof value, value);
+      clientLogger.error(`[LibraryPage] Attempt to set games with non-array value: ${typeof value}`, 'LibraryPage', { value: value as Record<string, unknown> });
     }
     
     setGames(validGames);
@@ -504,7 +513,7 @@ function LibraryListView() {
             _libCache.cover.data = coverCacheData;
             _libCache.cover.loaded = true;
             setCoverCache(coverCacheData);
-            clientLogger.debug('[Library] 📷 Cover cache caricata:', Object.keys(coverCacheData).length, 'immagini');
+            clientLogger.debug(`[Library] 📷 Cover cache caricata: ${Object.keys(coverCacheData).length} immagini`);
           }
         }
 
@@ -517,7 +526,7 @@ function LibraryListView() {
             _libCache.dates.data = addedDates;
             _libCache.dates.loaded = true;
             setAddedDatesCache(addedDates);
-            clientLogger.debug('[Library] 📅 Date aggiunta caricate:', Object.keys(addedDates).length, 'giochi');
+            clientLogger.debug(`[Library] 📅 Date aggiunta caricate: ${Object.keys(addedDates).length} giochi`);
           }
         }
 
@@ -530,7 +539,7 @@ function LibraryListView() {
             _libCache.lang.data = langCache;
             _libCache.lang.loaded = true;
             setLanguagesCache(langCache);
-            clientLogger.debug('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
+            clientLogger.debug(`[Library] 🌍 Cache lingue caricata: ${Object.keys(langCache).length} giochi`);
           }
         }
       } catch {
@@ -568,13 +577,14 @@ function LibraryListView() {
           
           clientLogger.debug(`[LIBRARY DEBUG] 📊 Steam API: ${apiResult.length} games with names`);
           
-          apiResult.forEach((g: unknown) => {
-            apiGames.set(String(g.appid), {
-              id: `steam_${g.appid}`,
-              app_id: String(g.appid),
-              title: g.name,
+          apiResult.forEach((g) => {
+            const game = g as { appid: number; name: string };
+            apiGames.set(String(game.appid), {
+              id: `steam_${game.appid}`,
+              app_id: String(game.appid),
+              title: game.name,
               platform: 'Steam',
-              header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+              header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`,
               isShared: false,
               is_vr: false,
               is_installed: false
@@ -659,7 +669,7 @@ function LibraryListView() {
       clientLogger.debug(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
       
     } catch (error: unknown) {
-      clientLogger.error('[LIBRARY] ❌ error scan:', error);
+      clientLogger.error(`[LIBRARY] ❌ error scan: ${String(error)}`);
       toast.error('Error during scan', {
         description: String(error),
       });
@@ -712,7 +722,7 @@ function LibraryListView() {
           return;
         }
       } catch (e: unknown) {
-        clientLogger.warn('Errore lettura cache IndexedDB libreria:', e);
+        clientLogger.warn(`Errore lettura cache IndexedDB libreria: ${String(e)}`);
       }
       
       // Nessuna cache: fetch completo (primo avvio)
@@ -783,7 +793,7 @@ function LibraryListView() {
               forceRefresh: false
             }) as unknown[];
           } catch (e: unknown) {
-            clientLogger.warn('⚠️ Steam API failed:', e);
+            clientLogger.warn(`⚠️ Steam API failed: ${String(e)}`);
             return null;
           }
         });
@@ -857,7 +867,7 @@ function LibraryListView() {
                 supported_languages: g.supported_languages || [],
                 genres: g.genres || [],
                 last_played: g.last_played,
-                install_dir: (g as unknown).install_path || (g as unknown).path || undefined,
+                install_dir: (g as { install_path?: string; path?: string }).install_path || g.path || undefined,
               });
             }
           }
@@ -882,7 +892,8 @@ function LibraryListView() {
           let added = 0;
           let enriched = 0;
 
-          for (const g of apiResult) {
+          type SteamApiGame = { appid: number; name: string; is_vr?: boolean; rtime_last_played?: number; last_played?: number; supported_languages?: string | string[]; engine?: string | null };
+          for (const g of apiResult as SteamApiGame[]) {
             const appId = String(g.appid);
             if (isSoftware(g.name)) continue;
             const localData = localScanData.get(appId);
@@ -957,7 +968,7 @@ function LibraryListView() {
           invoke<Record<string, number>>('save_batch_added_dates', { gameIds }).then(updatedDates => {
             if (updatedDates) {
               setAddedDatesCache(updatedDates);
-              clientLogger.debug('[Library] 📅 Date aggiunta aggiornate:', Object.keys(updatedDates).length, 'giochi');
+              clientLogger.debug(`[Library] 📅 Date aggiunta aggiornate: ${Object.keys(updatedDates).length} giochi`);
             }
           }).catch(() => {});
 
@@ -995,9 +1006,10 @@ function LibraryListView() {
                 );
                 results.forEach((r, idx) => {
                   if (!r) return;
+                  const result = r as { update_detected?: boolean; patch_intact?: boolean; patch_type?: string };
                   const game = batch[idx];
-                  if (r.update_detected) updatedGames.push(game.title);
-                  if (!r.patch_intact && r.patch_type !== 'none') brokenPatches.push(game.title);
+                  if (result.update_detected) updatedGames.push(game.title);
+                  if (!result.patch_intact && result.patch_type !== 'none') brokenPatches.push(game.title);
                 });
               }
 
@@ -1018,7 +1030,7 @@ function LibraryListView() {
               }
             }
           } catch (e: unknown) {
-            clientLogger.warn('[Library] Update check failed:', e);
+            clientLogger.warn(`[Library] Update check failed: ${String(e)}`);
           }
         };
 
@@ -1077,7 +1089,7 @@ function LibraryListView() {
                 clientLogger.debug(`[Library] 🌍 Salvate ${fetched} nuove lingue in cache`);
               }
             } catch (e: unknown) {
-              clientLogger.warn('[Library] Errore caricamento lingue:', e);
+              clientLogger.warn(`[Library] Errore caricamento lingue: ${String(e)}`);
             }
           };
           loadLanguagesInBackground();
@@ -1096,7 +1108,7 @@ function LibraryListView() {
   }, []); // Carica solo una volta all'avvio
 
   const handleForceRefresh = (freshGames: Game[]) => {
-    clientLogger.debug('🔄 Force refresh completed, updating games list:', freshGames);
+    clientLogger.debug(`🔄 Force refresh completed, updating games list: ${freshGames.length} games`);
     
     // Aggiungi platform: 'Steam' a tutti i games se mancante
     const safeFreshGames = ensureArray<Game>(freshGames);
@@ -1104,7 +1116,7 @@ function LibraryListView() {
       ...game,
       platform: game.platform || 'Steam',
       title: enrichGameTitle(game.app_id || game.id, game.title, game.platform),
-      install_dir: (game as unknown).install_path || game.install_dir || undefined,
+      install_dir: (game as Game & { install_path?: string }).install_path || game.install_dir || undefined,
     }));
     
     // Debug: conta giochi con nomi validi vs invalidi
@@ -1184,8 +1196,8 @@ function LibraryListView() {
             return (a.title || '').localeCompare(b.title || '');
           case 'playtime':
             // Sort per tempo di gioco (se disponibile)
-            const aTime = (a as unknown).playtime_forever || 0;
-            const bTime = (b as unknown).playtime_forever || 0;
+            const aTime = (a as Game & { playtime_forever?: number }).playtime_forever || 0;
+            const bTime = (b as Game & { playtime_forever?: number }).playtime_forever || 0;
             if (aTime !== bTime) {
               return bTime - aTime;
             }
@@ -1273,7 +1285,7 @@ function LibraryListView() {
                 <Languages className="h-4 w-4" />
               </button>
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as unknown).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as Game & { install_path?: string }).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
                 className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
                 title="P.T. Prediction Tool"
               >
@@ -1548,8 +1560,8 @@ function LibraryListView() {
               <p className="text-slate-400 text-xs font-medium mt-0.5">
                 {games.length > 0 
                   ? filteredGames.length === games.length
-                    ? `${games.length} ${lib.gamesAvailable || 'giochi disponibili'}`
-                    : `${filteredGames.length} ${lib.gamesOf} ${games.length} ${lib.gamesAvailable || 'disponibili'}`
+                    ? `${games.length} ${(lib as Record<string, string>).gamesAvailable || 'giochi disponibili'}`
+                    : `${filteredGames.length} ${lib.gamesOf} ${games.length} ${(lib as Record<string, string>).gamesAvailable || 'disponibili'}`
                   : lib.noGames}
               </p>
             </div>
@@ -1593,7 +1605,7 @@ function LibraryListView() {
 
           {/* Azioni rapide */}
           <div className="flex items-center gap-2">
-            <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+            <ForceRefreshButton onRefreshComplete={(games: unknown[]) => handleForceRefresh(games as Game[])} />
             <button 
               onClick={testFamilySharing} 
               className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30"
@@ -1626,8 +1638,8 @@ function LibraryListView() {
               onClick={async () => {
                 toast.info(lib.downloadingNames);
                 try {
-                  const result = await invoke('update_remote_game_database');
-                  const updatedGames = Object.values(result as unknown) as Game[];
+                  const result = await invoke<Record<string, Game>>('update_remote_game_database');
+                  const updatedGames = Object.values(result ?? {}) as Game[];
                   setGames(updatedGames);
                   toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
                 } catch (e: unknown) {
@@ -1676,7 +1688,7 @@ function LibraryListView() {
             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-slate-300 transition-colors pointer-events-none" />
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as string)}
+              onChange={(e) => setSortBy(e.target.value as 'alphabetical' | 'lastPlayed' | 'recentlyAdded' | 'playtime')}
               className="appearance-none bg-slate-900/60 border border-slate-700/50 rounded-xl pl-9 pr-9 py-2.5 text-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer shadow-sm transition-all"
             >
               <option value="alphabetical">{lib.alphabetical}</option>

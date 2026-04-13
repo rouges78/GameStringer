@@ -28,7 +28,7 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
       fs.copyFileSync(backupPath, originalPath);
       restored++;
     } catch (e: unknown) {
-      clientLogger.error(`Errore ripristino ${backup}: ${e.message}`);
+      clientLogger.error(`Errore ripristino ${backup}: ${e instanceof Error ? e.message : String(e)}`, 'UNITY_INK');
     }
   }
 

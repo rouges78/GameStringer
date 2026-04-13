@@ -350,7 +350,7 @@ export function SmartContextPanel({
                       <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.stileDiDialogo')}</label>
                       <Select 
                         value={newCharacter.speechStyle} 
-                        onValueChange={(v) => setNewCharacter({ ...newCharacter, speechStyle: v as string })}
+                        onValueChange={(v) => setNewCharacter({ ...newCharacter, speechStyle: v as "formal" | "informal" | "neutral" | "archaic" | "modern" | "slang" })}
                       >
                         <SelectTrigger className="bg-muted/50 border-border">
                           <SelectValue />

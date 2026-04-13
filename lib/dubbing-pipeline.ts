@@ -344,7 +344,7 @@ export class DubbingPipeline {
           segment.transcriptionConfidence = data.confidence || 0.9;
           segment.status = 'pending';
           this.stats.transcribed++;
-          confidenceSum += segment.transcriptionConfidence;
+          confidenceSum += segment.transcriptionConfidence ?? 0;
         } else {
           segment.status = 'error';
           segment.error = `Transcription failed: ${response.status}`;
@@ -428,6 +428,7 @@ export class DubbingPipeline {
 
         const voiceProfile: VoiceProfile = charProfile?.voiceProfile || {
           id: 'default',
+          name: 'Default Voice',
           provider: this.config.ttsProvider as VoiceProfile['provider'],
           voiceId: this.config.defaultVoice || 'alloy',
           settings: { speed: 1.0, pitch: 1.0, stability: 0.5, similarityBoost: 0.75 },

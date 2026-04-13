@@ -23,7 +23,8 @@ import {
   FeedbackEntry, 
   FeedbackCategory,
   FeedbackStats,
-  FEEDBACK_CATEGORIES 
+  FeedbackFilter,
+  FEEDBACK_CATEGORIES
 } from '@/lib/player-feedback';
 
 export function PlayerFeedbackPanel() {
@@ -51,11 +52,11 @@ export function PlayerFeedbackPanel() {
   }, [filterStatus, filterCategory]);
 
   const refreshData = () => {
-    const filter: unknown = {};
+    const filter: Record<string, string> = {};
     if (filterStatus !== 'all') filter.status = filterStatus;
     if (filterCategory !== 'all') filter.category = filterCategory;
-    
-    setFeedbackList(playerFeedbackService.getFeedback(filter));
+
+    setFeedbackList(playerFeedbackService.getFeedback(filter as FeedbackFilter));
     setStats(playerFeedbackService.getStats());
   };
 

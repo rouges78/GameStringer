@@ -94,8 +94,8 @@ export function LoginDebugMonitor() {
         });
       }
     } catch (e: unknown) {
-      clientLogger.debug('⚠️ [LoginDebugMonitor] Non posso intercettare window.location:', e.message);
-      setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: Non posso intercettare window.location: ${e.message}`]);
+      clientLogger.debug('⚠️ [LoginDebugMonitor] Non posso intercettare window.location:', (e as Error).message);
+      setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: Non posso intercettare window.location: ${(e as Error).message}`]);
     }
     
     return () => {

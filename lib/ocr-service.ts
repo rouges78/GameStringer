@@ -80,9 +80,12 @@ export async function recognizeText(
       }
     });
 
-    const data = result.data as unknown;
-    
-    const words: OCRWord[] = (data.words || []).map((w: unknown) => ({
+    interface TesseractWord { text: string; confidence: number; bbox: BoundingBox }
+    interface TesseractLine { text: string; confidence: number; bbox: BoundingBox; words: TesseractWord[] }
+    interface TesseractData { words: TesseractWord[]; lines: TesseractLine[] }
+    const data = result.data as unknown as TesseractData;
+
+    const words: OCRWord[] = (data.words || []).map((w: TesseractWord) => ({
       text: w.text,
       confidence: w.confidence,
       bbox: {
@@ -93,7 +96,7 @@ export async function recognizeText(
       }
     }));
 
-    const lines: OCRLine[] = (data.lines || []).map((l: unknown) => ({
+    const lines: OCRLine[] = (data.lines || []).map((l: TesseractLine) => ({
       text: l.text,
       confidence: l.confidence,
       bbox: {
@@ -102,7 +105,7 @@ export async function recognizeText(
         x1: l.bbox.x1,
         y1: l.bbox.y1
       },
-      words: (l.words || []).map((w: unknown) => ({
+      words: (l.words || []).map((w: TesseractWord) => ({
         text: w.text,
         confidence: w.confidence,
         bbox: {
@@ -122,7 +125,7 @@ export async function recognizeText(
       processingTime: Date.now() - startTime
     };
   } catch (error: unknown) {
-    clientLogger.error('OCR Error:', error);
+    clientLogger.error(`OCR Error: ${String(error)}`);
     throw new Error(`OCR failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

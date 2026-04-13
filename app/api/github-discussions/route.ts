@@ -92,7 +92,7 @@ async function scrapeDiscussions() {
     const html = await response.text();
 
     // Parse semplice per estrarre le discussions dalla pagina HTML
-    const discussions: unknown[] = [];
+    const discussions: Array<{ number: number; [key: string]: unknown }> = [];
 
     // Regex per trovare i link alle discussions
     const discussionRegex = /\/discussions\/(\d+)"[^>]*>([^<]+)</g;
@@ -123,7 +123,7 @@ async function scrapeDiscussions() {
     return NextResponse.json(discussions);
 
   } catch (error: unknown) {
-    clientLogger.error('Error scraping discussions:', error);
+    clientLogger.error('Error scraping discussions', 'GITHUB', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json([]);
   }
 }

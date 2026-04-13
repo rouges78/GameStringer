@@ -3,22 +3,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { clientLogger } from '@/lib/client-logger';
 
-// Client-side clientLogger (console only)
-const clientLogger = {
-  info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.info(`[${component || 'TAURI'}] ${message}`, metadata);
-  },
-  warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.warn(`[${component || 'TAURI'}] ${message}`, metadata);
-  },
-  error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.error(`[${component || 'TAURI'}] ${message}`, metadata);
-  },
-  debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
-    clientLogger.debug(`[${component || 'TAURI'}] ${message}`, metadata);
-  }
-};
-
 // Client-side secrets access via secure storage
 const getSecret = async (key: string): Promise<string | null> => {
   try {
@@ -238,13 +222,20 @@ export class TauriIntegration {
         throw new Error('Epic Games integration requires Tauri environment');
       }
 
-      const epicGames = await this.invokeCommand<unknown[]>('get_epic_games');
-      
+      interface EpicGame {
+        app_name: string;
+        display_name: string;
+        key_images?: Array<{ type: string; url: string }>;
+        is_installed?: boolean;
+        install_path?: string;
+      }
+      const epicGames = await this.invokeCommand<EpicGame[]>('get_epic_games');
+
       return epicGames.map(game => ({
         id: `epic_${game.app_name}`,
         name: game.display_name,
         provider: 'Epic Games',
-        imageUrl: game.key_images?.find((img: unknown) => img.type === 'DieselStoreFrontWide')?.url,
+        imageUrl: game.key_images?.find((img) => img.type === 'DieselStoreFrontWide')?.url,
         installed: game.is_installed || false,
         installPath: game.install_path
       }));

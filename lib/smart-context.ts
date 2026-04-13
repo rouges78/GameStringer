@@ -3,6 +3,8 @@
  * Memorizza personaggi, luoghi, termini ricorrenti e stili
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface CharacterProfile {
   name: string;
   aliases: string[];
@@ -111,7 +113,7 @@ class SmartContextManager {
       gameName,
       genre: options?.genre || 'unknown',
       setting: options?.setting || '',
-      tone: options?.tone || 'neutral' as unknown,
+      tone: options?.tone || 'serious',
       era: options?.era || 'modern',
       characters: [],
       locations: [],

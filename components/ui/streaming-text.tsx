@@ -19,7 +19,7 @@ export function StreamingText({
   cursorClassName,
   showCursor = true
 }: StreamingTextProps) {
-  const { t: _t } = useTranslation();
+  const { t } = useTranslation();
   return (
     <div className={cn('relative', className)}>
       <span className="whitespace-pre-wrap">{text}</span>
@@ -54,6 +54,7 @@ export function StreamingTranslationBox({
   onRetry,
   className
 }: StreamingTranslationBoxProps) {
+  const { t } = useTranslation();
   return (
     <div className={cn('rounded-lg border bg-card', className)}>
       {/* Header */}

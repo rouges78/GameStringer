@@ -170,11 +170,11 @@ export function UnityPatcher() {
         // Verifica motore
         invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string; has_bepinex?: boolean; has_xunity?: boolean }>('check_game_engine', { gamePath: matchedGame.install_dir })
           .then(check => setEngineCheck(check))
-          .catch(err => clientLogger.error('Engine verification error:', err));
+          .catch(err => clientLogger.error(`Engine verification error: ${String(err)}`));
       }
       toast.success(`🎮 "${getGameName(matchedGame)}" ${t('gamePatcher.gameSelectedAuto')}`);
     } else {
-      clientLogger.debug('[UnityPatcher] Game not found in Unity list:', urlGameId, urlGameName);
+      clientLogger.debug(`[UnityPatcher] Game not found in Unity list: ${urlGameId} ${urlGameName}`);
       toast.info(`"${urlGameName}" ${t('gamePatcher.gameNotFound')}`);
     }
     
@@ -235,7 +235,7 @@ export function UnityPatcher() {
       setUnityGames(allGamesWithEngine);
       setHasSteamCredentials(true); // Non serve più, ma manteniamo per UI
     } catch (err: unknown) {
-      clientLogger.error('Games loading error:', err);
+      clientLogger.error(`Games loading error: ${String(err)}`);
       setHasSteamCredentials(false);
       setUnityGames([]);
     } finally {
@@ -299,9 +299,9 @@ export function UnityPatcher() {
         const check = await invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string }>('check_game_engine', { gamePath: game.install_dir });
         setEngineCheck(check);
       } catch (err: unknown) {
-        clientLogger.error('Engine check error:', err);
+        clientLogger.error(`Engine check error: ${String(err)}`);
       }
-      
+
       try {
         const exes = await invoke<string[]>('find_executables_in_folder', { folderPath: game.install_dir });
         if (exes && exes.length > 0) {
@@ -331,7 +331,7 @@ export function UnityPatcher() {
       } catch (err: unknown) {
         // Ignora rate limit silenziosamente - non è critico
         if (!String(err).includes('Rate limit')) {
-          clientLogger.error('Languages loading error:', err);
+          clientLogger.error(`Languages loading error: ${String(err)}`);
         }
       } finally {
         setIsLoadingLanguages(false);
@@ -367,9 +367,9 @@ export function UnityPatcher() {
             toast.warning(`⚠ ${t('gamePatcher.engineNotRecognized')}`);
           }
         } catch (err: unknown) {
-          clientLogger.error('Engine check error:', err);
+          clientLogger.error(`Engine check error: ${String(err)}`);
         }
-        
+
         // Search for executables in selected folder
         try {
           const exes = await invoke<string[]>('find_executables_in_folder', { folderPath: selected });
@@ -381,11 +381,11 @@ export function UnityPatcher() {
             toast.warning(t('gamePatcher.noExeFound'));
           }
         } catch (err: unknown) {
-          clientLogger.error('Executable search error:', err);
+          clientLogger.error(`Executable search error: ${String(err)}`);
         }
       }
     } catch (err: unknown) {
-      clientLogger.error('Folder selection error:', err);
+      clientLogger.error(`Folder selection error: ${String(err)}`);
       toast.error(t('gamePatcher.cannotOpenFolder'));
     }
   };
@@ -458,7 +458,7 @@ export function UnityPatcher() {
       }
 
     } catch (err: unknown) {
-      clientLogger.error('Patching error:', err);
+      clientLogger.error(`Patching error: ${String(err)}`);
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : String(err));
       setLogs(prev => [...prev, `❌ Error: ${err instanceof Error ? err.message : String(err)}`]);
@@ -479,7 +479,7 @@ export function UnityPatcher() {
         toast.success(t('gamePatcher.gameLaunchedSteam'));
         return;
       } catch (err: unknown) {
-        clientLogger.error('Steam launch error:', err);
+        clientLogger.error(`Steam launch error: ${String(err)}`);
         // Continua con fallback
       }
     }
@@ -493,7 +493,7 @@ export function UnityPatcher() {
         toast.success(t('gamePatcher.gameLaunched'));
         return;
       } catch (err: unknown) {
-        clientLogger.error('Direct launch error:', err);
+        clientLogger.error(`Direct launch error: ${String(err)}`);
       }
     }
     
@@ -514,7 +514,7 @@ export function UnityPatcher() {
         toast.success(result.message);
       }
     } catch (err: unknown) {
-      clientLogger.error('Patch removal error:', err);
+      clientLogger.error(`Patch removal error: ${String(err)}`);
       toast.error(t('gamePatcher.patchRemoveError'));
     }
   };
@@ -711,7 +711,7 @@ export function UnityPatcher() {
                       <Button 
                         className="h-6 px-2 text-2xs bg-emerald-600 hover:bg-emerald-500" 
                         onClick={handlePatch} 
-                        disabled={isPatching || !exeName || !gamePath || (engineCheck && !engineCheck.can_patch)}
+                        disabled={isPatching || !exeName || !gamePath || (engineCheck != null && !engineCheck.can_patch)}
                       >
                         {isPatching ? t('gamePatcher.installing') : t('gamePatcher.install')}
                       </Button>

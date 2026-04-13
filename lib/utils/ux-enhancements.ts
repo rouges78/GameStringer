@@ -313,7 +313,7 @@ export function createKeyboardShortcut(
   options: { preventDefault?: boolean; stopPropagation?: boolean } = {}
 ): (event: KeyboardEvent) => void {
   return (event: KeyboardEvent) => {
-    const pressedKeys = [];
+    const pressedKeys: string[] = [];
     
     if (event.ctrlKey) pressedKeys.push('ctrl');
     if (event.altKey) pressedKeys.push('alt');

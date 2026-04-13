@@ -131,8 +131,8 @@ export const NotificationToastProvider: React.FC<NotificationToastProviderProps>
     }
 
     // Mostra la toast immediatamente
-    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).showNotificationToast) {
-      (window as unknown as Record<string, unknown>).showNotificationToast(notification);
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, (n: Notification) => void>).showNotificationToast) {
+      (window as unknown as Record<string, (n: Notification) => void>).showNotificationToast(notification);
     }
   }, [isUIBlocked]);
 
@@ -252,10 +252,10 @@ export const useToast = () => {
     // Fallback se il provider non è disponibile
     return {
       showToast: (notification: Notification) => clientLogger.debug('Toast:', notification),
-      showSuccessToast: (title: string, message: string) => clientLogger.debug('Success:', title, message),
-      showErrorToast: (title: string, message: string) => clientLogger.debug('Error:', title, message),
-      showInfoToast: (title: string, message: string) => clientLogger.debug('Info:', title, message),
-      showWarningToast: (title: string, message: string) => clientLogger.debug('Warning:', title, message)
+      showSuccessToast: (title: string, message: string) => clientLogger.debug('Success:', title, { message }),
+      showErrorToast: (title: string, message: string) => clientLogger.debug('Error:', title, { message }),
+      showInfoToast: (title: string, message: string) => clientLogger.debug('Info:', title, { message }),
+      showWarningToast: (title: string, message: string) => clientLogger.debug('Warning:', title, { message })
     };
   }
   

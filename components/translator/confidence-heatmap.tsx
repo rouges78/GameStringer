@@ -340,7 +340,7 @@ export function ConfidenceHeatmap({ data, onSelectPair, className }: ConfidenceH
       <div className="lg:col-span-2 space-y-4">
         {/* Toolbar */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={filterLevel} onValueChange={(v) => setFilterLevel(v as string)}>
+          <Select value={filterLevel} onValueChange={(v) => setFilterLevel(v as "all" | "critical" | "low" | "medium" | "high")}>
             <SelectTrigger className="w-[150px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filtra" />

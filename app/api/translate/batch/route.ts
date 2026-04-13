@@ -23,7 +23,9 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     if (!validated.success) {
       throw new ValidationError(validated.error);
     }
-    const { texts: batchTexts, targetLanguage, sourceLanguage, provider, context, apiKey: userApiKey } = validated.data;
+    const { texts: batchTexts, targetLanguage, context, apiKey: userApiKey } = validated.data;
+    const sourceLanguage = validated.data.sourceLanguage ?? 'auto';
+    const provider = validated.data.provider ?? 'openai';
 
     logger.info('Batch translation request', 'TRANSLATE_BATCH_API', {
       count: batchTexts.length,
@@ -39,16 +41,17 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
         translations = await translateBatchOpenAI(batchTexts, targetLanguage, sourceLanguage, context, provider === 'gpt5');
         break;
       case 'gemini':
-        logger.debug('[BATCH API] Calling Gemini with', batchTexts.length, 'texts, apiKey present:', !!userApiKey);
-        logger.debug('[BATCH API] First text sample:', batchTexts[0]?.substring(0, 100));
+        logger.debug(`[BATCH API] Calling Gemini with ${batchTexts.length} texts, apiKey present: ${!!userApiKey}`);
+        logger.debug(`[BATCH API] First text sample: ${batchTexts[0]?.substring(0, 100)}`);
         try {
           translations = await translateBatchGemini(batchTexts, targetLanguage, sourceLanguage, context, userApiKey);
-          logger.debug('[BATCH API] Gemini success:', translations.length, 'translations');
+          logger.debug(`[BATCH API] Gemini success: ${translations.length} translations`);
         } catch (geminiError: unknown) {
-          logger.error('[BATCH API] Gemini error details:', {
-            message: geminiError?.message,
-            stack: geminiError?.stack?.substring(0, 500),
-            name: geminiError?.name
+          const ge = geminiError instanceof Error ? geminiError : new Error(String(geminiError));
+          logger.error('[BATCH API] Gemini error details:', 'TRANSLATE_BATCH_API', {
+            message: ge.message,
+            stack: ge.stack?.substring(0, 500),
+            name: ge.name
           });
           throw geminiError;
         }
@@ -142,7 +145,7 @@ Keep game terminology consistent. Preserve formatting, variables like {0}, %s, e
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: unknown) => p.index === i + 1);
+      const item = parsed.find((p: { index?: number; translation?: string }) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,
@@ -177,7 +180,7 @@ async function translateBatchGemini(
 
   const numberedTexts = sanitizedTexts.map((t, i) => `[${i + 1}] ${t}`).join('\n');
   
-  logger.debug('[GEMINI BATCH] Translating', texts.length, 'texts, first:', sanitizedTexts[0]?.substring(0, 30));
+  logger.debug(`[GEMINI BATCH] Translating ${texts.length} texts, first: ${sanitizedTexts[0]?.substring(0, 30)}`);
   
   const prompt = `You are a professional video game translator. Translate these numbered texts from ${sourceLanguage} to ${targetLanguage}.
 ${context ? `Context: ${context}` : ''}
@@ -202,18 +205,18 @@ ${numberedTexts}`;
 
   if (!response.ok) {
     const errorBody = await response.text();
-    logger.error('[GEMINI BATCH] API Error:', response.status, errorBody);
+    logger.error(`[GEMINI BATCH] API Error: ${response.status} ${errorBody}`);
     throw new Error(`Gemini API error: ${response.status} - ${errorBody}`);
   }
 
   const data = await response.json();
-  logger.debug('[GEMINI BATCH] Response received, candidates:', data.candidates?.length);
+  logger.debug(`[GEMINI BATCH] Response received, candidates: ${data.candidates?.length}`);
   const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: unknown) => p.index === i + 1);
+      const item = parsed.find((p: { index?: number; translation?: string }) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,
@@ -275,7 +278,7 @@ Return ONLY a JSON array: [{"index": 1, "translation": "..."}, ...]`;
     try {
       const parsed = JSON.parse(content);
       return texts.map((original, i) => {
-        const item = parsed.find((p: unknown) => p.index === i + 1);
+        const item = parsed.find((p: { index?: number; translation?: string }) => p.index === i + 1);
         return {
           original,
           translated: item?.translation || original,
@@ -339,7 +342,7 @@ Return ONLY a JSON array: [{"index": 1, "translation": "..."}, ...]`;
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: unknown) => p.index === i + 1);
+      const item = parsed.find((p: { index?: number; translation?: string }) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,

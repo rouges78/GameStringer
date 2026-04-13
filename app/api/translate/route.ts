@@ -57,7 +57,9 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     if (!validated.success) {
       throw new ValidationError(validated.error);
     }
-    const { text, targetLanguage, sourceLanguage, provider, context, apiKey: userApiKey } = validated.data;
+    const { text, targetLanguage, context, apiKey: userApiKey } = validated.data;
+    const sourceLanguage = validated.data.sourceLanguage ?? 'auto';
+    const provider = validated.data.provider ?? 'openai';
 
     logger.info('Translation request received', 'TRANSLATE_API', {
       textLength: text.length,
@@ -79,7 +81,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     // Initialize secrets manager
     await secretsManager.initialize();
 
-    let translationResult: TranslationResponse;
+    let translationResult: TranslationResponse | undefined;
 
     // Funzione helper per traduzione con fallback a libre
     const translateWithProvider = async (): Promise<TranslationResponse> => {
@@ -127,7 +129,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
       { name: 'mock', fn: () => translateWithMock(text, targetLanguage, sourceLanguage) },
     ];
 
-    let lastError: Error | null = null;
+    let lastError: unknown = null;
     let usedFallback = false;
     let fallbackSuggestions: string[] = [];
 
@@ -152,7 +154,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
       } catch (err: unknown) {
         lastError = err;
         usedFallback = true;
-        logger.warn(`Provider ${fallback.name} failed, trying next fallback`, 'TRANSLATE_API', { error: err.message });
+        logger.warn(`Provider ${fallback.name} failed, trying next fallback`, 'TRANSLATE_API', { error: err instanceof Error ? err.message : String(err) });
       }
     }
 
@@ -181,7 +183,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     // Clear cache if it gets too large
     if (translationCache.size > 1000) {
       const firstKey = translationCache.keys().next().value;
-      translationCache.delete(firstKey);
+      if (firstKey !== undefined) translationCache.delete(firstKey);
     }
 
     logger.info('Translation completed', 'TRANSLATE_API', {
@@ -286,7 +288,7 @@ async function translateWithGemini(
 ): Promise<TranslationResponse> {
   const apiKey = userApiKey || secretsManager.get('GEMINI_API_KEY');
   
-  logger.debug('[GEMINI] API Key source:', userApiKey ? 'user-provided' : 'secrets');
+  logger.debug(`[GEMINI] API Key source: ${userApiKey ? 'user-provided' : 'secrets'}`);
   
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Set GEMINI_API_KEY in settings.');
@@ -311,7 +313,7 @@ async function translateWithGemini(
     };
   }
 
-  logger.debug('[GEMINI SINGLE] Translating:', sanitizedText.substring(0, 50), '...');
+  logger.debug(`[GEMINI SINGLE] Translating: ${sanitizedText.substring(0, 50)}...`);
 
   try {
     const systemPrompt = `You are a professional translator specializing in video game localization. 
@@ -356,7 +358,7 @@ async function translateWithGemini(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      logger.error('[GEMINI] Errore API:', response.status, JSON.stringify(errorData));
+      logger.error(`[GEMINI] Errore API: ${response.status} ${JSON.stringify(errorData)}`);
       throw new Error(`Gemini API error: ${response.status} - ${errorData?.error?.message || JSON.stringify(errorData)}`);
     }
 

@@ -434,7 +434,7 @@ export class BatchTranslator {
       clientLogger.debug(`[BatchTranslator] Glossary extracted: ${result.newTerms.length} new terms (${result.duplicates} duplicates) via ${result.provider} in ${result.timeMs}ms`);
       this.job.progress.statusMessage = undefined;
     } catch (error: unknown) {
-      clientLogger.warn('[BatchTranslator] Auto glossary extraction failed:', error);
+      clientLogger.warn(`[BatchTranslator] Auto glossary extraction failed: ${String(error)}`, 'BATCH');
       this.job.progress.statusMessage = undefined;
     }
   }
@@ -488,7 +488,7 @@ export class BatchTranslator {
           this.job.progress.fromMemory++;
           this.job.results.translatedItems++;
           this.job.results.fromMemoryItems++;
-          translationMemory.incrementUsage(fuzzyMatch.unit.id).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
+          translationMemory.incrementUsage(fuzzyMatch.unit.id).catch((err) => clientLogger.warn(`TM operation failed: ${String(err)}`, 'BATCH'));
           this.onItemCompleteCallback?.(item);
           clientLogger.debug(`[BatchTranslator] Fuzzy TM match (${fuzzyMatch.similarity}%): "${item.sourceText.substring(0, 40)}..."`);
           continue;
@@ -585,7 +585,7 @@ export class BatchTranslator {
         harvestedContext = harvestBatch(harvestInputs);
         clientLogger.debug(`[BatchTranslator] Context harvested: ${harvestedContext.stats.stringsWithConstraints} constrained, ${harvestedContext.stats.stringsWithPlaceholders} with placeholders`);
       } catch (e: unknown) {
-        clientLogger.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
+        clientLogger.warn(`[BatchTranslator] Context harvest failed, continuing without: ${String(e)}`, 'BATCH');
       }
 
       // RAG: inietta traduzioni simili dalla TM come contesto per coerenza terminologica
@@ -657,7 +657,7 @@ export class BatchTranslator {
               gameId: this.job.gameId,
               provider: this.job.provider,
               confidence: 0.85
-            }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
+            }).catch((err) => clientLogger.warn(`TM operation failed: ${String(err)}`, 'BATCH'));
           }
 
           // Stima costi
@@ -681,7 +681,7 @@ export class BatchTranslator {
       
     } catch (error: unknown) {
       // Fallback: traduci uno alla volta se batch fallisce
-      clientLogger.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single:`, error);
+      clientLogger.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single: ${String(error)}`, 'BATCH');
       
       for (const item of batchItems) {
         // Skip items already processed before the batch error
@@ -791,7 +791,7 @@ export class BatchTranslator {
                 gameId: this.job.gameId,
                 provider: this.job.provider,
                 confidence: 0.9 // Confidence più alta per retry riuscito
-              }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
+              }).catch((err) => clientLogger.warn(`TM operation failed: ${String(err)}`, 'BATCH'));
             }
 
             this.onItemCompleteCallback?.(item);
@@ -808,7 +808,7 @@ export class BatchTranslator {
         failedItems = stillFailing;
 
       } catch (error: unknown) {
-        clientLogger.warn(`[BatchTranslator] Quality retry ${attempt} error:`, error);
+        clientLogger.warn(`[BatchTranslator] Quality retry ${attempt} error: ${String(error)}`, 'BATCH');
         break;
       }
 
@@ -831,7 +831,7 @@ export class BatchTranslator {
             gameId: this.job.gameId,
             provider: this.job.provider,
             confidence: 0.6 // Confidence bassa — non ha superato QA
-          }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
+          }).catch((err) => clientLogger.warn(`TM operation failed: ${String(err)}`, 'BATCH'));
         }
 
         this.onItemCompleteCallback?.(item);
@@ -927,7 +927,7 @@ export class BatchTranslator {
       const report = runQualityGates({
         sourceText: item.sourceText,
         translatedText: item.translatedText,
-        context: item.classification?.type as unknown,
+        context: item.classification?.type as 'ui' | 'dialogue' | 'narrative' | 'system' | 'item' | 'general' | undefined,
         maxLength: item.metadata?.maxLength,
         glossaryTerms: this.job.options.glossaryTerms,
         minQualityScore: this.job.options.minQualityScore
@@ -991,7 +991,7 @@ export class BatchTranslator {
       translation: item.translatedText!,
       targetLang: this.job!.targetLanguage,
       sourceLang: this.job!.sourceLanguage || 'en',
-      genre: this.job!.gameGenre as unknown,
+      genre: this.job!.gameGenre as GameGenre | undefined,
       context: item.metadata?.context,
       qaScore: item.qualityReport?.overallScore,
       qaIssues: issues,
@@ -1019,7 +1019,7 @@ export class BatchTranslator {
         const newReport = runQualityGates({
           sourceText: item.sourceText,
           translatedText: suggestion.improved,
-          context: item.classification?.type as unknown,
+          context: item.classification?.type as 'ui' | 'dialogue' | 'narrative' | 'system' | 'item' | 'general' | undefined,
           maxLength: item.metadata?.maxLength,
           glossaryTerms: this.job!.options.glossaryTerms,
           minQualityScore: this.job!.options.minQualityScore,
@@ -1046,7 +1046,7 @@ export class BatchTranslator {
               gameId: this.job!.gameId,
               provider: this.job!.provider,
               confidence: 0.92, // Alta confidence per post-edit verificato
-            }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
+            }).catch((err) => clientLogger.warn(`TM operation failed: ${String(err)}`, 'BATCH'));
           }
 
           clientLogger.debug(`[BatchTranslator] Post-edit applied (${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
@@ -1055,7 +1055,7 @@ export class BatchTranslator {
         }
       });
     } catch (error: unknown) {
-      clientLogger.warn('[BatchTranslator] Auto post-edit failed:', error);
+      clientLogger.warn(`[BatchTranslator] Auto post-edit failed: ${String(error)}`, 'BATCH');
     }
 
     this.job.progress.statusMessage = undefined;

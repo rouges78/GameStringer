@@ -275,8 +275,8 @@ export function VoiceTranslator() {
       setState(prev => ({
         ...prev,
         transcription: data.text || '',
-        transcriptionSegments: (data.segments || []).map((s: unknown) => ({
-          start: s.start, end: s.end, text: s.text
+        transcriptionSegments: (data.segments || []).map((s: Record<string, unknown>) => ({
+          start: s.start as number, end: s.end as number, text: s.text as string
         })),
         sourceLanguage: data.language || prev.sourceLanguage,
         isTranscribing: false,

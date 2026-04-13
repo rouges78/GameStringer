@@ -12,6 +12,8 @@
  * - identifyPatch: rileva formato e info di una patch
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 const IPS_MAGIC = 'PATCH';
 const IPS_EOF = 'EOF';
 const BPS_MAGIC = 'BPS1';
@@ -134,7 +136,7 @@ export function applyIPS(romData: Uint8Array, patchData: Uint8Array): PatchResul
     const trimmed = output.slice(0, maxWritten);
     return { success: true, output: trimmed, outputSize: maxWritten, format: 'ips', recordsApplied: records };
   } catch (err: unknown) {
-    return { success: false, outputSize: 0, format: 'ips', recordsApplied: 0, error: err.message };
+    return { success: false, outputSize: 0, format: 'ips', recordsApplied: 0, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -265,7 +267,7 @@ export function applyBPS(romData: Uint8Array, patchData: Uint8Array): PatchResul
 
     return { success: true, output, outputSize: output.length, format: 'bps', recordsApplied: records };
   } catch (err: unknown) {
-    return { success: false, outputSize: 0, format: 'bps', recordsApplied: 0, error: err.message };
+    return { success: false, outputSize: 0, format: 'bps', recordsApplied: 0, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -401,7 +403,7 @@ export function createIPS(original: Uint8Array, modified: Uint8Array): CreatePat
 
     return { success: true, patch, patchSize: totalSize, format: 'ips', records };
   } catch (err: unknown) {
-    return { success: false, patchSize: 0, format: 'ips', records: 0, error: err.message };
+    return { success: false, patchSize: 0, format: 'ips', records: 0, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -531,7 +533,7 @@ export function createBPS(original: Uint8Array, modified: Uint8Array, metadata?:
 
     return { success: true, patch, patchSize: patch.length, format: 'bps', records };
   } catch (err: unknown) {
-    return { success: false, patchSize: 0, format: 'bps', records: 0, error: err.message };
+    return { success: false, patchSize: 0, format: 'bps', records: 0, error: err instanceof Error ? err.message : String(err) };
   }
 }
 

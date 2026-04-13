@@ -266,7 +266,7 @@ export async function translateCriEntries(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
 
-        const translated = translateResult.translations ?? translateResult.results ?? [];
+        const translated = translateResult.translations ?? (translateResult as unknown as Record<string, string[]>).results ?? [];
         batchIndices.forEach((entryIdx, batchIdx) => {
           result[entryIdx].translated = translated[batchIdx] ?? '';
           result[entryIdx].translationStatus = translated[batchIdx] ? 'translated' : 'error';

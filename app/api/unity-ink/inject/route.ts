@@ -70,8 +70,9 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
       output: output.substring(0, 2000),
     });
   } catch (e: unknown) {
+    const err = e as { stderr?: string; message?: string };
     return NextResponse.json({
-      error: `Errore InjectInk: ${e.stderr?.substring(0, 500) || e.message}`
+      error: `Errore InjectInk: ${err.stderr?.substring(0, 500) || err.message || 'Unknown error'}`
     }, { status: 500 });
   }
 });

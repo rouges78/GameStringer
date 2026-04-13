@@ -42,7 +42,9 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-export { progressMap };
+// progressMap is used internally and by other modules that import from this file
+// Next.js route files only allow HTTP method exports, so we expose it via a getter
+export function getProgressMap() { return progressMap; }
 
 export const POST = withErrorHandler(async function(req: NextRequest) {
   const { gameDir, targetLang = 'it', model = 'huihui_ai/hy-mt1.5-abliterated:7b', characterProfiles = [] } = await req.json();

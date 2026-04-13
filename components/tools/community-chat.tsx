@@ -152,7 +152,7 @@ export function CommunityChat() {
           });
         }
       } catch (e: unknown) {
-        clientLogger.error('[Chat] Init error:', e);
+        clientLogger.error(`[Chat] Init error: ${String(e)}`);
         toast.error(e instanceof Error ? e.message : 'Errore inizializzazione chat');
       } finally {
         setIsLoading(false);
@@ -204,7 +204,7 @@ export function CommunityChat() {
           });
         });
       } catch (e: unknown) {
-        clientLogger.error('[Chat] Load room error:', e);
+        clientLogger.error(`[Chat] Load room error: ${String(e)}`);
       }
     };
     loadRoom();
@@ -730,7 +730,7 @@ export function CommunityChat() {
             </div>
             <div>
               <Label className="text-xs">Tipo</Label>
-              <Select value={newRoomType} onValueChange={(v: unknown) => setNewRoomType(v)}>
+              <Select value={newRoomType} onValueChange={(v: string) => setNewRoomType(v as ChatRoom['type'])}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>

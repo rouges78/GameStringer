@@ -4,8 +4,14 @@
 
 import { Languages, Download, Upload, Check, X, Trash2, FileText } from 'lucide-react';
 import type { BatchOperation, TranslationBatchItem } from '@/lib/types/batch-operations';
+import type { BatchItem } from '@/lib/batch-processor';
 import type { ProgressState } from '@/lib/types/progress';
 import { createProgressBatchProcessor } from '@/lib/progress-batch-processor';
+
+// Helper to cast TranslationBatchItem processors to BatchItem processors
+type BatchItemProcessor = (item: BatchItem) => Promise<unknown>;
+const asBatchProcessor = (fn: (item: TranslationBatchItem) => Promise<unknown>): BatchItemProcessor =>
+  fn as BatchItemProcessor;
 import { 
   batchTranslateProcessor,
   batchExportProcessor,
@@ -37,7 +43,7 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
 
         return processor.processBatch(
           batchItems,
-          batchTranslateProcessor,
+          asBatchProcessor(batchTranslateProcessor),
           'translate',
           {
             title: `Traduzione di ${items.length} elementi`,
@@ -66,10 +72,10 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
         const exportWrapper = async (item: TranslationBatchItem) => {
           return batchExportProcessor([item], { format: 'json' });
         };
-        
+
         return processor.processBatch(
           batchItems,
-          exportWrapper,
+          asBatchProcessor(exportWrapper),
           'export',
           {
             title: `Esportazione di ${items.length} traduzioni`,
@@ -98,10 +104,10 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
         const importWrapper = async (item: TranslationBatchItem) => {
           return batchImportProcessor(item.data, { format: 'json', overwriteExisting: item.data.overwrite });
         };
-        
+
         return processor.processBatch(
           batchItems,
-          importWrapper,
+          asBatchProcessor(importWrapper),
           'import',
           {
             title: `Importazione di ${items.length} traduzioni`,
@@ -128,7 +134,7 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
 
         return processor.processBatch(
           batchItems,
-          batchApproveProcessor,
+          asBatchProcessor(batchApproveProcessor),
           'approve',
           {
             title: `Approvazione di ${items.length} traduzioni`,
@@ -155,7 +161,7 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
 
         return processor.processBatch(
           batchItems,
-          batchRejectProcessor,
+          asBatchProcessor(batchRejectProcessor),
           'reject',
           {
             title: `Rifiuto di ${items.length} traduzioni`,
@@ -182,7 +188,7 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
 
         return processor.processBatch(
           batchItems,
-          batchStatusUpdateProcessor,
+          asBatchProcessor(batchStatusUpdateProcessor),
           'status_update',
           {
             title: `Aggiornamento stato di ${items.length} traduzioni`,
@@ -209,7 +215,7 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
 
         return processor.processBatch(
           batchItems,
-          batchDeleteProcessor,
+          asBatchProcessor(batchDeleteProcessor),
           'delete',
           {
             title: `Eliminazione di ${items.length} traduzioni`,
@@ -243,7 +249,7 @@ export function useProgressBatchOperations(progressState: ProgressState) {
 
     return processor.processBatch(
       batchItems,
-      batchTranslateProcessor,
+      asBatchProcessor(batchTranslateProcessor),
       'translate',
       {
         title: `Traduzione in ${targetLanguage.toUpperCase()} di ${translationIds.length} elementi`,
@@ -271,7 +277,7 @@ export function useProgressBatchOperations(progressState: ProgressState) {
     
     return processor.processBatch(
       batchItems,
-      exportWrapper,
+      asBatchProcessor(exportWrapper),
       'export',
       {
         title: `Esportazione ${format.toUpperCase()} di ${translationIds.length} traduzioni`,
@@ -291,7 +297,7 @@ export function useProgressBatchOperations(progressState: ProgressState) {
 
     return processor.processBatch(
       batchItems,
-      batchStatusUpdateProcessor,
+      asBatchProcessor(batchStatusUpdateProcessor),
       'status_update',
       {
         title: `Aggiornamento stato di ${translationIds.length} traduzioni`,

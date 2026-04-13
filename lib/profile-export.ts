@@ -20,9 +20,9 @@ export function exportProfile(profile: Record<string, unknown>, settings: Record
       version: '1.0',
       exportedAt: new Date().toISOString(),
       profile: {
-        name: profile.name,
-        avatar_path: profile.avatar_path,
-        created_at: profile.created_at,
+        name: profile.name as string,
+        avatar_path: profile.avatar_path as string | undefined,
+        created_at: profile.created_at as string,
       },
       settings: settings,
     };
@@ -31,7 +31,7 @@ export function exportProfile(profile: Record<string, unknown>, settings: Record
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `gamestringer-profile-${profile.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.download = `gamestringer-profile-${(profile.name as string).toLowerCase().replace(/\s+/g, '-')}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -11,7 +11,7 @@
  * - Realtime subscription via Supabase
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 import { clientLogger } from '@/lib/client-logger';
 import { getSupabase as getSharedSupabase } from './community-hub-backend';
 
@@ -104,7 +104,7 @@ function getGSSession(): GSSessionInfo | null {
       if (p?.id || p?.name) {
         const id = p.id || p.name;
         const email = p.email || `gs_${id}@gamestringer.local`;
-        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gamestringer_current_profile:', id, p.name);
+        clientLogger.debug(`[Chat Bridge] Sessione GS trovata da gamestringer_current_profile: ${id} ${p.name}`);
         return { id, email, name: p.name || id, image: p.avatar_url || p.avatar_path || undefined };
       }
     }
@@ -116,7 +116,7 @@ function getGSSession(): GSSessionInfo | null {
       if (session?.user?.id) {
         const u = session.user;
         const email = u.email || `gs_${u.id}@gamestringer.local`;
-        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_session:', u.id, u.name);
+        clientLogger.debug(`[Chat Bridge] Sessione GS trovata da gs_session: ${u.id} ${u.name}`);
         return { id: u.id, email, name: u.name || u.id, image: u.image };
       }
     }
@@ -127,7 +127,7 @@ function getGSSession(): GSSessionInfo | null {
       const u = JSON.parse(rawUser);
       if (u?.id) {
         const email = u.email || `gs_${u.id}@gamestringer.local`;
-        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_user:', u.id, u.name);
+        clientLogger.debug(`[Chat Bridge] Sessione GS trovata da gs_user: ${u.id} ${u.name}`);
         return { id: u.id, email, name: u.name || u.id, image: u.image };
       }
     }
@@ -140,7 +140,7 @@ function getGSSession(): GSSessionInfo | null {
         const acc = accounts[0];
         const id = acc.userId || acc.id || 'unknown';
         const email = acc.email || `gs_${id}@gamestringer.local`;
-        clientLogger.debug('[Chat Bridge] Sessione GS trovata da gs_accounts:', id, acc.name);
+        clientLogger.debug(`[Chat Bridge] Sessione GS trovata da gs_accounts: ${id} ${acc.name}`);
         return { id, email, name: acc.name || id, image: acc.image };
       }
     }
@@ -148,7 +148,7 @@ function getGSSession(): GSSessionInfo | null {
     clientLogger.debug('[Chat Bridge] Nessuna sessione GS trovata in localStorage');
     return null;
   } catch (e: unknown) {
-    clientLogger.error('[Chat Bridge] Errore lettura sessione GS:', e);
+    clientLogger.error(`[Chat Bridge] Errore lettura sessione GS: ${String(e)}`);
     return null;
   }
 }
@@ -176,7 +176,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
   // 1. Check if already signed in
   const { data: current } = await supabase.auth.getUser();
   if (current?.user?.id) {
-    clientLogger.debug('[Chat Bridge] Già autenticato su Supabase:', current.user.id);
+    clientLogger.debug(`[Chat Bridge] Già autenticato su Supabase: ${current.user.id}`);
     authenticatedUserId = current.user.id;
   }
 
@@ -188,11 +188,11 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
     });
 
     if (signInData?.user?.id) {
-      clientLogger.debug('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
+      clientLogger.debug(`[Chat Bridge] Sign-in Supabase riuscito: ${signInData.user.id}`);
       authenticatedUserId = signInData.user.id;
     } else if (signInError) {
       // 3. If sign-in fails, try sign up (new user)
-      clientLogger.debug('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
+      clientLogger.debug(`[Chat Bridge] Sign-in fallito, provo sign-up... ${signInError.message}`);
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: gs.email!,
         password,
@@ -207,12 +207,12 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
       });
 
       if (signUpError) {
-        clientLogger.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
+        clientLogger.error(`[Chat Bridge] Sign-up fallito: ${signUpError.message}`);
         return null;
       }
 
       if (signUpData?.user?.id) {
-        clientLogger.debug('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
+        clientLogger.debug(`[Chat Bridge] Sign-up Supabase riuscito: ${signUpData.user.id}`);
         authenticatedUserId = signUpData.user.id;
       }
     }
@@ -229,7 +229,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
 
       if (!existingProfile) {
         const username = gs.name || `gs_${gs.id.substring(0, 8)}`;
-        clientLogger.debug('[Chat Bridge] Profilo mancante, creo via RPC per:', authenticatedUserId, username);
+        clientLogger.debug(`[Chat Bridge] Profilo mancante, creo via RPC per: ${authenticatedUserId} ${username}`);
 
         // Try RPC first (SECURITY DEFINER, bypasses RLS)
         const { error: rpcErr } = await supabase.rpc('ensure_user_profile', {
@@ -240,7 +240,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
         });
 
         if (rpcErr) {
-          clientLogger.warn('[Chat Bridge] RPC ensure_user_profile fallita:', rpcErr.message, '- provo INSERT diretto');
+          clientLogger.warn(`[Chat Bridge] RPC ensure_user_profile fallita: ${rpcErr.message} - provo INSERT diretto`);
           // Fallback: direct insert
           const { error: insertErr } = await supabase.from('user_profiles').insert({
             id: authenticatedUserId,
@@ -249,7 +249,7 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
             avatar_url: gs.image || '',
           });
           if (insertErr) {
-            clientLogger.error('[Chat Bridge] INSERT user_profiles fallita:', insertErr.message, insertErr.code);
+            clientLogger.error(`[Chat Bridge] INSERT user_profiles fallita: ${insertErr.message} ${insertErr.code}`);
           } else {
             clientLogger.debug('[Chat Bridge] Profilo creato via INSERT diretto');
           }
@@ -257,10 +257,10 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
           clientLogger.debug('[Chat Bridge] Profilo creato via RPC');
         }
       } else {
-        clientLogger.debug('[Chat Bridge] Profilo già esistente per:', authenticatedUserId);
+        clientLogger.debug(`[Chat Bridge] Profilo già esistente per: ${authenticatedUserId}`);
       }
     } catch (e: unknown) {
-      clientLogger.error('[Chat Bridge] Errore verifica/creazione profilo:', e);
+      clientLogger.error(`[Chat Bridge] Errore verifica/creazione profilo: ${String(e)}`);
     }
   }
 
@@ -376,8 +376,8 @@ export async function deleteMessage(messageId: string): Promise<void> {
 export type MessageCallback = (message: ChatMessage) => void;
 export type PresenceCallback = (presence: UserPresence[]) => void;
 
-let _messageSubscription: unknown = null;
-let _presenceSubscription: unknown = null;
+let _messageSubscription: RealtimeChannel | null = null;
+let _presenceSubscription: RealtimeChannel | null = null;
 
 export async function subscribeToRoom(roomId: string, onMessage: MessageCallback): Promise<() => void> {
   const supabase = await getSupabase();
@@ -398,15 +398,15 @@ export async function subscribeToRoom(roomId: string, onMessage: MessageCallback
         table: 'chat_messages',
         filter: `room_id=eq.${roomId}`,
       },
-      async (payload: unknown) => {
+      async (payload: { new: Record<string, unknown> }) => {
         // Fetch full message with author info
         try {
           const { data } = await supabase
             .from('chat_messages')
             .select('*, author:user_profiles!author_id(username, avatar_url)')
-            .eq('id', payload.new.id)
+            .eq('id', payload.new.id as string)
             .single();
-          if (data) onMessage(mapMessage(data));
+          if (data) onMessage(mapMessage(data as Record<string, unknown>));
         } catch {
           // Fallback: use payload directly
           onMessage(mapMessage(payload.new));
@@ -438,15 +438,15 @@ export async function subscribeToPresence(onPresence: PresenceCallback): Promise
       const seen = new Set<string>();
       const users: UserPresence[] = [];
       for (const key of Object.keys(state)) {
-        const presences = state[key] as unknown[];
+        const presences = state[key] as Array<Record<string, unknown>>;
         for (const p of presences) {
           const uid = p.user_id as string;
           if (uid && !seen.has(uid)) {
             seen.add(uid);
             users.push({
               userId: uid,
-              username: p.username,
-              avatar: p.avatar,
+              username: p.username as string | undefined,
+              avatar: p.avatar as string | undefined,
               status: 'online',
               lastSeen: new Date().toISOString(),
             });
@@ -515,13 +515,16 @@ export async function getOnlineUsers(): Promise<UserPresence[]> {
     .eq('status', 'online')
     .order('last_seen', { ascending: false });
 
-  return (data || []).map((row: Record<string, unknown>) => ({
-    userId: row.user_id,
-    username: row.profile?.username || 'Utente',
-    avatar: row.profile?.avatar_url,
-    status: row.status,
-    lastSeen: row.last_seen,
-  }));
+  return (data || []).map((row: Record<string, unknown>) => {
+    const profile = row.profile as Record<string, unknown> | null;
+    return {
+      userId: row.user_id as string,
+      username: (profile?.username as string) || 'Utente',
+      avatar: profile?.avatar_url as string | undefined,
+      status: row.status as UserPresence['status'],
+      lastSeen: row.last_seen as string,
+    };
+  });
 }
 
 // ─── ROOM MEMBERSHIP ────────────────────────────────────────────
@@ -558,35 +561,36 @@ export async function markRoomRead(roomId: string): Promise<void> {
 
 function mapRoom(row: Record<string, unknown>): ChatRoom {
   return {
-    id: row.id,
-    name: row.name,
-    description: row.description || '',
-    type: row.type,
-    gameId: row.game_id,
-    gameName: row.game_name,
-    createdBy: row.created_by,
-    isPinned: row.is_pinned || false,
-    isArchived: row.is_archived || false,
-    lastMessageAt: row.last_message_at,
-    memberCount: row.member_count || 0,
-    createdAt: row.created_at,
+    id: row.id as string,
+    name: row.name as string,
+    description: (row.description as string) || '',
+    type: row.type as ChatRoom['type'],
+    gameId: row.game_id as string | undefined,
+    gameName: row.game_name as string | undefined,
+    createdBy: row.created_by as string | undefined,
+    isPinned: (row.is_pinned as boolean) || false,
+    isArchived: (row.is_archived as boolean) || false,
+    lastMessageAt: row.last_message_at as string,
+    memberCount: (row.member_count as number) || 0,
+    createdAt: row.created_at as string,
   };
 }
 
 function mapMessage(row: Record<string, unknown>): ChatMessage {
+  const author = row.author as Record<string, unknown> | null;
   return {
-    id: row.id,
-    roomId: row.room_id,
-    authorId: row.author_id,
-    authorName: row.author?.username || 'Utente',
-    authorAvatar: row.author?.avatar_url,
-    content: row.content,
-    type: row.type || 'text',
-    replyTo: row.reply_to,
-    metadata: row.metadata || {},
-    edited: row.edited || false,
-    deleted: row.deleted || false,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: row.id as string,
+    roomId: row.room_id as string,
+    authorId: row.author_id as string,
+    authorName: (author?.username as string) || 'Utente',
+    authorAvatar: author?.avatar_url as string | undefined,
+    content: row.content as string,
+    type: (row.type as ChatMessage['type']) || 'text',
+    replyTo: row.reply_to as string | undefined,
+    metadata: (row.metadata as Record<string, unknown>) || {},
+    edited: (row.edited as boolean) || false,
+    deleted: (row.deleted as boolean) || false,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
   };
 }

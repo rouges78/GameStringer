@@ -161,7 +161,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         case 'app-update-available':
           await showInfoNotification(
             'Update Available',
-            `New version ${data.version} available for download`,
+            `New version ${(data as Record<string, unknown>)?.version ?? 'unknown'} available for download`,
             '/settings/updates'
           );
           break;
@@ -177,8 +177,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         case 'system-error':
           await showErrorNotification(
             'System Error',
-            data.message || 'A system error occurred',
-            data.actionUrl
+            (data as Record<string, unknown>)?.message as string || 'A system error occurred',
+            (data as Record<string, unknown>)?.actionUrl as string | undefined
           );
           break;
 
@@ -221,10 +221,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
           break;
 
         default:
-          clientLogger.debug('Unhandled system event:', eventType, data);
+          clientLogger.debug('Unhandled system event: ' + eventType);
       }
     } catch (error: unknown) {
-      clientLogger.error('Error handling system event:', error);
+      clientLogger.error('Error handling system event: ' + String(error));
     }
   };
 
@@ -267,7 +267,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         case 'credential-added':
           await showSuccessNotification(
             'Credentials Added',
-            `Credentials for ${data?.store || 'store'} added successfully`,
+            `Credentials for ${(data as Record<string, unknown>)?.store || 'store'} added successfully`,
             '/settings/stores'
           );
           break;
@@ -275,7 +275,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         case 'credential-error':
           await showErrorNotification(
             'Credential Error',
-            `Credential error for ${data?.store || 'store'}. Check settings.`,
+            `Credential error for ${(data as Record<string, unknown>)?.store || 'store'}. Check settings.`,
             '/settings/stores'
           );
           break;
@@ -311,16 +311,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         case 'security-alert':
           await showWarningNotification(
             'Security Alert',
-            data?.message || 'Suspicious activity detected on profile',
+            (data as Record<string, unknown>)?.message as string || 'Suspicious activity detected on profile',
             '/settings/security'
           );
           break;
 
         default:
-          clientLogger.debug('Unhandled profile event:', eventType, profileId, data);
+          clientLogger.debug('Unhandled profile event: ' + eventType + ' ' + profileId);
       }
     } catch (error: unknown) {
-      clientLogger.error('Error handling profile event:', error);
+      clientLogger.error('Error handling profile event: ' + String(error));
     }
   };
 
@@ -353,20 +353,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     const initializeNotificationSystem = async () => {
       try {
-        clientLogger.debug('Initializing notification system for profile:', currentProfileId);
+        clientLogger.debug('Initializing notification system for profile: ' + currentProfileId);
 
         // Initialize Tauri notification system if available
         if (typeof window !== 'undefined') {
-          const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
-          const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
-          if (invoke) {
+          const tauriGlobal = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
+          const tauriNs = tauriGlobal?.tauri as Record<string, unknown> | undefined;
+          const invokeCmd = tauriNs?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
+          if (invokeCmd) {
             try {
-              await invoke('initialize_notification_system', {
+              await invokeCmd('initialize_notification_system', {
                 profile_id: currentProfileId
               });
               clientLogger.debug('Tauri notification system initialized');
             } catch (error: unknown) {
-              clientLogger.warn('Error initializing Tauri notification system:', error);
+              clientLogger.warn('Error initializing Tauri notification system: ' + String(error));
             }
           }
         }
@@ -385,7 +386,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
         initializationRef.current = true;
       } catch (error: unknown) {
-        clientLogger.error('Error initializing notification system:', error);
+        clientLogger.error('Error initializing notification system: ' + String(error));
       }
     };
 
@@ -460,27 +461,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     // Setup Tauri event listeners se disponibili
     if (typeof window !== 'undefined') {
-      const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
-      const event = tauri?.event;
+      const tauriGlobal2 = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
+      const tauriEvent = tauriGlobal2?.event as { listen?: (event: string, handler: (evt: { payload: Record<string, unknown> }) => void) => Promise<() => void> } | undefined;
 
-      if (event?.listen) {
+      if (tauriEvent?.listen) {
         const setupTauriEventListeners = async () => {
           try {
             if (enableSystemEvents) {
-              const unlistenSystem = await event.listen('system-event', (event: unknown) => {
-                handleSystemEvent(event.payload.type, event.payload.data);
+              const unlistenSystem = await tauriEvent.listen!('system-event', (evt) => {
+                handleSystemEvent(evt.payload.type as string, evt.payload.data);
               });
               cleanup.push(unlistenSystem);
             }
 
             if (enableProfileEvents) {
-              const unlistenProfile = await event.listen('profile-event', (event: unknown) => {
-                handleProfileEvent(event.payload.type, event.payload.profileId, event.payload.data);
+              const unlistenProfile = await tauriEvent.listen!('profile-event', (evt) => {
+                handleProfileEvent(evt.payload.type as string, evt.payload.profileId as string, evt.payload.data);
               });
               cleanup.push(unlistenProfile);
             }
           } catch (error: unknown) {
-            clientLogger.warn('Error setting up Tauri event listeners:', error);
+            clientLogger.warn('Error setting up Tauri event listeners: ' + String(error));
           }
         };
 
@@ -501,11 +502,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     return () => {
       // Cleanup notification system when provider unmounts
       if (typeof window !== 'undefined') {
-        const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
-        const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
-        if (invoke) {
-          invoke('cleanup_notification_system').catch((error: unknown) => {
-            clientLogger.warn('Error cleaning up notification system:', error);
+        const tauriGlobal3 = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
+        const tauriNs3 = tauriGlobal3?.tauri as Record<string, unknown> | undefined;
+        const invokeCleanup = tauriNs3?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
+        if (invokeCleanup) {
+          invokeCleanup('cleanup_notification_system').catch((error: unknown) => {
+            clientLogger.warn('Error cleaning up notification system: ' + String(error));
           });
         }
       }
@@ -557,10 +559,10 @@ export const useNotificationActions = () => {
   if (context === undefined) {
     // Fallback se il provider non è disponibile
     return {
-      showSuccess: (title: string, message: string) => clientLogger.debug('Success:', title, message),
-      showError: (title: string, message: string) => clientLogger.debug('Error:', title, message),
-      showInfo: (title: string, message: string) => clientLogger.debug('Info:', title, message),
-      showWarning: (title: string, message: string) => clientLogger.debug('Warning:', title, message)
+      showSuccess: (title: string, message: string) => clientLogger.debug('Success: ' + title, message),
+      showError: (title: string, message: string) => clientLogger.debug('Error: ' + title, message),
+      showInfo: (title: string, message: string) => clientLogger.debug('Info: ' + title, message),
+      showWarning: (title: string, message: string) => clientLogger.debug('Warning: ' + title, message)
     };
   }
   

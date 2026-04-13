@@ -193,7 +193,7 @@ function CacheStatsCard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const result = await invoke<unknown>('get_cache_stats');
+        const result = await invoke<{ cache_size_mb: number; cover_count: number; disk_free_gb: number; disk_total_gb: number; app_data_size_mb: number; } | null>('get_cache_stats');
         setStats(result);
       } catch (e: unknown) {
         clientLogger.error('Error loading cache stats:', e);
@@ -517,14 +517,14 @@ export default function SettingsPage() {
       if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
         const { invoke } = await import('@tauri-apps/api/core');
         const result = await invoke('get_games');
-        const games = result as unknown[];
-        
+        const games = result as Array<Record<string, unknown>>;
+
         addDebugResult(`✅ Game library loaded successfully`);
         addDebugResult(`📋 Total games: ${games.length}`);
-        
+
         const vrGames = games.filter(g => g.is_vr);
         const installedGames = games.filter(g => g.is_installed);
-        
+
         addDebugResult(`🏷️ Games with metadata: ${games.filter(g => g.header_image).length}`);
         addDebugResult(`🥽 VR games detected: ${vrGames.length}`);
         addDebugResult(`💾 Installed games: ${installedGames.length}`);

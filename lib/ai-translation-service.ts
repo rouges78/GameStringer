@@ -5,6 +5,8 @@
  * Feature distintiva: context-aware gaming translations
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface AIProvider {
   id: string;
   name: string;
@@ -252,7 +254,7 @@ class AITranslationService {
         const lmProvider = this.providers.find(p => p.id === 'lmstudio');
         if (lmProvider) {
           lmProvider.isAvailable = true;
-          lmProvider.models = data.data?.map((m: unknown) => m.id) || [];
+          lmProvider.models = data.data?.map((m: Record<string, unknown>) => m.id) || [];
         }
         return true;
       }
@@ -433,7 +435,7 @@ REGOLE IMPORTANTI:
       // Parse alternatives se richieste
       const alternatives: string[] = [];
       if (request.alternatives && translation.includes('|||')) {
-        const parts = translation.split('|||').map(p => p.trim());
+        const parts = translation.split('|||').map((p: string) => p.trim());
         alternatives.push(...parts.slice(1));
       }
 

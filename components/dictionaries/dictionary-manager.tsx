@@ -42,7 +42,7 @@ export function DictionaryManager() {
     try {
       const [dicts, s] = await Promise.all([listInstalledDictionaries(), getDictionariesStats()]);
       setDictionaries(dicts); setStats(s);
-    } catch (e: unknown) { clientLogger.error(e); }
+    } catch (e: unknown) { clientLogger.error(String(e)); }
     finally { setLoading(false); }
   }, []);
 
@@ -143,14 +143,14 @@ export function DictionaryManager() {
     try {
       const f = await open({ filters: [{ name: 'JSON', extensions: ['json'] }] });
       if (f) setImportFilePath(f as string);
-    } catch (e: unknown) { clientLogger.error(e); }
+    } catch (e: unknown) { clientLogger.error(String(e)); }
   };
 
   const pickFolder = async () => {
     try {
       const f = await open({ directory: true });
       if (f) setGamePath(f as string);
-    } catch (e: unknown) { clientLogger.error(e); }
+    } catch (e: unknown) { clientLogger.error(String(e)); }
   };
 
   return (

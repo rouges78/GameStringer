@@ -14,8 +14,8 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
   }
 
   const { gameId, targetLanguage, original, translated } = validated.data;
-  const dictionaryId = gameId || 'default';
-  const targetLang = targetLanguage;
+  const dictionaryId = (gameId ?? 'default') as string;
+  const targetLang = (targetLanguage ?? 'it') as string;
 
   const result = await addTranslationToDictionary(
     dictionaryId,

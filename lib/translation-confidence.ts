@@ -739,19 +739,19 @@ export async function calculateBatchConfidenceWithTM(
     if (!tmManagerInstance) {
       tmManagerInstance = new TranslationMemoryManager()
     }
-    await tmManagerInstance.initialize(sourceLang, targetLang)
-    
+    await (tmManagerInstance as { initialize: (src: string, tgt: string) => Promise<void> }).initialize(sourceLang, targetLang)
+
     const results = new Map<string, ConfidenceResult>()
-    
+
     // Calcola confidenza per ogni coppia con supporto TM
     for (const pair of pairs) {
       // Cerca match nella TM per verificare coerenza
-      const tmResults = tmManagerInstance.search(pair.original, {
+      const tmResults = (tmManagerInstance as { search: (q: string, opts: Record<string, unknown>) => Array<{ unit: { sourceText: string; targetText: string }; similarity: number }> }).search(pair.original, {
         minSimilarity: 70,
         maxResults: 3
       })
-      
-      const tmMatches = tmResults.map((r: Record<string, unknown>) => ({
+
+      const tmMatches = tmResults.map((r) => ({
         sourceText: r.unit.sourceText,
         targetText: r.unit.targetText,
         similarity: r.similarity

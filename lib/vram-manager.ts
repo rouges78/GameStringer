@@ -230,7 +230,7 @@ class VramManager {
     if (!this.invoke) return null;
 
     try {
-      const stats: SystemStats = await this.invoke('get_system_stats');
+      const stats = await this.invoke('get_system_stats') as SystemStats;
       this.currentStats = stats;
 
       const prevTier = this.currentTier;

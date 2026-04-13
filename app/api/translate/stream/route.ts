@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { secretsManager } from '@/lib/secrets-manager';
 import { withErrorHandler } from '@/lib/error-handler';
 
@@ -23,7 +23,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
   } = body;
 
   if (!text || !targetLanguage) {
-    return new Response('Missing required fields', { status: 400 });
+    return new NextResponse('Missing required fields', { status: 400 });
   }
 
   // Initialize secrets
@@ -210,11 +210,11 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
     }
   });
 
-  return new Response(stream, {
+  return new NextResponse(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
     },
-  });
+  }) as NextResponse;
 });

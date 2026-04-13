@@ -208,12 +208,12 @@ export default function ContextHarvesterPage() {
         // Prova JSON
         const parsed = JSON.parse(content)
         if (Array.isArray(parsed)) {
-          inputs = parsed.map((item: unknown) => ({
-            text: item.text || item.value || item.source || String(item),
-            key: item.key || item.id,
+          inputs = parsed.map((item: Record<string, unknown>) => ({
+            text: (item.text || item.value || item.source || String(item)) as string,
+            key: (item.key || item.id) as string | undefined,
             filename: file.name,
-            comment: item.comment || item.context,
-            maxLength: item.maxLength,
+            comment: (item.comment || item.context) as string | undefined,
+            maxLength: item.maxLength as number | undefined,
             gameGenre: gameGenreInput || undefined,
             gameName: gameNameInput || undefined,
           }))
@@ -315,7 +315,7 @@ export default function ContextHarvesterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as string)}>
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as "file" | "paste" | "demo")}>
               <TabsList className="h-8">
                 <TabsTrigger value="demo" className="text-xs h-7">
                   <Sparkles className="h-3 w-3 mr-1" />
@@ -490,7 +490,7 @@ export default function ContextHarvesterPage() {
               <div className="flex-1" />
               <select
                 value={filterScreen}
-                onChange={(e) => setFilterScreen(e.target.value as string)}
+                onChange={(e) => setFilterScreen(e.target.value as "all" | ScreenType)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
                 <option value="all">{t('contextHarvesterPage.allScreenshots')}</option>
@@ -500,7 +500,7 @@ export default function ContextHarvesterPage() {
               </select>
               <select
                 value={filterSpeaker}
-                onChange={(e) => setFilterSpeaker(e.target.value as string)}
+                onChange={(e) => setFilterSpeaker(e.target.value as "all" | SpeakerType)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
                 <option value="all">{t('contextHarvesterPage.allSpeakers')}</option>

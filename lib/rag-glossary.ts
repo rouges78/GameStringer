@@ -6,6 +6,8 @@
  * il context window del LLM e garantire coerenza.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface GlossaryEntry {
   term: string;         // Termine originale (es. "Potion")
   translation: string;  // Traduzione obbligatoria (es. "Pozione")

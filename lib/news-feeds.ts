@@ -5,6 +5,8 @@
  * L'utente può abilitare/disabilitare singoli feed dalla pagina Gestisci.
  */
 
+import { clientLogger } from '@/lib/client-logger';
+
 export interface NewsFeedSource {
   id: string;
   name: string;

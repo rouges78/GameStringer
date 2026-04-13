@@ -97,7 +97,7 @@ class SessionPersistence {
         this.clearSession();
       }
     } catch (error: unknown) {
-      clientLogger.error('Error syncing session with backend:', error);
+      clientLogger.error(`Error syncing session with backend: ${String(error)}`, 'SESSION');
     }
   }
 
@@ -163,7 +163,7 @@ class SessionPersistence {
       return true;
       
     } catch (error: unknown) {
-      clientLogger.error('❌ Errore durante restore:', error);
+      clientLogger.error(`Errore durante restore: ${String(error)}`, 'SESSION');
       throw error;
     }
   }
@@ -216,7 +216,7 @@ class SessionPersistence {
           await this.syncWithBackend();
         }
       } catch (error: unknown) {
-        clientLogger.error('❌ Errore sync session:', error);
+        clientLogger.error(`Errore sync session: ${String(error)}`, 'SESSION');
       } finally {
         syncInProgress = false;
       }
@@ -254,18 +254,18 @@ class SessionPersistence {
 
     try {
       const ACCOUNTS_KEY = 'gameStringer_connectedAccounts';
-      const existing: unknown[] = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
+      const existing: Array<Record<string, unknown>> = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
       let changed = false;
-      const has = (p: string) => existing.some((a: unknown) => a.provider === p);
+      const has = (p: string) => existing.some((a) => a.provider === p);
 
       // Steam
       if (!has('steam-credentials')) {
         try {
-          const creds = await invoke<unknown>('load_steam_credentials');
+          const creds = await invoke<Record<string, string>>('load_steam_credentials');
           if (creds?.steam_id && creds.steam_id.length > 0) {
             existing.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
             changed = true;
-            clientLogger.debug('[BOOT] ✅ Steam credentials restored');
+            clientLogger.debug('[BOOT] Steam credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -273,11 +273,11 @@ class SessionPersistence {
       // Epic
       if (!has('epicgames')) {
         try {
-          const creds = await invoke<unknown>('load_epic_credentials');
+          const creds = await invoke<Record<string, string>>('load_epic_credentials');
           if (creds?.username_encrypted) {
             existing.push({ provider: 'epicgames', userId: 'epic-user' });
             changed = true;
-            clientLogger.debug('[BOOT] ✅ Epic credentials restored');
+            clientLogger.debug('[BOOT] Epic credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -285,11 +285,11 @@ class SessionPersistence {
       // GOG
       if (!has('gog-credentials')) {
         try {
-          const creds = await invoke<unknown>('load_gog_credentials');
+          const creds = await invoke<Record<string, string>>('load_gog_credentials');
           if (creds?.email || creds?.username) {
             existing.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
             changed = true;
-            clientLogger.debug('[BOOT] ✅ GOG credentials restored');
+            clientLogger.debug('[BOOT] GOG credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
@@ -297,21 +297,21 @@ class SessionPersistence {
       // Ubisoft
       if (!has('ubisoft-credentials')) {
         try {
-          const creds = await invoke<unknown>('load_ubisoft_credentials');
+          const creds = await invoke<Record<string, string>>('load_ubisoft_credentials');
           if (creds?.email) {
             existing.push({ provider: 'ubisoft-credentials', userId: creds.email });
             changed = true;
-            clientLogger.debug('[BOOT] ✅ Ubisoft credentials restored');
+            clientLogger.debug('[BOOT] Ubisoft credentials restored');
           }
         } catch { /* nessuna credenziale */ }
       }
 
       if (changed) {
         localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(existing));
-        clientLogger.debug(`[BOOT] 🔄 Store connections restored: ${existing.length} providers`);
+        clientLogger.debug(`[BOOT] Store connections restored: ${existing.length} providers`);
       }
     } catch (error: unknown) {
-      clientLogger.warn('[BOOT] Errore ripristino store connections:', error);
+      clientLogger.warn(`[BOOT] Errore ripristino store connections: ${String(error)}`, 'SESSION');
     }
   }
 }

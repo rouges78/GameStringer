@@ -227,7 +227,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       setPacks(packsResult.packs);
       setStats(hubStats);
     } catch (error: unknown) {
-      clientLogger.error('Error loading hub data:', error);
+      clientLogger.error(`Error loading hub data: ${String(error)}`);
       toast.error(t('communityHub.errorLoading'));
     } finally {
       setIsLoading(false);
@@ -239,7 +239,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       const result = await communityHubService.searchPacks(filters);
       setPacks(result.packs);
     } catch (error: unknown) {
-      clientLogger.error('Error searching packs:', error);
+      clientLogger.error(`Error searching packs: ${String(error)}`);
     }
   };
 
@@ -247,7 +247,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     try {
       const data = await fetchLeaderboard(20);
       setLeaderboard(data);
-    } catch (e: unknown) { clientLogger.error('Leaderboard error:', e); }
+    } catch (e: unknown) { clientLogger.error(`Leaderboard error: ${String(e)}`); }
   };
 
   const loadNotifications = async () => {
@@ -255,7 +255,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       const [notifs, count] = await Promise.all([fetchNotifications(20), getUnreadCount()]);
       setNotifications(notifs);
       setUnreadCount(count);
-    } catch (e: unknown) { clientLogger.error('Notifications error:', e); }
+    } catch (e: unknown) { clientLogger.error(`Notifications error: ${String(e)}`); }
   };
 
   const loadFavorites = async () => {
@@ -263,7 +263,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       const favs = await getFavorites();
       setFavoritePacks(favs);
       setFavoriteIds(new Set(favs.map(p => p.id)));
-    } catch (e: unknown) { clientLogger.error('Favorites error:', e); }
+    } catch (e: unknown) { clientLogger.error(`Favorites error: ${String(e)}`); }
   };
 
   const handleToggleFavorite = async (packId: string) => {
@@ -283,7 +283,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     try {
       const data = await fetchComments(packId);
       setComments(data);
-    } catch (e: unknown) { clientLogger.error('Comments error:', e); }
+    } catch (e: unknown) { clientLogger.error(`Comments error: ${String(e)}`); }
   };
 
   const handlePostComment = async (packId: string, parentId?: string) => {
@@ -319,7 +319,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       await markAllNotificationsRead();
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch (e: unknown) { clientLogger.error(e); }
+    } catch (e: unknown) { clientLogger.error(String(e)); }
   };
 
   const handleViewPack = async (pack: TranslationPack) => {
@@ -359,7 +359,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         sourceLanguage: uploadData.sourceLanguage,
         targetLanguage: uploadData.targetLanguage,
         platform: uploadData.platform || undefined,
-        patchFormat: (uploadData.patchFormat || 'none') as unknown,
+        patchFormat: (uploadData.patchFormat || 'none') as 'none' | 'ips' | 'bps' | 'xdelta',
         description: uploadData.description,
         tags: uploadData.tags.split(',').map(t => t.trim()).filter(Boolean),
         files: uploadData.files,
@@ -575,7 +575,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         </Select>
         <Select
           value={filters.sortBy}
-          onValueChange={(v: unknown) => setFilters(f => ({ ...f, sortBy: v }))}
+          onValueChange={(v: string) => setFilters(f => ({ ...f, sortBy: v as PackSearchFilters['sortBy'] }))}
         >
           <SelectTrigger className="w-[130px] h-9">
             <SelectValue placeholder={t('communityHub.sortBy')} />
@@ -1416,7 +1416,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <Label>Formato patch</Label>
                 <Select
                   value={uploadData.patchFormat || 'none'}
-                  onValueChange={(v) => setUploadData(d => ({ ...d, patchFormat: v as string }))}
+                  onValueChange={(v) => setUploadData(d => ({ ...d, patchFormat: v as 'ips' | 'bps' | 'xdelta' | 'none' | '' }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1454,8 +1454,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                     const patchFile = files.find(f => /\.(ips|bps|xdelta|xd|vcdiff)$/i.test(f.name));
                     if (patchFile) {
                       const ext = patchFile.name.split('.').pop()?.toLowerCase();
-                      const fmt = ext === 'ips' ? 'ips' : ext === 'bps' ? 'bps' : 'xdelta';
-                      setUploadData(d => ({ ...d, files, patchFormat: fmt as string }));
+                      const fmt = ext === 'ips' ? 'ips' : ext === 'bps' ? 'bps' : 'xdelta' as const;
+                      setUploadData(d => ({ ...d, files, patchFormat: fmt }));
                     } else {
                       setUploadData(d => ({ ...d, files }));
                     }

@@ -93,15 +93,15 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
 
     const setup = async () => {
       try {
-        unlistenDownload = await listen<unknown>('ollama-download-progress', (event) => {
+        unlistenDownload = await listen<Record<string, unknown>>('ollama-download-progress', (event) => {
           const data = event.payload;
-          setProgress(data.progress || 0);
-          setProgressMessage(data.message || '');
+          setProgress((data.progress as number) || 0);
+          setProgressMessage((data.message as string) || '');
         });
-        unlistenPull = await listen<unknown>('ollama-pull-progress', (event) => {
+        unlistenPull = await listen<Record<string, unknown>>('ollama-pull-progress', (event) => {
           const data = event.payload;
-          setProgress(data.progress || 0);
-          setProgressMessage(data.message || '');
+          setProgress((data.progress as number) || 0);
+          setProgressMessage((data.message as string) || '');
           if (data.status === 'success') {
             checkStatus();
           }

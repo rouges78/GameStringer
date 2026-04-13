@@ -149,7 +149,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   // Alert for authentication problems (keep for debugging critical issues)
   if (currentProfile && !isAuthenticated) {
     clientLogger.error('Authentication issue: currentProfile present but isAuthenticated = false', {
-      profileName: currentProfile.name,
+      profileName: (currentProfile as UserProfile).name,
       isSessionExpired,
       sessionTimeRemaining
     });

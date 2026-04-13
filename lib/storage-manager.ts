@@ -16,7 +16,7 @@ export const storageManager = {
       const data = await get('gameTranslations');
       return data || [];
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore lettura gameTranslations', e);
+      clientLogger.error(`[Storage] Errore lettura gameTranslations: ${String(e)}`);
       return [];
     }
   },
@@ -25,7 +25,7 @@ export const storageManager = {
     try {
       await set('gameTranslations', data);
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore salvataggio gameTranslations', e);
+      clientLogger.error(`[Storage] Errore salvataggio gameTranslations: ${String(e)}`);
     }
   },
 
@@ -34,7 +34,7 @@ export const storageManager = {
       const data = await get('gamePatches');
       return data || [];
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore lettura gamePatches', e);
+      clientLogger.error(`[Storage] Errore lettura gamePatches: ${String(e)}`);
       return [];
     }
   },
@@ -43,7 +43,7 @@ export const storageManager = {
     try {
       await set('gamePatches', data);
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore salvataggio gamePatches', e);
+      clientLogger.error(`[Storage] Errore salvataggio gamePatches: ${String(e)}`);
     }
   },
 
@@ -53,7 +53,7 @@ export const storageManager = {
     try {
       return await get('gamestringer_partial_translations');
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore lettura partial_translations', e);
+      clientLogger.error(`[Storage] Errore lettura partial_translations: ${String(e)}`);
       return null;
     }
   },
@@ -62,7 +62,7 @@ export const storageManager = {
     try {
       await set('gamestringer_partial_translations', data);
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore salvataggio partial_translations', e);
+      clientLogger.error(`[Storage] Errore salvataggio partial_translations: ${String(e)}`);
     }
   },
 
@@ -70,7 +70,7 @@ export const storageManager = {
     try {
       await del('gamestringer_partial_translations');
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore cancellazione partial_translations', e);
+      clientLogger.error(`[Storage] Errore cancellazione partial_translations: ${String(e)}`);
     }
   },
 
@@ -78,7 +78,7 @@ export const storageManager = {
     try {
       return await get('editorFile');
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore lettura editorFile', e);
+      clientLogger.error(`[Storage] Errore lettura editorFile: ${String(e)}`);
       return null;
     }
   },
@@ -87,7 +87,7 @@ export const storageManager = {
     try {
       await set('editorFile', data);
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore salvataggio editorFile', e);
+      clientLogger.error(`[Storage] Errore salvataggio editorFile: ${String(e)}`);
     }
   },
 
@@ -95,7 +95,7 @@ export const storageManager = {
     try {
       await del('editorFile');
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore cancellazione editorFile', e);
+      clientLogger.error(`[Storage] Errore cancellazione editorFile: ${String(e)}`);
     }
   },
 
@@ -120,7 +120,7 @@ export const storageManager = {
             localStorage.removeItem(key);
             clientLogger.debug(`[Storage] Migrato ${key} da localStorage a IndexedDB`);
           } catch (e: unknown) {
-            clientLogger.warn(`[Storage] Impossibile migrare ${key}`, e);
+            clientLogger.warn(`[Storage] Impossibile migrare ${key}: ${String(e)}`);
           }
         }
       }
@@ -135,7 +135,7 @@ export const storageManager = {
         } catch {}
       }
     } catch (e: unknown) {
-      clientLogger.error('[Storage] Errore durante la migrazione', e);
+      clientLogger.error(`[Storage] Errore durante la migrazione: ${String(e)}`);
     }
   }
 };

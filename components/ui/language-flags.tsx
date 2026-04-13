@@ -148,7 +148,7 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
         <div className="flex items-center gap-0.5">
             {flagCodes.map((code, index) => {
                 // Dinamicamente prende il componente bandiera
-                const FlagComponent = (CountryFlags as unknown)[code];
+                const FlagComponent = (CountryFlags as unknown as Record<string, React.ComponentType<{ className?: string }>>)[code];
                 
                 if (FlagComponent) {
                     return (

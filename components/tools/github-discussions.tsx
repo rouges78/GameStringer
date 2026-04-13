@@ -107,20 +107,26 @@ export function GitHubDiscussions() {
       if (restResponse.ok) {
         const data = await restResponse.json();
         if (Array.isArray(data) && data.length > 0) {
-          setDiscussions(data.map((d: unknown) => ({
-            id: String(d.number),
-            number: d.number,
-            title: (d.title || '').replace(/^#\s*/, ''),
-            body: (d.body || '').replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200),
-            author: { login: d.user?.login || 'unknown', avatarUrl: d.user?.avatar_url || '' },
-            category: { name: d.category?.name || 'General', emoji: d.category?.emoji || '💬' },
-            createdAt: d.created_at || new Date().toISOString(),
-            updatedAt: d.updated_at || new Date().toISOString(),
-            comments: { totalCount: d.comments || 0 },
-            upvoteCount: d.reactions?.total_count || 0,
-            answerChosenAt: d.answer_chosen_at || null,
-            url: d.html_url || `${DISCUSSIONS_URL}/${d.number}`
-          })));
+          setDiscussions(data.map((raw: unknown) => {
+            const d = raw as Record<string, unknown>;
+            const user = d.user as Record<string, unknown> | undefined;
+            const category = d.category as Record<string, unknown> | undefined;
+            const reactions = d.reactions as Record<string, unknown> | undefined;
+            return {
+              id: String(d.number),
+              number: d.number as number,
+              title: (String(d.title || '')).replace(/^#\s*/, ''),
+              body: (String(d.body || '')).replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200),
+              author: { login: (user?.login as string) || 'unknown', avatarUrl: (user?.avatar_url as string) || '' },
+              category: { name: (category?.name as string) || 'General', emoji: (category?.emoji as string) || '💬' },
+              createdAt: (d.created_at as string) || new Date().toISOString(),
+              updatedAt: (d.updated_at as string) || new Date().toISOString(),
+              comments: { totalCount: (d.comments as number) || 0 },
+              upvoteCount: (reactions?.total_count as number) || 0,
+              answerChosenAt: (d.answer_chosen_at as string) || null,
+              url: (d.html_url as string) || `${DISCUSSIONS_URL}/${d.number}`
+            };
+          }));
           return;
         }
       }
@@ -153,7 +159,7 @@ export function GitHubDiscussions() {
           const result = await gqlResponse.json();
           const nodes = result.data?.repository?.discussions?.nodes;
           if (nodes && nodes.length > 0) {
-            setDiscussions(nodes.map((d: unknown) => ({
+            setDiscussions(nodes.map((d: Discussion) => ({
               ...d,
               body: (d.body || '').replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200)
             })));
@@ -164,7 +170,7 @@ export function GitHubDiscussions() {
 
       setDiscussions([]);
     } catch (err: unknown) {
-      clientLogger.error('Error fetching discussions:', err);
+      clientLogger.error('Error fetching discussions: ' + String(err));
       setDiscussions([]);
     } finally {
       setIsLoading(false);

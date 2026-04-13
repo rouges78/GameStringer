@@ -116,7 +116,7 @@ export function GspackExportDialog({
         }, 1500);
       }
     } catch (e: unknown) {
-      toast.error(`${t('gspack.exportError')}: ${e.message}`);
+      toast.error(`${t('gspack.exportError')}: ${(e as Error).message}`);
     }
     setExporting(false);
   };
@@ -175,7 +175,7 @@ export function GspackExportDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">{t('gspack.quality')}</Label>
-                <Select value={quality} onValueChange={(v) => setQuality(v as string)}>
+                <Select value={quality} onValueChange={(v) => setQuality(v as "reviewed" | "draft" | "final")}>
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft">{t('gspack.qualityDraft')}</SelectItem>
@@ -245,7 +245,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
         }
       }
     } catch (e: unknown) {
-      toast.error(e.message);
+      toast.error((e as Error).message);
     }
     setLoading(false);
   };
@@ -261,7 +261,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
       onOpenChange(false);
       setResult(null);
     } catch (e: unknown) {
-      toast.error(e.message);
+      toast.error((e as Error).message);
     }
     setInstalling(false);
   };

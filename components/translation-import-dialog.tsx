@@ -67,13 +67,13 @@ export function TranslationImportDialog({
       // Supporta sia array diretto che oggetto con campo translations
       const translations = Array.isArray(data) ? data : (data.translations || []);
       
-      return translations.map((t: unknown) => ({
-        filePath: t.filePath || 'unknown',
-        originalText: t.originalText || '',
-        translatedText: t.translatedText || '',
-        targetLanguage: t.targetLanguage || 'it',
-        sourceLanguage: t.sourceLanguage || 'en',
-        context: t.context
+      return translations.map((item: Record<string, unknown>) => ({
+        filePath: (item.filePath as string) || 'unknown',
+        originalText: (item.originalText as string) || '',
+        translatedText: (item.translatedText as string) || '',
+        targetLanguage: (item.targetLanguage as string) || 'it',
+        sourceLanguage: (item.sourceLanguage as string) || 'en',
+        context: item.context as string | undefined
       }));
     } catch {
       throw new Error('Invalid JSON format');
@@ -112,13 +112,14 @@ export function TranslationImportDialog({
       let imported = 0;
       const total = translations.length;
       
-      for (const t of translations) {
+      for (const item of translations) {
         try {
+          const rec = item as Record<string, unknown>;
           const tmData = JSON.parse(localStorage.getItem('gs_translation_memory') || '[]');
           tmData.push({
             id: `import-${Date.now()}-${imported}`,
-            sourceText: t.source || t.original,
-            targetText: t.target || t.translated,
+            sourceText: rec.source || rec.original,
+            targetText: rec.target || rec.translated,
             gameId: selectedGame,
             provider: 'import',
             confidence: 0.9,
@@ -141,7 +142,7 @@ export function TranslationImportDialog({
       setSelectedGame('');
       setSelectedFile(null);
     } catch (error: unknown) {
-      clientLogger.error('Import error:', error);
+      clientLogger.error(`Import error: ${String(error)}`);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Error during import',

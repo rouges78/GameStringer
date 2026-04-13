@@ -310,7 +310,7 @@ export function VoiceCloneStudio() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs">{t('voiceClone.provider')}</Label>
-                  <Select value={selectedProvider} onValueChange={(v: unknown) => setSelectedProvider(v)}>
+                  <Select value={selectedProvider} onValueChange={(v: string) => setSelectedProvider(v as "openai" | "elevenlabs")}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

@@ -198,8 +198,8 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
       timestamp: new Date(),
       duration: data.duration || 0,
       audioUrl,
-      segments: (data.segments || []).map((s: unknown) => ({
-        start: s.start, end: s.end, text: s.text, confidence: Math.round((s.avg_logprob ? (1 + s.avg_logprob) * 100 : 85))
+      segments: (data.segments || []).map((s: Record<string, unknown>) => ({
+        start: s.start as number, end: s.end as number, text: s.text as string, confidence: Math.round((s.avg_logprob ? (1 + (s.avg_logprob as number)) * 100 : 85))
       }))
     };
   };

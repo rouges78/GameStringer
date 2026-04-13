@@ -68,7 +68,7 @@ interface ContentTypeBadgeProps {
 }
 
 export function ContentTypeBadge({ type, confidence, showConfidence = false, size = 'sm' }: ContentTypeBadgeProps) {
-  const { t: _t } = useTranslation();
+  const { t } = useTranslation();
   const Icon = CONTENT_TYPE_ICONS[type];
   const colorClass = CONTENT_TYPE_COLORS[type];
   
@@ -160,6 +160,7 @@ interface QualityScoreBarProps {
 }
 
 export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarProps) {
+  const { t } = useTranslation();
   const _getBarColor = (value: number) => {
     if (value >= 80) return 'bg-green-500';
     if (value >= 60) return 'bg-yellow-500';
@@ -275,6 +276,7 @@ interface BatchInsightsSummaryProps {
 }
 
 export function BatchInsightsSummary({ items, targetLanguage = 'it' }: BatchInsightsSummaryProps) {
+  const { t } = useTranslation();
   const classifications = items.map(item => classifyContent(item.source));
   
   const typeCounts: Record<ContentType, number> = {
