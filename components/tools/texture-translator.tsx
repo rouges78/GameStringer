@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,22 +8,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { 
   Upload,
-  ImageIcon,
   Languages,
   Wand2,
   Download,
   Eye,
   EyeOff,
-  Type,
-  Palette,
   ZoomIn,
   ZoomOut,
-  RotateCcw,
   CheckCircle2,
   Loader2,
   Layers,
@@ -31,7 +26,6 @@ import {
   FolderOpen,
   FileImage,
   Settings,
-  Sparkles,
   Grid3X3,
   ScanLine,
   Replace,
@@ -69,15 +63,6 @@ interface TextureFile {
   modified: boolean;
 }
 
-const TEXTURE_FORMATS = [
-  { id: 'dds', name: 'DDS (DirectDraw Surface)', ext: '.dds' },
-  { id: 'png', name: 'PNG', ext: '.png' },
-  { id: 'tga', name: 'TGA (Targa)', ext: '.tga' },
-  { id: 'bmp', name: 'BMP', ext: '.bmp' },
-  { id: 'jpg', name: 'JPEG', ext: '.jpg' },
-  { id: 'webp', name: 'WebP', ext: '.webp' },
-];
-
 const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
@@ -101,8 +86,6 @@ const FONT_OPTIONS = [
 export function TextureTranslator() {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
-  
   const [textures, setTextures] = useState<TextureFile[]>([]);
   const [currentTextureIndex, setCurrentTextureIndex] = useState(0);
   const [sourceLanguage, setSourceLanguage] = useState('en');
@@ -471,7 +454,7 @@ export function TextureTranslator() {
               ) : (
                 <ScrollArea className="h-[350px]">
                   <div className="space-y-1">
-                    {filteredTextures.map((texture, index) => (
+                    {filteredTextures.map((texture) => (
                       <div
                         key={texture.id}
                         className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${
@@ -731,7 +714,7 @@ export function TextureTranslator() {
               <CardContent className="p-2">
                 <ScrollArea className="h-[180px]">
                   <div className="space-y-2">
-                    {currentTexture.regions.map((region, idx) => (
+                    {currentTexture.regions.map((region) => (
                       <div
                         key={region.id}
                         className={`p-2 rounded-lg cursor-pointer transition-all ${

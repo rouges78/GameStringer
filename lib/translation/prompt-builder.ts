@@ -9,7 +9,7 @@
  */
 
 import { RagGlossary } from '../rag-glossary';
-import { harvestBatch, batchContextToPromptHint, type BatchHarvestResult, type HarvestInput } from '../context-harvester';
+import { harvestBatch, batchContextToPromptHint, type HarvestInput } from '../context-harvester';
 import { buildFewShotBlock } from '../adaptive-mt';
 import { buildGenrePromptBlock } from '../genre-prompts';
 import { clientLogger } from '@/lib/client-logger';

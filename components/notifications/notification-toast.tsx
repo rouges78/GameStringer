@@ -46,7 +46,7 @@ const priorityStyles: Record<NotificationPriority, string> = {
 export function NotificationToast({
   notification,
   onDismiss,
-  onAction,
+  onAction: _onAction,
   className
 }: NotificationToastProps) {
   const Icon = typeIcons[notification.type] || Bell;

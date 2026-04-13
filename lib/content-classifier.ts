@@ -269,7 +269,7 @@ export function classifyContent(
   }
 ): ContentClassification {
   const scores: Map<ContentType, number> = new Map();
-  let matchedRules: ClassificationRule[] = [];
+  const matchedRules: ClassificationRule[] = [];
   
   // Inizializza scores
   const types: ContentType[] = ['ui', 'dialogue', 'narrative', 'system', 'item', 'tutorial', 'achievement', 'subtitle', 'unknown'];

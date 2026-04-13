@@ -17,8 +17,7 @@ import {
   newsFeedService, 
   type NewsFeedSource, 
   type NewsFeedCategory,
-  FEED_CATEGORIES, 
-  DEFAULT_FEED_SOURCES 
+  FEED_CATEGORIES
 } from '@/lib/news-feeds';
 
 export default function NewsFeedsPage() {
@@ -65,7 +64,7 @@ export default function NewsFeedsPage() {
     ? sources 
     : sources.filter(s => s.category === selectedCategory);
 
-  const getCategoryInfo = (cat: NewsFeedCategory) => FEED_CATEGORIES.find(c => c.id === cat);
+  const _getCategoryInfo = (cat: NewsFeedCategory) => FEED_CATEGORIES.find(c => c.id === cat);
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-3" style={{ background: 'linear-gradient(180deg, #1b2838 0%, #171d25 40%, #0e1419 100%)' }}>

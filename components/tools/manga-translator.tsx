@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Progress } from '@/components/ui/progress';
 import { 
   Upload,
@@ -18,20 +18,14 @@ import {
   Eye,
   EyeOff,
   Type,
-  Palette,
   ZoomIn,
   ZoomOut,
-  RotateCcw,
-  Play,
-  Square,
   CheckCircle2,
   Loader2,
   ImageIcon,
   MessageSquare,
   Eraser,
   PaintBucket,
-  Sparkles,
-  Settings,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -81,7 +75,7 @@ const SUPPORTED_LANGUAGES = [
 export function MangaTranslator() {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const _canvasRef = useRef<HTMLCanvasElement>(null);
   
   const [pages, setPages] = useState<MangaPage[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -249,7 +243,7 @@ export function MangaTranslator() {
     setProcessingStep('');
   };
 
-  const translateAll = async () => {
+  const _translateAll = async () => {
     setIsProcessing(true);
     setProcessingStep(t('mangaTranslator.batchTranslation'));
     

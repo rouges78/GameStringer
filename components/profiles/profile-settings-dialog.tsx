@@ -8,14 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from 'radix-ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Settings, 
-  Bell, 
-  Palette, 
-  LayoutGrid, 
+import {
+  Bell,
+  Palette,
+  LayoutGrid,
   Clock,
   Save,
   RotateCcw,
@@ -55,7 +54,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
       await updateSettings(localSettings);
       toast.success('Settings saved');
       onOpenChange(false);
-    } catch (error: unknown) {
+    } catch {
       toast.error('Error saving settings');
     } finally {
       setIsSaving(false);

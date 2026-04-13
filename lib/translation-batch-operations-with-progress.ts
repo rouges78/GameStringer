@@ -3,9 +3,9 @@
  */
 
 import { Languages, Download, Upload, Check, X, Trash2, FileText } from 'lucide-react';
-import type { BatchOperation, BatchResult, TranslationBatchItem } from '@/lib/types/batch-operations';
+import type { BatchOperation, TranslationBatchItem } from '@/lib/types/batch-operations';
 import type { ProgressState } from '@/lib/types/progress';
-import { ProgressBatchProcessor, createProgressBatchProcessor } from '@/lib/progress-batch-processor';
+import { createProgressBatchProcessor } from '@/lib/progress-batch-processor';
 import { 
   batchTranslateProcessor,
   batchExportProcessor,

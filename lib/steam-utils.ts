@@ -109,27 +109,6 @@ function validateSteamAppId(appId: string): boolean {
 }
 
 /**
- * SECURITY: Validates Steam ID64 format
- * @param steamId - The Steam ID64 to validate
- * @returns true if valid, false otherwise
- */
-function validateSteamId64(steamId: string): boolean {
-  // Steam ID64 format: 17 digits, starts with 76561198
-  const steamIdPattern = /^76561198\d{9}$/;
-  
-  if (!steamIdPattern.test(steamId)) {
-    return false;
-  }
-  
-  // Additional validation: check if it's a valid Steam ID64
-  const numericSteamId = BigInt(steamId);
-  const minSteamId = BigInt('76561198000000000');
-  const maxSteamId = BigInt('76561198999999999');
-  
-  return numericSteamId >= minSteamId && numericSteamId <= maxSteamId;
-}
-
-/**
  * SECURITY: Sanitizes general string input to prevent injection
  * @param input - The input string to sanitize
  * @param maxLength - Maximum allowed length (default: 100)
@@ -478,7 +457,7 @@ class AdvancedSteamCache {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(content);
-    } catch (error: unknown) {
+    } catch {
       return null;
     }
   }
@@ -821,7 +800,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
       });
     });
     return steamPathValue ? (steamPathValue as string).replace(/\//g, '\\') : null;
-  } catch (error: unknown) {
+  } catch {
     logger.warn('Impossibile trovare la chiave di registro di Steam in HKCU, tento con HKLM...');
     try {
         const regKey = new WinReg({
@@ -1040,7 +1019,7 @@ export async function findSteamGamePath(gameId: string): Promise<string | null> 
         // Questa parte potrebbe essere migliorata con un mapping appId -> nome cartella.
         // Per ora, è un placeholder che dimostra la logica di fallback.
       }
-    } catch (error: unknown) {
+    } catch {
       logger.warn(`[findSteamGamePath] Impossibile leggere la cartella ${steamappsPath} durante la Strategia 2.`);
     }
   }

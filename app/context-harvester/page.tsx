@@ -22,8 +22,6 @@ import {
   AlertTriangle,
   Sparkles,
   BarChart3,
-  ChevronDown,
-  ChevronRight,
   Info,
   Loader2,
   Trash2,
@@ -32,13 +30,10 @@ import {
 import { cn } from "@/lib/utils"
 import {
   harvestBatch,
-  harvestContext,
   listHarvests,
   saveHarvest,
   deleteHarvest,
-  loadHarvest,
   type HarvestInput,
-  type HarvestedContext,
   type BatchHarvestResult,
   type ScreenType,
   type SpeakerType,
@@ -175,7 +170,7 @@ export default function ContextHarvesterPage() {
         inputs = DEMO_STRINGS
       } else if (inputMode === "paste") {
         const lines = pasteText.split("\n").filter(l => l.trim())
-        inputs = lines.map((line, i) => {
+        inputs = lines.map((line, _i) => {
           // Supporta formato "key=value" o "key\tvalue" o solo testo
           const tabSplit = line.split("\t")
           const eqSplit = line.split("=")

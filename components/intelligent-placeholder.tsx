@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Gamepad2, Zap, Globe, Disc, Monitor, Smartphone, Store, Cpu, Wrench } from 'lucide-react';
+import { Gamepad2, Zap, Globe, Disc, Monitor, Smartphone, Store } from 'lucide-react';
 
 interface IntelligentPlaceholderProps {
   gameName: string;

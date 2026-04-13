@@ -296,7 +296,7 @@ export function AINetworkBackground({ className = '' }: AINetworkBackgroundProps
         ctx.fillStyle = colors.bg;
         ctx.strokeStyle = trace.baseColor;
         ctx.lineWidth = 1;
-        trace.points.forEach((point, i) => {
+        trace.points.forEach((point, _i) => {
           if (trace.isBus) {
             // Bus pads (quadrati vuoti)
             ctx.strokeRect(point.x - 3, point.y - 3, 6, 6);

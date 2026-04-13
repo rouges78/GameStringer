@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Gamepad2, Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { clientLogger } from '@/lib/client-logger';

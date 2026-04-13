@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   FolderOpen,
   FileText,
-  Languages,
   Play,
   Pause,
-  Download,
   CheckCircle,
   XCircle,
   Loader2,
   FolderTree,
-  Filter,
-  Settings2,
   RefreshCw,
-  AlertTriangle,
   Globe,
   Edit3
 } from "lucide-react";
@@ -43,11 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
 
@@ -115,7 +105,6 @@ export function BatchFolderTranslator() {
   const [isPaused, setIsPaused] = useState(false);
   const [fileStatuses, setFileStatuses] = useState<Map<string, FileStatus>>(new Map());
   const [overallProgress, setOverallProgress] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
   const [outputFolder, setOutputFolder] = useState<string>("");
   
   const abortRef = useRef(false);
@@ -239,7 +228,7 @@ export function BatchFolderTranslator() {
         await new Promise(r => setTimeout(r, 500));
         
         // Scrivi file tradotto
-        const outputPath = await invoke<string>("write_translated_file", {
+        const _outputPath = await invoke<string>("write_translated_file", {
           originalPath: file.path,
           content: content, // In realtà dovrebbe essere tradotto
           outputSuffix: `_${targetLang}`,

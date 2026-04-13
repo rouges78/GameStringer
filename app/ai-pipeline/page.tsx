@@ -42,7 +42,6 @@ import {
   type PipelineResult,
   type PipelineStep,
   type PipelineStepId,
-  type PipelineOptions,
   type MultiAgentConfig,
   type AgentModelConfig,
   type BenchmarkEntry,
@@ -394,7 +393,7 @@ export default function AIPipelinePage() {
             <CardContent className="px-4 pb-3">
               <div className="flex items-center gap-1">
                 {steps.map((step, i) => {
-                  const Icon = STEP_ICONS[step.id] || ChevronRight
+                  const _Icon = STEP_ICONS[step.id] || ChevronRight
                   const StatusIcon = step.status === "completed" ? CheckCircle2
                     : step.status === "failed" ? XCircle
                     : step.status === "running" ? Loader2

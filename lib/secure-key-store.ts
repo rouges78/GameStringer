@@ -9,7 +9,6 @@
  * NEVER stores API keys in localStorage directly.
  */
 
-let isTauri = false;
 let tauriInvoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null = null;
 
 // Lazy-init Tauri detection
@@ -21,7 +20,6 @@ async function ensureTauri(): Promise<boolean> {
     if ('__TAURI__' in window || '__TAURI_INTERNALS__' in window) {
       const { invoke } = await import('@tauri-apps/api/core');
       tauriInvoke = invoke;
-      isTauri = true;
       return true;
     }
   } catch {

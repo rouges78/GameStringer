@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Brain, Users, MapPin, BookOpen, Sparkles, Plus, X, Check, 
-  ChevronDown, ChevronRight, Settings, Download, Upload, Trash2,
+  Brain, Users, BookOpen, Sparkles, Plus, X, Check,
+  ChevronDown, ChevronRight, Settings, Download,
   Lightbulb, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,9 +33,8 @@ import {
 } from '@/components/ui/dialog';
 import { 
   smartContext, 
-  CharacterProfile, 
-  GameContext,
-  TermEntry 
+  CharacterProfile,
+  GameContext
 } from '@/lib/smart-context';
 import { useTranslation } from '@/lib/i18n';
 

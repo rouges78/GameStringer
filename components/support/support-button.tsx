@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -41,7 +41,7 @@ export function SupportButton({
     if (url) {
       try {
         await open(url);
-      } catch (e: unknown) {
+      } catch {
         // Fallback per browser
         window.open(url, '_blank', 'noopener,noreferrer');
       }

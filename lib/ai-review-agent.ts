@@ -369,7 +369,7 @@ function checkStyle(original: string, translated: string): ReviewIssue[] {
   return issues
 }
 
-function checkGamingTerms(original: string, translated: string, targetLang: string): ReviewIssue[] {
+function checkGamingTerms(original: string, translated: string, _targetLang: string): ReviewIssue[] {
   const issues: ReviewIssue[] = []
   const originalLower = original.toLowerCase()
   
@@ -449,7 +449,7 @@ export function reviewTranslation(
   original: string,
   translated: string,
   targetLang: string = 'it',
-  context?: string
+  _context?: string
 ): ReviewResult {
   const issues: ReviewIssue[] = []
   

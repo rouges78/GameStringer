@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,8 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Glasses, Play, Square, Settings, Move3d, Palette, 
-  MonitorSpeaker, RefreshCw, Check, AlertTriangle, Eye, EyeOff
+  Glasses, Play, Square, Settings, Move3d, Palette,
+  MonitorSpeaker, RefreshCw, AlertTriangle, Eye
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
@@ -48,7 +48,7 @@ export function VROverlayPanel() {
       } else {
         toast.error(t('vrOverlay.noHeadset'));
       }
-    } catch (error: unknown) {
+    } catch {
       toast.error(t('vrOverlay.detectionError'));
     }
     setIsDetecting(false);

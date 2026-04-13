@@ -5,33 +5,20 @@ import {
   Gamepad2,
   Upload,
   Download,
-  FileText,
   Table,
   Type,
   Search,
   Wand2,
   Info,
-  AlertTriangle,
-  CheckCircle,
-  Copy,
-  Languages
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  detectRomPlatform,
   getRomInfo,
   parseTableFile,
   generateTableFile,
@@ -39,7 +26,6 @@ import {
   generateItalianTable,
   extractTextWithTable,
   findTextRegions,
-  textToBytes,
   RomInfo,
   TableFile,
   TextBlock,
@@ -60,7 +46,7 @@ export default function RetroPage() {
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [textRegions, setTextRegions] = useState<Array<{ start: number; end: number; preview: string }>>([]);
   const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
-  const [editedText, setEditedText] = useState<string>("");
+  const [_editedText, setEditedText] = useState<string>("");
   const [searchOffset, setSearchOffset] = useState<string>("");
   const [searchLength, setSearchLength] = useState<string>("1000");
 

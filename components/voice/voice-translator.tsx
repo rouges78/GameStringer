@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import {
   Mic,
-  MicOff,
-  Play,
-  Pause,
   Volume2,
   Languages,
   Wand2,
@@ -20,7 +17,6 @@ import {
   Upload,
   StopCircle,
   Loader2,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
   FileAudio,
@@ -196,7 +192,7 @@ export function VoiceTranslator() {
         step: 'recording'
       }));
 
-    } catch (error: unknown) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: 'Unable to access microphone. Check permissions.'
@@ -228,7 +224,7 @@ export function VoiceTranslator() {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -292,7 +288,7 @@ export function VoiceTranslator() {
         ...prev,
         isTranscribing: false,
         step: 'idle',
-        error: error?.message || 'Transcription error. Check your OpenAI API key.'
+        error: error instanceof Error ? error.message : 'Transcription error. Check your OpenAI API key.'
       }));
     }
   };
@@ -322,7 +318,7 @@ export function VoiceTranslator() {
         ...prev,
         isTranslating: false,
         step: 'idle',
-        error: error?.message || 'Translation error.'
+        error: error instanceof Error ? error.message : 'Translation error.'
       }));
     }
   };
@@ -346,7 +342,7 @@ export function VoiceTranslator() {
         speed: effectiveSpeed,
         response_format: 'mp3',
       };
-      let headers: Record<string, string> = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
 
@@ -447,7 +443,7 @@ export function VoiceTranslator() {
         ...prev,
         isSynthesizing: false,
         step: 'idle',
-        error: error?.message || 'Speech synthesis error.'
+        error: error instanceof Error ? error.message : 'Speech synthesis error.'
       }));
     }
   };

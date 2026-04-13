@@ -7,15 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  RefreshCw, 
-  Download, 
-  Trash2, 
-  Search, 
-  Filter, 
+import {
+  RefreshCw,
+  Download,
+  Trash2,
   AlertTriangle,
   Info,
   Bug,

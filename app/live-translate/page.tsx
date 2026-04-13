@@ -9,11 +9,10 @@ import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-  Play, Pause, Square, Monitor, ScanSearch, Zap, Clock, Eye, EyeOff,
+  Play, Pause, Square, Monitor, ScanSearch, Zap, Clock, Eye,
   Languages, Cpu, BarChart3, AlertCircle, CheckCircle, SkipForward
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { clientLogger } from '@/lib/client-logger';
 import {
   liveTranslationEngine,
   type LiveTranslationConfig,
@@ -54,11 +53,11 @@ const OCR_LANGUAGES = [
 ];
 
 export default function LiveTranslatePage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   // Config state
   const [targetLang, setTargetLang] = useState('it');
-  const [sourceLang, setSourceLang] = useState('en');
+  const [sourceLang, _setSourceLang] = useState('en');
   const [ocrLang, setOcrLang] = useState('eng');
   const [provider, setProvider] = useState('groq');
   const [intervalMs, setIntervalMs] = useState(2000);

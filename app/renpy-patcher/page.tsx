@@ -535,7 +535,7 @@ export default function RenpyPatcherPage() {
                 <Heart className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('renpyPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un gioco Ren'Py e clicca "Estrai Stringhe"
+                  Seleziona un gioco Ren&apos;Py e clicca &quot;Estrai Stringhe&quot;
                 </p>
               </div>
             ) : (

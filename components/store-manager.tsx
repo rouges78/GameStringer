@@ -131,7 +131,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
       } else {
         toast.error(`${storeStatuses[storeId]?.name || storeId}: ${result.error || 'Connection failed'}`);
       }
-    } catch (error: unknown) {
+    } catch {
       setStoreStatuses(prev => ({
         ...prev,
         [storeId]: {
@@ -154,7 +154,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
       const promises = stores.map(store => refreshStoreStatus(store.id));
       await Promise.all(promises);
       toast.success('All stores status updated');
-    } catch (error: unknown) {
+    } catch {
       toast.error('Error updating stores');
     } finally {
       setGlobalLoading(false);
@@ -193,7 +193,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
         // Connect store - should actually open a modal or auth process
         await refreshStoreStatus(storeId);
       }
-    } catch (error: unknown) {
+    } catch {
       setStoreStatuses(prev => ({
         ...prev,
         [storeId]: { ...prev[storeId], loading: false }

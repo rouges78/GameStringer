@@ -120,8 +120,8 @@ interface InteractiveTutorialProps {
   forceShow?: boolean;
 }
 
-export function InteractiveTutorial({ onComplete, forceShow = false }: InteractiveTutorialProps) {
-  const { t, language } = useTranslation();
+export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false }: InteractiveTutorialProps) {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);

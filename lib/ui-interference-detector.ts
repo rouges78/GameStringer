@@ -427,8 +427,6 @@ class UIInterferenceDetector {
       return this.getDefaultPosition(preferredPosition);
     }
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
     const safeDistance = this.options.safeDistance;
 
     // Prova tutte le posizioni possibili

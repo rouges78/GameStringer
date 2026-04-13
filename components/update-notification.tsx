@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { X, Download, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { open } from '@tauri-apps/plugin-shell';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';

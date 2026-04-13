@@ -10,7 +10,7 @@ const LiveOcrOverlay = dynamic(
 );
 
 export default function LiveOcrPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-6">
       <LiveOcrOverlay />

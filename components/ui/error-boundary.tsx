@@ -240,7 +240,7 @@ function DefaultErrorFallback({
 
 // Hook per gestire errori in componenti funzionali
 export function useErrorHandler() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
     // Log error
     clientLogger.error('useErrorHandler:', error, errorInfo);

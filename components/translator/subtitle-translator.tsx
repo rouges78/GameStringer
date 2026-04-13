@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { 
-  FileText, 
-  Upload, 
-  Download, 
-  Play, 
-  Pause,
+import {
+  FileText,
+  Download,
   Languages,
   Clock,
   AlertTriangle,
@@ -23,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -40,10 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
@@ -96,9 +89,9 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
   const [progress, setProgress] = useState(0);
   const [selectedEntry, setSelectedEntry] = useState<number | null>(null);
   const [editedText, setEditedText] = useState<string>("");
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewTime, setPreviewTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [_showPreview, _setShowPreview] = useState(false);
+  const [_previewTime, setPreviewTime] = useState(0);
+  const [_isPlaying, _setIsPlaying] = useState(false);
 
   // Stats e validazione
   const stats = subtitleFile ? getSubtitleStats(subtitleFile) : null;

@@ -3,31 +3,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  FolderOpen, 
-  Download, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Terminal, 
+  FolderOpen,
+  Download,
+  CheckCircle2,
   Gamepad2,
   Search,
-  Sparkles,
   Info,
-  ExternalLink,
   Play
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import Link from 'next/link';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
@@ -63,8 +55,8 @@ export function UnityPatcher() {
   const [gamePath, setGamePath] = useState<string>('');
   const [exeName, setExeName] = useState<string>('');
   const [isPatching, setIsPatching] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [_progress, setProgress] = useState(0);
+  const [_logs, setLogs] = useState<string[]>([]);
   const [status, setStatus] = useState<'idle' | 'patching' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   
@@ -74,10 +66,10 @@ export function UnityPatcher() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [urlGameApplied, setUrlGameApplied] = useState(false); // Per evitare loop
-  const [gameLanguages, setGameLanguages] = useState<string[]>([]);
-  const [isLoadingLanguages, setIsLoadingLanguages] = useState(false);
+  const [_gameLanguages, setGameLanguages] = useState<string[]>([]);
+  const [_isLoadingLanguages, setIsLoadingLanguages] = useState(false);
   const [engineCheck, setEngineCheck] = useState<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string; has_bepinex?: boolean; has_xunity?: boolean } | null>(null);
-  const [patchInfo, setPatchInfo] = useState<{ bepinex: string; xunity: string } | null>(null);
+  const [_patchInfo, setPatchInfo] = useState<{ bepinex: string; xunity: string } | null>(null);
   const [targetLanguage, setTargetLanguage] = useState('it'); // Lingua di destinazione per la traduzione
   const [translationMode, setTranslationMode] = useState<'google' | 'deepl' | 'capture'>('capture'); // Modalità traduzione
   
@@ -210,7 +202,7 @@ export function UnityPatcher() {
       // Debug: clientLogger.debug(`[UNITY PATCHER] games installati: ${installedGames.length}`);
       
       // Debug: mostra i motori rilevati
-      const engines = installedGames.reduce((acc, g) => {
+      const _engines = installedGames.reduce((acc, g) => {
         const eng = g.engine || 'Unknown';
         acc[eng] = (acc[eng] || 0) + 1;
         return acc;
@@ -318,7 +310,7 @@ export function UnityPatcher() {
         } else {
           setExeName(guessExeName(getGameName(game)));
         }
-      } catch (err: unknown) {
+      } catch {
         setExeName(guessExeName(getGameName(game)));
       }
     } else {
@@ -468,8 +460,8 @@ export function UnityPatcher() {
     } catch (err: unknown) {
       clientLogger.error('Patching error:', err);
       setStatus('error');
-      setErrorMessage(err.toString());
-      setLogs(prev => [...prev, `❌ Error: ${err}`]);
+      setErrorMessage(err instanceof Error ? err.message : String(err));
+      setLogs(prev => [...prev, `❌ Error: ${err instanceof Error ? err.message : String(err)}`]);
       toast.error(t('gamePatcher.patchError'));
     } finally {
       setIsPatching(false);
@@ -640,7 +632,7 @@ export function UnityPatcher() {
                     {(() => {
                       const isUnity = selectedGame.engine?.toLowerCase() === 'unity';
                       const isUnreal = selectedGame.engine?.toLowerCase().includes('unreal');
-                      const engineColor = isUnity ? 'emerald' : isUnreal ? 'blue' : 'slate';
+                      const _engineColor = isUnity ? 'emerald' : isUnreal ? 'blue' : 'slate';
                       const canPatch = isUnity; // Solo Unity supporta BepInEx
                       
                       return (

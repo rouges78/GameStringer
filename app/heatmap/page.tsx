@@ -26,7 +26,6 @@ import {
   Download,
   RefreshCw
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n"
 import { clientLogger } from '@/lib/client-logger';
 
@@ -207,7 +206,7 @@ export default function HeatmapPage() {
             })
           } else if (typeof json === 'object') {
             // Key-value format
-            Object.entries(json).forEach(([key, value], i) => {
+            Object.entries(json).forEach(([key, value], _i) => {
               if (typeof value === 'object' && value !== null) {
                 const v = value as unknown
                 pairs.push({

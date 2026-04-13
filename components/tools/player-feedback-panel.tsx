@@ -13,8 +13,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { 
   MessageSquare, Star, TrendingUp, TrendingDown, Minus, 
-  Download, Upload, Check, X, Eye, RefreshCw, Filter,
-  BarChart3, Send, ThumbsUp, ThumbsDown
+  Download, Check, X, RefreshCw, Filter,
+  BarChart3, Send
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';

@@ -64,7 +64,7 @@ export async function getInstalledSteamAppIds(): Promise<Set<number>> {
                         installedAppIds.add(parseInt(match[1], 10));
                     }
                 });
-            } catch (error: unknown) {
+            } catch {
                 // This is expected if a library folder is on a disconnected drive, for example.
                 clientLogger.warn(`[SteamUtils] Could not read directory: ${steamAppsFolder}. It might be on a disconnected drive.`);
             }

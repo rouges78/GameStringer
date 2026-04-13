@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Shield, FileWarning, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { AlertTriangle, Shield, FileWarning } from 'lucide-react';
+// Button import removed — not currently used
 import { useTranslation } from '@/lib/i18n';
 
 const DISCLAIMER_ACCEPTED_KEY = 'gamestringer-disclaimer-accepted';
@@ -13,7 +13,7 @@ interface DisclaimerModalProps {
 }
 
 export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isReady, setIsReady] = useState(false);
 

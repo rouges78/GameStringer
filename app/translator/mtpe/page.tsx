@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Upload, Play, FileText, Download, Sparkles } from 'lucide-react';
+import { ArrowLeft, Play, FileText, Download, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { MTPEWorkflow } from '@/components/translator/mtpe-workflow';
 import { useTranslation } from '@/lib/i18n';
@@ -34,7 +34,7 @@ export default function MTPEPage() {
   }, []);
   const [translations, setTranslations] = useState<Array<{ source: string; translation: string }>>([]);
   const [results, setResults] = useState<unknown[]>([]);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [_isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const handleStartTranslation = async () => {

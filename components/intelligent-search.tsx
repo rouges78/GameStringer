@@ -5,13 +5,12 @@ import { Search, X, Clock, Zap, Filter, Star, Calendar, Gamepad2 } from 'lucide-
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+// Card imports removed — not currently used
 import { Separator } from '@/components/ui/separator';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
@@ -71,7 +70,7 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [_suggestions, _setSuggestions] = useState<SearchSuggestion[]>([]);
   const [results, setResults] = useState<SearchResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -485,7 +484,7 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
 
               {query && results.length === 0 && (
                 <CommandEmpty>
-                  No results found for "{query}"
+                  No results found for &quot;{query}&quot;
                 </CommandEmpty>
               )}
             </CommandList>
@@ -498,10 +497,10 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
         <div className="mt-2 text-sm text-muted-foreground">
           {results.length > 0 ? (
             <span>
-              Found {results.length} results for "{query}"
+              Found {results.length} results for &quot;{query}&quot;
             </span>
           ) : (
-            <span>No results for "{query}"</span>
+            <span>No results for &quot;{query}&quot;</span>
           )}
         </div>
       )}

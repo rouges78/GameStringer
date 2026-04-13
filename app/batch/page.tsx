@@ -1,16 +1,14 @@
 "use client";
 
-import { 
-  FolderOpen, 
-  Sparkles, 
-  Languages, 
+import {
+  Sparkles,
+  Languages,
   Zap,
   FileText,
   FolderTree,
   Edit3,
   BookOpen
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { BatchFolderTranslator } from "@/components/translator/batch-folder-translator";
 import { useTranslation } from "@/lib/i18n";
 import Link from "next/link";

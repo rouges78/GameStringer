@@ -5,7 +5,6 @@
  * Storage locale con possibilità di sync futuro con server.
  */
 
-import { invoke } from '@/lib/tauri-api';
 import { clientLogger } from '@/lib/client-logger';
 
 export type RetroPlatform =

@@ -25,7 +25,6 @@ import {
 import {
   TranslationIssue,
   IssueType,
-  detectIssues,
   generateXUnityConfig,
   analyzeTranslationFile,
   detectGameType,

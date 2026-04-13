@@ -242,7 +242,6 @@ export class TranslationMemoryManager {
       gameIdFilter
     } = options;
 
-    const normalizedSource = normalizeText(sourceText);
     const results: TMSearchResult[] = [];
 
     // Prima cerca match esatto via hash
@@ -690,7 +689,7 @@ export async function translateWithMemory(
     targetLang = 'it',
     context,
     gameId,
-    provider = 'openai',
+    provider: _provider = 'openai',
     forceApi = false
   } = options;
 

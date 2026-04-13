@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Loader2, Check, Image as ImageIcon, Grid3X3, Sparkles, Type, AlertCircle, ThumbsUp, User, RefreshCw, Key, ExternalLink, Link2, Search, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -38,7 +38,7 @@ interface CoverPickerProps {
   currentCover?: string;
 }
 
-export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected, currentCover }: CoverPickerProps) {
+export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected, currentCover: _currentCover }: CoverPickerProps) {
   const { t } = useTranslation();
   const [covers, setCovers] = useState<Cover[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       try {
         const settings = JSON.parse(savedSettings);
         return settings?.integrations?.steamGridDbApiKey || null;
-      } catch (e: unknown) {}
+      } catch {}
     }
     // Fallback a utility prefs
     const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
@@ -77,7 +77,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       try {
         const prefs = JSON.parse(utilityPrefs);
         return prefs?.steamgriddb?.apiKey || null;
-      } catch (e: unknown) {}
+      } catch {}
     }
     return null;
   }, []);
@@ -87,7 +87,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
     const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
     let prefs = {};
     if (utilityPrefs) {
-      try { prefs = JSON.parse(utilityPrefs); } catch (e: unknown) {}
+      try { prefs = JSON.parse(utilityPrefs); } catch {}
     }
     const newPrefs = { ...prefs, steamgriddb: { enabled: true, apiKey: key } };
     localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
@@ -100,7 +100,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
         settings.integrations = settings.integrations || {};
         settings.integrations.steamGridDbApiKey = key;
         localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
-      } catch (e: unknown) {}
+      } catch {}
     }
   };
 
@@ -263,7 +263,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
     } catch (e: unknown) {
       clientLogger.error('IGDB fetch error:', e);
       // Se il comando non esiste, mostra messaggio appropriato
-      if (e.toString().includes('not found') || e.toString().includes('command')) {
+      if (String(e).includes('not found') || String(e).includes('command')) {
         setIgdbError('Ricerca IGDB non ancora configurata. Usa URL manuale.');
       } else {
         setIgdbError('Errore di connessione a IGDB');

@@ -1,25 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Star, 
-  MessageSquare, 
-  ThumbsUp, 
+import {
+  Users,
+  Star,
+  MessageSquare,
+  ThumbsUp,
   ThumbsDown,
   Flag,
   Award,
-  Crown,
-  Shield,
   Edit3,
   Send,
-  Filter,
   Search,
   Globe,
   TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,8 +38,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+// Tabs imports removed — not currently used
 import { toast } from 'sonner';
 
 interface CommunityTranslation {

@@ -6,7 +6,6 @@
  */
 
 const NEXUS_API_BASE = 'https://api.nexusmods.com/v1';
-const NEXUS_SEARCH_BASE = 'https://search.nexusmods.com/mods';
 
 export interface NexusMod {
   mod_id: number;

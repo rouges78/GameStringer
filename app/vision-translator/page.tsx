@@ -9,7 +9,7 @@ const VisionTranslator = dynamic(
 );
 
 export default function VisionTranslatorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <VisionTranslator />

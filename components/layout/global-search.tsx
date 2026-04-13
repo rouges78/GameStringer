@@ -21,7 +21,6 @@ import {
   Users, 
   Settings,
   Database,
-  Gamepad2,
   ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -130,7 +129,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         <ScrollArea className="max-h-[300px]">
           {filteredItems.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              No results per "{query}"
+              No results per &quot;{query}&quot;
             </div>
           ) : (
             <div className="p-2">

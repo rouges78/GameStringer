@@ -95,7 +95,7 @@ class InjektTranslator {
   }
 
   // Trova i punti dove agganciare il codice
-  private async findHookPoints(process: ProcessInfo): Promise<void> {
+  private async findHookPoints(_process: ProcessInfo): Promise<void> {
     // Simulazione - in produzione analizzeremmo la memoria del processo
     const mockHooks: HookPoint[] = [
       {

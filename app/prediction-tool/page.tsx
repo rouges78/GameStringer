@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useSearchParams } from 'next/navigation';
 import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
-  ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
+  ChevronLeft, Loader2, Zap, Server, Cloud, Layers,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
   ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench, Download,
   Music, Image
@@ -556,7 +556,7 @@ interface Deliverable {
 
 type DeliverableType = 'TranslatedFiles' | 'PatchPackage' | 'InstallationGuide' | 'TestingReport' | 'Documentation' | 'BackupArchive' | 'QualityReport' | 'DeploymentPackage';
 
-interface WorkflowExecutionResult {
+interface _WorkflowExecutionResult {
   executionId: string;
   gameTitle: string;
   engine: string;
@@ -629,7 +629,7 @@ const LANGUAGES = [
 
 function DifficultyGauge({ score, label }: { score: number; label: string }) {
   const color = score <= 20 ? 'text-green-400' : score <= 40 ? 'text-emerald-400' : score <= 60 ? 'text-yellow-400' : score <= 80 ? 'text-orange-400' : 'text-red-400';
-  const bgColor = score <= 20 ? 'bg-green-500' : score <= 40 ? 'bg-emerald-500' : score <= 60 ? 'bg-yellow-500' : score <= 80 ? 'bg-orange-500' : 'bg-red-500';
+  const _bgColor = score <= 20 ? 'bg-green-500' : score <= 40 ? 'bg-emerald-500' : score <= 60 ? 'bg-yellow-500' : score <= 80 ? 'bg-orange-500' : 'bg-red-500';
   const ringColor = score <= 20 ? 'ring-green-500/30' : score <= 40 ? 'ring-emerald-500/30' : score <= 60 ? 'ring-yellow-500/30' : score <= 80 ? 'ring-orange-500/30' : 'ring-red-500/30';
 
   return (
@@ -736,7 +736,7 @@ function getAudioQualityLabel(quality: AudioQuality): string {
   }
 }
 
-function getGraphicsCompressionColor(compression: GraphicsCompression): string {
+function _getGraphicsCompressionColor(compression: GraphicsCompression): string {
   switch (compression) {
     case 'None': return '#10b981';
     case 'Lossless': return '#3b82f6';
@@ -746,7 +746,7 @@ function getGraphicsCompressionColor(compression: GraphicsCompression): string {
   }
 }
 
-function getGraphicsCompressionLabel(compression: GraphicsCompression): string {
+function _getGraphicsCompressionLabel(compression: GraphicsCompression): string {
   switch (compression) {
     case 'None': return 'None';
     case 'Lossless': return 'Lossless';
@@ -756,7 +756,7 @@ function getGraphicsCompressionLabel(compression: GraphicsCompression): string {
   }
 }
 
-function getMultimediaToolCategoryColor(category: MultimediaToolCategory): string {
+function _getMultimediaToolCategoryColor(category: MultimediaToolCategory): string {
   switch (category) {
     case 'AudioEditing': return '#06b6d4';
     case 'GraphicsEditing': return '#10b981';
@@ -767,7 +767,7 @@ function getMultimediaToolCategoryColor(category: MultimediaToolCategory): strin
   }
 }
 
-function getMultimediaToolCategoryLabel(category: MultimediaToolCategory): string {
+function _getMultimediaToolCategoryLabel(category: MultimediaToolCategory): string {
   switch (category) {
     case 'AudioEditing': return 'Audio';
     case 'GraphicsEditing': return 'Graphics';
@@ -778,7 +778,7 @@ function getMultimediaToolCategoryLabel(category: MultimediaToolCategory): strin
   }
 }
 
-function getLearningCurveColor(curve: LearningCurve): string {
+function _getLearningCurveColor(curve: LearningCurve): string {
   switch (curve) {
     case 'Beginner': return '#10b981';
     case 'Easy': return '#3b82f6';
@@ -822,7 +822,7 @@ function getProblemSeverityLabel(severity: ProblemSeverity): string {
 
 // ── Backup Helper Functions ───────────────────────────────────────────
 
-function getBackupTypeColor(type: BackupType): string {
+function _getBackupTypeColor(type: BackupType): string {
   switch (type) {
     case 'Targeted': return '#10b981';
     case 'Essential': return '#3b82f6';
@@ -833,7 +833,7 @@ function getBackupTypeColor(type: BackupType): string {
   }
 }
 
-function getBackupTypeLabel(type: BackupType): string {
+function _getBackupTypeLabel(type: BackupType): string {
   switch (type) {
     case 'Targeted': return 'Targeted';
     case 'Essential': return 'Essential';
@@ -844,7 +844,7 @@ function getBackupTypeLabel(type: BackupType): string {
   }
 }
 
-function getCompressionMethodColor(method: CompressionMethod): string {
+function _getCompressionMethodColor(method: CompressionMethod): string {
   switch (method) {
     case 'None': return '#10b981';
     case 'Fast': return '#3b82f6';
@@ -855,7 +855,7 @@ function getCompressionMethodColor(method: CompressionMethod): string {
   }
 }
 
-function getCompressionMethodLabel(method: CompressionMethod): string {
+function _getCompressionMethodLabel(method: CompressionMethod): string {
   switch (method) {
     case 'None': return 'None';
     case 'Fast': return 'Fast';
@@ -866,7 +866,7 @@ function getCompressionMethodLabel(method: CompressionMethod): string {
   }
 }
 
-function getRestoreComplexityColor(complexity: RestoreComplexity): string {
+function _getRestoreComplexityColor(complexity: RestoreComplexity): string {
   switch (complexity) {
     case 'Simple': return '#10b981';
     case 'Moderate': return '#f59e0b';
@@ -876,7 +876,7 @@ function getRestoreComplexityColor(complexity: RestoreComplexity): string {
   }
 }
 
-function getRestoreComplexityLabel(complexity: RestoreComplexity): string {
+function _getRestoreComplexityLabel(complexity: RestoreComplexity): string {
   switch (complexity) {
     case 'Simple': return 'Simple';
     case 'Moderate': return 'Moderate';
@@ -886,7 +886,7 @@ function getRestoreComplexityLabel(complexity: RestoreComplexity): string {
   }
 }
 
-function getBackupPriorityColor(priority: BackupPriority): string {
+function _getBackupPriorityColor(priority: BackupPriority): string {
   switch (priority) {
     case 'Critical': return '#dc2626';
     case 'High': return '#ef4444';
@@ -896,7 +896,7 @@ function getBackupPriorityColor(priority: BackupPriority): string {
   }
 }
 
-function getBackupPriorityLabel(priority: BackupPriority): string {
+function _getBackupPriorityLabel(priority: BackupPriority): string {
   switch (priority) {
     case 'Critical': return 'Critical';
     case 'High': return 'High';
@@ -906,7 +906,7 @@ function getBackupPriorityLabel(priority: BackupPriority): string {
   }
 }
 
-function getBackupCategoryColor(category: BackupCategoryType): string {
+function _getBackupCategoryColor(category: BackupCategoryType): string {
   switch (category) {
     case 'TextFiles': return '#06b6d4';
     case 'AudioFiles': return '#10b981';
@@ -920,7 +920,7 @@ function getBackupCategoryColor(category: BackupCategoryType): string {
   }
 }
 
-function getBackupCategoryLabel(category: BackupCategoryType): string {
+function _getBackupCategoryLabel(category: BackupCategoryType): string {
   switch (category) {
     case 'TextFiles': return 'Text Files';
     case 'AudioFiles': return 'Audio Files';
@@ -936,7 +936,7 @@ function getBackupCategoryLabel(category: BackupCategoryType): string {
 
 // ── Workflow Helper Functions ───────────────────────────────────────────
 
-function getWorkflowApproachColor(approach: WorkflowApproach): string {
+function _getWorkflowApproachColor(approach: WorkflowApproach): string {
   switch (approach) {
     case 'Automated': return '#10b981';
     case 'SemiAutomated': return '#3b82f6';
@@ -947,7 +947,7 @@ function getWorkflowApproachColor(approach: WorkflowApproach): string {
   }
 }
 
-function getWorkflowApproachLabel(approach: WorkflowApproach): string {
+function _getWorkflowApproachLabel(approach: WorkflowApproach): string {
   switch (approach) {
     case 'Automated': return 'Automated';
     case 'SemiAutomated': return 'Semi-Automated';
@@ -958,7 +958,7 @@ function getWorkflowApproachLabel(approach: WorkflowApproach): string {
   }
 }
 
-function getStageTypeColor(type: StageType): string {
+function _getStageTypeColor(type: StageType): string {
   switch (type) {
     case 'Preparation': return '#06b6d4';
     case 'Extraction': return '#10b981';
@@ -972,7 +972,7 @@ function getStageTypeColor(type: StageType): string {
   }
 }
 
-function getStageTypeLabel(type: StageType): string {
+function _getStageTypeLabel(type: StageType): string {
   switch (type) {
     case 'Preparation': return 'Preparation';
     case 'Extraction': return 'Extraction';
@@ -986,7 +986,7 @@ function getStageTypeLabel(type: StageType): string {
   }
 }
 
-function getRiskLevelColor(level: RiskLevel): string {
+function _getRiskLevelColor(level: RiskLevel): string {
   switch (level) {
     case 'Low': return '#10b981';
     case 'Medium': return '#f59e0b';
@@ -996,7 +996,7 @@ function getRiskLevelColor(level: RiskLevel): string {
   }
 }
 
-function getRiskLevelLabel(level: RiskLevel): string {
+function _getRiskLevelLabel(level: RiskLevel): string {
   switch (level) {
     case 'Low': return 'Low';
     case 'Medium': return 'Medium';
@@ -1006,7 +1006,7 @@ function getRiskLevelLabel(level: RiskLevel): string {
   }
 }
 
-function getAutomationLevelColor(level: AutomationLevel): string {
+function _getAutomationLevelColor(level: AutomationLevel): string {
   switch (level) {
     case 'Manual': return '#ef4444';
     case 'SemiAutomated': return '#f59e0b';
@@ -1016,67 +1016,6 @@ function getAutomationLevelColor(level: AutomationLevel): string {
   }
 }
 
-function getAutomationLevelLabel(level: AutomationLevel): string {
-  switch (level) {
-    case 'Manual': return 'Manual';
-    case 'SemiAutomated': return 'Semi-Automated';
-    case 'FullyAutomated': return 'Fully Automated';
-    case 'Intelligent': return 'Intelligent';
-    default: return level;
-  }
-}
-
-function getTestingTypeColor(type: TestingType): string {
-  switch (type) {
-    case 'UnitTesting': return '#06b6d4';
-    case 'IntegrationTesting': return '#10b981';
-    case 'SystemTesting': return '#3b82f6';
-    case 'UserAcceptanceTesting': return '#8b5cf6';
-    case 'LocalizationTesting': return '#f59e0b';
-    case 'PerformanceTesting': return '#ef4444';
-    default: return '#6b7280';
-  }
-}
-
-function getTestingTypeLabel(type: TestingType): string {
-  switch (type) {
-    case 'UnitTesting': return 'Unit Testing';
-    case 'IntegrationTesting': return 'Integration Testing';
-    case 'SystemTesting': return 'System Testing';
-    case 'UserAcceptanceTesting': return 'User Acceptance Testing';
-    case 'LocalizationTesting': return 'Localization Testing';
-    case 'PerformanceTesting': return 'Performance Testing';
-    default: return type;
-  }
-}
-
-function getDeliverableTypeColor(type: DeliverableType): string {
-  switch (type) {
-    case 'TranslatedFiles': return '#06b6d4';
-    case 'PatchPackage': return '#10b981';
-    case 'InstallationGuide': return '#3b82f6';
-    case 'TestingReport': return '#8b5cf6';
-    case 'Documentation': return '#f59e0b';
-    case 'BackupArchive': return '#ef4444';
-    case 'QualityReport': return '#dc2626';
-    case 'DeploymentPackage': return '#059669';
-    default: return '#6b7280';
-  }
-}
-
-function getDeliverableTypeLabel(type: DeliverableType): string {
-  switch (type) {
-    case 'TranslatedFiles': return 'Translated Files';
-    case 'PatchPackage': return 'Patch Package';
-    case 'InstallationGuide': return 'Installation Guide';
-    case 'TestingReport': return 'Testing Report';
-    case 'Documentation': return 'Documentation';
-    case 'BackupArchive': return 'Backup Archive';
-    case 'QualityReport': return 'Quality Report';
-    case 'DeploymentPackage': return 'Deployment Package';
-    default: return type;
-  }
-}
 
 // ── Main Component ───────────────────────────────────────────────────
 
@@ -1146,8 +1085,6 @@ export default function PredictionToolPage() {
 
   const translatableFormats = useMemo(() =>
     result?.fileFormats.filter(f => f.translatable) || [], [result]);
-  const binaryFormats = useMemo(() =>
-    result?.fileFormats.filter(f => !f.translatable) || [], [result]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-200">

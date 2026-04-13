@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Gamepad2, Monitor, Play, Square, ArrowRight, Loader2, RefreshCw,
   Settings2, ChevronDown, ChevronUp, Scan, Image as ImageIcon,
-  Upload, Clipboard, X, Copy, Zap, Clock, Globe, Pause,
+  Upload, Clipboard, X, Copy, Zap, Clock, Pause,
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
@@ -75,7 +75,7 @@ const TARGET_LANGUAGES = [
 ];
 
 export default function EmulatorTranslatorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [windows, setWindows] = useState<WindowInfo[]>([]);
@@ -89,7 +89,7 @@ export default function EmulatorTranslatorPage() {
   const [currentTranslation, setCurrentTranslation] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showHistory, setShowHistory] = useState(true);
+  const [_showHistory, _setShowHistory] = useState(true);
   const [captureCount, setCaptureCount] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   // Screenshot mode

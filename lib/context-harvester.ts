@@ -532,7 +532,7 @@ function extractSpeakerName(text: string, key?: string): string | null {
  * Estrae il contesto da una singola stringa
  */
 export function harvestContext(input: HarvestInput): HarvestedContext {
-  const { text, key, filename, comment, maxLength, previousText, nextText, gameGenre } = input;
+  const { text, key, filename, comment, maxLength, previousText, nextText: _nextText, gameGenre } = input;
 
   // 1. Rileva schermata
   const { screen, confidence: screenConfidence } = detectScreen(text, key, filename);

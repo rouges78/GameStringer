@@ -5,12 +5,10 @@ import {
   Camera, 
   Upload, 
   Image as ImageIcon, 
-  Scan, 
-  Copy, 
-  Download, 
-  Trash2, 
+  Copy,
+  Download,
+  Trash2,
   Languages,
-  Zap,
   Settings,
   Eye,
   EyeOff
@@ -103,7 +101,7 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<OCRResult[]>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [_selectedImage, _setSelectedImage] = useState<string | null>(null);
   const [showBoundingBoxes, setShowBoundingBoxes] = useState(true);
   const [settings, setSettings] = useState<OCRSettings>({
     language: 'auto',

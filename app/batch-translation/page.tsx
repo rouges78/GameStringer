@@ -10,7 +10,7 @@ const BatchTranslationQueue = dynamic(
 );
 
 export default function BatchTranslationPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-6 space-y-6">
       <BatchTranslationQueue />

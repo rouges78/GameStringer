@@ -21,7 +21,7 @@ import { blogService, BlogPost } from '@/lib/blog';
 import { useTranslation } from '@/lib/i18n';
 
 export default function BlogPage() {
-  const { t, language } = useTranslation();
+  const { t: _t, language } = useTranslation();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

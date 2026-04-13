@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Database, Search, Trash2, Edit3, Check, X, RefreshCw, 
-  Filter, Download, Upload, Sparkles, Clock, Gamepad2,
-  ChevronDown, MoreHorizontal, AlertCircle, Scan, Bot, User, FileText
+  Database, Search, Trash2, Edit3, Check, X, RefreshCw,
+  Filter, Download, Sparkles, Gamepad2,
+  ChevronDown, AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   DropdownMenu, 
@@ -211,7 +210,7 @@ export default function MemoryPage() {
   };
 
   // Formatta data
-  const formatDate = (dateStr: string) => {
+  const _formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
@@ -417,8 +416,8 @@ export default function MemoryPage() {
               {t('dictionary.deleteDescription')}
               {unitToDelete && (
                 <span className="mt-3 p-3 rounded-lg bg-slate-800/50 text-sm block">
-                  <span className="text-slate-300 block">"{unitToDelete.sourceText}"</span>
-                  <span className="text-emerald-400 mt-1 block">→ "{unitToDelete.targetText}"</span>
+                  <span className="text-slate-300 block">&quot;{unitToDelete.sourceText}&quot;</span>
+                  <span className="text-emerald-400 mt-1 block">→ &quot;{unitToDelete.targetText}&quot;</span>
                 </span>
               )}
             </AlertDialogDescription>

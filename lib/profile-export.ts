@@ -40,7 +40,7 @@ export function exportProfile(profile: Record<string, unknown>, settings: Record
     toast.success('Profilo esportato!', {
       description: `${profile.name} salvato come file JSON`
     });
-  } catch (error: unknown) {
+  } catch {
     toast.error('Errore esportazione', {
       description: 'Impossibile esportare il profilo'
     });
@@ -73,7 +73,7 @@ export function importProfile(): Promise<ProfileExportData | null> {
         
         localStorage.setItem('importedProfileData', text);
         resolve(data);
-      } catch (error: unknown) {
+      } catch {
         toast.error('Errore importazione', {
           description: 'File non valido o corrotto'
         });

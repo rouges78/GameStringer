@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
 import {
-  Smile, AlertTriangle, CheckCircle2, Loader2, Download,
-  Play, Pause, FileAudio, Info, BarChart3, Settings2
+  Smile, AlertTriangle, Loader2, Download,
+  Play, Pause, BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -48,7 +46,7 @@ interface LipSyncPanelProps {
 }
 
 export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog, compact = false }: LipSyncPanelProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   // State
   const [rhubarbAvailable, setRhubarbAvailable] = useState<boolean | null>(null);

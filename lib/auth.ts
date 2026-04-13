@@ -1,7 +1,7 @@
 // Gestione auth locale completa per sostituire NextAuth
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 
 // Tipi per compatibilità con NextAuth

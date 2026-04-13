@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
@@ -20,7 +19,7 @@ export function StreamingText({
   cursorClassName,
   showCursor = true
 }: StreamingTextProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className={cn('relative', className)}>
       <span className="whitespace-pre-wrap">{text}</span>

@@ -1,4 +1,4 @@
-import { get, set, del, clear } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 import { clientLogger } from '@/lib/client-logger';
 
 /**
@@ -132,7 +132,7 @@ export const storageManager = {
           await set('editorFile', JSON.parse(sessionEditorFile));
           sessionStorage.removeItem('editorFile');
           clientLogger.debug(`[Storage] Migrato editorFile da sessionStorage a IndexedDB`);
-        } catch (e: unknown) {}
+        } catch {}
       }
     } catch (e: unknown) {
       clientLogger.error('[Storage] Errore durante la migrazione', e);

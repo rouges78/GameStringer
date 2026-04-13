@@ -8,17 +8,11 @@ import {
   ExternalLink,
   Key,
   CheckCircle,
-  XCircle,
   Star,
-  Users,
   Clock,
   FileText,
   RefreshCw,
-  Settings,
-  Globe,
-  Shield,
   Gamepad2,
-  Filter,
   Eye,
   Heart,
   AlertCircle
@@ -27,10 +21,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -45,7 +37,6 @@ import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import {
   nexusModsService,
-  type NexusMod,
   type NexusModFile,
   type NexusUserValidation,
   type TranslationModResult
@@ -57,7 +48,7 @@ export function NexusModsBrowser() {
   const [userInfo, setUserInfo] = useState<NexusUserValidation | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [_showApiKeyDialog, setShowApiKeyDialog] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TranslationModResult[]>([]);
@@ -127,7 +118,7 @@ export function NexusModsBrowser() {
       setShowApiKeyDialog(false);
       toast.success(`${t('nexusMods.welcome')}, ${info.name}!`);
     } catch (error: unknown) {
-      toast.error(error.message || t('nexusMods.invalidApiKey'));
+      toast.error(error instanceof Error ? error.message : t('nexusMods.invalidApiKey'));
       nexusModsService.clearApiKey();
     } finally {
       setIsValidating(false);
@@ -163,7 +154,7 @@ export function NexusModsBrowser() {
         toast.success(`${results.length} ${t('nexusMods.foundTranslations')}`);
       }
     } catch (error: unknown) {
-      toast.error(error.message || t('nexusMods.searchError'));
+      toast.error(error instanceof Error ? error.message : t('nexusMods.searchError'));
     } finally {
       setIsSearching(false);
     }

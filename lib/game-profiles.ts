@@ -1,5 +1,5 @@
 // Sistema di profili per giochi
-import { GameTranslation, genericTranslations, getTranslationsForProcess } from './game-translations';
+import { genericTranslations, getTranslationsForProcess } from './game-translations';
 import { clientLogger } from '@/lib/client-logger';
 
 export interface GameProfile {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,16 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Eye,
   Camera,
-  Languages,
   Loader2,
   Copy,
   CheckCircle2,
-  Image as ImageIcon,
   Upload,
   Sparkles,
   AlertTriangle,
   Monitor,
-  RefreshCw,
   X,
   Zap,
   Brain
@@ -117,7 +114,7 @@ export function VisionTranslator() {
       });
       setResult(res);
     } catch (err: unknown) {
-      setError(err?.message || err?.toString() || 'Errore durante la traduzione');
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -304,7 +301,7 @@ export function VisionTranslator() {
                   {contextLines.map((line, i) => (
                     <div key={i} className="flex items-center gap-1 text-2xs text-slate-400">
                       <span className="text-slate-600">{i + 1}.</span>
-                      <span className="flex-1 truncate">"{line}"</span>
+                      <span className="flex-1 truncate">&quot;{line}&quot;</span>
                       <button onClick={() => setContextLines(prev => prev.filter((_, j) => j !== i))}>
                         <X className="h-2.5 w-2.5 text-slate-600 hover:text-red-400" />
                       </button>
@@ -432,7 +429,7 @@ export function VisionTranslator() {
                 <Eye className="h-12 w-12 text-fuchsia-400/15 mx-auto mb-3" />
                 <h3 className="text-sm font-medium text-slate-400 mb-1">{t('visionTranslatorComp.liaVedeIlTuoGioco')}</h3>
                 <p className="text-2xs text-slate-500 max-w-xs mx-auto">
-                  Carica uno screenshot e inserisci il testo. L'IA userà il contesto visivo per tradurre con precisione — 
+                  Carica uno screenshot e inserisci il testo. L&apos;IA userà il contesto visivo per tradurre con precisione —
                   niente più errori di genere, ambiguità o allucinazioni.
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center max-w-sm mx-auto">

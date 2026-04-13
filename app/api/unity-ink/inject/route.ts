@@ -35,8 +35,8 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
 
   // Also check if there are pre-existing translation CSVs to merge
   const toolsDir = path.resolve(process.cwd(), 'tools');
-  const inkCsv = path.join(toolsDir, 'esoteric_ebb_strings', 'ink_strings', 'translated', 'ink_translations.csv');
-  const levelCsv = path.join(toolsDir, 'esoteric_ebb_strings', 'level_strings', 'translated', 'level_translations.csv');
+  const _inkCsv = path.join(toolsDir, 'esoteric_ebb_strings', 'ink_strings', 'translated', 'ink_translations.csv');
+  const _levelCsv = path.join(toolsDir, 'esoteric_ebb_strings', 'level_strings', 'translated', 'level_translations.csv');
 
   // Try to run the C# InjectInk tool
   const injectDir = path.resolve(process.cwd(), 'tools', 'assetstools_inject', 'InjectInk');

@@ -130,14 +130,6 @@ const TIER1_PERSONAL_PRONOUNS: RegExp[] = [
   /\b(we|we're|we'll|we've|we'd|our|ours|ourselves|us)\b/i,
 ];
 
-/** Tier 2: Contrazioni/interiezioni — DIALOGO PROBABILE (richiede 5+ parole) */
-const TIER2_SPEECH_PATTERNS: RegExp[] = [
-  /\b(don't|can't|won't|isn't|aren't|wasn't|weren't|didn't|couldn't|wouldn't|shouldn't|hasn't|haven't|hadn't|let's|that's|there's|here's|what's|who's|it's|he's|she's)\b/i,
-  /\b(said|asked|told|replied|answered|shouted|whispered|screamed|yelled|cried|muttered|exclaimed)\b/i,
-  /\b(hey|huh|hmm|um|uh|oh|ah|wow|well|okay|yeah|nah|damn|hell|god|dude|man|look|listen|wait|stop|shut up|no way|of course)\b/i,
-  /"[^"]+"/,
-];
-
 /** Minimo parole per considerare una stringa come dialogo senza speaker */
 const MIN_WORDS_NO_SPEAKER = 4;
 /** Minimo parole per considerare una stringa come dialogo con speaker */

@@ -1,13 +1,10 @@
 'use client';
 
 import { useProfileAuth } from '@/lib/profile-auth';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Shield, 
-  ShieldCheck, 
-  ShieldAlert, 
-  Clock, 
+import {
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
   User,
   RefreshCw
 } from 'lucide-react';
@@ -139,7 +136,7 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
   };
 
   const authStatus = getAuthStatus();
-  const StatusIcon = authStatus.icon;
+  const _StatusIcon = authStatus.icon;
 
   if (isExpanded) {
     return (

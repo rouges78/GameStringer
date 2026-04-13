@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,7 +72,7 @@ export function GameContextEditor({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showCharacterDialog, setShowCharacterDialog] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<GameCharacter | null>(null);
+  const [_editingCharacter, _setEditingCharacter] = useState<GameCharacter | null>(null);
   const [newDoNotTranslate, setNewDoNotTranslate] = useState('');
 
   // Form per nuovo personaggio
@@ -184,7 +184,7 @@ export function GameContextEditor({
                   Contesto del game
                 </CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  Aiuta l'IA a capire il contesto per traduzioni migliori
+                  Aiuta l&apos;IA a capire il contesto per traduzioni migliori
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -422,7 +422,7 @@ export function GameContextEditor({
               <div className="p-2 bg-primary/5 rounded border border-primary/20">
                 <Label className="text-xs flex items-center gap-1 text-primary">
                   <Sparkles className="h-3 w-3" />
-                  Contesto per l'IA
+                  Contesto per l&apos;IA
                 </Label>
                 <pre className="text-2xs text-muted-foreground mt-1 whitespace-pre-wrap">
                   {generateContextPrompt()}

@@ -59,7 +59,7 @@ export function InfoTooltip({
   className,
   iconSize = 'md',
 }: InfoTooltipProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const styles = variantStyles[variant];
   const Icon = styles.icon;
 

@@ -2,30 +2,27 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Wand2, Search, FolderOpen, FileText, Languages, CheckCircle2, 
-  AlertCircle, Loader2, ChevronRight, Globe, Sparkles, Download,
-  ArrowRight, Info, Lightbulb, Zap, FileCode, Database, Play,
-  RefreshCw, Eye, Copy, ExternalLink, Settings2, HelpCircle, ScanEye, Gamepad2
+  Wand2, Search, FolderOpen, FileText, Languages, CheckCircle2,
+  Loader2, ChevronRight, Download,
+  ArrowRight, Info, Zap, FileCode, Database, Play,
+  Eye, ExternalLink, Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
-import { detectStrategy, getAlternativeStrategies, type TranslationStrategy, type GameContext, type StrategyId } from '@/lib/wizard-strategies';
-import { findCommunityTranslation, type CommunityTranslation } from '@/lib/community-translations';
+import { detectStrategy, getAlternativeStrategies, type TranslationStrategy, type GameContext } from '@/lib/wizard-strategies';
+import { findCommunityTranslation } from '@/lib/community-translations';
 import { translateSmart } from '@/lib/ai-translate-direct';
-import { extractStringsFromBuffer, fitToByteLength, applyPatch, detectAntiCheat, detectLanguage, type BinaryString } from '@/lib/binary-string-patcher';
+import { extractStringsFromBuffer, fitToByteLength, applyPatch, detectAntiCheat, detectLanguage } from '@/lib/binary-string-patcher';
 import { clientLogger } from '@/lib/client-logger';
 
 // --- Types ---
@@ -113,13 +110,13 @@ export default function TranslationWizardPage() {
     }
   }, []);
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [_isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [analysisStatus, setAnalysisStatus] = useState('');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [strategy, setStrategy] = useState<TranslationStrategy | null>(null);
   const [altStrategies, setAltStrategies] = useState<TranslationStrategy[]>([]);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [_isTranslating, setIsTranslating] = useState(false);
   const [translateProgress, setTranslateProgress] = useState(0);
   const [translateStatus, setTranslateStatus] = useState('');
   const [translateLog, setTranslateLog] = useState<string[]>([]);

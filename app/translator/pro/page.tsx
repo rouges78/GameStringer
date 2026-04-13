@@ -11,16 +11,13 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { get, set } from 'idb-keyval';
+import { set } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -38,19 +35,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Loader2, AlertTriangle, FolderOpen, FileText, ArrowLeft,
-  Languages, CheckCircle, Search, ChevronRight, Sparkles,
-  Upload, Download, Brain, Shield, Zap, Clock, DollarSign,
-  Play, Pause, Square, RotateCcw, FileCode, Database,
-  ChevronDown, ChevronUp, Filter, Settings2, Info, Cpu, Wind, Save,
-  Gamepad2, Rocket, Package, Share2
+  FolderOpen, FileText, ArrowLeft,
+  Languages, CheckCircle, Sparkles,
+  Brain, Shield, Zap, Clock, DollarSign,
+  Database,
+  Settings2, Info, Cpu, Wind
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { notifications } from '@/lib/notifications';
-import { api } from '@/lib/api-client';
-import { offlineCache } from '@/lib/offline-cache';
+// import { api } from '@/lib/api-client';
 import { invoke } from '@/lib/tauri-api';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
@@ -61,20 +54,16 @@ import {
   initializeNeuralTranslator,
   getSystemStats,
   parseFile,
-  estimateBatchCost,
   formatTimeRemaining,
   SUPPORTED_FORMATS,
-  FORMAT_DESCRIPTIONS,
   type BatchProgress,
   type BatchTranslationJob,
   type ParseResult,
   type FileFormat,
 } from '@/lib/neural-translator';
 import { translationMemory } from '@/lib/translation-memory';
-import { getFlagEmoji, LanguageFlags } from '@/components/ui/language-flags';
-import { BatchInsightsSummary, QualityScoreBadge, ContentTypeBadge } from '@/components/translator/translation-insights';
-import { classifyContent } from '@/lib/content-classifier';
-import { calculateQualityScore } from '@/lib/translation-quality';
+import { getFlagEmoji } from '@/components/ui/language-flags';
+import { BatchInsightsSummary } from '@/components/translator/translation-insights';
 
 // Extracted sub-components
 import { GameSelector } from '@/components/translator-pro/game-selector';
@@ -82,13 +71,6 @@ import { FileSelector } from '@/components/translator-pro/file-selector';
 import { TranslationProgress } from '@/components/translator-pro/translation-progress';
 import { ReviewStep } from '@/components/translator-pro/review-step';
 import { getRecommendedProvider, computeCostEstimate } from '@/lib/translator-pro/cost-calculator';
-
-// Mappa codici lingua a codici paese per bandierine
-const langToCountry: Record<string, string> = {
-  'en': 'GB', 'it': 'IT', 'de': 'DE', 'fr': 'FR', 'es': 'ES',
-  'ja': 'JP', 'zh': 'CN', 'ko': 'KR', 'pt': 'BR', 'ru': 'RU',
-  'pl': 'PL', 'nl': 'NL', 'tr': 'TR', 'ar': 'SA', 'th': 'TH'
-};
 
 // ============================================================================
 // TYPES
@@ -221,7 +203,7 @@ export default function TranslatorProPage() {
   
   // Translation
   const [isTranslating, setIsTranslating] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const [_isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState<BatchProgress | null>(null);
   const [currentJob, setCurrentJob] = useState<BatchTranslationJob | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0); // Timer in secondi
@@ -1174,7 +1156,7 @@ export default function TranslatorProPage() {
       if (localizationInfo?.has_localization && localizationInfo.can_add_language) {
         clientLogger.debug('[ApplyToGame] Usando METODO 1 - File localizzazione diretti');
         // Prendi il primo file tradotto
-        const [filename, translatedContent] = Array.from(translatedFiles.entries())[0];
+        const [_filename, translatedContent] = Array.from(translatedFiles.entries())[0];
         
         try {
           const savedPath = await invoke<string>('apply_translation_file', {

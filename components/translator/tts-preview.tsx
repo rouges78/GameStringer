@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { 
-  Volume2, VolumeX, Play, Pause, Square, Settings,
-  RefreshCw, Download, Loader2, Mic, Speaker
+import {
+  Volume2, Play, Pause, Square, Settings,
+  Loader2, Mic, Speaker
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

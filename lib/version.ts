@@ -108,7 +108,7 @@ export class Version {
 
   public getVersionColor(): string {
     // Colori basati sul tipo di versione
-    const { major, minor, patch } = this.versionInfo;
+    const { major, minor } = this.versionInfo;
     
     if (major >= 4) return 'text-purple-400'; // Futuro
     if (major >= 3 && minor >= 5) return 'text-blue-400'; // Stabile avanzata

@@ -8,9 +8,6 @@ import {
   LANG_NAMES,
   NLLB_LANG_MAP,
   LANG_TO_CODE,
-  LANG_PROVIDER_AFFINITY,
-  GENRE_PROVIDER_BOOST,
-  normalizeLangCode,
   PROVIDER_LABELS,
   OLLAMA_PROVIDERS,
   API_KEY_URLS,
@@ -18,17 +15,13 @@ import {
 import {
   blockProvider,
   isProviderBlocked,
-  resetProviderBlocks,
   FREE_PROVIDERS,
   LANG_SENSITIVE_PROVIDERS,
   setCooldown,
 } from './translation/provider-blocking';
 import {
   type ChainPreset,
-  type ChainPresetInfo,
   CHAIN_PRESETS,
-  setChainPreset,
-  getChainPreset,
   getActiveChainPreset,
   getAutoProviderChain as _getAutoProviderChain,
 } from './translation/chain-presets';
@@ -1517,7 +1510,7 @@ export async function translateWithFallback(
         opts = { ...opts, tmContext: tmCtx };
         clientLogger.debug(`[TM-RAG] Auto-iniettate traduzioni simili nel prompt (${opts.texts.length} testi)`);
       }
-    } catch (e: unknown) {
+    } catch {
       // TM non disponibile — procedi senza
     }
   }
@@ -1599,7 +1592,6 @@ export async function translateWithFallback(
   const langMismatch = detectedLang && detectedLang !== declaredLang;
   if (langMismatch) {
     // Rimuovi provider lang-sensitive (traduttori web che non auto-detectano)
-    const before = providers.length;
     const removed: string[] = [];
     const filtered = providers.filter(p => {
       if (LANG_SENSITIVE_PROVIDERS.has(p.name)) { removed.push(p.name); return false; }

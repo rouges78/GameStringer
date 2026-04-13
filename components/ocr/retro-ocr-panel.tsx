@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Gamepad2, 
@@ -152,7 +151,6 @@ interface RetroOcrPanelProps {
 export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps) {
   const { t } = useTranslation();
   const [config, setConfig] = useState<RetroOcrConfig>(DEFAULT_CONFIGS.auto);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const updateConfig = (updates: Partial<RetroOcrConfig>) => {
@@ -295,7 +293,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
                   className="w-full"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Ingrandisce l'immagine preservando i pixel (nearest neighbor)
+                  Ingrandisce l&apos;immagine preservando i pixel (nearest neighbor)
                 </p>
               </div>
 
@@ -348,7 +346,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
                   />
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Converte l'immagine in bianco/nero per miglior riconoscimento
+                  Converte l&apos;immagine in bianco/nero per miglior riconoscimento
                 </p>
               </div>
 
@@ -430,9 +428,9 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
           <h4 className="font-medium text-sm text-green-600 mb-2">💡 Suggerimenti</h4>
           <ul className="text-xs text-muted-foreground space-y-1">
             <li>• Per games <strong>8-bit</strong>: usa upscale 4x e threshold alto</li>
-            <li>• Per games <strong>DOS</strong>: attiva "Remove Dithering" per palette limitate</li>
+            <li>• Per games <strong>DOS</strong>: attiva &quot;Remove Dithering&quot; per palette limitate</li>
             <li>• Per testo <strong>giapponese</strong> (PC-98): usa upscale 4x con sharpen</li>
-            <li>• Se il testo è scuro su sfondo chiaro, prova "Inverti Colori"</li>
+            <li>• Se il testo è scuro su sfondo chiaro, prova &quot;Inverti Colori&quot;</li>
           </ul>
         </CardContent>
       </Card>

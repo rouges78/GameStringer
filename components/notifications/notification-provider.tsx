@@ -7,12 +7,11 @@ import { clientLogger } from '@/lib/client-logger';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 // Rimossa dipendenza da useProfileAuth per evitare dipendenza circolare
 import { NotificationToastProvider } from './notification-toast-provider';
-import { 
-  Notification, 
-  NotificationPreferences, 
+import {
+  NotificationPreferences,
   UseNotificationsReturn,
   NotificationType,
-  NotificationPriority 
+  NotificationPriority
 } from '@/types/notifications';
 
 interface NotificationContextType extends UseNotificationsReturn {

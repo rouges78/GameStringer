@@ -164,7 +164,7 @@ class ProfilePreloader {
   /**
    * Preload metadati credenziali per un profilo
    */
-  private async preloadCredentialMetadata(profileId: string): Promise<void> {
+  private async preloadCredentialMetadata(_profileId: string): Promise<void> {
     // Non è necessario fare una chiamata separata al backend
     return Promise.resolve();
   }

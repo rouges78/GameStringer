@@ -5,15 +5,14 @@
  * Integra Translation Memory, Quality Gates e Content Classification.
  */
 
-import { translationMemory, translateWithMemory, TranslationUnit } from './translation-memory';
+import { translationMemory, translateWithMemory } from './translation-memory';
 import { clientLogger } from '@/lib/client-logger';
-import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from './quality-gates';
-import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
+import { runQualityGates, quickQualityCheck, QualityReport } from './quality-gates';
+import { classifyBatch, ContentClassification } from './content-classifier';
 import { translateSmart } from './ai-translate-direct';
 import { buildRelevantGlossaryHint, extractTerms, loadGlossary, loadGlossaryConfig } from './auto-glossary';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
 import { composeGenreAndCharacterContext, type GameGenre } from './genre-prompts';
-import { runPipeline, type PipelineResult } from './ai-pipeline';
 import { suggestBatchImprovements, type PostEditRequest } from './ai-post-edit';
 
 // ============================================================================
@@ -489,7 +488,7 @@ export class BatchTranslator {
           this.job.progress.fromMemory++;
           this.job.results.translatedItems++;
           this.job.results.fromMemoryItems++;
-          translationMemory.incrementUsage(fuzzyMatch.unit.id).catch(() => {});
+          translationMemory.incrementUsage(fuzzyMatch.unit.id).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
           this.onItemCompleteCallback?.(item);
           clientLogger.debug(`[BatchTranslator] Fuzzy TM match (${fuzzyMatch.similarity}%): "${item.sourceText.substring(0, 40)}..."`);
           continue;
@@ -658,7 +657,7 @@ export class BatchTranslator {
               gameId: this.job.gameId,
               provider: this.job.provider,
               confidence: 0.85
-            }).catch(() => {});
+            }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
           }
 
           // Stima costi
@@ -792,7 +791,7 @@ export class BatchTranslator {
                 gameId: this.job.gameId,
                 provider: this.job.provider,
                 confidence: 0.9 // Confidence più alta per retry riuscito
-              }).catch(() => {});
+              }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
             }
 
             this.onItemCompleteCallback?.(item);
@@ -832,7 +831,7 @@ export class BatchTranslator {
             gameId: this.job.gameId,
             provider: this.job.provider,
             confidence: 0.6 // Confidence bassa — non ha superato QA
-          }).catch(() => {});
+          }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
         }
 
         this.onItemCompleteCallback?.(item);
@@ -1047,7 +1046,7 @@ export class BatchTranslator {
               gameId: this.job!.gameId,
               provider: this.job!.provider,
               confidence: 0.92, // Alta confidence per post-edit verificato
-            }).catch(() => {});
+            }).catch((err) => clientLogger.warn('TM operation failed', { error: String(err) }));
           }
 
           clientLogger.debug(`[BatchTranslator] Post-edit applied (${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);

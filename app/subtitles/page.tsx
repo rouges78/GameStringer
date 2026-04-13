@@ -9,14 +9,13 @@ import {
   FileText,
   Zap
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { SubtitleTranslator } from "@/components/translator/subtitle-translator";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
 
 export default function SubtitlesPage() {
   const { t } = useTranslation();
-  const [apiKey, setApiKey] = useState<string>("");
+  const [_apiKey, _setApiKey] = useState<string>("");
 
   // Funzione di traduzione che usa l'API
   const handleTranslate = async (texts: string[], targetLang: string): Promise<string[]> => {

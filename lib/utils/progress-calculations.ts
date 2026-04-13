@@ -1,5 +1,5 @@
 // Progress Calculation Utilities
-import type { ProgressUpdate, OperationProgress } from '@/lib/types/progress';
+import type { ProgressUpdate } from '@/lib/types/progress';
 import type { BatchProgress } from '@/lib/types/batch';
 
 /**

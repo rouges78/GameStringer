@@ -216,7 +216,7 @@ function applyToPO(content: string, translations: Map<string, string>): string {
   }).join('\n\n');
 }
 
-function applyToXML(content: string, translations: Map<string, string>, format: string): string {
+function applyToXML(content: string, translations: Map<string, string>, _format: string): string {
   let result = content;
   for (const [key, value] of translations) {
     // Cerca pattern comuni in XML di localizzazione

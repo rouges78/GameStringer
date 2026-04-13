@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Gamepad2, Languages, Brain, ChevronRight, 
-  CheckCircle2, Circle, Sparkles, X, Rocket
+  CheckCircle2, Sparkles, X, Rocket
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -24,7 +24,7 @@ interface QuickStartStep {
 }
 
 export function QuickStartGuide() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [isDismissed, setIsDismissed] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
 

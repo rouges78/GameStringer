@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,18 +13,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import {
   BookOpen, Plus, Search, Trash2, Edit, Download, Upload, Sparkles,
-  Lock, RefreshCw, Unlock, Filter, X, Save, FileJson, FileSpreadsheet,
-  Wand2, CheckCircle, AlertTriangle, Info, Settings, ChevronDown,
+  Lock, RefreshCw, Unlock, Save, FileJson, FileSpreadsheet,
+  Wand2, Info, Settings,
   Edit3, FolderTree,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import {
-  loadGlossary, saveGlossary, createGlossary, deleteGlossary, listGlossaries,
+  loadGlossary, createGlossary, deleteGlossary, listGlossaries,
   addTerm, updateTerm, deleteTerm, searchTerms, extractTerms,
   exportToCsv, exportToJson, importFromCsv, importFromJson,
   addDefaultTerms, loadGlossaryConfig, saveGlossaryConfig, getGlossaryConfig,
-  checkConsistency,
   type AutoGlossary, type AutoGlossaryEntry, type GlossaryTier, type GlossaryCategory,
   type AutoGlossaryConfig,
 } from '@/lib/auto-glossary';
@@ -523,7 +521,7 @@ export default function GlossaryPage() {
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-white/5">
                     <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
                     <p className="text-[11px] text-muted-foreground">
-                      L'estrazione usa il provider attivo nella chain di traduzione.
+                      L&apos;estrazione usa il provider attivo nella chain di traduzione.
                       I termini estratti vengono classificati automaticamente per tier e categoria.
                       Puoi poi rivederli e modificarli manualmente.
                     </p>

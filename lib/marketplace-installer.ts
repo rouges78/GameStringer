@@ -10,8 +10,7 @@
  */
 
 import { downloadPack, fetchPackById } from './community-hub-backend';
-import type { TranslationPack } from './community-hub-service';
-import type { GspackData, GspackManifest, InstalledPack } from './gspack-manager';
+import type { GspackData, InstalledPack } from './gspack-manager';
 import { safeGetItem, safeSetItem } from './safe-storage';
 import { clientLogger } from './client-logger';
 

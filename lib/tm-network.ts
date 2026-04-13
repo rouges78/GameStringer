@@ -292,7 +292,7 @@ export async function lookupSharedTM(
   texts: string[],
   sourceLanguage: string,
   targetLanguage: string,
-  gameAppId?: number,
+  _gameAppId?: number,
 ): Promise<Map<string, SharedTMEntry>> {
   const config = getTMNetworkConfig();
   if (!config.enabled || texts.length === 0) {

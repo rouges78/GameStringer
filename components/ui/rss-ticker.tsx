@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Rss, ExternalLink, Maximize2 } from 'lucide-react';
+import { Rss, ExternalLink } from 'lucide-react';
 
 interface RssItem {
   title: string;

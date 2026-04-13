@@ -17,7 +17,6 @@ import {
   HelpCircle,
   Lightbulb,
   Megaphone,
-  AlertCircle,
   BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,16 +49,6 @@ interface Discussion {
   upvoteCount: number;
   answerChosenAt: string | null;
   url: string;
-}
-
-interface DiscussionsResponse {
-  data?: {
-    repository?: {
-      discussions?: {
-        nodes: Discussion[];
-      };
-    };
-  };
 }
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -96,11 +85,8 @@ export function GitHubDiscussions() {
   const { t } = useTranslation();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const fetchDiscussions = async () => {
     setIsLoading(true);
-    setError(null);
     
     try {
       // REST API pubblica (no token richiesto per repo pubblici)
@@ -192,7 +178,7 @@ export function GitHubDiscussions() {
   const openInGitHub = async (url: string) => {
     try {
       await open(url);
-    } catch (e: unknown) {
+    } catch {
       // Fallback per browser
       window.open(url, '_blank', 'noopener,noreferrer');
     }

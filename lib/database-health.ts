@@ -247,7 +247,7 @@ export class DatabaseHealthMonitor {
   private async getDiskSpaceInfo(): Promise<{ used: number; available: number; total: number }> {
     try {
       const fs = require('fs');
-      const path = require('path');
+      const _path = require('path');
       
       // Get database file path from DATABASE_URL
       const dbUrl = process.env.DATABASE_URL || '';

@@ -840,14 +840,14 @@ function serializeUnityYAML(content: ParsedContent): string {
   return content.entries.map(e => `m_Text: "${e.target || e.source}"`).join('\n');
 }
 
-function parseLocres(content: string): ParsedContent {
+function parseLocres(_content: string): ParsedContent {
   // Locres is binary, this would need proper binary parsing
   // Placeholder for text extraction
   const entries: TranslationEntry[] = [];
   return { entries, metadata: { format: 'locres', note: 'Binary format - use UnrealLocres tool' } };
 }
 
-function serializeLocres(content: ParsedContent): string {
+function serializeLocres(_content: ParsedContent): string {
   return '';
 }
 

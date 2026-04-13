@@ -8,7 +8,6 @@ import {
   Hash,
   Users,
   Circle,
-  ArrowLeft,
   Plus,
   Reply,
   Edit3,
@@ -24,9 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
@@ -96,7 +93,7 @@ function formatTime(iso: string): string {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────
 
 export function CommunityChat() {
-  const { t, language } = useTranslation();
+  const { t: _t, language } = useTranslation();
   const [enabled, setEnabled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -156,7 +153,7 @@ export function CommunityChat() {
         }
       } catch (e: unknown) {
         clientLogger.error('[Chat] Init error:', e);
-        toast.error(e.message || 'Errore inizializzazione chat');
+        toast.error(e instanceof Error ? e.message : 'Errore inizializzazione chat');
       } finally {
         setIsLoading(false);
       }
@@ -244,7 +241,7 @@ export function CommunityChat() {
         setReplyTo(null);
       }
     } catch (e: unknown) {
-      toast.error(e.message || 'Errore invio messaggio');
+      toast.error(e instanceof Error ? e.message : 'Errore invio messaggio');
       setMessageInput(content); // restore
     } finally {
       setIsSending(false);
@@ -261,7 +258,7 @@ export function CommunityChat() {
         prev.map((m) => (m.id === msg.id ? { ...m, deleted: true, content: '[messaggio eliminato]' } : m))
       );
     } catch (e: unknown) {
-      toast.error(e.message || 'Errore eliminazione');
+      toast.error(e instanceof Error ? e.message : 'Errore eliminazione');
     }
   };
 
@@ -366,7 +363,7 @@ export function CommunityChat() {
       setNewRoomDesc('');
       toast.success('Stanza creata!');
     } catch (e: unknown) {
-      toast.error(e.message || 'Errore creazione stanza');
+      toast.error(e instanceof Error ? e.message : 'Errore creazione stanza');
     }
   };
 
@@ -404,7 +401,7 @@ export function CommunityChat() {
           toast.error('Devi prima effettuare il login in GameStringer.');
         }
       } catch (e: unknown) {
-        toast.error(e.message || 'Errore connessione');
+        toast.error(e instanceof Error ? e.message : 'Errore connessione');
       } finally {
         setIsLoading(false);
       }

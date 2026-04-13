@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -82,7 +81,7 @@ export default function OCREnginesPage() {
   const [compareAll, setCompareAll] = useState(false)
   const [showSetup, setShowSetup] = useState<OCREngineId | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [settings] = useState(() => getOCRSettings())
+  const [_settings] = useState(() => getOCRSettings())
 
   const handleProbe = useCallback(async () => {
     setIsProbing(true)
@@ -137,7 +136,7 @@ export default function OCREnginesPage() {
     }
   }, [ocrResult])
 
-  const handleSaveSettings = useCallback(() => {
+  const _handleSaveSettings = useCallback(() => {
     saveOCRSettings({ preferredEngine, compareMode: compareAll })
   }, [preferredEngine, compareAll])
 

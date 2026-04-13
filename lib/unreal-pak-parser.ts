@@ -343,7 +343,7 @@ export function parseLocres(buffer: ArrayBuffer): LocresData | null {
 
     let namespaceName: string;
     if (version >= 2) {
-      const hash = reader.readUint32();
+      reader.readUint32(); // hash (unused, skip)
       namespaceName = reader.readFString();
     } else {
       namespaceName = reader.readFString();

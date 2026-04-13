@@ -68,7 +68,7 @@ export default function UnityCsvTranslatorPage() {
   const [injecting, setInjecting] = useState(false);
   const [injectResult, setInjectResult] = useState<InjectResult | null>(null);
   const [inkCsvPath, setInkCsvPath] = useState('');
-  const [csvExportDir, setCsvExportDir] = useState('');
+  const [csvExportDir, _setCsvExportDir] = useState('');
   // Ink state
   const [inkStrings, setInkStrings] = useState<{ text: string; source_file: string; translated: string; done: boolean }[]>([]);
   const [inkScanned, setInkScanned] = useState(false);

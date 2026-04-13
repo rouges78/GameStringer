@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  Wand2, FolderOpen, Languages, Rocket, CheckCircle2, 
+  Wand2, FolderOpen, Languages, Rocket, CheckCircle2,
   AlertCircle, Loader2, FileText, ArrowRight, RefreshCw,
-  Download, Upload, Search, Cpu, Zap, Shield, BarChart3,
-  Play, Pause, RotateCcw, Eye, ChevronDown, ChevronUp,
-  Package, Table, Filter, ArrowUpDown, ExternalLink
+  Search, Cpu, Zap, Shield, BarChart3,
+  Play, RotateCcw, Eye, ChevronDown, ChevronUp,
+  Package, Table
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,7 +112,7 @@ export function UnityInkTranslator() {
   
   const [steamGames, setSteamGames] = useState<SteamGame[]>([]);
   const [scanningGames, setScanningGames] = useState(false);
-  const [scannedPaths, setScannedPaths] = useState<string[]>([]);
+  const [_scannedPaths, setScannedPaths] = useState<string[]>([]);
   
   const [showPreview, setShowPreview] = useState(false);
   const [previewPairs, setPreviewPairs] = useState<TranslationPair[]>([]);
@@ -209,7 +209,7 @@ export function UnityInkTranslator() {
       toast({ title: `${data.gameName} rilevato`, description: `${data.inkBlobCount} blob Ink in ${data.assetsCount} file` });
       setStep('extract');
     } catch (e: unknown) {
-      addLog(`Errore connessione: ${e.message}`);
+      addLog(`Errore connessione: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -237,7 +237,7 @@ export function UnityInkTranslator() {
       toast({ title: 'Estrazione completata', description: `${data.uniqueStrings.toLocaleString()} stringhe uniche trovate` });
       setStep('translate');
     } catch (e: unknown) {
-      addLog(`Errore: ${e.message}`);
+      addLog(`Errore: ${e instanceof Error ? e.message : String(e)}`);
     }
     setExtracting(false);
   }
@@ -272,7 +272,7 @@ export function UnityInkTranslator() {
       // Start polling for progress
       startProgressPolling();
     } catch (e: unknown) {
-      addLog(`Errore: ${e.message}`);
+      addLog(`Errore: ${e instanceof Error ? e.message : String(e)}`);
       setTranslateProgress(prev => ({ ...prev, status: 'error' }));
     }
   }
@@ -344,8 +344,9 @@ export function UnityInkTranslator() {
       toast({ title: 'Iniezione completata!', description: `${data.totalReplacements.toLocaleString()} sostituzioni — avvia il gioco!` });
       setStep('done');
     } catch (e: unknown) {
-      addLog(`Errore: ${e.message}`);
-      setInjectResult(prev => ({ ...prev, status: 'error', error: e.message }));
+      const errMsg = e instanceof Error ? e.message : String(e);
+      addLog(`Errore: ${errMsg}`);
+      setInjectResult(prev => ({ ...prev, status: 'error', error: errMsg }));
     }
   }
 
@@ -361,7 +362,7 @@ export function UnityInkTranslator() {
       const data = await resp.json();
       addLog(data.message || 'Ripristino completato');
     } catch (e: unknown) {
-      addLog(`Errore ripristino: ${e.message}`);
+      addLog(`Errore ripristino: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -423,7 +424,7 @@ export function UnityInkTranslator() {
       URL.revokeObjectURL(url);
       addLog('Pack esportato!');
     } catch (e: unknown) {
-      addLog(`Errore export: ${e.message}`);
+      addLog(`Errore export: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 

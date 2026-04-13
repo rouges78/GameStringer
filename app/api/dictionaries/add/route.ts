@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addTranslationToDictionary } from '@/lib/game-dictionaries';
-import { withErrorHandler, ValidationError } from '@/lib/error-handler';
+import { withErrorHandler } from '@/lib/error-handler';
 import { dictionaryAddSchema, validateBody } from '@/lib/api-schemas';
 
 export const POST = withErrorHandler(async function(request: NextRequest) {

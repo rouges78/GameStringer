@@ -17,11 +17,9 @@ import {
   Layers,
   FolderOpen,
   BarChart3,
-  Cloud,
   FileText,
   Keyboard,
   Moon,
-  Sun,
   RefreshCw,
   Database,
   Brain,
@@ -31,7 +29,6 @@ import {
   ShoppingBag,
   Workflow,
   ShieldCheck,
-  FileEdit,
   Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -53,7 +50,7 @@ export function CommandPalette() {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme: _theme } = useTheme();
   const { t } = useTranslation();
 
   const commands: CommandItem[] = useMemo(() => [
@@ -180,7 +177,7 @@ export function CommandPalette() {
         <ScrollArea className="max-h-[300px]">
           {filteredCommands.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              {t('commandPalette.noResults')} "{search}"
+              {t('commandPalette.noResults')} &quot;{search}&quot;
             </div>
           ) : (
             <div className="p-2">

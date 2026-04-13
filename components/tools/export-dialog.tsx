@@ -3,12 +3,11 @@
 import { useState, useEffect } from 'react';
 import {
   Download, FileSpreadsheet, FileCode, FileText,
-  Database, Check, Loader2, FolderOpen, FileJson, Grid3X3
+  Database, Check, Loader2, FileJson, Grid3X3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,

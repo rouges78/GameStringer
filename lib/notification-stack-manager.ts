@@ -343,7 +343,6 @@ class NotificationStackManager {
     if (visibleToasts.length <= this.config.collapseThreshold) return;
 
     // Mantieni solo i toast più importanti
-    const toastsToKeep = visibleToasts.slice(0, this.config.collapseThreshold);
     const toastsToCollapse = visibleToasts.slice(this.config.collapseThreshold);
 
     toastsToCollapse.forEach(toast => {

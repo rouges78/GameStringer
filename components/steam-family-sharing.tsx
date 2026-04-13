@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 // Type definitions for Rust command returns
@@ -26,7 +26,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +38,6 @@ import {
   Info, 
   FileText,
   Loader2,
-  AlertCircle,
   FolderOpen,
   Copy,
   ExternalLink
@@ -76,7 +74,7 @@ export function SteamFamilySharing() {
           setManualAccounts(savedIds);
           setSharedAccounts(savedIds.map(steamId => ({ steamId })));
         }
-      } catch (err: unknown) {
+      } catch {
         clientLogger.debug('Nessun ID salvato o errore nel caricamento');
       }
     };

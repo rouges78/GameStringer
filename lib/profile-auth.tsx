@@ -26,7 +26,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   const { currentProfile, isLoading, logout: profileLogout, refreshProfiles } = useProfiles();
   
   // Force re-render when currentProfile changes
-  const [renderKey, setRenderKey] = useState(0);
+  const [_renderKey, setRenderKey] = useState(0);
   useEffect(() => {
     setRenderKey(prev => prev + 1);
   }, [currentProfile]);
@@ -46,7 +46,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
       }
     };
   }, [refreshProfiles]);
-  const { globalSettings } = useProfileSettings();
+  const { globalSettings: _globalSettings } = useProfileSettings();
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number | null>(null);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 

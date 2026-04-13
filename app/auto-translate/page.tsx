@@ -5,7 +5,6 @@ import { get, set, del } from 'idb-keyval'
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -30,20 +29,13 @@ import {
   ChevronRight,
   ChevronLeft,
   FileText,
-  FolderOpen,
   Sparkles,
   Shield,
   Wrench,
-  BarChart3,
-  ArrowRight,
   Save,
   RefreshCw,
-  Info,
   Zap,
-  Target,
-  Clock,
   Gamepad2,
-  Search,
   ArrowLeft,
   RotateCcw,
   Check,
@@ -55,7 +47,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { invoke } from "@/lib/tauri-api"
-import { detectFormat, parseFile, type ParseResult, type ParsedString } from "@/lib/file-parsers"
+import { detectFormat, parseFile, type ParseResult } from "@/lib/file-parsers"
 import { translateSmart } from "@/lib/ai-translate-direct"
 import { runQualityGates, type QualityReport } from "@/lib/quality-gates"
 import { harvestBatch, type HarvestInput } from "@/lib/context-harvester"
@@ -126,7 +118,7 @@ function DiffHighlight({ original, translated }: { original: string; translated:
   const origWords = original.split(/(\s+)/)
   const transWords = translated.split(/(\s+)/)
   // LCS semplificato per parole — evidenzia aggiunte/rimosse
-  const maxLen = Math.max(origWords.length, transWords.length)
+  const _maxLen = Math.max(origWords.length, transWords.length)
   const result: React.ReactNode[] = []
   let oi = 0, ti = 0
   while (oi < origWords.length || ti < transWords.length) {
@@ -229,7 +221,7 @@ export default function AutoTranslatePage() {
   const [files, setFiles] = useState<LoadedFile[]>([])
   const [sourceLang, setSourceLang] = useState('en')
   const [targetLang, setTargetLang] = useState('it')
-  const [translator, setTranslator] = useState('')
+  const [translator, _setTranslator] = useState('')
 
   // Carica lingua target dalle settings
   useEffect(() => {
@@ -241,7 +233,7 @@ export default function AutoTranslatePage() {
       } catch {}
     }
   }, []);
-  const [patchVersion, setPatchVersion] = useState('1.0')
+  const [patchVersion, _setPatchVersion] = useState('1.0')
   const [useContextHarvest, setUseContextHarvest] = useState(true)
 
   // Translation state
@@ -753,7 +745,7 @@ export default function AutoTranslatePage() {
 
     // Carica checkpoint esistente se si riprende
     let allTranslated: Map<string, TranslatedString[]>
-    let existingKeys = new Set<string>()
+    const existingKeys = new Set<string>()
     if (resumeFromCheckpoint) {
       const loaded = await loadCheckpoint()
       allTranslated = loaded || new Map()
@@ -1150,7 +1142,7 @@ export default function AutoTranslatePage() {
   }, [])
 
   // Rileva se il gioco è Unreal Engine (controlla se esiste una sottocartella con Content/Paks)
-  const isUnrealEngine = useCallback((installPath: string): boolean => {
+  const isUnrealEngine = useCallback((_installPath: string): boolean => {
     // Controlliamo se i file caricati provengono da un translation_session.json con entries namespace/key
     // Il modo più affidabile: cerchiamo se le stringhe hanno chiavi nel formato "namespace::key"
     for (const [, strings] of translatedStrings.entries()) {
@@ -1767,7 +1759,7 @@ export default function AutoTranslatePage() {
                       <div>
                         <p className="text-xs font-semibold text-amber-300">BepInEx non compatibile</p>
                         <p className="text-2xs text-amber-300/70 mt-0.5">
-                          I giochi Unity IL2CPP non supportano BepInEx 5.x + XUnity AutoTranslator. L'installazione causerebbe crash all'avvio del gioco.
+                          I giochi Unity IL2CPP non supportano BepInEx 5.x + XUnity AutoTranslator. L&apos;installazione causerebbe crash all&apos;avvio del gioco.
                           Usa il <strong>Unity CSV Translator</strong> che inietta le traduzioni direttamente negli asset binari.
                         </p>
                       </div>

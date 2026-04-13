@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-  Languages, TrendingUp, Clock, Target, Award,
+  Languages, TrendingUp, Target, Award,
   Flame, Calendar, AlertTriangle, CheckCircle2, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -102,7 +102,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
     return date;
   }, [stats]);
 
-  const getProgressColor = (progress: number) => {
+  const _getProgressColor = (progress: number) => {
     if (progress >= 90) return 'bg-green-500';
     if (progress >= 70) return 'bg-blue-500';
     if (progress >= 50) return 'bg-yellow-500';

@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
 export default function SteamVerifyPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const steamId = searchParams.get('steamId');
@@ -50,7 +50,7 @@ export default function SteamVerifyPage() {
     <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="text-center">
         <h1 className="text-2xl font-semibold">Verifica in corso...</h1>
-        <p className="text-muted-foreground">Stiamo completando l'accesso con Steam.</p>
+        <p className="text-muted-foreground">Stiamo completando l&apos;accesso con Steam.</p>
       </div>
     </div>
   );

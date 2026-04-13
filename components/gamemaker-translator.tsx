@@ -11,9 +11,8 @@ import { toast } from 'sonner';
 import {
   Loader2, Search, Languages, Download, Upload, RotateCcw, 
   ChevronLeft, ChevronRight, FileText, Zap, Check, X,
-  Filter, ArrowUpDown, Edit3, Save, AlertTriangle, Database
+  Filter, Edit3, Save, AlertTriangle, Database
 } from 'lucide-react';
-import { useTranslation } from '@/lib/i18n';
 
 interface GmString {
   index: number;
@@ -48,8 +47,6 @@ interface GameMakerTranslatorProps {
 const PAGE_SIZE = 50;
 
 export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorProps) {
-  const { t, language } = useTranslation();
-  
   // State
   const [dataInfo, setDataInfo] = useState<GmDataInfo | null>(null);
   const [strings, setStrings] = useState<GmString[]>([]);
@@ -618,7 +615,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           {strings.length === 0 && !isExtracting && (
             <div className="text-center py-8 text-slate-500">
               <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Clicca "Estrai Stringhe" per iniziare</p>
+              <p className="text-sm">Clicca &quot;Estrai Stringhe&quot; per iniziare</p>
               <p className="text-[11px] mt-1">Verranno estratte le stringhe traducibili dal data.win</p>
             </div>
           )}
@@ -628,7 +625,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
             <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
             <div className="text-[11px] text-amber-300/80 leading-relaxed">
               <strong>Nota:</strong> Viene creato un backup automatico (data.win.bak) prima di ogni modifica. 
-              Usa "Ripristina" per tornare all'originale. Le traduzioni più lunghe dell'originale verranno 
+              Usa &quot;Ripristina&quot; per tornare all&apos;originale. Le traduzioni più lunghe dell&apos;originale verranno
               troncate per compatibilità con il formato GameMaker.
             </div>
           </div>

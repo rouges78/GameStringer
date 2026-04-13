@@ -33,8 +33,6 @@ import {
   Upload,
   Search,
   Save,
-  X,
-  FileText,
   Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -42,9 +40,7 @@ import {
   GameGlossary, 
   GlossaryEntry,
   GlossaryMetadata,
-  GLOSSARY_CONTEXTS, 
-  GLOSSARY_TONES, 
-  GAME_GENRES 
+  GLOSSARY_CONTEXTS,
 } from '@/types/glossary';
 import { GameContextEditor } from './game-context-editor';
 import { useTranslation } from '@/lib/i18n';
@@ -70,7 +66,7 @@ export function GlossaryManager({
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showMetadataDialog, setShowMetadataDialog] = useState(false);
+  const [_showMetadataDialog, setShowMetadataDialog] = useState(false);
   const [editingEntry, setEditingEntry] = useState<GlossaryEntry | null>(null);
 
   // Form state for new entry

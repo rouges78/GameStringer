@@ -12,26 +12,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Plus, 
-  Download, 
+  Plus,
+  Download,
   Upload,
   Edit,
   Trash2,
   Copy,
-  Merge,
   Star,
-  StarOff,
   Search,
-  Filter,
   Globe,
   GamepadIcon,
   Hash,
-  Clock,
-  User,
   CheckCircle,
-  XCircle,
-  FileText,
-  Settings
+  FileText
 } from 'lucide-react';
 import { translationProfileManager, TranslationProfile, TranslationEntry } from '@/lib/game-translation-profiles';
 import { useTranslation } from '@/lib/i18n';

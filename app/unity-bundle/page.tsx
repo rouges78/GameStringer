@@ -79,7 +79,7 @@ export default function UnityBundlePage() {
   const [result, setResult] = useState<AnalyzeFolderResult | null>(null);
   const [selectedBundle, setSelectedBundle] = useState<BundleInfo | null>(null);
   const [error, setError] = useState<string>("");
-  const [apiKey, setApiKey] = useState<string>("");
+  const [_apiKey, setApiKey] = useState<string>("");
   const [provider, setProvider] = useState<string>("gemini");
   const [targetLanguage, setTargetLanguage] = useState<string>("it");
   

@@ -13,13 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+// Select imports removed — not currently used
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface Game {

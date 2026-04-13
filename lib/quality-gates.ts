@@ -132,13 +132,12 @@ export function checkGlossaryTerms(
       missingTerms.push(term.original);
       
       // Cerca se c'è una traduzione alternativa (errata)
-      const words = target.split(/\s+/);
       // Potrebbe essere tradotto in modo diverso
     }
   }
   
   const passed = missingTerms.length === 0;
-  let severity: QualityCheck['severity'] = passed ? 'info' : 'warning';
+  const severity: QualityCheck['severity'] = passed ? 'info' : 'warning';
   let message = '';
   
   if (missingTerms.length > 0) {

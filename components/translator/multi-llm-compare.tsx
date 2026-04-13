@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Sparkles, 
@@ -18,10 +17,9 @@ import {
   Loader2,
   Copy,
   Check,
-  Users,
   Brain
 } from 'lucide-react';
-import { CHARACTER_PRESETS, type CharacterProfile, getQualityCategory } from '@/lib/translation-quality';
+import { CHARACTER_PRESETS, getQualityCategory } from '@/lib/translation-quality';
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback } from '@/lib/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
@@ -83,8 +81,7 @@ export function MultiLLMCompare() {
   const [targetLanguage, setTargetLanguage] = useState('it');
   const [sourceLanguage, setSourceLanguage] = useState('en');
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['openai', 'gemini', 'claude']);
-  const [selectedCharacter, setSelectedCharacter] = useState<string>('none');
-  const [customCharacter, setCustomCharacter] = useState<Partial<CharacterProfile>>({});
+  const [selectedCharacter, _setSelectedCharacter] = useState<string>('none');
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<CompareResponse | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -298,7 +295,7 @@ export function MultiLLMCompare() {
 
           {/* Individual Results */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {response.results.map((result, index) => {
+            {response.results.map((result, _index) => {
               const providerInfo = getProviderInfo(result.provider);
               const qualityCategory = getQualityCategory(result.qualityScore.overall);
               const isBest = response.bestResult?.provider === result.provider;

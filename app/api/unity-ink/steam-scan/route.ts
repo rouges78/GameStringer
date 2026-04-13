@@ -34,13 +34,13 @@ export const GET = withErrorHandler(async function() {
     let entries: string[];
     try {
       entries = fs.readdirSync(steamPath);
-    } catch { continue; }
+    } catch { /* fs read error — skip directory */ continue; }
 
     for (const entry of entries) {
       const gamePath = path.join(steamPath, entry);
 
       let stat;
-      try { stat = fs.statSync(gamePath); } catch { continue; }
+      try { stat = fs.statSync(gamePath); } catch { /* fs read error — skip directory */ continue; }
       if (!stat.isDirectory()) continue;
 
       // Look for _Data folder (Unity signature)

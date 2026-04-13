@@ -24,8 +24,7 @@ import {
   FolderSearch,
   ChevronRight,
   AlertTriangle,
-  Save,
-  Download
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
@@ -47,14 +46,14 @@ interface FileHandle {
   type?: string;
 }
 
-export default function InlineTranslator({ gameId, gameName, gamePath, onClose }: InlineTranslatorProps) {
+export default function InlineTranslator({ gameId: _gameId, gameName, gamePath: _gamePath, onClose }: InlineTranslatorProps) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<'scanning' | 'select-file' | 'translate-editor' | 'complete'>('scanning');
   const [scanProgress, setScanProgress] = useState(0);
   const [files, setFiles] = useState<FileHandle[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileHandle | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [translationProgress, setTranslationProgress] = useState(0);
+  const [_translationProgress, _setTranslationProgress] = useState(0);
   
   // States for translation editor
   const [originalContent, setOriginalContent] = useState('');
@@ -123,7 +122,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
       
       setOriginalContent(sampleContent);
       setCurrentStep('translate-editor');
-    } catch (error: unknown) {
+    } catch {
       setTranslatorError('Error loading file');
     } finally {
       setIsLoadingFile(false);

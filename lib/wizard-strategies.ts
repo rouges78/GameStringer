@@ -423,7 +423,6 @@ export function detectStrategy(
   steamAppId?: number | string,
   targetLang?: string
 ): TranslationStrategy {
-  const allPaths = files.map(f => f.path.toLowerCase());
   const allNames = files.map(f => f.name.toLowerCase());
 
   // 🌟 PRIORITY 1: Community translation already available (human quality > AI)

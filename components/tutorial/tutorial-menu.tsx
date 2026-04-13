@@ -19,7 +19,7 @@ interface TutorialMenuProps {
   userId?: string;
 }
 
-export function TutorialMenu({ userId }: TutorialMenuProps) {
+export function TutorialMenu({ userId: _userId }: TutorialMenuProps) {
   const { startTutorial, isActive } = useTutorial();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);

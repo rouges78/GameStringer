@@ -9,18 +9,13 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ColorPicker } from '@/components/ui/color-picker';
-import { 
+import {
   Monitor,
   Palette,
-  Type,
   Move,
-  Eye,
-  EyeOff,
   Settings2,
   Sparkles,
   Layers,
-  Maximize2,
   Download,
   Upload,
   RotateCcw
@@ -96,7 +91,7 @@ interface InjektOverlayConfigProps {
 export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayConfigProps) {
   const { t } = useTranslation();
   const [localConfig, setLocalConfig] = useState<OverlayConfig>(config);
-  const [previewText, setPreviewText] = useState({
+  const [previewText, _setPreviewText] = useState({
     original: 'Hello, adventurer!',
     translated: 'Ciao, avventuriero!'
   });

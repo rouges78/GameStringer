@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -28,7 +28,6 @@ import {
   Loader2,
   RefreshCw,
   Archive,
-  FolderOutput
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WadExtractor } from '@/components/tools/wad-extractor';

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { safeSetItem, safeGetItem, safeRemoveItem } from './safe-storage';
+import { safeSetItem, safeGetItem } from './safe-storage';
 import { clientLogger } from '@/lib/client-logger';
 
 const PROGRESS_KEY = 'translation_progress';

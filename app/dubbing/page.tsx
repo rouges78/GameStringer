@@ -10,12 +10,11 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-  Mic, Play, Pause, Square, Volume2, Languages, Cpu, Film,
+  Mic, Play, Pause, Square, Volume2, Languages,
   CheckCircle, AlertCircle, Loader2, FolderOpen, FileAudio,
-  Subtitles, Smile, BarChart3, Clock
+  BarChart3, Clock
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult } from '@/lib/dubbing-pipeline';
 import { clientLogger } from '@/lib/client-logger';
@@ -38,14 +37,14 @@ const VOICES = [
 ];
 
 export default function DubbingPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   // Config
   const [gamePath, setGamePath] = useState('');
   const [gameName, setGameName] = useState('');
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('it');
-  const [ttsProvider, setTtsProvider] = useState<'openai' | 'elevenlabs'>('openai');
+  const [ttsProvider, _setTtsProvider] = useState<'openai' | 'elevenlabs'>('openai');
   const [sttProvider, setSttProvider] = useState<'openai_whisper' | 'groq_whisper'>('openai_whisper');
   const [defaultVoice, setDefaultVoice] = useState('alloy');
   const [enableLipSync, setEnableLipSync] = useState(false);
@@ -55,7 +54,7 @@ export default function DubbingPage() {
 
   // Pipeline state
   const [progress, setProgress] = useState<DubbingProgress | null>(null);
-  const [result, setResult] = useState<DubbingResult | null>(null);
+  const [_result, setResult] = useState<DubbingResult | null>(null);
   const pipelineRef = useRef<DubbingPipeline | null>(null);
 
   const isRunning = progress?.isRunning || false;

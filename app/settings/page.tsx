@@ -53,12 +53,12 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { OllamaManager } from '@/components/settings/ollama-manager';
 import { VramSettingsCard } from '@/components/settings/vram-settings-card';
 import { invoke } from '@/lib/tauri-api';
-import { saveConfig as saveSupabaseConfig, isBackendEnabled as isSupabaseEnabled, SUPABASE_MIGRATION_SQL } from '@/lib/community-hub-backend';
+import { saveConfig as saveSupabaseConfig, SUPABASE_MIGRATION_SQL } from '@/lib/community-hub-backend';
 import { clientLogger } from '@/lib/client-logger';
 
 // Supabase Settings Component
 function SupabaseSettingsCard() {
-  const { t, language } = useTranslation();
+  const { t: _t, language } = useTranslation();
   const [url, setUrl] = useState('');
   const [anonKey, setAnonKey] = useState('');
   const [enabled, setEnabled] = useState(false);
@@ -333,8 +333,8 @@ interface Settings {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const { version, buildInfo, formatDate } = useVersion();
+  const _router = useRouter();
+  const { version, buildInfo } = useVersion();
   const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings>({
     translation: {
@@ -410,7 +410,7 @@ export default function SettingsPage() {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       toast.success(t('common.success'));
-    } catch (error: unknown) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setIsSaving(false);

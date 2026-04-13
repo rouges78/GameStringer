@@ -10,7 +10,7 @@ const VoiceCloneStudio = dynamic(
 );
 
 export default function VoiceClonePage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="container mx-auto p-4">
       <VoiceCloneStudio />

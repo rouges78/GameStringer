@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -373,7 +373,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Mods in "{activeProfile.name}"
+              Mods in &quot;{activeProfile.name}&quot;
             </CardTitle>
           </CardHeader>
           <CardContent>

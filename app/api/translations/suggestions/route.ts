@@ -4,7 +4,7 @@ import { withErrorHandler } from '@/lib/error-handler';
 // POST /api/translations/suggestions - Generate real AI suggestions from multiple providers
 export const POST = withErrorHandler(async function(request: NextRequest) {
   const body = await request.json();
-  const { translationId, originalText, targetLanguage, sourceLanguage = 'auto', provider } = body;
+  const { translationId: _translationId, originalText, targetLanguage, sourceLanguage = 'auto', provider } = body;
 
   if (!originalText) {
     return NextResponse.json({ error: 'Original text is required' }, { status: 400 });

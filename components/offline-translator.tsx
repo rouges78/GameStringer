@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import {
   WifiOff, Download, CheckCircle2, XCircle, Loader2,
-  ArrowRightLeft, Trash2, Copy, Plus, ChevronDown, Cpu, Zap
+  ArrowRightLeft, Trash2, Copy, ChevronDown, Cpu, Zap
 } from 'lucide-react';
 
 interface OfflineStatus {

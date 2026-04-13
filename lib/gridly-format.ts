@@ -50,10 +50,6 @@ const LANG_LABELS: Record<string, string> = {
   'es-la': 'Spanish (Latin America)',
 };
 
-function getLangLabel(code: string): string {
-  return LANG_LABELS[code.toLowerCase()] || code.toUpperCase();
-}
-
 // ── CSV Escaping ───────────────────────────────────────────────────────
 
 function escapeCsvField(value: string, delimiter: string): string {

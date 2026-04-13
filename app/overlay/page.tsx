@@ -4,7 +4,7 @@ import { SubtitleOverlay } from '@/components/tools/subtitle-overlay';
 import { useTranslation } from '@/lib/i18n';
 
 export default function OverlayPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-4 overflow-y-auto h-full">
       <SubtitleOverlay />

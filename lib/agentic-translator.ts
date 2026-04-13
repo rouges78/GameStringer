@@ -54,7 +54,7 @@ export class AgenticTranslator {
       // Preferisci modelli istruiti per compiti complessi come il QA
       const specialized = available.find(n => n.includes('tower') || n.includes('qwen') || n.includes('llama3') || n.includes('mistral'));
       return specialized || available[0];
-    } catch (e: unknown) {
+    } catch {
       return 'llama3'; // Fallback teorico
     }
   }
@@ -115,7 +115,7 @@ Rules:
     let feedback = '';
 
     // Esegui la prima traduzione
-    let userPrompt = `Source text:\n${opts.text}\n\n${opts.context ? `Context: ${opts.context}\n\n` : ''}Translation:`;
+    const userPrompt = `Source text:\n${opts.text}\n\n${opts.context ? `Context: ${opts.context}\n\n` : ''}Translation:`;
     
     try {
       currentTranslation = await this.callOllama(translatorSystem, userPrompt, model);
@@ -134,7 +134,7 @@ Rules:
         
         const isTooLong = currentTranslation.length > (opts.text.length * maxLengthRatio) && opts.text.length > 5;
         
-        let qaErrors: string[] = [];
+        const qaErrors: string[] = [];
         
         if (missingVars.length > 0) {
           qaErrors.push(`CRITICAL: Missing variables in translation: ${missingVars.join(', ')}`);

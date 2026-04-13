@@ -2,18 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
-  User, 
-  Lock, 
+  Lock,
   Plus, 
   Eye, 
   EyeOff, 
@@ -22,7 +19,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
-  MoreVertical,
   Trash2
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -193,7 +189,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
     setIsAuthenticating(false);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const _handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleAuthenticate();
     }
@@ -546,7 +542,6 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
   // Determine active profile - ONLY ONE can be active at a time
   // currentProfile comes from backend which guarantees single active profile
   const activeProfileId = currentProfile?.id || null;
-  const isActive = (profile: ProfileInfo) => profile.id === activeProfileId;
 
   const handleProfileSelect = (profile: ProfileInfo) => {
     if (profile.is_locked) return;
@@ -612,7 +607,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 />
               </motion.div>
               <p className="text-xs text-slate-500 mt-3 font-mono">v{version}</p>
-              <p className="text-sm text-slate-400/80 italic mt-1.5">"{t('profile.loginTagline')}"</p>
+              <p className="text-sm text-slate-400/80 italic mt-1.5">&quot;{t('profile.loginTagline')}&quot;</p>
             </motion.div>
             <p className="text-sm text-slate-400 mt-1">{t('profile.selectProfileToContinue')}</p>
             

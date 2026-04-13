@@ -9,7 +9,7 @@
  * - Fallback → chain preset attivo
  */
 
-import { classifyBatch, classifyContent, type ContentType, type ContentClassification } from './content-classifier';
+import { classifyBatch, type ContentType } from './content-classifier';
 import { type TranslateOptions, type TranslateResult, getApiKeys, translateWithFallback } from './ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -259,7 +259,6 @@ export async function translateWithSmartRouting(
   // Classifica e raggruppa
   const batches = routeTexts(texts, { gameGenre: opts.gameGenre });
   const allTranslations: string[] = new Array(texts.length);
-  let lastProvider = 'none';
   let anySuccess = false;
   let doneCount = 0;
 
@@ -298,7 +297,6 @@ export async function translateWithSmartRouting(
 
     if (result.success) {
       anySuccess = true;
-      lastProvider = result.provider;
     }
 
     doneCount += batch.texts.length;

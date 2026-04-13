@@ -10,13 +10,10 @@ const DryRunScanner = dynamic(() => import('@/components/dry-run-scanner'), { ss
 import { invoke } from '@/lib/tauri-api';
 import { get, set } from 'idb-keyval';
 import { activityHistory } from '@/lib/activity-history';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { LanguageFlags, languageToCountryCode, getFlagEmoji, getCountryCode } from '@/components/ui/language-flags';
+import { LanguageFlags } from '@/components/ui/language-flags';
 import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { ensureArray, validateArray } from '@/lib/array-utils';
 import { toast } from 'sonner';
-import * as CountryFlags from 'country-flag-icons/react/3x2';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
 import { enrichGameTitle } from '@/lib/game-names-db';
@@ -108,7 +105,7 @@ const queueCoverSave = (gameId: string, imageUrl: string) => {
 };
 
 // Componente per immagine game con fallback e cache SteamGridDB
-const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes: string; coverCache?: Record<string, string> }) => {
+const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game; sizes: string; coverCache?: Record<string, string> }) => {
   const [hasError, setHasError] = React.useState(false);
   const [steamGridDbImage, setSteamGridDbImage] = React.useState<string | null>(null);
   const [triedSteamGridDb, setTriedSteamGridDb] = React.useState(false);
@@ -453,8 +450,8 @@ function LibraryListView() {
   const [selectedTags, setSelectedTags] = useState<string[]>(savedFilters.selectedTags);
   const [selectedStatus, setSelectedStatus] = useState<string[]>(savedFilters.selectedStatus);
   const [selectedEngines, setSelectedEngines] = useState<string[]>(savedFilters.selectedEngines);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>(savedFilters.selectedGenres);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(savedFilters.selectedLanguages);
+  const [selectedGenres, _setSelectedGenres] = useState<string[]>(savedFilters.selectedGenres);
+  const [selectedLanguages, _setSelectedLanguages] = useState<string[]>(savedFilters.selectedLanguages);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(savedFilters.viewMode);
   const [showFilters, setShowFilters] = useState(false);
   const [coverPickerGame, setCoverPickerGame] = useState<Game | null>(null);
@@ -536,7 +533,7 @@ function LibraryListView() {
             clientLogger.debug('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
           }
         }
-      } catch (e: unknown) {
+      } catch {
         clientLogger.warn('[Library] Cache non disponibile');
       }
     };
@@ -583,7 +580,7 @@ function LibraryListView() {
               is_installed: false
             });
           });
-        } catch (e: unknown) {
+        } catch {
           clientLogger.warn('[LIBRARY DEBUG] ⚠️ Steam API failed, using local files only');
         }
       }
@@ -1121,13 +1118,13 @@ function LibraryListView() {
   // Estrai le piattaforme, engine, lingue e generi unici dai games caricati
   const safeGames = useMemo(() => ensureArray<Game>(games), [games]);
   const platforms = useMemo(() => ['All', ...new Set(safeGames.map(game => game.platform))], [safeGames]);
-  const engines = useMemo(() => ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))], [safeGames]);
-  const languages = useMemo(() => {
+  const _engines = useMemo(() => ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))], [safeGames]);
+  const _languages = useMemo(() => {
     const allLanguages = safeGames.flatMap(game => game.supported_languages || []);
     const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
     return ['All', ...new Set(normalizedLanguages)].sort();
   }, [safeGames]);
-  const genres = useMemo(() => {
+  const _genres = useMemo(() => {
     const allGenres = safeGames.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
     return ['All', ...new Set(allGenres)];
   }, [safeGames]);

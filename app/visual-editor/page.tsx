@@ -10,7 +10,7 @@ const VisualTranslationEditor = dynamic(
 );
 
 export default function VisualEditorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="container mx-auto p-6">
       <VisualTranslationEditor />

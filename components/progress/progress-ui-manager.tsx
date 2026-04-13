@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { ProgressManager } from './progress-modal';
 import { ProgressNotificationContainer } from './progress-notification';
 import { useProgressUI } from '@/hooks/use-progress-ui';
@@ -14,7 +13,6 @@ export function ProgressUIManager() {
     minimizedOperations,
     notifications,
     minimizeOperation,
-    maximizeOperation,
     closeOperation,
     cancelOperation,
     removeNotification,

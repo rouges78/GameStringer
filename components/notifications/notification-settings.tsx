@@ -3,7 +3,7 @@
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, Volume2, Monitor, Loader2 } from 'lucide-react';
+import { Volume2, Monitor, Loader2 } from 'lucide-react';
 import { NotificationPreferences } from '@/types/notifications';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';

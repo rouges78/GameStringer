@@ -76,7 +76,7 @@ const MARKUP_PATTERNS: { pattern: RegExp; type: IssueType; description: string }
 export function detectIssues(text: string, file?: string, line?: number): TranslationIssue[] {
   const issues: TranslationIssue[] = [];
   
-  for (const { pattern, type, description } of MARKUP_PATTERNS) {
+  for (const { pattern, type } of MARKUP_PATTERNS) {
     const matches = text.matchAll(new RegExp(pattern.source, pattern.flags));
     
     for (const match of matches) {

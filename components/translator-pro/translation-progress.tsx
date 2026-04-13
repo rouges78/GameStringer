@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   AlertTriangle, CheckCircle, ChevronRight, Brain,
-  Clock, Square, RotateCcw, Save, Database,
+  Clock, Square, RotateCcw, Save,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';

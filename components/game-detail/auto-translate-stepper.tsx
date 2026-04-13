@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, Clock } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 
@@ -169,7 +169,7 @@ export function AutoTranslateStepper({
                     <Edit3 className="h-4 w-4 text-indigo-400" />
                   </div>
                   <span className="text-xs font-bold text-indigo-300">Rivedi Traduzioni</span>
-                  <span className="text-2xs text-slate-500 leading-tight">Controlla e modifica le stringhe tradotte nell'editor</span>
+                  <span className="text-2xs text-slate-500 leading-tight">Controlla e modifica le stringhe tradotte nell&apos;editor</span>
                 </button>
 
                 {/* Option 2: Test Game */}

@@ -18,7 +18,7 @@
  */
 
 import { translateSmart, type TranslateOptions, type TranslateResult } from './ai-translate-direct';
-import { runQualityGates, type QualityReport, type QualityCheck } from './quality-gates';
+import { runQualityGates, type QualityReport } from './quality-gates';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
 import { buildRelevantGlossaryHint } from './auto-glossary';
 import { clientLogger } from '@/lib/client-logger';

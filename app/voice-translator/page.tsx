@@ -10,7 +10,7 @@ const VoiceTranslator = dynamic(
 );
 
 export default function VoiceTranslatorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-4 overflow-y-auto h-full">
       <VoiceTranslator />

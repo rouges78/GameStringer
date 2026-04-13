@@ -7,7 +7,6 @@ import {
   Languages, 
   FolderOpen, 
   Search,
-  Plus,
   Download,
   Sparkles
 } from 'lucide-react';

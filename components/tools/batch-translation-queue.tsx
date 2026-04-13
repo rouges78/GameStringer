@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
@@ -27,7 +25,6 @@ import {
   ChevronDown,
   Languages,
   Zap,
-  Settings,
   RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,7 +53,7 @@ interface BatchTranslationQueueProps {
   onTranslateFile?: (job: TranslationJob) => Promise<void>;
 }
 
-export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueueProps) {
+export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: BatchTranslationQueueProps) {
   const { t } = useTranslation();
   const [queue, setQueue] = useState<TranslationJob[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -66,8 +63,6 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
   
   // Batch settings
   const [targetLanguage, setTargetLanguage] = useState('it');
-  const [translationService, setTranslationService] = useState('ollama');
-  const [maxConcurrent, setMaxConcurrent] = useState(1);
 
   // Statistics
   const completedJobs = queue.filter(j => j.status === 'completed').length;
@@ -172,9 +167,9 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
     setIsProcessing(true);
     setIsPaused(false);
 
-    const pendingJobs = queue.filter(j => j.status === 'pending');
-    
-    for (const job of pendingJobs) {
+    const pendingJobsList = queue.filter(j => j.status === 'pending');
+
+    for (const job of pendingJobsList) {
       if (isPaused) break;
       
       setCurrentJobId(job.id);
@@ -194,8 +189,8 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           stringCount = await invoke<number>('count_translatable_strings', {
             filePath: job.filePath
           });
-        } catch (e: unknown) {
-          clientLogger.warn('Unable to count strings, using default:', e);
+        } catch {
+          clientLogger.warn('Unable to count strings, using default');
         }
 
         setQueue(prev => prev.map(j => 
@@ -239,11 +234,11 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
 
       } catch (error: unknown) {
         clientLogger.error('Translation error:', error);
-        setQueue(prev => prev.map(j => 
-          j.id === job.id ? { 
-            ...j, 
-            status: 'failed', 
-            errorMessage: error?.message || 'Unknown error',
+        setQueue(prev => prev.map(j =>
+          j.id === job.id ? {
+            ...j,
+            status: 'failed',
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
             endTime: Date.now()
           } : j
         ));

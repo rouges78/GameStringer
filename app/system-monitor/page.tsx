@@ -21,7 +21,7 @@ export default function SystemMonitorPage() {
         <h1 className="text-2xl font-bold text-slate-200">{t('systemMonitorPage.title')}</h1>
       </div>
       <p className="text-sm text-slate-400 -mt-4">
-        Monitora le risorse del sistema (VRAM, RAM) e configura l'AI locale.
+        Monitora le risorse del sistema (VRAM, RAM) e configura l&apos;AI locale.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

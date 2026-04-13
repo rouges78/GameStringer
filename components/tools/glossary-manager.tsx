@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -52,10 +52,10 @@ interface GlossaryManagerProps {
 
 export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryManagerProps) {
   const { t } = useTranslation();
-  const [glossaries, setGlossaries] = useState<Glossary[]>([]);
+  const [_glossaries, setGlossaries] = useState<Glossary[]>([]);
   const [selectedGlossary, setSelectedGlossary] = useState<Glossary | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddingEntry, setIsAddingEntry] = useState(false);
+  const [_searchQuery, _setSearchQuery] = useState('');
+  const [_isAddingEntry, setIsAddingEntry] = useState(false);
   const [editingEntry, setEditingEntry] = useState<GlossaryEntry | null>(null);
   const [newEntry, setNewEntry] = useState({
     source: '',
@@ -85,7 +85,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     }
   };
 
-  const handleCreateGlossary = () => {
+  const _handleCreateGlossary = () => {
     const newGlossary = glossaryManager.createGlossary({
       name: gameId ? `Glossary ${gameName || 'Game'}` : 'New Glossary',
       gameId: gameId,
@@ -96,12 +96,12 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     toast.success('Glossary created');
   };
 
-  const handleToggleGlossary = (glossaryId: string, active: boolean) => {
+  const _handleToggleGlossary = (glossaryId: string, active: boolean) => {
     glossaryManager.updateGlossary(glossaryId, { isActive: active });
     loadGlossaries();
   };
 
-  const handleDeleteGlossary = (glossaryId: string) => {
+  const _handleDeleteGlossary = (glossaryId: string) => {
     if (confirm(t('glossaryManager.deleteConfirm'))) {
       glossaryManager.deleteGlossary(glossaryId);
       loadGlossaries();
@@ -110,9 +110,9 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     }
   };
 
-  const handleAddEntry = () => {
+  const _handleAddEntry = () => {
     if (!selectedGlossary || !newEntry.source.trim()) return;
-    
+
     glossaryManager.addEntry(selectedGlossary.id, {
       source: newEntry.source.trim(),
       target: newEntry.target.trim(),
@@ -120,19 +120,19 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
       caseSensitive: newEntry.caseSensitive,
       wholeWord: newEntry.wholeWord,
     });
-    
+
     setNewEntry({ source: '', target: '', category: 'other', caseSensitive: false, wholeWord: true });
     setIsAddingEntry(false);
     loadGlossaries();
-    
+
     // Update selectedGlossary
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
-    
+
     toast.success(t('glossaryManager.termAdded'));
   };
 
-  const handleUpdateEntry = () => {
+  const _handleUpdateEntry = () => {
     if (!selectedGlossary || !editingEntry) return;
     
     glossaryManager.updateEntry(selectedGlossary.id, editingEntry.id, editingEntry);
@@ -144,19 +144,19 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     toast.success(t('glossaryManager.termUpdated'));
   };
 
-  const handleDeleteEntry = (entryId: string) => {
+  const _handleDeleteEntry = (entryId: string) => {
     if (!selectedGlossary) return;
-    
+
     glossaryManager.deleteEntry(selectedGlossary.id, entryId);
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
-    
+
     toast.success(t('glossaryManager.termRemoved'));
   };
 
-  const handleExport = () => {
+  const _handleExport = () => {
     if (!selectedGlossary) return;
-    
+
     const data = glossaryManager.exportGlossary(selectedGlossary.id);
     if (data) {
       const blob = new Blob([data], { type: 'application/json' });
@@ -170,10 +170,10 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     }
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
@@ -189,9 +189,9 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     reader.readAsText(file);
   };
 
-  const filteredEntries = selectedGlossary?.entries.filter(entry =>
-    entry.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    entry.target.toLowerCase().includes(searchQuery.toLowerCase())
+  const _filteredEntries = selectedGlossary?.entries.filter(entry =>
+    entry.source.toLowerCase().includes(_searchQuery.toLowerCase()) ||
+    entry.target.toLowerCase().includes(_searchQuery.toLowerCase())
   ) || [];
 
   const stats = glossaryManager.getStats();
@@ -248,7 +248,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
   const [selectedGlossary, setSelectedGlossary] = useState<Glossary | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingEntry, setIsAddingEntry] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<GlossaryEntry | null>(null);
+  const [_editingEntry, _setEditingEntry] = useState<GlossaryEntry | null>(null);
   const [newEntry, setNewEntry] = useState({
     source: '',
     target: '',

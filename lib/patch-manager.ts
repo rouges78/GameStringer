@@ -2,11 +2,7 @@ import { promises as fs, createWriteStream } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import archiver from 'archiver';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import { clientLogger } from '@/lib/client-logger';
-
-const execAsync = promisify(exec);
 
 export interface PatchMetadata {
   id: string;
@@ -338,7 +334,7 @@ class PatchManager {
       }
 
       return true;
-    } catch (error: unknown) {
+    } catch {
       return false;
     }
   }
@@ -501,7 +497,7 @@ Creato con GameStringer
       // Implementa logica di ripristino
       clientLogger.debug(`Ripristino backup da ${backupDir}`);
       return true;
-    } catch (error: unknown) {
+    } catch {
       return false;
     }
   }
@@ -528,7 +524,7 @@ Creato con GameStringer
     return translations;
   }
 
-  private parsePOTranslations(content: string): TranslationEntry[] {
+  private parsePOTranslations(_content: string): TranslationEntry[] {
     // Implementa parser PO
     const translations: TranslationEntry[] = [];
     // Implementazione semplificata

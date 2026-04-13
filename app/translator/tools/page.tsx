@@ -16,8 +16,8 @@ export default function TranslatorToolsPage() {
   const { t } = useTranslation();
   const [originalText, setOriginalText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
-  const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
-  const [isOverflow, setIsOverflow] = useState(false);
+  const [_selectedGame, _setSelectedGame] = useState<{ id: string; name: string } | null>(null);
+  const [_isOverflow, setIsOverflow] = useState(false);
 
   // Demo game per Smart Context
   const demoGame = { id: 'demo-game', name: 'Demo Game' };

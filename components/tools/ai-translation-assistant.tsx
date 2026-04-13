@@ -13,8 +13,7 @@ import {
   Gamepad2,
   ChevronDown,
   ChevronUp,
-  ArrowRight,
-  MessageSquare
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,7 +84,7 @@ export function AITranslationAssistant() {
   const [targetLanguage, setTargetLanguage] = useState('it');
   const [textType, setTextType] = useState<string>('dialogue');
   const [speaker, setSpeaker] = useState('');
-  const [maxLength, setMaxLength] = useState<number | undefined>(undefined);
+  const [maxLength, _setMaxLength] = useState<number | undefined>(undefined);
   const [generateAlternatives, setGenerateAlternatives] = useState(false);
   
   const [showContext, setShowContext] = useState(false); // Collapsed di default
@@ -176,7 +175,7 @@ export function AITranslationAssistant() {
 
       toast.success(`Translated in ${result.processingTime}ms`);
     } catch (error: unknown) {
-      toast.error(error.message || 'Translation error');
+      toast.error(error instanceof Error ? error.message : 'Translation error');
     } finally {
       setIsTranslating(false);
     }

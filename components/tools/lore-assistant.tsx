@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +9,11 @@ import {
   BookOpen,
   Send,
   Trash2,
-  MessageCircle,
   Sparkles,
   User,
   Bot,
   ChevronDown,
   ChevronUp,
-  History,
   Info
 } from 'lucide-react';
 import { loreAssistant, type LoreResponse, type DialogueEntry } from '@/lib/lore-assistant';
@@ -76,7 +74,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         confidence: response.confidence,
       };
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err: unknown) {
+    } catch {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         role: 'assistant',
@@ -161,7 +159,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
             <div className="text-center py-6">
               <Sparkles className="h-8 w-8 text-amber-400/20 mx-auto mb-2" />
               <p className="text-xs text-amber-400/40">{t('loreAssistantComp.chiediQualsiasiCosaSullaLoreDe')}</p>
-              <p className="text-2xs text-amber-400/25 mt-1">"Chi è questo personaggio?" • "Cosa è successo prima?" • "Dove mi trovo?"</p>
+              <p className="text-2xs text-amber-400/25 mt-1">&quot;Chi è questo personaggio?&quot; • &quot;Cosa è successo prima?&quot; • &quot;Dove mi trovo?&quot;</p>
             </div>
           ) : (
             messages.map(msg => (

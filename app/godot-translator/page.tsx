@@ -5,15 +5,14 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as dialogOpen, save as dialogSave } from '@tauri-apps/plugin-dialog';
 import {
   FileText, FolderOpen, Search, Loader2, CheckCircle2,
-  Globe, ChevronDown, ChevronRight, Download, Upload,
-  Settings2, StopCircle, Wand2, Zap, AlertTriangle, Sparkles
+  Globe, ChevronDown, ChevronRight, Download,
+  Settings2, StopCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { buildSingleTranslationPrompt, detectGenreFromText, getAllGenres, type GameGenre } from '@/lib/genre-prompts';
-import { suggestImprovement, type PostEditSuggestion } from '@/lib/ai-post-edit';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 
 interface LocaleEntry {
@@ -35,7 +34,7 @@ interface LocaleFile {
 type Status = 'idle' | 'scanning' | 'translating' | 'done' | 'error';
 
 /** Parse Godot CSV localization (key,en,it,... or key,text format) */
-function parseGodotCsv(content: string, filename: string): LocaleEntry[] {
+function parseGodotCsv(content: string, _filename: string): LocaleEntry[] {
   const lines = content.split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
   const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
@@ -96,7 +95,7 @@ function parseGodotTres(content: string): LocaleEntry[] {
 }
 
 export default function GodotTranslatorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [status, setStatus] = useState<Status>('idle');
   const [projectPath, setProjectPath] = useState('');
   const [projectName, setProjectName] = useState('');

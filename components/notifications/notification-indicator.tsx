@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// Badge import removed — not currently used
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/hooks/use-notifications';
 import { announceNotificationCount, createHelpText } from '@/lib/notification-accessibility';
@@ -45,7 +45,7 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
   }, [unreadCount, prevCount, animate, lastAnnouncedCount]);
 
   const helpText = createHelpText('indicator');
-  const displayCount = unreadCount > maxCount ? `${maxCount}+` : unreadCount.toString();
+  const _displayCount = unreadCount > maxCount ? `${maxCount}+` : unreadCount.toString();
   const hasNotifications = unreadCount > 0;
 
   const getAriaLabel = () => {

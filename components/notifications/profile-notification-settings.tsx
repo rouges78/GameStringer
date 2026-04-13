@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertTriangle, User, Bell } from 'lucide-react';
+import { AlertTriangle, User } from 'lucide-react';
 import { NotificationSettings } from './notification-settings';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
@@ -29,8 +29,8 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
   } = useNotificationPreferences();
   const { t } = useTranslation();
 
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [autoSaveEnabled, _setAutoSaveEnabled] = useState(true);
+  const [_lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Salvataggio automatico delle preferenze
   const handleUpdatePreferences = async (newPreferences: NotificationPreferences): Promise<boolean> => {
@@ -51,7 +51,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
   };
 
   // Reset alle impostazioni predefinite con conferma
-  const handleResetToDefaults = async (): Promise<boolean> => {
+  const _handleResetToDefaults = async (): Promise<boolean> => {
     if (!currentProfile) {
       return false;
     }

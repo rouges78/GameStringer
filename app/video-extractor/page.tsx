@@ -7,9 +7,9 @@ import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import {
   Film, FolderOpen, Search, Play, Download, Settings2,
-  CheckCircle2, XCircle, Loader2, Info, HardDrive,
+  CheckCircle2, XCircle, Loader2, Info,
   Maximize2, Zap, FileVideo, ChevronDown, ChevronRight,
-  AlertTriangle, RefreshCw, Trash2, Eye, Gamepad2, Library
+  AlertTriangle, Gamepad2, Library
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,11 +26,12 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-interface VideoFormat {
-  VMD?: null; BIK?: null; SMK?: null; USM?: null; ROQ?: null;
-  THP?: null; BK2?: null; RBT?: null; DUK?: null; AVI?: null;
-  WMV?: null; Unknown?: null;
-}
+// VideoFormat type used by Rust backend
+// interface VideoFormat {
+//   VMD?: null; BIK?: null; SMK?: null; USM?: null; ROQ?: null;
+//   THP?: null; BK2?: null; RBT?: null; DUK?: null; AVI?: null;
+//   WMV?: null; Unknown?: null;
+// }
 
 interface GameVideoFile {
   name: string;
@@ -119,7 +120,7 @@ interface LibraryGame {
 }
 
 export default function VideoExtractorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const searchParams = useSearchParams();
 
   // State
@@ -135,7 +136,7 @@ export default function VideoExtractorPage() {
   const [conversionProgress, setConversionProgress] = useState(0);
   const [presets, setPresets] = useState<ConversionPreset[]>([]);
   const [selectedPreset, setSelectedPreset] = useState('standard');
-  const [customOptions, setCustomOptions] = useState<ConversionOptions>({
+  const [customOptions, _setCustomOptions] = useState<ConversionOptions>({
     output_format: 'mp4',
     video_codec: 'libx264',
     crf: 18,

@@ -9,11 +9,6 @@ interface CacheEntry<T> {
   hits: number;
 }
 
-interface TrigramIndex {
-  trigram: string;
-  ids: Set<string>;
-}
-
 export class SearchCache<T extends { id: string; name: string }> {
   private cache: Map<string, CacheEntry<T[]>> = new Map();
   private trigramIndex: Map<string, Set<string>> = new Map();

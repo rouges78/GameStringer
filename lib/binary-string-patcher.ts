@@ -270,7 +270,7 @@ export function extractStringsFromBuffer(
 
 export function fitToByteLength(text: string, targetLen: number): string {
   const encoder = new TextEncoder();
-  let buf = encoder.encode(text);
+  const buf = encoder.encode(text);
 
   if (buf.length === targetLen) return text;
 

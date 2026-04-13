@@ -2,23 +2,15 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { translateSingleWithFallback, getApiKeys } from '@/lib/ai-translate-direct';
-import { 
-  Mic, 
-  MicOff, 
-  Play, 
-  Pause, 
-  Square, 
-  Volume2, 
-  VolumeX, 
-  Languages, 
-  Download, 
+import {
+  Mic,
+  Play,
+  Square,
+  Volume2,
   Upload,
   Headphones,
-  AudioWaveform,
   Settings,
-  Trash2,
-  Copy,
-  RotateCcw
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -119,9 +111,9 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
   className
 }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [_isPlaying, setIsPlaying] = useState(false);
+  const [_currentTime, setCurrentTime] = useState(0);
+  const [_duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [transcriptions, setTranscriptions] = useState<AudioTranscription[]>([]);
   const [translations, setTranslations] = useState<AudioTranslation[]>([]);
@@ -360,7 +352,7 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
   };
 
   // Download audio
-  const downloadAudio = (audioUrl: string, filename: string) => {
+  const _downloadAudio = (audioUrl: string, filename: string) => {
     const a = document.createElement('a');
     a.href = audioUrl;
     a.download = filename;

@@ -374,8 +374,8 @@ function calculateConsistencyScore(text: string, details: string[]): number {
   
   // Controlla maiuscole coerenti
   const words = text.split(/\s+/);
-  const capitalizedWords = words.filter(w => /^[A-Z]/.test(w));
-  
+  const _capitalizedWords = words.filter(w => /^[A-Z]/.test(w));
+
   // Se ci sono molte parole capitalizzate a caso nel mezzo delle frasi
   const midSentenceCapitals = text.match(/[a-z]\s+[A-Z][a-z]/g) || [];
   if (midSentenceCapitals.length > 2) {

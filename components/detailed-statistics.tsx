@@ -1,26 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Clock, 
-  Trophy, 
-  Target, 
-  TrendingUp, 
-  Calendar, 
-  Gamepad2, 
-  Star, 
-  BarChart3,
-  PieChart,
+import React, { useState, useMemo } from 'react';
+import {
+  Clock,
+  Trophy,
+  Star,
   Activity,
   Award,
-  Zap,
-  Timer
+  Zap
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -87,7 +79,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
   className
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year' | 'all'>('month');
-  const [selectedGame, setSelectedGame] = useState<string>('all');
+  const [_selectedGame, _setSelectedGame] = useState<string>('all');
 
   // Calcola statistiche globali
   const globalStats = useMemo((): GlobalStatistics => {
@@ -145,7 +137,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
   const calculateCurrentStreak = (stats: GameStatistics[]): number => {
     const today = new Date();
     let streak = 0;
-    let currentDate = new Date(today);
+    const currentDate = new Date(today);
     
     for (let i = 0; i < 365; i++) {
       const dayStart = new Date(currentDate);
@@ -384,7 +376,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
           <Card>
             <CardHeader>
               <CardTitle>Top Games by Playtime</CardTitle>
-              <CardDescription>The games you've spent the most time on</CardDescription>
+              <CardDescription>The games you&apos;ve spent the most time on</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -421,7 +413,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentAchievements.map((achievement, index) => (
+                {recentAchievements.map((achievement) => (
                   <div key={achievement.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <Trophy className="h-5 w-5 text-yellow-500" />
@@ -465,7 +457,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {genreStats.map((genre, index) => (
+                {genreStats.map((genre) => (
                   <div key={genre.genre} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{genre.genre}</span>

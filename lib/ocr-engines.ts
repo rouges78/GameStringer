@@ -530,7 +530,7 @@ export async function recognizeMultiEngine(
   }
 
   // Converti File a Blob se necessario
-  let imageInput: string | Blob = image instanceof File ? image : image;
+  const imageInput: string | Blob = image instanceof File ? image : image;
 
   // Se compareAll, esegui tutti gli engine in parallelo
   if (compareAll) {

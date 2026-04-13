@@ -102,7 +102,6 @@ class OptimalPositioningAlgorithm {
     interferences: UIInterference[],
     constraints: Partial<PositioningConstraints> = {}
   ): Array<PositionCandidate & { id: string }> {
-    const viewport = this.getViewportInfo();
     const fullConstraints = this.mergeConstraints(constraints);
     const positions: Array<PositionCandidate & { id: string }> = [];
 

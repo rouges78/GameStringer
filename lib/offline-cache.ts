@@ -60,7 +60,7 @@ function saveCache(cache: CacheData): void {
       entries: Object.fromEntries(cache.entries),
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-  } catch (e: unknown) {
+  } catch {
     // localStorage might be full, try to clean up
     cleanupCache();
   }

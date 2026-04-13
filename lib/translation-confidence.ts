@@ -521,7 +521,7 @@ function getConfidenceLevel(score: number): ConfidenceLevel {
 export function calculateConfidence(
   original: string,
   translated: string,
-  context?: string
+  _context?: string
 ): ConfidenceResult {
   // Caso speciale: traduzione vuota
   if (!translated || translated.trim() === '') {
@@ -814,7 +814,7 @@ export async function calculateBatchConfidenceWithTM(
     const summary = generateSummary(pairs, results)
     
     return { pairs, results, summary }
-  } catch (error: unknown) {
+  } catch {
     // Fallback a calcolo senza TM
     return calculateBatchConfidence(pairs)
   }

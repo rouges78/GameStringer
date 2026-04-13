@@ -23,7 +23,6 @@ import {
   Loader2,
   Save,
   Database,
-  Map,
   AlertTriangle,
   ExternalLink,
   FileSpreadsheet
@@ -92,7 +91,7 @@ export default function WolfRpgPatcherPage() {
   const [game, setGame] = useState<WolfRpgGame | null>(null);
   const [strings, setStrings] = useState<WolfRpgString[]>([]);
   const [stats, setStats] = useState<WolfRpgStats | null>(null);
-  const [toolInfo, setToolInfo] = useState<WolfTransInfo | null>(null);
+  const [_toolInfo, setToolInfo] = useState<WolfTransInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -571,7 +570,7 @@ export default function WolfRpgPatcherPage() {
                 <Database className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('wolfrpgPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un file .dat e clicca l'icona ✨ per estrarre
+                  Seleziona un file .dat e clicca l&apos;icona ✨ per estrarre
                 </p>
               </div>
             ) : (

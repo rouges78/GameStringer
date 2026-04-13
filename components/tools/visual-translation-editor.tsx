@@ -3,11 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   Image as ImageIcon,
-  Type,
-  Move,
   ZoomIn,
   ZoomOut,
-  RotateCcw,
   Download,
   Upload,
   Eye,
@@ -16,8 +13,6 @@ import {
   Plus,
   Trash2,
   Edit3,
-  Check,
-  X,
   Copy,
   Palette,
   AlignLeft,
@@ -26,18 +21,16 @@ import {
   Bold,
   Italic,
   Save,
-  FolderOpen,
-  RefreshCw
+  FolderOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -579,7 +572,7 @@ export function VisualTranslationEditor() {
                   </p>
                 ) : (
                   <div className="space-y-1">
-                    {overlays.map((overlay, index) => (
+                    {overlays.map((overlay, _index) => (
                       <div
                         key={overlay.id}
                         className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${

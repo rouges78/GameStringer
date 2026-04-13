@@ -69,10 +69,6 @@ export type LiveTranslationEvent =
 
 type EventCallback = (event: LiveTranslationEvent) => void;
 
-// ── Speed-optimized provider chain ─────────────────────────
-
-const SPEED_CHAIN = ['groq', 'cerebras', 'deepseek', 'gemini', 'ollama'];
-
 // ── Simple string hash for diff detection ──────────────────
 
 function simpleHash(str: string): number {

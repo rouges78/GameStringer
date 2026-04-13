@@ -10,12 +10,11 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import {
   Keyboard, BookOpen, Zap, ChevronRight, Rocket, ArrowRight,
-  Gamepad2, Settings, Sparkles, Brain, Scan, Mic, FolderTree,
+  Gamepad2, Sparkles, Brain, Scan, Mic, FolderTree,
   Database, Wand2, ShieldCheck, AlertTriangle, HelpCircle,
-  CheckCircle2, Info, Globe, Monitor, Target, Eye, Wrench,
-  Package, Heart, Cpu, Film, Layers, AudioLines, User,
-  FileArchive, ShoppingBag, Users, MessageSquare, Glasses,
-  Subtitles, Play, FileText, Trophy, FlaskConical, GitBranch,
+  CheckCircle2, Info, Target, Wrench,
+  Cpu, Layers,
+  FileText, Trophy, FlaskConical, GitBranch,
   ListOrdered, Gauge, Workflow,
 } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -88,7 +87,7 @@ export default function GuidePage() {
   const { version } = useVersion();
   const [activeTab, setActiveTab] = useState('quickstart');
 
-  const guideTrans = (translations[language] as unknown)?.guidePage || (translations.it as Record<string, unknown>)?.guidePage;
+  const _guideTrans = (translations[language] as unknown)?.guidePage || (translations.it as Record<string, unknown>)?.guidePage;
   const g = getGuideTranslations(language);
   const registry = useMemo(() => getToolsRegistry(), []);
 
@@ -524,7 +523,7 @@ export default function GuidePage() {
                   </div>
 
                   <Tip variant="info">
-                    Come si apre: <strong>icona Brain (viola)</strong> sulla game card in libreria (hover) oppure dal bottone <strong>P.T.</strong> nella pagina dettaglio gioco. Output: report esportabile + bottone "Esegui workflow".
+                    Come si apre: <strong>icona Brain (viola)</strong> sulla game card in libreria (hover) oppure dal bottone <strong>P.T.</strong> nella pagina dettaglio gioco. Output: report esportabile + bottone &quot;Esegui workflow&quot;.
                   </Tip>
                 </CardContent>
               </Card>
@@ -534,7 +533,7 @@ export default function GuidePage() {
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <FlaskConical className="w-4 h-4 text-sky-400" />
-                    Dry Run Scanner — Scansione sicura dell'intera libreria
+                    Dry Run Scanner — Scansione sicura dell&apos;intera libreria
                     <Badge variant="outline" className="ml-auto text-2xs border-sky-500/40 text-sky-300">v1.6.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -651,7 +650,7 @@ export default function GuidePage() {
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-indigo-400" />
-                    "String it!" — Traduzione in un click
+                    &quot;String it!&quot; — Traduzione in un click
                     <Badge variant="outline" className="ml-auto text-2xs border-indigo-500/40 text-indigo-300">v1.6.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">

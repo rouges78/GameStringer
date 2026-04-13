@@ -6,16 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store as StoreIcon, ChevronDown, ExternalLink } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
-import { useSession, signIn, signOut, isProviderConnected, getConnectedAccount } from '@/lib/auth';
+import { useSession, signIn, signOut, isProviderConnected } from '@/lib/auth';
 import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
 import { ItchioModal } from '@/components/modals/itchio-modal';
@@ -27,7 +23,7 @@ import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { clientLogger } from '@/lib/client-logger';
 
 // Define a type for the store object for better type safety
-type Store = {
+type _Store = {
   id: string;
   name: string;
   description: string;
@@ -223,14 +219,14 @@ export default function StoresPage() {
   // State for Steam ID modal
   const [isSteamModalOpen, setIsSteamModalOpen] = useState(false);
 
-  const [ubisoftCredentials, setUbisoftCredentials] = useState({ email: '', password: '' });
+  const [_ubisoftCredentials, setUbisoftCredentials] = useState({ email: '', password: '' });
   const [isUbisoftModalOpen, setIsUbisoftModalOpen] = useState(false);
 
   // State for itch.io modal
   const [isItchioModalOpen, setIsItchioModalOpen] = useState(false);
 
   // Generic credentials state for new providers
-  const [genericCredentials, setGenericCredentials] = useState({ email: '', password: '' });
+  const [_genericCredentials, setGenericCredentials] = useState({ email: '', password: '' });
   const [genericModalProvider, setGenericModalProvider] = useState<string | null>(null);
   
   // Test connection state
@@ -344,23 +340,23 @@ export default function StoresPage() {
         setLoadingProvider(null);
         return;
       }
-    } catch (error: unknown) {
+    } catch {
       toast.error(`Errore durante l'attivazione di ${utilityId}`);
     }
-    
+
     setLoadingProvider(null);
   };
 
   const handleDisconnectUtility = async (utilityId: string) => {
     setLoadingProvider(utilityId);
-    
+
     try {
       const newPrefs = { ...utilityPreferences };
       delete newPrefs[utilityId];
       localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
       setUtilityPreferences(newPrefs);
       toast.success(`${utilityId} disattivato con successo.`);
-    } catch (error: unknown) {
+    } catch {
       toast.error(`Errore durante la disattivazione di ${utilityId}`);
     }
     
@@ -369,7 +365,7 @@ export default function StoresPage() {
 
   const handleConnect = async (providerId: string) => {
     setLoadingProvider(providerId);
-    const userId = session?.user?.id;
+    const _userId = session?.user?.id;
 
     // Handle OAuth providers
     if (providerId === 'epic') {
@@ -605,7 +601,7 @@ export default function StoresPage() {
     }
   };
 
-  const steamAccount = session?.user?.accounts?.find(acc => acc.provider === 'steam-credentials');
+  const _steamAccount = session?.user?.accounts?.find(acc => acc.provider === 'steam-credentials');
 
   const testConnectionUtility = async (utilityId: string) => {
     setTestingProvider(utilityId);
@@ -615,7 +611,7 @@ export default function StoresPage() {
         // Test HowLongToBeat - fetch diretto (no API route)
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 8000);
-        const response = await fetch('https://howlongtobeat.com', {
+        const _response = await fetch('https://howlongtobeat.com', {
           method: 'HEAD',
           mode: 'no-cors',
           signal: controller.signal,
@@ -631,7 +627,7 @@ export default function StoresPage() {
           throw new Error('API key mancante');
         }
         
-        const result = await invoke<string | null>('fetch_steamgriddb_image', {
+        const _result = await invoke<string | null>('fetch_steamgriddb_image', {
           appId: 292030,
           gameName: 'The Witcher 3',
           apiKey: apiKey,
@@ -672,7 +668,7 @@ export default function StoresPage() {
       } else {
         toast.error(`Problema con ${providerId}: ${result.error || 'connection non riuscita'}`);
       }
-    } catch (error: unknown) {
+    } catch {
       toast.error(`error nel test di ${providerId}`);
       setTestResults(prev => ({ ...prev, [providerId]: { error: 'Test fallito' } }));
     }

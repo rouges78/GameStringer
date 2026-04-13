@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { 
-  Save, Clock, Database, Settings, FileText, 
-  RefreshCw, Download, Trash2, RotateCcw, HardDrive,
-  CheckCircle2, XCircle, AlertCircle
+  Save, Clock, Database, Settings, FileText,
+  RefreshCw, RotateCcw, HardDrive,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -14,10 +14,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   AlertDialog,
@@ -88,7 +84,7 @@ export function AutoBackupSettings() {
     try {
       await restoreBackup(restoreDialog.path, restoreDialog.backupType);
       setRestoreDialog(null);
-    } catch (e: unknown) {
+    } catch {
       // Toast già gestito nell'hook
     }
   };
@@ -266,7 +262,7 @@ export function AutoBackupSettings() {
           ) : (
             <ScrollArea className="h-[200px]">
               <div className="space-y-2">
-                {backups.map((backup, idx) => (
+                {backups.map((backup, _idx) => (
                   <div 
                     key={backup.path}
                     className={cn(

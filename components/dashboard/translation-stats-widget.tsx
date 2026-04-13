@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+// Badge import removed — not currently used
 import { 
   BarChart3, 
   TrendingUp, 
@@ -11,9 +11,7 @@ import {
   FileText, 
   Languages, 
   CheckCircle,
-  AlertCircle,
   Zap,
-  Calendar,
   Target
 } from 'lucide-react';
 import { activityHistory } from '@/lib/activity-history';

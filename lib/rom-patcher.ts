@@ -413,7 +413,7 @@ function writeBpsVlq(value: number): Uint8Array {
   const bytes: number[] = [];
   let v = value;
   while (true) {
-    let x = v & 0x7f;
+    const x = v & 0x7f;
     v >>= 7;
     if (v === 0) {
       bytes.push(x | 0x80);

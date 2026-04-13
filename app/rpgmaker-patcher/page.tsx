@@ -3,19 +3,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  FolderOpen, 
-  Package, 
-  FileText, 
-  Download, 
-  Upload, 
+import {
+  FolderOpen,
+  Download,
+  Upload,
   Search,
   Check,
   X,
@@ -23,7 +21,6 @@ import {
   Sparkles,
   ExternalLink,
   Loader2,
-  RefreshCw,
   Save,
   FileJson
 } from 'lucide-react';
@@ -494,7 +491,7 @@ export default function RpgMakerPatcherPage() {
                 <Gamepad2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('rpgmakerPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un gioco RPG Maker e clicca "Estrai Stringhe"
+                  Seleziona un gioco RPG Maker e clicca &quot;Estrai Stringhe&quot;
                 </p>
               </div>
             ) : (

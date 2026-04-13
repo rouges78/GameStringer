@@ -72,7 +72,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [showRecoveryKey, setShowRecoveryKey] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
-  const { createProfile, authenticateProfile } = useProfiles();
+  const { createProfile } = useProfiles();
 
   // Gestione upload immagine personalizzata
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

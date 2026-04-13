@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 
 export default function TranslatorRedirect() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   

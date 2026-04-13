@@ -8,10 +8,9 @@ import type {
   ProgressEvent,
   ProgressEventType 
 } from '@/lib/types/progress';
-import { 
+import {
   calculateEstimatedTimeRemaining,
-  validateProgress,
-  createProgressUpdate 
+  validateProgress
 } from '@/lib/utils/progress-calculations';
 import { progressPersistence } from '@/lib/progress-persistence';
 import { clientLogger } from '@/lib/client-logger';
@@ -26,7 +25,7 @@ type ProgressAction =
   | { type: 'CLEANUP_COMPLETED'; payload: { maxAge: number } };
 
 // Initial state
-const initialState: { operations: Map<string, OperationProgress> } = {
+const _initialState: { operations: Map<string, OperationProgress> } = {
   operations: new Map()
 };
 

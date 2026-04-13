@@ -321,7 +321,7 @@ export class RateLimitStats {
 }
 
 // Update rate limiters to use stats
-Object.entries(rateLimiters).forEach(([name, limiter]) => {
+Object.entries(rateLimiters).forEach(([_name, limiter]) => {
   const originalOnLimitReached = limiter['config'].onLimitReached;
   limiter['config'].onLimitReached = (req: NextRequest, identifier: string) => {
     RateLimitStats.getInstance().recordRequest(identifier, true);

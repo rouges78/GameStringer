@@ -10,7 +10,7 @@ const TranslationStatsWidget = dynamic(
 );
 
 export default function StatsPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-6 space-y-6">
       <TranslationStatsWidget />

@@ -577,7 +577,7 @@ export function generatePOString(
 export function parsePOString(
   content: string
 ): { entries: GenericStringEntry[]; stats: PoStats } {
-  const { entries, headerParsed } = parsePoContent(content)
+  const { entries } = parsePoContent(content)
   const generic = entries.map(poEntryToGeneric)
   const stats = computeStats(entries)
   return { entries: generic, stats }

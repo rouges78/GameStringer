@@ -10,11 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { translateWithFallback } from '@/lib/ai-translate-direct';
-import { Progress } from '@/components/ui/progress';
 import { 
-  Play, Pause, Square, Settings, Eye, EyeOff, 
-  Monitor, Maximize2, Languages, Zap, RefreshCw,
-  Volume2, Copy, Download, Trash2, Target
+  Play, Pause, Square, Settings, Eye,
+  Monitor, Languages,
+  Copy, Download, Trash2, Target
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
@@ -40,7 +39,7 @@ interface CaptureRegion {
 }
 
 export function LiveOcrOverlay() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [detectedTexts, setDetectedTexts] = useState<DetectedText[]>([]);
@@ -57,7 +56,7 @@ export function LiveOcrOverlay() {
   const [totalDetected, setTotalDetected] = useState(0);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastCaptureTime = useRef<number>(0);
+  const _lastCaptureTime = useRef<number>(0);
   const frameCount = useRef<number>(0);
 
   // Calcola FPS
@@ -239,7 +238,7 @@ export function LiveOcrOverlay() {
       setCaptureRegion(region);
       setCaptureMode('region');
       toast.success(`Regione selezionata: ${region.width}x${region.height}`);
-    } catch (error: unknown) {
+    } catch {
       toast.error('Selezione regione annullata');
     } finally {
       setIsSelectingRegion(false);

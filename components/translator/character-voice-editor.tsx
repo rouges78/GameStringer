@@ -1,19 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { 
   User, Plus, Trash2, Save, Copy, Sparkles, 
-  MessageSquare, Settings, Volume2, Wand2, RefreshCw,
+  MessageSquare, Wand2, RefreshCw,
   Crown, Skull, Sword, Heart, Smile, Bot, BookOpen
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
@@ -71,7 +70,7 @@ interface CharacterVoiceEditorProps {
 }
 
 export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoiceEditorProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [profiles, setProfiles] = useState<CharacterProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<CharacterProfile | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -196,7 +195,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
       );
       setTranslatedText(result.translated);
       toast.success('Traduzione completata!');
-    } catch (error: unknown) {
+    } catch {
       toast.error('Errore nella traduzione');
     } finally {
       setIsTranslating(false);
@@ -488,7 +487,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                   </div>
                   {selectedProfile.patterns.catchphrases.length > 0 && (
                     <p className="text-xs text-gray-400 mt-2 italic">
-                      "{selectedProfile.patterns.catchphrases[0]}"
+                      &quot;{selectedProfile.patterns.catchphrases[0]}&quot;
                     </p>
                   )}
                 </div>

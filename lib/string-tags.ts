@@ -424,7 +424,7 @@ class StringTagsManager {
 export const stringTagsManager = new StringTagsManager();
 
 // React hook
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 
 export function useStringTags(stringId?: string) {

@@ -174,8 +174,6 @@ function generateReadme(config: WorkshopExportConfig): string {
 
 function generatePreviewSVG(config: WorkshopExportConfig): string {
   const langName = LANGUAGE_NAMES[config.targetLanguage] || config.targetLanguage;
-  const flag = getFlagEmoji(config.targetLanguage);
-  
   return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -198,15 +196,6 @@ function generatePreviewSVG(config: WorkshopExportConfig): string {
 
 function escapeXml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function getFlagEmoji(lang: string): string {
-  const flags: Record<string, string> = {
-    'it': '🇮🇹', 'en': '🇬🇧', 'es': '🇪🇸', 'fr': '🇫🇷', 'de': '🇩🇪',
-    'pt': '🇵🇹', 'pt-BR': '🇧🇷', 'ru': '🇷🇺', 'pl': '🇵🇱', 'zh': '🇨🇳',
-    'ja': '🇯🇵', 'ko': '🇰🇷', 'ar': '🇸🇦', 'hi': '🇮🇳', 'tr': '🇹🇷',
-  };
-  return flags[lang] || '🌐';
 }
 
 // ─── Main Export Function ────────────────────────────────────

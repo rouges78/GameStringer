@@ -107,7 +107,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
         try {
           const prefs = JSON.parse(utilityPrefs);
           apiKey = prefs?.steamgriddb?.apiKey || null;
-        } catch (e: unknown) {}
+        } catch {}
       }
       
       const result = await invoke<string | null>('fetch_steamgriddb_image', {

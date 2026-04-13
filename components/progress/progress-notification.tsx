@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, CheckCircle, AlertCircle, XCircle, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CheckCircle, AlertCircle, XCircle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProgressBar } from './progress-bar';
 import type { ProgressNotification } from '@/lib/types/progress';

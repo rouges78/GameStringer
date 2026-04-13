@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import GameImage from '@/components/game-image';
-import { Cog, Clock, Gamepad2, Timer } from 'lucide-react';
+import { Cog, Timer } from 'lucide-react';
 
 interface DisplayGame {
   id: string;

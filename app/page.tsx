@@ -14,7 +14,6 @@ import {
   ArrowUp,
   ArrowDown,
   Play,
-  Filter,
   Rss,
   Settings2,
   Cpu,
@@ -95,7 +94,7 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [_lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
   const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
@@ -256,7 +255,7 @@ export default function Dashboard() {
         savedPatches = allActivities.filter((a: Activity) => 
           a.activity_type === 'patch' || a.title?.includes('Patch') || a.title?.includes('Applicat')
         );
-      } catch (e: unknown) {
+      } catch {
         // Fallback: IndexedDB
         savedTranslations = await storageManager.getTranslations();
         savedPatches = await storageManager.getPatches();
@@ -337,10 +336,10 @@ export default function Dashboard() {
         if (savedLastScan) {
           lastScan = new Date(savedLastScan);
         }
-      } catch (e: unknown) {
+      } catch {
         // Ignora errore
       }
-      
+
       // Leggi ultimo gioco visitato su GameStringer da localStorage
       try {
         const saved = localStorage.getItem('gs_last_visited_game');
@@ -408,7 +407,7 @@ export default function Dashboard() {
           icon: activityIcons[a.activity_type]
         }));
         setActivities(recentActivities);
-      } catch (e: unknown) {
+      } catch {
         setActivities([]);
       }
       setLastUpdate(new Date());

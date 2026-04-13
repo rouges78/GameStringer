@@ -184,9 +184,9 @@ export class BatchOperationManager {
   }
 
   private async updateOperationProgress(
-    operationId: string, 
-    progress: number, 
-    status: string
+    operationId: string,
+    progress: number,
+    _status: string
   ): Promise<void> {
     try {
       await prisma.batchOperation.update({

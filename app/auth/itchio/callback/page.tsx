@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
 export default function ItchioCallbackPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {

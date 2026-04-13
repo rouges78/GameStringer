@@ -15,9 +15,7 @@ import {
   Clock,
   DollarSign,
   Zap,
-  TrendingUp,
   BarChart3,
-  Filter,
 } from 'lucide-react';
 import { 
   translationHistory, 
@@ -39,7 +37,6 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
   const [records, setRecords] = useState<TranslationRecord[]>([]);
   const [stats, setStats] = useState<TranslationStats | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterTool, setFilterTool] = useState<string>('');
   const [activeTab, setActiveTab] = useState('recent');
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Minimize2, Maximize2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProgressBar, CircularProgress } from './progress-bar';
@@ -24,7 +24,7 @@ export function ProgressModal({
   isMinimized = false,
   className
 }: ProgressModalProps) {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, _setIsVisible] = useState(true);
   const [elapsedTime, setElapsedTime] = useState(0);
 
   // Aggiorna tempo trascorso

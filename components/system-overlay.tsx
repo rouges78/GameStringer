@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Cpu, MemoryStick, Monitor, Thermometer, ChevronDown, ChevronUp, Zap, Cloud, HardDrive } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Cpu, Monitor, Thermometer, ChevronDown, ChevronUp, Zap, Cloud, HardDrive } from 'lucide-react';
 import { vramManager, type SystemStats, type VramTier } from '@/lib/vram-manager';
 
 const TIER_COLORS: Record<VramTier, string> = {
@@ -31,7 +31,7 @@ const TIER_LABELS: Record<VramTier, string> = {
   cloud: 'Cloud',
 };
 
-function ProgressRing({ percent, size = 32, stroke = 3, color }: { percent: number; size?: number; stroke?: number; color: string }) {
+function _ProgressRing({ percent, size = 32, stroke = 3, color }: { percent: number; size?: number; stroke?: number; color: string }) {
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
@@ -78,7 +78,7 @@ export function SystemOverlay({ position = 'bottom-right', compact: initialCompa
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [tier, setTier] = useState<VramTier>('cloud');
   const [expanded, setExpanded] = useState(!initialCompact);
-  const [visible, setVisible] = useState(true);
+  const [visible, _setVisible] = useState(true);
   const [modelInfo, setModelInfo] = useState<{ provider: 'local' | 'cloud'; model: string } | null>(null);
 
   useEffect(() => {

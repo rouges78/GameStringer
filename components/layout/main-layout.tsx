@@ -6,16 +6,11 @@ import { cn } from '@/lib/utils';
 import { useVersion } from '@/lib/version';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Home, 
+import {
+  Home,
   Gamepad2,
-  Bot, 
-  FileText, 
-  Store, 
   Settings,
-  Menu,
   X,
-  Bug,
   ChevronRight,
   ChevronLeft,
   ChevronDown,
@@ -27,46 +22,24 @@ import {
   Scan,
   Puzzle,
   Sparkles,
-  HelpCircle,
   Package,
   Wifi,
   WifiOff,
   Search,
   Globe,
-  Image as ImageIcon,
-  Download,
   Mic,
   Users,
   Wrench,
   Subtitles,
   BookOpen,
   Check,
-  Layers,
-  ShieldCheck,
   Film,
   Smile,
-  FileArchive,
   FolderTree,
-  Info,
-  ShoppingBag,
   FolderOpen,
-  AudioLines,
-  Glasses,
-  MessageSquare,
-  Monitor,
-  User,
   Heart,
-  Wheat,
-  Workflow,
-  ScanEye,
   Rocket,
-  Crosshair,
-  Eye,
-  BarChart3,
-  Newspaper,
-  Clock,
   Edit3,
-  Binary,
   ArrowRight,
   Library,
   Languages,
@@ -74,11 +47,11 @@ import {
   Disc
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
-import Image from 'next/image';
+// Image import removed — not currently used
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ProfileHeader } from '@/components/profiles/profile-header';
-import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
+// AuthStatusSidebar import removed — not currently used
 import { ProfileNotifications } from '@/components/profiles/profile-notifications';
 import { DefaultProfileAlert } from '@/components/profiles/default-profile-alert';
 import { SupportButton } from '@/components/support/support-button';
@@ -87,7 +60,7 @@ import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { UpdateBell } from '@/components/notifications/update-bell';
 import { FeaturedGameWidget } from '@/components/ui/featured-game-widget';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,7 +84,7 @@ import { TermsOfUse } from '@/components/onboarding/terms-of-use';
 import { TutorialProvider } from '@/components/tutorial/tutorial-provider';
 import { TutorialOverlay } from '@/components/tutorial/tutorial-overlay';
 import { TutorialMenu } from '@/components/tutorial/tutorial-menu';
-import { OfflineIndicator } from '@/components/ui/offline-indicator';
+// OfflineIndicator import removed — not currently used
 import { CommandPalette } from '@/components/ui/command-palette';
 import { GlobalSearch } from '@/components/layout/global-search';
 import { SystemOverlay } from '@/components/system-overlay';
@@ -249,7 +222,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Keyboard shortcuts globali
   useKeyboardShortcuts();
   
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
+  const [_systemStatus, setSystemStatus] = useState<SystemStatus>({
     neuralEngine: { status: 'online', color: 'bg-green-500', text: 'ON' },
     steamApi: { status: 'connected', color: 'bg-blue-500', text: 'OK' },
     cache: { percentage: 0, color: 'bg-cyan-500', text: '0%' }
@@ -257,7 +230,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [isOnline, setIsOnline] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
-  const { version, buildInfo, allVersions } = useVersion();
+  const { version, buildInfo: _buildInfo, allVersions } = useVersion();
 
   // Tray icon navigation events — riceve percorsi dal backend Rust
   useEffect(() => {
@@ -835,7 +808,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       if (filtered.length === 0) {
                         return (
                           <div className="py-6 text-center text-sm text-slate-500">
-                            {t('commandPalette.noResults')} "{searchQuery}"
+                            {t('commandPalette.noResults')} &quot;{searchQuery}&quot;
                           </div>
                         );
                       }

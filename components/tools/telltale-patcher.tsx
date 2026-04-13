@@ -1,24 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  FolderOpen, 
-  Download, 
-  CheckCircle2, 
-  AlertTriangle
-  , 
+  FolderOpen,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
   Gamepad2,
   ExternalLink,
-  Play,
-  FileArchive,
-  Globe,
-  Trash2
+  Globe
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@/lib/tauri-api';
@@ -85,7 +80,7 @@ export function TelltalePatcher() {
   const [errorMessage, setErrorMessage] = useState('');
   const [hasExistingPatch, setHasExistingPatch] = useState(false);
   const [hasBackup, setHasBackup] = useState(false);
-  const [backupPath, setBackupPath] = useState<string>('');
+  const [_backupPath, setBackupPath] = useState<string>('');
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
@@ -256,8 +251,8 @@ export function TelltalePatcher() {
 
     } catch (error: unknown) {
       setStatus('error');
-      setErrorMessage(error.message || 'Unknown error');
-      addLog(`❌ Error: ${error.message}`);
+      setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
+      addLog(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
       toast.error('Error during process');
     } finally {
       setIsPatching(false);
@@ -292,7 +287,7 @@ export function TelltalePatcher() {
       addLog(`✅ Backup created: ${backupDir}`);
       toast.success('Backup created successfully');
     } catch (error: unknown) {
-      addLog(`❌ Backup error: ${error.message}`);
+      addLog(`❌ Backup error: ${error instanceof Error ? error.message : String(error)}`);
       toast.error('Error creating backup');
     }
   };
@@ -312,7 +307,7 @@ export function TelltalePatcher() {
       toast.success('Original files restored');
       setHasExistingPatch(true);
     } catch (error: unknown) {
-      addLog(`❌ Restore error: ${error.message}`);
+      addLog(`❌ Restore error: ${error instanceof Error ? error.message : String(error)}`);
       toast.error('Error during restore');
     }
   };
@@ -360,7 +355,7 @@ export function TelltalePatcher() {
         addLog('   You may need to extract files from the archive');
       }
     } catch (error: unknown) {
-      addLog(`❌ Verification error: ${error.message}`);
+      addLog(`❌ Verification error: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

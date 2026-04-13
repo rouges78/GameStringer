@@ -3,7 +3,6 @@
  * Automatically saves project state at regular intervals
  */
 
-import { invoke } from '@tauri-apps/api/core';
 import { clientLogger } from '@/lib/client-logger';
 
 export interface BackupConfig {

@@ -71,7 +71,7 @@ export const useResponsive = () => {
 };
 
 const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({ children, className }) => {
-  const { breakpoint, isMobile, isTablet, isDesktop } = useResponsive();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   return (
     <div className={cn(

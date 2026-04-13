@@ -203,7 +203,7 @@ export function ProfileHeader() {
     await logout();
   };
 
-  const handleProfileCreated = (profileId: string) => {
+  const handleProfileCreated = (_profileId: string) => {
     setShowCreateDialog(false);
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,8 +19,6 @@ import {
   Download,
   Eye,
   EyeOff,
-  Palette,
-  Type,
   Monitor,
   Subtitles,
   Clock,
@@ -31,8 +29,6 @@ import {
   Subtitle,
   DEFAULT_CONFIG,
   STYLE_PRESETS,
-  generateOverlayCSS,
-  generateSubtitleHTML,
   saveConfig,
   loadConfig,
   saveHistory,
@@ -54,7 +50,7 @@ export function SubtitleOverlay() {
   const [previewTranslation, setPreviewTranslation] = useState('Ciao, come stai?');
   const [showPreview, setShowPreview] = useState(true);
   
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const _overlayRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Carica config salvata

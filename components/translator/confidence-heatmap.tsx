@@ -7,17 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+
 import {
   Select,
   SelectContent,
@@ -44,7 +34,6 @@ import {
   CONFIDENCE_COLORS,
   TranslationPair,
   filterByConfidenceLevel,
-  sortByConfidence,
   getHeatmapChartData
 } from "@/lib/translation-confidence"
 import { useTranslation } from '@/lib/i18n';
@@ -57,7 +46,7 @@ interface ConfidenceHeatmapProps {
 
 // Componente Badge per singolo livello di confidenza
 function ConfidenceBadge({ result, size = 'md' }: { result: ConfidenceResult; size?: 'sm' | 'md' | 'lg' }) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const sizeClasses = {
     sm: 'text-xs px-1.5 py-0.5',
     md: 'text-sm px-2 py-1',

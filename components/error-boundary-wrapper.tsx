@@ -29,8 +29,8 @@ export function ErrorBoundaryWrapper({
 
   const getFallbackComponent = () => {
     switch (fallbackType) {
-      case 'api':
-        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+      case 'api': {
+        const ApiFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <ApiErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -39,8 +39,11 @@ export function ErrorBoundaryWrapper({
             endpoint={endpoint}
           />
         );
-      case 'loading':
-        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+        ApiFallbackComponent.displayName = 'ApiFallbackComponent';
+        return ApiFallbackComponent;
+      }
+      case 'loading': {
+        const LoadingFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <LoadingErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -49,8 +52,11 @@ export function ErrorBoundaryWrapper({
             resource={resource}
           />
         );
-      default:
-        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
+        LoadingFallbackComponent.displayName = 'LoadingFallbackComponent';
+        return LoadingFallbackComponent;
+      }
+      default: {
+        const DefaultFallbackComponent = ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <ErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -59,6 +65,9 @@ export function ErrorBoundaryWrapper({
             title={`error in ${context}`}
           />
         );
+        DefaultFallbackComponent.displayName = 'DefaultFallbackComponent';
+        return DefaultFallbackComponent;
+      }
     }
   };
 

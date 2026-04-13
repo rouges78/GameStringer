@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2, ChevronDown, ChevronUp, Layers, Image as ImageIcon, Upload, Clipboard, X, Copy } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
@@ -392,9 +391,9 @@ export default function OcrTranslatorPage() {
     toast.success('Traduzioni copiate!');
   }, [screenshotTexts]);
 
-  const srcLang = SOURCE_LANGUAGES.find(l => l.code === config.language);
-  const tgtLang = TARGET_LANGUAGES.find(l => l.code === config.target_language);
-  const selectedWindow = windows.find(w => w.hwnd === config.target_window);
+  const _srcLang = SOURCE_LANGUAGES.find(l => l.code === config.language);
+  const _tgtLang = TARGET_LANGUAGES.find(l => l.code === config.target_language);
+  const _selectedWindow = windows.find(w => w.hwnd === config.target_window);
 
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-3 animate-fade-in">
@@ -631,7 +630,7 @@ export default function OcrTranslatorPage() {
                   </select>
                   {ocrProvider === 'vlm' && (
                     <div className="mt-2 text-2xs text-amber-400 bg-amber-500/10 p-2 rounded">
-                      <strong>{t('ocrTranslatorPage.notaVlm')}</strong> L'immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
+                      <strong>{t('ocrTranslatorPage.notaVlm')}</strong> L&apos;immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
                     </div>
                   )}
                 </div>

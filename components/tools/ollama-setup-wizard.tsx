@@ -10,7 +10,6 @@ import {
   Download,
   Play,
   CheckCircle2,
-  XCircle,
   Loader2,
   Cpu,
   ArrowRight,
@@ -66,7 +65,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       } else {
         setStep('done');
       }
-    } catch (err: unknown) {
+    } catch {
       setError('Impossibile verificare lo stato di Ollama');
     } finally {
       setLoading(false);
@@ -125,7 +124,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       await invoke('download_ollama');
       setProgressMessage('Installer avviato. Completa l\'installazione e premi Continua.');
     } catch (err: unknown) {
-      setError(err?.toString() || 'Errore durante il download');
+      setError(err instanceof Error ? err.message : 'Errore durante il download');
     } finally {
       setLoading(false);
     }
@@ -138,7 +137,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       await invoke('start_ollama');
       await checkStatus();
     } catch (err: unknown) {
-      setError(err?.toString() || 'Impossibile avviare Ollama');
+      setError(err instanceof Error ? err.message : 'Impossibile avviare Ollama');
     } finally {
       setLoading(false);
     }
@@ -153,7 +152,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       await invoke('pull_ollama_model', { modelName: selectedModel });
       setStep('done');
     } catch (err: unknown) {
-      setError(err?.toString() || 'Errore download modello');
+      setError(err instanceof Error ? err.message : 'Errore download modello');
     } finally {
       setLoading(false);
     }

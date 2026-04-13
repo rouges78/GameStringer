@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { X, Bell, Trash2, Check, MoreVertical, Filter, CheckCheck, Mail, Search, ArrowUpDown, Square, CheckSquare, HelpCircle } from 'lucide-react';
-import { useKeyboardNavigation, useNotificationListNavigation } from '@/hooks/use-keyboard-navigation';
-import { announceFilterChange, announceSearchResults, announceBatchOperation } from '@/lib/notification-accessibility';
+import { useKeyboardNavigation } from '@/hooks/use-keyboard-navigation';
+import { announceFilterChange, announceSearchResults } from '@/lib/notification-accessibility';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea import removed — not currently used
 import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu,
@@ -20,13 +20,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/hooks/use-notifications';
-import { 
-  Notification, 
-  NotificationType, 
+import {
+  Notification,
+  NotificationType,
   NotificationPriority,
-  NotificationFilter,
-  formatNotificationTime,
-  getNotificationTypeColor 
+  formatNotificationTime
 } from '@/types/notifications';
 
 interface NotificationCenterProps {
@@ -55,7 +53,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   const { 
     notifications, 
-    unreadCount, 
+    unreadCount: _unreadCount,
     isLoading, 
     markAsRead, 
     deleteNotification, 
@@ -86,7 +84,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   
   // Stati per navigazione tastiera
   const [selectedNotificationIndex, setSelectedNotificationIndex] = useState(-1);
-  const [keyboardNavigationActive, setKeyboardNavigationActive] = useState(false);
+  const [_keyboardNavigationActive, setKeyboardNavigationActive] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   // Enhanced keyboard navigation - DEVE essere prima degli useEffect che lo usano
@@ -373,7 +371,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   // Verifica se ci sono filtri attivi
   const hasActiveFilters = selectedTypes.size > 0 || selectedPriorities.size > 0 || showUnreadOnly || searchQuery.trim().length > 0;
 
-  const getNotificationIcon = (type: NotificationType) => {
+  const _getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case NotificationType.SECURITY:
         return '🔒';
@@ -392,7 +390,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   };
 
-  const getPriorityColor = (priority: NotificationPriority) => {
+  const _getPriorityColor = (priority: NotificationPriority) => {
     switch (priority) {
       case NotificationPriority.URGENT:
         return 'border-l-red-500 bg-red-50 dark:bg-red-950/20';
@@ -670,7 +668,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-500" aria-hidden="true" />
             <Input
               id="notification-search"
-              aria-label="Search" placeholder="Search notifications..."
+              placeholder="Search notifications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 bg-slate-800/50 border-slate-700 focus:border-purple-500/50 focus:ring-purple-500/20 placeholder:text-slate-500"
@@ -689,7 +687,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             Showing {processedNotifications.length} of {notifications.length} notifications
             {searchQuery && (
               <span className="ml-2">
-                • Search: "{searchQuery}"
+                • Search: &quot;{searchQuery}&quot;
               </span>
             )}
           </div>

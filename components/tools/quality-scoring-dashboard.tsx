@@ -1,21 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
-  Shield, CheckCircle2, Bot, FileText, TrendingUp,
-  Download, Upload, Trash2, Search, Filter, ChevronDown,
-  ChevronRight, Eye, Edit3, Check, X, BarChart3
+  Shield, CheckCircle2, FileText, TrendingUp,
+  Download, Upload, Trash2, Search,
+  ChevronRight, Edit3, Check, X, BarChart3
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   qualityScoringService,
-  calculateQualityScore,
-  getQualityLabel,
   getQualityColor,
   getQualityBgColor,
   getTagInfo,
@@ -111,7 +107,7 @@ function StatsCards({ stats }: { stats: QualityStats }) {
 // ─── Entry Row ───────────────────────────────────────────────
 
 function EntryRow({
-  entryKey,
+  entryKey: _entryKey,
   entry,
   onValidate,
   onEdit,

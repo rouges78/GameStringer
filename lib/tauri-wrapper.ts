@@ -29,7 +29,7 @@ export async function safeInvoke<T>(command: string, args?: Record<string, unkno
 }
 
 // Risposte mock per ambiente web
-function getMockResponse<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+function getMockResponse<T>(command: string, _args?: Record<string, unknown>): Promise<T> {
   const mockResponses: Record<string, unknown> = {
     'get_games': [],
     'get_steam_games_with_family_sharing': generateMockGames(),

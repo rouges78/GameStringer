@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,26 +12,21 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Palette, 
-  Sparkles, 
-  Users, 
-  Download, 
+  Palette,
+  Sparkles,
+  Users,
+  Download,
   Upload,
   Check,
   Star,
   Heart,
   Zap,
-  Moon,
-  Sun,
   Brush,
   RotateCcw,
   Save,
-  Eye,
-  Copy,
-  Share2
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTheme } from 'next-themes';
 import { useTranslation } from '@/lib/i18n';
 
 interface CustomTheme {
@@ -214,7 +208,6 @@ const DEFAULT_COLORS: ThemeColors = PRESET_THEMES[0].colors;
 
 export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
   const { t } = useTranslation();
-  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('presets');
   const [selectedTheme, setSelectedTheme] = useState<CustomTheme | null>(null);
   const [customColors, setCustomColors] = useState<ThemeColors>(DEFAULT_COLORS);

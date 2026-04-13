@@ -21,8 +21,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { t } = useTranslation();
   const { 
-    isAuthenticated, 
-    currentProfile, 
+    isAuthenticated,
     isLoading
   } = useProfileAuth();
   

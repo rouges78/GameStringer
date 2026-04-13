@@ -39,7 +39,7 @@ export class VlmTranslator {
         m.includes('pixtral') ||
         m.includes('vision')
       );
-    } catch (e: unknown) {
+    } catch {
       clearTimeout(timeoutId);
       return [];
     }

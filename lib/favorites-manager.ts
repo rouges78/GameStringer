@@ -312,7 +312,7 @@ class FavoritesManager {
 export const favoritesManager = new FavoritesManager();
 
 // React hook
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 
 export function useFavorites() {

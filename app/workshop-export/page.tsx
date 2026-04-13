@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   exportForWorkshop,
   validateWorkshopConfig,
-  generateWorkshopMetadata,
   type WorkshopExportConfig,
   type WorkshopTranslatedFile,
 } from '@/lib/workshop-exporter';

@@ -287,7 +287,6 @@ class TranslationAnalytics {
 
     // Calculate streak
     let streak = 0;
-    const today = new Date().toISOString().split('T')[0];
     const sortedDates = last30Days.map(d => d.date).sort().reverse();
     
     for (let i = 0; i < sortedDates.length; i++) {

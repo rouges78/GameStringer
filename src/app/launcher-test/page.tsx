@@ -413,7 +413,7 @@ export default function LauncherTestPage() {
             <p><strong>Steam:</strong> Usa App ID numerici (es. 730 per CS2, 440 per TF2)</p>
             <p><strong>Epic Games:</strong> Usa nomi app Epic (es. Fortnite, WorldWarZ)</p>
             <p><strong>GOG:</strong> Usa Game ID GOG (numerico)</p>
-            <p><strong>Diretto:</strong> Percorso completo all'eseguibile del gioco</p>
+            <p><strong>Diretto:</strong> Percorso completo all&apos;eseguibile del gioco</p>
             <p><strong>Universale:</strong> Sistema intelligente che sceglie il metodo migliore</p>
           </div>
         </div>

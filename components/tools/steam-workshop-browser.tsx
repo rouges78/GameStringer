@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -21,8 +21,7 @@ import {
   Gamepad2,
   Heart,
   Eye,
-  AlertTriangle,
-  Image as ImageIcon
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
@@ -71,7 +70,7 @@ export function SteamWorkshopBrowser() {
   const [sortBy, setSortBy] = useState<string>('popular');
   const [apiKey, setApiKey] = useState('');
   const [loadingKey, setLoadingKey] = useState(true);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [_hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     const loadKey = async () => {
@@ -110,7 +109,7 @@ export function SteamWorkshopBrowser() {
       setItems(result.items);
       setTotalResults(result.total);
     } catch (error: unknown) {
-      const msg = typeof error === 'string' ? error : error?.message || 'Errore ricerca Workshop';
+      const msg = typeof error === 'string' ? error : (error instanceof Error ? error.message : 'Errore ricerca Workshop');
       toast.error(msg);
       setItems([]);
       setTotalResults(0);

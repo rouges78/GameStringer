@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2, ExternalLink, CheckCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@/lib/tauri-api';
-import Image from 'next/image';
+
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -27,7 +27,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
   const { t } = useTranslation();
   const [error, setError] = useState('');
   const [authStep, setAuthStep] = useState<'idle' | 'waiting' | 'success'>('idle');
-  const [verifying, setVerifying] = useState(false);
+  const [_verifying, setVerifying] = useState(false);
   const [steamUser, setSteamUser] = useState<SteamUser | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [wishlist, setWishlist] = useState<unknown[]>([]);
@@ -61,13 +61,13 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               });
             }
           }
-        } catch (e: unknown) {
+        } catch {
           clientLogger.debug('Could not load full profile with avatar');
         }
         setSteamUser(fullProfile);
         setAuthStep('success');
       }
-    } catch (e: unknown) {
+    } catch {
       clientLogger.debug('No existing Steam auth');
     }
     setCheckingAuth(false);
@@ -81,7 +81,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
     try {
       // Start local callback server and get auth URL
-      const [authUrl, port] = await invoke<[string, number]>('steam_openid_start_server');
+      const [authUrl, _port] = await invoke<[string, number]>('steam_openid_start_server');
       
       // Open in system browser
       const { open } = await import('@tauri-apps/plugin-shell');
@@ -123,7 +123,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
     }
   };
 
-  const handleManualCallback = async () => {
+  const _handleManualCallback = async () => {
     const callbackUrl = prompt('Incolla qui l\'URL completo dopo il login Steam:');
     if (!callbackUrl) return;
 
@@ -388,7 +388,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
               Clicca il pulsante qui sotto per accedere con il tuo account Steam. 
-              Verrai reindirizzato al sito ufficiale di Steam per l'autenticazione sicura.
+              Verrai reindirizzato al sito ufficiale di Steam per l&apos;autenticazione sicura.
             </p>
 
             <Button 

@@ -6,9 +6,7 @@ import { useProfiles } from '@/hooks/use-profiles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from 'radix-ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,7 +35,7 @@ interface ProfileSecurityDialogProps {
 export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDialogProps) {
   const { t } = useTranslation();
   const { currentProfile, logout } = useProfileAuth();
-  const { deleteProfile } = useProfiles();
+  const { deleteProfile: _deleteProfile } = useProfiles();
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -303,7 +301,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
                   
                   <div className="space-y-2">
                     <Label className="text-sm">
-                      Type "{currentProfile?.name}" to confirm
+                      Type &quot;{currentProfile?.name}&quot; to confirm
                     </Label>
                     <Input
                       value={deleteConfirmation}

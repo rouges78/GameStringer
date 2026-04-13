@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -363,7 +362,7 @@ const CustomSorting: React.FC<CustomSortingProps> = ({
               className="text-destructive"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete "{preset.name}"
+              Delete &quot;{preset.name}&quot;
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

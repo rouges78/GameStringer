@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -328,7 +328,7 @@ export function CharacterProfileManager({
                   <div className="flex flex-wrap gap-1 mt-2">
                     {(newProfile.speechPatterns || []).map((pattern, i) => (
                       <Badge key={i} variant="secondary" className="gap-1">
-                        "{pattern}"
+                        &quot;{pattern}&quot;
                         <button onClick={() => removeSpeechPattern(i)} className="ml-1 hover:text-red-500">
                           ×
                         </button>
@@ -365,9 +365,9 @@ export function CharacterProfileManager({
                     <div className="mt-2 space-y-1">
                       {(newProfile.examples || []).map((ex, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs bg-muted p-2 rounded">
-                          <span className="text-muted-foreground">"{ex.source}"</span>
+                          <span className="text-muted-foreground">&quot;{ex.source}&quot;</span>
                           <span>→</span>
-                          <span className="font-medium">"{ex.translation}"</span>
+                          <span className="font-medium">&quot;{ex.translation}&quot;</span>
                           <button 
                             onClick={() => removeExample(i)} 
                             className="ml-auto hover:text-red-500"

@@ -1,11 +1,6 @@
-import { exec } from 'child_process';
 import { clientLogger } from '@/lib/client-logger';
-import { promisify } from 'util';
-import path from 'path';
 import { gameProfileManager } from './game-profiles';
 import { getGameInfo } from './game-translations';
-
-const execAsync = promisify(exec);
 
 // Interfacce per il modulo nativo
 interface InjectionResult {
@@ -47,7 +42,7 @@ class InjectionService {
 
   private createMockModule() {
     return {
-      injectTranslations: (processId: number, translations: Translation[]) => {
+      injectTranslations: (_processId: number, translations: Translation[]) => {
         clientLogger.debug(`[MOCK] Injecting ${translations.length} translations into process ${processId}`);
         return {
           success: true,
@@ -59,18 +54,18 @@ class InjectionService {
           }))
         };
       },
-      monitorProcess: (processId: number) => {
-        clientLogger.debug(`[MOCK] Monitoring process ${processId}`);
+      monitorProcess: (_processId: number) => {
+        clientLogger.debug(`[MOCK] Monitoring process ${_processId}`);
         return { success: true, message: 'Mock monitoring started' };
       },
-      getProcessModules: (processId: number) => {
+      getProcessModules: (_processId: number) => {
         return [
           { name: 'game.exe', base: 0x400000, size: 0x100000 },
           { name: 'engine.dll', base: 0x10000000, size: 0x200000 }
         ];
       },
-      isProcess64Bit: (processId: number) => true,
-      scanMemory: (processId: number, pattern: number[], mask: string) => {
+      isProcess64Bit: (_processId: number) => true,
+      scanMemory: (_processId: number, _pattern: number[], _mask: string) => {
         return [
           { address: 0x401000, region: 0x400000, size: 0x1000 }
         ];
@@ -223,7 +218,7 @@ class InjectionService {
   }
 
   public stopAllMonitoring() {
-    for (const [processId, timer] of this.activeInjections) {
+    for (const [_processId, timer] of this.activeInjections) {
       clearInterval(timer as unknown as number);
     }
     this.activeInjections.clear();

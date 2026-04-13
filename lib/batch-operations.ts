@@ -58,32 +58,32 @@ class BatchOperationsManager {
 
   private registerDefaultProcessors(): void {
     // Copy source to target
-    this.processors.set('copy-source', async (stringId) => {
+    this.processors.set('copy-source', async (_stringId) => {
       // In real implementation, would copy source to target
       await this.simulateDelay(50);
       return true;
     });
 
     // Clear target
-    this.processors.set('clear', async (stringId) => {
+    this.processors.set('clear', async (_stringId) => {
       await this.simulateDelay(30);
       return true;
     });
 
     // Mark as reviewed
-    this.processors.set('review', async (stringId) => {
+    this.processors.set('review', async (_stringId) => {
       await this.simulateDelay(20);
       return true;
     });
 
     // Approve
-    this.processors.set('approve', async (stringId) => {
+    this.processors.set('approve', async (_stringId) => {
       await this.simulateDelay(20);
       return true;
     });
 
     // Reject
-    this.processors.set('reject', async (stringId) => {
+    this.processors.set('reject', async (_stringId) => {
       await this.simulateDelay(20);
       return true;
     });
@@ -194,7 +194,7 @@ class BatchOperationsManager {
       operation.completedAt = Date.now();
       operation.progress = 100;
 
-    } catch (error: unknown) {
+    } catch {
       operation.status = 'failed';
       operation.completedAt = Date.now();
     }
@@ -266,7 +266,7 @@ class BatchOperationsManager {
     replace: string,
     options?: { caseSensitive?: boolean; wholeWord?: boolean; regex?: boolean }
   ): Promise<BatchOperationResult> {
-    this.registerProcessor('find-replace', async (stringId) => {
+    this.registerProcessor('find-replace', async (_stringId) => {
       // In real implementation, would modify the string
       await this.simulateDelay(30);
       return true;
@@ -282,7 +282,7 @@ class BatchOperationsManager {
     targetLanguage: string,
     options?: { preserveFormatting?: boolean; useGlossary?: boolean }
   ): Promise<BatchOperationResult> {
-    this.registerProcessor('translate', async (stringId) => {
+    this.registerProcessor('translate', async (_stringId) => {
       // In real implementation, would call AI translation
       await this.simulateDelay(200 + Math.random() * 300);
       return Math.random() > 0.05; // 95% success rate

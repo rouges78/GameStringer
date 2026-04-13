@@ -6,21 +6,16 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  Trash2, ArrowLeft, Languages, Info, Sparkles, Edit3, Image as ImageIcon, Cpu, Map, Globe, Clock, Brain, ChevronDown, Film
+  Gamepad2, Settings, Search, Play, Loader2,
+  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { mockGames } from '@/lib/mock-data';
 import InlineTranslator from '@/components/inline-translator';
-import { LanguageFlags } from '@/components/ui/language-flags';
+// LanguageFlags import removed — not currently used
 import { activityHistory } from '@/lib/activity-history';
 import { TranslationRecommendation } from '@/components/translation-recommendation';
 import { useTranslation } from '@/lib/i18n';
@@ -29,7 +24,7 @@ import { HltbStats } from '@/components/hltb-stats';
 import { toast } from 'sonner';
 import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dialog';
 
-import AudioPatcher from '@/components/audio-patcher';
+// AudioPatcher import removed — not currently used
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
 import {
@@ -121,14 +116,14 @@ export default function GameDetailPage() {
   }, [searchParams, params.id]);
   
   const [game, setGame] = useState<Game | null>(null);
-  const [translations, setTranslations] = useState<unknown[]>([]);
+  const [_translations, setTranslations] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [dlcGames, setDlcGames] = useState<unknown[]>([]);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [steamDetails, setSteamDetails] = useState<unknown>(null);
-  const [imageError, setImageError] = useState(false);
+  const [_steamDetails, setSteamDetails] = useState<unknown>(null);
+  const [_imageError, setImageError] = useState(false);
 
   const [isInstallingPatch, setIsInstallingPatch] = useState(false);
   const [patchStatus, setPatchStatus] = useState<{success: boolean, message: string} | null>(null);
@@ -144,10 +139,10 @@ export default function GameDetailPage() {
   
   // Editor traduzioni XUnity
   const [xunityTranslations, setXunityTranslations] = useState<{original: string, translated: string, line_number: number}[]>([]);
-  const [isLoadingTranslations, setIsLoadingTranslations] = useState(false);
-  const [showTranslationEditor, setShowTranslationEditor] = useState(false);
-  const [translationSearch, setTranslationSearch] = useState('');
-  const [editingEntry, setEditingEntry] = useState<{original: string, translated: string} | null>(null);
+  const [_isLoadingTranslations, setIsLoadingTranslations] = useState(false);
+  const [_showTranslationEditor, setShowTranslationEditor] = useState(false);
+  const [_translationSearch, _setTranslationSearch] = useState('');
+  const [_editingEntry, setEditingEntry] = useState<{original: string, translated: string} | null>(null);
 
   // Lightbox screenshot (indice per navigazione)
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
@@ -160,8 +155,8 @@ export default function GameDetailPage() {
   const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
 
   // HowLongToBeat
-  const [hltbData, setHltbData] = useState<{found: boolean; main?: number; main_extra?: number; completionist?: number; url?: string} | null>(null);
-  const [isLoadingHltb, setIsLoadingHltb] = useState(false);
+  const [_hltbData, setHltbData] = useState<{found: boolean; main?: number; main_extra?: number; completionist?: number; url?: string} | null>(null);
+  const [_isLoadingHltb, setIsLoadingHltb] = useState(false);
   
   // SteamGridDB fallback image
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
@@ -225,7 +220,7 @@ export default function GameDetailPage() {
 
   // Auto-Translate one-click flow
   const [autoTranslateActive, setAutoTranslateActive] = useState(false);
-  const [autoTranslateStep, setAutoTranslateStep] = useState(0);
+  const [_autoTranslateStep, setAutoTranslateStep] = useState(0);
   const [autoTranslateSteps, setAutoTranslateSteps] = useState<{label: string, status: 'pending' | 'running' | 'done' | 'error', detail?: string}[]>([]);
   const [autoTranslateError, setAutoTranslateError] = useState<string | null>(null);
   const [autoTranslateResult, setAutoTranslateResult] = useState<{
@@ -278,7 +273,7 @@ export default function GameDetailPage() {
   const sideEffectsRunRef = useRef<string | null>(null);
 
   // Unreal Engine Patcher
-  const [unrealPatchStatus, setUnrealPatchStatus] = useState<{
+  const [_unrealPatchStatus, setUnrealPatchStatus] = useState<{
     installed: boolean;
     version: string;
     target_language: string;
@@ -345,7 +340,7 @@ export default function GameDetailPage() {
       });
       setEngineInfo(result);
       setGame(prev => prev ? { ...prev, engine: result.engine } : null);
-    } catch (error: unknown) {
+    } catch {
       // Fallback client-side: detection per nome
       const gameName = game.name || game.title;
       const fallbackEngine = detectEngineByName(gameName);
@@ -614,9 +609,9 @@ export default function GameDetailPage() {
     }
   };
 
-  const handleUninstallUnityPatch = async () => {
+  const _handleUninstallUnityPatch = async () => {
     if (!game?.installPath) return;
-    
+
     if (!confirm('Sei sicuro di voler rimuovere la patch Unity AutoTranslator?')) return;
     
     setIsInstallingPatch(true);
@@ -763,7 +758,7 @@ export default function GameDetailPage() {
 
     try {
       const lang = language || 'it';
-      const gameName = game.title || game.name || 'Game';
+      const _gameName = game.title || game.name || 'Game';
 
       // 1. Estrai stringhe di localizzazione dal gioco
       toast.info('Estrazione stringhe di localizzazione Unreal...');
@@ -881,7 +876,7 @@ export default function GameDetailPage() {
     }
   };
 
-  const handleUninstallUnrealPatch = async () => {
+  const _handleUninstallUnrealPatch = async () => {
     if (!game?.installPath) return;
     
     if (!confirm('Sei sicuro di voler rimuovere la patch di traduzione?')) return;
@@ -902,7 +897,7 @@ export default function GameDetailPage() {
     }
   };
 
-  const handleLaunchWithTranslator = async () => {
+  const _handleLaunchWithTranslator = async () => {
     if (!game?.installPath) return;
     
     try {
@@ -934,7 +929,7 @@ export default function GameDetailPage() {
   };
 
   // Carica traduzioni XUnity
-  const loadXunityTranslations = async () => {
+  const _loadXunityTranslations = async () => {
     if (!game?.installPath) return;
     
     setIsLoadingTranslations(true);
@@ -954,7 +949,7 @@ export default function GameDetailPage() {
   };
 
   // Salva traduzione modificata
-  const saveTranslation = async (original: string, newTranslation: string) => {
+  const _saveTranslation = async (original: string, newTranslation: string) => {
     if (!game?.installPath) return;
     
     try {
@@ -976,9 +971,9 @@ export default function GameDetailPage() {
   };
 
   // Filtra traduzioni per ricerca
-  const filteredTranslations = xunityTranslations.filter(t => 
-    t.original.toLowerCase().includes(translationSearch.toLowerCase()) ||
-    t.translated.toLowerCase().includes(translationSearch.toLowerCase())
+  const _filteredTranslations = xunityTranslations.filter(t =>
+    t.original.toLowerCase().includes(_translationSearch.toLowerCase()) ||
+    t.translated.toLowerCase().includes(_translationSearch.toLowerCase())
   );
 
   useEffect(() => {
@@ -1567,7 +1562,7 @@ export default function GameDetailPage() {
       
       const success = executionResult?.successRate || 0;
       const duration = executionResult?.totalDurationMinutes || 0;
-      const finalStatus = executionResult?.finalStatus;
+      const _finalStatus = executionResult?.finalStatus;
       
       if (success >= 0.8) {
         updateStep(6, 'done', `Traduzione completata: ${(success * 100).toFixed(0)}% successo in ${duration.toFixed(1)}min`);
@@ -1691,7 +1686,7 @@ export default function GameDetailPage() {
     }
   };
 
-  const getPlatformColor = (platform: string) => {
+  const _getPlatformColor = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'steam': return 'bg-blue-500/10 text-blue-500';
       case 'epic games': return 'bg-gray-500/10 text-gray-500';

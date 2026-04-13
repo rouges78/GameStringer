@@ -96,7 +96,7 @@ export class ProgressBatchProcessor {
     }
   }
 
-  private handleItemComplete(itemId: string, result: unknown) {
+  private handleItemComplete(_itemId: string, _result: unknown) {
     // Potresti aggiungere logging o altre azioni qui
   }
 
@@ -105,11 +105,11 @@ export class ProgressBatchProcessor {
     clientLogger.warn(`Errore nell'elaborazione di ${itemId} (tentativo ${attempt}):`, error);
   }
 
-  private handleComplete(result: BatchResult) {
+  private handleComplete(_result: BatchResult) {
     // Operazione completata, il progresso è già gestito nel processBatch
   }
 
-  private handleError(error: Error) {
+  private handleError(_error: Error) {
     // Errore generale, il progresso è già gestito nel processBatch
   }
 
@@ -127,7 +127,7 @@ export class ProgressBatchProcessor {
     return titles[operationType] || `Elaborazione di ${itemCount} elementi`;
   }
 
-  private getOperationDescription(operationType: BatchOperationType, itemCount: number): string {
+  private getOperationDescription(operationType: BatchOperationType, _itemCount: number): string {
     const descriptions: Record<BatchOperationType, string> = {
       translate: 'Traduzione automatica in corso...',
       export: 'Esportazione file in corso...',

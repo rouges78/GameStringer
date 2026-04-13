@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Gamepad2,
   Upload,
   Download,
   FileUp,
@@ -14,8 +13,6 @@ import {
   Zap,
   Info,
   RefreshCw,
-  Copy,
-  Trash2,
   Share2,
   ShieldCheck
 } from 'lucide-react';
@@ -24,7 +21,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -121,7 +117,7 @@ export function RomPatcherUI() {
         toast.error(result.error || 'Errore applicazione patch');
       }
     } catch (err: unknown) {
-      toast.error(err.message);
+      toast.error(err instanceof Error ? err.message : 'Errore applicazione patch');
     } finally {
       setIsApplying(false);
     }
@@ -199,7 +195,7 @@ export function RomPatcherUI() {
         toast.error(result.error || 'Errore creazione patch');
       }
     } catch (err: unknown) {
-      toast.error(err.message);
+      toast.error(err instanceof Error ? err.message : 'Errore creazione patch');
     } finally {
       setIsCreating(false);
     }

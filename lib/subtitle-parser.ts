@@ -179,7 +179,7 @@ export function parseVtt(content: string): SubtitleFile {
   const entries: SubtitleEntry[] = [];
   const lines = content.split('\n');
   
-  let metadata: SubtitleFile['metadata'] = {};
+  const metadata: SubtitleFile['metadata'] = {};
   let i = 0;
   
   // Skip WEBVTT header

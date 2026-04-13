@@ -369,7 +369,7 @@ class PlayerFeedbackService {
   }
 
   // Importa feedback da file
-  importFeedback(data: string, format: 'json'): number {
+  importFeedback(data: string, _format: 'json'): number {
     try {
       const entries: FeedbackEntry[] = JSON.parse(data);
       let imported = 0;

@@ -119,14 +119,14 @@ async function synthesizeWithOpenAI(
 
 async function synthesizeWithEdgeTTS(
   text: string,
-  voice: string,
-  language: string
+  _voice: string,
+  _language: string
 ): Promise<TTSResponse> {
   // Edge TTS is free and works offline with Microsoft Edge voices
   // This would require a local server or Tauri command
   
   // Map language to Edge voice
-  const edgeVoices: Record<string, string> = {
+  const _edgeVoices: Record<string, string> = {
     'it': 'it-IT-ElsaNeural',
     'en': 'en-US-JennyNeural',
     'de': 'de-DE-KatjaNeural',

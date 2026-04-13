@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Type, Settings, AlertTriangle, Check, Maximize2, 
-  ChevronDown, Download, RefreshCw, Eye
+  Type, Settings, AlertTriangle, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,7 +72,7 @@ export function PixelFontPreview({
   const [bgColor, setBgColor] = useState('#1a1a2e');
   const [textColor, setTextColor] = useState('#ffffff');
   const [borderColor, setBorderColor] = useState('#4a4a6a');
-  const [showBorder, setShowBorder] = useState(true);
+  const [showBorder, _setShowBorder] = useState(true);
   const [isOverflow, setIsOverflow] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   

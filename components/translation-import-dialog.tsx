@@ -38,8 +38,8 @@ export function TranslationImportDialog({
 
   const parseCSV = async (text: string): Promise<unknown[]> => {
     const lines = text.split('\n').filter(line => line.trim());
-    const headers = lines[0].split(',').map(h => h.trim());
-    
+    const _headers = lines[0].split(',').map(h => h.trim());
+
     const translations = [];
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].match(/(".*?"|[^,]+)/g) || [];
@@ -75,7 +75,7 @@ export function TranslationImportDialog({
         sourceLanguage: t.sourceLanguage || 'en',
         context: t.context
       }));
-    } catch (error: unknown) {
+    } catch {
       throw new Error('Invalid JSON format');
     }
   };

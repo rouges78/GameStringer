@@ -59,7 +59,7 @@ export class RagGlossary {
           if (regex.test(combinedText)) {
             matchedEntries.add(entry);
           }
-        } catch (e: unknown) {
+        } catch {
           // Ignora regex malformate
         }
       } else {

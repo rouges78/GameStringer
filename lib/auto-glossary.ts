@@ -10,7 +10,7 @@
  * - src-tauri smart_glossary.rs (storage persistente Tauri)
  */
 
-import { translateSmart, getApiKeys, type TranslateOptions } from './ai-translate-direct';
+import { translateSmart } from './ai-translate-direct';
 import { invoke } from '@/lib/tauri-api';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -168,17 +168,6 @@ export async function initializeGlossaries(): Promise<void> {
     // Tauri non disponibile, usa localStorage
   }
   loadAllGlossaries();
-}
-
-function saveAllGlossaries(): void {
-  // localStorage come cache veloce
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache));
-  } catch {}
-  // Persisti ogni glossario su Tauri (fire & forget)
-  for (const [gameId, glossary] of Object.entries(glossaryCache)) {
-    invoke('save_auto_glossary', { gameId, data: glossary }).catch(() => {});
-  }
 }
 
 export function loadGlossary(gameId: string): AutoGlossary | null {
@@ -436,7 +425,7 @@ export async function extractTerms(
 
   // Filtra e aggiungi termini al glossario
   const config = loadGlossaryConfig();
-  let newTerms: AutoGlossaryEntry[] = [];
+  const newTerms: AutoGlossaryEntry[] = [];
   let duplicates = 0;
 
   for (const raw of rawTerms) {
@@ -833,7 +822,7 @@ export function importFromJson(gameId: string, jsonContent: string): number {
     const data = JSON.parse(jsonContent) as AutoGlossary;
     if (!data.entries || !Array.isArray(data.entries)) return 0;
 
-    let glossary = loadGlossary(gameId);
+    const glossary = loadGlossary(gameId);
     if (!glossary) return 0;
 
     let imported = 0;

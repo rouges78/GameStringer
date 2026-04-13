@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { 
-  Filter, X, SlidersHorizontal, Calendar, Clock, 
+  Filter, X, SlidersHorizontal, Clock,
   Languages, Gamepad2, Store, Tag, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

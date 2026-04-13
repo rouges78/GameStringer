@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Puzzle, 
   FileText, 
   Check, 
-  RefreshCw,
   Info,
   Package,
   Upload,
@@ -33,7 +31,7 @@ export default function PluginsPage() {
   const { t } = useTranslation();
   const [plugins, setPlugins] = useState<PluginDefinition[]>([]);
   const [enginePlugins, setEnginePlugins] = useState<EnginePlugin[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [manifestInput, setManifestInput] = useState('');
   const [installing, setInstalling] = useState(false);
@@ -99,7 +97,7 @@ export default function PluginsPage() {
   };
 
   const formatPlugins = plugins.filter(p => p.type === 'format');
-  const externalPlugins = plugins.filter(p => !p.id.startsWith('builtin-'));
+  const _externalPlugins = plugins.filter(p => !p.id.startsWith('builtin-'));
   const supportedExtensions = pluginRegistry.getSupportedExtensions();
 
   return (

@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
-import { translateWithFallback, translateWithFallbackBatched, CHAIN_PRESETS, setChainPreset, getApiKeys, getChainPreset, hasAvailableProviders, checkChainRequirements, type ChainPreset, type ProviderRequirement } from '@/lib/ai-translate-direct';
-import { filterDanganronpaDialogues, type FilterStats } from '@/lib/danganronpa-filter';
+import { translateWithFallback, translateWithFallbackBatched, CHAIN_PRESETS, setChainPreset, getChainPreset, hasAvailableProviders, checkChainRequirements, type ChainPreset, type ProviderRequirement } from '@/lib/ai-translate-direct';
+import { filterDanganronpaDialogues } from '@/lib/danganronpa-filter';
 import { canTranslate, addTranslationCount } from '@/lib/donation-gate';
 import { DonationDialog } from '@/components/donation-dialog';
 import {
@@ -50,7 +50,6 @@ import {
   Bot,
   Shield,
   Lightbulb,
-  Package,
   Cpu,
   Play,
   Pause,
@@ -64,12 +63,7 @@ import {
   FileCheck,
   BarChart3,
   Download,
-  ShieldCheck,
-  RotateCcw,
-  Clock,
-  Coins,
-  Activity,
-  BookOpen
+  ShieldCheck
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-shell';
 import { TranslationMemoryManager } from '@/lib/translation-memory';
@@ -187,8 +181,6 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
   // Stats, validazione, resume
   const [translationStats, setTranslationStats] = useState<TranslationStats | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [pendingCheckpoint, setPendingCheckpoint] = useState<TranslationCheckpoint | null>(null);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
   // Ref per catturare coppie tradotte tra step (per QA reale)
   const lastTranslatedPairs = useRef<Array<{ original: string; translated: string }>>([]);
 
@@ -379,7 +371,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
   }, [recommendation, autoState.isPaused]);
 
   // Esegui singolo step
-  const executeStep = async (step: AutoTranslationStep, stepIndex: number, totalSteps: number) => {
+  const executeStep = async (step: AutoTranslationStep, stepIndex: number, _totalSteps: number) => {
     const updateProgress = (progress: number, message?: string) => {
       setAutoState(prev => ({
         ...prev,
@@ -547,7 +539,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '⚠️ Nessun file .pck trovato');
             toast.warning('Nessun file PCK trovato. Prova estrazione manuale con gdsdecomp.');
           }
-        } catch (e: unknown) {
+        } catch {
           updateProgress(100, '📦 Usa gdsdecomp per estrarre il PCK manualmente');
           toast.info('Per Godot, usa gdsdecomp: https://github.com/bruvzg/gdsdecomp');
         }
@@ -764,7 +756,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '📦 Usa RPG Maker Trans per estrarre testi');
             toast.info('Per RPG Maker VX/Ace, usa RPG Maker Trans');
           }
-        } catch (e: unknown) {
+        } catch {
           updateProgress(100, '📝 Apri Neural Translator per traduzione manuale');
         }
         break;
@@ -807,7 +799,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun file Ren\'Py trovato');
           }
-        } catch (e: unknown) {
+        } catch {
           updateProgress(100, '📦 Usa UnRPA per estrarre manualmente');
           toast.info('Per Ren\'Py, usa UnRPA: https://github.com/Lattyware/unrpa');
         }
@@ -839,7 +831,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun archivio XP3 trovato');
           }
-        } catch (e: unknown) {
+        } catch {
           updateProgress(100, '📦 Estrazione manuale richiesta');
         }
         break;
@@ -848,7 +840,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         updateProgress(20, 'Cercando data.win di GameMaker...');
         await new Promise(r => setTimeout(r, 500));
         
-        const dataWin = gamePath + '/data.win';
+        const _dataWin = gamePath + '/data.win';
         updateProgress(50, 'Analizzando struttura GameMaker...');
         updateProgress(100, '📦 Usa UndertaleModTool per estrarre stringhe');
         toast.info('GameMaker: usa UndertaleModTool per modificare data.win');
@@ -1160,7 +1152,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           );
         } catch (e: unknown) {
           // Se è errore API key, non mostrare altri messaggi (già gestito)
-          if (e?.message === 'API_KEY_MISSING') {
+          if (e instanceof Error && e.message === 'API_KEY_MISSING') {
             return; // Esce silenziosamente, redirect già fatto
           }
           
@@ -1722,7 +1714,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                             content,
                           });
                           toast.success(`Esportato translations.${ext}`);
-                        } catch (err: unknown) {
+                        } catch {
                           toast.error(`Errore export ${fmt}`);
                         }
                       }}

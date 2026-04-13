@@ -14,9 +14,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { 
-  Mic, Play, Pause, Square, Upload, Download, Trash2, 
-  Settings, Volume2, AudioLines, User, Plus, RefreshCw,
-  Sparkles, Languages, Save, Copy, Check, AlertTriangle
+  Mic, Play, Pause, Upload, Download, Trash2,
+  Settings, Volume2, AudioLines, User, RefreshCw,
+  Sparkles, Save, AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
@@ -32,7 +32,7 @@ export function VoiceCloneStudio() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('synthesize');
   const [profiles, setProfiles] = useState<VoiceProfile[]>([]);
-  const [selectedProfile, setSelectedProfile] = useState<VoiceProfile | null>(null);
+  const [_selectedProfile, setSelectedProfile] = useState<VoiceProfile | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -97,7 +97,7 @@ export function VoiceCloneStudio() {
       setGeneratedAudio(result);
       toast.success(t('voiceClone.generated'));
     } catch (error: unknown) {
-      toast.error(error.message || t('voiceClone.error'));
+      toast.error(error instanceof Error ? error.message : t('voiceClone.error'));
     } finally {
       setIsGenerating(false);
       setProgress(100);
@@ -147,7 +147,7 @@ export function VoiceCloneStudio() {
       setAudioSamples([]);
       toast.success(t('voiceClone.cloned'));
     } catch (error: unknown) {
-      toast.error(error.message || t('voiceClone.cloneError'));
+      toast.error(error instanceof Error ? error.message : t('voiceClone.cloneError'));
     } finally {
       setIsCloning(false);
     }

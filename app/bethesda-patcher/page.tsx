@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import React from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   FolderOpen, Globe, Languages, CheckCircle2, XCircle, AlertCircle,
@@ -25,7 +24,6 @@ import {
   type PluginStringEntry,
   type PatchedStringEntry,
   BETHESDA_LANGUAGES,
-  RECORD_TYPE_LABELS,
   detectBethesdaGame,
   extractStringsFile,
   extractPluginStrings,
@@ -37,7 +35,6 @@ import {
   exportStringsToPO,
   exportPluginStringsToPO,
   importStringsFromCSV,
-  importStringsFromPO,
   getLanguageDisplayName,
   getRecordTypeLabel,
   formatFileSize,
@@ -91,7 +88,7 @@ export default function BethesdaPatcherPage() {
   const [error, setError] = useState('')
 
   // Step 2: Plugin selection
-  const [selectedPlugins, setSelectedPlugins] = useState<Set<string>>(new Set())
+  const [_selectedPlugins, setSelectedPlugins] = useState<Set<string>>(new Set())
   const [selectedStringTable, setSelectedStringTable] = useState<StringTableFile | null>(null)
 
   // Step 3: Editor state
@@ -187,7 +184,7 @@ export default function BethesdaPatcherPage() {
   // Step 2: Plugin overview
   // -----------------------------------------------------------------------
 
-  const togglePlugin = useCallback((filename: string) => {
+  const _togglePlugin = useCallback((filename: string) => {
     setSelectedPlugins((prev) => {
       const next = new Set(prev)
       if (next.has(filename)) {

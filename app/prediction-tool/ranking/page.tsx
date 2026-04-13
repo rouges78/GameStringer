@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import {
   Brain, ChevronLeft, Loader2, Shield, ShieldOff, Globe,
   Clock, DollarSign, AlertTriangle, CheckCircle, ArrowUpDown,
-  Sparkles, Zap, BarChart3, Trophy
+  Zap, BarChart3, Trophy
 } from 'lucide-react';
 
 interface GameQuickSummary {
@@ -371,7 +371,7 @@ export default function PredictionRankingPage() {
             <Brain className="h-20 w-20 mx-auto mb-6 text-purple-500/30" />
             <h2 className="text-xl font-semibold text-slate-300 mb-2">Classifica Difficoltà Traduzione</h2>
             <p className="text-slate-500 max-w-md mx-auto mb-8">
-              Clicca "Scansiona Tutti" per analizzare tutti i giochi installati e ottenere
+              Clicca &quot;Scansiona Tutti&quot; per analizzare tutti i giochi installati e ottenere
               una classifica ordinata per difficoltà di traduzione, con stime di tempo e costo.
             </p>
             <div className="flex items-center justify-center gap-6 text-sm text-slate-500">

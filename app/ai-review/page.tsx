@@ -40,7 +40,7 @@ export default function AIReviewPage() {
   const [isReviewing, setIsReviewing] = useState(false)
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [batchResults, setBatchResults] = useState<{ results: ReviewResult[]; stats: ReviewStats } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [_copied, setCopied] = useState(false)
 
   const handleSingleReview = useCallback(() => {
     if (!original.trim() || !translated.trim()) return
@@ -83,7 +83,7 @@ export default function AIReviewPage() {
     }
   }, [original, translated])
 
-  const handleCopy = useCallback((text: string) => {
+  const _handleCopy = useCallback((text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)

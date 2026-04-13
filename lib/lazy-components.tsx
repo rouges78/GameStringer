@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Suspense, ComponentType, ReactNode } from 'react';
+import { ComponentType, ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
 
 // Loading fallback component
@@ -27,16 +27,7 @@ function CardSkeleton() {
   );
 }
 
-function TableSkeleton({ rows = 5 }: { rows?: number }) {
-  return (
-    <div className="space-y-2 animate-pulse">
-      <div className="h-10 bg-muted rounded" />
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-12 bg-muted/50 rounded" />
-      ))}
-    </div>
-  );
-}
+
 
 function ChartSkeleton() {
   return (

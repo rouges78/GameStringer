@@ -19,9 +19,6 @@ import {
   Upload,
   Plus,
   Trash2,
-  Edit,
-  Save,
-  X,
   TrendingUp,
   Clock,
   Zap,
@@ -33,7 +30,7 @@ import { gameTranslations } from '@/lib/game-translations';
 import { InjektRealtimeStats } from '@/components/injekt-realtime-stats';
 import { InjektOverlayConfig, OverlayConfig } from '@/components/injekt-overlay-config';
 import { TranslationProfileManager } from '@/components/translation-profile-manager';
-import { translationProfileManager, TranslationProfile } from '@/lib/game-translation-profiles';
+// translationProfileManager/TranslationProfile imports removed — not currently used
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -69,7 +66,7 @@ export function InjektUIEnhanced() {
   const [activeTab, setActiveTab] = useState('injection');
   const [customTranslations, setCustomTranslations] = useState<TranslationEntry[]>([]);
   const [newTranslation, setNewTranslation] = useState({ original: '', translated: '' });
-  const [editingTranslation, setEditingTranslation] = useState<string | null>(null);
+  const [_editingTranslation, _setEditingTranslation] = useState<string | null>(null);
   const [injectionCount, setInjectionCount] = useState(0);
   const [monitoringInterval, setMonitoringInterval] = useState<NodeJS.Timeout | null>(null);
   const [overlayConfig, setOverlayConfig] = useState<OverlayConfig>(() => {

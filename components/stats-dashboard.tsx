@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { invoke } from '@/lib/tauri-api';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,8 +10,7 @@ import {
   Gamepad2, 
   Languages, 
   TrendingUp,
-  RefreshCw,
-  Download
+  RefreshCw
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
@@ -258,7 +256,7 @@ export function updateTranslationStats(
   timeSpentMinutes: number,
   sourceLang: string,
   targetLang: string,
-  gameId?: string
+  _gameId?: string
 ) {
   try {
     // Carica stats esistenti

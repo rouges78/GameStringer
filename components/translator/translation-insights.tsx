@@ -4,12 +4,11 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
-  Sparkles, 
-  MessageSquare, 
-  FileText, 
-  Settings, 
-  Package, 
+import {
+  MessageSquare,
+  FileText,
+  Settings,
+  Package,
   GraduationCap,
   Trophy,
   Subtitles,
@@ -19,7 +18,7 @@ import {
   XCircle,
   Zap
 } from 'lucide-react';
-import { classifyContent, type ContentClassification, type ContentType } from '@/lib/content-classifier';
+import { classifyContent, type ContentType } from '@/lib/content-classifier';
 import { calculateQualityScore, getQualityCategory, type QualityScore } from '@/lib/translation-quality';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
@@ -69,7 +68,7 @@ interface ContentTypeBadgeProps {
 }
 
 export function ContentTypeBadge({ type, confidence, showConfidence = false, size = 'sm' }: ContentTypeBadgeProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const Icon = CONTENT_TYPE_ICONS[type];
   const colorClass = CONTENT_TYPE_COLORS[type];
   
@@ -109,7 +108,7 @@ interface QualityScoreBadgeProps {
 }
 
 export function QualityScoreBadge({ score, size = 'sm', showLabel = true }: QualityScoreBadgeProps) {
-  const { category, label, color } = getQualityCategory(score);
+  const { category: _category, label, color: _color } = getQualityCategory(score);
   
   const getScoreColor = (s: number) => {
     if (s >= 90) return 'text-green-500 bg-green-500/20 border-green-500/30';
@@ -161,7 +160,7 @@ interface QualityScoreBarProps {
 }
 
 export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarProps) {
-  const getBarColor = (value: number) => {
+  const _getBarColor = (value: number) => {
     if (value >= 80) return 'bg-green-500';
     if (value >= 60) return 'bg-yellow-500';
     return 'bg-red-500';

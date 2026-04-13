@@ -94,7 +94,7 @@ export class RequestLogger {
         } else if (contentType?.includes('application/x-www-form-urlencoded')) {
           body = await request.formData();
         }
-      } catch (error: unknown) {
+      } catch {
         // Body parsing failed, continue without body
       }
     }

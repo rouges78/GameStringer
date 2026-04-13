@@ -9,20 +9,15 @@ import {
   Star,
   Users,
   Search,
-  Filter,
   Package,
   CheckCircle,
   Clock,
   TrendingUp,
   Award,
   MessageSquare,
-  ChevronRight,
-  ExternalLink,
   FileText,
   RefreshCw,
   Plus,
-  Eye,
-  Heart,
   Gamepad2,
   HardDrive,
   Bell,
@@ -30,17 +25,14 @@ import {
   BookmarkCheck,
   Trophy,
   UserPlus,
-  UserMinus,
   Send,
   ThumbsUp,
-  Edit3,
-  Trash2,
   Crown,
   Medal,
   Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,27 +69,17 @@ import {
 import {
   type PackComment,
   type LeaderboardEntry,
-  type BadgeAward,
   type HubNotification,
-  type HubUser,
   fetchComments,
   postComment,
-  editComment as editCommentApi,
   deleteComment as deleteCommentApi,
   toggleCommentLike,
   fetchLeaderboard,
   toggleFavorite,
   getFavorites,
-  isFavorite,
   fetchNotifications,
   getUnreadCount,
   markAllNotificationsRead,
-  followUser,
-  unfollowUser,
-  isFollowing,
-  getFullProfile,
-  getUserBadges,
-  checkBadges,
   isBackendEnabled,
 } from '@/lib/community-hub-backend';
 import { GitHubDiscussions } from './github-discussions';
@@ -294,7 +276,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       });
       toast.success(nowFav ? 'Aggiunto ai preferiti' : 'Rimosso dai preferiti');
       if (activeTab === 'favorites') loadFavorites();
-    } catch (e: unknown) { toast.error(e.message || 'Errore preferiti'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Errore preferiti'); }
   };
 
   const loadComments = async (packId: string) => {
@@ -314,22 +296,22 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       setReplyTo(null);
       await loadComments(packId);
       toast.success('Commento pubblicato');
-    } catch (e: unknown) { toast.error(e.message || 'Errore commento'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Errore commento'); }
   };
 
-  const handleDeleteComment = async (commentId: string, packId: string) => {
+  const _handleDeleteComment = async (commentId: string, packId: string) => {
     try {
       await deleteCommentApi(commentId);
       await loadComments(packId);
       toast.success('Commento eliminato');
-    } catch (e: unknown) { toast.error(e.message || 'Errore eliminazione'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Errore eliminazione'); }
   };
 
   const handleToggleCommentLike = async (commentId: string, packId: string) => {
     try {
       await toggleCommentLike(commentId);
       await loadComments(packId);
-    } catch (e: unknown) { toast.error(e.message || 'Errore like'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Errore like'); }
   };
 
   const handleMarkAllRead = async () => {
@@ -357,7 +339,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       toast.success(t('communityHub.packDownloaded'));
       await loadData();
     } catch (error: unknown) {
-      toast.error(error.message || t('communityHub.downloadError'));
+      toast.error(error instanceof Error ? error.message : t('communityHub.downloadError'));
     } finally {
       setIsDownloading(null);
     }
@@ -406,7 +388,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       });
       await loadData();
     } catch (error: unknown) {
-      toast.error(error.message || t('communityHub.createError'));
+      toast.error(error instanceof Error ? error.message : t('communityHub.createError'));
     }
   };
 

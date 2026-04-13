@@ -1,4 +1,4 @@
-import { BatchResult, BatchOperationConfig, BatchOperationType, BatchOperationStatus } from '@/lib/types/batch-operations';
+import { BatchResult, BatchOperationType } from '@/lib/types/batch-operations';
 
 export interface BatchProcessorOptions {
   concurrency?: number;

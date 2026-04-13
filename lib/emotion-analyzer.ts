@@ -296,7 +296,6 @@ export function analyzeEmotion(text: string): EmotionAnalysis {
 
   // Analisi aggiuntiva: punteggiatura
   const exclamationCount = (text.match(/!/g) || []).length
-  const questionCount = (text.match(/\?/g) || []).length
   const ellipsisCount = (text.match(/\.\.\./g) || []).length
   const capsRatio = (text.match(/[A-Z]/g) || []).length / text.length
 
@@ -423,9 +422,9 @@ export function analyzeEmotionBatch(texts: string[]): Map<EmotionType, { texts: 
  * Suggerisce traduzioni alternative basate sull'emozione
  */
 export function suggestEmotionalVariants(
-  originalTranslation: string, 
-  emotion: EmotionType,
-  targetLanguage: string
+  originalTranslation: string,
+  _emotion: EmotionType,
+  _targetLanguage: string
 ): { variant: string; emotionLevel: 'softer' | 'standard' | 'stronger' }[] {
   // Questo sarebbe idealmente fatto da un LLM, ma qui forniamo struttura
   return [

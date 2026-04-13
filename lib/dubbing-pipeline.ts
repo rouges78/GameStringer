@@ -224,7 +224,7 @@ export class DubbingPipeline {
       // Step 7: Subtitles (optional)
       if (this.config.enableSubtitles) {
         await this.runStep('subtitles', async () => {
-          const content = this.generateSubtitles();
+          this.generateSubtitles();
           return `Sottotitoli ${this.config.subtitleFormat.toUpperCase()} generati`;
         });
       }
@@ -395,7 +395,7 @@ export class DubbingPipeline {
             this.stats.translated++;
           });
         }
-      } catch (err: unknown) {
+      } catch {
         batch.forEach(seg => {
           seg.status = 'error';
           seg.error = 'Translation batch failed';

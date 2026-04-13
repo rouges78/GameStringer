@@ -5,8 +5,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { open as dialogOpen, save as dialogSave } from '@tauri-apps/plugin-dialog';
 import {
   FileText, FolderOpen, Search, Loader2, CheckCircle2,
-  Globe, ChevronDown, ChevronRight, Download, Upload,
-  Settings2, StopCircle, Sparkles
+  Globe, ChevronDown, ChevronRight, Download,
+  Settings2, StopCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -128,7 +128,7 @@ function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPG
 }
 
 export default function RPGMakerTranslatorPage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [status, setStatus] = useState<Status>('idle');
   const [projectPath, setProjectPath] = useState('');
   const [projectName, setProjectName] = useState('');

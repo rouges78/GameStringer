@@ -123,7 +123,7 @@ export function getAutoProviderChain(
     ['deepl', 'anthropic', 'openai', 'modelwiz', 'gemini', 'deepseek', 'mistral', 'qwen'];
 
   // 2) Applica boost genere: i provider nel boost salgono di 2 posizioni
-  let ranked = [...langRanking];
+  const ranked = [...langRanking];
   if (gameGenre) {
     const genreKey = typeof gameGenre === 'string' ? gameGenre.toLowerCase().replace(/\s+/g, '_') : '';
     const boostProviders = GENRE_PROVIDER_BOOST[genreKey] || [];

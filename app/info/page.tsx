@@ -2,25 +2,22 @@
 
 import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  Info, 
-  Github, 
-  Heart, 
-  Coffee, 
-  Mail, 
-  Globe, 
+  Info,
+  Github,
+  Heart,
+  Coffee,
+  Globe,
   Code2,
   Sparkles,
   Shield,
   Zap,
   Users,
-  BookOpen,
-  ExternalLink
+  BookOpen
 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function InfoPage() {
   const { t } = useTranslation();
@@ -136,7 +133,7 @@ export default function InfoPage() {
           <div className="relative space-y-0">
             {/* Timeline line */}
             <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-orange-500/50 via-amber-500/30 to-transparent" />
-            {version.allVersions.map((v: { version: string; date: string; type: string; changes: string[] }, i: number) => (
+            {version.allVersions.map((v: { version: string; date: string; type: string; changes: string[] }, _i: number) => (
               <div key={v.version} className="relative pl-6 pb-3">
                 {/* Timeline dot */}
                 <div className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${

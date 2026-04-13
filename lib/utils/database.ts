@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import type { UserTutorialProgress } from '@/lib/types/tutorial';
-import type { TranslationMemoryEntry, GlossaryEntry, TranslationProject } from '@/lib/types/translation-memory';
+import type { TranslationMemoryEntry, GlossaryEntry } from '@/lib/types/translation-memory';
 import type { BatchResult } from '@/lib/types/batch';
 
 // Singleton Prisma client

@@ -28,7 +28,19 @@ const progressMap = new Map<string, {
   rate: number;
   eta: number;
   status: 'running' | 'done' | 'error';
+  _createdAt: number;
 }>();
+
+// Cleanup completed/stale entries every 10 minutes (TTL: 30 min)
+const PROGRESS_TTL_MS = 30 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of progressMap) {
+    if (entry.status !== 'running' && now - entry._createdAt > PROGRESS_TTL_MS) {
+      progressMap.delete(key);
+    }
+  }
+}, 10 * 60 * 1000);
 
 export { progressMap };
 
@@ -64,7 +76,7 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
   }
 
   // Initialize progress
-  const progress = { total, done: 0, errors: 0, currentText: '', currentCharacter: '', rate: 0, eta: 0, status: 'running' as const };
+  const progress = { total, done: 0, errors: 0, currentText: '', currentCharacter: '', rate: 0, eta: 0, status: 'running' as const, _createdAt: Date.now() };
   progressMap.set(gameDir, progress);
 
   // Start translation in background
@@ -127,74 +139,6 @@ function matchProfileToText(
 
   // Per dialoghi senza speaker identificato, usa il profilo generico se disponibile
   return null;
-}
-
-// ── Character-Aware Prompt Builder ───────────────────────────
-function buildCharacterPrompt(
-  text: string,
-  langName: string,
-  profile: CharacterVoiceProfile | null,
-  textType: TextType
-): string {
-  if (!profile) {
-    // Prompt base migliorato con context tipo testo
-    const typeHint = textType === 'dialogue' ? 'This is character dialogue.'
-      : textType === 'narration' ? 'This is narrative/descriptive text.'
-      : textType === 'action' ? 'This is a stage direction or action.'
-      : 'This is a game system text.';
-
-    return `You are an expert video game translator. ${typeHint}
-Translate the following text from English to ${langName}.
-Maintain the original tone, style, and any HTML/formatting tags.
-Respond ONLY with the translation, no explanations.
-
-English: ${text}
-${langName}:`;
-  }
-
-  // Character-aware prompt
-  let prompt = `You are an expert video game translator with deep understanding of character voices.
-
-CHARACTER PROFILE: ${profile.name}
-- Archetype: ${profile.archetype}
-- Personality traits: ${profile.traits.join(', ')}
-- Mood: ${profile.mood}
-- Formality: ${profile.formality}
-- Vocabulary style: ${profile.vocabulary}`;
-
-  if (profile.catchphrases.length > 0) {
-    prompt += `\n- Catchphrases/patterns: ${profile.catchphrases.join(', ')}`;
-  }
-
-  if (profile.avoidWords.length > 0) {
-    prompt += `\n- Words to AVOID: ${profile.avoidWords.join(', ')}`;
-  }
-
-  if (Object.keys(profile.preferredWords).length > 0) {
-    prompt += `\n- Preferred word substitutions:`;
-    for (const [from, to] of Object.entries(profile.preferredWords)) {
-      prompt += `\n  "${from}" → "${to}"`;
-    }
-  }
-
-  if (profile.exampleDialogues.length > 0) {
-    prompt += `\n\nTRANSLATION EXAMPLES for this character:`;
-    for (const ex of profile.exampleDialogues.slice(0, 3)) {
-      prompt += `\n  "${ex.original}" → "${ex.translated}"`;
-    }
-  }
-
-  prompt += `\n\nTRANSLATION RULES:
-- Maintain the character's voice and personality in ${langName}
-- Keep HTML tags and formatting intact
-- Preserve punctuation style (ellipsis, exclamation marks, etc.)
-- Match the character's formality level
-- Respond ONLY with the translation, no explanations
-
-English: ${text}
-${langName}:`;
-
-  return prompt;
 }
 
 // ── Background Translation Worker ────────────────────────────

@@ -13,16 +13,13 @@ import {
   Zap,
   RefreshCw,
   CheckCircle2,
-  XCircle,
   Loader2,
   HardDrive,
-  Cpu,
   Timer,
   ArrowLeftRight,
   Star,
   AlertTriangle,
   Play,
-  Globe,
   Package,
   Sparkles,
   ExternalLink,
@@ -533,7 +530,7 @@ export default function OllamaManagerPage() {
 
                 {compareResult && (
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    {[compareResult.modelA, compareResult.modelB].map((r, i) => (
+                    {[compareResult.modelA, compareResult.modelB].map((r, _i) => (
                       <div key={r.name} className={cn(
                         "rounded-lg p-2.5 border",
                         r.timeMs <= Math.min(compareResult.modelA.timeMs, compareResult.modelB.timeMs)

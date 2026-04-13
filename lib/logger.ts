@@ -1,4 +1,4 @@
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';

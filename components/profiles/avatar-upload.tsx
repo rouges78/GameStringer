@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Camera, Upload, X, Check, User, ImagePlus } from 'lucide-react';
+import { Camera, X, Check, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -92,7 +92,7 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
       toast.success('Avatar updated!');
       onOpenChange(false);
       setPreviewUrl(null);
-    } catch (error: unknown) {
+    } catch {
       toast.error('Error saving');
     } finally {
       setIsLoading(false);

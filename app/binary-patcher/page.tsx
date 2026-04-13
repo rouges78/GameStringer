@@ -6,11 +6,11 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@/lib/tauri-api';
 import {
-  FileCode2, Upload, Languages, Shield, Play, Download, Save,
-  Search, Filter, ChevronDown, ChevronRight, AlertTriangle,
-  CheckCircle2, XCircle, Loader2, FileWarning, Binary, Zap,
-  ArrowRight, RefreshCw, Eye, EyeOff, BarChart3, Trash2,
-  Gamepad2, FolderOpen, Bot, Sparkles, Cpu
+  FileCode2, Upload, Languages, Play, Download, Save,
+  Search, AlertTriangle,
+  CheckCircle2, XCircle, Loader2, Binary, Zap,
+  ArrowRight, Eye, EyeOff, BarChart3,
+  Gamepad2, Bot, Sparkles, Cpu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,11 +23,9 @@ import {
   applyPatch,
   fitToByteLength,
   getProjectStats,
-  detectLanguage,
   createProject,
   exportProject,
   importProject,
-  type BinaryString,
   type PatchProject,
   type AntiCheatResult,
 } from '@/lib/binary-string-patcher';
@@ -37,7 +35,6 @@ import {
   setChainPreset,
   getChainPreset,
   hasAvailableProviders,
-  type TranslateOptions,
   type ChainPreset,
 } from '@/lib/ai-translate-direct';
 import { addCorrection } from '@/lib/adaptive-mt';
@@ -78,7 +75,7 @@ export default function BinaryPatcherPage() {
   const [step, setStep] = useState<Step>('load');
   const [fileName, setFileName] = useState('');
   const [fileBuffer, setFileBuffer] = useState<Uint8Array | null>(null);
-  const [gameFiles, setGameFiles] = useState<string[]>([]);
+  const [_gameFiles, _setGameFiles] = useState<string[]>([]);
   const [antiCheat, setAntiCheat] = useState<AntiCheatResult | null>(null);
   const [project, setProject] = useState<PatchProject | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -92,7 +89,7 @@ export default function BinaryPatcherPage() {
   const [editValue, setEditValue] = useState('');
   const [gameName, setGameName] = useState('');
   const [gamePath, setGamePath] = useState('');
-  const [detectedBinaries, setDetectedBinaries] = useState<{name: string; path: string; size: number}[]>([]);
+  const [_detectedBinaries, setDetectedBinaries] = useState<{name: string; path: string; size: number}[]>([]);
   const [autoLoadLog, setAutoLoadLog] = useState<string[]>([]);
   const [translationMode, setTranslationMode] = useState<'ai' | 'rule'>('ai');
   const [chainPreset, setChainPresetState] = useState<ChainPreset>(getChainPreset() as ChainPreset);
@@ -1109,7 +1106,7 @@ export default function BinaryPatcherPage() {
             {/* String list */}
             <div className="flex-1 overflow-auto rounded-lg border border-white/10 bg-white/[0.02]">
               <div className="divide-y divide-white/5">
-                {filteredStrings.slice(0, 200).map((s, i) => {
+                {filteredStrings.slice(0, 200).map((s, _i) => {
                   const realIdx = project.strings.indexOf(s);
                   const isEditing = editingIdx === realIdx;
                   const byteLenOk = s.translated ? new TextEncoder().encode(s.translated).length === s.byteLen : true;

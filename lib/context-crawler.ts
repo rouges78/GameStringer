@@ -78,16 +78,6 @@ export interface CrawlerStats {
   processingSpeed: number; // frames/sec
 }
 
-const DEFAULT_CONFIG: CrawlerConfig = {
-  captureInterval: 2000, // 2 secondi
-  ocrLanguage: 'en',
-  targetLanguage: 'it',
-  minConfidence: 0.6,
-  deduplicateThreshold: 0.85,
-  contextWindowSize: 5,
-  autoClassify: true,
-};
-
 // Storage keys
 const SESSIONS_KEY = 'gamestringer_crawler_sessions';
 const GLOSSARY_KEY = 'gamestringer_crawler_glossary';

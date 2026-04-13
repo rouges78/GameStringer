@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import {
-  Search, Loader2, Zap, Cpu, ImageIcon, Package, Upload, Globe, FolderOpen,
-  FileText, CheckCircle, AlertTriangle, Download, Clock, Image as ImageIconLucide
+  Search, Loader2, Zap, Cpu, Package, Upload, Globe, FolderOpen,
+  FileText, CheckCircle, AlertTriangle, Download, Image as ImageIconLucide
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@/lib/tauri-api';
@@ -74,7 +74,7 @@ export function GameToolsPanel({
   onOpenGspackExport,
   onOpenGspackImport,
 }: GameToolsPanelProps) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const router = useRouter();
   const showEngine = engineInfo?.engine && engineInfo.engine !== 'Unknown' && engineInfo.engine !== 'Sconosciuto';
   const engineLabel = engineInfo?.engine || game.engine;

@@ -24,7 +24,6 @@ import {
   type CriStringEntry,
   type CriFilePatch,
   type CriTranslateOptions,
-  CRI_GAME_PROFILES,
   detectCriGame,
   listCpkContents,
   extractTextFilesFromCpk,

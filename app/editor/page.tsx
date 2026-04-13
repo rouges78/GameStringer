@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   FileText, Save, Languages, Search, Edit3, 
-  CheckCircle, AlertCircle, Lightbulb, Copy, Download, Upload, 
-  Loader2, Trash2, ChevronRight, Sparkles, 
+  CheckCircle, AlertCircle, Copy, Download, Upload,
+  Loader2, ChevronRight, Sparkles,
   ArrowLeftRight, LayoutPanelLeft, X, HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 import { storageManager } from '@/lib/storage-manager';
 import { get, set } from 'idb-keyval';
-import { loadGlossary, searchTerms, type AutoGlossaryEntry } from '@/lib/auto-glossary';
+import { loadGlossary, type AutoGlossaryEntry } from '@/lib/auto-glossary';
 import { BookOpen, FolderTree, Globe } from 'lucide-react';
 
 // --- Types ---
@@ -79,7 +79,7 @@ interface ParsedLine {
 }
 
 // Lingue supportate per file multi-lingua (ordine tipico nei file di localizzazione)
-const SUPPORTED_LANGUAGES = [
+const _SUPPORTED_LANGUAGES = [
   { code: 'fr', name: 'Francese' },
   { code: 'en', name: 'Inglese' },
   { code: 'de', name: 'Tedesco' },
@@ -233,10 +233,10 @@ export default function EditorPage() {
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [selectedTranslation, setSelectedTranslation] = useState<Translation | null>(null);
   const [selectedLine, setSelectedLine] = useState<ParsedLine | null>(null);
-  const [viewMode, setViewMode] = useState<'lines' | 'full'>('lines');
+  const [_viewMode, _setViewMode] = useState<'lines' | 'full'>('lines');
   const [isMultiLangFile, setIsMultiLangFile] = useState(false);
   const [sourceLanguageIndex, setSourceLanguageIndex] = useState(0);
-  const [targetLanguageIndex, setTargetLanguageIndex] = useState<number | null>(null); // null = nuova traduzione
+  const [_targetLanguageIndex, _setTargetLanguageIndex] = useState<number | null>(null); // null = nuova traduzione
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
   const [rawContent, setRawContent] = useState<string>(''); // Per ri-parsare quando cambia lingua
   const [games, setGames] = useState<Game[]>([]);
@@ -720,7 +720,7 @@ export default function EditorPage() {
         }
         notifications.success(`${suggestions.length} suggerimenti trovati`);
       }
-    } catch (error: unknown) {
+    } catch {
       notifications.error('Impossibile generare suggerimenti');
     } finally {
       setIsGeneratingSuggestions(false);
@@ -851,7 +851,7 @@ export default function EditorPage() {
     }
   };
 
-  const deleteTranslation = async (id: string) => {
+  const _deleteTranslation = async (id: string) => {
     if (!confirm('Eliminare questa traduzione?')) return;
     try {
       const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE', headers: { 'X-GS-Client': 'gamestringer' } });
@@ -860,7 +860,7 @@ export default function EditorPage() {
         if (selectedTranslation?.id === id) setSelectedTranslation(null);
         toast({ title: 'Eliminata', description: 'Traduzione rimossa' });
       }
-    } catch (error: unknown) {
+    } catch {
       toast({ title: 'error', description: 'Impossibile eliminare', variant: 'destructive' });
     }
   };
@@ -895,7 +895,7 @@ export default function EditorPage() {
         
         toast({ title: 'Esportazione completata', description: `Traduzioni esportate in ${format.toUpperCase()}` });
       }
-    } catch (error: unknown) {
+    } catch {
       toast({ title: 'error', description: 'Impossibile esportare', variant: 'destructive' });
     }
   };
@@ -1349,7 +1349,7 @@ export default function EditorPage() {
                   </div>
                   <ScrollArea className="flex-1 custom-scrollbar">
                     <div className="p-2 space-y-1">
-                      {selectedTranslation.parsedLines.map((line, idx) => {
+                      {selectedTranslation.parsedLines.map((line, _idx) => {
                         const isSelected = selectedLine?.lineNumber === line.lineNumber;
                         const isTranslated = !!line.translatedText;
                         return (

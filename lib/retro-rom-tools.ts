@@ -83,9 +83,7 @@ const NES_HEADER = [0x4E, 0x45, 0x53, 0x1A]; // "NES\x1A"
 const SNES_HEADER_LOROM = 0x7FC0;
 const SNES_HEADER_HIROM = 0xFFC0;
 const GB_HEADER_OFFSET = 0x0134;
-const GBA_HEADER = [0x2E, 0x00, 0x00, 0xEA]; // ARM branch
 const GENESIS_HEADER = "SEGA";
-const PSX_HEADER = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]; // PS-X EXE
 
 export function detectRomPlatform(data: Uint8Array): RomPlatform {
   // NES - iNES header

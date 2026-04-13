@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import {
   Copy,
   CheckCircle2,
   AlertTriangle,
-  Cpu,
   Zap
 } from 'lucide-react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
@@ -55,7 +54,7 @@ export function AutoHookScanner() {
       }) as HookScanResult;
       setResult(res);
     } catch (err: unknown) {
-      setError(err?.toString() || 'Errore durante la scansione');
+      setError(err instanceof Error ? err.message : 'Errore durante la scansione');
     } finally {
       setLoading(false);
     }

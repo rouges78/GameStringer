@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+// Input and Label imports removed — not currently used
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ExternalLink, Eye, EyeOff, AlertTriangle, Download, Terminal, CheckCircle } from 'lucide-react';
+import { ExternalLink, AlertTriangle, Download, Terminal, CheckCircle } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
@@ -19,16 +18,16 @@ interface EpicModalProps {
   isLoading: boolean;
 }
 
-export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalProps) {
+export function EpicModal({ isOpen, onClose, onSubmit, isLoading: _isLoading }: EpicModalProps) {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [_showPassword, setShowPassword] = useState(false);
+  const [_errors, setErrors] = useState<Record<string, string>>({});
   
   // Stati per Legendary
   const [legendaryStatus, setLegendaryStatus] = useState<unknown>(null);
-  const [legendaryLoading, setLegendaryLoading] = useState(false);
+  const [_legendaryLoading, setLegendaryLoading] = useState(false);
   const [installLegendaryLoading, setInstallLegendaryLoading] = useState(false);
   const [authLegendaryLoading, setAuthLegendaryLoading] = useState(false);
 
@@ -108,7 +107,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const _handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -151,7 +150,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
           <Alert className="border-blue-600 bg-blue-900/20">
             <AlertTriangle className="h-4 w-4 text-blue-400" />
             <AlertDescription className="text-blue-200 text-sm">
-              Epic Games doesn't offer public APIs. Use <strong>{t('epicModalComp.legendary')}</strong> to access your library.
+              Epic Games doesn&apos;t offer public APIs. Use <strong>{t('epicModalComp.legendary')}</strong> to access your library.
             </AlertDescription>
           </Alert>
 
@@ -241,7 +240,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
             <p><strong>{t('epicModalComp.whatIsLegendary')}</strong></p>
             <p>Legendary is an open-source client that allows you to access the Epic Games library without the official launcher.</p>
             <p className="pt-1">• Safe and open-source</p>
-            <p>• Doesn't require Epic Games launcher</p>
+            <p>• Doesn&apos;t require Epic Games launcher</p>
             <p>• Supports 2FA</p>
           </div>
 

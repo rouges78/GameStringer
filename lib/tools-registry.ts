@@ -26,7 +26,6 @@ import {
   Users,
   ShoppingBag,
   Settings,
-  Info,
   Home,
   Disc,
   type LucideIcon,

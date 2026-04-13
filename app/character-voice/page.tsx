@@ -10,7 +10,7 @@ const CharacterVoiceEditor = dynamic(
 );
 
 export default function CharacterVoicePage() {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   return (
     <div className="p-6">
       <CharacterVoiceEditor />

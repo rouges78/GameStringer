@@ -5,14 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { 
   FolderOpen, 
   CheckCircle2, 
-  AlertTriangle, 
   Gamepad2,
   Search,
   Play,
@@ -21,7 +19,6 @@ import {
   Trash2,
   Shield,
   Cpu,
-  RefreshCw,
   Download
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -272,7 +269,7 @@ export function UnrealTranslator() {
     }
   };
 
-  const loadCacheStats = async () => {
+  const _loadCacheStats = async () => {
     try {
       const stats = await invoke<CacheStats>('get_ue_cache_stats');
       setCacheStats(stats);

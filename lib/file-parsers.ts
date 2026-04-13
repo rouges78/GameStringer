@@ -163,7 +163,7 @@ export function parsePO(content: string): ParseResult {
     let msgid = '';
     let msgstr = '';
     let msgctxt = '';
-    let comments: string[] = [];
+    const comments: string[] = [];
     let isHeader = false;
     
     for (const line of lines) {
@@ -310,7 +310,7 @@ export function parseXLIFF(content: string): ParseResult {
 export function writeXLIFF(
   result: ParseResult,
   translations: Map<string, string>,
-  options: WriteOptions = {}
+  _options: WriteOptions = {}
 ): string {
   const srcLang = result.metadata.sourceLanguage || 'en';
   const tgtLang = result.metadata.targetLanguage || 'it';
@@ -637,7 +637,7 @@ export function parseINI(content: string): ParseResult {
 export function writeINI(
   result: ParseResult,
   translations: Map<string, string>,
-  options: WriteOptions = {}
+  _options: WriteOptions = {}
 ): string {
   const sections: Map<string, Array<{ key: string; value: string }>> = new Map();
   

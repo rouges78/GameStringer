@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,7 @@ export function RecoveryKeyDisplay({
   onConfirm,
 }: RecoveryKeyDisplayProps) {
   const [copied, setCopied] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [_confirmed, setConfirmed] = useState(false);
 
   const formattedGroups = formatRecoveryKeyForDisplay(recoveryKey);
   const keyString = recoveryKeyToString(recoveryKey);
@@ -101,7 +101,7 @@ Do not share this with anyone.
           <Alert className="border-amber-500/30 bg-amber-500/10">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
             <AlertDescription className="text-amber-200 text-sm ml-2">
-              <strong>Important:</strong> Write down or save these 12 words. You won't be able to see them again!
+              <strong>Important:</strong> Write down or save these 12 words. You won&apos;t be able to see them again!
             </AlertDescription>
           </Alert>
 
@@ -172,7 +172,7 @@ Do not share this with anyone.
           className="w-full bg-emerald-600 hover:bg-emerald-700"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          I've saved my recovery key
+          I&apos;ve saved my recovery key
         </Button>
       </DialogContent>
     </Dialog>

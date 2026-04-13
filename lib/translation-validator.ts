@@ -406,7 +406,7 @@ class TranslationValidator {
 export const translationValidator = new TranslationValidator();
 
 // React hook for real-time validation
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { clientLogger } from '@/lib/client-logger';
 
 export function useTranslationValidation(
