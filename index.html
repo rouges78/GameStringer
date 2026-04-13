@@ -652,8 +652,52 @@
 <section id="whatsnew">
   <div class="container" style="text-align:center">
     <span class="section-label">// v1.8.1</span>
-    <h2 class="section-title" data-i18n="whatsnew.title">Novita nella Versione 1.8.1</h2>
-    <p class="section-desc" data-i18n="whatsnew.desc">Live Overlay, Hub Marketplace, AI Dubbing, Plugin System, Audit Qualita Codice e Performance.</p>
+    <h2 class="section-title">Novit&agrave; nella v1.8.1 &mdash; Qualit&agrave; &amp; Performance</h2>
+    <p class="section-desc">Audit completo del codebase: 380+ file puliti, vulnerabilit&agrave; risolte, bundle ottimizzato.</p>
+
+    <div class="timeline">
+      <div class="timeline-entry">
+        <div class="timeline-dot" style="border-color:#ef4444"></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">ESLint &amp; TypeScript Strict</h4>
+          <p class="timeline-desc">ESLint: 1218&rarr;20 errori su 299 file. TypeScript strict mode: 2427&rarr;2 errori su 189 file. Logger refactorato con <code>normalizeArgs()</code>, interfacce tipizzate su tutti gli <code>invoke&lt;T&gt;()</code>, guard <code>instanceof Error</code> su 893 catch.</p>
+          <div class="timeline-tags"><span class="timeline-tag">ESLint</span><span class="timeline-tag">TypeScript</span><span class="timeline-tag">299 File</span><span class="timeline-tag">189 File</span></div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot" style="border-color:#f59e0b"></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Sicurezza npm</h4>
+          <p class="timeline-desc">npm audit: 39&rarr;2 vulnerabilit&agrave; (7 critical &rarr; 0). Patchati axios, vite, rollup, undici. Upgrade lodash (prototype pollution fix). Downgrade to-ico (rimossa catena request&rarr;jimp vulnerabile).</p>
+          <div class="timeline-tags"><span class="timeline-tag">npm audit</span><span class="timeline-tag">0 Critical</span><span class="timeline-tag">lodash</span><span class="timeline-tag">Security</span></div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot" style="border-color:#22c55e"></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Performance &amp; Bundle</h4>
+          <p class="timeline-desc">11 dipendenze inutilizzate rimosse (-1.716 righe package-lock). Import dinamici su /settings (-62 kB) e /translator/pro (-24 kB). Totale: -86 kB sulle pagine pi&ugrave; pesanti.</p>
+          <div class="timeline-tags"><span class="timeline-tag">-11 Deps</span><span class="timeline-tag">dynamic()</span><span class="timeline-tag">-86 kB</span><span class="timeline-tag">Code Split</span></div>
+        </div>
+      </div>
+      <div class="timeline-entry">
+        <div class="timeline-dot" style="border-color:#8b5cf6"></div>
+        <div class="timeline-content">
+          <h4 class="timeline-title">Documentazione</h4>
+          <p class="timeline-desc">Nuovo DEVELOPER_GUIDE.md (~310 righe): architettura, directory map, pattern chiave, howto per nuove pagine/comandi Rust, testing, 10 gotcha comuni. PROJECT_STATUS.md aggiornato.</p>
+          <div class="timeline-tags"><span class="timeline-tag">Dev Guide</span><span class="timeline-tag">310 Righe</span><span class="timeline-tag">Architettura</span><span class="timeline-tag">Howto</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S NEW v1.8.0 -->
+<section>
+  <div class="container" style="text-align:center">
+    <span class="section-label">// v1.8.0</span>
+    <h2 class="section-title">Novit&agrave; nella v1.8.0 &mdash; Feature Principali</h2>
+    <p class="section-desc">Live Overlay, Hub Marketplace, AI Dubbing Pipeline, Plugin System, Translation Memory Network e Security Hardening.</p>
 
     <div class="timeline">
       <div class="timeline-entry">
@@ -692,16 +736,16 @@
         <div class="timeline-dot" style="border-color:#22c55e"></div>
         <div class="timeline-content">
           <h4 class="timeline-title">Translation Memory Network</h4>
-          <p class="timeline-desc">Condivisione federata delle traduzioni. Contribuzione automatica delle traduzioni di alta qualita (confidence &gt; 0.8), hash privacy-first, integrato nel pipeline translateWithFallback().</p>
+          <p class="timeline-desc">Condivisione federata delle traduzioni. Contribuzione automatica delle traduzioni di alta qualit&agrave; (confidence &gt; 0.8), hash privacy-first, integrato nel pipeline translateWithFallback().</p>
           <div class="timeline-tags"><span class="timeline-tag">Federated</span><span class="timeline-tag">Privacy</span><span class="timeline-tag">Opt-in</span><span class="timeline-tag">Auto-Share</span></div>
         </div>
       </div>
       <div class="timeline-entry">
         <div class="timeline-dot" style="border-color:#ef4444"></div>
         <div class="timeline-content">
-          <h4 class="timeline-title">Audit Qualita &amp; Performance</h4>
-          <p class="timeline-desc">ESLint 1218&rarr;20, TypeScript 2427&rarr;2 errori, npm audit 39&rarr;2 vulnerabilita. 11 dipendenze inutilizzate rimosse, import dinamici sulle pagine pesanti (-86 kB). 380+ file puliti.</p>
-          <div class="timeline-tags"><span class="timeline-tag">ESLint</span><span class="timeline-tag">TypeScript</span><span class="timeline-tag">Security</span><span class="timeline-tag">Bundle -86kB</span></div>
+          <h4 class="timeline-title">Security Hardening</h4>
+          <p class="timeline-desc">CSP rinforzata, rimosso unsafe-eval, fix XSS, crittografia AES-256-GCM per API key, protezione CSRF, validazione Zod su 4 route API, rate limiting globale. 42/42 route con withErrorHandler.</p>
+          <div class="timeline-tags"><span class="timeline-tag">CSP</span><span class="timeline-tag">AES-256</span><span class="timeline-tag">CSRF</span><span class="timeline-tag">Rate Limit</span></div>
         </div>
       </div>
     </div>

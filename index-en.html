@@ -368,9 +368,44 @@
 <!-- WHAT'S NEW v1.8.1 -->
 <section id="whatsnew">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 What's New in v1.8.1</span>
-    <h2 class="section-title">Latest Release Highlights</h2>
-    <p class="section-desc">Live Overlay, Hub Marketplace, AI Dubbing Pipeline, Plugin System, Code Quality Audit &amp; Performance.</p>
+    <span class="badge section-badge" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3);color:#f87171">🔧 v1.8.1 &mdash; Quality &amp; Performance</span>
+    <h2 class="section-title">Code Quality Audit</h2>
+    <p class="section-desc">Comprehensive codebase audit: 380+ files cleaned, vulnerabilities resolved, bundle optimized.</p>
+    <div class="grid grid-2" style="margin-top:48px;text-align:left">
+      <div class="card feature-card" style="border-left:4px solid #ef4444">
+        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#ef4444)">🛡️</div>
+        <h3 class="feature-title">ESLint &amp; TypeScript Strict</h3>
+        <p class="feature-desc">ESLint: 1,218&rarr;20 errors across 299 files. TypeScript strict: 2,427&rarr;2 errors across 189 files. Refactored logger with <code>normalizeArgs()</code>, typed all <code>invoke&lt;T&gt;()</code>, <code>instanceof Error</code> guards on 893 catch blocks.</p>
+        <div class="feature-tags"><span class="feature-tag">ESLint</span><span class="feature-tag">TypeScript</span><span class="feature-tag">299 Files</span><span class="feature-tag">189 Files</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #f59e0b">
+        <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)">🔒</div>
+        <h3 class="feature-title">npm Security</h3>
+        <p class="feature-desc">npm audit: 39&rarr;2 vulnerabilities (7 critical &rarr; 0). Patched axios, vite, rollup, undici. Upgraded lodash (prototype pollution fix). Downgraded to-ico (removed vulnerable request&rarr;jimp chain).</p>
+        <div class="feature-tags"><span class="feature-tag">npm audit</span><span class="feature-tag">0 Critical</span><span class="feature-tag">lodash</span><span class="feature-tag">Security</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #22c55e">
+        <div class="icon-box" style="background:linear-gradient(135deg,#059669,#22c55e)">⚡</div>
+        <h3 class="feature-title">Performance &amp; Bundle</h3>
+        <p class="feature-desc">11 unused dependencies removed (-1,716 lines package-lock). Dynamic imports on /settings (-62 kB) and /translator/pro (-24 kB). Total: -86 kB on heaviest pages.</p>
+        <div class="feature-tags"><span class="feature-tag">-11 Deps</span><span class="feature-tag">dynamic()</span><span class="feature-tag">-86 kB</span><span class="feature-tag">Code Split</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
+        <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)">📖</div>
+        <h3 class="feature-title">Documentation</h3>
+        <p class="feature-desc">New DEVELOPER_GUIDE.md (~310 lines): architecture, directory map, key patterns, howto for new pages/Rust commands, testing, 10 common gotchas. Updated PROJECT_STATUS.md.</p>
+        <div class="feature-tags"><span class="feature-tag">Dev Guide</span><span class="feature-tag">310 Lines</span><span class="feature-tag">Architecture</span><span class="feature-tag">Howto</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT'S NEW v1.8.0 -->
+<section>
+  <div class="container" style="text-align:center">
+    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 v1.8.0 &mdash; Major Features</span>
+    <h2 class="section-title">What's New in v1.8.0</h2>
+    <p class="section-desc">Live Overlay, Hub Marketplace, AI Dubbing Pipeline, Plugin System, Translation Memory Network &amp; Security Hardening.</p>
     <div class="grid grid-2" style="margin-top:48px;text-align:left">
       <div class="card feature-card" style="border-left:4px solid #8b5cf6">
         <div class="icon-box" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)">👁️</div>
@@ -381,19 +416,19 @@
       <div class="card feature-card" style="border-left:4px solid #0ea5e9">
         <div class="icon-box" style="background:linear-gradient(135deg,#0891b2,#06b6d4)">🏪</div>
         <h3 class="feature-title">Hub Marketplace</h3>
-        <p class="feature-desc">Community translation pack marketplace. User profiles with reputation system, status workflow (draft → published → verified → featured). Browse, search, review &amp; 1-click install.</p>
+        <p class="feature-desc">Community translation pack marketplace. User profiles with reputation system, status workflow (draft &rarr; published &rarr; verified &rarr; featured). Browse, search, review &amp; 1-click install.</p>
         <div class="feature-tags"><span class="feature-tag">Community</span><span class="feature-tag">1-Click Install</span><span class="feature-tag">Supabase</span><span class="feature-tag">Reputation</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #f59e0b">
         <div class="icon-box" style="background:linear-gradient(135deg,#d97706,#f59e0b)">🎬</div>
         <h3 class="feature-title">AI Dubbing Pipeline</h3>
-        <p class="feature-desc">Full 7-step pipeline: scan audio → Whisper STT → AI translation → TTS (OpenAI/ElevenLabs/Azure) → duration matching → audio patching → lip sync + subtitles.</p>
+        <p class="feature-desc">Full 7-step pipeline: scan audio &rarr; Whisper STT &rarr; AI translation &rarr; TTS (OpenAI/ElevenLabs/Azure) &rarr; duration matching &rarr; audio patching &rarr; lip sync + subtitles.</p>
         <div class="feature-tags"><span class="feature-tag">Whisper</span><span class="feature-tag">TTS</span><span class="feature-tag">Lip Sync</span><span class="feature-tag">7 Steps</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #ec4899">
         <div class="icon-box" style="background:linear-gradient(135deg,#db2777,#ec4899)">🧩</div>
         <h3 class="feature-title">Plugin System</h3>
-        <p class="feature-desc">Community-extensible game engine patchers via PatcherPlugin interface. Full lifecycle: detect → extract → patch → verify → restore. Template generator, JS sandbox, distributed as .gsplugin.</p>
+        <p class="feature-desc">Community-extensible game engine patchers via PatcherPlugin interface. Full lifecycle: detect &rarr; extract &rarr; patch &rarr; verify &rarr; restore. Template generator, JS sandbox, distributed as .gsplugin.</p>
         <div class="feature-tags"><span class="feature-tag">Plugin API</span><span class="feature-tag">.gsplugin</span><span class="feature-tag">Sandbox</span><span class="feature-tag">Template</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #22c55e">
@@ -403,10 +438,10 @@
         <div class="feature-tags"><span class="feature-tag">Federated</span><span class="feature-tag">Privacy</span><span class="feature-tag">Opt-in</span><span class="feature-tag">Auto-Share</span></div>
       </div>
       <div class="card feature-card" style="border-left:4px solid #dc2626">
-        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)">🔧</div>
-        <h3 class="feature-title">Quality Audit &amp; Performance</h3>
-        <p class="feature-desc">ESLint 1218→20, TypeScript 2427→2 errors, npm audit 39→2 vulnerabilities. 11 unused deps removed, dynamic imports on heavy pages (-86 kB). 380+ files cleaned.</p>
-        <div class="feature-tags"><span class="feature-tag">ESLint</span><span class="feature-tag">TypeScript</span><span class="feature-tag">Security</span><span class="feature-tag">Bundle -86kB</span></div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#b91c1c,#dc2626)">🔒</div>
+        <h3 class="feature-title">Security Hardening</h3>
+        <p class="feature-desc">Hardened CSP, removed unsafe-eval, XSS fix, AES-256-GCM encrypted API keys, CSRF protection, Zod validation on 4 API routes, global rate limiting. 42/42 routes with withErrorHandler.</p>
+        <div class="feature-tags"><span class="feature-tag">CSP</span><span class="feature-tag">AES-256</span><span class="feature-tag">CSRF</span><span class="feature-tag">Rate Limit</span></div>
       </div>
     </div>
   </div>
