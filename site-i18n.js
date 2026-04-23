@@ -1,9 +1,9 @@
 // GameStringer Website i18n — 11 languages
-// v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System
+// v1.8.2 — Compact UI + Social Features + Bug Fixes
 
 const translations = {
   it: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
     'hero.desc': 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.',
@@ -67,7 +67,7 @@ const translations = {
   },
 
   en: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize video games with AI. Open source. Free.',
     'hero.desc': 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-line (0-100), AI Auto-glossary, persistent Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then pay-what-you-want.',
@@ -131,7 +131,7 @@ const translations = {
   },
 
   es: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localiza videojuegos con IA. Open source. Gratuito.',
     'hero.desc': 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) y <strong>20+ proveedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por línea (0-100), Auto-glosario IA, Translation Memory persistente, Tutorial interactivo. <strong>500 cadenas gratis</strong>, luego donación libre.',
@@ -195,7 +195,7 @@ const translations = {
   },
 
   de: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
     'hero.desc': 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> pro Zeile (0-100), KI-Auto-Glossar, persistenter Translation Memory, Interaktives Tutorial. <strong>500 Strings kostenlos</strong>, dann freiwillige Spende.',
@@ -259,7 +259,7 @@ const translations = {
   },
 
   fr: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localisez les jeux vidéo avec l\'IA. Open source. Gratuit.',
     'hero.desc': 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> par ligne (0-100), Auto-glossaire IA, Translation Memory persistante, Tutoriel interactif. <strong>500 chaînes gratuites</strong>, puis don libre.',
@@ -323,7 +323,7 @@ const translations = {
   },
 
   ja: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AIでビデオゲームをローカライズ。オープンソース。無料。',
     'hero.desc': '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>ダンガンロンパ</strong>...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。行ごとの<strong>品質バッジ</strong>（0-100）、AI自動用語集、永続的翻訳メモリ、インタラクティブチュートリアル。<strong>500文字列無料</strong>、その後は任意の寄付。',
@@ -387,7 +387,7 @@ const translations = {
   },
 
   zh: {
-    'hero.badge': 'v1.8.1 — Live Overlay + Hub Marketplace + AI Dubbing + Plugin System',
+    'hero.badge': 'v1.8.2 — Compact UI + Social Features + Bug Fixes',
     'hero.title': 'GameStringer',
     'hero.subtitle': '用AI本地化电子游戏。开源。免费。',
     'hero.desc': '支持<strong>11+引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>弹丸论破</strong>...）和<strong>20+ AI提供商</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。逐行<strong>质量徽章</strong>（0-100）、AI自动术语表、持久化翻译记忆、交互式教程。<strong>500条字符串免费</strong>，之后自愿捐赠。',
