@@ -14,12 +14,12 @@
   <div class="container nav-content">
     <div class="nav-logo"><img src="logo.png" alt="Logo"></div>
     <div class="nav-links">
-      <a href="#features">Caratteristiche</a>
+      <a href="#features">Features</a>
       <a href="#engines">Engine</a>
-      <a href="#ai">AI</a>
-      <a href="#pricing">Prezzi</a>
+      <a href="#ai">AI & Cloud</a>
+      <a href="#faq">FAQ</a>
     </div>
-    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-primary" style="padding:10px 20px; font-size:12px">GitHub</a>
+    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-primary" style="padding:10px 20px; font-size:12px">GitHub Source</a>
   </div>
 </nav>
 
@@ -27,76 +27,123 @@
   <div class="container">
     <img src="logo.png" alt="GameStringer" class="hero-logo">
     <h1 class="hero-title">Traduci i tuoi giochi<br>con l'intelligenza artificiale</h1>
-    <p class="hero-desc">La suite open source definitiva per la localizzazione. Supporta Unity, Unreal, Godot e molti altri. 500 stringhe gratuite per ogni progetto.</p>
-    <div style="display:flex; gap:20px; justify-content:center">
-      <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary">Scarica Ora</a>
-      <a href="#features" class="btn" style="border:1px solid rgba(255,255,255,0.2)">Scopri di più</a>
+    <p class="hero-desc">La suite open source definitiva per la localizzazione. Supporta 11+ engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI) e 20+ provider AI. 500 stringhe gratuite per ogni progetto.</p>
+    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap">
+      <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary">Scarica per Windows</a>
+      <a href="#features" class="btn" style="border:1px solid rgba(255,255,255,0.2)">Esplora Funzionalità</a>
+    </div>
+    
+    <div style="display:flex; justify-content:center; gap:40px; margin-top:60px; border-top:1px solid rgba(255,255,255,0.1); padding-top:40px">
+      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">11+</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Engine</div></div>
+      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">20+</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Provider AI</div></div>
+      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">&infin;</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Possibilità</div></div>
     </div>
   </div>
 </header>
 
 <section id="features">
   <div class="container">
-    <span class="section-label">// Features</span>
-    <h2 class="section-title">Potenza e Semplicità</h2>
+    <span class="section-label">// Core.Systems</span>
+    <h2 class="section-title">Tecnologia di Traduzione</h2>
     <div class="grid">
       <div class="card">
-        <h3>Neural AI</h3>
-        <p>Integrazione nativa con GPT-4, Claude 3.5 e modelli locali via Ollama per traduzioni che capiscono il contesto del gioco.</p>
+        <h3>Neural AI Hub</h3>
+        <p>Integrazione nativa con GPT-4, Claude 3.5, Gemini e modelli locali via Ollama. Il sistema analizza il genere del gioco per adattare il tono (Horror, JRPG, Indie).</p>
       </div>
       <div class="card">
         <h3>Translation Memory</h3>
-        <p>Il sistema impara dalle tue correzioni. Non tradurrai mai la stessa frase due volte, garantendo coerenza assoluta.</p>
+        <p>Database locale che impara dalle tue correzioni. Garantisce coerenza terminologica e ti permette di non tradurre mai la stessa frase due volte.</p>
       </div>
       <div class="card">
         <h3>Quality Badges</h3>
-        <p>Ogni stringa riceve un punteggio di qualità da 0 a 100. Identifica istantaneamente dove serve una revisione umana.</p>
+        <p>Ogni riga riceve un punteggio di qualità (0-100). Identifica istantaneamente dove serve una revisione umana e dove l'AI ha fatto un lavoro perfetto.</p>
+      </div>
+      <div class="card">
+        <h3>Auto-Glossary</h3>
+        <p>Estrazione automatica dei termini chiave (nomi personaggi, luoghi, oggetti) per mantenere la coerenza in progetti da migliaia di stringhe.</p>
+      </div>
+      <div class="card">
+        <h3>System Tray Notifications</h3>
+        <p>Notifiche native per traduzioni completate, messaggi chat e aggiornamenti, con quiet hours configurabili.</p>
+      </div>
+      <div class="card">
+        <h3>Batch Processing</h3>
+        <p>Traduci migliaia di stringhe in pochi minuti grazie alla pipeline ottimizzata e al supporto per il multi-threading.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="engines" style="background:rgba(255,255,255,0.02)">
+<section id="whatsnew" style="background:rgba(255,255,255,0.02)">
+  <div class="container">
+    <span class="section-label">// Roadmap</span>
+    <h2 class="section-title">Ultime Novità (v1.9.0)</h2>
+    <div style="display:flex; flex-direction:column; gap:20px">
+      <div class="card">
+        <h3 style="color:#fff">Bethesda & CRI Engine Support</h3>
+        <p>Nuovo patcher per Skyrim, Fallout, Starfield (BSA/BA2/ESP) e CRI Middleware (Persona, Yakuza) con auto-detection dell'encoding.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:#fff">Tauri v2 Migration</h3>
+        <p>Passaggio alla nuova architettura Tauri per prestazioni superiori e maggiore sicurezza su Windows, macOS e Linux.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="engines">
   <div class="container">
     <span class="section-label">// Compatibility</span>
-    <h2 class="section-title">Supporto per 11+ Engine</h2>
+    <h2 class="section-title">Supporto Game Engine</h2>
     <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
-      <div class="card" style="text-align:center; padding:20px">
-        <h3 style="margin:0">Unity</h3>
-      </div>
-      <div class="card" style="text-align:center; padding:20px">
-        <h3 style="margin:0">Unreal</h3>
-      </div>
-      <div class="card" style="text-align:center; padding:20px">
-        <h3 style="margin:0">Godot</h3>
-      </div>
-      <div class="card" style="text-align:center; padding:20px">
-        <h3 style="margin:0">RPG Maker</h3>
-      </div>
+      <div class="card" style="text-align:center"><h3>Unity</h3><p style="font-size:12px">BepInEx / XUnity</p></div>
+      <div class="card" style="text-align:center"><h3>Unreal</h3><p style="font-size:12px">.locres / .pak</p></div>
+      <div class="card" style="text-align:center"><h3>Godot</h3><p style="font-size:12px">.pck / .csv</p></div>
+      <div class="card" style="text-align:center"><h3>RPG Maker</h3><p style="font-size:12px">MV / MZ / VX</p></div>
+      <div class="card" style="text-align:center"><h3>Ren'Py</h3><p style="font-size:12px">Game/TL</p></div>
+      <div class="card" style="text-align:center"><h3>Bethesda</h3><p style="font-size:12px">Skyrim / Starfield</p></div>
     </div>
   </div>
 </section>
 
-<section id="pricing">
-  <div class="container" style="text-align:center">
-    <span class="section-label">// Pricing</span>
-    <h2 class="section-title">Semplice e Trasparente</h2>
-    <div class="card" style="max-width:500px; margin:0 auto">
-      <h3 style="font-size:2rem">500 Stringhe Gratis</h3>
-      <p style="margin-bottom:20px">Poi supporto libero. GameStringer è basato sull'onore: se ti piace e lo usi, offrici un caffè.</p>
-      <a href="https://ko-fi.com/gamestringer" target="_blank" class="btn btn-primary">Supporta il Progetto</a>
+<section id="faq">
+  <div class="container">
+    <span class="section-label">// Help</span>
+    <h2 class="section-title">Domande Frequenti</h2>
+    <div style="display:flex; flex-direction:column; gap:15px">
+      <div class="card" style="padding:20px">
+        <h4 style="color:var(--cyan)">È davvero gratuito?</h4>
+        <p>Sì. Le prime 500 stringhe sono libere. Per progetti più grandi chiediamo una donazione libera per sbloccare l'uso illimitato. È un sistema basato sull'onore.</p>
+      </div>
+      <div class="card" style="padding:20px">
+        <h4 style="color:var(--cyan)">Supporta i giochi Steam/Epic?</h4>
+        <p>Sì, GameStringer rileva automaticamente la tua libreria e ti guida nell'installazione delle patch necessarie.</p>
+      </div>
+      <div class="card" style="padding:20px">
+        <h4 style="color:var(--cyan)">Posso usare AI locali?</h4>
+        <p>Certamente. Supportiamo Ollama per far girare modelli come Llama 3 o Gemma direttamente sulla tua GPU, senza costi API.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="container">
-    <p>&copy; 2025-2026 GameStringer. Sviluppato con passione in Italia.</p>
+    <div style="margin-bottom:20px">
+      <img src="logo.png" alt="Logo" style="height:40px">
+    </div>
+    <p style="margin-bottom:10px">GameStringer è la suite definitiva per chi ama i videogiochi e vuole abbattere le barriere linguistiche.</p>
+    <div style="display:flex; justify-content:center; gap:20px; font-size:12px">
+      <a href="https://ko-fi.com/gamestringer" style="color:var(--cyan)">Supporta su Ko-fi</a>
+      <a href="https://github.com/rouges78/GameStringer" style="color:var(--cyan)">GitHub Repository</a>
+      <a href="#" style="color:var(--cyan)">Documentazione</a>
+    </div>
+    <p style="margin-top:30px; font-size:11px; color:var(--text-m)">&copy; 2025-2026 GameStringer by rouges78. Source-Available License.</p>
   </div>
 </footer>
 
 <script>
-  ScrollReveal().reveal('.card', { delay: 200, distance: '50px', origin: 'bottom', interval: 100 });
+  ScrollReveal().reveal('.card', { delay: 200, distance: '30px', origin: 'bottom', interval: 50 });
 </script>
 
 </body>
