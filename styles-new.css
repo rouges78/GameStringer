@@ -139,3 +139,30 @@ footer { padding:60px 0; border-top:1px solid rgba(0,255,245,0.1); background:#0
   .nav-links { display:none; }
   .hero-title { font-size:4rem; }
 }
+
+/* Fix Scroll & Sections */
+section {
+  min-height: auto;
+  overflow: visible;
+}
+
+.hero-section {
+  height: auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Ensure container allows flow */
+.container {
+  overflow: visible;
+  height: auto;
+}
+
+/* Re-enable display of hidden items */
+.showcase-grid, .bento-grid, .engines-grid, .tools-grid {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
