@@ -73,3 +73,42 @@ section { padding:100px 0; }
 
 /* Footer */
 footer { padding:80px 0; border-top:1px solid rgba(255,255,255,0.05); text-align:center; color:var(--text-s); }
+
+/* --- ADVANCED CYBERPUNK CHATBOT --- */
+#gs-chatbot { position:fixed; bottom:24px; right:24px; z-index:9999; font-family:'JetBrains Mono',monospace; }
+#gs-chat-fab { 
+  width:64px; height:64px; border-radius:50%; border:2px solid var(--cyan); 
+  background:rgba(2,6,18,0.9); color:var(--cyan); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 20px rgba(0,255,245,0.3); transition:0.3s;
+}
+#gs-chat-fab:hover { transform:scale(1.1) rotate(5deg); box-shadow:0 0 30px var(--cyan); }
+
+#gs-chat-window {
+  position:absolute; bottom:80px; right:0; width:380px; height:500px;
+  background:rgba(2,6,18,0.98); border:1px solid var(--cyan);
+  border-radius:12px; display:none; flex-direction:column; overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,245,0.1);
+}
+.chat-header { 
+  padding:15px; background:rgba(0,255,245,0.1); border-bottom:1px solid rgba(0,255,245,0.2);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.chat-messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+.msg { padding:10px 14px; border-radius:8px; font-size:13px; max-width:85%; }
+.msg-bot { background:rgba(0,255,245,0.1); color:#fff; align-self:flex-start; border-left:3px solid var(--cyan); }
+.msg-user { background:var(--violet); color:#fff; align-self:flex-end; }
+.chat-input-area { padding:15px; border-top:1px solid rgba(255,255,255,0.05); display:flex; gap:10px; }
+.chat-input-area input { 
+  flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  padding:10px; color:#fff; border-radius:4px; outline:none;
+}
+.chat-input-area input:focus { border-color:var(--cyan); }
+
+/* --- AI PROVIDER TABLE --- */
+.ai-table { width:100%; border-collapse:collapse; margin-top:30px; }
+.ai-table th { text-align:left; padding:12px; border-bottom:2px solid var(--cyan); color:var(--cyan); font-size:14px; }
+.ai-table td { padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px; }
+.badge { padding:2px 8px; border-radius:4px; font-size:10px; font-weight:800; text-transform:uppercase; }
+.badge-free { background:rgba(0,255,136,0.1); color:#00ff88; border:1px solid #00ff88; }
+.badge-paid { background:rgba(255,170,0,0.1); color:#ffaa00; border:1px solid #ffaa00; }

@@ -148,3 +148,68 @@
 
 </body>
 </html>
+<section id="ai-details" style="background:rgba(139,92,246,0.03)">
+  <div class="container">
+    <span class="section-label">// AI.Network</span>
+    <h2 class="section-title">20+ Provider AI Supportati</h2>
+    <div class="card" style="overflow-x:auto">
+      <table class="ai-table">
+        <thead>
+          <tr><th>Provider</th><th>Modello Consigliato</th><th>Tipo</th><th>Specialità</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Ollama</strong></td><td>Llama 3 / Gemma 2</td><td><span class="badge badge-free">Locale</span></td><td>Privacy totale, zero costi</td></tr>
+          <tr><td><strong>Claude</strong></td><td>Claude 3.5 Sonnet</td><td><span class="badge badge-paid">Cloud</span></td><td>Nuance narrative, stile letterario</td></tr>
+          <tr><td><strong>OpenAI</strong></td><td>GPT-4o</td><td><span class="badge badge-paid">Cloud</span></td><td>Logica complessa, istruzioni sistema</td></tr>
+          <tr><td><strong>Gemini</strong></td><td>Gemini 1.5 Pro</td><td><span class="badge badge-free">Cloud (Free)</span></td><td>Script lunghissimi (1M context)</td></tr>
+          <tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V2</td><td><span class="badge badge-paid">Economy</span></td><td>Qualità/Prezzo imbattibile</td></tr>
+          <tr><td><strong>TranslateGemma</strong></td><td>Gemma-2-9b-it</td><td><span class="badge badge-free">Specialized</span></td><td>Traduzione pura multilingua</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div id="gs-chatbot">
+  <div id="gs-chat-window">
+    <div class="chat-header">
+      <span style="font-weight:800; color:var(--cyan)">GS::NEURAL_LINK</span>
+      <button onclick="toggleChat()" style="background:none; border:none; color:#fff; cursor:pointer">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-msgs">
+      <div class="msg msg-bot">Connessione neurale stabilita. Come posso aiutarti con GameStringer?</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Chiedi qualcosa..." onkeydown="if(event.key==='Enter') sendMsg()">
+      <button onclick="sendMsg()" class="btn btn-primary" style="padding:10px">Invia</button>
+    </div>
+  </div>
+  <button id="gs-chat-fab" onclick="toggleChat()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  </button>
+</div>
+
+<script>
+  function toggleChat() {
+    const win = document.getElementById('gs-chat-window');
+    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+  }
+  function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const msgs = document.getElementById('chat-msgs');
+    if(!input.value) return;
+    
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg msg-user';
+    userMsg.textContent = input.value;
+    msgs.appendChild(userMsg);
+    
+    const botMsg = document.createElement('div');
+    botMsg.className = 'msg msg-bot';
+    botMsg.textContent = "Sto analizzando la tua richiesta nei database di GameStringer...";
+    msgs.appendChild(botMsg);
+    
+    input.value = '';
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+</script>
