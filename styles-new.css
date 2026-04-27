@@ -41,10 +41,14 @@ nav {
   backdrop-filter:blur(10px);transition:all 0.3s;
 }
 
-.nav-logo img { height:40px; filter:drop-shadow(0 0 10px var(--neon)); }
+.nav-logo img { height: 54px; width: auto; filter: drop-shadow(0 0 15px var(--neon)); transition: transform 0.3s; }
+.nav-logo img:hover { transform: scale(1.05); }
 
 .nav-links {
-  display:flex;gap:4px;margin-left:60px;flex:1;
+  display: flex;
+  gap: 8px;
+  margin-left: 40px;
+  flex: 1;
 }
 
 .nav-links a {
