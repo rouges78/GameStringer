@@ -3,116 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-gs-version-title>GameStringer v1.9.1 — Traduci qualsiasi videogioco con l'AI</title>
-  <meta name="description" content="Suite open source per tradurre videogiochi con l'AI. 11+ engine, 20+ provider AI.">
-  <meta name="theme-color" content="#020612">
-  <link rel="canonical" href="https://gamestringer.ai/">
+  <title>GameStringer v1.9.1 — Traduci qualsiasi videogioco con l'AI</title>
   <link rel="stylesheet" href="styles-new.css">
+  <link rel="icon" href="favicon.svg">
   <script src="https://unpkg.com/scrollreveal"></script>
 </head>
 <body>
-<div class="scanline-overlay"></div>
 
 <nav>
-  <div class="container" style="display:flex; align-items:center; width:100%; max-width:1400px">
-    <div class="nav-logo"><img src="logo.png" alt="GameStringer"></div>
+  <div class="container nav-content">
+    <div class="nav-logo"><img src="logo.png" alt="Logo"></div>
     <div class="nav-links">
-      <a href="#showcase">Data</a>
-      <a href="#features">Systems</a>
-      <a href="#engines">Engines</a>
-      <a href="#ai">AI.Link</a>
-      <a href="#whatsnew" data-gs-version-nav>v1.9.1</a>
+      <a href="#features">Caratteristiche</a>
+      <a href="#engines">Engine</a>
+      <a href="#ai">AI</a>
+      <a href="#pricing">Prezzi</a>
     </div>
-    <div class="nav-right">
-      <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-sm">GitHub.src</a>
-    </div>
+    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-primary" style="padding:10px 20px; font-size:12px">GitHub</a>
   </div>
 </nav>
 
-<section class="hero-section" id="top">
-  <div class="hud-line hud-line-tl"></div>
-  <div class="hud-line hud-line-tr"></div>
+<header class="hero">
   <div class="container">
-    <div class="hero-subtitle">System Status: Optimal</div>
-    <h1 class="hero-title" data-text="GAMESTRINGER">GameStringer</h1>
-    <p class="hero-desc">The ultimate open-source localization suite powered by Neural AI. Translate any game engine with a single click.</p>
-    <div class="hero-buttons">
-      <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" class="btn btn-primary btn-lg">Download Core</a>
-      <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-lg">View Source</a>
+    <img src="logo.png" alt="GameStringer" class="hero-logo">
+    <h1 class="hero-title">Traduci i tuoi giochi<br>con l'intelligenza artificiale</h1>
+    <p class="hero-desc">La suite open source definitiva per la localizzazione. Supporta Unity, Unreal, Godot e molti altri. 500 stringhe gratuite per ogni progetto.</p>
+    <div style="display:flex; gap:20px; justify-content:center">
+      <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary">Scarica Ora</a>
+      <a href="#features" class="btn" style="border:1px solid rgba(255,255,255,0.2)">Scopri di più</a>
     </div>
   </div>
-</section>
-
-<section id="showcase">
-  <div class="container">
-    <span class="section-label">// Visual.Interface</span>
-    <h2 class="section-title">Interfaccia HUD Moderna</h2>
-    <div class="showcase-hero glass-card">
-      <img src="images/screenshot-library.png" alt="GameStringer Interface">
-    </div>
-  </div>
-</section>
+</header>
 
 <section id="features">
   <div class="container">
-    <span class="section-label">// Core.Functions</span>
-    <h2 class="section-title">Tecnologia Avanzata</h2>
-    <div class="bento-grid">
-      <div class="glass-card bento-card">
-        <div class="bento-icon">AI</div>
-        <h3 class="bento-title">Neural Translation</h3>
-        <p class="bento-desc">Integrazione con i migliori modelli LLM per traduzioni contestuali e precise.</p>
+    <span class="section-label">// Features</span>
+    <h2 class="section-title">Potenza e Semplicità</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Neural AI</h3>
+        <p>Integrazione nativa con GPT-4, Claude 3.5 e modelli locali via Ollama per traduzioni che capiscono il contesto del gioco.</p>
       </div>
-      <div class="glass-card bento-card">
-        <div class="bento-icon">TM</div>
-        <h3 class="bento-title">Translation Memory</h3>
-        <p class="bento-desc">Database locale che impara dalle tue correzioni per mantenere coerenza.</p>
+      <div class="card">
+        <h3>Translation Memory</h3>
+        <p>Il sistema impara dalle tue correzioni. Non tradurrai mai la stessa frase due volte, garantendo coerenza assoluta.</p>
       </div>
-      <div class="glass-card bento-card">
-        <div class="bento-icon">QA</div>
-        <h3 class="bento-title">Quality Gates</h3>
-        <p class="bento-desc">Validazione automatica delle stringhe per evitare errori tecnici nel gioco.</p>
+      <div class="card">
+        <h3>Quality Badges</h3>
+        <p>Ogni stringa riceve un punteggio di qualità da 0 a 100. Identifica istantaneamente dove serve una revisione umana.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="engines">
+<section id="engines" style="background:rgba(255,255,255,0.02)">
   <div class="container">
-    <span class="section-label">// Engine.Support</span>
-    <h2 class="section-title">Compatibilità Totale</h2>
-    <div class="engines-grid">
-      <div class="glass-card engine-card">
-        <span class="engine-icon">U</span>
-        <span class="engine-name">Unity</span>
+    <span class="section-label">// Compatibility</span>
+    <h2 class="section-title">Supporto per 11+ Engine</h2>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
+      <div class="card" style="text-align:center; padding:20px">
+        <h3 style="margin:0">Unity</h3>
       </div>
-      <div class="glass-card engine-card">
-        <span class="engine-icon">UE</span>
-        <span class="engine-name">Unreal Engine</span>
+      <div class="card" style="text-align:center; padding:20px">
+        <h3 style="margin:0">Unreal</h3>
       </div>
-      <div class="glass-card engine-card">
-        <span class="engine-icon">G</span>
-        <span class="engine-name">Godot</span>
+      <div class="card" style="text-align:center; padding:20px">
+        <h3 style="margin:0">Godot</h3>
       </div>
-      <div class="glass-card engine-card">
-        <span class="engine-icon">RP</span>
-        <span class="engine-name">RPG Maker</span>
+      <div class="card" style="text-align:center; padding:20px">
+        <h3 style="margin:0">RPG Maker</h3>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="container" style="text-align:center">
+    <span class="section-label">// Pricing</span>
+    <h2 class="section-title">Semplice e Trasparente</h2>
+    <div class="card" style="max-width:500px; margin:0 auto">
+      <h3 style="font-size:2rem">500 Stringhe Gratis</h3>
+      <p style="margin-bottom:20px">Poi supporto libero. GameStringer è basato sull'onore: se ti piace e lo usi, offrici un caffè.</p>
+      <a href="https://ko-fi.com/gamestringer" target="_blank" class="btn btn-primary">Supporta il Progetto</a>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="container">
-    <div class="footer-bottom">
-      <p>&copy; 2025-2026 GameStringer by rouges78. Made with <span class="footer-heart">&hearts;</span> in Italy.</p>
-    </div>
+    <p>&copy; 2025-2026 GameStringer. Sviluppato con passione in Italia.</p>
   </div>
 </footer>
 
 <script>
-  ScrollReveal().reveal('.glass-card', { delay: 200, distance: '50px', origin: 'bottom', interval: 100 });
-  ScrollReveal().reveal('.section-title', { delay: 100, origin: 'left', distance: '30px' });
+  ScrollReveal().reveal('.card', { delay: 200, distance: '50px', origin: 'bottom', interval: 100 });
 </script>
+
 </body>
 </html>
