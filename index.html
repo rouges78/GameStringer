@@ -64,86 +64,33 @@
 <body>
 <!-- Scanline overlay -->
 <div class="scanline-overlay"></div>
-<!-- Particle canvas -->
-<canvas id="particle-canvas"></canvas>
-<a class="skip-link" href="#main-content" data-i18n="a11y.skip">Salta al contenuto</a>
 
-<!-- NAV -->
 <nav aria-label="Principale">
-  <a class="nav-logo" href="#top" aria-label="GameStringer — Home"><img src="logo.png" alt="GameStringer"></a>
-  <div class="nav-links" role="navigation">
-    <a href="#showcase">Showcase</a>
-    <a href="#features">Features</a>
+  <div class="nav-logo"><img src="logo.png" alt="GameStringer"></div>
+  <div class="nav-links">
+    <a href="#showcase">Data</a>
+    <a href="#features">Systems</a>
     <a href="#engines">Engines</a>
-    <a href="#ai">AI</a>
-    <a href="#tools">Tools</a>
+    <a href="#ai">AI.Link</a>
     <a href="#whatsnew" data-gs-version-nav>v1.9.1</a>
-    <a href="#usecases">Use Cases</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#faq">FAQ</a>
   </div>
   <div class="nav-right">
-    <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-sm" aria-label="Vai al repository GitHub">GitHub</a>
-    <div class="lang-selector">
-      <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()" aria-haspopup="true" aria-expanded="false" aria-label="Seleziona lingua">IT</button>
-      <div id="lang-menu" class="lang-menu" role="menu">
-        <button class="lang-option" onclick="setLanguage('en')">English</button>
-        <button class="lang-option active" onclick="setLanguage('it')">Italiano</button>
-        <button class="lang-option" onclick="setLanguage('es')">Espanol</button>
-        <button class="lang-option" onclick="setLanguage('de')">Deutsch</button>
-        <button class="lang-option" onclick="setLanguage('fr')">Francais</button>
-        <button class="lang-option" onclick="setLanguage('ja')">Japanese</button>
-        <button class="lang-option" onclick="setLanguage('zh')">Chinese</button>
-        <button class="lang-option" onclick="setLanguage('ko')">Korean</button>
-        <button class="lang-option" onclick="setLanguage('pt')">Portugues</button>
-        <button class="lang-option" onclick="setLanguage('ru')">Russian</button>
-        <button class="lang-option" onclick="setLanguage('pl')">Polish</button>
-      </div>
-    </div>
+    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-sm">GitHub.src</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero-section" id="main-content">
-  <!-- Floating glow orbs -->
-  <div class="hero-orb hero-orb--1"></div>
-  <div class="hero-orb hero-orb--2"></div>
-  <div class="hero-orb hero-orb--3"></div>
-
-  <div class="hero-inner">
-    <img src="logo.png" alt="GameStringer Logo" width="180" height="180" style="display:block;margin:0 auto 32px;filter:drop-shadow(0 0 40px rgba(0,255,245,.6)) drop-shadow(0 0 80px rgba(139,92,246,.3)) drop-shadow(0 0 120px rgba(0,255,245,.15))">
-    <span class="hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge" data-gs-version-badge>v1.9.1 — Tauri 2, Presenza Online, Notifiche Tray, Bethesda &amp; CRI Engine</span></span>
-    <h1 class="hero-title glitch" data-text="GameStringer" data-i18n="hero.title">GameStringer</h1>
-    <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
-    <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi supporto libero.</p>
-    <div class="hero-buttons">
-      <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-i18n="hero.download">Download Gratuito — Windows, macOS & Linux</a>
-      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-lg" data-i18n="hero.source">Codice Sorgente su GitHub</a>
-    </div>
-    <div class="hero-meta">
-      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Open Source</span>
-      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Nessun Account</span>
-      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> AI Locale Gratis</span>
-      <span class="hero-meta-item"><span class="hero-meta-check">&#10003;</span> Windows, macOS & Linux</span>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-value">11+</div>
-        <div class="hero-stat-label" data-i18n="stats.engines">Game Engine</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-value">20+</div>
-        <div class="hero-stat-label" data-i18n="stats.ai">Provider AI</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-value">7</div>
-        <div class="hero-stat-label" data-i18n="stats.stores">Store Integrati</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-value">&infin;</div>
-        <div class="hero-stat-label" data-i18n="stats.games">Games Traducibili</div>
-      </div>
-    </div>
+  <div class="hud-line hud-line-tl"></div>
+  <div class="hud-line hud-line-tr"></div>
+  
+  <div class="hero-subtitle">System Status: Optimal</div>
+  <h1 class="hero-title" data-text="GAMESTRINGER">GameStringer</h1>
+  <p class="hero-desc">The ultimate open-source localization suite powered by Neural AI.</p>
+  
+  <div class="hero-buttons">
+    <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" class="btn btn-primary">Download Core</a>
+    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn">View Source</a>
   </div>
 </section>
 
