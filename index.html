@@ -213,3 +213,56 @@
     msgs.scrollTop = msgs.scrollHeight;
   }
 </script>
+<script>
+  // GameStringer Brain Knowledge Base
+  const GS_BRAIN_KB = [
+    { k:['cos','gamestringer','what is'], a:'GameStringer è una suite open source che usa l\'AI per tradurre videogiochi. Supporta Unity, Unreal, Godot e molti altri engine.' },
+    { k:['scaric','download','installa'], a:'Puoi scaricare l\'ultima versione per Windows nella sezione Hero in alto o direttamente da GitHub Releases.' },
+    { k:['gratis','costo','prezzo','pagar'], a:'È gratuito fino a 500 stringhe. Per progetti più grandi, puoi sbloccare tutto con una donazione libera.' },
+    { k:['engine','motori','unity','unreal','godot'], a:'Supportiamo 11+ engine! Per Unity usiamo BepInEx, per Unreal i file .locres, e abbiamo patcher nativi per Bethesda e CRI.' },
+    { k:['ai','modelli','gpt','claude','ollama'], a:'Supportiamo 20+ modelli! Claude è ottimo per la narrativa, GPT-4 per la logica, e Ollama per tradurre gratis in locale.' },
+    { k:['ollama','locale'], a:'Sì! Con Ollama puoi tradurre senza costi API e con privacy totale usando la tua GPU.' },
+    { k:['ciao','buongiorno','hey'], a:'Ciao! Sono il cervello neurale di GameStringer. Chiedimi pure come tradurre un gioco o quali AI usare.' }
+  ];
+
+  function toggleChat() {
+    const win = document.getElementById('gs-chat-window');
+    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function getGSResponse(q) {
+    const lowQ = q.toLowerCase();
+    for (const entry of GS_BRAIN_KB) {
+      if (entry.k.some(key => lowQ.includes(key))) return entry.a;
+    }
+    return "Interessante... Sto scansionando i miei database per '" + q + "'. Al momento so darti info su engine, modelli AI, costi e download. Prova a chiedermi 'Quali engine supporti?'";
+  }
+
+  function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const msgs = document.getElementById('chat-msgs');
+    const text = input.value.trim();
+    if(!text) return;
+    
+    // User message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg msg-user';
+    userMsg.textContent = text;
+    msgs.appendChild(userMsg);
+    
+    // Thinking...
+    const botMsg = document.createElement('div');
+    botMsg.className = 'msg msg-bot';
+    botMsg.innerHTML = "<em>Elaborazione neurale...</em>";
+    msgs.appendChild(botMsg);
+    
+    input.value = '';
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // Brain Response
+    setTimeout(() => {
+      botMsg.innerHTML = getGSResponse(text);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 600);
+  }
+</script>
