@@ -1021,6 +1021,208 @@
   </div>
 </footer>
 
+<!-- CHATBOT -->
+<div id="gs-chatbot">
+  <div id="gs-chat-window" class="gs-chat-hidden">
+    <div class="gs-chat-header">
+      <div class="gs-chat-header-left">
+        <div class="gs-chat-avatar">GS</div>
+        <div>
+          <div class="gs-chat-name">GameStringer Bot</div>
+          <div class="gs-chat-status"><span class="gs-chat-dot"></span> Online</div>
+        </div>
+      </div>
+      <button class="gs-chat-close" onclick="toggleChat()" aria-label="Chiudi chat">&times;</button>
+    </div>
+    <div id="gs-chat-messages" class="gs-chat-messages"></div>
+    <div id="gs-chat-suggestions" class="gs-chat-suggestions"></div>
+    <div class="gs-chat-input-wrap">
+      <input id="gs-chat-input" type="text" placeholder="Scrivi un messaggio..." autocomplete="off" onkeydown="if(event.key==='Enter')sendChatMsg()">
+      <button onclick="sendChatMsg()" class="gs-chat-send" aria-label="Invia">&#10148;</button>
+    </div>
+  </div>
+  <button id="gs-chat-fab" onclick="toggleChat()" aria-label="Apri assistente">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span id="gs-chat-badge" class="gs-chat-badge-hidden">1</span>
+  </button>
+</div>
+
+<style>
+  #gs-chatbot { position:fixed; bottom:24px; right:24px; z-index:9999; font-family:'Inter',sans-serif; }
+  #gs-chat-fab { width:60px; height:60px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#8b5cf6,#06b6d4); color:#fff; box-shadow:0 4px 24px rgba(139,92,246,.4); transition:transform .2s,box-shadow .2s; position:relative; }
+  #gs-chat-fab:hover { transform:scale(1.08); box-shadow:0 6px 32px rgba(139,92,246,.5); }
+  #gs-chat-badge { position:absolute; top:-2px; right:-2px; width:20px; height:20px; border-radius:50%; background:#ef4444; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:opacity .2s; }
+  .gs-chat-badge-hidden { opacity:0!important; pointer-events:none; }
+  #gs-chat-window { position:absolute; bottom:72px; right:0; width:380px; max-height:520px; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; background:rgba(10,15,30,.96); border:1px solid rgba(139,92,246,.3); box-shadow:0 8px 48px rgba(0,0,0,.5),0 0 80px rgba(139,92,246,.1); backdrop-filter:blur(20px); transition:opacity .25s,transform .25s; }
+  .gs-chat-hidden { opacity:0!important; transform:translateY(16px) scale(.95)!important; pointer-events:none!important; }
+  .gs-chat-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(6,182,212,.1)); border-bottom:1px solid rgba(255,255,255,.06); }
+  .gs-chat-header-left { display:flex; align-items:center; gap:10px; }
+  .gs-chat-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#8b5cf6,#06b6d4); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; }
+  .gs-chat-name { font-weight:600; font-size:14px; color:#f1f5f9; }
+  .gs-chat-status { font-size:11px; color:#94a3b8; display:flex; align-items:center; gap:4px; }
+  .gs-chat-dot { width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block; animation:gs-pulse 2s infinite; }
+  @keyframes gs-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .gs-chat-close { background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer; padding:4px 8px; border-radius:8px; transition:background .15s,color .15s; }
+  .gs-chat-close:hover { background:rgba(255,255,255,.08); color:#fff; }
+  .gs-chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; min-height:200px; max-height:300px; scrollbar-width:thin; scrollbar-color:rgba(139,92,246,.3) transparent; }
+  .gs-msg { max-width:85%; padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.5; animation:gs-fadeIn .3s ease; word-break:break-word; }
+  .gs-msg a { color:#7dd3fc; text-decoration:underline; }
+  @keyframes gs-fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .gs-msg-bot { background:rgba(139,92,246,.12); color:#e2e8f0; border-bottom-left-radius:4px; align-self:flex-start; }
+  .gs-msg-user { background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:#fff; border-bottom-right-radius:4px; align-self:flex-end; }
+  .gs-msg-typing { display:flex; gap:4px; padding:12px 16px; }
+  .gs-msg-typing span { width:7px; height:7px; border-radius:50%; background:#8b5cf6; animation:gs-bounce .6s infinite alternate; }
+  .gs-msg-typing span:nth-child(2) { animation-delay:.15s; }
+  .gs-msg-typing span:nth-child(3) { animation-delay:.3s; }
+  @keyframes gs-bounce { to{opacity:.3;transform:translateY(-4px)} }
+  .gs-chat-suggestions { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px 10px; }
+  .gs-chat-suggestions button { background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.25); color:#c4b5fd; border-radius:20px; padding:5px 12px; font-size:12px; cursor:pointer; transition:background .15s,border-color .15s; font-family:inherit; }
+  .gs-chat-suggestions button:hover { background:rgba(139,92,246,.2); border-color:rgba(139,92,246,.5); }
+  .gs-chat-input-wrap { display:flex; padding:12px; border-top:1px solid rgba(255,255,255,.06); gap:8px; }
+  #gs-chat-input { flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:10px 14px; color:#f1f5f9; font-size:13px; outline:none; font-family:inherit; transition:border-color .15s; }
+  #gs-chat-input:focus { border-color:rgba(139,92,246,.5); }
+  #gs-chat-input::placeholder { color:#64748b; }
+  .gs-chat-send { width:40px; height:40px; border-radius:10px; border:none; background:linear-gradient(135deg,#8b5cf6,#06b6d4); color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform .15s; }
+  .gs-chat-send:hover { transform:scale(1.05); }
+  @media(max-width:480px){
+    #gs-chat-window { width:calc(100vw - 32px); right:-8px; bottom:68px; max-height:70vh; }
+    #gs-chatbot { bottom:16px; right:16px; }
+  }
+</style>
+
+<script>
+  // ── GameStringer Chatbot ──
+  const GS_KB = [
+    { k:['cos.*gamestringer','what is','che cos','a cosa serve'], a:'GameStringer è un\'app desktop che traduce videogiochi in qualsiasi lingua usando l\'AI. Supporta 11+ engine (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI...) e 20+ provider AI. <a href="#features">Scopri le feature &rarr;</a>' },
+    { k:['download','scaric','dove.*trovo','installa'], a:'Puoi scaricare GameStringer gratis dalla pagina <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank">GitHub Releases</a>. Disponibile per Windows, macOS e Linux!' },
+    { k:['gratis','free','cost','prezzo','price','pag'], a:'GameStringer è <strong>completamente gratuito</strong>. Nessun account richiesto, nessun limite di utilizzo. Se vuoi supportare il progetto: <a href="https://ko-fi.com/gamestringer" target="_blank">Ko-fi</a> o <a href="https://github.com/sponsors/rouges78" target="_blank">GitHub Sponsors</a>.' },
+    { k:['engine','motor','unity','unreal','godot','rpg maker','bethesda','cri'], a:'Supportiamo <strong>11+ engine</strong>: Unity (BepInEx auto-install), Unreal (.locres), Godot, RPG Maker (MV/MZ/VX/XP), Ren\'Py, Bethesda (Skyrim/Fallout/Starfield), CRI (Persona/Yakuza), GameMaker, Kirikiri, Wolf RPG, Telltale, Visionaire, Danganronpa. <a href="#engines">Vedi tutti &rarr;</a>' },
+    { k:['ai','provider','ollama','gpt','claude','gemini','deepseek','locale','local'], a:'<strong>20+ provider AI</strong>: Ollama (locale, gratis), TranslateGemma, HY-MT, GPT-4o, Claude 3.5, Gemini, DeepSeek, Groq, Mistral, DeepL, e altri. Ti consiglio <strong>TranslateGemma</strong> (gratis, locale) o <strong>Gemini</strong> (cloud, free tier). <a href="#ai">Confronta &rarr;</a>' },
+    { k:['p\\.?t\\.?','prediction','analisi','difficolt','difficulty'], a:'Il <strong>P.T. (Prediction Tool)</strong> analizza il gioco prima di tradurre: punteggio difficoltà 0-100, tempo stimato per 18 modelli AI, 5 catene LLM consigliate, rilevamento DRM, analisi encoding. <a href="#features">Dettagli &rarr;</a>' },
+    { k:['come funzion','how.*work','step','procedura'], a:'Semplicissimo! 1️⃣ Installa e avvia. 2️⃣ La libreria giochi si carica automaticamente (Steam, Epic, GOG...). 3️⃣ Scegli un gioco. 4️⃣ Clicca <strong>"String it!"</strong> — scansione, traduzione e patching automatici. 5️⃣ Gioca nella tua lingua!' },
+    { k:['chat','community','comunit','online','real.?time'], a:'GameStringer include una <strong>Community Chat</strong> integrata con Supabase Realtime: stanze tematiche, presenza online, reply/edit/delete, auto-login dal profilo GS. Connettiti con altri traduttori! <a href="#showcase">Vedi &rarr;</a>' },
+    { k:['windows','linux','mac','piattaform','platform','sistema'], a:'GameStringer gira su <strong>Windows 10+</strong>, <strong>macOS 10.15+</strong> e <strong>Linux</strong> (Ubuntu 22.04+, Fedora 38+). Requisiti: 4 GB RAM (8 GB+ per AI locale), 500 MB disco.' },
+    { k:['backup','ripristin','restore','sicur'], a:'Ogni patch crea un <strong>backup automatico</strong> prima di modificare qualsiasi file. Puoi ripristinare con un click dalla pagina del gioco. Nessun rischio!' },
+    { k:['tray','notific','notification'], a:'Le <strong>notifiche System Tray</strong> (v1.9.0) ti avvisano di: messaggi chat, traduzioni completate, errori, aggiornamenti, amici online. Configurabili con quiet hours.' },
+    { k:['bug','errore','problema','issue','segnala'], a:'Puoi segnalare bug su <a href="https://github.com/rouges78/GameStringer/issues" target="_blank">GitHub Issues</a> o discuterne su <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank">GitHub Discussions</a>. La community è attiva!' },
+    { k:['contribu','open source','codice','source','licen'], a:'GameStringer è <strong>Source-Available</strong> (non OSI). Il codice è su <a href="https://github.com/rouges78/GameStringer" target="_blank">GitHub</a>. Uso personale gratuito, uso commerciale richiede permesso. Puoi ispezionare, buildare e modificare per te stesso.' },
+    { k:['skyrim','fallout','oblivion','starfield','elder scroll','bethesda'], a:'Da v1.9.0 supportiamo nativamente <strong>Bethesda Engine</strong>: Skyrim LE/SE/AE, Fallout 3/NV/4, Oblivion, Starfield. Parser nativo per BSA v103-105, BA2 GNRL/DX10, ESP/ESM con record FULL/DESC/NAM1, file STRINGS/DLSTRINGS/ILSTRINGS.' },
+    { k:['persona','yakuza','tales','dragon ball','cri','cpk'], a:'Da v1.9.0 supportiamo <strong>CRI Middleware</strong>: Persona 5 Royal, Yakuza, Tales of, Dragon Ball. Parser CPK + CRILAYLA + MSG/BMD/FTD con auto-detection Shift-JIS/UTF-8/UTF-16.' },
+    { k:['aggiorna','update','versione','version'], a:'GameStringer si <strong>aggiorna automaticamente</strong> via Tauri Updater. Se vieni da v1.8.x, scarica v1.9.1+ manualmente (migrazione Tauri v2). Dopo, gli aggiornamenti sono automatici.' },
+    { k:['ciao','hello','hi','salve','buon','hey'], a:'Ciao! 👋 Sono il bot di GameStringer. Come posso aiutarti? Chiedimi di engine supportati, provider AI, come funziona, prezzi, o qualsiasi altra cosa!' },
+    { k:['grazie','thanks','thank','thx'], a:'Prego! 😊 Se hai altre domande, sono qui. Buona traduzione! 🎮' },
+  ];
+
+  const GS_SUGGESTIONS = [
+    { label:'Cos\'è GameStringer?', q:'Cos\'è GameStringer?' },
+    { label:'È gratis?', q:'È gratis?' },
+    { label:'Engine supportati', q:'Quali engine supporta?' },
+    { label:'Come funziona?', q:'Come funziona?' },
+    { label:'Download', q:'Dove lo scarico?' },
+    { label:'Provider AI', q:'Quali AI posso usare?' },
+  ];
+
+  let chatOpen = false;
+  let chatInited = false;
+
+  function toggleChat() {
+    chatOpen = !chatOpen;
+    document.getElementById('gs-chat-window').classList.toggle('gs-chat-hidden', !chatOpen);
+    document.getElementById('gs-chat-badge').classList.add('gs-chat-badge-hidden');
+    if (!chatInited) { initChat(); chatInited = true; }
+    if (chatOpen) document.getElementById('gs-chat-input').focus();
+  }
+
+  function initChat() {
+    addBotMsg('Ciao! 👋 Sono l\'assistente di <strong>GameStringer</strong>. Chiedimi qualsiasi cosa sul progetto!');
+    showSuggestions(GS_SUGGESTIONS);
+    // Show badge after 3s if not opened
+    setTimeout(() => {
+      if (!chatOpen) document.getElementById('gs-chat-badge').classList.remove('gs-chat-badge-hidden');
+    }, 3000);
+  }
+
+  function addBotMsg(html) {
+    const msgs = document.getElementById('gs-chat-messages');
+    // Typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'gs-msg gs-msg-bot gs-msg-typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    msgs.appendChild(typing);
+    msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(() => {
+      typing.remove();
+      const el = document.createElement('div');
+      el.className = 'gs-msg gs-msg-bot';
+      el.innerHTML = html;
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 400 + Math.random() * 400);
+  }
+
+  function addUserMsg(text) {
+    const msgs = document.getElementById('gs-chat-messages');
+    const el = document.createElement('div');
+    el.className = 'gs-msg gs-msg-user';
+    el.textContent = text;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showSuggestions(items) {
+    const wrap = document.getElementById('gs-chat-suggestions');
+    wrap.innerHTML = '';
+    items.forEach(s => {
+      const btn = document.createElement('button');
+      btn.textContent = s.label;
+      btn.onclick = () => { sendChatQuery(s.q); };
+      wrap.appendChild(btn);
+    });
+  }
+
+  function sendChatMsg() {
+    const input = document.getElementById('gs-chat-input');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    sendChatQuery(q);
+  }
+
+  function sendChatQuery(q) {
+    addUserMsg(q);
+    document.getElementById('gs-chat-suggestions').innerHTML = '';
+    const lower = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let best = null;
+    let bestScore = 0;
+    for (const entry of GS_KB) {
+      for (const pattern of entry.k) {
+        try {
+          if (new RegExp(pattern, 'i').test(lower)) {
+            const score = pattern.length;
+            if (score > bestScore) { best = entry; bestScore = score; }
+          }
+        } catch(_) {}
+      }
+    }
+    if (best) {
+      addBotMsg(best.a);
+    } else {
+      addBotMsg('Non ho una risposta specifica per questa domanda. Prova a consultare la <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank">Community</a> o le <a href="#faq">FAQ</a>! Oppure chiedimi di: engine, AI, download, come funziona...');
+    }
+    // Show suggestions after reply
+    setTimeout(() => {
+      showSuggestions(GS_SUGGESTIONS.sort(() => Math.random() - 0.5).slice(0, 4));
+    }, 1200);
+  }
+
+  // Auto-show badge after 3s
+  setTimeout(() => {
+    if (!chatOpen && !chatInited) {
+      document.getElementById('gs-chat-badge').classList.remove('gs-chat-badge-hidden');
+    }
+  }, 3000);
+</script>
+
 <script>
   // ScrollReveal
   const sr = ScrollReveal({ origin:'bottom', distance:'60px', duration:1000, delay:200, reset:false });
