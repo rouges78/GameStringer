@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameStringer v1.9.1 — Traduci qualsiasi videogioco con l'AI</title>
+  <title data-gs-version-title>GameStringer v1.9.1 — Traduci qualsiasi videogioco con l'AI</title>
   <meta name="description" content="Suite open source per tradurre videogiochi con l'AI. 11+ engine (Unity, Unreal, Godot, RPG Maker, Bethesda, CRI), 20+ provider AI, Quality Badges, Translation Memory, Auto-glossario. 500 stringhe gratis.">
   <meta name="keywords" content="traduzione giochi, localizzazione videogiochi, AI translator, Unity, Unreal, RPG Maker, Bethesda, CRI, Danganronpa, Ollama, GPT-4, TranslateGemma">
   <meta name="theme-color" content="#050a14">
@@ -73,7 +73,7 @@
     <a href="#engines">Engines</a>
     <a href="#ai">AI</a>
     <a href="#tools">Tools</a>
-    <a href="#whatsnew">v1.9.1</a>
+    <a href="#whatsnew" data-gs-version-nav>v1.9.1</a>
     <a href="#usecases">Use Cases</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
@@ -108,7 +108,7 @@
 
   <div class="hero-inner">
     <img src="logo.png" alt="GameStringer Logo" width="200" height="200" style="display:block;margin:0 auto 32px;filter:drop-shadow(0 0 60px rgba(139,92,246,.5)) drop-shadow(0 0 120px rgba(6,182,212,.25))">
-    <span class="hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.9.1 — Tauri 2, Presenza Online, Notifiche Tray, Bethesda &amp; CRI Engine</span></span>
+    <span class="hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge" data-gs-version-badge>v1.9.1 — Tauri 2, Presenza Online, Notifiche Tray, Bethesda &amp; CRI Engine</span></span>
     <h1 class="hero-title" data-i18n="hero.title">GameStringer</h1>
     <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
     <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi supporto libero.</p>
@@ -1016,7 +1016,7 @@
     </div>
     <div class="footer-bottom">
       <p>&copy; 2025-2026 GameStringer by <span style="color:#7dd3fc">rouges78</span>. Source-Available License v1.1</p>
-      <p>Made with <span class="footer-heart">&hearts;</span> in Italy &mdash; v1.9.1</p>
+      <p>Made with <span class="footer-heart">&hearts;</span> in Italy &mdash; <span data-gs-version-footer>v1.9.1</span></p>
     </div>
   </div>
 </footer>
@@ -1081,6 +1081,65 @@
       langBtn.setAttribute('aria-expanded', langMenu.classList.contains('open') ? 'true' : 'false');
     }).observe(langMenu, { attributes: true, attributeFilter: ['class'] });
   }
+
+  // ── Auto-update version from GitHub latest release ──
+  (async function autoUpdateVersion() {
+    try {
+      const res = await fetch('https://api.github.com/repos/rouges78/GameStringer/releases/latest', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const ver = data.tag_name?.replace(/^v/, '') || '';
+      if (!ver) return;
+
+      const vTag = 'v' + ver;
+      const published = new Date(data.published_at).toLocaleDateString('it-IT', { year:'numeric', month:'long', day:'numeric' });
+      const body = data.body || '';
+
+      // Extract first line of release notes as summary
+      const summary = body.split('\n').filter(l => l.trim())[0]?.replace(/^#+\s*/, '').replace(/[*_`]/g, '').trim() || '';
+
+      // Update page title
+      const titleEl = document.querySelector('[data-gs-version-title]');
+      if (titleEl) titleEl.textContent = 'GameStringer v' + ver + ' \u2014 Traduci qualsiasi videogioco con l\'AI';
+
+      // Update nav link
+      const navLink = document.querySelector('[data-gs-version-nav]');
+      if (navLink) navLink.textContent = vTag;
+
+      // Update hero badge
+      const badge = document.querySelector('[data-gs-version-badge]');
+      if (badge && summary) badge.textContent = vTag + ' \u2014 ' + summary;
+      else if (badge) badge.textContent = vTag;
+
+      // Update footer
+      const footer = document.querySelector('[data-gs-version-footer]');
+      if (footer) footer.textContent = vTag;
+
+      // Update schema.org
+      const schemaEl = document.querySelector('script[type="application/ld+json"]');
+      if (schemaEl) {
+        try {
+          const schema = JSON.parse(schemaEl.textContent);
+          schema.softwareVersion = ver;
+          schemaEl.textContent = JSON.stringify(schema, null, 2);
+        } catch(_) {}
+      }
+
+      // Update download button URL
+      const dlBtn = document.querySelector('[data-i18n="hero.download"]');
+      if (dlBtn) dlBtn.href = 'https://github.com/rouges78/GameStringer/releases/tag/' + vTag;
+
+      // Update OG meta
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.content = 'GameStringer v' + ver + ' \u2014 Traduci qualsiasi videogioco con l\'AI';
+      const twTitle = document.querySelector('meta[name="twitter:title"]');
+      if (twTitle) twTitle.content = 'GameStringer v' + ver + ' \u2014 Traduci qualsiasi videogioco con l\'AI';
+
+      console.log('[GameStringer.ai] Auto-updated to', vTag, '(published', published + ')');
+    } catch(e) {
+      console.warn('[GameStringer.ai] Could not fetch latest release:', e);
+    }
+  })();
 </script>
 
 </body>
