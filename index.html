@@ -77,8 +77,12 @@
 <section id="whatsnew" style="background:rgba(255,255,255,0.02)">
   <div class="container">
     <span class="section-label">// Roadmap</span>
-    <h2 class="section-title">Ultime Novità (v1.9.0)</h2>
+    <h2 class="section-title">Ultime Novità (v1.9.1)</h2>
     <div style="display:flex; flex-direction:column; gap:20px">
+      <div class="card">
+        <h3 style="color:#fff">Design Glassmorphism & UI Tradotta</h3>
+        <p style="margin-top:10px">Le modali di profilo, sicurezza, avatar e changelog ora usano un elegante effetto "vetro" (glassmorphism) ultra-sfocato, e tutta la UI è stata localizzata in 11 lingue diverse, inclusa la nuova Community Chat completamente tradotta.</p>
+      </div>
       <div class="card">
         <h3 style="color:#fff">Bethesda & CRI Engine Support</h3>
         <p>Nuovo patcher per Skyrim, Fallout, Starfield (BSA/BA2/ESP) e CRI Middleware (Persona, Yakuza) con auto-detection dell'encoding.</p>
@@ -123,6 +127,28 @@
         <h4 style="color:var(--cyan)">Posso usare AI locali?</h4>
         <p>Certamente. Supportiamo Ollama per far girare modelli come Llama 3 o Gemma direttamente sulla tua GPU, senza costi API.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="ai-details" style="background:rgba(139,92,246,0.03)">
+  <div class="container">
+    <span class="section-label">// AI.Network</span>
+    <h2 class="section-title">20+ Provider AI Supportati</h2>
+    <div class="card" style="overflow-x:auto">
+      <table class="ai-table">
+        <thead>
+          <tr><th>Provider</th><th>Modello Consigliato</th><th>Tipo</th><th>Specialità</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Ollama</strong></td><td>Llama 3 / Gemma 2</td><td><span class="badge badge-free">Locale</span></td><td>Privacy totale, zero costi</td></tr>
+          <tr><td><strong>Claude</strong></td><td>Claude 3.5 Sonnet</td><td><span class="badge badge-paid">Cloud</span></td><td>Nuance narrative, stile letterario</td></tr>
+          <tr><td><strong>OpenAI</strong></td><td>GPT-4o</td><td><span class="badge badge-paid">Cloud</span></td><td>Logica complessa, istruzioni sistema</td></tr>
+          <tr><td><strong>Gemini</strong></td><td>Gemini 1.5 Pro</td><td><span class="badge badge-free">Cloud (Free)</span></td><td>Script lunghissimi (1M context)</td></tr>
+          <tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V2</td><td><span class="badge badge-paid">Economy</span></td><td>Qualità/Prezzo imbattibile</td></tr>
+          <tr><td><strong>TranslateGemma</strong></td><td>Gemma-2-9b-it</td><td><span class="badge badge-free">Specialized</span></td><td>Traduzione pura multilingua</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
