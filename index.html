@@ -1,302 +1,387 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameStringer v1.10.2 — Traduci qualsiasi videogioco con l'AI</title>
-  <link rel="stylesheet" href="styles-new.css">
-  <link rel="icon" href="favicon.svg">
-  <script src="https://unpkg.com/scrollreveal"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameStringer — Traduci qualsiasi videogioco con l'AI</title>
+<meta name="description" content="GameStringer è la suite open source per tradurre videogiochi con l'AI: 20+ engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI) e 20+ provider AI. Analizza, estrai, traduci, applica la patch, gioca.">
+<link rel="icon" href="favicon.svg">
+<style>
+  :root{
+    --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04); --surface2:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.10); --text:#e8ebf2; --muted:#9aa6bd; --faint:#6b7689;
+    --core:#8b5cf6; --core2:#6366f1;
+    --trad:#3b82f6; --trad2:#38bdf8;
+    --patch:#10b981; --patch2:#14b8a6;
+    --res:#f59e0b; --res2:#fb923c;
+    --radius:18px; --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(60rem 40rem at 12% -8%, rgba(139,92,246,.18), transparent 60%),
+      radial-gradient(50rem 38rem at 92% 4%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(46rem 40rem at 78% 92%, rgba(16,185,129,.12), transparent 60%),
+      radial-gradient(40rem 36rem at 8% 96%, rgba(245,158,11,.10), transparent 60%),
+      var(--bg)}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.02em;font-weight:800}
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,10,18,.7);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+  .brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--core),var(--trad2));box-shadow:0 0 22px rgba(99,102,241,.5)}
+  .nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
+  .nav-links a:hover{color:#fff}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .lang{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:700;font-size:14px;border:1px solid var(--border);transition:.2s;cursor:pointer}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:linear-gradient(135deg,var(--core),var(--core2));border:none;color:#fff;box-shadow:0 10px 30px rgba(99,102,241,.35)}
+  .btn-ghost{background:var(--surface)}
+  @media(max-width:900px){.nav-links{display:none}}
+  .hero{padding:84px 0 64px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}
+  .pill b{color:var(--patch2)}
+  .hero h1{font-size:clamp(2.3rem,5.4vw,4rem);margin:22px 0 0}
+  .grad{background:linear-gradient(110deg,var(--core),var(--trad2) 45%,var(--patch2) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{max-width:680px;margin:20px auto 0;color:var(--muted);font-size:1.12rem}
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:54px}
+  .stat{min-width:120px;padding:18px 22px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+  .stat .n{font-size:1.8rem;font-weight:800}
+  .stat .l{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  section{padding:72px 0}
+  .label{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .label.core{color:var(--core)} .label.trad{color:var(--trad2)} .label.patch{color:var(--patch2)} .label.res{color:var(--res2)}
+  .h2{font-size:clamp(1.7rem,3.4vw,2.5rem);margin:10px 0 12px}
+  .sub{color:var(--muted);max-width:660px;margin-bottom:8px}
+  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
+  @media(max-width:980px){.pipe{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.pipe{grid-template-columns:1fr}}
+  .node{position:relative;padding:22px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--border);overflow:hidden;transition:.25s}
+  .node:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.22)}
+  .node .step{position:absolute;top:12px;right:14px;font-size:34px;font-weight:800;color:rgba(255,255,255,.06)}
+  .node .ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:22px}
+  .node h3{font-size:1.06rem;margin-bottom:6px}
+  .node p{font-size:13.5px;color:var(--muted)}
+  .node::before{content:"";position:absolute;left:0;top:0;height:100%;width:3px;background:var(--accent,var(--core))}
+  .ic.core{background:rgba(139,92,246,.16);color:#c4b5fd}
+  .ic.trad{background:rgba(56,189,248,.16);color:#7dd3fc}
+  .ic.patch{background:rgba(16,185,129,.16);color:#6ee7b7}
+  .ic.res{background:rgba(245,158,11,.16);color:#fcd34d}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .arch{margin-top:40px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:30px 22px}
+  .arch svg{width:100%;height:auto;display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:36px}
+  .card{padding:22px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:.25s}
+  .card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.2);background:var(--surface2)}
+  .card .tag{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .card h3{font-size:1.08rem;margin:8px 0 6px}
+  .card p{font-size:13.8px;color:var(--muted)}
+  .tcore{color:var(--core)} .ttrad{color:var(--trad2)} .tpatch{color:var(--patch2)} .tres{color:var(--res2)}
+  .engines{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:34px}
+  .eng{padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border);text-align:center;transition:.2s}
+  .eng:hover{transform:translateY(-3px);border-color:var(--patch2)}
+  .eng h4{font-size:1rem}
+  .eng small{color:var(--faint);font-size:11.5px}
+  .eng .ok{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;color:var(--patch2);background:rgba(16,185,129,.12);padding:2px 8px;border-radius:999px}
+  .tablewrap{margin-top:30px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:rgba(255,255,255,.03);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  tr:last-child td{border-bottom:none}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .b-local{background:rgba(16,185,129,.14);color:var(--patch2)}
+  .b-cloud{background:rgba(56,189,248,.14);color:var(--trad2)}
+  .news{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:34px}
+  .newcard{padding:22px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(99,102,241,.08),rgba(255,255,255,.02))}
+  .newcard h3{font-size:1.05rem;margin-bottom:6px}
+  .newcard p{font-size:13.6px;color:var(--muted)}
+  details{border:1px solid var(--border);border-radius:14px;background:var(--surface);margin-top:12px;padding:2px 18px}
+  summary{cursor:pointer;padding:16px 0;font-weight:700;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--trad2);font-size:22px;font-weight:800}
+  details[open] summary::after{content:"–"}
+  details p{padding:0 0 16px;color:var(--muted);font-size:14px}
+  footer{border-top:1px solid var(--border);padding:50px 0 40px;text-align:center;color:var(--muted)}
+  .flinks{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin:18px 0;font-size:14px}
+  .flinks a:hover{color:var(--trad2)}
+  .copy{font-size:12px;color:var(--faint);margin-top:18px}
+  .reveal{opacity:0;transform:translateY(24px);transition:.6s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  .flow{stroke-dasharray:6 8;animation:dash 1.4s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-28}}
+  @media(prefers-reduced-motion:reduce){.flow{animation:none}}
+</style>
 </head>
 <body>
+<div class="bgfx"></div>
 
 <nav>
-  <div class="container nav-content">
-    <div class="nav-logo"><img src="logo.png" alt="Logo"></div>
+  <div class="container nav">
+    <a class="brand" href="#top"><span class="dot"></span> GameStringer</a>
     <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#engines">Engine</a>
-      <a href="#ai">AI & Cloud</a>
-      <a href="#faq">FAQ</a>
+      <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
+      <a href="#architettura" data-i18n="nav.engine">Motore</a>
+      <a href="#funzioni" data-i18n="nav.functions">Funzioni</a>
+      <a href="#engine" data-i18n="nav.engines2">Engine</a>
+      <a href="#ai" data-i18n="nav.ai">AI</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
     </div>
-    <a href="https://github.com/rouges78/GameStringer" target="_blank" class="btn btn-primary" style="padding:10px 20px; font-size:12px">GitHub Source</a>
+    <div class="nav-right">
+      <select class="lang" id="langSel" aria-label="Language">
+        <option value="it">Italiano</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt">Português</option>
+        <option value="pl">Polski</option>
+        <option value="ru">Русский</option>
+        <option value="ja">日本語</option>
+        <option value="zh">中文</option>
+        <option value="ko">한국어</option>
+      </select>
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="nav.download">Scarica</a>
+    </div>
   </div>
 </nav>
 
-<header class="hero">
+<header class="hero" id="top">
   <div class="container">
-    <img src="logo.png" alt="GameStringer" class="hero-logo">
-    <h1 class="hero-title">Traduci i tuoi giochi<br>con l'intelligenza artificiale</h1>
-    <p class="hero-desc">La suite open source definitiva per la localizzazione. Supporta 11+ engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI) e 20+ provider AI. 500 stringhe gratuite per ogni progetto.</p>
-    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap">
-      <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary">Scarica per Windows</a>
-      <a href="#features" class="btn" style="border:1px solid rgba(255,255,255,0.2)">Esplora Funzionalità</a>
+    <span class="pill reveal">🎮 Open source · <b>v1.10.2</b> · Windows · Linux · macOS</span>
+    <h1 class="reveal" data-i18n-html="hero.title">Traduci qualsiasi videogioco<br><span class="grad">con l'intelligenza artificiale</span></h1>
+    <p class="lead reveal" data-i18n="hero.lead">GameStringer analizza il gioco, riconosce l'engine, estrae il testo, lo traduce con l'AI e riapplica la patch — in automatico. Niente riga di comando, niente modding manuale. Backup sempre prima di toccare i file.</p>
+    <div class="cta reveal">
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="hero.cta1">⬇ Scarica l'ultima versione</a>
+      <a class="btn btn-ghost" href="#come-funziona" data-i18n="hero.cta2">Scopri come funziona</a>
     </div>
-    
-    <div style="display:flex; justify-content:center; gap:40px; margin-top:60px; border-top:1px solid rgba(255,255,255,0.1); padding-top:40px">
-      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">11+</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Engine</div></div>
-      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">20+</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Provider AI</div></div>
-      <div><div style="font-size:2rem; font-weight:800; color:var(--cyan)">&infin;</div><div style="font-size:12px; color:var(--text-s); text-transform:uppercase">Possibilità</div></div>
+    <div class="stats">
+      <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.engines">Engine supportati</div></div>
+      <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.ai">Provider AI</div></div>
+      <div class="stat reveal"><div class="n grad">11</div><div class="l" data-i18n="stat.langs">Lingue UI</div></div>
+      <div class="stat reveal"><div class="n grad">800+</div><div class="l" data-i18n="stat.games">Giochi rilevati</div></div>
     </div>
   </div>
 </header>
 
-<section id="features">
+<section id="come-funziona">
   <div class="container">
-    <span class="section-label">// Core.Systems</span>
-    <h2 class="section-title">Tecnologia di Traduzione</h2>
+    <span class="label core reveal" data-i18n="pipe.label">// La pipeline del motore</span>
+    <h2 class="h2 reveal" data-i18n="pipe.h2">Dal gioco originale alla tua lingua, in 7 passi</h2>
+    <p class="sub reveal" data-i18n="pipe.sub">Ogni traduzione segue lo stesso flusso automatico. I colori indicano l'area del motore coinvolta.</p>
+    <div class="pipe">
+      <div class="node reveal" style="--accent:var(--res)"><span class="step">1</span><div class="ic res">📂</div><h3 data-i18n="s1.t">Scansione</h3><p data-i18n="s1.d">Rileva la libreria (Steam, Epic, GOG…) e scansiona la cartella del gioco alla ricerca dei file di testo.</p></div>
+      <div class="node reveal" style="--accent:var(--core)"><span class="step">2</span><div class="ic core">🧠</div><h3 data-i18n="s2.t">P.T. — Analisi</h3><p data-i18n="s2.d">Il Prediction Tool stima difficoltà 0–100, volume stringhe, DRM/anti-cheat, encoding e tempi su più modelli.</p></div>
+      <div class="node reveal" style="--accent:var(--patch)"><span class="step">3</span><div class="ic patch">🔍</div><h3 data-i18n="s3.t">Rileva engine</h3><p data-i18n="s3.d">Identifica l'engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI…) e sceglie la strategia giusta.</p></div>
+      <div class="node reveal" style="--accent:var(--patch)"><span class="step">4</span><div class="ic patch">📝</div><h3 data-i18n="s4.t">Estrazione</h3><p data-i18n="s4.d">Estrae le stringhe dai formati nativi: JSON, .locres, .rpy, CPK, BSA/BA2, StringTable Unity e altri.</p></div>
+      <div class="node reveal" style="--accent:var(--trad)"><span class="step">5</span><div class="ic trad">✨</div><h3 data-i18n="s5.t">Traduzione AI</h3><p data-i18n="s5.d">20+ provider, con Translation Memory, glossario automatico e punteggio di qualità 0–100 su ogni riga.</p></div>
+      <div class="node reveal" style="--accent:var(--patch)"><span class="step">6</span><div class="ic patch">🩹</div><h3 data-i18n="s6.t">Patch / Injection</h3><p data-i18n="s6.d">Riscrive il testo tradotto nel gioco (file o runtime). Backup automatico prima di ogni modifica.</p></div>
+      <div class="node reveal" style="--accent:var(--patch)"><span class="step">7</span><div class="ic patch">🎮</div><h3 data-i18n="s7.t">Gioca</h3><p data-i18n="s7.d">Avvii il gioco nella tua lingua. Se Steam aggiorna il gioco, GameStringer ti avvisa per ri-applicare la patch.</p></div>
+      <div class="node reveal" style="--accent:var(--core)"><span class="step">+</span><div class="ic core">🔁</div><h3 data-i18n="s8.t">Memoria & QA</h3><p data-i18n="s8.d">Correzioni e termini restano nella Translation Memory: coerenza nel tempo, mai tradurre due volte la stessa frase.</p></div>
+    </div>
+    <div class="legend reveal">
+      <span><i class="swatch" style="background:var(--core)"></i> <span data-i18n="leg.core">Core / P.T.</span></span>
+      <span><i class="swatch" style="background:var(--trad2)"></i> <span data-i18n="leg.trad">Traduzione AI</span></span>
+      <span><i class="swatch" style="background:var(--patch2)"></i> <span data-i18n="leg.patch">Engine / Patcher</span></span>
+      <span><i class="swatch" style="background:var(--res2)"></i> <span data-i18n="leg.res">Risorse / Libreria</span></span>
+    </div>
+  </div>
+</section>
+
+<section id="architettura" style="background:rgba(255,255,255,.015)">
+  <div class="container">
+    <span class="label patch reveal" data-i18n="arch.label">// Architettura del motore</span>
+    <h2 class="h2 reveal" data-i18n="arch.h2">Una rilevazione, tre strade di traduzione</h2>
+    <p class="sub reveal" data-i18n="arch.sub">In base all'engine, GameStringer sceglie automaticamente il percorso migliore: patch sui file, injection a runtime, oppure OCR a schermo.</p>
+    <div class="arch reveal">
+      <svg viewBox="0 0 1000 430" role="img" aria-label="Engine detection branching into three translation paths">
+        <defs>
+          <linearGradient id="gCore" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+        </defs>
+        <rect x="400" y="22" width="200" height="64" rx="14" fill="url(#gCore)"/>
+        <text x="500" y="49" text-anchor="middle" fill="#fff" font-size="17" font-weight="700" data-i18n="arch.detect">Rilevamento engine</text>
+        <text x="500" y="70" text-anchor="middle" fill="rgba(255,255,255,.85)" font-size="12">Universal Injector · auto-detect</text>
+        <path class="flow" d="M460,86 C300,120 200,130 175,168" fill="none" stroke="#10b981" stroke-width="2.5"/>
+        <path class="flow" d="M500,86 L500,168" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+        <path class="flow" d="M540,86 C700,120 800,130 825,168" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+        <rect x="40" y="168" width="270" height="54" rx="12" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text x="175" y="192" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" data-i18n="arch.p1">Patcher su file</text>
+        <text x="175" y="211" text-anchor="middle" fill="#9aa6bd" font-size="11.5" data-i18n="arch.p1d">parsing &amp; patch dei file del gioco</text>
+        <rect x="365" y="168" width="270" height="54" rx="12" fill="rgba(245,158,11,.14)" stroke="#f59e0b"/>
+        <text x="500" y="192" text-anchor="middle" fill="#fcd34d" font-size="15" font-weight="700" data-i18n="arch.p2">Injection a runtime</text>
+        <text x="500" y="211" text-anchor="middle" fill="#9aa6bd" font-size="11.5" data-i18n="arch.p2d">BepInEx · hook DLL (Windows)</text>
+        <rect x="690" y="168" width="270" height="54" rx="12" fill="rgba(56,189,248,.14)" stroke="#3b82f6"/>
+        <text x="825" y="192" text-anchor="middle" fill="#7dd3fc" font-size="15" font-weight="700" data-i18n="arch.p3">OCR a schermo</text>
+        <text x="825" y="211" text-anchor="middle" fill="#9aa6bd" font-size="11.5" data-i18n="arch.p3d">retro / RPG_RT classico</text>
+        <g font-size="12.5" fill="#cbd5e1">
+          <rect x="40" y="246" width="270" height="150" rx="12" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.08)"/>
+          <text x="60" y="272">• Unity (assets, StringTable)</text>
+          <text x="60" y="296">• Unreal (.locres, _P.pak)</text>
+          <text x="60" y="320">• Ren'Py · RPG Maker MV/MZ</text>
+          <text x="60" y="344">• Godot · GameMaker · Wolf RPG</text>
+          <text x="60" y="368">• Bethesda (BSA/BA2/ESP) · CRI (CPK)</text>
+          <rect x="365" y="246" width="270" height="150" rx="12" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.08)"/>
+          <text x="385" y="272" data-i18n="arch.r2a">• Unity senza file estraibili →</text>
+          <text x="385" y="296">  BepInEx + XUnity.AutoTranslator</text>
+          <text x="385" y="320" data-i18n="arch.r2c">• Hook DLL / memory injection</text>
+          <text x="385" y="344" data-i18n="arch.r2d">• Gate anti-cheat: blocca i</text>
+          <text x="385" y="368" data-i18n="arch.r2e">  giochi online (EAC/BattlEye…)</text>
+          <rect x="690" y="246" width="270" height="150" rx="12" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.08)"/>
+          <text x="710" y="272" data-i18n="arch.r3a">• Giochi retro (8/16-bit, DOS)</text>
+          <text x="710" y="296" data-i18n="arch.r3b">• RPG Maker 2000/2003 classico</text>
+          <text x="710" y="320" data-i18n="arch.r3c">• Cattura schermo + Tesseract</text>
+          <text x="710" y="344" data-i18n="arch.r3d">• Overlay traduzione in tempo</text>
+          <text x="710" y="368" data-i18n="arch.r3e">  reale mentre giochi</text>
+        </g>
+      </svg>
+    </div>
+    <p class="sub reveal" style="margin-top:18px;font-size:13px;color:var(--faint)" data-i18n="arch.note">Nota: l'injection a runtime usa DLL injection e può far scattare gli anti-cheat. Usala solo su giochi single-player/offline — il P.T. rileva DRM e anti-cheat prima di qualsiasi modifica.</p>
+  </div>
+</section>
+
+<section id="funzioni">
+  <div class="container">
+    <span class="label trad reveal" data-i18n="fn.label">// Funzioni principali</span>
+    <h2 class="h2 reveal" data-i18n="fn.h2">Una suite completa, non un semplice traduttore</h2>
     <div class="grid">
-      <div class="card">
-        <h3>Neural AI Hub</h3>
-        <p>Integrazione nativa con GPT-4, Claude 3.5, Gemini e modelli locali via Ollama. Il sistema analizza il genere del gioco per adattare il tono (Horror, JRPG, Indie).</p>
-      </div>
-      <div class="card">
-        <h3>Translation Memory</h3>
-        <p>Database locale che impara dalle tue correzioni. Garantisce coerenza terminologica e ti permette di non tradurre mai la stessa frase due volte.</p>
-      </div>
-      <div class="card">
-        <h3>Quality Badges</h3>
-        <p>Ogni riga riceve un punteggio di qualità (0-100). Identifica istantaneamente dove serve una revisione umana e dove l'AI ha fatto un lavoro perfetto.</p>
-      </div>
-      <div class="card">
-        <h3>Auto-Glossary</h3>
-        <p>Estrazione automatica dei termini chiave (nomi personaggi, luoghi, oggetti) per mantenere la coerenza in progetti da migliaia di stringhe.</p>
-      </div>
-      <div class="card">
-        <h3>System Tray Notifications</h3>
-        <p>Notifiche native per traduzioni completate, messaggi chat e aggiornamenti, con quiet hours configurabili.</p>
-      </div>
-      <div class="card">
-        <h3>Batch Processing</h3>
-        <p>Traduci migliaia di stringhe in pochi minuti grazie alla pipeline ottimizzata e al supporto per il multi-threading.</p>
-      </div>
+      <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="f1.t">P.T. — Prediction Tool</h3><p data-i18n="f1.d">Analisi predittiva prima di tradurre: difficoltà, DRM, encoding, complessità linguistica e catene di modelli consigliate (Locale, Cloud, Ibrida, Budget, Premium).</p></div>
+      <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="f2.t">Dry Run & P.T.Rank</h3><p data-i18n="f2.d">Scansiona l'intera libreria (800+ giochi) senza toccare nulla e ordina i titoli per difficoltà per pianificare la coda di lavoro.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f3.t">20+ provider AI</h3><p data-i18n="f3.d">OpenAI, Claude, Gemini, DeepSeek, Groq, DeepL, Ollama (locale) e altri. Auto-Select per lingua e genere del gioco.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f4.t">Translation Memory & Glossario</h3><p data-i18n="f4.d">Database locale che impara dalle tue correzioni, con estrazione automatica di nomi e termini per la coerenza.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f5.t">Quality gate 0–100</h3><p data-i18n="f5.d">Punteggio di qualità automatico su ogni stringa e heatmap visiva: vedi a colpo d'occhio dove serve una revisione umana.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="f6.t">Patcher nativi</h3><p data-i18n="f6.d">Parser dedicati per oltre 20 engine, con wizard a step condiviso e backup automatico prima di ogni patch.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="f7.t">Unity auto-setup</h3><p data-i18n="f7.d">Per i giochi Unity senza testo estraibile, installa BepInEx + XUnity.AutoTranslator con un clic.</p></div>
+      <div class="card reveal"><div class="tag tres" data-i18n="tag.res">Strumenti</div><h3 data-i18n="f8.t">OCR & Overlay</h3><p data-i18n="f8.d">Traduzione a schermo per giochi retro e RPG Maker classico, con preprocessing dedicato e backend Tesseract.</p></div>
+      <div class="card reveal"><div class="tag tres" data-i18n="tag.res">Strumenti</div><h3 data-i18n="f9.t">Libreria & aggiunta manuale</h3><p data-i18n="f9.d">Rilevamento automatico da Steam/Epic/GOG e, da v1.10.2, aggiunta manuale di un gioco selezionando la cartella dal disco.</p></div>
     </div>
   </div>
 </section>
 
-<section id="whatsnew" style="background:rgba(255,255,255,0.02)">
+<section id="engine" style="background:rgba(255,255,255,.015)">
   <div class="container">
-    <span class="section-label">// Roadmap</span>
-    <h2 class="section-title">Ultime Novità (v1.10.2)</h2>
-    <div style="display:flex; flex-direction:column; gap:20px">
-      <div class="card">
-        <h3 style="color:#fff">Design Glassmorphism & UI Tradotta</h3>
-        <p style="margin-top:10px">Le modali di profilo, sicurezza, avatar e changelog ora usano un elegante effetto "vetro" (glassmorphism) ultra-sfocato, e tutta la UI è stata localizzata in 11 lingue diverse, inclusa la nuova Community Chat completamente tradotta.</p>
-      </div>
-      <div class="card">
-        <h3 style="color:#fff">Bethesda & CRI Engine Support</h3>
-        <p>Nuovo patcher per Skyrim, Fallout, Starfield (BSA/BA2/ESP) e CRI Middleware (Persona, Yakuza) con auto-detection dell'encoding.</p>
-      </div>
-      <div class="card">
-        <h3 style="color:#fff">Tauri v2 Migration</h3>
-        <p>Passaggio alla nuova architettura Tauri per prestazioni superiori e maggiore sicurezza su Windows, macOS e Linux.</p>
-      </div>
+    <span class="label patch reveal" data-i18n="eng.label">// Engine supportati</span>
+    <h2 class="h2 reveal" data-i18n="eng.h2">Oltre 20 engine, con parser dedicati</h2>
+    <p class="sub reveal" data-i18n="eng.sub">Copertura verificata sul codice: patcher con test su fixture, più moduli runtime per i casi che richiedono injection.</p>
+    <div class="engines">
+      <div class="eng reveal"><h4>Unity</h4><small>assets · StringTable · BepInEx</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Unreal</h4><small>.locres · _P.pak · IoStore</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Godot</h4><small>.pck · .translation</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>RPG Maker</h4><small>MV · MZ · VX/Ace · 2k OCR</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Ren'Py</h4><small>.rpy · dialoghi</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Bethesda</h4><small>BSA/BA2 · ESP/ESM</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>CRI Middleware</h4><small>CPK · CRILAYLA · MSG/BMD</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>GameMaker</h4><small>UndertaleModTool</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Wolf RPG</h4><small>WolfTrans</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>TyranoScript</h4><small>fast-path JSON</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Visionaire</h4><small>Daedalic adventures</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Danganronpa</h4><small>WAD · STX</small><div class="ok">Full</div></div>
     </div>
   </div>
 </section>
 
-<section id="engines">
+<section id="ai">
   <div class="container">
-    <span class="section-label">// Compatibility</span>
-    <h2 class="section-title">Supporto Game Engine</h2>
-    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))">
-      <div class="card" style="text-align:center"><h3>Unity</h3><p style="font-size:12px">BepInEx / XUnity</p></div>
-      <div class="card" style="text-align:center"><h3>Unreal</h3><p style="font-size:12px">.locres / .pak</p></div>
-      <div class="card" style="text-align:center"><h3>Godot</h3><p style="font-size:12px">.pck / .csv</p></div>
-      <div class="card" style="text-align:center"><h3>RPG Maker</h3><p style="font-size:12px">MV / MZ / VX</p></div>
-      <div class="card" style="text-align:center"><h3>Ren'Py</h3><p style="font-size:12px">Game/TL</p></div>
-      <div class="card" style="text-align:center"><h3>Bethesda</h3><p style="font-size:12px">Skyrim / Starfield</p></div>
+    <span class="label trad reveal" data-i18n="ai.label">// Provider AI</span>
+    <h2 class="h2 reveal" data-i18n="ai.h2">Scegli il cervello che preferisci</h2>
+    <p class="sub reveal" data-i18n="ai.sub">Dalla privacy totale in locale alla massima qualità cloud. Puoi mescolarli e confrontare i risultati riga per riga.</p>
+    <div class="tablewrap reveal">
+      <table>
+        <thead><tr><th data-i18n="ai.th1">Provider</th><th data-i18n="ai.th2">Modello consigliato</th><th data-i18n="ai.th3">Tipo</th><th data-i18n="ai.th4">Ideale per</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Ollama</strong></td><td>Llama 3 · Gemma · Qwen 3</td><td><span class="badge b-local" data-i18n="ai.local">Locale</span></td><td data-i18n="ai.r1">Privacy totale, zero costi API</td></tr>
+          <tr><td><strong>Claude</strong></td><td>Claude 3.5 Sonnet</td><td><span class="badge b-cloud">Cloud</span></td><td data-i18n="ai.r2">Sfumature narrative, stile letterario, CJK</td></tr>
+          <tr><td><strong>OpenAI</strong></td><td>GPT-4o</td><td><span class="badge b-cloud">Cloud</span></td><td data-i18n="ai.r3">Logica complessa e istruzioni di sistema</td></tr>
+          <tr><td><strong>Gemini</strong></td><td>Gemini 1.5 Pro</td><td><span class="badge b-cloud">Cloud</span></td><td data-i18n="ai.r4">Script lunghissimi (contesto enorme)</td></tr>
+          <tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V2</td><td><span class="badge b-cloud">Economy</span></td><td data-i18n="ai.r5">Miglior rapporto qualità/prezzo</td></tr>
+          <tr><td><strong>DeepL</strong></td><td>DeepL API</td><td><span class="badge b-cloud">Cloud</span></td><td data-i18n="ai.r6">Lingue europee, traduzione pulita</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="novita" style="background:rgba(255,255,255,.015)">
+  <div class="container">
+    <span class="label res reveal" data-i18n="news.label">// Novità v1.10.2</span>
+    <h2 class="h2 reveal" data-i18n="news.h2">Le ultime migliorie</h2>
+    <div class="news">
+      <div class="newcard reveal"><h3 data-i18n="n1.t">🔁 Auto-update riparato</h3><p data-i18n="n1.d">Risolto il blocco su "Preparazione…": l'aggiornamento automatico ora parte, scarica e installa correttamente con un clic.</p></div>
+      <div class="newcard reveal"><h3 data-i18n="n2.t">💾 Impostazioni che restano</h3><p data-i18n="n2.d">Impostazioni e API key dei provider AI ora vengono salvate in modo affidabile su disco. Niente più configurazioni perse al riavvio.</p></div>
+      <div class="newcard reveal"><h3 data-i18n="n3.t">📁 Aggiungi giochi dal disco</h3><p data-i18n="n3.d">Oltre all'auto-detect delle librerie, ora puoi aggiungere manualmente un gioco scegliendo la sua cartella.</p></div>
     </div>
   </div>
 </section>
 
 <section id="faq">
   <div class="container">
-    <span class="section-label">// Help</span>
-    <h2 class="section-title">Domande Frequenti</h2>
-    <div style="display:flex; flex-direction:column; gap:15px">
-      <div class="card" style="padding:20px">
-        <h4 style="color:var(--cyan)">È davvero gratuito?</h4>
-        <p>Sì. Le prime 500 stringhe sono libere. Per progetti più grandi chiediamo una donazione libera per sbloccare l'uso illimitato. È un sistema basato sull'onore.</p>
-      </div>
-      <div class="card" style="padding:20px">
-        <h4 style="color:var(--cyan)">Supporta i giochi Steam/Epic?</h4>
-        <p>Sì, GameStringer rileva automaticamente la tua libreria e ti guida nell'installazione delle patch necessarie.</p>
-      </div>
-      <div class="card" style="padding:20px">
-        <h4 style="color:var(--cyan)">Posso usare AI locali?</h4>
-        <p>Certamente. Supportiamo Ollama per far girare modelli come Llama 3 o Gemma direttamente sulla tua GPU, senza costi API.</p>
-      </div>
+    <span class="label core reveal" data-i18n="faq.label">// Domande frequenti</span>
+    <h2 class="h2 reveal" data-i18n="faq.h2">FAQ</h2>
+    <div class="reveal">
+      <details><summary data-i18n="faq.q1">È gratuito?</summary><p data-i18n="faq.a1">GameStringer è open source. Le prime 500 stringhe di ogni progetto sono libere; per progetti più grandi è previsto un sistema basato sull'onore con donazione libera.</p></details>
+      <details><summary data-i18n="faq.q2">Funziona con i giochi Steam, Epic, GOG?</summary><p data-i18n="faq.a2">Sì: rileva automaticamente le librerie installate (800+ giochi) e ti guida nell'applicazione delle patch. Da v1.10.2 puoi anche aggiungere un gioco manualmente dal disco.</p></details>
+      <details><summary data-i18n="faq.q3">Posso tradurre senza pagare API?</summary><p data-i18n="faq.a3">Sì, con Ollama esegui modelli come Llama 3, Gemma o Qwen direttamente sulla tua GPU: privacy totale e zero costi.</p></details>
+      <details><summary data-i18n="faq.q4">È sicuro per i giochi online?</summary><p data-i18n="faq.a4">L'injection a runtime può far scattare gli anti-cheat. Usa GameStringer su giochi single-player/offline: il P.T. rileva DRM e anti-cheat e ti avvisa prima di modificare qualsiasi cosa. I file vengono sempre salvati in backup.</p></details>
+      <details><summary data-i18n="faq.q5">Su quali sistemi gira?</summary><p data-i18n="faq.a5">Windows 10+, Linux (Ubuntu 22.04+/Fedora 38+) e macOS 10.15+. Le release sono firmate e si aggiornano automaticamente.</p></details>
     </div>
-  </div>
-</section>
-
-<section id="ai-details" style="background:rgba(139,92,246,0.03)">
-  <div class="container">
-    <span class="section-label">// AI.Network</span>
-    <h2 class="section-title">20+ Provider AI Supportati</h2>
-    <div class="card" style="overflow-x:auto">
-      <table class="ai-table">
-        <thead>
-          <tr><th>Provider</th><th>Modello Consigliato</th><th>Tipo</th><th>Specialità</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Ollama</strong></td><td>Llama 3 / Gemma 2</td><td><span class="badge badge-free">Locale</span></td><td>Privacy totale, zero costi</td></tr>
-          <tr><td><strong>Claude</strong></td><td>Claude 3.5 Sonnet</td><td><span class="badge badge-paid">Cloud</span></td><td>Nuance narrative, stile letterario</td></tr>
-          <tr><td><strong>OpenAI</strong></td><td>GPT-4o</td><td><span class="badge badge-paid">Cloud</span></td><td>Logica complessa, istruzioni sistema</td></tr>
-          <tr><td><strong>Gemini</strong></td><td>Gemini 1.5 Pro</td><td><span class="badge badge-free">Cloud (Free)</span></td><td>Script lunghissimi (1M context)</td></tr>
-          <tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V2</td><td><span class="badge badge-paid">Economy</span></td><td>Qualità/Prezzo imbattibile</td></tr>
-          <tr><td><strong>TranslateGemma</strong></td><td>Gemma-2-9b-it</td><td><span class="badge badge-free">Specialized</span></td><td>Traduzione pura multilingua</td></tr>
-        </tbody>
-      </table>
+    <div class="cta" style="margin-top:40px">
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="faq.cta1">⬇ Scarica GameStringer</a>
+      <a class="btn btn-ghost" href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" data-i18n="faq.cta2">★ Codice su GitHub</a>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="container">
-    <div style="margin-bottom:20px">
-      <img src="logo.png" alt="Logo" style="height:40px">
+    <a class="brand" href="#top" style="justify-content:center"><span class="dot"></span> GameStringer</a>
+    <div class="flinks">
+      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="foot.dl">Download</a>
+      <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank" rel="noopener" data-i18n="foot.comm">Community</a>
+      <a href="https://ko-fi.com/gamestringer" target="_blank" rel="noopener">Ko-fi</a>
     </div>
-    <p style="margin-bottom:10px">GameStringer è la suite definitiva per chi ama i videogiochi e vuole abbattere le barriere linguistiche.</p>
-    <div style="display:flex; justify-content:center; gap:20px; font-size:12px">
-      <a href="https://ko-fi.com/gamestringer" style="color:var(--cyan)">Supporta su Ko-fi</a>
-      <a href="https://github.com/rouges78/GameStringer" style="color:var(--cyan)">GitHub Repository</a>
-      <a href="#" style="color:var(--cyan)">Documentazione</a>
-    </div>
-    <p style="margin-top:30px; font-size:11px; color:var(--text-m)">&copy; 2025-2026 GameStringer by rouges78. Source-Available License.</p>
+    <p data-i18n="foot.tagline">Abbatti le barriere linguistiche dei videogiochi. Analizza, traduci, gioca.</p>
+    <p class="copy">© 2025–2026 GameStringer by rouges78 · Source-Available License</p>
   </div>
 </footer>
 
+<script src="site-v2-i18n.js"></script>
 <script>
-  ScrollReveal().reveal('.card', { delay: 200, distance: '30px', origin: 'bottom', interval: 50 });
-</script>
+  // Reveal on scroll
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=(Math.min(i%6,5)*60)+'ms';io.observe(el)});
 
+  // i18n
+  const I18N = window.GS_I18N || {};
+  function applyLang(lang){
+    const dict = I18N[lang] || I18N.it || {};
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.getAttribute('data-i18n'); if(dict[k]!=null) el.textContent=dict[k];
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+      const k=el.getAttribute('data-i18n-html'); if(dict[k]!=null) el.innerHTML=dict[k];
+    });
+    try{localStorage.setItem('gs_site_lang',lang)}catch(e){}
+    const sel=document.getElementById('langSel'); if(sel) sel.value=lang;
+  }
+  (function initLang(){
+    const supported=['it','en','es','fr','de','pt','pl','ru','ja','zh','ko'];
+    let lang='it';
+    try{const s=localStorage.getItem('gs_site_lang'); if(s&&supported.includes(s)) lang=s; else{const b=(navigator.language||'it').slice(0,2).toLowerCase(); if(supported.includes(b)) lang=b;}}catch(e){}
+    const sel=document.getElementById('langSel');
+    if(sel){sel.value=lang; sel.addEventListener('change',e=>applyLang(e.target.value));}
+    if(lang!=='it') applyLang(lang);
+    else if(sel) sel.value='it';
+  })();
+</script>
 </body>
 </html>
-<section id="ai-details" style="background:rgba(139,92,246,0.03)">
-  <div class="container">
-    <span class="section-label">// AI.Network</span>
-    <h2 class="section-title">20+ Provider AI Supportati</h2>
-    <div class="card" style="overflow-x:auto">
-      <table class="ai-table">
-        <thead>
-          <tr><th>Provider</th><th>Modello Consigliato</th><th>Tipo</th><th>Specialità</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>Ollama</strong></td><td>Llama 3 / Gemma 2</td><td><span class="badge badge-free">Locale</span></td><td>Privacy totale, zero costi</td></tr>
-          <tr><td><strong>Claude</strong></td><td>Claude 3.5 Sonnet</td><td><span class="badge badge-paid">Cloud</span></td><td>Nuance narrative, stile letterario</td></tr>
-          <tr><td><strong>OpenAI</strong></td><td>GPT-4o</td><td><span class="badge badge-paid">Cloud</span></td><td>Logica complessa, istruzioni sistema</td></tr>
-          <tr><td><strong>Gemini</strong></td><td>Gemini 1.5 Pro</td><td><span class="badge badge-free">Cloud (Free)</span></td><td>Script lunghissimi (1M context)</td></tr>
-          <tr><td><strong>DeepSeek</strong></td><td>DeepSeek-V2</td><td><span class="badge badge-paid">Economy</span></td><td>Qualità/Prezzo imbattibile</td></tr>
-          <tr><td><strong>TranslateGemma</strong></td><td>Gemma-2-9b-it</td><td><span class="badge badge-free">Specialized</span></td><td>Traduzione pura multilingua</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<div id="gs-chatbot">
-  <div id="gs-chat-window">
-    <div class="chat-header">
-      <span style="font-weight:800; color:var(--cyan)">GS::NEURAL_LINK</span>
-      <button onclick="toggleChat()" style="background:none; border:none; color:#fff; cursor:pointer">✕</button>
-    </div>
-    <div class="chat-messages" id="chat-msgs">
-      <div class="msg msg-bot">Connessione neurale stabilita. Come posso aiutarti con GameStringer?</div>
-    </div>
-    <div class="chat-input-area">
-      <input type="text" id="chat-input" placeholder="Chiedi qualcosa..." onkeydown="if(event.key==='Enter') sendMsg()">
-      <button onclick="sendMsg()" class="btn btn-primary" style="padding:10px">Invia</button>
-    </div>
-  </div>
-  <button id="gs-chat-fab" onclick="toggleChat()">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-  </button>
-</div>
-
-<script>
-  function toggleChat() {
-    const win = document.getElementById('gs-chat-window');
-    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-  }
-  function sendMsg() {
-    const input = document.getElementById('chat-input');
-    const msgs = document.getElementById('chat-msgs');
-    if(!input.value) return;
-    
-    const userMsg = document.createElement('div');
-    userMsg.className = 'msg msg-user';
-    userMsg.textContent = input.value;
-    msgs.appendChild(userMsg);
-    
-    const botMsg = document.createElement('div');
-    botMsg.className = 'msg msg-bot';
-    botMsg.textContent = "Sto analizzando la tua richiesta nei database di GameStringer...";
-    msgs.appendChild(botMsg);
-    
-    input.value = '';
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-</script>
-<script>
-  // GameStringer Brain Knowledge Base
-  const GS_BRAIN_KB = [
-    { k:['cos','gamestringer','what is'], a:'GameStringer è una suite open source che usa l\'AI per tradurre videogiochi. Supporta Unity, Unreal, Godot e molti altri engine.' },
-    { k:['scaric','download','installa'], a:'Puoi scaricare l\'ultima versione per Windows nella sezione Hero in alto o direttamente da GitHub Releases.' },
-    { k:['gratis','costo','prezzo','pagar'], a:'È gratuito fino a 500 stringhe. Per progetti più grandi, puoi sbloccare tutto con una donazione libera.' },
-    { k:['engine','motori','unity','unreal','godot'], a:'Supportiamo 11+ engine! Per Unity usiamo BepInEx, per Unreal i file .locres, e abbiamo patcher nativi per Bethesda e CRI.' },
-    { k:['ai','modelli','gpt','claude','ollama'], a:'Supportiamo 20+ modelli! Claude è ottimo per la narrativa, GPT-4 per la logica, e Ollama per tradurre gratis in locale.' },
-    { k:['ollama','locale'], a:'Sì! Con Ollama puoi tradurre senza costi API e con privacy totale usando la tua GPU.' },
-    { k:['ciao','buongiorno','hey'], a:'Ciao! Sono il cervello neurale di GameStringer. Chiedimi pure come tradurre un gioco o quali AI usare.' }
-  ];
-
-  function toggleChat() {
-    const win = document.getElementById('gs-chat-window');
-    win.style.display = win.style.display === 'flex' ? 'none' : 'flex';
-  }
-
-  async function getGSResponse(q) {
-    const lowQ = q.toLowerCase();
-    
-    // 1. Check local Knowledge Base first
-    for (const entry of GS_BRAIN_KB) {
-      if (entry.k.some(key => lowQ.includes(key))) return entry.a;
-    }
-
-    // 2. Trigger Autonomous Web Search (Simulated for Frontend)
-    try {
-      const searchTerms = q.replace(/[?]/g, '').split(' ').slice(0, 4).join(' ');
-      return `📡 <strong>AUTOSEARCH ACTIVE:</strong> Sto interrogando la rete per "${searchTerms}"...<br><br>GameStringer è in costante aggiornamento. Le ultime info su GitHub indicano che supportiamo nuovi engine come <strong>Bethesda</strong> e <strong>CRI</strong>. Per dettagli specifici su "${q}", ti consiglio di consultare la nostra <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank" style="color:var(--cyan)">Community su GitHub</a> dove l'AI analizza i problemi in tempo reale.`;
-    } catch (e) {
-      return "Connessione neurale instabile. Prova a chiedermi di engine, AI, costi o download.";
-    }
-  }
-
-  async function sendMsg() {
-    const input = document.getElementById('chat-input');
-    const msgs = document.getElementById('chat-msgs');
-    const text = input.value.trim();
-    if(!text) return;
-    
-    const userMsg = document.createElement('div');
-    userMsg.className = 'msg msg-user';
-    userMsg.textContent = text;
-    msgs.appendChild(userMsg);
-    
-    const botMsg = document.createElement('div');
-    botMsg.className = 'msg msg-bot';
-    botMsg.innerHTML = "<em>🌐 Inizializzazione AUTOSEARCH...</em>";
-    msgs.appendChild(botMsg);
-    
-    input.value = '';
-    msgs.scrollTop = msgs.scrollHeight;
-
-    // Async Brain Response
-    const response = await getGSResponse(text);
-    setTimeout(() => {
-      botMsg.innerHTML = response;
-      msgs.scrollTop = msgs.scrollHeight;
-    }, 1000);
-  }
-</script>
