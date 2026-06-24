@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GameStringer — Traduci qualsiasi videogioco con l'AI</title>
 <meta name="description" content="GameStringer è la suite open source per tradurre videogiochi con l'AI: 20+ engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI) e 20+ provider AI. Analizza, estrai, traduci, applica la patch, gioca.">
-<link rel="icon" href="favicon.svg">
+<link rel="icon" href="favicon.png">
 <style>
   :root{
     --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04); --surface2:rgba(255,255,255,.06);
@@ -34,7 +34,9 @@
   nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,10,18,.7);border-bottom:1px solid var(--border)}
   .nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:14px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
-  .brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--core),var(--trad2));box-shadow:0 0 22px rgba(99,102,241,.5)}
+  .brand .dot{width:30px;height:30px;border-radius:9px;object-fit:cover;box-shadow:0 0 22px rgba(177,77,255,.5)}
+  .brand .brandname{background:linear-gradient(90deg,#ff4d9e,#b14dff,#4d8dff,#ff4d9e);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandGrad 4s linear infinite}
+  @keyframes brandGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
   .nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
   .nav-links a:hover{color:#fff}
   .nav-right{display:flex;align-items:center;gap:12px}
@@ -48,7 +50,7 @@
   .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}
   .pill b{color:var(--patch2)}
   .hero h1{font-size:clamp(2.3rem,5.4vw,4rem);margin:22px 0 0}
-  .grad{background:linear-gradient(110deg,var(--core),var(--trad2) 45%,var(--patch2) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .grad{background:linear-gradient(110deg,#ff4d9e,#b14dff 45%,#4d8dff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
   .hero p.lead{max-width:680px;margin:20px auto 0;color:var(--muted);font-size:1.12rem}
   .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
   .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:54px}
@@ -127,7 +129,7 @@
 
 <nav>
   <div class="container nav">
-    <a class="brand" href="#top"><span class="dot"></span> GameStringer</a>
+    <a class="brand" href="#top"><img class="dot" src="logo.png" alt="GameStringer"> <span class="brandname">GameStringer</span></a>
     <div class="nav-links">
       <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
       <a href="#architettura" data-i18n="nav.engine">Motore</a>
