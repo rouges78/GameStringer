@@ -34,8 +34,8 @@
   nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,10,18,.7);border-bottom:1px solid var(--border)}
   .nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:14px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
-  .brand .dot{width:30px;height:30px;border-radius:9px;object-fit:cover;box-shadow:0 0 22px rgba(177,77,255,.5)}
-  .brand .brandname{background:linear-gradient(90deg,#ff4d9e,#b14dff,#4d8dff,#ff4d9e);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandGrad 4s linear infinite}
+  .brand .dot{width:30px;height:30px;border-radius:9px;object-fit:cover;box-shadow:0 0 22px rgba(139,92,246,.5)}
+  .brand .brandname{background:linear-gradient(90deg,#8b5cf6,#6366f1,#3b82f6,#8b5cf6);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandGrad 4s linear infinite}
   @keyframes brandGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
   .nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
   .nav-links a:hover{color:#fff}
@@ -51,7 +51,7 @@
   .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}
   .pill b{color:var(--patch2)}
   .hero h1{font-size:clamp(2.3rem,5.4vw,4rem);margin:22px 0 0}
-  .grad{background:linear-gradient(110deg,#ff4d9e,#b14dff 45%,#4d8dff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .grad{background:linear-gradient(110deg,#8b5cf6,#6366f1 45%,#38bdf8 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
   .hero p.lead{max-width:680px;margin:20px auto 0;color:var(--muted);font-size:1.12rem}
   .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px}
   .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:54px}
@@ -314,6 +314,23 @@
     <span class="label trad reveal" data-i18n="ai.label">// Provider AI</span>
     <h2 class="h2 reveal" data-i18n="ai.h2">Scegli il cervello che preferisci</h2>
     <p class="sub reveal" data-i18n="ai.sub">Dalla privacy totale in locale alla massima qualità cloud. Puoi mescolarli e confrontare i risultati riga per riga.</p>
+    <div class="arch reveal" style="margin-bottom:26px">
+      <svg viewBox="0 0 1000 210" role="img" aria-label="AI provider spectrum from local/privacy to cloud/quality">
+        <defs>
+          <linearGradient id="gSpec" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+        </defs>
+        <rect x="40" y="92" width="920" height="14" rx="7" fill="url(#gSpec)"/>
+        <text x="40" y="78" fill="#6ee7b7" font-size="13" font-weight="700" data-i18n="spec.left">◀ Locale · Privacy · zero costi</text>
+        <text x="960" y="78" text-anchor="end" fill="#7dd3fc" font-size="13" font-weight="700" data-i18n="spec.right">Cloud · Massima qualità ▶</text>
+        <g font-size="12.5" fill="#e8ebf2" text-anchor="middle">
+          <circle cx="120" cy="99" r="5" fill="#10b981"/><text x="120" y="135">Ollama</text><text x="120" y="153" fill="#9aa6bd" font-size="10.5">LM Studio</text>
+          <circle cx="330" cy="99" r="5" fill="#22c55e"/><text x="330" y="135">DeepSeek</text><text x="330" y="153" fill="#9aa6bd" font-size="10.5">Groq · Gemini Flash</text>
+          <circle cx="560" cy="99" r="5" fill="#38bdf8"/><text x="560" y="135">DeepL</text><text x="560" y="153" fill="#9aa6bd" font-size="10.5">Mistral Large</text>
+          <circle cx="800" cy="99" r="5" fill="#3b82f6"/><text x="800" y="135">GPT-4o · Claude</text><text x="800" y="153" fill="#9aa6bd" font-size="10.5">Gemini Pro</text>
+        </g>
+        <text x="500" y="190" text-anchor="middle" fill="#9aa6bd" font-size="12.5" data-i18n="spec.cap">Una catena con fallback automatico tra provider — e confronto riga per riga in Multi-LLM.</text>
+      </svg>
+    </div>
     <div class="tablewrap reveal">
       <table>
         <thead><tr><th data-i18n="ai.th1">Provider</th><th data-i18n="ai.th2">Modello consigliato</th><th data-i18n="ai.th3">Tipo</th><th data-i18n="ai.th4">Ideale per</th></tr></thead>
@@ -327,6 +344,44 @@
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section id="community">
+  <div class="container">
+    <span class="label res reveal" data-i18n="com.label">// Community & Patch Hub</span>
+    <h2 class="h2 reveal" data-i18n="com.h2">Condividi le tue traduzioni, scarica quelle degli altri</h2>
+    <p class="sub reveal" data-i18n="com.sub">Le traduzioni finite diventano pacchetti .gspack: pubblicale nel Patch Hub o scarica quelle della community e applicale al gioco — con backup, come sempre.</p>
+    <div class="arch reveal">
+      <svg viewBox="0 0 1000 300" role="img" aria-label="Community translation flow: translate, publish, Patch Hub, download, apply, with a reputation loop">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa6bd"/></marker>
+        </defs>
+        <line x1="187" y1="102" x2="205" y2="102" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ah)"/>
+        <line x1="384" y1="102" x2="402" y2="102" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ah)"/>
+        <line x1="581" y1="102" x2="599" y2="102" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ah)"/>
+        <line x1="778" y1="102" x2="796" y2="102" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ah)"/>
+        <rect x="12" y="70" width="175" height="64" rx="12" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text x="99" y="100" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" data-i18n="com.n1">Traduci</text>
+        <text x="99" y="120" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="com.n1s">con l'AI nel tuo gioco</text>
+        <rect x="209" y="70" width="175" height="64" rx="12" fill="rgba(245,158,11,.14)" stroke="#f59e0b"/>
+        <text x="296" y="100" text-anchor="middle" fill="#fcd34d" font-size="15" font-weight="700" data-i18n="com.n2">Pubblica .gspack</text>
+        <text x="296" y="120" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="com.n2s">nome, gioco, lingue, file</text>
+        <rect x="406" y="70" width="175" height="64" rx="12" fill="rgba(245,158,11,.14)" stroke="#f59e0b"/>
+        <text x="493" y="100" text-anchor="middle" fill="#fcd34d" font-size="15" font-weight="700" data-i18n="com.n3">Patch Hub</text>
+        <text x="493" y="120" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="com.n3s">moderazione → pubblico</text>
+        <rect x="603" y="70" width="175" height="64" rx="12" fill="rgba(56,189,248,.14)" stroke="#3b82f6"/>
+        <text x="690" y="100" text-anchor="middle" fill="#7dd3fc" font-size="15" font-weight="700" data-i18n="com.n4">Scarica</text>
+        <text x="690" y="120" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="com.n4s">in libreria pack locale</text>
+        <rect x="800" y="70" width="175" height="64" rx="12" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text x="887" y="100" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" data-i18n="com.n5">Applica al gioco</text>
+        <text x="887" y="120" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="com.n5s">backup automatico</text>
+        <path d="M887,134 C887,210 700,240 500,240 C300,240 99,210 99,134" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#ah)"/>
+        <rect x="343" y="222" width="314" height="34" rx="10" fill="rgba(139,92,246,.12)" stroke="#8b5cf6"/>
+        <text x="500" y="244" text-anchor="middle" fill="#c4b5fd" font-size="12.5" font-weight="600" data-i18n="com.loop">Reputazione · Verified translator · passaparola</text>
+      </svg>
+    </div>
+    <p class="sub reveal" style="margin-top:18px;font-size:13px;color:var(--faint)" data-i18n="com.note">Sfogli i pack per gioco, lingua, rating e completamento. Il backend è su Supabase e le patch sono artefatti di prima classe, non allegati in chat.</p>
   </div>
 </section>
 
