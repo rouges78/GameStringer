@@ -269,6 +269,39 @@
   </div>
 </section>
 
+<section id="sicurezza" style="background:rgba(255,255,255,.015)">
+  <div class="container">
+    <span class="label core reveal" data-i18n="sec.label">// Sicurezza &amp; garanzie</span>
+    <h2 class="h2 reveal" data-i18n="sec.h2">Prima tocca i file, poi li protegge</h2>
+    <p class="sub reveal" data-i18n="sec.sub">Ogni patch è reversibile per design: backup prima di scrivere, verifica dopo, e un controllo a ogni aggiornamento del gioco.</p>
+    <div class="arch reveal">
+      <svg viewBox="0 0 1000 280" role="img" aria-label="Safety flow: backup, apply, verify, update tracker, plus anti-cheat gate">
+        <defs>
+          <marker id="ahg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa6bd"/></marker>
+        </defs>
+        <line x1="237" y1="92" x2="256" y2="92" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ahg)"/>
+        <line x1="487" y1="92" x2="506" y2="92" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ahg)"/>
+        <line x1="737" y1="92" x2="756" y2="92" stroke="#9aa6bd" stroke-width="2" marker-end="url(#ahg)"/>
+        <rect x="12" y="58" width="225" height="68" rx="12" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text x="124" y="90" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" data-i18n="sec.n1">Backup</text>
+        <text x="124" y="110" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="sec.n1s">prima di ogni scrittura</text>
+        <rect x="262" y="58" width="225" height="68" rx="12" fill="rgba(56,189,248,.14)" stroke="#3b82f6"/>
+        <text x="374" y="90" text-anchor="middle" fill="#7dd3fc" font-size="15" font-weight="700" data-i18n="sec.n2">Applica patch</text>
+        <text x="374" y="110" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="sec.n2s">file o runtime</text>
+        <rect x="512" y="58" width="225" height="68" rx="12" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text x="624" y="90" text-anchor="middle" fill="#6ee7b7" font-size="15" font-weight="700" data-i18n="sec.n3">Verifica</text>
+        <text x="624" y="110" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="sec.n3s">integrità della patch</text>
+        <rect x="762" y="58" width="226" height="68" rx="12" fill="rgba(139,92,246,.14)" stroke="#8b5cf6"/>
+        <text x="875" y="86" text-anchor="middle" fill="#c4b5fd" font-size="15" font-weight="700" data-i18n="sec.n4">Update tracker</text>
+        <text x="875" y="106" text-anchor="middle" fill="#9aa6bd" font-size="11" data-i18n="sec.n4s">ri-controlla dopo gli update e ti avvisa</text>
+        <rect x="12" y="176" width="976" height="76" rx="14" fill="rgba(245,158,11,.10)" stroke="#f59e0b"/>
+        <text x="40" y="208" fill="#fcd34d" font-size="15" font-weight="700" data-i18n="sec.gate">🛡 Gate anti-cheat (invariante)</text>
+        <text x="40" y="232" fill="#cbd5e1" font-size="12.5" data-i18n="sec.gates">Blocca l'injection sui giochi online (EAC/BattlEye). Solo single-player/offline.</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
 <section id="funzioni">
   <div class="container">
     <span class="label trad reveal" data-i18n="fn.label">// Funzioni principali</span>
@@ -292,6 +325,23 @@
     <span class="label patch reveal" data-i18n="eng.label">// Engine supportati</span>
     <h2 class="h2 reveal" data-i18n="eng.h2">Oltre 20 engine, con parser dedicati</h2>
     <p class="sub reveal" data-i18n="eng.sub">Copertura verificata sul codice: patcher con test su fixture, più moduli runtime per i casi che richiedono injection.</p>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:22px">
+      <div style="padding:18px;border-radius:16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25)">
+        <div style="font-weight:800;color:#6ee7b7;margin-bottom:2px" data-i18n="cov.m1">Parser su file</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px" data-i18n="cov.m1d">parsing e riscrittura dei file nativi</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">Unity · Unreal · Godot · RPG Maker MV/MZ · Ren'Py · Bethesda · CRI · Wolf RPG · TyranoScript · Visionaire · Danganronpa</div>
+      </div>
+      <div style="padding:18px;border-radius:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25)">
+        <div style="font-weight:800;color:#fcd34d;margin-bottom:2px" data-i18n="cov.m2">Injection a runtime</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px" data-i18n="cov.m2d">quando non c'è testo estraibile (Windows)</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">Unity IL2CPP → BepInEx + XUnity.AutoTranslator · hook DLL · overlay live</div>
+      </div>
+      <div style="padding:18px;border-radius:16px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.25)">
+        <div style="font-weight:800;color:#7dd3fc;margin-bottom:2px" data-i18n="cov.m3">OCR a schermo</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px" data-i18n="cov.m3d">testo non estraibile, retro e classici</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">RPG Maker 2000/2003 (RPG_RT) · giochi retro / DOS</div>
+      </div>
+    </div>
     <div class="engines">
       <div class="eng reveal"><h4>Unity</h4><small>assets · StringTable · BepInEx</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>Unreal</h4><small>.locres · _P.pak · IoStore</small><div class="ok">Full</div></div>
@@ -393,6 +443,29 @@
       <div class="newcard reveal"><h3 data-i18n="n1.t">🔁 Auto-update riparato</h3><p data-i18n="n1.d">Risolto il blocco su "Preparazione…": l'aggiornamento automatico ora parte, scarica e installa correttamente con un clic.</p></div>
       <div class="newcard reveal"><h3 data-i18n="n2.t">💾 Impostazioni che restano</h3><p data-i18n="n2.d">Impostazioni e API key dei provider AI ora vengono salvate in modo affidabile su disco. Niente più configurazioni perse al riavvio.</p></div>
       <div class="newcard reveal"><h3 data-i18n="n3.t">📁 Aggiungi giochi dal disco</h3><p data-i18n="n3.d">Oltre all'auto-detect delle librerie, ora puoi aggiungere manualmente un gioco scegliendo la sua cartella.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="fatti" style="padding:40px 0">
+  <div class="container">
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+      <div style="padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--patch2)" data-i18n="trust.i1">Gratis</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i1s">le prime 500 stringhe per ogni progetto</div>
+      </div>
+      <div style="padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--trad2)" data-i18n="trust.i2">Source-available</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i2s">codice pubblico su GitHub</div>
+      </div>
+      <div style="padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--core)" data-i18n="trust.i3">Windows · Linux · macOS</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i3s">auto-update firmato</div>
+      </div>
+      <div style="padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--res2)" data-i18n="trust.i4">11 lingue UI</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i4s">interfaccia completamente localizzata</div>
+      </div>
     </div>
   </div>
 </section>
