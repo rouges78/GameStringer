@@ -40,7 +40,8 @@
   .nav-links{display:flex;gap:24px;font-size:14px;color:var(--muted)}
   .nav-links a:hover{color:#fff}
   .nav-right{display:flex;align-items:center;gap:12px}
-  .lang{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .lang{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .lang option{background:#0c1020;color:#e8ebf2}
   .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:700;font-size:14px;border:1px solid var(--border);transition:.2s;cursor:pointer}
   .btn:hover{transform:translateY(-2px)}
   .btn-primary{background:linear-gradient(135deg,var(--core),var(--core2));border:none;color:#fff;box-shadow:0 10px 30px rgba(99,102,241,.35)}
@@ -133,6 +134,7 @@
     <div class="nav-links">
       <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
       <a href="#architettura" data-i18n="nav.engine">Motore</a>
+      <a href="#sotto-il-cofano" data-i18n="nav.tech">Sotto il cofano</a>
       <a href="#funzioni" data-i18n="nav.functions">Funzioni</a>
       <a href="#engine" data-i18n="nav.engines2">Engine</a>
       <a href="#ai" data-i18n="nav.ai">AI</a>
@@ -247,6 +249,23 @@
       </svg>
     </div>
     <p class="sub reveal" style="margin-top:18px;font-size:13px;color:var(--faint)" data-i18n="arch.note">Nota: l'injection a runtime usa DLL injection e può far scattare gli anti-cheat. Usala solo su giochi single-player/offline — il P.T. rileva DRM e anti-cheat prima di qualsiasi modifica.</p>
+  </div>
+</section>
+
+<section id="sotto-il-cofano">
+  <div class="container">
+    <span class="label patch reveal" data-i18n="uh.label">// Sotto il cofano</span>
+    <h2 class="h2 reveal" data-i18n="uh.h2">Sotto il cofano: come lavora davvero il motore</h2>
+    <p class="sub reveal" data-i18n="uh.sub">Un giro tecnico nei sottosistemi che trasformano un gioco in un'altra lingua — senza riga di comando, senza modding manuale.</p>
+    <div class="grid">
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="uh.c1t">Rilevamento engine</h3><p data-i18n="uh.c1d">GameStringer impronta il gioco dai marcatori su disco (eseguibili, cartelle, file firma come .pak, .assets, .rpa) e lo instrada all'engine giusto con un dispatcher auto-detect (Universal Injector). Nessuna configurazione manuale.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="uh.c2t">Estrazione per formato</h3><p data-i18n="uh.c2d">Parser dedicati leggono i formati nativi: StringTable e assets Unity, .locres e _P.pak Unreal, .rpy Ren'Py, data/*.json RPG Maker MV/MZ, CPK/CRILAYLA CRI, BSA/BA2 Bethesda. Ogni stringa conserva il percorso originale per la riscrittura.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="uh.c3t">Orchestrazione AI</h3><p data-i18n="uh.c3d">Una catena di provider con fallback automatico (es. Gemini → DeepSeek → OpenAI), contesto per-stringa, glossario e Translation Memory iniettati nel prompt, e codici di controllo del gioco preservati. Con i modelli locali (Ollama) è una chiamata per stringa.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="uh.c4t">Qualità & memoria</h3><p data-i18n="uh.c4d">Ogni riga riceve un punteggio 0–100 con heatmap visiva; correzioni e termini finiscono nella Translation Memory locale, così la stessa frase non si traduce mai due volte e lo stile resta coerente nel tempo.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="uh.c5t">Applicazione della patch</h3><p data-i18n="uh.c5d">Tre strade in base all'engine: riscrittura dei file con re-impacchettamento, injection a runtime (BepInEx + XUnity.AutoTranslator o hook DLL su Windows), oppure overlay OCR a schermo per i retro e RPG Maker classico. Backup automatico prima di ogni scrittura.</p></div>
+      <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="uh.c6t">Sicurezza & aggiornamenti</h3><p data-i18n="uh.c6d">Un gate anti-cheat (invariante) blocca l'injection sui giochi online (EAC/BattlEye). Dopo gli aggiornamenti del gioco su Steam, l'update tracker ricontrolla l'integrità della patch e ti avvisa se serve ri-applicarla.</p></div>
+    </div>
+    <p class="sub reveal" style="margin-top:18px;font-size:13px;color:var(--faint)" data-i18n="uh.note">Le traduzioni finite diventano pacchetti .gspack condivisibili nel Patch Hub: pubblichi le tue e scarichi quelle della community.</p>
   </div>
 </section>
 
