@@ -49,7 +49,7 @@
     <text x="290" y="27" font-family="Arial" font-size="14" fill="#4ade80" text-anchor="middle">🎮 10+ Engines</text>
     
     <rect x="400" y="0" width="160" height="40" rx="20" fill="#1e293b" stroke="#334155"/>
-    <text x="480" y="27" font-family="Arial" font-size="14" fill="#22d3ee" text-anchor="middle">💯 Open Source</text>
+    <text x="480" y="27" font-family="Arial" font-size="14" fill="#22d3ee" text-anchor="middle">💯 Source-Available</text>
   </g>
   
   <!-- Version badge -->
