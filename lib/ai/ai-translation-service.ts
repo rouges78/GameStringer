@@ -6,6 +6,12 @@
  */
 
 import { clientLogger } from '@/lib/client-logger';
+import {
+  loadCustomProviders,
+  isCustomProviderId,
+  getCustomProvider,
+  customChatCompletion
+} from './custom-providers';
 import { ollamaFetch } from './ollama-http';
 
 export interface AIProvider {
@@ -277,7 +283,16 @@ class AITranslationService {
       this.checkOllamaAvailability(),
       this.checkLMStudioAvailability()
     ]);
-    return this.providers;
+    // 🔌 Пользовательские API-endpoint’ы (OpenAI-compatible / Anthropic)
+    const customProviders: AIProvider[] = loadCustomProviders().map((p) => ({
+      id: p.id,
+      name: `🔌 ${p.name}`,
+      type: 'cloud',
+      baseUrl: p.baseUrl,
+      models: p.models && p.models.length > 0 ? p.models : [p.model],
+      isAvailable: true
+    }));
+    return [...this.providers, ...customProviders];
   }
 
   /**
@@ -500,9 +515,51 @@ REGOLE IMPORTANTI:
   }
 
   /**
+   * 🔌 Traduzione con provider API personalizzato (OpenAI-compatible / Anthropic)
+   */
+  async translateWithCustomApi(request: AITranslationRequest): Promise<AITranslationResult> {
+    const startTime = Date.now();
+    const provider = getCustomProvider(this.currentProvider);
+    if (!provider) {
+      throw new Error(`Custom API provider not found: ${this.currentProvider}`);
+    }
+    const model = provider.models?.includes(this.currentModel) ? this.currentModel : provider.model;
+    const systemPrompt = this.buildSystemPrompt(request.context);
+    const userPrompt = this.buildUserPrompt(request);
+    const result = await customChatCompletion(
+      { ...provider, model },
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      { temperature: 0.3, maxTokens: provider.maxTokens ?? 1000 }
+    );
+    const translation = result.text;
+    const alternatives: string[] = [];
+    if (request.alternatives && translation.includes('|||')) {
+      const parts = translation.split('|||').map((p: string) => p.trim());
+      alternatives.push(...parts.slice(1));
+    }
+    return {
+      translation: alternatives.length > 0 ? translation.split('|||')[0].trim() : translation,
+      alternatives,
+      confidence: 0.9,
+      tokensUsed: result.tokensUsed,
+      provider: provider.id,
+      model,
+      processingTime: Date.now() - startTime
+    };
+  }
+
+  /**
    * Traduzione principale - seleziona automaticamente il provider
    */
   async translate(request: AITranslationRequest): Promise<AITranslationResult> {
+    // 🔌 Кастомные API-провайдеры имеют приоритет
+    if (isCustomProviderId(this.currentProvider)) {
+      return this.translateWithCustomApi(request);
+    }
+
     // Verifica disponibilità provider locali
     const ollamaAvailable = await this.checkOllamaAvailability();
     const lmStudioAvailable = await this.checkLMStudioAvailability();

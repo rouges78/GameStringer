@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CustomApiSettings from '@/components/settings/custom-api-settings';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -1107,6 +1108,7 @@ export default function SettingsPage() {
 
           {/* Custom Prompt & Voice */}
           <CustomPromptSettings />
+            <CustomApiSettings />
         </TabsContent>
 
         {/* Backup Tab */}

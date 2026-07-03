@@ -1,0 +1,19 @@
+{
+  "customApi": {
+    "title": "Custom API Providers",
+    "description": "Connect your own endpoint in OpenAI format (/v1/chat/completions) or Anthropic/Claude format (/v1/messages): OpenRouter, DeepSeek, Groq, vLLM, local servers and more.",
+    "name": "Name",
+    "namePlaceholder": "e.g. My OpenRouter",
+    "format": "API format",
+    "formatOpenai": "OpenAI-compatible",
+    "formatAnthropic": "Anthropic / Claude",
+    "apiKey": "API key",
+    "model": "Model",
+    "add": "Add provider",
+    "test": "Test",
+    "testOk": "Connection successful",
+    "testError": "Connection error",
+    "errorRequired": "Fill in the name, Base URL and model",
+    "hint": "After adding, the provider appears in the AI translation provider list with a 🔌 icon. Keys are stored locally on your computer."
+  }
+}

@@ -130,7 +130,7 @@
     "country-flag-icons": "^1.5.19",
     "csv": "6.3.11",
     "date-fns": "3.6.0",
-    "dayjs": "1.11.13",
+    "dayjs": "1.12.03",
     "deepl-node": "^1.19.0",
     "dotenv": "16.5.0",
     "embla-carousel-react": "^8.6.0",
@@ -171,5 +171,5 @@
     "winreg": "^1.2.5",
     "zod": "3.23.8"
   },
-  "version": "1.11.1"
+  "version": "1.12.0"
 }

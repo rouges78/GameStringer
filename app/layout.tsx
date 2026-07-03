@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next';
+import RuntimeRuFix from '@/components/i18n/runtime-ru-fix';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -41,7 +42,8 @@ export default function RootLayout({
                   {/* ProfileWrapper integra ProfileAuthProvider e ProtectedRoute */}
                   <ProfileWrapper>
                     <ErrorBoundary>
-                      {children}
+                      <RuntimeRuFix />
+        {children}
                     </ErrorBoundary>
                   </ProfileWrapper>
                 </ErrorBoundary>

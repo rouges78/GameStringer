@@ -1,6 +1,6 @@
 [package]
 name = "gamestringer"
-version = "1.11.1"
+version = "1.12.0"
 description = "GameStringer - AI Game Translation System"
 authors = ["GameStringer Team"]
 license = ""

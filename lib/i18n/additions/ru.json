@@ -1,0 +1,19 @@
+{
+  "customApi": {
+    "title": "Кастомные API-провайдеры",
+    "description": "Подключите свой endpoint в формате OpenAI (/v1/chat/completions) или Anthropic/Claude (/v1/messages): OpenRouter, DeepSeek, Groq, vLLM, локальные серверы и др.",
+    "name": "Название",
+    "namePlaceholder": "Например: Мой OpenRouter",
+    "format": "Формат API",
+    "formatOpenai": "OpenAI-совместимый",
+    "formatAnthropic": "Anthropic / Claude",
+    "apiKey": "API-ключ",
+    "model": "Модель",
+    "add": "Добавить провайдер",
+    "test": "Проверить",
+    "testOk": "Соединение успешно",
+    "testError": "Ошибка соединения",
+    "errorRequired": "Заполните название, Base URL и модель",
+    "hint": "После добавления провайдер появится в списке AI-провайдеров перевода со значком 🔌. Ключи хранятся локально на вашем компьютере."
+  }
+}

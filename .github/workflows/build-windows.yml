@@ -1,0 +1,54 @@
+# Сборка Windows .exe для GameStringer через GitHub Actions.
+# Запуск: вкладка Actions → "Build Windows EXE" → Run workflow,
+# либо автоматически при пуше тега вида v1.12.0.
+# Готовый установщик появится в артефактах запуска (Artifacts → GameStringer-windows).
+
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Apply v1.12.0 patch (idempotent, safe if already applied)
+        run: node scripts/apply-gamestringer-patch.mjs
+        continue-on-error: true
+
+      - name: Build Tauri app
+        run: npx tauri build
+
+      - name: Upload Windows binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameStringer-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/*.exe
+          if-no-files-found: warn
