@@ -38,13 +38,55 @@ function isRussian(): boolean {
   return false;
 }
 
+// Ключи словаря, отсортированные по убыванию длины — чтобы длинные фразы
+// заменялись раньше коротких (иначе "Game" съест кусок "Game Details").
+let SORTED_KEYS: string[] | null = null;
+function getSortedKeys(): string[] {
+  if (SORTED_KEYS) return SORTED_KEYS;
+  SORTED_KEYS = Object.keys(DICT).sort((a, b) => b.length - a.length);
+  return SORTED_KEYS;
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function translateSubstrings(raw: string): string {
+  let out = raw;
+  for (const key of getSortedKeys()) {
+    if (!out.includes(key)) continue;
+    const ru = DICT[key];
+    if (!ru || ru === key) continue;
+    // Границы слова, чтобы "Game" не ломал "GameMaker". Для ключей с не-буквенными
+    // символами в начале/конце используем простую замену.
+    const startsAlnum = /^[A-Za-zА-Яа-я0-9]/.test(key);
+    const endsAlnum = /[A-Za-zА-Яа-я0-9]$/.test(key);
+    const pattern = (startsAlnum ? '(?<![A-Za-zА-Яа-я0-9])' : '') +
+      escapeRe(key) +
+      (endsAlnum ? '(?![A-Za-zА-Яа-я0-9])' : '');
+    try {
+      out = out.replace(new RegExp(pattern, 'g'), ru);
+    } catch {
+      out = out.split(key).join(ru);
+    }
+  }
+  return out;
+}
+
 function translateTextNode(node: Text): void {
   const raw = node.nodeValue || '';
+  if (!raw.trim()) return;
+  // 1) Точное совпадение целого узла (быстрый путь)
   const trimmed = raw.trim();
-  if (!trimmed) return;
-  const ru = DICT[trimmed];
-  if (ru && ru !== trimmed) {
-    node.nodeValue = raw.replace(trimmed, ru);
+  const exact = DICT[trimmed];
+  if (exact && exact !== trimmed) {
+    node.nodeValue = raw.replace(trimmed, exact);
+    return;
+  }
+  // 2) Замена подстрок (для "String it! → Русский" и т.п.)
+  const replaced = translateSubstrings(raw);
+  if (replaced !== raw) {
+    node.nodeValue = replaced;
   }
 }
 
@@ -52,8 +94,13 @@ function translateElementAttrs(el: Element): void {
   for (const attr of ATTRS) {
     const val = el.getAttribute(attr);
     if (!val) continue;
-    const ru = DICT[val.trim()];
-    if (ru && ru !== val) el.setAttribute(attr, ru);
+    const exact = DICT[val.trim()];
+    if (exact && exact !== val) {
+      el.setAttribute(attr, exact);
+      continue;
+    }
+    const replaced = translateSubstrings(val);
+    if (replaced !== val) el.setAttribute(attr, replaced);
   }
 }
 

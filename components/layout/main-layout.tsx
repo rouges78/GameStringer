@@ -1255,8 +1255,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Suspense fallback={<LazyFallback />}><BackgroundJobsIndicator /></Suspense>
               
               <div className="h-6 w-px bg-slate-800/60 mx-1" />
-              
-              <ProfileHeader />
+
+              {/* ProfileHeader removed in v1.12.0 patch — account system disabled */}
               <UpdateBell />
               
               <Button
