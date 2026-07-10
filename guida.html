@@ -238,7 +238,7 @@
 
 <header class="hero" id="top">
   <div class="container">
-    <span class="pill reveal">📖 <b data-i18n="g.hero.pill">Manuale utente interattivo</b> · v1.11.2</span>
+    <span class="pill reveal">📖 <b data-i18n="g.hero.pill">Manuale utente interattivo</b> · v1.12.0</span>
     <h1 class="reveal" data-i18n-html="g.hero.title">Hai installato GameStringer.<br><span class="grad">E adesso?</span></h1>
     <p class="lead reveal" data-i18n="g.hero.lead">Questa guida ti accompagna dal primo avvio al primo gioco tradotto, passo per passo — la stessa strada che farai dentro l'app, spiegata prima. Dieci capitoli, cinque minuti di lettura, zero termini oscuri.</p>
     <div class="chapters reveal" id="chapnav">
@@ -257,6 +257,36 @@
 </header>
 
 <!-- 01 · PRIMO AVVIO -->
+<section id="v112">
+  <div class="container">
+    <span class="label core reveal" data-i18n="g.v112.label">// Novità v1.12.0</span>
+    <h2 class="h2 reveal" data-i18n="g.v112.h2">Traduzioni più intelligenti, che si correggono da sole</h2>
+    <p class="sub reveal" data-i18n="g.v112.sub">La v1.12.0 aggiunge il contesto visivo, una revisione automatica della traduzione e una memoria che ragiona per significato. Tutto opzionale, e possibile anche in locale con Ollama.</p>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:22px">
+      <div style="padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <h3 style="font-size:1rem;margin-bottom:6px" data-i18n="g.v112.c1t">👁️ Contesto visivo (VLM)</h3>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6" data-i18n="g.v112.c1d">Traduzione con contesto visivo (VLM): l'AI vede lo schermo e traduce col contesto, risolvendo le parole ambigue (es. "Chest" = forziere o petto). Locale (Ollama) o OpenAI/Gemini</p>
+      </div>
+      <div style="padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <h3 style="font-size:1rem;margin-bottom:6px" data-i18n="g.v112.c2t">🪞 Traduzioni auto-correttive</h3>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6" data-i18n="g.v112.c2d">Passaggio auto-correttivo (Reflection): una seconda passata opzionale rivede e rifinisce la traduzione su glossario, tono e coerenza — solo dove serve</p>
+      </div>
+      <div style="padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <h3 style="font-size:1rem;margin-bottom:6px" data-i18n="g.v112.c3t">🧠 Memoria semantica (RAG)</h3>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6" data-i18n="g.v112.c3d">Memoria semantica (RAG): Translation Memory e glossario abbinati per significato tramite embedding locali, per una terminologia coerente in tutto il gioco</p>
+      </div>
+      <div style="padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <h3 style="font-size:1rem;margin-bottom:6px" data-i18n="g.v112.c4t">⚡ Live più fluida</h3>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6" data-i18n="g.v112.c4d">Traduzione live più fluida ed elaborazione nativa degli screenshot (ritaglio/ridimensionamento prima della chiamata AI)</p>
+      </div>
+      <div style="padding:18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
+        <h3 style="font-size:1rem;margin-bottom:6px" data-i18n="g.v112.c5t">🔌 Più provider pronti all'uso</h3>
+        <p style="font-size:13.5px;color:var(--muted);line-height:1.6" data-i18n="g.v112.c5d">Più provider pronti all'uso: DeepL, Groq, Cerebras, Cohere, Together, Fireworks, Hugging Face, Azure Translator, DashScope, LibreTranslate, Lingva, MyMemory</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="c1">
   <div class="container">
     <span class="label core reveal">// 01 · <span data-i18n="g.ch1">Primo avvio</span></span>
