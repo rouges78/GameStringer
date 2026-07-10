@@ -133,12 +133,14 @@
     <a class="brand" href="#top"><img class="dot" src="logo.png" alt="GameStringer"> <span class="brandname">GameStringer</span></a>
     <div class="nav-links">
       <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
+      <a href="#v112" data-i18n="nav.new" style="color:var(--trad2)">Novità</a>
       <a href="#architettura" data-i18n="nav.engine">Motore</a>
       <a href="#sotto-il-cofano" data-i18n="nav.tech">Sotto il cofano</a>
       <a href="#funzioni" data-i18n="nav.functions">Funzioni</a>
       <a href="#engine" data-i18n="nav.engines2">Engine</a>
       <a href="#ai" data-i18n="nav.ai">AI</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="guida.html" data-i18n="nav.guide" style="color:var(--core)">Guida</a>
     </div>
     <div class="nav-right">
       <select class="lang" id="langSel" aria-label="Language">
@@ -153,6 +155,7 @@
         <option value="ja">日本語</option>
         <option value="zh">中文</option>
         <option value="ko">한국어</option>
+        <option value="el">Ελληνικά</option>
       </select>
       <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="nav.download">Scarica</a>
     </div>
@@ -161,17 +164,18 @@
 
 <header class="hero" id="top">
   <div class="container">
-    <span class="pill reveal">🎮 Source-available · <b>v1.11.2</b> · Windows · Linux · macOS</span>
+    <span class="pill reveal">🎮 Source-available · <b>v1.12.0</b> · Windows · Linux · macOS</span>
     <h1 class="reveal" data-i18n-html="hero.title">Traduci qualsiasi videogioco<br><span class="grad">con l'intelligenza artificiale</span></h1>
     <p class="lead reveal" data-i18n="hero.lead">GameStringer analizza il gioco, riconosce l'engine, estrae il testo, lo traduce con l'AI e riapplica la patch — in automatico. Niente riga di comando, niente modding manuale. Backup sempre prima di toccare i file.</p>
     <div class="cta reveal">
       <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="hero.cta1">⬇ Scarica l'ultima versione</a>
       <a class="btn btn-ghost" href="#come-funziona" data-i18n="hero.cta2">Scopri come funziona</a>
+      <a class="btn btn-ghost" href="guida.html">📖 <span data-i18n="nav.guide">Guida</span></a>
     </div>
     <div class="stats">
       <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.engines">Engine supportati</div></div>
       <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.ai">Provider AI</div></div>
-      <div class="stat reveal"><div class="n grad">11</div><div class="l" data-i18n="stat.langs">Lingue UI</div></div>
+      <div class="stat reveal"><div class="n grad">12</div><div class="l" data-i18n="stat.langs">Lingue UI</div></div>
       <div class="stat reveal"><div class="n grad">800+</div><div class="l" data-i18n="stat.games">Giochi rilevati</div></div>
     </div>
   </div>
@@ -197,6 +201,49 @@
       <span><i class="swatch" style="background:var(--trad2)"></i> <span data-i18n="leg.trad">Traduzione AI</span></span>
       <span><i class="swatch" style="background:var(--patch2)"></i> <span data-i18n="leg.patch">Engine / Patcher</span></span>
       <span><i class="swatch" style="background:var(--res2)"></i> <span data-i18n="leg.res">Risorse / Libreria</span></span>
+    </div>
+  </div>
+</section>
+
+<section id="v112">
+  <div class="container">
+    <span class="label trad reveal" data-i18n="v112.label">// Novità v1.12.0</span>
+    <h2 class="h2 reveal" data-i18n="v112.h2">Traduzioni più intelligenti, che si correggono da sole</h2>
+    <p class="sub reveal" data-i18n="v112.sub">La v1.12.0 aggiunge il contesto visivo, una revisione automatica della traduzione e una memoria che ragiona per significato. Tutto opzionale, e possibile anche in locale con Ollama.</p>
+    <div class="arch reveal">
+      <svg viewBox="0 0 1000 270" role="img" aria-label="v1.12.0: contesto visivo, auto-correzione, memoria semantica">
+        <defs>
+          <linearGradient id="gV1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+        </defs>
+        <rect x="24" y="26" width="300" height="212" rx="16" fill="rgba(56,189,248,.08)" stroke="#38bdf8"/>
+        <circle cx="174" cy="72" r="24" fill="rgba(56,189,248,.16)"/>
+        <text x="174" y="80" text-anchor="middle" font-size="24">👁️</text>
+        <text x="174" y="122" text-anchor="middle" fill="#7dd3fc" font-size="16" font-weight="700" data-i18n="v112.p1">Contesto visivo (VLM)</text>
+        <text x="174" y="150" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p1a">L'AI vede lo schermo e traduce</text>
+        <text x="174" y="168" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p1b">sciogliendo le ambiguità</text>
+        <text x="174" y="202" text-anchor="middle" fill="#9aa6bd" font-size="11.5" font-style="italic" data-i18n="v112.p1c">"Chest" = forziere o petto?</text>
+        <rect x="350" y="26" width="300" height="212" rx="16" fill="rgba(139,92,246,.08)" stroke="#8b5cf6"/>
+        <circle cx="500" cy="72" r="24" fill="rgba(139,92,246,.16)"/>
+        <text x="500" y="80" text-anchor="middle" font-size="24">🪞</text>
+        <text x="500" y="122" text-anchor="middle" fill="#c4b5fd" font-size="16" font-weight="700" data-i18n="v112.p2">Auto-correzione</text>
+        <text x="500" y="150" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p2a">Rilegge e rifinisce la traduzione</text>
+        <text x="500" y="168" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p2b">su glossario, tono e coerenza</text>
+        <text x="500" y="202" text-anchor="middle" fill="#9aa6bd" font-size="11.5" font-style="italic" data-i18n="v112.p2c">scrivi → rifletti → rifinisci</text>
+        <rect x="676" y="26" width="300" height="212" rx="16" fill="rgba(16,185,129,.08)" stroke="#10b981"/>
+        <circle cx="826" cy="72" r="24" fill="rgba(16,185,129,.16)"/>
+        <text x="826" y="80" text-anchor="middle" font-size="24">🧠</text>
+        <text x="826" y="122" text-anchor="middle" fill="#6ee7b7" font-size="16" font-weight="700" data-i18n="v112.p3">Memoria semantica (RAG)</text>
+        <text x="826" y="150" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p3a">Riusa le frasi già tradotte</text>
+        <text x="826" y="168" text-anchor="middle" fill="#cbd5e1" font-size="12" data-i18n="v112.p3b">per significato, non parola per parola</text>
+        <text x="826" y="202" text-anchor="middle" fill="#9aa6bd" font-size="11.5" font-style="italic" data-i18n="v112.p3c">terminologia coerente nel gioco</text>
+      </svg>
+    </div>
+    <div class="grid">
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c1t">👁️ Contesto visivo (VLM)</h3><p data-i18n="v112.c1d">Per la traduzione live/a schermo, un modello visivo guarda il frame e traduce col contesto: niente più errori sulle parole ambigue. Funziona in locale (Ollama) o con OpenAI/Gemini.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c2t">🪞 Traduzioni auto-correttive</h3><p data-i18n="v112.c2d">Dopo la traduzione, una seconda passata opzionale rilegge il lavoro su glossario, tono e formattazione e corregge solo le righe che ne hanno davvero bisogno. Selettiva, quindi veloce ed economica.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c3t">🧠 Memoria semantica</h3><p data-i18n="v112.c3d">Translation Memory e glossario ora si abbinano per significato tramite embedding locali: una frase già tradotta viene riusata anche se scritta in modo diverso, per una terminologia coerente in tutto il gioco.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="v112.c4t">⚡ Live più fluida</h3><p data-i18n="v112.c4d">Pipeline dell'overlay live rivista ed elaborazione nativa degli screenshot (ritaglio/ridimensionamento) per un risultato a schermo più rapido e pulito.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c5t">🔌 Più provider pronti all'uso</h3><p data-i18n="v112.c5d">Aggiunti DeepL, Groq, Cerebras, Cohere, Together, Fireworks, Hugging Face, Azure Translator, DashScope, LibreTranslate, Lingva e MyMemory: più motori di traduzione funzionano subito.</p></div>
     </div>
   </div>
 </section>
@@ -298,6 +345,22 @@
         <text x="40" y="208" fill="#fcd34d" font-size="15" font-weight="700" data-i18n="sec.gate">🛡 Gate anti-cheat (invariante)</text>
         <text x="40" y="232" fill="#cbd5e1" font-size="12.5" data-i18n="sec.gates">Blocca l'injection sui giochi online (EAC/BattlEye). Solo single-player/offline.</text>
       </svg>
+    </div>
+  </div>
+</section>
+
+<section id="guida-cta" style="padding:48px 0">
+  <div class="container">
+    <div class="reveal" style="position:relative;overflow:hidden;border-radius:22px;padding:44px 34px;text-align:center;
+      background:linear-gradient(135deg,rgba(139,92,246,.16),rgba(99,102,241,.10) 50%,rgba(56,189,248,.10));
+      border:1px solid rgba(139,92,246,.35)">
+      <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(32rem 16rem at 50% -20%,rgba(139,92,246,.25),transparent 70%)"></div>
+      <span class="label core" data-i18n="gcta.label">// Manuale utente</span>
+      <h2 class="h2" style="margin-top:10px" data-i18n="gcta.h2">Scaricato? Ora impara a usarlo in 5 minuti</h2>
+      <p class="sub" style="margin:8px auto 0;max-width:720px" data-i18n="gcta.sub">La guida interattiva ti porta dal primo avvio al primo gioco tradotto: mappa dell'app, simulatore del flusso di traduzione, P.T., Patch Hub e soluzioni ai problemi comuni.</p>
+      <div class="cta" style="margin-top:26px">
+        <a class="btn btn-primary" href="guida.html" data-i18n="gcta.btn">📖 Apri la guida interattiva</a>
+      </div>
     </div>
   </div>
 </section>
@@ -440,9 +503,9 @@
     <span class="label res reveal" data-i18n="news.label">// Novità v1.11.2</span>
     <h2 class="h2 reveal" data-i18n="news.h2">Le ultime migliorie</h2>
     <div class="news">
-      <div class="newcard reveal"><h3 data-i18n="n1.t">🔁 Auto-update riparato</h3><p data-i18n="n1.d">Risolto il blocco su "Preparazione…": l'aggiornamento automatico ora parte, scarica e installa correttamente con un clic.</p></div>
-      <div class="newcard reveal"><h3 data-i18n="n2.t">💾 Impostazioni che restano</h3><p data-i18n="n2.d">Impostazioni e API key dei provider AI ora vengono salvate in modo affidabile su disco. Niente più configurazioni perse al riavvio.</p></div>
-      <div class="newcard reveal"><h3 data-i18n="n3.t">📁 Aggiungi giochi dal disco</h3><p data-i18n="n3.d">Oltre all'auto-detect delle librerie, ora puoi aggiungere manualmente un gioco scegliendo la sua cartella.</p></div>
+      <div class="newcard reveal"><h3 data-i18n="n1.t">🚀 String it! ovunque</h3><p data-i18n="n1.d">Instradamento one-click per Unity, Unreal e Godot, più una nuova pipeline cloud per TyranoScript. Il parser Godot ora legge anche i .pck di Godot 4.4+.</p></div>
+      <div class="newcard reveal"><h3 data-i18n="n2.t">🧩 Pubblica nel Patch Hub</h3><p data-i18n="n2.d">Un progetto completato si pubblica nel Patch Hub della community in un solo passo, e il Community Hub ha una nuova panoramica con attività recenti e ultimi pack.</p></div>
+      <div class="newcard reveal"><h3 data-i18n="n3.t">🛒 Più store, più giochi</h3><p data-i18n="n3.d">Rilevamento locale di Humble App, Game Jolt e Big Fish Games, e verifica via PCGamingWiki se il gioco ha già la tua lingua.</p></div>
     </div>
   </div>
 </section>
@@ -463,7 +526,7 @@
         <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i3s">auto-update firmato</div>
       </div>
       <div style="padding:16px 18px;border-radius:14px;background:var(--surface);border:1px solid var(--border)">
-        <div style="font-size:1.05rem;font-weight:800;color:var(--res2)" data-i18n="trust.i4">11 lingue UI</div>
+        <div style="font-size:1.05rem;font-weight:800;color:var(--res2)" data-i18n="trust.i4">12 lingue UI</div>
         <div style="font-size:12.5px;color:var(--muted);margin-top:3px" data-i18n="trust.i4s">interfaccia completamente localizzata</div>
       </div>
     </div>
@@ -488,11 +551,28 @@
   </div>
 </section>
 
+<section id="dev-note" style="background:rgba(255,255,255,.015)">
+  <div class="container">
+    <div class="reveal" style="position:relative;overflow:hidden;border-radius:22px;padding:40px 32px;
+      background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(56,189,248,.08));
+      border:1px solid rgba(139,92,246,.30)">
+      <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(30rem 14rem at 50% -20%,rgba(139,92,246,.22),transparent 70%)"></div>
+      <span class="label core" data-i18n="dev.label">// Una nota dallo sviluppatore</span>
+      <h2 class="h2" style="margin-top:10px" data-i18n="dev.h2">Un progetto di una persona sola — abbiate pazienza 💜</h2>
+      <p class="sub" style="max-width:760px" data-i18n="dev.p1">GameStringer è sviluppato da una persona sola — io — e convivo con il Parkinson, quindi a volte gli aggiornamenti arrivano più lentamente di quanto vorrei. Grazie di cuore per la pazienza.</p>
+      <p class="sub" style="max-width:760px" data-i18n="dev.p2">Non lo faccio per soldi: voglio solo cambiare la rotta delle traduzioni dei videogiochi e mettere in mano ai giocatori uno strumento davvero utile.</p>
+      <p class="sub" style="max-width:760px" data-i18n="dev.p3">🎮 Presto aprirò un canale Discord per parlarne insieme, scambiare idee e migliorare tutto — renderlo unico. Se ti va, resta nei paraggi.</p>
+      <p class="sub" style="margin-top:6px;color:var(--faint)" data-i18n="dev.sign">— Davide (rouges78)</p>
+    </div>
+  </div>
+</section>
+
 <footer>
   <div class="container">
     <a class="brand" href="#top" style="justify-content:center"><img class="dot" src="logo.png" alt="GameStringer"> <span class="brandname">GameStringer</span></a>
     <div class="flinks">
       <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener">GitHub</a>
+      <a href="guida.html" data-i18n="nav.guide">Guida</a>
       <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="foot.dl">Download</a>
       <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank" rel="noopener" data-i18n="foot.comm">Community</a>
       <a href="https://ko-fi.com/gamestringer" target="_blank" rel="noopener">Ko-fi</a>
@@ -523,7 +603,7 @@
     const sel=document.getElementById('langSel'); if(sel) sel.value=lang;
   }
   (function initLang(){
-    const supported=['it','en','es','fr','de','pt','pl','ru','ja','zh','ko'];
+    const supported=['it','en','es','fr','de','pt','pl','ru','ja','zh','ko','el'];
     let lang='it';
     try{const s=localStorage.getItem('gs_site_lang'); if(s&&supported.includes(s)) lang=s; else{const b=(navigator.language||'it').slice(0,2).toLowerCase(); if(supported.includes(b)) lang=b;}}catch(e){}
     const sel=document.getElementById('langSel');
