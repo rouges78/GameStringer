@@ -1,9 +1,9 @@
 // GameStringer guide i18n — 12 lingue (it, en, es, fr, de, pt, pl, ru, ja, zh, ko, el)
 window.GS_GUIDE_I18N = {
   it: {
-    "g.v112.label": "// Novità v1.12.0",
+    "g.v112.label": "// Novità v1.13.0",
     "g.v112.h2": "Traduzioni più intelligenti, che si correggono da sole",
-    "g.v112.sub": "La v1.12.0 aggiunge il contesto visivo, una revisione automatica della traduzione e una memoria che ragiona per significato. Tutto opzionale, e possibile anche in locale con Ollama.",
+    "g.v112.sub": "La v1.13.0 aggiunge il contesto visivo, una revisione automatica della traduzione e una memoria che ragiona per significato. Tutto opzionale, e possibile anche in locale con Ollama.",
     "g.v112.c1t": "👁️ Contesto visivo (VLM)",
     "g.v112.c1d": "Traduzione con contesto visivo (VLM): l'AI vede lo schermo e traduce col contesto, risolvendo le parole ambigue (es. \"Chest\" = forziere o petto). Locale (Ollama) o OpenAI/Gemini",
     "g.v112.c2t": "🪞 Traduzioni auto-correttive",
@@ -165,9 +165,9 @@ window.GS_GUIDE_I18N = {
   },
 
   en: {
-    "g.v112.label": "// What's new in v1.12.0",
+    "g.v112.label": "// What's new in v1.13.0",
     "g.v112.h2": "Smarter translations that check themselves",
-    "g.v112.sub": "v1.12.0 adds visual context, an automatic review of the translation and a memory that reasons by meaning. All optional, and possible fully locally with Ollama.",
+    "g.v112.sub": "v1.13.0 adds visual context, an automatic review of the translation and a memory that reasons by meaning. All optional, and possible fully locally with Ollama.",
     "g.v112.c1t": "👁️ Visual context (VLM)",
     "g.v112.c1d": "Visual-context translation (VLM): the AI sees the screen and translates with context, resolving ambiguous words (e.g. \"Chest\" = coffer vs. body). Local (Ollama) or OpenAI/Gemini",
     "g.v112.c2t": "🪞 Self-correcting translations",
@@ -329,9 +329,9 @@ window.GS_GUIDE_I18N = {
   },
 
   es: {
-    "g.v112.label": "// Novedades de v1.12.0",
+    "g.v112.label": "// Novedades de v1.13.0",
     "g.v112.h2": "Traducciones más inteligentes que se corrigen solas",
-    "g.v112.sub": "La v1.12.0 añade contexto visual, una revisión automática de la traducción y una memoria que razona por significado. Todo opcional, y posible también en local con Ollama.",
+    "g.v112.sub": "La v1.13.0 añade contexto visual, una revisión automática de la traducción y una memoria que razona por significado. Todo opcional, y posible también en local con Ollama.",
     "g.v112.c1t": "👁️ Contexto visual (VLM)",
     "g.v112.c1d": "Traducción con contexto visual (VLM): la IA ve la pantalla y traduce con contexto, resolviendo palabras ambiguas (p. ej. \"Chest\" = cofre o pecho). Local (Ollama) u OpenAI/Gemini",
     "g.v112.c2t": "🪞 Traducciones autocorrectivas",
@@ -577,9 +577,9 @@ window.GS_GUIDE_I18N = {
   },
 
   fr: {
-    "g.v112.label": "// Nouveautés de v1.12.0",
+    "g.v112.label": "// Nouveautés de v1.13.0",
     "g.v112.h2": "Des traductions plus intelligentes qui se corrigent",
-    "g.v112.sub": "La v1.12.0 ajoute le contexte visuel, une relecture automatique de la traduction et une mémoire qui raisonne par le sens. Tout est optionnel, et possible en local avec Ollama.",
+    "g.v112.sub": "La v1.13.0 ajoute le contexte visuel, une relecture automatique de la traduction et une mémoire qui raisonne par le sens. Tout est optionnel, et possible en local avec Ollama.",
     "g.v112.c1t": "👁️ Contexte visuel (VLM)",
     "g.v112.c1d": "Traduction avec contexte visuel (VLM) : l'IA voit l'écran et traduit avec le contexte, levant les ambiguïtés (ex. \"Chest\" = coffre ou poitrine). Local (Ollama) ou OpenAI/Gemini",
     "g.v112.c2t": "🪞 Traductions autocorrectives",
@@ -825,9 +825,9 @@ window.GS_GUIDE_I18N = {
   },
 
   de: {
-    "g.v112.label": "// Neu in v1.12.0",
+    "g.v112.label": "// Neu in v1.13.0",
     "g.v112.h2": "Intelligentere Übersetzungen, die sich selbst prüfen",
-    "g.v112.sub": "v1.12.0 bringt visuellen Kontext, eine automatische Überprüfung der Übersetzung und einen Speicher, der nach Bedeutung denkt. Alles optional und auch lokal mit Ollama möglich.",
+    "g.v112.sub": "v1.13.0 bringt visuellen Kontext, eine automatische Überprüfung der Übersetzung und einen Speicher, der nach Bedeutung denkt. Alles optional und auch lokal mit Ollama möglich.",
     "g.v112.c1t": "👁️ Visueller Kontext (VLM)",
     "g.v112.c1d": "Übersetzung mit visuellem Kontext (VLM): Die KI sieht den Bildschirm und übersetzt im Kontext, löst mehrdeutige Wörter auf (z. B. \"Chest\" = Truhe oder Brust). Lokal (Ollama) oder OpenAI/Gemini",
     "g.v112.c2t": "🪞 Selbstkorrigierende Übersetzungen",
@@ -1073,9 +1073,9 @@ window.GS_GUIDE_I18N = {
   },
 
   pt: {
-    "g.v112.label": "// Novidades da v1.12.0",
+    "g.v112.label": "// Novidades da v1.13.0",
     "g.v112.h2": "Traduções mais inteligentes que se corrigem sozinhas",
-    "g.v112.sub": "A v1.12.0 adiciona contexto visual, uma revisão automática da tradução e uma memória que raciocina por significado. Tudo opcional, e possível localmente com Ollama.",
+    "g.v112.sub": "A v1.13.0 adiciona contexto visual, uma revisão automática da tradução e uma memória que raciocina por significado. Tudo opcional, e possível localmente com Ollama.",
     "g.v112.c1t": "👁️ Contexto visual (VLM)",
     "g.v112.c1d": "Tradução com contexto visual (VLM): a IA vê a tela e traduz com contexto, resolvendo palavras ambíguas (ex.: \"Chest\" = baú ou peito). Local (Ollama) ou OpenAI/Gemini",
     "g.v112.c2t": "🪞 Traduções autocorretivas",
@@ -1321,9 +1321,9 @@ window.GS_GUIDE_I18N = {
   },
 
   pl: {
-    "g.v112.label": "// Nowości w v1.12.0",
+    "g.v112.label": "// Nowości w v1.13.0",
     "g.v112.h2": "Inteligentniejsze tłumaczenia, które same się sprawdzają",
-    "g.v112.sub": "v1.12.0 dodaje kontekst wizualny, automatyczną korektę tłumaczenia i pamięć rozumującą znaczeniowo. Wszystko opcjonalne i możliwe lokalnie z Ollama.",
+    "g.v112.sub": "v1.13.0 dodaje kontekst wizualny, automatyczną korektę tłumaczenia i pamięć rozumującą znaczeniowo. Wszystko opcjonalne i możliwe lokalnie z Ollama.",
     "g.v112.c1t": "👁️ Kontekst wizualny (VLM)",
     "g.v112.c1d": "Tłumaczenie z kontekstem wizualnym (VLM): AI widzi ekran i tłumaczy z kontekstem, rozwiązując wieloznaczne słowa (np. \"Chest\" = skrzynia lub klatka piersiowa). Lokalnie (Ollama) lub OpenAI/Gemini",
     "g.v112.c2t": "🪞 Samokorygujące się tłumaczenia",
@@ -1569,9 +1569,9 @@ window.GS_GUIDE_I18N = {
   },
 
   ru: {
-    "g.v112.label": "// Что нового в v1.12.0",
+    "g.v112.label": "// Что нового в v1.13.0",
     "g.v112.h2": "Умные переводы, которые сами себя проверяют",
-    "g.v112.sub": "v1.12.0 добавляет визуальный контекст, автоматическую проверку перевода и память, работающую по смыслу. Всё опционально и возможно локально с Ollama.",
+    "g.v112.sub": "v1.13.0 добавляет визуальный контекст, автоматическую проверку перевода и память, работающую по смыслу. Всё опционально и возможно локально с Ollama.",
     "g.v112.c1t": "👁️ Визуальный контекст (VLM)",
     "g.v112.c1d": "Перевод с визуальным контекстом (VLM): ИИ видит экран и переводит с учётом контекста, снимая неоднозначность слов (напр. \"Chest\" = сундук или грудь). Локально (Ollama) или OpenAI/Gemini",
     "g.v112.c2t": "🪞 Самокорректирующийся перевод",
@@ -1817,9 +1817,9 @@ window.GS_GUIDE_I18N = {
   },
 
   ja: {
-    "g.v112.label": "// v1.12.0の新機能",
+    "g.v112.label": "// v1.13.0の新機能",
     "g.v112.h2": "自分で見直す、より賢い翻訳",
-    "g.v112.sub": "v1.12.0は視覚的コンテキスト、翻訳の自動見直し、意味で考えるメモリを追加。すべて任意で、Ollamaならローカルでも動作します。",
+    "g.v112.sub": "v1.13.0は視覚的コンテキスト、翻訳の自動見直し、意味で考えるメモリを追加。すべて任意で、Ollamaならローカルでも動作します。",
     "g.v112.c1t": "👁️ 視覚的コンテキスト（VLM）",
     "g.v112.c1d": "ビジュアルコンテキスト翻訳（VLM）：AIが画面を見て文脈で翻訳し、曖昧な語（例：\"Chest\"＝宝箱か胸か）を解決。ローカル（Ollama）またはOpenAI/Gemini対応",
     "g.v112.c2t": "🪞 自己修正する翻訳",
@@ -2065,9 +2065,9 @@ window.GS_GUIDE_I18N = {
   },
 
   zh: {
-    "g.v112.label": "// v1.12.0 新功能",
+    "g.v112.label": "// v1.13.0 新功能",
     "g.v112.h2": "更聪明、会自我校对的翻译",
-    "g.v112.sub": "v1.12.0 新增视觉上下文、翻译的自动复核，以及按语义推理的记忆。全部可选，并可通过 Ollama 完全在本地运行。",
+    "g.v112.sub": "v1.13.0 新增视觉上下文、翻译的自动复核，以及按语义推理的记忆。全部可选，并可通过 Ollama 完全在本地运行。",
     "g.v112.c1t": "👁️ 视觉上下文（VLM）",
     "g.v112.c1d": "视觉上下文翻译（VLM）：AI 查看画面并结合上下文翻译，消除歧义词（例如 \"Chest\" = 宝箱还是胸部）。支持本地（Ollama）或 OpenAI/Gemini",
     "g.v112.c2t": "🪞 自我校正的翻译",
@@ -2313,9 +2313,9 @@ window.GS_GUIDE_I18N = {
   },
 
   ko: {
-    "g.v112.label": "// v1.12.0의 새로운 기능",
+    "g.v112.label": "// v1.13.0의 새로운 기능",
     "g.v112.h2": "스스로 점검하는 더 똑똑한 번역",
-    "g.v112.sub": "v1.12.0은 시각적 맥락, 번역 자동 검토, 의미로 추론하는 메모리를 추가합니다. 모두 선택 사항이며 Ollama로 로컬에서도 가능합니다.",
+    "g.v112.sub": "v1.13.0은 시각적 맥락, 번역 자동 검토, 의미로 추론하는 메모리를 추가합니다. 모두 선택 사항이며 Ollama로 로컬에서도 가능합니다.",
     "g.v112.c1t": "👁️ 시각적 맥락(VLM)",
     "g.v112.c1d": "시각적 맥락 번역(VLM): AI가 화면을 보고 맥락으로 번역해 모호한 단어(예: \"Chest\" = 상자 또는 가슴)를 해소. 로컬(Ollama) 또는 OpenAI/Gemini 지원",
     "g.v112.c2t": "🪞 자기 교정 번역",
@@ -2561,9 +2561,9 @@ window.GS_GUIDE_I18N = {
   },
 
   el: {
-    "g.v112.label": "// Τι νέο στην v1.12.0",
+    "g.v112.label": "// Τι νέο στην v1.13.0",
     "g.v112.h2": "Πιο έξυπνες μεταφράσεις που ελέγχουν τον εαυτό τους",
-    "g.v112.sub": "Η v1.12.0 προσθέτει οπτικό πλαίσιο, αυτόματο έλεγχο της μετάφρασης και μνήμη που σκέφτεται με βάση το νόημα. Όλα προαιρετικά, και τοπικά με Ollama.",
+    "g.v112.sub": "Η v1.13.0 προσθέτει οπτικό πλαίσιο, αυτόματο έλεγχο της μετάφρασης και μνήμη που σκέφτεται με βάση το νόημα. Όλα προαιρετικά, και τοπικά με Ollama.",
     "g.v112.c1t": "👁️ Οπτικό πλαίσιο (VLM)",
     "g.v112.c1d": "Μετάφραση με οπτικό πλαίσιο (VLM): το AI βλέπει την οθόνη και μεταφράζει με βάση τα συμφραζόμενα, λύνοντας διφορούμενες λέξεις (π.χ. \"Chest\" = μπαούλο ή στήθος). Τοπικά (Ollama) ή OpenAI/Gemini",
     "g.v112.c2t": "🪞 Αυτοδιορθούμενες μεταφράσεις",
