@@ -8,3 +8,4 @@ export { UnrealLocalizationPanel } from './unreal-localization-panel';
 export { UnityAssetsPanel } from './unity-assets-panel';
 
 export { CompatCard } from './compat-card';
+export { FontCheckCard } from './font-check-card';

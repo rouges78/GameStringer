@@ -34,8 +34,9 @@ import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
 import { startHeroTracking } from '@/lib/hero-job-tracking';
 import {
   reportCompatStep, newCompatRunId, compatGameKey, setPendingBootCheck,
-  classifyCompatError, type CompatGameRef,
+  classifyCompatError, maybeOfferCompatOptIn, type CompatGameRef,
 } from '@/lib/compat-telemetry';
+import { reportCrash } from '@/lib/crash-reporter';
 import {
   ScreenshotGallery,
   ScreenshotLightbox,
@@ -46,6 +47,7 @@ import {
   UnrealLocalizationPanel,
   UnityAssetsPanel,
   CompatCard,
+  FontCheckCard,
 } from '@/components/game-detail';
 
 // Game interface based on mock data structure
@@ -2402,6 +2404,15 @@ export default function GameDetailPage() {
           runId: compatRunId, gameKey: compatGame.key, gameName: compatGame.name,
           targetLang: compatLang, engine: predictionResult?.engine || game.engine,
         });
+        // Telemetria OFF? Propone l'opt-in una sola volta (report retroattivo se accetta).
+        maybeOfferCompatOptIn({
+          runId: compatRunId, game: compatGame,
+          engine: predictionResult?.engine || game.engine,
+          result: success >= 0.8 ? 'success' : 'partial',
+          stringsTotal: totalStr,
+          stringsTranslated: executionResult?.translatedStrings || 0,
+          targetLang: compatLang,
+        });
       }
 
       // Save result for completion wizard
@@ -2423,6 +2434,7 @@ export default function GameDetailPage() {
         step: compatStage, result: 'failure',
         targetLang: compatLang, errorCategory: classifyCompatError(error),
       });
+      void reportCrash({ error, area: 'pipeline', engine: game.engine, gameKey: compatGame.key });
       setAutoTranslateError(String(error) || 'Errore durante l\'esecuzione del workflow');
       toast.error(t('common.erroreDuranteLaTraduzioneAutomatica'));
       // Cleanup workflow listener on error too
@@ -3124,6 +3136,13 @@ export default function GameDetailPage() {
 
           {/* ═══ COMPATIBILITÀ COMMUNITY + CONFERMA BOOT (telemetria opt-in) ═══ */}
           <CompatCard game={compatRefFor(game)} targetLang={targetLang || language} />
+
+          {/* ═══ VERIFICA FONT (glifi mancanti → □□□) ═══ */}
+          <FontCheckCard
+            installPath={game.installPath}
+            engine={game.engine || engineInfo?.engine}
+            targetLang={targetLang || language}
+          />
 
           {/* ═══ DETTAGLI & STRUMENTI ═══ */}
           <GameToolsPanel

@@ -79,6 +79,7 @@ pub mod image_process;
 
 // === Game engine patchers (cross-platform, file-based) ===
 pub mod unity_patcher;
+pub mod font_installer;
 pub mod unity_bundle;
 pub mod unity_csv;
 pub mod unity_asset_injector;

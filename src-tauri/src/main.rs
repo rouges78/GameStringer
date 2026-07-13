@@ -540,6 +540,10 @@ fn main() {
             // Unity Patcher
             commands::unity_patcher::check_game_engine,
             commands::unity_patcher::install_unity_autotranslator,
+            commands::unity_patcher::check_game_font_status,
+            commands::unity_patcher::apply_xunity_font_override,
+            commands::font_installer::install_game_font,
+            commands::font_installer::remove_game_font,
             commands::unity_patcher::remove_unity_patch,
             commands::unity_patcher::detect_localization_files,
             commands::unity_patcher::apply_translation_file,

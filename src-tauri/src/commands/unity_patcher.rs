@@ -2422,6 +2422,115 @@ async fn ensure_tmp_fonts(game_dir: &Path, lang: &str, tmp_font: &str, steps: &m
     }
 }
 
+// ─── Font check / fix retroattivo (issue #46, esteso) ───────────────────
+// L'override font viene applicato dall'installer XUnity; questi comandi
+// permettono di DIAGNOSTICARE lo stato font di un gioco e di applicare
+// l'override a config XUnity già esistenti (installate prima del fix o con
+// lingua cambiata dopo).
+
+/// Config XUnity candidate (stesso ordine di xunity_bridge).
+fn find_xunity_config(game_dir: &Path) -> Option<std::path::PathBuf> {
+    for rel in [
+        "BepInEx/config/AutoTranslatorConfig.ini",
+        "BepInEx/plugins/XUnity.AutoTranslator/Config.ini",
+        "AutoTranslator/Config.ini",
+    ] {
+        let p = game_dir.join(rel);
+        if p.exists() {
+            return Some(p);
+        }
+    }
+    None
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct GameFontStatus {
+    pub needs_override: bool,
+    pub xunity_config_path: Option<String>,
+    pub override_present: bool,
+    pub tmp_font_expected: String,
+    pub tmp_bundle_present: bool,
+    pub unity_version: Option<String>,
+}
+
+/// Stato font di un gioco Unity per la lingua target: config XUnity trovata?
+/// override font presente? bundle TMP corretto già nella cartella del gioco?
+#[tauri::command(rename_all = "camelCase")]
+pub async fn check_game_font_status(game_path: String, target_lang: String) -> Result<GameFontStatus, String> {
+    let game_dir = Path::new(&game_path);
+    if !game_dir.exists() {
+        return Err(format!("Cartella gioco non trovata: {}", game_path));
+    }
+    let unity_version = detect_unity_version(game_dir);
+    let tmp_font = tmp_font_asset_for_unity_version(unity_version.as_deref()).to_string();
+    let cfg = find_xunity_config(game_dir);
+    let override_present = match &cfg {
+        Some(p) => fs::read_to_string(p)
+            .map(|c| c.contains("OverrideFontTextMeshPro=") || c.contains("FallbackFontTextMeshPro="))
+            .unwrap_or(false),
+        None => false,
+    };
+    Ok(GameFontStatus {
+        needs_override: needs_font_override(&target_lang),
+        xunity_config_path: cfg.map(|p| p.to_string_lossy().to_string()),
+        override_present,
+        tmp_bundle_present: game_dir.join(&tmp_font).exists(),
+        tmp_font_expected: tmp_font,
+        unity_version,
+    })
+}
+
+/// Inietta il blocco di override font in una config XUnity ESISTENTE
+/// (idempotente) e scarica/copia il bundle TMP corretto. Da usare per i giochi
+/// dove XUnity era stato installato prima del fix font, o cambiando lingua.
+#[tauri::command(rename_all = "camelCase")]
+pub async fn apply_xunity_font_override(game_path: String, target_lang: String) -> Result<Vec<String>, String> {
+    let game_dir = std::path::PathBuf::from(&game_path);
+    if !game_dir.exists() {
+        return Err(format!("Cartella gioco non trovata: {}", game_path));
+    }
+    if !needs_font_override(&target_lang) {
+        return Ok(vec![format!(
+            "La lingua '{}' usa l'alfabeto latino: override font non necessario.",
+            target_lang
+        )]);
+    }
+
+    let mut steps: Vec<String> = Vec::new();
+    let unity_version = detect_unity_version(&game_dir);
+    let tmp_font = tmp_font_asset_for_unity_version(unity_version.as_deref());
+
+    let cfg_path = find_xunity_config(&game_dir).ok_or_else(|| {
+        "Config XUnity non trovata: installa prima XUnity AutoTranslator dalla pagina del gioco.".to_string()
+    })?;
+
+    let content = fs::read_to_string(&cfg_path).map_err(|e| format!("Lettura config fallita: {}", e))?;
+    if content.contains("OverrideFontTextMeshPro=") || content.contains("FallbackFontTextMeshPro=") {
+        steps.push("✓ Override font già presente nella config XUnity".to_string());
+    } else {
+        let block = xunity_font_override_block(tmp_font);
+        let patched = if content.contains("[Behaviour]\r\n") {
+            content.replace(
+                "[Behaviour]\r\n",
+                &format!("[Behaviour]\r\n{}", block.replace('\n', "\r\n")),
+            )
+        } else if content.contains("[Behaviour]") {
+            content.replace("[Behaviour]", &format!("[Behaviour]\n{}", block.trim_end()))
+        } else {
+            format!("{}\n[Behaviour]\n{}", content.trim_end(), block)
+        };
+        fs::write(&cfg_path, patched).map_err(|e| format!("Scrittura config fallita: {}", e))?;
+        steps.push(format!(
+            "✓ Override font ({}) aggiunto a {}",
+            tmp_font,
+            cfg_path.to_string_lossy()
+        ));
+    }
+
+    ensure_tmp_fonts(&game_dir, &target_lang, tmp_font, &mut steps).await;
+    Ok(steps)
+}
+
 /// Cerca ricorsivamente un file per nome esatto dentro una cartella.
 fn find_file_recursive(dir: &Path, name: &str) -> Option<std::path::PathBuf> {
     let rd = fs::read_dir(dir).ok()?;
