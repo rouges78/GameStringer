@@ -41,10 +41,13 @@ runtime translation, the live overlay and the Auto-Hook scanner.
 - **Download only from [GitHub Releases](https://github.com/rouges78/GameStringer/releases)**
   (or the auto-updater inside the app, which verifies the update signature).
   No other site is authorized to distribute GameStringer.
-- **Check the digital signature** (Windows): right-click the installer →
-  *Properties* → *Digital Signatures*. Releases are code-signed; the Tauri
-  auto-updater additionally verifies updates against the public key shipped
-  with the app (`gamestringer.key.pub` in the repo).
+- **Verify the update signature.** The Tauri auto-updater verifies every
+  update against the public key bundled in the app, so updates delivered
+  in-app are cryptographically authenticated. (Installer Authenticode
+  code-signing is being set up — see
+  [DEFENDER_SUBMISSION.md](DEFENDER_SUBMISSION.md) §0 — so for now a fresh
+  installer may not carry a Windows "Digital Signatures" tab; that's expected
+  and not a sign of tampering when downloaded from the official Releases page.)
 - **Scan it yourself** on [VirusTotal](https://www.virustotal.com) — a couple
   of heuristic engines flagging an injector while the major engines are clean
   is the classic false-positive pattern.
@@ -86,3 +89,6 @@ offline games.** See the warning in the README.
 ---
 
 *Questions? Open a [Discussion](https://github.com/rouges78/GameStringer/discussions).*
+
+*Maintainer note: the per-release submission runbook lives in
+[DEFENDER_SUBMISSION.md](DEFENDER_SUBMISSION.md) (`npm run av:checklist`).*
