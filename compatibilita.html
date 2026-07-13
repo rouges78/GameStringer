@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameStringer — Database di compatibilità</title>
+<meta name="description" content="Il database pubblico di compatibilità di GameStringer: scopri se un gioco si traduce bene, con quale engine e in quale lingua — dati reali riportati dalla community.">
+<link rel="icon" href="favicon.png">
+<style>
+  :root{
+    --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04); --surface2:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.10); --text:#e8ebf2; --muted:#9aa6bd; --faint:#6b7689;
+    --core:#8b5cf6; --core2:#6366f1;
+    --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    --radius:18px; --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(60rem 40rem at 12% -8%, rgba(139,92,246,.18), transparent 60%),
+      radial-gradient(50rem 38rem at 92% 4%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(46rem 40rem at 78% 92%, rgba(16,185,129,.12), transparent 60%),
+      var(--bg)}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.02em;font-weight:800}
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,10,18,.7);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+  .brand .dot{width:30px;height:30px;border-radius:9px;object-fit:cover;box-shadow:0 0 22px rgba(139,92,246,.5)}
+  .brand .brandname{background:linear-gradient(90deg,#8b5cf6,#6366f1,#3b82f6,#8b5cf6);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandGrad 4s linear infinite}
+  @keyframes brandGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .lang{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .lang option{background:#0c1020;color:#e8ebf2}
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:700;font-size:14px;border:1px solid var(--border);transition:.2s;cursor:pointer}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:linear-gradient(135deg,var(--core),var(--core2));border:none;color:#fff;box-shadow:0 10px 30px rgba(99,102,241,.35)}
+  .btn-ghost{background:var(--surface)}
+  .hero{padding:64px 0 28px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}
+  .hero h1{font-size:clamp(2rem,4.6vw,3.2rem);margin:18px 0 0}
+  .grad{background:linear-gradient(110deg,#8b5cf6,#6366f1 45%,#38bdf8 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{max-width:700px;margin:16px auto 0;color:var(--muted);font-size:1.08rem}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+  .stat{min-width:130px;padding:14px 22px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+  .stat .n{font-size:1.6rem;font-weight:800}
+  .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:34px 0 8px}
+  .controls input,.controls select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-size:14px;outline:none}
+  .controls input{flex:1;min-width:220px}
+  .controls input:focus,.controls select:focus{border-color:rgba(139,92,246,.5)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin:22px 0 60px}
+  .gcard{padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:.2s}
+  .gcard:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);background:var(--surface2)}
+  .gcard .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .gcard h3{font-size:1.02rem;line-height:1.3;word-break:break-word}
+  .badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:800;color:#fff;white-space:nowrap}
+  .b-ok{background:rgba(16,185,129,.9)} .b-warn{background:rgba(245,158,11,.9)} .b-bad{background:rgba(239,68,68,.9)}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);background:rgba(255,255,255,.03);border-radius:999px;padding:3px 10px}
+  .chip.engine{color:#c4b5fd;border-color:rgba(139,92,246,.35)}
+  .langs{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+  .langchip{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;border:1px solid var(--border);color:var(--muted)}
+  .langchip.good{color:#6ee7b7;border-color:rgba(16,185,129,.4)}
+  .langchip.mid{color:#fcd34d;border-color:rgba(245,158,11,.4)}
+  .langchip.poor{color:#fca5a5;border-color:rgba(239,68,68,.4)}
+  .center{padding:70px 0;text-align:center;color:var(--muted)}
+  .center h3{margin-bottom:10px;color:var(--text)}
+  .center .cta{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--core);margin:0 auto 16px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{font-size:12.5px;color:var(--faint);text-align:center;margin:0 auto 60px;max-width:720px}
+  footer{border-top:1px solid var(--border);padding:26px 0;text-align:center;color:var(--faint);font-size:13px}
+</style>
+</head>
+<body>
+<div class="bgfx"></div>
+
+<nav>
+  <div class="container nav">
+    <a class="brand" href="index.html"><img class="dot" src="logo.png" alt="GameStringer"><span class="brandname">GameStringer</span></a>
+    <div class="nav-right">
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="it">🇮🇹 IT</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option><option value="de">🇩🇪 DE</option><option value="pt">🇧🇷 PT</option>
+        <option value="pl">🇵🇱 PL</option><option value="ru">🇷🇺 RU</option><option value="ja">🇯🇵 JA</option>
+        <option value="zh">🇨🇳 ZH</option><option value="ko">🇰🇷 KO</option><option value="el">🇬🇷 EL</option>
+      </select>
+      <a class="btn btn-ghost" href="index.html" data-i18n="back">← Sito</a>
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="download">Scarica</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero container">
+  <span class="pill">🎮 <span data-i18n="pill">Dati reali della community — aggiornati in tempo reale</span></span>
+  <h1><span class="grad" data-i18n="title">Database di compatibilità</span></h1>
+  <p class="lead" data-i18n="lead">Funziona la traduzione automatica su quel gioco? Qui trovi la risposta: esiti reali riportati (in forma anonima) da chi ha usato GameStringer, gioco per gioco, lingua per lingua.</p>
+  <div class="stats" id="stats" hidden>
+    <div class="stat"><div class="n" id="stGames">–</div><div class="l" data-i18n="stGames">Giochi</div></div>
+    <div class="stat"><div class="n" id="stRuns">–</div><div class="l" data-i18n="stRuns">Run riportate</div></div>
+    <div class="stat"><div class="n" id="stBoot">–</div><div class="l" data-i18n="stBoot">Conferme in-gioco</div></div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="controls" id="controls" hidden>
+    <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Cerca un gioco…">
+    <select id="fLang"><option value="" data-i18n="allLangs">Tutte le lingue</option></select>
+    <select id="fEngine"><option value="" data-i18n="allEngines">Tutti gli engine</option></select>
+    <select id="sort">
+      <option value="runs" data-i18n="sortRuns">Più testati</option>
+      <option value="pct" data-i18n="sortPct">% di successo</option>
+      <option value="recent" data-i18n="sortRecent">Più recenti</option>
+    </select>
+  </div>
+
+  <div id="loading" class="center"><div class="spinner"></div><span data-i18n="loading">Carico i report della community…</span></div>
+
+  <div id="empty" class="center" hidden>
+    <h3 data-i18n="emptyTitle">Il database è appena nato 🌱</h3>
+    <p data-i18n="emptyDesc">Nessun report ancora (o nessuno che corrisponde ai filtri). Scarica GameStringer, attiva i report di compatibilità nelle impostazioni e diventa uno dei primi tester: ogni run aiuta chi viene dopo di te.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="ctaDownload">⬇ Scarica GameStringer</a>
+      <a class="btn btn-ghost" href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener">★ GitHub</a>
+    </div>
+  </div>
+
+  <div id="error" class="center" hidden><h3>⚠️</h3><p data-i18n="error">Impossibile caricare i dati in questo momento. Riprova tra poco.</p></div>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="note" data-i18n="note">I report sono anonimi e volontari (opt-in nell'app): contengono solo gioco, engine, step raggiunto ed esito — mai file, percorsi o dati personali. Una run conta come "funziona" quando la patch è stata applicata con successo o l'avvio in gioco è stato confermato dall'utente.</p>
+</main>
+
+<footer><div class="container">GameStringer · <a href="index.html" style="color:var(--muted)">gamestringer.ai</a> · <a href="https://github.com/rouges78/GameStringer" style="color:var(--muted)">GitHub</a></div></footer>
+
+<script>
+// ── i18n (stessa lingua scelta sul resto del sito: gs_site_lang) ──
+const I18N = {
+  it:{back:"← Sito",download:"Scarica",pill:"Dati reali della community — aggiornati in tempo reale",title:"Database di compatibilità",lead:"Funziona la traduzione automatica su quel gioco? Qui trovi la risposta: esiti reali riportati (in forma anonima) da chi ha usato GameStringer, gioco per gioco, lingua per lingua.",stGames:"Giochi",stRuns:"Run riportate",stBoot:"Conferme in-gioco",searchPh:"Cerca un gioco…",allLangs:"Tutte le lingue",allEngines:"Tutti gli engine",sortRuns:"Più testati",sortPct:"% di successo",sortRecent:"Più recenti",loading:"Carico i report della community…",emptyTitle:"Il database è appena nato 🌱",emptyDesc:"Nessun report ancora (o nessuno che corrisponde ai filtri). Scarica GameStringer, attiva i report di compatibilità nelle impostazioni e diventa uno dei primi tester: ogni run aiuta chi viene dopo di te.",ctaDownload:"⬇ Scarica GameStringer",error:"Impossibile caricare i dati in questo momento. Riprova tra poco.",note:"I report sono anonimi e volontari (opt-in nell'app): contengono solo gioco, engine, step raggiunto ed esito — mai file, percorsi o dati personali. Una run conta come \"funziona\" quando la patch è stata applicata con successo o l'avvio in gioco è stato confermato dall'utente.",runs:"run",boot:"conferme in-gioco",works:"funziona",updated:"ultimo report"},
+  en:{back:"← Site",download:"Download",pill:"Real community data — updated in real time",title:"Compatibility database",lead:"Does automatic translation work on that game? Find the answer here: real outcomes reported (anonymously) by GameStringer users, game by game, language by language.",stGames:"Games",stRuns:"Reported runs",stBoot:"In-game confirmations",searchPh:"Search a game…",allLangs:"All languages",allEngines:"All engines",sortRuns:"Most tested",sortPct:"Success %",sortRecent:"Most recent",loading:"Loading community reports…",emptyTitle:"The database was just born 🌱",emptyDesc:"No reports yet (or none matching your filters). Download GameStringer, enable compatibility reports in settings and become one of the first testers: every run helps whoever comes after you.",ctaDownload:"⬇ Download GameStringer",error:"Couldn't load data right now. Please try again shortly.",note:"Reports are anonymous and voluntary (opt-in in the app): they contain only game, engine, step reached and outcome — never files, paths or personal data. A run counts as \"working\" when the patch applied successfully or the in-game boot was confirmed by the user.",runs:"runs",boot:"in-game confirmations",works:"works",updated:"last report"},
+  es:{back:"← Sitio",download:"Descargar",pill:"Datos reales de la comunidad — actualizados en tiempo real",title:"Base de datos de compatibilidad",lead:"¿Funciona la traducción automática en ese juego? Aquí está la respuesta: resultados reales reportados (de forma anónima) por usuarios de GameStringer, juego por juego, idioma por idioma.",stGames:"Juegos",stRuns:"Ejecuciones reportadas",stBoot:"Confirmaciones en el juego",searchPh:"Busca un juego…",allLangs:"Todos los idiomas",allEngines:"Todos los motores",sortRuns:"Más probados",sortPct:"% de éxito",sortRecent:"Más recientes",loading:"Cargando informes de la comunidad…",emptyTitle:"La base de datos acaba de nacer 🌱",emptyDesc:"Aún no hay informes (o ninguno coincide con los filtros). Descarga GameStringer, activa los informes de compatibilidad en los ajustes y sé de los primeros testers: cada ejecución ayuda a quien viene después.",ctaDownload:"⬇ Descargar GameStringer",error:"No se pudieron cargar los datos. Inténtalo de nuevo en breve.",note:"Los informes son anónimos y voluntarios (opt-in en la app): contienen solo juego, motor, paso alcanzado y resultado — nunca archivos, rutas ni datos personales. Una ejecución cuenta como \"funciona\" cuando el parche se aplicó con éxito o el arranque fue confirmado por el usuario.",runs:"ejecuciones",boot:"confirmaciones en el juego",works:"funciona",updated:"último informe"},
+  fr:{back:"← Site",download:"Télécharger",pill:"Données réelles de la communauté — mises à jour en temps réel",title:"Base de données de compatibilité",lead:"La traduction automatique fonctionne-t-elle sur ce jeu ? La réponse est ici : des résultats réels rapportés (anonymement) par les utilisateurs de GameStringer, jeu par jeu, langue par langue.",stGames:"Jeux",stRuns:"Exécutions signalées",stBoot:"Confirmations en jeu",searchPh:"Rechercher un jeu…",allLangs:"Toutes les langues",allEngines:"Tous les moteurs",sortRuns:"Les plus testés",sortPct:"% de réussite",sortRecent:"Les plus récents",loading:"Chargement des rapports…",emptyTitle:"La base vient de naître 🌱",emptyDesc:"Pas encore de rapports (ou aucun ne correspond aux filtres). Téléchargez GameStringer, activez les rapports de compatibilité dans les paramètres et devenez l'un des premiers testeurs : chaque exécution aide ceux qui suivent.",ctaDownload:"⬇ Télécharger GameStringer",error:"Impossible de charger les données pour l'instant. Réessayez bientôt.",note:"Les rapports sont anonymes et volontaires (opt-in dans l'app) : ils contiennent seulement le jeu, le moteur, l'étape atteinte et le résultat — jamais de fichiers, chemins ou données personnelles. Une exécution compte comme « fonctionne » quand le patch a été appliqué avec succès ou que le démarrage en jeu a été confirmé.",runs:"exécutions",boot:"confirmations en jeu",works:"fonctionne",updated:"dernier rapport"},
+  de:{back:"← Website",download:"Download",pill:"Echte Community-Daten — in Echtzeit aktualisiert",title:"Kompatibilitätsdatenbank",lead:"Funktioniert die automatische Übersetzung bei diesem Spiel? Hier ist die Antwort: echte Ergebnisse, (anonym) gemeldet von GameStringer-Nutzern — Spiel für Spiel, Sprache für Sprache.",stGames:"Spiele",stRuns:"Gemeldete Durchläufe",stBoot:"Bestätigungen im Spiel",searchPh:"Spiel suchen…",allLangs:"Alle Sprachen",allEngines:"Alle Engines",sortRuns:"Am meisten getestet",sortPct:"Erfolgsquote %",sortRecent:"Neueste",loading:"Lade Community-Berichte…",emptyTitle:"Die Datenbank ist ganz neu 🌱",emptyDesc:"Noch keine Berichte (oder keine passen zu den Filtern). Lade GameStringer herunter, aktiviere Kompatibilitätsberichte in den Einstellungen und werde einer der ersten Tester: jeder Durchlauf hilft denen, die nach dir kommen.",ctaDownload:"⬇ GameStringer herunterladen",error:"Daten konnten gerade nicht geladen werden. Bitte gleich nochmal versuchen.",note:"Berichte sind anonym und freiwillig (Opt-in in der App): sie enthalten nur Spiel, Engine, erreichten Schritt und Ergebnis — nie Dateien, Pfade oder persönliche Daten. Ein Durchlauf zählt als \"funktioniert\", wenn der Patch erfolgreich angewendet oder der Start im Spiel bestätigt wurde.",runs:"Durchläufe",boot:"Bestätigungen im Spiel",works:"funktioniert",updated:"letzter Bericht"},
+  pt:{back:"← Site",download:"Baixar",pill:"Dados reais da comunidade — atualizados em tempo real",title:"Banco de dados de compatibilidade",lead:"A tradução automática funciona naquele jogo? A resposta está aqui: resultados reais relatados (anonimamente) por usuários do GameStringer, jogo por jogo, idioma por idioma.",stGames:"Jogos",stRuns:"Execuções relatadas",stBoot:"Confirmações no jogo",searchPh:"Buscar um jogo…",allLangs:"Todos os idiomas",allEngines:"Todas as engines",sortRuns:"Mais testados",sortPct:"% de sucesso",sortRecent:"Mais recentes",loading:"Carregando relatórios…",emptyTitle:"O banco de dados acabou de nascer 🌱",emptyDesc:"Ainda não há relatórios (ou nenhum corresponde aos filtros). Baixe o GameStringer, ative os relatórios de compatibilidade nas configurações e seja um dos primeiros testers: cada execução ajuda quem vem depois.",ctaDownload:"⬇ Baixar GameStringer",error:"Não foi possível carregar os dados agora. Tente novamente em breve.",note:"Os relatórios são anônimos e voluntários (opt-in no app): contêm apenas jogo, engine, etapa alcançada e resultado — nunca arquivos, caminhos ou dados pessoais. Uma execução conta como \"funciona\" quando o patch foi aplicado com sucesso ou a inicialização foi confirmada pelo usuário.",runs:"execuções",boot:"confirmações no jogo",works:"funciona",updated:"último relatório"},
+  pl:{back:"← Strona",download:"Pobierz",pill:"Prawdziwe dane społeczności — aktualizowane na żywo",title:"Baza danych zgodności",lead:"Czy automatyczne tłumaczenie działa w tej grze? Odpowiedź jest tutaj: prawdziwe wyniki zgłaszane (anonimowo) przez użytkowników GameStringer — gra po grze, język po języku.",stGames:"Gry",stRuns:"Zgłoszone uruchomienia",stBoot:"Potwierdzenia w grze",searchPh:"Szukaj gry…",allLangs:"Wszystkie języki",allEngines:"Wszystkie silniki",sortRuns:"Najczęściej testowane",sortPct:"% powodzenia",sortRecent:"Najnowsze",loading:"Wczytywanie raportów…",emptyTitle:"Baza dopiero się narodziła 🌱",emptyDesc:"Nie ma jeszcze raportów (lub żaden nie pasuje do filtrów). Pobierz GameStringer, włącz raporty zgodności w ustawieniach i zostań jednym z pierwszych testerów: każde uruchomienie pomaga następnym.",ctaDownload:"⬇ Pobierz GameStringer",error:"Nie udało się teraz wczytać danych. Spróbuj ponownie za chwilę.",note:"Raporty są anonimowe i dobrowolne (opt-in w aplikacji): zawierają tylko grę, silnik, osiągnięty etap i wynik — nigdy plików, ścieżek ani danych osobowych. Uruchomienie liczy się jako \"działa\", gdy łatka została zastosowana pomyślnie lub start gry został potwierdzony przez użytkownika.",runs:"uruchomień",boot:"potwierdzenia w grze",works:"działa",updated:"ostatni raport"},
+  ru:{back:"← Сайт",download:"Скачать",pill:"Реальные данные сообщества — обновляются в реальном времени",title:"База данных совместимости",lead:"Работает ли автоматический перевод в этой игре? Ответ здесь: реальные результаты, (анонимно) присланные пользователями GameStringer — игра за игрой, язык за языком.",stGames:"Игры",stRuns:"Запусков в отчётах",stBoot:"Подтверждений в игре",searchPh:"Найти игру…",allLangs:"Все языки",allEngines:"Все движки",sortRuns:"Самые проверенные",sortPct:"% успеха",sortRecent:"Самые свежие",loading:"Загрузка отчётов сообщества…",emptyTitle:"База данных только родилась 🌱",emptyDesc:"Отчётов пока нет (или ни один не подходит под фильтры). Скачайте GameStringer, включите отчёты о совместимости в настройках и станьте одним из первых тестеров: каждый запуск помогает тем, кто придёт после вас.",ctaDownload:"⬇ Скачать GameStringer",error:"Не удалось загрузить данные. Попробуйте чуть позже.",note:"Отчёты анонимны и добровольны (opt-in в приложении): они содержат только игру, движок, достигнутый шаг и результат — никогда файлы, пути или личные данные. Запуск считается «работает», когда патч успешно применён или запуск игры подтверждён пользователем.",runs:"запусков",boot:"подтверждений в игре",works:"работает",updated:"последний отчёт"},
+  ja:{back:"← サイト",download:"ダウンロード",pill:"コミュニティの実データ — リアルタイム更新",title:"互換性データベース",lead:"そのゲームで自動翻訳は動く?答えはここに:GameStringerユーザーが(匿名で)報告した実際の結果を、ゲームごと・言語ごとに確認できます。",stGames:"ゲーム",stRuns:"報告された実行",stBoot:"ゲーム内確認",searchPh:"ゲームを検索…",allLangs:"すべての言語",allEngines:"すべてのエンジン",sortRuns:"テスト数順",sortPct:"成功率順",sortRecent:"新着順",loading:"コミュニティレポートを読み込み中…",emptyTitle:"データベースは生まれたばかり 🌱",emptyDesc:"まだレポートがありません(またはフィルターに一致しません)。GameStringerをダウンロードし、設定で互換性レポートを有効にして、最初のテスターになりましょう。あなたの実行が次の人を助けます。",ctaDownload:"⬇ GameStringerをダウンロード",error:"データを読み込めませんでした。しばらくしてからもう一度お試しください。",note:"レポートは匿名かつ任意(アプリ内でオプトイン)です。ゲーム、エンジン、到達ステップ、結果のみを含み、ファイル・パス・個人データは含まれません。パッチの適用成功、またはユーザーによるゲーム内起動確認で「動作」としてカウントされます。",runs:"実行",boot:"ゲーム内確認",works:"動作",updated:"最終レポート"},
+  zh:{back:"← 网站",download:"下载",pill:"社区真实数据——实时更新",title:"兼容性数据库",lead:"那个游戏的自动翻译能用吗?答案就在这里:GameStringer用户(匿名)报告的真实结果,按游戏、按语言逐一呈现。",stGames:"游戏",stRuns:"报告的运行",stBoot:"游戏内确认",searchPh:"搜索游戏…",allLangs:"所有语言",allEngines:"所有引擎",sortRuns:"测试最多",sortPct:"成功率",sortRecent:"最新",loading:"正在加载社区报告…",emptyTitle:"数据库刚刚诞生 🌱",emptyDesc:"还没有报告(或没有符合筛选条件的)。下载GameStringer,在设置中启用兼容性报告,成为第一批测试者:你的每次运行都在帮助后来者。",ctaDownload:"⬇ 下载GameStringer",error:"暂时无法加载数据,请稍后重试。",note:"报告是匿名且自愿的(应用内选择加入):仅包含游戏、引擎、到达的步骤和结果——绝不包含文件、路径或个人数据。补丁成功应用或用户确认游戏内启动即算作\"可用\"。",runs:"次运行",boot:"游戏内确认",works:"可用",updated:"最新报告"},
+  ko:{back:"← 사이트",download:"다운로드",pill:"커뮤니티 실제 데이터 — 실시간 업데이트",title:"호환성 데이터베이스",lead:"그 게임에서 자동 번역이 될까요? 답은 여기에: GameStringer 사용자가 (익명으로) 보고한 실제 결과를 게임별·언어별로 확인하세요.",stGames:"게임",stRuns:"보고된 실행",stBoot:"게임 내 확인",searchPh:"게임 검색…",allLangs:"모든 언어",allEngines:"모든 엔진",sortRuns:"테스트 많은 순",sortPct:"성공률 순",sortRecent:"최신 순",loading:"커뮤니티 보고서 불러오는 중…",emptyTitle:"데이터베이스가 이제 막 태어났어요 🌱",emptyDesc:"아직 보고서가 없습니다(또는 필터와 일치하는 항목이 없음). GameStringer를 다운로드하고 설정에서 호환성 보고서를 활성화해 첫 테스터가 되어 보세요. 모든 실행이 다음 사람을 돕습니다.",ctaDownload:"⬇ GameStringer 다운로드",error:"지금은 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",note:"보고서는 익명이며 자발적입니다(앱 내 옵트인). 게임, 엔진, 도달 단계, 결과만 포함하며 파일·경로·개인 데이터는 절대 포함하지 않습니다. 패치가 성공적으로 적용되었거나 사용자가 게임 내 실행을 확인하면 \"작동\"으로 집계됩니다.",runs:"회 실행",boot:"게임 내 확인",works:"작동",updated:"최근 보고"},
+  el:{back:"← Ιστότοπος",download:"Λήψη",pill:"Πραγματικά δεδομένα κοινότητας — ενημέρωση σε πραγματικό χρόνο",title:"Βάση δεδομένων συμβατότητας",lead:"Λειτουργεί η αυτόματη μετάφραση σε αυτό το παιχνίδι; Η απάντηση είναι εδώ: πραγματικά αποτελέσματα που αναφέρθηκαν (ανώνυμα) από χρήστες του GameStringer, παιχνίδι-παιχνίδι, γλώσσα-γλώσσα.",stGames:"Παιχνίδια",stRuns:"Αναφερόμενες εκτελέσεις",stBoot:"Επιβεβαιώσεις εντός παιχνιδιού",searchPh:"Αναζήτηση παιχνιδιού…",allLangs:"Όλες οι γλώσσες",allEngines:"Όλες οι μηχανές",sortRuns:"Πιο δοκιμασμένα",sortPct:"% επιτυχίας",sortRecent:"Πιο πρόσφατα",loading:"Φόρτωση αναφορών κοινότητας…",emptyTitle:"Η βάση μόλις γεννήθηκε 🌱",emptyDesc:"Δεν υπάρχουν ακόμη αναφορές (ή καμία δεν ταιριάζει στα φίλτρα). Κατεβάστε το GameStringer, ενεργοποιήστε τις αναφορές συμβατότητας στις ρυθμίσεις και γίνετε από τους πρώτους testers: κάθε εκτέλεση βοηθά όσους έρχονται μετά.",ctaDownload:"⬇ Λήψη GameStringer",error:"Αδυναμία φόρτωσης δεδομένων αυτή τη στιγμή. Δοκιμάστε ξανά σε λίγο.",note:"Οι αναφορές είναι ανώνυμες και εθελοντικές (opt-in στην εφαρμογή): περιέχουν μόνο παιχνίδι, μηχανή, βήμα και αποτέλεσμα — ποτέ αρχεία, διαδρομές ή προσωπικά δεδομένα. Μια εκτέλεση μετρά ως «λειτουργεί» όταν το patch εφαρμόστηκε επιτυχώς ή η εκκίνηση επιβεβαιώθηκε από τον χρήστη.",runs:"εκτελέσεις",boot:"επιβεβαιώσεις εντός παιχνιδιού",works:"λειτουργεί",updated:"τελευταία αναφορά"}
+};
+let LANG='it', T=I18N.it;
+function applyLang(lang){
+  T=I18N[lang]||I18N.it; LANG=I18N[lang]?lang:'it';
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n'); if(T[k]!=null) el.textContent=T[k];});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const k=el.getAttribute('data-i18n-ph'); if(T[k]!=null) el.placeholder=T[k];});
+  try{localStorage.setItem('gs_site_lang',LANG)}catch(e){}
+  const sel=document.getElementById('langSel'); if(sel) sel.value=LANG;
+  render();
+}
+(function initLang(){
+  const supported=Object.keys(I18N);
+  let lang='it';
+  try{const s=localStorage.getItem('gs_site_lang'); if(s&&supported.includes(s)) lang=s; else{const b=(navigator.language||'it').slice(0,2).toLowerCase(); if(supported.includes(b)) lang=b;}}catch(e){}
+  const sel=document.getElementById('langSel');
+  if(sel){sel.value=lang; sel.addEventListener('change',e=>applyLang(e.target.value));}
+  if(lang!=='it') applyLang(lang);
+})();
+
+// ── Dati (vista pubblica compat_game_summary, sola lettura, chiave anon) ──
+const SUPABASE_URL='https://relbkjoxdnbqizgomzhs.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlbGJram94ZG5icWl6Z29temhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDcxMDUsImV4cCI6MjA4OTkyMzEwNX0.TY4pVsZVJ3vS_8AArXXr4RghxUn1ATju4kiVwjzpdyM';
+
+let GAMES=[]; // aggregato per game_key
+
+function pctClass(p){return p>=75?'ok':p>=40?'warn':'bad'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+async function load(){
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/compat_game_summary?select=*&order=last_report_at.desc&limit=2000`,{
+      headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`}
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=await res.json();
+    const byKey=new Map();
+    for(const r of rows){
+      const g=byKey.get(r.game_key)||{key:r.game_key,name:r.game_name,engine:r.engine,runs:0,ok:0,bootOk:0,bootFail:0,last:null,langs:[]};
+      g.runs+=r.runs||0; g.ok+=r.ok_runs||0; g.bootOk+=r.boot_ok_runs||0; g.bootFail+=r.boot_fail_runs||0;
+      if(r.game_name) g.name=r.game_name;
+      if(r.engine) g.engine=r.engine;
+      if(!g.last||(r.last_report_at&&r.last_report_at>g.last)) g.last=r.last_report_at;
+      if(r.target_lang) g.langs.push({lang:r.target_lang,runs:r.runs||0,ok:r.ok_runs||0});
+      byKey.set(r.game_key,g);
+    }
+    GAMES=[...byKey.values()];
+    document.getElementById('loading').hidden=true;
+    if(GAMES.length){
+      document.getElementById('stats').hidden=false;
+      document.getElementById('controls').hidden=false;
+      document.getElementById('stGames').textContent=GAMES.length;
+      document.getElementById('stRuns').textContent=GAMES.reduce((a,g)=>a+g.runs,0);
+      document.getElementById('stBoot').textContent=GAMES.reduce((a,g)=>a+g.bootOk,0);
+      // filtri dinamici
+      const langs=[...new Set(GAMES.flatMap(g=>g.langs.map(l=>l.lang)))].sort();
+      const engines=[...new Set(GAMES.map(g=>g.engine).filter(Boolean))].sort();
+      const fL=document.getElementById('fLang'), fE=document.getElementById('fEngine');
+      for(const l of langs){const o=document.createElement('option');o.value=l;o.textContent=l.toUpperCase();fL.appendChild(o);}
+      for(const e of engines){const o=document.createElement('option');o.value=e;o.textContent=e;fE.appendChild(o);}
+    }
+    render();
+  }catch(e){
+    document.getElementById('loading').hidden=true;
+    document.getElementById('error').hidden=false;
+  }
+}
+
+function render(){
+  const grid=document.getElementById('grid');
+  const busy=!document.getElementById('loading').hidden||!document.getElementById('error').hidden;
+  if(busy){grid.innerHTML='';document.getElementById('empty').hidden=true;return;}
+  const q=(document.getElementById('q').value||'').toLowerCase().trim();
+  const fL=document.getElementById('fLang').value;
+  const fE=document.getElementById('fEngine').value;
+  const sort=document.getElementById('sort').value;
+  let list=GAMES.filter(g=>
+    (!q||g.name.toLowerCase().includes(q))&&
+    (!fL||g.langs.some(l=>l.lang===fL))&&
+    (!fE||g.engine===fE)
+  );
+  list.sort((a,b)=>{
+    if(sort==='pct') return (b.ok/b.runs)-(a.ok/a.runs)||b.runs-a.runs;
+    if(sort==='recent') return (b.last||'').localeCompare(a.last||'');
+    return b.runs-a.runs;
+  });
+  document.getElementById('empty').hidden=list.length>0;
+  grid.innerHTML=list.map(g=>{
+    const pct=Math.round((g.ok/Math.max(g.runs,1))*100);
+    const cls=pctClass(pct);
+    const date=g.last?new Date(g.last).toLocaleDateString(LANG):'–';
+    const langChips=g.langs.map(l=>{
+      const lp=Math.round((l.ok/Math.max(l.runs,1))*100);
+      const lc=lp>=75?'good':lp>=40?'mid':'poor';
+      return `<span class="langchip ${lc}" title="${lp}% · ${l.runs} ${esc(T.runs)}">${esc(l.lang.toUpperCase())} ${lp}%</span>`;
+    }).join('');
+    return `<div class="gcard">
+      <div class="top"><h3>${esc(g.name)}</h3><span class="badge b-${cls}">${pct}% ${esc(T.works)}</span></div>
+      <div class="meta">
+        ${g.engine?`<span class="chip engine">⚙ ${esc(g.engine)}</span>`:''}
+        <span class="chip">🎮 ${g.runs} ${esc(T.runs)}</span>
+        ${g.bootOk?`<span class="chip">✅ ${g.bootOk} ${esc(T.boot)}</span>`:''}
+        <span class="chip">🕒 ${esc(T.updated)}: ${esc(date)}</span>
+      </div>
+      ${langChips?`<div class="langs">${langChips}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+for(const id of ['q','fLang','fEngine','sort']){
+  document.getElementById(id).addEventListener('input',render);
+  document.getElementById(id).addEventListener('change',render);
+}
+load();
+</script>
+</body>
+</html>
