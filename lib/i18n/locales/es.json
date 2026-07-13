@@ -6611,15 +6611,15 @@
       "13": "• ue-translator: Errores del backend localizados en inglés + claves de error añadidas"
     },
     "v1_14_0": {
-      "0": "✨ compat: Compatibility badge on game cards + abuse-guard migration",
-      "1": "✨ packs: Verifiable pack integrity via aggregated SHA-256",
-      "2": "✨ crash: Opt-in crash reporting to Supabase",
-      "3": "✨ fonts: Missing-glyph detection + automatic Noto font install for file-based engines",
-      "4": "✨ compat: Opt-in compatibility telemetry - the ProtonDB of translations",
-      "5": "✨ library: Robust language scan + manual 'Detect languages' button",
-      "6": "✨ news-feed: Clean MediaWiki diff descriptions and hide deal posts",
-      "7": "🐛 release: Use readline for ship confirm (hung on Windows waiting for stdin EOF)",
-      "8": "• Translate v1.13.0 changelog keys across all 12 locales"
+      "0": "✨ compat: Insignia de compatibilidad en las tarjetas de juego + migración de abuse-guard",
+      "1": "✨ packs: Integridad de packs verificable mediante SHA-256 agregado",
+      "2": "✨ crash: Informes de fallos opcionales a Supabase",
+      "3": "✨ fonts: Detección de glifos faltantes + instalación automática de fuentes Noto para motores basados en archivos",
+      "4": "✨ compat: Telemetría de compatibilidad opcional: el ProtonDB de las traducciones",
+      "5": "✨ library: Escaneo de idiomas robusto + botón manual 'Detectar idiomas'",
+      "6": "✨ news-feed: Descripciones de diferencias de MediaWiki limpias y ocultación de publicaciones de ofertas",
+      "7": "🐛 release: Usar readline para la confirmación de ship (se colgaba en Windows esperando EOF de stdin)",
+      "8": "• Traducir las claves del changelog de v1.13.0 en los 12 idiomas"
     }
   },
   "communityChat": {
