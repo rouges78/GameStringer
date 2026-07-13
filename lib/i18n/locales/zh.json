@@ -6609,6 +6609,17 @@
       "11": "• 完成 10 种语言的 aiQuality/loreRetrieval/semanticIndex 翻译",
       "12": "• 将 v1.12.0 的 aiQuality/semantic/lore 键翻译为 10 种语言",
       "13": "• ue-translator: 后端错误改为英文并新增错误键"
+    },
+    "v1_14_0": {
+      "0": "✨ compat: 游戏卡片上的兼容性徽章 + abuse-guard 迁移",
+      "1": "✨ packs: 通过聚合 SHA-256 验证语言包完整性",
+      "2": "✨ crash: 选择性加入向 Supabase 发送崩溃报告",
+      "3": "✨ fonts: 缺失字符检测 + 针对基于文件的引擎自动安装 Noto 字体",
+      "4": "✨ compat: 选择性加入兼容性遥测 - 翻译界的 ProtonDB",
+      "5": "✨ library: 强大的语言扫描 + 手动“检测语言”按钮",
+      "6": "✨ news-feed: 干净的 MediaWiki 差异描述并隐藏优惠帖子",
+      "7": "🐛 release: 使用 readline 进行发布确认（此前在 Windows 上因等待 stdin EOF 而卡死）",
+      "8": "• 翻译所有 12 个本地化版本的 v1.13.0 更新日志键值"
     }
   },
   "communityChat": {

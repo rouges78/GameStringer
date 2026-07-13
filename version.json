@@ -1,12 +1,12 @@
 {
-  "version": "1.13.0",
+  "version": "1.14.0",
   "major": 1,
-  "minor": 13,
+  "minor": 14,
   "patch": 0,
   "prerelease": null,
   "buildNumber": 129,
-  "buildDate": "2026-07-11T01:40:03.293Z",
-  "gitHash": "4d734b17",
+  "buildDate": "2026-07-13T23:31:11.698Z",
+  "gitHash": "87f08d58",
   "branch": "main",
   "changelog": {
     "1.12.0": {
@@ -833,6 +833,21 @@
         "• Completa le traduzioni aiQuality/loreRetrieval/semanticIndex in 10 lingue",
         "• Translate v1.12.0 aiQuality/semantic/lore keys in 10 languages",
         "• ue-translator: Localizza in inglese gli errori del backend e aggiunge le chiavi errore"
+      ]
+    },
+    "1.14.0": {
+      "date": "2026-07-13",
+      "type": "minor",
+      "changes": [
+        "✨ compat: Compatibility badge on game cards + abuse-guard migration",
+        "✨ packs: Verifiable pack integrity via aggregated SHA-256",
+        "✨ crash: Opt-in crash reporting to Supabase",
+        "✨ fonts: Missing-glyph detection + automatic Noto font install for file-based engines",
+        "✨ compat: Opt-in compatibility telemetry - the ProtonDB of translations",
+        "✨ library: Robust language scan + manual 'Detect languages' button",
+        "✨ news-feed: Clean MediaWiki diff descriptions and hide deal posts",
+        "🐛 release: Use readline for ship confirm (hung on Windows waiting for stdin EOF)",
+        "• Translate v1.13.0 changelog keys across all 12 locales"
       ]
     }
   }

@@ -6573,6 +6573,17 @@
       "11": "• Completate le traduzioni aiQuality/loreRetrieval/semanticIndex in 10 lingue",
       "12": "• Tradotte le chiavi v1.12.0 aiQuality/semantic/lore in 10 lingue",
       "13": "• ue-translator: Errori del backend localizzati in inglese + chiavi errore aggiunte"
+    },
+    "v1_14_0": {
+      "0": "✨ compat: Compatibility badge on game cards + abuse-guard migration",
+      "1": "✨ packs: Verifiable pack integrity via aggregated SHA-256",
+      "2": "✨ crash: Opt-in crash reporting to Supabase",
+      "3": "✨ fonts: Missing-glyph detection + automatic Noto font install for file-based engines",
+      "4": "✨ compat: Opt-in compatibility telemetry - the ProtonDB of translations",
+      "5": "✨ library: Robust language scan + manual 'Detect languages' button",
+      "6": "✨ news-feed: Clean MediaWiki diff descriptions and hide deal posts",
+      "7": "🐛 release: Use readline for ship confirm (hung on Windows waiting for stdin EOF)",
+      "8": "• Translate v1.13.0 changelog keys across all 12 locales"
     }
   },
   "communityChat": {

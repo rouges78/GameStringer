@@ -6609,6 +6609,17 @@
       "11": "• aiQuality/loreRetrieval/semanticIndex の翻訳を10言語で完了",
       "12": "• v1.12.0 の aiQuality/semantic/lore キーを10言語に翻訳",
       "13": "• ue-translator: バックエンドのエラーを英語化し、エラーキーを追加"
+    },
+    "v1_14_0": {
+      "0": "✨ compat: ゲームカードへの互換性バッジの追加 + abuse-guardの移行",
+      "1": "✨ packs: 集約されたSHA-256による検証可能なパック整合性",
+      "2": "✨ crash: Supabaseへのオプトイン方式のクラッシュレポート送信",
+      "3": "✨ fonts: 欠落グリフの検出 + ファイルベースエンジン向けのNotoフォント自動インストール",
+      "4": "✨ compat: オプトイン方式の互換性テレメトリ - 翻訳版ProtonDB",
+      "5": "✨ library: 堅牢な言語スキャン + 手動の「Detect languages」ボタン",
+      "6": "✨ news-feed: MediaWikiの差分説明のクリーンアップとセール投稿の非表示化",
+      "7": "🐛 release: 出荷確認にreadlineを使用（WindowsでstdinのEOF待ちによりハングアップする問題を修正）",
+      "8": "• 全12ロケールにおけるv1.13.0変更履歴キーの翻訳"
     }
   },
   "communityChat": {

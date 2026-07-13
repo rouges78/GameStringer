@@ -1,5 +1,17 @@
 # GameStringer Changelog
 
+## 🚀 v1.14.0 - 2026-07-13
+
+- ✨ compat: Compatibility badge on game cards + abuse-guard migration
+- ✨ packs: Verifiable pack integrity via aggregated SHA-256
+- ✨ crash: Opt-in crash reporting to Supabase
+- ✨ fonts: Missing-glyph detection + automatic Noto font install for file-based engines
+- ✨ compat: Opt-in compatibility telemetry - the ProtonDB of translations
+- ✨ library: Robust language scan + manual 'Detect languages' button
+- ✨ news-feed: Clean MediaWiki diff descriptions and hide deal posts
+- 🐛 release: Use readline for ship confirm (hung on Windows waiting for stdin EOF)
+- • Translate v1.13.0 changelog keys across all 12 locales
+
 ## 🚀 v1.13.0 - 2026-07-11
 
 - ✨ ue-translator: Mark the real-time tool as experimental

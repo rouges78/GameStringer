@@ -6609,6 +6609,17 @@
       "11": "• Traductions aiQuality/loreRetrieval/semanticIndex complétées dans 10 langues",
       "12": "• Clés v1.12.0 aiQuality/semantic/lore traduites dans 10 langues",
       "13": "• ue-translator: Erreurs du backend localisées en anglais + clés d'erreur ajoutées"
+    },
+    "v1_14_0": {
+      "0": "✨ compat : Badge de compatibilité sur les fiches de jeu + migration d'abuse-guard",
+      "1": "✨ packs : Intégrité vérifiable des packs via SHA-256 agrégé",
+      "2": "✨ crash : Rapports de plantage opt-in vers Supabase",
+      "3": "✨ fonts : Détection des glyphes manquants + installation automatique des polices Noto pour les moteurs basés sur des fichiers",
+      "4": "✨ compat : Télémétrie de compatibilité opt-in - le ProtonDB des traductions",
+      "5": "✨ library : Analyse robuste des langues + bouton manuel 'Détecter les langues'",
+      "6": "✨ news-feed : Descriptions épurées des diffs MediaWiki et masquage des publications de bons plans",
+      "7": "🐛 release : Utilisation de readline pour la confirmation d'envoi (bloqué sous Windows en attente de stdin EOF)",
+      "8": "• Traduction des clés du changelog v1.13.0 dans les 12 langues"
     }
   },
   "communityChat": {

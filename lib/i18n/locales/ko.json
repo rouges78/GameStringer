@@ -6609,6 +6609,17 @@
       "11": "• 10개 언어로 aiQuality/loreRetrieval/semanticIndex 번역 완료",
       "12": "• v1.12.0 aiQuality/semantic/lore 키를 10개 언어로 번역",
       "13": "• ue-translator: 백엔드 오류를 영어로 현지화하고 오류 키 추가"
+    },
+    "v1_14_0": {
+      "0": "✨ compat: 게임 카드에 호환성 배지 추가 + abuse-guard 마이그레이션",
+      "1": "✨ packs: 집계된 SHA-256을 통한 검증 가능한 팩 무결성",
+      "2": "✨ crash: Supabase로의 선택적 크래시 보고",
+      "3": "✨ fonts: 누락된 글리프 감지 + 파일 기반 엔진을 위한 Noto 폰트 자동 설치",
+      "4": "✨ compat: 선택적 호환성 텔레메트리 - 번역계의 ProtonDB",
+      "5": "✨ library: 강력한 언어 스캔 + 수동 'Detect languages' 버튼",
+      "6": "✨ news-feed: 깔끔한 MediaWiki diff 설명 및 할인 게시물 숨기기",
+      "7": "🐛 release: 배포 확인에 readline 사용 (Windows에서 stdin EOF를 대기하며 멈추던 현상 수정)",
+      "8": "• 12개 모든 로캘에 대해 v1.13.0 변경 로그 키 번역"
     }
   },
   "communityChat": {
