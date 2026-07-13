@@ -62,6 +62,7 @@
     "ship:dry": "node scripts/release-all.js --dry-run",
     "ship:prepare": "node scripts/release-all.js --no-publish",
     "changelog:preview": "node scripts/release/changelog-from-git.js",
+    "av:checklist": "node scripts/release/av-checklist.js",
     "deploy:sito": "node scripts/deploy-sito.js",
     "deploy:sito:watch": "node scripts/deploy-sito-watch.js",
     "icons:generate": "node scripts/generate-icons.js",

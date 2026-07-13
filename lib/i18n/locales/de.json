@@ -7001,7 +7001,9 @@
     "filesSelected": "Dateien ausgewählt",
     "filesPlaceholder": "Dateien auswählen (.json, .po, .csv, .ips…)",
     "cancel": "Abbrechen",
-    "publishConfirm": "Veröffentlichen"
+    "publishConfirm": "Veröffentlichen",
+    "integrityBadge": "Integrität geprüft",
+    "integrityDesc": "SHA-256-gehashter Inhalt: wird bei jedem Download automatisch neu geprüft, ein manipuliertes Paket wird abgelehnt."
   },
   "predictionToolPage": {
     "backToLibrary": "Zurück zur Bibliothek",
@@ -7132,6 +7134,47 @@
     "bootYes": "Ja, funktioniert",
     "bootNo": "Nein, Probleme",
     "bootSkip": "Noch nicht ausprobiert",
-    "bootThanks": "Danke! Dein Bericht hilft der ganzen Community."
+    "bootThanks": "Danke! Dein Bericht hilft der ganzen Community.",
+    "optinTitle": "Hilf der Community: Kompatibilitätsberichte aktivieren?",
+    "optinDesc": "Übersetzung erfolgreich! Anonyme Berichte (Spiel, Engine, Ergebnis — nie Dateien oder persönliche Daten) bauen die öffentliche \"dieses Spiel funktioniert\"-Datenbank auf. Du kannst es in den Einstellungen jederzeit ändern.",
+    "optinAccept": "Aktivieren",
+    "optinDecline": "Nein danke",
+    "optinThanks": "Telemetrie aktiviert: Diese Übersetzung ist bereits dein erster Beitrag!"
+  },
+  "crash": {
+    "cardTitle": "Datenschutz & Telemetrie",
+    "settingLabel": "Anonyme Absturzberichte senden",
+    "settingDesc": "Wenn etwas kaputtgeht (Abstürze, Pipeline-Fehler), wird ein anonymer Bericht mit Fehlerkategorie und reduziertem Stacktrace gesendet — nie Pfade, Dateien oder persönliche Daten. Hilft, Bugs zu beheben, die sonst niemand sehen würde."
+  },
+  "fontCheck": {
+    "title": "Schriftarten-Prüfung",
+    "desc": "Prüft, ob die Spielschriften die Glyphen deiner Sprache haben: eine perfekte Übersetzung, die □□□ zeigt, ist trotzdem ein Fehlschlag.",
+    "run": "Jetzt prüfen",
+    "running": "Analysiere Schriften…",
+    "verdictOk": "Mindestens eine Spielschrift deckt deine Sprache ab: keine Kästchen zu erwarten.",
+    "verdictLatin": "Deine Sprache nutzt das lateinische Alphabet: sehr geringes Risiko fehlender Glyphen.",
+    "verdictMissing": "Keine gefundene Schrift deckt deine Sprache ab: im Spiel wirst du wahrscheinlich □□□ sehen.",
+    "verdictNoFonts": "Keine inspizierbaren Schriften im Ordner (vermutlich in kompilierten Assets).",
+    "fontsFound": "{n} Schriften im Spielordner gefunden",
+    "notInspectable": "nicht inspizierbar",
+    "missingEg": "Fehlen z. B.",
+    "xunityTitle": "XUnity-Font-Override (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator ist nicht installiert: installiere es über die Spielseite, der Font-Override wird automatisch konfiguriert.",
+    "xunityOverrideOn": "Font-Override in der Config vorhanden",
+    "xunityOverrideOff": "Font-Override NICHT in der Config",
+    "xunityBundleOn": "TMP-Bundle vorhanden ({font})",
+    "xunityBundleOff": "TMP-Bundle fehlt ({font})",
+    "applyFix": "Font-Fix anwenden",
+    "applying": "Wende an…",
+    "adviceUnity": "Unity: nutze den Fix oben — er konfiguriert XUnitys Font-Override und kopiert das richtige TMP-Bundle für die Unity-Version des Spiels.",
+    "adviceUnreal": "Unreal: Schriften liegen in .pak-Assets. Du brauchst eine _P.pak-Mod, die die Composite-Font durch eine mit breiter Abdeckung (z. B. Noto Sans) ersetzt, oder such einen Community-Font-Fix.",
+    "adviceRenpy": "Ren'Py: kopiere eine vollständige Schrift (NotoSans oder DejaVuSans) in game/ und setze sie in options.rpy oder gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: kopiere eine vollständige Schrift nach www/fonts/ (oder fonts/) und passe gamefont.css an.",
+    "adviceGodot": "Godot: die Schrift muss im Spiel-Theme ersetzt werden (Theme-Override) — erfordert einen .pck-Patch oder eine Theme-Mod.",
+    "adviceGeneric": "Ersetze die Spielschrift durch eine mit breiter Abdeckung (Noto Sans / DejaVu) gemäß der Engine-Struktur, oder such einen Community-Font-Fix.",
+    "autoInstallTitle": "Automatischer Schriftarten-Ersatz",
+    "autoInstallDesc": "Installiert Noto Sans (oder die CJK-Variante) ins Spiel und passt die Konfiguration automatisch an. Ein Backup wird erstellt: Wiederherstellung jederzeit möglich.",
+    "installFont": "Noto-Schrift installieren",
+    "removeFont": "Originale wiederherstellen"
   }
 }

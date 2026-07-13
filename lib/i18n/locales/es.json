@@ -7001,7 +7001,9 @@
     "filesSelected": "archivos seleccionados",
     "filesPlaceholder": "Selecciona archivos (.json, .po, .csv, .ips…)",
     "cancel": "Cancelar",
-    "publishConfirm": "Publicar"
+    "publishConfirm": "Publicar",
+    "integrityBadge": "Integridad verificada",
+    "integrityDesc": "Contenido con hash SHA-256: se vuelve a verificar automáticamente en cada descarga; un pack manipulado se rechaza."
   },
   "predictionToolPage": {
     "backToLibrary": "Volver a la Biblioteca",
@@ -7132,6 +7134,47 @@
     "bootYes": "Sí, funciona",
     "bootNo": "No, hay problemas",
     "bootSkip": "Aún no lo he probado",
-    "bootThanks": "¡Gracias! Tu informe ayuda a toda la comunidad."
+    "bootThanks": "¡Gracias! Tu informe ayuda a toda la comunidad.",
+    "optinTitle": "¿Ayudas a la comunidad activando los informes de compatibilidad?",
+    "optinDesc": "¡La traducción se completó! Los informes anónimos (juego, motor, resultado — nunca archivos ni datos personales) construyen la base de datos pública \"este juego funciona\". Puedes cambiar de opinión en los ajustes.",
+    "optinAccept": "Activar",
+    "optinDecline": "No, gracias",
+    "optinThanks": "Telemetría activada: ¡esta traducción ya es tu primera contribución!"
+  },
+  "crash": {
+    "cardTitle": "Privacidad y telemetría",
+    "settingLabel": "Enviar informes de errores anónimos",
+    "settingDesc": "Cuando algo falla (cierres inesperados, errores de pipeline), envía un informe anónimo con la categoría del error y una traza reducida — nunca rutas, archivos ni datos personales. Ayuda a corregir errores que nadie vería."
+  },
+  "fontCheck": {
+    "title": "Verificación de fuentes",
+    "desc": "Comprueba si las fuentes del juego tienen los glifos de tu idioma: una traducción perfecta que muestra □□□ sigue siendo un fracaso.",
+    "run": "Verificar ahora",
+    "running": "Analizando fuentes…",
+    "verdictOk": "Al menos una fuente del juego cubre tu idioma: no se esperan cuadrados.",
+    "verdictLatin": "Tu idioma usa el alfabeto latino: riesgo muy bajo de glifos faltantes.",
+    "verdictMissing": "Ninguna fuente detectada cubre tu idioma: probablemente verás □□□ en el juego.",
+    "verdictNoFonts": "No hay fuentes inspeccionables en la carpeta (probablemente están dentro de assets compilados).",
+    "fontsFound": "{n} fuentes encontradas en la carpeta del juego",
+    "notInspectable": "no inspeccionable",
+    "missingEg": "Faltan p. ej.",
+    "xunityTitle": "Override de fuente XUnity (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator no está instalado: instálalo desde la página del juego y el override se configurará automáticamente.",
+    "xunityOverrideOn": "Override de fuente presente en la config",
+    "xunityOverrideOff": "Override de fuente NO presente en la config",
+    "xunityBundleOn": "El bundle TMP está presente ({font})",
+    "xunityBundleOff": "Falta el bundle TMP ({font})",
+    "applyFix": "Aplicar fix de fuente",
+    "applying": "Aplicando…",
+    "adviceUnity": "Unity: usa el fix de arriba — configura el override de XUnity y copia el bundle TMP correcto para la versión de Unity del juego.",
+    "adviceUnreal": "Unreal: las fuentes están en los assets .pak. Necesitas un mod _P.pak que reemplace la fuente compuesta por una de amplia cobertura (p. ej. Noto Sans), o busca un font-fix de la comunidad.",
+    "adviceRenpy": "Ren'Py: copia una fuente completa (NotoSans o DejaVuSans) en la carpeta game/ y configúrala en options.rpy o gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: copia una fuente completa en www/fonts/ (o fonts/) y actualiza gamefont.css.",
+    "adviceGodot": "Godot: la fuente debe reemplazarse en el tema del juego (theme override) — requiere un parche del .pck o un mod del tema.",
+    "adviceGeneric": "Reemplaza la fuente del juego por una de amplia cobertura (Noto Sans / DejaVu) según la estructura del engine, o busca un font-fix de la comunidad.",
+    "autoInstallTitle": "Sustitución automática de fuente",
+    "autoInstallDesc": "Instala Noto Sans (o su variante CJK) en el juego y actualiza la configuración por ti. Se crea una copia de seguridad: puedes restaurar en cualquier momento.",
+    "installFont": "Instalar fuente Noto",
+    "removeFont": "Restaurar originales"
   }
 }

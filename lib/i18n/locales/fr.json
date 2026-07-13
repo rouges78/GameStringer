@@ -7001,7 +7001,9 @@
     "filesSelected": "fichiers sélectionnés",
     "filesPlaceholder": "Sélectionnez des fichiers (.json, .po, .csv, .ips…)",
     "cancel": "Annuler",
-    "publishConfirm": "Publier"
+    "publishConfirm": "Publier",
+    "integrityBadge": "Intégrité vérifiée",
+    "integrityDesc": "Contenu haché en SHA-256 : re-vérifié automatiquement à chaque téléchargement, un pack altéré est rejeté."
   },
   "predictionToolPage": {
     "backToLibrary": "Retour à la Bibliothèque",
@@ -7132,6 +7134,47 @@
     "bootYes": "Oui, ça marche",
     "bootNo": "Non, des problèmes",
     "bootSkip": "Pas encore essayé",
-    "bootThanks": "Merci ! Votre rapport aide toute la communauté."
+    "bootThanks": "Merci ! Votre rapport aide toute la communauté.",
+    "optinTitle": "Aidez la communauté : activer les rapports de compatibilité ?",
+    "optinDesc": "Traduction réussie ! Les rapports anonymes (jeu, moteur, résultat — jamais de fichiers ni de données personnelles) construisent la base publique « ce jeu fonctionne ». Vous pouvez changer d'avis dans les paramètres.",
+    "optinAccept": "Activer",
+    "optinDecline": "Non merci",
+    "optinThanks": "Télémétrie activée : cette traduction est déjà votre première contribution !"
+  },
+  "crash": {
+    "cardTitle": "Confidentialité et télémétrie",
+    "settingLabel": "Envoyer des rapports d'erreur anonymes",
+    "settingDesc": "Quand quelque chose casse (plantages, erreurs de pipeline), envoie un rapport anonyme avec la catégorie d'erreur et une trace réduite — jamais de chemins, fichiers ou données personnelles. Aide à corriger des bugs que personne ne verrait."
+  },
+  "fontCheck": {
+    "title": "Vérification des polices",
+    "desc": "Vérifie si les polices du jeu ont les glyphes de votre langue : une traduction parfaite qui affiche □□□ reste un échec.",
+    "run": "Vérifier",
+    "running": "Analyse des polices…",
+    "verdictOk": "Au moins une police du jeu couvre votre langue : pas de carrés attendus.",
+    "verdictLatin": "Votre langue utilise l'alphabet latin : risque très faible de glyphes manquants.",
+    "verdictMissing": "Aucune police détectée ne couvre votre langue : vous verrez probablement □□□ en jeu.",
+    "verdictNoFonts": "Aucune police inspectable dans le dossier (probablement dans les assets compilés).",
+    "fontsFound": "{n} polices trouvées dans le dossier du jeu",
+    "notInspectable": "non inspectable",
+    "missingEg": "Manquent p. ex.",
+    "xunityTitle": "Override de police XUnity (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator n'est pas installé : installez-le depuis la page du jeu, l'override sera configuré automatiquement.",
+    "xunityOverrideOn": "Override de police présent dans la config",
+    "xunityOverrideOff": "Override de police ABSENT de la config",
+    "xunityBundleOn": "Bundle TMP présent ({font})",
+    "xunityBundleOff": "Bundle TMP manquant ({font})",
+    "applyFix": "Appliquer le fix police",
+    "applying": "Application…",
+    "adviceUnity": "Unity : utilisez le fix ci-dessus — il configure l'override de XUnity et copie le bon bundle TMP pour la version Unity du jeu.",
+    "adviceUnreal": "Unreal : les polices sont dans les assets .pak. Il faut un mod _P.pak remplaçant la police composite par une à large couverture (p. ex. Noto Sans), ou cherchez un font-fix communautaire.",
+    "adviceRenpy": "Ren'Py : copiez une police complète (NotoSans ou DejaVuSans) dans game/ et définissez-la dans options.rpy ou gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ : copiez une police complète dans www/fonts/ (ou fonts/) et mettez à jour gamefont.css.",
+    "adviceGodot": "Godot : la police doit être remplacée dans le thème du jeu (theme override) — nécessite un patch du .pck ou un mod du thème.",
+    "adviceGeneric": "Remplacez la police du jeu par une à large couverture (Noto Sans / DejaVu) selon la structure du moteur, ou cherchez un font-fix communautaire.",
+    "autoInstallTitle": "Remplacement automatique de police",
+    "autoInstallDesc": "Installe Noto Sans (ou sa variante CJK) dans le jeu et met à jour la config pour vous. Une sauvegarde est créée : restauration possible à tout moment.",
+    "installFont": "Installer la police Noto",
+    "removeFont": "Restaurer les originaux"
   }
 }

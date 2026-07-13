@@ -7001,7 +7001,9 @@
     "filesSelected": "file selezionati",
     "filesPlaceholder": "Seleziona i file (.json, .po, .csv, .ips…)",
     "cancel": "Annulla",
-    "publishConfirm": "Pubblica"
+    "publishConfirm": "Pubblica",
+    "integrityBadge": "Integrità verificata",
+    "integrityDesc": "Contenuto con hash SHA-256: riverificato automaticamente a ogni download, un pack manomesso viene rifiutato."
   },
   "predictionToolPage": {
     "backToLibrary": "Torna alla Libreria",
@@ -7132,6 +7134,47 @@
     "bootYes": "Sì, funziona",
     "bootNo": "No, problemi",
     "bootSkip": "Non ho ancora provato",
-    "bootThanks": "Grazie! Il tuo report aiuta tutta la community."
+    "bootThanks": "Grazie! Il tuo report aiuta tutta la community.",
+    "optinTitle": "Aiuta la community: attiva i report di compatibilità?",
+    "optinDesc": "La traduzione è riuscita! Con i report anonimi (gioco, engine, esito — mai file o dati personali) costruiamo il database pubblico \"questo gioco funziona\". Puoi cambiare idea nei settings.",
+    "optinAccept": "Attiva",
+    "optinDecline": "No grazie",
+    "optinThanks": "Telemetria attivata: questa traduzione è già il tuo primo contributo!"
+  },
+  "crash": {
+    "cardTitle": "Privacy e telemetria",
+    "settingLabel": "Invia crash report anonimi",
+    "settingDesc": "Quando qualcosa si rompe (crash, errori di pipeline), invia un report anonimo con categoria dell'errore e stack ridotto — mai percorsi, file o dati personali. Aiuta a correggere i bug che altrimenti nessuno vedrebbe."
+  },
+  "fontCheck": {
+    "title": "Verifica font",
+    "desc": "Controlla se i font del gioco hanno i glifi per la tua lingua: una traduzione perfetta che mostra □□□ è comunque un fallimento.",
+    "run": "Verifica ora",
+    "running": "Analisi font…",
+    "verdictOk": "Almeno un font del gioco copre la tua lingua: niente quadrati previsti.",
+    "verdictLatin": "La tua lingua usa l'alfabeto latino: rischio glifi mancanti molto basso.",
+    "verdictMissing": "Nessun font trovato copre la tua lingua: in gioco vedrai probabilmente □□□.",
+    "verdictNoFonts": "Nessun font ispezionabile nella cartella (probabilmente sono dentro gli asset compilati).",
+    "fontsFound": "{n} font trovati nella cartella del gioco",
+    "notInspectable": "non ispezionabile",
+    "missingEg": "Mancano ad esempio",
+    "xunityTitle": "Override font XUnity (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator non risulta installato: installalo dalla pagina del gioco, l'override font verrà configurato automaticamente.",
+    "xunityOverrideOn": "Override font presente nella config",
+    "xunityOverrideOff": "Override font NON presente nella config",
+    "xunityBundleOn": "Bundle TMP presente ({font})",
+    "xunityBundleOff": "Bundle TMP mancante ({font})",
+    "applyFix": "Applica fix font",
+    "applying": "Applico…",
+    "adviceUnity": "Unity: usa il fix qui sopra — configura l'override font di XUnity e copia il bundle TMP corretto per la versione Unity del gioco.",
+    "adviceUnreal": "Unreal: i font sono negli asset .pak. Serve una mod _P.pak con un font sostitutivo (es. Noto Sans) che rimpiazzi il font composito del gioco; in alternativa cerca una community font-fix per questo titolo.",
+    "adviceRenpy": "Ren'Py: copia un font completo (es. NotoSans o DejaVuSans) nella cartella game/ e impostalo in options.rpy o gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: copia un font completo in www/fonts/ (o fonts/) e aggiorna gamefont.css per usarlo.",
+    "adviceGodot": "Godot: il font va sostituito nel tema del gioco (theme override) — serve una patch del .pck o una mod del tema.",
+    "adviceGeneric": "Sostituisci il font del gioco con uno a copertura ampia (Noto Sans / DejaVu) seguendo la struttura dell'engine, o cerca una community font-fix per questo titolo.",
+    "autoInstallTitle": "Sostituzione font automatica",
+    "autoInstallDesc": "Installa Noto Sans (o la variante CJK) nel gioco e aggiorna la config da solo. Viene creato un backup: puoi ripristinare in ogni momento.",
+    "installFont": "Installa font Noto",
+    "removeFont": "Ripristina originali"
   }
 }

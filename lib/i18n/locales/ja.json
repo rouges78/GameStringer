@@ -7001,7 +7001,9 @@
     "filesSelected": "個のファイルを選択",
     "filesPlaceholder": "ファイルを選択 (.json, .po, .csv, .ips…)",
     "cancel": "キャンセル",
-    "publishConfirm": "公開"
+    "publishConfirm": "公開",
+    "integrityBadge": "整合性を検証済み",
+    "integrityDesc": "SHA-256ハッシュ付きコンテンツ:ダウンロードごとに自動再検証され、改ざんされたパックは拒否されます。"
   },
   "predictionToolPage": {
     "backToLibrary": "ライブラリに戻る",
@@ -7132,6 +7134,47 @@
     "bootYes": "はい、動作します",
     "bootNo": "いいえ、問題あり",
     "bootSkip": "まだ試していない",
-    "bootThanks": "ありがとうございます!あなたの報告がコミュニティ全体の助けになります。"
+    "bootThanks": "ありがとうございます!あなたの報告がコミュニティ全体の助けになります。",
+    "optinTitle": "コミュニティに協力:互換性レポートを有効にしますか?",
+    "optinDesc": "翻訳に成功しました!匿名レポート(ゲーム、エンジン、結果 — ファイルや個人データは含まれません)が「このゲームは動く」公開データベースを作ります。設定でいつでも変更できます。",
+    "optinAccept": "有効にする",
+    "optinDecline": "結構です",
+    "optinThanks": "テレメトリーを有効にしました。この翻訳がもう最初の貢献です!"
+  },
+  "crash": {
+    "cardTitle": "プライバシーとテレメトリー",
+    "settingLabel": "匿名クラッシュレポートを送信",
+    "settingDesc": "問題が発生したとき(クラッシュ、パイプラインエラー)、エラーカテゴリと短縮スタックトレースを含む匿名レポートを送信します。パス、ファイル、個人データは決して含まれません。誰も気づかないバグの修正に役立ちます。"
+  },
+  "fontCheck": {
+    "title": "フォントチェック",
+    "desc": "ゲームのフォントにあなたの言語のグリフがあるか確認します。完璧な翻訳でも□□□が表示されれば失敗です。",
+    "run": "今すぐ確認",
+    "running": "フォントを分析中…",
+    "verdictOk": "少なくとも1つのフォントがあなたの言語をカバーしています。豆腐(□)の心配はありません。",
+    "verdictLatin": "あなたの言語はラテン文字です。グリフ欠落のリスクは非常に低いです。",
+    "verdictMissing": "検出されたフォントはどれもあなたの言語をカバーしていません。ゲーム内で□□□が表示される可能性が高いです。",
+    "verdictNoFonts": "フォルダに検査可能なフォントがありません(コンパイル済みアセット内にある可能性があります)。",
+    "fontsFound": "ゲームフォルダで{n}個のフォントを発見",
+    "notInspectable": "検査不可",
+    "missingEg": "欠落例",
+    "xunityTitle": "XUnityフォントオーバーライド(Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslatorが未インストールです。ゲームページからインストールすると、フォントオーバーライドは自動設定されます。",
+    "xunityOverrideOn": "設定にフォントオーバーライドあり",
+    "xunityOverrideOff": "設定にフォントオーバーライドなし",
+    "xunityBundleOn": "TMPバンドルあり({font})",
+    "xunityBundleOff": "TMPバンドルなし({font})",
+    "applyFix": "フォント修正を適用",
+    "applying": "適用中…",
+    "adviceUnity": "Unity:上の修正を使ってください。XUnityのフォントオーバーライドを設定し、ゲームのUnityバージョンに合ったTMPバンドルをコピーします。",
+    "adviceUnreal": "Unreal:フォントは.pakアセット内にあります。コンポジットフォントを広範囲カバーのフォント(例:Noto Sans)に置き換える_P.pakモッドが必要です。コミュニティのフォント修正も探してみてください。",
+    "adviceRenpy": "Ren'Py:フルカバレッジのフォント(NotoSansやDejaVuSans)をgame/フォルダにコピーし、options.rpyまたはgui.rpy(gui.text_font)で設定してください。",
+    "adviceRpgMaker": "RPG Maker MV/MZ:フルカバレッジのフォントをwww/fonts/(またはfonts/)にコピーし、gamefont.cssを更新してください。",
+    "adviceGodot": "Godot:ゲームのテーマでフォントを置き換える必要があります(テーマオーバーライド)。.pckパッチかテーマモッドが必要です。",
+    "adviceGeneric": "エンジンの構造に従って、ゲームのフォントを広範囲カバーのフォント(Noto Sans / DejaVu)に置き換えるか、コミュニティのフォント修正を探してください。",
+    "autoInstallTitle": "フォント自動置き換え",
+    "autoInstallDesc": "Noto Sans(またはCJK版)をゲームにインストールし、設定も自動で更新します。バックアップが作成されるので、いつでも元に戻せます。",
+    "installFont": "Notoフォントをインストール",
+    "removeFont": "元に戻す"
   }
 }

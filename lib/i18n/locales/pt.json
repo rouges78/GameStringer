@@ -7001,7 +7001,9 @@
     "filesSelected": "arquivos selecionados",
     "filesPlaceholder": "Selecione arquivos (.json, .po, .csv, .ips…)",
     "cancel": "Cancelar",
-    "publishConfirm": "Publicar"
+    "publishConfirm": "Publicar",
+    "integrityBadge": "Integridade verificada",
+    "integrityDesc": "Conteúdo com hash SHA-256: verificado novamente a cada download; um pack adulterado é rejeitado."
   },
   "predictionToolPage": {
     "backToLibrary": "Voltar à Biblioteca",
@@ -7132,6 +7134,47 @@
     "bootYes": "Sim, funciona",
     "bootNo": "Não, problemas",
     "bootSkip": "Ainda não testei",
-    "bootThanks": "Obrigado! Seu relatório ajuda toda a comunidade."
+    "bootThanks": "Obrigado! Seu relatório ajuda toda a comunidade.",
+    "optinTitle": "Ajude a comunidade: ativar os relatórios de compatibilidade?",
+    "optinDesc": "A tradução foi concluída! Relatórios anônimos (jogo, engine, resultado — nunca arquivos ou dados pessoais) constroem o banco de dados público \"este jogo funciona\". Você pode mudar de ideia nas configurações.",
+    "optinAccept": "Ativar",
+    "optinDecline": "Não, obrigado",
+    "optinThanks": "Telemetria ativada: esta tradução já é a sua primeira contribuição!"
+  },
+  "crash": {
+    "cardTitle": "Privacidade e telemetria",
+    "settingLabel": "Enviar relatórios de erro anônimos",
+    "settingDesc": "Quando algo quebra (travamentos, erros de pipeline), envia um relatório anônimo com a categoria do erro e um stack reduzido — nunca caminhos, arquivos ou dados pessoais. Ajuda a corrigir bugs que ninguém veria."
+  },
+  "fontCheck": {
+    "title": "Verificação de fontes",
+    "desc": "Verifica se as fontes do jogo têm os glifos do seu idioma: uma tradução perfeita que mostra □□□ ainda é um fracasso.",
+    "run": "Verificar agora",
+    "running": "Analisando fontes…",
+    "verdictOk": "Pelo menos uma fonte do jogo cobre o seu idioma: sem quadrados esperados.",
+    "verdictLatin": "Seu idioma usa o alfabeto latino: risco muito baixo de glifos ausentes.",
+    "verdictMissing": "Nenhuma fonte detectada cobre o seu idioma: você provavelmente verá □□□ no jogo.",
+    "verdictNoFonts": "Nenhuma fonte inspecionável na pasta (provavelmente estão dentro de assets compilados).",
+    "fontsFound": "{n} fontes encontradas na pasta do jogo",
+    "notInspectable": "não inspecionável",
+    "missingEg": "Faltam p. ex.",
+    "xunityTitle": "Override de fonte XUnity (Unity)",
+    "xunityNotInstalled": "O XUnity AutoTranslator não está instalado: instale-o pela página do jogo e o override será configurado automaticamente.",
+    "xunityOverrideOn": "Override de fonte presente na config",
+    "xunityOverrideOff": "Override de fonte AUSENTE na config",
+    "xunityBundleOn": "O bundle TMP está presente ({font})",
+    "xunityBundleOff": "Bundle TMP ausente ({font})",
+    "applyFix": "Aplicar fix de fonte",
+    "applying": "Aplicando…",
+    "adviceUnity": "Unity: use o fix acima — ele configura o override do XUnity e copia o bundle TMP correto para a versão do Unity do jogo.",
+    "adviceUnreal": "Unreal: as fontes ficam nos assets .pak. É preciso um mod _P.pak substituindo a fonte composta por uma de ampla cobertura (ex.: Noto Sans), ou procure um font-fix da comunidade.",
+    "adviceRenpy": "Ren'Py: copie uma fonte completa (NotoSans ou DejaVuSans) para a pasta game/ e defina-a em options.rpy ou gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: copie uma fonte completa para www/fonts/ (ou fonts/) e atualize o gamefont.css.",
+    "adviceGodot": "Godot: a fonte deve ser substituída no tema do jogo (theme override) — requer um patch do .pck ou um mod do tema.",
+    "adviceGeneric": "Substitua a fonte do jogo por uma de ampla cobertura (Noto Sans / DejaVu) conforme a estrutura da engine, ou procure um font-fix da comunidade.",
+    "autoInstallTitle": "Substituição automática de fonte",
+    "autoInstallDesc": "Instala a Noto Sans (ou a variante CJK) no jogo e atualiza a configuração por você. Um backup é criado: é possível restaurar a qualquer momento.",
+    "installFont": "Instalar fonte Noto",
+    "removeFont": "Restaurar originais"
   }
 }

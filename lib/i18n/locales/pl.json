@@ -7001,7 +7001,9 @@
     "filesSelected": "wybranych plików",
     "filesPlaceholder": "Wybierz pliki (.json, .po, .csv, .ips…)",
     "cancel": "Anuluj",
-    "publishConfirm": "Opublikuj"
+    "publishConfirm": "Opublikuj",
+    "integrityBadge": "Integralność zweryfikowana",
+    "integrityDesc": "Zawartość z hashem SHA-256: automatycznie weryfikowana przy każdym pobraniu; zmodyfikowany pack jest odrzucany."
   },
   "predictionToolPage": {
     "backToLibrary": "Powrót do Biblioteki",
@@ -7132,6 +7134,47 @@
     "bootYes": "Tak, działa",
     "bootNo": "Nie, problemy",
     "bootSkip": "Jeszcze nie próbowałem",
-    "bootThanks": "Dziękujemy! Twój raport pomaga całej społeczności."
+    "bootThanks": "Dziękujemy! Twój raport pomaga całej społeczności.",
+    "optinTitle": "Pomóż społeczności: włączyć raporty zgodności?",
+    "optinDesc": "Tłumaczenie się powiodło! Anonimowe raporty (gra, silnik, wynik — nigdy pliki ani dane osobowe) budują publiczną bazę \"ta gra działa\". Zdanie możesz zmienić w ustawieniach.",
+    "optinAccept": "Włącz",
+    "optinDecline": "Nie, dziękuję",
+    "optinThanks": "Telemetria włączona: to tłumaczenie to już Twój pierwszy wkład!"
+  },
+  "crash": {
+    "cardTitle": "Prywatność i telemetria",
+    "settingLabel": "Wysyłaj anonimowe raporty o awariach",
+    "settingDesc": "Gdy coś się psuje (awarie, błędy potoku), wysyła anonimowy raport z kategorią błędu i skróconym śladem stosu — nigdy ścieżek, plików ani danych osobowych. Pomaga naprawiać błędy, których nikt by nie zobaczył."
+  },
+  "fontCheck": {
+    "title": "Sprawdzenie czcionek",
+    "desc": "Sprawdza, czy czcionki gry mają glify twojego języka: idealne tłumaczenie pokazujące □□□ to wciąż porażka.",
+    "run": "Sprawdź teraz",
+    "running": "Analiza czcionek…",
+    "verdictOk": "Co najmniej jedna czcionka gry obsługuje twój język: kwadratów nie powinno być.",
+    "verdictLatin": "Twój język używa alfabetu łacińskiego: bardzo niskie ryzyko brakujących glifów.",
+    "verdictMissing": "Żadna wykryta czcionka nie obsługuje twojego języka: w grze prawdopodobnie zobaczysz □□□.",
+    "verdictNoFonts": "Brak czcionek do sprawdzenia w folderze (prawdopodobnie są w skompilowanych assetach).",
+    "fontsFound": "Znaleziono {n} czcionek w folderze gry",
+    "notInspectable": "nie do sprawdzenia",
+    "missingEg": "Brakuje np.",
+    "xunityTitle": "Override czcionki XUnity (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator nie jest zainstalowany: zainstaluj go ze strony gry, a override zostanie skonfigurowany automatycznie.",
+    "xunityOverrideOn": "Override czcionki obecny w konfiguracji",
+    "xunityOverrideOff": "BRAK override czcionki w konfiguracji",
+    "xunityBundleOn": "Bundle TMP obecny ({font})",
+    "xunityBundleOff": "Brak bundle TMP ({font})",
+    "applyFix": "Zastosuj fix czcionki",
+    "applying": "Stosowanie…",
+    "adviceUnity": "Unity: użyj powyższego fixa — konfiguruje override XUnity i kopiuje właściwy bundle TMP dla wersji Unity gry.",
+    "adviceUnreal": "Unreal: czcionki są w assetach .pak. Potrzebny jest mod _P.pak zastępujący czcionkę kompozytową czcionką o szerokim pokryciu (np. Noto Sans), albo poszukaj społecznościowego font-fixa.",
+    "adviceRenpy": "Ren'Py: skopiuj pełną czcionkę (NotoSans lub DejaVuSans) do folderu game/ i ustaw ją w options.rpy lub gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: skopiuj pełną czcionkę do www/fonts/ (lub fonts/) i zaktualizuj gamefont.css.",
+    "adviceGodot": "Godot: czcionkę trzeba podmienić w motywie gry (theme override) — wymaga patcha .pck lub moda motywu.",
+    "adviceGeneric": "Podmień czcionkę gry na taką o szerokim pokryciu (Noto Sans / DejaVu) zgodnie ze strukturą silnika, albo poszukaj społecznościowego font-fixa.",
+    "autoInstallTitle": "Automatyczna podmiana czcionki",
+    "autoInstallDesc": "Instaluje Noto Sans (lub wariant CJK) w grze i sam aktualizuje konfigurację. Tworzona jest kopia zapasowa: można przywrócić w każdej chwili.",
+    "installFont": "Zainstaluj czcionkę Noto",
+    "removeFont": "Przywróć oryginalne"
   }
 }

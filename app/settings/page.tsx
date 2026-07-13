@@ -325,40 +325,61 @@ const INDEX_LANGS: { code: string; label: string }[] = [
 // getSemanticTMMode / detectEmbeddingModel). Lo stato diagnostico è indipendente:
 // interroga Ollama in tempo reale per mostrare il modello embedding attivo.
 /**
- * Card "Telemetria di compatibilità" (tab Community): opt-in al database
- * pubblico di compatibilità (il "ProtonDB delle traduzioni"). Default OFF;
- * il valore vive in settings.privacy.compatTelemetry ed è persistito dal
- * Save globale (nessuna persistenza propria, come AiQualityCard).
+ * Card "Privacy e telemetria" (tab Community): due opt-in, entrambi default OFF.
+ * 1. Telemetria di compatibilità → database pubblico "ProtonDB delle traduzioni"
+ * 2. Crash report anonimi → ogni errore reale diventa una issue con contesto
+ * I valori vivono in settings.privacy.* e sono persistiti dal Save globale
+ * (nessuna persistenza propria, come AiQualityCard).
  */
 function CompatTelemetryCard({
-  enabled,
+  compatEnabled,
+  crashEnabled,
   onChange,
 }: {
-  enabled: boolean;
-  onChange: (value: boolean) => void;
+  compatEnabled: boolean;
+  crashEnabled: boolean;
+  onChange: (key: 'compatTelemetry' | 'crashReports', value: boolean) => void;
 }) {
   const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          {t('compat.settingTitle')}
-          <Badge variant={enabled ? 'default' : 'secondary'} className="text-2xs">
-            {enabled ? 'ON' : 'OFF'}
-          </Badge>
-        </CardTitle>
+        <CardTitle className="text-base">{t('crash.cardTitle')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">{t('compat.settingDesc')}</p>
-        <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
-          <Label htmlFor="compat-telemetry" className="text-sm cursor-pointer">
-            {t('compat.settingLabel')}
-          </Label>
-          <Switch
-            id="compat-telemetry"
-            checked={enabled}
-            onCheckedChange={onChange}
-          />
+        {/* Telemetria di compatibilità */}
+        <div className="rounded-lg border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="compat-telemetry" className="text-sm cursor-pointer flex items-center gap-2">
+              {t('compat.settingLabel')}
+              <Badge variant={compatEnabled ? 'default' : 'secondary'} className="text-2xs">
+                {compatEnabled ? 'ON' : 'OFF'}
+              </Badge>
+            </Label>
+            <Switch
+              id="compat-telemetry"
+              checked={compatEnabled}
+              onCheckedChange={(v) => onChange('compatTelemetry', v)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{t('compat.settingDesc')}</p>
+        </div>
+        {/* Crash report anonimi */}
+        <div className="rounded-lg border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="crash-reports" className="text-sm cursor-pointer flex items-center gap-2">
+              {t('crash.settingLabel')}
+              <Badge variant={crashEnabled ? 'default' : 'secondary'} className="text-2xs">
+                {crashEnabled ? 'ON' : 'OFF'}
+              </Badge>
+            </Label>
+            <Switch
+              id="crash-reports"
+              checked={crashEnabled}
+              onCheckedChange={(v) => onChange('crashReports', v)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{t('crash.settingDesc')}</p>
         </div>
         <p className="text-xs text-muted-foreground">{t('compat.settingPrivacy')}</p>
       </CardContent>
@@ -670,6 +691,7 @@ interface Settings {
   // Privacy / telemetria (opt-in, default tutto OFF)
   privacy: {
     compatTelemetry: boolean;
+    crashReports: boolean;
   };
 }
 
@@ -719,6 +741,7 @@ export default function SettingsPage() {
     },
     privacy: {
       compatTelemetry: false,
+      crashReports: false,
     }
   });
 
@@ -1598,8 +1621,9 @@ export default function SettingsPage() {
         <TabsContent value="community" className="space-y-3">
           <SupabaseSettingsCard />
           <CompatTelemetryCard
-            enabled={settings.privacy.compatTelemetry}
-            onChange={(v) => updateSetting('privacy', 'compatTelemetry', v)}
+            compatEnabled={settings.privacy.compatTelemetry}
+            crashEnabled={settings.privacy.crashReports}
+            onChange={(key, v) => updateSetting('privacy', key, v)}
           />
         </TabsContent>
 

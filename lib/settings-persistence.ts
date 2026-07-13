@@ -47,7 +47,7 @@ export async function hydrateSettingsFromDisk(): Promise<void> {
       // inserite ma non ancora salvate su disco da una versione precedente).
       const d = disk as Record<string, Record<string, unknown> | unknown>;
       const merged: Record<string, unknown> = { ...local, ...d };
-      for (const cat of ['translation', 'system', 'performance', 'display']) {
+      for (const cat of ['translation', 'system', 'performance', 'display', 'privacy']) {
         const lc = (local as Record<string, unknown>)[cat] as Record<string, unknown> | undefined;
         const dc = (d as Record<string, unknown>)[cat] as Record<string, unknown> | undefined;
         if (lc || dc) merged[cat] = { ...(lc || {}), ...(dc || {}) };

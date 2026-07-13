@@ -19,8 +19,9 @@ import { tStatic } from '@/lib/i18n';
 import { gamePathKey } from '@/lib/game-path';
 import {
   reportCompatStep, newCompatRunId, compatGameKey, setPendingBootCheck,
-  classifyCompatError, type CompatStep, type CompatGameRef,
+  classifyCompatError, maybeOfferCompatOptIn, type CompatStep, type CompatGameRef,
 } from '@/lib/compat-telemetry';
+import { reportCrash } from '@/lib/crash-reporter';
 
 export interface HeroTrackMeta {
   engineId: string;     // 'renpy' | 'hendrix' | 'rpgmaker' | 'visionaire'
@@ -210,6 +211,17 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
         targetLang: meta.targetLang,
         engine: meta.engineId,
       });
+      // Telemetria OFF? Propone l'opt-in una sola volta (report retroattivo se accetta).
+      maybeOfferCompatOptIn({
+        runId: compatRunId,
+        game: compatGame,
+        engine: meta.engineId,
+        result: partial ? 'partial' : 'success',
+        stringsTotal: total,
+        stringsTranslated: translated,
+        sourceLang: meta.sourceLang,
+        targetLang: meta.targetLang,
+      });
       try {
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationCompleted(meta.gameName || 'Gioco', translated);
@@ -228,6 +240,7 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
         targetLang: meta.targetLang,
         errorCategory: classifyCompatError(err),
       });
+      void reportCrash({ error: err, area: 'pipeline', engine: meta.engineId, gameKey: compatGame.key });
       try {
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationFailed(meta.gameName || 'Gioco', String(err));

@@ -7001,7 +7001,9 @@
     "filesSelected": "개 파일 선택됨",
     "filesPlaceholder": "파일 선택 (.json, .po, .csv, .ips…)",
     "cancel": "취소",
-    "publishConfirm": "게시"
+    "publishConfirm": "게시",
+    "integrityBadge": "무결성 검증됨",
+    "integrityDesc": "SHA-256 해시 콘텐츠: 다운로드할 때마다 자동으로 재검증되며 변조된 팩은 거부됩니다."
   },
   "predictionToolPage": {
     "backToLibrary": "라이브러리로 돌아가기",
@@ -7132,6 +7134,47 @@
     "bootYes": "네, 작동해요",
     "bootNo": "아니요, 문제 있음",
     "bootSkip": "아직 안 해봤어요",
-    "bootThanks": "감사합니다! 여러분의 보고가 커뮤니티 전체에 도움이 됩니다."
+    "bootThanks": "감사합니다! 여러분의 보고가 커뮤니티 전체에 도움이 됩니다.",
+    "optinTitle": "커뮤니티를 도와주세요: 호환성 보고서를 활성화할까요?",
+    "optinDesc": "번역 성공! 익명 보고서(게임, 엔진, 결과 — 파일이나 개인 데이터는 절대 포함되지 않음)로 \"이 게임은 작동함\" 공개 데이터베이스를 만듭니다. 설정에서 언제든 변경할 수 있습니다.",
+    "optinAccept": "활성화",
+    "optinDecline": "괜찮아요",
+    "optinThanks": "원격 측정 활성화: 이 번역이 이미 첫 번째 기여입니다!"
+  },
+  "crash": {
+    "cardTitle": "개인정보 및 원격 측정",
+    "settingLabel": "익명 크래시 보고서 보내기",
+    "settingDesc": "문제가 발생하면(크래시, 파이프라인 오류) 오류 범주와 축약된 스택이 포함된 익명 보고서를 보냅니다. 경로, 파일, 개인 데이터는 절대 포함되지 않습니다. 아무도 발견하지 못할 버그를 고치는 데 도움이 됩니다."
+  },
+  "fontCheck": {
+    "title": "폰트 검사",
+    "desc": "게임 폰트에 내 언어의 글리프가 있는지 확인합니다. 완벽한 번역이라도 □□□가 보이면 실패입니다.",
+    "run": "지금 검사",
+    "running": "폰트 분석 중…",
+    "verdictOk": "게임 폰트 중 적어도 하나가 내 언어를 지원합니다. 네모 걱정 없음.",
+    "verdictLatin": "내 언어는 라틴 문자를 사용합니다. 글리프 누락 위험이 매우 낮습니다.",
+    "verdictMissing": "감지된 폰트 중 내 언어를 지원하는 것이 없습니다. 게임에서 □□□가 보일 가능성이 높습니다.",
+    "verdictNoFonts": "폴더에 검사 가능한 폰트가 없습니다(컴파일된 에셋 안에 있을 수 있음).",
+    "fontsFound": "게임 폴더에서 폰트 {n}개 발견",
+    "notInspectable": "검사 불가",
+    "missingEg": "누락 예",
+    "xunityTitle": "XUnity 폰트 오버라이드(Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator가 설치되어 있지 않습니다. 게임 페이지에서 설치하면 폰트 오버라이드가 자동 구성됩니다.",
+    "xunityOverrideOn": "설정에 폰트 오버라이드 있음",
+    "xunityOverrideOff": "설정에 폰트 오버라이드 없음",
+    "xunityBundleOn": "TMP 번들 있음({font})",
+    "xunityBundleOff": "TMP 번들 없음({font})",
+    "applyFix": "폰트 수정 적용",
+    "applying": "적용 중…",
+    "adviceUnity": "Unity: 위의 수정을 사용하세요. XUnity의 폰트 오버라이드를 구성하고 게임의 Unity 버전에 맞는 TMP 번들을 복사합니다.",
+    "adviceUnreal": "Unreal: 폰트는 .pak 에셋 안에 있습니다. 복합 폰트를 넓은 커버리지 폰트(예: Noto Sans)로 교체하는 _P.pak 모드가 필요합니다. 커뮤니티 폰트 픽스도 찾아보세요.",
+    "adviceRenpy": "Ren'Py: 전체 커버리지 폰트(NotoSans 또는 DejaVuSans)를 game/ 폴더에 복사하고 options.rpy 또는 gui.rpy(gui.text_font)에서 설정하세요.",
+    "adviceRpgMaker": "RPG Maker MV/MZ: 전체 커버리지 폰트를 www/fonts/(또는 fonts/)에 복사하고 gamefont.css를 업데이트하세요.",
+    "adviceGodot": "Godot: 게임 테마에서 폰트를 교체해야 합니다(테마 오버라이드). .pck 패치나 테마 모드가 필요합니다.",
+    "adviceGeneric": "엔진 구조에 따라 게임 폰트를 넓은 커버리지 폰트(Noto Sans / DejaVu)로 교체하거나 커뮤니티 폰트 픽스를 찾아보세요.",
+    "autoInstallTitle": "자동 폰트 교체",
+    "autoInstallDesc": "Noto Sans(또는 CJK 버전)를 게임에 설치하고 설정도 자동으로 업데이트합니다. 백업이 생성되므로 언제든 되돌릴 수 있습니다.",
+    "installFont": "Noto 폰트 설치",
+    "removeFont": "원본 복원"
   }
 }

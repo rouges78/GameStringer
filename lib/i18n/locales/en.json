@@ -7001,7 +7001,9 @@
     "filesSelected": "files selected",
     "filesPlaceholder": "Select files (.json, .po, .csv, .ips…)",
     "cancel": "Cancel",
-    "publishConfirm": "Publish"
+    "publishConfirm": "Publish",
+    "integrityBadge": "Integrity verified",
+    "integrityDesc": "SHA-256 hashed content: automatically re-verified on every download, a tampered pack is rejected."
   },
   "predictionToolPage": {
     "backToLibrary": "Back to Library",
@@ -7132,6 +7134,47 @@
     "bootYes": "Yes, it works",
     "bootNo": "No, issues",
     "bootSkip": "Haven't tried yet",
-    "bootThanks": "Thank you! Your report helps the whole community."
+    "bootThanks": "Thank you! Your report helps the whole community.",
+    "optinTitle": "Help the community: enable compatibility reports?",
+    "optinDesc": "Translation succeeded! Anonymous reports (game, engine, outcome — never files or personal data) build the public \"this game works\" database. You can change your mind in settings.",
+    "optinAccept": "Enable",
+    "optinDecline": "No thanks",
+    "optinThanks": "Telemetry enabled: this translation is already your first contribution!"
+  },
+  "crash": {
+    "cardTitle": "Privacy & telemetry",
+    "settingLabel": "Send anonymous crash reports",
+    "settingDesc": "When something breaks (crashes, pipeline errors), sends an anonymous report with the error category and a reduced stack trace — never paths, files or personal data. Helps fix bugs nobody would otherwise see."
+  },
+  "fontCheck": {
+    "title": "Font check",
+    "desc": "Check whether the game's fonts have the glyphs for your language: a perfect translation showing □□□ is still a failure.",
+    "run": "Check now",
+    "running": "Analyzing fonts…",
+    "verdictOk": "At least one game font covers your language: no tofu expected.",
+    "verdictLatin": "Your language uses the Latin alphabet: very low risk of missing glyphs.",
+    "verdictMissing": "No detected font covers your language: you will likely see □□□ in-game.",
+    "verdictNoFonts": "No inspectable fonts in the folder (they are probably inside compiled assets).",
+    "fontsFound": "{n} fonts found in the game folder",
+    "notInspectable": "not inspectable",
+    "missingEg": "Missing e.g.",
+    "xunityTitle": "XUnity font override (Unity)",
+    "xunityNotInstalled": "XUnity AutoTranslator is not installed: install it from the game page and the font override will be configured automatically.",
+    "xunityOverrideOn": "Font override present in the config",
+    "xunityOverrideOff": "Font override NOT present in the config",
+    "xunityBundleOn": "TMP bundle present ({font})",
+    "xunityBundleOff": "TMP bundle missing ({font})",
+    "applyFix": "Apply font fix",
+    "applying": "Applying…",
+    "adviceUnity": "Unity: use the fix above — it configures XUnity's font override and copies the correct TMP bundle for the game's Unity version.",
+    "adviceUnreal": "Unreal: fonts live inside .pak assets. You need a _P.pak mod replacing the game's composite font with a wide-coverage one (e.g. Noto Sans), or look for a community font fix for this title.",
+    "adviceRenpy": "Ren'Py: copy a full-coverage font (e.g. NotoSans or DejaVuSans) into the game/ folder and set it in options.rpy or gui.rpy (gui.text_font).",
+    "adviceRpgMaker": "RPG Maker MV/MZ: copy a full-coverage font into www/fonts/ (or fonts/) and update gamefont.css to use it.",
+    "adviceGodot": "Godot: the font must be replaced in the game theme (theme override) — requires a .pck patch or a theme mod.",
+    "adviceGeneric": "Replace the game font with a wide-coverage one (Noto Sans / DejaVu) following the engine's structure, or look for a community font fix for this title.",
+    "autoInstallTitle": "Automatic font replacement",
+    "autoInstallDesc": "Installs Noto Sans (or its CJK variant) into the game and updates the config for you. A backup is created: you can restore at any time.",
+    "installFont": "Install Noto font",
+    "removeFont": "Restore originals"
   }
 }

@@ -245,6 +245,8 @@ function printVerify(version, args) {
   console.log(`  gh release view v${version}`);
   console.log(`  gh release download v${version} -p latest.json -O -   ${C.dim}# 4 piattaforme con signature non vuota${C.r}`);
   console.log(`  ${C.dim}poi testa l'auto-update da una copia installata.${C.r}`);
+  console.log(`\n${C.yel}🛡️  Anti falsi-positivi (5 min, entro poche ore):${C.r}`);
+  console.log(`  npm run av:checklist   ${C.dim}# asset + passi submission Microsoft (docs/DEFENDER_SUBMISSION.md)${C.r}`);
 }
 
 main().catch((e) => { console.error(`\n${C.red}Errore:${C.r} ${e.stack || e.message}`); process.exit(1); });

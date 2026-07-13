@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { hydrateSettingsFromDisk, persistSettingsToDisk } from '@/lib/settings-persistence';
+import { installGlobalCrashHandlers } from '@/lib/crash-reporter';
 
 /**
  * Idrata le impostazioni dal disco PRIMA di montare il resto dell'app, così
@@ -26,6 +27,10 @@ export function SettingsBootGate({ children }: { children: React.ReactNode }) {
 
     // Timeout di sicurezza: non bloccare mai l'avvio oltre 1.5s.
     const timer = setTimeout(finish, 1500);
+
+    // Crash reporting (opt-in): gli handler si installano sempre, il gate
+    // sulle impostazioni privacy viene ricontrollato a ogni report.
+    installGlobalCrashHandlers();
 
     hydrateSettingsFromDisk().finally(() => {
       clearTimeout(timer);

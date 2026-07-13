@@ -7001,7 +7001,9 @@
     "filesSelected": "个文件已选择",
     "filesPlaceholder": "选择文件 (.json, .po, .csv, .ips…)",
     "cancel": "取消",
-    "publishConfirm": "发布"
+    "publishConfirm": "发布",
+    "integrityBadge": "完整性已验证",
+    "integrityDesc": "SHA-256哈希内容:每次下载时自动重新验证,被篡改的包会被拒绝。"
   },
   "predictionToolPage": {
     "backToLibrary": "返回库",
@@ -7132,6 +7134,47 @@
     "bootYes": "是,可以运行",
     "bootNo": "否,有问题",
     "bootSkip": "还没试过",
-    "bootThanks": "谢谢!你的报告将帮助整个社区。"
+    "bootThanks": "谢谢!你的报告将帮助整个社区。",
+    "optinTitle": "帮助社区:启用兼容性报告?",
+    "optinDesc": "翻译成功!匿名报告(游戏、引擎、结果——绝不包含文件或个人数据)将构建\"这个游戏能用\"公开数据库。你可以随时在设置中更改。",
+    "optinAccept": "启用",
+    "optinDecline": "不了,谢谢",
+    "optinThanks": "遥测已启用:这次翻译已经是你的第一份贡献!"
+  },
+  "crash": {
+    "cardTitle": "隐私与遥测",
+    "settingLabel": "发送匿名崩溃报告",
+    "settingDesc": "当出现问题时(崩溃、管线错误),发送包含错误类别和精简堆栈的匿名报告——绝不包含路径、文件或个人数据。有助于修复否则无人知晓的错误。"
+  },
+  "fontCheck": {
+    "title": "字体检查",
+    "desc": "检查游戏字体是否包含你语言的字形:完美的翻译如果显示□□□仍然是失败。",
+    "run": "立即检查",
+    "running": "正在分析字体…",
+    "verdictOk": "至少有一个游戏字体覆盖你的语言:不会出现方块。",
+    "verdictLatin": "你的语言使用拉丁字母:缺字风险很低。",
+    "verdictMissing": "检测到的字体都不覆盖你的语言:游戏中很可能会看到□□□。",
+    "verdictNoFonts": "文件夹中没有可检查的字体(可能在编译的资源内)。",
+    "fontsFound": "在游戏文件夹中找到{n}个字体",
+    "notInspectable": "无法检查",
+    "missingEg": "缺失示例",
+    "xunityTitle": "XUnity字体覆盖(Unity)",
+    "xunityNotInstalled": "未安装XUnity AutoTranslator:从游戏页面安装后,字体覆盖将自动配置。",
+    "xunityOverrideOn": "配置中已有字体覆盖",
+    "xunityOverrideOff": "配置中没有字体覆盖",
+    "xunityBundleOn": "TMP包已存在({font})",
+    "xunityBundleOff": "缺少TMP包({font})",
+    "applyFix": "应用字体修复",
+    "applying": "应用中…",
+    "adviceUnity": "Unity:使用上面的修复——配置XUnity的字体覆盖,并复制与游戏Unity版本匹配的TMP包。",
+    "adviceUnreal": "Unreal:字体在.pak资源内。需要一个_P.pak模组,用覆盖面广的字体(如Noto Sans)替换游戏的复合字体,或寻找社区字体修复。",
+    "adviceRenpy": "Ren'Py:将完整字体(NotoSans或DejaVuSans)复制到game/文件夹,并在options.rpy或gui.rpy(gui.text_font)中设置。",
+    "adviceRpgMaker": "RPG Maker MV/MZ:将完整字体复制到www/fonts/(或fonts/),并更新gamefont.css。",
+    "adviceGodot": "Godot:需要在游戏主题中替换字体(主题覆盖)——需要.pck补丁或主题模组。",
+    "adviceGeneric": "按引擎结构将游戏字体替换为覆盖面广的字体(Noto Sans / DejaVu),或寻找该游戏的社区字体修复。",
+    "autoInstallTitle": "自动替换字体",
+    "autoInstallDesc": "将Noto Sans(或其CJK变体)安装到游戏中并自动更新配置。会创建备份:随时可以还原。",
+    "installFont": "安装Noto字体",
+    "removeFont": "还原原始字体"
   }
 }
