@@ -1,0 +1,6 @@
+/* Main menu */
+"NEW_GAME" = "New Game";
+"CONTINUE" = "Continue";
+
+/* Battle */
+"CRITICAL_HIT" = "Critical hit!";

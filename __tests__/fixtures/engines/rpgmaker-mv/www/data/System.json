@@ -1,0 +1,1 @@
+{"gameTitle":"MicroQuest MV","locale":"en_US","terms":{"basic":["Level","Lv","HP","HP","MP","MP","TP","TP","EXP","EXP"],"commands":["Fight","Escape","Attack","Guard","Item","Skill","Equip","Status","Formation","Save","Game End"],"messages":{"actionFailure":"There was no effect on %1!","actorDamage":"%1 took %2 damage!","victory":"%1 was victorious!"}}}

@@ -1,0 +1,11 @@
+{
+  "menu": {
+    "start": "Start Game",
+    "quit": "Quit"
+  },
+  "battle": {
+    "victory": "Victory!",
+    "defeat": "Game Over"
+  },
+  "npc_greeting": "Hello, traveler."
+}

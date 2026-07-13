@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" target-language="it" datatype="plaintext" original="game.strings">
+    <body>
+      <trans-unit id="menu.start">
+        <source>Start Adventure</source>
+        <target>Inizia l'avventura</target>
+      </trans-unit>
+      <trans-unit id="menu.options">
+        <source>Options</source>
+        <target>Opzioni</target>
+      </trans-unit>
+      <trans-unit id="dialog.greeting">
+        <source>Welcome, hero!</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

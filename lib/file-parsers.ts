@@ -276,28 +276,39 @@ export function parseXLIFF(content: string): ParseResult {
   if (srcLangMatch) metadata.sourceLanguage = srcLangMatch[1];
   if (tgtLangMatch) metadata.targetLanguage = tgtLangMatch[1];
   
-  // Parse trans-units (XLIFF 1.2)
-  const unitRegex = /<trans-unit[^>]*id="([^"]*)"[^>]*>[\s\S]*?<source>([^<]*)<\/source>[\s\S]*?(?:<target>([^<]*)<\/target>)?[\s\S]*?<\/trans-unit>/g;
+  // Parse trans-units (XLIFF 1.2).
+  // NB: si estrae prima il BODY della unit e poi source/target al suo interno.
+  // La vecchia regex monolitica (`...<\/source>[\s\S]*?(?:<target>...)?...`)
+  // catturava il <target> solo se ATTACCATO a </source>: con la normale
+  // formattazione (newline/indentazione) il target veniva ignorato e la
+  // traduzione esistente andava persa. Bug scovato dal corpus fixture.
+  const unitRegex = /<trans-unit[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/trans-unit>/g;
   let match;
-  
+
   while ((match = unitRegex.exec(content)) !== null) {
-    const [, id, source, target] = match;
+    const [, id, body] = match;
+    const source = body.match(/<source[^>]*>([^<]*)<\/source>/)?.[1] ?? '';
+    const target = body.match(/<target[^>]*>([^<]*)<\/target>/)?.[1];
     strings.push({
       key: id,
-      value: target || source,
+      value: decodeXML(target || source),
       metadata: { source: decodeXML(source) }
     });
   }
-  
+
   // Parse XLIFF 2.0 format
   if (strings.length === 0) {
-    const unit2Regex = /<unit[^>]*id="([^"]*)"[^>]*>[\s\S]*?<segment>[\s\S]*?<source>([^<]*)<\/source>[\s\S]*?(?:<target>([^<]*)<\/target>)?[\s\S]*?<\/segment>[\s\S]*?<\/unit>/g;
-    
+    const unit2Regex = /<unit[^>]*id="([^"]*)"[^>]*>([\s\S]*?)<\/unit>/g;
+
     while ((match = unit2Regex.exec(content)) !== null) {
-      const [, id, source, target] = match;
+      const [, id, body] = match;
+      const segment = body.match(/<segment[^>]*>([\s\S]*?)<\/segment>/)?.[1];
+      if (!segment) continue;
+      const source = segment.match(/<source[^>]*>([^<]*)<\/source>/)?.[1] ?? '';
+      const target = segment.match(/<target[^>]*>([^<]*)<\/target>/)?.[1];
       strings.push({
         key: id,
-        value: target || source,
+        value: decodeXML(target || source),
         metadata: { source: decodeXML(source) }
       });
     }

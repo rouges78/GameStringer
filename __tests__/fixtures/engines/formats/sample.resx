@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="BtnAttack" xml:space="preserve">
+    <value>Attack</value>
+    <comment>Battle command</comment>
+  </data>
+  <data name="BtnDefend" xml:space="preserve">
+    <value>Defend</value>
+  </data>
+  <data name="MsgVictory" xml:space="preserve">
+    <value>You won the battle!</value>
+  </data>
+</root>

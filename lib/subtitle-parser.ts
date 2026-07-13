@@ -232,15 +232,35 @@ export function parseVtt(content: string): SubtitleFile {
       id: cueId,
       startTime,
       endTime,
-      startMs: srtTimeToMs(startTime.replace('.', ',')),
-      endMs: srtTimeToMs(endTime.replace('.', ',')),
+      startMs: vttTimeToMs(startTime),
+      endMs: vttTimeToMs(endTime),
       text: textLines.join('\n')
     });
-    
+
     id++;
   }
-  
+
   return { format: 'vtt', entries, metadata };
+}
+
+/**
+ * Converte timestamp VTT in millisecondi. Gestisce sia la forma piena
+ * (HH:MM:SS.mmm) sia quella BREVE (MM:SS.mmm) prevista dallo standard WebVTT
+ * — e che il nostro stesso serializzatore emette per cue sotto l'ora. Prima
+ * la forma breve passava da srtTimeToMs e tornava 0 (bug scovato dal corpus
+ * fixture: round-trip che azzerava tutti i tempi).
+ */
+export function vttTimeToMs(time: string): number {
+  const full = time.match(/(\d{2,}):(\d{2}):(\d{2})\.(\d{3})/);
+  if (full) {
+    return parseInt(full[1]) * 3600000 + parseInt(full[2]) * 60000 +
+      parseInt(full[3]) * 1000 + parseInt(full[4]);
+  }
+  const short = time.match(/(\d{2}):(\d{2})\.(\d{3})/);
+  if (short) {
+    return parseInt(short[1]) * 60000 + parseInt(short[2]) * 1000 + parseInt(short[3]);
+  }
+  return 0;
 }
 
 // ============================================================================

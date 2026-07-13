@@ -1,0 +1,17 @@
+# GameStringer fixture — mini gettext catalog
+msgid ""
+msgstr ""
+"Project-Id-Version: MicroGame 1.0\n"
+"Language: it\n"
+
+#: ui/menu.c:12
+msgid "New Game"
+msgstr "Nuova partita"
+
+#: ui/menu.c:13
+msgid "Load Game"
+msgstr "Carica partita"
+
+# dialogo del boss
+msgid "You shall not pass, {player}!"
+msgstr "Non passerai, {player}!"

@@ -1,0 +1,11 @@
+1
+00:00:01,000 --> 00:00:03,500
+Welcome to the kingdom of Eldoria.
+
+2
+00:00:04,000 --> 00:00:06,200
+The dragon awaits in the northern tower.
+
+3
+00:00:07,000 --> 00:00:09,900
+<i>May the light guide you, hero.</i>
