@@ -1,6 +1,18 @@
-﻿# 🎮 GameStringer v1.8.0
+﻿# 🎮 GameStringer — Historical Release Notes
 
-> ℹ️ **Note**: this file covers historical releases. For the latest versions (up to v1.12.0) see [CHANGELOG.md](../CHANGELOG.md).
+> ⚠️ **This file is an archive.** It stops at v1.8.0 and is kept only for the long-form notes of the v1.6.0–v1.8.0 cycle.
+>
+> **For anything newer, the single source of truth is [CHANGELOG.md](../CHANGELOG.md)** — it is regenerated from the commits at every release by `scripts/release-all.js`. Do not add new versions here: they would drift.
+>
+> - Current version: **v1.13.0** (2026-07-11) — see [CHANGELOG.md](../CHANGELOG.md) and the [GitHub release](https://github.com/rouges78/GameStringer/releases/latest)
+> - Per-release GitHub bodies live in `docs/RELEASE_BODY_vX.Y.Z.md`
+> - Release procedure: [RELEASE_PROCESS.md](./RELEASE_PROCESS.md)
+>
+> **Note on the dates below:** they are the dates the notes were *written*, not the tag dates, which is why they read out of order (v1.8.0 → April 9, v1.6.0 → April 4). The authoritative dates are the ones in `CHANGELOG.md`.
+
+---
+
+# 🎮 GameStringer v1.8.0
 
 > **Release Date**: April 9, 2026
 > **Type**: Live Translation Overlay + Hub Marketplace + Translation Memory Network + AI Dubbing Pipeline + Plugin System
