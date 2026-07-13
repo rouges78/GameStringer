@@ -16,6 +16,18 @@
   (scan → extract → translate → patch → boot). Trasforma ogni utente in un tester
   e crea un asset che nessun concorrente ha: *"questo gioco funziona al 94%,
   testato da 37 persone"*. Sostituisce i report manuali chiesti nel README.
+  - [x] **v1 in-app (13/07/2026)**: tabella `compat_reports` + vista
+    `compat_game_summary` su Supabase (RLS insert-only), sender fail-open con
+    coda offline (`lib/compat-telemetry.ts`), agganci in hero-job-tracking e
+    fast path universale, banner conferma boot 👍/👎, badge community in game
+    detail, toggle opt-in (default OFF) nel tab Community dei settings,
+    i18n 12 lingue. Dettagli: `docs/COMPAT_TELEMETRY.md`.
+  - [ ] Pagina web pubblica su gamestringer.ai che espone il database
+    (ricerca per gioco, filtro lingua/engine).
+  - [ ] Prompt one-time in-app che propone l'opt-in dopo la prima traduzione
+    riuscita (oggi si attiva solo dai settings).
+  - [ ] Badge compatibilità anche nelle card della Library.
+  - [ ] Anti-abuso lato server (rate limit per IP, dedup run sospette).
 - [ ] **Crash/error reporting opt-in**
   Oggi un fallimento su un gioco reale muore in silenzio sul PC dell'utente.
   Report anonimo con engine + versione + stacktrace = roadmap dei fix automatica.

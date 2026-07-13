@@ -324,6 +324,48 @@ const INDEX_LANGS: { code: string; label: string }[] = [
 // dal Save globale della pagina (stessa fonte di verità letta da getReflectionMode /
 // getSemanticTMMode / detectEmbeddingModel). Lo stato diagnostico è indipendente:
 // interroga Ollama in tempo reale per mostrare il modello embedding attivo.
+/**
+ * Card "Telemetria di compatibilità" (tab Community): opt-in al database
+ * pubblico di compatibilità (il "ProtonDB delle traduzioni"). Default OFF;
+ * il valore vive in settings.privacy.compatTelemetry ed è persistito dal
+ * Save globale (nessuna persistenza propria, come AiQualityCard).
+ */
+function CompatTelemetryCard({
+  enabled,
+  onChange,
+}: {
+  enabled: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          {t('compat.settingTitle')}
+          <Badge variant={enabled ? 'default' : 'secondary'} className="text-2xs">
+            {enabled ? 'ON' : 'OFF'}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">{t('compat.settingDesc')}</p>
+        <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+          <Label htmlFor="compat-telemetry" className="text-sm cursor-pointer">
+            {t('compat.settingLabel')}
+          </Label>
+          <Switch
+            id="compat-telemetry"
+            checked={enabled}
+            onCheckedChange={onChange}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">{t('compat.settingPrivacy')}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function AiQualityCard({
   reflectionMode,
   semanticTM,
@@ -624,6 +666,11 @@ interface Settings {
     sidebarWidth: number;
     animationsEnabled: boolean;
   };
+
+  // Privacy / telemetria (opt-in, default tutto OFF)
+  privacy: {
+    compatTelemetry: boolean;
+  };
 }
 
 export default function SettingsPage() {
@@ -669,6 +716,9 @@ export default function SettingsPage() {
       compactMode: false,
       sidebarWidth: 256,
       animationsEnabled: true,
+    },
+    privacy: {
+      compatTelemetry: false,
     }
   });
 
@@ -692,6 +742,7 @@ export default function SettingsPage() {
           system: { ...prev.system, ...(parsed.system || {}) },
           performance: { ...prev.performance, ...(parsed.performance || {}) },
           display: { ...prev.display, ...(parsed.display || {}) },
+          privacy: { ...prev.privacy, ...(parsed.privacy || {}) },
         }));
       } catch (error: unknown) {
         clientLogger.error('Error loading settings:', error);
@@ -1546,6 +1597,10 @@ export default function SettingsPage() {
         {/* Community Hub / Supabase Tab */}
         <TabsContent value="community" className="space-y-3">
           <SupabaseSettingsCard />
+          <CompatTelemetryCard
+            enabled={settings.privacy.compatTelemetry}
+            onChange={(v) => updateSetting('privacy', 'compatTelemetry', v)}
+          />
         </TabsContent>
 
         {/* Display Tab */}

@@ -17,6 +17,10 @@ import { projectService } from '@/lib/services/translation-projects';
 import type { ProgressState } from '@/lib/types/progress';
 import { tStatic } from '@/lib/i18n';
 import { gamePathKey } from '@/lib/game-path';
+import {
+  reportCompatStep, newCompatRunId, compatGameKey, setPendingBootCheck,
+  classifyCompatError, type CompatStep, type CompatGameRef,
+} from '@/lib/compat-telemetry';
 
 export interface HeroTrackMeta {
   engineId: string;     // 'renpy' | 'hendrix' | 'rpgmaker' | 'visionaire'
@@ -36,6 +40,12 @@ export interface HeroTracker {
   onProgress: (done: number, total: number) => void;
   done: (translated: number, total: number) => Promise<void>;
   fail: (err: unknown) => Promise<void>;
+  /**
+   * Facoltativo: comunica lo step di pipeline corrente al tracker (per la
+   * telemetria di compatibilità). Se mai chiamato, la stima è: 'extract'
+   * all'avvio → 'translate' al primo progress → 'patch' su done().
+   */
+  setStage: (stage: Exclude<CompatStep, 'boot'>) => void;
 }
 
 const _g = globalThis as unknown as { __gsHeroRunning?: Set<string> };
@@ -120,6 +130,18 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
     } catch { /* tray non disponibile */ }
   };
 
+  // ── Telemetria di compatibilità (opt-in, fail-open) ──────────────────
+  // Un run_id per l'intera run; lo stage avanza con i progressi e può essere
+  // precisato dal chiamante via tracker.setStage(). reportCompatStep è un
+  // no-op se l'utente non ha attivato l'opzione nelle impostazioni privacy.
+  const compatRunId = newCompatRunId();
+  const compatGame: CompatGameRef = {
+    key: compatGameKey(meta.gameId, meta.gameName || meta.engineLabel),
+    appId: meta.gameId && /^\d+$/.test(meta.gameId) ? parseInt(meta.gameId, 10) : null,
+    name: meta.gameName || meta.engineLabel,
+  };
+  let compatStage: Exclude<CompatStep, 'boot'> = 'extract';
+
   // ── Advisor di ritmo ─────────────────────────────────────────────────
   // Dopo un rodaggio di 5 minuti misura la velocità REALE del job; se a quel
   // ritmo mancano più di 60 minuti, consiglia (una sola volta, via toast) di
@@ -158,6 +180,7 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
   return {
     onProgress: (done: number, total: number) => {
       void ensureProject(total);
+      if (compatStage === 'extract' && total > 0) compatStage = 'translate';
       progress.updateProgress(opId, total > 0 ? (done / total) * 100 : 0, `${done}/${total}`);
       if (projectId) void projectService.updateProgress(projectId, done).catch(() => {});
       paceAdvisor(done, total);
@@ -167,6 +190,26 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
       progress.completeOperation(opId, { translated, total });
       if (projectId) await projectService.updateProgress(projectId, translated).catch(() => {});
       await releaseGuardAndBadge();
+      // Esito run: 'success' se è stato tradotto (quasi) tutto, 'partial' altrimenti.
+      const partial = total > 0 && translated > 0 && translated / total < 0.8;
+      void reportCompatStep({
+        runId: compatRunId,
+        game: compatGame,
+        engine: meta.engineId,
+        step: 'patch',
+        result: partial ? 'partial' : 'success',
+        stringsTotal: total,
+        stringsTranslated: translated,
+        sourceLang: meta.sourceLang,
+        targetLang: meta.targetLang,
+      });
+      setPendingBootCheck({
+        runId: compatRunId,
+        gameKey: compatGame.key,
+        gameName: compatGame.name,
+        targetLang: meta.targetLang,
+        engine: meta.engineId,
+      });
       try {
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationCompleted(meta.gameName || 'Gioco', translated);
@@ -175,10 +218,21 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
     fail: async (err: unknown) => {
       progress.failOperation(opId, err instanceof Error ? err : new Error(String(err)));
       await releaseGuardAndBadge();
+      void reportCompatStep({
+        runId: compatRunId,
+        game: compatGame,
+        engine: meta.engineId,
+        step: compatStage,
+        result: 'failure',
+        sourceLang: meta.sourceLang,
+        targetLang: meta.targetLang,
+        errorCategory: classifyCompatError(err),
+      });
       try {
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationFailed(meta.gameName || 'Gioco', String(err));
       } catch { /* ignore */ }
     },
+    setStage: (stage) => { compatStage = stage; },
   };
 }

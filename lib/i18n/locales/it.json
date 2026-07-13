@@ -7117,5 +7117,21 @@
     "vectors": "vettori",
     "emptyTm": "Nessuna traduzione in memoria per questa coppia.",
     "unavailable": "Attiva la TM semantica e installa un modello di embedding per pre-indicizzare."
+  },
+  "compat": {
+    "settingTitle": "Telemetria di compatibilità",
+    "settingDesc": "Invia automaticamente l'esito anonimo di ogni traduzione (gioco, engine, step raggiunto, riuscita o meno) per costruire il database pubblico di compatibilità della community.",
+    "settingLabel": "Contribuisci al database di compatibilità",
+    "settingPrivacy": "Niente percorsi file, niente messaggi di errore grezzi, nessun dato personale. Il profilo è incluso solo se sei connesso alla community.",
+    "cardTitle": "Compatibilità community",
+    "worksPct": "Funziona nel {pct}% delle run",
+    "runs": "{n} run riportate",
+    "bootConfirmed": "{n} conferme in-gioco",
+    "yourLang": "Nella tua lingua ({lang}): {ok}/{runs} run riuscite",
+    "bootQuestion": "Hai avviato il gioco dopo la traduzione: parte e il testo tradotto si vede?",
+    "bootYes": "Sì, funziona",
+    "bootNo": "No, problemi",
+    "bootSkip": "Non ho ancora provato",
+    "bootThanks": "Grazie! Il tuo report aiuta tutta la community."
   }
 }

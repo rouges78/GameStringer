@@ -7117,5 +7117,21 @@
     "vectors": "wektory",
     "emptyTm": "Brak tłumaczeń w pamięci dla tej pary.",
     "unavailable": "Włącz semantyczną pamięć tłumaczeń i zainstaluj model osadzeń, aby wstępnie zindeksować."
+  },
+  "compat": {
+    "settingTitle": "Telemetria zgodności",
+    "settingDesc": "Automatycznie wysyła anonimowy wynik każdego tłumaczenia (gra, silnik, osiągnięty etap, sukces lub porażka), aby budować publiczną bazę zgodności społeczności.",
+    "settingLabel": "Współtwórz bazę danych zgodności",
+    "settingPrivacy": "Żadnych ścieżek plików, surowych komunikatów o błędach ani danych osobowych. Twój profil jest dołączany tylko, gdy jesteś zalogowany do społeczności.",
+    "cardTitle": "Zgodność społeczności",
+    "worksPct": "Działa w {pct}% uruchomień",
+    "runs": "{n} zgłoszonych uruchomień",
+    "bootConfirmed": "{n} potwierdzeń w grze",
+    "yourLang": "W Twoim języku ({lang}): {ok}/{runs} udanych uruchomień",
+    "bootQuestion": "Czy uruchomiłeś grę po tłumaczeniu: startuje i widać przetłumaczony tekst?",
+    "bootYes": "Tak, działa",
+    "bootNo": "Nie, problemy",
+    "bootSkip": "Jeszcze nie próbowałem",
+    "bootThanks": "Dziękujemy! Twój raport pomaga całej społeczności."
   }
 }

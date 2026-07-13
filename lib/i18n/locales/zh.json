@@ -7117,5 +7117,21 @@
     "vectors": "向量",
     "emptyTm": "此语言对在记忆库中没有翻译。",
     "unavailable": "启用语义 TM 并安装嵌入模型以进行预索引。"
+  },
+  "compat": {
+    "settingTitle": "兼容性遥测",
+    "settingDesc": "自动发送每次翻译的匿名结果(游戏、引擎、到达的步骤、成功或失败),用于构建社区公开兼容性数据库。",
+    "settingLabel": "为兼容性数据库做贡献",
+    "settingPrivacy": "不含文件路径、原始错误信息或个人数据。仅当你登录社区时才会包含个人资料。",
+    "cardTitle": "社区兼容性",
+    "worksPct": "在{pct}%的运行中有效",
+    "runs": "{n}次运行报告",
+    "bootConfirmed": "{n}次游戏内确认",
+    "yourLang": "你的语言({lang}):{ok}/{runs}次运行成功",
+    "bootQuestion": "翻译后你启动过游戏吗?能启动并显示翻译文本吗?",
+    "bootYes": "是,可以运行",
+    "bootNo": "否,有问题",
+    "bootSkip": "还没试过",
+    "bootThanks": "谢谢!你的报告将帮助整个社区。"
   }
 }

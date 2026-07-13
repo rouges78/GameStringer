@@ -33,6 +33,10 @@ import { runRenpyTranslation } from '@/lib/renpy-translate';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
 import { startHeroTracking } from '@/lib/hero-job-tracking';
 import {
+  reportCompatStep, newCompatRunId, compatGameKey, setPendingBootCheck,
+  classifyCompatError, type CompatGameRef,
+} from '@/lib/compat-telemetry';
+import {
   ScreenshotGallery,
   ScreenshotLightbox,
   AutoTranslateStepper,
@@ -41,6 +45,7 @@ import {
   GameToolsPanel,
   UnrealLocalizationPanel,
   UnityAssetsPanel,
+  CompatCard,
 } from '@/components/game-detail';
 
 // Game interface based on mock data structure
@@ -95,6 +100,17 @@ interface Game {
   detailedDescription?: string;
   aboutGame?: string;
   playtime_forever?: number;
+}
+
+/** Riferimento cross-utente del gioco per la telemetria di compatibilità. */
+function compatRefFor(game: Game): CompatGameRef {
+  const name = game.title || game.name || 'Unknown Game';
+  return {
+    key: compatGameKey(game.appid ?? game.id, name),
+    appId: typeof game.appid === 'number' && game.appid > 0 ? game.appid : null,
+    name,
+    store: typeof game.source === 'string' ? game.source : null,
+  };
 }
 
 export default function GameDetailPage() {
@@ -2211,6 +2227,14 @@ export default function GameDetailPage() {
     ];
     setAutoTranslateSteps([...workflowSteps]);
 
+    // ── Telemetria di compatibilità (opt-in, fail-open) ──
+    // Un run_id per l'intero fast path; lo stage avanza con il flusso e viene
+    // riportato solo se l'utente ha attivato l'opzione nelle impostazioni.
+    const compatRunId = newCompatRunId();
+    const compatGame = compatRefFor(game);
+    let compatStage: 'scan' | 'detect' | 'extract' | 'translate' | 'patch' = 'scan';
+    const compatLang = targetLang || language || 'it';
+
     const updateStep = (idx: number, status: 'running' | 'done' | 'error', detail?: string) => {
       setAutoTranslateStep(idx);
       setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx ? { ...s, status: 'done' } : s));
@@ -2239,6 +2263,7 @@ export default function GameDetailPage() {
       });
       
       updateStep(0, 'done', `Analisi completata: ${predictionResult?.engine || 'Engine rilevato'}`);
+      compatStage = 'extract';
       await new Promise(r => setTimeout(r, 800));
 
       // ── STEP 2: Tool Selection ──
@@ -2281,6 +2306,7 @@ export default function GameDetailPage() {
 
       // ── STEP 7: Complete Execution with real-time progress ──
       updateStep(6, 'running', 'Esecuzione traduzione completa...');
+      compatStage = 'translate';
       
       // Listen for real-time progress events from backend
       try {
@@ -2333,6 +2359,13 @@ export default function GameDetailPage() {
       // Messaggio onesto: nessun deliverable e nessuna stringa estraibile = motore non
       // supportato (file-based) o niente da tradurre. Niente falso "successo".
       if (deliverables.length === 0 && totalStr === 0) {
+        void reportCompatStep({
+          runId: compatRunId, game: compatGame,
+          engine: predictionResult?.engine || game.engine,
+          step: workflowFailed ? 'patch' : 'extract', result: 'failure',
+          targetLang: compatLang,
+          errorCategory: workflowFailed ? 'patch_write' : 'no_strings',
+        });
         updateStep(7, 'error', 'Nessuna stringa estraibile da questo gioco');
         setAutoTranslateError(
           `Il motore "${predictionResult?.engine || game.engine || 'sconosciuto'}" non è ancora supportato per la traduzione automatica sui file, oppure non sono state trovate stringhe estraibili. Opzioni: prova l'OCR overlay (per giochi che mostrano testo a runtime) o la traduzione manuale dal patcher dedicato.`
@@ -2345,6 +2378,30 @@ export default function GameDetailPage() {
         updateStep(7, 'done', `✅ ${deliverables.length} deliverables creati, 0 errori`);
       } else {
         updateStep(7, 'done', `⚠️ ${deliverables.length} deliverables creati, ${errors.length} errori`);
+      }
+
+      // Telemetria: esito finale della run (patch riuscita/parziale/fallita).
+      if (workflowFailed) {
+        void reportCompatStep({
+          runId: compatRunId, game: compatGame,
+          engine: predictionResult?.engine || game.engine,
+          step: 'patch', result: 'failure',
+          stringsTotal: totalStr,
+          targetLang: compatLang, errorCategory: 'patch_write',
+        });
+      } else {
+        void reportCompatStep({
+          runId: compatRunId, game: compatGame,
+          engine: predictionResult?.engine || game.engine,
+          step: 'patch', result: success >= 0.8 ? 'success' : 'partial',
+          stringsTotal: totalStr,
+          stringsTranslated: executionResult?.translatedStrings || 0,
+          targetLang: compatLang,
+        });
+        setPendingBootCheck({
+          runId: compatRunId, gameKey: compatGame.key, gameName: compatGame.name,
+          targetLang: compatLang, engine: predictionResult?.engine || game.engine,
+        });
       }
 
       // Save result for completion wizard
@@ -2361,6 +2418,11 @@ export default function GameDetailPage() {
 
     } catch (error: unknown) {
       clientLogger.error('[AutoTranslate] Workflow execution failed:', String(error));
+      void reportCompatStep({
+        runId: compatRunId, game: compatGame, engine: game.engine,
+        step: compatStage, result: 'failure',
+        targetLang: compatLang, errorCategory: classifyCompatError(error),
+      });
       setAutoTranslateError(String(error) || 'Errore durante l\'esecuzione del workflow');
       toast.error(t('common.erroreDuranteLaTraduzioneAutomatica'));
       // Cleanup workflow listener on error too
@@ -3059,6 +3121,9 @@ export default function GameDetailPage() {
               onUpgradeUEWithAI={upgradeUEWithAI}
             />
           )}
+
+          {/* ═══ COMPATIBILITÀ COMMUNITY + CONFERMA BOOT (telemetria opt-in) ═══ */}
+          <CompatCard game={compatRefFor(game)} targetLang={targetLang || language} />
 
           {/* ═══ DETTAGLI & STRUMENTI ═══ */}
           <GameToolsPanel

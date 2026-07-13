@@ -7,3 +7,4 @@ export { GameToolsPanel } from './game-tools-panel';
 export { UnrealLocalizationPanel } from './unreal-localization-panel';
 export { UnityAssetsPanel } from './unity-assets-panel';
 
+export { CompatCard } from './compat-card';

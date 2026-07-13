@@ -7117,5 +7117,21 @@
     "vectors": "vectors",
     "emptyTm": "No translations in memory for this pair.",
     "unavailable": "Enable semantic TM and install an embedding model to pre-index."
+  },
+  "compat": {
+    "settingTitle": "Compatibility telemetry",
+    "settingDesc": "Automatically sends the anonymous outcome of each translation (game, engine, step reached, success or failure) to build the public community compatibility database.",
+    "settingLabel": "Contribute to the compatibility database",
+    "settingPrivacy": "No file paths, no raw error messages, no personal data. Your profile is included only if you are signed in to the community.",
+    "cardTitle": "Community compatibility",
+    "worksPct": "Works in {pct}% of runs",
+    "runs": "{n} runs reported",
+    "bootConfirmed": "{n} in-game confirmations",
+    "yourLang": "In your language ({lang}): {ok}/{runs} successful runs",
+    "bootQuestion": "Did you launch the game after translating: does it start and show the translated text?",
+    "bootYes": "Yes, it works",
+    "bootNo": "No, issues",
+    "bootSkip": "Haven't tried yet",
+    "bootThanks": "Thank you! Your report helps the whole community."
   }
 }
