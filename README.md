@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://www.gamestringer.ai"><img src="https://img.shields.io/badge/🌐_Website-gamestringer.ai-indigo" alt="Website" /></a>
+  <a href="https://discord.gg/SjnD3Z7Uf8"><img src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
   <img src="https://img.shields.io/badge/version-1.13.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
@@ -21,6 +22,7 @@
 
 <p align="center">
   <a href="https://www.gamestringer.ai">Website</a> ·
+  <a href="https://discord.gg/SjnD3Z7Uf8"><strong>💬 Discord</strong></a> ·
   <a href="#help-wanted"><strong>🙏 Help wanted</strong></a> ·
   <a href="#-what-is-gamestringer">What is it</a> ·
   <a href="#-download">Download</a> ·
@@ -41,7 +43,7 @@
 
 > ### 💜 A note from the developer
 >
-> GameStringer is built by **one person — me — and I have Parkinson's**, so updates sometimes land slower than I'd like. **Thank you for your patience.** I'm **not doing this for money**: I just want to change the way game translation works and put a genuinely useful tool in players' hands. I'll be **opening a Discord channel soon** so we can talk, swap ideas, and make GameStringer better — together. If that sounds good, watch this space. 🙏
+> GameStringer is built by **one person — me — and I have Parkinson's**, so updates sometimes land slower than I'd like. **Thank you for your patience.** I'm **not doing this for money**: I just want to change the way game translation works and put a genuinely useful tool in players' hands. **The Discord is now open** 🎉 — [come join us](https://discord.gg/SjnD3Z7Uf8) so we can talk, swap ideas, and make GameStringer better, together. 🙏
 >
 > — *Davide ([@rouges78](https://github.com/rouges78))*
 
@@ -120,7 +122,7 @@ Get the latest release from **[GitHub Releases](https://github.com/rouges78/Game
 | **Linux** | `GameStringer_1.12.0_amd64.deb` | Debian / Ubuntu |
 | **Linux** | `GameStringer-1.12.0-1.x86_64.rpm` | Fedora / RHEL |
 
-**Requirements:** Windows 10+, macOS 10.15+, or Linux (Ubuntu 22.04+, Fedora 38+). 4 GB RAM (8 GB+ for local AI), 500 MB disk. Releases are **code-signed** and **auto-updated** via Tauri Updater.
+**Requirements:** Windows 10+, macOS 10.15+, or Linux (Ubuntu 22.04+, Fedora 38+). 4 GB RAM (8 GB+ for local AI), 500 MB disk. Updates are **cryptographically signed** and delivered via Tauri Updater (the app verifies each update against a bundled public key).
 
 > 🛡️ **Antivirus or SmartScreen warning?** That's a known **false positive** — runtime translation uses DLL injection (BepInEx / gs-hook), a technique heuristic scanners are suspicious of, and every new release starts with zero SmartScreen reputation. **[Read docs/ANTIVIRUS.md](docs/ANTIVIRUS.md)** for what triggers it, how to verify your download, and how to report the false positive.
 
