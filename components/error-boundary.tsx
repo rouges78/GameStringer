@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
+import { reportCrash } from '@/lib/crash-reporter';
 
 // Error Fallback Component with translations
 function ErrorFallback({ 
@@ -88,7 +89,8 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
     this.props.onError?.(error, errorInfo);
-    
+    void reportCrash({ error, area: 'react-widget' });
+
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       clientLogger.error('ErrorBoundary caught:', error, errorInfo as unknown as Record<string, unknown>);
@@ -207,6 +209,7 @@ export class WidgetErrorBoundary extends Component<WidgetProps, WidgetState> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     clientLogger.error(`[WidgetErrorBoundary:${this.props.name}]`, error, errorInfo as unknown as Record<string, unknown>);
+    void reportCrash({ error, area: 'react-widget' });
 
     const maxRetries = this.props.maxRetries ?? 3;
     if (this.state.retryCount < maxRetries) {
@@ -288,6 +291,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppStat
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     clientLogger.error('[AppErrorBoundary] Fatal error:', error, errorInfo as unknown as Record<string, unknown>);
+    void reportCrash({ error, area: 'react-app' });
   }
 
   handleReload = () => {
