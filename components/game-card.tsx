@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import GameImage from '@/components/game-image';
 import { Cog, Timer } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { CompatBadge } from '@/components/compat-badge';
+import { compatGameKey } from '@/lib/compat-telemetry';
 
 interface DisplayGame {
   id: string;
@@ -235,16 +237,20 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
             )}
           </div>
           
-          {game.engine && game.engine !== 'Unknown' && (
-            <Badge 
-              variant="secondary" 
-              className="text-2xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-sm px-1.5 py-0"
-              title={`Motore: ${game.engine}`}
-            >
-              <Cog className="h-2.5 w-2.5 mr-0.5" />
-              {game.engine}
-            </Badge>
-          )}
+          <div className="flex items-center gap-1">
+            {/* Compatibilità community ("ProtonDB delle traduzioni") */}
+            <CompatBadge gameKey={compatGameKey(game.id, game.title)} />
+            {game.engine && game.engine !== 'Unknown' && (
+              <Badge
+                variant="secondary"
+                className="text-2xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-sm px-1.5 py-0"
+                title={`Motore: ${game.engine}`}
+              >
+                <Cog className="h-2.5 w-2.5 mr-0.5" />
+                {game.engine}
+              </Badge>
+            )}
+          </div>
         </div>
         
         {/* Riga 2: HowLongToBeat */}

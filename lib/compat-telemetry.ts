@@ -22,6 +22,7 @@
 
 import { getSupabase, getCurrentUser } from '@/lib/social/community-hub-backend';
 import { clientLogger } from './client-logger';
+import { tStatic } from '@/lib/i18n';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -91,6 +92,74 @@ export function isCompatTelemetryEnabled(): boolean {
   } catch {
     return false;
   }
+}
+
+/** Attiva l'opt-in da codice (prompt one-time) e persiste su disco. */
+export function enableCompatTelemetry(): void {
+  try {
+    const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    settings.privacy = { ...(settings.privacy || {}), compatTelemetry: true };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch { /* ignore */ }
+  void import('@/lib/settings-persistence')
+    .then(m => m.persistSettingsToDisk())
+    .catch(() => {});
+}
+
+// ── Prompt one-time di opt-in ──────────────────────────────
+
+const OPTIN_PROMPT_KEY = 'gs-compat-optin-prompted';
+
+export interface CompatOptInContext {
+  runId: string;
+  game: CompatGameRef;
+  engine?: string | null;
+  result: CompatResult;
+  stringsTotal?: number | null;
+  stringsTranslated?: number | null;
+  sourceLang?: string | null;
+  targetLang?: string | null;
+}
+
+/**
+ * Dopo la PRIMA traduzione riuscita con telemetria OFF, propone una sola volta
+ * l'opt-in via toast. Se l'utente accetta: attiva l'opzione, invia
+ * retroattivamente il report della run appena conclusa e arma la conferma boot
+ * (così il primo contributo non va perso). Se rifiuta o ignora, non viene mai
+ * più riproposto (il toggle resta nei settings, tab Community).
+ */
+export function maybeOfferCompatOptIn(ctx: CompatOptInContext): void {
+  try {
+    if (isCompatTelemetryEnabled()) return;
+    if (localStorage.getItem(OPTIN_PROMPT_KEY)) return;
+    localStorage.setItem(OPTIN_PROMPT_KEY, String(Date.now())); // one-time, comunque vada
+    void import('sonner').then(({ toast }) => {
+      toast(tStatic('compat.optinTitle'), {
+        description: tStatic('compat.optinDesc'),
+        duration: 20_000,
+        action: {
+          label: tStatic('compat.optinAccept'),
+          onClick: () => {
+            enableCompatTelemetry();
+            // Report retroattivo della run appena conclusa + conferma boot
+            void reportCompatStep({ ...ctx, step: 'patch' });
+            setPendingBootCheck({
+              runId: ctx.runId,
+              gameKey: ctx.game.key,
+              gameName: ctx.game.name,
+              targetLang: ctx.targetLang,
+              engine: ctx.engine,
+            });
+            toast.success(tStatic('compat.optinThanks'));
+          },
+        },
+        cancel: {
+          label: tStatic('compat.optinDecline'),
+          onClick: () => { /* mai più riproposto */ },
+        },
+      });
+    }).catch(() => {});
+  } catch { /* fail-open */ }
 }
 
 // ── Game key & environment helpers ─────────────────────────
@@ -351,6 +420,29 @@ export async function resolvePendingBootCheck(
 const summaryCache = new Map<string, { data: CompatSummary | null; ts: number }>();
 const SUMMARY_TTL_MS = 5 * 60_000;
 
+function buildSummary(gameKey: string, rows: Record<string, unknown>[]): CompatSummary | null {
+  if (!rows.length) return null;
+  const byLang: CompatLangSummary[] = rows.map((r) => ({
+    targetLang: (r.target_lang as string) ?? null,
+    runs: Number(r.runs) || 0,
+    okRuns: Number(r.ok_runs) || 0,
+    bootOkRuns: Number(r.boot_ok_runs) || 0,
+    bootFailRuns: Number(r.boot_fail_runs) || 0,
+    knownTesters: Number(r.known_testers) || 0,
+    lastReportAt: (r.last_report_at as string) ?? null,
+    lastAppVersion: (r.last_app_version as string) ?? null,
+  }));
+  const sum = (f: (l: CompatLangSummary) => number) => byLang.reduce((a, l) => a + f(l), 0);
+  return {
+    gameKey,
+    runs: sum(l => l.runs),
+    okRuns: sum(l => l.okRuns),
+    bootOkRuns: sum(l => l.bootOkRuns),
+    bootFailRuns: sum(l => l.bootFailRuns),
+    byLang,
+  };
+}
+
 export async function fetchCompatSummary(gameKey: string): Promise<CompatSummary | null> {
   const cached = summaryCache.get(gameKey);
   if (cached && Date.now() - cached.ts < SUMMARY_TTL_MS) return cached.data;
@@ -361,33 +453,65 @@ export async function fetchCompatSummary(gameKey: string): Promise<CompatSummary
       .select('*')
       .eq('game_key', gameKey);
     if (error) throw error;
-    if (!data || data.length === 0) {
-      summaryCache.set(gameKey, { data: null, ts: Date.now() });
-      return null;
-    }
-    const byLang: CompatLangSummary[] = data.map((r: Record<string, unknown>) => ({
-      targetLang: (r.target_lang as string) ?? null,
-      runs: Number(r.runs) || 0,
-      okRuns: Number(r.ok_runs) || 0,
-      bootOkRuns: Number(r.boot_ok_runs) || 0,
-      bootFailRuns: Number(r.boot_fail_runs) || 0,
-      knownTesters: Number(r.known_testers) || 0,
-      lastReportAt: (r.last_report_at as string) ?? null,
-      lastAppVersion: (r.last_app_version as string) ?? null,
-    }));
-    const sum = (f: (l: CompatLangSummary) => number) => byLang.reduce((a, l) => a + f(l), 0);
-    const result: CompatSummary = {
-      gameKey,
-      runs: sum(l => l.runs),
-      okRuns: sum(l => l.okRuns),
-      bootOkRuns: sum(l => l.bootOkRuns),
-      bootFailRuns: sum(l => l.bootFailRuns),
-      byLang,
-    };
+    const result = buildSummary(gameKey, (data as Record<string, unknown>[]) || []);
     summaryCache.set(gameKey, { data: result, ts: Date.now() });
     return result;
   } catch (e) {
     clientLogger.debug('[compat] summary fetch failed', { gameKey, error: e });
     return null;
+  }
+}
+
+// ── Fetch batched (badge nelle card della Library) ─────────
+// Le card visibili chiedono ognuna la propria summary: qui si accorpano le
+// richieste in una sola query `.in()` ogni 250ms (chunk da 100 chiavi), così
+// una libreria da 800 giochi non genera 800 round-trip.
+
+const pendingBatch = new Map<string, Array<(s: CompatSummary | null) => void>>();
+let batchTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function fetchCompatSummaryBatched(gameKey: string): Promise<CompatSummary | null> {
+  const cached = summaryCache.get(gameKey);
+  if (cached && Date.now() - cached.ts < SUMMARY_TTL_MS) return Promise.resolve(cached.data);
+  return new Promise((resolve) => {
+    const arr = pendingBatch.get(gameKey) || [];
+    arr.push(resolve);
+    pendingBatch.set(gameKey, arr);
+    if (!batchTimer) batchTimer = setTimeout(() => { void flushSummaryBatch(); }, 250);
+  });
+}
+
+async function flushSummaryBatch(): Promise<void> {
+  batchTimer = null;
+  const batch = new Map(pendingBatch);
+  pendingBatch.clear();
+  const keys = [...batch.keys()];
+  try {
+    const supabase = await getSupabase();
+    for (let i = 0; i < keys.length; i += 100) {
+      const chunk = keys.slice(i, i + 100);
+      const { data, error } = await supabase
+        .from('compat_game_summary')
+        .select('*')
+        .in('game_key', chunk);
+      if (error) throw error;
+      const rowsByKey = new Map<string, Record<string, unknown>[]>();
+      for (const r of (data as Record<string, unknown>[]) || []) {
+        const k = String(r.game_key);
+        const arr = rowsByKey.get(k) || [];
+        arr.push(r);
+        rowsByKey.set(k, arr);
+      }
+      for (const k of chunk) {
+        summaryCache.set(k, { data: buildSummary(k, rowsByKey.get(k) || []), ts: Date.now() });
+      }
+    }
+  } catch (e) {
+    clientLogger.debug('[compat] batched summary fetch failed', { count: keys.length, error: e });
+  }
+  for (const [k, resolvers] of batch) {
+    const c = summaryCache.get(k);
+    const val = c && Date.now() - c.ts < SUMMARY_TTL_MS ? c.data : null;
+    for (const r of resolvers) r(val);
   }
 }

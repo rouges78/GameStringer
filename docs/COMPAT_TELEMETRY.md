@@ -17,13 +17,35 @@ game detail page <── fetchCompatSummary() <── compat_game_summary (aggre
 
 | Piece | Where |
 |---|---|
-| Sender + queue + opt-in gate | `lib/compat-telemetry.ts` |
+| Sender + queue + opt-in gate + one-time opt-in prompt | `lib/compat-telemetry.ts` |
 | Hooks (hero engines: Ren'Py, Hendrix, RPG Maker, …) | `lib/hero-job-tracking.ts` (`done`/`fail`/`setStage`) |
 | Hooks (universal fast path) | `components/game-detail-client.tsx` (`startAutoTranslate`) |
 | Boot confirmation banner + community badge | `components/game-detail/compat-card.tsx` |
+| Library card badge (batched fetch, 1 query per screen) | `components/compat-badge.tsx` + `fetchCompatSummaryBatched` |
 | Opt-in toggle (Community tab) | `app/settings/page.tsx` → `settings.privacy.compatTelemetry` |
 | Schema + RLS + view | `supabase/migrations/20260713_compat_reports.sql` |
-| i18n | namespace `compat` (14 keys, 12 locales) |
+| Server-side anti-abuse (trigger) | `supabase/migrations/20260713_compat_reports_abuse_guard.sql` |
+| Public web page (search + filters, 12 languages) | `docs/sito/compatibilita.html` (nav link in `index.html` / `site-v2-i18n.js`) |
+| i18n | namespace `compat` (19 keys, 12 locales) |
+
+## Opt-in prompt (one-time)
+
+`maybeOfferCompatOptIn()` fires after the first successful run when telemetry
+is OFF and the prompt was never shown (`gs-compat-optin-prompted` flag). If the
+user accepts, the setting is enabled + persisted to disk, the just-finished
+run is reported retroactively and the boot confirmation is armed — the first
+contribution isn't lost. Declining never re-prompts (the toggle stays in
+Settings → Community).
+
+## Server-side anti-abuse
+
+A `BEFORE INSERT` trigger (`compat_reports_guard`) drops abusive rows
+**silently** (so client queues never get stuck): duplicate
+`(run_id, step, result)` triples; more than 60 rows/hour per client IP; more
+than 10 distinct runs per game per 24h per IP (later steps of an existing run,
+like the boot confirmation, always pass). The IP comes from PostgREST's
+`x-forwarded-for` header and is stored only as an md5 hash in `ip_hash`, which
+is never exposed (no SELECT policy; the view doesn't select it).
 
 ## The model
 
@@ -54,7 +76,12 @@ Telemetry must never break a run: every call is `void reportCompatStep(...)`,
 errors are swallowed and rows are parked in a localStorage queue
 (`gs-compat-queue`, cap 50) retried on the next report.
 
-## Next steps (see ROADMAP.md)
+## Public web page
 
-Public web page on gamestringer.ai, one-time opt-in prompt after the first
-successful translation, library card badges, server-side anti-abuse.
+`docs/sito/compatibilita.html` — self-contained static page (same style and
+`gs_site_lang` language mechanism as the rest of the site) that reads the
+`compat_game_summary` view via PostgREST with the public anon key. Search by
+game, filter by target language / engine, sort by tested/success/recent;
+per-language chips on each card. Deployed automatically with the site
+(deploy-site.yml) on push. All feature milestones are complete — future ideas
+go through ROADMAP.md.
