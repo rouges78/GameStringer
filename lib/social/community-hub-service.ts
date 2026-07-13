@@ -66,6 +66,8 @@ export interface TranslationPack {
   compatibility: string[];
   patchFormat?: 'ips' | 'bps' | 'xdelta' | 'none';
   patchInstructions?: string;
+  /** SHA-256 aggregato dei file pubblicati: presente = pack con integrità verificabile. */
+  contentSha256?: string;
 }
 
 export interface CommunityAuthor {
@@ -539,7 +541,7 @@ class CommunityHubService {
       // Scarica i file reali e ricostruisci un .gspack nella libreria locale.
       const files = await backend.downloadPackFiles(packId);
       const { createGspack, installPack } = await import('@/lib/gspack-manager');
-      const { data, filename, manifest } = createGspack({
+      const { data, filename, manifest } = await createGspack({
         gameName: pack.gameName,
         gameAppId: pack.gameAppId,
         platform: pack.platform || 'pc',

@@ -45,7 +45,10 @@ export interface GspackManifest {
   };
   createdAt: string;
   exportedWith: string;
+  /** Legacy: hash non crittografico a 32 bit (solo warning, retrocompatibilità). */
   checksum: string;
+  /** SHA-256 del contenuto (file+glossario). Se presente, un mismatch BLOCCA l'import. */
+  sha256?: string;
 }
 
 export interface GspackFile {
@@ -169,7 +172,7 @@ function countStrings(content: string, format: string): { total: number; transla
  * Crea un pacchetto .gspack da opzioni di export
  * Ritorna una stringa JSON (il contenuto del file .gspack)
  */
-export function createGspack(options: ExportOptions): { data: string; filename: string; manifest: GspackManifest } {
+export async function createGspack(options: ExportOptions): Promise<{ data: string; filename: string; manifest: GspackManifest }> {
   const packId = generateId();
 
   // Processa file
@@ -218,9 +221,14 @@ export function createGspack(options: ExportOptions): { data: string; filename: 
 
   const packData: GspackData = { manifest, files, glossary, notes };
 
-  // Calcola checksum sul contenuto
+  // Calcola checksum sul contenuto: SHA-256 (integrità reale, blocca l'import
+  // se manomesso) + legacy simpleHash per i lettori vecchi.
   const contentForHash = JSON.stringify({ files: packData.files, glossary: packData.glossary });
   manifest.checksum = simpleHash(contentForHash);
+  try {
+    const { sha256Hex } = await import('@/lib/pack-integrity');
+    manifest.sha256 = await sha256Hex(contentForHash);
+  } catch { /* WebCrypto non disponibile: resta il solo checksum legacy */ }
   packData.manifest = manifest;
 
   const jsonStr = JSON.stringify(packData);
@@ -259,7 +267,7 @@ export interface ImportResult {
  * Importa un file .gspack
  * @param rawContent Contenuto del file .gspack (base64 o JSON)
  */
-export function importGspack(rawContent: string): ImportResult {
+export async function importGspack(rawContent: string): Promise<ImportResult> {
   const warnings: string[] = [];
 
   try {
@@ -286,17 +294,51 @@ export function importGspack(rawContent: string): ImportResult {
       warnings.push('Il pack non contiene file — potrebbe essere incompleto');
     }
 
-    // Verifica checksum
+    // Verifica integrità. SHA-256 presente → un mismatch BLOCCA l'import
+    // (contenuto manomesso). Solo checksum legacy → warning come prima.
     const contentForHash = JSON.stringify({ files: data.files, glossary: data.glossary || [] });
-    const computedChecksum = simpleHash(contentForHash);
-    if (data.manifest.checksum && data.manifest.checksum !== computedChecksum) {
-      warnings.push('Checksum non corrispondente — il file potrebbe essere stato modificato');
+    if (data.manifest.sha256) {
+      try {
+        const { sha256Hex } = await import('@/lib/pack-integrity');
+        const computedSha = await sha256Hex(contentForHash);
+        if (computedSha !== data.manifest.sha256) {
+          return {
+            success: false,
+            error: 'Verifica integrità fallita: il contenuto del pack non corrisponde alla firma SHA-256 del manifest. Il file è stato modificato — import annullato.',
+            warnings,
+          };
+        }
+      } catch {
+        warnings.push('Impossibile verificare la firma SHA-256 (WebCrypto non disponibile)');
+      }
+    } else {
+      const computedChecksum = simpleHash(contentForHash);
+      if (data.manifest.checksum && data.manifest.checksum !== computedChecksum) {
+        warnings.push('Checksum non corrispondente — il file potrebbe essere stato modificato');
+      }
     }
 
-    // Validazione file
+    // Validazione file + sanitizzazione path: un pack non deve mai indicare
+    // percorsi assoluti o traversal (../) che scriverebbero fuori dalla
+    // cartella del gioco quando i file vengono applicati.
+    const { isSafePackPath, sanitizePackFileName } = await import('@/lib/pack-integrity');
     for (const file of data.files) {
       if (!file.content || !file.path) {
         warnings.push(`File '${file.path || 'sconosciuto'}' è incompleto`);
+        continue;
+      }
+      if (!isSafePackPath(file.path)) {
+        const safe = sanitizePackFileName(file.path);
+        if (!safe) {
+          return { success: false, error: `Il pack contiene un percorso file non sicuro: "${file.path}". Import annullato.`, warnings };
+        }
+        warnings.push(`Percorso non sicuro "${file.path}" ridotto a "${safe}"`);
+        file.path = safe;
+      }
+      if (file.originalPath && !isSafePackPath(file.originalPath)) {
+        // originalPath è informativo: se ostile, lo si azzera senza bloccare.
+        warnings.push(`Percorso originale non sicuro rimosso per "${file.path}"`);
+        file.originalPath = file.path;
       }
     }
 

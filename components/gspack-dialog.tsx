@@ -102,7 +102,7 @@ export function GspackExportDialog({
         files,
       };
 
-      const { data, filename, manifest } = createGspack(options);
+      const { data, filename, manifest } = await createGspack(options);
       const saved = await saveGspackToFile(data, filename);
 
       if (saved) {
@@ -238,7 +238,7 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
     try {
       const content = await loadGspackFromFile();
       if (content) {
-        const importResult = importGspack(content);
+        const importResult = await importGspack(content);
         setResult(importResult);
         if (!importResult.success) {
           toast.error(importResult.error || t('gspack.invalidPack'));

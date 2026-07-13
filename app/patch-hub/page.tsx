@@ -77,8 +77,15 @@ function PackCard({ pack, onOpen }: { pack: TranslationPack; onOpen: (id: string
         <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
           <Package className="h-4.5 w-4.5 text-amber-400" />
         </div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_CLS[pack.status]}`}>
-          {t(`patchHubPage.${STATUS_KEY[pack.status]}`)}
+        <span className="flex items-center gap-1.5">
+          {pack.contentSha256 && (
+            <span title={t('patchHubPage.integrityDesc')} className="inline-flex items-center text-emerald-400">
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </span>
+          )}
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_CLS[pack.status]}`}>
+            {t(`patchHubPage.${STATUS_KEY[pack.status]}`)}
+          </span>
         </span>
       </div>
       <div className="min-w-0">
@@ -188,6 +195,14 @@ function PackDetail({ packId, onBack }: { packId: string; onBack: () => void }) 
             {pack.author.verifiedTranslator && (
               <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300">
                 <ShieldCheck className="h-3 w-3" /> {t('patchHubPage.verifiedTranslator')}
+              </span>
+            )}
+            {pack.contentSha256 && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] text-emerald-400"
+                title={t('patchHubPage.integrityDesc')}
+              >
+                <ShieldCheck className="h-3 w-3" /> {t('patchHubPage.integrityBadge')}
               </span>
             )}
           </div>

@@ -319,28 +319,50 @@ export async function publishPack(pack: Partial<TranslationPack>, files: File[])
 
   if (packError) throw new Error(`Errore pubblicazione: ${packError.message}`);
 
-  // 2. Upload files to Supabase Storage
+  // 2. Upload files to Supabase Storage (con SHA-256 per l'integrità)
+  const { sha256Hex, aggregatePackSha256, sanitizePackFileName } = await import('@/lib/pack-integrity');
   const uploadedFiles: PackFile[] = [];
+  const fileHashes: Array<{ name: string; sha256: string }> = [];
   for (const file of files) {
-    const storagePath = `packs/${packData.id}/${file.name}`;
+    // Mai fidarsi del nome file: solo basename, niente separatori/traversal.
+    const safeName = sanitizePackFileName(file.name);
+    if (!safeName) {
+      clientLogger.warn(`Nome file non valido, saltato:`, file.name);
+      continue;
+    }
+    const fileSha256 = await sha256Hex(await file.arrayBuffer());
+    const storagePath = `packs/${packData.id}/${safeName}`;
     const { error: uploadError } = await supabase.storage.from('translation-packs').upload(storagePath, file);
     if (uploadError) {
-      clientLogger.warn(`Upload fallito per ${file.name}:`, String(uploadError));
+      clientLogger.warn(`Upload fallito per ${safeName}:`, String(uploadError));
       continue;
     }
 
     // 3. Insert file record
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'json';
+    const ext = safeName.split('.').pop()?.toLowerCase() || 'json';
     const { data: fileData } = await supabase.from('pack_files').insert({
       pack_id: packData.id,
-      name: file.name,
+      name: safeName,
       path: storagePath,
       type: ext,
       size: file.size,
       string_count: 0,
+      sha256: fileSha256,
     }).select().single();
 
-    if (fileData) uploadedFiles.push(mapFileRow(fileData));
+    if (fileData) {
+      uploadedFiles.push(mapFileRow(fileData));
+      fileHashes.push({ name: safeName, sha256: fileSha256 });
+    }
+  }
+
+  // 3b. Hash aggregato del pack (badge integrità + verifica al download)
+  if (fileHashes.length > 0) {
+    const contentSha256 = await aggregatePackSha256(fileHashes);
+    await supabase.from('translation_packs')
+      .update({ content_sha256: contentSha256 })
+      .eq('id', packData.id);
+    packData.content_sha256 = contentSha256;
   }
 
   // 4. Update user contribution count
@@ -402,6 +424,7 @@ export interface DownloadedPackFile {
   name: string;
   path: string;
   content: string;
+  sha256?: string | null;
 }
 
 /**
@@ -409,9 +432,15 @@ export interface DownloadedPackFile {
  * A differenza di downloadPack() (solo il primo file come Blob), serve a
  * ricostruire l'intero pacchetto per salvarlo localmente (.gspack) e applicarlo.
  * Incrementa il contatore download una sola volta per l'intero pack.
+ *
+ * INTEGRITÀ: se il pack è stato pubblicato con gli hash (pack_files.sha256),
+ * ogni file scaricato viene riverificato con SHA-256 e un mismatch BLOCCA
+ * l'intero download (niente install di contenuto manomesso). I pack storici
+ * senza hash passano come 'legacy'.
  */
 export async function downloadPackFiles(packId: string): Promise<DownloadedPackFile[]> {
   const supabase = await getSupabase();
+  const { sha256Hex, sanitizePackFileName } = await import('@/lib/pack-integrity');
 
   const { data: files, error: filesErr } = await supabase
     .from('pack_files')
@@ -422,12 +451,32 @@ export async function downloadPackFiles(packId: string): Promise<DownloadedPackF
 
   const out: DownloadedPackFile[] = [];
   for (const f of files) {
-    const { data, error } = await supabase.storage.from('translation-packs').download(f.path);
-    if (error || !data) {
-      clientLogger.warn(`Download fallito per ${f.name}: ${error?.message || 'no data'}`);
+    const safeName = sanitizePackFileName(f.name);
+    if (!safeName) {
+      clientLogger.warn(`Nome file non valido nel pack, saltato: ${f.name}`);
       continue;
     }
-    out.push({ name: f.name, path: f.path, content: await data.text() });
+    const { data, error } = await supabase.storage.from('translation-packs').download(f.path);
+    if (error || !data) {
+      clientLogger.warn(`Download fallito per ${safeName}: ${error?.message || 'no data'}`);
+      continue;
+    }
+    const buffer = await data.arrayBuffer();
+    if (f.sha256) {
+      const actual = await sha256Hex(buffer);
+      if (actual !== f.sha256) {
+        // Contenuto diverso da quello pubblicato: NON installare nulla.
+        throw new Error(
+          `Verifica integrità fallita per "${safeName}": il contenuto non corrisponde a quello pubblicato. Download annullato.`
+        );
+      }
+    }
+    out.push({
+      name: safeName,
+      path: f.path,
+      content: new TextDecoder('utf-8').decode(buffer),
+      sha256: f.sha256 ?? null,
+    });
   }
   if (out.length === 0) throw new Error('Download dei file del pack fallito');
 
@@ -1032,6 +1081,7 @@ function mapPackRow(row: Record<string, any>): TranslationPack {
     compatibility: row.compatibility || [],
     patchFormat: row.patch_format,
     patchInstructions: row.patch_instructions,
+    contentSha256: row.content_sha256 || undefined,
   };
 }
 

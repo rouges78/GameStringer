@@ -8,9 +8,29 @@ pub struct GspackInfo {
     pub path: String,
 }
 
+/// Riduce un filename al solo nome base sicuro: niente separatori di percorso,
+/// niente traversal (`..`), niente componenti di drive. Difesa in profondità:
+/// il filename arriva dal JS (e in origine da contenuti di rete), quindi non
+/// deve mai poter uscire dalla directory dei pack.
+fn sanitize_pack_filename(filename: &str) -> Result<String, String> {
+    let base = filename
+        .replace('\\', "/")
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .next_back()
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    if base.is_empty() || base == "." || base == ".." || base.contains(':') {
+        return Err(format!("Nome file non valido: {}", filename));
+    }
+    Ok(base)
+}
+
 /// Salva un file .gspack su disco
 #[tauri::command]
 pub async fn save_gspack(content: String, filename: String, directory: Option<String>) -> Result<GspackInfo, String> {
+    let filename = sanitize_pack_filename(&filename)?;
     let dir = if let Some(d) = directory {
         PathBuf::from(d)
     } else {
