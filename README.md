@@ -464,6 +464,7 @@ GameStringer supports **20+ engines** with varying levels of depth:
 - **[docs/ANTIVIRUS.md](docs/ANTIVIRUS.md)** — antivirus / SmartScreen false positives
 - **[PLUGIN_SYSTEM.md](docs/PLUGIN_SYSTEM.md)** — plugin architecture design
 - **[LICENSE](LICENSE)** — Source-Available License v1.1
+- **[docs/LEGAL.md](docs/LEGAL.md)** — legal position & acceptable-use policy
 
 ---
 
@@ -510,7 +511,7 @@ If GameStringer helped you play games in your language:
 - ❌ Commercial use requires written permission
 - ❌ Redistribution of modified versions requires written permission
 
-See [LICENSE](LICENSE) for details. Questions? Open a [Discussion](https://github.com/rouges78/GameStringer/discussions).
+See [LICENSE](LICENSE) for details, and **[docs/LEGAL.md](docs/LEGAL.md)** for the project's legal position & acceptable-use policy. Questions? Open a [Discussion](https://github.com/rouges78/GameStringer/discussions).
 
 ---
 
