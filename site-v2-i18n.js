@@ -1,6 +1,7 @@
 // GameStringer site i18n — 12 lingue (con greco)
 window.GS_I18N = {
   it: {
+    "foot.legal": "Note legali",
     "nav.new": "Novità",
     "v112.label": "// Novità v1.14.0",
     "v112.h2": "Traduzioni più intelligenti, che si correggono da sole",
@@ -228,6 +229,7 @@ window.GS_I18N = {
     "foot.tagline": "Abbatti le barriere linguistiche dei videogiochi. Analizza, traduci, gioca."
   },
   en: {
+    "foot.legal": "Legal",
     "nav.new": "News",
     "v112.label": "// What's new in v1.14.0",
     "v112.h2": "Smarter translations that check themselves",
@@ -455,6 +457,7 @@ window.GS_I18N = {
     "foot.tagline": "Break down the language barriers of video games. Analyze, translate, play."
   },
   es: {
+    "foot.legal": "Aviso legal",
     "nav.new": "Novedades",
     "v112.label": "// Novedades de v1.14.0",
     "v112.h2": "Traducciones más inteligentes que se corrigen solas",
@@ -682,6 +685,7 @@ window.GS_I18N = {
     "foot.tagline": "Derriba las barreras lingüísticas de los videojuegos. Analiza, traduce, juega."
   },
   fr: {
+    "foot.legal": "Mentions légales",
     "nav.new": "Nouveautés",
     "v112.label": "// Nouveautés de v1.14.0",
     "v112.h2": "Des traductions plus intelligentes qui se corrigent",
@@ -909,6 +913,7 @@ window.GS_I18N = {
     "foot.tagline": "Faites tomber les barrières linguistiques des jeux vidéo. Analysez, traduisez, jouez."
   },
   de: {
+    "foot.legal": "Rechtliches",
     "nav.new": "Neu",
     "v112.label": "// Neu in v1.14.0",
     "v112.h2": "Intelligentere Übersetzungen, die sich selbst prüfen",
@@ -1136,6 +1141,7 @@ window.GS_I18N = {
     "foot.tagline": "Reiße die Sprachbarrieren von Videospielen ein. Analysieren, übersetzen, spielen."
   },
   pt: {
+    "foot.legal": "Aviso legal",
     "nav.new": "Novidades",
     "v112.label": "// Novidades da v1.14.0",
     "v112.h2": "Traduções mais inteligentes que se corrigem sozinhas",
@@ -1363,6 +1369,7 @@ window.GS_I18N = {
     "foot.tagline": "Derrube as barreiras linguísticas dos videogames. Analise, traduza, jogue."
   },
   pl: {
+    "foot.legal": "Informacje prawne",
     "nav.new": "Nowości",
     "v112.label": "// Nowości w v1.14.0",
     "v112.h2": "Inteligentniejsze tłumaczenia, które same się sprawdzają",
@@ -1590,6 +1597,7 @@ window.GS_I18N = {
     "foot.tagline": "Przełam bariery językowe gier wideo. Analizuj, tłumacz, graj."
   },
   ru: {
+    "foot.legal": "Правовая информация",
     "nav.new": "Новое",
     "v112.label": "// Что нового в v1.14.0",
     "v112.h2": "Умные переводы, которые сами себя проверяют",
@@ -1817,6 +1825,7 @@ window.GS_I18N = {
     "foot.tagline": "Сломайте языковые барьеры видеоигр. Анализируйте, переводите, играйте."
   },
   ja: {
+    "foot.legal": "法的情報",
     "nav.new": "新機能",
     "v112.label": "// v1.14.0の新機能",
     "v112.h2": "自分で見直す、より賢い翻訳",
@@ -2044,6 +2053,7 @@ window.GS_I18N = {
     "foot.tagline": "ビデオゲームの言語の壁を打ち破ろう。解析し、翻訳し、プレイする。"
   },
   zh: {
+    "foot.legal": "法律声明",
     "nav.new": "新功能",
     "v112.label": "// v1.14.0 新功能",
     "v112.h2": "更聪明、会自我校对的翻译",
@@ -2271,6 +2281,7 @@ window.GS_I18N = {
     "foot.tagline": "打破电子游戏的语言壁垒。分析、翻译、畅玩。"
   },
   ko: {
+    "foot.legal": "법적 고지",
     "nav.new": "새 기능",
     "v112.label": "// v1.14.0의 새로운 기능",
     "v112.h2": "스스로 점검하는 더 똑똑한 번역",
@@ -2499,6 +2510,7 @@ window.GS_I18N = {
   },
 
   el: {
+    "foot.legal": "Νομικά",
     "nav.new": "Νέα",
     "v112.label": "// Τι νέο στην v1.14.0",
     "v112.h2": "Πιο έξυπνες μεταφράσεις που ελέγχουν τον εαυτό τους",
