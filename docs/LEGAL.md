@@ -1,5 +1,7 @@
 # GameStringer — Legal Position & Acceptable Use
 
+**🌐 Languages:** [English](LEGAL.md) · [Italiano](LEGAL_IT.md) · [Español](LEGAL_ES.md) · [Français](LEGAL_FR.md) · [Deutsch](LEGAL_DE.md) · [Português](LEGAL_PT.md) · [Polski](LEGAL_PL.md) · [Русский](LEGAL_RU.md) · [日本語](LEGAL_JA.md) · [中文](LEGAL_ZH.md) · [한국어](LEGAL_KO.md) · [Ελληνικά](LEGAL_EL.md)
+
 *Last updated: 14 July 2026 · Applies to GameStringer, the source-available desktop application.*
 
 > **This is not legal advice.** It is a good-faith statement of what GameStringer
