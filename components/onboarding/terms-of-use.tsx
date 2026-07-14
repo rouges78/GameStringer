@@ -150,6 +150,18 @@ export function TermsOfUse() {
             <p className="text-xs text-muted-foreground text-center italic pt-1">
               {t('disclaimer.summary')}
             </p>
+
+            {/* Full legal policy link */}
+            <p className="text-xs text-center pt-1">
+              <a
+                href="https://github.com/rouges78/GameStringer/blob/main/docs/LEGAL.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-400 hover:text-orange-300 underline underline-offset-2"
+              >
+                {t('disclaimer.fullPolicy')}
+              </a>
+            </p>
           </div>
         </ScrollArea>
 

@@ -4588,6 +4588,7 @@
     "ttsError": "Error de síntesis de voz."
   },
   "disclaimer": {
+    "fullPolicy": "Leer la política legal y de uso aceptable completa",
     "title": "Términos de Uso",
     "subtitle": "Lee antes de continuar",
     "mainDisclaimer": "Aviso Legal",
