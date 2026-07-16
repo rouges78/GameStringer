@@ -113,14 +113,14 @@ Get the latest release from **[GitHub Releases](https://github.com/rouges78/Game
 
 | Platform | File | Notes |
 |----------|------|-------|
-| **Windows** | `GameStringer_1.12.0_x64-setup.exe` | Installer (recommended) |
-| **Windows** | `GameStringer_1.12.0_x64-portable.zip` | No install needed |
-| **Windows** | `GameStringer_1.12.0_x64_en-US.msi` | MSI alternative |
-| **macOS** | `GameStringer_1.12.0_x64.dmg` | Intel Mac |
-| **macOS** | `GameStringer_1.12.0_aarch64.dmg` | Apple Silicon |
-| **Linux** | `GameStringer_1.12.0_amd64.AppImage` | Universal (recommended) |
-| **Linux** | `GameStringer_1.12.0_amd64.deb` | Debian / Ubuntu |
-| **Linux** | `GameStringer-1.12.0-1.x86_64.rpm` | Fedora / RHEL |
+| **Windows** | `GameStringer_1.14.0_x64-setup.exe` | Installer (recommended) |
+| **Windows** | `GameStringer_1.14.0_x64-portable.zip` | No install needed |
+| **Windows** | `GameStringer_1.14.0_x64_en-US.msi` | MSI alternative |
+| **macOS** | `GameStringer_1.14.0_x64.dmg` | Intel Mac |
+| **macOS** | `GameStringer_1.14.0_aarch64.dmg` | Apple Silicon |
+| **Linux** | `GameStringer_1.14.0_amd64.AppImage` | Universal (recommended) |
+| **Linux** | `GameStringer_1.14.0_amd64.deb` | Debian / Ubuntu |
+| **Linux** | `GameStringer-1.14.0-1.x86_64.rpm` | Fedora / RHEL |
 
 **Requirements:** Windows 10+, macOS 10.15+, or Linux (Ubuntu 22.04+, Fedora 38+). 4 GB RAM (8 GB+ for local AI), 500 MB disk. Updates are **cryptographically signed** and delivered via Tauri Updater (the app verifies each update against a bundled public key).
 
@@ -259,6 +259,24 @@ GameStringer supports **20+ engines** with varying levels of depth:
 ---
 
 ## ✨ Features
+
+### 🆕 New in v1.14.0 — community compatibility & bulletproof packs
+
+- **🧭 Compatibility telemetry (opt-in)** — the "ProtonDB of translations": report whether a translation worked and see **compatibility badges on game cards**, backed by community reports with abuse guards and a [public stats page](https://gamestringer.ai/compatibilita.html)
+- **🔤 Missing-glyph detection + automatic font fix** — GameStringer parses the game font's character map, detects when your language's glyphs are missing, and **auto-installs a matching Noto font** for file-based engines (Ren'Py, RPG Maker) — no more tofu squares instead of text
+- **🛡 Verifiable pack integrity** — community packs are verified with an **aggregated SHA-256**, path-traversal protection and automatic flagging of tampered packs
+- **💥 Opt-in crash reporting** — anonymous reports with recurring-crash signatures so crashes get fixed faster
+- **📚 Robust library language scan** — more reliable detection of the languages a game already ships, plus a manual "Detect languages" button
+- **💬 Discord is live** — join at [discord.gg/SjnD3Z7Uf8](https://discord.gg/SjnD3Z7Uf8)
+- **🧪 Parser regression suite** — shared binary fixtures (Godot, .locres, STX, RPG Maker, CRI CPK, Bethesda) exercised by both the Rust and TS parsers; 2 real bugs found and fixed
+- **📰 Cleaner news feed** — MediaWiki diff noise removed, deal posts filtered out
+
+### 🆕 New in v1.13.0
+
+- **🖥 Real-time UE translator marked experimental** — the Unreal real-time tool now states its experimental status up front, and checks the game is actually running before it starts
+- **🎛 Quality controls in Settings** — switches for the new translation-quality features (reflection pass, semantic retrieval) plus a broadened provider allowlist
+- **🌐 Site + i18n** — v1.12.0 section on the site with infographics and a developer note, in 12 languages; `aiQuality` / `semantic` / `lore` keys backfilled across all locales
+- **🐛 Fixes** — CI now builds the release from the current branch instead of a not-yet-created tag; Supabase forum INSERT policies recreated under RLS hardening, with a graceful bridge bailout; deduplicated migration version `20260626`
 
 ### 🆕 New in v1.12.0 — smarter, self-checking translations
 
