@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameStringer — Benchmark qualità dei provider</title>
+<meta name="description" content="Le classifiche pubbliche di GameStringer: quale provider AI traduce meglio per coppia di lingue e genere di gioco, dai punteggi di qualità reali (0–100) riportati dalla community.">
+<link rel="icon" href="favicon.png">
+<style>
+  :root{
+    --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04); --surface2:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.10); --text:#e8ebf2; --muted:#9aa6bd; --faint:#6b7689;
+    --core:#8b5cf6; --core2:#6366f1;
+    --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    --radius:18px; --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(60rem 40rem at 12% -8%, rgba(139,92,246,.18), transparent 60%),
+      radial-gradient(50rem 38rem at 92% 4%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(46rem 40rem at 78% 92%, rgba(16,185,129,.12), transparent 60%),
+      var(--bg)}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.02em;font-weight:800}
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(8,10,18,.7);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+  .brand .dot{width:30px;height:30px;border-radius:9px;object-fit:cover;box-shadow:0 0 22px rgba(139,92,246,.5)}
+  .brand .brandname{background:linear-gradient(90deg,#8b5cf6,#6366f1,#3b82f6,#8b5cf6);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:brandGrad 4s linear infinite}
+  @keyframes brandGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+  .nav-right{display:flex;align-items:center;gap:12px}
+  .lang{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;cursor:pointer}
+  .lang option{background:#0c1020;color:#e8ebf2}
+  .btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 18px;font-weight:700;font-size:14px;border:1px solid var(--border);transition:.2s;cursor:pointer}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:linear-gradient(135deg,var(--core),var(--core2));border:none;color:#fff;box-shadow:0 10px 30px rgba(99,102,241,.35)}
+  .btn-ghost{background:var(--surface)}
+  .hero{padding:64px 0 28px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted)}
+  .hero h1{font-size:clamp(2rem,4.6vw,3.2rem);margin:18px 0 0}
+  .grad{background:linear-gradient(110deg,#8b5cf6,#6366f1 45%,#38bdf8 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.lead{max-width:720px;margin:16px auto 0;color:var(--muted);font-size:1.08rem}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+  .stat{min-width:130px;padding:14px 22px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+  .stat .n{font-size:1.6rem;font-weight:800}
+  .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:34px 0 8px}
+  .controls input,.controls select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-size:14px;outline:none}
+  .controls input{flex:1;min-width:220px}
+  .controls input:focus,.controls select:focus{border-color:rgba(139,92,246,.5)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin:22px 0 60px}
+  .mcard{padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--border);transition:.2s}
+  .mcard:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);background:var(--surface2)}
+  .mcard .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .pair{display:flex;align-items:center;gap:7px;font-weight:800;font-size:1.02rem}
+  .pair .code{background:rgba(139,92,246,.16);border:1px solid rgba(139,92,246,.35);color:#c4b5fd;border-radius:7px;padding:2px 8px;font-size:.85rem}
+  .pair .arrow{color:var(--faint)}
+  .genre{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+  .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border)}
+  .row:first-of-type{border-top:none}
+  .rank{width:22px;height:22px;min-width:22px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface2);color:var(--muted)}
+  .row.win .rank{background:linear-gradient(135deg,var(--core),var(--core2));color:#fff}
+  .prov{flex:1;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prov .lowtag{font-size:10px;font-weight:700;color:var(--faint);border:1px solid var(--border);border-radius:5px;padding:1px 5px;margin-left:6px}
+  .bar{flex:1.2;height:8px;border-radius:999px;background:var(--bg2);border:1px solid var(--border);overflow:hidden;min-width:60px}
+  .bar>i{display:block;height:100%;border-radius:999px}
+  .b-ok{background:linear-gradient(90deg,#10b981,#34d399)} .b-warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)} .b-bad{background:linear-gradient(90deg,#ef4444,#f87171)}
+  .score{width:64px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .n{color:var(--faint);font-size:11px;width:74px;text-align:right;white-space:nowrap}
+  .mfoot{margin-top:11px;font-size:11.5px;color:var(--faint);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .center{padding:70px 0;text-align:center;color:var(--muted)}
+  .center h3{margin-bottom:10px;color:var(--text)}
+  .center .cta{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--core);margin:0 auto 16px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .note{font-size:12.5px;color:var(--faint);text-align:center;margin:0 auto 60px;max-width:760px}
+  footer{border-top:1px solid var(--border);padding:26px 0;text-align:center;color:var(--faint);font-size:13px}
+</style>
+</head>
+<body>
+<div class="bgfx"></div>
+
+<nav>
+  <div class="container nav">
+    <a class="brand" href="index.html"><img class="dot" src="logo.png" alt="GameStringer"><span class="brandname">GameStringer</span></a>
+    <div class="nav-right">
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="it">🇮🇹 IT</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option><option value="de">🇩🇪 DE</option><option value="pt">🇧🇷 PT</option>
+        <option value="pl">🇵🇱 PL</option><option value="ru">🇷🇺 RU</option><option value="ja">🇯🇵 JA</option>
+        <option value="zh">🇨🇳 ZH</option><option value="ko">🇰🇷 KO</option><option value="el">🇬🇷 EL</option>
+      </select>
+      <a class="btn btn-ghost" href="index.html" data-i18n="back">← Sito</a>
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="download">Scarica</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero container">
+  <span class="pill">🏆 <span data-i18n="pill">Dati reali della community — aggiornati in tempo reale</span></span>
+  <h1><span class="grad" data-i18n="title">Benchmark qualità dei provider</span></h1>
+  <p class="lead" data-i18n="lead">Quale provider AI traduce meglio per la tua coppia di lingue e il tuo genere di gioco? Qui ci sono le classifiche costruite dai punteggi di qualità reali (0–100) riportati in forma anonima da chi usa GameStringer.</p>
+  <div class="stats" id="stats" hidden>
+    <div class="stat"><div class="n" id="stMatchups">–</div><div class="l" data-i18n="stMatchups">Combinazioni</div></div>
+    <div class="stat"><div class="n" id="stProviders">–</div><div class="l" data-i18n="stProviders">Provider</div></div>
+    <div class="stat"><div class="n" id="stSamples">–</div><div class="l" data-i18n="stSamples">Campioni</div></div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="controls" id="controls" hidden>
+    <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Cerca un provider…">
+    <select id="fLang"><option value="" data-i18n="allLangs">Tutte le lingue (destinazione)</option></select>
+    <select id="fGenre"><option value="" data-i18n="allGenres">Tutti i generi</option></select>
+    <select id="sort">
+      <option value="samples" data-i18n="sortSamples">Più campioni</option>
+      <option value="score" data-i18n="sortScore">Punteggio</option>
+      <option value="recent" data-i18n="sortRecent">Più recenti</option>
+    </select>
+  </div>
+
+  <div id="loading" class="center"><div class="spinner"></div><span data-i18n="loading">Carico il benchmark della community…</span></div>
+
+  <div id="empty" class="center" hidden>
+    <h3 data-i18n="emptyTitle">Il benchmark è appena nato 🌱</h3>
+    <p data-i18n="emptyDesc">Nessun dato ancora (o nessuno che corrisponde ai filtri). Scarica GameStringer, attiva il benchmark qualità nelle impostazioni: ogni traduzione contribuisce alle classifiche.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="ctaDownload">⬇ Scarica GameStringer</a>
+      <a class="btn btn-ghost" href="compatibilita.html" data-i18n="compatLink">Database compatibilità</a>
+    </div>
+  </div>
+
+  <div id="error" class="center" hidden><h3>⚠️</h3><p data-i18n="error">Impossibile caricare i dati in questo momento. Riprova tra poco.</p></div>
+
+  <div class="grid" id="grid"></div>
+
+  <p class="note" data-i18n="note">I dati sono anonimi e volontari (opt-in nell'app): solo provider, coppia di lingue, genere e il punteggio di qualità 0–100 già calcolato — mai testi tradotti né nomi di giochi. Le classifiche usano un limite inferiore di confidenza: un provider con pochi campioni non scavalca uno ben testato.</p>
+</main>
+
+<footer><div class="container">GameStringer · <a href="index.html" style="color:var(--muted)">gamestringer.ai</a> · <a href="https://github.com/rouges78/GameStringer" style="color:var(--muted)">GitHub</a></div></footer>
+
+<script>
+const I18N = {
+  it:{back:"← Sito",download:"Scarica",pill:"Dati reali della community — aggiornati in tempo reale",title:"Benchmark qualità dei provider",lead:"Quale provider AI traduce meglio per la tua coppia di lingue e il tuo genere di gioco? Qui ci sono le classifiche costruite dai punteggi di qualità reali (0–100) riportati in forma anonima da chi usa GameStringer.",stMatchups:"Combinazioni",stProviders:"Provider",stSamples:"Campioni",searchPh:"Cerca un provider…",allLangs:"Tutte le lingue (destinazione)",allGenres:"Tutti i generi",sortSamples:"Più campioni",sortScore:"Punteggio",sortRecent:"Più recenti",loading:"Carico il benchmark della community…",emptyTitle:"Il benchmark è appena nato 🌱",emptyDesc:"Nessun dato ancora (o nessuno che corrisponde ai filtri). Scarica GameStringer, attiva il benchmark qualità nelle impostazioni: ogni traduzione contribuisce alle classifiche.",ctaDownload:"⬇ Scarica GameStringer",compatLink:"Database compatibilità",error:"Impossibile caricare i dati in questo momento. Riprova tra poco.",note:"I dati sono anonimi e volontari (opt-in nell'app): solo provider, coppia di lingue, genere e il punteggio di qualità 0–100 già calcolato — mai testi tradotti né nomi di giochi. Le classifiche usano un limite inferiore di confidenza: un provider con pochi campioni non scavalca uno ben testato.",samples:"campioni",best:"migliore",low:"pochi dati",updated:"ultimo dato",anyGenre:"Generico"},
+  en:{back:"← Site",download:"Download",pill:"Real community data — updated in real time",title:"Provider quality benchmark",lead:"Which AI provider translates best for your language pair and game genre? Here are the rankings built from real quality scores (0–100) reported anonymously by GameStringer users.",stMatchups:"Matchups",stProviders:"Providers",stSamples:"Samples",searchPh:"Search a provider…",allLangs:"All target languages",allGenres:"All genres",sortSamples:"Most samples",sortScore:"Score",sortRecent:"Most recent",loading:"Loading the community benchmark…",emptyTitle:"The benchmark was just born 🌱",emptyDesc:"No data yet (or none matching your filters). Download GameStringer, enable the quality benchmark in settings: every translation feeds the rankings.",ctaDownload:"⬇ Download GameStringer",compatLink:"Compatibility database",error:"Couldn't load data right now. Please try again shortly.",note:"Data is anonymous and voluntary (opt-in in the app): only provider, language pair, genre and the already-computed 0–100 quality score — never translated text or game names. Rankings use a confidence lower bound: a provider with few samples won't outrank a well-tested one.",samples:"samples",best:"best",low:"few data",updated:"last data",anyGenre:"Generic"},
+  es:{back:"← Sitio",download:"Descargar",pill:"Datos reales de la comunidad — actualizados en tiempo real",title:"Benchmark de calidad de proveedores",lead:"¿Qué proveedor de IA traduce mejor para tu par de idiomas y tu género de juego? Aquí están las clasificaciones construidas con puntuaciones de calidad reales (0–100) reportadas de forma anónima por usuarios de GameStringer.",stMatchups:"Combinaciones",stProviders:"Proveedores",stSamples:"Muestras",searchPh:"Busca un proveedor…",allLangs:"Todos los idiomas (destino)",allGenres:"Todos los géneros",sortSamples:"Más muestras",sortScore:"Puntuación",sortRecent:"Más recientes",loading:"Cargando el benchmark de la comunidad…",emptyTitle:"El benchmark acaba de nacer 🌱",emptyDesc:"Aún no hay datos (o ninguno coincide con los filtros). Descarga GameStringer, activa el benchmark de calidad en los ajustes: cada traducción alimenta las clasificaciones.",ctaDownload:"⬇ Descargar GameStringer",compatLink:"Base de compatibilidad",error:"No se pudieron cargar los datos. Inténtalo de nuevo en breve.",note:"Los datos son anónimos y voluntarios (opt-in en la app): solo proveedor, par de idiomas, género y la puntuación de calidad 0–100 ya calculada — nunca texto traducido ni nombres de juegos. Las clasificaciones usan un límite inferior de confianza: un proveedor con pocas muestras no supera a uno bien probado.",samples:"muestras",best:"mejor",low:"pocos datos",updated:"último dato",anyGenre:"Genérico"},
+  fr:{back:"← Site",download:"Télécharger",pill:"Données réelles de la communauté — mises à jour en temps réel",title:"Benchmark de qualité des fournisseurs",lead:"Quel fournisseur d'IA traduit le mieux pour votre paire de langues et votre genre de jeu ? Voici les classements construits à partir de scores de qualité réels (0–100) rapportés anonymement par les utilisateurs de GameStringer.",stMatchups:"Combinaisons",stProviders:"Fournisseurs",stSamples:"Échantillons",searchPh:"Rechercher un fournisseur…",allLangs:"Toutes les langues (cible)",allGenres:"Tous les genres",sortSamples:"Le plus d'échantillons",sortScore:"Score",sortRecent:"Les plus récents",loading:"Chargement du benchmark…",emptyTitle:"Le benchmark vient de naître 🌱",emptyDesc:"Pas encore de données (ou aucune ne correspond aux filtres). Téléchargez GameStringer, activez le benchmark de qualité dans les paramètres : chaque traduction alimente les classements.",ctaDownload:"⬇ Télécharger GameStringer",compatLink:"Base de compatibilité",error:"Impossible de charger les données pour l'instant. Réessayez bientôt.",note:"Les données sont anonymes et volontaires (opt-in dans l'app) : seulement le fournisseur, la paire de langues, le genre et le score de qualité 0–100 déjà calculé — jamais de texte traduit ni de noms de jeux. Les classements utilisent une borne inférieure de confiance : un fournisseur avec peu d'échantillons ne dépasse pas un fournisseur bien testé.",samples:"échantillons",best:"meilleur",low:"peu de données",updated:"dernière donnée",anyGenre:"Générique"},
+  de:{back:"← Website",download:"Download",pill:"Echte Community-Daten — in Echtzeit aktualisiert",title:"Anbieter-Qualitäts-Benchmark",lead:"Welcher KI-Anbieter übersetzt am besten für dein Sprachpaar und dein Spielgenre? Hier sind die Ranglisten aus echten Qualitätswerten (0–100), anonym gemeldet von GameStringer-Nutzern.",stMatchups:"Kombinationen",stProviders:"Anbieter",stSamples:"Stichproben",searchPh:"Anbieter suchen…",allLangs:"Alle Zielsprachen",allGenres:"Alle Genres",sortSamples:"Meiste Stichproben",sortScore:"Wert",sortRecent:"Neueste",loading:"Lade den Community-Benchmark…",emptyTitle:"Der Benchmark ist ganz neu 🌱",emptyDesc:"Noch keine Daten (oder keine passen zu den Filtern). Lade GameStringer herunter, aktiviere den Qualitäts-Benchmark in den Einstellungen: jede Übersetzung speist die Ranglisten.",ctaDownload:"⬇ GameStringer herunterladen",compatLink:"Kompatibilitätsdatenbank",error:"Daten konnten gerade nicht geladen werden. Bitte gleich nochmal versuchen.",note:"Die Daten sind anonym und freiwillig (Opt-in in der App): nur Anbieter, Sprachpaar, Genre und der bereits berechnete 0–100-Qualitätswert — nie übersetzter Text oder Spielnamen. Ranglisten nutzen eine Konfidenz-Untergrenze: ein Anbieter mit wenigen Stichproben überholt keinen gut getesteten.",samples:"Stichproben",best:"bestes",low:"wenig Daten",updated:"letzte Daten",anyGenre:"Generisch"},
+  pt:{back:"← Site",download:"Baixar",pill:"Dados reais da comunidade — atualizados em tempo real",title:"Benchmark de qualidade dos fornecedores",lead:"Qual fornecedor de IA traduz melhor para o seu par de idiomas e o seu gênero de jogo? Aqui estão as classificações construídas com pontuações de qualidade reais (0–100) relatadas anonimamente por usuários do GameStringer.",stMatchups:"Combinações",stProviders:"Fornecedores",stSamples:"Amostras",searchPh:"Buscar um fornecedor…",allLangs:"Todos os idiomas (destino)",allGenres:"Todos os gêneros",sortSamples:"Mais amostras",sortScore:"Pontuação",sortRecent:"Mais recentes",loading:"Carregando o benchmark…",emptyTitle:"O benchmark acabou de nascer 🌱",emptyDesc:"Ainda não há dados (ou nenhum corresponde aos filtros). Baixe o GameStringer, ative o benchmark de qualidade nas configurações: cada tradução alimenta as classificações.",ctaDownload:"⬇ Baixar GameStringer",compatLink:"Base de compatibilidade",error:"Não foi possível carregar os dados agora. Tente novamente em breve.",note:"Os dados são anônimos e voluntários (opt-in no app): apenas fornecedor, par de idiomas, gênero e a pontuação de qualidade 0–100 já calculada — nunca texto traduzido ou nomes de jogos. As classificações usam um limite inferior de confiança: um fornecedor com poucas amostras não supera um bem testado.",samples:"amostras",best:"melhor",low:"poucos dados",updated:"último dado",anyGenre:"Genérico"},
+  pl:{back:"← Strona",download:"Pobierz",pill:"Prawdziwe dane społeczności — aktualizowane na żywo",title:"Benchmark jakości dostawców",lead:"Który dostawca AI tłumaczy najlepiej dla Twojej pary językowej i gatunku gry? Oto rankingi zbudowane z prawdziwych ocen jakości (0–100) zgłaszanych anonimowo przez użytkowników GameStringer.",stMatchups:"Kombinacje",stProviders:"Dostawcy",stSamples:"Próbki",searchPh:"Szukaj dostawcy…",allLangs:"Wszystkie języki (docelowe)",allGenres:"Wszystkie gatunki",sortSamples:"Najwięcej próbek",sortScore:"Wynik",sortRecent:"Najnowsze",loading:"Wczytywanie benchmarku…",emptyTitle:"Benchmark dopiero się narodził 🌱",emptyDesc:"Brak danych (lub żadne nie pasuje do filtrów). Pobierz GameStringer, włącz benchmark jakości w ustawieniach: każde tłumaczenie zasila rankingi.",ctaDownload:"⬇ Pobierz GameStringer",compatLink:"Baza zgodności",error:"Nie udało się teraz wczytać danych. Spróbuj ponownie za chwilę.",note:"Dane są anonimowe i dobrowolne (opt-in w aplikacji): tylko dostawca, para językowa, gatunek i już obliczony wynik jakości 0–100 — nigdy przetłumaczony tekst ani nazwy gier. Rankingi używają dolnej granicy ufności: dostawca z małą liczbą próbek nie wyprzedzi dobrze przetestowanego.",samples:"próbki",best:"najlepszy",low:"mało danych",updated:"ostatnie dane",anyGenre:"Ogólny"},
+  ru:{back:"← Сайт",download:"Скачать",pill:"Реальные данные сообщества — обновляются в реальном времени",title:"Бенчмарк качества провайдеров",lead:"Какой AI-провайдер лучше переводит для вашей пары языков и жанра игры? Здесь рейтинги, построенные на реальных оценках качества (0–100), присланных анонимно пользователями GameStringer.",stMatchups:"Комбинации",stProviders:"Провайдеры",stSamples:"Выборки",searchPh:"Найти провайдера…",allLangs:"Все языки (целевые)",allGenres:"Все жанры",sortSamples:"Больше выборок",sortScore:"Оценка",sortRecent:"Самые свежие",loading:"Загрузка бенчмарка сообщества…",emptyTitle:"Бенчмарк только родился 🌱",emptyDesc:"Данных пока нет (или ничего не подходит под фильтры). Скачайте GameStringer, включите бенчмарк качества в настройках: каждый перевод питает рейтинги.",ctaDownload:"⬇ Скачать GameStringer",compatLink:"База совместимости",error:"Не удалось загрузить данные. Попробуйте чуть позже.",note:"Данные анонимны и добровольны (opt-in в приложении): только провайдер, пара языков, жанр и уже вычисленная оценка качества 0–100 — никогда переведённый текст или названия игр. Рейтинги используют нижнюю границу доверия: провайдер с малым числом выборок не обгонит хорошо протестированного.",samples:"выборок",best:"лучший",low:"мало данных",updated:"последние данные",anyGenre:"Общий"},
+  ja:{back:"← サイト",download:"ダウンロード",pill:"コミュニティの実データ — リアルタイム更新",title:"プロバイダー品質ベンチマーク",lead:"あなたの言語ペアとゲームのジャンルで、どのAIプロバイダーが最も上手く翻訳する?ここにはGameStringerユーザーが匿名で報告した実際の品質スコア(0〜100)から作られたランキングがあります。",stMatchups:"組み合わせ",stProviders:"プロバイダー",stSamples:"サンプル",searchPh:"プロバイダーを検索…",allLangs:"すべての言語(対象)",allGenres:"すべてのジャンル",sortSamples:"サンプル数順",sortScore:"スコア",sortRecent:"新着順",loading:"コミュニティのベンチマークを読み込み中…",emptyTitle:"ベンチマークは生まれたばかり 🌱",emptyDesc:"まだデータがありません(またはフィルターに一致しません)。GameStringerをダウンロードし、設定で品質ベンチマークを有効にしてください。すべての翻訳がランキングに貢献します。",ctaDownload:"⬇ GameStringerをダウンロード",compatLink:"互換性データベース",error:"データを読み込めませんでした。しばらくしてからお試しください。",note:"データは匿名かつ任意(アプリ内オプトイン):プロバイダー、言語ペア、ジャンル、算出済みの0〜100品質スコアのみで、翻訳テキストやゲーム名は含みません。ランキングは信頼下限を使用:サンプルの少ないプロバイダーは十分検証されたものを上回りません。",samples:"サンプル",best:"最良",low:"データ少",updated:"最新データ",anyGenre:"汎用"},
+  zh:{back:"← 网站",download:"下载",pill:"社区真实数据——实时更新",title:"提供商质量基准",lead:"对于你的语言对和游戏类型,哪个AI提供商翻译得最好?这里是根据GameStringer用户匿名报告的真实质量分数(0–100)构建的排名。",stMatchups:"组合",stProviders:"提供商",stSamples:"样本",searchPh:"搜索提供商…",allLangs:"所有语言(目标)",allGenres:"所有类型",sortSamples:"样本最多",sortScore:"分数",sortRecent:"最新",loading:"正在加载社区基准…",emptyTitle:"基准刚刚诞生 🌱",emptyDesc:"还没有数据(或没有符合筛选条件的)。下载GameStringer,在设置中启用质量基准:每次翻译都会充实排名。",ctaDownload:"⬇ 下载GameStringer",compatLink:"兼容性数据库",error:"暂时无法加载数据,请稍后重试。",note:"数据匿名且自愿(应用内选择加入):仅包含提供商、语言对、类型和已算出的0–100质量分数——绝不含翻译文本或游戏名称。排名采用置信下限:样本少的提供商不会超过经过充分测试的提供商。",samples:"样本",best:"最佳",low:"数据少",updated:"最新数据",anyGenre:"通用"},
+  ko:{back:"← 사이트",download:"다운로드",pill:"커뮤니티 실제 데이터 — 실시간 업데이트",title:"제공자 품질 벤치마크",lead:"당신의 언어 쌍과 게임 장르에서 어떤 AI 제공자가 가장 잘 번역할까요? GameStringer 사용자가 익명으로 보고한 실제 품질 점수(0–100)로 만든 순위입니다.",stMatchups:"조합",stProviders:"제공자",stSamples:"샘플",searchPh:"제공자 검색…",allLangs:"모든 언어(대상)",allGenres:"모든 장르",sortSamples:"샘플 많은 순",sortScore:"점수",sortRecent:"최신 순",loading:"커뮤니티 벤치마크 불러오는 중…",emptyTitle:"벤치마크가 이제 막 태어났어요 🌱",emptyDesc:"아직 데이터가 없습니다(또는 필터와 일치하는 항목이 없음). GameStringer를 다운로드하고 설정에서 품질 벤치마크를 활성화하세요. 모든 번역이 순위를 채웁니다.",ctaDownload:"⬇ GameStringer 다운로드",compatLink:"호환성 데이터베이스",error:"지금은 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.",note:"데이터는 익명이며 자발적입니다(앱 내 옵트인): 제공자, 언어 쌍, 장르와 이미 계산된 0–100 품질 점수만 포함하며 번역 텍스트나 게임 이름은 없습니다. 순위는 신뢰 하한을 사용합니다: 샘플이 적은 제공자는 충분히 검증된 제공자를 앞서지 못합니다.",samples:"샘플",best:"최고",low:"데이터 적음",updated:"최근 데이터",anyGenre:"일반"},
+  el:{back:"← Ιστότοπος",download:"Λήψη",pill:"Πραγματικά δεδομένα κοινότητας — ενημέρωση σε πραγματικό χρόνο",title:"Benchmark ποιότητας παρόχων",lead:"Ποιος πάροχος AI μεταφράζει καλύτερα για το ζεύγος γλωσσών και το είδος παιχνιδιού σου; Εδώ είναι οι κατατάξεις από πραγματικές βαθμολογίες ποιότητας (0–100) που αναφέρθηκαν ανώνυμα από χρήστες του GameStringer.",stMatchups:"Συνδυασμοί",stProviders:"Πάροχοι",stSamples:"Δείγματα",searchPh:"Αναζήτηση παρόχου…",allLangs:"Όλες οι γλώσσες (στόχος)",allGenres:"Όλα τα είδη",sortSamples:"Περισσότερα δείγματα",sortScore:"Βαθμολογία",sortRecent:"Πιο πρόσφατα",loading:"Φόρτωση benchmark κοινότητας…",emptyTitle:"Το benchmark μόλις γεννήθηκε 🌱",emptyDesc:"Δεν υπάρχουν ακόμη δεδομένα (ή κανένα δεν ταιριάζει στα φίλτρα). Κατεβάστε το GameStringer, ενεργοποιήστε το benchmark ποιότητας στις ρυθμίσεις: κάθε μετάφραση τροφοδοτεί τις κατατάξεις.",ctaDownload:"⬇ Λήψη GameStringer",compatLink:"Βάση συμβατότητας",error:"Αδυναμία φόρτωσης δεδομένων αυτή τη στιγμή. Δοκιμάστε ξανά σε λίγο.",note:"Τα δεδομένα είναι ανώνυμα και εθελοντικά (opt-in στην εφαρμογή): μόνο πάροχος, ζεύγος γλωσσών, είδος και η ήδη υπολογισμένη βαθμολογία 0–100 — ποτέ μεταφρασμένο κείμενο ή ονόματα παιχνιδιών. Οι κατατάξεις χρησιμοποιούν κατώτερο όριο εμπιστοσύνης: πάροχος με λίγα δείγματα δεν ξεπερνά έναν καλά δοκιμασμένο.",samples:"δείγματα",best:"καλύτερος",low:"λίγα δεδομένα",updated:"τελευταία δεδομένα",anyGenre:"Γενικό"}
+};
+let LANG='it', T=I18N.it;
+function applyLang(lang){
+  T=I18N[lang]||I18N.it; LANG=I18N[lang]?lang:'it';
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n'); if(T[k]!=null) el.textContent=T[k];});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{const k=el.getAttribute('data-i18n-ph'); if(T[k]!=null) el.placeholder=T[k];});
+  try{localStorage.setItem('gs_site_lang',LANG)}catch(e){}
+  const sel=document.getElementById('langSel'); if(sel) sel.value=LANG;
+  render();
+}
+(function initLang(){
+  const supported=Object.keys(I18N);
+  let lang='it';
+  try{const s=localStorage.getItem('gs_site_lang'); if(s&&supported.includes(s)) lang=s; else{const b=(navigator.language||'it').slice(0,2).toLowerCase(); if(supported.includes(b)) lang=b;}}catch(e){}
+  const sel=document.getElementById('langSel');
+  if(sel){sel.value=lang; sel.addEventListener('change',e=>applyLang(e.target.value));}
+  if(lang!=='it') applyLang(lang);
+})();
+
+// ── Dati (vista pubblica benchmark_provider_summary, sola lettura, chiave anon) ──
+const SUPABASE_URL='https://relbkjoxdnbqizgomzhs.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlbGJram94ZG5icWl6Z29temhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDcxMDUsImV4cCI6MjA4OTkyMzEwNX0.TY4pVsZVJ3vS_8AArXXr4RghxUn1ATju4kiVwjzpdyM';
+
+let MATCHUPS=[]; // aggregato per (src>tgt, genre)
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function barClass(s){return s>=75?'ok':s>=50?'warn':'bad'}
+// Limite inferiore di confidenza (stesso principio dell'app): media − 1.28·SE
+function lowerBound(avg,stddev,n){const sd=n>=2?stddev:25;const se=sd/Math.sqrt(Math.max(n,1));return avg-1.28*se;}
+
+async function load(){
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/benchmark_provider_summary?select=*&order=last_report_at.desc&limit=5000`,{
+      headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`}
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=await res.json();
+    const byKey=new Map();
+    for(const r of rows){
+      const src=(r.source_lang||'?'), tgt=(r.target_lang||'?'), genre=(r.genre||'any');
+      const key=`${src}>${tgt}|${genre}`;
+      const m=byKey.get(key)||{key,src,tgt,genre,providers:[],samples:0,last:null};
+      const n=r.samples||0, avg=Number(r.avg_score)||0, sd=Number(r.stddev_score)||0;
+      m.providers.push({provider:r.provider,samples:n,avg,stddev:sd,lb:lowerBound(avg,sd,n),confident:n>=5});
+      m.samples+=n;
+      if(!m.last||(r.last_report_at&&r.last_report_at>m.last)) m.last=r.last_report_at;
+      byKey.set(key,m);
+    }
+    for(const m of byKey.values()){
+      m.providers.sort((a,b)=>{
+        if(a.confident!==b.confident) return a.confident?-1:1;
+        if(b.lb!==a.lb) return b.lb-a.lb;
+        return b.samples-a.samples;
+      });
+    }
+    MATCHUPS=[...byKey.values()];
+    document.getElementById('loading').hidden=true;
+    if(MATCHUPS.length){
+      document.getElementById('stats').hidden=false;
+      document.getElementById('controls').hidden=false;
+      document.getElementById('stMatchups').textContent=MATCHUPS.length;
+      document.getElementById('stProviders').textContent=new Set(rows.map(r=>r.provider)).size;
+      document.getElementById('stSamples').textContent=MATCHUPS.reduce((a,m)=>a+m.samples,0);
+      const langs=[...new Set(MATCHUPS.map(m=>m.tgt))].sort();
+      const genres=[...new Set(MATCHUPS.map(m=>m.genre))].sort();
+      const fL=document.getElementById('fLang'), fG=document.getElementById('fGenre');
+      for(const l of langs){const o=document.createElement('option');o.value=l;o.textContent=l.toUpperCase();fL.appendChild(o);}
+      for(const g of genres){const o=document.createElement('option');o.value=g;o.textContent=g==='any'?(T.anyGenre||'Generic'):g;fG.appendChild(o);}
+    }
+    render();
+  }catch(e){
+    document.getElementById('loading').hidden=true;
+    document.getElementById('error').hidden=false;
+  }
+}
+
+function render(){
+  const grid=document.getElementById('grid');
+  const busy=!document.getElementById('loading').hidden||!document.getElementById('error').hidden;
+  if(busy){grid.innerHTML='';document.getElementById('empty').hidden=true;return;}
+  const q=(document.getElementById('q').value||'').toLowerCase().trim();
+  const fL=document.getElementById('fLang').value;
+  const fG=document.getElementById('fGenre').value;
+  const sort=document.getElementById('sort').value;
+  let list=MATCHUPS.filter(m=>
+    (!fL||m.tgt===fL)&&
+    (!fG||m.genre===fG)&&
+    (!q||m.providers.some(p=>p.provider.toLowerCase().includes(q)))
+  );
+  list.sort((a,b)=>{
+    if(sort==='score') return (b.providers[0]?.lb||0)-(a.providers[0]?.lb||0);
+    if(sort==='recent') return (b.last||'').localeCompare(a.last||'');
+    return b.samples-a.samples;
+  });
+  document.getElementById('empty').hidden=list.length>0;
+  grid.innerHTML=list.map(m=>{
+    const rows=m.providers.slice(0,6).map((p,i)=>{
+      const s=Math.round(p.avg);
+      return `<div class="row ${i===0&&p.confident?'win':''}">
+        <span class="rank">${i+1}</span>
+        <span class="prov">${esc(p.provider)}${p.confident?'':`<span class="lowtag">${esc(T.low)}</span>`}</span>
+        <span class="bar"><i class="b-${barClass(s)}" style="width:${Math.max(4,s)}%"></i></span>
+        <span class="score">${s}/100</span>
+        <span class="n">${p.samples} ${esc(T.samples)}</span>
+      </div>`;
+    }).join('');
+    const date=m.last?new Date(m.last).toLocaleDateString(LANG):'–';
+    const genreLabel=m.genre==='any'?(T.anyGenre||'Generic'):m.genre;
+    return `<div class="mcard">
+      <div class="top">
+        <div class="pair"><span class="code">${esc(m.src.toUpperCase())}</span><span class="arrow">→</span><span class="code">${esc(m.tgt.toUpperCase())}</span></div>
+        <span class="genre">${esc(genreLabel)}</span>
+      </div>
+      ${rows}
+      <div class="mfoot"><span>🧪 ${m.samples} ${esc(T.samples)}</span><span>🕒 ${esc(T.updated)}: ${esc(date)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+for(const id of ['q','fLang','fGenre','sort']){
+  document.getElementById(id).addEventListener('input',render);
+  document.getElementById(id).addEventListener('change',render);
+}
+load();
+</script>
+</body>
+</html>
