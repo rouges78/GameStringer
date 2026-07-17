@@ -734,7 +734,7 @@ class CommunityHubService {
       // ammesse). Basato sui segnali interni al pack; 'block' respinge, 'warn'
       // solo logga (falsi positivi gestiti dalla moderazione/override).
       try {
-        const rawFiles = (localPack.files || []) as Array<Record<string, unknown>>;
+        const rawFiles = (localPack.files || []) as unknown as Array<Record<string, unknown>>;
         const gp = {
           manifest: { translation: {
             totalStrings: Number(localPack.totalStrings) || 0,
