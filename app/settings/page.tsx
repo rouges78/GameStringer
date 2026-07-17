@@ -334,11 +334,13 @@ const INDEX_LANGS: { code: string; label: string }[] = [
 function CompatTelemetryCard({
   compatEnabled,
   crashEnabled,
+  benchmarkEnabled,
   onChange,
 }: {
   compatEnabled: boolean;
   crashEnabled: boolean;
-  onChange: (key: 'compatTelemetry' | 'crashReports', value: boolean) => void;
+  benchmarkEnabled: boolean;
+  onChange: (key: 'compatTelemetry' | 'crashReports' | 'benchmarkTelemetry', value: boolean) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -380,6 +382,23 @@ function CompatTelemetryCard({
             />
           </div>
           <p className="text-xs text-muted-foreground">{t('crash.settingDesc')}</p>
+        </div>
+        {/* Benchmark qualità provider (anonimo) */}
+        <div className="rounded-lg border p-3 space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <Label htmlFor="benchmark-telemetry" className="text-sm cursor-pointer flex items-center gap-2">
+              {t('benchmark.settingLabel')}
+              <Badge variant={benchmarkEnabled ? 'default' : 'secondary'} className="text-2xs">
+                {benchmarkEnabled ? 'ON' : 'OFF'}
+              </Badge>
+            </Label>
+            <Switch
+              id="benchmark-telemetry"
+              checked={benchmarkEnabled}
+              onCheckedChange={(v) => onChange('benchmarkTelemetry', v)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{t('benchmark.settingDesc')}</p>
         </div>
         <p className="text-xs text-muted-foreground">{t('compat.settingPrivacy')}</p>
       </CardContent>
@@ -692,6 +711,7 @@ interface Settings {
   privacy: {
     compatTelemetry: boolean;
     crashReports: boolean;
+    benchmarkTelemetry: boolean;
   };
 }
 
@@ -742,6 +762,7 @@ export default function SettingsPage() {
     privacy: {
       compatTelemetry: false,
       crashReports: false,
+      benchmarkTelemetry: false,
     }
   });
 
@@ -1623,6 +1644,7 @@ export default function SettingsPage() {
           <CompatTelemetryCard
             compatEnabled={settings.privacy.compatTelemetry}
             crashEnabled={settings.privacy.crashReports}
+            benchmarkEnabled={settings.privacy.benchmarkTelemetry}
             onChange={(key, v) => updateSetting('privacy', key, v)}
           />
         </TabsContent>

@@ -33,6 +33,8 @@ import {
   recordProviderQuality,
   applyQualityHistory,
 } from '@/lib/translation/provider-quality-tracker';
+import { applyBenchmarkOrder, recordQaSample } from '@/lib/translation/benchmark-store';
+import { reportBenchmarkSample } from '@/lib/benchmark-telemetry';
 import { buildTranslationPrompt } from '@/lib/translation/prompt-builder';
 
 // Re-export everything for backwards compatibility
@@ -76,7 +78,7 @@ export interface TranslateResult {
   provider: string;
   success: boolean;
   /** Statistiche del passaggio di riflessione (write → reflect → refine), se eseguito */
-  reflection?: { candidates: number; refined: number };
+  reflection?: { candidates: number; refined: number; repaired?: number };
 }
 
 
@@ -1942,9 +1944,17 @@ export async function translateWithFallback(
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
   const skipped: string[] = [];
 
-  // Auto-select: costruisci chain dinamica per lingua/genere
+  // Auto-select: costruisci chain dinamica per lingua/genere.
+  // Prima lo storico di sessione (success/unchanged), poi il benchmark qualità
+  // data-driven (QA score aggregati per coppia lingua+genere), che ha l'ultima
+  // parola quando ci sono abbastanza campioni.
   const providerList = getActiveChainPreset() === 'auto'
-    ? applyQualityHistory(getAutoProviderChain(opts.targetLanguage, opts.gameGenre), opts.targetLanguage)
+    ? applyBenchmarkOrder(
+        applyQualityHistory(getAutoProviderChain(opts.targetLanguage, opts.gameGenre), opts.targetLanguage),
+        opts.sourceLanguage || 'auto',
+        opts.targetLanguage,
+        opts.gameGenre
+      )
     : preset.providers;
 
   for (const providerName of providerList) {
@@ -2034,7 +2044,7 @@ export async function translateWithFallback(
           // Pipeline auto-correttiva (write → reflect → refine): un secondo passaggio
           // dello STESSO provider critica le stringhe a rischio (glossario, contesto,
           // placeholder, tono) e le riscrive. Selettiva di default, fail-open.
-          let reflectionStats: { candidates: number; refined: number } | undefined;
+          let reflectionStats: { candidates: number; refined: number; repaired?: number } | undefined;
           if (opts.reflection !== 'off') {
             try {
               const outcome = await maybeReflect(
@@ -2051,9 +2061,15 @@ export async function translateWithFallback(
                 provider.name,
                 provider.key
               );
-              if (outcome.candidates > 0) {
+              // Applica se la riflessione ha prodotto candidati OPPURE se l'auto-fix
+              // dei placeholder ha riparato almeno una stringa (protezione garantita).
+              if (outcome.candidates > 0 || outcome.repaired > 0) {
                 translations = outcome.translations;
-                reflectionStats = { candidates: outcome.candidates, refined: outcome.refined };
+                reflectionStats = {
+                  candidates: outcome.candidates,
+                  refined: outcome.refined,
+                  repaired: outcome.repaired,
+                };
               }
             } catch (e: unknown) {
               clientLogger.warn(`[Reflection] Passaggio saltato per errore: ${String(e)}`);
@@ -2605,6 +2621,24 @@ export async function translateWithComparison(
       });
     }
   }
+
+  // Benchmark qualità: registra il QA score di OGNI provider confrontato
+  // (locale per l'Auto-Select data-driven + invio opt-in per il benchmark
+  // pubblico). Fail-open, non blocca mai il confronto.
+  try {
+    for (const c of candidates) {
+      if (c.error || typeof c.score !== 'number') continue;
+      const sample = {
+        provider: c.provider,
+        sourceLang: opts.sourceLanguage || 'auto',
+        targetLang: opts.targetLanguage,
+        genre: opts.gameGenre ?? null,
+        score: c.score,
+      };
+      recordQaSample(sample);
+      void reportBenchmarkSample(sample);
+    }
+  } catch { /* fail-open: la telemetria non deve mai rompere il confronto */ }
 
   // Se nessun candidato riuscito, fallback
   if (candidates.filter(c => !c.error).length === 0) {

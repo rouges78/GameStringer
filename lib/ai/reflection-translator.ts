@@ -24,6 +24,7 @@
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
 import { httpPostJson } from './http-proxy';
+import { extractPlaceholders, autoFixPlaceholders, placeholdersPreserved } from './placeholder-guard';
 
 // ---------------------------------------------------------------------------
 // Tipi
@@ -51,6 +52,8 @@ export interface ReflectionInput {
   mode?: ReflectionMode;
   /** Cap candidati per batch in modalità 'auto' */
   maxCandidates?: number;
+  /** Auto-fix deterministico dei placeholder nel pass finale (default: true) */
+  autoFix?: boolean;
 }
 
 export interface ReflectionOutcome {
@@ -59,6 +62,8 @@ export interface ReflectionOutcome {
   candidates: number;
   /** Quante stringhe sono state effettivamente riscritte */
   refined: number;
+  /** Quante stringhe sono state riparate dall'auto-fix dei placeholder */
+  repaired: number;
 }
 
 type ChatFn = (key: string, system: string, user: string) => Promise<string>;
@@ -83,14 +88,12 @@ export function getReflectionMode(): ReflectionMode {
 // Euristica di selezione (deterministica, zero costi)
 // ---------------------------------------------------------------------------
 
-/** Placeholder e markup che il gioco usa e che la traduzione deve preservare */
-const PLACEHOLDER_REGEX = /(%\d*\$?[sdif]|\{\{[^}]+\}\}|\{[a-zA-Z0-9_.]+\}|<[^<>]{1,40}>|\[\[[^\]]+\]\]|&[a-z]{2,8};|\\n)/g;
-
-/** Estrae i placeholder/markup da una stringa (con duplicati, per confronto) */
-export function extractPlaceholders(text: string): string[] {
-  PLACEHOLDER_REGEX.lastIndex = 0;
-  return text.match(PLACEHOLDER_REGEX) || [];
-}
+/**
+ * Estrazione e auto-fix dei token protetti (placeholder, tag, control code, ruby)
+ * sono centralizzati in `placeholder-guard`. Re-export per compatibilità con i
+ * consumatori esistenti (test, agenti di review).
+ */
+export { extractPlaceholders, autoFixPlaceholders, placeholdersPreserved };
 
 /**
  * Estrae i termini sorgente dal glossario manuale (glossaryHint), che usa
@@ -496,63 +499,84 @@ export async function maybeReflect(
   providerName: string,
   providerKey: string
 ): Promise<ReflectionOutcome> {
-  const noop: ReflectionOutcome = {
-    translations: input.translations,
-    candidates: 0,
-    refined: 0,
-  };
-
   const mode = input.mode || getReflectionMode();
-  if (mode === 'off') return noop;
+  if (mode === 'off') {
+    // 'off' = mani ferme del tutto: né riflessione LLM né auto-fix.
+    return { translations: input.translations, candidates: 0, refined: 0, repaired: 0 };
+  }
 
-  const chat = REFLECTION_PROVIDERS[providerName];
-  if (!chat) return noop; // provider MT puro o sconosciuto → nessuna riflessione
-
-  const candidates = selectReflectionCandidates(input.texts, input.translations, {
-    glossaryHint: input.glossaryHint,
-    mode,
-    maxCandidates: input.maxCandidates,
-  });
-  if (candidates.length === 0) return noop;
-
-  const srcLang = input.sourceLanguage || 'en';
-  const system = buildCriticSystem(srcLang, input.targetLanguage);
   const result = [...input.translations];
   let refined = 0;
+  let candidatesCount = 0;
 
-  for (let i = 0; i < candidates.length; i += CRITIC_BATCH_SIZE) {
-    const chunk = candidates.slice(i, i + CRITIC_BATCH_SIZE);
-    try {
-      const user = buildCriticUser(chunk, {
-        context: input.context,
-        glossaryHint: input.glossaryHint,
-      });
-      const raw = await chat(providerKey, system, user);
-      const verdicts = parseCriticResponse(raw);
+  // 1) Riflessione LLM selettiva (solo per i provider LLM-capable)
+  const chat = REFLECTION_PROVIDERS[providerName];
+  if (chat) {
+    const candidates = selectReflectionCandidates(input.texts, input.translations, {
+      glossaryHint: input.glossaryHint,
+      mode,
+      maxCandidates: input.maxCandidates,
+    });
+    candidatesCount = candidates.length;
 
-      for (const v of verdicts) {
-        const c = chunk[v.i - 1]; // il critico numera 1-based dentro il chunk
-        if (!c || v.ok) continue;
-        const guarded = guardRevision(c.source, result[c.index], v.revised);
-        if (guarded !== result[c.index]) {
-          clientLogger.debug(
-            `[Reflection] ✏️ #${c.index} (${c.reasons.join(',')}): "${result[c.index].substring(0, 40)}" → "${guarded.substring(0, 40)}"${v.issues ? ` — ${v.issues}` : ''}`
-          );
-          result[c.index] = guarded;
-          refined++;
+    if (candidates.length > 0) {
+      const srcLang = input.sourceLanguage || 'en';
+      const system = buildCriticSystem(srcLang, input.targetLanguage);
+
+      for (let i = 0; i < candidates.length; i += CRITIC_BATCH_SIZE) {
+        const chunk = candidates.slice(i, i + CRITIC_BATCH_SIZE);
+        try {
+          const user = buildCriticUser(chunk, {
+            context: input.context,
+            glossaryHint: input.glossaryHint,
+          });
+          const raw = await chat(providerKey, system, user);
+          const verdicts = parseCriticResponse(raw);
+
+          for (const v of verdicts) {
+            const c = chunk[v.i - 1]; // il critico numera 1-based dentro il chunk
+            if (!c || v.ok) continue;
+            const guarded = guardRevision(c.source, result[c.index], v.revised);
+            if (guarded !== result[c.index]) {
+              clientLogger.debug(
+                `[Reflection] ✏️ #${c.index} (${c.reasons.join(',')}): "${result[c.index].substring(0, 40)}" → "${guarded.substring(0, 40)}"${v.issues ? ` — ${v.issues}` : ''}`
+              );
+              result[c.index] = guarded;
+              refined++;
+            }
+          }
+        } catch (e: unknown) {
+          // Fail-open: il chunk fallito mantiene le traduzioni del primo passaggio
+          clientLogger.warn(`[Reflection] Chunk fallito su ${providerName}: ${String(e)}`);
         }
       }
-    } catch (e: unknown) {
-      // Fail-open: il chunk fallito mantiene le traduzioni del primo passaggio
-      clientLogger.warn(`[Reflection] Chunk fallito su ${providerName}: ${String(e)}`);
+
+      if (refined > 0) {
+        clientLogger.debug(
+          `[Reflection] ${providerName}: ${candidates.length} candidate, ${refined} raffinate (mode: ${mode})`
+        );
+      }
     }
   }
 
-  if (refined > 0) {
-    clientLogger.debug(
-      `[Reflection] ${providerName}: ${candidates.length} candidate, ${refined} raffinate (mode: ${mode})`
-    );
+  // 2) Auto-fix deterministico FINALE: protezione GARANTITA di placeholder/tag/
+  //    control code su OGNI stringa, indipendente dal provider e dall'LLM.
+  //    Ripristina i token persi anche quando la riflessione è saltata (fail-open),
+  //    non disponibile (provider MT) o non ha selezionato la stringa.
+  let repaired = 0;
+  if (input.autoFix !== false) {
+    for (let i = 0; i < result.length; i++) {
+      const current = result[i] ?? '';
+      const fixed = autoFixPlaceholders(input.texts[i] ?? '', current);
+      if (fixed !== current) {
+        result[i] = fixed;
+        repaired++;
+      }
+    }
+    if (repaired > 0) {
+      clientLogger.debug(`[Reflection] 🔧 auto-fix placeholder su ${repaired} stringhe (${providerName})`);
+    }
   }
 
-  return { translations: result, candidates: candidates.length, refined };
+  return { translations: result, candidates: candidatesCount, refined, repaired };
 }

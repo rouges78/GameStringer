@@ -9,12 +9,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   extractPlaceholders,
+  autoFixPlaceholders,
   extractGlossaryTerms,
   selectReflectionCandidates,
   guardRevision,
   isReflectionCapable,
   maybeReflect,
 } from '@/lib/ai/reflection-translator';
+import { diffPlaceholders, placeholdersPreserved } from '@/lib/ai/placeholder-guard';
 
 describe('extractPlaceholders', () => {
   it('estrae variabili printf, curly, tag e placeholder Unreal', () => {
@@ -25,6 +27,77 @@ describe('extractPlaceholders', () => {
 
   it('ritorna array vuoto senza placeholder', () => {
     expect(extractPlaceholders('Solo testo semplice')).toEqual([]);
+  });
+
+  it('estrae printf estesi e posizionali (%x, %.2f, %%, %1$s, %@)', () => {
+    expect(extractPlaceholders('HP %x, dmg %.2f')).toEqual(['%x', '%.2f']);
+    expect(extractPlaceholders('Sconto 50%% su %1$s per %2$s')).toEqual(['%%', '%1$s', '%2$s']);
+    expect(extractPlaceholders('Nome: %@ (%1$@)')).toEqual(['%@', '%1$@']); // stile iOS/Obj-C
+  });
+
+  it('estrae control code RPG Maker/escape (\\C[3], \\V[1], \\N[1])', () => {
+    expect(extractPlaceholders('\\C[3]Attenzione\\C[0]')).toEqual(['\\C[3]', '\\C[0]']);
+    expect(extractPlaceholders('Ciao \\N[1], hai \\V[12] monete')).toEqual(['\\N[1]', '\\V[12]']);
+  });
+
+  it('estrae variabili ${var} e #{ruby}', () => {
+    expect(extractPlaceholders('Ciao ${player} e #{name}')).toEqual(['${player}', '#{name}']);
+  });
+
+  it('estrae ruby giapponese aozora ｜漢字《かんじ》', () => {
+    expect(extractPlaceholders('これは｜漢字《かんじ》です')).toEqual(['｜漢字《かんじ》']);
+  });
+
+  it('estrae BBCode e tag rich-text (<color=...>, [ruby=...])', () => {
+    expect(extractPlaceholders('<color=#ff0000>Rosso</color>')).toEqual(['<color=#ff0000>', '</color>']);
+    expect(extractPlaceholders('[ruby=かんじ]漢字[/ruby]')).toEqual(['[ruby=かんじ]', '[/ruby]']);
+  });
+
+  it('estrae entità HTML (&amp; &#123;)', () => {
+    expect(extractPlaceholders('Tom &amp; Jerry &#160;')).toEqual(['&amp;', '&#160;']);
+  });
+
+  it('non tokenizza una percentuale normale (50% fatto)', () => {
+    expect(extractPlaceholders('Progresso 50% fatto')).toEqual([]);
+  });
+});
+
+describe('diffPlaceholders / placeholdersPreserved', () => {
+  it('rileva token mancanti e in eccesso', () => {
+    const d = diffPlaceholders('Hai %d monete, {name}', 'Hai monete, {name} e {bonus}');
+    expect(d.missing).toEqual(['%d']);
+    expect(d.extra).toEqual(['{bonus}']);
+  });
+
+  it('placeholdersPreserved vero solo se tutti i token sopravvivono', () => {
+    expect(placeholdersPreserved('Hai %d oro', 'Hai %d oro adesso')).toBe(true);
+    expect(placeholdersPreserved('Hai %d oro', 'Hai oro')).toBe(false);
+  });
+});
+
+describe('autoFixPlaceholders', () => {
+  it('non tocca una traduzione con gli stessi token (anche riordinati)', () => {
+    expect(autoFixPlaceholders('%1$s usa %2$s', '%2$s è usato da %1$s')).toBe('%2$s è usato da %1$s');
+  });
+
+  it('ripristina posizionalmente un token di tipo sbagliato (%s → %d)', () => {
+    expect(autoFixPlaceholders('Hai %d monete', 'Hai %s monete')).toBe('Hai %d monete');
+  });
+
+  it('riappende in coda i token del sorgente persi', () => {
+    expect(autoFixPlaceholders('Ciao {name}, hai %d oro', 'Ciao, hai oro')).toBe('Ciao, hai oro {name} %d');
+  });
+
+  it('preserva un control code perso', () => {
+    expect(autoFixPlaceholders('\\C[3]Boss', 'Boss')).toBe('Boss \\C[3]');
+  });
+
+  it('non cancella contenuto quando ci sono solo token inventati in più', () => {
+    expect(autoFixPlaceholders('Ciao mondo', 'Ciao {x} mondo')).toBe('Ciao {x} mondo');
+  });
+
+  it('è un no-op se non ci sono token nel sorgente', () => {
+    expect(autoFixPlaceholders('Ciao mondo', 'Ciao mondo tradotto')).toBe('Ciao mondo tradotto');
   });
 });
 
@@ -236,7 +309,7 @@ describe('maybeReflect (provider mockato)', () => {
     expect(outcome.translations[0]).toBe('Hai guadagnato oro! %d');
   });
 
-  it('è fail-open: errore di rete → traduzioni originali intatte', async () => {
+  it('è fail-open: errore di rete → nessuna riscrittura LLM', async () => {
     global.fetch = vi.fn(async () => {
       throw new Error('network down');
     }) as unknown as typeof fetch;
@@ -244,7 +317,7 @@ describe('maybeReflect (provider mockato)', () => {
     const outcome = await maybeReflect(
       {
         texts: ['You gained %d gold!'],
-        translations: ['Hai guadagnato oro!'],
+        translations: ['Hai guadagnato %d oro!'], // placeholder già presente
         targetLanguage: 'it',
       },
       'groq',
@@ -252,7 +325,29 @@ describe('maybeReflect (provider mockato)', () => {
     );
 
     expect(outcome.refined).toBe(0);
-    expect(outcome.translations[0]).toBe('Hai guadagnato oro!');
+    expect(outcome.translations[0]).toBe('Hai guadagnato %d oro!');
+  });
+
+  it('auto-fix ripristina un placeholder perso anche in fail-open', async () => {
+    global.fetch = vi.fn(async () => {
+      throw new Error('network down');
+    }) as unknown as typeof fetch;
+
+    const outcome = await maybeReflect(
+      {
+        texts: ['You gained %d gold!'],
+        translations: ['Hai guadagnato oro!'], // %d perso al primo passaggio
+        targetLanguage: 'it',
+      },
+      'groq',
+      'fake-key'
+    );
+
+    // La riflessione LLM è saltata (fail-open) ma l'auto-fix deterministico
+    // garantisce comunque la sopravvivenza del placeholder.
+    expect(outcome.refined).toBe(0);
+    expect(outcome.repaired).toBe(1);
+    expect(outcome.translations[0]).toBe('Hai guadagnato oro! %d');
   });
 
   it('skip totale per provider MT puri (nessuna chiamata fetch)', async () => {
@@ -322,7 +417,7 @@ describe('maybeReflect (provider mockato)', () => {
     const outcome = await maybeReflect(
       {
         texts: ['You gained %d gold!'],
-        translations: ['Hai guadagnato oro!'],
+        translations: ['Hai guadagnato %d oro!'],
         targetLanguage: 'it',
       },
       'groq',
@@ -330,6 +425,24 @@ describe('maybeReflect (provider mockato)', () => {
     );
 
     expect(outcome.refined).toBe(0);
+    expect(outcome.translations[0]).toBe('Hai guadagnato %d oro!');
+  });
+
+  it('disattiva l\'auto-fix con autoFix:false', async () => {
+    mockGroqCritic([{ i: 1, ok: true }]);
+
+    const outcome = await maybeReflect(
+      {
+        texts: ['You gained %d gold!'],
+        translations: ['Hai guadagnato oro!'], // %d perso
+        targetLanguage: 'it',
+        autoFix: false,
+      },
+      'groq',
+      'fake-key'
+    );
+
+    expect(outcome.repaired).toBe(0);
     expect(outcome.translations[0]).toBe('Hai guadagnato oro!');
   });
 });

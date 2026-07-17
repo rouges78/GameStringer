@@ -4,7 +4,7 @@
 >
 > **For anything newer, the single source of truth is [CHANGELOG.md](../CHANGELOG.md)** — it is regenerated from the commits at every release by `scripts/release-all.js`. Do not add new versions here: they would drift.
 >
-> - Current version: **v1.13.0** (2026-07-11) — see [CHANGELOG.md](../CHANGELOG.md) and the [GitHub release](https://github.com/rouges78/GameStringer/releases/latest)
+> - Current version: **v1.14.0** (2026-07-13) — see [CHANGELOG.md](../CHANGELOG.md) and the [GitHub release](https://github.com/rouges78/GameStringer/releases/latest)
 > - Per-release GitHub bodies live in `docs/RELEASE_BODY_vX.Y.Z.md`
 > - Release procedure: [RELEASE_PROCESS.md](./RELEASE_PROCESS.md)
 >

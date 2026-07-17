@@ -3759,6 +3759,30 @@
     "disconnectedAll": "Disconnected from all other sessions",
     "thisProfile": "this profile"
   },
+  "firstGame": {
+    "title": "Translate your first game",
+    "subtitle": "We picked the easiest title in your library — just a few minutes to your first result.",
+    "pickedForYou": "Picked for you from your library",
+    "estMinutes": "≈ {min} min",
+    "translateNow": "Translate now",
+    "chooseAnother": "Choose another",
+    "later": "Later",
+    "scanLibrary": "Scan your library",
+    "noGames": "I haven't found any games in your library yet. Scan it to get started.",
+    "noEasyGame": "No easy title detected. Open the library to pick your first game.",
+    "reason": {
+      "renpy": "Ren'Py uses plain text files: translation is fast and reliable — the ideal first game.",
+      "rpgmaker": "RPG Maker stores text in JSON: simple, quick extraction and patching.",
+      "tyranoscript": "TyranoScript is text-script based: direct, fast translation.",
+      "kirikiri": "KiriKiri exposes dialogue scripts: a good first game, few steps.",
+      "wolf": "Wolf RPG has accessible text: a solid starting point.",
+      "gamemaker": "GameMaker: extractable text, medium but manageable difficulty.",
+      "godot": "Godot: readable text resources, medium complexity.",
+      "unity": "Unity: well supported (including IL2CPP), a few more steps.",
+      "unreal": "Unreal Engine: powerful but slower to translate; best after your first win.",
+      "unknown": "Engine not clearly identified: we'll try anyway — the pipeline adapts."
+    }
+  },
   "onboarding": {
     "step": "Step {current} of {total}",
     "back": "Back",
@@ -7131,6 +7155,16 @@
     "vectors": "vectors",
     "emptyTm": "No translations in memory for this pair.",
     "unavailable": "Enable semantic TM and install an embedding model to pre-index."
+  },
+  "benchmark": {
+    "settingLabel": "Contribute to the quality benchmark",
+    "settingDesc": "Anonymously send the quality scores (0–100) already computed per provider, language pair and genre, to build the public benchmark \"which provider is best for IT→JA on JRPGs\". No translated text, no game names.",
+    "cardTitle": "Provider quality benchmark",
+    "rankTitle": "Provider ranking",
+    "samples": "samples",
+    "avgScore": "average score",
+    "noData": "Not enough data yet for this language/genre combination.",
+    "dataDriven": "Data-driven Auto-Select active"
   },
   "compat": {
     "settingTitle": "Compatibility telemetry",

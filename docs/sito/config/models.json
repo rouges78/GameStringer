@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-15",
+  "_comment": "Catalogo modelli/prezzi remoto di GameStringer. Modifica questo file e ridistribuisci il sito per aggiornare modelli, prezzi e raccomandazioni SENZA rilasciare l'app. L'app fa fail-open sui default bundled se il file non e' raggiungibile. Prezzi in USD per 1K token (stima input).",
+  "pricing": {
+    "openai": { "per1kUsd": 0.00015, "note": "GPT-4o-mini ($0.15/1M input)" },
+    "gpt5": { "per1kUsd": 0.0025, "note": "GPT-4o ($2.50/1M input)" },
+    "gemini": { "per1kUsd": 0.000125, "note": "Gemini 2.0 Flash ($0.10/1M input)" },
+    "claude": { "per1kUsd": 0.003, "note": "Claude 3.5 Sonnet ($3/1M input)" },
+    "deepseek": { "per1kUsd": 0.00014, "note": "DeepSeek V3 ($0.14/1M input)" },
+    "mistral": { "per1kUsd": 0.002, "note": "Mistral Large ($2/1M input)" },
+    "openrouter": { "per1kUsd": 0.001, "note": "Varia per modello" },
+    "deepl": { "per1kUsd": 0.02, "note": "DeepL Pro" },
+    "google": { "per1kUsd": 0.00002, "note": "Google Translate" }
+  },
+  "models": {
+    "openai": [
+      { "id": "gpt-4o-mini", "label": "GPT-4o mini", "recommended": true },
+      { "id": "gpt-4o", "label": "GPT-4o" },
+      { "id": "gpt-4-turbo", "label": "GPT-4 Turbo" }
+    ],
+    "claude": [
+      { "id": "claude-3-5-sonnet", "label": "Claude 3.5 Sonnet", "recommended": true },
+      { "id": "claude-3-5-haiku", "label": "Claude 3.5 Haiku" }
+    ],
+    "gemini": [
+      { "id": "gemini-2.0-flash", "label": "Gemini 2.0 Flash", "recommended": true },
+      { "id": "gemini-1.5-pro", "label": "Gemini 1.5 Pro" }
+    ],
+    "deepseek": [
+      { "id": "deepseek-chat", "label": "DeepSeek V3", "recommended": true }
+    ],
+    "mistral": [
+      { "id": "mistral-large-latest", "label": "Mistral Large" }
+    ]
+  },
+  "recommendations": {
+    "creative": "claude",
+    "asian": "deepseek",
+    "ui_variables": "gemini",
+    "large_project": "claude",
+    "european_ui": "gpt5",
+    "rare_language": "openrouter",
+    "default": "gpt5"
+  }
+}

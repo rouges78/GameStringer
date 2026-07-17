@@ -7,6 +7,7 @@
 
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
+import { getModelConfig, getProviderModels } from '@/lib/remote-config';
 
 export interface AIProvider {
   id: string;
@@ -277,7 +278,19 @@ class AITranslationService {
       this.checkOllamaAvailability(),
       this.checkLMStudioAvailability()
     ]);
-    return this.providers;
+    // Overlay del catalogo modelli dal remote-config (aggiornabile senza
+    // rilasciare l'app): per i provider con un catalogo remoto usiamo QUELLO,
+    // così "Claude 3.5, GPT-4o" ecc. non invecchiano. Fallback ai default
+    // hardcoded quando il config non ha voci per quel provider.
+    try {
+      const cfg = getModelConfig();
+      return this.providers.map(p => {
+        const remote = getProviderModels(cfg, p.id);
+        return remote.length > 0 ? { ...p, models: remote.map(m => m.id) } : p;
+      });
+    } catch {
+      return this.providers;
+    }
   }
 
   /**

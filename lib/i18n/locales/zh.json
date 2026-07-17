@@ -7132,6 +7132,40 @@
     "emptyTm": "此语言对在记忆库中没有翻译。",
     "unavailable": "启用语义 TM 并安装嵌入模型以进行预索引。"
   },
+  "firstGame": {
+    "title": "翻译你的第一个游戏",
+    "subtitle": "我们从你的库中挑选了最简单的作品——几分钟即可获得首个结果。",
+    "pickedForYou": "从你的库中为你挑选",
+    "estMinutes": "约 {min} 分钟",
+    "translateNow": "立即翻译",
+    "chooseAnother": "换一个",
+    "later": "稍后",
+    "scanLibrary": "扫描库",
+    "noGames": "尚未在你的库中找到游戏。请扫描以开始。",
+    "noEasyGame": "未检测到简单的作品。打开库来选择你的第一个游戏。",
+    "reason": {
+      "renpy": "Ren'Py 使用纯文本文件：翻译快速可靠，是理想的第一个游戏。",
+      "rpgmaker": "RPG Maker 以 JSON 存储文本：提取和打补丁简单快速。",
+      "tyranoscript": "TyranoScript 基于文本脚本：直接、快速的翻译。",
+      "kirikiri": "KiriKiri 公开对话脚本：步骤少，适合作为第一个游戏。",
+      "wolf": "Wolf RPG 文本易于访问：稳妥的起点。",
+      "gamemaker": "GameMaker：文本可提取，难度中等但可控。",
+      "godot": "Godot：文本资源可读，复杂度中等。",
+      "unity": "Unity：支持良好（包括 IL2CPP），步骤稍多。",
+      "unreal": "Unreal Engine：强大但翻译较慢；建议在首次成功之后再尝试。",
+      "unknown": "无法确定引擎：我们仍会尝试，流程会自适应。"
+    }
+  },
+  "benchmark": {
+    "settingLabel": "为质量基准做贡献",
+    "settingDesc": "匿名发送已按提供商、语言对和类型计算的质量分数（0–100），以构建公开基准，展示在 IT→JA 的 JRPG 上哪个提供商最佳。不发送翻译文本或游戏名称。",
+    "cardTitle": "提供商质量基准",
+    "rankTitle": "提供商排名",
+    "samples": "样本",
+    "avgScore": "平均分",
+    "noData": "此语言/类型组合的数据仍然不足。",
+    "dataDriven": "数据驱动的自动选择已启用"
+  },
   "compat": {
     "settingTitle": "兼容性遥测",
     "settingDesc": "自动发送每次翻译的匿名结果(游戏、引擎、到达的步骤、成功或失败),用于构建社区公开兼容性数据库。",

@@ -11,6 +11,7 @@
 
 import { safeGetItem, safeSetItem } from './safe-storage';
 import { clientLogger } from '@/lib/client-logger';
+import { checkRedistribution } from './redistribution-guard';
 
 const PACKS_STORAGE_KEY = 'gspack_installed';
 
@@ -220,6 +221,16 @@ export async function createGspack(options: ExportOptions): Promise<{ data: stri
   const notes = options.includeNotes && options.notes ? options.notes : '';
 
   const packData: GspackData = { manifest, files, glossary, notes };
+
+  // Garanzia "solo diff": un pack deve contenere TRADUZIONI, non testo originale
+  // del gioco. All'export (che include bozze/WIP) solo segnaliamo: il blocco vero
+  // avviene al PUBLISH sul Patch Hub (vedi community-hub-service.publishPack).
+  try {
+    const rd = checkRedistribution(packData);
+    if (rd.flagged) {
+      clientLogger.warn(`[gspack] possibile redistribuzione (${rd.severity}): ${rd.reasons.map(r => r.code).join(', ')}`);
+    }
+  } catch { /* la verifica non deve mai bloccare l'export locale */ }
 
   // Calcola checksum sul contenuto: SHA-256 (integrità reale, blocca l'import
   // se manomesso) + legacy simpleHash per i lettori vecchi.

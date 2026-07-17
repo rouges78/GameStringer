@@ -14,6 +14,7 @@ import { buildRelevantGlossaryHint, extractTerms, loadGlossary, loadGlossaryConf
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from '@/lib/context-harvester';
 import { composeGenreAndCharacterContext, type GameGenre } from '@/lib/ai/genre-prompts';
 import { suggestBatchImprovements, type PostEditRequest } from '@/lib/ai/ai-post-edit';
+import { getModelConfig, getProviderPrice1k } from '@/lib/remote-config';
 
 // ============================================================================
 // TYPES
@@ -1155,20 +1156,11 @@ export function estimateBatchCost(
   const estimatedTmHits = useTranslationMemory ? Math.floor(totalItems * tmHitRate) : 0;
   const estimatedApiCalls = totalItems - estimatedTmHits;
   
-  // Cost per provider (per 1K tokens) - Aggiornato 2025
-  const costPer1K: Record<string, number> = {
-    openai: 0.00015,   // GPT-4o-mini ($0.15/1M input)
-    gpt5: 0.0025,      // GPT-4o ($2.50/1M input)
-    gemini: 0.000125,  // Gemini 2.0 Flash ($0.10/1M input) - BEST VALUE
-    claude: 0.003,     // Claude 3.5 Sonnet ($3/1M input) - BEST QUALITY
-    deepseek: 0.00014, // DeepSeek V3 ($0.14/1M input) - CHEAPEST
-    mistral: 0.002,    // Mistral Large ($2/1M input)
-    openrouter: 0.001, // Varia per modello
-    deepl: 0.02,       // DeepL Pro ($20/1M chars)
-    google: 0.00002,   // Google Translate ($20/1M chars)
-  };
-  
-  const estimatedCost = (estimatedTokens / 1000) * (costPer1K[provider] || 0.002) * (estimatedApiCalls / totalItems);
+  // Prezzo per 1K token dal remote-config (aggiornabile senza rilasciare l'app;
+  // fallback ai default bundled = valori storici). Vedi lib/remote-config.ts.
+  const per1k = getProviderPrice1k(getModelConfig(), provider);
+
+  const estimatedCost = (estimatedTokens / 1000) * per1k * (estimatedApiCalls / totalItems);
   
   // Time estimate: ~1 sec per API call + 0.5 sec delay
   const estimatedTime = estimatedApiCalls * 1.5;

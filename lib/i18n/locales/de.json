@@ -7132,6 +7132,40 @@
     "emptyTm": "Keine Übersetzungen im Speicher für dieses Paar.",
     "unavailable": "Aktiviere den semantischen TM und installiere ein Embedding-Modell zum Vorindizieren."
   },
+  "firstGame": {
+    "title": "Übersetze dein erstes Spiel",
+    "subtitle": "Wir haben den einfachsten Titel deiner Bibliothek gewählt – wenige Minuten bis zum ersten Ergebnis.",
+    "pickedForYou": "Für dich aus deiner Bibliothek ausgewählt",
+    "estMinutes": "≈ {min} Min.",
+    "translateNow": "Jetzt übersetzen",
+    "chooseAnother": "Anderes wählen",
+    "later": "Später",
+    "scanLibrary": "Bibliothek scannen",
+    "noGames": "Ich habe noch keine Spiele in deiner Bibliothek gefunden. Scanne sie, um zu beginnen.",
+    "noEasyGame": "Kein einfacher Titel erkannt. Öffne die Bibliothek, um dein erstes Spiel zu wählen.",
+    "reason": {
+      "renpy": "Ren'Py nutzt Textdateien: die Übersetzung ist schnell und zuverlässig – ideal als erstes Spiel.",
+      "rpgmaker": "RPG Maker speichert Texte als JSON: einfaches, schnelles Extrahieren und Patchen.",
+      "tyranoscript": "TyranoScript basiert auf Textskripten: direkte, schnelle Übersetzung.",
+      "kirikiri": "KiriKiri legt die Dialogskripte offen: ein gutes erstes Spiel, wenige Schritte.",
+      "wolf": "Wolf RPG hat zugängliche Texte: ein solider Ausgangspunkt.",
+      "gamemaker": "GameMaker: extrahierbarer Text, mittlere aber machbare Schwierigkeit.",
+      "godot": "Godot: lesbare Textressourcen, mittlere Komplexität.",
+      "unity": "Unity: gut unterstützt (auch IL2CPP), ein paar Schritte mehr.",
+      "unreal": "Unreal Engine: mächtig, aber langsamer zu übersetzen; besser nach dem ersten Erfolg.",
+      "unknown": "Engine nicht sicher erkannt: wir versuchen es trotzdem, die Pipeline passt sich an."
+    }
+  },
+  "benchmark": {
+    "settingLabel": "Zum Qualitäts-Benchmark beitragen",
+    "settingDesc": "Sende anonym die bereits berechneten Qualitätswerte (0–100) pro Anbieter, Sprachpaar und Genre, um den öffentlichen Benchmark aufzubauen, welcher Anbieter für IT→JA bei JRPGs am besten ist. Kein übersetzter Text, keine Spielnamen.",
+    "cardTitle": "Anbieter-Qualitäts-Benchmark",
+    "rankTitle": "Anbieter-Rangliste",
+    "samples": "Stichproben",
+    "avgScore": "Durchschnittswert",
+    "noData": "Noch zu wenige Daten für diese Sprache/Genre-Kombination.",
+    "dataDriven": "Datenbasierte Auto-Select aktiv"
+  },
   "compat": {
     "settingTitle": "Kompatibilitäts-Telemetrie",
     "settingDesc": "Sendet automatisch das anonyme Ergebnis jeder Übersetzung (Spiel, Engine, erreichter Schritt, Erfolg oder Fehlschlag), um die öffentliche Kompatibilitätsdatenbank der Community aufzubauen.",

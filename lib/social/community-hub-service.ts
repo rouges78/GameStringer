@@ -6,6 +6,8 @@
  */
 
 import { clientLogger } from '@/lib/client-logger';
+import { checkRedistribution } from '@/lib/redistribution-guard';
+import type { GspackData } from '@/lib/gspack-manager';
 
 export type RetroPlatform =
   | 'nes' | 'snes' | 'n64' | 'gb' | 'gbc' | 'gba' | 'nds' | '3ds'
@@ -726,6 +728,45 @@ class CommunityHubService {
         // Sentinella tradotta dalla UI (vedi patchHubPage.publishOnlineLoginRequired).
         throw new Error('community-hub:online-login-required');
       }
+
+      // Garanzia "solo diff": non pubblichiamo sul Patch Hub pack che sembrano
+      // redistribuire il TESTO ORIGINALE del gioco (solo traduzioni/diff sono
+      // ammesse). Basato sui segnali interni al pack; 'block' respinge, 'warn'
+      // solo logga (falsi positivi gestiti dalla moderazione/override).
+      try {
+        const rawFiles = (localPack.files || []) as Array<Record<string, unknown>>;
+        const gp = {
+          manifest: { translation: {
+            totalStrings: Number(localPack.totalStrings) || 0,
+            translatedStrings: Number(localPack.translatedStrings) || 0,
+          } } as GspackData['manifest'],
+          files: rawFiles.map(f => ({
+            path: String(f.path || f.name || 'file'),
+            originalPath: '',
+            content: typeof f.content === 'string' ? f.content : '',
+            format: String(f.type || ''),
+            stringCount: 0,
+            translatedCount: 0,
+          })),
+          glossary: [] as GspackData['glossary'],
+          notes: '',
+        } as GspackData;
+        const rd = checkRedistribution(gp);
+        if (rd.severity === 'block') {
+          clientLogger.warn('[CommunityHub] publish respinto (redistribution): ' + rd.reasons.map(r => r.code).join(','));
+          // Sentinella: la UI può mapparla su un messaggio localizzato
+          // (TODO i18n patchHubPage.publishRedistributionBlocked in tutti i locale).
+          throw new Error('community-hub:redistribution-blocked');
+        }
+        if (rd.flagged) {
+          clientLogger.warn('[CommunityHub] pack segnalato (redistribution): ' + rd.reasons.map(r => r.code).join(','));
+        }
+      } catch (e) {
+        // Rilancia solo il blocco esplicito; qualsiasi altro errore della verifica
+        // non deve impedire la pubblicazione (fail-open sulla verifica stessa).
+        if (e instanceof Error && e.message === 'community-hub:redistribution-blocked') throw e;
+      }
+
       const remote = await backend.publishPack(localPack, files);
       // Riconcilia il record locale con quello remoto (in moderazione lato server).
       localPack.remoteId = remote.id;

@@ -1,0 +1,69 @@
+# Audit sicurezza dipendenze + SBOM (task ROADMAP `sec-deps`).
+#
+# Intercetta CVE note su npm e cargo PRIMA del rilascio e produce un SBOM
+# CycloneDX come artefatto. Gating: fallisce solo su vulnerabilità
+# high/critical (il rumore low/moderate non blocca la CI).
+#
+# NB: i workflow in .github/ sono protetti — questo file va rivisto/approvato
+# da Davide prima del merge. È un punto di partenza sensato, non definitivo.
+
+name: security-audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1' # ogni lunedì mattina: intercetta CVE nuove su deps ferme
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    name: npm audit + SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Non usiamo `npm ci` (build completa non necessaria): l'audit lavora sul lockfile.
+      - name: npm audit (gate high/critical)
+        run: npm audit --audit-level=high
+      - name: Genera SBOM CycloneDX (npm)
+        if: always()
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.json || true
+      - name: Carica SBOM npm
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-npm
+          path: sbom-npm.json
+          if-no-files-found: ignore
+
+  cargo-audit:
+    name: cargo audit + SBOM
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Installa cargo-audit e cargo-cyclonedx
+        run: cargo install cargo-audit cargo-cyclonedx --locked || cargo install cargo-audit cargo-cyclonedx
+      # cargo-audit esce !=0 su vulnerabilità: è il gating desiderato.
+      - name: cargo audit
+        run: cargo audit
+      - name: Genera SBOM CycloneDX (cargo)
+        if: always()
+        run: cargo cyclonedx --format json || true
+      - name: Carica SBOM cargo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cargo
+          path: src-tauri/**/*.cdx.json
+          if-no-files-found: ignore

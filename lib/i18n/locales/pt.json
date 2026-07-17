@@ -7132,6 +7132,40 @@
     "emptyTm": "Nenhuma tradução na memória para este par.",
     "unavailable": "Ative a MT semântica e instale um modelo de embedding para pré-indexar."
   },
+  "firstGame": {
+    "title": "Traduza o seu primeiro jogo",
+    "subtitle": "Escolhemos o título mais fácil da sua biblioteca — poucos minutos até ao primeiro resultado.",
+    "pickedForYou": "Escolhido para si a partir da sua biblioteca",
+    "estMinutes": "≈ {min} min",
+    "translateNow": "Traduzir agora",
+    "chooseAnother": "Escolher outro",
+    "later": "Mais tarde",
+    "scanLibrary": "Analisar a biblioteca",
+    "noGames": "Ainda não encontrei jogos na sua biblioteca. Analise-a para começar.",
+    "noEasyGame": "Nenhum título fácil detetado. Abra a biblioteca para escolher o seu primeiro jogo.",
+    "reason": {
+      "renpy": "Ren'Py usa ficheiros de texto: a tradução é rápida e fiável, ideal como primeiro jogo.",
+      "rpgmaker": "RPG Maker guarda os textos em JSON: extração e patch simples e rápidos.",
+      "tyranoscript": "TyranoScript baseia-se em scripts de texto: tradução direta e rápida.",
+      "kirikiri": "KiriKiri expõe os scripts de diálogo: um bom primeiro jogo, poucos passos.",
+      "wolf": "Wolf RPG tem textos acessíveis: um bom ponto de partida.",
+      "gamemaker": "GameMaker: texto extraível, dificuldade média mas gerível.",
+      "godot": "Godot: recursos de texto legíveis, complexidade média.",
+      "unity": "Unity: bem suportado (incluindo IL2CPP), alguns passos a mais.",
+      "unreal": "Unreal Engine: poderoso mas mais lento de traduzir; melhor após o primeiro sucesso.",
+      "unknown": "Motor não identificado com certeza: tentamos à mesma, a pipeline adapta-se."
+    }
+  },
+  "benchmark": {
+    "settingLabel": "Contribua para o benchmark de qualidade",
+    "settingDesc": "Envie anonimamente as pontuações de qualidade (0–100) já calculadas por fornecedor, par de idiomas e género, para construir o benchmark público de qual fornecedor é melhor para IT→JA em JRPG. Sem texto traduzido, sem nomes de jogos.",
+    "cardTitle": "Benchmark de qualidade dos fornecedores",
+    "rankTitle": "Classificação dos fornecedores",
+    "samples": "amostras",
+    "avgScore": "pontuação média",
+    "noData": "Ainda há poucos dados para esta combinação de idioma/género.",
+    "dataDriven": "Auto-Select orientado por dados ativo"
+  },
   "compat": {
     "settingTitle": "Telemetria de compatibilidade",
     "settingDesc": "Envia automaticamente o resultado anônimo de cada tradução (jogo, engine, etapa alcançada, sucesso ou falha) para construir o banco de dados público de compatibilidade da comunidade.",

@@ -90,6 +90,7 @@ import { clientLogger } from '@/lib/client-logger';
 
 // Lazy-loaded components for code splitting
 const InteractiveTutorial = lazy(() => import('@/components/onboarding/interactive-tutorial').then(m => ({ default: m.InteractiveTutorial })));
+const FirstGameFlow = lazy(() => import('@/components/onboarding/first-game-flow').then(m => ({ default: m.FirstGameFlow })));
 const TermsOfUse = lazy(() => import('@/components/onboarding/terms-of-use').then(m => ({ default: m.TermsOfUse })));
 const CommandPalette = lazy(() => import('@/components/ui/command-palette').then(m => ({ default: m.CommandPalette })));
 const GlobalSearch = lazy(() => import('@/components/layout/global-search').then(m => ({ default: m.GlobalSearch })));
@@ -1386,7 +1387,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Tutorial Interattivo (onboarding prima visita) */}
         <Suspense fallback={<LazyFallback />}><InteractiveTutorial /></Suspense>
-        
+
+        {/* Primo gioco in 5 minuti (dopo il tutorial) */}
+        <Suspense fallback={<LazyFallback />}><FirstGameFlow /></Suspense>
+
         {/* Tutorial per-pagina (provider context) */}
         <TutorialOverlay />
         

@@ -3759,6 +3759,30 @@
     "disconnectedAll": "Disconnesso da tutte le altre sessioni",
     "thisProfile": "questo profilo"
   },
+  "firstGame": {
+    "title": "Traduci il tuo primo gioco",
+    "subtitle": "Ti proponiamo il titolo più facile della tua libreria: pochi minuti al primo risultato.",
+    "pickedForYou": "Scelto per te dalla tua libreria",
+    "estMinutes": "≈ {min} min",
+    "translateNow": "Traduci ora",
+    "chooseAnother": "Scegli un altro",
+    "later": "Più tardi",
+    "scanLibrary": "Scansiona la libreria",
+    "noGames": "Non ho ancora trovato giochi nella tua libreria. Scansionala per iniziare.",
+    "noEasyGame": "Nessun titolo facile individuato. Apri la libreria per scegliere tu il primo gioco.",
+    "reason": {
+      "renpy": "Ren'Py usa file di testo: la traduzione è veloce e affidabile, ideale come primo gioco.",
+      "rpgmaker": "RPG Maker salva i testi in JSON: estrazione e patch semplici e rapide.",
+      "tyranoscript": "TyranoScript è basato su script di testo: traduzione diretta e veloce.",
+      "kirikiri": "KiriKiri espone gli script di dialogo: buon primo gioco, pochi passaggi.",
+      "wolf": "Wolf RPG ha testi accessibili: un buon banco di prova iniziale.",
+      "gamemaker": "GameMaker: testi estraibili, difficoltà media ma gestibile.",
+      "godot": "Godot: risorse di testo leggibili, complessità media.",
+      "unity": "Unity: supportato bene (anche IL2CPP), qualche passaggio in più.",
+      "unreal": "Unreal Engine: potente ma più lento da tradurre; meglio dopo il primo successo.",
+      "unknown": "Engine non identificato con certezza: proviamo comunque, la pipeline si adatta."
+    }
+  },
   "onboarding": {
     "step": "Passo {current} di {total}",
     "back": "Indietro",
@@ -7131,6 +7155,16 @@
     "vectors": "vettori",
     "emptyTm": "Nessuna traduzione in memoria per questa coppia.",
     "unavailable": "Attiva la TM semantica e installa un modello di embedding per pre-indicizzare."
+  },
+  "benchmark": {
+    "settingLabel": "Contribuisci al benchmark qualità",
+    "settingDesc": "Invia in forma anonima i punteggi di qualità (0–100) già calcolati per provider, coppia di lingue e genere, per costruire il benchmark pubblico \"quale provider è migliore per IT→JA su JRPG\". Nessun testo tradotto, nessun nome gioco.",
+    "cardTitle": "Benchmark qualità provider",
+    "rankTitle": "Classifica provider",
+    "samples": "campioni",
+    "avgScore": "punteggio medio",
+    "noData": "Ancora pochi dati per questa combinazione lingua/genere.",
+    "dataDriven": "Auto-Select data-driven attivo"
   },
   "compat": {
     "settingTitle": "Telemetria di compatibilità",

@@ -3,6 +3,11 @@
  * Sistema di revisione automatica delle traduzioni con suggerimenti intelligenti
  */
 
+// Estrazione dei token protetti centralizzata in placeholder-guard: stessi token
+// rilevati ovunque (control code RPG Maker, ruby, printf estesi, entità…),
+// coerente con il pass di reflection e l'auto-fix.
+import { extractPlaceholders } from './placeholder-guard'
+
 export type ReviewSeverity = 'critical' | 'warning' | 'suggestion' | 'info'
 
 export type ReviewCategory = 
@@ -161,34 +166,12 @@ export const SEVERITY_CONFIG: Record<ReviewSeverity, {
   }
 }
 
-// Pattern di rilevamento problemi
-const PLACEHOLDER_PATTERNS = [
-  /\{[^}]+\}/g,           // {variable}
-  /\{\{[^}]+\}\}/g,       // {{variable}}
-  /%[sd@]/g,              // %s, %d, %@
-  /%\d+\$[sd@]/g,         // %1$s, %2$d
-  /\$\{[^}]+\}/g,         // ${variable}
-  /<[^>]+>/g,             // <tag>
-  /\[\[[^\]]+\]\]/g,      // [[variable]]
-]
-
 const GAMING_TERMS: Record<string, string[]> = {
   en: ['level', 'score', 'health', 'mana', 'XP', 'HP', 'MP', 'NPC', 'quest', 'achievement', 'inventory', 'spawn', 'respawn', 'buff', 'debuff', 'cooldown', 'DPS', 'tank', 'healer', 'boss', 'loot', 'raid', 'dungeon', 'guild', 'clan'],
   it: ['livello', 'punteggio', 'salute', 'mana', 'XP', 'HP', 'MP', 'NPC', 'missione', 'obiettivo', 'inventario', 'spawn', 'respawn', 'buff', 'debuff', 'cooldown', 'DPS', 'tank', 'curatore', 'boss', 'bottino', 'raid', 'dungeon', 'gilda', 'clan']
 }
 
 // Funzioni di rilevamento
-
-function extractPlaceholders(text: string): string[] {
-  const placeholders: string[] = []
-  for (const pattern of PLACEHOLDER_PATTERNS) {
-    const matches = text.match(pattern)
-    if (matches) {
-      placeholders.push(...matches)
-    }
-  }
-  return placeholders
-}
 
 function checkPlaceholders(original: string, translated: string): ReviewIssue[] {
   const issues: ReviewIssue[] = []

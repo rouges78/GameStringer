@@ -10,10 +10,25 @@ import {
   estimateBatchCost,
   type ParseResult,
 } from '@/lib/neural-translator';
+import { getModelConfig, getProviderModels } from '@/lib/remote-config';
 
 // ============================================================================
 // TYPES
 // ============================================================================
+
+/**
+ * Etichetta di un modello specifico dal remote-config (aggiornabile senza
+ * rilasciare l'app), con fallback al nome storico se il config non lo contiene.
+ * Evita che le raccomandazioni citino modelli invecchiati ("GPT-4o", "DeepSeek V3").
+ */
+function modelLabelById(catalog: string, modelId: string, fallback: string): string {
+  try {
+    const m = getProviderModels(getModelConfig(), catalog).find(x => x.id === modelId);
+    return m?.label || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export interface ProviderRecommendation {
   provider: string;
@@ -85,7 +100,7 @@ export function getRecommendedProvider(
   if (isAsianTarget || (isTechnical && isAsianTarget)) {
     return {
       provider: 'deepseek',
-      reason: 'DeepSeek V3 è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici',
+      reason: `${modelLabelById('deepseek', 'deepseek-chat', 'DeepSeek V3')} è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici`,
       confidence: 0.85,
     };
   }
@@ -109,7 +124,7 @@ export function getRecommendedProvider(
   if (isEuropeanTarget && isUI) {
     return {
       provider: 'gpt5',
-      reason: 'GPT-4o è il gold standard per lingue europee ad alta risorsa',
+      reason: `${modelLabelById('openai', 'gpt-4o', 'GPT-4o')} è il gold standard per lingue europee ad alta risorsa`,
       confidence: 0.85,
     };
   }
@@ -125,7 +140,7 @@ export function getRecommendedProvider(
   // Default: GPT-4o for quality/cost balance
   return {
     provider: 'gpt5',
-    reason: 'GPT-4o offre il miglior bilanciamento qualità/consistenza per la maggior parte dei casi',
+    reason: `${modelLabelById('openai', 'gpt-4o', 'GPT-4o')} offre il miglior bilanciamento qualità/consistenza per la maggior parte dei casi`,
     confidence: 0.75,
   };
 }

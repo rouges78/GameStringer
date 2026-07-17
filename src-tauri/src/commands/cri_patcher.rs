@@ -1692,6 +1692,161 @@ mod tests {
     use super::*;
 
     // ─────────────────────────────────────────────────────────────
+    // CRILAYLA — compressore di test + round-trip (chiude il residuo fixture)
+    //
+    // `decompress_crilayla` è codice di PRODUZIONE ma finora non aveva una
+    // fixture che lo esercitasse (serviva un compressore o campioni reali).
+    // Qui generiamo uno stream CRILAYLA valido (bit-level, lettura all'indietro,
+    // campi LSB-first, distanza minima 3, VLE della lunghezza) e verifichiamo
+    // che il decompressore reale lo inverta. Logica validata anche via port
+    // standalone (6/6 round-trip) prima di essere portata qui.
+    // ─────────────────────────────────────────────────────────────
+
+    fn emit_bits(bits: &mut Vec<u8>, val: u32, n: usize) {
+        for i in 0..n {
+            bits.push(((val >> i) & 1) as u8);
+        }
+    }
+
+    fn emit_length(bits: &mut Vec<u8>, l: usize) {
+        match l {
+            3 => emit_bits(bits, 0, 2),
+            4 => emit_bits(bits, 1, 2),
+            5 => { emit_bits(bits, 2, 2); emit_bits(bits, 0, 1); }
+            6 => { emit_bits(bits, 2, 2); emit_bits(bits, 1, 1); }
+            _ => {
+                emit_bits(bits, 3, 2);
+                let mut eb = 3usize;
+                let mut base = 7usize;
+                loop {
+                    let span = (1usize << eb) - 1;
+                    if l - base < span {
+                        emit_bits(bits, (l - base) as u32, eb);
+                        break;
+                    }
+                    emit_bits(bits, span as u32, eb);
+                    base += span;
+                    eb += 1;
+                    assert!(eb <= 20, "lunghezza CRILAYLA troppo grande");
+                }
+            }
+        }
+    }
+
+    /// Comprime la regione (dopo il prefisso) come reverse-LZ: i match puntano
+    /// in avanti (indici più alti, già scritti perché l'output si riempie
+    /// dall'ultimo byte verso il primo).
+    fn compress_region(region: &[u8]) -> Vec<u8> {
+        let m = region.len();
+        let mut bits: Vec<u8> = Vec::new();
+        let mut p = m;
+        while p > 0 {
+            let mut best_len = 0usize;
+            let mut best_d = 0usize;
+            let maxd = std::cmp::min(8194usize, m - p);
+            let mut d = 3usize;
+            while d <= maxd {
+                let mut l = 0usize;
+                while l < p && region[p - 1 - l] == region[p - 1 - l + d] {
+                    l += 1;
+                }
+                if l >= 3 && l > best_len {
+                    best_len = l;
+                    best_d = d;
+                    if l >= 64 { break; }
+                }
+                d += 1;
+            }
+            if best_len >= 3 {
+                bits.push(1);
+                emit_bits(&mut bits, (best_d - 3) as u32, 13);
+                emit_length(&mut bits, best_len);
+                p -= best_len;
+            } else {
+                bits.push(0);
+                emit_bits(&mut bits, region[p - 1] as u32, 8);
+                p -= 1;
+            }
+        }
+        // Impacchetta i bit nell'ordine che il reader si aspetta (ultimo byte
+        // per primo, LSB per primo).
+        let nbytes = (bits.len() + 7) / 8;
+        let mut buf = vec![0u8; nbytes];
+        for (k, &b) in bits.iter().enumerate() {
+            if b == 1 {
+                let bi = nbytes - 1 - (k >> 3);
+                buf[bi] |= 1 << (k & 7);
+            }
+        }
+        buf
+    }
+
+    /// Costruisce un blob CRILAYLA completo (magic + header + compresso + prefisso).
+    fn build_crilayla(original: &[u8]) -> Vec<u8> {
+        let prefix_len = std::cmp::min(0x100usize, original.len());
+        let prefix = &original[..prefix_len];
+        let region = &original[prefix_len..];
+        let comp = compress_region(region);
+        let mut blob = Vec::new();
+        blob.extend_from_slice(b"CRILAYLA");
+        blob.extend_from_slice(&(region.len() as u32).to_le_bytes());
+        blob.extend_from_slice(&(comp.len() as u32).to_le_bytes());
+        blob.extend_from_slice(&comp);
+        blob.extend_from_slice(prefix);
+        blob
+    }
+
+    fn crilayla_roundtrip(original: &[u8]) {
+        let blob = build_crilayla(original);
+        let out = decompress_crilayla(&blob, 0).expect("decompressione CRILAYLA fallita");
+        assert_eq!(out, original, "round-trip CRILAYLA non corrisponde (len {})", original.len());
+    }
+
+    #[test]
+    fn test_crilayla_roundtrip_prefix_only() {
+        // File più piccolo del prefisso 0x100: tutto prefisso, regione vuota.
+        let data: Vec<u8> = (0..50u16).map(|i| (i & 0xff) as u8).collect();
+        crilayla_roundtrip(&data);
+    }
+
+    #[test]
+    fn test_crilayla_roundtrip_repetitive() {
+        // Testo ripetitivo → forza i backreference.
+        let mut data = vec![0x41u8; 0x100];
+        let s = "ABCABCABCABC DIALOGO DI PROVA ".repeat(20);
+        data.extend_from_slice(s.as_bytes());
+        crilayla_roundtrip(&data);
+    }
+
+    #[test]
+    fn test_crilayla_roundtrip_random() {
+        // Dati pseudo-casuali → quasi tutti letterali.
+        let mut data = vec![7u8; 0x100];
+        let mut seed: u64 = 12345;
+        for _ in 0..500 {
+            seed = seed.wrapping_mul(1103515245).wrapping_add(12345) & 0x7fff_ffff;
+            data.push((seed & 0xff) as u8);
+        }
+        crilayla_roundtrip(&data);
+    }
+
+    #[test]
+    fn test_crilayla_roundtrip_long_run() {
+        // Run lunghissimo di byte uguali → backreference sovrapposti (stile RLE).
+        let mut data = vec![0u8; 0x100];
+        data.extend(std::iter::repeat(0x41u8).take(1000));
+        crilayla_roundtrip(&data);
+    }
+
+    #[test]
+    fn test_crilayla_roundtrip_text_with_placeholders() {
+        let mut data = vec![32u8; 0x100];
+        let s = "Hai %d monete, {name}! ".repeat(40);
+        data.extend_from_slice(s.as_bytes());
+        crilayla_roundtrip(&data);
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // BINARY READ HELPERS
     // ─────────────────────────────────────────────────────────────
 
