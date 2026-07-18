@@ -144,16 +144,32 @@ export interface ActivityItem {
 
 // ─── PROFILES ────────────────────────────────────────────────────────────────
 
+// Il record remoto di user_profiles usa `id` come PK (= auth user id) e non
+// espone le colonne legacy `user_id`/`display_name`. Normalizziamo qui così i
+// consumatori (UserProfileView, chat-panel, …) che leggono quei campi funzionano
+// contro lo schema reale senza rompersi.
+function normalizeProfile(row: UserProfile | null): UserProfile | null {
+  if (!row) return null;
+  const anyRow = row as unknown as Record<string, unknown>;
+  return {
+    ...row,
+    user_id: row.user_id ?? (anyRow.id as string),
+    display_name: row.display_name ?? row.username ?? null,
+  };
+}
+
 export async function getProfile(userId: string): Promise<UserProfile | null> {
-  return safeQuery<UserProfile>('user_profiles', (supabase) =>
-    supabase.from('user_profiles').select('*').eq('user_id', userId).single()
+  const row = await safeQuery<UserProfile>('user_profiles', (supabase) =>
+    supabase.from('user_profiles').select('*').eq('id', userId).single()
   );
+  return normalizeProfile(row);
 }
 
 export async function getProfileByUsername(username: string): Promise<UserProfile | null> {
-  return safeQuery<UserProfile>('user_profiles', (supabase) =>
+  const row = await safeQuery<UserProfile>('user_profiles', (supabase) =>
     supabase.from('user_profiles').select('*').eq('username', username).single()
   );
+  return normalizeProfile(row);
 }
 
 export async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<boolean> {

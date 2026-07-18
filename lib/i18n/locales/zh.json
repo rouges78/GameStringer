@@ -4524,7 +4524,8 @@
     "packsAvailable": "个语言包",
     "noPacksDesc": "完成翻译后，通过 Patch Hub 以翻译包形式分享。",
     "openPatchHub": "打开 Patch Hub",
-    "friends": "好友"
+    "friends": "好友",
+    "tabShowcase": "排行榜"
   },
   "social": {
     "friends": "好友",
@@ -7222,5 +7223,14 @@
     "autoInstallDesc": "将Noto Sans(或其CJK变体)安装到游戏中并自动更新配置。会创建备份:随时可以还原。",
     "installFont": "安装Noto字体",
     "removeFont": "还原原始字体"
+  },
+  "showcase": {
+    "topTranslators": "译者排行榜",
+    "topPacks": "精选补丁包",
+    "sortDownloads": "下载最多",
+    "sortRating": "评分最高",
+    "emptyTranslators": "暂无译者上榜。",
+    "emptyTranslatorsHint": "发布补丁包即可出现在这里。",
+    "emptyPacks": "暂无已发布的补丁包。"
   }
 }

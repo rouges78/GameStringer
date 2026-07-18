@@ -15,11 +15,12 @@ import {
   Download,
   Flame,
   LayoutDashboard,
+  Trophy,
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { ForumHome, CommunityOverview, ThreadView, NewThread } from '@/components/forum';
-import { FriendsSidebar, NotificationsPanel, OnlineIndicator, ChatPanel } from '@/components/social';
+import { FriendsSidebar, NotificationsPanel, OnlineIndicator, ChatPanel, Showcase, UserProfileView } from '@/components/social';
 import { SocialOnboarding } from '@/components/social/social-onboarding';
 import { useProfiles } from '@/hooks/use-profiles';
 import { updatePresence } from '@/lib/social/social';
@@ -29,8 +30,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ForumThread } from '@/lib/social/forum';
 
-type View = 'home' | 'thread' | 'new';
-type HomeTab = 'overview' | 'threads' | 'packs';
+type View = 'home' | 'thread' | 'new' | 'profile';
+type HomeTab = 'overview' | 'threads' | 'packs' | 'showcase';
 
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export default function CommunityHubPage() {
   const [showChat, setShowChat] = useState(false);
   const [_chatUserId, setChatUserId] = useState<string | null>(null);
   const [stats, setStats] = useState<ForumStats | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
 
   const userId = currentProfile?.id || '';
   const userName = currentProfile?.name || '';
@@ -128,6 +130,12 @@ export default function CommunityHubPage() {
   const handleBack = () => {
     setView('home');
     setSelectedThread(null);
+    setProfileUsername(null);
+  };
+
+  const handleOpenProfile = (username: string) => {
+    setProfileUsername(username);
+    setView('profile');
   };
 
   const handleThreadCreated = (thread: ForumThread) => {
@@ -145,6 +153,7 @@ export default function CommunityHubPage() {
     { id: 'overview', label: t('communityHub.tabOverview') || 'Panoramica', icon: LayoutDashboard },
     { id: 'threads', label: t('communityHub.tabThreads') || 'Discussioni', icon: MessageSquare },
     { id: 'packs', label: t('communityHub.tabPacks') || 'Pack', icon: Package },
+    { id: 'showcase', label: t('communityHub.tabShowcase') || 'Classifiche', icon: Trophy },
   ];
 
   const kpiVisible =
@@ -281,6 +290,18 @@ export default function CommunityHubPage() {
                 packsOnly
                 onOpenThread={handleOpenThread}
                 onNewThread={handleNewThread}
+              />
+            )}
+
+            {view === 'home' && homeTab === 'showcase' && (
+              <Showcase onOpenProfile={handleOpenProfile} />
+            )}
+
+            {view === 'profile' && profileUsername && (
+              <UserProfileView
+                username={profileUsername}
+                currentUserId={userId || undefined}
+                onClose={handleBack}
               />
             )}
 

@@ -4914,7 +4914,8 @@
     "packsAvailable": "packs disponíveis",
     "noPacksDesc": "Conclua uma tradução e compartilhe-a como Translation Pack pelo Patch Hub.",
     "openPatchHub": "Abrir Patch Hub",
-    "friends": "Amigos"
+    "friends": "Amigos",
+    "tabShowcase": "Classificação"
   },
   "social": {
     "friends": "Amigos",
@@ -7222,5 +7223,14 @@
     "autoInstallDesc": "Instala a Noto Sans (ou a variante CJK) no jogo e atualiza a configuração por você. Um backup é criado: é possível restaurar a qualquer momento.",
     "installFont": "Instalar fonte Noto",
     "removeFont": "Restaurar originais"
+  },
+  "showcase": {
+    "topTranslators": "Melhores tradutores",
+    "topPacks": "Packs em destaque",
+    "sortDownloads": "Mais baixados",
+    "sortRating": "Mais bem avaliados",
+    "emptyTranslators": "Ainda não há tradutores na classificação.",
+    "emptyTranslatorsHint": "Publique um pack para aparecer aqui.",
+    "emptyPacks": "Ainda não há packs publicados."
   }
 }

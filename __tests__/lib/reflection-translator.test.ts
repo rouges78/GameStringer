@@ -368,14 +368,14 @@ describe('maybeReflect (provider mockato)', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('rispetta mode off da input', async () => {
+  it('mode off: spegne il critico LLM ma l\'auto-fix resta attivo (garanzia)', async () => {
     const spy = vi.fn();
     global.fetch = spy as unknown as typeof fetch;
 
     const outcome = await maybeReflect(
       {
         texts: ['You gained %d gold!'],
-        translations: ['Hai guadagnato oro!'],
+        translations: ['Hai guadagnato oro!'], // %d perso
         targetLanguage: 'it',
         mode: 'off',
       },
@@ -383,11 +383,16 @@ describe('maybeReflect (provider mockato)', () => {
       'fake-key'
     );
 
+    // Nessuna chiamata LLM (costi zero)…
     expect(outcome.candidates).toBe(0);
+    expect(outcome.refined).toBe(0);
     expect(spy).not.toHaveBeenCalled();
+    // …ma la protezione dei placeholder è comunque garantita.
+    expect(outcome.repaired).toBe(1);
+    expect(outcome.translations[0]).toBe('Hai guadagnato oro! %d');
   });
 
-  it('rispetta reflectionMode off dalle impostazioni utente', async () => {
+  it('reflectionMode off dalle impostazioni: niente LLM, auto-fix attivo', async () => {
     mockLocalStorageGetItem(JSON.stringify({ translation: { reflectionMode: 'off' } }));
     const spy = vi.fn();
     global.fetch = spy as unknown as typeof fetch;
@@ -404,6 +409,30 @@ describe('maybeReflect (provider mockato)', () => {
 
     expect(outcome.candidates).toBe(0);
     expect(spy).not.toHaveBeenCalled();
+    expect(outcome.repaired).toBe(1);
+    expect(outcome.translations[0]).toBe('Hai guadagnato oro! %d');
+  });
+
+  it('mode off + autoFix:false = mani ferme del tutto (opt-out esplicito)', async () => {
+    const spy = vi.fn();
+    global.fetch = spy as unknown as typeof fetch;
+
+    const outcome = await maybeReflect(
+      {
+        texts: ['You gained %d gold!'],
+        translations: ['Hai guadagnato oro!'],
+        targetLanguage: 'it',
+        mode: 'off',
+        autoFix: false,
+      },
+      'groq',
+      'fake-key'
+    );
+
+    expect(outcome.candidates).toBe(0);
+    expect(outcome.repaired).toBe(0);
+    expect(spy).not.toHaveBeenCalled();
+    expect(outcome.translations[0]).toBe('Hai guadagnato oro!');
   });
 
   it('gestisce risposta del critico non-JSON senza rompere nulla', async () => {

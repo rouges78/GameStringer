@@ -4,6 +4,7 @@
 // job lungo (decine di migliaia di stringhe in locale) sopravvive a interruzioni.
 
 import { invoke } from '@/lib/tauri-api';
+import { autoFixPlaceholders } from '@/lib/ai/placeholder-guard';
 
 export interface HendrixProgress {
   phase: 'detect' | 'extract' | 'translate' | 'apply' | 'enable' | 'done';
@@ -27,6 +28,20 @@ interface HendrixRow {
 const CODE = /(\\[A-Za-z]+\[[^\]]*\]|\\[.!|^><$]|\{[^}]*\}|%\d)/g;
 function codeKey(s: string): string {
   return (s.match(CODE) ?? []).slice().sort().join('');
+}
+
+/**
+ * Valida (ed eventualmente ripara) una traduzione del batch offline.
+ * Ritorna la stringa da accettare, o null se va scartata (retry al resume).
+ * Se il modello ha perso/alterato i codici, tenta PRIMA l'auto-fix
+ * deterministico del guard: sblocca stringhe che altrimenti resterebbero
+ * non tradotte per sempre. Esportata per i test.
+ */
+export function acceptOfflineTranslation(orig: string, out: string): string | null {
+  if (!out || out.startsWith('[ERRORE]')) return null;
+  if (codeKey(out) === codeKey(orig)) return out;
+  const fixed = autoFixPlaceholders(orig, out);
+  return codeKey(fixed) === codeKey(orig) ? fixed : null;
 }
 
 function lsGet(key: string): string | null {
@@ -91,11 +106,8 @@ export async function runHendrixTranslation(opts: {
     });
     res.forEach((tr, k) => {
       const orig = slice[k].original;
-      const out = (tr.translated || '').trim();
-      const bad = !out || out.startsWith('[ERRORE]');
-      // Accetta solo se i codici di controllo combaciano; altrimenti lascia non tradotto
-      // (verrà ritentato al prossimo resume, evitando di scrivere placeholder rotti).
-      if (!bad && codeKey(out) === codeKey(orig)) translations[orig] = out;
+      const accepted = acceptOfflineTranslation(orig, (tr.translated || '').trim());
+      if (accepted !== null) translations[orig] = accepted;
     });
     done += slice.length;
     sinceSave += slice.length;

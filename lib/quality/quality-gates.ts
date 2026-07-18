@@ -5,6 +5,8 @@
  * Verifica qualità, lunghezza, terminologia e coerenza.
  */
 
+import { diffPlaceholders } from '@/lib/ai/placeholder-guard';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -167,30 +169,15 @@ export function checkGlossaryTerms(
  * Verifica la presenza di placeholder/variabili
  */
 export function checkPlaceholders(source: string, target: string): QualityCheck {
-  // Pattern comuni per placeholder nei giochi
-  const patterns = [
-    /\{[^}]+\}/g,           // {variable}
-    /%[sd%]/g,              // %s, %d, %%
-    /\$\{[^}]+\}/g,         // ${variable}
-    /\[\[[^\]]+\]\]/g,      // [[variable]]
-    /<[^>]+>/g,             // <tag>
-    /\{[0-9]+\}/g,          // {0}, {1}
-    /%[0-9]+/g,             // %1, %2
-  ];
-  
-  const sourcePlaceholders: string[] = [];
-  const targetPlaceholders: string[] = [];
-  
-  for (const pattern of patterns) {
-    const sourceMatches = source.match(pattern) || [];
-    const targetMatches = target.match(pattern) || [];
-    sourcePlaceholders.push(...sourceMatches);
-    targetPlaceholders.push(...targetMatches);
-  }
-  
-  // Verifica che tutti i placeholder siano presenti
-  const missingInTarget = sourcePlaceholders.filter(p => !targetPlaceholders.includes(p));
-  const extraInTarget = targetPlaceholders.filter(p => !sourcePlaceholders.includes(p));
+  // Delega a placeholder-guard: unica fonte di verità per i token protetti
+  // (printf coi flag, control code RPG Maker, BBCode, ruby, entità HTML, ecc.)
+  // con confronto per multiset — i vecchi pattern locali erano un sottoinsieme
+  // e contavano doppio i token che matchavano più pattern.
+  const diff = diffPlaceholders(source, target);
+  const sourcePlaceholders = diff.src;
+  const targetPlaceholders = diff.tr;
+  const missingInTarget = diff.missing;
+  const extraInTarget = diff.extra;
   
   const passed = missingInTarget.length === 0;
   let severity: QualityCheck['severity'] = 'info';

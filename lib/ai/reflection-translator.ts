@@ -500,17 +500,16 @@ export async function maybeReflect(
   providerKey: string
 ): Promise<ReflectionOutcome> {
   const mode = input.mode || getReflectionMode();
-  if (mode === 'off') {
-    // 'off' = mani ferme del tutto: né riflessione LLM né auto-fix.
-    return { translations: input.translations, candidates: 0, refined: 0, repaired: 0 };
-  }
 
   const result = [...input.translations];
   let refined = 0;
   let candidatesCount = 0;
 
-  // 1) Riflessione LLM selettiva (solo per i provider LLM-capable)
-  const chat = REFLECTION_PROVIDERS[providerName];
+  // 1) Riflessione LLM selettiva (solo per i provider LLM-capable).
+  //    'off' spegne SOLO questo passaggio (costi LLM): l'auto-fix deterministico
+  //    dei placeholder al punto 2 è gratuito e resta SEMPRE attivo — è la
+  //    "protezione garantita" della roadmap. Opt-out esplicito: autoFix: false.
+  const chat = mode === 'off' ? undefined : REFLECTION_PROVIDERS[providerName];
   if (chat) {
     const candidates = selectReflectionCandidates(input.texts, input.translations, {
       glossaryHint: input.glossaryHint,

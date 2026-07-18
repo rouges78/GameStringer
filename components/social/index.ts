@@ -5,6 +5,7 @@
 
 export { FriendsSidebar } from './friends-sidebar';
 export { UserProfileView } from './user-profile';
+export { Showcase } from './showcase';
 export { NotificationsPanel, NotificationsBadge } from './notifications-panel';
 export { OnlineUsersWidget, OnlineIndicator } from './online-users-widget';
 export { AddFriendDialog } from './add-friend-dialog';

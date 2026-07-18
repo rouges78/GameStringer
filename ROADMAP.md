@@ -115,9 +115,19 @@
     manca la serializzazione `.uasset` + il reader pak compresso/UE5 + un gioco
     di test. Prerequisiti e opzioni (A regen / B byte-swap / C guida) nell'ADR.
     Per ora resta la guida per engine in `fontCheck.adviceUnreal`.
-- [ ] **Protezione tag/variabili garantita**
-  Validatore che assicura che `{player}`, `%s`, ruby, control codes sopravvivano
-  alla traduzione, con auto-fix nel pass di reflection.
+- [x] **Protezione tag/variabili garantita** — COMPLETATA 17/07/2026.
+  Il guard esisteva (`lib/ai/placeholder-guard.ts`: printf, graffe, control
+  code, rich-text, BBCode, ruby, entità) ma la garanzia aveva 3 buchi, chiusi:
+  1) con `reflection: 'off'` veniva saltato anche l'auto-fix deterministico
+  (gratuito) — ora `maybeReflect` con 'off' spegne solo il critico LLM e
+  l'auto-fix resta SEMPRE attivo (opt-out esplicito `autoFix: false`);
+  2) `quality-gates.checkPlaceholders` aveva pattern propri più deboli e con
+  doppi conteggi — ora delega a `diffPlaceholders` (unica fonte di verità);
+  3) il percorso Hendrix offline scartava per sempre le stringhe coi codici
+  rotti — ora `acceptOfflineTranslation` tenta prima l'auto-fix del guard e
+  scarta solo se irreparabile. Test nuovi/aggiornati (reflection off ripara,
+  quality-gates delegati, hendrix accept). Da verificare in locale:
+  typecheck + vitest (sandbox troppo lento per eseguirli).
 - [ ] **Catalogo modelli/provider via remote config**
   Le liste in P.T. citano ancora "Claude 3.5, GPT-4o" e invecchiano ad ogni
   release: un JSON remoto aggiornabile senza rilasciare l'app tiene modelli,
@@ -137,7 +147,17 @@
   suggerito dalla libreria (P.T. sa già quali sono). Il momento "wow" deve
   arrivare entro 10 minuti dall'installazione.
 - [ ] **Video demo 60–90 secondi** sul sito e nel README: "click → gioco in italiano".
-- [ ] **Showcase dei pack**: classifiche, contatore download, profilo traduttore.
+- [x] **Showcase dei pack** — v1 FATTA 17/07/2026.
+  Tab "Classifiche" (Trophy) nel Community Hub: classifica traduttori
+  (reputazione, download totali, pack pubblicati, rating medio, badge, verificato)
+  dalla view Supabase `leaderboard` via `communityHubService.getLeaderboard`, e
+  sezione "Pack in vetrina" con toggle più-scaricati/meglio-valutati
+  (`getTopPacks`). Profilo traduttore pubblico ricablato: `UserProfileView`
+  (era orfano) + route condivisibile `/u/[username]`, apribile dai click su
+  classifica e autori. Fix di base: `social.getProfile` filtrava `.eq('user_id')`
+  su una colonna inesistente → avvelenava tutta la tabella `user_profiles` via
+  `markTableMissing`; ora filtra `id` e normalizza `user_id`/`display_name`
+  (sana anche chat-panel). i18n 12 lingue (namespace `showcase`).
   La reputazione è la valuta che fa pubblicare pack.
 
 ## P2 — Copertura engine e piattaforme

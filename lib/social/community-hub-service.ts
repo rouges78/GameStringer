@@ -8,6 +8,7 @@
 import { clientLogger } from '@/lib/client-logger';
 import { checkRedistribution } from '@/lib/redistribution-guard';
 import type { GspackData } from '@/lib/gspack-manager';
+import type { LeaderboardEntry } from './community-hub-backend';
 
 export type RetroPlatform =
   | 'nes' | 'snes' | 'n64' | 'gb' | 'gbc' | 'gba' | 'nds' | '3ds'
@@ -860,6 +861,42 @@ class CommunityHubService {
         .slice(0, 5),
       recentActivity: []
     };
+  }
+
+  /**
+   * Classifica traduttori (leaderboard). Backend Supabase se disponibile,
+   * altrimenti lista vuota (fail-open, nessun errore in UI).
+   */
+  async getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
+    try {
+      const { isBackendEnabled, fetchLeaderboard } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Leaderboard timeout')), 5000)
+        );
+        return await Promise.race([fetchLeaderboard(limit), timeout]);
+      }
+    } catch (e) {
+      clientLogger.warn('getLeaderboard fallita', e as Error);
+    }
+    return [];
+  }
+
+  /**
+   * Pack in vetrina: i più scaricati o meglio valutati.
+   * Riusa searchPacks (già con fallback locale se il backend è offline).
+   */
+  async getTopPacks(
+    sortBy: 'downloads' | 'rating' = 'downloads',
+    limit = 12
+  ): Promise<TranslationPack[]> {
+    const { packs } = await this.searchPacks({
+      sortBy,
+      sortOrder: 'desc',
+      status: ['published', 'verified', 'featured'],
+      limit,
+    });
+    return packs;
   }
 
   /**

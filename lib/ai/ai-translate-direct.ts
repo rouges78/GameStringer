@@ -2044,8 +2044,11 @@ export async function translateWithFallback(
           // Pipeline auto-correttiva (write → reflect → refine): un secondo passaggio
           // dello STESSO provider critica le stringhe a rischio (glossario, contesto,
           // placeholder, tono) e le riscrive. Selettiva di default, fail-open.
+          // Chiamata SEMPRE: con reflection 'off' maybeReflect salta il critico LLM
+          // ma esegue comunque l'auto-fix deterministico dei placeholder (gratuito),
+          // così la protezione tag/variabili è garantita su ogni percorso.
           let reflectionStats: { candidates: number; refined: number; repaired?: number } | undefined;
-          if (opts.reflection !== 'off') {
+          {
             try {
               const outcome = await maybeReflect(
                 {
