@@ -1448,7 +1448,8 @@
     "faster": "Schneller",
     "nessunModelloInstallatoScarica": "Kein Modell installiert. Lade eines der unten empfohlenen herunter.",
     "advancedFeatures": "Erweiterte Funktionen",
-    "goToAdvanced": "Zu Erweitert wechseln"
+    "goToAdvanced": "Zu Erweitert wechseln",
+    "embeddingBadge": "Embedding · semantische TM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "Indiziert",
     "vectors": "Vektoren",
     "emptyTm": "Keine Übersetzungen im Speicher für dieses Paar.",
-    "unavailable": "Aktiviere den semantischen TM und installiere ein Embedding-Modell zum Vorindizieren."
+    "unavailable": "Aktiviere den semantischen TM und installiere ein Embedding-Modell zum Vorindizieren.",
+    "gameLabel": "Glossar von",
+    "gameNone": "nur TM",
+    "glossaryLabel": "Glossar",
+    "loreLabel": "Lore"
   },
   "firstGame": {
     "title": "Übersetze dein erstes Spiel",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Noch keine Übersetzer in der Rangliste.",
     "emptyTranslatorsHint": "Veröffentliche ein Pack, um hier zu erscheinen.",
     "emptyPacks": "Noch keine Packs veröffentlicht."
+  },
+  "communityGlossary": {
+    "tab": "Community",
+    "publishTitle": "Mit der Community teilen",
+    "publishDesc": "Veröffentliche dieses Glossar: Wer dasselbe Spiel übersetzt, startet mit deinen validierten Begriffen.",
+    "publishButton": "Veröffentlichen",
+    "published": "Glossar veröffentlicht",
+    "publishFailed": "Veröffentlichung fehlgeschlagen",
+    "loginRequired": "Melde dich im Community Hub an, um zu veröffentlichen",
+    "listTitle": "Community-Glossare",
+    "refresh": "Aktualisieren",
+    "empty": "Noch keine Community-Glossare für dieses Spiel. Sei der Erste!",
+    "termsLabel": "Begriffe",
+    "importButton": "Importieren",
+    "imported": "Begriffe importiert",
+    "importFailed": "Import fehlgeschlagen",
+    "skippedLabel": "bereits vorhanden",
+    "mergeHint": "Der Import überschreibt nie deine Einträge: Er fügt nur neue Begriffe hinzu, bearbeitbar und als flexibel markiert."
   }
 }

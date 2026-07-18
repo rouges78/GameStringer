@@ -1448,7 +1448,8 @@
     "faster": "Szybciej",
     "nessunModelloInstallatoScarica": "Brak zainstalowanych modeli. Pobierz jeden z rekomendowanych poniżej.",
     "advancedFeatures": "Funkcje zaawansowane",
-    "goToAdvanced": "Przejdź do zaawansowanych"
+    "goToAdvanced": "Przejdź do zaawansowanych",
+    "embeddingBadge": "Embedding · semantyczna TM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "Zindeksowano",
     "vectors": "wektory",
     "emptyTm": "Brak tłumaczeń w pamięci dla tej pary.",
-    "unavailable": "Włącz semantyczną pamięć tłumaczeń i zainstaluj model osadzeń, aby wstępnie zindeksować."
+    "unavailable": "Włącz semantyczną pamięć tłumaczeń i zainstaluj model osadzeń, aby wstępnie zindeksować.",
+    "gameLabel": "glosariusz",
+    "gameNone": "tylko TM",
+    "glossaryLabel": "glosariusz",
+    "loreLabel": "lore"
   },
   "firstGame": {
     "title": "Przetłumacz swoją pierwszą grę",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Brak tłumaczy w rankingu.",
     "emptyTranslatorsHint": "Opublikuj paczkę, aby się tu pojawić.",
     "emptyPacks": "Brak opublikowanych paczek."
+  },
+  "communityGlossary": {
+    "tab": "Społeczność",
+    "publishTitle": "Udostępnij społeczności",
+    "publishDesc": "Opublikuj ten glosariusz: tłumacze tej samej gry zaczną od Twoich zweryfikowanych terminów.",
+    "publishButton": "Opublikuj",
+    "published": "Glosariusz opublikowany",
+    "publishFailed": "Publikacja nie powiodła się",
+    "loginRequired": "Zaloguj się do Community Hub, aby publikować",
+    "listTitle": "Glosariusze społeczności",
+    "refresh": "Odśwież",
+    "empty": "Brak glosariuszy społeczności dla tej gry. Bądź pierwszy!",
+    "termsLabel": "terminów",
+    "importButton": "Importuj",
+    "imported": "Terminy zaimportowane",
+    "importFailed": "Import nie powiódł się",
+    "skippedLabel": "już obecne",
+    "mergeHint": "Import nigdy nie nadpisuje Twoich wpisów: dodaje tylko nowe terminy, edytowalne i oznaczone jako elastyczne."
   }
 }

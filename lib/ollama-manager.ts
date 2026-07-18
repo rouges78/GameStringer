@@ -29,7 +29,7 @@ export interface RecommendedModel {
   pullName: string;       // nome per `ollama pull`
   description: string;
   sizeGb: string;
-  category: 'translation' | 'general' | 'multilingual';
+  category: 'translation' | 'general' | 'multilingual' | 'embedding';
   languages: string;
   speed: 'fast' | 'medium' | 'slow';
   quality: 1 | 2 | 3 | 4 | 5;
@@ -327,6 +327,58 @@ export const RECOMMENDED_MODELS: RecommendedModel[] = [
     speed: 'slow',
     quality: 5,
     vramGb: 48,
+    recommended: false,
+  },
+  // ─── EMBEDDING (TM semantica / glossario / lore) ──────────────────────
+  // Usati da semantic-retriever (/api/embed): stesso ordine di preferenza di
+  // EMBEDDING_MODEL_PREFERENCES. Il pull one-click da qui abilita la TM
+  // semantica senza passare dal terminale.
+  {
+    name: 'BGE-M3',
+    pullName: 'bge-m3',
+    description: '⭐ Embedding multilingue top per la TM semantica — ideale per JA/ZH/KO → IT. Il preferito di GameStringer.',
+    sizeGb: '~1.2',
+    category: 'embedding',
+    languages: '100+ lingue',
+    speed: 'fast',
+    quality: 5,
+    vramGb: 2,
+    recommended: true,
+  },
+  {
+    name: 'Nomic Embed Text',
+    pullName: 'nomic-embed-text',
+    description: 'Embedding leggero e velocissimo (~270MB). Ottimo per sorgenti EN e macchine modeste.',
+    sizeGb: '~0.3',
+    category: 'embedding',
+    languages: 'EN (best), multilingue di base',
+    speed: 'fast',
+    quality: 3,
+    vramGb: 1,
+    recommended: true,
+  },
+  {
+    name: 'MxBai Embed Large',
+    pullName: 'mxbai-embed-large',
+    description: 'Embedding di qualità alta per EN; alternativa robusta a nomic.',
+    sizeGb: '~0.7',
+    category: 'embedding',
+    languages: 'EN (best)',
+    speed: 'fast',
+    quality: 4,
+    vramGb: 1,
+    recommended: false,
+  },
+  {
+    name: 'EmbeddingGemma',
+    pullName: 'embeddinggemma',
+    description: 'Google — embedding multilingue compatto (100+ lingue), buon compromesso qualità/peso.',
+    sizeGb: '~0.6',
+    category: 'embedding',
+    languages: '100+ lingue',
+    speed: 'fast',
+    quality: 4,
+    vramGb: 1,
     recommended: false,
   },
 ];

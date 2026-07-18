@@ -1406,7 +1406,8 @@
     "faster": "Faster",
     "nessunModelloInstallatoScarica": "No models installed. Download one of the recommended models below.",
     "advancedFeatures": "Advanced Features",
-    "goToAdvanced": "Go to Advanced"
+    "goToAdvanced": "Go to Advanced",
+    "embeddingBadge": "Embedding · semantic TM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7155,7 +7156,11 @@
     "doneLabel": "Indexed",
     "vectors": "vectors",
     "emptyTm": "No translations in memory for this pair.",
-    "unavailable": "Enable semantic TM and install an embedding model to pre-index."
+    "unavailable": "Enable semantic TM and install an embedding model to pre-index.",
+    "gameLabel": "glossary of",
+    "gameNone": "TM only",
+    "glossaryLabel": "glossary",
+    "loreLabel": "lore"
   },
   "benchmark": {
     "settingLabel": "Contribute to the quality benchmark",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "No translators ranked yet.",
     "emptyTranslatorsHint": "Publish a pack to show up here.",
     "emptyPacks": "No packs published yet."
+  },
+  "communityGlossary": {
+    "tab": "Community",
+    "publishTitle": "Share with the community",
+    "publishDesc": "Publish this glossary: whoever translates the same game will start from your validated terms.",
+    "publishButton": "Publish",
+    "published": "Glossary published",
+    "publishFailed": "Publish failed",
+    "loginRequired": "Sign in to the Community Hub to publish",
+    "listTitle": "Community glossaries",
+    "refresh": "Refresh",
+    "empty": "No community glossaries for this game yet. Be the first to publish one!",
+    "termsLabel": "terms",
+    "importButton": "Import",
+    "imported": "Terms imported",
+    "importFailed": "Import failed",
+    "skippedLabel": "already present",
+    "mergeHint": "Import never overwrites your entries: it only adds new terms, editable and marked as flexible."
   }
 }

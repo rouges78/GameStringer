@@ -15,7 +15,7 @@ import {
   BookOpen, Plus, Search, Trash2, Edit, Download, Upload, Sparkles,
   Lock, RefreshCw, Unlock, Save, FileJson, FileSpreadsheet,
   Wand2, Info, Settings,
-  Edit3, FolderTree,
+  Edit3, FolderTree, Globe, Loader2, UploadCloud,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -81,6 +81,66 @@ export default function GlossaryPage() {
   const [createSourceLang, setCreateSourceLang] = useState('en');
   const [createTargetLang, setCreateTargetLang] = useState('it');
 
+  // Community (glossari condivisi per gioco)
+  const [communityList, setCommunityList] = useState<import('@/lib/social/community-glossary').CommunityGlossaryInfo[]>([]);
+  const [communityLoading, setCommunityLoading] = useState(false);
+  const [communityBusy, setCommunityBusy] = useState<string | null>(null); // id in import, o 'publish'
+
+  async function refreshCommunity() {
+    if (!selectedGameId) return;
+    setCommunityLoading(true);
+    try {
+      const { listCommunityGlossaries } = await import('@/lib/social/community-glossary');
+      setCommunityList(await listCommunityGlossaries(selectedGameId));
+    } catch {
+      setCommunityList([]);
+    } finally {
+      setCommunityLoading(false);
+    }
+  }
+
+  async function handlePublishCommunity() {
+    if (!selectedGameId) return;
+    setCommunityBusy('publish');
+    try {
+      const { publishGameGlossary } = await import('@/lib/social/community-glossary');
+      const ok = await publishGameGlossary(selectedGameId);
+      if (ok) {
+        toast.success(t('communityGlossary.published'));
+        await refreshCommunity();
+      } else {
+        toast.error(t('communityGlossary.publishFailed'));
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message === 'community-hub:online-login-required') {
+        toast.error(t('communityGlossary.loginRequired'));
+      } else {
+        toast.error(t('communityGlossary.publishFailed'));
+      }
+    } finally {
+      setCommunityBusy(null);
+    }
+  }
+
+  async function handleImportCommunity(id: string) {
+    if (!selectedGameId) return;
+    setCommunityBusy(id);
+    try {
+      const { importCommunityGlossary } = await import('@/lib/social/community-glossary');
+      const res = await importCommunityGlossary(id, selectedGameId);
+      if (res.ok) {
+        toast.success(`${t('communityGlossary.imported')}: +${res.added} (${res.skipped} ${t('communityGlossary.skippedLabel')})`);
+        refreshGlossaries();
+      } else {
+        toast.error(t('communityGlossary.importFailed'));
+      }
+    } catch {
+      toast.error(t('communityGlossary.importFailed'));
+    } finally {
+      setCommunityBusy(null);
+    }
+  }
+
   useEffect(() => {
     const saved = localStorage.getItem('gameStringerSettings');
     if (saved) {
@@ -96,6 +156,12 @@ export default function GlossaryPage() {
     setConfig(loaded);
     refreshGlossaries();
   }, []);
+
+  // Carica le varianti community quando si apre il tab (o cambia gioco)
+  useEffect(() => {
+    if (activeTab === 'community' && selectedGameId) void refreshCommunity();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedGameId]);
 
   function refreshGlossaries() {
     const all = listGlossaries();
@@ -390,6 +456,8 @@ export default function GlossaryPage() {
                 {t('glossaryPage.aiExtraction')}</TabsTrigger>
               <TabsTrigger value="io" className="text-xs px-3 py-1">
                 {t('glossaryPage.importExport')}</TabsTrigger>
+              <TabsTrigger value="community" className="text-xs px-3 py-1">
+                {t('communityGlossary.tab')}</TabsTrigger>
             </TabsList>
 
             {/* === TERMS TAB === */}
@@ -612,6 +680,86 @@ export default function GlossaryPage() {
                   </div>
                   <Button variant="destructive" size="sm" onClick={handleDeleteGlossary}>
                     <Trash2 className="h-3.5 w-3.5 mr-1" />{t('projects.delete')}</Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* === COMMUNITY TAB === */}
+            <TabsContent value="community" className="space-y-4 mt-3">
+              <Card>
+                <CardContent className="flex items-center justify-between gap-3 py-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium flex items-center gap-1.5">
+                      <UploadCloud className="h-4 w-4 text-violet-400" />
+                      {t('communityGlossary.publishTitle')}
+                    </p>
+                    <p className="text-2xs text-muted-foreground">
+                      {t('communityGlossary.publishDesc')}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handlePublishCommunity}
+                    disabled={communityBusy !== null || !selectedGlossary || selectedGlossary.entries.length === 0}
+                  >
+                    {communityBusy === 'publish'
+                      ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      : <UploadCloud className="h-3.5 w-3.5 mr-1" />}
+                    {t('communityGlossary.publishButton')}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle as="h2" className="text-sm flex items-center gap-1.5">
+                    <Globe className="h-4 w-4 text-emerald-400" />
+                    {t('communityGlossary.listTitle')}
+                    <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={refreshCommunity} disabled={communityLoading} aria-label={t('communityGlossary.refresh')}>
+                      <RefreshCw className={`h-3.5 w-3.5 ${communityLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {communityLoading ? (
+                    <div className="flex items-center justify-center py-8 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  ) : communityList.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-4 text-center">
+                      {t('communityGlossary.empty')}
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {communityList.map((g) => (
+                        <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-800/60 bg-slate-900/40">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">
+                              {g.sourceLanguage.toUpperCase()} → {g.targetLanguage.toUpperCase()} · {g.termsCount} {t('communityGlossary.termsLabel')}
+                            </p>
+                            <p className="text-2xs text-muted-foreground truncate">
+                              {g.authorUsername} · <Download className="h-3 w-3 inline-block -mt-0.5" /> {g.downloads}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0"
+                            onClick={() => handleImportCommunity(g.id)}
+                            disabled={communityBusy !== null}
+                          >
+                            {communityBusy === g.id
+                              ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                              : <Download className="h-3.5 w-3.5 mr-1" />}
+                            {t('communityGlossary.importButton')}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-2xs text-muted-foreground mt-3">
+                    {t('communityGlossary.mergeHint')}
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>

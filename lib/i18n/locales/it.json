@@ -1406,7 +1406,8 @@
     "faster": "Più veloce",
     "nessunModelloInstallatoScarica": "Nessun modello installato. Scarica uno dei consigliati qui sotto.",
     "advancedFeatures": "Funzionalità Avanzate",
-    "goToAdvanced": "Vai ad Avanzate"
+    "goToAdvanced": "Vai ad Avanzate",
+    "embeddingBadge": "Embedding · TM semantica"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7155,7 +7156,11 @@
     "doneLabel": "Indicizzati",
     "vectors": "vettori",
     "emptyTm": "Nessuna traduzione in memoria per questa coppia.",
-    "unavailable": "Attiva la TM semantica e installa un modello di embedding per pre-indicizzare."
+    "unavailable": "Attiva la TM semantica e installa un modello di embedding per pre-indicizzare.",
+    "gameLabel": "glossario di",
+    "gameNone": "solo TM",
+    "glossaryLabel": "glossario",
+    "loreLabel": "lore"
   },
   "benchmark": {
     "settingLabel": "Contribuisci al benchmark qualità",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Nessun traduttore in classifica per ora.",
     "emptyTranslatorsHint": "Pubblica un pack per apparire qui.",
     "emptyPacks": "Ancora nessun pack pubblicato."
+  },
+  "communityGlossary": {
+    "tab": "Community",
+    "publishTitle": "Condividi con la community",
+    "publishDesc": "Pubblica questo glossario: chi traduce lo stesso gioco partirà dai tuoi termini già validati.",
+    "publishButton": "Pubblica",
+    "published": "Glossario pubblicato",
+    "publishFailed": "Pubblicazione non riuscita",
+    "loginRequired": "Accedi al Community Hub per pubblicare",
+    "listTitle": "Glossari della community",
+    "refresh": "Aggiorna",
+    "empty": "Nessun glossario community per questo gioco. Sii il primo a pubblicarne uno!",
+    "termsLabel": "termini",
+    "importButton": "Importa",
+    "imported": "Termini importati",
+    "importFailed": "Import non riuscito",
+    "skippedLabel": "già presenti",
+    "mergeHint": "L'import non sovrascrive mai le tue voci: aggiunge solo i termini nuovi, modificabili e marcati come flessibili."
   }
 }

@@ -300,6 +300,7 @@ export default function OllamaManagerPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-xs font-semibold">{rm.name}</span>
+                            {rm.category === 'embedding' && <Badge className="text-2xs h-3 px-1 bg-violet-500/20 text-violet-300 border-violet-500/30">{t('ollamaManagerPage.embeddingBadge') || 'Embedding · TM semantica'}</Badge>}
                             {rm.recommended && <Badge className="text-2xs h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
                             {isInstalled && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
                           </div>

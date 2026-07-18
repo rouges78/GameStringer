@@ -1448,7 +1448,8 @@
     "faster": "Más rápido",
     "nessunModelloInstallatoScarica": "Ningún modelo instalado. Descarga uno de los recomendados abajo.",
     "advancedFeatures": "Funciones avanzadas",
-    "goToAdvanced": "Ir a Avanzado"
+    "goToAdvanced": "Ir a Avanzado",
+    "embeddingBadge": "Embedding · MT semántica"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "Indexados",
     "vectors": "vectores",
     "emptyTm": "No hay traducciones en memoria para este par.",
-    "unavailable": "Activa la TM semántica e instala un modelo de embedding para preindexar."
+    "unavailable": "Activa la TM semántica e instala un modelo de embedding para preindexar.",
+    "gameLabel": "glosario de",
+    "gameNone": "solo MT",
+    "glossaryLabel": "glosario",
+    "loreLabel": "lore"
   },
   "firstGame": {
     "title": "Traduce tu primer juego",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Aún no hay traductores en la clasificación.",
     "emptyTranslatorsHint": "Publica un pack para aparecer aquí.",
     "emptyPacks": "Todavía no hay packs publicados."
+  },
+  "communityGlossary": {
+    "tab": "Comunidad",
+    "publishTitle": "Comparte con la comunidad",
+    "publishDesc": "Publica este glosario: quien traduzca el mismo juego partirá de tus términos ya validados.",
+    "publishButton": "Publicar",
+    "published": "Glosario publicado",
+    "publishFailed": "No se pudo publicar",
+    "loginRequired": "Inicia sesión en el Community Hub para publicar",
+    "listTitle": "Glosarios de la comunidad",
+    "refresh": "Actualizar",
+    "empty": "Aún no hay glosarios comunitarios para este juego. ¡Sé el primero en publicar uno!",
+    "termsLabel": "términos",
+    "importButton": "Importar",
+    "imported": "Términos importados",
+    "importFailed": "Error al importar",
+    "skippedLabel": "ya presentes",
+    "mergeHint": "La importación nunca sobrescribe tus entradas: solo añade términos nuevos, editables y marcados como flexibles."
   }
 }

@@ -1448,7 +1448,8 @@
     "faster": "Plus rapide",
     "nessunModelloInstallatoScarica": "Aucun modèle installé. Téléchargez l'un des modèles recommandés ci-dessous.",
     "advancedFeatures": "Fonctionnalités avancées",
-    "goToAdvanced": "Aller aux options avancées"
+    "goToAdvanced": "Aller aux options avancées",
+    "embeddingBadge": "Embedding · MT sémantique"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "Indexés",
     "vectors": "vecteurs",
     "emptyTm": "Aucune traduction en mémoire pour cette paire.",
-    "unavailable": "Activez la MT sémantique et installez un modèle d'embedding pour préindexer."
+    "unavailable": "Activez la MT sémantique et installez un modèle d'embedding pour préindexer.",
+    "gameLabel": "glossaire de",
+    "gameNone": "MT seule",
+    "glossaryLabel": "glossaire",
+    "loreLabel": "lore"
   },
   "firstGame": {
     "title": "Traduisez votre premier jeu",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Aucun traducteur classé pour l'instant.",
     "emptyTranslatorsHint": "Publiez un pack pour apparaître ici.",
     "emptyPacks": "Aucun pack publié pour l'instant."
+  },
+  "communityGlossary": {
+    "tab": "Communauté",
+    "publishTitle": "Partager avec la communauté",
+    "publishDesc": "Publiez ce glossaire : ceux qui traduisent le même jeu partiront de vos termes déjà validés.",
+    "publishButton": "Publier",
+    "published": "Glossaire publié",
+    "publishFailed": "Échec de la publication",
+    "loginRequired": "Connectez-vous au Community Hub pour publier",
+    "listTitle": "Glossaires de la communauté",
+    "refresh": "Actualiser",
+    "empty": "Aucun glossaire communautaire pour ce jeu. Soyez le premier à en publier un !",
+    "termsLabel": "termes",
+    "importButton": "Importer",
+    "imported": "Termes importés",
+    "importFailed": "Échec de l'import",
+    "skippedLabel": "déjà présents",
+    "mergeHint": "L'import n'écrase jamais vos entrées : il ajoute uniquement les nouveaux termes, modifiables et marqués comme flexibles."
   }
 }

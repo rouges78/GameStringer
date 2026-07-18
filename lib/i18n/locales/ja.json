@@ -1448,7 +1448,8 @@
     "faster": "高速",
     "nessunModelloInstallatoScarica": "モデルがインストールされていません。下記の推奨モデルをダウンロードしてください。",
     "advancedFeatures": "詳細機能",
-    "goToAdvanced": "詳細設定へ"
+    "goToAdvanced": "詳細設定へ",
+    "embeddingBadge": "埋め込み · セマンティックTM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "インデックス済み",
     "vectors": "ベクトル",
     "emptyTm": "このペアの翻訳がメモリにありません。",
-    "unavailable": "セマンティックTMを有効にし、埋め込みモデルをインストールして事前インデックスしてください。"
+    "unavailable": "セマンティックTMを有効にし、埋め込みモデルをインストールして事前インデックスしてください。",
+    "gameLabel": "用語集:",
+    "gameNone": "TMのみ",
+    "glossaryLabel": "用語集",
+    "loreLabel": "ロア"
   },
   "firstGame": {
     "title": "最初のゲームを翻訳しよう",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "まだランキングに翻訳者がいません。",
     "emptyTranslatorsHint": "パックを公開するとここに表示されます。",
     "emptyPacks": "まだ公開されたパックがありません。"
+  },
+  "communityGlossary": {
+    "tab": "コミュニティ",
+    "publishTitle": "コミュニティと共有",
+    "publishDesc": "この用語集を公開すると、同じゲームの翻訳者があなたの検証済み用語から始められます。",
+    "publishButton": "公開",
+    "published": "用語集を公開しました",
+    "publishFailed": "公開に失敗しました",
+    "loginRequired": "公開するには Community Hub にログインしてください",
+    "listTitle": "コミュニティの用語集",
+    "refresh": "更新",
+    "empty": "このゲームのコミュニティ用語集はまだありません。最初の公開者になりましょう!",
+    "termsLabel": "語",
+    "importButton": "インポート",
+    "imported": "用語をインポートしました",
+    "importFailed": "インポートに失敗しました",
+    "skippedLabel": "既存",
+    "mergeHint": "インポートは既存の項目を上書きしません。新しい用語のみ追加され、編集可能で「柔軟」として印が付きます。"
   }
 }

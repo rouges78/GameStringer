@@ -1448,7 +1448,8 @@
     "faster": "Mais rápido",
     "nessunModelloInstallatoScarica": "Nenhum modelo instalado. Baixe um dos recomendados abaixo.",
     "advancedFeatures": "Funcionalidades avançadas",
-    "goToAdvanced": "Ir para Avançado"
+    "goToAdvanced": "Ir para Avançado",
+    "embeddingBadge": "Embedding · MT semântica"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "Indexados",
     "vectors": "vetores",
     "emptyTm": "Nenhuma tradução na memória para este par.",
-    "unavailable": "Ative a MT semântica e instale um modelo de embedding para pré-indexar."
+    "unavailable": "Ative a MT semântica e instale um modelo de embedding para pré-indexar.",
+    "gameLabel": "glossário de",
+    "gameNone": "só MT",
+    "glossaryLabel": "glossário",
+    "loreLabel": "lore"
   },
   "firstGame": {
     "title": "Traduza o seu primeiro jogo",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "Ainda não há tradutores na classificação.",
     "emptyTranslatorsHint": "Publique um pack para aparecer aqui.",
     "emptyPacks": "Ainda não há packs publicados."
+  },
+  "communityGlossary": {
+    "tab": "Comunidade",
+    "publishTitle": "Compartilhe com a comunidade",
+    "publishDesc": "Publique este glossário: quem traduzir o mesmo jogo partirá dos seus termos já validados.",
+    "publishButton": "Publicar",
+    "published": "Glossário publicado",
+    "publishFailed": "Falha ao publicar",
+    "loginRequired": "Entre no Community Hub para publicar",
+    "listTitle": "Glossários da comunidade",
+    "refresh": "Atualizar",
+    "empty": "Ainda não há glossários da comunidade para este jogo. Seja o primeiro!",
+    "termsLabel": "termos",
+    "importButton": "Importar",
+    "imported": "Termos importados",
+    "importFailed": "Falha ao importar",
+    "skippedLabel": "já presentes",
+    "mergeHint": "A importação nunca sobrescreve suas entradas: só adiciona termos novos, editáveis e marcados como flexíveis."
   }
 }

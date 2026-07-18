@@ -222,6 +222,45 @@ class LoreAssistantEngine {
   }
 
   /**
+   * Pre-indicizzazione ("indicizza ora") del lore: embedda TUTTI i dialoghi
+   * non ancora vettorializzati, senza il cap per-ask, così il primo ask()
+   * trova l'indice pronto. Fail-open: ritorna ok:false se il semantico è
+   * spento o nessun modello embedding è disponibile.
+   */
+  async warmLoreIndex(
+    onProgress?: (indexed: number, total: number) => void
+  ): Promise<{ ok: boolean; model: string | null; total: number; indexed: number }> {
+    if (getSemanticTMMode() === 'off') return { ok: false, model: null, total: 0, indexed: 0 };
+    const model = await detectEmbeddingModel(true);
+    if (!model) return { ok: false, model: null, total: 0, indexed: 0 };
+
+    await this.ensureVectorsLoaded();
+    if (this.loreVectorModel && this.loreVectorModel !== model) {
+      this.loreVectors.clear();
+    }
+    this.loreVectorModel = model;
+
+    const missing = this.dialogueLog.filter(d => !this.loreVectors.has(d.id));
+    const total = missing.length;
+    let indexed = 0;
+    let dirty = false;
+    for (let i = 0; i < missing.length; i += LORE_EMBED_CHUNK) {
+      const chunk = missing.slice(i, i + LORE_EMBED_CHUNK);
+      const texts = chunk.map(d => (d.speaker ? `${d.speaker}: ${d.text}` : d.text));
+      const vectors = await embedTexts(model, texts, 'document');
+      if (!vectors) break; // Ollama caduto a metà → stop, si riprende al prossimo warm/ask
+      for (let j = 0; j < chunk.length; j++) {
+        this.loreVectors.set(chunk[j].id, vectors[j]);
+        dirty = true;
+        indexed++;
+      }
+      onProgress?.(indexed, total);
+    }
+    if (dirty) await this.saveVectors();
+    return { ok: true, model, total, indexed };
+  }
+
+  /**
    * Chiedi all'IA usando il contesto dei dialoghi (RAG)
    */
   async ask(query: LoreQuery): Promise<LoreResponse> {

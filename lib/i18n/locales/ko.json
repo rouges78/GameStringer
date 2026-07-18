@@ -1448,7 +1448,8 @@
     "faster": "더 빠름",
     "nessunModelloInstallatoScarica": "설치된 모델 없음. 아래 권장 모델 중 하나를 다운로드하세요.",
     "advancedFeatures": "고급 기능",
-    "goToAdvanced": "고급으로 이동"
+    "goToAdvanced": "고급으로 이동",
+    "embeddingBadge": "임베딩 · 시맨틱 TM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "인덱싱됨",
     "vectors": "벡터",
     "emptyTm": "이 언어 쌍에 대한 번역이 메모리에 없습니다.",
-    "unavailable": "의미 기반 TM을 켜고 임베딩 모델을 설치해 미리 인덱싱하세요."
+    "unavailable": "의미 기반 TM을 켜고 임베딩 모델을 설치해 미리 인덱싱하세요.",
+    "gameLabel": "용어집:",
+    "gameNone": "TM만",
+    "glossaryLabel": "용어집",
+    "loreLabel": "로어"
   },
   "firstGame": {
     "title": "첫 게임을 번역해 보세요",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "아직 순위에 오른 번역가가 없습니다.",
     "emptyTranslatorsHint": "팩을 게시하면 여기에 표시됩니다.",
     "emptyPacks": "아직 게시된 팩이 없습니다."
+  },
+  "communityGlossary": {
+    "tab": "커뮤니티",
+    "publishTitle": "커뮤니티와 공유",
+    "publishDesc": "이 용어집을 게시하면 같은 게임을 번역하는 사람이 검증된 용어에서 시작할 수 있습니다.",
+    "publishButton": "게시",
+    "published": "용어집이 게시되었습니다",
+    "publishFailed": "게시 실패",
+    "loginRequired": "게시하려면 Community Hub에 로그인하세요",
+    "listTitle": "커뮤니티 용어집",
+    "refresh": "새로고침",
+    "empty": "이 게임의 커뮤니티 용어집이 아직 없습니다. 첫 번째로 게시해 보세요!",
+    "termsLabel": "개 용어",
+    "importButton": "가져오기",
+    "imported": "용어를 가져왔습니다",
+    "importFailed": "가져오기 실패",
+    "skippedLabel": "이미 있음",
+    "mergeHint": "가져오기는 기존 항목을 덮어쓰지 않습니다. 새 용어만 추가되며 편집 가능하고 유연으로 표시됩니다."
   }
 }

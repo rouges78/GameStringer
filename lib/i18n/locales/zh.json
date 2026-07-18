@@ -1448,7 +1448,8 @@
     "faster": "更快",
     "nessunModelloInstallatoScarica": "未安装任何模型。请下载下方推荐的模型之一。",
     "advancedFeatures": "高级功能",
-    "goToAdvanced": "前往高级设置"
+    "goToAdvanced": "前往高级设置",
+    "embeddingBadge": "嵌入 · 语义TM"
   },
   "ocrEnginesPage": {
     "engines": "OneOCR · PaddleOCR · RapidOCR · Tesseract",
@@ -7131,7 +7132,11 @@
     "doneLabel": "已索引",
     "vectors": "向量",
     "emptyTm": "此语言对在记忆库中没有翻译。",
-    "unavailable": "启用语义 TM 并安装嵌入模型以进行预索引。"
+    "unavailable": "启用语义 TM 并安装嵌入模型以进行预索引。",
+    "gameLabel": "术语表:",
+    "gameNone": "仅TM",
+    "glossaryLabel": "术语表",
+    "loreLabel": "背景設定"
   },
   "firstGame": {
     "title": "翻译你的第一个游戏",
@@ -7232,5 +7237,23 @@
     "emptyTranslators": "暂无译者上榜。",
     "emptyTranslatorsHint": "发布补丁包即可出现在这里。",
     "emptyPacks": "暂无已发布的补丁包。"
+  },
+  "communityGlossary": {
+    "tab": "社区",
+    "publishTitle": "与社区分享",
+    "publishDesc": "发布此术语表:翻译同一游戏的人将从你已验证的术语开始。",
+    "publishButton": "发布",
+    "published": "术语表已发布",
+    "publishFailed": "发布失败",
+    "loginRequired": "请登录 Community Hub 后发布",
+    "listTitle": "社区术语表",
+    "refresh": "刷新",
+    "empty": "该游戏还没有社区术语表。做第一个发布的人吧!",
+    "termsLabel": "个术语",
+    "importButton": "导入",
+    "imported": "术语已导入",
+    "importFailed": "导入失败",
+    "skippedLabel": "已存在",
+    "mergeHint": "导入绝不会覆盖你的条目:只添加新术语,可编辑并标记为灵活。"
   }
 }

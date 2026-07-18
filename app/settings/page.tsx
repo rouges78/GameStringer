@@ -426,9 +426,30 @@ function AiQualityCard({
 
   // Pre-indicizzazione ("indicizza ora")
   const [indexSrc, setIndexSrc] = useState('en');
+  const [indexGame, setIndexGame] = useState('');   // '' = solo TM (+lore)
+  const [glossaryGames, setGlossaryGames] = useState<string[]>([]);
   const [indexing, setIndexing] = useState(false);
   const [indexProgress, setIndexProgress] = useState<{ done: number; total: number } | null>(null);
   const [indexResult, setIndexResult] = useState<string | null>(null);
+
+  // Giochi con un glossario locale (chiavi dict_<gameId> — stesso formato del
+  // retriever semantico): alimentano il select "anche glossario di…".
+  useEffect(() => {
+    try {
+      const games: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('dict_')) {
+          const gid = k.slice('dict_'.length);
+          try {
+            const arr = JSON.parse(localStorage.getItem(k) || '[]');
+            if (Array.isArray(arr) && arr.length > 0) games.push(gid);
+          } catch { /* voce corrotta: ignora */ }
+        }
+      }
+      setGlossaryGames(games.sort());
+    } catch { setGlossaryGames([]); }
+  }, []);
 
   const runWarmIndex = useCallback(async () => {
     setIndexing(true);
@@ -437,15 +458,30 @@ function AiQualityCard({
     try {
       const { warmSemanticIndex } = await import('@/lib/ai/semantic-retriever');
       const res = await warmSemanticIndex(
-        { sourceLang: indexSrc, targetLang: defaultTargetLang },
+        { sourceLang: indexSrc, targetLang: defaultTargetLang, gameId: indexGame || undefined },
         (done, total) => setIndexProgress({ done, total })
       );
+      // Lore: indice semantico dei dialoghi (globale, non per gioco) — best-effort
+      let lorePart = '';
+      try {
+        const { loreAssistant } = await import('@/lib/lore-assistant');
+        const lore = await loreAssistant?.warmLoreIndex();
+        if (lore?.ok && (lore.total > 0 || lore.indexed > 0)) {
+          lorePart = ` · ${t('semanticIndex.loreLabel')}: ${lore.indexed}/${lore.total}`;
+        }
+      } catch { /* lore assistant non disponibile: ignora */ }
+
       if (!res.ok) {
         setIndexResult(t('semanticIndex.unavailable'));
-      } else if (res.tmTotal === 0) {
+      } else if (res.tmTotal === 0 && res.glTotal === 0 && !lorePart) {
         setIndexResult(t('semanticIndex.emptyTm'));
       } else {
-        setIndexResult(`${t('semanticIndex.doneLabel')}: ${res.tmIndexed}/${res.tmTotal} ${t('semanticIndex.vectors')}`);
+        const glPart = res.glTotal > 0
+          ? ` · ${t('semanticIndex.glossaryLabel')}: ${res.glIndexed}/${res.glTotal}`
+          : '';
+        setIndexResult(
+          `${t('semanticIndex.doneLabel')}: ${res.tmIndexed}/${res.tmTotal} ${t('semanticIndex.vectors')}${glPart}${lorePart}`
+        );
       }
     } catch {
       setIndexResult(t('semanticIndex.unavailable'));
@@ -453,7 +489,7 @@ function AiQualityCard({
       setIndexing(false);
       setIndexProgress(null);
     }
-  }, [indexSrc, defaultTargetLang, t]);
+  }, [indexSrc, indexGame, defaultTargetLang, t]);
 
   const refresh = useCallback(async () => {
     setChecking(true);
@@ -614,6 +650,20 @@ function AiQualityCard({
                   </SelectContent>
                 </Select>
                 <span className="text-2xs text-muted-foreground">→ {defaultTargetLang.toUpperCase()}</span>
+                {glossaryGames.length > 0 && (
+                  <>
+                    <span className="text-2xs text-muted-foreground">{t('semanticIndex.gameLabel')}</span>
+                    <Select value={indexGame || '_none'} onValueChange={(v) => setIndexGame(v === '_none' ? '' : v)}>
+                      <SelectTrigger className="h-8 w-44"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">{t('semanticIndex.gameNone')}</SelectItem>
+                        {glossaryGames.map((g) => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                )}
                 <Button
                   type="button"
                   size="sm"

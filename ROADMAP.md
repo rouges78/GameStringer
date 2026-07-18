@@ -132,11 +132,24 @@
   Le liste in P.T. citano ancora "Claude 3.5, GPT-4o" e invecchiano ad ogni
   release: un JSON remoto aggiornabile senza rilasciare l'app tiene modelli,
   prezzi e raccomandazioni sempre freschi.
-- [ ] **Glossari community condivisi per gioco**
-  Chi traduce Persona 5 in italiano parte dal glossario già validato da altri
-  (via Patch Hub / TM Network). La TM semantica c'è già: questo è il passo dopo.
-- [ ] Modelli embedding nella lista consigliati di `ollama-manager` (pull one-click).
-- [ ] "Indicizza ora" anche per glossario/lore quando c'è un contesto gioco attivo.
+- [x] **Glossari community condivisi per gioco** — v1 FATTA 17/07/2026.
+  Tabella Supabase `game_glossaries` (RLS: lettura pubblica, scrittura autore;
+  max 500 termini/256KB; un glossario per gioco/lingua/autore con upsert;
+  contatore download via RPC SECURITY DEFINER — migration APPLICATA al remoto
+  e versionata). Service `lib/social/community-glossary.ts`: publish dal
+  glossario locale (stesso bridge sessione del publish pack), lista varianti,
+  import con merge NON distruttivo (le voci dell'utente vincono; le importate
+  arrivano flexible/autoExtracted). UI: tab "Community" in /glossary
+  (pubblica + lista con download/autore + importa), i18n 12 lingue.
+- [x] Modelli embedding nella lista consigliati di `ollama-manager` (17/07/2026:
+  categoria 'embedding' con bge-m3 ⭐, nomic-embed-text, mxbai-embed-large,
+  embeddinggemma — pull one-click, badge dedicato, allineati alle preferenze
+  del retriever semantico).
+- [x] "Indicizza ora" anche per glossario/lore (17/07/2026: select "glossario
+  di <gioco>" in Settings → AI Quality alimentato dai glossari locali dict_*,
+  gameId passato a warmSemanticIndex — la lib lo supportava già ma la UI non
+  lo passava; nuovo `warmLoreIndex()` nel lore assistant che pre-embedda tutti
+  i dialoghi; risultato esteso TM+glossario+lore).
 
 ## P1 — Community (il moltiplicatore)
 
