@@ -429,6 +429,9 @@ pub fn create_output_structure(
     Ok(created)
 }
 
+// Payload di avanzamento del batch: nessun `emit` lo usa ancora, il progresso
+// oggi lo calcola il frontend dai risultati parziali.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchProgress {

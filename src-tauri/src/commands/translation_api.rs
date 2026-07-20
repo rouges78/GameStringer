@@ -491,14 +491,9 @@ pub async fn translate_libre(
 // UNIFIED TRANSLATE (Auto-select provider)
 // ============================================================================
 
-/// Provider di traduzione disponibili
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum TranslationProvider {
-    DeepL,
-    Google,
-    LibreTranslate,
-}
+// NB: l'enum TranslationProvider è stato rimosso il 21/07/2026:
+// translate_text_unified riceve il provider come String dal frontend, dove la
+// lista dei provider vive già (e ne conta molti più di tre).
 
 /// Traduce usando il provider specificato
 #[tauri::command]

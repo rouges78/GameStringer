@@ -2138,12 +2138,6 @@ use std::net::TcpListener;
 use std::io::{Read, Write};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SteamOpenIdConfig {
-    pub auth_url: String,
-    pub return_url: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct SteamUser {
     pub steam_id: String,
     pub persona_name: String,

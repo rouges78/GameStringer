@@ -20,7 +20,10 @@ pub struct SecureDeleteResult {
     pub errors: Vec<String>,
 }
 
-/// Opzioni per cancellazione sicura
+/// Opzioni per cancellazione sicura.
+/// I comandi esposti usano i default (3 passaggi, verifica attiva): il tipo
+/// resta per quando le opzioni saranno configurabili dall'utente.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SecureDeleteOptions {

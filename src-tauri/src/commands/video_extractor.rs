@@ -169,6 +169,8 @@ pub struct ConversionResult {
     pub output_size: Option<u64>,
 }
 
+// Avanzamento della conversione batch: non ancora emesso verso il frontend.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BatchConversionProgress {
     pub total: usize,

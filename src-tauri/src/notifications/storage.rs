@@ -134,7 +134,7 @@ impl NotificationStorage {
     }
 
     /// Ottiene una connessione al database
-    fn get_connection(&self) -> NotificationResult<std::sync::MutexGuard<Option<Connection>>> {
+    fn get_connection(&self) -> NotificationResult<std::sync::MutexGuard<'_, Option<Connection>>> {
         Ok(self.connection.lock().unwrap_or_else(|e| e.into_inner()))
     }
 

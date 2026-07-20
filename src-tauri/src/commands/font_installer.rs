@@ -330,7 +330,7 @@ pub fn remove_font_files(game_dir: &Path, engine: &str) -> Result<Vec<String>, S
     let mut steps = Vec::new();
     let engine_l = engine.to_lowercase();
 
-    let mut restore = |path: &Path, steps: &mut Vec<String>| {
+    let restore = |path: &Path, steps: &mut Vec<String>| {
         let backup = path.with_file_name(format!(
             "{}{}",
             path.file_name().unwrap_or_default().to_string_lossy(),

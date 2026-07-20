@@ -65,7 +65,10 @@ pub enum SegmentType {
     Removed,
 }
 
-/// Formato generico di file traduzioni (key → value)
+/// Formato generico di file traduzioni (key → value).
+/// Il diff lavora direttamente su HashMap: questo wrapper serve quando i file
+/// verranno letti/scritti anche dal backend.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TranslationFile {
     #[serde(flatten)]

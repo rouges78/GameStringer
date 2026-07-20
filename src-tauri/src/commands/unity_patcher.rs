@@ -2909,7 +2909,10 @@ pub async fn remove_unity_patch(game_path: String) -> Result<PatchStatus, String
 // SISTEMA DI RACCOMANDAZIONE TRADUZIONE
 // ============================================================================
 
-/// Metodo di traduzione consigliato
+/// Metodo di traduzione consigliato.
+/// La raccomandazione oggi viaggia come stringa nel payload degli strumenti
+/// disponibili; l'enum resta come documentazione dei casi previsti.
+#[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub enum TranslationMethod {
     /// Traduzione al volo con BepInEx + XUnity (Unity)

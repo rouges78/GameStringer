@@ -1,52 +1,9 @@
 use serde_json;
-use serde::{Deserialize, Serialize};
 use super::process_util::no_window_command;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct HltbSearchRequest {
-    #[serde(rename = "searchType")]
-    search_type: String,
-    #[serde(rename = "searchTerms")]
-    search_terms: Vec<String>,
-    #[serde(rename = "searchPage")]
-    search_page: i32,
-    size: i32,
-    #[serde(rename = "searchOptions")]
-    search_options: HltbSearchOptions,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct HltbSearchOptions {
-    games: HltbGamesOptions,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct HltbGamesOptions {
-    #[serde(rename = "userId")]
-    user_id: i32,
-    platform: String,
-    #[serde(rename = "sortCategory")]
-    sort_category: String,
-    #[serde(rename = "rangeCategory")]
-    range_category: String,
-    #[serde(rename = "rangeTime")]
-    range_time: HltbRangeTime,
-    gameplay: HltbGameplay,
-    modifier: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct HltbRangeTime {
-    min: i32,
-    max: i32,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct HltbGameplay {
-    perspective: String,
-    flow: String,
-    genre: String,
-}
+// NB: le struct del payload POST verso l'API HowLongToBeat sono state rimosse
+// il 21/07/2026: get_howlongtobeat_info usa lo scraping HTML della pagina di
+// ricerca, quel percorso API non è più esercitato da nessuno.
 
 #[tauri::command]
 pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Value, String> {

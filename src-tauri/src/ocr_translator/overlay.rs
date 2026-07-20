@@ -2,6 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
+// L'overlay OCR è per ora renderizzato dal frontend in una finestra Tauri
+// separata: questi tipi descrivono il contratto lato Rust, tenuto pronto per
+// quando la gestione passerà qui (vedi create_overlay_window più sotto).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverlayConfig {
     pub enabled: bool,
@@ -12,6 +16,7 @@ pub struct OverlayConfig {
     pub position: OverlayPosition,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OverlayPosition {
     FollowText,    // Segue posizione testo originale

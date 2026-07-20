@@ -51,13 +51,6 @@ pub struct OriginUser {
     pub profile_id: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct OriginApiGame {
-    pub id: String,
-    pub name: String,
-    pub platform: String,
-}
-
 /// Scansiona i giochi Origin/EA App installati localmente
 pub async fn get_origin_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();

@@ -12,6 +12,9 @@ use tauri::AppHandle;
 static REGISTERED_HOTKEYS: Lazy<Mutex<Vec<(u32, String)>>> = Lazy::new(|| Mutex::new(Vec::new()));
 static HOTKEYS_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
+// Payload dell'evento hotkey: le scorciatoie sono oggi gestite dal frontend
+// (vedi init_global_hotkeys), il tipo serve quando passeranno al backend.
+#[allow(dead_code)]
 #[derive(serde::Serialize, Clone)]
 pub struct HotkeyEvent {
     pub action: String,

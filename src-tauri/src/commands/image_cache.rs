@@ -2,15 +2,6 @@ use std::path::PathBuf;
 use std::fs;
 use serde::{Deserialize, Serialize};
 
-/// Informazioni su un'immagine cached
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CachedImage {
-    pub url: String,
-    pub local_path: String,
-    pub cached_at: u64,
-    pub size_bytes: u64,
-}
-
 /// Statistiche della cache immagini
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageCacheStats {

@@ -86,6 +86,10 @@ pub struct ConsistencyIssue {
     pub severity: String,  // error for locked, warning for synced, info for flexible
 }
 
+// Suggerimenti culturali/linguistici: struttura pronta lato Rust, per ora
+// prodotta solo dal glossario lato frontend. Da rimuovere se a fine 2026 il
+// percorso Rust non sarà stato cablato.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContextHint {

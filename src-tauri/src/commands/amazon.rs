@@ -12,6 +12,10 @@ use log::{info, warn};
 // STRUTTURE DATI
 // ============================================================================
 
+// Tipo di dominio dello store: lo scan restituisce InstalledGame, questo
+// descrive il record Amazon nella sua forma nativa (usato quando servirà
+// esporre i campi specifici, es. product_asin).
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AmazonGame {
     pub id: String,

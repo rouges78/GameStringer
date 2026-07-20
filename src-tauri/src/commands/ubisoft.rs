@@ -51,13 +51,6 @@ pub struct UbisoftUser {
     pub profile_id: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct UbisoftApiGame {
-    pub id: String,
-    pub name: String,
-    pub platform: String,
-}
-
 /// Scansiona i giochi Ubisoft Connect installati localmente
 pub async fn get_ubisoft_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();

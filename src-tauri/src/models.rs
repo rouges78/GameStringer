@@ -103,13 +103,6 @@ pub struct FamilySharingConfig {
     pub authorized_users: Vec<String>,
 }
 
-// Struct for the game-details result
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GameDetails {
-    pub name: String,
-    pub supported_languages: String,
-}
-
 // Struct for game info (used by games API)
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct GameInfo {

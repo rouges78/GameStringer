@@ -20,6 +20,9 @@ use winreg::RegKey;
 // STRUTTURE DATI
 // ============================================================================
 
+// Come AmazonGame: forma nativa del record Microsoft Store, tenuta per i
+// campi che InstalledGame non porta (package_family_name, is_game_pass).
+#[allow(dead_code)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct XboxGame {
     pub package_family_name: String,

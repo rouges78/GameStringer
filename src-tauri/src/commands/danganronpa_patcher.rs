@@ -2290,6 +2290,9 @@ pub struct AutoTranslateResult {
     pub output_path: String,
 }
 
+// Come BatchProgress: contratto di avanzamento pronto, non ancora emesso
+// (l'estrazione dialoghi è sincrona e il frontend traduce per conto suo).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TranslationProgress {
     pub current: u32,

@@ -53,13 +53,6 @@ pub struct BattlenetUser {
     pub profile_id: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct BattlenetApiGame {
-    pub id: String,
-    pub name: String,
-    pub platform: String,
-}
-
 /// Scansiona i giochi Battle.net installati localmente
 pub async fn get_battlenet_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();

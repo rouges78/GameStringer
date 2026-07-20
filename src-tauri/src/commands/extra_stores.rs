@@ -10,7 +10,7 @@
 //! test_*_connection (Ok(String) descrittiva su successo).
 
 use crate::commands::library::InstalledGame;
-use log::{info, warn};
+use log::info;
 use std::path::{Path, PathBuf};
 #[cfg(windows)]
 use winreg::enums::*;

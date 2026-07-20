@@ -51,13 +51,6 @@ pub struct RockstarUser {
     pub profile_id: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct RockstarApiGame {
-    pub id: String,
-    pub name: String,
-    pub platform: String,
-}
-
 /// Scansiona i giochi Rockstar Games installati localmente
 pub async fn get_rockstar_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
