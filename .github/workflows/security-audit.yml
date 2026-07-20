@@ -55,8 +55,18 @@ jobs:
       - name: Installa cargo-audit e cargo-cyclonedx
         run: cargo install cargo-audit cargo-cyclonedx --locked || cargo install cargo-audit cargo-cyclonedx
       # cargo-audit esce !=0 su vulnerabilità: è il gating desiderato.
+      # Gli `--ignore` sono eccezioni motivate, non silenziamenti: vanno
+      # rimossi appena esiste una versione corretta raggiungibile.
+      #
+      # RUSTSEC-2026-0194 / 0195 — quick-xml <0.41, DoS su XML malformato.
+      #   Non è dipendenza diretta: arriva da `plist` (bundling macOS, legge
+      #   solo plist generati da noi) e da `tauri-winrt-notification` (payload
+      #   delle notifiche Windows, costruito dall'app). Non parsiamo XML di
+      #   terzi né dai file di gioco su quel percorso. Da rimuovere quando
+      #   plist / tauri-winrt-notification passano a quick-xml >= 0.41.
+      #   Revisione prevista: 2026-10-01, o prima a ogni bump di Tauri.
       - name: cargo audit
-        run: cargo audit
+        run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
       - name: Genera SBOM CycloneDX (cargo)
         if: always()
         run: cargo cyclonedx --format json || true
