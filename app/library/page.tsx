@@ -1651,10 +1651,14 @@ function LibraryListView() {
   return (
     <div className="w-full px-4 py-4 relative z-10">
       {/* Hero Header Premium */}
-      <div className="relative overflow-hidden rounded-xl bg-slate-950/60 border border-slate-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      {/* NB: niente overflow-hidden sul contenitore — clipperebbe il dropdown "Altro".
+          Il clipping serve solo ai layer decorativi, spostati nel wrapper qui sotto. */}
+      <div className="relative rounded-xl bg-slate-950/60 border border-slate-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80">
+        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4" />
+        </div>
         
         <div className="relative flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
