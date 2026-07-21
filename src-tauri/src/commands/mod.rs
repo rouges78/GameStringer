@@ -113,6 +113,8 @@ pub mod universal_injector;
 pub mod auto_hook;
 // Unity .assets file manager (UABEA integration)
 pub mod unity_assets;
+// Parser SerializedFile Unity: estrazione strutturata dei TextAsset
+pub mod unity_serialized;
 // Game update tracker (Steam buildid + patch integrity)
 pub mod game_update_tracker;
 // GameTranslator.it community integration

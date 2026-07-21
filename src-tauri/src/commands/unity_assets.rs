@@ -274,6 +274,30 @@ fn looks_like_game_text(text: &str) -> bool {
 #[command]
 pub async fn scan_assets_for_text(assets_file: String) -> Result<Vec<TextAssetEntry>, String> {
     let data = fs::read(&assets_file).map_err(|e| format!("Errore lettura: {}", e))?;
+
+    // Percorso strutturato: se è un SerializedFile parsabile, estraiamo i
+    // TextAsset veri (nome + contenuto esatti, comprese le stringhe corte che lo
+    // scan euristico sotto scarta). Se il parse fallisce si ricade sull'euristica,
+    // che resta la rete di sicurezza per bundle/versioni non coperte.
+    if super::unity_serialized::is_serialized_file(&data) {
+        if let Ok(assets) = super::unity_serialized::extract_text_assets(&data) {
+            if !assets.is_empty() {
+                let entries: Vec<TextAssetEntry> = assets
+                    .into_iter()
+                    .map(|a| TextAssetEntry {
+                        name: a.name,
+                        content: a.content,
+                        translated: String::new(),
+                        assets_file: assets_file.clone(),
+                        content_offset: a.path_id as u64,
+                        content_length: 0,
+                    })
+                    .collect();
+                return Ok(entries);
+            }
+        }
+    }
+
     let mut found: Vec<TextAssetEntry> = Vec::new();
     let min_len = 40usize;
     let max_len = 500_000usize;
