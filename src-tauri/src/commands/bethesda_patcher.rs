@@ -2698,6 +2698,363 @@ mod tests {
         assert_eq!(result[0].value, "test");
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // ESTRAZIONE DA ARCHIVIO — BA2 GNRL e BSA v104/v105
+    //
+    // I test sopra coprono il LISTING (parse_ba2_contents / parse_bsa_contents).
+    // Questi coprono l'ESTRAZIONE, che è dove vivono offset, dimensioni e
+    // decompressione: il punto in cui un formato binario si rompe davvero.
+    // Layout costruito dalla specifica pubblica dei formati Bethesda, non
+    // ricalcando il nostro parser.
+    // ═══════════════════════════════════════════════════════════════
+
+    fn zlib_compress(data: &[u8]) -> Vec<u8> {
+        use flate2::write::ZlibEncoder;
+        use flate2::Compression;
+        use std::io::Write;
+        let mut enc = ZlibEncoder::new(Vec::new(), Compression::default());
+        enc.write_all(data).unwrap();
+        enc.finish().unwrap()
+    }
+
+    /// BA2 GNRL completo di blocco dati e name table.
+    /// files: (percorso interno, contenuto, comprimere con zlib)
+    fn build_ba2_gnrl_with_data(files: &[(&str, &[u8], bool)]) -> Vec<u8> {
+        let n = files.len();
+        let data_start = 24 + 36 * n; // header + file entries
+
+        // Prima i blob, per conoscere offset e dimensioni delle entry.
+        let mut blobs: Vec<(u64, u32, u32, Vec<u8>)> = Vec::new(); // offset, packed, unpacked, bytes
+        let mut cursor = data_start;
+        for (_, content, compress) in files {
+            let stored = if *compress { zlib_compress(content) } else { content.to_vec() };
+            let packed = if *compress { stored.len() as u32 } else { 0 };
+            blobs.push((cursor as u64, packed, content.len() as u32, stored.clone()));
+            cursor += stored.len();
+        }
+        let name_table_offset = cursor as u64;
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(b"BTDX");
+        buf.extend_from_slice(&1u32.to_le_bytes()); // version (Fallout 4)
+        buf.extend_from_slice(b"GNRL");
+        buf.extend_from_slice(&(n as u32).to_le_bytes());
+        buf.extend_from_slice(&name_table_offset.to_le_bytes());
+
+        for (i, (path, _, _)) in files.iter().enumerate() {
+            let (offset, packed, unpacked, _) = &blobs[i];
+            let ext = path.rsplit('.').next().unwrap_or("");
+            let mut ext4 = [0u8; 4];
+            for (j, b) in ext.bytes().take(4).enumerate() {
+                ext4[j] = b;
+            }
+            buf.extend_from_slice(&0xDEADBEEFu32.to_le_bytes()); // name hash (non letto in estrazione)
+            buf.extend_from_slice(&ext4);
+            buf.extend_from_slice(&0xFEEDFACEu32.to_le_bytes()); // dir hash
+            buf.extend_from_slice(&0u32.to_le_bytes()); // flags
+            buf.extend_from_slice(&offset.to_le_bytes());
+            buf.extend_from_slice(&packed.to_le_bytes());
+            buf.extend_from_slice(&unpacked.to_le_bytes());
+            buf.extend_from_slice(&0xBAADF00Du32.to_le_bytes()); // align, da spec
+        }
+
+        for (_, _, _, bytes) in &blobs {
+            buf.extend_from_slice(bytes);
+        }
+
+        for (path, _, _) in files {
+            buf.extend_from_slice(&(path.len() as u16).to_le_bytes());
+            buf.extend_from_slice(path.as_bytes());
+        }
+
+        buf
+    }
+
+    #[test]
+    fn test_ba2_extract_uncompressed() {
+        let content = b"Hello from a loose BA2 entry";
+        let buf = build_ba2_gnrl_with_data(&[("strings\\test.strings", content, false)]);
+
+        let out = extract_from_ba2(&buf, "strings\\test.strings").unwrap();
+        assert_eq!(out, content, "il contenuto estratto deve essere identico byte a byte");
+    }
+
+    #[test]
+    fn test_ba2_extract_compressed_zlib() {
+        // Contenuto ripetitivo: garantisce che la compressione cambi davvero i byte.
+        let content = "Dragonborn ".repeat(40).into_bytes();
+        let buf = build_ba2_gnrl_with_data(&[("strings\\skyrim_english.strings", &content, true)]);
+
+        let out = extract_from_ba2(&buf, "strings\\skyrim_english.strings").unwrap();
+        assert_eq!(out, content);
+    }
+
+    #[test]
+    fn test_ba2_extract_picks_the_right_file() {
+        // Tre file: se offset o dimensioni slittano, esce il vicino invece di quello giusto.
+        let a = b"AAAA".to_vec();
+        let b = "BBBB".repeat(50).into_bytes();
+        let c = b"CCCC-tail".to_vec();
+        let buf = build_ba2_gnrl_with_data(&[
+            ("data\\a.txt", &a, false),
+            ("data\\b.txt", &b, true),
+            ("data\\c.txt", &c, false),
+        ]);
+
+        assert_eq!(extract_from_ba2(&buf, "data\\a.txt").unwrap(), a);
+        assert_eq!(extract_from_ba2(&buf, "data\\b.txt").unwrap(), b);
+        assert_eq!(extract_from_ba2(&buf, "data\\c.txt").unwrap(), c);
+    }
+
+    #[test]
+    fn test_ba2_extract_path_is_case_and_separator_insensitive() {
+        // I percorsi arrivano dall'UI con slash e maiuscole miste.
+        let content = b"case insensitive lookup";
+        let buf = build_ba2_gnrl_with_data(&[("strings\\test.strings", content, false)]);
+
+        assert_eq!(extract_from_ba2(&buf, "Strings/Test.STRINGS").unwrap(), content);
+    }
+
+    #[test]
+    fn test_ba2_extract_missing_file_errors() {
+        let buf = build_ba2_gnrl_with_data(&[("strings\\test.strings", b"x", false)]);
+        let err = extract_from_ba2(&buf, "strings\\assente.strings").unwrap_err();
+        assert!(err.contains("non trovato"), "errore inatteso: {}", err);
+    }
+
+    #[test]
+    fn test_ba2_extract_dx10_is_rejected() {
+        let mut buf = build_ba2_gnrl_with_data(&[("textures\\t.dds", b"x", false)]);
+        buf[8..12].copy_from_slice(b"DX10");
+        assert!(extract_from_ba2(&buf, "textures\\t.dds").is_err());
+    }
+
+    /// BSA v104/v105 completo di blocco dati.
+    /// files: (cartella, nome, contenuto, comprimere)
+    /// Layout da spec: header 36 → folder record (16 B v104 / 24 B v105) →
+    /// per ogni cartella bzstring + file record (16 B) → file names → dati.
+    fn build_bsa_with_data(version: u32, files: &[(&str, &str, &[u8], bool)]) -> Vec<u8> {
+        let is_v105 = version == 105;
+        let folder_rec_size = if is_v105 { 24 } else { 16 };
+
+        // Una sola cartella per semplicità: è il caso che serve al patcher.
+        let folder = files[0].0;
+        let n = files.len();
+
+        let header_size = 36usize;
+        let folder_records_size = folder_rec_size;
+        let folder_block = 1 + folder.len() + 1 + 16 * n; // bzstring (len + testo + \0) + file records
+        let names_block: usize = files.iter().map(|(_, name, _, _)| name.len() + 1).sum();
+        let data_start = header_size + folder_records_size + folder_block + names_block;
+
+        let mut stored: Vec<Vec<u8>> = Vec::new();
+        for (_, _, content, compress) in files {
+            if *compress {
+                let mut blob = (content.len() as u32).to_le_bytes().to_vec(); // size originale
+                if is_v105 {
+                    blob.extend_from_slice(&lz4_flex::compress(content));
+                } else {
+                    blob.extend_from_slice(&zlib_compress(content));
+                }
+                stored.push(blob);
+            } else {
+                stored.push(content.to_vec());
+            }
+        }
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(b"BSA\0");
+        buf.extend_from_slice(&version.to_le_bytes());
+        buf.extend_from_slice(&(header_size as u32).to_le_bytes()); // folder_record_offset
+        buf.extend_from_slice(&3u32.to_le_bytes()); // archive_flags: nomi cartelle | nomi file
+        buf.extend_from_slice(&1u32.to_le_bytes()); // folder_count
+        buf.extend_from_slice(&(n as u32).to_le_bytes()); // file_count
+        buf.extend_from_slice(&((folder.len() + 1) as u32).to_le_bytes());
+        buf.extend_from_slice(&(names_block as u32).to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes()); // file_flags
+
+        // Folder record
+        buf.extend_from_slice(&0u64.to_le_bytes()); // name hash
+        buf.extend_from_slice(&(n as u32).to_le_bytes()); // file count
+        if is_v105 {
+            buf.extend_from_slice(&0u32.to_le_bytes()); // padding
+            buf.extend_from_slice(&0u64.to_le_bytes()); // offset (non usato in lettura sequenziale)
+        } else {
+            buf.extend_from_slice(&0u32.to_le_bytes()); // offset
+        }
+
+        // bzstring della cartella: byte di lunghezza (incluso il null) + testo + null
+        buf.push((folder.len() + 1) as u8);
+        buf.extend_from_slice(folder.as_bytes());
+        buf.push(0);
+
+        // File records
+        let mut cursor = data_start;
+        for (i, (_, _, _, compress)) in files.iter().enumerate() {
+            let raw_size = if *compress {
+                // bit 30 acceso = questo file inverte il default dell'archivio
+                (stored[i].len() as u32) | 0x40000000
+            } else {
+                stored[i].len() as u32
+            };
+            buf.extend_from_slice(&0u64.to_le_bytes()); // hash
+            buf.extend_from_slice(&raw_size.to_le_bytes());
+            buf.extend_from_slice(&(cursor as u32).to_le_bytes());
+            cursor += stored[i].len();
+        }
+
+        // Nomi file (zstring)
+        for (_, name, _, _) in files {
+            buf.extend_from_slice(name.as_bytes());
+            buf.push(0);
+        }
+
+        assert_eq!(buf.len(), data_start, "offset dei dati calcolato male nella fixture");
+        for blob in &stored {
+            buf.extend_from_slice(blob);
+        }
+
+        buf
+    }
+
+    #[test]
+    fn test_bsa_v104_extract_uncompressed() {
+        let content = b"plain file inside a BSA";
+        let buf = build_bsa_with_data(104, &[("strings", "test.strings", content, false)]);
+
+        let out = extract_from_bsa(&buf, "strings\\test.strings").unwrap();
+        assert_eq!(out, content);
+    }
+
+    #[test]
+    fn test_bsa_v104_extract_zlib() {
+        let content = "Skyrim ".repeat(60).into_bytes();
+        let buf = build_bsa_with_data(104, &[("strings", "skyrim.strings", &content, true)]);
+
+        let out = extract_from_bsa(&buf, "strings\\skyrim.strings").unwrap();
+        assert_eq!(out, content);
+    }
+
+    #[test]
+    fn test_bsa_v105_extract_lz4() {
+        // v105 (Skyrim SE) usa LZ4 invece di zlib: ramo diverso del decoder.
+        let content = "Dawnguard ".repeat(60).into_bytes();
+        let buf = build_bsa_with_data(105, &[("strings", "dawnguard.strings", &content, true)]);
+
+        let out = extract_from_bsa(&buf, "strings\\dawnguard.strings").unwrap();
+        assert_eq!(out, content);
+    }
+
+    #[test]
+    fn test_bsa_extract_missing_file_errors() {
+        let buf = build_bsa_with_data(104, &[("strings", "test.strings", b"x", false)]);
+        assert!(extract_from_bsa(&buf, "strings\\assente.strings").is_err());
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ESP/ESM — record compresso (flag 0x00040000)
+    // ═══════════════════════════════════════════════════════════════
+
+    /// Come build_esp_fixture, ma il corpo del record è zlib con prefisso
+    /// u32 di dimensione decompressa, come da spec per i record compressi.
+    fn build_esp_compressed_fixture(records: &[(&str, u32, &str, &[(&str, &str)])]) -> Vec<u8> {
+        let mut buf = Vec::new();
+
+        buf.extend_from_slice(b"TES4");
+        buf.extend_from_slice(&0u32.to_le_bytes()); // data_size
+        buf.extend_from_slice(&0u32.to_le_bytes()); // flags: non localizzato
+        buf.extend_from_slice(&0u32.to_le_bytes()); // form_id
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+
+        for (rec_type, form_id, editor_id, fields) in records {
+            let mut rec_data = Vec::new();
+
+            if !editor_id.is_empty() {
+                rec_data.extend_from_slice(b"EDID");
+                let edid: Vec<u8> = editor_id.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(edid.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&edid);
+            }
+            for (field_type, value) in *fields {
+                rec_data.extend_from_slice(&field_type.as_bytes()[..4]);
+                let val: Vec<u8> = value.as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+                rec_data.extend_from_slice(&(val.len() as u16).to_le_bytes());
+                rec_data.extend_from_slice(&val);
+            }
+
+            let mut payload = (rec_data.len() as u32).to_le_bytes().to_vec();
+            payload.extend_from_slice(&zlib_compress(&rec_data));
+
+            let mut rt = [0u8; 4];
+            rt.copy_from_slice(rec_type.as_bytes());
+            buf.extend_from_slice(&rt);
+            buf.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+            buf.extend_from_slice(&0x00040000u32.to_le_bytes()); // flag "compressed"
+            buf.extend_from_slice(&form_id.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&0u16.to_le_bytes());
+            buf.extend_from_slice(&payload);
+        }
+
+        buf
+    }
+
+    #[test]
+    fn test_esp_compressed_record() {
+        let buf = build_esp_compressed_fixture(&[(
+            "BOOK",
+            0x00001234,
+            "BookOfLore",
+            &[("FULL", "Il Libro del Sapere"), ("DESC", "Pagine ingiallite.")],
+        )]);
+
+        let entries = parse_plugin_strings(&buf).unwrap();
+        assert_eq!(entries.len(), 2, "un record compresso deve dare le stesse stringhe di uno non compresso");
+        assert_eq!(entries[0].value, "Il Libro del Sapere");
+        assert_eq!(entries[1].value, "Pagine ingiallite.");
+        assert_eq!(entries[0].editor_id, "BookOfLore");
+        assert_eq!(entries[0].form_id, 0x00001234);
+    }
+
+    #[test]
+    fn test_esp_compressed_and_plain_records_mixed() {
+        // Un plugin reale mescola record compressi e non: il parser deve
+        // riprendere il passo dopo un record compresso.
+        let mut buf = build_esp_compressed_fixture(&[(
+            "WEAP",
+            1,
+            "Sword",
+            &[("FULL", "Spada lunga")],
+        )]);
+
+        // Appende un record NON compresso subito dopo.
+        let mut rec_data = Vec::new();
+        rec_data.extend_from_slice(b"FULL");
+        let val: Vec<u8> = "Scudo".as_bytes().iter().copied().chain(std::iter::once(0)).collect();
+        rec_data.extend_from_slice(&(val.len() as u16).to_le_bytes());
+        rec_data.extend_from_slice(&val);
+
+        buf.extend_from_slice(b"ARMO");
+        buf.extend_from_slice(&(rec_data.len() as u32).to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&2u32.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&0u16.to_le_bytes());
+        buf.extend_from_slice(&rec_data);
+
+        let entries = parse_plugin_strings(&buf).unwrap();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].value, "Spada lunga");
+        assert_eq!(entries[1].value, "Scudo");
+    }
+
     #[test]
     fn test_accuracy_score() {
         let (precision, _recall, f1, total, passed) = compute_accuracy_score();
