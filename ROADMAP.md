@@ -194,9 +194,12 @@
 - [x] **`docs/PROJECT_STATUS.md`** — riscritto snello 13/07/2026 (stato +
   puntatori a CHANGELOG/ROADMAP) e agganciato a `npm run ship`
   (`bumpProjectStatus` stampa versione/data ad ogni release).
-- [ ] **Bus factor**: documentare i percorsi critici (release, firma, deploy sito,
-  gestione chiavi) così la community può contribuire davvero; più issue
-  etichettate `good first issue`.
+- [~] **Bus factor**: documentati i percorsi critici in `docs/MAINTAINERS.md`
+  (22/07/2026) — mappa release/firma/deploy sito/Supabase con puntatori ai
+  runbook esistenti, e riempie i buchi: §1 chiave privata minisign (il rischio
+  n.1: se persa, l'auto-update muore per tutti → serve backup offline), §2
+  deploy SFTP Ionos, §5 inventario segreti. RESTA (azione Davide): creare la
+  label `good first issue` e applicarla, + tenere un backup offline della chiave.
 
 ---
 
