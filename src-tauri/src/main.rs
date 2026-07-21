@@ -562,6 +562,10 @@ fn main() {
             commands::unity_assets::scan_assets_for_text,
             commands::unity_assets::prepare_assets_for_translation,
 
+            // Unity SerializedFile: estrazione/riscrittura TextAsset (no Python)
+            commands::unity_serialized::extract_unity_text_assets,
+            commands::unity_serialized::rewrite_unity_text_assets,
+
             // RSS proxy (bypass CORS)
             commands::rss_proxy::fetch_rss_feed,
             commands::rss_proxy::fetch_url_content,

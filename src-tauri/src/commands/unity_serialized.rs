@@ -24,6 +24,7 @@
 // is_serialized_file() per il fallback difensivo.
 
 use serde::{Deserialize, Serialize};
+use tauri::command;
 
 const CLASS_ID_TEXT_ASSET: i32 = 49;
 
@@ -166,15 +167,25 @@ fn parse_header(data: &[u8]) -> Result<Header, String> {
     Ok(Header { version, data_offset, big_endian, metadata_start })
 }
 
-/// Estrae tutti i TextAsset da un SerializedFile in memoria.
-/// Ritorna Err se il file non è un SerializedFile della fascia supportata o se
-/// è troncato; il chiamante può allora ripiegare sullo scan euristico.
-pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, String> {
+/// Un oggetto nella tabella, con gli offset ASSOLUTI nel file dei campi
+/// byte_start e byte_size: servono al rewriter per ripatcharli senza ricostruire
+/// tutta la metadata.
+struct ParsedObject {
+    path_id: i64,
+    byte_start: u64,
+    byte_size: u32,
+    class_id: i32,
+    field_off_byte_start: usize,
+    field_off_byte_size: usize,
+}
+
+/// Parse condiviso: header + tabella oggetti. Usato sia dall'estrazione che
+/// dalla riscrittura, così il layout è definito in un posto solo.
+fn parse(data: &[u8]) -> Result<(Header, Vec<ParsedObject>), String> {
     let header = parse_header(data)?;
     let mut r = Reader::new(data, header.metadata_start, header.big_endian);
 
     // unity version (stringa null-terminated)
-    let start = r.pos;
     while r.pos < data.len() && data[r.pos] != 0 {
         r.pos += 1;
     }
@@ -182,7 +193,6 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
         return Err("unity version non terminata".to_string());
     }
     r.pos += 1; // salta il null
-    let _unity_version = String::from_utf8_lossy(&data[start..r.pos - 1]).to_string();
 
     let _target_platform = r.i32()?;
     let enable_type_tree = r.u8()?;
@@ -214,27 +224,37 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
     if object_count > 5_000_000 {
         return Err(format!("object_count implausibile: {}", object_count));
     }
-
-    struct ObjRec {
-        path_id: i64,
-        byte_start: u64,
-        byte_size: u32,
-        class_id: i32,
-    }
-    let mut objects: Vec<ObjRec> = Vec::with_capacity(object_count as usize);
+    let mut objects: Vec<ParsedObject> = Vec::with_capacity(object_count as usize);
     for _ in 0..object_count {
         r.align4(); // gli oggetti sono allineati a 4 da v>=14
         let path_id = r.i64()?;
+        let field_off_byte_start = r.pos;
         let byte_start = if header.version >= 22 { r.u64()? } else { r.u32()? as u64 };
+        let field_off_byte_size = r.pos;
         let byte_size = r.u32()?;
         let type_index = r.i32()?;
         let class_id = *class_ids
             .get(type_index as usize)
             .ok_or_else(|| format!("type_index {} fuori dalla type list ({})", type_index, class_ids.len()))?;
-        objects.push(ObjRec { path_id, byte_start, byte_size, class_id });
+        objects.push(ParsedObject {
+            path_id,
+            byte_start,
+            byte_size,
+            class_id,
+            field_off_byte_start,
+            field_off_byte_size,
+        });
     }
 
-    // Estrai gli oggetti TextAsset
+    Ok((header, objects))
+}
+
+/// Estrae tutti i TextAsset da un SerializedFile in memoria.
+/// Ritorna Err se il file non è un SerializedFile della fascia supportata o se
+/// è troncato; il chiamante può allora ripiegare sullo scan euristico.
+pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, String> {
+    let (header, objects) = parse(data)?;
+
     let mut out = Vec::new();
     for obj in objects.iter().filter(|o| o.class_id == CLASS_ID_TEXT_ASSET) {
         let base = header.data_offset as usize + obj.byte_start as usize;
@@ -253,6 +273,135 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
         }
     }
     Ok(out)
+}
+
+/// Riscrive il contenuto (m_Script) dei TextAsset indicati, restituendo un nuovo
+/// SerializedFile. `replacements` mappa path_id → nuovo contenuto. Gli oggetti
+/// non citati — TextAsset o no — restano identici byte a byte.
+///
+/// La stringa tradotta può avere lunghezza diversa dall'originale: in quel caso
+/// tutti gli oggetti successivi slittano. metadata_size e data_offset NON
+/// cambiano (la tabella oggetti è a campi fissi), quindi ripatchiamo in-place
+/// byte_start/byte_size di ogni oggetto e file_size nell'header, poi riaccodiamo
+/// la sezione dati ricostruita.
+pub fn rewrite_text_assets(
+    data: &[u8],
+    replacements: &std::collections::HashMap<i64, String>,
+) -> Result<Vec<u8>, String> {
+    let (header, mut objects) = parse(data)?;
+    let data_offset = header.data_offset as usize;
+
+    // Ricostruisco la sezione dati nell'ordine FISICO (per byte_start), così gli
+    // offset restano monotoni come li scrive Unity.
+    let mut order: Vec<usize> = (0..objects.len()).collect();
+    order.sort_by_key(|&i| objects[i].byte_start);
+
+    let mut new_data: Vec<u8> = Vec::with_capacity(data.len().saturating_sub(data_offset));
+    // (nuovo_byte_start, nuovo_byte_size) per ogni oggetto, indicizzato come objects
+    let mut new_pos: Vec<(u64, u32)> = vec![(0, 0); objects.len()];
+
+    for &i in &order {
+        while new_data.len() % 4 != 0 {
+            new_data.push(0);
+        }
+        let obj = &objects[i];
+        let base = data_offset + obj.byte_start as usize;
+        let end = base + obj.byte_size as usize;
+        if end > data.len() {
+            return Err(format!(
+                "oggetto path_id {} punta fuori dai limiti del file",
+                obj.path_id
+            ));
+        }
+        let new_byte_start = new_data.len() as u64;
+
+        if obj.class_id == CLASS_ID_TEXT_ASSET {
+            if let Some(new_script) = replacements.get(&obj.path_id) {
+                match rebuild_text_asset(&data[base..end], new_script) {
+                    Some(body) => new_data.extend_from_slice(&body),
+                    // corpo non riconosciuto: meglio conservare l'originale che
+                    // corrompere il file
+                    None => new_data.extend_from_slice(&data[base..end]),
+                }
+            } else {
+                new_data.extend_from_slice(&data[base..end]);
+            }
+        } else {
+            new_data.extend_from_slice(&data[base..end]);
+        }
+
+        let new_byte_size = (new_data.len() as u64 - new_byte_start) as u32;
+        new_pos[i] = (new_byte_start, new_byte_size);
+    }
+
+    // Copia header+metadata (fino a data_offset), poi patcha i campi.
+    let mut out = data[..data_offset].to_vec();
+
+    for (i, obj) in objects.iter_mut().enumerate() {
+        let (nbs, nsz) = new_pos[i];
+        patch_uint(&mut out, obj.field_off_byte_start, nbs, header.version >= 22, header.big_endian)?;
+        patch_uint(&mut out, obj.field_off_byte_size, nsz as u64, false, header.big_endian)?;
+    }
+
+    // file_size nell'header.
+    let new_file_size = (data_offset + new_data.len()) as u64;
+    if header.version >= 22 {
+        // header esteso: file_size i64 big-endian a offset 24 (dopo i 20 byte base
+        // + metadata_size u32).
+        patch_uint(&mut out, 24, new_file_size, true, true)?;
+    } else {
+        // header classico: file_size u32 big-endian a offset 4.
+        patch_uint(&mut out, 4, new_file_size, false, true)?;
+    }
+
+    out.extend_from_slice(&new_data);
+    Ok(out)
+}
+
+/// Scrive un intero senza segno (u32 o u64) a `off`, con l'endianness data.
+/// `wide` = true → 8 byte, altrimenti 4.
+fn patch_uint(buf: &mut [u8], off: usize, val: u64, wide: bool, big: bool) -> Result<(), String> {
+    let n = if wide { 8 } else { 4 };
+    if off + n > buf.len() {
+        return Err(format!("patch fuori dai limiti a offset {}", off));
+    }
+    if wide {
+        let b = if big { val.to_be_bytes() } else { val.to_le_bytes() };
+        buf[off..off + 8].copy_from_slice(&b);
+    } else {
+        let b = if big { (val as u32).to_be_bytes() } else { (val as u32).to_le_bytes() };
+        buf[off..off + 4].copy_from_slice(&b);
+    }
+    Ok(())
+}
+
+/// Ricostruisce il corpo di un TextAsset conservando m_Name e sostituendo
+/// m_Script. Ritorna None se il corpo non ha il layout atteso (due aligned
+/// string): in quel caso il chiamante conserva l'originale.
+fn rebuild_text_asset(body: &[u8], new_script: &str) -> Option<Vec<u8>> {
+    if body.len() < 4 {
+        return None;
+    }
+    let name_len = u32::from_le_bytes([body[0], body[1], body[2], body[3]]) as usize;
+    let name_end = 4 + name_len;
+    if name_end > body.len() {
+        return None;
+    }
+    let name = &body[4..name_end];
+
+    let mut out: Vec<u8> = Vec::new();
+    out.extend_from_slice(&(name_len as u32).to_le_bytes());
+    out.extend_from_slice(name);
+    while out.len() % 4 != 0 {
+        out.push(0);
+    }
+    let s = new_script.as_bytes();
+    out.extend_from_slice(&(s.len() as u32).to_le_bytes());
+    out.extend_from_slice(s);
+    while out.len() % 4 != 0 {
+        out.push(0);
+    }
+    Some(out)
 }
 
 /// Legge il corpo di un TextAsset: m_Name (aligned string) + m_Script (aligned
@@ -284,6 +433,64 @@ fn read_text_asset(body: &[u8]) -> Option<(String, String)> {
     let name = read_aligned_string(body, &mut p)?;
     let content = read_aligned_string(body, &mut p)?;
     Some((name, content))
+}
+
+// ── comandi Tauri ───────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextAssetReplacement {
+    pub path_id: i64,
+    pub content: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RewriteResult {
+    pub replaced: u32,
+    pub backup_path: String,
+}
+
+/// Legge un SerializedFile (.assets), estrae i TextAsset e li restituisce.
+/// Percorso strutturato "in profondità": nessuna euristica sulla lunghezza.
+#[command]
+pub async fn extract_unity_text_assets(assets_file: String) -> Result<Vec<SerializedTextAsset>, String> {
+    let data = std::fs::read(&assets_file).map_err(|e| format!("Errore lettura: {}", e))?;
+    if !is_serialized_file(&data) {
+        return Err("Non è un SerializedFile della fascia supportata (v16-22, type-tree disabilitato)".to_string());
+    }
+    extract_text_assets(&data)
+}
+
+/// Riscrive in-place i TextAsset tradotti dentro un .assets, dopo aver salvato
+/// un backup `<file>.backup` (ripristinabile con restore_unity_assets). Tutto in
+/// Rust: nessuna dipendenza da Python.
+#[command]
+pub async fn rewrite_unity_text_assets(
+    assets_file: String,
+    replacements: Vec<TextAssetReplacement>,
+) -> Result<RewriteResult, String> {
+    let data = std::fs::read(&assets_file).map_err(|e| format!("Errore lettura: {}", e))?;
+    if !is_serialized_file(&data) {
+        return Err("Non è un SerializedFile della fascia supportata (v16-22, type-tree disabilitato)".to_string());
+    }
+
+    let map: std::collections::HashMap<i64, String> =
+        replacements.into_iter().map(|r| (r.path_id, r.content)).collect();
+    let count = map.len() as u32;
+
+    let new_data = rewrite_text_assets(&data, &map)?;
+
+    // Backup solo se non esiste già, per non sovrascrivere l'originale con una
+    // versione già tradotta a una seconda esecuzione.
+    let backup_path = format!("{}.backup", assets_file);
+    if !std::path::Path::new(&backup_path).exists() {
+        std::fs::write(&backup_path, &data)
+            .map_err(|e| format!("Errore scrittura backup: {}", e))?;
+    }
+
+    std::fs::write(&assets_file, &new_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+
+    Ok(RewriteResult { replaced: count, backup_path })
 }
 
 #[cfg(test)]
@@ -525,5 +732,112 @@ mod tests {
         let buf = build_serialized(17, "2020.3.16f1", &[(49, text_asset_body("a", "b"))]);
         let cut = &buf[..buf.len() / 2];
         assert!(extract_text_assets(cut).is_err()); // Err, niente panic
+    }
+
+    // ── riscrittura ─────────────────────────────────────────────────────────
+    use std::collections::HashMap;
+
+    fn extracted(buf: &[u8]) -> HashMap<String, String> {
+        extract_text_assets(buf)
+            .unwrap()
+            .into_iter()
+            .map(|a| (a.name, a.content))
+            .collect()
+    }
+
+    #[test]
+    fn rewrite_replaces_only_targeted_text_asset() {
+        let buf = build_serialized(
+            17,
+            "2020.3.16f1",
+            &[
+                (49, text_asset_body("a", "Short original")),
+                (28, vec![0xAA, 0xBB, 0xCC]), // oggetto opaco in mezzo
+                (49, text_asset_body("b", "keep me too")),
+                (49, text_asset_body("c", "keep me")),
+            ],
+        );
+        // path_id 1 = a. Traduzione più LUNGA dell'originale → tutto slitta.
+        let mut repl = HashMap::new();
+        repl.insert(1i64, "Una traduzione molto più lunga dell'originale inglese!".to_string());
+        let out = rewrite_text_assets(&buf, &repl).unwrap();
+
+        let d = extracted(&out);
+        assert_eq!(d["a"], "Una traduzione molto più lunga dell'originale inglese!");
+        assert_eq!(d["b"], "keep me too", "i TextAsset non citati restano intatti");
+        assert_eq!(d["c"], "keep me");
+        // l'oggetto opaco è preservato byte a byte
+        assert!(out.windows(3).any(|w| w == [0xAA, 0xBB, 0xCC]), "oggetto opaco perso");
+    }
+
+    #[test]
+    fn rewrite_handles_shorter_and_longer_together() {
+        let buf = build_serialized(
+            18,
+            "2021.3.5f1",
+            &[
+                (49, text_asset_body("grow", "x")),
+                (49, text_asset_body("shrink", "una stringa iniziale piuttosto lunga")),
+            ],
+        );
+        let mut repl = HashMap::new();
+        repl.insert(1i64, "adesso molto più lungo di prima davvero".to_string());
+        repl.insert(2i64, "corto".to_string());
+        let out = rewrite_text_assets(&buf, &repl).unwrap();
+
+        let d = extracted(&out);
+        assert_eq!(d["grow"], "adesso molto più lungo di prima davvero");
+        assert_eq!(d["shrink"], "corto");
+    }
+
+    #[test]
+    fn rewrite_without_changes_is_idempotent() {
+        let buf = build_serialized(
+            17,
+            "2020.3.16f1",
+            &[(49, text_asset_body("a", "hello")), (28, vec![1, 2, 3, 4])],
+        );
+        let out = rewrite_text_assets(&buf, &HashMap::new()).unwrap();
+        // Nessuna sostituzione: il contenuto ri-estratto deve combaciare.
+        assert_eq!(extracted(&out), extracted(&buf));
+        // e file_size resta coerente
+        let fs = u32::from_be_bytes([out[4], out[5], out[6], out[7]]) as usize;
+        assert_eq!(fs, out.len());
+    }
+
+    #[test]
+    fn rewrite_v22_updates_64bit_file_size() {
+        let buf = build_serialized(
+            22,
+            "6000.0.23f1",
+            &[(49, text_asset_body("story", "Chapter 1")), (28, vec![0xEE])],
+        );
+        let mut repl = HashMap::new();
+        repl.insert(1i64, "Capitolo Uno, molto più lungo dell'originale".to_string());
+        let out = rewrite_text_assets(&buf, &repl).unwrap();
+
+        assert_eq!(extracted(&out)["story"], "Capitolo Uno, molto più lungo dell'originale");
+        // file_size è i64 BE a offset 24 nell'header esteso
+        let fs = u64::from_be_bytes([
+            out[24], out[25], out[26], out[27], out[28], out[29], out[30], out[31],
+        ]) as usize;
+        assert_eq!(fs, out.len(), "file_size a 64 bit deve riflettere la nuova dimensione");
+    }
+
+    #[test]
+    fn rewrite_output_is_reparseable() {
+        // Il file riscritto deve restare un SerializedFile valido e ri-riscrivibile.
+        let buf = build_serialized(
+            20,
+            "2022.3.10f1",
+            &[(49, text_asset_body("a", "one")), (49, text_asset_body("b", "two"))],
+        );
+        let mut repl = HashMap::new();
+        repl.insert(2i64, "due tradotto".to_string());
+        let once = rewrite_text_assets(&buf, &repl).unwrap();
+        // seconda passata senza modifiche: identica a once
+        let twice = rewrite_text_assets(&once, &HashMap::new()).unwrap();
+        assert_eq!(once, twice, "una riscrittura a vuoto non deve cambiare il file");
+        assert_eq!(extracted(&once)["b"], "due tradotto");
     }
 }
