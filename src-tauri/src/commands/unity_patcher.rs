@@ -175,17 +175,27 @@ fn read_unity_version_from_binary(path: &Path, buffer_size: usize) -> Option<Str
     }
     
     let mut file = File::open(path).ok()?;
+    // read_exact fallisce se il file è più corto del buffer (level0, mainData di
+    // giochi piccoli): leggiamo quel che c'è e tagliamo il resto.
     let mut buffer = vec![0u8; buffer_size];
-    file.read_exact(&mut buffer).ok()?;
+    let read = file.read(&mut buffer).ok()?;
+    if read == 0 {
+        return None;
+    }
+    buffer.truncate(read);
 
     let content = String::from_utf8_lossy(&buffer);
 
-    // Pattern 1: "20XX.X.XXfX" o "20XX.X.XXpX" (release/patch)
-    // Pattern 2: "5.X.XfX" (Unity 5.x)
-    // Pattern 3: "4.X.XfX" (Unity 4.x)
-    // Pattern 4: "6.X.X" (Unity 6 tech preview)
+    // Pattern 1: "6000.X.XXfX" — Unity 6 (2024+). ATTENZIONE: Unity 6 NON si
+    //   numera "6.x", si numera 6000.x.y; va provato PRIMA di 202X, altrimenti
+    //   una stringa come "6000.0.23f1" resta senza match e il gioco risulta "?.?".
+    // Pattern 2: "20XX.X.XXfX" o "20XX.X.XXpX" (release/patch)
+    // Pattern 3: "5.X.XfX" (Unity 5.x)
+    // Pattern 4: "4.X.XfX" (Unity 4.x)
+    // Pattern 5: "6.X.X" (Unity 6 tech preview, numerazione vecchia)
     use regex::Regex;
     let pattern_strs = [
+        r"(6000\.[0-9]+\.[0-9]+[fpab][0-9]+)",
         r"(202[0-9]\.[0-9]+\.[0-9]+[fpab][0-9]+)",
         r"(201[0-9]\.[0-9]+\.[0-9]+[fpab][0-9]+)",
         r"(5\.[0-9]+\.[0-9]+[fpab][0-9]+)",
@@ -1223,9 +1233,12 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
             is_il2cpp,
             engine_name: format!("Unity {} ({})", ver_str, runtime),
             engine_version: unity_version,
-            can_patch: !is_il2cpp, // IL2CPP è più difficile da patchare
+            // IL2CPP È patchabile: install_il2cpp_patch installa BepInEx 6
+            // IL2CPP + la build IL2CPP di XUnity. Dire "non compatibile" era
+            // falso e respingeva l'utente dal percorso che l'app sa già fare.
+            can_patch: true,
             message: if is_il2cpp {
-                "⚠ Unity IL2CPP - BepInEx/XUnity non compatibile, usa Unity CSV Translator".to_string()
+                "✓ Unity IL2CPP - BepInEx 6 (IL2CPP) + XUnity AutoTranslator. Se il gioco è molto recente e BepInEx non si aggancia, resta l'alternativa Unity CSV Translator".to_string()
             } else {
                 "✓ Unity Mono - compatibile con XUnity AutoTranslator".to_string()
             },
@@ -3581,6 +3594,139 @@ mod tests {
     use tempfile::TempDir;
 
     // ========================================================================
+    // RILEVAMENTO VERSIONE UNITY
+    //
+    // La versione finisce nell'engine_name mostrato all'utente e decide quali
+    // strumenti proponiamo. Unity 6 si numera 6000.x.y — non 6.x — ed è la
+    // numerazione dei giochi usciti dal 2024 in poi.
+    // ========================================================================
+
+    /// Scrive un finto globalgamemanagers: la stringa di versione compare
+    /// vicino all'inizio del file, com'è nel formato reale.
+    fn write_ggm(dir: &Path, version: &str) -> std::path::PathBuf {
+        let path = dir.join("globalgamemanagers");
+        let mut data = vec![0u8; 32];
+        data.extend_from_slice(version.as_bytes());
+        data.extend_from_slice(&vec![0u8; 64]);
+        std::fs::write(&path, data).unwrap();
+        path
+    }
+
+    #[test]
+    fn unity_version_detects_unity_6() {
+        let dir = TempDir::new().unwrap();
+        let ggm = write_ggm(dir.path(), "6000.0.23f1");
+        assert_eq!(
+            read_unity_version_from_binary(&ggm, 8192).as_deref(),
+            Some("6000.0.23f1"),
+            "Unity 6 usa la numerazione 6000.x.y: se non la riconosciamo il gioco resta '?.?'"
+        );
+    }
+
+    #[test]
+    fn unity_version_detects_unity_6_minor() {
+        let dir = TempDir::new().unwrap();
+        let ggm = write_ggm(dir.path(), "6000.1.5f1");
+        assert_eq!(read_unity_version_from_binary(&ggm, 8192).as_deref(), Some("6000.1.5f1"));
+    }
+
+    #[test]
+    fn unity_version_detects_2022_and_2019() {
+        let dir = TempDir::new().unwrap();
+        let a = write_ggm(dir.path(), "2022.3.42f1");
+        assert_eq!(read_unity_version_from_binary(&a, 8192).as_deref(), Some("2022.3.42f1"));
+
+        let dir2 = TempDir::new().unwrap();
+        let b = write_ggm(dir2.path(), "2019.4.40f1");
+        assert_eq!(read_unity_version_from_binary(&b, 8192).as_deref(), Some("2019.4.40f1"));
+    }
+
+    #[test]
+    fn unity_version_detects_legacy_5x() {
+        let dir = TempDir::new().unwrap();
+        let ggm = write_ggm(dir.path(), "5.6.7f1");
+        assert_eq!(read_unity_version_from_binary(&ggm, 8192).as_deref(), Some("5.6.7f1"));
+    }
+
+    #[test]
+    fn unity_version_reads_file_shorter_than_buffer() {
+        // level0 e mainData dei giochi piccoli stanno sotto gli 8 KB richiesti:
+        // con read_exact la lettura falliva e la versione risultava sconosciuta.
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("level0");
+        let mut data = vec![0u8; 16];
+        data.extend_from_slice(b"2021.3.5f1");
+        std::fs::write(&path, data).unwrap(); // ~26 byte, buffer richiesto 8192
+        assert_eq!(read_unity_version_from_binary(&path, 8192).as_deref(), Some("2021.3.5f1"));
+    }
+
+    #[test]
+    fn unity_version_none_when_absent() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("globalgamemanagers");
+        std::fs::write(&path, vec![0u8; 256]).unwrap();
+        assert_eq!(read_unity_version_from_binary(&path, 8192), None);
+    }
+
+    #[test]
+    fn unity_version_none_when_file_missing() {
+        let dir = TempDir::new().unwrap();
+        assert_eq!(read_unity_version_from_binary(&dir.path().join("nope"), 8192), None);
+    }
+
+    #[test]
+    fn unity_version_from_game_dir_walks_data_folder() {
+        // detect_unity_version parte dalla cartella <Gioco>_Data.
+        let dir = TempDir::new().unwrap();
+        let data_dir = dir.path().join("MyGame_Data");
+        std::fs::create_dir(&data_dir).unwrap();
+        write_ggm(&data_dir, "6000.0.23f1");
+        assert_eq!(detect_unity_version(dir.path()).as_deref(), Some("6000.0.23f1"));
+    }
+
+    // ========================================================================
+    // VERDETTO IL2CPP
+    // ========================================================================
+
+    #[tokio::test]
+    async fn il2cpp_game_is_reported_as_patchable() {
+        // GameAssembly.dll = build IL2CPP. Dichiararla non patchabile era falso:
+        // install_il2cpp_patch installa BepInEx 6 IL2CPP + XUnity IL2CPP.
+        let dir = TempDir::new().unwrap();
+        let data_dir = dir.path().join("MyGame_Data");
+        std::fs::create_dir(&data_dir).unwrap();
+        write_ggm(&data_dir, "6000.0.23f1");
+        std::fs::write(dir.path().join("GameAssembly.dll"), b"stub").unwrap();
+        std::fs::write(dir.path().join("UnityPlayer.dll"), b"stub").unwrap();
+
+        let check = check_game_engine(dir.path().to_string_lossy().to_string()).await.unwrap();
+        assert!(check.is_unity);
+        assert!(check.is_il2cpp, "GameAssembly.dll deve marcare il gioco come IL2CPP");
+        assert!(check.can_patch, "un gioco IL2CPP è patchabile: BepInEx 6 IL2CPP");
+        assert!(
+            !check.message.contains("non compatibile"),
+            "il messaggio non deve negare un percorso che l'app implementa: {}",
+            check.message
+        );
+        assert!(check.engine_name.contains("6000.0.23f1"), "engine_name: {}", check.engine_name);
+    }
+
+    #[tokio::test]
+    async fn mono_game_is_reported_as_patchable() {
+        let dir = TempDir::new().unwrap();
+        let data_dir = dir.path().join("MyGame_Data");
+        std::fs::create_dir(&data_dir).unwrap();
+        write_ggm(&data_dir, "2021.3.5f1");
+        std::fs::write(dir.path().join("UnityPlayer.dll"), b"stub").unwrap();
+
+        let check = check_game_engine(dir.path().to_string_lossy().to_string()).await.unwrap();
+        assert!(check.is_unity);
+        assert!(!check.is_il2cpp);
+        assert!(check.can_patch);
+        assert!(check.engine_name.contains("Mono"), "engine_name: {}", check.engine_name);
+    }
+
+    // ========================================================================
     // PE ARCHITECTURE DETECTION
     // ========================================================================
 
@@ -3753,7 +3899,9 @@ mod tests {
     fn unity_version_from_binary_file_too_small() {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("tiny");
-        // File smaller than buffer_size - read_exact will fail
+        // File più piccolo del buffer: ora viene letto comunque (vedi
+        // unity_version_reads_file_shorter_than_buffer), qui resta None
+        // semplicemente perché non contiene nessuna versione.
         std::fs::write(&path, b"short").unwrap();
         let result = read_unity_version_from_binary(&path, 8192);
         assert_eq!(result, None);
