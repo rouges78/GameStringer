@@ -20,6 +20,13 @@ fixture sintetiche (vedi ADR-002 / ADR-003, "corpus di test reale"):
      - controllo header (versione 16..22, endianness, dimensioni coerenti)
        come pre-verifica del percorso unity_serialized.rs
 
+  4. data.win  (GameMaker)
+     - mirror di parse_chunks/extract_strings in gamemaker_patcher.rs
+     - CENSIMENTO PUNTATORI per il rebuilder (roadmap "GameMaker da parziale
+       a pieno"): conta i siti u32 nel file che puntano ai dati stringa e
+       stima i falsi positivi → dato necessario per decidere se la
+       rilocazione generica dei puntatori è sicura (design del rebuilder).
+
 Uso:
     python3 scripts/validation/validate_real_samples.py [cartella]
     (default: .samples/ nella root del repo)
@@ -183,6 +190,98 @@ def check_serialized_file(path):
         report('WARN', path, detail + ' → dimensioni non coerenti: verificare (bundle? troncato?)')
 
 
+# ─── 4. GameMaker data.win ─────────────────────────────────────────────────
+
+def check_data_win(path):
+    data = open(path, 'rb').read()
+    if len(data) < 16 or data[0:4] != b'FORM':
+        return report('FAIL', path, 'header FORM mancante: non è un data.win')
+    # mirror parse_chunks: FORM + size, poi chunk (nome 4B, size u32, dati)
+    chunks = []
+    pos = 8
+    while pos + 8 <= len(data):
+        name = data[pos:pos+4].decode('ascii', 'replace')
+        (size,) = struct.unpack_from('<I', data, pos+4)
+        chunks.append((name, pos+8, size))
+        pos += 8 + size
+    names = [c[0] for c in chunks]
+    strg = next((c for c in chunks if c[0] == 'STRG'), None)
+    if not strg:
+        return report('WARN', path, f'{len(chunks)} chunk ({" ".join(names[:12])}…) ma STRG assente')
+    _, strg_off, strg_size = strg
+    (count,) = struct.unpack_from('<I', data, strg_off)
+    table = strg_off + 4
+    entries = []   # (entry_off, char_off, length)
+    for i in range(min(count, 500_000)):
+        p = table + i*4
+        if p + 4 > len(data):
+            break
+        (entry_abs,) = struct.unpack_from('<I', data, p)
+        if entry_abs + 4 > len(data):
+            continue
+        (slen,) = struct.unpack_from('<I', data, entry_abs)
+        entries.append((entry_abs, entry_abs + 4, slen))
+    report('PASS', path,
+           f'FORM OK: {len(chunks)} chunk, STRG con {count} stringhe ({len(entries)} leggibili), '
+           f'file {len(data)/1e6:.1f} MB')
+
+    # ── Censimento puntatori (per il rebuilder) ──
+    # Ipotesi da verificare: gli altri chunk referenziano le stringhe con u32
+    # assoluti che puntano ai DATI (entry+4). Misuriamo: quanti siti u32 nel
+    # file corrispondono a un char_off reale, e quanti "match" cadono su
+    # indirizzi che NON sono inizio-dati (stima falsi positivi).
+    char_offs = {e[1] for e in entries}
+    decoys = {e[1] + 1 for e in entries if e[2] > 2}  # indirizzi interni: mai referenziati legittimamente
+    hits = 0
+    decoy_hits = 0
+    referenced = set()
+    strg_end = strg_off + strg_size
+    step_report = max(1, len(data) // (20 * 1024 * 1024))
+    try:
+        import numpy as np
+        buf = np.frombuffer(data, dtype=np.uint8)
+        c_sorted = np.array(sorted(char_offs), dtype=np.uint64)
+        d_sorted = np.array(sorted(decoys), dtype=np.uint64)
+        for align in range(4):
+            n = (len(data) - align - 4) // 4 * 4
+            if n <= 0:
+                continue
+            words = buf[align:align+n].view('<u4').astype(np.uint64)
+            # posizioni assolute dei siti
+            pos_abs = np.arange(align, align+n, 4, dtype=np.uint64)
+            # escludi i siti DENTRO la tabella STRG (quelli sono la tabella stessa)
+            outside = (pos_abs < strg_off) | (pos_abs >= strg_end)
+            w = words[outside]
+            m = np.isin(w, c_sorted)
+            hits += int(m.sum())
+            referenced.update(w[m].tolist())
+            decoy_hits += int(np.isin(w, d_sorted).sum())
+    except ImportError:
+        # fallback puro-Python (solo siti allineati a 4, più lento)
+        for p in range(0, len(data) - 4, 4):
+            if strg_off <= p < strg_end:
+                continue
+            (v,) = struct.unpack_from('<I', data, p)
+            if v in char_offs:
+                hits += 1
+                referenced.add(v)
+            elif v in decoys:
+                decoy_hits += 1
+            if p % (50*1024*1024) == 0 and p:
+                print(f'   … censimento {p/1e6:.0f}/{len(data)/1e6:.0f} MB')
+    ref_ratio = len(referenced) / len(char_offs) if char_offs else 0
+    fp_rate = decoy_hits / max(1, len(decoys))
+    msg = (f'censimento puntatori: {hits} siti → {len(referenced)}/{len(char_offs)} '
+           f'stringhe referenziate ({ref_ratio:.0%}); falsi positivi stimati: '
+           f'{decoy_hits} su {len(decoys)} esche ({fp_rate:.2%})')
+    if ref_ratio > 0.6 and fp_rate < 0.01:
+        report('PASS', path, msg + ' → rilocazione generica PROMETTENTE: dato sufficiente per progettare il rebuilder')
+    elif ref_ratio > 0.3:
+        report('WARN', path, msg + ' → segnale parziale: servono più campioni o parsing per-chunk (stile UndertaleModTool)')
+    else:
+        report('WARN', path, msg + ' → le stringhe non sembrano referenziate con puntatori diretti: rebuilder da progettare per-chunk')
+
+
 # ─── main ──────────────────────────────────────────────────────────────────
 
 def main():
@@ -202,6 +301,8 @@ def main():
                 found = True; check_utoc(p)
             elif low.endswith('.assets') or low == 'resources.assets':
                 found = True; check_serialized_file(p)
+            elif low == 'data.win':
+                found = True; check_data_win(p)
 
     if not found:
         print('Nessun file riconosciuto in .samples/ — vedi .samples/README.md per cosa copiare.')

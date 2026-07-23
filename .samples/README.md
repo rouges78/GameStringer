@@ -21,6 +21,11 @@ Da giochi che possiedi, bastano questi file (copia, non spostare):
   (es. `pakchunk0-optional-Windows.utoc`, di solito KB–MB;
   il `.ucas` gemello NON serve per la validazione dell'header/TOC)
 
+### GameMaker (per il rebuilder data.win — roadmap "da parziale a pieno")
+- il `data.win` di un gioco GameMaker installato (es. Undertale, Deltarune…)
+  L'harness fa un censimento dei puntatori alle stringhe: il risultato dice
+  se la rilocazione generica è sicura o se serve il parsing per-chunk.
+
 ## Come lanciare la validazione
 
 ```
