@@ -28,7 +28,7 @@
       { "id": "gemini-1.5-pro", "label": "Gemini 1.5 Pro" }
     ],
     "deepseek": [
-      { "id": "deepseek-chat", "label": "DeepSeek V3", "recommended": true }
+      { "id": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "recommended": true }
     ],
     "mistral": [
       { "id": "mistral-large-latest", "label": "Mistral Large" }

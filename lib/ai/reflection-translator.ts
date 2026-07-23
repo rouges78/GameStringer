@@ -379,7 +379,7 @@ const REFLECTION_PROVIDERS: Record<string, ChatFn> = {
   'gemini-3.1': chatGemini('gemini-3.1-flash-lite'),
   groq: chatOpenAICompatible('https://api.groq.com/openai/v1/chat/completions', 'llama-3.3-70b-versatile'),
   'groq-gptoss': chatOpenAICompatibleProxy('https://api.groq.com/openai/v1/chat/completions', 'openai/gpt-oss-120b'),
-  deepseek: chatOpenAICompatible('https://api.deepseek.com/chat/completions', 'deepseek-chat'),
+  deepseek: chatOpenAICompatible('https://api.deepseek.com/chat/completions', 'deepseek-v4-flash'),
   openai: chatOpenAICompatibleProxy('https://api.openai.com/v1/chat/completions', 'gpt-4o-mini'),
   anthropic: chatAnthropic(ANTHROPIC_MODEL),
   'anthropic-claude4': chatAnthropic(ANTHROPIC_MODEL),

@@ -100,7 +100,7 @@ export function getRecommendedProvider(
   if (isAsianTarget || (isTechnical && isAsianTarget)) {
     return {
       provider: 'deepseek',
-      reason: `${modelLabelById('deepseek', 'deepseek-chat', 'DeepSeek V3')} è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici`,
+      reason: `${modelLabelById('deepseek', 'deepseek-v4-flash', 'DeepSeek V4 Flash')} è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici`,
       confidence: 0.85,
     };
   }

@@ -76,7 +76,7 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
       { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', recommended: true },
       { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     ],
-    deepseek: [{ id: 'deepseek-chat', label: 'DeepSeek V3', recommended: true }],
+    deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
     mistral: [{ id: 'mistral-large-latest', label: 'Mistral Large' }],
   },
   recommendations: {
