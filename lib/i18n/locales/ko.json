@@ -907,7 +907,9 @@
     "legalGateBody": "GameStringer는 합법적으로 소유한 게임에만 패치를 적용합니다. 확인하면 이 게임의 정품을 소유하고 있음을 선언하는 것입니다.",
     "legalGateLink": "법적 고지 읽기",
     "legalGateCancel": "취소",
-    "legalGateConfirm": "게임 소유를 확인합니다"
+    "legalGateConfirm": "게임 소유를 확인합니다",
+    "whitelistBlocked": "퍼블리셔의 요청으로 이 타이틀은 번역에서 제외되었습니다.",
+    "whitelistOfficialNotice": "이 게임에는 이미 선택한 언어의 공식 현지화가 있습니다. 팬 번역은 아마 불필요합니다."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",

@@ -907,7 +907,9 @@
     "legalGateBody": "GameStringer n'applique des correctifs qu'aux jeux que vous possédez légalement. En confirmant, vous déclarez détenir une copie légitime de ce jeu.",
     "legalGateLink": "Lire les mentions légales",
     "legalGateCancel": "Annuler",
-    "legalGateConfirm": "Je confirme posséder le jeu"
+    "legalGateConfirm": "Je confirme posséder le jeu",
+    "whitelistBlocked": "Ce titre est exclu de la traduction à la demande de l'éditeur.",
+    "whitelistOfficialNotice": "Ce jeu dispose déjà d'une localisation officielle dans la langue choisie : une traduction amateur est probablement superflue."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Erreur lors du chargement des infos DRAT :",

@@ -12,6 +12,8 @@ import {
   Gamepad2, Settings, Search, Play, Loader2, Database,
   ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck
 } from 'lucide-react';
+import { matchWhitelist, type PublisherWhitelist } from '@/lib/social/publisher-whitelist';
+import publisherWhitelistData from '@/data/publisher-whitelist.json';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import InlineTranslator from '@/components/inline-translator';
@@ -1652,6 +1654,23 @@ export default function GameDetailPage() {
       setLegalGateOpen(true);
       return;
     }
+    // Whitelist relazioni-publisher: blocco (richiesta publisher) o avviso
+    // (localizzazione ufficiale già esistente) prima del flusso. Fail-open.
+    try {
+      const verdict = matchWhitelist(
+        { appId: game.appid, title: game.title || game.name },
+        targetLang,
+        publisherWhitelistData as PublisherWhitelist
+      );
+      if (verdict?.blocked) {
+        toast.error(t('gameDetail.whitelistBlocked'));
+        return;
+      }
+      if (verdict?.notice) {
+        toast.info(t('gameDetail.whitelistOfficialNotice'));
+        // non bloccante: il flusso prosegue
+      }
+    } catch { /* fail-open: la whitelist non deve mai rompere la traduzione */ }
     if (autoTranslateRunningRef.current || autoTranslateActive) return;
 
     // Motori con percorso DIRETTO (branch dedicato in startAutoTranslate: hero

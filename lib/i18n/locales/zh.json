@@ -907,7 +907,9 @@
     "legalGateBody": "GameStringer 只为你合法拥有的游戏打补丁。确认即表示你声明拥有本游戏的正版。",
     "legalGateLink": "阅读法律声明",
     "legalGateCancel": "取消",
-    "legalGateConfirm": "确认，我拥有本游戏"
+    "legalGateConfirm": "确认，我拥有本游戏",
+    "whitelistBlocked": "应发行商要求，该游戏已被排除在翻译之外。",
+    "whitelistOfficialNotice": "该游戏已有所选语言的官方本地化：粉丝翻译可能没有必要。"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "加载 DRAT 信息时出错：",

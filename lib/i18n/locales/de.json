@@ -907,7 +907,9 @@
     "legalGateBody": "GameStringer patcht nur Spiele, die du legal besitzt. Mit der Bestätigung erklärst du, eine rechtmäßige Kopie dieses Spiels zu besitzen.",
     "legalGateLink": "Rechtliche Hinweise lesen",
     "legalGateCancel": "Abbrechen",
-    "legalGateConfirm": "Ich bestätige, das Spiel zu besitzen"
+    "legalGateConfirm": "Ich bestätige, das Spiel zu besitzen",
+    "whitelistBlocked": "Dieser Titel ist auf Wunsch des Publishers von der Übersetzung ausgeschlossen.",
+    "whitelistOfficialNotice": "Dieses Spiel hat bereits eine offizielle Lokalisierung in der gewählten Sprache: eine Fan-Übersetzung ist wahrscheinlich überflüssig."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Fehler beim Laden der DRAT-Informationen:",
