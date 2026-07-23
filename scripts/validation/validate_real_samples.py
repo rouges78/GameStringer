@@ -27,6 +27,13 @@ fixture sintetiche (vedi ADR-002 / ADR-003, "corpus di test reale"):
        stima i falsi positivi → dato necessario per decidere se la
        rilocazione generica dei puntatori è sicura (design del rebuilder).
 
+  5. *.pak  (Unreal classico — ADR-001 prerequisito 1)
+     - parse del footer (magic 0x5A6F12E1, v1..v11) e dell'INDICE:
+       classico v1-v9 e PathHash/FullDirectoryIndex v10/v11 (che il reader
+       Rust unreal_localization.rs oggi rifiuta)
+     - SCOPERTA CANDIDATI FONT (bersaglio dell'opzione B dell'ADR-001):
+       elenca le entry .ufont / Font / FontFace con path completo.
+
 Uso:
     python3 scripts/validation/validate_real_samples.py [cartella]
     (default: .samples/ nella root del repo)
@@ -282,6 +289,113 @@ def check_data_win(path):
         report('WARN', path, msg + ' → le stringhe non sembrano referenziate con puntatori diretti: rebuilder da progettare per-chunk')
 
 
+# ─── 5. Unreal .pak (classico) ─────────────────────────────────────────────
+
+PAK_MAGIC = 0x5A6F12E1
+
+
+def _fstring(data, off):
+    """FString UE: i32 len (negativo = UTF-16), poi bytes con terminatore."""
+    (n,) = struct.unpack_from('<i', data, off)
+    off += 4
+    if n == 0:
+        return '', off
+    if n < 0:
+        raw = data[off:off + (-n) * 2]
+        return raw.decode('utf-16-le', 'replace').rstrip('\x00'), off + (-n) * 2
+    raw = data[off:off + n]
+    return raw.decode('utf-8', 'replace').rstrip('\x00'), off + n
+
+
+def check_pak(path):
+    size = os.path.getsize(path)
+    with open(path, 'rb') as f:
+        tail_len = min(size, 4096)
+        f.seek(size - tail_len)
+        tail = f.read(tail_len)
+        # Il footer varia per versione: cerchiamo il magic nel tail e leggiamo
+        # version/index_offset/index_size che lo seguono (layout stabile).
+        pos = tail.rfind(struct.pack('<I', PAK_MAGIC))
+        if pos < 0:
+            return report('FAIL', path, 'magic pak 0x5A6F12E1 non trovato nel footer')
+        try:
+            version, idx_off, idx_size = struct.unpack_from('<IQQ', tail, pos + 4)
+        except struct.error:
+            return report('FAIL', path, 'footer troncato dopo il magic')
+        if not (1 <= version <= 12) or idx_off + idx_size > size:
+            return report('FAIL', path, f'footer incoerente: v{version}, index {idx_off}+{idx_size} vs file {size}')
+        # encrypted flag: u8 subito PRIMA del magic (v4+), guid prima ancora (v7+)
+        encrypted = tail[pos - 1] == 1 if pos >= 1 else False
+        if encrypted:
+            return report('WARN', path, f'pak v{version} con INDICE CRIPTATO: serve la chiave AES, censimento impossibile')
+        f.seek(idx_off)
+        idx = f.read(idx_size)
+
+    try:
+        mount, off = _fstring(idx, 0)
+        (count,) = struct.unpack_from('<I', idx, off)
+        off += 4
+        names = []
+        if version >= 10:
+            # PathHashIndex header: seed u64, has_phi u32 [+off/size/hash],
+            # has_fdi u32 [+off/size/hash], encoded entries...
+            off += 8
+            (has_phi,) = struct.unpack_from('<I', idx, off); off += 4
+            if has_phi:
+                off += 8 + 8 + 20
+            (has_fdi,) = struct.unpack_from('<I', idx, off); off += 4
+            fdi_off = fdi_size = 0
+            if has_fdi:
+                fdi_off, fdi_size = struct.unpack_from('<QQ', idx, off)
+                off += 8 + 8 + 20
+            if not has_fdi or fdi_off + fdi_size > size:
+                return report('WARN', path,
+                              f'pak v{version} "{mount}": {count} entry ma FullDirectoryIndex assente/incoerente '
+                              f'(has_fdi={has_fdi}) — servono più campioni')
+            with open(path, 'rb') as f:
+                f.seek(fdi_off)
+                fdi = f.read(fdi_size)
+            (dir_count,) = struct.unpack_from('<I', fdi, 0)
+            p = 4
+            for _ in range(dir_count):
+                dname, p = _fstring(fdi, p)
+                (fcount,) = struct.unpack_from('<I', fdi, p); p += 4
+                for _ in range(fcount):
+                    fname, p = _fstring(fdi, p)
+                    p += 4  # offset nelle encoded entries
+                    names.append(dname + fname)
+            layout = f'v{version} PathHash+FullDirectoryIndex ({dir_count} directory)'
+        else:
+            # Indice classico v1-v9: per-entry FString path + record entry
+            for _ in range(count):
+                nm, off = _fstring(idx, off)
+                names.append(nm)
+                # entry: offset u64, size u64, uncompressed u64, compression u32, sha1 20
+                (_eo, _es, _eu, comp) = struct.unpack_from('<QQQI', idx, off)
+                off += 28 + 20
+                if version >= 3 and comp != 0:
+                    (nblocks,) = struct.unpack_from('<I', idx, off)
+                    off += 4 + nblocks * 16
+                off += 1  # encrypted u8
+                if version >= 3:
+                    off += 4  # compression block size
+            layout = f'v{version} indice classico'
+        fonts = [n for n in names
+                 if n.lower().endswith(('.ufont', '.ttf', '.otf'))
+                 or ('font' in n.lower() and n.lower().endswith(('.uasset', '.uexp')))]
+        msg = f'pak {layout}, mount "{mount}", {len(names)}/{count} path letti'
+        if fonts:
+            msg += f' — CANDIDATI FONT ({len(fonts)}): ' + ', '.join(fonts[:8])
+        else:
+            msg += ' — nessun asset font nell\'elenco (il font può stare in un altro pak)'
+        if len(names) >= count * 0.99:
+            report('PASS', path, msg + ' → layout indice CONFERMATO: pronto per il port Rust (ADR-001 prereq 1)')
+        else:
+            report('WARN', path, msg + ' → indice letto solo in parte: layout da rifinire')
+    except (struct.error, IndexError) as e:
+        report('WARN', path, f'pak v{version}: indice non decodificato ({e}) — layout da studiare su questo campione')
+
+
 # ─── main ──────────────────────────────────────────────────────────────────
 
 def main():
@@ -303,6 +417,8 @@ def main():
                 found = True; check_serialized_file(p)
             elif low == 'data.win':
                 found = True; check_data_win(p)
+            elif low.endswith('.pak'):
+                found = True; check_pak(p)
 
     if not found:
         print('Nessun file riconosciuto in .samples/ — vedi .samples/README.md per cosa copiare.')

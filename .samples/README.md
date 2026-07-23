@@ -26,6 +26,13 @@ Da giochi che possiedi, bastano questi file (copia, non spostare):
   L'harness fa un censimento dei puntatori alle stringhe: il risultato dice
   se la rilocazione generica è sicura o se serve il parsing per-chunk.
 
+### Unreal classico (per il font _P.pak — ADR-001 prerequisito 1)
+- un `.pak` dalla cartella `Paks` di un gioco UE4/UE5 (anche grande: viene
+  letto solo l'indice in coda al file). L'harness ne decodifica l'indice
+  (classico v1-v9 o PathHash/FullDirectory v10-v11, che il reader Rust oggi
+  rifiuta) ed elenca i CANDIDATI FONT (.ufont / Font*.uasset) — il bersaglio
+  esatto dell'opzione B (byte-swap) dell'ADR-001.
+
 ## Come lanciare la validazione
 
 ```
