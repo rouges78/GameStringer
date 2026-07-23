@@ -38,12 +38,34 @@ pub struct GmDataInfo {
     pub string_source: String,  // "strg", "exe", or "language_files"
 }
 
+/// Stringa la cui traduzione non entrava nello spazio dell'originale.
+///
+/// Sia `rebuild_same_size` (data.win) sia `patch_exe` (YYC) riscrivono in
+/// place: se la traduzione e' piu' lunga dell'originale viene tagliata. Prima
+/// succedeva in silenzio e l'utente pubblicava una patch con testo mozzato
+/// senza accorgersene; ora ogni taglio finisce qui e la UI lo mostra.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GmTruncatedString {
+    pub index: usize,
+    pub original: String,
+    /// Traduzione richiesta (intera, non tagliata).
+    pub translated: String,
+    /// Testo effettivamente scritto nel file.
+    pub written: String,
+    /// Byte disponibili per il testo in quello slot.
+    pub available_bytes: usize,
+    /// Byte richiesti dalla traduzione completa.
+    pub needed_bytes: usize,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GmPatchResult {
     pub success: bool,
     pub patched_count: usize,
     pub backup_path: String,
     pub message: String,
+    /// Traduzioni tagliate per mancanza di spazio (vuoto = nessun taglio).
+    pub truncated: Vec<GmTruncatedString>,
 }
 
 // ── IFF Chunk parsing helpers ──
@@ -871,6 +893,8 @@ fn patch_language_files(
         patched_count,
         backup_path: backup_dir.to_string_lossy().to_string(),
         message: format!("{} stringhe tradotte in engLanguage/ (backup in engLanguage.bak/)", patched_count),
+        // I .jn sono file di testo: le stringhe possono crescere liberamente.
+        truncated: Vec::new(),
     })
 }
 
@@ -900,22 +924,37 @@ fn patch_exe(
     let all_strings = extract_exe_strings(&exe_data, 15);
     
     let mut patched_count = 0;
-    
+    let mut truncated: Vec<GmTruncatedString> = Vec::new();
+
     for (idx, translated) in translations.iter() {
         // Find the string by index
         if let Some(s) = all_strings.iter().find(|s| s.index == *idx) {
             let offset = s.data_offset as usize;
             let original_len = s.length; // byte length in EXE
             let trans_bytes = translated.as_bytes();
-            
+
             // Same-length replacement: pad with spaces or truncate
             let end = offset + original_len;
             if end > exe_data.len() { continue; }
-            
+
             // Write translated bytes (truncate if longer)
-            let write_len = trans_bytes.len().min(original_len);
+            let mut write_len = trans_bytes.len().min(original_len);
+            // Non tagliare a meta' di un carattere multibyte
+            while write_len > 0 && !translated.is_char_boundary(write_len) {
+                write_len -= 1;
+            }
+            if write_len < trans_bytes.len() {
+                truncated.push(GmTruncatedString {
+                    index: *idx,
+                    original: s.original.clone(),
+                    translated: translated.clone(),
+                    written: translated[..write_len].to_string(),
+                    available_bytes: original_len,
+                    needed_bytes: trans_bytes.len(),
+                });
+            }
             exe_data[offset..offset + write_len].copy_from_slice(&trans_bytes[..write_len]);
-            
+
             // Pad remaining with spaces (0x20) to keep same length
             if write_len < original_len {
                 for b in &mut exe_data[offset + write_len..end] {
@@ -931,13 +970,28 @@ fn patch_exe(
     fs::write(&exe_path, &exe_data)
         .map_err(|e| format!("Errore scrittura EXE: {}", e))?;
     
-    println!("[GM-YYC] Patch EXE completata: {} stringhe", patched_count);
-    
+    println!(
+        "[GM-YYC] Patch EXE completata: {} stringhe ({} troncate)",
+        patched_count,
+        truncated.len()
+    );
+
+    let message = if truncated.is_empty() {
+        format!("{} stringhe tradotte nell'EXE (same-length)", patched_count)
+    } else {
+        format!(
+            "{} stringhe tradotte nell'EXE (same-length) — {} troncate per mancanza di spazio",
+            patched_count,
+            truncated.len()
+        )
+    };
+
     Ok(GmPatchResult {
         success: true,
         patched_count,
         backup_path: backup_path.to_string_lossy().to_string(),
-        message: format!("{} stringhe tradotte nell'EXE (same-length)", patched_count),
+        message,
+        truncated,
     })
 }
 
@@ -1002,15 +1056,17 @@ fn rebuild_same_size(
     let mut string_data_buf: Vec<u8> = Vec::with_capacity(available_data_space);
     let mut new_pointers: Vec<u32> = Vec::with_capacity(count);
     let mut patched_count = 0;
-    
+    let mut truncated: Vec<GmTruncatedString> = Vec::new();
+
     for (i, s) in all_strings.iter().enumerate() {
+        let is_translated = translations[i].is_some();
         let text = if let Some(ref t) = translations[i] {
             patched_count += 1;
             t.as_str()
         } else {
             s.original.as_str()
         };
-        
+
         let text_bytes = text.as_bytes();
         let _original_entry_size = s.length + 4 + 1; // u32 len + chars + null
         
@@ -1024,6 +1080,18 @@ fn rebuild_same_size(
         
         // Minimum: 4 (len) + 1 (null) = 5
         if entry_space < 5 {
+            // Nessuno spazio: la stringa viene azzerata. Se era tradotta e' una
+            // perdita totale, va segnalata.
+            if is_translated {
+                truncated.push(GmTruncatedString {
+                    index: s.index,
+                    original: s.original.clone(),
+                    translated: text.to_string(),
+                    written: String::new(),
+                    available_bytes: 0,
+                    needed_bytes: text.len(),
+                });
+            }
             // No space, write minimal
             new_pointers.push(string_data_abs_base + string_data_buf.len() as u32);
             string_data_buf.extend_from_slice(&0u32.to_le_bytes());
@@ -1042,11 +1110,23 @@ fn rebuild_same_size(
             while end > 0 && !text.is_char_boundary(end) {
                 end -= 1;
             }
+            // Solo le traduzioni contano come taglio: se a non entrare e' un
+            // originale, il file era gia' cosi' e non c'e' nulla da segnalare.
+            if is_translated {
+                truncated.push(GmTruncatedString {
+                    index: s.index,
+                    original: s.original.clone(),
+                    translated: text.to_string(),
+                    written: text[..end].to_string(),
+                    available_bytes: max_text_len,
+                    needed_bytes: text_bytes.len(),
+                });
+            }
             &text_bytes[..end]
         } else {
             text_bytes
         };
-        
+
         new_pointers.push(string_data_abs_base + string_data_buf.len() as u32);
         string_data_buf.extend_from_slice(&(actual_text.len() as u32).to_le_bytes());
         string_data_buf.extend_from_slice(actual_text);
@@ -1084,13 +1164,28 @@ fn rebuild_same_size(
     fs::write(data_win_path, &new_file)
         .map_err(|e| format!("Errore scrittura: {}", e))?;
     
-    println!("[GM] Same-size patch completata: {} stringhe", patched_count);
-    
+    println!(
+        "[GM] Same-size patch completata: {} stringhe ({} troncate)",
+        patched_count,
+        truncated.len()
+    );
+
+    let message = if truncated.is_empty() {
+        format!("{} stringhe tradotte (same-size mode)", patched_count)
+    } else {
+        format!(
+            "{} stringhe tradotte (same-size mode) — {} troncate: non entravano nello spazio dell'originale",
+            patched_count,
+            truncated.len()
+        )
+    };
+
     Ok(GmPatchResult {
         success: true,
         patched_count,
         backup_path: backup_path.to_string_lossy().to_string(),
-        message: format!("{} stringhe tradotte (same-size mode)", patched_count),
+        message,
+        truncated,
     })
 }
 

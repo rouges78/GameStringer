@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "Vor jeder Änderung wird automatisch ein Backup (data.win.bak) erstellt. Verwende \"Wiederherstellen\", um zum Original zurückzukehren. Übersetzungen, die länger als das Original sind, werden zur Kompatibilität mit dem GameMaker-Format gekürzt.",
     "dataWinNotFound": "data.win in diesem Ordner nicht gefunden",
-    "searchPh": "Strings suchen..."
+    "searchPh": "Strings suchen...",
+    "truncatedCount": "Übersetzungen abgeschnitten: sie passten nicht in den Platz des Originals",
+    "truncatedTitle": "abgeschnittene Übersetzungen",
+    "truncatedDesc": "GameMaker schreibt den Text in den Platz des Originals: diese Übersetzungen waren länger und wurden abgeschnitten. Kürze sie und wende den Patch erneut an.",
+    "truncatedOriginal": "Original",
+    "truncatedRequested": "Angeforderte Übersetzung",
+    "truncatedWritten": "In Datei geschrieben",
+    "truncatedBytes": "Bytes"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Text in die Zwischenablage kopiert",

@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "每次修改前都会自动创建备份（data.win.bak）。使用“恢复”可还原为原始文件。为了兼容 GameMaker 格式，比原文更长的翻译将被截断。",
     "dataWinNotFound": "在此文件夹中未找到 data.win",
-    "searchPh": "搜索字符串……"
+    "searchPh": "搜索字符串……",
+    "truncatedCount": "条翻译被截断：放不进原文的空间",
+    "truncatedTitle": "条被截断的翻译",
+    "truncatedDesc": "GameMaker 在原文的空间内重写文本：这些翻译过长，已被截断。请缩短后重新应用补丁。",
+    "truncatedOriginal": "原文",
+    "truncatedRequested": "请求的翻译",
+    "truncatedWritten": "已写入文件",
+    "truncatedBytes": "字节"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "文本已复制到剪贴板",

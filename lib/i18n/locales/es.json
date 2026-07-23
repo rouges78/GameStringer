@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "Se crea una copia de seguridad automática (data.win.bak) antes de cada cambio. Usa \"Restaurar\" para volver al original. Las traducciones más largas que el original se truncarán por compatibilidad con el formato GameMaker.",
     "dataWinNotFound": "No se encontró data.win en esta carpeta",
-    "searchPh": "Buscar cadenas..."
+    "searchPh": "Buscar cadenas...",
+    "truncatedCount": "traducciones truncadas: no cabían en el espacio del original",
+    "truncatedTitle": "traducciones truncadas",
+    "truncatedDesc": "GameMaker reescribe el texto en el espacio del original: estas traducciones eran más largas y se cortaron. Acórtalas y vuelve a aplicar el parche.",
+    "truncatedOriginal": "Original",
+    "truncatedRequested": "Traducción solicitada",
+    "truncatedWritten": "Escrito en el archivo",
+    "truncatedBytes": "bytes"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Texto copiado al portapapeles",

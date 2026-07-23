@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "모든 변경 전에 자동 백업(data.win.bak)이 생성됩니다. 원본으로 되돌리려면 \"복원\"을 사용하세요. 원본보다 긴 번역은 GameMaker 형식과의 호환성을 위해 잘립니다.",
     "dataWinNotFound": "이 폴더에서 data.win을 찾을 수 없습니다",
-    "searchPh": "문자열 검색..."
+    "searchPh": "문자열 검색...",
+    "truncatedCount": "개의 번역이 잘렸습니다: 원본 공간에 들어가지 않았습니다",
+    "truncatedTitle": "개의 잘린 번역",
+    "truncatedDesc": "GameMaker는 원본 공간에 텍스트를 다시 씁니다. 이 번역들은 더 길어서 잘렸습니다. 줄인 뒤 패치를 다시 적용하세요.",
+    "truncatedOriginal": "원본",
+    "truncatedRequested": "요청한 번역",
+    "truncatedWritten": "파일에 기록됨",
+    "truncatedBytes": "바이트"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "텍스트가 클립보드에 복사되었습니다",

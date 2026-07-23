@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "変更のたびに自動バックアップ（data.win.bak）が作成されます。「復元」を使うと元に戻せます。原文より長い翻訳は、GameMakerフォーマットとの互換性のために切り詰められます。",
     "dataWinNotFound": "このフォルダにdata.winが見つかりません",
-    "searchPh": "文字列を検索..."
+    "searchPh": "文字列を検索...",
+    "truncatedCount": "件の翻訳が切り詰められました（原文の領域に収まりません）",
+    "truncatedTitle": "件の切り詰められた翻訳",
+    "truncatedDesc": "GameMaker は原文の領域にテキストを上書きします。これらの翻訳は長すぎて切り詰められました。短くして再度パッチを適用してください。",
+    "truncatedOriginal": "原文",
+    "truncatedRequested": "依頼した翻訳",
+    "truncatedWritten": "ファイルに書き込まれた内容",
+    "truncatedBytes": "バイト"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "テキストをクリップボードにコピーしました",

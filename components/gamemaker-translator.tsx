@@ -40,6 +40,24 @@ interface GmDataInfo {
   string_source: string; // "strg" | "exe" | "language_files"
 }
 
+/** Traduzione che non entrava nello spazio dell'originale (rif. GmTruncatedString lato Rust). */
+interface GmTruncatedString {
+  index: number;
+  original: string;
+  translated: string;
+  written: string;
+  available_bytes: number;
+  needed_bytes: number;
+}
+
+interface GmPatchResult {
+  success: boolean;
+  patched_count: number;
+  backup_path: string;
+  message: string;
+  truncated: GmTruncatedString[];
+}
+
 interface GameMakerTranslatorProps {
   gamePath: string;
   gameName: string;
@@ -64,6 +82,9 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
   const [translateProgress, setTranslateProgress] = useState(0);
   const [translateTotal, setTranslateTotal] = useState(0);
   const [showOnlyUntranslated, setShowOnlyUntranslated] = useState(false);
+  // Traduzioni tagliate dall'ultima patch: data.win e l'EXE YYC riscrivono in
+  // place, quindi una traduzione piu' lunga dell'originale non ci sta.
+  const [truncated, setTruncated] = useState<GmTruncatedString[]>([]);
   const { t } = useTranslation();
   const abortRef = useRef(false);
 
@@ -274,14 +295,20 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
 
     setIsPatching(true);
     try {
-      const result = await invoke<{ success: boolean; patched_count: number; backup_path: string; message: string }>('gm_patch_strings', {
+      const result = await invoke<GmPatchResult>('gm_patch_strings', {
         gamePath,
         translations,
       });
-      if (result.success) {
-        toast.success(result.message);
-      } else {
+      const cut = result.truncated ?? [];
+      setTruncated(cut);
+      if (!result.success) {
         toast.error(result.message);
+      } else if (cut.length > 0) {
+        // Patch riuscita ma con testo tagliato: warning, non success — l'utente
+        // deve sapere che la patch NON e' completa prima di pubblicarla.
+        toast.warning(`${cut.length} ${t('gameMakerTranslator.truncatedCount')}`);
+      } else {
+        toast.success(result.message);
       }
     } catch (e: unknown) {
       toast.error(e?.toString() || 'Errore patching data.win');
@@ -489,6 +516,45 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
                   : `Salva in data.win (${translatedCount})`}
             </Button>
           </div>
+
+          {/* Traduzioni troncate dall'ultima patch */}
+          {truncated.length > 0 && (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-bold text-amber-300">
+                    {truncated.length} {t('gameMakerTranslator.truncatedTitle')}
+                  </p>
+                  <p className="text-[11px] text-amber-200/80 mt-0.5">
+                    {t('gameMakerTranslator.truncatedDesc')}
+                  </p>
+                </div>
+                <Button size="xs" variant="outline" className="h-6 text-[10px] shrink-0"
+                  onClick={() => setTruncated([])}>
+                  {t('common.chiudi')}
+                </Button>
+              </div>
+              <div className="max-h-56 overflow-y-auto space-y-1.5">
+                {truncated.map((tr) => (
+                  <div key={tr.index} className="rounded bg-slate-900/60 px-2 py-1.5 text-[11px] space-y-0.5">
+                    <div className="flex items-center gap-2 text-slate-500 text-[10px]">
+                      <span>#{tr.index}</span>
+                      <span>{tr.needed_bytes} → {tr.available_bytes} {t('gameMakerTranslator.truncatedBytes')}</span>
+                    </div>
+                    <div className="text-slate-400 truncate" title={tr.original}>
+                      {t('gameMakerTranslator.truncatedOriginal')}: {tr.original}
+                    </div>
+                    <div className="text-amber-200 truncate" title={tr.translated}>
+                      {t('gameMakerTranslator.truncatedRequested')}: {tr.translated}
+                    </div>
+                    <div className="text-emerald-300/80 truncate" title={tr.written}>
+                      {t('gameMakerTranslator.truncatedWritten')}: {tr.written || '—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Search + Filter */}
           {strings.length > 0 && (

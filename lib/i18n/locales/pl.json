@@ -290,7 +290,14 @@
     "noteLabel": "Note:",
     "noteText": "Przed każdą zmianą tworzona jest automatyczna kopia zapasowa (data.win.bak). Użyj \"Przywróć\", aby wrócić do oryginału. Tłumaczenia dłuższe niż oryginał zostaną obcięte dla zgodności z formatem GameMaker.",
     "dataWinNotFound": "Nie znaleziono pliku data.win w tym folderze",
-    "searchPh": "Szukaj ciągów znaków..."
+    "searchPh": "Szukaj ciągów znaków...",
+    "truncatedCount": "przetłumaczonych tekstów przyciętych: nie zmieściły się w miejscu oryginału",
+    "truncatedTitle": "przyciętych tłumaczeń",
+    "truncatedDesc": "GameMaker zapisuje tekst w miejscu oryginału: te tłumaczenia były dłuższe i zostały obcięte. Skróć je i ponownie nałóż łatkę.",
+    "truncatedOriginal": "Oryginał",
+    "truncatedRequested": "Żądane tłumaczenie",
+    "truncatedWritten": "Zapisano w pliku",
+    "truncatedBytes": "bajtów"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Tekst skopiowany do schowka",
