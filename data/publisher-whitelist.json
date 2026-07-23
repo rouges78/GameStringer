@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "updated": "2026-07-23",
+  "description": "Giochi per cui la traduzione amatoriale non ha senso o non e' gradita. Vedi docs/PUBLISHER_RELATIONS.md. reason: 'official_localization' (esiste gia' la localizzazione ufficiale nelle lingue elencate -> avviso non bloccante) | 'publisher_request' (il publisher ha chiesto di non tradurre -> flusso disabilitato).",
+  "entries": [
+    {
+      "title": "Esempio — Gioco con IT ufficiale",
+      "appId": 0,
+      "reason": "official_localization",
+      "languages": ["it"],
+      "note": "Voce di esempio: localizzazione italiana ufficiale gia' presente. Sostituire con casi reali.",
+      "source": ""
+    },
+    {
+      "title": "Esempio — Titolo su richiesta publisher",
+      "appId": 0,
+      "reason": "publisher_request",
+      "languages": [],
+      "note": "Voce di esempio: il publisher ha chiesto l'esclusione. languages vuoto = tutte le lingue.",
+      "source": "publishers@gamestringer.ai"
+    }
+  ]
+}
