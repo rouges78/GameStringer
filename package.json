@@ -109,7 +109,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "0.26.0",
-    "@hookform/resolvers": "3.9.0",
+    "@hookform/resolvers": "5.4.0",
     "@prisma/client": "^6.10.1",
     "@supabase/supabase-js": "^2.100.0",
     "@tauri-apps/api": "^2.10.1",
