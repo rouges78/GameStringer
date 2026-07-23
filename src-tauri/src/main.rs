@@ -565,6 +565,7 @@ fn main() {
             // Unity SerializedFile: estrazione/riscrittura TextAsset (no Python)
             commands::unity_serialized::extract_unity_text_assets,
             commands::unity_serialized::rewrite_unity_text_assets,
+            commands::il2cpp_metadata::get_il2cpp_metadata_version,
 
             // RSS proxy (bypass CORS)
             commands::rss_proxy::fetch_rss_feed,

@@ -115,6 +115,8 @@ pub mod auto_hook;
 pub mod unity_assets;
 // Parser SerializedFile Unity: estrazione strutturata dei TextAsset
 pub mod unity_serialized;
+// Reader header global-metadata.dat (versione metadata IL2CPP)
+pub mod il2cpp_metadata;
 // Game update tracker (Steam buildid + patch integrity)
 pub mod game_update_tracker;
 // GameTranslator.it community integration

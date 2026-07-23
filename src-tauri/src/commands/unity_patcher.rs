@@ -1222,26 +1222,45 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
     let is_unity = unity_player || unity_crash_handler || mono_dll || has_data_folder;
     
     if is_unity {
-        let is_il2cpp = game_dir.join("GameAssembly.dll").exists();
+        // Rilevamento IL2CPP: GameAssembly.dll È l'indizio principale, ma lo
+        // confermiamo (e ne ricaviamo la versione) leggendo global-metadata.dat.
+        let has_game_assembly = game_dir.join("GameAssembly.dll").exists();
+        let metadata = super::il2cpp_metadata::detect_il2cpp_metadata(game_dir);
+        let is_il2cpp = has_game_assembly || metadata.is_some();
         let runtime = if is_il2cpp { "IL2CPP" } else { "Mono" };
         let unity_version = detect_unity_version(game_dir);
         let ver_str = unity_version.clone().unwrap_or_else(|| "?.?".to_string());
-        
+
+        // Messaggio onesto: se il metadata è oltre la soglia BepInEx, non promettere
+        // l'hook — indirizza al percorso asset. (La versione metadata precisa è
+        // esposta separatamente da get_il2cpp_metadata_version.)
+        let message = if is_il2cpp {
+            match &metadata {
+                Some(m) if !m.bepinex_supported => format!(
+                    "Unity IL2CPP (metadata v{}) - troppo recente per BepInEx IL2CPP. \
+                     Usa il Unity CSV Translator (inietta negli asset).", m.version
+                ),
+                Some(m) => format!(
+                    "✓ Unity IL2CPP (metadata v{}) - BepInEx 6 IL2CPP + XUnity, \
+                     con Unity CSV Translator come alternativa.", m.version
+                ),
+                None => "✓ Unity IL2CPP - BepInEx 6 IL2CPP + XUnity AutoTranslator. \
+                     Se BepInEx non si aggancia, resta l'alternativa Unity CSV Translator".to_string(),
+            }
+        } else {
+            "✓ Unity Mono - compatibile con XUnity AutoTranslator".to_string()
+        };
+
         return Ok(GameEngineCheck {
             is_unity: true,
             is_unreal: false,
             is_il2cpp,
             engine_name: format!("Unity {} ({})", ver_str, runtime),
             engine_version: unity_version,
-            // IL2CPP È patchabile: install_il2cpp_patch installa BepInEx 6
-            // IL2CPP + la build IL2CPP di XUnity. Dire "non compatibile" era
-            // falso e respingeva l'utente dal percorso che l'app sa già fare.
+            // can_patch resta true: anche i giochi IL2CPP oltre la soglia BepInEx
+            // sono traducibili col percorso asset (Unity CSV / TextAsset).
             can_patch: true,
-            message: if is_il2cpp {
-                "✓ Unity IL2CPP - BepInEx 6 (IL2CPP) + XUnity AutoTranslator. Se il gioco è molto recente e BepInEx non si aggancia, resta l'alternativa Unity CSV Translator".to_string()
-            } else {
-                "✓ Unity Mono - compatibile con XUnity AutoTranslator".to_string()
-            },
+            message,
             alternative_tools,
             has_bepinex,
             has_xunity,
@@ -2191,17 +2210,42 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
 
 /// Installa BepInEx 6 IL2CPP + XUnity per giochi Unity IL2CPP
 async fn install_il2cpp_patch(game_dir: &Path, lang: &str, mode: &str, is_64bit: bool, mut steps: Vec<String>) -> Result<PatchStatus, String> {
-    // Verifica versione Unity - Unity 6 (6000.x) non è supportato
+    // Gate basato sulla VERSIONE DI METADATA IL2CPP (non sulla stringa Unity):
+    // è il metadata che decide se BepInEx IL2CPP riesce ad agganciarsi. Leggiamo
+    // global-metadata.dat invece di indovinare da "6000.x".
     let unity_version = detect_unity_version(game_dir);
-    if let Some(ref ver) = unity_version {
-        if ver.starts_with("6000") || ver.starts_with("6.") {
-            return Err(format!(
-                "Unity {} non è ancora supportato da BepInEx IL2CPP. \
-                La versione di metadata IL2CPP è troppo nuova. \
-                Usa OCR Translator come alternativa per tradurre questo gioco.", ver
+    match super::il2cpp_metadata::detect_il2cpp_metadata(game_dir) {
+        Some(info) => {
+            if !info.bepinex_supported {
+                return Err(format!(
+                    "global-metadata.dat versione {} più recente di quella verificata \
+                     con BepInEx IL2CPP (max v{}). BepInEx potrebbe non agganciarsi. \
+                     Usa il Unity CSV Translator (inietta negli asset) o l'OCR Translator.",
+                    info.version,
+                    super::il2cpp_metadata::MAX_SUPPORTED_METADATA_VERSION
+                ));
+            }
+            steps.push(format!(
+                "✓ Metadata IL2CPP v{} (compatibile){}",
+                info.version,
+                unity_version.as_ref().map(|v| format!(" · Unity {}", v)).unwrap_or_default()
             ));
         }
-        steps.push(format!("✓ Unity {} rilevato", ver));
+        None => {
+            // Nessun metadata leggibile: non blocchiamo (potrebbe essere un layout
+            // insolito), ma segnaliamo e teniamo il vecchio guard sulla stringa
+            // Unity 6 come rete di sicurezza.
+            if let Some(ref ver) = unity_version {
+                if ver.starts_with("6000") || ver.starts_with("6.") {
+                    return Err(format!(
+                        "Unity {} (metadata IL2CPP non leggibile): BepInEx IL2CPP \
+                         potrebbe non essere ancora compatibile. Usa il Unity CSV \
+                         Translator o l'OCR Translator.", ver
+                    ));
+                }
+                steps.push(format!("✓ Unity {} rilevato (metadata non letto)", ver));
+            }
+        }
     }
     
     // 1. Scarica BepInEx 6 IL2CPP
