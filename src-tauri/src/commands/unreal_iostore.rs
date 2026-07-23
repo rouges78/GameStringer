@@ -11,6 +11,12 @@ use super::unreal_localization::ExtractionResult;
 const UTOC_MAGIC: &[u8; 16] = b"-==--==--==--==-";
 const INVALID_INDEX: u32 = 0xFFFFFFFF;
 
+/// Versione UTOC più recente su cui il parser è stato verificato.
+/// UE 5.3 = v5 (PerfectHash). Le versioni superiori vengono lette best-effort
+/// trattando i campi extra come padding; lo segnaliamo così, se un gioco nuovo
+/// si estrae male, la causa è evidente invece di apparire come "container vuoto".
+const UTOC_MAX_KNOWN_VERSION: u8 = 5;
+
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════
@@ -359,7 +365,18 @@ fn parse_utoc_header(data: &[u8]) -> Result<UtocHeader, String> {
     
     log::info!("📦 UTOC v{}: {} entry, {} compressed blocks, {} partitions, {} PH seeds",
         version, entry_count, compressed_block_entry_count, partition_count, perfect_hash_seeds_count);
-    
+
+    // Le versioni oltre quella nota vengono lette come v5 con i campi ignoti
+    // paddati: può funzionare, ma va detto chiaramente. Non è un errore fatale
+    // (molti giochi UE 5.4/5.5 restano leggibili così), solo un avviso.
+    if version > UTOC_MAX_KNOWN_VERSION {
+        log::warn!(
+            "⚠️ UTOC v{} più recente della v{} testata: lettura best-effort, \
+             alcuni asset potrebbero non estrarsi. Verificare i risultati.",
+            version, UTOC_MAX_KNOWN_VERSION
+        );
+    }
+
     Ok(UtocHeader {
         version, header_size, entry_count,
         compressed_block_entry_count, compressed_block_entry_size,
@@ -2087,9 +2104,17 @@ fn create_iostore_container(
     // --- ChunkMetas (33 bytes each: 32-byte hash + 1-byte flags) ---
     // UE5 SEMPRE legge entry_count × sizeof(FIoStoreTocEntryMeta) dopo DirectoryIndex.
     // Senza questa sezione l'engine legge fuori range → crash AsyncLoading2.
+    //
+    // ChunkHash lasciato a zeri DELIBERATAMENTE: UE5 (FIoChunkHash) calcola questo
+    // campo con BLAKE3, non con SHA-1/SHA-2 (le uniche hash disponibili qui). Il
+    // container che generiamo è NON compresso, NON cifrato e senza signing
+    // (ContainerFlags=0), quindi l'engine non verifica l'integrità del chunk e
+    // gli zeri vengono accettati. Scrivere un hash con l'algoritmo sbagliato
+    // sarebbe PEGGIO degli zeri: se una build validasse, romperebbe il mount.
+    // Vero hash BLAKE3 → vedi ADR-002 (fase compressione/signing).
     for _ in 0..entry_count {
-        utoc.extend_from_slice(&[0u8; 32]); // ChunkHash = zeros (no integrity check)
-        utoc.push(0u8); // Flags = None (data is uncompressed)
+        utoc.extend_from_slice(&[0u8; 32]); // ChunkHash = zeros (vedi nota sopra)
+        utoc.push(0u8); // Flags = None (dati non compressi)
     }
     
     log::info!("📦 IoStore writer: UTOC {} bytes (hdr={}, metas={}×33), UCAS {} bytes, {} file, {} blocchi", 
@@ -2134,28 +2159,33 @@ pub async fn apply_datatable_translation(
     
     log::info!("📦 UTOC metadata: version={}, block_size={}, header_size={}", utoc_version, block_size, original_header_size);
     
-    // Diagnostica: quante traduzioni sono effettivamente diverse dall'originale?
+    // Quante traduzioni sono effettivamente diverse dall'originale?
     let actually_translated = translations.iter()
         .filter(|t| t.original != t.translated)
         .count();
-    log::info!("📊 Diagnostica: {}/{} traduzioni effettivamente diverse dall'originale", 
+    log::info!("📊 Diagnostica: {}/{} traduzioni effettivamente diverse dall'originale",
         actually_translated, translations.len());
-    
-    // Se nessuna traduzione è diversa, inietta marker di test "[IT] " per verificare override
-    let inject_test_markers = actually_translated == 0;
-    if inject_test_markers {
-        log::warn!("⚠️ Nessuna traduzione reale! Inietto marker '[IT] ' per test IoStore override");
+
+    // Se NIENTE è realmente tradotto non si spedisce nulla: prima qui veniva
+    // iniettato un marker fasullo "[IT] "+originale "per test override", che
+    // finiva nel container consegnato all'utente — testo finto spacciato per
+    // traduzione. Meglio fallire onestamente e non creare il container.
+    if actually_translated == 0 {
+        return Err(
+            "Nessuna traduzione da applicare: tutte le voci sono identiche all'originale. \
+             Traduci prima le stringhe, poi riprova."
+                .into(),
+        );
     }
-    
-    // Costruisci lookup: original → translated per tutte le traduzioni
+
+    // Costruisci lookup: original → translated, saltando le voci non tradotte
+    // (una traduzione identica non deve sovrascrivere nulla nel .uasset).
     let mut translation_lookup: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for t in &translations {
-        let translated = if inject_test_markers && t.original.len() >= 5 {
-            format!("[IT] {}", t.original)
-        } else {
-            t.translated.clone()
-        };
-        translation_lookup.insert(t.original.trim().to_string(), translated);
+        if t.original == t.translated {
+            continue;
+        }
+        translation_lookup.insert(t.original.trim().to_string(), t.translated.clone());
     }
     
     log::info!("📦 {} traduzioni nel lookup, {} file nel chunk_map", 
@@ -2497,5 +2527,97 @@ mod tests {
         let found = find_utoc_files(tmp.path());
         assert_eq!(found.len(), 1);
         assert!(found[0].to_string_lossy().ends_with(".utoc"));
+    }
+
+    // ── WRITE PATH ──────────────────────────────────────────────────────
+
+    /// patch_uasset_binary deve sostituire la stringa e riscrivere il prefisso
+    /// di lunghezza quando la traduzione è più lunga dell'originale (a differenza
+    /// del patcher GameMaker, qui il file può crescere).
+    #[test]
+    fn patch_uasset_grows_string_and_rewrites_length_prefix() {
+        // Nessun magic UAsset → data_offset = 0, si scansiona tutto il buffer.
+        let mut buf = Vec::new();
+        put_fstring(&mut buf, "Hello");
+        let original_len = buf.len();
+
+        let mut repl = std::collections::HashMap::new();
+        repl.insert("Hello".to_string(), "Ciao Mondo".to_string());
+
+        let out = patch_uasset_binary(&buf, &repl);
+
+        // La nuova stringa è presente…
+        let text = String::from_utf8_lossy(&out);
+        assert!(text.contains("Ciao Mondo"), "traduzione non scritta: {text:?}");
+        assert!(!text.contains("Hello"), "originale non sostituito");
+        // …il buffer è cresciuto di 5 byte ("Ciao Mondo" 10 vs "Hello" 5)…
+        assert_eq!(out.len(), original_len + 5);
+        // …e il prefisso di lunghezza in testa vale len(testo)+1 (null incluso).
+        let new_len = i32::from_le_bytes([out[0], out[1], out[2], out[3]]);
+        assert_eq!(new_len, ("Ciao Mondo".len() + 1) as i32);
+        assert_eq!(*out.last().unwrap(), 0, "manca il null terminator");
+    }
+
+    /// Le stringhe non presenti nella mappa restano intatte.
+    #[test]
+    fn patch_uasset_leaves_unmatched_strings_untouched() {
+        let mut buf = Vec::new();
+        put_fstring(&mut buf, "Keep me");
+        let repl = std::collections::HashMap::new(); // vuota
+        let out = patch_uasset_binary(&buf, &repl);
+        assert_eq!(out, buf);
+    }
+
+    /// Il container generato ha header valido, i ChunkMeta (33 byte l'uno) e
+    /// l'UCAS con i dati grezzi; ChunkHash a zeri come da scelta documentata.
+    #[test]
+    fn create_iostore_container_layout_v5() {
+        let chunk_id = [1u8; 12];
+        let file_data: &[u8] = b"ABCDE";
+        let entries: Vec<(&[u8; 12], &[u8])> = vec![(&chunk_id, file_data)];
+
+        let (utoc, ucas) = create_iostore_container(&entries, 5, 65536, 0, 0xDEAD_BEEF);
+
+        // UCAS = dati grezzi (non compressi)
+        assert_eq!(ucas, file_data);
+
+        // Header
+        assert_eq!(&utoc[0..16], UTOC_MAGIC);
+        assert_eq!(utoc[16], 5, "version byte");
+        let entry_count = u32::from_le_bytes([utoc[24], utoc[25], utoc[26], utoc[27]]);
+        assert_eq!(entry_count, 1);
+
+        // Gli ultimi entry_count*33 byte sono i ChunkMeta: 32 di hash a zero + 1 flag.
+        let meta = &utoc[utoc.len() - 33..];
+        assert_eq!(&meta[0..32], &[0u8; 32], "ChunkHash deve essere zeri (vedi nota)");
+        assert_eq!(meta[32], 0, "Flags = None per dati non compressi");
+    }
+
+    /// Una UTOC con versione oltre quella nota si legge comunque best-effort
+    /// (nessun errore fatale) — è ciò che consente ai giochi UE 5.4+ di aprirsi.
+    #[test]
+    fn parse_utoc_header_accepts_newer_version_best_effort() {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(UTOC_MAGIC);
+        buf.push(7u8); // versione oltre UTOC_MAX_KNOWN_VERSION
+        buf.extend_from_slice(&[0u8; 3]);
+        buf.extend_from_slice(&144u32.to_le_bytes()); // header_size
+        buf.extend_from_slice(&3u32.to_le_bytes());   // entry_count
+        buf.extend_from_slice(&1u32.to_le_bytes());   // compressed_block_entry_count
+        buf.extend_from_slice(&12u32.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&32u32.to_le_bytes());
+        buf.extend_from_slice(&65536u32.to_le_bytes());
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());   // partition_count
+        buf.extend_from_slice(&0x99u64.to_le_bytes());
+        buf.extend_from_slice(&[0u8; 16]);
+        buf.push(0u8);
+        buf.resize(200, 0);
+
+        let h = parse_utoc_header(&buf).expect("versione recente deve leggersi best-effort");
+        assert_eq!(h.version, 7);
+        assert_eq!(h.entry_count, 3);
+        assert!(h.version > UTOC_MAX_KNOWN_VERSION);
     }
 }
