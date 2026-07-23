@@ -91,10 +91,21 @@
 
 ## P1 — Qualità traduzione (da ottima a imbattibile)
 
-- [ ] **Benchmark qualità per provider/lingua con dati reali**
+- [x] **Benchmark qualità per provider/lingua con dati reali — FATTO**
   Aggregare (opt-in) i QA score 0–100 già calcolati su ogni stringa e pubblicare
   *"per IT→JA su JRPG il migliore è X"*. Auto-Select diventa data-driven;
   il benchmark pubblico è marketing gratuito.
+  - Aggregatore `lib/translation/benchmark-aggregator.ts` (Welford + lower-bound
+    di confidenza) + Auto-Select data-driven; telemetria opt-in
+    `lib/benchmark-telemetry.ts`.
+  - Migration `benchmark_reports` (+guard revoke) **APPLICATE al remoto**:
+    tabella insert-only, vista aggregata pubblica `benchmark_provider_summary`.
+  - Pagina pubblica `docs/sito/benchmark.html` online e linkata dalla home.
+  - Nota sicurezza: la vista aggregata è volutamente a privilegi del proprietario
+    (righe grezze private, solo l'aggregato è pubblico) — vedi
+    `docs/security/benchmark-view-security.md`. L'advisor Supabase la segnala come
+    "security definer view" ma è una scelta deliberata, NON va convertita a
+    `security_invoker` (romperebbe l'accesso anon alla pagina).
 - [x] **Font auto-patching — v1 FATTA 13/07/2026** (`docs/FONT_CHECK.md`).
   Rilevamento REALE dei glifi mancanti: parser `cmap` TTF/OTF/TTC puro TS
   (`lib/font-coverage.ts`), scan dei font del gioco, verdetto per scrittura
@@ -176,8 +187,16 @@
 ## P2 — Copertura engine e piattaforme
 
 - [ ] **Unity IL2CPP di profondità** + versioni Unity recenti (il grosso dei giochi nuovi).
+  — _Rilevamento e gate rafforzati 23/07: reader header `global-metadata.dat`
+  (versione metadata), rifiuto Unity 6 ora version-aware sulla versione metadata
+  reale invece di `starts_with("6000")`. Resta l'estrazione/scrittura degli
+  string literal dal binario + hook nativo IL2CPP: piano in
+  `docs/adr/ADR-003-il2cpp-depth.md`._
 - [ ] **UE5 IoStore/Zen loader completo** + portare il tool UE fuori dallo stato
-  "sperimentale" (rif. issue #52).
+  "sperimentale" (rif. issue #52). — _Lettura OK; write path di override reso
+  onesto (rimosso marker di test) e diagnosticabile (versioni ignote segnalate),
+  23/07. Restano compressione Oodle in scrittura, ChunkHash BLAKE3, Zen store,
+  corpus reale: piano in `docs/adr/ADR-002-ue5-iostore-writeback.md`._
 - [ ] **GameMaker da parziale a pieno** (oltre l'integrazione UndertaleModTool).
 - [ ] **Parità macOS/Linux verificata** — o coperta da test reali, o limiti
   dichiarati onestamente per piattaforma (aumenta comunque la fiducia).
