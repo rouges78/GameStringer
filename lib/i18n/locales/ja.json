@@ -7243,7 +7243,10 @@
     "sortRating": "評価順",
     "emptyTranslators": "まだランキングに翻訳者がいません。",
     "emptyTranslatorsHint": "パックを公開するとここに表示されます。",
-    "emptyPacks": "まだ公開されたパックがありません。"
+    "emptyPacks": "まだ公開されたパックがありません。",
+    "ambassadorTitle": "注目のアンバサダー",
+    "ambassadorBadge": "アンバサダー",
+    "ambassadorCriteria": "ダウンロード数と平均評価に基づき自動選出"
   },
   "communityGlossary": {
     "tab": "コミュニティ",

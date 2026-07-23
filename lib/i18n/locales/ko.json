@@ -7243,7 +7243,10 @@
     "sortRating": "평점순",
     "emptyTranslators": "아직 순위에 오른 번역가가 없습니다.",
     "emptyTranslatorsHint": "팩을 게시하면 여기에 표시됩니다.",
-    "emptyPacks": "아직 게시된 팩이 없습니다."
+    "emptyPacks": "아직 게시된 팩이 없습니다.",
+    "ambassadorTitle": "주목받는 앰배서더",
+    "ambassadorBadge": "앰배서더",
+    "ambassadorCriteria": "다운로드 수와 평균 평점으로 자동 선정"
   },
   "communityGlossary": {
     "tab": "커뮤니티",

@@ -7243,7 +7243,10 @@
     "sortRating": "Top rated",
     "emptyTranslators": "No translators ranked yet.",
     "emptyTranslatorsHint": "Publish a pack to show up here.",
-    "emptyPacks": "No packs published yet."
+    "emptyPacks": "No packs published yet.",
+    "ambassadorTitle": "Featured ambassador",
+    "ambassadorBadge": "Ambassador",
+    "ambassadorCriteria": "Automatically selected by downloads and average rating"
   },
   "communityGlossary": {
     "tab": "Community",

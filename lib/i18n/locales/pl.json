@@ -7243,7 +7243,10 @@
     "sortRating": "Najwyżej oceniane",
     "emptyTranslators": "Brak tłumaczy w rankingu.",
     "emptyTranslatorsHint": "Opublikuj paczkę, aby się tu pojawić.",
-    "emptyPacks": "Brak opublikowanych paczek."
+    "emptyPacks": "Brak opublikowanych paczek.",
+    "ambassadorTitle": "Wyróżniony ambasador",
+    "ambassadorBadge": "Ambasador",
+    "ambassadorCriteria": "Wybrany automatycznie na podstawie pobrań i średniej oceny"
   },
   "communityGlossary": {
     "tab": "Społeczność",

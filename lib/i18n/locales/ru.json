@@ -7243,7 +7243,10 @@
     "sortRating": "Лучшие по оценке",
     "emptyTranslators": "Пока нет переводчиков в рейтинге.",
     "emptyTranslatorsHint": "Опубликуйте пак, чтобы попасть сюда.",
-    "emptyPacks": "Пока нет опубликованных паков."
+    "emptyPacks": "Пока нет опубликованных паков.",
+    "ambassadorTitle": "Избранный амбассадор",
+    "ambassadorBadge": "Амбассадор",
+    "ambassadorCriteria": "Выбран автоматически по числу загрузок и среднему рейтингу"
   },
   "communityGlossary": {
     "tab": "Сообщество",

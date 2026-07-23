@@ -6,7 +6,7 @@
 // la valuta che spinge a pubblicare: qui la rendiamo visibile e navigabile.
 // Backend Supabase via communityHubService (fail-open: liste vuote se offline).
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Trophy,
   Download,
@@ -17,6 +17,7 @@ import {
   Users,
   Loader2,
   TrendingUp,
+  Crown,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,6 +27,7 @@ import {
   type TranslationPack,
 } from '@/lib/social/community-hub-service';
 import type { LeaderboardEntry } from '@/lib/social/community-hub-service';
+import { pickAmbassador } from '@/lib/social/ambassador';
 
 interface ShowcaseProps {
   /** Apre il profilo pubblico del traduttore (per username). */
@@ -68,6 +70,84 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+// ─── Ambassador in evidenza (traduttore del mese) ──────────────────────────
+// Scelto in automatico dalla leaderboard (download × qualità); nessuna curatela
+// manuale → niente favoritismi. Vedi lib/social/ambassador.ts per i criteri.
+function AmbassadorSpotlight({
+  ambassador,
+  onOpenProfile,
+}: {
+  ambassador: LeaderboardEntry;
+  onOpenProfile?: (username: string) => void;
+}) {
+  const { t } = useTranslation();
+  const clickable = !!onOpenProfile;
+  return (
+    <section className="rounded-xl border border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-slate-900/40 to-slate-900/40 overflow-hidden">
+      <header className="flex items-center gap-2 px-4 py-3 border-b border-amber-400/20">
+        <Crown className="h-4 w-4 text-amber-400" />
+        <h2 className="text-sm font-semibold text-amber-200">
+          {t('showcase.ambassadorTitle') || 'Ambassador in evidenza'}
+        </h2>
+      </header>
+      <button
+        type="button"
+        disabled={!clickable}
+        onClick={() => onOpenProfile?.(ambassador.username)}
+        className={cn(
+          'w-full flex items-center gap-4 px-4 py-4 text-left',
+          clickable && 'hover:bg-amber-500/5 transition-colors'
+        )}
+      >
+        <div className="relative flex-shrink-0">
+          <Avatar className="h-14 w-14 ring-2 ring-amber-400/40">
+            {ambassador.avatar ? <AvatarImage src={ambassador.avatar} alt={ambassador.username} /> : null}
+            <AvatarFallback className="bg-slate-800 text-amber-200 text-sm font-bold">
+              {ambassador.username.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="absolute -bottom-1 -right-1 rounded-full bg-amber-400 p-1 shadow-lg">
+            <Crown className="h-3 w-3 text-slate-900" />
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base font-semibold text-slate-100 truncate">{ambassador.username}</span>
+            {ambassador.verifiedTranslator && <BadgeCheck className="h-4 w-4 text-sky-400 flex-shrink-0" />}
+            <span className="ml-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/30">
+              {t('showcase.ambassadorBadge') || 'Ambassador'}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-400 mt-1.5">
+            <span className="inline-flex items-center gap-1">
+              <Download className="h-3 w-3 text-emerald-400" />
+              {nf(ambassador.totalDownloads)}
+            </span>
+            {ambassador.avgRating > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {ambassador.avgRating.toFixed(1)}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1">
+              <Package className="h-3 w-3 text-indigo-400" />
+              {nf(ambassador.publishedPacks)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Award className="h-3 w-3 text-violet-400" />
+              {nf(ambassador.reputation)}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1.5">
+            {t('showcase.ambassadorCriteria') ||
+              'Selezionato automaticamente per download e valutazione media'}
+          </p>
+        </div>
+      </button>
+    </section>
+  );
+}
+
 export function Showcase({ onOpenProfile }: ShowcaseProps) {
   const { t } = useTranslation();
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
@@ -104,8 +184,13 @@ export function Showcase({ onOpenProfile }: ShowcaseProps) {
 
   useEffect(() => loadPacks(packSort), [packSort, loadPacks]);
 
+  // Ambassador in evidenza: calcolato dai leader già caricati, nessuna chiamata extra.
+  const ambassador = useMemo(() => pickAmbassador(leaders), [leaders]);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {ambassador && <AmbassadorSpotlight ambassador={ambassador} onOpenProfile={onOpenProfile} />}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ─── Classifica traduttori ─────────────────────────────────────────── */}
       <section className="rounded-xl border border-slate-800/60 bg-slate-900/40 overflow-hidden">
         <header className="flex items-center gap-2 px-4 py-3 border-b border-slate-800/60">
@@ -272,6 +357,7 @@ export function Showcase({ onOpenProfile }: ShowcaseProps) {
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }

@@ -7243,7 +7243,10 @@
     "sortRating": "评分最高",
     "emptyTranslators": "暂无译者上榜。",
     "emptyTranslatorsHint": "发布补丁包即可出现在这里。",
-    "emptyPacks": "暂无已发布的补丁包。"
+    "emptyPacks": "暂无已发布的补丁包。",
+    "ambassadorTitle": "特色大使",
+    "ambassadorBadge": "大使",
+    "ambassadorCriteria": "根据下载量和平均评分自动选出"
   },
   "communityGlossary": {
     "tab": "社区",

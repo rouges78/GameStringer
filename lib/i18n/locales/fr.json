@@ -7243,7 +7243,10 @@
     "sortRating": "Les mieux notés",
     "emptyTranslators": "Aucun traducteur classé pour l'instant.",
     "emptyTranslatorsHint": "Publiez un pack pour apparaître ici.",
-    "emptyPacks": "Aucun pack publié pour l'instant."
+    "emptyPacks": "Aucun pack publié pour l'instant.",
+    "ambassadorTitle": "Ambassadeur à l'honneur",
+    "ambassadorBadge": "Ambassadeur",
+    "ambassadorCriteria": "Sélectionné automatiquement selon les téléchargements et la note moyenne"
   },
   "communityGlossary": {
     "tab": "Communauté",
