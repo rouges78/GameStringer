@@ -358,6 +358,8 @@ function PublishDialog({ open, onOpenChange, onPublished }: {
       const msg = e instanceof Error ? e.message : '';
       if (msg === 'community-hub:online-login-required') {
         toast.error(t('patchHubPage.publishOnlineLoginRequired'));
+      } else if (msg === 'community-hub:redistribution-blocked') {
+        toast.error(t('patchHubPage.publishRedistributionBlocked'));
       } else {
         toast.error(msg || t('patchHubPage.publishFailed'));
       }

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Gamepad2, Settings, Search, Play, Loader2, Database,
-  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench
+  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -219,6 +219,17 @@ export default function GameDetailPage() {
   const stringItBtnRef = useRef<HTMLButtonElement>(null);
   const [highlightStringIt, setHighlightStringIt] = useState(false);
   const firstGameHandledRef = useRef(false);
+
+  // Gate anti-pirateria: conferma una-tantum di possedere una copia legale del
+  // gioco, richiesta prima della PRIMA traduzione. Persistita in localStorage.
+  const [legalGateOpen, setLegalGateOpen] = useState(false);
+  const isLegalCopyAcked = () => {
+    try {
+      return localStorage.getItem('gamestringer_legal_copy_ack') === '1';
+    } catch {
+      return false;
+    }
+  };
 
   // Onboarding: quando si arriva dal flusso "primo gioco" (?firstGame=1), evidenzia
   // e porta in vista il pulsante "String it!". Guidato, non avvia da solo la traduzione.
@@ -1634,6 +1645,11 @@ export default function GameDetailPage() {
   const handleStringIt = async () => {
     if (!game?.installPath) {
       toast.error(t('common.percorsoDiInstallazioneNonDisponibile'));
+      return;
+    }
+    // Gate copia legale: alla prima traduzione chiedi conferma di possesso legale.
+    if (!isLegalCopyAcked()) {
+      setLegalGateOpen(true);
       return;
     }
     if (autoTranslateRunningRef.current || autoTranslateActive) return;
@@ -3404,6 +3420,64 @@ export default function GameDetailPage() {
                 className="flex-1 h-10 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-500/25 transition-all"
               >
                 {t('gameDetail.runPtFirst')}</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Gate anti-pirateria: conferma possesso copia legale (una-tantum) */}
+      {legalGateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-b border-emerald-500/20 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  {t('gameDetail.legalGateTitle') || 'Possiedi una copia legale?'}
+                </h3>
+              </div>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-slate-300">
+                {t('gameDetail.legalGateBody') ||
+                  'GameStringer applica patch solo a giochi che possiedi legalmente. Confermando, dichiari di avere una copia legittima di questo gioco.'}
+              </p>
+              <a
+                href="https://github.com/rouges78/GameStringer/blob/main/docs/LEGAL.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 text-xs text-emerald-400 hover:text-emerald-300 underline"
+              >
+                {t('gameDetail.legalGateLink') || 'Leggi le note legali'}
+              </a>
+            </div>
+            <div className="flex gap-3 p-4 pt-0">
+              <button
+                onClick={() => setLegalGateOpen(false)}
+                className="flex-1 h-10 rounded-xl text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600/50 transition-all"
+              >
+                {t('gameDetail.legalGateCancel') || 'Annulla'}
+              </button>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem('gamestringer_legal_copy_ack', '1');
+                  } catch {
+                    /* no-op */
+                  }
+                  setLegalGateOpen(false);
+                  handleStringIt();
+                }}
+                className="flex-1 h-10 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 transition-all"
+              >
+                {t('gameDetail.legalGateConfirm') || 'Confermo, possiedo il gioco'}
+              </button>
             </div>
           </motion.div>
         </div>

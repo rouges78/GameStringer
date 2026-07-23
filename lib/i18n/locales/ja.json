@@ -902,7 +902,12 @@
     "ptDesc": "P.T.はゲームの構造を解析し、翻訳のための最適な設定を提案します。",
     "translateAnyway": "それでも翻訳する",
     "runPtFirst": "先にP.T.を実行してください",
-    "openMetacritic": "Metacriticで開く"
+    "openMetacritic": "Metacriticで開く",
+    "legalGateTitle": "正規版を所有していますか？",
+    "legalGateBody": "GameStringerは合法的に所有しているゲームのみにパッチを適用します。確認すると、このゲームの正規のコピーを所有していることを宣言したことになります。",
+    "legalGateLink": "法的注意事項を読む",
+    "legalGateCancel": "キャンセル",
+    "legalGateConfirm": "所有していることを確認"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",
@@ -7024,7 +7029,8 @@
     "cancel": "キャンセル",
     "publishConfirm": "公開",
     "integrityBadge": "整合性を検証済み",
-    "integrityDesc": "SHA-256ハッシュ付きコンテンツ:ダウンロードごとに自動再検証され、改ざんされたパックは拒否されます。"
+    "integrityDesc": "SHA-256ハッシュ付きコンテンツ:ダウンロードごとに自動再検証され、改ざんされたパックは拒否されます。",
+    "publishRedistributionBlocked": "公開がブロックされました：このパックは翻訳だけでなく再配布可能な原文を含んでいるようです。差分（パッチ）のみを公開してください。"
   },
   "predictionToolPage": {
     "backToLibrary": "ライブラリに戻る",

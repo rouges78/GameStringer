@@ -902,7 +902,12 @@
     "ptDesc": "P.T. analyse la structure du jeu et suggère la configuration optimale pour la traduction.",
     "translateAnyway": "Traduire quand même",
     "runPtFirst": "Exécute d'abord P.T.",
-    "openMetacritic": "Ouvrir sur Metacritic"
+    "openMetacritic": "Ouvrir sur Metacritic",
+    "legalGateTitle": "Possédez-vous une copie légale ?",
+    "legalGateBody": "GameStringer n'applique des correctifs qu'aux jeux que vous possédez légalement. En confirmant, vous déclarez détenir une copie légitime de ce jeu.",
+    "legalGateLink": "Lire les mentions légales",
+    "legalGateCancel": "Annuler",
+    "legalGateConfirm": "Je confirme posséder le jeu"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Erreur lors du chargement des infos DRAT :",
@@ -7024,7 +7029,8 @@
     "cancel": "Annuler",
     "publishConfirm": "Publier",
     "integrityBadge": "Intégrité vérifiée",
-    "integrityDesc": "Contenu haché en SHA-256 : re-vérifié automatiquement à chaque téléchargement, un pack altéré est rejeté."
+    "integrityDesc": "Contenu haché en SHA-256 : re-vérifié automatiquement à chaque téléchargement, un pack altéré est rejeté.",
+    "publishRedistributionBlocked": "Publication bloquée : le pack semble contenir du texte original redistribuable, pas seulement des traductions. Ne publiez que les différences (patch)."
   },
   "predictionToolPage": {
     "backToLibrary": "Retour à la Bibliothèque",

@@ -902,7 +902,12 @@
     "ptDesc": "P.T. 会分析游戏结构，并为翻译建议最佳配置。",
     "translateAnyway": "仍然翻译",
     "runPtFirst": "请先运行 P.T.",
-    "openMetacritic": "在 Metacritic 上打开"
+    "openMetacritic": "在 Metacritic 上打开",
+    "legalGateTitle": "你拥有正版吗？",
+    "legalGateBody": "GameStringer 只为你合法拥有的游戏打补丁。确认即表示你声明拥有本游戏的正版。",
+    "legalGateLink": "阅读法律声明",
+    "legalGateCancel": "取消",
+    "legalGateConfirm": "确认，我拥有本游戏"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "加载 DRAT 信息时出错：",
@@ -7024,7 +7029,8 @@
     "cancel": "取消",
     "publishConfirm": "发布",
     "integrityBadge": "完整性已验证",
-    "integrityDesc": "SHA-256哈希内容:每次下载时自动重新验证,被篡改的包会被拒绝。"
+    "integrityDesc": "SHA-256哈希内容:每次下载时自动重新验证,被篡改的包会被拒绝。",
+    "publishRedistributionBlocked": "发布被阻止：该补丁包似乎包含可再分发的原文，而不仅仅是翻译。请只发布差异（补丁）。"
   },
   "predictionToolPage": {
     "backToLibrary": "返回库",

@@ -902,7 +902,12 @@
     "ptDesc": "P.T.는 게임 구조를 분석하고 번역을 위한 최적의 구성을 제안합니다.",
     "translateAnyway": "그래도 번역",
     "runPtFirst": "먼저 P.T.를 실행하세요",
-    "openMetacritic": "Metacritic에서 열기"
+    "openMetacritic": "Metacritic에서 열기",
+    "legalGateTitle": "정품을 소유하고 있나요?",
+    "legalGateBody": "GameStringer는 합법적으로 소유한 게임에만 패치를 적용합니다. 확인하면 이 게임의 정품을 소유하고 있음을 선언하는 것입니다.",
+    "legalGateLink": "법적 고지 읽기",
+    "legalGateCancel": "취소",
+    "legalGateConfirm": "게임 소유를 확인합니다"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",
@@ -7024,7 +7029,8 @@
     "cancel": "취소",
     "publishConfirm": "게시",
     "integrityBadge": "무결성 검증됨",
-    "integrityDesc": "SHA-256 해시 콘텐츠: 다운로드할 때마다 자동으로 재검증되며 변조된 팩은 거부됩니다."
+    "integrityDesc": "SHA-256 해시 콘텐츠: 다운로드할 때마다 자동으로 재검증되며 변조된 팩은 거부됩니다.",
+    "publishRedistributionBlocked": "게시가 차단되었습니다: 이 팩은 번역뿐 아니라 재배포 가능한 원문을 포함한 것으로 보입니다. 차이(패치)만 게시하세요."
   },
   "predictionToolPage": {
     "backToLibrary": "라이브러리로 돌아가기",
