@@ -1,0 +1,65 @@
+# Aggiornamenti automatici delle dipendenze, raggruppati e settimanali.
+# Obiettivo: aprire POCHE PR già pronte (minor+patch insieme) invece di
+# rincorrere ogni advisory a mano. Gli aggiornamenti di SICUREZZA veri e propri
+# arrivano comunque a parte, ma richiedono "Dependabot alerts" attivo in
+# Settings > Code security. I major restano separati per non mescolare rotture
+# (es. un bump major di Next) con i patch innocui.
+version: 2
+updates:
+  # ── npm (frontend Next/React) ──────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Rome"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Next major va valutato a mano (config/build possono rompersi).
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+
+  # ── Cargo (backend Tauri/Rust) ─────────────────────────────────────────────
+  - package-ecosystem: "cargo"
+    directory: "/src-tauri"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Rome"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ── GitHub Actions (chiude anche i warning "Node.js 20 deprecated") ─────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Rome"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions-all:
+        applies-to: version-updates
+        patterns:
+          - "*"
