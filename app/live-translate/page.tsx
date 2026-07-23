@@ -22,6 +22,7 @@ import {
 } from '@/lib/live-translation-engine';
 import type { VlmProvider } from '@/lib/ocr/vlm-batch-translate';
 import { useGlobalHotkeys } from '@/hooks/use-global-hotkeys';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 
 interface LogEntry {
   time: string;
@@ -37,14 +38,7 @@ const PROVIDERS = [
   { id: 'ollama', name: 'Ollama (Local)', speed: '500-2000ms', icon: Monitor },
 ];
 
-const LANGUAGES = [
-  { code: 'it', name: 'Italiano' }, { code: 'en', name: 'English' },
-  { code: 'es', name: 'Espanol' }, { code: 'fr', name: 'Francais' },
-  { code: 'de', name: 'Deutsch' }, { code: 'ja', name: 'Japanese' },
-  { code: 'zh', name: 'Chinese' }, { code: 'ko', name: 'Korean' },
-  { code: 'pt', name: 'Portugues' }, { code: 'ru', name: 'Russian' },
-  { code: 'pl', name: 'Polski' },
-];
+const LANGUAGES = TARGET_LANGUAGES.map(l => ({ code: l.code, name: l.name }));
 
 const OCR_LANGUAGES = [
   { code: 'eng', name: 'English' }, { code: 'ita', name: 'Italiano' },

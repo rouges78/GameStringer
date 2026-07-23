@@ -14,6 +14,7 @@ export const LANG_NAMES: Record<string, string> = {
   ar: 'Arabic', th: 'Thai', vi: 'Vietnamese', id: 'Indonesian', uk: 'Ukrainian',
   el: 'Greek', bg: 'Bulgarian', hr: 'Croatian', sk: 'Slovak', sl: 'Slovenian',
   'pt-BR': 'Brazilian Portuguese', 'es-419': 'Latin American Spanish',
+  hi: 'Hindi', 'pt-br': 'Brazilian Portuguese', 'zh-tw': 'Traditional Chinese',
 };
 
 /** NLLB-200 language code mapping (Meta, 200 languages) */
@@ -32,6 +33,9 @@ export const NLLB_LANG_MAP: Record<string, string> = {
   af: 'afr_Latn', sq: 'als_Latn', mk: 'mkd_Cyrl', bs: 'bos_Latn', is: 'isl_Latn',
   mt: 'mlt_Latn', lb: 'ltz_Latn', tl: 'tgl_Latn', mn: 'khk_Cyrl', uz: 'uzn_Latn',
   kk: 'kaz_Cyrl', az: 'azj_Latn', ky: 'kir_Cyrl', tg: 'tgk_Cyrl',
+  // Varianti regionali esposte in TARGET_LANGUAGES (NLLB non le distingue dalla
+  // lingua base, tranne per lo script cinese).
+  'pt-br': 'por_Latn', 'zh-tw': 'zho_Hant',
 };
 
 /** Language name to code mapping for chat translation */

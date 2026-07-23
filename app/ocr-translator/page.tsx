@@ -14,6 +14,7 @@ import { translateSingleSmart, translateWithFallback } from '@/lib/ai/ai-transla
 import { rawPixelsToBase64 } from '@/lib/image-utils';
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 
 interface DetectedText {
   text: string;
@@ -48,20 +49,6 @@ const SOURCE_LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
   { code: 'zh-Hans', name: '中文', flag: '🇨🇳' },
   { code: 'ko', name: '한국어', flag: '🇰🇷' },
-];
-
-const TARGET_LANGUAGES = [
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Español', flag: '��' },
-  { code: 'pt', name: 'Português', flag: '🇵🇹' },
-  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' },
-  { code: 'ko', name: '한국어', flag: '��' },
 ];
 
 export default function OcrTranslatorPage() {

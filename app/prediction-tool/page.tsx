@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers,
@@ -605,26 +606,7 @@ type ErrorSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
-const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'it', name: 'Italiano' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'fr', name: 'Français' },
-  { code: 'es', name: 'Español' },
-  { code: 'pt', name: 'Português' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'pl', name: 'Polski' },
-  { code: 'ja', name: '日本語' },
-  { code: 'zh', name: '中文' },
-  { code: 'ko', name: '한국어' },
-  { code: 'nl', name: 'Nederlands' },
-  { code: 'sv', name: 'Svenska' },
-  { code: 'cs', name: 'Čeština' },
-  { code: 'tr', name: 'Türkçe' },
-  { code: 'ar', name: 'العربية' },
-  { code: 'th', name: 'ไทย' },
-  { code: 'uk', name: 'Українська' },
-];
+const LANGUAGES = TARGET_LANGUAGES.map(l => ({ code: l.code, name: l.name }));
 
 // ── Helper Components ────────────────────────────────────────────────
 

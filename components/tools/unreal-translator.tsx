@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Unreal string extraction is wired into this translator.
 
@@ -88,19 +89,7 @@ export function UnrealTranslator() {
   const [autoTranslate, setAutoTranslate] = useState(true);
   const [targetLanguage, setTargetLanguage] = useState('it');
   
-  const supportedLanguages = [
-    { code: 'it', name: 'Italiano' },
-    { code: 'en', name: 'English' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'fr', name: 'Français' },
-    { code: 'es', name: 'Español' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'ja', name: '日本語' },
-    { code: 'zh', name: '中文' },
-    { code: 'ko', name: '한국어' },
-    { code: 'el', name: 'Ελληνικά' },
-  ];
+  const supportedLanguages = TARGET_LANGUAGES;
 
   useEffect(() => {
     loadUnrealGames();

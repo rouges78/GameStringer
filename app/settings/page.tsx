@@ -86,6 +86,7 @@ const CustomPromptSettings = dynamic(
 import { invoke } from '@/lib/tauri-api';
 import { saveConfig as saveSupabaseConfig, SUPABASE_MIGRATION_SQL } from '@/lib/social/community-hub-backend';
 import { clientLogger } from '@/lib/client-logger';
+import { useWarmIndex } from '@/hooks/use-warm-index';
 
 // Supabase Settings Component
 function SupabaseSettingsCard() {
@@ -428,8 +429,7 @@ function AiQualityCard({
   const [indexSrc, setIndexSrc] = useState('en');
   const [indexGame, setIndexGame] = useState('');   // '' = solo TM (+lore)
   const [glossaryGames, setGlossaryGames] = useState<string[]>([]);
-  const [indexing, setIndexing] = useState(false);
-  const [indexProgress, setIndexProgress] = useState<{ done: number; total: number } | null>(null);
+  const { run: runWarm, indexing, progress: indexProgress } = useWarmIndex();
   const [indexResult, setIndexResult] = useState<string | null>(null);
 
   // Giochi con un glossario locale (chiavi dict_<gameId> — stesso formato del
@@ -452,44 +452,31 @@ function AiQualityCard({
   }, []);
 
   const runWarmIndex = useCallback(async () => {
-    setIndexing(true);
     setIndexResult(null);
-    setIndexProgress({ done: 0, total: 0 });
-    try {
-      const { warmSemanticIndex } = await import('@/lib/ai/semantic-retriever');
-      const res = await warmSemanticIndex(
-        { sourceLang: indexSrc, targetLang: defaultTargetLang, gameId: indexGame || undefined },
-        (done, total) => setIndexProgress({ done, total })
-      );
-      // Lore: indice semantico dei dialoghi (globale, non per gioco) — best-effort
-      let lorePart = '';
-      try {
-        const { loreAssistant } = await import('@/lib/lore-assistant');
-        const lore = await loreAssistant?.warmLoreIndex();
-        if (lore?.ok && (lore.total > 0 || lore.indexed > 0)) {
-          lorePart = ` · ${t('semanticIndex.loreLabel')}: ${lore.indexed}/${lore.total}`;
-        }
-      } catch { /* lore assistant non disponibile: ignora */ }
+    const res = await runWarm({
+      sourceLang: indexSrc,
+      targetLang: defaultTargetLang,
+      gameId: indexGame || undefined,
+    });
 
-      if (!res.ok) {
-        setIndexResult(t('semanticIndex.unavailable'));
-      } else if (res.tmTotal === 0 && res.glTotal === 0 && !lorePart) {
-        setIndexResult(t('semanticIndex.emptyTm'));
-      } else {
-        const glPart = res.glTotal > 0
-          ? ` · ${t('semanticIndex.glossaryLabel')}: ${res.glIndexed}/${res.glTotal}`
-          : '';
-        setIndexResult(
-          `${t('semanticIndex.doneLabel')}: ${res.tmIndexed}/${res.tmTotal} ${t('semanticIndex.vectors')}${glPart}${lorePart}`
-        );
-      }
-    } catch {
+    if (!res.ok) {
       setIndexResult(t('semanticIndex.unavailable'));
-    } finally {
-      setIndexing(false);
-      setIndexProgress(null);
+      return;
     }
-  }, [indexSrc, indexGame, defaultTargetLang, t]);
+    if (res.empty) {
+      setIndexResult(t('semanticIndex.emptyTm'));
+      return;
+    }
+    const glPart = res.glTotal > 0
+      ? ` · ${t('semanticIndex.glossaryLabel')}: ${res.glIndexed}/${res.glTotal}`
+      : '';
+    const lorePart = (res.loreTotal > 0 || res.loreIndexed > 0)
+      ? ` · ${t('semanticIndex.loreLabel')}: ${res.loreIndexed}/${res.loreTotal}`
+      : '';
+    setIndexResult(
+      `${t('semanticIndex.doneLabel')}: ${res.tmIndexed}/${res.tmTotal} ${t('semanticIndex.vectors')}${glPart}${lorePart}`
+    );
+  }, [runWarm, indexSrc, indexGame, defaultTargetLang, t]);
 
   const refresh = useCallback(async () => {
     setChecking(true);

@@ -21,6 +21,7 @@ import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { activityHistory } from '@/lib/activity-history';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { useTranslation } from '@/lib/i18n';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Unity string extraction is wired into this patcher.
@@ -80,22 +81,9 @@ export function UnityPatcher() {
     { id: 'deepl', name: t('gamePatcher.deepl'), description: t('gamePatcher.deeplDesc') },
   ];
   
-  // Lingue supportate da XUnity.AutoTranslator
-  const supportedLanguages = [
-    { code: 'it', name: 'Italiano' },
-    { code: 'en', name: 'English' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'fr', name: 'Français' },
-    { code: 'es', name: 'Español' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'ja', name: '日本語' },
-    { code: 'zh', name: '中文' },
-    { code: 'ko', name: '한국어' },
-    { code: 'pl', name: 'Polski' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'el', name: 'Ελληνικά' },
-  ];
+  // Lingue supportate da XUnity.AutoTranslator (codici ISO 639-1, gia' accettati
+  // dal config del plugin) — lista canonica condivisa con le altre schermate.
+  const supportedLanguages = TARGET_LANGUAGES;
 
   // Helper functions (definite prima degli useEffect che le usano)
   const handleExportPO = useCallback(() => {

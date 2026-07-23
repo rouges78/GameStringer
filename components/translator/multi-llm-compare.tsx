@@ -23,6 +23,7 @@ import { CHARACTER_PRESETS, getQualityCategory } from '@/lib/quality/translation
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 
 interface TranslationResult {
   provider: string;
@@ -62,18 +63,7 @@ const PROVIDERS = [
   { id: 'libre', name: 'Libre', icon: '🆓', color: 'bg-slate-500/20 border-slate-500/50 text-slate-400', activeColor: 'bg-slate-500 text-white' }
 ];
 
-const LANGUAGES = [
-  { code: 'it', name: 'Italiano 🇮🇹' },
-  { code: 'en', name: 'English 🇬🇧' },
-  { code: 'de', name: 'Deutsch 🇩🇪' },
-  { code: 'es', name: 'Español 🇪🇸' },
-  { code: 'fr', name: 'Français 🇫🇷' },
-  { code: 'ja', name: '日本語 🇯🇵' },
-  { code: 'ko', name: '한국어 🇰🇷' },
-  { code: 'zh', name: '中文 🇨🇳' },
-  { code: 'pt', name: 'Português 🇵🇹' },
-  { code: 'ru', name: 'Русский 🇷🇺' }
-];
+const LANGUAGES = TARGET_LANGUAGES.map(l => ({ code: l.code, name: `${l.name} ${l.flag}` }));
 
 export function MultiLLMCompare() {
   const { t } = useTranslation();

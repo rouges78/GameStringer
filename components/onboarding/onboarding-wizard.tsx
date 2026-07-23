@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { VisuallyHidden } from 'radix-ui';
 import { cn } from '@/lib/utils';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { useTranslation } from '@/lib/i18n';
 
 interface OnboardingStep {
@@ -117,20 +118,10 @@ export function OnboardingWizard() {
     if (typeof window !== 'undefined') window.location.href = href;
   };
 
-  const TARGET_LANGS: { code: string; label: string }[] = [
-    { code: 'it', label: '🇮🇹 Italiano' },
-    { code: 'en', label: '🇬🇧 English' },
-    { code: 'es', label: '🇪🇸 Español' },
-    { code: 'fr', label: '🇫🇷 Français' },
-    { code: 'de', label: '🇩🇪 Deutsch' },
-    { code: 'pt', label: '🇵🇹 Português' },
-    { code: 'pl', label: '🇵🇱 Polski' },
-    { code: 'ru', label: '🇷🇺 Русский' },
-    { code: 'zh', label: '🇨🇳 中文' },
-    { code: 'ja', label: '🇯🇵 日本語' },
-    { code: 'ko', label: '🇰🇷 한국어' },
-    { code: 'el', label: '🇬🇷 Ελληνικά' },
-  ];
+  const TARGET_LANGS: { code: string; label: string }[] = TARGET_LANGUAGES.map(l => ({
+    code: l.code,
+    label: `${l.flag} ${l.name}`,
+  }));
 
   // Onboarding azionabile a 3 passi: lingua → AI/key → gioco.
   // Riusa solo chiavi i18n esistenti (nessuna nuova chiave nei locale).

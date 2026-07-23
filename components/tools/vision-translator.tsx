@@ -22,21 +22,16 @@ import {
 } from 'lucide-react';
 import { visionTranslate, getAvailableVisionModels, captureGameScreenshot, type VisionTranslateResult } from '@/lib/ocr/vision-translate';
 import { useTranslation } from '@/lib/i18n';
+import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { LANG_NAMES } from '@/lib/translation/language-mappings';
 
-const TARGET_LANGUAGES = [
-  { code: 'italiano', label: '🇮🇹 Italiano' },
-  { code: 'english', label: '🇬🇧 English' },
-  { code: 'spanish', label: '🇪🇸 Español' },
-  { code: 'french', label: '🇫🇷 Français' },
-  { code: 'german', label: '🇩🇪 Deutsch' },
-  { code: 'portuguese', label: '🇧🇷 Português' },
-  { code: 'japanese', label: '🇯🇵 日本語' },
-  { code: 'chinese', label: '🇨🇳 中文' },
-  { code: 'korean', label: '🇰🇷 한국어' },
-  { code: 'russian', label: '🇷🇺 Русский' },
-  { code: 'arabic', label: '🇸🇦 العربية' },
-  { code: 'greek', label: '🇬🇷 Ελληνικά' },
-];
+// Il VLM riceve il nome inglese della lingua nel prompt (es. "Czech"), non il
+// codice ISO: la lista resta agganciata a TARGET_LANGUAGES cosi' nuove lingue
+// compaiono qui automaticamente.
+const TARGET_LANGUAGES = CANONICAL_TARGET_LANGUAGES.map(l => ({
+  code: LANG_NAMES[l.code] ?? l.name,
+  label: `${l.flag} ${l.name}`,
+}));
 
 const VISION_PROVIDERS = [
   { id: 'ollama' as const, label: 'Ollama (Locale)', icon: '🦙', description: 'LLaVA, Llama 3.2 Vision — Gratis, locale' },
@@ -47,7 +42,7 @@ const VISION_PROVIDERS = [
 export function VisionTranslator() {
   const { t } = useTranslation();
   const [text, setText] = useState('');
-  const [targetLang, setTargetLang] = useState('italiano');
+  const [targetLang, setTargetLang] = useState(TARGET_LANGUAGES[0]?.code ?? 'Italian');
   const [provider, setProvider] = useState<'ollama' | 'gemini' | 'openai'>('ollama');
   const [model, setModel] = useState('');
   const [screenshotBase64, setScreenshotBase64] = useState<string | null>(null);

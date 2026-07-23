@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
@@ -9,7 +9,7 @@ import { invoke } from '@/lib/tauri-api';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  Gamepad2, Settings, Search, Play, Loader2,
+  Gamepad2, Settings, Search, Play, Loader2, Database,
   ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench
 } from 'lucide-react';
 import Link from 'next/link';
@@ -37,6 +37,9 @@ import {
   classifyCompatError, maybeOfferCompatOptIn, type CompatGameRef,
 } from '@/lib/compat-telemetry';
 import { reportCrash } from '@/lib/crash-reporter';
+import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { LANG_TO_CODE } from '@/lib/translation/language-mappings';
+import { useWarmIndex } from '@/hooks/use-warm-index';
 import {
   ScreenshotGallery,
   ScreenshotLightbox,
@@ -198,35 +201,11 @@ export default function GameDetailPage() {
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
 
   // ═══ TARGET LANGUAGE (lingua traduzione, indipendente dalla lingua UI) ═══
-  const TARGET_LANGUAGES = [
-    { code: 'it', label: 'Italiano', flag: 'IT' },
-    { code: 'en', label: 'English', flag: 'GB' },
-    { code: 'de', label: 'Deutsch', flag: 'DE' },
-    { code: 'fr', label: 'Français', flag: 'FR' },
-    { code: 'es', label: 'Español', flag: 'ES' },
-    { code: 'pt', label: 'Português', flag: 'BR' },
-    { code: 'ru', label: 'Русский', flag: 'RU' },
-    { code: 'ja', label: '日本語', flag: 'JP' },
-    { code: 'ko', label: '한국어', flag: 'KR' },
-    { code: 'zh', label: '中文', flag: 'CN' },
-    { code: 'pl', label: 'Polski', flag: 'PL' },
-    { code: 'tr', label: 'Türkçe', flag: 'TR' },
-    { code: 'uk', label: 'Українська', flag: 'UA' },
-    { code: 'nl', label: 'Nederlands', flag: 'NL' },
-    { code: 'sv', label: 'Svenska', flag: 'SE' },
-    { code: 'cs', label: 'Čeština', flag: 'CZ' },
-    { code: 'hu', label: 'Magyar', flag: 'HU' },
-    { code: 'ro', label: 'Română', flag: 'RO' },
-    { code: 'da', label: 'Dansk', flag: 'DK' },
-    { code: 'no', label: 'Norsk', flag: 'NO' },
-    { code: 'fi', label: 'Suomi', flag: 'FI' },
-    { code: 'ar', label: 'العربية', flag: 'SA' },
-    { code: 'th', label: 'ไทย', flag: 'TH' },
-    { code: 'vi', label: 'Tiếng Việt', flag: 'VN' },
-    { code: 'el', label: 'Ελληνικά', flag: 'GR' },
-    { code: 'bg', label: 'Български', flag: 'BG' },
-    { code: 'hi', label: 'हिन्दी', flag: 'IN' },
-  ];
+  const TARGET_LANGUAGES = CANONICAL_TARGET_LANGUAGES.map(l => ({
+    code: l.code,
+    label: l.name,
+    flag: l.flag,
+  }));
   const [targetLang, setTargetLang] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('gs_target_lang') || language || 'it';
@@ -235,6 +214,36 @@ export default function GameDetailPage() {
   });
   const [showLangPicker, setShowLangPicker] = useState(false);
   const langPickerRef = useRef<HTMLDivElement>(null);
+
+  // ═══ Pre-indicizzazione semantica del gioco aperto ═══
+  const { run: runWarmIndex, indexing: warmIndexing, progress: warmProgress } = useWarmIndex();
+  const runGameWarmIndex = useCallback(async () => {
+    const gameKey = game?.id || (game?.appid ? String(game.appid) : null) || gameId;
+    // detect_languages_from_files restituisce NOMI inglesi ("English", "Czech"),
+    // ordinati alfabeticamente: vanno ricondotti a codici ISO. Se il gioco ha
+    // l'inglese si parte da li' (sorgente quasi sempre corretta), altrimenti si
+    // prende la prima lingua rilevata che sappiamo mappare.
+    const sourceLang = detectedLanguages.includes('English')
+      ? 'en'
+      : (detectedLanguages.map(n => LANG_TO_CODE[n]).find(Boolean) ?? 'en');
+    const res = await runWarmIndex({ sourceLang, targetLang, gameId: gameKey });
+
+    if (!res.ok) {
+      toast.error(t('semanticIndex.unavailable'));
+      return;
+    }
+    if (res.empty) {
+      toast.info(t('semanticIndex.emptyTm'));
+      return;
+    }
+    const glPart = res.glTotal > 0 ? ` · ${t('semanticIndex.glossaryLabel')}: ${res.glIndexed}/${res.glTotal}` : '';
+    const lorePart = (res.loreTotal > 0 || res.loreIndexed > 0)
+      ? ` · ${t('semanticIndex.loreLabel')}: ${res.loreIndexed}/${res.loreTotal}`
+      : '';
+    toast.success(
+      `${t('semanticIndex.doneLabel')}: ${res.tmIndexed}/${res.tmTotal} ${t('semanticIndex.vectors')}${glPart}${lorePart}`
+    );
+  }, [runWarmIndex, game, gameId, detectedLanguages, targetLang, t]);
   const currentFlag = TARGET_LANGUAGES.find(l => l.code === targetLang) || TARGET_LANGUAGES[0];
 
   // Persist targetLang
@@ -2904,20 +2913,19 @@ export default function GameDetailPage() {
                     onClick={() => setShowLangPicker(!showLangPicker)}
                     title={`Lingua: ${currentFlag.label}`}
                   >
-                    <span className="text-base leading-none">{(() => { const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' }; return emojis[currentFlag.flag] || '🌐'; })()}</span>
+                    <span className="text-base leading-none">{currentFlag.flag}</span>
                     <ChevronDown className="h-3 w-3 opacity-70" />
                   </button>
                   {showLangPicker && (
                     <div className="absolute right-0 top-full mt-1 z-50 bg-[#0f1318] border border-white/10 rounded-xl shadow-2xl shadow-black/60 py-1.5 w-48 max-h-72 overflow-y-auto custom-scrollbar">
                       {TARGET_LANGUAGES.map(lang => {
-                        const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' };
                         return (
                           <button
                             key={lang.code}
                             className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-[11px] transition-colors ${targetLang === lang.code ? 'bg-indigo-600/30 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
                             onClick={() => { setTargetLang(lang.code); setShowLangPicker(false); }}
                           >
-                            <span className="text-sm">{emojis[lang.flag] || '🌐'}</span>
+                            <span className="text-sm">{lang.flag}</span>
                             <span>{lang.label}</span>
                             <span className="ml-auto text-micro text-slate-500 uppercase">{lang.code}</span>
                           </button>
@@ -2932,6 +2940,20 @@ export default function GameDetailPage() {
                   {translationStrategy.engine} · {translationStrategy.detail}
                 </div>
               )}
+              {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi
+                  TM + glossario + lore si scaldano senza passare da Impostazioni. ── */}
+              <button
+                className="h-7 mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                onClick={runGameWarmIndex}
+                disabled={warmIndexing}
+                title={t('semanticIndex.hint')}
+              >
+                {warmIndexing
+                  ? <><Loader2 className="h-3 w-3 animate-spin" /> {warmProgress && warmProgress.total > 0
+                      ? `${warmProgress.done}/${warmProgress.total}`
+                      : t('semanticIndex.indexing')}</>
+                  : <><Database className="h-3 w-3" /> {t('semanticIndex.button')}</>}
+              </button>
             </div>
             {game.platform === 'Steam' && (game.appid ?? 0) > 0 && (
               <a
@@ -2977,7 +2999,7 @@ export default function GameDetailPage() {
         <button className="h-9 px-2 flex items-center gap-0.5 rounded-r-lg bg-violet-600/90 text-white text-xs font-bold"
           onClick={() => setShowLangPicker(!showLangPicker)}
         >
-          {(() => { const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' }; return emojis[currentFlag.flag] || '🌐'; })()}
+          {currentFlag.flag}
           <ChevronDown className="h-2.5 w-2.5 opacity-70" />
         </button>
         <button className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400"
