@@ -139,3 +139,7 @@ src-tauri/.cache/
 # i18n tooling temp dirs
 .gs-i18n-tmp/
 _gs_split/
+
+# File reali di gioco per il collaudo parser (MAI committare — copyright)
+.samples/*
+!.samples/README.md
