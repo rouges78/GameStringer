@@ -146,7 +146,7 @@ export default function GameDetailPage() {
       gameDataLoadedRef.current = null; // allow re-fetch
     }
   }, [searchParams, params.id]);
-  
+
   const [game, setGame] = useState<Game | null>(null);
   const [_translations, setTranslations] = useState<{id: string; gameId: string; filePath: string; status: string; confidence: number; timestamp: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -214,6 +214,32 @@ export default function GameDetailPage() {
   });
   const [showLangPicker, setShowLangPicker] = useState(false);
   const langPickerRef = useRef<HTMLDivElement>(null);
+  // Onboarding "primo gioco": all'arrivo da ?firstGame=1 evidenzia e porta in vista
+  // il CTA "String it!" per accorciare il time-to-wow (highlight guidato, non avvio auto).
+  const stringItBtnRef = useRef<HTMLButtonElement>(null);
+  const [highlightStringIt, setHighlightStringIt] = useState(false);
+  const firstGameHandledRef = useRef(false);
+
+  // Onboarding: quando si arriva dal flusso "primo gioco" (?firstGame=1), evidenzia
+  // e porta in vista il pulsante "String it!". Guidato, non avvia da solo la traduzione.
+  useEffect(() => {
+    if (firstGameHandledRef.current) return;
+    if (searchParams.get('firstGame') !== '1') return;
+    if (!game || !game.isInstalled) return; // aspetta che il gioco sia caricato
+    firstGameHandledRef.current = true;
+    setHighlightStringIt(true);
+    const scrollT = setTimeout(() => {
+      stringItBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    const clearT = setTimeout(() => setHighlightStringIt(false), 6000);
+    // Ripulisce il parametro così un refresh non ri-attiva l'evidenza (senza navigazione).
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('firstGame');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    } catch { /* no-op */ }
+    return () => { clearTimeout(scrollT); clearTimeout(clearT); };
+  }, [game, searchParams]);
 
   // ═══ Pre-indicizzazione semantica del gioco aperto ═══
   const { run: runWarmIndex, indexing: warmIndexing, progress: warmProgress } = useWarmIndex();
@@ -2889,6 +2915,15 @@ export default function GameDetailPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="shrink-0 hidden lg:flex flex-col gap-2 items-stretch w-[200px]"
           >
+            {highlightStringIt && (
+              <style>{`
+                @keyframes firstGamePulse {
+                  0%, 100% { box-shadow: 0 0 0 0 rgba(129,140,248,0.55), 0 10px 30px rgba(99,102,241,0.45); }
+                  50% { box-shadow: 0 0 0 8px rgba(129,140,248,0), 0 10px 30px rgba(99,102,241,0.65); }
+                }
+                .first-game-pulse { animation: firstGamePulse 1.2s ease-out infinite; }
+              `}</style>
+            )}
             {game.isInstalled && (
               <button className="h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all border border-emerald-400/20 group"
                 onClick={async () => { if ((game.appid ?? 0) > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
@@ -2898,8 +2933,8 @@ export default function GameDetailPage() {
             <div className="flex flex-col items-stretch">
               <div className="flex items-stretch gap-0">
                 {/* ── Bottone STRING IT! (HERO — azione principale) ── */}
-                <button className="h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all border border-indigo-400/30 border-r-0 relative overflow-hidden group"
-                  onClick={handleStringIt}
+                <button ref={stringItBtnRef} className={`h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all border border-indigo-400/30 border-r-0 relative overflow-hidden group${highlightStringIt ? ' first-game-pulse ring-2 ring-indigo-300/70' : ''}`}
+                  onClick={() => { setHighlightStringIt(false); handleStringIt(); }}
                   disabled={autoTranslateBusy}
                   title={t('common.avviaLaTraduzioneCompletaDelGioco')}
                 >
@@ -2990,8 +3025,8 @@ export default function GameDetailPage() {
           >
             <Play className="h-3.5 w-3.5 fill-current" /> {t('gameDetail.play')}</button>
         )}
-        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-gradient-to-r from-indigo-600 to-violet-500 text-white font-bold text-2xs uppercase tracking-wider shadow-lg shadow-indigo-500/30"
-          onClick={handleStringIt}
+        <button className={`flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-gradient-to-r from-indigo-600 to-violet-500 text-white font-bold text-2xs uppercase tracking-wider shadow-lg shadow-indigo-500/30${highlightStringIt ? ' first-game-pulse ring-2 ring-indigo-300/70' : ''}`}
+          onClick={() => { setHighlightStringIt(false); handleStringIt(); }}
           disabled={autoTranslateBusy}
         >
           {autoTranslateBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateBusy ? (autoTranslateProgress || '...') : 'String it!'}
