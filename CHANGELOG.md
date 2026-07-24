@@ -11,6 +11,7 @@
 - ✨ patch-hub: Faster Hub via client-side caching (60s TTL) + write throttling; server-side rate-limiting migration prepared
 - 🐛 news-feed: RSS feeds no longer trigger CORS errors in the desktop webview
 - • a11y: Documented WCAG 2.1 AA accessibility audit + translate v1.14.0 changelog across all 12 locales
+- 🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green
 
 ## 🚀 v1.14.0 - 2026-07-13
 

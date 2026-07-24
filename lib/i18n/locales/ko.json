@@ -6653,7 +6653,8 @@
       "5": "✨ feedback: 인앱 피드백 위젯(설정 → 커뮤니티), 자동 컨텍스트(버전, 플랫폼, 화면, 게임) 포함; fail-open 전송 + 복사/이메일 대체",
       "6": "✨ patch-hub: 클라이언트 측 캐싱(TTL 60초)과 쓰기 스로틀링으로 Hub 속도 향상; 서버 측 속도 제한 마이그레이션 준비",
       "7": "🐛 news-feed: RSS 피드가 데스크톱 웹뷰에서 더 이상 CORS 오류를 일으키지 않습니다",
-      "8": "• a11y: WCAG 2.1 AA 접근성 감사 문서화 + 전체 12개 로케일에 v1.14.0 변경 로그 번역"
+      "8": "• a11y: WCAG 2.1 AA 접근성 감사 문서화 + 전체 12개 로케일에 v1.14.0 변경 로그 번역",
+      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
     }
   },
   "communityChat": {

@@ -6653,7 +6653,8 @@
       "5": "✨ feedback: Ενσωματωμένο widget σχολίων (Ρυθμίσεις → Κοινότητα) με αυτόματο πλαίσιο (έκδοση, πλατφόρμα, οθόνη, παιχνίδι)· αποστολή fail-open + εναλλακτική αντιγραφή/email",
       "6": "✨ patch-hub: Ταχύτερο Hub μέσω προσωρινής αποθήκευσης από την πλευρά του πελάτη (TTL 60 δευτ.) + ρύθμιση ρυθμού εγγραφών· προετοιμάστηκε migration περιορισμού ρυθμού από την πλευρά του διακομιστή",
       "7": "🐛 news-feed: Οι ροές RSS δεν προκαλούν πλέον σφάλματα CORS στο desktop webview",
-      "8": "• a11y: Τεκμηριωμένος έλεγχος προσβασιμότητας WCAG 2.1 AA + μετάφραση του changelog v1.14.0 σε όλες τις 12 γλώσσες"
+      "8": "• a11y: Τεκμηριωμένος έλεγχος προσβασιμότητας WCAG 2.1 AA + μετάφραση του changelog v1.14.0 σε όλες τις 12 γλώσσες",
+      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
     }
   },
   "communityChat": {

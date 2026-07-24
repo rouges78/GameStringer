@@ -6653,7 +6653,8 @@
       "5": "✨ feedback: In-App-Feedback-Widget (Einstellungen → Community) mit automatischem Kontext (Version, Plattform, Bildschirm, Spiel); Fail-Open-Versand + Kopier-/E-Mail-Fallback",
       "6": "✨ patch-hub: Schnellerer Hub durch clientseitiges Caching (TTL 60 s) + Schreibdrosselung; serverseitige Rate-Limiting-Migration vorbereitet",
       "7": "🐛 news-feed: RSS-Feeds lösen in der Desktop-Webview keine CORS-Fehler mehr aus",
-      "8": "• a11y: Dokumentiertes WCAG-2.1-AA-Barrierefreiheitsaudit + Übersetzung des v1.14.0-Changelogs in alle 12 Sprachen"
+      "8": "• a11y: Dokumentiertes WCAG-2.1-AA-Barrierefreiheitsaudit + Übersetzung des v1.14.0-Changelogs in alle 12 Sprachen",
+      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
     }
   },
   "communityChat": {

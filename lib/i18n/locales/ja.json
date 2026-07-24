@@ -6653,7 +6653,8 @@
       "5": "✨ feedback: アプリ内フィードバックウィジェット（設定 → コミュニティ）。自動コンテキスト（バージョン、プラットフォーム、画面、ゲーム）付き。フェイルオープン送信 + コピー/メールのフォールバック",
       "6": "✨ patch-hub: クライアント側キャッシュ（TTL 60秒）と書き込みスロットリングでHubを高速化。サーバー側のレート制限マイグレーションを準備",
       "7": "🐛 news-feed: RSSフィードがデスクトップWebViewでCORSエラーを発生させなくなりました",
-      "8": "• a11y: WCAG 2.1 AAアクセシビリティ監査を文書化 + 全12ロケールにv1.14.0変更履歴を翻訳"
+      "8": "• a11y: WCAG 2.1 AAアクセシビリティ監査を文書化 + 全12ロケールにv1.14.0変更履歴を翻訳",
+      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
     }
   },
   "communityChat": {

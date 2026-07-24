@@ -6653,7 +6653,8 @@
       "5": "✨ feedback: 应用内反馈小组件（设置 → 社区），带自动上下文（版本、平台、界面、游戏）；fail-open 发送 + 复制/邮件回退",
       "6": "✨ patch-hub: 通过客户端缓存（TTL 60 秒）+ 写入节流让 Hub 更快；已准备服务端限流迁移",
       "7": "🐛 news-feed: RSS 订阅源在桌面 webview 中不再触发 CORS 错误",
-      "8": "• a11y: 记录 WCAG 2.1 AA 无障碍审计 + 将 v1.14.0 更新日志翻译到全部 12 种语言"
+      "8": "• a11y: 记录 WCAG 2.1 AA 无障碍审计 + 将 v1.14.0 更新日志翻译到全部 12 种语言",
+      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
     }
   },
   "communityChat": {

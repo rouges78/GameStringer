@@ -22,6 +22,7 @@
 
 - Fix: i **feed RSS** non generano più errori **CORS** nella webview desktop.
 - **Audit accessibilità WCAG 2.1 AA** documentato.
+- **Dipendenze**: aggiornato **rand 0.8 → 0.9** (adattato alla nuova API: `rng()`, `random()`, `OsRng` ora `TryRngCore`, `IndexedRandom`) — suite di test Rust tutta verde.
 - Changelog in-app v1.15.0 in **12 lingue UI**.
 
 ---
@@ -50,6 +51,7 @@
 
 - Fix: **RSS feeds** no longer trigger **CORS** errors in the desktop webview.
 - Documented **WCAG 2.1 AA accessibility audit**.
+- **Dependencies**: upgraded **rand 0.8 → 0.9**, adapting to its new API (`rng()`, `random()`, `OsRng` is now `TryRngCore`, `IndexedRandom`) — full Rust test suite green.
 - In-app v1.15.0 changelog across **12 UI languages**.
 
 ---
