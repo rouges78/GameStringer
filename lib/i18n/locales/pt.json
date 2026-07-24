@@ -6643,6 +6643,17 @@
       "6": "✨ news-feed: Descrições limpas de diff do MediaWiki e ocultação de posts de ofertas",
       "7": "🐛 release: Uso de readline para confirmação de envio (travava no Windows esperando por stdin EOF)",
       "8": "• Traduzir as chaves do changelog da v1.13.0 em todos os 12 locales"
+    },
+    "v1_15_0": {
+      "0": "✨ ollama: Painel de parâmetros de inferência (predefinições Fiel/Equilibrado/Criativo + modo especialista: temperature, top_p, top_k, repeat_penalty, num_ctx, seed) para Ollama local, incluindo reflection",
+      "1": "✨ ollama: O botão 'Funções avançadas' já não devolve erro 404 — abre o novo painel /ollama-manager/advanced",
+      "2": "✨ projects: Integração com o Patch Hub: importar um .gspack regista um projeto concluído e guarda o ficheiro traduzido",
+      "3": "✨ patch-hub: Publicação pré-preenchida a partir de um projeto com o ficheiro traduzido real anexado + alternância Explorar / Os meus patches",
+      "4": "✨ patch-hub: Nova ação 'Aplicar ao jogo' (seletor de pasta + cópia de segurança .bak automática)",
+      "5": "✨ feedback: Widget de feedback integrado (Definições → Comunidade) com contexto automático (versão, plataforma, ecrã, jogo); envio fail-open + alternativa de cópia/e-mail",
+      "6": "✨ patch-hub: Hub mais rápido através de cache do lado do cliente (TTL de 60 s) + limitação de escritas; migração de limitação de taxa do lado do servidor preparada",
+      "7": "🐛 news-feed: Os feeds RSS já não provocam erros CORS na webview de ambiente de trabalho",
+      "8": "• a11y: Auditoria de acessibilidade WCAG 2.1 AA documentada + tradução do changelog v1.14.0 nos 12 idiomas"
     }
   },
   "communityChat": {

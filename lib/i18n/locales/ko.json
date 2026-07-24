@@ -6643,6 +6643,17 @@
       "6": "✨ news-feed: 깔끔한 MediaWiki diff 설명 및 할인 게시물 숨기기",
       "7": "🐛 release: 배포 확인에 readline 사용 (Windows에서 stdin EOF를 대기하며 멈추던 현상 수정)",
       "8": "• 12개 모든 로캘에 대해 v1.13.0 변경 로그 키 번역"
+    },
+    "v1_15_0": {
+      "0": "✨ ollama: 추론 매개변수 패널(충실/균형/창의 프리셋 + 전문가 모드: temperature, top_p, top_k, repeat_penalty, num_ctx, seed), 로컬 Ollama용, reflection 포함",
+      "1": "✨ ollama: '고급 기능' 버튼이 더 이상 404를 반환하지 않고 새로운 /ollama-manager/advanced 패널을 엽니다",
+      "2": "✨ projects: Patch Hub 연동: .gspack 가져오기로 완료된 프로젝트를 등록하고 번역된 파일을 저장",
+      "3": "✨ patch-hub: 프로젝트에서 미리 채워 게시하며 실제 번역 파일 첨부 + 탐색/내 패치 전환",
+      "4": "✨ patch-hub: 새로운 '게임에 적용' 작업(폴더 선택 + 자동 .bak 백업)",
+      "5": "✨ feedback: 인앱 피드백 위젯(설정 → 커뮤니티), 자동 컨텍스트(버전, 플랫폼, 화면, 게임) 포함; fail-open 전송 + 복사/이메일 대체",
+      "6": "✨ patch-hub: 클라이언트 측 캐싱(TTL 60초)과 쓰기 스로틀링으로 Hub 속도 향상; 서버 측 속도 제한 마이그레이션 준비",
+      "7": "🐛 news-feed: RSS 피드가 데스크톱 웹뷰에서 더 이상 CORS 오류를 일으키지 않습니다",
+      "8": "• a11y: WCAG 2.1 AA 접근성 감사 문서화 + 전체 12개 로케일에 v1.14.0 변경 로그 번역"
     }
   },
   "communityChat": {

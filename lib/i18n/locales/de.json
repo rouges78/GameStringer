@@ -6643,6 +6643,17 @@
       "6": "✨ news-feed: Saubere MediaWiki-Diff-Beschreibungen und Ausblenden von Deal-Beiträgen",
       "7": "🐛 release: readline für Release-Bestätigung verwenden (hing unter Windows beim Warten auf stdin EOF)",
       "8": "• Changelog-Schlüssel für v1.13.0 in alle 12 Locales übersetzen"
+    },
+    "v1_15_0": {
+      "0": "✨ ollama: Panel für Inferenzparameter (Presets Treu/Ausgewogen/Kreativ + Expertenmodus: temperature, top_p, top_k, repeat_penalty, num_ctx, seed) für lokales Ollama, inklusive Reflection",
+      "1": "✨ ollama: Die Schaltfläche „Erweiterte Funktionen“ liefert keinen 404 mehr – sie öffnet das neue Panel /ollama-manager/advanced",
+      "2": "✨ projects: Patch-Hub-Integration: Der Import einer .gspack registriert ein abgeschlossenes Projekt und speichert die übersetzte Datei",
+      "3": "✨ patch-hub: Veröffentlichen aus einem Projekt vorausgefüllt, mit angehängter echter übersetzter Datei + Umschalter Entdecken / Meine Patches",
+      "4": "✨ patch-hub: Neue Aktion „Auf Spiel anwenden“ (Ordnerauswahl + automatisches .bak-Backup)",
+      "5": "✨ feedback: In-App-Feedback-Widget (Einstellungen → Community) mit automatischem Kontext (Version, Plattform, Bildschirm, Spiel); Fail-Open-Versand + Kopier-/E-Mail-Fallback",
+      "6": "✨ patch-hub: Schnellerer Hub durch clientseitiges Caching (TTL 60 s) + Schreibdrosselung; serverseitige Rate-Limiting-Migration vorbereitet",
+      "7": "🐛 news-feed: RSS-Feeds lösen in der Desktop-Webview keine CORS-Fehler mehr aus",
+      "8": "• a11y: Dokumentiertes WCAG-2.1-AA-Barrierefreiheitsaudit + Übersetzung des v1.14.0-Changelogs in alle 12 Sprachen"
     }
   },
   "communityChat": {

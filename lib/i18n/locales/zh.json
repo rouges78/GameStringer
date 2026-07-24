@@ -6643,6 +6643,17 @@
       "6": "✨ news-feed: 干净的 MediaWiki 差异描述并隐藏优惠帖子",
       "7": "🐛 release: 使用 readline 进行发布确认（此前在 Windows 上因等待 stdin EOF 而卡死）",
       "8": "• 翻译所有 12 个本地化版本的 v1.13.0 更新日志键值"
+    },
+    "v1_15_0": {
+      "0": "✨ ollama: 推理参数面板（忠实/平衡/创意预设 + 专家模式：temperature、top_p、top_k、repeat_penalty、num_ctx、seed），适用于本地 Ollama，包含 reflection",
+      "1": "✨ ollama: “高级功能”按钮不再返回 404，改为打开新的 /ollama-manager/advanced 面板",
+      "2": "✨ projects: Patch Hub 集成：导入 .gspack 会注册一个已完成的项目并保存翻译后的文件",
+      "3": "✨ patch-hub: 从项目预填并发布，附带真实的翻译文件 + 探索/我的补丁 切换",
+      "4": "✨ patch-hub: 新增“应用到游戏”操作（文件夹选择器 + 自动 .bak 备份）",
+      "5": "✨ feedback: 应用内反馈小组件（设置 → 社区），带自动上下文（版本、平台、界面、游戏）；fail-open 发送 + 复制/邮件回退",
+      "6": "✨ patch-hub: 通过客户端缓存（TTL 60 秒）+ 写入节流让 Hub 更快；已准备服务端限流迁移",
+      "7": "🐛 news-feed: RSS 订阅源在桌面 webview 中不再触发 CORS 错误",
+      "8": "• a11y: 记录 WCAG 2.1 AA 无障碍审计 + 将 v1.14.0 更新日志翻译到全部 12 种语言"
     }
   },
   "communityChat": {
