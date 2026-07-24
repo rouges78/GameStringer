@@ -4,6 +4,7 @@ import { type BatchHarvestResult, type HarvestInput } from '@/lib/context-harves
 import { type GameGenre } from './genre-prompts';
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
+import { buildOllamaOptions } from './ollama-options';
 import { httpPostJson } from './http-proxy';
 import { isTauri } from '@/lib/tauri-api';
 
@@ -873,7 +874,7 @@ async function translateWithTranslateGemma(
         model: 'translategemma',
         messages: [{ role: 'user', content: prompt }],
         stream: false,
-        options: { temperature: 0.2, num_predict: 4096 },
+        options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 4096 },
       }),
       timeoutMs: 120000,
     });
@@ -904,7 +905,7 @@ async function translateWithTranslateGemma(
             model: 'translategemma',
             messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}: ${text}` }],
             stream: false,
-            options: { temperature: 0.2, num_predict: 500 },
+            options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 500 },
           }),
           timeoutMs: 60000,
         });
@@ -1041,7 +1042,7 @@ Rules:
             { role: 'user', content: inputText },
           ],
           stream: false,
-          options: { temperature: 0.1, num_predict: numPredict },
+          options: { ...buildOllamaOptions({ temperature: 0.1 }), num_predict: numPredict },
         }),
         timeoutMs: 90000,
       });
@@ -1407,7 +1408,7 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
             model: selectedModel,
             messages,
             stream: false,
-            options: { temperature: 0.1, num_predict: Math.max(256, inputText.length * 3) },
+            options: { ...buildOllamaOptions({ temperature: 0.1 }), num_predict: Math.max(256, inputText.length * 3) },
           }),
           timeoutMs: 60000,
         });

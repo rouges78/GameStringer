@@ -23,6 +23,7 @@
 
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from './ollama-http';
+import { buildOllamaOptions } from './ollama-options';
 import { httpPostJson } from './http-proxy';
 import { extractPlaceholders, autoFixPlaceholders, placeholdersPreserved } from './placeholder-guard';
 
@@ -360,7 +361,7 @@ const chatOllama: ChatFn = async (_key, system, user) => {
         { role: 'user', content: user },
       ],
       stream: false,
-      options: { temperature: 0.2, num_predict: 4096 },
+      options: { ...buildOllamaOptions({ temperature: 0.2 }), num_predict: 4096 },
     }),
     timeoutMs: 90000,
   });
