@@ -1,5 +1,12 @@
 ﻿# GameStringer - Kompletny przewodnik
 
+## 🆕 Nowości w v1.15.0
+
+- ⚙️ **Parametry inferencji Ollama**: nowa strona *Ollama Manager → Zaawansowane* z 3 presetami (Wierny/Zrównoważony/Kreatywny) oraz trybem eksperta do regulacji `temperature`, `top_p`, `top_k`, `repeat_penalty`, `num_ctx` i `seed` modeli lokalnych.
+- 🚀 **Projekty ↔ Patch Hub**: każdy zaimportowany `.gspack` jest rejestrowany jako ukończony projekt; z Projektów możesz **Zastosować do gry** (z kopią zapasową `.bak`) lub **Opublikować** wstępnie wypełnione tłumaczenie w Patch Hub.
+- 💬 **Widget opinii** w *Ustawienia → Społeczność*: zgłaszaj błędy lub pomysły z automatycznie dołączonym kontekstem technicznym (wersja, platforma, ekran).
+- ⚡ **Szybszy Patch Hub**: lokalna pamięć podręczna listy i limity antynadużyciowe, dzięki którym przełączasz się między kartami bez ponownego ładowania z serwera za każdym razem.
+
 ## 🆕 Nowości w v1.12.0
 
 - 👁️ Tłumaczenie z kontekstem wizualnym (VLM): AI widzi ekran i tłumaczy z kontekstem, rozwiązując wieloznaczne słowa (np. "Chest" = skrzynia lub klatka piersiowa). Lokalnie (Ollama) lub OpenAI/Gemini
@@ -38,6 +45,9 @@
 17. [Bezpieczeństwo i Recovery Key](#faza-17-bezpieczeństwo)
 18. [Rozwiązywanie problemów](#faza-18-rozwiązywanie-problemów)
 19. [Czat Społeczności (Czas Rzeczywisty)](#faza-19-czat-społeczności) *(NOWOŚĆ v1.5.0)*
+20. [Projekty i Patch Hub](#projekty-i-patch-hub) *(ZAKTUALIZOWANO v1.15.0)*
+21. [Parametry Inferencji Ollama](#parametry-inferencji-ollama) *(NOWOŚĆ v1.15.0)*
+22. [Wyślij Opinię](#wyślij-opinię) *(NOWOŚĆ v1.15.0)*
 
 ---
 
@@ -480,6 +490,126 @@ Kliknij **Publish patch** (Opublikuj łatkę), aby otworzyć formularz publikacj
 
 ---
 
+## Projekty i Patch Hub
+
+*(ZAKTUALIZOWANO v1.15.0)*
+
+Strona **Projekty** gromadzi w jednym miejscu każdą grę, którą tłumaczysz lub już przetłumaczyłeś — na podstawie Quality Scoring, słowników, Translation Memory i biblioteki gier. Stąd zarządzasz całym cyklem życia tłumaczenia: otwieranie, stosowanie, publikowanie.
+
+### Import `.gspack` → projekt
+
+Gdy **importujesz pakiet `.gspack`** (pobrany z Patch Hub lub utworzony przez Ciebie), GameStringer nie tylko go stosuje: **rejestruje ukończony projekt** i **zapisuje przetłumaczone pliki** lokalnie. Gra pojawia się wtedy w Projektach na 100 %, gotowa do ponownego zastosowania lub opublikowania później bez powtarzania żadnej pracy.
+
+### Zastosuj do gry
+
+Dla **ukończonych** projektów przycisk **"Zastosuj do gry"** (ikona folderu) kopiuje przetłumaczone pliki bezpośrednio do instalacji:
+
+1. Wybierz **folder instalacyjny** gry
+2. Przed nadpisaniem istniejącego pliku obok oryginału tworzona jest **kopia zapasowa `.bak`**
+3. **Bezpieczeństwo**: jeśli utworzenie kopii zapasowej pliku się nie powiedzie, ten plik jest **pomijany** (nigdy nie nadpisywany bez kopii bezpieczeństwa)
+4. Po zakończeniu zobaczysz, ile plików zapisano, a ile pominięto
+
+Aby przywrócić oryginał, po prostu zmień nazwę pliku `.bak`, usuwając rozszerzenie.
+
+### Publikuj (wstępnie wypełnione)
+
+Przycisk **"Opublikuj w Patch Hub"** (ikona udostępniania) wysyła tłumaczenie do społeczności. Publikuje **prawdziwy przetłumaczony plik** (nie tylko manifest metadanych), z nazwą, grą, językami i procentem ukończenia **już wstępnie wypełnionymi**. Paczka trafia do **kolejki moderacji**, zanim stanie się publicznie widoczna.
+
+> Publikowanie wymaga zalogowania do **Community Hub** (konta oddzielnego od Twojego profilu lokalnego).
+
+### Eksploruj / Moje łatki
+
+Strona **Patch Hub** ma dwie karty:
+
+- **Eksploruj** — wszystkie paczki opublikowane przez społeczność, z wyszukiwaniem i sortowaniem (najczęściej pobierane, najwyżej oceniane, ostatnio zaktualizowane, ukończenie)
+- **Moje łatki** — tylko paczki opublikowane przez Ciebie za pomocą bieżącego profilu
+
+### Wydajność
+
+Listy Patch Hub używają **lokalnej pamięci podręcznej** (około 60 sekund): przełączanie się między kartami nie ładuje już za każdym razem z serwera. Pamięć podręczna odświeża się automatycznie po publikacji lub pobraniu. Publikowanie i zgłaszanie mają także niewielki **minimalny odstęp** między wysyłkami, aby nie przeciążać współdzielonego serwera.
+
+---
+
+## Parametry Inferencji Ollama
+
+*(NOWOŚĆ v1.15.0)*
+
+Gdy tłumaczysz za pomocą **lokalnego modelu Ollama**, możesz kontrolować, *jak* model generuje tekst. Otwórz stronę z **Ollama Manager → "Zaawansowane"** (ścieżka `/ollama-manager/advanced`).
+
+> Jeśli nic nie zmienisz, pozostają aktywne zalecane wartości domyślne: tłumaczenie zachowuje się dokładnie jak wcześniej. Parametry zaawansowane są wysyłane do Ollama **tylko** wtedy, gdy je ustawisz.
+
+### Presety
+
+Trzy gotowe profile, dostrojone do tłumaczenia gier wideo:
+
+| Preset | Temperature | `num_ctx` | Kiedy używać |
+|--------|-------------|-----------|--------------|
+| 🎯 **Wierny** | 0.1 | 8192 | Maksymalna wierność tekstowi, mało inwencji. **Zalecany** do tłumaczenia. |
+| ⚖️ **Zrównoważony** | 0.3 | 4096 | Kompromis między wiernością a naturalnością. |
+| ✨ **Kreatywny** | 0.7 | 4096 | Więcej swobody stylistycznej: do dialogów i wyrazistego tonu. |
+
+### Tryb eksperta
+
+Rozwiń **"Tryb eksperta"**, aby dostroić każdy parametr suwakami:
+
+| Parametr | Efekt |
+|----------|-------|
+| `temperature` | Losowość generowania. Niska = bardziej deterministyczna i wierna; wysoka = bardziej zróżnicowana i kreatywna. |
+| `top_p` | *Nucleus sampling*: bierze pod uwagę tylko najbardziej prawdopodobne tokeny aż do tej masy prawdopodobieństwa. Niższa = bardziej skupiona. |
+| `top_k` | Ogranicza wybór do k najbardziej prawdopodobnych tokenów na każdym kroku. Niższa = mniej dygresji. |
+| `repeat_penalty` | Zniechęca do powtarzania słów. Powyżej 1.0 redukuje pętle; zbyt wysoka może zniekształcić tekst. |
+| `num_ctx` | Okno kontekstu (tokeny trzymane w pamięci). **Szersze = brak obcinania długich tekstów**, ale więcej RAM/VRAM. |
+| `seed` *(opcjonalny)* | Ustala ziarno losowe dla **powtarzalnych** wyników (przydatne do benchmarków). Wyłączone = każde uruchomienie może się różnić. |
+
+Edycja dowolnej wartości automatycznie przełącza preset na **"custom"**.
+
+### Kiedy i dlaczego ich używać
+
+- **Wierność vs. kreatywność**: do tłumaczenia preferuj **niską temperaturę** (preset Wierny) — mniej inwencji, więcej wierności. Podnoś ją tylko dla dialogów, w których chcesz bardziej wyrazistego tonu.
+- **Długie pliki**: jeśli tłumaczysz długie teksty i zauważasz obcinanie lub utratę kontekstu, zwiększ **`num_ctx`** (kosztem większego RAM/VRAM).
+- **Powtarzalność**: włącz **`seed`**, gdy chcesz porównać dwa modele lub ponownie uruchomić to samo tłumaczenie i uzyskać dokładnie ten sam wynik.
+
+### Jak ich używać
+
+1. Otwórz **Ollama Manager** z paska bocznego i kliknij **"Zaawansowane"**
+2. Wybierz preset (zacznij od **Wierny** do tłumaczenia) lub otwórz **Tryb eksperta**
+3. Dostosuj parametry (np. zwiększ `num_ctx` dla długich plików, włącz `seed` dla powtarzalnych wyników)
+4. Kliknij **"Zapisz"** — parametry są przechowywane dla kolejnych tłumaczeń
+
+> **Zakres**: te parametry dotyczą tłumaczeń wykonywanych z **lokalnymi modelami Ollama** (w tym przebiegu *reflection*). Nie wpływają na dostawców webowych (Gemini, Groq itp.).
+
+---
+
+## Wyślij Opinię
+
+*(NOWOŚĆ v1.15.0)*
+
+Możesz zgłosić błąd, zaproponować pomysł lub powiedzieć nam, co myślisz, bezpośrednio z aplikacji, bez opuszczania GameStringer.
+
+### Jak wysłać
+
+1. Przejdź do **Ustawienia → Społeczność** (karta Community Hub)
+2. W polu **"Wyślij opinię"** kliknij **"Wyślij opinię"**
+3. Wybierz **kategorię** — 🐞 Błąd, 💡 Pomysł lub 💬 Inne
+4. Napisz wiadomość i kliknij **"Wyślij"**
+
+### Kontekst dołączany automatycznie
+
+Aby pomóc nam zrozumieć problem, do wiadomości dołączany jest **minimalny kontekst techniczny**:
+
+- **Wersja** aplikacji
+- **Platforma** (system operacyjny + Tauri/Web)
+- **Ekran**, na którym byłeś (bieżąca ścieżka)
+- **Gra** (tylko jeśli pracowałeś nad konkretnym tytułem)
+
+> **Prywatność**: żadnych danych osobowych. Tylko wersja, platforma i bieżący ekran.
+
+### Jeśli backend jest niedostępny
+
+Widget jest **fail-open**: jeśli serwer nie jest skonfigurowany lub jesteś offline, wiadomość nie ginie. Nadal możesz **skopiować raport** do schowka lub wysłać go **e-mailem** jednym kliknięciem — kontekst techniczny jest już zawarty w tekście.
+
+---
+
 ## Nowości v1.8.1
 
 ### Nakładka tłumaczenia na żywo
@@ -649,4 +779,4 @@ Optymalizacja czasu startu:
 
 ---
 
-GameStringer v1.9.0 - Przewodnik zaktualizowany 26.04.2026
+GameStringer v1.15.0 - Przewodnik zaktualizowany 24.07.2026
