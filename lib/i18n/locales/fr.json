@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "Projets totaux",
     "translatedStringsLabel": "Chaînes traduites",
-    "searchPh": "Rechercher des projets..."
+    "searchPh": "Rechercher des projets...",
+    "applyTitle": "Appliquer au jeu",
+    "applying": "Application au jeu…",
+    "applySuccess": "Traduction appliquée au jeu",
+    "applyError": "Échec de l'application",
+    "applyNoContent": "Aucun fichier traduit enregistré pour ce projet. Réimportez le pack.",
+    "applyPickFolder": "Choisissez le dossier d'installation du jeu"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "Publier",
     "integrityBadge": "Intégrité vérifiée",
     "integrityDesc": "Contenu haché en SHA-256 : re-vérifié automatiquement à chaque téléchargement, un pack altéré est rejeté.",
-    "publishRedistributionBlocked": "Publication bloquée : le pack semble contenir du texte original redistribuable, pas seulement des traductions. Ne publiez que les différences (patch)."
+    "publishRedistributionBlocked": "Publication bloquée : le pack semble contenir du texte original redistribuable, pas seulement des traductions. Ne publiez que les différences (patch).",
+    "scopeExplore": "Explorer",
+    "scopeMine": "Mes correctifs",
+    "emptyMineTitle": "Vous n'avez pas encore publié de correctifs",
+    "emptyMineHint": "Publiez une traduction depuis un projet terminé pour la voir ici."
   },
   "predictionToolPage": {
     "backToLibrary": "Retour à la Bibliothèque",
@@ -7273,5 +7283,91 @@
     "importFailed": "Échec de l'import",
     "skippedLabel": "déjà présents",
     "mergeHint": "L'import n'écrase jamais vos entrées : il ajoute uniquement les nouveaux termes, modifiables et marqués comme flexibles."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Paramètres d'inférence Ollama",
+    "subtitle": "Réglez la façon dont les modèles locaux génèrent les traductions",
+    "back": "Retour",
+    "intro": "Ces paramètres contrôlent la façon dont le modèle local génère le texte pendant la traduction. Une température plus basse rend la traduction plus fidèle et prévisible ; un num_ctx plus grand évite les coupures sur les fichiers longs. Si vous ne changez rien, les valeurs par défaut recommandées restent actives.",
+    "presetsLabel": "Préréglages",
+    "preset": {
+      "fedele": {
+        "name": "Fidèle",
+        "desc": "Peu d'invention, fidélité maximale au texte. Recommandé pour la traduction."
+      },
+      "bilanciato": {
+        "name": "Équilibré",
+        "desc": "Compromis entre fidélité et naturel."
+      },
+      "creativo": {
+        "name": "Créatif",
+        "desc": "Plus de liberté stylistique. Pour les dialogues et le ton expressif."
+      }
+    },
+    "expertToggle": "Mode expert",
+    "customBadge": "personnalisé",
+    "param": {
+      "temperature": {
+        "label": "Température",
+        "help": "Aléa de la génération. Basse = plus déterministe et fidèle ; haute = plus variée et créative."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "Ne considère que les tokens les plus probables jusqu'à cette masse de probabilité. Plus bas = plus focalisé."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Limite le choix aux k tokens les plus probables à chaque étape. Plus bas = moins de digressions."
+      },
+      "repeat_penalty": {
+        "label": "Pénalité de répétition",
+        "help": "Décourage la répétition de mots. Au-dessus de 1.0 réduit les boucles ; trop élevé peut dénaturer le texte."
+      },
+      "num_ctx": {
+        "label": "Fenêtre de contexte",
+        "help": "Nombre de tokens que le modèle garde en mémoire. Plus grand = pas de coupures sur les longs textes, mais plus de RAM/VRAM."
+      },
+      "seed": {
+        "label": "Graine fixe",
+        "help": "Fixe la graine aléatoire pour des résultats reproductibles (utile pour les benchmarks). Désactivé = chaque exécution peut varier."
+      }
+    },
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "reset": "Réinitialiser",
+    "appliesTo": "Ces paramètres s'appliquent aux traductions effectuées avec les modèles Ollama locaux (y compris la reflection). Ils n'affectent pas les fournisseurs web (Gemini, Groq, etc.)."
+  },
+  "feedback": {
+    "cardTitle": "Envoyer un commentaire",
+    "cardDesc": "Signalez un bug, proposez une idée ou dites-nous ce que vous en pensez. Le contexte technique (version, plateforme, écran) est joint automatiquement.",
+    "openButton": "Envoyer un commentaire",
+    "dialogTitle": "Envoyer un commentaire",
+    "dialogDesc": "Votre message nous aide à améliorer GameStringer. Si le backend n'est pas configuré, vous pouvez tout de même copier le rapport ou l'envoyer par e-mail.",
+    "categoryLabel": "Catégorie",
+    "category": {
+      "bug": "Bug",
+      "idea": "Idée",
+      "other": "Autre"
+    },
+    "messageLabel": "Votre message",
+    "messagePlaceholder": "Décrivez le problème, l'idée ou le commentaire…",
+    "contextTitle": "Contexte joint",
+    "contextNote": "Aucune donnée personnelle : uniquement la version, la plateforme et l'écran actuel.",
+    "ctxVersion": "Version",
+    "ctxPlatform": "Plateforme",
+    "ctxRoute": "Écran",
+    "ctxGame": "Jeu",
+    "submit": "Envoyer",
+    "copyReport": "Copier le rapport",
+    "email": "E-mail",
+    "messageRequired": "Rédigez un message avant d'envoyer",
+    "copied": "Rapport copié dans le presse-papiers",
+    "copyFailed": "Échec de la copie",
+    "sentDb": "Commentaire envoyé. Merci !",
+    "sentFallbackCopied": "Rapport copié dans le presse-papiers : collez-le dans un e-mail pour nous l'envoyer.",
+    "sentFallbackManual": "Utilisez le bouton E-mail ou Copier le rapport pour nous envoyer votre commentaire.",
+    "thanksTitle": "Merci pour votre commentaire !",
+    "thanksDb": "Nous l'avons bien reçu : cela nous aide à améliorer l'application.",
+    "thanksFallback": "Backend indisponible : utilisez E-mail ou Copier le rapport pour nous l'envoyer."
   }
 }

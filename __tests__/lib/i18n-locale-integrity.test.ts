@@ -111,17 +111,23 @@ const en = flatten(enJson as Json);
 // 2026-07-10 i18n aiQuality/semantic/lore: tradotte le 34 chiavi in 10 lingue.
 // Cognato romanzo legittimo esposto: pt aiQuality.modeAlways "Sempre" (= it, en "Always").
 // Baseline: pt 83->84. es/fr/de/pl/ja/zh/ko/ru invariati.
+// 2026-07-24 i18n ollamaAdvancedPage + feedback + projectsPage.apply* (propagate in
+// tutte le lingue): nuovi cognati romanzi legittimi identici all'IT ma corretti nella
+// lingua target — es +2 (param.temperature.label "Temperatura", preset.creativo.name
+// "Creativo"), pt +2 (param.temperature.label "Temperatura", feedback.categoryLabel
+// "Categoria"), pl +1 (param.temperature.label "Temperatura"). Baseline: es 64->66,
+// pt 84->86, pl 15->16. fr/de/ja/zh/ko/ru invariati (0 missing ovunque).
 const locales: { name: string; json: Json; maxMissing: number; maxLeftover: number }[] = [
   { name: 'en', json: enJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ru', json: ruJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 64 },
+  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 66 },
   { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 2 },
   { name: 'de', json: deJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ja', json: jaJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'zh', json: zhJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ko', json: koJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 84 },
-  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 15 },
+  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 86 },
+  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 16 },
 ];
 
 describe('integrità dei locale i18n', () => {

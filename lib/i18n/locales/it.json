@@ -441,7 +441,13 @@
     "deleteTitle": "Elimina",
     "totalProjectsLabel": "Progetti totali",
     "translatedStringsLabel": "Stringhe tradotte",
-    "searchPh": "Cerca progetti..."
+    "searchPh": "Cerca progetti...",
+    "applyTitle": "Applica al gioco",
+    "applying": "Applico al gioco…",
+    "applySuccess": "Traduzione applicata al gioco",
+    "applyError": "Applicazione non riuscita",
+    "applyNoContent": "Nessun file tradotto salvato per questo progetto. Re-importa il pacchetto.",
+    "applyPickFolder": "Scegli la cartella d'installazione del gioco"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossibile leggere gli appunti",
@@ -7056,7 +7062,11 @@
     "publishConfirm": "Pubblica",
     "integrityBadge": "Integrità verificata",
     "integrityDesc": "Contenuto con hash SHA-256: riverificato automaticamente a ogni download, un pack manomesso viene rifiutato.",
-    "publishRedistributionBlocked": "Pubblicazione bloccata: il pack sembra contenere testo originale ridistribuibile, non solo traduzioni. Pubblica solo le differenze (patch)."
+    "publishRedistributionBlocked": "Pubblicazione bloccata: il pack sembra contenere testo originale ridistribuibile, non solo traduzioni. Pubblica solo le differenze (patch).",
+    "scopeExplore": "Esplora",
+    "scopeMine": "Le mie patch",
+    "emptyMineTitle": "Non hai ancora pubblicato patch",
+    "emptyMineHint": "Pubblica una traduzione da un progetto completato per vederla qui."
   },
   "predictionToolPage": {
     "backToLibrary": "Torna alla Libreria",
@@ -7213,6 +7223,39 @@
     "settingLabel": "Invia crash report anonimi",
     "settingDesc": "Quando qualcosa si rompe (crash, errori di pipeline), invia un report anonimo con categoria dell'errore e stack ridotto — mai percorsi, file o dati personali. Aiuta a correggere i bug che altrimenti nessuno vedrebbe."
   },
+  "feedback": {
+    "cardTitle": "Invia feedback",
+    "cardDesc": "Segnala un bug, proponi un'idea o dicci cosa ne pensi. Il contesto tecnico (versione, piattaforma, schermata) viene allegato automaticamente.",
+    "openButton": "Invia feedback",
+    "dialogTitle": "Invia feedback",
+    "dialogDesc": "Il tuo messaggio ci aiuta a migliorare GameStringer. Se il backend non è configurato, puoi comunque copiare il report o inviarlo via email.",
+    "categoryLabel": "Categoria",
+    "category": {
+      "bug": "Bug",
+      "idea": "Idea",
+      "other": "Altro"
+    },
+    "messageLabel": "Il tuo messaggio",
+    "messagePlaceholder": "Descrivi il problema, l'idea o il feedback…",
+    "contextTitle": "Contesto allegato",
+    "contextNote": "Nessun dato personale: solo versione, piattaforma e schermata corrente.",
+    "ctxVersion": "Versione",
+    "ctxPlatform": "Piattaforma",
+    "ctxRoute": "Schermata",
+    "ctxGame": "Gioco",
+    "submit": "Invia",
+    "copyReport": "Copia report",
+    "email": "Email",
+    "messageRequired": "Scrivi un messaggio prima di inviare",
+    "copied": "Report copiato negli appunti",
+    "copyFailed": "Copia non riuscita",
+    "sentDb": "Feedback inviato. Grazie!",
+    "sentFallbackCopied": "Report copiato negli appunti: incollalo in una email per inviarcelo.",
+    "sentFallbackManual": "Usa il pulsante Email o Copia report per inviarci il feedback.",
+    "thanksTitle": "Grazie per il feedback!",
+    "thanksDb": "Lo abbiamo ricevuto: ci aiuta a migliorare l'app.",
+    "thanksFallback": "Backend non disponibile: usa Email o Copia report per inviarcelo."
+  },
   "fontCheck": {
     "title": "Verifica font",
     "desc": "Controlla se i font del gioco hanno i glifi per la tua lingua: una traduzione perfetta che mostra □□□ è comunque un fallimento.",
@@ -7273,5 +7316,58 @@
     "importFailed": "Import non riuscito",
     "skippedLabel": "già presenti",
     "mergeHint": "L'import non sovrascrive mai le tue voci: aggiunge solo i termini nuovi, modificabili e marcati come flessibili."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Parametri di inferenza Ollama",
+    "subtitle": "Regola come i modelli locali generano le traduzioni",
+    "back": "Indietro",
+    "intro": "Questi parametri controllano come il modello locale genera il testo durante la traduzione. Una temperatura più bassa rende la traduzione più fedele e prevedibile; un num_ctx più ampio evita tagli sui file lunghi. Se non tocchi nulla, restano attivi i valori di default consigliati.",
+    "presetsLabel": "Preset",
+    "preset": {
+      "fedele": {
+        "name": "Fedele",
+        "desc": "Poca invenzione, massima aderenza al testo. Consigliato per la traduzione."
+      },
+      "bilanciato": {
+        "name": "Bilanciato",
+        "desc": "Compromesso tra fedeltà e naturalezza."
+      },
+      "creativo": {
+        "name": "Creativo",
+        "desc": "Più libertà stilistica. Per dialoghi e tono espressivo."
+      }
+    },
+    "expertToggle": "Modalità esperto",
+    "customBadge": "personalizzato",
+    "param": {
+      "temperature": {
+        "label": "Temperatura",
+        "help": "Casualità della generazione. Bassa = più deterministica e fedele; alta = più varia e creativa."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "Considera solo i token più probabili fino a questa massa di probabilità. Più basso = più focalizzato."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Limita la scelta ai k token più probabili a ogni passo. Più basso = meno divagazioni."
+      },
+      "repeat_penalty": {
+        "label": "Penalità ripetizioni",
+        "help": "Scoraggia la ripetizione di parole. Sopra 1.0 riduce i loop; troppo alto può snaturare il testo."
+      },
+      "num_ctx": {
+        "label": "Finestra di contesto",
+        "help": "Numero di token che il modello tiene in memoria. Più ampio = niente tagli sui testi lunghi, ma più RAM/VRAM."
+      },
+      "seed": {
+        "label": "Seed fisso",
+        "help": "Fissa il seme casuale per risultati riproducibili (utile ai benchmark). Disattivato = ogni run può variare."
+      }
+    },
+    "save": "Salva",
+    "saved": "Salvato",
+    "reset": "Ripristina default",
+    "appliesTo": "Questi parametri si applicano alle traduzioni eseguite con i modelli Ollama locali (inclusa la reflection). Non influiscono sui provider web (Gemini, Groq, ecc.)."
   }
 }

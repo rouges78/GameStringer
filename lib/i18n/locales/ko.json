@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "총 프로젝트",
     "translatedStringsLabel": "번역된 문자열",
-    "searchPh": "프로젝트 검색..."
+    "searchPh": "프로젝트 검색...",
+    "applyTitle": "게임에 적용",
+    "applying": "게임에 적용 중…",
+    "applySuccess": "번역을 게임에 적용했습니다",
+    "applyError": "적용 실패",
+    "applyNoContent": "이 프로젝트에 저장된 번역 파일이 없습니다. 팩을 다시 가져오세요.",
+    "applyPickFolder": "게임 설치 폴더 선택"
   },
   "emulatorTranslator": {
     "clipboardError": "클립보드를 읽을 수 없습니다",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "게시",
     "integrityBadge": "무결성 검증됨",
     "integrityDesc": "SHA-256 해시 콘텐츠: 다운로드할 때마다 자동으로 재검증되며 변조된 팩은 거부됩니다.",
-    "publishRedistributionBlocked": "게시가 차단되었습니다: 이 팩은 번역뿐 아니라 재배포 가능한 원문을 포함한 것으로 보입니다. 차이(패치)만 게시하세요."
+    "publishRedistributionBlocked": "게시가 차단되었습니다: 이 팩은 번역뿐 아니라 재배포 가능한 원문을 포함한 것으로 보입니다. 차이(패치)만 게시하세요.",
+    "scopeExplore": "둘러보기",
+    "scopeMine": "내 패치",
+    "emptyMineTitle": "아직 게시한 패치가 없습니다",
+    "emptyMineHint": "완료된 프로젝트에서 번역을 게시하면 여기에 표시됩니다."
   },
   "predictionToolPage": {
     "backToLibrary": "라이브러리로 돌아가기",
@@ -7273,5 +7283,91 @@
     "importFailed": "가져오기 실패",
     "skippedLabel": "이미 있음",
     "mergeHint": "가져오기는 기존 항목을 덮어쓰지 않습니다. 새 용어만 추가되며 편집 가능하고 유연으로 표시됩니다."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Ollama 추론 매개변수",
+    "subtitle": "로컬 모델이 번역을 생성하는 방식을 조정합니다",
+    "back": "뒤로",
+    "intro": "이 매개변수는 번역 중 로컬 모델이 텍스트를 생성하는 방식을 제어합니다. temperature가 낮을수록 번역이 더 충실하고 예측 가능해지며, num_ctx가 클수록 긴 파일이 잘리는 것을 방지합니다. 아무것도 바꾸지 않으면 권장 기본값이 유지됩니다.",
+    "presetsLabel": "프리셋",
+    "preset": {
+      "fedele": {
+        "name": "충실",
+        "desc": "창작을 줄이고 원문에 최대한 충실. 번역에 권장."
+      },
+      "bilanciato": {
+        "name": "균형",
+        "desc": "충실함과 자연스러움 사이의 절충."
+      },
+      "creativo": {
+        "name": "창의",
+        "desc": "문체적 자유도가 높음. 대사와 표현력 있는 톤에 적합."
+      }
+    },
+    "expertToggle": "전문가 모드",
+    "customBadge": "사용자 지정",
+    "param": {
+      "temperature": {
+        "label": "Temperature",
+        "help": "생성의 무작위성. 낮음 = 더 결정적이고 충실함; 높음 = 더 다양하고 창의적."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "이 확률 질량까지 가장 가능성 높은 토큰만 고려합니다. 낮을수록 더 집중됩니다."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "각 단계에서 가장 가능성 높은 k개 토큰으로 선택을 제한합니다. 낮을수록 이탈이 줄어듭니다."
+      },
+      "repeat_penalty": {
+        "label": "반복 페널티",
+        "help": "단어 반복을 억제합니다. 1.0 이상이면 루프를 줄이고, 너무 높으면 텍스트가 왜곡될 수 있습니다."
+      },
+      "num_ctx": {
+        "label": "컨텍스트 창",
+        "help": "모델이 메모리에 유지하는 토큰 수. 클수록 긴 텍스트가 잘리지 않지만 RAM/VRAM을 더 사용합니다."
+      },
+      "seed": {
+        "label": "고정 시드",
+        "help": "재현 가능한 결과를 위해 난수 시드를 고정합니다(벤치마크에 유용). 꺼짐 = 실행마다 달라질 수 있습니다."
+      }
+    },
+    "save": "저장",
+    "saved": "저장됨",
+    "reset": "기본값으로 재설정",
+    "appliesTo": "이 매개변수는 로컬 Ollama 모델로 수행되는 번역(reflection 포함)에 적용됩니다. 웹 제공자(Gemini, Groq 등)에는 영향을 주지 않습니다."
+  },
+  "feedback": {
+    "cardTitle": "피드백 보내기",
+    "cardDesc": "버그를 신고하거나 아이디어를 제안하거나 의견을 알려주세요. 기술 정보(버전, 플랫폼, 화면)는 자동으로 첨부됩니다.",
+    "openButton": "피드백 보내기",
+    "dialogTitle": "피드백 보내기",
+    "dialogDesc": "여러분의 메시지는 GameStringer를 개선하는 데 도움이 됩니다. 백엔드가 구성되지 않은 경우에도 보고서를 복사하거나 이메일로 보낼 수 있습니다.",
+    "categoryLabel": "카테고리",
+    "category": {
+      "bug": "버그",
+      "idea": "아이디어",
+      "other": "기타"
+    },
+    "messageLabel": "메시지",
+    "messagePlaceholder": "문제, 아이디어 또는 피드백을 설명하세요…",
+    "contextTitle": "첨부된 정보",
+    "contextNote": "개인 정보 없음: 버전, 플랫폼 및 현재 화면만 포함됩니다.",
+    "ctxVersion": "버전",
+    "ctxPlatform": "플랫폼",
+    "ctxRoute": "화면",
+    "ctxGame": "게임",
+    "submit": "보내기",
+    "copyReport": "보고서 복사",
+    "email": "이메일",
+    "messageRequired": "보내기 전에 메시지를 작성하세요",
+    "copied": "보고서를 클립보드에 복사했습니다",
+    "copyFailed": "복사 실패",
+    "sentDb": "피드백을 보냈습니다. 감사합니다!",
+    "sentFallbackCopied": "보고서를 클립보드에 복사했습니다: 이메일에 붙여넣어 보내주세요.",
+    "sentFallbackManual": "이메일 또는 보고서 복사 버튼을 사용하여 피드백을 보내주세요.",
+    "thanksTitle": "피드백을 보내주셔서 감사합니다!",
+    "thanksDb": "잘 받았습니다: 앱을 개선하는 데 도움이 됩니다.",
+    "thanksFallback": "백엔드를 사용할 수 없습니다: 이메일 또는 보고서 복사를 사용하여 보내주세요."
   }
 }

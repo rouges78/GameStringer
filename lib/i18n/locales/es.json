@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "Proyectos totales",
     "translatedStringsLabel": "Cadenas traducidas",
-    "searchPh": "Buscar proyectos..."
+    "searchPh": "Buscar proyectos...",
+    "applyTitle": "Aplicar al juego",
+    "applying": "Aplicando al juego…",
+    "applySuccess": "Traducción aplicada al juego",
+    "applyError": "Error al aplicar",
+    "applyNoContent": "No hay archivos traducidos guardados para este proyecto. Vuelve a importar el paquete.",
+    "applyPickFolder": "Elige la carpeta de instalación del juego"
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "Publicar",
     "integrityBadge": "Integridad verificada",
     "integrityDesc": "Contenido con hash SHA-256: se vuelve a verificar automáticamente en cada descarga; un pack manipulado se rechaza.",
-    "publishRedistributionBlocked": "Publicación bloqueada: el paquete parece contener texto original redistribuible, no solo traducciones. Publica solo las diferencias (parche)."
+    "publishRedistributionBlocked": "Publicación bloqueada: el paquete parece contener texto original redistribuible, no solo traducciones. Publica solo las diferencias (parche).",
+    "scopeExplore": "Explorar",
+    "scopeMine": "Mis parches",
+    "emptyMineTitle": "Aún no has publicado parches",
+    "emptyMineHint": "Publica una traducción de un proyecto completado para verla aquí."
   },
   "predictionToolPage": {
     "backToLibrary": "Volver a la Biblioteca",
@@ -7273,5 +7283,91 @@
     "importFailed": "Error al importar",
     "skippedLabel": "ya presentes",
     "mergeHint": "La importación nunca sobrescribe tus entradas: solo añade términos nuevos, editables y marcados como flexibles."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Parámetros de inferencia de Ollama",
+    "subtitle": "Ajusta cómo los modelos locales generan las traducciones",
+    "back": "Atrás",
+    "intro": "Estos parámetros controlan cómo el modelo local genera el texto durante la traducción. Una temperatura más baja hace que la traducción sea más fiel y previsible; un num_ctx más amplio evita cortes en archivos largos. Si no cambias nada, se mantienen los valores por defecto recomendados.",
+    "presetsLabel": "Preajustes",
+    "preset": {
+      "fedele": {
+        "name": "Fiel",
+        "desc": "Poca invención, máxima fidelidad al texto. Recomendado para traducir."
+      },
+      "bilanciato": {
+        "name": "Equilibrado",
+        "desc": "Compromiso entre fidelidad y naturalidad."
+      },
+      "creativo": {
+        "name": "Creativo",
+        "desc": "Más libertad estilística. Para diálogos y tono expresivo."
+      }
+    },
+    "expertToggle": "Modo experto",
+    "customBadge": "personalizado",
+    "param": {
+      "temperature": {
+        "label": "Temperatura",
+        "help": "Aleatoriedad de la generación. Baja = más determinista y fiel; alta = más variada y creativa."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "Considera solo los tokens más probables hasta esta masa de probabilidad. Más bajo = más enfocado."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Limita la elección a los k tokens más probables en cada paso. Más bajo = menos divagaciones."
+      },
+      "repeat_penalty": {
+        "label": "Penalización por repetición",
+        "help": "Desalienta repetir palabras. Por encima de 1.0 reduce los bucles; demasiado alto puede distorsionar el texto."
+      },
+      "num_ctx": {
+        "label": "Ventana de contexto",
+        "help": "Número de tokens que el modelo mantiene en memoria. Mayor = sin cortes en textos largos, pero más RAM/VRAM."
+      },
+      "seed": {
+        "label": "Semilla fija",
+        "help": "Fija la semilla aleatoria para resultados reproducibles (útil para benchmarks). Desactivado = cada ejecución puede variar."
+      }
+    },
+    "save": "Guardar",
+    "saved": "Guardado",
+    "reset": "Restablecer valores",
+    "appliesTo": "Estos parámetros se aplican a las traducciones realizadas con modelos Ollama locales (incluida la reflection). No afectan a los proveedores web (Gemini, Groq, etc.)."
+  },
+  "feedback": {
+    "cardTitle": "Enviar comentarios",
+    "cardDesc": "Informa de un error, propón una idea o dinos qué opinas. El contexto técnico (versión, plataforma, pantalla) se adjunta automáticamente.",
+    "openButton": "Enviar comentarios",
+    "dialogTitle": "Enviar comentarios",
+    "dialogDesc": "Tu mensaje nos ayuda a mejorar GameStringer. Si el backend no está configurado, aún puedes copiar el informe o enviarlo por correo electrónico.",
+    "categoryLabel": "Categoría",
+    "category": {
+      "bug": "Bug",
+      "idea": "Idea",
+      "other": "Otro"
+    },
+    "messageLabel": "Tu mensaje",
+    "messagePlaceholder": "Describe el problema, la idea o el comentario…",
+    "contextTitle": "Contexto adjunto",
+    "contextNote": "Sin datos personales: solo versión, plataforma y pantalla actual.",
+    "ctxVersion": "Versión",
+    "ctxPlatform": "Plataforma",
+    "ctxRoute": "Pantalla",
+    "ctxGame": "Juego",
+    "submit": "Enviar",
+    "copyReport": "Copiar informe",
+    "email": "Correo electrónico",
+    "messageRequired": "Escribe un mensaje antes de enviar",
+    "copied": "Informe copiado al portapapeles",
+    "copyFailed": "Error al copiar",
+    "sentDb": "¡Comentarios enviados. Gracias!",
+    "sentFallbackCopied": "Informe copiado al portapapeles: pégalo en un correo electrónico para enviárnoslo.",
+    "sentFallbackManual": "Usa el botón Correo electrónico o Copiar informe para enviarnos tus comentarios.",
+    "thanksTitle": "¡Gracias por tus comentarios!",
+    "thanksDb": "Lo hemos recibido: nos ayuda a mejorar la aplicación.",
+    "thanksFallback": "Backend no disponible: usa Correo electrónico o Copiar informe para enviárnoslo."
   }
 }

@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "プロジェクト総数",
     "translatedStringsLabel": "翻訳済み文字列",
-    "searchPh": "プロジェクトを検索..."
+    "searchPh": "プロジェクトを検索...",
+    "applyTitle": "ゲームに適用",
+    "applying": "ゲームに適用中…",
+    "applySuccess": "翻訳をゲームに適用しました",
+    "applyError": "適用に失敗しました",
+    "applyNoContent": "このプロジェクトに保存された翻訳済みファイルがありません。パックを再インポートしてください。",
+    "applyPickFolder": "ゲームのインストールフォルダーを選択"
   },
   "emulatorTranslator": {
     "clipboardError": "クリップボードを読み取れません",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "公開",
     "integrityBadge": "整合性を検証済み",
     "integrityDesc": "SHA-256ハッシュ付きコンテンツ:ダウンロードごとに自動再検証され、改ざんされたパックは拒否されます。",
-    "publishRedistributionBlocked": "公開がブロックされました：このパックは翻訳だけでなく再配布可能な原文を含んでいるようです。差分（パッチ）のみを公開してください。"
+    "publishRedistributionBlocked": "公開がブロックされました：このパックは翻訳だけでなく再配布可能な原文を含んでいるようです。差分（パッチ）のみを公開してください。",
+    "scopeExplore": "さがす",
+    "scopeMine": "自分のパッチ",
+    "emptyMineTitle": "まだパッチを公開していません",
+    "emptyMineHint": "完了したプロジェクトから翻訳を公開すると、ここに表示されます。"
   },
   "predictionToolPage": {
     "backToLibrary": "ライブラリに戻る",
@@ -7273,5 +7283,91 @@
     "importFailed": "インポートに失敗しました",
     "skippedLabel": "既存",
     "mergeHint": "インポートは既存の項目を上書きしません。新しい用語のみ追加され、編集可能で「柔軟」として印が付きます。"
+  },
+  "ollamaAdvancedPage": {
+    "title": "Ollama 推論パラメータ",
+    "subtitle": "ローカルモデルが翻訳を生成する方法を調整します",
+    "back": "戻る",
+    "intro": "これらのパラメータは、翻訳中にローカルモデルがテキストを生成する方法を制御します。temperature を低くすると翻訳がより忠実で予測可能になり、num_ctx を大きくすると長いファイルでの切り詰めを防げます。何も変更しなければ、推奨のデフォルト値が有効なままになります。",
+    "presetsLabel": "プリセット",
+    "preset": {
+      "fedele": {
+        "name": "忠実",
+        "desc": "創作を抑え、原文に最大限忠実。翻訳に推奨。"
+      },
+      "bilanciato": {
+        "name": "バランス",
+        "desc": "忠実さと自然さの折衷。"
+      },
+      "creativo": {
+        "name": "クリエイティブ",
+        "desc": "文体の自由度が高い。台詞や表現豊かなトーン向け。"
+      }
+    },
+    "expertToggle": "エキスパートモード",
+    "customBadge": "カスタム",
+    "param": {
+      "temperature": {
+        "label": "Temperature",
+        "help": "生成のランダム性。低い = より決定的で忠実、高い = より多様で創造的。"
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "この確率質量までの最も確からしいトークンのみを考慮します。低いほど焦点が絞られます。"
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "各ステップで最も確からしい k 個のトークンに選択を制限します。低いほど脱線が減ります。"
+      },
+      "repeat_penalty": {
+        "label": "繰り返しペナルティ",
+        "help": "単語の繰り返しを抑制します。1.0 を超えるとループを減らし、高すぎるとテキストが不自然になることがあります。"
+      },
+      "num_ctx": {
+        "label": "コンテキストウィンドウ",
+        "help": "モデルが記憶に保持するトークン数。大きいほど長文でも切り詰められませんが、RAM/VRAM を多く使います。"
+      },
+      "seed": {
+        "label": "固定シード",
+        "help": "再現可能な結果のために乱数シードを固定します（ベンチマークに便利）。無効 = 実行ごとに変わる可能性があります。"
+      }
+    },
+    "save": "保存",
+    "saved": "保存しました",
+    "reset": "デフォルトに戻す",
+    "appliesTo": "これらのパラメータは、ローカルの Ollama モデルによる翻訳（reflection を含む）に適用されます。Web プロバイダー（Gemini、Groq など）には影響しません。"
+  },
+  "feedback": {
+    "cardTitle": "フィードバックを送信",
+    "cardDesc": "バグの報告、アイデアの提案、ご意見をお寄せください。技術的な情報（バージョン、プラットフォーム、画面）は自動的に添付されます。",
+    "openButton": "フィードバックを送信",
+    "dialogTitle": "フィードバックを送信",
+    "dialogDesc": "あなたのメッセージは GameStringer の改善に役立ちます。バックエンドが設定されていない場合でも、レポートをコピーしたりメールで送信したりできます。",
+    "categoryLabel": "カテゴリー",
+    "category": {
+      "bug": "バグ",
+      "idea": "アイデア",
+      "other": "その他"
+    },
+    "messageLabel": "メッセージ",
+    "messagePlaceholder": "問題、アイデア、フィードバックを記入してください…",
+    "contextTitle": "添付された情報",
+    "contextNote": "個人データは含まれません：バージョン、プラットフォーム、現在の画面のみ。",
+    "ctxVersion": "バージョン",
+    "ctxPlatform": "プラットフォーム",
+    "ctxRoute": "画面",
+    "ctxGame": "ゲーム",
+    "submit": "送信",
+    "copyReport": "レポートをコピー",
+    "email": "メール",
+    "messageRequired": "送信する前にメッセージを入力してください",
+    "copied": "レポートをクリップボードにコピーしました",
+    "copyFailed": "コピーに失敗しました",
+    "sentDb": "フィードバックを送信しました。ありがとうございます！",
+    "sentFallbackCopied": "レポートをクリップボードにコピーしました：メールに貼り付けて送信してください。",
+    "sentFallbackManual": "「メール」または「レポートをコピー」ボタンを使ってフィードバックをお送りください。",
+    "thanksTitle": "フィードバックありがとうございます！",
+    "thanksDb": "受け取りました：アプリの改善に役立ちます。",
+    "thanksFallback": "バックエンドを利用できません：「メール」または「レポートをコピー」で送信してください。"
   }
 }

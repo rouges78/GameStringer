@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "项目总数",
     "translatedStringsLabel": "已翻译字符串",
-    "searchPh": "搜索项目……"
+    "searchPh": "搜索项目……",
+    "applyTitle": "应用到游戏",
+    "applying": "正在应用到游戏…",
+    "applySuccess": "翻译已应用到游戏",
+    "applyError": "应用失败",
+    "applyNoContent": "此项目没有保存已翻译的文件。请重新导入该包。",
+    "applyPickFolder": "选择游戏安装文件夹"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "发布",
     "integrityBadge": "完整性已验证",
     "integrityDesc": "SHA-256哈希内容:每次下载时自动重新验证,被篡改的包会被拒绝。",
-    "publishRedistributionBlocked": "发布被阻止：该补丁包似乎包含可再分发的原文，而不仅仅是翻译。请只发布差异（补丁）。"
+    "publishRedistributionBlocked": "发布被阻止：该补丁包似乎包含可再分发的原文，而不仅仅是翻译。请只发布差异（补丁）。",
+    "scopeExplore": "浏览",
+    "scopeMine": "我的补丁",
+    "emptyMineTitle": "你还没有发布任何补丁",
+    "emptyMineHint": "从已完成的项目发布翻译即可在此看到。"
   },
   "predictionToolPage": {
     "backToLibrary": "返回库",
@@ -7273,5 +7283,91 @@
     "importFailed": "导入失败",
     "skippedLabel": "已存在",
     "mergeHint": "导入绝不会覆盖你的条目:只添加新术语,可编辑并标记为灵活。"
+  },
+  "ollamaAdvancedPage": {
+    "title": "Ollama 推理参数",
+    "subtitle": "调整本地模型生成翻译的方式",
+    "back": "返回",
+    "intro": "这些参数控制本地模型在翻译时如何生成文本。较低的 temperature 使翻译更忠实、更可预测；更大的 num_ctx 可避免长文件被截断。如果不做任何更改，将保持推荐的默认值。",
+    "presetsLabel": "预设",
+    "preset": {
+      "fedele": {
+        "name": "忠实",
+        "desc": "少发挥，最大程度贴合原文。推荐用于翻译。"
+      },
+      "bilanciato": {
+        "name": "平衡",
+        "desc": "在忠实与自然之间折中。"
+      },
+      "creativo": {
+        "name": "创意",
+        "desc": "更多风格自由。适合对白和富有表现力的语气。"
+      }
+    },
+    "expertToggle": "专家模式",
+    "customBadge": "自定义",
+    "param": {
+      "temperature": {
+        "label": "Temperature",
+        "help": "生成的随机性。低 = 更确定、更忠实；高 = 更多样、更有创意。"
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "仅考虑累计概率达到该值的最可能 token。越低越聚焦。"
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "每一步仅从最可能的 k 个 token 中选择。越低越少跑题。"
+      },
+      "repeat_penalty": {
+        "label": "重复惩罚",
+        "help": "抑制重复词语。高于 1.0 可减少循环；过高可能使文本失真。"
+      },
+      "num_ctx": {
+        "label": "上下文窗口",
+        "help": "模型保留在内存中的 token 数。越大越不会截断长文本，但占用更多 RAM/VRAM。"
+      },
+      "seed": {
+        "label": "固定种子",
+        "help": "固定随机种子以获得可复现的结果（便于基准测试）。关闭 = 每次运行可能不同。"
+      }
+    },
+    "save": "保存",
+    "saved": "已保存",
+    "reset": "恢复默认",
+    "appliesTo": "这些参数适用于使用本地 Ollama 模型的翻译（包括 reflection）。不影响 Web 提供商（Gemini、Groq 等）。"
+  },
+  "feedback": {
+    "cardTitle": "发送反馈",
+    "cardDesc": "报告错误、提出想法或告诉我们您的看法。技术上下文（版本、平台、屏幕）会自动附上。",
+    "openButton": "发送反馈",
+    "dialogTitle": "发送反馈",
+    "dialogDesc": "您的留言有助于我们改进 GameStringer。如果未配置后端，您仍然可以复制报告或通过电子邮件发送。",
+    "categoryLabel": "类别",
+    "category": {
+      "bug": "错误",
+      "idea": "想法",
+      "other": "其他"
+    },
+    "messageLabel": "您的留言",
+    "messagePlaceholder": "描述问题、想法或反馈…",
+    "contextTitle": "已附加的上下文",
+    "contextNote": "不含个人数据：仅包含版本、平台和当前屏幕。",
+    "ctxVersion": "版本",
+    "ctxPlatform": "平台",
+    "ctxRoute": "屏幕",
+    "ctxGame": "游戏",
+    "submit": "发送",
+    "copyReport": "复制报告",
+    "email": "电子邮件",
+    "messageRequired": "发送前请先写留言",
+    "copied": "报告已复制到剪贴板",
+    "copyFailed": "复制失败",
+    "sentDb": "反馈已发送。谢谢！",
+    "sentFallbackCopied": "报告已复制到剪贴板：将其粘贴到电子邮件中发送给我们。",
+    "sentFallbackManual": "使用“电子邮件”或“复制报告”按钮向我们发送反馈。",
+    "thanksTitle": "感谢您的反馈！",
+    "thanksDb": "我们已收到：它有助于我们改进应用。",
+    "thanksFallback": "后端不可用：请使用“电子邮件”或“复制报告”发送给我们。"
   }
 }

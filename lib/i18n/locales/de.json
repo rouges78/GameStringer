@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "Projekte insgesamt",
     "translatedStringsLabel": "Übersetzte Strings",
-    "searchPh": "Projekte suchen..."
+    "searchPh": "Projekte suchen...",
+    "applyTitle": "Auf Spiel anwenden",
+    "applying": "Wird auf das Spiel angewendet…",
+    "applySuccess": "Übersetzung auf das Spiel angewendet",
+    "applyError": "Anwenden fehlgeschlagen",
+    "applyNoContent": "Keine gespeicherten übersetzten Dateien für dieses Projekt. Importiere das Paket erneut.",
+    "applyPickFolder": "Wähle den Installationsordner des Spiels"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "Veröffentlichen",
     "integrityBadge": "Integrität geprüft",
     "integrityDesc": "SHA-256-gehashter Inhalt: wird bei jedem Download automatisch neu geprüft, ein manipuliertes Paket wird abgelehnt.",
-    "publishRedistributionBlocked": "Veröffentlichung blockiert: Das Paket scheint weiterverbreitbaren Originaltext zu enthalten, nicht nur Übersetzungen. Veröffentliche nur die Unterschiede (Patch)."
+    "publishRedistributionBlocked": "Veröffentlichung blockiert: Das Paket scheint weiterverbreitbaren Originaltext zu enthalten, nicht nur Übersetzungen. Veröffentliche nur die Unterschiede (Patch).",
+    "scopeExplore": "Entdecken",
+    "scopeMine": "Meine Patches",
+    "emptyMineTitle": "Du hast noch keine Patches veröffentlicht",
+    "emptyMineHint": "Veröffentliche eine Übersetzung aus einem abgeschlossenen Projekt, um sie hier zu sehen."
   },
   "predictionToolPage": {
     "backToLibrary": "Zurück zur Bibliothek",
@@ -7273,5 +7283,91 @@
     "importFailed": "Import fehlgeschlagen",
     "skippedLabel": "bereits vorhanden",
     "mergeHint": "Der Import überschreibt nie deine Einträge: Er fügt nur neue Begriffe hinzu, bearbeitbar und als flexibel markiert."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Ollama-Inferenzparameter",
+    "subtitle": "Stelle ein, wie lokale Modelle Übersetzungen erzeugen",
+    "back": "Zurück",
+    "intro": "Diese Parameter steuern, wie das lokale Modell beim Übersetzen Text erzeugt. Eine niedrigere Temperatur macht die Übersetzung treuer und vorhersehbarer; ein größeres num_ctx verhindert Abschneiden bei langen Dateien. Wenn du nichts änderst, bleiben die empfohlenen Standardwerte aktiv.",
+    "presetsLabel": "Voreinstellungen",
+    "preset": {
+      "fedele": {
+        "name": "Treu",
+        "desc": "Wenig Erfindung, maximale Texttreue. Empfohlen für Übersetzungen."
+      },
+      "bilanciato": {
+        "name": "Ausgewogen",
+        "desc": "Kompromiss zwischen Treue und Natürlichkeit."
+      },
+      "creativo": {
+        "name": "Kreativ",
+        "desc": "Mehr stilistische Freiheit. Für Dialoge und ausdrucksstarken Ton."
+      }
+    },
+    "expertToggle": "Expertenmodus",
+    "customBadge": "benutzerdefiniert",
+    "param": {
+      "temperature": {
+        "label": "Temperatur",
+        "help": "Zufälligkeit der Generierung. Niedrig = deterministischer und treuer; hoch = vielfältiger und kreativer."
+      },
+      "top_p": {
+        "label": "Top-p (Nucleus)",
+        "help": "Berücksichtigt nur die wahrscheinlichsten Tokens bis zu dieser Wahrscheinlichkeitsmasse. Niedriger = fokussierter."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Beschränkt die Auswahl auf die k wahrscheinlichsten Tokens pro Schritt. Niedriger = weniger Abschweifungen."
+      },
+      "repeat_penalty": {
+        "label": "Wiederholungsstrafe",
+        "help": "Erschwert das Wiederholen von Wörtern. Über 1.0 reduziert Schleifen; zu hoch kann den Text verzerren."
+      },
+      "num_ctx": {
+        "label": "Kontextfenster",
+        "help": "Anzahl der Tokens, die das Modell im Speicher hält. Größer = kein Abschneiden bei langen Texten, aber mehr RAM/VRAM."
+      },
+      "seed": {
+        "label": "Fester Seed",
+        "help": "Legt den Zufalls-Seed für reproduzierbare Ergebnisse fest (nützlich für Benchmarks). Aus = jeder Lauf kann variieren."
+      }
+    },
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "reset": "Auf Standard zurücksetzen",
+    "appliesTo": "Diese Parameter gelten für Übersetzungen mit lokalen Ollama-Modellen (einschließlich Reflection). Sie betreffen keine Web-Anbieter (Gemini, Groq usw.)."
+  },
+  "feedback": {
+    "cardTitle": "Feedback senden",
+    "cardDesc": "Melde einen Fehler, schlage eine Idee vor oder sag uns deine Meinung. Der technische Kontext (Version, Plattform, Bildschirm) wird automatisch angehängt.",
+    "openButton": "Feedback senden",
+    "dialogTitle": "Feedback senden",
+    "dialogDesc": "Deine Nachricht hilft uns, GameStringer zu verbessern. Wenn das Backend nicht konfiguriert ist, kannst du den Bericht trotzdem kopieren oder per E-Mail senden.",
+    "categoryLabel": "Kategorie",
+    "category": {
+      "bug": "Bug",
+      "idea": "Idee",
+      "other": "Sonstiges"
+    },
+    "messageLabel": "Deine Nachricht",
+    "messagePlaceholder": "Beschreibe das Problem, die Idee oder das Feedback…",
+    "contextTitle": "Angehängter Kontext",
+    "contextNote": "Keine personenbezogenen Daten: nur Version, Plattform und aktueller Bildschirm.",
+    "ctxVersion": "Version",
+    "ctxPlatform": "Plattform",
+    "ctxRoute": "Bildschirm",
+    "ctxGame": "Spiel",
+    "submit": "Senden",
+    "copyReport": "Bericht kopieren",
+    "email": "E-Mail",
+    "messageRequired": "Schreibe eine Nachricht, bevor du sendest",
+    "copied": "Bericht in die Zwischenablage kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "sentDb": "Feedback gesendet. Danke!",
+    "sentFallbackCopied": "Bericht in die Zwischenablage kopiert: Füge ihn in eine E-Mail ein, um ihn uns zu senden.",
+    "sentFallbackManual": "Verwende die Schaltfläche E-Mail oder Bericht kopieren, um uns dein Feedback zu senden.",
+    "thanksTitle": "Danke für dein Feedback!",
+    "thanksDb": "Wir haben es erhalten: Es hilft uns, die App zu verbessern.",
+    "thanksFallback": "Backend nicht verfügbar: Verwende E-Mail oder Bericht kopieren, um es uns zu senden."
   }
 }

@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "Total projects",
     "translatedStringsLabel": "Translated strings",
-    "searchPh": "Search projects..."
+    "searchPh": "Search projects...",
+    "applyTitle": "Apply to game",
+    "applying": "Applying to game…",
+    "applySuccess": "Translation applied to the game",
+    "applyError": "Apply failed",
+    "applyNoContent": "No saved translated files for this project. Re-import the pack.",
+    "applyPickFolder": "Choose the game install folder"
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",
@@ -7056,7 +7062,11 @@
     "publishConfirm": "Publish",
     "integrityBadge": "Integrity verified",
     "integrityDesc": "SHA-256 hashed content: automatically re-verified on every download, a tampered pack is rejected.",
-    "publishRedistributionBlocked": "Publishing blocked: the pack appears to contain redistributable original text, not just translations. Publish only the differences (patch)."
+    "publishRedistributionBlocked": "Publishing blocked: the pack appears to contain redistributable original text, not just translations. Publish only the differences (patch).",
+    "scopeExplore": "Explore",
+    "scopeMine": "My patches",
+    "emptyMineTitle": "You haven't published any patches yet",
+    "emptyMineHint": "Publish a translation from a completed project to see it here."
   },
   "predictionToolPage": {
     "backToLibrary": "Back to Library",
@@ -7213,6 +7223,39 @@
     "settingLabel": "Send anonymous crash reports",
     "settingDesc": "When something breaks (crashes, pipeline errors), sends an anonymous report with the error category and a reduced stack trace — never paths, files or personal data. Helps fix bugs nobody would otherwise see."
   },
+  "feedback": {
+    "cardTitle": "Send feedback",
+    "cardDesc": "Report a bug, suggest an idea, or tell us what you think. Technical context (version, platform, screen) is attached automatically.",
+    "openButton": "Send feedback",
+    "dialogTitle": "Send feedback",
+    "dialogDesc": "Your message helps us improve GameStringer. If the backend isn't configured, you can still copy the report or send it by email.",
+    "categoryLabel": "Category",
+    "category": {
+      "bug": "Bug",
+      "idea": "Idea",
+      "other": "Other"
+    },
+    "messageLabel": "Your message",
+    "messagePlaceholder": "Describe the problem, idea, or feedback…",
+    "contextTitle": "Attached context",
+    "contextNote": "No personal data: only version, platform and current screen.",
+    "ctxVersion": "Version",
+    "ctxPlatform": "Platform",
+    "ctxRoute": "Screen",
+    "ctxGame": "Game",
+    "submit": "Send",
+    "copyReport": "Copy report",
+    "email": "Email",
+    "messageRequired": "Write a message before sending",
+    "copied": "Report copied to clipboard",
+    "copyFailed": "Copy failed",
+    "sentDb": "Feedback sent. Thank you!",
+    "sentFallbackCopied": "Report copied to clipboard: paste it into an email to send it to us.",
+    "sentFallbackManual": "Use the Email or Copy report button to send us your feedback.",
+    "thanksTitle": "Thanks for the feedback!",
+    "thanksDb": "We received it: it helps us improve the app.",
+    "thanksFallback": "Backend unavailable: use Email or Copy report to send it to us."
+  },
   "fontCheck": {
     "title": "Font check",
     "desc": "Check whether the game's fonts have the glyphs for your language: a perfect translation showing □□□ is still a failure.",
@@ -7273,5 +7316,58 @@
     "importFailed": "Import failed",
     "skippedLabel": "already present",
     "mergeHint": "Import never overwrites your entries: it only adds new terms, editable and marked as flexible."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Ollama inference parameters",
+    "subtitle": "Tune how local models generate translations",
+    "back": "Back",
+    "intro": "These parameters control how the local model generates text while translating. Lower temperature makes translations more faithful and predictable; a larger num_ctx avoids truncation on long files. If you leave everything untouched, the recommended defaults stay active.",
+    "presetsLabel": "Presets",
+    "preset": {
+      "fedele": {
+        "name": "Faithful",
+        "desc": "Minimal invention, maximum adherence to the source. Recommended for translation."
+      },
+      "bilanciato": {
+        "name": "Balanced",
+        "desc": "A trade-off between faithfulness and naturalness."
+      },
+      "creativo": {
+        "name": "Creative",
+        "desc": "More stylistic freedom. For dialogue and expressive tone."
+      }
+    },
+    "expertToggle": "Expert mode",
+    "customBadge": "custom",
+    "param": {
+      "temperature": {
+        "label": "Temperature",
+        "help": "Randomness of generation. Low = more deterministic and faithful; high = more varied and creative."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "Only consider the most likely tokens up to this probability mass. Lower = more focused."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Restrict the choice to the k most likely tokens at each step. Lower = fewer digressions."
+      },
+      "repeat_penalty": {
+        "label": "Repeat penalty",
+        "help": "Discourages repeating words. Above 1.0 reduces loops; too high can distort the text."
+      },
+      "num_ctx": {
+        "label": "Context window",
+        "help": "Number of tokens the model keeps in memory. Larger = no truncation on long text, but more RAM/VRAM."
+      },
+      "seed": {
+        "label": "Fixed seed",
+        "help": "Pins the random seed for reproducible results (useful for benchmarks). Off = each run may vary."
+      }
+    },
+    "save": "Save",
+    "saved": "Saved",
+    "reset": "Reset to defaults",
+    "appliesTo": "These parameters apply to translations run with local Ollama models (including reflection). They do not affect web providers (Gemini, Groq, etc.)."
   }
 }

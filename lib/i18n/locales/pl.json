@@ -441,7 +441,13 @@
     "deleteTitle": "Delete",
     "totalProjectsLabel": "Łączna liczba projektów",
     "translatedStringsLabel": "Przetłumaczone ciągi znaków",
-    "searchPh": "Szukaj projektów..."
+    "searchPh": "Szukaj projektów...",
+    "applyTitle": "Zastosuj do gry",
+    "applying": "Stosowanie do gry…",
+    "applySuccess": "Tłumaczenie zastosowane do gry",
+    "applyError": "Zastosowanie nie powiodło się",
+    "applyNoContent": "Brak zapisanych przetłumaczonych plików dla tego projektu. Zaimportuj pakiet ponownie.",
+    "applyPickFolder": "Wybierz folder instalacji gry"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",
@@ -7032,7 +7038,11 @@
     "publishConfirm": "Opublikuj",
     "integrityBadge": "Integralność zweryfikowana",
     "integrityDesc": "Zawartość z hashem SHA-256: automatycznie weryfikowana przy każdym pobraniu; zmodyfikowany pack jest odrzucany.",
-    "publishRedistributionBlocked": "Publikacja zablokowana: pakiet wydaje się zawierać oryginalny tekst do redystrybucji, a nie tylko tłumaczenia. Publikuj tylko różnice (patch)."
+    "publishRedistributionBlocked": "Publikacja zablokowana: pakiet wydaje się zawierać oryginalny tekst do redystrybucji, a nie tylko tłumaczenia. Publikuj tylko różnice (patch).",
+    "scopeExplore": "Przeglądaj",
+    "scopeMine": "Moje łatki",
+    "emptyMineTitle": "Nie opublikowałeś jeszcze żadnych łatek",
+    "emptyMineHint": "Opublikuj tłumaczenie z ukończonego projektu, aby zobaczyć je tutaj."
   },
   "predictionToolPage": {
     "backToLibrary": "Powrót do Biblioteki",
@@ -7273,5 +7283,91 @@
     "importFailed": "Import nie powiódł się",
     "skippedLabel": "już obecne",
     "mergeHint": "Import nigdy nie nadpisuje Twoich wpisów: dodaje tylko nowe terminy, edytowalne i oznaczone jako elastyczne."
+  },
+  "ollamaAdvancedPage": {
+    "title": "Parametry inferencji Ollama",
+    "subtitle": "Dostosuj, jak lokalne modele generują tłumaczenia",
+    "back": "Wstecz",
+    "intro": "Te parametry kontrolują sposób, w jaki lokalny model generuje tekst podczas tłumaczenia. Niższa temperatura sprawia, że tłumaczenie jest wierniejsze i bardziej przewidywalne; większe num_ctx zapobiega ucinaniu długich plików. Jeśli nic nie zmienisz, pozostają zalecane wartości domyślne.",
+    "presetsLabel": "Ustawienia wstępne",
+    "preset": {
+      "fedele": {
+        "name": "Wierny",
+        "desc": "Mało inwencji, maksymalna wierność tekstowi. Zalecane do tłumaczenia."
+      },
+      "bilanciato": {
+        "name": "Zrównoważony",
+        "desc": "Kompromis między wiernością a naturalnością."
+      },
+      "creativo": {
+        "name": "Kreatywny",
+        "desc": "Więcej swobody stylistycznej. Do dialogów i wyrazistego tonu."
+      }
+    },
+    "expertToggle": "Tryb eksperta",
+    "customBadge": "niestandardowy",
+    "param": {
+      "temperature": {
+        "label": "Temperatura",
+        "help": "Losowość generowania. Niska = bardziej deterministyczna i wierna; wysoka = bardziej różnorodna i kreatywna."
+      },
+      "top_p": {
+        "label": "Top-p (nucleus)",
+        "help": "Bierze pod uwagę tylko najbardziej prawdopodobne tokeny do tej masy prawdopodobieństwa. Niższe = bardziej skupione."
+      },
+      "top_k": {
+        "label": "Top-k",
+        "help": "Ogranicza wybór do k najbardziej prawdopodobnych tokenów na każdym kroku. Niższe = mniej dygresji."
+      },
+      "repeat_penalty": {
+        "label": "Kara za powtórzenia",
+        "help": "Zniechęca do powtarzania słów. Powyżej 1.0 ogranicza pętle; zbyt wysoka może zniekształcić tekst."
+      },
+      "num_ctx": {
+        "label": "Okno kontekstu",
+        "help": "Liczba tokenów, które model trzyma w pamięci. Większe = brak ucinania długich tekstów, ale więcej RAM/VRAM."
+      },
+      "seed": {
+        "label": "Stały seed",
+        "help": "Ustala ziarno losowości dla powtarzalnych wyników (przydatne do benchmarków). Wyłączone = każde uruchomienie może się różnić."
+      }
+    },
+    "save": "Zapisz",
+    "saved": "Zapisano",
+    "reset": "Przywróć domyślne",
+    "appliesTo": "Te parametry dotyczą tłumaczeń wykonywanych lokalnymi modelami Ollama (w tym reflection). Nie wpływają na dostawców webowych (Gemini, Groq itd.)."
+  },
+  "feedback": {
+    "cardTitle": "Wyślij opinię",
+    "cardDesc": "Zgłoś błąd, zaproponuj pomysł lub powiedz nam, co myślisz. Kontekst techniczny (wersja, platforma, ekran) jest dołączany automatycznie.",
+    "openButton": "Wyślij opinię",
+    "dialogTitle": "Wyślij opinię",
+    "dialogDesc": "Twoja wiadomość pomaga nam ulepszać GameStringer. Jeśli backend nie jest skonfigurowany, nadal możesz skopiować raport lub wysłać go e-mailem.",
+    "categoryLabel": "Kategoria",
+    "category": {
+      "bug": "Błąd",
+      "idea": "Pomysł",
+      "other": "Inne"
+    },
+    "messageLabel": "Twoja wiadomość",
+    "messagePlaceholder": "Opisz problem, pomysł lub opinię…",
+    "contextTitle": "Dołączony kontekst",
+    "contextNote": "Brak danych osobowych: tylko wersja, platforma i bieżący ekran.",
+    "ctxVersion": "Wersja",
+    "ctxPlatform": "Platforma",
+    "ctxRoute": "Ekran",
+    "ctxGame": "Gra",
+    "submit": "Wyślij",
+    "copyReport": "Kopiuj raport",
+    "email": "E-mail",
+    "messageRequired": "Napisz wiadomość przed wysłaniem",
+    "copied": "Raport skopiowany do schowka",
+    "copyFailed": "Kopiowanie nie powiodło się",
+    "sentDb": "Opinia wysłana. Dziękujemy!",
+    "sentFallbackCopied": "Raport skopiowany do schowka: wklej go do e-maila, aby go do nas wysłać.",
+    "sentFallbackManual": "Użyj przycisku E-mail lub Kopiuj raport, aby wysłać nam swoją opinię.",
+    "thanksTitle": "Dziękujemy za opinię!",
+    "thanksDb": "Otrzymaliśmy ją: pomaga nam ulepszać aplikację.",
+    "thanksFallback": "Backend niedostępny: użyj E-mail lub Kopiuj raport, aby ją do nas wysłać."
   }
 }
