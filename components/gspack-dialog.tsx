@@ -265,9 +265,16 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
       try {
         const m = result.manifest;
         const gameId = m.game.appId ? `steam_${m.game.appId}` : m.game.name;
+        // Cover: il manifest non la porta, ma per i giochi Steam si ricava
+        // dall'appId (stesso CDN usato altrove). Senza questa il progetto
+        // compariva senza copertina in /projects.
+        const gameImage = m.game.appId
+          ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${m.game.appId}/header.jpg`
+          : undefined;
         const project = await projectService.createOrGetProject({
           gameId,
           gameName: m.game.name,
+          gameImage,
           engine: m.game.engine,
           sourceLanguage: m.translation.sourceLanguage,
           targetLanguage: m.translation.targetLanguage,

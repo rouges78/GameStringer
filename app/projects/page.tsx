@@ -154,7 +154,10 @@ async function loadAllProjects(): Promise<UnifiedProject[]> {
         lastUpdated: p.lastActivityAt || p.updatedAt,
         source: 'active',
         status: p.status === 'completed' ? 'completed' : p.status === 'active' ? 'in_progress' : 'empty',
-        openHref: `/auto-translate?gameId=${encodeURIComponent(p.gameId)}&resume=true`,
+        // Il dettaglio gioco basta id+nome; /auto-translate invece richiede
+        // gameId && gameName && installPath (che qui non abbiamo) e senza
+        // quelli restava inerte: "Apri" sembrava rotto.
+        openHref: `/library?id=${encodeURIComponent(p.gameId)}&name=${encodeURIComponent(p.gameName)}`,
       });
     }
     clientLogger.debug(`[Projects] Caricati ${activeProjects.length} progetti attivi`);
