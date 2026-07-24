@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://www.gamestringer.ai"><img src="https://img.shields.io/badge/🌐_Website-gamestringer.ai-indigo" alt="Website" /></a>
   <a href="https://discord.gg/SjnD3Z7Uf8"><img src="https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
-  <img src="https://img.shields.io/badge/version-1.14.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.15.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -113,14 +113,14 @@ Get the latest release from **[GitHub Releases](https://github.com/rouges78/Game
 
 | Platform | File | Notes |
 |----------|------|-------|
-| **Windows** | `GameStringer_1.14.0_x64-setup.exe` | Installer (recommended) |
-| **Windows** | `GameStringer_1.14.0_x64-portable.zip` | No install needed |
-| **Windows** | `GameStringer_1.14.0_x64_en-US.msi` | MSI alternative |
-| **macOS** | `GameStringer_1.14.0_x64.dmg` | Intel Mac |
-| **macOS** | `GameStringer_1.14.0_aarch64.dmg` | Apple Silicon |
-| **Linux** | `GameStringer_1.14.0_amd64.AppImage` | Universal (recommended) |
-| **Linux** | `GameStringer_1.14.0_amd64.deb` | Debian / Ubuntu |
-| **Linux** | `GameStringer-1.14.0-1.x86_64.rpm` | Fedora / RHEL |
+| **Windows** | `GameStringer_1.15.0_x64-setup.exe` | Installer (recommended) |
+| **Windows** | `GameStringer_1.15.0_x64-portable.zip` | No install needed |
+| **Windows** | `GameStringer_1.15.0_x64_en-US.msi` | MSI alternative |
+| **macOS** | `GameStringer_1.15.0_x64.dmg` | Intel Mac |
+| **macOS** | `GameStringer_1.15.0_aarch64.dmg` | Apple Silicon |
+| **Linux** | `GameStringer_1.15.0_amd64.AppImage` | Universal (recommended) |
+| **Linux** | `GameStringer_1.15.0_amd64.deb` | Debian / Ubuntu |
+| **Linux** | `GameStringer-1.15.0-1.x86_64.rpm` | Fedora / RHEL |
 
 **Requirements:** Windows 10+, macOS 10.15+, or Linux (Ubuntu 22.04+, Fedora 38+). 4 GB RAM (8 GB+ for local AI), 500 MB disk. Updates are **cryptographically signed** and delivered via Tauri Updater (the app verifies each update against a bundled public key).
 
@@ -259,6 +259,14 @@ GameStringer supports **20+ engines** with varying levels of depth:
 ---
 
 ## ✨ Features
+
+### 🆕 New in v1.15.0 — Ollama tuning & Projects ↔ Patch Hub
+
+- **🎚 Ollama inference parameters panel** — fine-tune local Ollama translations with **Faithful / Balanced / Creative presets**, or flip to **expert mode** for direct control over temperature, top-p and the rest of the sampling knobs; the choice is wired non-destructively into every Ollama translation call
+- **🔗 Projects ↔ Patch Hub integration** — **import a `.gspack` as a completed project**, publish to the Hub **pre-filled straight from a project**, switch between an **Explore / My patches** toggle, and **Apply to game** in one click (with automatic backup)
+- **💬 In-app feedback widget** — send feedback or report a problem without ever leaving the app
+- **⚡ Faster Patch Hub** — response **caching + rate-limiting** for snappier browsing and downloads under load
+- **🐛 Fixes** — the RSS news webview is no longer blocked by CORS, plus a fresh **WCAG 2.1 AA accessibility audit** pass
 
 ### 🆕 New in v1.14.0 — community compatibility & bulletproof packs
 
@@ -548,5 +556,5 @@ See [LICENSE](LICENSE) for details, and **[docs/LEGAL.md](docs/LEGAL.md)** for t
 
 <p align="center">
   Made with ❤️ for gamers who want to play in their own language<br>
-  <strong>GameStringer v1.14.0</strong> · <a href="https://www.gamestringer.ai">gamestringer.ai</a> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.15.0</strong> · <a href="https://www.gamestringer.ai">gamestringer.ai</a> · © 2025-2026 GameStringer Team
 </p>

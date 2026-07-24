@@ -1,5 +1,12 @@
 ﻿# GameStringer - Complete Guide
 
+## 🆕 New in v1.15.0
+
+- ⚙️ **Ollama inference parameters**: new *Ollama Manager → Advanced* page with 3 presets (Faithful/Balanced/Creative) and an expert mode to tune `temperature`, `top_p`, `top_k`, `repeat_penalty`, `num_ctx` and `seed` of local models.
+- 🚀 **Projects ↔ Patch Hub**: every imported `.gspack` is registered as a completed project; from Projects you can **Apply to game** (with `.bak` backup) or **Publish** the pre-filled translation to the Patch Hub.
+- 💬 **Feedback widget** in *Settings → Community*: report bugs or ideas with technical context attached automatically (version, platform, screen).
+- ⚡ **Faster Patch Hub**: local list cache and anti-abuse limits so you can move between tabs without reloading from the server each time.
+
 ## 🆕 New in v1.12.0
 
 - 👁️ Visual-context translation (VLM): the AI sees the screen and translates with context, resolving ambiguous words (e.g. "Chest" = coffer vs. body). Local (Ollama) or OpenAI/Gemini
@@ -38,6 +45,9 @@
 17. [Security & Recovery Key](#phase-17-security)
 18. [Troubleshooting](#phase-18-troubleshooting)
 19. [Community Chat (Real-Time)](#phase-19-community-chat) *(NEW v1.5.0)*
+20. [Projects & Patch Hub](#projects--patch-hub) *(UPDATED v1.15.0)*
+21. [Ollama Inference Parameters](#ollama-inference-parameters) *(NEW v1.15.0)*
+22. [Send Feedback](#send-feedback) *(NEW v1.15.0)*
 
 ---
 
@@ -493,6 +503,126 @@ Click **Publish patch** to open the publish form. Fill in the pack name, game, s
 
 ---
 
+## Projects & Patch Hub
+
+*(UPDATED v1.15.0)*
+
+The **Projects** page gathers, in one place, every game you are translating or have already translated — sourced from Quality Scoring, dictionaries, Translation Memory and the game library. From here you manage the full life cycle of a translation: open, apply, publish.
+
+### Import `.gspack` → project
+
+When you **import a `.gspack` bundle** (downloaded from the Patch Hub or made by you), GameStringer doesn't just apply it: it **registers a completed project** and **saves the translated files** locally. The game then shows up under Projects at 100%, ready to be re-applied or published later without redoing any work.
+
+### Apply to game
+
+For **completed** projects, the **"Apply to game"** button (folder icon) copies the translated files straight into the installation:
+
+1. Pick the game's **installation folder**
+2. Before overwriting an existing file, a **`.bak` backup** is created next to the original
+3. **Safety**: if a file's backup fails, that file is **skipped** (never overwritten without a safety copy)
+4. When done, you see how many files were written and how many skipped
+
+To restore an original, just rename the `.bak` file, removing the extension.
+
+### Publish (pre-filled)
+
+The **"Publish to Patch Hub"** button (share icon) sends the translation to the community. It publishes **the real translated file** (not just a metadata manifest), with name, game, languages and completion percentage **already pre-filled**. The pack enters a **moderation queue** before it becomes publicly visible.
+
+> Publishing requires being signed in to the **Community Hub** (an account separate from your local profile).
+
+### Explore / My patches
+
+The **Patch Hub** page has two tabs:
+
+- **Explore** — every pack published by the community, with search and sorting (most downloaded, top rated, recently updated, completion)
+- **My patches** — only the packs you published with the current profile
+
+### Performance
+
+Patch Hub lists use a **local cache** (about 60 seconds): moving back and forth between tabs no longer reloads from the server every time. The cache refreshes automatically after a publish or download. Publishing and reporting also have a small **minimum interval** between submissions, to avoid overloading the shared server.
+
+---
+
+## Ollama Inference Parameters
+
+*(NEW v1.15.0)*
+
+When you translate with a **local Ollama model**, you can control *how* the model generates text. Open the page from **Ollama Manager → "Advanced"** (route `/ollama-manager/advanced`).
+
+> If you change nothing, the recommended defaults stay active: translation behaves exactly as before. Advanced parameters are sent to Ollama **only** when you set them.
+
+### Presets
+
+Three ready-made profiles, tuned for video game translation:
+
+| Preset | Temperature | `num_ctx` | When to use |
+|--------|-------------|-----------|-------------|
+| 🎯 **Faithful** | 0.1 | 8192 | Maximum adherence to the text, little invention. **Recommended** for translation. |
+| ⚖️ **Balanced** | 0.3 | 4096 | A compromise between faithfulness and naturalness. |
+| ✨ **Creative** | 0.7 | 4096 | More stylistic freedom: for dialogue and expressive tone. |
+
+### Expert mode
+
+Expand **"Expert mode"** to tune each parameter with sliders:
+
+| Parameter | Effect |
+|-----------|--------|
+| `temperature` | Randomness of generation. Low = more deterministic and faithful; high = more varied and creative. |
+| `top_p` | *Nucleus sampling*: consider only the most probable tokens up to this probability mass. Lower = more focused. |
+| `top_k` | Limit the choice to the k most probable tokens at each step. Lower = fewer digressions. |
+| `repeat_penalty` | Discourages repeating words. Above 1.0 reduces loops; too high can distort the text. |
+| `num_ctx` | Context window (tokens kept in memory). **Wider = no truncation on long texts**, but more RAM/VRAM. |
+| `seed` *(optional)* | Fixes the random seed for **reproducible** results (useful for benchmarks). Off = every run may vary. |
+
+Editing any value switches the preset to **"custom"** automatically.
+
+### When and why to use them
+
+- **Faithfulness vs creativity**: for translation, prefer a **low temperature** (Faithful preset) — less invention, more adherence. Raise it only for dialogue where you want a more expressive tone.
+- **Long files**: if you translate long texts and notice truncation or lost context, increase **`num_ctx`** (at the cost of more RAM/VRAM).
+- **Reproducibility**: enable the **`seed`** when you want to compare two models or re-run the same translation and get exactly the same output.
+
+### How to use
+
+1. Open **Ollama Manager** from the sidebar and click **"Advanced"**
+2. Pick a preset (start with **Faithful** for translation) or open **Expert mode**
+3. Adjust the parameters (e.g. raise `num_ctx` for long files, enable `seed` for repeatable results)
+4. Click **"Save"** — the parameters are stored for subsequent translations
+
+> **Scope**: these parameters apply to translations run with **local Ollama models** (including the *reflection* pass). They do not affect web providers (Gemini, Groq, etc.).
+
+---
+
+## Send Feedback
+
+*(NEW v1.15.0)*
+
+You can report a bug, suggest an idea, or tell us what you think straight from the app, without leaving GameStringer.
+
+### How to send it
+
+1. Go to **Settings → Community** (Community Hub tab)
+2. In the **"Send feedback"** box, click **"Send feedback"**
+3. Pick a **category** — 🐞 Bug, 💡 Idea or 💬 Other
+4. Write your message and click **"Send"**
+
+### Context attached automatically
+
+To help us understand the problem, a **minimal technical context** is attached to the message:
+
+- **Version** of the app
+- **Platform** (operating system + Tauri/Web)
+- **Screen** you were on (the current route)
+- **Game** (only if you were working on a specific title)
+
+> **Privacy**: no personal data. Only version, platform and current screen.
+
+### If the backend is unavailable
+
+The widget is **fail-open**: if the server isn't configured or you're offline, the message isn't lost. You can still **copy the report** to the clipboard or send it by **email** in one click — the technical context is already included in the text.
+
+---
+
 ## What's New v1.8.1
 
 ### Live Translation Overlay
@@ -662,4 +792,4 @@ Startup time optimization:
 
 ---
 
-GameStringer v1.9.0 - Guide updated 26/04/2026
+GameStringer v1.15.0 - Guide updated 24/07/2026

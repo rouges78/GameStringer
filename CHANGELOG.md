@@ -1,5 +1,17 @@
 # GameStringer Changelog
 
+## 🚀 v1.15.0 - 2026-07-24
+
+- ✨ ollama: Inference parameters panel (Faithful/Balanced/Creative presets + expert mode: temperature, top_p, top_k, repeat_penalty, num_ctx, seed) for local Ollama, reflection included
+- ✨ ollama: The 'Advanced Functions' button no longer 404s — it opens the new /ollama-manager/advanced panel
+- ✨ projects: Patch Hub integration — importing a .gspack registers a completed project and saves the translated file
+- ✨ patch-hub: Publish pre-filled from a project with the real translated file attached + Explore / My patches toggle
+- ✨ patch-hub: New 'Apply to game' action (folder picker + automatic .bak backup)
+- ✨ feedback: In-app feedback widget (Settings → Community) with automatic context (version, platform, screen, game); fail-open send + copy/email fallback
+- ✨ patch-hub: Faster Hub via client-side caching (60s TTL) + write throttling; server-side rate-limiting migration prepared
+- 🐛 news-feed: RSS feeds no longer trigger CORS errors in the desktop webview
+- • a11y: Documented WCAG 2.1 AA accessibility audit + translate v1.14.0 changelog across all 12 locales
+
 ## 🚀 v1.14.0 - 2026-07-13
 
 - ✨ compat: Compatibility badge on game cards + abuse-guard migration

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.15.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ GameStringer는 다양한 깊이 수준으로 **20개 이상의 엔진**을 지�
 ---
 
 ## ✨ 기능
+
+### 🆕 v1.15.0 신규 기능 — Ollama 파라미터와 프로젝트 ↔ Patch Hub
+
+- **🎚 Ollama 추론 파라미터 패널** — **충실 / 균형 / 창의** 프리셋으로 로컬 Ollama 번역을 미세 조정하거나, **전문가 모드**로 전환해 temperature, top-p 등 샘플링 옵션을 직접 제어하세요. 선택한 설정은 모든 Ollama 번역 호출에 비파괴적으로 연결됩니다
+- **🔗 프로젝트 ↔ Patch Hub 통합** — **`.gspack`을 완료된 프로젝트로 가져오고**, **프로젝트에서 바로 채워진** 상태로 Hub에 게시하며, **탐색 / 내 패치** 토글을 전환하고, 한 번의 클릭으로 **게임에 적용**(자동 백업 포함)
+- **💬 인앱 피드백 위젯** — 앱을 벗어나지 않고 피드백을 보내거나 문제를 신고하세요
+- **⚡ 더 빨라진 Patch Hub** — 응답 **캐싱 + 속도 제한**으로 부하 상황에서도 쾌적한 탐색과 다운로드
+- **🐛 수정 사항** — RSS 뉴스 WebView가 더 이상 CORS로 차단되지 않으며, 새로운 **WCAG 2.1 AA 접근성 감사**를 수행했습니다
 
 ### 🆕 v1.9.0 신규 기능
 
@@ -421,6 +429,5 @@ GameStringer가 원하는 언어로 게임을 플레이하는 데 도움이 되�
 
 <p align="center">
   자신의 언어로 게임을 플레이하고 싶은 게이머를 위해 ❤️로 제작됨<br>
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.15.0</strong> · © 2025-2026 GameStringer Team
 </p>

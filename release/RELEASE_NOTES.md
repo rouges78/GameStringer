@@ -1,63 +1,36 @@
-# GameStringer v1.8.1 — Live Translation Overlay, Hub Marketplace, TM Network, AI Dubbing Pipeline, Plugin System
+# GameStringer v1.15.0 — Parametri Ollama, Progetti ↔ Patch Hub, Feedback in-app, Hub più veloce
 
-## Live Translation Overlay
+## Parametri di inferenza Ollama
 
-- **Overlay OCR in tempo reale**: traduzione live del gioco tramite overlay trasparente
-- Pipeline: cattura schermo → OCR multi-engine (Tesseract/OneOCR/PaddleOCR) → traduzione AI (Groq/Cerebras) → overlay stile gaming
-- Hotkey `Ctrl+Alt+O` per attivare/disattivare
-- Diff detection: salta il testo invariato tra frame successivi
-- Cache traduzioni per replay istantaneo
+- **Pannello parametri** (`/ollama-manager/advanced`): preset **Fedele / Bilanciato / Creativo** + **modalità esperto**
+- Controlli esperto: `temperature`, `top_p`, `top_k`, `repeat_penalty`, `num_ctx`, `seed`
+- Vale per Ollama locale, inclusa la pipeline di reflection
+- Chiude il **404** del pulsante "Funzioni avanzate"
 
-## Hub Marketplace
+## Integrazione Progetti ↔ Patch Hub
 
-- **Marketplace community**: piattaforma pacchetti traduzione con installazione 1-click
-- Backend Supabase con 10 tabelle (packs, reviews, commenti, follower, moderazione)
-- Profili utente con sistema di reputazione
-- Workflow stato: draft → published → verified → featured
+- L'import di un **`.gspack`** registra un progetto completato e salva il file tradotto
+- **Pubblica** precompilato dal progetto; la pubblicazione allega il file tradotto reale
+- Toggle **Esplora / Le mie patch**
+- Nuova azione **Applica al gioco**: scelta cartella + backup **`.bak`** automatico
 
-## Translation Memory Network
+## Feedback in-app
 
-- **TM federata**: condivisione Translation Memory via Supabase
-- Traduzioni ad alta qualità (confidence > 0.8) contribuite al pool globale (opt-in, privacy-first)
-- Testo sorgente hashato per protezione privacy
-- Auto-integrata nella pipeline `translateWithFallback()`
-- Entry con scope per gioco
+- **Widget di feedback** (Impostazioni → Community): categoria + messaggio
+- Contesto automatico allegato: versione, piattaforma, schermata, gioco
+- Invio **fail-open** con fallback copia/email
 
-## AI Dubbing Pipeline
+## Prestazioni Patch Hub
 
-- **Pipeline doppiaggio a 7 step**: scan audio → Whisper STT → traduzione AI → sintesi TTS con voci personaggio (OpenAI/ElevenLabs/Azure) → duration matching → patching audio con backup → Rhubarb lip sync → sottotitoli (SRT/VTT/ASS)
-- 16 archetipi personaggio per voci caratterizzate
-- Supporto pausa/ripresa/annullamento
+- **Caching client-side** (TTL 60s) + throttle delle scritture
+- **Migration di rate-limiting** lato server preparata
 
-## Plugin System
+## Fix & Qualità
 
-- **PatcherPlugin interface**: plugin per patcher engine creati dalla community
-- Ciclo di vita: detect → extract → patch → verify → restore
-- Template generator per scaffolding plugin
-- Nessuna compilazione Rust — plugin via JavaScript eval sandboxed
-- Distribuzione come pacchetti `.gsplugin`
-
-## Security
-
-- CSP rinforzata: rimosso `unsafe-eval`, `img-src`/`connect-src` ristretti a domini specifici
-- Fix XSS nella ricerca intelligente (rimosso `dangerouslySetInnerHTML`)
-- Storage chiavi API criptato con AES-256-GCM (backend Rust + client TypeScript)
-- Protezione CSRF: validazione Origin + header `X-GS-Client`
-- Validazione input Zod su 4 route API
-- Rate limiting globale middleware (configurabile per-route)
-- Tutte le 42/42 route API usano `withErrorHandler`
-
-## Architettura & Qualità Codice
-
-- CI pipeline: aggiunto job `frontend-checks` (tsc, eslint, vitest, npm audit)
-- ESLint config: regole `no-console`, `no-explicit-any`, `no-unused-vars`
-- 71 nuovi unit test (api-schemas, middleware, moduli traduzione)
-- 18 moduli estratti da 3 file monolitici (-1841 righe totali)
-- 1197/1203 chiamate `console.*` migrate a `clientLogger`/`logger` strutturato (99.5%)
-- 893 clausole catch tipizzate con `: unknown`
-- 25+ tipi TypeScript `any` eliminati
-- Rimosse dipendenze duplicate: react-hot-toast, vdf (-42 pacchetti)
+- Fix: i **feed RSS** non generano più errori **CORS** nella webview desktop
+- **Audit accessibilità WCAG 2.1 AA** documentato
+- Changelog in-app v1.15.0 tradotto in **12 lingue UI**
 
 ---
 
-**Download**: Scegli `GameStringer-1.8.1-Setup.exe` (installer) o `GameStringer-1.8.1-Portable.zip`
+**Download**: Scegli `GameStringer_1.15.0_x64-setup.exe` (installer) o `GameStringer_1.15.0_x64-portable.zip`

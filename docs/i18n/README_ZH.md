@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.15.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ GameStringer 支持具有不同深度级别的 **20+ 引擎**:
 ---
 
 ## ✨ 功能
+
+### 🆕 v1.15.0 新增功能 — Ollama 参数与 项目 ↔ Patch Hub
+
+- **🎚 Ollama 推理参数面板** — 通过**忠实 / 平衡 / 创意**预设微调本地 Ollama 翻译，或切换到**专家模式**直接控制 temperature、top-p 等采样参数；所选设置会以非破坏方式接入每一次 Ollama 翻译调用
+- **🔗 项目 ↔ Patch Hub 集成** — **将 `.gspack` 作为已完成项目导入**，**直接从项目预填充**并发布到 Hub，在**浏览 / 我的补丁**开关间切换，一键**应用到游戏**（并自动备份）
+- **💬 应用内反馈小组件** — 无需离开应用即可发送反馈或报告问题
+- **⚡ 更快的 Patch Hub** — 响应**缓存 + 限流**，在高负载下也能更流畅地浏览和下载
+- **🐛 修复** — RSS 新闻 WebView 不再被 CORS 拦截，并新增一轮 **WCAG 2.1 AA 无障碍审计**
 
 ### 🆕 v1.9.0 新增功能
 
@@ -421,6 +429,5 @@ Rust 后端:`cd src-tauri && cargo check` 以验证 Tauri 命令在您的平台�
 
 <p align="center">
   用 ❤️ 为想用自己语言玩游戏的玩家制作<br>
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.15.0</strong> · © 2025-2026 GameStringer Team
 </p>

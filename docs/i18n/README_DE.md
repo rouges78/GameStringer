@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.1-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.15.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ GameStringer unterstützt **20+ Engines** mit unterschiedlichem Tiefgang:
 ---
 
 ## ✨ Funktionen
+
+### 🆕 Neu in v1.15.0 — Ollama-Parameter und Projekte ↔ Patch Hub
+
+- **🎚 Ollama-Inferenzparameter-Panel** — Feinabstimmung der Übersetzungen mit lokalem Ollama über die Presets **Treu / Ausgewogen / Kreativ** oder Wechsel in den **Expertenmodus** für die direkte Kontrolle über temperature, top-p und die übrigen Sampling-Regler; die Wahl wird nicht-invasiv in jeden Ollama-Übersetzungsaufruf eingebunden
+- **🔗 Integration Projekte ↔ Patch Hub** — **importiere eine `.gspack` als abgeschlossenes Projekt**, veröffentliche im Hub **direkt aus einem Projekt vorbefüllt**, wechsle über den Umschalter **Entdecken / Meine Patches** und **Auf Spiel anwenden** mit einem Klick (mit automatischem Backup)
+- **💬 Feedback-Widget in der App** — sende Feedback oder melde ein Problem, ohne die App zu verlassen
+- **⚡ Schnellerer Patch Hub** — **Caching + Rate-Limiting** der Antworten für flüssigeres Blättern und Herunterladen unter Last
+- **🐛 Fehlerbehebungen** — die RSS-News-Webview wird nicht mehr durch CORS blockiert, plus ein neuer **WCAG-2.1-AA-Barrierefreiheits-Audit**
 
 ### 🆕 Neu in v1.9.0
 
@@ -421,6 +429,5 @@ Siehe [LICENSE](LICENSE) für Details. Fragen? Öffne eine [Discussion](https://
 
 <p align="center">
   Mit ❤️ gemacht für Gamer, die in ihrer eigenen Sprache spielen wollen<br>
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.15.0</strong> · © 2025-2026 GameStringer Team
 </p>

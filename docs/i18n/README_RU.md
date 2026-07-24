@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.9.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.15.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -187,6 +187,14 @@ GameStringer поддерживает **20+ движков** с различны
 ---
 
 ## ✨ Возможности
+
+### 🆕 Новое в v1.15.0 — параметры Ollama и Проекты ↔ Patch Hub
+
+- **🎚 Панель параметров вывода Ollama** — тонкая настройка переводов с локальной Ollama через пресеты **Точный / Сбалансированный / Творческий** или переход в **режим эксперта** для прямого контроля temperature, top-p и остальных параметров сэмплирования; выбор ненавязчиво подключён к каждому вызову перевода Ollama
+- **🔗 Интеграция Проекты ↔ Patch Hub** — **импортируйте `.gspack` как завершённый проект**, публикуйте в Hub **с автозаполнением прямо из проекта**, переключайтесь между **Обзор / Мои патчи** и **Применить к игре** в один клик (с автоматической резервной копией)
+- **💬 Виджет обратной связи в приложении** — отправляйте отзыв или сообщайте о проблеме, не выходя из приложения
+- **⚡ Более быстрый Patch Hub** — **кэширование + ограничение частоты запросов** ответов для более отзывчивого просмотра и загрузки под нагрузкой
+- **🐛 Исправления** — веб-представление новостей RSS больше не блокируется CORS, плюс новый проход **аудита доступности WCAG 2.1 AA**
 
 ### 🆕 Новое в v1.9.0
 
@@ -421,6 +429,5 @@ Rust-бэкенд: `cd src-tauri && cargo check`, чтобы проверить,
 
 <p align="center">
   Сделано с ❤️ для геймеров, которые хотят играть на своём родном языке<br>
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
-  <strong>GameStringer v1.9.0</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.15.0</strong> · © 2025-2026 GameStringer Team
 </p>

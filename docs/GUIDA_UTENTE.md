@@ -1,5 +1,12 @@
 ﻿# 📖 GameStringer - Guida Utente Completa
 
+## 🆕 Novità v1.15.0
+
+- ⚙️ **Parametri di inferenza Ollama**: nuova pagina *Ollama Manager → Funzioni avanzate* con 3 preset (Fedele/Bilanciato/Creativo) e modalità esperto per regolare `temperature`, `top_p`, `top_k`, `repeat_penalty`, `num_ctx` e `seed` dei modelli locali.
+- 🚀 **Progetti ↔ Patch Hub**: ogni pacchetto `.gspack` importato viene registrato come progetto completato; dai Progetti puoi **Applicare al gioco** (con backup `.bak`) o **Pubblicare** la traduzione precompilata sul Patch Hub.
+- 💬 **Widget feedback** in *Impostazioni → Community*: segnala bug o idee con il contesto tecnico allegato automaticamente (versione, piattaforma, schermata).
+- ⚡ **Patch Hub più veloce**: cache locale delle liste e limiti anti-abuso per navigare tra le schede senza ricaricare ogni volta dal server.
+
 ## 🆕 Novità v1.12.0
 
 - 👁️ Traduzione con contesto visivo (VLM): l'AI vede lo schermo e traduce col contesto, risolvendo le parole ambigue (es. "Chest" = forziere o petto). Locale (Ollama) o OpenAI/Gemini
@@ -75,6 +82,9 @@
 54. [Novità v1.5.0](#novità-v150)
 55. [Translation Innovations 2026](#translation-innovations-2026) *(NUOVO)*
 56. [Novità v1.9.0](#novità-v160) *(NUOVO v1.9.0)*
+57. [Progetti e Patch Hub](#progetti-e-patch-hub) *(AGGIORNATO v1.15.0)*
+58. [Parametri di Inferenza Ollama](#parametri-di-inferenza-ollama) *(NUOVO v1.15.0)*
+59. [Invia Feedback](#invia-feedback) *(NUOVO v1.15.0)*
 
 ---
 
@@ -86,7 +96,7 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e altri
 - **Provider AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **LM Studio** (locale), **Alocai ModelWiz** (MT gaming), **Qwen 3**, **NLLB-200** (18+ provider)
 - **Lingue**: 200+ lingue supportate (con NLLB-200)
-- **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 lingue)
+- **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL, EL (12 lingue)
 - **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games, Humble App, Game Jolt, Big Fish Games
 - **NUOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
 - **NUOVO v1.0.6**: Qwen 3 (lingue asiatiche), NLLB-200 (200 lingue), bug fixes
@@ -731,6 +741,96 @@ Clicca **Pubblica patch** per aprire il form di pubblicazione. Inserisci nome de
 
 ---
 
+## Progetti e Patch Hub
+
+*(AGGIORNATO v1.15.0)*
+
+La pagina **Progetti** raccoglie in un unico posto tutti i giochi che stai traducendo o hai già tradotto — provenienti da Quality Scoring, dizionari, Translation Memory e libreria giochi. Da qui gestisci l'intero ciclo di vita di una traduzione: apri, applica, pubblica.
+
+### Import `.gspack` → progetto
+
+Quando **importi un pacchetto `.gspack`** (scaricato dal Patch Hub o creato da te), GameStringer non si limita ad applicarlo: **registra un progetto completato** e **salva i file tradotti** in locale. Il gioco appare così tra i Progetti al 100%, pronto per essere ri-applicato o pubblicato in futuro senza rifare nulla.
+
+### Applica al gioco
+
+Per i progetti **completati**, il pulsante **"Applica al gioco"** (icona cartella) copia i file tradotti direttamente nell'installazione:
+
+1. Scegli la **cartella d'installazione** del gioco
+2. Prima di sovrascrivere un file esistente, viene creato un **backup `.bak`** accanto all'originale
+3. **Sicurezza**: se il backup di un file non riesce, quel file viene **saltato** (mai sovrascritto senza una copia di sicurezza)
+4. Al termine vedi quanti file sono stati scritti e quanti saltati
+
+Per ripristinare l'originale basta rinominare il file `.bak` togliendo l'estensione.
+
+### Pubblica (precompilato)
+
+Il pulsante **"Pubblica sul Patch Hub"** (icona condividi) invia la traduzione alla community. Pubblica **il file tradotto reale** (non un semplice manifest di metadati), con nome, gioco, lingue e percentuale di completamento **già precompilati**. Il pack entra in **coda di moderazione** prima di diventare pubblicamente visibile.
+
+> La pubblicazione richiede l'accesso al **Community Hub** (account separato dal profilo locale).
+
+### Esplora / Le mie patch
+
+Nella pagina **Patch Hub** trovi due schede:
+
+- **Esplora** — tutti i pack pubblicati dalla community, con ricerca e ordinamento (più scaricati, meglio valutati, aggiornati di recente, completamento)
+- **Le mie patch** — solo i pack che hai pubblicato tu con il profilo corrente
+
+### Prestazioni
+
+Le liste del Patch Hub usano una **cache locale** (circa 60 secondi): navigando avanti e indietro tra le schede non ricarichi ogni volta dal server. La cache si aggiorna automaticamente dopo una pubblicazione o un download. Pubblicazioni e segnalazioni hanno inoltre un piccolo **intervallo minimo** tra un invio e l'altro, per non sovraccaricare il server condiviso.
+
+---
+
+## Parametri di Inferenza Ollama
+
+*(NUOVO v1.15.0)*
+
+Quando traduci con un modello **locale via Ollama**, puoi controllare *come* il modello genera il testo. La pagina si apre da **Ollama Manager → "Funzioni avanzate"** (rotta `/ollama-manager/advanced`).
+
+> Se non tocchi nulla, restano attivi i valori di default consigliati: la traduzione si comporta esattamente come prima. I parametri avanzati vengono inviati a Ollama **solo** quando li imposti tu.
+
+### Preset
+
+Tre profili pronti all'uso, pensati per la traduzione di videogiochi:
+
+| Preset | Temperatura | `num_ctx` | Quando usarlo |
+|--------|-------------|-----------|---------------|
+| 🎯 **Fedele** | 0.1 | 8192 | Massima aderenza al testo, poca invenzione. **Consigliato** per la traduzione. |
+| ⚖️ **Bilanciato** | 0.3 | 4096 | Compromesso tra fedeltà e naturalezza. |
+| ✨ **Creativo** | 0.7 | 4096 | Più libertà stilistica: per dialoghi e tono espressivo. |
+
+### Modalità Esperto
+
+Espandi **"Modalità esperto"** per regolare ogni parametro con gli slider:
+
+| Parametro | Effetto |
+|-----------|---------|
+| `temperature` | Casualità della generazione. Bassa = più deterministica e fedele; alta = più varia e creativa. |
+| `top_p` | *Nucleus sampling*: considera solo i token più probabili fino a questa massa di probabilità. Più basso = più focalizzato. |
+| `top_k` | Limita la scelta ai k token più probabili a ogni passo. Più basso = meno divagazioni. |
+| `repeat_penalty` | Scoraggia la ripetizione di parole. Sopra 1.0 riduce i loop; troppo alto può snaturare il testo. |
+| `num_ctx` | Finestra di contesto (token tenuti in memoria). **Più ampio = niente tagli sui testi lunghi**, ma più RAM/VRAM. |
+| `seed` *(opzionale)* | Fissa il seme casuale per risultati **riproducibili** (utile ai benchmark). Disattivato = ogni run può variare. |
+
+Modificando un valore, il preset passa automaticamente a **"personalizzato"**.
+
+### Quando e perché usarli
+
+- **Fedeltà vs creatività**: per la traduzione conviene una **temperatura bassa** (preset Fedele) — meno invenzione, più aderenza. Alza la temperatura solo per dialoghi in cui vuoi un tono più espressivo.
+- **File lunghi**: se traduci testi lunghi e noti tagli o perdita di contesto, aumenta **`num_ctx`** (a costo di più RAM/VRAM).
+- **Riproducibilità**: attiva il **`seed`** quando vuoi confrontare due modelli o rieseguire la stessa traduzione ottenendo esattamente lo stesso output.
+
+### Come usarlo
+
+1. Apri **Ollama Manager** dalla sidebar e clicca **"Funzioni avanzate"**
+2. Scegli un preset (parti da **Fedele** per la traduzione) oppure apri la **Modalità esperto**
+3. Regola i parametri (es. alza `num_ctx` per i file lunghi, attiva il `seed` per risultati ripetibili)
+4. Clicca **"Salva"** — i parametri restano memorizzati per le traduzioni successive
+
+> **Ambito**: questi parametri si applicano alle traduzioni eseguite con i modelli **Ollama locali** (inclusa la passata di *reflection*). Non influiscono sui provider web (Gemini, Groq, ecc.).
+
+---
+
 ## Esportazione Patch
 
 Il Unity Patcher installa automaticamente BepInEx e XUnity.AutoTranslator sui giochi Unity.
@@ -979,6 +1079,36 @@ Il salvataggio e il caricamento avvengono tramite i comandi Tauri `save_app_sett
 1. Vai su **Settings → API Keys**
 2. Inserisci la chiave del provider AI desiderato (Claude, Gemini, OpenAI, DeepSeek, ecc.)
 3. Le chiavi vengono salvate automaticamente e restano disponibili anche dopo la chiusura dell'app
+
+---
+
+## Invia Feedback
+
+*(NUOVO v1.15.0)*
+
+Puoi segnalare un bug, proporre un'idea o dirci cosa ne pensi direttamente dall'app, senza uscire da GameStringer.
+
+### Come inviarlo
+
+1. Vai in **Impostazioni → Community** (scheda Community Hub)
+2. Nel riquadro **"Invia feedback"**, clicca **"Invia feedback"**
+3. Scegli una **categoria** — 🐞 Bug, 💡 Idea o 💬 Altro
+4. Scrivi il tuo messaggio e clicca **"Invia"**
+
+### Contesto allegato automaticamente
+
+Per aiutarci a capire il problema, al messaggio viene allegato un **contesto tecnico minimo**:
+
+- **Versione** dell'app
+- **Piattaforma** (sistema operativo + Tauri/Web)
+- **Schermata** corrente (la rotta in cui ti trovavi)
+- **Gioco** (solo se stavi lavorando su un titolo specifico)
+
+> **Privacy**: nessun dato personale. Solo versione, piattaforma e schermata corrente.
+
+### Se il backend non è disponibile
+
+Il widget è **fail-open**: se il server non è configurato o sei offline, il messaggio non va perso. Puoi comunque **copiare il report** negli appunti o inviarlo via **email** con un clic — il contesto tecnico è già incluso nel testo.
 
 ---
 
@@ -2223,4 +2353,4 @@ Ottimizzazione del tempo di caricamento:
 
 ---
 
-GameStringer v1.9.0 - Guida aggiornata 26/04/2026
+GameStringer v1.15.0 - Guida aggiornata 24/07/2026

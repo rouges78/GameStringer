@@ -2,7 +2,7 @@
 
 ## Panoramica
 
-Documentazione completa di GameStringer v1.9.0 - Suite professionale di localizzazione videogiochi con AI.
+Documentazione completa di GameStringer v1.15.0 - Suite professionale di localizzazione videogiochi con AI.
 
 ---
 
