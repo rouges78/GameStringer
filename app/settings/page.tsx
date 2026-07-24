@@ -87,6 +87,7 @@ import { invoke } from '@/lib/tauri-api';
 import { saveConfig as saveSupabaseConfig, SUPABASE_MIGRATION_SQL } from '@/lib/social/community-hub-backend';
 import { clientLogger } from '@/lib/client-logger';
 import { useWarmIndex } from '@/hooks/use-warm-index';
+import { FeedbackWidget } from '@/components/feedback/feedback-widget';
 
 // Supabase Settings Component
 function SupabaseSettingsCard() {
@@ -1684,6 +1685,7 @@ export default function SettingsPage() {
             benchmarkEnabled={settings.privacy.benchmarkTelemetry}
             onChange={(key, v) => updateSetting('privacy', key, v)}
           />
+          <FeedbackWidget />
         </TabsContent>
 
         {/* Display Tab */}
