@@ -146,7 +146,7 @@ GameStringer 是一款**桌面应用程序**(Windows、Linux 和 macOS),可让�
 ## 🚀 工作原理
 
 1. **安装** GameStringer 并启动
-2. **您的游戏库自动加载** — Steam、Epic、GOG、Origin、Ubisoft、Amazon、itch.io、Humble App、Game Jolt、Big Fish(秒级检测 800+ 游戏)
+2. **您的游戏库自动加载** — Steam、Epic、GOG、Origin、Ubisoft、Amazon、itch.io、Humble App、Game Jolt、Big Fish(秒级检测已安装的游戏，数量不限)
 3. **选择一款游戏** → 可选择运行 **P.T.(Prediction Tool)** 查看难度、预计时间、最佳 LLM 链
 4. 点击 **"String it!"** — GameStringer 自动扫描、提取、翻译和打补丁
 5. **用您的语言畅玩** — 打补丁前始终创建备份
@@ -194,11 +194,11 @@ P.T. 是一个在任何翻译*之前*运行的深度分析引擎。它扫描您�
 
 ### P.T.Rank — 快速排行
 
-在多款游戏上运行 P.T. 后,打开 **P.T.Rank** 可查看按难度排序的所有已分析标题。非常适合规划您的翻译队列:从轻松的开始,把 80 万字符串的 RPG 留到最后。
+在多款游戏上运行 P.T. 后,打开 **P.T.Rank** 可查看按难度排序的所有已分析标题。非常适合规划您的翻译队列:从轻松的开始,把动辄数十万字符串的 RPG 留到最后。
 
 ### Dry Run Scanner
 
-不想一次分析一款游戏?从库页面运行 **Dry Run** 可批量扫描**整个 Steam 库(800+ 游戏)**,**零文件修改**。您将获得一个 JSON 报告,将每款游戏分类为 **Ready**(引擎支持 + 可提取字符串)、**Errors**(manifest 问题 / DRM 阻塞)或 **Unsupported**(未知引擎 / 无文本)。进度为实时的,且无需备份,因为未触及任何内容。
+不想一次分析一款游戏?从库页面运行 **Dry Run** 可批量扫描**已安装的整个游戏库(数量不限)**,**零文件修改**。您将获得一个 JSON 报告,将每款游戏分类为 **Ready**(引擎支持 + 可提取字符串)、**Errors**(manifest 问题 / DRM 阻塞)或 **Unsupported**(未知引擎 / 无文本)。进度为实时的,且无需备份,因为未触及任何内容。
 
 ### String it! Smart Gate
 
@@ -246,7 +246,7 @@ flowchart TD
     class PLAY core
 ```
 
-GameStringer 支持具有不同深度级别的 **20+ 引擎**:
+GameStringer 有 **12 个配备专用解析器的引擎**，总共可识别 **20 多个引擎**，深度级别各不相同:
 
 | 引擎 | 支持 | 工作原理 |
 |--------|---------|--------------|
@@ -366,7 +366,7 @@ GameStringer 支持具有不同深度级别的 **20+ 引擎**:
 - 逐文件**编码分析**(Shift-JIS、UTF-8/16、Big5、EUC-KR)
 - **翻译复杂度分析**(敬语、性别、CJK、注音、RTL)
 - **P.T.Rank / Quick Ranking** — 按难度对所有已分析游戏排序
-- **Dry Run Scanner** — 整个 Steam 库(800+ 游戏)的批量扫描,无修改
+- **Dry Run Scanner** — 已安装的整个游戏库(数量不限)的批量扫描,无修改
 - **Workflow Orchestrator** — 实际执行引擎,具有 6+ 引擎的通用 fast path 和实时进度
 - **预测缓存**(24 小时) — 立即重新打开之前分析过的游戏
 - **导出报告**(JSON + Markdown)用于共享和存档
@@ -374,7 +374,7 @@ GameStringer 支持具有不同深度级别的 **20+ 引擎**:
 ### 📚 游戏库
 
 - **自动检测**:Steam(带 Family Sharing)、Epic、GOG Galaxy、Origin/EA、Ubisoft Connect、Amazon Games、itch.io、Humble App、Game Jolt、Big Fish Games
-- 秒级从已安装库识别 **800+ 游戏**
+- 秒级识别**已安装的整个游戏库**,数量不限
 - 带封面艺术、元数据、引擎徽章、VR 徽章、安装状态的**游戏卡片**
 - **悬停快捷操作**:String it!、Batch、Community、P.T. — 全部一键
 - **Game Update Tracker**:检测 Steam 何时更新了已翻译的游戏(通过 `buildid`),验证补丁完整性(BepInEx 文件、`_P.pak` 存在),如果需要重新打补丁则警告

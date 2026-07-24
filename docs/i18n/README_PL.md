@@ -146,7 +146,7 @@ Pobierz najnowszą wersję z **[GitHub Releases](https://github.com/rouges78/Gam
 ## 🚀 Jak to działa
 
 1. **Zainstaluj** GameStringer i uruchom go
-2. **Twoja biblioteka gier ładuje się automatycznie** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (800+ gier wykrywanych w sekundy)
+2. **Twoja biblioteka gier ładuje się automatycznie** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (zainstalowane gry są wykrywane w sekundy, bez limitu liczby)
 3. **Wybierz grę** → opcjonalnie uruchom **P.T. (Prediction Tool)**, aby zobaczyć trudność, szacowany czas, najlepszy łańcuch LLM
 4. Kliknij **„String it!"** — GameStringer automatycznie skanuje, wyodrębnia, tłumaczy i patchuje
 5. **Graj w swoim języku** — kopie zapasowe są zawsze tworzone przed patchowaniem
@@ -194,11 +194,11 @@ P.T. to silnik głębokiej analizy, który działa *przed* jakimkolwiek tłumacz
 
 ### P.T.Rank — Szybki ranking
 
-Po uruchomieniu P.T. na wielu grach otwórz **P.T.Rank**, aby zobaczyć wszystkie przeanalizowane tytuły posortowane według trudności. Idealne do planowania kolejki tłumaczeń: zacznij od łatwych zwycięstw, RPG-i z 800 tys. ciągów zostaw na koniec.
+Po uruchomieniu P.T. na wielu grach otwórz **P.T.Rank**, aby zobaczyć wszystkie przeanalizowane tytuły posortowane według trudności. Idealne do planowania kolejki tłumaczeń: zacznij od łatwych zwycięstw, RPG-i z setkami tysięcy ciągów zostaw na koniec.
 
 ### Dry Run Scanner
 
-Nie chcesz analizować jednej gry na raz? Uruchom **Dry Run** ze strony Biblioteki, aby skanować **całą bibliotekę Steam (800+ gier) wsadowo**, z **zerową modyfikacją plików**. Otrzymasz raport JSON kategoryzujący każdą grę jako **Ready** (silnik wspierany + ciągi do wyodrębnienia), **Errors** (problemy z manifestem / blokada DRM) lub **Unsupported** (nieznany silnik / brak tekstu). Postęp jest w czasie rzeczywistym, a kopia zapasowa nie jest potrzebna, ponieważ niczego się nie dotyka.
+Nie chcesz analizować jednej gry na raz? Uruchom **Dry Run** ze strony Biblioteki, aby skanować **całą zainstalowaną bibliotekę wsadowo**, bez limitu liczby gier,, z **zerową modyfikacją plików**. Otrzymasz raport JSON kategoryzujący każdą grę jako **Ready** (silnik wspierany + ciągi do wyodrębnienia), **Errors** (problemy z manifestem / blokada DRM) lub **Unsupported** (nieznany silnik / brak tekstu). Postęp jest w czasie rzeczywistym, a kopia zapasowa nie jest potrzebna, ponieważ niczego się nie dotyka.
 
 ### String it! Smart Gate
 
@@ -246,7 +246,7 @@ flowchart TD
     class PLAY core
 ```
 
-GameStringer wspiera **20+ silników** z różnym poziomem głębokości:
+GameStringer ma **12 silników z dedykowanym parserem** i rozpoznaje łącznie **ponad 20**, z różnym poziomem głębokości:
 
 | Silnik | Wsparcie | Jak to działa |
 |--------|---------|--------------|
@@ -366,7 +366,7 @@ GameStringer wspiera **20+ silników** z różnym poziomem głębokości:
 - **Analiza kodowania** dla każdego pliku (Shift-JIS, UTF-8/16, Big5, EUC-KR)
 - **Analiza złożoności tłumaczenia** (formy grzecznościowe, rodzaj, CJK, ruby, RTL)
 - **P.T.Rank / Quick Ranking** — sortuje wszystkie przeanalizowane gry według trudności
-- **Dry Run Scanner** — wsadowe skanowanie całej biblioteki Steam (800+ gier) bez modyfikacji
+- **Dry Run Scanner** — wsadowe skanowanie całej zainstalowanej biblioteki, bez limitu liczby gier, bez modyfikacji
 - **Workflow Orchestrator** — rzeczywisty silnik wykonania z uniwersalnym fast path dla 6+ silników i postępem w czasie rzeczywistym
 - **Cache predykcji** (24h) — natychmiastowe ponowne otwieranie wcześniej przeanalizowanych gier
 - **Eksport raportu** (JSON + Markdown) do udostępniania i archiwizacji
@@ -374,7 +374,7 @@ GameStringer wspiera **20+ silników** z różnym poziomem głębokości:
 ### 📚 Biblioteka gier
 
 - **Auto-detect**: Steam (z Family Sharing), Epic, GOG Galaxy, Origin/EA, Ubisoft Connect, Amazon Games, itch.io, Humble App, Game Jolt, Big Fish Games
-- **800+ gier** rozpoznawanych z zainstalowanych bibliotek w sekundy
+- **Cała zainstalowana biblioteka** rozpoznawana w sekundy, bez limitu liczby gier
 - **Karty gier** z okładkami, metadanymi, odznaką silnika, odznaką VR, statusem instalacji
 - **Szybkie akcje przy najechaniu**: String it!, Batch, Community, P.T. — wszystkie jednym kliknięciem
 - **Game Update Tracker**: wykrywa, gdy Steam aktualizuje przetłumaczoną grę (przez `buildid`), weryfikuje integralność patcha (pliki BepInEx, obecność `_P.pak`), ostrzega, jeśli wymagane jest ponowne patchowanie

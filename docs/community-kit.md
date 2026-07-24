@@ -20,7 +20,7 @@ Don't spread thin across many chat servers. Keep **one** public hub (the project
 
 **Title:** Help test GameStringer across engines — looking for testers and contributors
 
-GameStringer auto-detects a game's engine, extracts the text, translates it (local or cloud AI), and re-applies the patch. It already has dedicated parsers for 20+ engines, but real games are messy — the most useful thing right now is **coverage testing on real titles**.
+GameStringer auto-detects a game's engine, extracts the text, translates it (local or cloud AI), and re-applies the patch. It already has dedicated parsers for 12 engines and recognizes over 20, but real games are messy — the most useful thing right now is **coverage testing on real titles**.
 
 You can help in three ways, pick whatever fits:
 

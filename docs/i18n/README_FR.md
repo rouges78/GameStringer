@@ -68,7 +68,7 @@
 
 ## 🙏 Aide recherchée — Testez-le sur de vrais jeux et envoyez du feedback
 
-> **GameStringer est un projet solo, source-available, et encore jeune.** Il gère déjà 20+ moteurs, mais les vrais jeux sont un désordre — chaque titre stocke son texte un peu différemment. **La chose la plus utile que vous puissiez faire maintenant est de lancer GameStringer sur un vrai jeu et de me raconter ce qui s'est passé.** Même un *« ça a échoué à l'étape X »* vaut de l'or.
+> **GameStringer est un projet solo, source-available, et encore jeune.** Il reconnaît déjà 20+ moteurs (12 avec parser dédié), mais les vrais jeux sont un désordre — chaque titre stocke son texte un peu différemment. **La chose la plus utile que vous puissiez faire maintenant est de lancer GameStringer sur un vrai jeu et de me raconter ce qui s'est passé.** Même un *« ça a échoué à l'étape X »* vaut de l'or.
 
 **Pourquoi c'est important :** je ne peux pas tester seul les milliers de jeux qui existent. Un **test et un feedback** continus, sur le terrain, sont ce qui transforme *« ça marche sur mes fixtures »* en *« ça marche sur votre jeu. »* Vos rapports façonnent directement la feuille de route — c'est là que la communauté fait ou défait le projet.
 
@@ -146,7 +146,7 @@ Obtenez la dernière version depuis **[GitHub Releases](https://github.com/rouge
 ## 🚀 Comment ça marche
 
 1. **Installez** GameStringer et lancez-le
-2. **Votre bibliothèque de jeux se charge automatiquement** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (800+ jeux détectés en quelques secondes)
+2. **Votre bibliothèque de jeux se charge automatiquement** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (vos jeux installés sont détectés en quelques secondes, sans limite de nombre)
 3. **Choisissez un jeu** → lancez éventuellement **P.T. (Prediction Tool)** pour voir la difficulté, le temps estimé, la meilleure chaîne LLM
 4. Cliquez sur **« String it! »** — GameStringer scanne, extrait, traduit et applique le patch automatiquement
 5. **Jouez dans votre langue** — des sauvegardes sont toujours créées avant le patch
@@ -194,11 +194,11 @@ P.T. est un moteur d'analyse approfondie qui s'exécute *avant* toute traduction
 
 ### P.T.Rank — Classement rapide
 
-Après avoir exécuté P.T. sur plusieurs jeux, ouvrez **P.T.Rank** pour voir tous les titres analysés triés par difficulté. Idéal pour planifier votre file de traduction : commencez par les plus faciles, gardez les RPG de 800k chaînes pour la fin.
+Après avoir exécuté P.T. sur plusieurs jeux, ouvrez **P.T.Rank** pour voir tous les titres analysés triés par difficulté. Idéal pour planifier votre file de traduction : commencez par les plus faciles, gardez les RPG de centaines de milliers de chaînes pour la fin.
 
 ### Dry Run Scanner
 
-Vous ne voulez pas analyser un jeu à la fois ? Lancez **Dry Run** depuis la page Bibliothèque pour scanner **toute votre bibliothèque Steam (800+ jeux) en lot**, avec **zéro modification de fichier**. Vous obtenez un rapport JSON qui catégorise chaque jeu en **Ready** (moteur supporté + chaînes extractibles), **Errors** (problèmes de manifest / blocage DRM) ou **Unsupported** (moteur inconnu / pas de texte). La progression est en temps réel et aucune sauvegarde n'est nécessaire puisque rien n'est touché.
+Vous ne voulez pas analyser un jeu à la fois ? Lancez **Dry Run** depuis la page Bibliothèque pour scanner **toute votre bibliothèque installée en lot**, sans limite de nombre de jeux,, avec **zéro modification de fichier**. Vous obtenez un rapport JSON qui catégorise chaque jeu en **Ready** (moteur supporté + chaînes extractibles), **Errors** (problèmes de manifest / blocage DRM) ou **Unsupported** (moteur inconnu / pas de texte). La progression est en temps réel et aucune sauvegarde n'est nécessaire puisque rien n'est touché.
 
 ### String it! Smart Gate
 
@@ -246,7 +246,7 @@ flowchart TD
     class PLAY core
 ```
 
-GameStringer prend en charge **20+ moteurs** avec différents niveaux de profondeur :
+GameStringer dispose de **12 moteurs avec parser dédié** et en reconnaît **plus de 20** au total, avec différents niveaux de profondeur :
 
 | Moteur | Support | Comment ça marche |
 |--------|---------|--------------|
@@ -366,7 +366,7 @@ GameStringer prend en charge **20+ moteurs** avec différents niveaux de profond
 - **Analyse d'encodage** fichier par fichier (Shift-JIS, UTF-8/16, Big5, EUC-KR)
 - **Analyse de complexité de traduction** (honorifiques, genre, CJK, ruby, RTL)
 - **P.T.Rank / Quick Ranking** — trie tous les jeux analysés par difficulté
-- **Dry Run Scanner** — scan par lot de toute la bibliothèque Steam (800+ jeux) sans modification
+- **Dry Run Scanner** — scan par lot de toute votre bibliothèque installée, sans limite de nombre de jeux, sans modification
 - **Workflow Orchestrator** — moteur d'exécution réel avec fast path universel pour 6+ moteurs et progression en temps réel
 - **Cache de prédiction** (24h) — réouverture instantanée des jeux déjà analysés
 - **Export du rapport** (JSON + Markdown) pour partage et archivage
@@ -374,7 +374,7 @@ GameStringer prend en charge **20+ moteurs** avec différents niveaux de profond
 ### 📚 Bibliothèque de jeux
 
 - **Auto-detect** : Steam (avec Family Sharing), Epic, GOG Galaxy, Origin/EA, Ubisoft Connect, Amazon Games, itch.io, Humble App, Game Jolt, Big Fish Games
-- **800+ jeux** reconnus depuis les bibliothèques installées en quelques secondes
+- **Toute votre bibliothèque installée** reconnue en quelques secondes, sans limite de nombre de jeux
 - **Cartes de jeux** avec jaquettes, métadonnées, badge moteur, badge VR, statut d'installation
 - **Actions rapides au survol** : String it!, Batch, Community, P.T. — toutes en un clic
 - **Game Update Tracker** : détecte quand Steam met à jour un jeu traduit (via `buildid`), vérifie l'intégrité du patch (fichiers BepInEx, présence de `_P.pak`), avertit si un re-patch est nécessaire

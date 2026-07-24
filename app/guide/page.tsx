@@ -594,7 +594,7 @@ export default function GuidePage() {
                           <Database className="h-3.5 w-3.5 text-sky-300" />
                         </div>
                         <div className="text-center font-semibold text-sky-200">Steam Library</div>
-                        <div className="text-[9px] text-muted-foreground">{t('guidePage.games800')}</div>
+                        <div className="text-[9px] text-muted-foreground">{t('guidePage.gamesWholeLibrary')}</div>
                       </div>
                       <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
                       <div className="flex flex-col items-center gap-1 flex-1">

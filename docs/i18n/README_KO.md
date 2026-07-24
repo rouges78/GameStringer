@@ -146,7 +146,7 @@ GameStringer는 원하는 언어가 없는 비디오 게임을 번역할 수 있
 ## 🚀 작동 방식
 
 1. GameStringer를 **설치**하고 실행합니다
-2. **게임 라이브러리가 자동으로 로드됩니다** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish(몇 초 만에 800개 이상의 게임 감지)
+2. **게임 라이브러리가 자동으로 로드됩니다** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish(설치된 게임을 개수 제한 없이 몇 초 만에 감지)
 3. **게임 선택** → 선택적으로 **P.T.(Prediction Tool)**를 실행하여 난이도, 예상 시간, 최적의 LLM 체인 확인
 4. **"String it!"** 클릭 — GameStringer가 자동으로 스캔, 추출, 번역, 패치합니다
 5. **원하는 언어로 플레이** — 패치 전에 항상 백업이 생성됩니다
@@ -194,11 +194,11 @@ P.T.는 모든 번역 *전에* 실행되는 심층 분석 엔진입니다. 게�
 
 ### P.T.Rank — 빠른 순위
 
-여러 게임에서 P.T.를 실행한 후 **P.T.Rank**를 열면 분석된 모든 타이틀이 난이도별로 정렬되어 표시됩니다. 번역 큐를 계획하는 데 완벽합니다: 쉬운 것부터 시작하고, 80만 문자열 RPG는 마지막을 위해 남겨두세요.
+여러 게임에서 P.T.를 실행한 후 **P.T.Rank**를 열면 분석된 모든 타이틀이 난이도별로 정렬되어 표시됩니다. 번역 큐를 계획하는 데 완벽합니다: 쉬운 것부터 시작하고, 수십만 문자열 규모의 RPG는 마지막을 위해 남겨두세요.
 
 ### Dry Run Scanner
 
-한 번에 하나의 게임을 분석하고 싶지 않으신가요? 라이브러리 페이지에서 **Dry Run**을 실행하여 **전체 Steam 라이브러리(800개 이상의 게임)를 일괄 스캔**하세요. **파일 수정은 전혀 없습니다.** 각 게임을 **Ready**(엔진 지원 + 문자열 추출 가능), **Errors**(manifest 문제 / DRM 차단) 또는 **Unsupported**(알 수 없는 엔진 / 텍스트 없음)로 분류하는 JSON 보고서를 받게 됩니다. 진행 상황은 실시간이며, 아무것도 건드리지 않기 때문에 백업이 필요 없습니다.
+한 번에 하나의 게임을 분석하고 싶지 않으신가요? 라이브러리 페이지에서 **Dry Run**을 실행하여 **설치된 라이브러리 전체를 개수 제한 없이 일괄 스캔**하세요. **파일 수정은 전혀 없습니다.** 각 게임을 **Ready**(엔진 지원 + 문자열 추출 가능), **Errors**(manifest 문제 / DRM 차단) 또는 **Unsupported**(알 수 없는 엔진 / 텍스트 없음)로 분류하는 JSON 보고서를 받게 됩니다. 진행 상황은 실시간이며, 아무것도 건드리지 않기 때문에 백업이 필요 없습니다.
 
 ### String it! Smart Gate
 
@@ -246,7 +246,7 @@ flowchart TD
     class PLAY core
 ```
 
-GameStringer는 다양한 깊이 수준으로 **20개 이상의 엔진**을 지원합니다:
+GameStringer는 **전용 파서를 갖춘 엔진 12종**을 제공하며 총 **20종 이상의 엔진**을 인식합니다. 깊이 수준은 각기 다릅니다:
 
 | 엔진 | 지원 | 작동 방식 |
 |--------|---------|--------------|
@@ -366,7 +366,7 @@ GameStringer는 다양한 깊이 수준으로 **20개 이상의 엔진**을 지�
 - 파일별 **인코딩 분석**(Shift-JIS, UTF-8/16, Big5, EUC-KR)
 - **번역 복잡도 분석**(경어법, 성별, CJK, 루비, RTL)
 - **P.T.Rank / Quick Ranking** — 분석된 모든 게임을 난이도별로 정렬
-- **Dry Run Scanner** — 수정 없이 전체 Steam 라이브러리(800개 이상의 게임) 일괄 스캔
+- **Dry Run Scanner** — 수정 없이 설치된 라이브러리 전체를 개수 제한 없이 일괄 스캔
 - **Workflow Orchestrator** — 6개 이상의 엔진에 대한 범용 fast path와 실시간 진행률이 있는 실제 실행 엔진
 - **예측 캐시**(24시간) — 이전에 분석된 게임의 즉각적인 재오픈
 - 공유 및 보관을 위한 **보고서 내보내기**(JSON + Markdown)
@@ -374,7 +374,7 @@ GameStringer는 다양한 깊이 수준으로 **20개 이상의 엔진**을 지�
 ### 📚 게임 라이브러리
 
 - **자동 감지**: Steam(Family Sharing 포함), Epic, GOG Galaxy, Origin/EA, Ubisoft Connect, Amazon Games, itch.io, Humble App, Game Jolt, Big Fish Games
-- 몇 초 만에 설치된 라이브러리에서 **800개 이상의 게임** 인식
+- 몇 초 만에 **설치된 라이브러리 전체**를 개수 제한 없이 인식
 - 커버 아트, 메타데이터, 엔진 배지, VR 배지, 설치 상태가 있는 **게임 카드**
 - **호버 빠른 작업**: String it!, Batch, Community, P.T. — 모두 원클릭
 - **Game Update Tracker**: Steam이 번역된 게임을 업데이트할 때 감지(`buildid` 통해), 패치 무결성 확인(BepInEx 파일, `_P.pak` 존재), 재패치가 필요한 경우 경고

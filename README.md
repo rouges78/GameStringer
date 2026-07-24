@@ -53,7 +53,7 @@
 
 ## 🙏 Help Wanted — Test it on real games & send feedback
 
-> **GameStringer is a solo, source-available project and it's still young.** It already handles 20+ engines, but real games are messy — every title stores its text a little differently. **The single most useful thing you can do right now is run GameStringer on a real game and tell me what happened.** Even *"it failed at step X"* is gold.
+> **GameStringer is a solo, source-available project and it's still young.** It already recognizes 20+ engines (12 with a dedicated parser), but real games are messy — every title stores its text a little differently. **The single most useful thing you can do right now is run GameStringer on a real game and tell me what happened.** Even *"it failed at step X"* is gold.
 
 **Why this matters:** I can't possibly test the thousands of games out there alone. Continuous, real-world **testing and feedback** is what turns *"works on my fixtures"* into *"works on your game."* Your reports directly shape the roadmap — this is the part where the community makes or breaks the project.
 
@@ -131,7 +131,7 @@ Get the latest release from **[GitHub Releases](https://github.com/rouges78/Game
 ## 🚀 How it works
 
 1. **Install** GameStringer and launch it
-2. **Your game library loads automatically** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (800+ games detected in seconds)
+2. **Your game library loads automatically** — Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io, Humble App, Game Jolt, Big Fish (your installed games are detected in seconds, with no limit on how many)
 3. **Pick a game** → optionally run **P.T. (Prediction Tool)** to see difficulty, estimated time, best LLM chain
 4. Click **"String it!"** — GameStringer scans, extracts, translates, and patches automatically
 5. **Play in your language** — backups are always created before patching
@@ -179,11 +179,11 @@ P.T. is a deep analysis engine that runs *before* any translation. It scans your
 
 ### P.T.Rank — Quick Ranking
 
-After running P.T. on multiple games, open **P.T.Rank** to see all analyzed titles sorted by difficulty. Perfect for planning your translation queue: start from the easy wins, save the 800k-string RPGs for last.
+After running P.T. on multiple games, open **P.T.Rank** to see all analyzed titles sorted by difficulty. Perfect for planning your translation queue: start from the easy wins, save the RPGs with hundreds of thousands of strings for last.
 
 ### Dry Run Scanner
 
-Don't want to analyze one game at a time? Run **Dry Run** from the Library page to scan your **entire Steam library (800+ games) in batch**, with **zero file modification**. You get a JSON report categorizing every game as **Ready** (engine supported + strings extractable), **Errors** (manifest issues / DRM blocker), or **Unsupported** (unknown engine / no text). Progress is real-time, and no backup is needed because nothing gets touched.
+Don't want to analyze one game at a time? Run **Dry Run** from the Library page to scan your **entire installed library in batch**, with no limit on the number of games,, with **zero file modification**. You get a JSON report categorizing every game as **Ready** (engine supported + strings extractable), **Errors** (manifest issues / DRM blocker), or **Unsupported** (unknown engine / no text). Progress is real-time, and no backup is needed because nothing gets touched.
 
 ### String it! Smart Gate
 
@@ -231,7 +231,7 @@ flowchart TD
     class PLAY core
 ```
 
-GameStringer supports **20+ engines** with varying levels of depth:
+GameStringer ships **12 engines with a dedicated parser** and recognizes **over 20 engines** in total, with varying levels of depth:
 
 | Engine | Support | How it works |
 |--------|---------|--------------|
@@ -351,7 +351,7 @@ GameStringer supports **20+ engines** with varying levels of depth:
 - **Encoding analysis** per-file (Shift-JIS, UTF-8/16, Big5, EUC-KR)
 - **Translation complexity analysis** (honorifics, gender, CJK, ruby, RTL)
 - **P.T.Rank / Quick Ranking** — sort all analyzed games by difficulty
-- **Dry Run Scanner** — batch scan of entire Steam library (800+ games) without modification
+- **Dry Run Scanner** — batch scan of your entire installed library, no limit on the number of games, without modification
 - **Workflow Orchestrator** — real execution engine with universal fast path for 6+ engines and real-time progress
 - **Prediction cache** (24h) — instant re-open of previously analyzed games
 - **Export report** (JSON + Markdown) for sharing and archiving
@@ -359,7 +359,7 @@ GameStringer supports **20+ engines** with varying levels of depth:
 ### 📚 Game Library
 
 - **Auto-detect**: Steam (with Family Sharing), Epic, GOG Galaxy, Origin/EA, Ubisoft Connect, Amazon Games, itch.io, Humble App, Game Jolt, Big Fish Games
-- **800+ games** recognized from installed libraries in seconds
+- **Your whole installed library** recognized in seconds, with no limit on the number of games
 - **Game cards** with cover art, metadata, engine badge, VR badge, install status
 - **Hover quick actions**: String it!, Batch, Community, P.T. — all one click
 - **Game Update Tracker**: detects when Steam updates a translated game (via `buildid`), verifies patch integrity (BepInEx files, `_P.pak` presence), warns if re-patching is needed
