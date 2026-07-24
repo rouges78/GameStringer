@@ -59,8 +59,8 @@ fn get_2fa_dir() -> Result<PathBuf, String> {
 
 /// Genera un secret Base32 casuale per TOTP
 fn generate_secret() -> String {
-    let mut rng = rand::thread_rng();
-    let bytes: Vec<u8> = (0..20).map(|_| rng.gen()).collect();
+    let mut rng = rand::rng();
+    let bytes: Vec<u8> = (0..20).map(|_| rng.random()).collect();
     // Semplice encoding Base32 manuale (RFC 4648)
     const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     let mut result = String::new();
@@ -85,10 +85,10 @@ fn generate_secret() -> String {
 
 /// Genera codici di backup
 fn generate_backup_codes(count: usize) -> Vec<String> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     (0..count)
         .map(|_| {
-            let code: u32 = rng.gen_range(10000000..99999999);
+            let code: u32 = rng.random_range(10000000..99999999);
             format!("{}", code)
         })
         .collect()

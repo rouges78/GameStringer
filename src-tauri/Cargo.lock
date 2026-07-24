@@ -1395,7 +1395,7 @@ dependencies = [
 
 [[package]]
 name = "gamestringer"
-version = "1.14.0"
+version = "1.15.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1423,7 +1423,7 @@ dependencies = [
  "open",
  "parking_lot",
  "pbkdf2 0.12.2",
- "rand 0.8.5",
+ "rand 0.9.4",
  "regex",
  "reqwest 0.11.27",
  "rusqlite",

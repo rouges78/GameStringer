@@ -62,7 +62,7 @@ fn secure_overwrite_file(filepath: &PathBuf, passes: u32) -> Result<u64, String>
         .open(filepath)
         .map_err(|e| format!("Errore apertura file: {}", e))?;
     
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let buffer_size = 65536; // 64KB buffer
     let mut buffer = vec![0u8; buffer_size];
     

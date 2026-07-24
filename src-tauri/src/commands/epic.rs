@@ -26,7 +26,7 @@ use std::fs;
 use log::{debug, info, error};
 use base64::{Engine as _, engine::general_purpose};
 use aes_gcm::{Aes256Gcm, Nonce, aead::{Aead, KeyInit}};
-use rand::{RngCore, rngs::OsRng};
+use rand::RngCore;
 use chrono;
 
 // ============================================================================
@@ -386,8 +386,8 @@ async fn save_epic_auth_data(auth_data: &EpicAuthData) -> Result<(), String> {
     // Genera chiave e nonce casuali
     let mut key_bytes = [0u8; 32];
     let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut key_bytes);
-    OsRng.fill_bytes(&mut nonce_bytes);
+    rand::rng().fill_bytes(&mut key_bytes);
+    rand::rng().fill_bytes(&mut nonce_bytes);
     
     // Cripta con AES-256-GCM
     let cipher = Aes256Gcm::new_from_slice(&key_bytes)
@@ -2752,7 +2752,7 @@ fn encrypt_epic_credentials(username: &str, password: &str) -> Result<(String, S
     
     // SECURITY FIX: Generate cryptographically secure nonce
     let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut nonce_bytes);
+    rand::rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
     
     // Create payload with credentials and timestamp

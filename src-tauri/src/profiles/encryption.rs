@@ -10,7 +10,10 @@ use pbkdf2::{
     password_hash::{PasswordHasher, SaltString},
     Pbkdf2,
 };
-use rand::RngCore;
+// OsRng qui viene da aes_gcm::aead (rand_core 0.6), non da rand 0.9: importa il
+// RngCore dallo STESSO rand_core, altrimenti .fill_bytes() non risolve dopo il
+// bump di rand a 0.9 (rand_core 0.9).
+use aes_gcm::aead::rand_core::RngCore;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -260,7 +263,8 @@ impl ProfileEncryption {
     /// Genera password sicura casuale
     #[allow(dead_code)] // API per generazione password - utilizzata nei test e per sicurezza
     pub fn generate_secure_password(&self, length: usize) -> String {
-        use rand::seq::SliceRandom;
+        // rand 0.9: choose() è passato a IndexedRandom, shuffle() resta in SliceRandom.
+        use rand::seq::{IndexedRandom, SliceRandom};
 
         let length = length.clamp(12, 64); // Lunghezza tra 12 e 64 caratteri
 
@@ -270,7 +274,9 @@ impl ProfileEncryption {
         let special = b"!@#$%^&*()_+-=[]{}|;:,.<>?";
 
         let mut password = Vec::new();
-        let mut rng = OsRng;
+        // Usa il generatore di rand 0.9 (CSPRNG) per choose/shuffle: l'OsRng di
+        // aead è su rand_core 0.6 e non soddisfa i trait seq di rand 0.9.
+        let mut rng = rand::rng();
 
         // Assicura almeno un carattere di ogni tipo
         password.push(*lowercase.choose(&mut rng).unwrap());

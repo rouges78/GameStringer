@@ -114,7 +114,7 @@ fn encrypt_value(key: &[u8; 32], plaintext: &str) -> Result<EncryptedEntry, Stri
 
     // Generate random nonce (96 bits)
     let mut nonce_bytes = [0u8; 12];
-    rand::thread_rng().fill(&mut nonce_bytes);
+    rand::rng().fill(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let ciphertext = cipher.encrypt(nonce, plaintext.as_bytes())

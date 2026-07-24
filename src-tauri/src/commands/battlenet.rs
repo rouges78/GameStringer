@@ -10,7 +10,7 @@ use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
-use rand::{RngCore, rngs::OsRng};
+use rand::RngCore;
 use base64::{Engine as _, engine::general_purpose};
 use chrono;
 
@@ -519,7 +519,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     
     // Genera nonce sicuro
     let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut nonce_bytes);
+    rand::rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
     
     // Cripta con AES-GCM

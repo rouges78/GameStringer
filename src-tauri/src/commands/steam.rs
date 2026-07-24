@@ -29,7 +29,7 @@ use keyvalues_serde as kv;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use base64::{Engine as _, engine::general_purpose};
-use rand::{RngCore, rngs::OsRng};
+use rand::RngCore;
 use log::{debug, info, warn, error};
 
 // ============================================================================
@@ -1394,7 +1394,7 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
     
     // SECURITY FIX: Generate cryptographically secure nonce
     let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut nonce_bytes);
+    rand::rng().fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
     
     // SECURITY FIX: Encrypt with authenticated encryption (AES-GCM)

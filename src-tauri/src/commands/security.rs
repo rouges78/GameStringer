@@ -174,8 +174,8 @@ pub async fn generate_session_token(
     use rand::Rng;
     use sha2::{Sha256, Digest};
     
-    let mut rng = rand::thread_rng();
-    let random_bytes: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+    let mut rng = rand::rng();
+    let random_bytes: Vec<u8> = (0..32).map(|_| rng.random()).collect();
     let timestamp = Utc::now().timestamp_nanos_opt().unwrap_or(0);
     
     let mut hasher = Sha256::new();
