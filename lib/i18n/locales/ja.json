@@ -447,7 +447,9 @@
     "applySuccess": "翻訳をゲームに適用しました",
     "applyError": "適用に失敗しました",
     "applyNoContent": "このプロジェクトに保存された翻訳済みファイルがありません。パックを再インポートしてください。",
-    "applyPickFolder": "ゲームのインストールフォルダーを選択"
+    "applyPickFolder": "ゲームのインストールフォルダーを選択",
+    "deleteConfirm": "プロジェクトを削除しますか",
+    "deleteError": "削除に失敗しました"
   },
   "emulatorTranslator": {
     "clipboardError": "クリップボードを読み取れません",

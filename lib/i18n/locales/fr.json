@@ -447,7 +447,9 @@
     "applySuccess": "Traduction appliquée au jeu",
     "applyError": "Échec de l'application",
     "applyNoContent": "Aucun fichier traduit enregistré pour ce projet. Réimportez le pack.",
-    "applyPickFolder": "Choisissez le dossier d'installation du jeu"
+    "applyPickFolder": "Choisissez le dossier d'installation du jeu",
+    "deleteConfirm": "Supprimer le projet",
+    "deleteError": "Échec de la suppression"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",

@@ -447,7 +447,9 @@
     "applySuccess": "Übersetzung auf das Spiel angewendet",
     "applyError": "Anwenden fehlgeschlagen",
     "applyNoContent": "Keine gespeicherten übersetzten Dateien für dieses Projekt. Importiere das Paket erneut.",
-    "applyPickFolder": "Wähle den Installationsordner des Spiels"
+    "applyPickFolder": "Wähle den Installationsordner des Spiels",
+    "deleteConfirm": "Projekt löschen",
+    "deleteError": "Löschen fehlgeschlagen"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",

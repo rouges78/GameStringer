@@ -447,7 +447,9 @@
     "applySuccess": "Translation applied to the game",
     "applyError": "Apply failed",
     "applyNoContent": "No saved translated files for this project. Re-import the pack.",
-    "applyPickFolder": "Choose the game install folder"
+    "applyPickFolder": "Choose the game install folder",
+    "deleteConfirm": "Delete the project",
+    "deleteError": "Delete failed"
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",

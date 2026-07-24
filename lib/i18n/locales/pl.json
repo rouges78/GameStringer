@@ -447,7 +447,9 @@
     "applySuccess": "Tłumaczenie zastosowane do gry",
     "applyError": "Zastosowanie nie powiodło się",
     "applyNoContent": "Brak zapisanych przetłumaczonych plików dla tego projektu. Zaimportuj pakiet ponownie.",
-    "applyPickFolder": "Wybierz folder instalacji gry"
+    "applyPickFolder": "Wybierz folder instalacji gry",
+    "deleteConfirm": "Usunąć projekt",
+    "deleteError": "Nie udało się usunąć"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",

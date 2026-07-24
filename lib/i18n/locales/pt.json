@@ -447,7 +447,9 @@
     "applySuccess": "Tradução aplicada ao jogo",
     "applyError": "Falha ao aplicar",
     "applyNoContent": "Nenhum arquivo traduzido salvo para este projeto. Reimporte o pacote.",
-    "applyPickFolder": "Escolha a pasta de instalação do jogo"
+    "applyPickFolder": "Escolha a pasta de instalação do jogo",
+    "deleteConfirm": "Eliminar o projeto",
+    "deleteError": "Falha ao eliminar"
   },
   "emulatorTranslator": {
     "clipboardError": "Não foi possível ler a área de transferência",

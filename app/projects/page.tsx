@@ -41,7 +41,7 @@ import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
-import { loadTranslatedFiles } from '@/lib/services/translated-files-store';
+import { loadTranslatedFiles, deleteTranslatedFiles } from '@/lib/services/translated-files-store';
 import { toast } from 'sonner';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -455,26 +455,28 @@ function ProjectCard({
             </Button>
           )}
           {project.source === 'quality' && (
-            <>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-slate-200"
-                onClick={() => onExport(project)}
-                title={t('projectsPage.exportTitle')}
-              >
-                <Download className="w-3 h-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0 text-slate-400 hover:text-red-400"
-                onClick={() => onDelete(project)}
-                title={t('projectsPage.deleteTitle')}
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-slate-200"
+              onClick={() => onExport(project)}
+              title={t('projectsPage.exportTitle')}
+            >
+              <Download className="w-3 h-3" />
+            </Button>
+          )}
+          {/* Elimina: disponibile anche per i progetti attivi/importati, non
+              solo quality — prima erano impossibili da cancellare dalla UI. */}
+          {(project.source === 'quality' || project.source === 'active') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-red-400"
+              onClick={() => onDelete(project)}
+              title={t('projectsPage.deleteTitle')}
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
           )}
         </div>
       </div>
@@ -542,13 +544,28 @@ export default function ProjectsPage() {
     return Array.from(set).sort();
   }, [projects]);
 
-  const handleDelete = (p: UnifiedProject) => {
-    if (!confirm(`Eliminare il progetto "${p.gameName}"?`)) return;
+  const handleDelete = async (p: UnifiedProject) => {
+    if (!confirm(`${t('projectsPage.deleteConfirm')} "${p.gameName}"?`)) return;
     if (p.source === 'quality') {
       const qsId = p.id.replace(/^qs:/, '');
       qualityScoringService.deleteProject(qsId);
       toast.success(t('projectsPage.projectDeleted'));
       reload();
+      return;
+    }
+    if (p.source === 'active') {
+      // id = `active:<projectId>`; rimuove anche i file tradotti persistiti,
+      // altrimenti resterebbero orfani in IndexedDB.
+      const projectId = p.id.replace(/^active:/, '');
+      try {
+        await projectService.deleteProject(projectId);
+        await deleteTranslatedFiles(p.gameId, p.targetLanguage);
+        toast.success(t('projectsPage.projectDeleted'));
+        reload();
+      } catch (e: unknown) {
+        clientLogger.error(`[Projects] delete failed: ${String(e)}`);
+        toast.error(t('projectsPage.deleteError'));
+      }
     }
   };
 

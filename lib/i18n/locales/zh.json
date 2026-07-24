@@ -447,7 +447,9 @@
     "applySuccess": "翻译已应用到游戏",
     "applyError": "应用失败",
     "applyNoContent": "此项目没有保存已翻译的文件。请重新导入该包。",
-    "applyPickFolder": "选择游戏安装文件夹"
+    "applyPickFolder": "选择游戏安装文件夹",
+    "deleteConfirm": "删除项目",
+    "deleteError": "删除失败"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",

@@ -447,7 +447,9 @@
     "applySuccess": "Traduzione applicata al gioco",
     "applyError": "Applicazione non riuscita",
     "applyNoContent": "Nessun file tradotto salvato per questo progetto. Re-importa il pacchetto.",
-    "applyPickFolder": "Scegli la cartella d'installazione del gioco"
+    "applyPickFolder": "Scegli la cartella d'installazione del gioco",
+    "deleteConfirm": "Eliminare il progetto",
+    "deleteError": "Eliminazione non riuscita"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossibile leggere gli appunti",
