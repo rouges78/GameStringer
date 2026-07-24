@@ -267,16 +267,21 @@ class NewsFeedService {
       }
     }
 
-    // 3) Fallback: fetch diretto (funziona se il server manda CORS headers)
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (res.ok) {
-        const text = await res.text();
-        if (text.includes('<rss') || text.includes('<feed') || text.includes('<channel')) {
-          return text;
+    // 3) Fallback: fetch diretto (funziona solo se il server manda CORS headers).
+    // SOLO fuori da Tauri: nel webview una fetch cross-origin è SEMPRE bloccata dal
+    // CORS (non può mai riuscire) e produrrebbe solo errori rossi in console — come
+    // per gli step 2 e 4. In Tauri l'unico metodo valido è il proxy Rust (step 1).
+    if (!isTauri()) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (res.ok) {
+          const text = await res.text();
+          if (text.includes('<rss') || text.includes('<feed') || text.includes('<channel')) {
+            return text;
+          }
         }
-      }
-    } catch {}
+      } catch {}
+    }
 
     // 4) Ultimo fallback: CORS proxies pubblici — SOLO in web/dev. Nel webview Tauri
     // questi proxy falliscono sempre per CORS, quindi li saltiamo (evita errori in console).
