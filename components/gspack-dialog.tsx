@@ -47,6 +47,9 @@ import {
   type GspackFile,
   type ImportResult,
 } from '@/lib/gspack-manager';
+import { projectService } from '@/lib/services/translation-projects';
+import { saveTranslatedFiles } from '@/lib/services/translated-files-store';
+import { clientLogger } from '@/lib/client-logger';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 
@@ -250,12 +253,44 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
     setLoading(false);
   };
 
-  const handleInstall = () => {
+  const handleInstall = async () => {
     if (!result?.success || !result.manifest || !result.files) return;
     setInstalling(true);
 
     try {
       installPack(result.manifest, result.files.length);
+
+      // Registra la traduzione come PROGETTO (regola: ogni traduzione è tracciata
+      // nei progetti). Non deve mai bloccare l'installazione se fallisce.
+      try {
+        const m = result.manifest;
+        const gameId = m.game.appId ? `steam_${m.game.appId}` : m.game.name;
+        const project = await projectService.createOrGetProject({
+          gameId,
+          gameName: m.game.name,
+          engine: m.game.engine,
+          sourceLanguage: m.translation.sourceLanguage,
+          targetLanguage: m.translation.targetLanguage,
+          files: result.files.map(f => ({
+            path: f.path,
+            name: f.path,
+            type: f.format,
+            strings: f.stringCount,
+          })),
+        });
+        await projectService.updateProgress(project.id, m.translation.translatedStrings);
+        // Persisti il contenuto tradotto così Pubblica/Esporta dal progetto
+        // possono allegare il file vero (non solo i metadati).
+        await saveTranslatedFiles(
+          gameId,
+          m.translation.targetLanguage,
+          result.files.map(f => ({ path: f.path, originalPath: f.originalPath, content: f.content, format: f.format })),
+        );
+      } catch (projErr) {
+        // Non bloccante: il pack è comunque installato.
+        clientLogger.warn('[gspack] registrazione progetto non riuscita:', String(projErr));
+      }
+
       toast.success(`${result.manifest.name} ${t('gspack.packInstalled')}`);
       onImported?.(result.manifest, result.files);
       onOpenChange(false);

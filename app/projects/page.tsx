@@ -17,6 +17,7 @@ import {
   Trash2,
   Download,
   Upload,
+  FolderInput,
   BookOpen,
   Languages,
   TrendingUp,
@@ -40,6 +41,7 @@ import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
+import { loadTranslatedFiles } from '@/lib/services/translated-files-store';
 import { toast } from 'sonner';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -320,11 +322,13 @@ function ProjectCard({
   onDelete,
   onExport,
   onPublish,
+  onApply,
 }: {
   project: UnifiedProject;
   onDelete: (p: UnifiedProject) => void;
   onExport: (p: UnifiedProject) => void;
   onPublish: (p: UnifiedProject) => void;
+  onApply: (p: UnifiedProject) => void;
 }) {
   const { t } = useTranslation();
   const pct = percent(project.completedStrings, project.totalStrings);
@@ -424,6 +428,17 @@ function ProjectCard({
                 <FileText className="w-3 h-3 mr-1" />
                 {t('projectsPage.open')}</Button>
             </Link>
+          )}
+          {project.status === 'completed' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-300"
+              onClick={() => onApply(project)}
+              title={t('projectsPage.applyTitle')}
+            >
+              <FolderInput className="w-3 h-3" />
+            </Button>
           )}
           {project.status === 'completed' && (
             <Button
@@ -557,22 +572,23 @@ export default function ProjectsPage() {
   // (Supabase). Il pack entra in stato "pending" (moderazione). Contenuto: export
   // completo per i progetti quality, altrimenti un manifest con i metadati.
   const handlePublish = async (p: UnifiedProject) => {
-    let content = '';
-    if (p.source === 'quality') {
+    // Preferisci SEMPRE il file tradotto reale se persistito (es. da import .gspack):
+    // così si pubblica la traduzione vera, non un manifest di metadati.
+    const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
+    let files: File[];
+    if (stored && stored.length) {
+      files = stored.map(f => new File([f.content], f.path, { type: 'application/json' }));
+    } else if (p.source === 'quality') {
       const qsId = p.id.replace(/^qs:/, '');
-      content = qualityScoringService.exportProject(qsId) || '';
+      const content = qualityScoringService.exportProject(qsId) || '';
+      if (!content) { toast.error(t('projectsPage.publishNoContent')); return; }
+      const safeName = `${p.gameName.replace(/[^\w-]/g, '_')}_${p.targetLanguage}.gsproj.json`;
+      files = [new File([content], safeName, { type: 'application/json' })];
     } else {
-      content = JSON.stringify({
-        gameId: p.gameId, gameName: p.gameName,
-        sourceLanguage: p.sourceLanguage, targetLanguage: p.targetLanguage,
-        totalStrings: p.totalStrings, completedStrings: p.completedStrings,
-        exportedAt: new Date().toISOString(),
-      }, null, 2);
+      // Nessun contenuto reale disponibile: non pubblicare un manifest vuoto.
+      toast.error(t('projectsPage.publishNoContent'));
+      return;
     }
-    if (!content) { toast.error(t('projectsPage.publishNoContent')); return; }
-
-    const safeName = `${p.gameName.replace(/[^\w-]/g, '_')}_${p.targetLanguage}.gsproj.json`;
-    const file = new File([content], safeName, { type: 'application/json' });
     const tid = toast.loading(t('projectsPage.publishing'));
     try {
       const { publishPack } = await import('@/lib/social/community-hub-backend');
@@ -586,7 +602,7 @@ export default function ProjectsPage() {
         totalStrings: p.totalStrings,
         translatedStrings: p.completedStrings,
         completionPercentage: pct,
-      }, [file]);
+      }, files);
       toast.success(t('projectsPage.publishSuccess'), { id: tid, description: t('projectsPage.publishModeration') });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -596,6 +612,55 @@ export default function ProjectsPage() {
         clientLogger.error(`[Projects] publish failed:`, msg);
         toast.error(t('projectsPage.publishError'), { id: tid, description: msg });
       }
+    }
+  };
+
+  // Applica al gioco: copia i file tradotti persistiti nell'installazione scelta
+  // dall'utente, facendo un backup .bak prima di sovrascrivere. Sicuro: se il
+  // backup di un file esistente fallisce, quel file viene SALTATO (mai sovrascritto).
+  const handleApply = async (p: UnifiedProject) => {
+    const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
+    if (!stored || !stored.length) { toast.error(t('projectsPage.applyNoContent')); return; }
+
+    let dir: string | null = null;
+    try {
+      const { open } = await import('@tauri-apps/plugin-dialog');
+      const picked = await open({ directory: true, multiple: false, title: t('projectsPage.applyPickFolder') });
+      dir = typeof picked === 'string' ? picked : null;
+    } catch {
+      toast.error(t('projectsPage.applyError'));
+      return;
+    }
+    if (!dir) return;
+
+    const tid = toast.loading(t('projectsPage.applying'));
+    try {
+      const fsp = await import('@tauri-apps/plugin-fs');
+      let written = 0; let skipped = 0;
+      for (const f of stored) {
+        const rel = (f.originalPath || f.path).replace(/\\/g, '/').replace(/^\/+/, '');
+        const target = `${dir}/${rel}`;
+        const folder = target.slice(0, target.lastIndexOf('/'));
+        // Backup obbligatorio se il file esiste già
+        try {
+          if (await fsp.exists(target)) {
+            await fsp.copyFile(target, `${target}.bak`);
+          }
+        } catch {
+          skipped++; // backup fallito → non sovrascrivere
+          continue;
+        }
+        try { await fsp.mkdir(folder, { recursive: true }); } catch { /* già esiste */ }
+        await fsp.writeTextFile(target, f.content);
+        written++;
+      }
+      if (written > 0) {
+        toast.success(t('projectsPage.applySuccess'), { id: tid, description: `${written} file · ${skipped} saltati` });
+      } else {
+        toast.error(t('projectsPage.applyError'), { id: tid, description: `${skipped} saltati (backup non riuscito)` });
+      }
+    } catch (e: unknown) {
+      toast.error(t('projectsPage.applyError'), { id: tid, description: e instanceof Error ? e.message : String(e) });
     }
   };
 
@@ -756,6 +821,7 @@ export default function ProjectsPage() {
               onDelete={handleDelete}
               onExport={handleExport}
               onPublish={handlePublish}
+              onApply={handleApply}
             />
           ))}
         </div>

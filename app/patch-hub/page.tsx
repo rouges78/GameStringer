@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { useProfiles } from '@/hooks/use-profiles';
 import { communityHubService, type TranslationPack } from '@/lib/social/community-hub-service';
+import { projectService } from '@/lib/services/translation-projects';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -313,6 +314,26 @@ function PublishDialog({ open, onOpenChange, onPublished }: {
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  // Precompila dal progetto completato più recente (regola: si pubblica DAL
+  // progetto completato). Non sovrascrive i campi che l'utente ha già toccato.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    projectService.getAllProjects().then((projects) => {
+      if (cancelled) return;
+      const completed = projects
+        .filter((p) => p.status === 'completed' || p.progress >= 100)
+        .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+      const p = completed[0];
+      if (!p) return;
+      setName((n) => n || `${p.gameName} — ${(p.targetLanguage || 'it').toUpperCase()}`);
+      setGameName((g) => g || p.gameName);
+      if (p.sourceLanguage) setSourceLanguage(p.sourceLanguage);
+      if (p.targetLanguage) setTargetLanguage(p.targetLanguage);
+    }).catch(() => { /* nessun progetto o storage non disponibile */ });
+    return () => { cancelled = true; };
+  }, [open]);
+
   const reset = () => {
     setName(''); setGameName(''); setDescription(''); setTags(''); setFiles([]);
     setSourceLanguage('en'); setTargetLanguage('it');
@@ -443,11 +464,19 @@ export default function PatchHubPage() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
 
+  const { currentProfile } = useProfiles();
   const [packs, setPacks] = useState<TranslationPack[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<'downloads' | 'rating' | 'updated' | 'completion'>('downloads');
+  const [scope, setScope] = useState<'explore' | 'mine'>('explore');
   const [publishOpen, setPublishOpen] = useState(false);
+
+  // "Le mie patch" = quelle pubblicate dal profilo corrente (distinzione
+  // privato/pubblico: i Progetti sono il workspace, qui vedi le TUE pubblicate).
+  const visiblePacks = scope === 'mine' && currentProfile
+    ? packs.filter((p) => p.author?.id === currentProfile.id)
+    : packs;
 
   const load = useCallback(() => {
     setLoading(true);
@@ -503,6 +532,23 @@ export default function PatchHubPage() {
         onPublished={(packId) => { load(); openPack(packId); }}
       />
 
+      {/* Scope: Esplora (community) vs Le mie patch (pubblicate dal profilo) */}
+      <div className="flex items-center gap-2 mb-3">
+        {(['explore', 'mine'] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => setScope(s)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              scope === s
+                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                : 'bg-slate-900/40 border-slate-700 text-slate-400 hover:border-slate-600'
+            }`}
+          >
+            {s === 'explore' ? t('patchHubPage.scopeExplore') : t('patchHubPage.scopeMine')}
+          </button>
+        ))}
+      </div>
+
       {/* Toolbar: search + sort */}
       <div className="flex items-center gap-2 mb-5">
         <div className="relative flex-1 max-w-md">
@@ -531,15 +577,15 @@ export default function PatchHubPage() {
         <div className="flex items-center justify-center h-64 text-amber-400">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
-      ) : packs.length === 0 ? (
+      ) : visiblePacks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-slate-500 gap-2">
           <Package className="h-8 w-8 opacity-30" />
-          <p className="text-sm">{t('patchHubPage.emptyTitle')}</p>
-          <p className="text-xs text-slate-600">{t('patchHubPage.emptyHint')}</p>
+          <p className="text-sm">{scope === 'mine' ? t('patchHubPage.emptyMineTitle') : t('patchHubPage.emptyTitle')}</p>
+          <p className="text-xs text-slate-600">{scope === 'mine' ? t('patchHubPage.emptyMineHint') : t('patchHubPage.emptyHint')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {packs.map((p) => (
+          {visiblePacks.map((p) => (
             <PackCard key={p.id} pack={p} onOpen={openPack} />
           ))}
         </div>
