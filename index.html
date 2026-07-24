@@ -4,8 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GameStringer — Traduci qualsiasi videogioco con l'AI</title>
-<meta name="description" content="GameStringer è la suite gratuita e source-available per tradurre videogiochi con l'AI: 20+ engine (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI) e 20+ provider AI. Analizza, estrai, traduci, applica la patch, gioca.">
+<meta name="description" content="GameStringer è la suite gratuita e source-available per tradurre videogiochi con l'AI: 12 engine con parser dedicato (Unity, Unreal, Godot, RPG Maker, Ren'Py, Bethesda, CRI…), oltre 20 riconosciuti e 23 provider AI. Analizza, estrai, traduci, applica la patch, gioca.">
 <link rel="icon" href="favicon.png">
+<link rel="canonical" href="https://gamestringer.ai/">
+<meta name="theme-color" content="#080a12">
+<!-- Open Graph / Twitter: senza questi ogni link condiviso (Discord, X, Reddit)
+     appare senza anteprima. og-image.svg era già in images/ ma non referenziata. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GameStringer">
+<meta property="og:url" content="https://gamestringer.ai/">
+<meta property="og:title" content="GameStringer — Traduci qualsiasi videogioco con l'AI">
+<meta property="og:description" content="Suite gratuita e source-available per tradurre videogiochi con l'AI: rileva l'engine, estrae il testo, traduce e riapplica la patch. Backup automatico prima di ogni modifica.">
+<meta property="og:image" content="https://gamestringer.ai/images/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GameStringer — Traduci qualsiasi videogioco con l'AI">
+<meta name="twitter:description" content="Suite gratuita e source-available per tradurre videogiochi con l'AI: rileva l'engine, estrae il testo, traduce e riapplica la patch.">
+<meta name="twitter:image" content="https://gamestringer.ai/images/og-image.svg">
 <style>
   :root{
     --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04); --surface2:rgba(255,255,255,.06);
@@ -99,6 +113,7 @@
   .eng h4{font-size:1rem}
   .eng small{color:var(--faint);font-size:11.5px}
   .eng .ok{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;color:var(--patch2);background:rgba(16,185,129,.12);padding:2px 8px;border-radius:999px}
+  .eng .part{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;color:var(--res2);background:rgba(245,158,11,.14);padding:2px 8px;border-radius:999px}
   .tablewrap{margin-top:30px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border)}
@@ -138,10 +153,10 @@
     <div class="nav-links">
       <a href="#come-funziona" data-i18n="nav.how">Come funziona</a>
       <a href="#novita" data-i18n="nav.new" style="color:var(--trad2)">Novità</a>
-      <a href="#architettura" data-i18n="nav.engine">Motore</a>
+      <a href="#architettura" data-i18n="nav.engine">Pipeline</a>
       <a href="#sotto-il-cofano" data-i18n="nav.tech">Sotto il cofano</a>
       <a href="#funzioni" data-i18n="nav.functions">Funzioni</a>
-      <a href="#engine" data-i18n="nav.engines2">Engine</a>
+      <a href="#engine" data-i18n="nav.engines2">Motori</a>
       <a href="#ai" data-i18n="nav.ai">AI</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
       <a href="compatibilita.html" data-i18n="nav.compat" style="color:var(--patch2)">Compatibilità</a>
@@ -178,12 +193,14 @@
       <a class="btn btn-ghost" href="#come-funziona" data-i18n="hero.cta2">Scopri come funziona</a>
       <a class="btn btn-ghost" href="guida.html">📖 <span data-i18n="nav.guide">Guida</span></a>
     </div>
-    <p class="sub reveal" data-i18n-html="hero.avnote" style="font-size:13px;margin-top:14px;opacity:.85">🛡️ Windows può mostrare un avviso SmartScreen al primo avvio: è un <b>falso positivo</b> noto. <a href="https://github.com/rouges78/GameStringer/blob/main/docs/ANTIVIRUS.md" target="_blank" rel="noopener">Perché è sicuro e come procedere →</a></p>
+    <!-- margin-inline:auto: .sub ha max-width 660px senza margini auto, quindi
+         nell'hero centrato il blocco restava ancorato a sinistra. -->
+    <p class="sub reveal" data-i18n-html="hero.avnote" style="font-size:13px;margin:14px auto 0;max-width:720px;opacity:.85;text-wrap:balance">🛡️ Windows può mostrare un avviso SmartScreen al primo avvio: è un <b>falso positivo</b> noto. <a href="https://github.com/rouges78/GameStringer/blob/main/docs/ANTIVIRUS.md" target="_blank" rel="noopener">Perché è sicuro e come procedere →</a></p>
     <div class="stats">
-      <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.engines">Engine supportati</div></div>
-      <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.ai">Provider AI</div></div>
+      <div class="stat reveal"><div class="n grad">20+</div><div class="l" data-i18n="stat.engines">Engine riconosciuti</div></div>
+      <div class="stat reveal"><div class="n grad">23</div><div class="l" data-i18n="stat.ai">Provider AI</div></div>
       <div class="stat reveal"><div class="n grad">12</div><div class="l" data-i18n="stat.langs">Lingue UI</div></div>
-      <div class="stat reveal"><div class="n grad">800+</div><div class="l" data-i18n="stat.games">Giochi rilevati</div></div>
+      <div class="stat reveal"><div class="n grad">10</div><div class="l" data-i18n="stat.games">Store collegati</div></div>
     </div>
   </div>
 </header>
@@ -246,11 +263,11 @@
       </svg>
     </div>
     <div class="grid">
-      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c1t">👁️ Contesto visivo (VLM)</h3><p data-i18n="v112.c1d">Per la traduzione live/a schermo, un modello visivo guarda il frame e traduce col contesto: niente più errori sulle parole ambigue. Funziona in locale (Ollama) o con OpenAI/Gemini.</p></div>
-      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c2t">🪞 Traduzioni auto-correttive</h3><p data-i18n="v112.c2d">Dopo la traduzione, una seconda passata opzionale rilegge il lavoro su glossario, tono e formattazione e corregge solo le righe che ne hanno davvero bisogno. Selettiva, quindi veloce ed economica.</p></div>
-      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c3t">🧠 Memoria semantica</h3><p data-i18n="v112.c3d">Translation Memory e glossario ora si abbinano per significato tramite embedding locali: una frase già tradotta viene riusata anche se scritta in modo diverso, per una terminologia coerente in tutto il gioco.</p></div>
-      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="v112.c4t">⚡ Live più fluida</h3><p data-i18n="v112.c4d">Pipeline dell'overlay live rivista ed elaborazione nativa degli screenshot (ritaglio/ridimensionamento) per un risultato a schermo più rapido e pulito.</p></div>
-      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c5t">🔌 Più provider pronti all'uso</h3><p data-i18n="v112.c5d">Aggiunti DeepL, Groq, Cerebras, Cohere, Together, Fireworks, Hugging Face, Azure Translator, DashScope, LibreTranslate, Lingva e MyMemory: più motori di traduzione funzionano subito.</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c1t">👁️ Contesto visivo (VLM)</h3><p data-i18n="v112.c1d">Traduzione con contesto visivo (VLM): l'AI vede lo schermo e traduce col contesto, risolvendo le parole ambigue (es. "Chest" = forziere o petto). Locale (Ollama) o OpenAI/Gemini</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c2t">🪞 Traduzioni auto-correttive</h3><p data-i18n="v112.c2d">Passaggio auto-correttivo (Reflection): una seconda passata opzionale rivede e rifinisce la traduzione su glossario, tono e coerenza — solo dove serve</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c3t">🧠 Memoria semantica (RAG)</h3><p data-i18n="v112.c3d">Memoria semantica (RAG): Translation Memory e glossario abbinati per significato tramite embedding locali, per una terminologia coerente in tutto il gioco</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="v112.c4t">⚡ Live più fluida</h3><p data-i18n="v112.c4d">Traduzione live più fluida ed elaborazione nativa degli screenshot (ritaglio/ridimensionamento prima della chiamata AI)</p></div>
+      <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="v112.c5t">🔌 Più provider pronti all'uso</h3><p data-i18n="v112.c5d">Più provider pronti all'uso: DeepL, Groq, Cerebras, Cohere, Together, Fireworks, Hugging Face, Azure Translator, DashScope, LibreTranslate, Lingva, MyMemory</p></div>
     </div>
   </div>
 </section>
@@ -378,11 +395,11 @@
     <h2 class="h2 reveal" data-i18n="fn.h2">Una suite completa, non un semplice traduttore</h2>
     <div class="grid">
       <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="f1.t">P.T. — Prediction Tool</h3><p data-i18n="f1.d">Analisi predittiva prima di tradurre: difficoltà, DRM, encoding, complessità linguistica e catene di modelli consigliate (Locale, Cloud, Ibrida, Budget, Premium).</p></div>
-      <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="f2.t">Dry Run & P.T.Rank</h3><p data-i18n="f2.d">Scansiona l'intera libreria (800+ giochi) senza toccare nulla e ordina i titoli per difficoltà per pianificare la coda di lavoro.</p></div>
+      <div class="card reveal"><div class="tag tcore" data-i18n="tag.core">Core</div><h3 data-i18n="f2.t">Dry Run & P.T.Rank</h3><p data-i18n="f2.d">Scansiona l'intera libreria installata, senza limiti di numero e senza toccare nulla, e ordina i titoli per difficoltà per pianificare la coda di lavoro.</p></div>
       <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f3.t">20+ provider AI</h3><p data-i18n="f3.d">OpenAI, Claude, Gemini, DeepSeek, Groq, DeepL, Ollama (locale) e altri. Auto-Select per lingua e genere del gioco.</p></div>
       <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f4.t">Translation Memory & Glossario</h3><p data-i18n="f4.d">Database locale che impara dalle tue correzioni, con estrazione automatica di nomi e termini per la coerenza.</p></div>
       <div class="card reveal"><div class="tag ttrad" data-i18n="tag.trad">Traduzione</div><h3 data-i18n="f5.t">Quality gate 0–100</h3><p data-i18n="f5.d">Punteggio di qualità automatico su ogni stringa e heatmap visiva: vedi a colpo d'occhio dove serve una revisione umana.</p></div>
-      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="f6.t">Patcher nativi</h3><p data-i18n="f6.d">Parser dedicati per oltre 20 engine, con wizard a step condiviso e backup automatico prima di ogni patch.</p></div>
+      <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="f6.t">Patcher nativi</h3><p data-i18n="f6.d">12 engine con parser dedicato e oltre 20 riconosciuti, con wizard a step condiviso e backup automatico prima di ogni patch.</p></div>
       <div class="card reveal"><div class="tag tpatch" data-i18n="tag.patch">Engine</div><h3 data-i18n="f7.t">Unity auto-setup</h3><p data-i18n="f7.d">Per i giochi Unity senza testo estraibile, installa BepInEx + XUnity.AutoTranslator con un clic.</p></div>
       <div class="card reveal"><div class="tag tres" data-i18n="tag.res">Strumenti</div><h3 data-i18n="f8.t">OCR & Overlay</h3><p data-i18n="f8.d">Traduzione a schermo per giochi retro e RPG Maker classico, con preprocessing dedicato e backend Tesseract.</p></div>
       <div class="card reveal"><div class="tag tres" data-i18n="tag.res">Strumenti</div><h3 data-i18n="f9.t">Libreria & aggiunta manuale</h3><p data-i18n="f9.d">Rilevamento automatico da Steam/Epic/GOG e aggiunta manuale di un gioco selezionando la cartella dal disco.</p></div>
@@ -393,13 +410,13 @@
 <section id="engine" style="background:rgba(255,255,255,.015)">
   <div class="container">
     <span class="label patch reveal" data-i18n="eng.label">// Engine supportati</span>
-    <h2 class="h2 reveal" data-i18n="eng.h2">Oltre 20 engine, con parser dedicati</h2>
+    <h2 class="h2 reveal" data-i18n="eng.h2">12 engine con parser dedicato, oltre 20 riconosciuti</h2>
     <p class="sub reveal" data-i18n="eng.sub">Copertura verificata sul codice: patcher con test su fixture, più moduli runtime per i casi che richiedono injection.</p>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:22px">
       <div style="padding:18px;border-radius:16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25)">
         <div style="font-weight:800;color:#6ee7b7;margin-bottom:2px" data-i18n="cov.m1">Parser su file</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px" data-i18n="cov.m1d">parsing e riscrittura dei file nativi</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7">Unity · Unreal · Godot · RPG Maker MV/MZ · Ren'Py · Bethesda · CRI · Wolf RPG · TyranoScript · Visionaire · Danganronpa</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">Unity · Unreal · Godot · RPG Maker MV/MZ · Ren'Py · Bethesda · CRI · GameMaker · Wolf RPG · TyranoScript · Visionaire · Danganronpa</div>
       </div>
       <div style="padding:18px;border-radius:16px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25)">
         <div style="font-weight:800;color:#fcd34d;margin-bottom:2px" data-i18n="cov.m2">Injection a runtime</div>
@@ -414,18 +431,19 @@
     </div>
     <div class="engines">
       <div class="eng reveal"><h4>Unity</h4><small>assets · StringTable · BepInEx</small><div class="ok">Full</div></div>
-      <div class="eng reveal"><h4>Unreal</h4><small>.locres · _P.pak · IoStore</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>Unreal</h4><small>.locres · _P.pak · IoStore</small><div class="part" data-i18n="eng.partial">Parziale</div></div>
       <div class="eng reveal"><h4>Godot</h4><small>.pck · .translation</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>RPG Maker</h4><small>MV · MZ · VX/Ace · 2k OCR</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>Ren'Py</h4><small>.rpy · dialoghi</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>Bethesda</h4><small>BSA/BA2 · ESP/ESM</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>CRI Middleware</h4><small>CPK · CRILAYLA · MSG/BMD</small><div class="ok">Full</div></div>
-      <div class="eng reveal"><h4>GameMaker</h4><small>UndertaleModTool</small><div class="ok">Full</div></div>
+      <div class="eng reveal"><h4>GameMaker</h4><small>UndertaleModTool</small><div class="part" data-i18n="eng.partial">Parziale</div></div>
       <div class="eng reveal"><h4>Wolf RPG</h4><small>WolfTrans</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>TyranoScript</h4><small>fast-path JSON</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>Visionaire</h4><small>Daedalic adventures</small><div class="ok">Full</div></div>
       <div class="eng reveal"><h4>Danganronpa</h4><small>WAD · STX</small><div class="ok">Full</div></div>
     </div>
+    <p class="reveal" style="margin-top:18px;font-size:12.5px;color:var(--faint)" data-i18n="eng.unrealnote">Unreal: la lettura dei container IoStore (.utoc/.ucas) è completa, ma la riscrittura è ancora parziale e passa da un container di override _P (ADR-002). GameMaker: la riscrittura avviene a lunghezza invariata, quindi le traduzioni più lunghe dell'originale vengono troncate e segnalate.</p>
   </div>
 </section>
 
@@ -546,7 +564,7 @@
     <h2 class="h2 reveal" data-i18n="faq.h2">FAQ</h2>
     <div class="reveal">
       <details><summary data-i18n="faq.q1">È gratuito?</summary><p data-i18n="faq.a1">GameStringer è source-available. Le prime 500 stringhe di ogni progetto sono libere; per progetti più grandi è previsto un sistema basato sull'onore con donazione libera.</p></details>
-      <details><summary data-i18n="faq.q2">Funziona con i giochi Steam, Epic, GOG?</summary><p data-i18n="faq.a2">Sì: rileva automaticamente le librerie installate (800+ giochi) e ti guida nell'applicazione delle patch. Puoi anche aggiungere un gioco manualmente dal disco.</p></details>
+      <details><summary data-i18n="faq.q2">Funziona con i giochi Steam, Epic, GOG?</summary><p data-i18n="faq.a2">Sì: rileva automaticamente i giochi installati dai tuoi store (Steam, Epic, GOG e altri) e ti guida nell'applicazione delle patch. Puoi anche aggiungere un gioco manualmente dal disco.</p></details>
       <details><summary data-i18n="faq.q3">Posso tradurre senza pagare API?</summary><p data-i18n="faq.a3">Sì, con Ollama esegui modelli come Llama 3, Gemma o Qwen direttamente sulla tua GPU: privacy totale e zero costi.</p></details>
       <details><summary data-i18n="faq.q4">È sicuro per i giochi online?</summary><p data-i18n="faq.a4">L'injection a runtime può far scattare gli anti-cheat. Usa GameStringer su giochi single-player/offline: il P.T. rileva DRM e anti-cheat e ti avvisa prima di modificare qualsiasi cosa. I file vengono sempre salvati in backup.</p></details>
       <details><summary data-i18n="faq.q5">Su quali sistemi gira?</summary><p data-i18n="faq.a5">Windows 10+, Linux (Ubuntu 22.04+/Fedora 38+) e macOS 10.15+. Le release sono firmate e si aggiornano automaticamente.</p></details>
