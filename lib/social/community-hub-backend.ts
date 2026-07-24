@@ -21,6 +21,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { TranslationPack, CommunityAuthor, PackReview, PackSearchFilters, HubStats, PackFile } from './community-hub-service';
 import { clientLogger } from '@/lib/client-logger';
 import { isTauri } from '@/lib/tauri-api';
+import { checkThrottle, markThrottledAction, HUB_THROTTLE_MS } from './hub-cache';
 
 // Instrada le fetch di supabase-js attraverso un comando Rust (supabase_proxy_fetch)
 // per evitare il blocco CORS del webview Tauri verso Supabase. Fuori da Tauri
@@ -577,6 +578,12 @@ export async function getModerationQueue(): Promise<TranslationPack[]> {
 }
 
 export async function reportPack(packId: string, reason: string): Promise<void> {
+  // Throttle client-side: assorbe i "report" ravvicinati (min-interval) prima
+  // che raggiungano la tabella condivisa. Non-breaking: se l'azione è troppo
+  // ravvicinata esce silenziosamente (no-op), senza errori per il chiamante.
+  const throttle = checkThrottle('report', HUB_THROTTLE_MS.report);
+  if (!throttle.allowed) return;
+
   const supabase = await getSupabase();
   const user = await getCurrentUser();
   await supabase.from('pack_reports').insert({
@@ -584,6 +591,7 @@ export async function reportPack(packId: string, reason: string): Promise<void> 
     reporter_id: user?.id,
     reason,
   });
+  markThrottledAction('report');
 }
 
 // ─── FOLLOWERS ────────────────────────────────────────────────────

@@ -9,6 +9,14 @@ import { clientLogger } from '@/lib/client-logger';
 import { checkRedistribution } from '@/lib/redistribution-guard';
 import type { GspackData } from '@/lib/gspack-manager';
 import type { LeaderboardEntry } from './community-hub-backend';
+import {
+  withHubCache,
+  hubCacheKey,
+  invalidateHubCache,
+  checkThrottle,
+  markThrottledAction,
+  HUB_THROTTLE_MS,
+} from './hub-cache';
 
 export type RetroPlatform =
   | 'nes' | 'snes' | 'n64' | 'gb' | 'gbc' | 'gba' | 'nds' | '3ds'
@@ -418,15 +426,19 @@ class CommunityHubService {
    * Cerca pack di traduzioni — usa backend Supabase se disponibile, altrimenti fallback locale
    */
   async searchPacks(filters: PackSearchFilters = {}): Promise<{ packs: TranslationPack[]; total: number }> {
-    // Try Supabase backend first (with 5s timeout to avoid blocking UI)
+    // Try Supabase backend first (with 5s timeout to avoid blocking UI).
+    // I READ passano da una cache in-memory con TTL (fail-open): riduce i
+    // round-trip su Supabase quando l'utente naviga tra le tab. Un errore/timeout
+    // NON viene cachato e ricade sul fallback locale sottostante.
     try {
       const { isBackendEnabled, fetchPacks } = await import('./community-hub-backend');
       if (isBackendEnabled()) {
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Supabase timeout')), 5000)
-        );
-        const result = await Promise.race([fetchPacks(filters), timeout]);
-        return result;
+        return await withHubCache(hubCacheKey('searchPacks', filters), () => {
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Supabase timeout')), 5000)
+          );
+          return Promise.race([fetchPacks(filters), timeout]);
+        });
       }
     } catch {
       // Backend non disponibile o timeout, fallback locale
@@ -575,6 +587,10 @@ class CommunityHubService {
 
       // Registra nel registro gspack (visibile dalla libreria pack esistente).
       installPack(manifest, files.length);
+
+      // Il download ha incrementato il contatore remoto: invalida le liste
+      // cachate (ordinate anche per downloads) così riflettono il nuovo valore.
+      invalidateHubCache();
     }
 
     // Registro installazioni del service.
@@ -715,6 +731,15 @@ class CommunityHubService {
     const backend = await import('./community-hub-backend').catch(() => null);
 
     if (backend && backend.isBackendEnabled()) {
+      // Throttle client-side: blocca publish ravvicinati (min-interval) per non
+      // martellare il backend condiviso. La finestra viene "consumata" solo dopo
+      // una pubblicazione riuscita (vedi markThrottledAction più sotto), così un
+      // errore di rete non penalizza l'utente. Sentinella mappabile dalla UI.
+      const throttle = checkThrottle('publish', HUB_THROTTLE_MS.publish);
+      if (!throttle.allowed) {
+        throw new Error('community-hub:publish-throttled');
+      }
+
       // Pubblicazione online: richiede una sessione Community Hub attiva.
       // Eventuali errori (auth / upload) vengono propagati al chiamante,
       // lasciando il pack come bozza locale così l'utente non perde il lavoro.
@@ -774,6 +799,10 @@ class CommunityHubService {
       localPack.status = 'published';
       localPack.updatedAt = new Date().toISOString();
       this.saveLocalData();
+      // Avvia la finestra di throttle e invalida le liste cachate: il nuovo
+      // pack deve poter comparire senza aspettare la scadenza del TTL.
+      markThrottledAction('publish');
+      invalidateHubCache();
       return true;
     }
 
@@ -818,10 +847,12 @@ class CommunityHubService {
     try {
       const { isBackendEnabled, fetchHubStats } = await import('./community-hub-backend');
       if (isBackendEnabled()) {
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Stats timeout')), 5000)
-        );
-        return await Promise.race([fetchHubStats(), timeout]);
+        return await withHubCache(hubCacheKey('hubStats', null), () => {
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Stats timeout')), 5000)
+          );
+          return Promise.race([fetchHubStats(), timeout]);
+        });
       }
     } catch {}
 
@@ -871,10 +902,12 @@ class CommunityHubService {
     try {
       const { isBackendEnabled, fetchLeaderboard } = await import('./community-hub-backend');
       if (isBackendEnabled()) {
-        const timeout = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Leaderboard timeout')), 5000)
-        );
-        return await Promise.race([fetchLeaderboard(limit), timeout]);
+        return await withHubCache(hubCacheKey('leaderboard', limit), () => {
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Leaderboard timeout')), 5000)
+          );
+          return Promise.race([fetchLeaderboard(limit), timeout]);
+        });
       }
     } catch (e) {
       clientLogger.warn('getLeaderboard fallita', e as Error);
