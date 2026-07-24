@@ -1,12 +1,12 @@
 {
-  "version": "1.14.0",
+  "version": "1.15.0",
   "major": 1,
-  "minor": 14,
+  "minor": 15,
   "patch": 0,
   "prerelease": null,
   "buildNumber": 129,
-  "buildDate": "2026-07-13T23:31:11.698Z",
-  "gitHash": "87f08d58",
+  "buildDate": "2026-07-24T18:58:17.074Z",
+  "gitHash": "980f7807",
   "branch": "main",
   "changelog": {
     "1.12.0": {

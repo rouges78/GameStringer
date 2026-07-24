@@ -1,11 +1,11 @@
 {
   "productName": "GameStringer",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "identifier": "com.gamestringer.app",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "node scripts/build-tauri-cross.js",
-    "devUrl": "http://127.0.0.1:3275",
+    "devUrl": "http://127.0.0.1:3277",
     "frontendDist": "../out"
   },
   "app": {
