@@ -66,6 +66,7 @@ import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 import { getBackgroundTranslationManager, type BGJobFile, type BGJobString } from '@/lib/batch/background-translation';
 import { VoiceProfileManager } from '@/components/settings/voice-profile-manager';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // ============================================================================
 // TYPES
@@ -204,7 +205,8 @@ export default function AutoTranslatePage() {
   const [step, setStep] = useState<WizardStep>('select_game')
   const [files, setFiles] = useState<LoadedFile[]>([])
   const [sourceLang, setSourceLang] = useState('en')
-  const [targetLang, setTargetLang] = useState('it')
+  const [targetLang, setTargetLang] = useState('en')
+  useDefaultTargetLang(setTargetLang);
   const [translator, _setTranslator] = useState('')
 
   // Carica lingua target dalle settings

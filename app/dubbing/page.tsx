@@ -18,6 +18,7 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult } from '@/lib/voice/dubbing-pipeline';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 const LANGUAGES = [
   { code: 'en', name: 'English' }, { code: 'it', name: 'Italiano' },
@@ -43,7 +44,8 @@ export default function DubbingPage() {
   const [gamePath, setGamePath] = useState('');
   const [gameName, setGameName] = useState('');
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [ttsProvider, _setTtsProvider] = useState<'openai' | 'elevenlabs'>('openai');
   const [sttProvider, setSttProvider] = useState<'openai_whisper' | 'groq_whisper'>('openai_whisper');
   const [defaultVoice, setDefaultVoice] = useState('alloy');

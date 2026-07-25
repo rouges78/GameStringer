@@ -18,6 +18,7 @@ import { rawPixelsToBase64 } from '@/lib/image-utils';
 import Link from 'next/link';
 import { RETRO_PLATFORMS, type RetroPlatform } from '@/lib/social/community-hub-service';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface WindowInfo {
   hwnd: number;
@@ -75,7 +76,8 @@ export default function EmulatorTranslatorPage() {
   const [selectedWindow, setSelectedWindow] = useState<number | null>(null);
   const [selectedEmulator, setSelectedEmulator] = useState<EmulatorProfile>(EMULATOR_PROFILES[0]);
   const [sourceLang, setSourceLang] = useState('ja');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [captureInterval, setCaptureInterval] = useState(2000);
   const [history, setHistory] = useState<TranslatedLine[]>([]);
   const [currentText, setCurrentText] = useState<string | null>(null);

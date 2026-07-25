@@ -18,6 +18,7 @@ import {
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedText {
   id: string;
@@ -45,7 +46,8 @@ export function LiveOcrOverlay() {
   const [detectedTexts, setDetectedTexts] = useState<DetectedText[]>([]);
   const [captureMode, setCaptureMode] = useState<'fullscreen' | 'region' | 'window'>('fullscreen');
   const [captureRegion, setCaptureRegion] = useState<CaptureRegion | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [sourceLanguage, setSourceLanguage] = useState('auto');
   const [captureInterval, setCaptureInterval] = useState(1000); // ms
   const [showOverlay, setShowOverlay] = useState(true);

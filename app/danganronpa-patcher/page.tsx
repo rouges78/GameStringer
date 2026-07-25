@@ -35,6 +35,7 @@ import { useTranslation } from '@/lib/i18n';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DanganronpaGame {
   path: string;
@@ -170,7 +171,8 @@ export default function DanganronpaPatcherPage() {
   const [linViewMode, setLinViewMode] = useState<'full' | 'compact'>('full');
   const [linShowUntranslated, setLinShowUntranslated] = useState(false);
   const [pakFilter, setPakFilter] = useState<'all' | 'translatable'>('translatable');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
 
   useEffect(() => {
     const saved = localStorage.getItem('gameStringerSettings');

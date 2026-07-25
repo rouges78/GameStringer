@@ -49,6 +49,7 @@ import {
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 const STEP_ICONS: Record<PipelineStepId, any> = {
   harvest: Sparkles,
@@ -92,7 +93,8 @@ export default function AIPipelinePage() {
   const [steps, setSteps] = useState<PipelineStep[]>([])
   const [isRunning, setIsRunning] = useState(false)
   const [inputText, setInputText] = useState(DEMO_TEXTS.join("\n"))
-  const [targetLang, setTargetLang] = useState("it")
+  const [targetLang, setTargetLang] = useState("en")
+  useDefaultTargetLang(setTargetLang);
 
   useEffect(() => {
     const saved = localStorage.getItem('gameStringerSettings');

@@ -32,6 +32,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useProfiles } from '@/hooks/use-profiles';
 import { communityHubService, type TranslationPack } from '@/lib/social/community-hub-service';
 import { projectService } from '@/lib/services/translation-projects';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -308,7 +309,8 @@ function PublishDialog({ open, onOpenChange, onPublished }: {
   const [name, setName] = useState('');
   const [gameName, setGameName] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState('en');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [files, setFiles] = useState<File[]>([]);

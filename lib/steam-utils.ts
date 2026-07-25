@@ -596,7 +596,7 @@ async function processGameWithAdvancedCache(
     // SECURITY FIX: Wait for rate limit if needed
     await rateLimiter.waitForNextRequest(endpoint);
     
-    const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appId}&l=italian`);
+    const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appId}&l=english`);
     
     if (response.status === 429) {
       logger.warn(`[getGameDetails] Rate limit per appId: ${game.appId}.`);

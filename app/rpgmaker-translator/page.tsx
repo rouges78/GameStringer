@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { buildSingleTranslationPrompt, detectGenreFromText, getAllGenres, type GameGenre } from '@/lib/ai/genre-prompts';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface RPGMakerEntry {
   key: string;
@@ -140,7 +141,8 @@ export default function RPGMakerTranslatorPage() {
   const [prog, setProg] = useState({ cur: 0, tot: 0, file: '' });
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [model, setModel] = useState('');
   const [models, setModels] = useState<string[]>([]);
   const [showCfg, setShowCfg] = useState(false);

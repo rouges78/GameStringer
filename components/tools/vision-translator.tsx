@@ -24,6 +24,7 @@ import { visionTranslate, getAvailableVisionModels, captureGameScreenshot, type 
 import { useTranslation } from '@/lib/i18n';
 import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { LANG_NAMES } from '@/lib/translation/language-mappings';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // Il VLM riceve il nome inglese della lingua nel prompt (es. "Czech"), non il
 // codice ISO: la lista resta agganciata a TARGET_LANGUAGES cosi' nuove lingue
@@ -43,6 +44,7 @@ export function VisionTranslator() {
   const { t } = useTranslation();
   const [text, setText] = useState('');
   const [targetLang, setTargetLang] = useState(TARGET_LANGUAGES[0]?.code ?? 'Italian');
+  useDefaultTargetLang(setTargetLang);
   const [provider, setProvider] = useState<'ollama' | 'gemini' | 'openai'>('ollama');
   const [model, setModel] = useState('');
   const [screenshotBase64, setScreenshotBase64] = useState<string | null>(null);

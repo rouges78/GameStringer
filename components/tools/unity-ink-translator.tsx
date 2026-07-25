@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/lib/i18n';
 import { isTauri } from '@/lib/tauri-api';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // ── Types ──────────────────────────────────────────────────
 interface ExtractResult {
@@ -94,7 +95,8 @@ export function UnityInkTranslator() {
   const [step, setStep] = useState<Step>('select');
   const [gameDir, setGameDir] = useState('');
   const [gameName, setGameName] = useState('');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [ollamaModel, setOllamaModel] = useState('huihui_ai/hy-mt1.5-abliterated:7b');
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'online' | 'offline'>('checking');

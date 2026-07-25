@@ -143,3 +143,4 @@ _gs_split/
 # File reali di gioco per il collaudo parser (MAI committare — copyright)
 .samples/*
 !.samples/README.md
+.i18n-work/

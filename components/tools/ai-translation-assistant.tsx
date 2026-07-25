@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import {
   aiTranslationService,
   type AIProvider, 
@@ -81,7 +82,8 @@ export function AITranslationAssistant() {
   const [lastResult, setLastResult] = useState<AITranslationResult | null>(null);
   
   const [sourceLanguage, setSourceLanguage] = useState('en');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [textType, setTextType] = useState<string>('dialogue');
   const [speaker, setSpeaker] = useState('');
   const [maxLength, _setMaxLength] = useState<number | undefined>(undefined);

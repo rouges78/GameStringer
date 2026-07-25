@@ -1445,7 +1445,7 @@ export default function GameDetailPage() {
   const fetchDescriptionFromSteam = async () => {
     if (!game?.appid) return;
     try {
-      const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=italian`);
+      const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=english`);
       const data = await response.json();
       if (data[game.appid]?.success && data[game.appid]?.data?.short_description) {
         const desc = data[game.appid].data.short_description.replace(/<[^>]*>?/gm, '');

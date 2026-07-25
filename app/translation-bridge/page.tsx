@@ -36,6 +36,7 @@ import {
 import { translationBridge, BridgeStats, DictionaryStats, TranslationPair } from '@/lib/translation-bridge';
 import { getFlagEmoji } from '@/components/ui/language-flags';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 export default function TranslationBridgePage() {
   const { t } = useTranslation();
@@ -44,7 +45,8 @@ export default function TranslationBridgePage() {
   const [stats, setStats] = useState<BridgeStats | null>(null);
   const [dictStats, setDictStats] = useState<DictionaryStats | null>(null);
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
 
   useEffect(() => {
     const saved = localStorage.getItem('gameStringerSettings');

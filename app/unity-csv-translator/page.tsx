@@ -17,6 +17,7 @@ import { useTranslation } from '@/lib/i18n';
 import { buildSingleTranslationPrompt, detectGenreFromText, getAllGenres, type GameGenre } from '@/lib/ai/genre-prompts';
 import { suggestImprovement, type PostEditSuggestion } from '@/lib/ai/ai-post-edit';
 import { saveSnapshot, loadSnapshot, calculateDiff, formatDiffSummary, type IncrementalDiff, type StringEntry } from '@/lib/incremental-translator';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface CsvEntry { id: string; english: string; translated: string; category: string; done: boolean; }
 interface CsvTable { name: string; offset: number; source: string; header: string[]; entries: CsvEntry[]; doneCount: number; }
@@ -60,7 +61,8 @@ export default function UnityCsvTranslatorPage() {
   const [prog, setProg] = useState({ cur: 0, tot: 0, tbl: '' });
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [model, setModel] = useState('huihui_ai/hy-mt1.5-abliterated:7b');
   const [models, setModels] = useState<string[]>([]);
   const [showCfg, setShowCfg] = useState(false);

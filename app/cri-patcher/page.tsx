@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import {
   type CriGameInfo,
   type CpkFileInfo,
@@ -76,7 +77,8 @@ export default function CriPatcherPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [translating, setTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [sourceLang, setSourceLang] = useState('ja');
 
   // Step 4

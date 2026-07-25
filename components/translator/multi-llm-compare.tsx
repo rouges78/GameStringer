@@ -24,6 +24,7 @@ import { useTranslation } from '@/lib/i18n';
 import { translateSingleWithFallback } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface TranslationResult {
   provider: string;
@@ -68,7 +69,8 @@ const LANGUAGES = TARGET_LANGUAGES.map(l => ({ code: l.code, name: `${l.name} ${
 export function MultiLLMCompare() {
   const { t } = useTranslation();
   const [sourceText, setSourceText] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [sourceLanguage, setSourceLanguage] = useState('en');
   const [selectedProviders, setSelectedProviders] = useState<string[]>(['openai', 'gemini', 'claude']);
   const [selectedCharacter, _setSelectedCharacter] = useState<string>('none');

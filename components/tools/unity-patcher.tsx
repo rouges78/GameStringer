@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { activityHistory } from '@/lib/activity-history';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Unity string extraction is wired into this patcher.
 
@@ -71,7 +72,8 @@ export function UnityPatcher() {
   const [_isLoadingLanguages, setIsLoadingLanguages] = useState(false);
   const [engineCheck, setEngineCheck] = useState<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string; has_bepinex?: boolean; has_xunity?: boolean } | null>(null);
   const [_patchInfo, setPatchInfo] = useState<{ bepinex: string; xunity: string } | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState('it'); // Lingua di destinazione per la traduzione
+  const [targetLanguage, setTargetLanguage] = useState('en'); // Lingua di destinazione per la traduzione
+  useDefaultTargetLang(setTargetLanguage);
   const [translationMode, setTranslationMode] = useState<'google' | 'deepl' | 'capture'>('capture'); // Modalità traduzione
   
   // Modalità di traduzione XUnity

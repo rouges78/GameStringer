@@ -24,6 +24,7 @@ import { findCommunityTranslation } from '@/lib/social/community-translations';
 import { translateSmart } from '@/lib/ai/ai-translate-direct';
 import { extractStringsFromBuffer, fitToByteLength, applyPatch, detectAntiCheat, detectLanguage } from '@/lib/patchers/binary-string-patcher';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // --- Types ---
 interface Game {
@@ -176,7 +177,8 @@ export default function TranslationWizardPage() {
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState<string>('it');
+  const [targetLanguage, setTargetLanguage] = useState<string>('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [isLoading, setIsLoading] = useState(false);
   
   // Load settings from localStorage

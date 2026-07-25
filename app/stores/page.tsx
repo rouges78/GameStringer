@@ -742,10 +742,17 @@ export default function StoresPage() {
     try {
       if (utilityId === 'howlongtobeat') {
         // Test HowLongToBeat via comando Rust (niente fetch diretto: CORS nel webview).
-        // Se la ricerca non lancia, il servizio è raggiungibile.
-        await invoke('get_howlongtobeat_info', { gameName: 'The Witcher 3' });
-        setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
-        toast.success(t('common.howlongtobeatRaggiungibile'));
+        // Il comando NON lancia più su timeout/rete (HLTB è opzionale, non deve
+        // produrre errori rossi): l'esito va letto dal campo `available`.
+        const hltb = await invoke<{ available?: boolean; message?: string }>(
+          'get_howlongtobeat_info', { gameName: 'The Witcher 3' }
+        );
+        if (hltb?.available) {
+          setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
+          toast.success(t('common.howlongtobeatRaggiungibile'));
+        } else {
+          throw new Error(hltb?.message || 'HowLongToBeat non raggiungibile');
+        }
       } else if (utilityId === 'steamgriddb') {
         // Test SteamGridDB API via Tauri command (no CORS)
         const apiKey = utilityPreferences[utilityId]?.apiKey;

@@ -30,6 +30,7 @@ import {
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface GameContext {
   gameTitle: string;
@@ -95,7 +96,8 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [translations, setTranslations] = useState<ContextTranslation[]>([]);
   
   const [gameContext, setGameContext] = useState<GameContext>(

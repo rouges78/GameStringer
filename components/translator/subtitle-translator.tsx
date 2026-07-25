@@ -42,6 +42,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import {
   SubtitleFile,
   SubtitleEntry,
@@ -72,6 +73,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
   const [subtitleFile, setSubtitleFile] = useState<SubtitleFile | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [targetLang, setTargetLang] = useState<string>("it");
+  useDefaultTargetLang(setTargetLang);
   const [outputFormat, setOutputFormat] = useState<string>("srt");
   const [isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);

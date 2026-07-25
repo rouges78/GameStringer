@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers,
@@ -1011,7 +1012,8 @@ export default function PredictionToolPage() {
   const headerImage = searchParams.get('headerImage') || '';
 
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

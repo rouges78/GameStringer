@@ -29,6 +29,7 @@ import {
 } from '@/lib/auto-glossary';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 const TIER_COLORS: Record<GlossaryTier, string> = {
   locked: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -79,7 +80,8 @@ export default function GlossaryPage() {
   const [createGameId, setCreateGameId] = useState('');
   const [createGameName, setCreateGameName] = useState('');
   const [createSourceLang, setCreateSourceLang] = useState('en');
-  const [createTargetLang, setCreateTargetLang] = useState('it');
+  const [createTargetLang, setCreateTargetLang] = useState('en');
+  useDefaultTargetLang(setCreateTargetLang);
 
   // Community (glossari condivisi per gioco)
   const [communityList, setCommunityList] = useState<import('@/lib/social/community-glossary').CommunityGlossaryInfo[]>([]);

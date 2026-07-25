@@ -2365,7 +2365,7 @@ async fn enrich_game_details(app_id: u32) -> Result<SteamGame, String> {
         return Ok(cached);
     }
     
-    let details_url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=it", app_id);
+    let details_url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=english", app_id);
     
     let response = HTTP_CLIENT.get(&details_url)
         .send()

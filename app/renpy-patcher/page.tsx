@@ -32,6 +32,7 @@ import { useTranslation } from '@/lib/i18n';
 import { generatePOString, entriesToGeneric, type PoMetadata } from '@/lib/po-export';
 import { WizardStepper, type WizardStep } from '@/components/ui/wizard-stepper';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface RenpyGame {
   path: string;
@@ -87,6 +88,7 @@ export default function RenpyPatcherPage() {
   const [editedTranslation, setEditedTranslation] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [targetLanguage, setTargetLanguage] = useState('italian');
+  useDefaultTargetLang(setTargetLanguage);
 
   useEffect(() => {
     if (strings.length > 0) {

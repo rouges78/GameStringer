@@ -118,7 +118,7 @@ pub async fn get_epic_game_details(app_name: String) -> Result<EpicGame, String>
     println!("[EPIC] Recupero dettagli per: {}", app_name);
     
     // Epic Games Store API endpoint (pubblico)
-    let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=it&country=IT&allowCountries=IT".to_string();
+    let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=US&allowCountries=US".to_string();
     
     match HTTP_CLIENT.get(&url).send().await {
         Ok(response) => {
@@ -1609,7 +1609,7 @@ fn extract_games_from_file_content(content: &str) -> Vec<String> {
 
 /// Prova a recuperare giochi gratuiti Epic Games da API pubblica
 async fn try_epic_free_games_api() -> Result<Vec<String>, String> {
-    let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=it&country=IT";
+    let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=en-US&country=US";
     
     match HTTP_CLIENT.get(url).send().await {
         Ok(response) => {

@@ -30,6 +30,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // Types for translation queue
 export interface TranslationJob {
@@ -62,7 +63,8 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
   
   // Batch settings
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
 
   // Statistics
   const completedJobs = queue.filter(j => j.status === 'completed').length;

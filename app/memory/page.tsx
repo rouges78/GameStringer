@@ -448,7 +448,7 @@ export default function MemoryPage() {
           notes: u.metadata?.notes,
         }))}
         sourceLang="en"
-        targetLang="it"
+        targetLang="en"
         defaultFileName="translation_memory"
       />
     </div>

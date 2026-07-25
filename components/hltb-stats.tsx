@@ -53,7 +53,12 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
         clientLogger.debug('[HLTB] Fetching for:', gameName);
         const result = await invoke<HltbData>('get_howlongtobeat_info', { gameName });
         clientLogger.debug('[HLTB] Result:', JSON.stringify(result));
-        _hltbCache.set(gameName, result);
+        // Non mettere in cache un fallimento di RETE (available === false):
+        // altrimenti un timeout momentaneo blocca il dato per tutta la sessione.
+        // Un "nessun risultato" (available true, found false) invece si cachea.
+        if ((result as { available?: boolean })?.available !== false) {
+          _hltbCache.set(gameName, result);
+        }
         if (!cancelled) setData(result);
       } catch (e: unknown) {
         clientLogger.warn('[HLTB] Fetch failed:', e);

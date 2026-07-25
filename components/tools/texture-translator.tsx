@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedTextRegion {
   id: string;
@@ -81,7 +82,8 @@ export function TextureTranslator() {
   const [textures, setTextures] = useState<TextureFile[]>([]);
   const [currentTextureIndex, setCurrentTextureIndex] = useState(0);
   const [sourceLanguage, setSourceLanguage] = useState('en');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [selectedFont, setSelectedFont] = useState('arial');
   const [zoom, setZoom] = useState(100);
   const [showOriginal, setShowOriginal] = useState(false);

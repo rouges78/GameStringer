@@ -1022,7 +1022,7 @@ pub async fn fetch_steam_game_details(app_id: u32) -> Result<Option<SteamGameDet
     info!("🎮 Fetching dettagli Steam per app_id: {}", app_id);
     
     let url = format!(
-        "https://store.steampowered.com/api/appdetails?appids={}&l=it&cc=IT",
+        "https://store.steampowered.com/api/appdetails?appids={}&l=english&cc=US",
         app_id
     );
     
@@ -2019,7 +2019,7 @@ pub async fn save_languages_cache(languages: std::collections::HashMap<String, V
 pub async fn fetch_game_languages(app_id: String) -> Result<Vec<String>, String> {
     use reqwest;
     
-    let url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=it", app_id);
+    let url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=english", app_id);
     
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))

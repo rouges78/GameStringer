@@ -20,29 +20,60 @@ pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Val
         urlencoding::encode(&game_name)
     );
     
-    let response = client
+    // HLTB è un arricchimento OPZIONALE (durata stimata): se il sito è lento,
+    // irraggiungibile o rifiuta la richiesta, non è un errore dell'app. Prima un
+    // timeout finiva in `Err` (errore rosso + stack trace in console) mentre un
+    // 403/500 restituiva un garbato `found: false`: stessa situazione, due
+    // comportamenti opposti. Ora tutti i fallimenti di rete seguono la via
+    // gentile, e il chiamante mostra semplicemente "durata non disponibile".
+    let response = match client
         .get(&search_url)
         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
         .header("Accept-Language", "en-US,en;q=0.5")
         .send()
         .await
-        .map_err(|e| format!("Errore richiesta HLTB: {}", e))?;
-    
+    {
+        Ok(r) => r,
+        Err(e) => {
+            let reason = if e.is_timeout() { "timeout" } else { "rete" };
+            log::warn!("⚠️ HLTB irraggiungibile ({}): {}", reason, e);
+            return Ok(serde_json::json!({
+                "found": false,
+                "available": false,
+                "message": "HowLongToBeat non raggiungibile",
+                "reason": reason,
+                "url": search_url
+            }));
+        }
+    };
+
     let status = response.status();
     log::info!("🕐 HLTB HTML response status: {}", status);
-    
+
     if !status.is_success() {
         log::warn!("⚠️ HLTB risposta non OK: {}", status);
         return Ok(serde_json::json!({
             "found": false,
+            "available": false,
             "message": format!("HowLongToBeat non disponibile ({})", status),
             "url": search_url
         }));
     }
-    
-    let html = response.text().await
-        .map_err(|e| format!("Errore lettura HLTB: {}", e))?;
+
+    let html = match response.text().await {
+        Ok(h) => h,
+        Err(e) => {
+            log::warn!("⚠️ HLTB corpo risposta illeggibile: {}", e);
+            return Ok(serde_json::json!({
+                "found": false,
+                "available": false,
+                "message": "HowLongToBeat non raggiungibile",
+                "reason": "corpo risposta",
+                "url": search_url
+            }));
+        }
+    };
     
     // Parse HTML per estrarre i dati (cerca pattern nei data attributes o nel JSON embedded)
     // Pattern: cerca "comp_main":XXX, "comp_plus":XXX, "comp_100":XXX nel HTML/JS
@@ -68,6 +99,7 @@ pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Val
         log::info!("ℹ️ HLTB nessun risultato per: {}", game_name);
         return Ok(serde_json::json!({
             "found": false,
+            "available": true,   // sito raggiungibile: semplicemente nessun risultato
             "url": search_url
         }));
     }
@@ -79,16 +111,31 @@ pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Val
 async fn fetch_hltb_game_page(client: &reqwest::Client, game_id: i64, game_name: &str) -> Result<serde_json::Value, String> {
     let game_url = format!("https://howlongtobeat.com/game/{}", game_id);
     
-    let response = client
+    // Stesso principio della ricerca: un sito esterno lento non è un errore
+    // dell'app (vedi commento in get_howlongtobeat_info).
+    let response = match client
         .get(&game_url)
         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         .send()
         .await
-        .map_err(|e| format!("Errore fetch game page: {}", e))?;
-    
+    {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("⚠️ HLTB pagina gioco irraggiungibile: {}", e);
+            return Ok(serde_json::json!({
+                "found": false,
+                "available": false,
+                "message": "HowLongToBeat non raggiungibile",
+                "reason": if e.is_timeout() { "timeout" } else { "rete" },
+                "url": game_url
+            }));
+        }
+    };
+
     if !response.status().is_success() {
         return Ok(serde_json::json!({
             "found": false,
+            "available": false,
             "url": game_url
         }));
     }
@@ -140,6 +187,7 @@ async fn fetch_hltb_game_page(client: &reqwest::Client, game_id: i64, game_name:
         
         return Ok(serde_json::json!({
             "found": true,
+            "available": true,
             "game_name": game_name,
             "main": main,
             "main_extra": main_extra,
@@ -152,6 +200,7 @@ async fn fetch_hltb_game_page(client: &reqwest::Client, game_id: i64, game_name:
     log::info!("ℹ️ HLTB pagina trovata ma senza tempi per: {}", game_name);
     Ok(serde_json::json!({
         "found": false,
+        "available": true,   // pagina raggiunta, ma senza tempi utilizzabili
         "url": game_url
     }))
 }

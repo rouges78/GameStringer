@@ -23,6 +23,7 @@ import {
 import type { VlmProvider } from '@/lib/ocr/vlm-batch-translate';
 import { useGlobalHotkeys } from '@/hooks/use-global-hotkeys';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface LogEntry {
   time: string;
@@ -52,7 +53,8 @@ export default function LiveTranslatePage() {
   const { t: _t } = useTranslation();
 
   // Config state
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [sourceLang, _setSourceLang] = useState('en');
   const [ocrLang, setOcrLang] = useState('eng');
   const [provider, setProvider] = useState('groq');

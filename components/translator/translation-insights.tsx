@@ -231,7 +231,7 @@ interface TranslationInsightsProps {
 export function TranslationInsights({
   sourceText,
   translatedText,
-  targetLanguage = 'it',
+  targetLanguage = 'en',
   filename,
   stringKey,
   className
@@ -276,7 +276,7 @@ interface BatchInsightsSummaryProps {
   targetLanguage?: string;
 }
 
-export function BatchInsightsSummary({ items, targetLanguage = 'it' }: BatchInsightsSummaryProps) {
+export function BatchInsightsSummary({ items, targetLanguage = 'en' }: BatchInsightsSummaryProps) {
   const { t } = useTranslation();
   const classifications = items.map(item => classifyContent(item.source));
   

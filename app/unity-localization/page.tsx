@@ -84,7 +84,8 @@ export default function UnityLocalizationPage() {
   const [loadedTable, setLoadedTable] = useState<StringTableInfo | null>(null);
   const [entries, setEntries] = useState<StringTableEntry[]>([]);
   const [sourceLocale, setSourceLocale] = useState("en");
-  const [targetLocale, setTargetLocale] = useState("it");
+  const [targetLocale, setTargetLocale] = useState("en");
+  useDefaultTargetLang(setTargetLocale);
   const [searchFilter, setSearchFilter] = useState("");
   const [translating, setTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -964,6 +965,7 @@ export default function UnityLocalizationPage() {
 
 import React from "react";
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 const EntryRow = React.memo(function EntryRow({
   entry,

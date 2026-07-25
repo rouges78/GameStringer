@@ -31,6 +31,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface InlineTranslatorProps {
   gameId: string;
@@ -60,7 +61,8 @@ export default function InlineTranslator({ gameId: _gameId, gameName, gamePath: 
   const [translatedContent, setTranslatedContent] = useState('');
   const [provider, setProvider] = useState<'openai' | 'deepl' | 'google'>('openai');
   const [apiKey, setApiKey] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [translatorError, setTranslatorError] = useState<string | null>(null);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   

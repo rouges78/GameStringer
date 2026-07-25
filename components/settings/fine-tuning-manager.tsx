@@ -31,6 +31,7 @@ import {
 import { getCorrections } from '@/lib/ai/adaptive-mt';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 export function FineTuningManager({ gameId }: { gameId?: string }) {
   const { t, language } = useTranslation();
@@ -39,7 +40,8 @@ export function FineTuningManager({ gameId }: { gameId?: string }) {
   const [ollamaStatus, setOllamaStatus] = useState<{ available: boolean; models: string[] }>({ available: false, models: [] });
   const [isGenerating, setIsGenerating] = useState(false);
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [approvedOnly, setApprovedOnly] = useState(true);
   const [exportFormat, setExportFormat] = useState<'openai' | 'ollama' | 'alpaca' | 'chatml'>('openai');
   // In Impostazioni il componente è montato senza gameId: senza questo selettore

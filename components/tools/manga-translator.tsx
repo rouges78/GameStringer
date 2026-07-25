@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedBalloon {
   id: string;
@@ -72,7 +73,8 @@ export function MangaTranslator() {
   const [pages, setPages] = useState<MangaPage[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [sourceLanguage, setSourceLanguage] = useState('ja');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [selectedFont, setSelectedFont] = useState('manga');
   const [fontSize, setFontSize] = useState([16]);
   const [showOriginal, setShowOriginal] = useState(false);

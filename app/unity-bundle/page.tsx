@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface BundleInfo {
   bundle_path: string;
@@ -82,6 +83,7 @@ export default function UnityBundlePage() {
   const [_apiKey, setApiKey] = useState<string>("");
   const [provider, setProvider] = useState<string>("gemini");
   const [targetLanguage, setTargetLanguage] = useState<string>("it");
+  useDefaultTargetLang(setTargetLanguage);
   
   // Carica impostazioni (API key, provider, lingua target) dal localStorage
   useEffect(() => {

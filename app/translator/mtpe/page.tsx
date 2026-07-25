@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { MTPEWorkflow } from '@/components/translator/mtpe-workflow';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 type Phase = 'input' | 'translate' | 'review' | 'complete';
 
@@ -26,7 +27,8 @@ export default function MTPEPage() {
   const [phase, setPhase] = useState<Phase>('input');
   const [sourceTexts, setSourceTexts] = useState('');
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [provider, setProvider] = useState('gemini');
 
   useEffect(() => {

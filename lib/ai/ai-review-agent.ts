@@ -431,7 +431,7 @@ function checkAccuracy(original: string, translated: string): ReviewIssue[] {
 export function reviewTranslation(
   original: string,
   translated: string,
-  targetLang: string = 'it',
+  targetLang: string = 'en',
   _context?: string
 ): ReviewResult {
   const issues: ReviewIssue[] = []

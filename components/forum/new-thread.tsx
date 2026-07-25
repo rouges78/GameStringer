@@ -28,6 +28,7 @@ import {
   type PackData,
 } from '@/lib/social/forum';
 import { toast } from 'sonner';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // ─── LANGUAGES ───────────────────────────────────────────────────────────────
 
@@ -71,7 +72,8 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
   // Pack data
   const [gameName, setGameName] = useState('');
   const [sourceLang, setSourceLang] = useState('en');
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [stringCount, setStringCount] = useState('');
   const [version, setVersion] = useState('1.0');
   const [engine, setEngine] = useState('');

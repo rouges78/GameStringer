@@ -6,6 +6,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import {
   WifiOff, Download, CheckCircle2, XCircle, Loader2,
   ArrowRightLeft, Trash2, Copy, ChevronDown, Cpu, Zap
@@ -57,6 +58,7 @@ export default function OfflineTranslator() {
   const [selectedModel, setSelectedModel] = useState('');
   const [sourceLang, setSourceLang] = useState('English');
   const [targetLang, setTargetLang] = useState('Italian');
+  useDefaultTargetLang(setTargetLang);
   const [inputText, setInputText] = useState('');
   const [results, setResults] = useState<TranslationResult[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);

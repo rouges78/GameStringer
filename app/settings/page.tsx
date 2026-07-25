@@ -772,7 +772,7 @@ export default function SettingsPage() {
       cerebrasApiKey: '',
       deeplApiKey: '',
       qwenApiKey: '',
-      defaultTargetLang: 'it',
+      defaultTargetLang: 'en',
       temperature: 0.3,
       maxTokens: 2000,
       batchSize: 50,

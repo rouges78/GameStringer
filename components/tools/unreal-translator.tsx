@@ -28,6 +28,7 @@ import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 // Note: generatePOString/entriesToGeneric from '@/lib/po-export' will be used once
 // Unreal string extraction is wired into this translator.
 
@@ -87,7 +88,8 @@ export function UnrealTranslator() {
   const [compatibility, setCompatibility] = useState<CompatibilityResult | null>(null);
   const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
   const [autoTranslate, setAutoTranslate] = useState(true);
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   
   const supportedLanguages = TARGET_LANGUAGES;
 

@@ -74,7 +74,7 @@ export function ExportDialog({
   onOpenChange,
   entries,
   sourceLang = 'en',
-  targetLang = 'it',
+  targetLang = 'en',
   defaultFileName = 'translations'
 }: ExportDialogProps) {
   const { t } = useTranslation();

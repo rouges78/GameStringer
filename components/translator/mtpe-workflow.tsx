@@ -52,7 +52,7 @@ interface MTPEWorkflowProps {
 export function MTPEWorkflow({
   translations,
   sourceLang = 'en',
-  targetLang = 'it',
+  targetLang = 'en',
   gameId,
   context,
   onComplete

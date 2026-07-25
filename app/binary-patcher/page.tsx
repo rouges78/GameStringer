@@ -39,6 +39,7 @@ import {
 } from '@/lib/ai/ai-translate-direct';
 import { addCorrection } from '@/lib/ai/adaptive-mt';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 type Step = 'load' | 'extract' | 'translate' | 'review' | 'patch';
 
@@ -84,7 +85,8 @@ export default function BinaryPatcherPage() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterLang, setFilterLang] = useState<string>('all');
   const [showTranslatedOnly, setShowTranslatedOnly] = useState(false);
-  const [targetLang, setTargetLang] = useState('it');
+  const [targetLang, setTargetLang] = useState('en');
+  useDefaultTargetLang(setTargetLang);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
   const [gameName, setGameName] = useState('');

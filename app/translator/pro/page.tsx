@@ -121,6 +121,7 @@ import { storageManager } from '@/lib/storage-manager';
 import { clientLogger } from '@/lib/client-logger';
 import { setSecureKey } from '@/lib/secure-key-store';
 import { isTauri } from '@/lib/tauri-api';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 export default function TranslatorProPage() {
   const { toast } = useToast();
@@ -160,7 +161,8 @@ export default function TranslatorProPage() {
   const [provider, setProvider] = useState<'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState('en');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+  const [targetLanguage, setTargetLanguage] = useState('en');
+  useDefaultTargetLang(setTargetLanguage);
   const [useTranslationMemory, setUseTranslationMemory] = useState(true);
   const [runQualityChecks, setRunQualityChecks] = useState(true);
   const [showAllFiles, setShowAllFiles] = useState(false); // Bypass filtro file

@@ -102,7 +102,7 @@ export default function BethesdaPatcherPage() {
   const [searchFilter, setSearchFilter] = useState('')
   const [recordTypeFilter, setRecordTypeFilter] = useState('all')
   const [sourceLanguage, setSourceLanguage] = useState('English')
-  const [targetLanguage, setTargetLanguage] = useState('Italian')
+  const [targetLanguage, setTargetLanguage] = useState('English')
 
   // Step 4: Export
   const [exporting, setExporting] = useState(false)

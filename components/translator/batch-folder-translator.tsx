@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface BatchFile {
   path: string;
@@ -89,7 +90,8 @@ export function BatchFolderTranslator() {
   
   const [scanResult, setScanResult] = useState<BatchScanResult | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [targetLang, setTargetLang] = useState("it");
+  const [targetLang, setTargetLang] = useState("en");
+  useDefaultTargetLang(setTargetLang);
   const [isScanning, setIsScanning] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
