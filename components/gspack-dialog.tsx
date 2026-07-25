@@ -41,15 +41,12 @@ import {
   importGspack,
   saveGspackToFile,
   loadGspackFromFile,
-  installPack,
   type ExportOptions,
   type GspackManifest,
   type GspackFile,
   type ImportResult,
 } from '@/lib/gspack-manager';
-import { projectService } from '@/lib/services/translation-projects';
-import { saveTranslatedFiles } from '@/lib/services/translated-files-store';
-import { clientLogger } from '@/lib/client-logger';
+import { installGspackAsProject } from '@/lib/services/gspack-install';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 
@@ -258,45 +255,9 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
     setInstalling(true);
 
     try {
-      installPack(result.manifest, result.files.length);
-
-      // Registra la traduzione come PROGETTO (regola: ogni traduzione è tracciata
-      // nei progetti). Non deve mai bloccare l'installazione se fallisce.
-      try {
-        const m = result.manifest;
-        const gameId = m.game.appId ? `steam_${m.game.appId}` : m.game.name;
-        // Cover: il manifest non la porta, ma per i giochi Steam si ricava
-        // dall'appId (stesso CDN usato altrove). Senza questa il progetto
-        // compariva senza copertina in /projects.
-        const gameImage = m.game.appId
-          ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${m.game.appId}/header.jpg`
-          : undefined;
-        const project = await projectService.createOrGetProject({
-          gameId,
-          gameName: m.game.name,
-          gameImage,
-          engine: m.game.engine,
-          sourceLanguage: m.translation.sourceLanguage,
-          targetLanguage: m.translation.targetLanguage,
-          files: result.files.map(f => ({
-            path: f.path,
-            name: f.path,
-            type: f.format,
-            strings: f.stringCount,
-          })),
-        });
-        await projectService.updateProgress(project.id, m.translation.translatedStrings);
-        // Persisti il contenuto tradotto così Pubblica/Esporta dal progetto
-        // possono allegare il file vero (non solo i metadati).
-        await saveTranslatedFiles(
-          gameId,
-          m.translation.targetLanguage,
-          result.files.map(f => ({ path: f.path, originalPath: f.originalPath, content: f.content, format: f.format })),
-        );
-      } catch (projErr) {
-        // Non bloccante: il pack è comunque installato.
-        clientLogger.warn('[gspack] registrazione progetto non riuscita:', String(projErr));
-      }
+      // Installa + registra il progetto (logica condivisa con il pulsante
+      // "Importa" della pagina Progetti, così i due percorsi coincidono).
+      await installGspackAsProject(result.manifest, result.files);
 
       toast.success(`${result.manifest.name} ${t('gspack.packInstalled')}`);
       onImported?.(result.manifest, result.files);

@@ -42,6 +42,8 @@ import { useTranslation } from '@/lib/i18n';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
 import { loadTranslatedFiles, deleteTranslatedFiles } from '@/lib/services/translated-files-store';
+import { importGspack } from '@/lib/gspack-manager';
+import { installGspackAsProject } from '@/lib/services/gspack-install';
 import { toast } from 'sonner';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -687,21 +689,37 @@ export default function ProjectsPage() {
   const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json,.gsproj.json';
+    // Accetta ANCHE i .gspack: prima questo pulsante prendeva solo i .gsproj.json
+    // e il pack andava importato dalla scheda gioco — due "Importa" che facevano
+    // cose diverse. Ora l'estensione decide il percorso.
+    input.accept = '.json,.gsproj.json,.gspack';
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       try {
         const text = await file.text();
+
+        if (file.name.toLowerCase().endsWith('.gspack')) {
+          const res = await importGspack(text);
+          if (!res.success || !res.manifest || !res.files) {
+            toast.error(res.error || t('projectsPage.invalidFile'));
+            return;
+          }
+          await installGspackAsProject(res.manifest, res.files);
+          toast.success(`${res.manifest.name} — ${t('projectsPage.projectImported')}`);
+          reload();
+          return;
+        }
+
         const project = qualityScoringService.importProject(text);
         if (project) {
-          toast.success(`Progetto "${project.gameName}" importato`);
+          toast.success(`${project.gameName} — ${t('projectsPage.projectImported')}`);
           reload();
         } else {
           toast.error(t('projectsPage.invalidFile'));
         }
       } catch (err: unknown) {
-        clientLogger.error('Import failed:', err);
+        clientLogger.error(`[Projects] import failed: ${String(err)}`);
         toast.error(t('projectsPage.importError'));
       }
     };

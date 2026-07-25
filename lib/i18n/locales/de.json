@@ -449,7 +449,8 @@
     "applyNoContent": "Keine gespeicherten übersetzten Dateien für dieses Projekt. Importiere das Paket erneut.",
     "applyPickFolder": "Wähle den Installationsordner des Spiels",
     "deleteConfirm": "Projekt löschen",
-    "deleteError": "Löschen fehlgeschlagen"
+    "deleteError": "Löschen fehlgeschlagen",
+    "projectImported": "Projekt importiert"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",

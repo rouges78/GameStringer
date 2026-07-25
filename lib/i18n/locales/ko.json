@@ -449,7 +449,8 @@
     "applyNoContent": "이 프로젝트에 저장된 번역 파일이 없습니다. 팩을 다시 가져오세요.",
     "applyPickFolder": "게임 설치 폴더 선택",
     "deleteConfirm": "프로젝트를 삭제할까요",
-    "deleteError": "삭제하지 못했습니다"
+    "deleteError": "삭제하지 못했습니다",
+    "projectImported": "프로젝트를 가져왔습니다"
   },
   "emulatorTranslator": {
     "clipboardError": "클립보드를 읽을 수 없습니다",

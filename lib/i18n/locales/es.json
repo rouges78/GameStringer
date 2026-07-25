@@ -449,7 +449,8 @@
     "applyNoContent": "No hay archivos traducidos guardados para este proyecto. Vuelve a importar el paquete.",
     "applyPickFolder": "Elige la carpeta de instalación del juego",
     "deleteConfirm": "¿Eliminar el proyecto",
-    "deleteError": "No se pudo eliminar"
+    "deleteError": "No se pudo eliminar",
+    "projectImported": "proyecto importado"
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",

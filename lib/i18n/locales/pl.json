@@ -449,7 +449,8 @@
     "applyNoContent": "Brak zapisanych przetłumaczonych plików dla tego projektu. Zaimportuj pakiet ponownie.",
     "applyPickFolder": "Wybierz folder instalacji gry",
     "deleteConfirm": "Usunąć projekt",
-    "deleteError": "Nie udało się usunąć"
+    "deleteError": "Nie udało się usunąć",
+    "projectImported": "projekt zaimportowany"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",

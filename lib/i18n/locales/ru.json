@@ -449,7 +449,8 @@
     "applyNoContent": "Для этого проекта нет сохранённых переведённых файлов. Повторно импортируйте пакет.",
     "applyPickFolder": "Выберите папку установки игры",
     "deleteConfirm": "Удалить проект",
-    "deleteError": "Не удалось удалить"
+    "deleteError": "Не удалось удалить",
+    "projectImported": "проект импортирован"
   },
   "emulatorTranslator": {
     "clipboardError": "Не удалось прочитать буфер обмена",

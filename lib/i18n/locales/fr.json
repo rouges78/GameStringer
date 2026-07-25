@@ -449,7 +449,8 @@
     "applyNoContent": "Aucun fichier traduit enregistré pour ce projet. Réimportez le pack.",
     "applyPickFolder": "Choisissez le dossier d'installation du jeu",
     "deleteConfirm": "Supprimer le projet",
-    "deleteError": "Échec de la suppression"
+    "deleteError": "Échec de la suppression",
+    "projectImported": "projet importé"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",
