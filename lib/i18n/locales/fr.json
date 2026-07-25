@@ -5506,7 +5506,9 @@
     "toolsRequired": "Outils Requis",
     "translatableFiles": "Fichiers Traduisibles",
     "supportedEngines": "Moteurs Supportés",
-    "version": "Version :"
+    "version": "Version :",
+    "selectGameFolder": "Sélectionnez le dossier du jeu",
+    "browseFailed": "Impossible d'ouvrir le sélecteur de dossier"
   },
   "nexusMods": {
     "title": "Intégration Nexus Mods",

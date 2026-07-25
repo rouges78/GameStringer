@@ -5110,7 +5110,9 @@
     "toolsRequired": "Απαιτούμενα εργαλεία",
     "translatableFiles": "Μεταφράσιμα αρχεία",
     "supportedEngines": "Υποστηριζόμενες μηχανές",
-    "version": "Έκδοση:"
+    "version": "Έκδοση:",
+    "selectGameFolder": "Επιλέξτε τον φάκελο του παιχνιδιού",
+    "browseFailed": "Δεν ήταν δυνατό το άνοιγμα του επιλογέα φακέλων"
   },
   "subtitleOverlay": {
     "title": "Επικάλυψη υποτίτλων",

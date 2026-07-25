@@ -369,7 +369,7 @@ export class TauriIntegration {
     }
 
     try {
-      await this.invokeCommand('open_directory', { path: gamePath });
+      await this.invokeCommand('open_path', { path: gamePath });
     } catch (error: unknown) {
       clientLogger.error('Failed to open game directory', 'TAURI_INTEGRATION', { error, gamePath });
       throw error;

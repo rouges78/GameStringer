@@ -4836,7 +4836,9 @@
     "toolsRequired": "Tool Richiesti",
     "translatableFiles": "File Traducibili",
     "supportedEngines": "Engine Supportati",
-    "version": "Versione:"
+    "version": "Versione:",
+    "selectGameFolder": "Seleziona la cartella del gioco",
+    "browseFailed": "Impossibile aprire il selettore di cartelle"
   },
   "dictionary": {
     "title": "Dizionario",

@@ -5695,7 +5695,9 @@
     "toolsRequired": "필수 도구",
     "translatableFiles": "번역 가능한 파일",
     "supportedEngines": "지원 엔진",
-    "version": "버전:"
+    "version": "버전:",
+    "selectGameFolder": "게임 폴더 선택",
+    "browseFailed": "폴더 선택 창을 열지 못했습니다"
   },
   "nexusMods": {
     "title": "Nexus Mods",

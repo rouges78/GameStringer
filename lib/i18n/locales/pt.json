@@ -5695,7 +5695,9 @@
     "toolsRequired": "Ferramentas Necessárias",
     "translatableFiles": "Arquivos Traduzíveis",
     "supportedEngines": "Engines Suportados",
-    "version": "Versão:"
+    "version": "Versão:",
+    "selectGameFolder": "Selecione a pasta do jogo",
+    "browseFailed": "Não foi possível abrir o seletor de pastas"
   },
   "nexusMods": {
     "title": "Nexus Mods",

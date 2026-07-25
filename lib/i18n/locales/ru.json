@@ -5695,7 +5695,9 @@
     "toolsRequired": "Требуемые инструменты",
     "translatableFiles": "Переводимые файлы",
     "supportedEngines": "Поддерживаемые движки",
-    "version": "Версия:"
+    "version": "Версия:",
+    "selectGameFolder": "Выберите папку игры",
+    "browseFailed": "Не удалось открыть выбор папки"
   },
   "nexusMods": {
     "title": "Nexus Mods",

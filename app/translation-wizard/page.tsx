@@ -2509,7 +2509,7 @@ export default function TranslationWizardPage() {
                         className={strategy?.id === 'community-patch' ? 'border-slate-600' : 'bg-gradient-to-r from-emerald-500 to-cyan-600'}
                         onClick={() => {
                           if (analysisResult?.game.install_path) {
-                            invoke('open_folder', { path: analysisResult.game.install_path }).catch(() => {});
+                            invoke('open_path', { path: analysisResult.game.install_path }).catch(() => {});
                           }
                         }}
                       >

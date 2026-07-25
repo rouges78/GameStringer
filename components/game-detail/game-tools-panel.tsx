@@ -138,7 +138,7 @@ export function GameToolsPanel({
         )}
         {game.installPath && (
           <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
-            onClick={async () => { try { await invoke('open_folder_in_explorer', { folderPath: game.installPath }); } catch { toast.error(t('common.impossibileAprireLaCartella')); } }}
+            onClick={async () => { try { await invoke('open_path', { path: game.installPath }); } catch { toast.error(t('common.impossibileAprireLaCartella')); } }}
           >
             <FolderOpen className="h-3 w-3" /> Cartella
           </button>

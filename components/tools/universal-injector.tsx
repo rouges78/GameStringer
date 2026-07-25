@@ -100,17 +100,27 @@ export function UniversalInjector() {
 
   const handleBrowse = async () => {
     try {
-      const selected = await invoke<string | null>('select_folder', {
-        title: 'Select game folder'
+      // Prima invocava un comando Tauri `select_folder` che NON ESISTE: l'errore
+      // finiva nel catch, che si limitava a scrivere nel log, e all'utente il
+      // pulsante sembrava morto («"обзор" non funziona», segnalato il 21/07).
+      // Ora usa il selettore di sistema, come tutte le altre schermate.
+      const { open } = await import('@tauri-apps/plugin-dialog');
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: t('universalInjector.selectGameFolder'),
       });
-      if (selected) {
+      if (typeof selected === 'string' && selected) {
         setGamePath(selected);
         setDetectionResult(null);
         setInjectionResult(null);
         setError(null);
       }
     } catch (e: unknown) {
+      // Un fallimento qui va DETTO, non solo loggato: altrimenti il pulsante
+      // sembra di nuovo non fare nulla.
       clientLogger.error('Folder selection error:', e);
+      setError(t('universalInjector.browseFailed'));
     }
   };
 

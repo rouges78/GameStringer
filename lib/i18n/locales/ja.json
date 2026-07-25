@@ -5305,7 +5305,9 @@
     "toolsRequired": "必要なツール",
     "translatableFiles": "翻訳可能なファイル",
     "supportedEngines": "サポートされているエンジン",
-    "version": "バージョン:"
+    "version": "バージョン:",
+    "selectGameFolder": "ゲームのフォルダーを選択",
+    "browseFailed": "フォルダー選択ダイアログを開けませんでした"
   },
   "nexusMods": {
     "title": "Nexus Mods連携",

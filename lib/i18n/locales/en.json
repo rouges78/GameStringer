@@ -5092,7 +5092,9 @@
     "toolsRequired": "Tools Required",
     "translatableFiles": "Translatable Files",
     "supportedEngines": "Supported Engines",
-    "version": "Version:"
+    "version": "Version:",
+    "selectGameFolder": "Select the game folder",
+    "browseFailed": "Could not open the folder picker"
   },
   "subtitleOverlay": {
     "title": "Subtitle Overlay",

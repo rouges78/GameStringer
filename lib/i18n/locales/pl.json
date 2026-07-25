@@ -5695,7 +5695,9 @@
     "toolsRequired": "Wymagane Narzędzia",
     "translatableFiles": "Pliki Do Przetłumaczenia",
     "supportedEngines": "Obsługiwane Silniki",
-    "version": "Wersja:"
+    "version": "Wersja:",
+    "selectGameFolder": "Wybierz folder gry",
+    "browseFailed": "Nie udało się otworzyć okna wyboru folderu"
   },
   "nexusMods": {
     "title": "Nexus Mods",

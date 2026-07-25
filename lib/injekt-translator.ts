@@ -55,7 +55,7 @@ class InjektTranslator {
   async findProcesses(): Promise<ProcessInfo[]> {
     try {
       // Usa il comando Tauri per trovare i processi
-      const processes = await invoke<ProcessInfo[]>('find_processes');
+      const processes = await invoke<ProcessInfo[]>('get_processes');
       return processes;
     } catch (error: unknown) {
       clientLogger.error(`Errore ricerca processi: ${String(error)}`);

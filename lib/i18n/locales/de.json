@@ -5614,7 +5614,9 @@
     "toolsRequired": "Benötigte Tools",
     "translatableFiles": "Übersetzbare Dateien",
     "supportedEngines": "Unterstützte Engines",
-    "version": "Version:"
+    "version": "Version:",
+    "selectGameFolder": "Spielordner auswählen",
+    "browseFailed": "Der Ordnerdialog konnte nicht geöffnet werden"
   },
   "nexusMods": {
     "title": "Nexus Mods-Integration",

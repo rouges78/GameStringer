@@ -5305,7 +5305,9 @@
     "toolsRequired": "所需工具",
     "translatableFiles": "可翻译文件",
     "supportedEngines": "支持的引擎",
-    "version": "版本:"
+    "version": "版本:",
+    "selectGameFolder": "选择游戏文件夹",
+    "browseFailed": "无法打开文件夹选择器"
   },
   "nexusMods": {
     "title": "Nexus Mods集成",

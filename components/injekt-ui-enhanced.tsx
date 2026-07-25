@@ -130,7 +130,7 @@ export function InjektUIEnhanced() {
   const fetchProcesses = async () => {
     try {
       const { invoke } = await import('@/lib/tauri-api');
-      const result = await invoke('list_running_processes') as Record<string, unknown>;
+      const result = await invoke('get_processes') as Record<string, unknown>;
       setProcesses((result?.processes || result || []) as typeof processes);
     } catch (error: unknown) {
       clientLogger.error('Error loading processes:', error);
