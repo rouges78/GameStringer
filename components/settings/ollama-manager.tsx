@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 interface OllamaStatus {
   installed: boolean;
@@ -60,7 +61,7 @@ export function OllamaManager() {
       if (isTauriEnv) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          const s = await invoke<OllamaStatus>('check_ollama_status');
+          const s = await invoke<OllamaStatus>('check_ollama_status', ollamaArgs());
           setStatus({
             installed: s.installed,
             running: s.running,
@@ -153,7 +154,7 @@ export function OllamaManager() {
     try {
       if (isTauri) {
         const { invoke } = await import('@tauri-apps/api/core');
-        const result = await invoke<string>('start_ollama');
+        const result = await invoke<string>('start_ollama', ollamaArgs());
         toast.success(result);
       } else {
         toast.error(t('common.avviaOllamaManualmenteOllamaServe'));
@@ -171,7 +172,7 @@ export function OllamaManager() {
     try {
       if (isTauri) {
         const { invoke } = await import('@tauri-apps/api/core');
-        const result = await invoke<string>('stop_ollama');
+        const result = await invoke<string>('stop_ollama', ollamaArgs());
         toast.success(result);
       }
       await checkStatus();

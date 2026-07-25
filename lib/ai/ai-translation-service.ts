@@ -65,6 +65,11 @@ export interface OllamaModel {
   digest: string;
 }
 
+// NB: `baseUrl` qui è METADATO DESCRITTIVO, non l'indirizzo realmente
+// contattato. Le chiamate ai modelli locali passano da `ollamaFetch`, che
+// risolve l'endpoint dall'impostazione utente (Impostazioni → Indirizzo server
+// Ollama), poi da `OLLAMA_HOST`, poi da 127.0.0.1:11434. Non "correggere" qui
+// pensando di cambiare dove va l'app: si cambia in lib/ai/ollama-endpoint.ts.
 const DEFAULT_PROVIDERS: AIProvider[] = [
   {
     id: 'translategemma',

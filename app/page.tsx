@@ -32,6 +32,7 @@ import { get } from 'idb-keyval';
 import { newsFeedService, type NewsFeedItem, FEED_CATEGORIES } from '@/lib/news-feeds';
 import { clientLogger } from '@/lib/client-logger';
 import { ImageWithFallback } from '@/components/ui/image-with-fallback';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 // Helper: ritorna un'immagine di fallback (favicon ad alta risoluzione) dato un URL
 function getFaviconFallback(url: string): string {
@@ -143,7 +144,7 @@ export default function Dashboard() {
       // Prova ad avviare Ollama via Tauri backend (solo per start, non per check)
       try {
         const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-        await tauriInvoke('start_ollama').catch(() => {});
+        await tauriInvoke('start_ollama', ollamaArgs()).catch(() => {});
       } catch {
         // Non in ambiente Tauri, l'utente deve avviare Ollama manualmente
       }

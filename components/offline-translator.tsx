@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 import {
   WifiOff, Download, CheckCircle2, XCircle, Loader2,
   ArrowRightLeft, Trash2, Copy, ChevronDown, Cpu, Zap
@@ -92,7 +93,7 @@ export default function OfflineTranslator() {
   const handleStartOllama = async () => {
     try {
       toast.loading(t('offlineTranslator.startingOllama'));
-      await invoke<string>('start_ollama');
+      await invoke<string>('start_ollama', ollamaArgs());
       toast.success(t('offlineTranslator.ollamaStarted'));
       await refreshStatus();
     } catch (err: unknown) {
@@ -104,7 +105,7 @@ export default function OfflineTranslator() {
     setIsPulling(modelName);
     try {
       toast.loading(`${t('offlineTranslator.downloading')} ${modelName}...`, { id: `pull-${modelName}` });
-      await invoke<string>('pull_ollama_model', { modelName });
+      await invoke<string>('pull_ollama_model', { modelName, ...ollamaArgs() });
       toast.success(`${modelName} ${t('offlineTranslator.installed')}`, { id: `pull-${modelName}` });
       await refreshStatus();
     } catch (err: unknown) {

@@ -1729,7 +1729,9 @@
     "ver": "バージョン:",
     "build": "ビルド:",
     "git": "Git:",
-    "branch": "ブランチ:"
+    "branch": "ブランチ:",
+    "ollamaUrlLabel": "Ollama サーバー URL",
+    "ollamaUrlHint": "空欄なら自動検出します。Ollama が別のポート、WSL/Docker、または別のPCで動作している場合に入力してください（例: http://192.168.1.5:11434）。"
   },
   "translatorProPage": {
     "subtitle": "マルチステップパイプラインによる高度なニューラル翻訳",

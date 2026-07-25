@@ -1729,7 +1729,9 @@
     "ver": "버전:",
     "build": "빌드:",
     "git": "Git:",
-    "branch": "브랜치:"
+    "branch": "브랜치:",
+    "ollamaUrlLabel": "Ollama 서버 URL",
+    "ollamaUrlHint": "비워 두면 자동으로 감지합니다. Ollama가 다른 포트, WSL/Docker 또는 다른 PC에서 실행 중이면 입력하세요(예: http://192.168.1.5:11434)."
   },
   "translatorProPage": {
     "subtitle": "다단계 파이프라인을 갖춘 고급 신경망 번역",

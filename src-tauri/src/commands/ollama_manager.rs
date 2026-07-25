@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use serde::Serialize;
 use super::process_util::no_window_command;
+use super::ollama_endpoint::{ollama_base_url, ollama_host_port};
 
 #[derive(Debug, Serialize)]
 pub struct OllamaStatus {
@@ -18,10 +19,17 @@ pub struct OllamaModelInfo {
     pub description: String,
 }
 
-/// Trova il path dell'eseguibile Ollama su Windows
+/// Trova il path dell'eseguibile Ollama.
+///
+/// NB: trovare l'eseguibile NON è più condizione necessaria per usare Ollama —
+/// vedi `check_ollama_status`. Serve solo per avviarlo/fermarlo dall'app e per
+/// mostrarne la versione. Un Ollama in Docker, WSL o su un'altra macchina non
+/// ha un eseguibile locale ma è perfettamente utilizzabile.
 fn find_ollama_path() -> Option<PathBuf> {
-    // 1. Controlla PATH di sistema
-    if let Ok(output) = no_window_command("where").arg("ollama").output() {
+    // 1. Controlla PATH di sistema (`where` su Windows, `which` altrove:
+    //    prima era solo `where`, quindi su Linux/macOS falliva sempre)
+    let lookup = if cfg!(windows) { "where" } else { "which" };
+    if let Ok(output) = no_window_command(lookup).arg("ollama").output() {
         if output.status.success() {
             let path = String::from_utf8_lossy(&output.stdout).trim().lines().next().unwrap_or("").to_string();
             if !path.is_empty() {
@@ -31,12 +39,23 @@ fn find_ollama_path() -> Option<PathBuf> {
     }
     
     // 2. Controlla path comuni su Windows
-    let common_paths = [
-        dirs::home_dir().map(|h| h.join("AppData\\Local\\Programs\\Ollama\\ollama.exe")),
-        Some(PathBuf::from("C:\\Program Files\\Ollama\\ollama.exe")),
-        Some(PathBuf::from("C:\\Program Files (x86)\\Ollama\\ollama.exe")),
-        dirs::home_dir().map(|h| h.join("AppData\\Local\\Ollama\\ollama.exe")),
-    ];
+    let common_paths = if cfg!(windows) {
+        vec![
+            dirs::home_dir().map(|h| h.join("AppData\\Local\\Programs\\Ollama\\ollama.exe")),
+            Some(PathBuf::from("C:\\Program Files\\Ollama\\ollama.exe")),
+            Some(PathBuf::from("C:\\Program Files (x86)\\Ollama\\ollama.exe")),
+            dirs::home_dir().map(|h| h.join("AppData\\Local\\Ollama\\ollama.exe")),
+        ]
+    } else {
+        // macOS e Linux: prima erano assenti del tutto
+        vec![
+            Some(PathBuf::from("/usr/local/bin/ollama")),
+            Some(PathBuf::from("/usr/bin/ollama")),
+            Some(PathBuf::from("/opt/homebrew/bin/ollama")),
+            Some(PathBuf::from("/Applications/Ollama.app/Contents/Resources/ollama")),
+            dirs::home_dir().map(|h| h.join(".local/bin/ollama")),
+        ]
+    };
     
     for path_opt in &common_paths {
         if let Some(path) = path_opt {
@@ -49,13 +68,18 @@ fn find_ollama_path() -> Option<PathBuf> {
     None
 }
 
-/// Controlla se Ollama è in esecuzione (porta 11434)
-fn is_ollama_running() -> bool {
-    // Tenta una connessione TCP a localhost:11434
-    std::net::TcpStream::connect_timeout(
-        &"127.0.0.1:11434".parse().unwrap(),
-        std::time::Duration::from_secs(2),
-    ).is_ok()
+/// Controlla se Ollama risponde sull'endpoint configurato.
+/// Risolve host/porta via `ollama_base_url` (override utente → OLLAMA_HOST →
+/// 127.0.0.1:11434), invece di dare per scontata la porta di default.
+fn is_ollama_running(base_url: &str) -> bool {
+    use std::net::ToSocketAddrs;
+    let (host, port) = ollama_host_port(base_url);
+    match (host.as_str(), port).to_socket_addrs() {
+        Ok(addrs) => addrs.into_iter().any(|a| {
+            std::net::TcpStream::connect_timeout(&a, std::time::Duration::from_secs(2)).is_ok()
+        }),
+        Err(_) => false,
+    }
 }
 
 /// Ottieni la versione di Ollama installata
@@ -69,9 +93,9 @@ fn get_ollama_version(ollama_path: &PathBuf) -> String {
 }
 
 /// Ottieni lista modelli installati via API
-async fn get_installed_models() -> Vec<String> {
+async fn get_installed_models(base_url: &str) -> Vec<String> {
     let client = reqwest::Client::new();
-    match client.get("http://localhost:11434/api/tags")
+    match client.get(format!("{}/api/tags", base_url))
         .timeout(std::time::Duration::from_secs(3))
         .send()
         .await
@@ -94,32 +118,47 @@ async fn get_installed_models() -> Vec<String> {
 // COMANDI TAURI
 // ═══════════════════════════════════════════════════════════════════
 
+/// Stato di Ollama.
+///
+/// `base_url` è l'eventuale indirizzo scelto dall'utente. Prima non esisteva:
+/// l'indirizzo era cablato, quindi chi eseguiva Ollama su un'altra porta, in
+/// WSL, in Docker o su un'altra macchina non aveva modo di dirlo all'app.
+///
+/// Cambio importante: `installed` NON dipende più solo dal trovare
+/// l'eseguibile. Se l'API risponde, Ollama è utilizzabile — punto. Prima un
+/// Ollama perfettamente funzionante ma installato in un percorso non previsto
+/// (o in un container) risultava "non installato" e la UI non provava nemmeno
+/// a contattarlo: è la causa della segnalazione «dai log non prova nemmeno a
+/// connettersi».
 #[tauri::command]
-pub async fn check_ollama_status() -> Result<OllamaStatus, String> {
+pub async fn check_ollama_status(base_url: Option<String>) -> Result<OllamaStatus, String> {
+    let endpoint = ollama_base_url(base_url.as_deref());
     let ollama_path = find_ollama_path();
-    let installed = ollama_path.is_some();
-    let running = is_ollama_running();
-    
+    let running = is_ollama_running(&endpoint);
+
+    let models = if running {
+        get_installed_models(&endpoint).await
+    } else {
+        vec![]
+    };
+
+    // Utilizzabile se l'eseguibile c'è OPPURE se il server risponde.
+    let installed = ollama_path.is_some() || running;
+
     let version = if let Some(ref path) = ollama_path {
         get_ollama_version(path)
     } else {
         String::new()
     };
-    
+
     let install_path = ollama_path
         .as_ref()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default();
-    
-    let models = if running {
-        get_installed_models().await
-    } else {
-        vec![]
-    };
-    
-    println!("[OLLAMA] Status: installed={}, running={}, version={}, models={}", 
-        installed, running, version, models.len());
-    
+
+    println!("[OLLAMA] Status: endpoint={}, installed={}, running={}, version={}, models={}",
+        endpoint, installed, running, version, models.len());
+
     Ok(OllamaStatus {
         installed,
         running,
@@ -202,9 +241,10 @@ pub async fn download_ollama(app: tauri::AppHandle) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn start_ollama() -> Result<String, String> {
+pub async fn start_ollama(base_url: Option<String>) -> Result<String, String> {
+    let endpoint = ollama_base_url(base_url.as_deref());
     // Controlla se già in esecuzione
-    if is_ollama_running() {
+    if is_ollama_running(&endpoint) {
         return Ok("Ollama è già in esecuzione".to_string());
     }
     
@@ -222,7 +262,7 @@ pub async fn start_ollama() -> Result<String, String> {
     // Attendi che sia pronto (max 15 secondi)
     for i in 0..30 {
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        if is_ollama_running() {
+        if is_ollama_running(&endpoint) {
             println!("[OLLAMA] Avviato con successo dopo {}ms", (i + 1) * 500);
             return Ok("Ollama avviato con successo".to_string());
         }
@@ -232,8 +272,9 @@ pub async fn start_ollama() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn stop_ollama() -> Result<String, String> {
-    if !is_ollama_running() {
+pub async fn stop_ollama(base_url: Option<String>) -> Result<String, String> {
+    let endpoint = ollama_base_url(base_url.as_deref());
+    if !is_ollama_running(&endpoint) {
         return Ok("Ollama non è in esecuzione".to_string());
     }
     
@@ -257,7 +298,7 @@ pub async fn stop_ollama() -> Result<String, String> {
     // Attendi arresto
     for _ in 0..10 {
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-        if !is_ollama_running() {
+        if !is_ollama_running(&endpoint) {
             println!("[OLLAMA] Arrestato con successo");
             return Ok("Ollama arrestato".to_string());
         }
@@ -267,10 +308,11 @@ pub async fn stop_ollama() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn pull_ollama_model(app: tauri::AppHandle, model_name: String) -> Result<String, String> {
+pub async fn pull_ollama_model(app: tauri::AppHandle, model_name: String, base_url: Option<String>) -> Result<String, String> {
+    let endpoint = ollama_base_url(base_url.as_deref());
     use tauri::Emitter;
     
-    if !is_ollama_running() {
+    if !is_ollama_running(&endpoint) {
         return Err("Ollama non è in esecuzione. Avvialo prima.".to_string());
     }
     
@@ -283,7 +325,7 @@ pub async fn pull_ollama_model(app: tauri::AppHandle, model_name: String) -> Res
     }));
     
     let client = reqwest::Client::new();
-    let response = client.post("http://localhost:11434/api/pull")
+    let response = client.post(format!("{}/api/pull", endpoint))
         .json(&serde_json::json!({ "name": model_name, "stream": true }))
         .send()
         .await
@@ -469,7 +511,7 @@ pub struct OllamaHttpResponse {
     pub body: String,
 }
 
-/// Proxy HTTP generico verso Ollama locale (127.0.0.1:11434), eseguito lato Rust
+/// Proxy HTTP generico verso Ollama, eseguito lato Rust sull'endpoint risolto
 /// con reqwest per aggirare il CORS del webview Tauri (origine `tauri://localhost` /
 /// `http://tauri.localhost` non ammessa dagli `OLLAMA_ORIGINS` di default).
 /// Supporta chiamate NON-streaming: GET/DELETE e POST con body JSON (`stream:false`).
@@ -479,9 +521,10 @@ pub async fn ollama_http(
     path: String,
     body: Option<String>,
     timeout_ms: Option<u64>,
+    base_url: Option<String>,
 ) -> Result<OllamaHttpResponse, String> {
     let client = reqwest::Client::new();
-    let url = format!("http://127.0.0.1:11434{}", path);
+    let url = format!("{}{}", ollama_base_url(base_url.as_deref()), path);
     let timeout = std::time::Duration::from_millis(timeout_ms.unwrap_or(180_000));
 
     let builder = match method.to_uppercase().as_str() {

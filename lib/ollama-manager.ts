@@ -4,6 +4,7 @@
  */
 
 import { ollamaFetch } from './ai/ollama-http';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 const OLLAMA_URL = 'http://127.0.0.1:11434';
 
@@ -430,7 +431,7 @@ export async function pullModel(modelName: string, onProgress?: (status: string,
       }
     );
     try {
-      await invoke<string>('pull_ollama_model', { modelName });
+      await invoke<string>('pull_ollama_model', { modelName, ...ollamaArgs() });
       onProgress?.('success', 100, 100);
       return;
     } finally {

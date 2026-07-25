@@ -1729,7 +1729,9 @@
     "ver": "Ver:",
     "build": "Build:",
     "git": "Git:",
-    "branch": "Branch:"
+    "branch": "Branch:",
+    "ollamaUrlLabel": "URL do servidor Ollama",
+    "ollamaUrlHint": "Deixe vazio para deteção automática. Preencha se o Ollama estiver noutra porta, em WSL/Docker ou noutro computador (ex.: http://192.168.1.5:11434)."
   },
   "translatorProPage": {
     "subtitle": "Tradução neural avançada com pipeline multi-etapa",

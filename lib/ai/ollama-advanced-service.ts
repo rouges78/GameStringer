@@ -12,6 +12,7 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { clientLogger } from '@/lib/client-logger';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -500,7 +501,7 @@ export async function checkModelUpdates(): Promise<ModelUpdateInfo[]> {
 
 export async function updateModel(model: string): Promise<void> {
   try {
-    await invoke('pull_ollama_model', { name: model });
+    await invoke('pull_ollama_model', { name: model, ...ollamaArgs() });
   } catch (error) {
     clientLogger.error('[Auto-Update] Update failed:', error);
     throw error;

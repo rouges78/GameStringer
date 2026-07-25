@@ -1787,7 +1787,9 @@
     "ver": "Ver:",
     "build": "Build:",
     "git": "Git:",
-    "branch": "Branch:"
+    "branch": "Branch:",
+    "ollamaUrlLabel": "Indirizzo server Ollama",
+    "ollamaUrlHint": "Lascia vuoto per il rilevamento automatico. Compila se Ollama gira su un'altra porta, in WSL/Docker o su un altro PC (es. http://192.168.1.5:11434)."
   },
   "mtpePage": {
     "title": "Flusso MTPE",

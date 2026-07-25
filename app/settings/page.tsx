@@ -715,6 +715,7 @@ interface Settings {
     temperature: number;
     maxTokens: number;
     batchSize: number;
+    ollamaUrl: string;
     lmStudioUrl: string;
     lmStudioModel: string;
     modelwizApiKey: string;
@@ -776,6 +777,7 @@ export default function SettingsPage() {
       temperature: 0.3,
       maxTokens: 2000,
       batchSize: 50,
+      ollamaUrl: '',
       lmStudioUrl: 'http://localhost:1234',
       lmStudioModel: '',
       modelwizApiKey: '',
@@ -1118,6 +1120,20 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground">
                 {t('settingsPage.lmStudioDesc')}
               </p>
+              {/* Indirizzo Ollama: prima era cablato nel backend, quindi chi lo
+                  esegue su un'altra porta, in WSL/Docker o su un'altra macchina
+                  non poteva usarlo. Vuoto = rilevamento automatico. */}
+              <div className="space-y-2 pb-2 border-b border-border/40">
+                <Label>{t('settingsPage.ollamaUrlLabel')}</Label>
+                <Input
+                  value={settings.translation?.ollamaUrl || ''}
+                  onChange={(e) => updateSetting('translation', 'ollamaUrl', e.target.value)}
+                  placeholder="http://127.0.0.1:11434"
+                  className="font-mono text-xs"
+                />
+                <p className="text-2xs text-muted-foreground">{t('settingsPage.ollamaUrlHint')}</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('settingsPage.serverUrl')}</Label>

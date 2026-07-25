@@ -105,6 +105,7 @@ import { clearTrayNotifications, updateTrayTooltip } from '@/lib/notifications/t
 import { WidgetErrorBoundary } from '@/components/error-boundary';
 import { initNetworkMonitor, stopNetworkMonitor } from '@/lib/network-resilience';
 import { NetworkStatusBar } from '@/components/layout/network-status-bar';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -426,7 +427,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       if (isTauriEnv) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
-          const s = await invoke<{ running: boolean }>('check_ollama_status');
+          const s = await invoke<{ running: boolean }>('check_ollama_status', ollamaArgs());
           setOllamaOnline(!!s.running);
           return;
         } catch {

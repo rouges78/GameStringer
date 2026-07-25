@@ -14,6 +14,8 @@
  * comandi Rust dedicati (ollama_streaming).
  */
 
+import { ollamaArgs } from './ollama-endpoint';
+
 export const OLLAMA_BASE_URL = 'http://127.0.0.1:11434';
 
 export interface OllamaLikeResponse {
@@ -58,6 +60,7 @@ export async function ollamaFetch(path: string, init: OllamaFetchInit = {}): Pro
       path,
       body: typeof init.body === 'string' ? init.body : undefined,
       timeoutMs: init.timeoutMs,
+      ...ollamaArgs(),
     });
     return {
       ok: res.ok,

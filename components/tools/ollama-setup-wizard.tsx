@@ -21,6 +21,7 @@ import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { listen } from '@tauri-apps/api/event';
 import { useTranslation } from '@/lib/i18n';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 interface OllamaStatus {
   installed: boolean;
@@ -145,7 +146,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      await invoke('start_ollama');
+      await invoke('start_ollama', ollamaArgs());
       await checkStatus();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Impossibile avviare Ollama');
@@ -160,7 +161,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     setError(null);
     setProgress(0);
     try {
-      await invoke('pull_ollama_model', { modelName: selectedModel });
+      await invoke('pull_ollama_model', { modelName: selectedModel, ...ollamaArgs() });
       setStep('done');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Errore download modello');

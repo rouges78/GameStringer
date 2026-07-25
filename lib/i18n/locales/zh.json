@@ -1729,7 +1729,9 @@
     "ver": "版本：",
     "build": "构建：",
     "git": "Git：",
-    "branch": "分支："
+    "branch": "分支：",
+    "ollamaUrlLabel": "Ollama 服务器地址",
+    "ollamaUrlHint": "留空则自动检测。如果 Ollama 运行在其他端口、WSL/Docker 或另一台电脑上，请填写（例如 http://192.168.1.5:11434）。"
   },
   "translatorProPage": {
     "subtitle": "采用多步骤管线的高级神经翻译",
