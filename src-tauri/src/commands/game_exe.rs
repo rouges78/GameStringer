@@ -29,10 +29,24 @@ pub fn is_junk_executable(file_name: &str) -> bool {
         "dotnet",
         "vc_redist",
         "launcher",
-        "cmd.exe",
         "gamestringer", // la nostra portable, se copiata nella cartella del gioco
     ];
-    JUNK.iter().any(|j| lower.contains(j))
+    if JUNK.iter().any(|j| lower.contains(j)) {
+        return true;
+    }
+    is_cmd_tool(lower.strip_suffix(".exe").unwrap_or(&lower))
+}
+
+/// Strumenti a riga di comando che accompagnano il gioco senza esserlo:
+/// `cmd_helper.exe`, e la variante console di Unreal `Foo-Win64-Shipping-Cmd.exe`.
+///
+/// Non basta `contains("cmd")`: escluderebbe un gioco che ha quelle tre lettere
+/// nel nome. Si guarda quindi solo il nome intero, il prefisso o il suffisso.
+fn is_cmd_tool(stem: &str) -> bool {
+    stem == "cmd"
+        || stem.starts_with("cmd_")
+        || stem.starts_with("cmd-")
+        || stem.ends_with("cmd")
 }
 
 /// Punteggio di quanto un eseguibile "sembra" il gioco della cartella.
@@ -81,9 +95,20 @@ mod tests {
     }
 
     #[test]
+    fn excludes_command_line_tools() {
+        // Regressione: la regola precedente cercava "cmd.exe" e lasciava passare
+        // cmd_helper.exe (test di unreal_patcher) e la variante console di Unreal.
+        for n in ["cmd.exe", "cmd_helper.exe", "MyGame-Win64-Shipping-Cmd.exe"] {
+            assert!(is_junk_executable(n), "{n} dovrebbe essere scartato");
+        }
+    }
+
+    #[test]
     fn keeps_real_game_executables() {
         for n in ["Mouthwashing.exe", "hotline_miami.exe", "CoreKeeper.exe",
-                  "Deltarune.exe", "game.exe", "nw.exe"] {
+                  "Deltarune.exe", "game.exe", "nw.exe",
+                  // tre lettere "cmd" dentro al nome: NON è uno strumento
+                  "Cmdr_Adventure.exe", "Blackcmdrun.exe"] {
             assert!(!is_junk_executable(n), "{n} NON dovrebbe essere scartato");
         }
     }
