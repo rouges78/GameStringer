@@ -287,30 +287,44 @@ fn extract_strings(data: &[u8], strg_offset: u64, _strg_size: u32) -> Vec<GmStri
 // ── YYC EXE string extraction ──
 
 /// Find the game executable in game directory
+/// Trova l'eseguibile del gioco nella cartella.
+///
+/// Prima restituiva il PRIMO `.exe` in ordine di lettura, con un filtro
+/// parziale che non escludeva GameStringer stesso: se la portable era copiata
+/// nella cartella del gioco, veniva lanciata lei. Ora usa le regole condivise
+/// di `game_exe` e sceglie il candidato migliore (nome che combacia con la
+/// cartella, poi il binario più grande), come già fa
+/// `find_executables_in_folder`.
 fn find_game_exe(game_path: &str) -> Option<PathBuf> {
+    use super::game_exe::{is_junk_executable, name_match_score};
+
     let dir = Path::new(game_path);
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries.flatten() {
-            let p = entry.path();
-            if p.is_file() {
-                if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
-                    if ext.eq_ignore_ascii_case("exe") {
-                        // Skip common non-game executables
-                        if let Some(name) = p.file_stem().and_then(|n| n.to_str()) {
-                            let lower = name.to_lowercase();
-                            if lower.contains("unins") || lower.contains("setup") 
-                               || lower.contains("crash") || lower.contains("redist")
-                               || lower.contains("vcredist") || lower.contains("dxsetup") {
-                                continue;
-                            }
-                        }
-                        return Some(p);
-                    }
-                }
-            }
+    let folder_name = dir
+        .file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_default();
+
+    let mut best: Option<(u8, u64, PathBuf)> = None;
+    for entry in fs::read_dir(dir).ok()?.flatten() {
+        let p = entry.path();
+        if !p.is_file() {
+            continue;
+        }
+        if !p.extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case("exe")).unwrap_or(false) {
+            continue;
+        }
+        let file_name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if is_junk_executable(file_name) {
+            continue;
+        }
+        let stem = p.file_stem().and_then(|n| n.to_str()).unwrap_or("");
+        let score = name_match_score(stem, &folder_name);
+        let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        if best.as_ref().map(|(bs, bz, _)| (score, size) > (*bs, *bz)).unwrap_or(true) {
+            best = Some((score, size, p));
         }
     }
-    None
+    best.map(|(_, _, p)| p)
 }
 
 /// Heuristic: is this EXE string translatable game text?

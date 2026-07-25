@@ -1788,16 +1788,10 @@ pub async fn find_executables_in_folder(folder_path: String) -> Result<Vec<Strin
                             // Escludi installer/redistributable/crash-handler E GameStringer
                             // stesso: se la portable è copiata nella cartella del gioco era
                             // proprio lei a farsi lanciare al posto del gioco.
-                            let is_junk = lower.contains("unins")
-                                || lower.contains("redist")
-                                || lower.contains("vcredist")
-                                || lower.contains("dxsetup")
-                                || lower.contains("crashhandler")
-                                || lower.contains("crashpad")
-                                || lower.contains("ue4prereq")
-                                || lower.contains("dotnet")
-                                || lower.contains("gamestringer");
-                            if is_junk {
+                            // Regole condivise con i patcher Unreal/GameMaker
+                            // (src-tauri/src/commands/game_exe.rs), così non
+                            // divergono più: erano tre elenchi diversi.
+                            if super::game_exe::is_junk_executable(&lower) {
                                 continue;
                             }
 

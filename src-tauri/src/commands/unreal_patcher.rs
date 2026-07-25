@@ -340,24 +340,27 @@ fn detect_ue_version(game_dir: &Path) -> (String, bool) {
     ("Unreal Engine 4/5".to_string(), false)
 }
 
+/// Trova l'eseguibile del gioco Unreal.
+///
+/// Il filtro locale non escludeva GameStringer stesso: con la portable copiata
+/// nella cartella del gioco, poteva essere lei a venire lanciata (segnalazione
+/// utente). Ora usa le regole condivise in `game_exe`.
 fn find_game_executable(game_dir: &Path) -> Option<String> {
+    use super::game_exe::is_junk_executable;
+
     // Cerca eseguibili nella cartella principale
     if let Ok(entries) = fs::read_dir(game_dir) {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             if path.extension().map(|e| e == "exe").unwrap_or(false) {
-                let name = path.file_name()?.to_string_lossy().to_lowercase();
-                // Salta launcher e crash handler
-                if !name.contains("launcher") && 
-                   !name.contains("crash") && 
-                   !name.contains("uninstall") &&
-                   !name.contains("redist") {
-                    return Some(path.file_name()?.to_string_lossy().to_string());
+                let name = path.file_name()?.to_string_lossy().to_string();
+                if !is_junk_executable(&name) {
+                    return Some(name);
                 }
             }
         }
     }
-    
+
     // Cerca in Binaries/Win64
     let binaries = game_dir.join("Binaries").join("Win64");
     if binaries.exists() {
@@ -365,15 +368,15 @@ fn find_game_executable(game_dir: &Path) -> Option<String> {
             for entry in entries.filter_map(|e| e.ok()) {
                 let path = entry.path();
                 if path.extension().map(|e| e == "exe").unwrap_or(false) {
-                    let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
-                    if !name.contains("crash") && !name.contains("cmd") {
-                        return Some(format!("Binaries/Win64/{}", path.file_name()?.to_string_lossy()));
+                    let name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+                    if !is_junk_executable(&name) {
+                        return Some(format!("Binaries/Win64/{}", name));
                     }
                 }
             }
         }
     }
-    
+
     None
 }
 
