@@ -1,6 +1,6 @@
 # ADR-003 — Profondità Unity IL2CPP
 
-**Stato:** rilevamento e gate rafforzati · estrazione binaria rimandata con piano · **Data:** 23/07/2026
+**Stato:** rilevamento e gate rafforzati · **estrazione string literal FATTA (read-only)** · scrittura/patch rimandata (serve gioco reale) · **Data:** 23/07/2026 · **agg.** 25/07/2026
 **Contesto:** voce roadmap P2 "Unity IL2CPP di profondità + versioni recenti".
 
 ## Problema
@@ -54,14 +54,39 @@ Interventi **read-only, a basso rischio, testabili con fixture sintetiche**:
 5. **Test sintetici**: magic valido/errato, buffer corto, endianness su disco
    (AF 1B B1 FA), soglia che scarta v31, rilevamento da cartella `_Data`.
 
+## Cosa è stato fatto ora (25/07) — blocco 1: estrazione read-only
+
+`il2cpp_metadata.rs` legge ora la **StringLiteral table** e ne estrae il testo,
+senza mai scrivere sul binario:
+
+1. **`extract_string_literals(bytes)`**: parsa i campi header (offset 8/12/16/20
+   → `string_literal_offset`/`_count`/`_data_offset`/`_data_count`), itera le
+   entry `Il2CppStringLiteral` (8 byte: `length` + `data_index`) e decodifica le
+   stringhe UTF-8 dal blob dati. Layout stabile su tutte le versioni 24..=31
+   (sono i primi campi dell'header, non si spostano — cfr. Il2CppDumper).
+2. **Robustezza**: ogni offset è bounds-checked; entry incoerenti (data_index
+   fuori dal blob, `count` non multiplo di 8) vengono **saltate**, mai un panico
+   o una lettura fuori range. Errore globale solo se magic errato o header che
+   punta fuori dal file.
+3. **Comando `get_il2cpp_string_literals`** (path + versione + totale + entry),
+   con `only_translatable` (euristica prudente: scarta namespace/path/identificatori)
+   e `limit` per la UI. Registrato in `main.rs`.
+4. **Test sintetici** (10): ordine/indici, UTF-8 multibyte, euristica
+   translatable, magic errato, offset fuori file, entry corrotta saltata,
+   `table_size` non multiplo di 8, tabella vuota. Logica byte-level verificata
+   anche con reimplementazione Python di controllo (14/14 casi verdi).
+
+Nota: `string_literal_count` nell'header è la **dimensione in byte** della
+tabella, non il numero di entry (numero entry = count / 8) — punto classico di
+errore, coperto dai test.
+
 ## Cosa manca per "profondità" (rimandato, con piano)
 
 In ordine di valore/rischio:
 
-1. **Estrazione degli string literal da `global-metadata.dat`**: leggere la
-   `StringLiteral` table (offset+size in header, dati nel blob) per tirare fuori
-   il testo hardcoded nel binario nativo. È il pezzo centrale: senza, i giochi
-   IL2CPP che non mettono testo negli asset restano non traducibili.
+1. ~~**Estrazione degli string literal da `global-metadata.dat`**~~ → **FATTO
+   25/07** (vedi sopra). Resta l'integrazione nella pipeline di traduzione
+   (mostrare/esportare le literal estratte accanto al testo degli asset).
 2. **Scrittura/patch degli string literal** con gestione della crescita (le
    stringhe UTF-8 possono allungarsi → offset da rilocare), oppure override via
    file di traduzione runtime.
@@ -77,11 +102,14 @@ In ordine di valore/rischio:
 
 ## Decisione
 
-**Non implementare l'estrazione/scrittura di string literal senza un gioco
-IL2CPP reale** per il collaudo, stesso principio di ADR-001/002: mai un parser
-binario "plausibile ma sbagliato" che l'utente non può verificare. Nel frattempo
-il percorso ufficiale IL2CPP resta l'**iniezione asset (Unity CSV)**, ora scelto
-in modo **informato** (versione metadata nota) invece che per esclusione.
+**L'estrazione (read-only) è sicura e la implementiamo**: legge solo, è testabile
+con fixture sintetiche e non può danneggiare i file dell'utente. **La
+scrittura/patch resta gated su un gioco IL2CPP reale** per il collaudo, stesso
+principio di ADR-001/002: mai un parser binario che *scrive* in modo "plausibile
+ma sbagliato" che l'utente non può verificare. Nel frattempo il percorso di
+traduzione IL2CPP resta l'**iniezione asset (Unity CSV)**, ora scelto in modo
+**informato** (versione metadata nota) e affiancabile all'elenco delle string
+literal estratte.
 
 ## Conseguenze
 

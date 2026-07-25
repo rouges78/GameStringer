@@ -110,6 +110,209 @@ pub async fn get_il2cpp_metadata_version(game_path: String) -> Result<Option<Il2
     Ok(detect_il2cpp_metadata(dir))
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Estrazione READ-ONLY delle string literal (ADR-003, blocco 1).
+//
+// Il testo hardcoded dei giochi IL2CPP vive nella `StringLiteral` table di
+// `global-metadata.dat`, NON in un assembly .NET. Qui la leggiamo senza mai
+// scrivere sul binario. Layout (stabile in tutte le versioni 24..=31, cfr.
+// Il2CppDumper — sono i primi campi dell'header e non si sono mai spostati):
+//
+//   offset  8: u32 string_literal_offset       → inizio della tabella
+//   offset 12: u32 string_literal_count         → DIMENSIONE IN BYTE della tabella
+//   offset 16: u32 string_literal_data_offset   → inizio del blob dati
+//   offset 20: u32 string_literal_data_count    → dimensione del blob dati
+//
+// Ogni entry della tabella è un `Il2CppStringLiteral` di 8 byte:
+//   u32 length      (lunghezza in byte della stringa UTF-8)
+//   u32 data_index  (offset della stringa RELATIVO a string_literal_data_offset)
+// Numero di entry = string_literal_count / 8.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Byte per entry `Il2CppStringLiteral` ({ u32 length; u32 data_index }).
+const STRING_LITERAL_ENTRY_SIZE: usize = 8;
+
+/// Byte minimi di header per contenere i 4 campi StringLiteral (fino a offset 24).
+const HEADER_MIN_LEN: usize = 24;
+
+/// Una string literal estratta dal metadata (read-only).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Il2CppStringLiteral {
+    /// Indice progressivo nella tabella = l'ID usato dal bytecode IL2CPP.
+    pub index: usize,
+    /// Testo decodificato (UTF-8 lossy se il gioco contiene byte non validi).
+    pub text: String,
+    /// Lunghezza in byte dichiarata nell'entry.
+    pub byte_len: u32,
+    /// Euristica prudente: sembra testo mostrato all'utente (SUGGERIMENTO per la
+    /// UI, non un filtro definitivo — cfr. `looks_translatable`).
+    pub translatable: bool,
+}
+
+/// Legge un u32 little-endian a `off`, `None` se fuori dal buffer (mai panico).
+fn read_u32_le(bytes: &[u8], off: usize) -> Option<u32> {
+    let end = off.checked_add(4)?;
+    let s = bytes.get(off..end)?;
+    Some(u32::from_le_bytes([s[0], s[1], s[2], s[3]]))
+}
+
+/// Euristica prudente per distinguere il testo probabilmente mostrato
+/// all'utente dagli identificatori interni (nomi di tipo/metodo, namespace,
+/// path, format string). È solo un SUGGERIMENTO per ordinare/filtrare in UI:
+/// non scarta nulla dall'estrazione, marca soltanto le entry.
+fn looks_translatable(s: &str) -> bool {
+    let t = s.trim();
+    // Troppo corto o senza lettere → quasi mai testo utente.
+    if t.chars().count() < 2 || !t.chars().any(|c| c.is_alphabetic()) {
+        return false;
+    }
+    // Namespace/path tipici del runtime: non testo utente.
+    if t.starts_with("System.")
+        || t.starts_with("UnityEngine.")
+        || t.starts_with("Microsoft.")
+        || t.contains('/')
+        || t.contains('\\')
+    {
+        return false;
+    }
+    // Uno spazio è un forte indizio di frase; altrimenti, se è un puro
+    // identificatore C# (lettere/cifre/_/./<>/`) lo consideriamo interno.
+    let has_space = t.chars().any(|c| c.is_whitespace());
+    let looks_identifier = t
+        .chars()
+        .all(|c| c.is_alphanumeric() || matches!(c, '_' | '.' | '<' | '>' | '`'));
+    has_space || !looks_identifier
+}
+
+/// Estrae TUTTE le string literal da un buffer completo di `global-metadata.dat`.
+///
+/// READ-ONLY: non modifica nulla. Ritorna `Err` solo se il buffer non è un
+/// metadata IL2CPP valido o se i campi header puntano fuori dal file; le singole
+/// entry malformate (offset/lunghezza incoerenti) vengono **saltate**, mai un
+/// panico né una lettura fuori range.
+pub fn extract_string_literals(bytes: &[u8]) -> Result<Vec<Il2CppStringLiteral>, String> {
+    // 1) magic + versione: se falliscono, non è un metadata IL2CPP.
+    let version = read_metadata_version(bytes).ok_or_else(|| {
+        "Non è un global-metadata.dat IL2CPP valido (magic errato o file troppo corto)".to_string()
+    })?;
+    if bytes.len() < HEADER_MIN_LEN {
+        return Err(format!(
+            "Header troppo corto ({} byte) per contenere i campi StringLiteral (metadata v{})",
+            bytes.len(),
+            version
+        ));
+    }
+
+    // 2) campi header della StringLiteral table + blob dati.
+    let table_off = read_u32_le(bytes, 8).ok_or("header troncato (string_literal_offset)")? as usize;
+    let table_size = read_u32_le(bytes, 12).ok_or("header troncato (string_literal_count)")? as usize;
+    let data_off = read_u32_le(bytes, 16).ok_or("header troncato (data_offset)")? as usize;
+    let data_size = read_u32_le(bytes, 20).ok_or("header troncato (data_count)")? as usize;
+
+    // 3) i range di tabella e blob devono stare dentro il file.
+    let table_end = table_off.checked_add(table_size).ok_or("overflow offset tabella")?;
+    let data_end = data_off.checked_add(data_size).ok_or("overflow offset blob dati")?;
+    if table_end > bytes.len() || data_end > bytes.len() {
+        return Err(format!(
+            "Offset StringLiteral fuori dal file (len={}, tabella={}..{}, blob={}..{}) — metadata v{} corrotto o non standard",
+            bytes.len(), table_off, table_end, data_off, data_end, version
+        ));
+    }
+
+    // 4) itera le entry (count = dimensione tabella / 8), saltando le corrotte.
+    let count = table_size / STRING_LITERAL_ENTRY_SIZE;
+    let mut out = Vec::with_capacity(count);
+    for i in 0..count {
+        let entry_off = table_off + i * STRING_LITERAL_ENTRY_SIZE;
+        let (len, data_index) = match (read_u32_le(bytes, entry_off), read_u32_le(bytes, entry_off + 4)) {
+            (Some(l), Some(d)) => (l as usize, d as usize),
+            _ => continue,
+        };
+        // La stringa vive a data_off + data_index, per `len` byte, dentro il blob.
+        let s_start = match data_off.checked_add(data_index) {
+            Some(v) => v,
+            None => continue,
+        };
+        let s_end = match s_start.checked_add(len) {
+            Some(v) => v,
+            None => continue,
+        };
+        if s_end > data_end {
+            // entry incoerente: la salto invece di leggere fuori dal blob.
+            continue;
+        }
+        let text = String::from_utf8_lossy(&bytes[s_start..s_end]).into_owned();
+        let translatable = looks_translatable(&text);
+        out.push(Il2CppStringLiteral {
+            index: i,
+            text,
+            byte_len: len as u32,
+            translatable,
+        });
+    }
+    Ok(out)
+}
+
+/// Risultato dell'estrazione string literal per un gioco.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Il2CppStringLiteralsResult {
+    /// Path del global-metadata.dat letto.
+    pub path: String,
+    /// Versione major di metadata.
+    pub version: i32,
+    /// Totale string literal estratte (prima di filtro/limite).
+    pub total: usize,
+    /// Numero effettivamente restituito (dopo filtro/limite).
+    pub returned: usize,
+    /// Le string literal (eventualmente filtrate/troncate).
+    pub literals: Vec<Il2CppStringLiteral>,
+}
+
+/// Comando Tauri: estrae le string literal dal metadata IL2CPP di un gioco.
+/// `Ok(None)` = il gioco non è IL2CPP (nessun global-metadata.dat).
+///
+/// - `only_translatable`: se `true`, tiene solo le entry marcate dall'euristica.
+/// - `limit`: tetto opzionale al numero di entry restituite (per la UI).
+///
+/// READ-ONLY: legge il file, non lo modifica mai.
+#[tauri::command]
+pub async fn get_il2cpp_string_literals(
+    game_path: String,
+    limit: Option<usize>,
+    only_translatable: Option<bool>,
+) -> Result<Option<Il2CppStringLiteralsResult>, String> {
+    let dir = Path::new(&game_path);
+    if !dir.exists() {
+        return Err(format!("Percorso non trovato: {}", game_path));
+    }
+    let meta_path = match find_global_metadata(dir) {
+        Some(p) => p,
+        None => return Ok(None), // non è IL2CPP
+    };
+    let bytes = std::fs::read(&meta_path)
+        .map_err(|e| format!("Lettura di {}: {}", meta_path.display(), e))?;
+    let version = read_metadata_version(&bytes)
+        .ok_or_else(|| "global-metadata.dat trovato ma header non valido".to_string())?;
+
+    let mut literals = extract_string_literals(&bytes)?;
+    let total = literals.len();
+    if only_translatable.unwrap_or(false) {
+        literals.retain(|l| l.translatable);
+    }
+    if let Some(lim) = limit {
+        literals.truncate(lim);
+    }
+    let returned = literals.len();
+
+    Ok(Some(Il2CppStringLiteralsResult {
+        path: meta_path.to_string_lossy().to_string(),
+        version,
+        total,
+        returned,
+        literals,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -169,5 +372,120 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         std::fs::create_dir_all(tmp.path().join("MyGame_Data")).unwrap();
         assert!(detect_il2cpp_metadata(tmp.path()).is_none());
+    }
+
+    // ── Estrazione string literal (ADR-003 blocco 1) ─────────────────────────
+
+    /// Costruisce un `global-metadata.dat` sintetico con solo l'header + la
+    /// StringLiteral table + il blob dati (i campi non usati restano 0).
+    /// Layout: header 24B → table (8B/entry) → data blob.
+    fn build_metadata(version: i32, strings: &[&str]) -> Vec<u8> {
+        let table_off = HEADER_MIN_LEN; // 24
+        let table_size = strings.len() * STRING_LITERAL_ENTRY_SIZE;
+        let data_off = table_off + table_size;
+
+        let mut blob: Vec<u8> = Vec::new();
+        let mut entries: Vec<(u32, u32)> = Vec::new(); // (len, data_index)
+        for s in strings {
+            let idx = blob.len() as u32;
+            let b = s.as_bytes();
+            entries.push((b.len() as u32, idx));
+            blob.extend_from_slice(b);
+        }
+
+        let mut out: Vec<u8> = Vec::new();
+        out.extend_from_slice(&IL2CPP_METADATA_MAGIC.to_le_bytes()); // 0
+        out.extend_from_slice(&version.to_le_bytes()); // 4
+        out.extend_from_slice(&(table_off as u32).to_le_bytes()); // 8
+        out.extend_from_slice(&(table_size as u32).to_le_bytes()); // 12
+        out.extend_from_slice(&(data_off as u32).to_le_bytes()); // 16
+        out.extend_from_slice(&(blob.len() as u32).to_le_bytes()); // 20
+        assert_eq!(out.len(), HEADER_MIN_LEN, "header deve essere 24 byte");
+        for (len, idx) in &entries {
+            out.extend_from_slice(&len.to_le_bytes());
+            out.extend_from_slice(&idx.to_le_bytes());
+        }
+        out.extend_from_slice(&blob);
+        out
+    }
+
+    #[test]
+    fn extracts_literals_in_order() {
+        let buf = build_metadata(29, &["Hello world", "Premi E per aprire", "Assembly-CSharp"]);
+        let lits = extract_string_literals(&buf).expect("estrazione fallita");
+        assert_eq!(lits.len(), 3);
+        assert_eq!(lits[0].index, 0);
+        assert_eq!(lits[0].text, "Hello world");
+        assert_eq!(lits[1].text, "Premi E per aprire");
+        assert_eq!(lits[2].text, "Assembly-CSharp");
+        assert_eq!(lits[0].byte_len, "Hello world".len() as u32);
+    }
+
+    #[test]
+    fn handles_multibyte_utf8() {
+        let buf = build_metadata(24, &["Città èàù 日本語"]);
+        let lits = extract_string_literals(&buf).expect("estrazione fallita");
+        assert_eq!(lits.len(), 1);
+        assert_eq!(lits[0].text, "Città èàù 日本語");
+        // byte_len è in byte, non in caratteri.
+        assert_eq!(lits[0].byte_len, "Città èàù 日本語".len() as u32);
+    }
+
+    #[test]
+    fn translatable_heuristic_flags_sentences_not_identifiers() {
+        let buf = build_metadata(
+            29,
+            &["Press any key to continue", "System.Int32", "PlayerController", "Assets/UI/Menu.prefab"],
+        );
+        let lits = extract_string_literals(&buf).unwrap();
+        assert!(lits[0].translatable, "una frase con spazi deve essere translatable");
+        assert!(!lits[1].translatable, "un namespace System.* no");
+        assert!(!lits[2].translatable, "un identificatore CamelCase no");
+        assert!(!lits[3].translatable, "un path asset no");
+    }
+
+    #[test]
+    fn rejects_non_il2cpp_buffer() {
+        assert!(extract_string_literals(&[0x00, 0x11, 0x22, 0x33, 0, 0, 0, 0]).is_err());
+    }
+
+    #[test]
+    fn errors_when_offsets_point_outside_file() {
+        let mut buf = build_metadata(29, &["ok"]);
+        // Sposta data_offset (offset 16) oltre la fine del file.
+        let bogus = (buf.len() as u32 + 9_999).to_le_bytes();
+        buf[16..20].copy_from_slice(&bogus);
+        assert!(extract_string_literals(&buf).is_err());
+    }
+
+    #[test]
+    fn skips_corrupt_entry_without_panic() {
+        // Due entry: la seconda ha un data_index che sfora il blob → va saltata.
+        let mut buf = build_metadata(29, &["good", "bad"]);
+        // La seconda entry inizia a table_off + 8; il suo data_index è a +12..+16.
+        let idx_field = HEADER_MIN_LEN + STRING_LITERAL_ENTRY_SIZE + 4;
+        buf[idx_field..idx_field + 4].copy_from_slice(&999_999u32.to_le_bytes());
+        let lits = extract_string_literals(&buf).expect("non deve andare in errore globale");
+        // La prima resta, la corrotta è saltata: nessun panico, nessun crash.
+        assert_eq!(lits.len(), 1);
+        assert_eq!(lits[0].text, "good");
+    }
+
+    #[test]
+    fn table_size_not_multiple_of_entry_is_truncated() {
+        // count = table_size / 8 tronca: un table_size "sporco" non deve panicare.
+        let mut buf = build_metadata(29, &["a", "b"]);
+        // string_literal_count è a offset 12; era 16 (2*8) → mettiamo 20 (non /8).
+        buf[12..16].copy_from_slice(&20u32.to_le_bytes());
+        // Ora table_end = 24 + 20 = 44 potrebbe sforare: se sfora, è Err (accettabile);
+        // se non sfora, non deve panicare. In entrambi i casi: nessun panico.
+        let _ = extract_string_literals(&buf);
+    }
+
+    #[test]
+    fn empty_table_yields_no_literals() {
+        let buf = build_metadata(29, &[]);
+        let lits = extract_string_literals(&buf).expect("tabella vuota è valida");
+        assert!(lits.is_empty());
     }
 }
