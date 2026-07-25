@@ -347,60 +347,59 @@ export const patchesTutorial: TutorialConfig = {
   ]
 };
 
-// Community Chat Tutorial
-export const communityChatTutorial: TutorialConfig = {
-  id: 'community-chat-guide',
-  name: 'Community Chat Guide',
-  description: 'Learn how to use the real-time community chat',
+// Community Forum Tutorial
+export const communityForumTutorial: TutorialConfig = {
+  id: 'community-forum-guide',
+  name: 'Community Forum Guide',
+  description: 'Learn how to use the community forum to share packs and get help',
   canSkip: true,
   showProgress: true,
   steps: [
     {
-      id: 'chat-intro',
-      title: 'Community Chat',
-      description: 'Chat in real-time with other GameStringer translators! Share tips, ask for help, and collaborate on translations.',
+      id: 'forum-intro',
+      title: 'Community Forum',
+      description: 'Share translation packs, ask for help and collaborate with other GameStringer translators. Posts stay around, so you get answers even when nobody is online right now.',
       target: '.container',
       position: 'bottom'
     },
     {
-      id: 'chat-rooms',
-      title: 'Chat Rooms',
-      description: 'Browse available rooms: General, Translations, Feedback & Bug, and Announcements. You can also create custom rooms.',
-      target: '[data-testid="chat-rooms"]',
+      id: 'forum-categories',
+      title: 'Categories',
+      description: 'Browse by category: translation requests, help, pack releases, feedback and announcements.',
+      target: '[data-testid="forum-categories"]',
       position: 'right',
       optional: true
     },
     {
-      id: 'chat-auto-login',
+      id: 'forum-auto-login',
       title: 'Automatic Login',
-      description: 'When you\'re logged into your GameStringer profile, you\'re automatically connected to chat. No extra login needed!',
-      target: '[data-testid="chat-status"]',
+      description: 'When you\'re logged into your GameStringer profile, you\'re automatically connected to the community. No extra login needed!',
+      target: '[data-testid="community-status"]',
       position: 'bottom',
       optional: true
     },
     {
-      id: 'chat-send-message',
-      title: 'Send Messages',
-      description: 'Type your message and press Enter or click Send. You can also reply to specific messages.',
-      target: 'input[placeholder*="messaggio"]',
-      position: 'top',
-      action: 'input',
+      id: 'forum-new-thread',
+      title: 'Start a Discussion',
+      description: 'Open a new thread to request a translation, share a pack or report an issue.',
+      target: '[data-testid="new-thread"]',
+      position: 'bottom',
       optional: true
     },
     {
-      id: 'chat-online-users',
+      id: 'forum-packs',
+      title: 'Translation Packs',
+      description: 'The Packs tab collects community translations ready to install, with ratings and download counts.',
+      target: '[data-testid="forum-packs"]',
+      position: 'bottom',
+      optional: true
+    },
+    {
+      id: 'forum-online-users',
       title: 'Online Users',
-      description: 'See who\'s online right now. The presence indicator shows active community members.',
+      description: 'See who\'s around right now. The presence indicator shows active community members.',
       target: '[data-testid="online-users"]',
       position: 'left',
-      optional: true
-    },
-    {
-      id: 'chat-create-room',
-      title: 'Create a Room',
-      description: 'Need a dedicated space for your translation project? Create a custom room for your team or game.',
-      target: 'button:contains("New Room")',
-      position: 'bottom',
       optional: true
     }
   ]
@@ -463,7 +462,7 @@ export const tutorialRegistry = {
   'neural-translator-guide': neuralTranslatorTutorial,
   'editor-guide': editorTutorial,
   'patches-guide': patchesTutorial,
-  'community-chat-guide': communityChatTutorial,
+  'community-forum-guide': communityForumTutorial,
   'settings-guide': settingsTutorial
 };
 
@@ -485,7 +484,7 @@ export function getTutorialsForPage(pathname: string): TutorialConfig[] {
     '/injekt-translator': ['neural-translator-guide'],
     '/editor': ['editor-guide'],
     '/patches': ['patches-guide'],
-    '/community-hub': ['community-chat-guide'],
+    '/community-hub': ['community-forum-guide'],
     '/settings': ['settings-guide']
   };
 

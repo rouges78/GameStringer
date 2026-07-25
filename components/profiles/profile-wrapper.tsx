@@ -93,18 +93,6 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
     return <>{children}</>;
   }
 
-  // Route finestre secondarie: niente MainLayout ma servono i provider profilo
-  const popupRoutes = ['/chat-popup'];
-  if (popupRoutes.some(route => pathname?.startsWith(route))) {
-    return (
-      <ProfilesProvider>
-        <ProfileAuthProvider>
-          {children}
-        </ProfileAuthProvider>
-      </ProfilesProvider>
-    );
-  }
-
   return (
     <ProfilesProvider>
       <ProfileAuthProvider>

@@ -746,7 +746,7 @@ class CommunityHubService {
       // Assicura la sessione (bridge profilo-locale → utente Supabase) così
       // getCurrentUser() risolve e l'INSERT usa author_id = auth.uid().
       try {
-        const { autoSyncGSToSupabase } = await import('./community-chat');
+        const { autoSyncGSToSupabase } = await import('./auth-bridge');
         await autoSyncGSToSupabase();
       } catch { /* bridge non disponibile → getCurrentUser resterà null sotto */ }
       const user = await backend.getCurrentUser();

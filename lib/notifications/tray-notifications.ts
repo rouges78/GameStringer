@@ -293,17 +293,6 @@ export function onUnreadCountUpdate(
 // CONVENIENCE FUNCTIONS
 // ============================================================================
 
-/** Notifica messaggio chat ricevuto */
-export async function notifyChatMessage(author: string, content: string): Promise<void> {
-  const preview = content.length > 60 ? content.slice(0, 57) + '...' : content;
-  await sendTrayNotification({
-    type: 'chat_message',
-    title: `💬 ${author}`,
-    body: preview,
-    actionUrl: '/community-hub',
-  });
-}
-
 /** Notifica traduzione completata */
 export async function notifyTranslationCompleted(gameName: string, stringCount: number): Promise<void> {
   await sendTrayNotification({

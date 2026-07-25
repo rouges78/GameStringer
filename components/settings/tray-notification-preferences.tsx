@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, MessageSquare, Languages, AlertTriangle, RefreshCw, Users, Newspaper, Gamepad2, Moon, Send } from 'lucide-react';
+import { Bell, Languages, AlertTriangle, RefreshCw, Users, Newspaper, Gamepad2, Moon, Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,6 @@ interface NotificationTypeConfig {
 }
 
 const NOTIFICATION_TYPES: NotificationTypeConfig[] = [
-  { key: 'chatMessages', type: 'chat_message', label: 'Messaggi Chat', description: 'Notifiche quando ricevi un messaggio nella chat community', icon: MessageSquare },
   { key: 'translationCompleted', type: 'translation_completed', label: 'Traduzioni Completate', description: 'Notifica quando una traduzione termina con successo', icon: Languages },
   { key: 'translationFailed', type: 'translation_failed', label: 'Errori Traduzione', description: 'Notifica quando una traduzione fallisce', icon: AlertTriangle },
   { key: 'systemErrors', type: 'system_error', label: 'Errori di Sistema', description: 'Notifiche per errori critici del sistema', icon: AlertTriangle },

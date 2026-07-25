@@ -68,7 +68,7 @@ export async function publishGameGlossary(gameId: string): Promise<boolean> {
 
   // Bridge profilo-locale → utente Supabase (come publishPack).
   try {
-    const { autoSyncGSToSupabase } = await import('./community-chat');
+    const { autoSyncGSToSupabase } = await import('./auth-bridge');
     await autoSyncGSToSupabase();
   } catch { /* senza bridge getCurrentUser resterà null sotto */ }
   const user = await backend.getCurrentUser();

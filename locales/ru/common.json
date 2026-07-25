@@ -95,30 +95,6 @@
     "noResults": "Результаты не найдены",
     "confirmDelete": "Вы уверены, что хотите удалить?"
   },
-  "chat": {
-    "title": "Чат сообщества",
-    "rooms": "Комнаты",
-    "online": "В сети",
-    "offline": "Не в сети",
-    "sendMessage": "Отправить сообщение",
-    "typePlaceholder": "Введите сообщение...",
-    "noMessages": "Пока нет сообщений. Будьте первым!",
-    "createRoom": "Создать комнату",
-    "roomName": "Название комнаты",
-    "roomDescription": "Описание",
-    "roomType": "Тип",
-    "general": "Общий",
-    "translations": "Переводы",
-    "feedback": "Отзывы и баги",
-    "announcement": "Объявления",
-    "onlineUsers": "Пользователи онлайн",
-    "autoLogin": "Автоматическое подключение через профиль GameStringer",
-    "notAuthenticated": "Войдите в свой профиль GameStringer для доступа к чату",
-    "retry": "Повторить подключение",
-    "editMessage": "Редактировать сообщение",
-    "deleteMessage": "Удалить сообщение",
-    "replyTo": "Ответить на"
-  },
   "danganronpa": {
     "title": "Danganronpa Авто-переводчик",
     "detectGames": "Обнаружить игры",
@@ -136,5 +112,10 @@
       "texture": "Текстура PAK",
       "font": "Шрифт PAK"
     }
+  },
+  "forum": {
+    "loginRequired": "Войдите, чтобы публиковать",
+    "loginRequiredHint": "Создайте или выберите профиль GameStringer, чтобы создавать темы и делиться паками.",
+    "backendUnavailable": "Бэкенд сообщества недоступен. Повторите попытку чуть позже."
   }
 }

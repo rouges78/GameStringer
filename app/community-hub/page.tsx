@@ -10,7 +10,6 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Users,
-  MessageCircle,
   Package,
   Download,
   Flame,
@@ -20,8 +19,7 @@ import {
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { ForumHome, CommunityOverview, ThreadView, NewThread } from '@/components/forum';
-import { FriendsSidebar, NotificationsPanel, OnlineIndicator, ChatPanel, Showcase, UserProfileView } from '@/components/social';
-import { SocialOnboarding } from '@/components/social/social-onboarding';
+import { NotificationsPanel, OnlineIndicator, Showcase, UserProfileView } from '@/components/social';
 import { useProfiles } from '@/hooks/use-profiles';
 import { updatePresence } from '@/lib/social/social';
 import { getForumStats, type ForumStats } from '@/lib/social/forum';
@@ -87,9 +85,6 @@ export default function CommunityHubPage() {
   const [threadsKey, setThreadsKey] = useState(0); // forza remount di ForumHome quando cambio categoria dalla Panoramica
   const [selectedThread, setSelectedThread] = useState<ForumThread | null>(null);
   const [newThreadCategory, setNewThreadCategory] = useState<string | undefined>(initialCategory);
-  const [showFriendsSidebar, setShowFriendsSidebar] = useState(true);
-  const [showChat, setShowChat] = useState(false);
-  const [_chatUserId, setChatUserId] = useState<string | null>(null);
   const [stats, setStats] = useState<ForumStats | null>(null);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
 
@@ -198,30 +193,6 @@ export default function CommunityHubPage() {
                   >
                     <Package className="h-5 w-5" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowChat(!showChat)}
-                    className={cn(
-                      showChat ? 'text-violet-400 bg-violet-500/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                    )}
-                    title="Chat"
-                    aria-label="Chat"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowFriendsSidebar(!showFriendsSidebar)}
-                    className={cn(
-                      showFriendsSidebar ? 'text-violet-400 bg-violet-500/10' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                    )}
-                    title={t('communityHub.friends') || 'Amici'}
-                    aria-label="Amici"
-                  >
-                    <Users className="h-5 w-5" />
-                  </Button>
                 </div>
               </div>
 
@@ -328,33 +299,7 @@ export default function CommunityHubPage() {
           </div>
         </div>
 
-        {/* Chat Panel (slide-in) */}
-        {userId && showChat && (
-          <div className="w-80 border-l border-slate-800 bg-slate-950/50 backdrop-blur-sm">
-            <ChatPanel userId={userId} initialUserId={_chatUserId || undefined} />
-          </div>
-        )}
-
-        {/* Friends Sidebar */}
-        {userId && (
-          <FriendsSidebar
-            userId={userId}
-            collapsed={!showFriendsSidebar}
-            onToggle={() => setShowFriendsSidebar(!showFriendsSidebar)}
-            onOpenProfile={(friendUserId) => {
-              setChatUserId(friendUserId);
-              setShowChat(true);
-            }}
-            onStartChat={(friendUserId) => {
-              setChatUserId(friendUserId);
-              setShowChat(true);
-            }}
-          />
-        )}
       </div>
-
-      {/* Onboarding Tutorial */}
-      <SocialOnboarding />
     </TooltipProvider>
   );
 }

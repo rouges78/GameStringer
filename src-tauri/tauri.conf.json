@@ -5,7 +5,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "node scripts/build-tauri-cross.js",
-    "devUrl": "http://127.0.0.1:3277",
+    "devUrl": "http://127.0.0.1:3278",
     "frontendDist": "../out"
   },
   "app": {
@@ -40,22 +40,6 @@
         "skipTaskbar": true,
         "transparent": true,
         "url": "/ocr-overlay"
-      },
-      {
-        "label": "chat",
-        "title": "GameStringer Chat",
-        "width": 380,
-        "height": 620,
-        "minWidth": 320,
-        "minHeight": 400,
-        "resizable": true,
-        "fullscreen": false,
-        "center": false,
-        "visible": false,
-        "decorations": true,
-        "alwaysOnTop": false,
-        "skipTaskbar": false,
-        "url": "/chat-popup"
       }
     ],
     "security": {

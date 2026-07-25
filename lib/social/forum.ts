@@ -331,7 +331,7 @@ function generateSlug(title: string): string {
  */
 async function resolveAuthorId(_localId: string): Promise<string | null> {
   try {
-    const { autoSyncGSToSupabase } = await import('./community-chat');
+    const { autoSyncGSToSupabase } = await import('./auth-bridge');
     return await autoSyncGSToSupabase();
   } catch {
     return null; // bridge non disponibile → il chiamante fa bail-out

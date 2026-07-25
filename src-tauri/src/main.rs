@@ -1164,7 +1164,6 @@ fn main() {
             let screen_capture = MenuItem::with_id(app, "screen_capture", "📷 Cattura Schermo OCR", true, None::<&str>)?;
             let open_library = MenuItem::with_id(app, "open_library", "📚 Libreria Giochi", true, None::<&str>)?;
             let open_community = MenuItem::with_id(app, "open_community", "💬 Community Hub", true, None::<&str>)?;
-            let open_chat_popup = MenuItem::with_id(app, "open_chat_popup", "💭 Chat Rapida", true, Some("CmdOrCtrl+Shift+C"))?;
 
             let sep2 = PredefinedMenuItem::separator(app)?;
 
@@ -1205,7 +1204,6 @@ fn main() {
                 &screen_capture,
                 &open_library,
                 &open_community,
-                &open_chat_popup,
                 &sep2,
                 &tools_submenu,
                 &sep3,
@@ -1295,30 +1293,6 @@ fn main() {
                                 let _ = app.emit("navigate", "/community-hub");
                             }
                         }
-                        "open_chat_popup" => {
-                            // Apri/focus la finestra chat popup stile Steam
-                            if let Some(chat_window) = app.get_webview_window("chat") {
-                                let _ = chat_window.show();
-                                let _ = chat_window.unminimize();
-                                let _ = chat_window.set_focus();
-                            } else {
-                                // Finestra non esiste ancora, creala runtime
-                                use tauri::WebviewUrl;
-                                let _ = tauri::WebviewWindowBuilder::new(
-                                    app,
-                                    "chat",
-                                    WebviewUrl::App("/chat-popup".into())
-                                )
-                                .title("GameStringer Chat")
-                                .inner_size(380.0, 620.0)
-                                .min_inner_size(320.0, 400.0)
-                                .resizable(true)
-                                .decorations(true)
-                                .visible(true)
-                                .build();
-                            }
-                        }
-
                         // ── Submenu Strumenti ──
                         "nav_translator" => {
                             if let Some(window) = app.get_webview_window("main") {
@@ -1392,18 +1366,7 @@ fn main() {
                 });
             }
             
-            // Intercetta la chiusura della finestra chat → nascondi invece di chiudere
-            if let Some(chat_window) = app.get_webview_window("chat") {
-                let chat_clone = chat_window.clone();
-                chat_window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        api.prevent_close();
-                        let _ = chat_clone.hide();
-                    }
-                });
-            }
-
-            println!("[TRAY] ✅ System Tray Completo attivo — 13 voci menu + Chat Popup + Ollama monitor");
+            println!("[TRAY] ✅ System Tray attivo — 12 voci menu + Ollama monitor");
 
             // ═══════════════════════════════════════════════════
             // SPLASH SCREEN — Usa splash.html da public/

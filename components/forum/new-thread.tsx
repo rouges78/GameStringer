@@ -93,6 +93,12 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
   // ─── SUBMIT ────────────────────────────────────────────────────────────────
   
   const handleSubmit = async () => {
+    // Senza profilo locale il ponte auth non può autenticare su Supabase e la RLS
+    // rifiuterebbe l'insert: meglio dirlo PRIMA che l'utente compili tutto.
+    if (!userId) {
+      toast.error(t('forum.loginRequired'), { description: t('forum.loginRequiredHint') });
+      return;
+    }
     if (!categorySlug) {
       toast.error(t('common.selezionaUnaCategoria'));
       return;
@@ -144,7 +150,9 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
         toast.success(t('common.threadCreatoConSuccesso'));
         onSuccess?.(thread);
       } else {
-        toast.error(t('common.erroreNellaCreazioneDelThread'));
+        // Input già validati sopra: se createThread torna null la causa è il
+        // backend community (ponte auth giù o insert respinta), non l'utente.
+        toast.error(t('forum.backendUnavailable'));
       }
     } catch (error) {
       console.error('[NewThread] Error:', error);
@@ -178,6 +186,16 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
           </div>
         </div>
       </div>
+
+      {/* Senza profilo locale la pubblicazione non può funzionare (il ponte auth
+          non ha una sessione da portare su Supabase): dirlo subito, non dopo
+          che l'utente ha scritto tutto. */}
+      {!userId && (
+        <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <p className="text-sm font-medium text-amber-200">{t('forum.loginRequired')}</p>
+          <p className="text-xs text-amber-200/80 mt-1">{t('forum.loginRequiredHint')}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form - 2 columns */}
@@ -351,7 +369,7 @@ export function NewThread({ initialCategory, userId, userName, userAvatar, onBac
           <div className="rounded-xl bg-slate-900/60 border border-slate-800/60 p-5 space-y-4">
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !categorySlug || !title.trim() || !content.trim()} 
+              disabled={loading || !userId || !categorySlug || !title.trim() || !content.trim()}
               className="w-full h-12 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-500/30 font-semibold"
             >
               {loading ? (
