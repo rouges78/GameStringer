@@ -3573,7 +3573,10 @@
     "ltLogPaused": "일시정지됨",
     "ltLogResumed": "재개됨",
     "ltLogSkip": "건너뜀",
-    "ltLogError": "오류"
+    "ltLogError": "오류",
+    "salva": "저장",
+    "salvataggio": "저장 중…",
+    "eliminazione": "삭제 중…"
   },
   "languages": {
     "cs": "Čeština",
@@ -5078,7 +5081,13 @@
     "strings": "문자열",
     "loginRequired": "게시하려면 로그인하세요",
     "loginRequiredHint": "GameStringer 프로필을 만들거나 선택하면 토론을 시작하고 팩을 공유할 수 있습니다.",
-    "backendUnavailable": "커뮤니티 백엔드에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."
+    "backendUnavailable": "커뮤니티 백엔드에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    "editEmpty": "제목과 내용은 비워 둘 수 없습니다",
+    "editSaved": "변경 사항이 저장되었습니다",
+    "editFailed": "변경 사항을 저장하지 못했습니다",
+    "deleteConfirm": "이 토론을 삭제할까요? 되돌릴 수 없습니다.",
+    "deleteDone": "토론을 삭제했습니다",
+    "deleteFailed": "토론을 삭제하지 못했습니다"
   },
   "voiceClone": {
     "title": "음성 복제",

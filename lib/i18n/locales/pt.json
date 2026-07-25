@@ -3573,7 +3573,10 @@
     "ltLogPaused": "Em pausa",
     "ltLogResumed": "Retomado",
     "ltLogSkip": "Ignorado",
-    "ltLogError": "Erro"
+    "ltLogError": "Erro",
+    "salva": "Guardar",
+    "salvataggio": "A guardar…",
+    "eliminazione": "A eliminar…"
   },
   "languages": {
     "cs": "Čeština",
@@ -5078,7 +5081,13 @@
     "strings": "strings",
     "loginRequired": "Entre para publicar",
     "loginRequiredHint": "Crie ou selecione um perfil GameStringer para abrir discussões e compartilhar packs.",
-    "backendUnavailable": "Backend da comunidade indisponível. Tente novamente em instantes."
+    "backendUnavailable": "Backend da comunidade indisponível. Tente novamente em instantes.",
+    "editEmpty": "O título e o conteúdo não podem estar vazios",
+    "editSaved": "Alterações guardadas",
+    "editFailed": "Não foi possível guardar as alterações",
+    "deleteConfirm": "Eliminar esta discussão? Não é reversível.",
+    "deleteDone": "Discussão eliminada",
+    "deleteFailed": "Não foi possível eliminar a discussão"
   },
   "voiceClone": {
     "title": "Clone de Voz",

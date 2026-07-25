@@ -3573,7 +3573,10 @@
     "ltLogPaused": "Pausiert",
     "ltLogResumed": "Fortgesetzt",
     "ltLogSkip": "Übersprungen",
-    "ltLogError": "Fehler"
+    "ltLogError": "Fehler",
+    "salva": "Speichern",
+    "salvataggio": "Wird gespeichert…",
+    "eliminazione": "Wird gelöscht…"
   },
   "languages": {
     "cs": "Čeština",
@@ -4997,7 +5000,13 @@
     "strings": "Strings",
     "loginRequired": "Zum Posten anmelden",
     "loginRequiredHint": "Erstelle oder wähle ein GameStringer-Profil, um Diskussionen zu starten und Packs zu teilen.",
-    "backendUnavailable": "Community-Backend nicht erreichbar. Bitte versuche es gleich erneut."
+    "backendUnavailable": "Community-Backend nicht erreichbar. Bitte versuche es gleich erneut.",
+    "editEmpty": "Titel und Inhalt dürfen nicht leer sein",
+    "editSaved": "Änderungen gespeichert",
+    "editFailed": "Änderungen konnten nicht gespeichert werden",
+    "deleteConfirm": "Diese Diskussion löschen? Das lässt sich nicht rückgängig machen.",
+    "deleteDone": "Diskussion gelöscht",
+    "deleteFailed": "Diskussion konnte nicht gelöscht werden"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",

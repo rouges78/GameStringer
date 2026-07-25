@@ -3573,7 +3573,10 @@
     "ltLogPaused": "Wstrzymano",
     "ltLogResumed": "Wznowiono",
     "ltLogSkip": "Pominięto",
-    "ltLogError": "Błąd"
+    "ltLogError": "Błąd",
+    "salva": "Zapisz",
+    "salvataggio": "Zapisywanie…",
+    "eliminazione": "Usuwanie…"
   },
   "languages": {
     "cs": "Čeština",
@@ -5078,7 +5081,13 @@
     "strings": "ciągów",
     "loginRequired": "Zaloguj się, aby publikować",
     "loginRequiredHint": "Utwórz lub wybierz profil GameStringer, aby zakładać dyskusje i udostępniać paczki.",
-    "backendUnavailable": "Backend społeczności jest niedostępny. Spróbuj ponownie za chwilę."
+    "backendUnavailable": "Backend społeczności jest niedostępny. Spróbuj ponownie za chwilę.",
+    "editEmpty": "Tytuł i treść nie mogą być puste",
+    "editSaved": "Zmiany zapisane",
+    "editFailed": "Nie udało się zapisać zmian",
+    "deleteConfirm": "Usunąć tę dyskusję? Tej operacji nie można cofnąć.",
+    "deleteDone": "Dyskusja usunięta",
+    "deleteFailed": "Nie udało się usunąć dyskusji"
   },
   "voiceClone": {
     "title": "Klon głosu",

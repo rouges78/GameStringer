@@ -3573,7 +3573,10 @@
     "ltLogPaused": "En pause",
     "ltLogResumed": "Repris",
     "ltLogSkip": "Ignoré",
-    "ltLogError": "Erreur"
+    "ltLogError": "Erreur",
+    "salva": "Enregistrer",
+    "salvataggio": "Enregistrement…",
+    "eliminazione": "Suppression…"
   },
   "languages": {
     "cs": "Čeština",
@@ -4997,7 +5000,13 @@
     "strings": "chaînes",
     "loginRequired": "Connectez-vous pour publier",
     "loginRequiredHint": "Créez ou sélectionnez un profil GameStringer pour lancer des discussions et partager des packs.",
-    "backendUnavailable": "Backend de la communauté injoignable. Réessayez dans un instant."
+    "backendUnavailable": "Backend de la communauté injoignable. Réessayez dans un instant.",
+    "editEmpty": "Le titre et le contenu ne peuvent pas être vides",
+    "editSaved": "Modifications enregistrées",
+    "editFailed": "Impossible d'enregistrer les modifications",
+    "deleteConfirm": "Supprimer cette discussion ? Action irréversible.",
+    "deleteDone": "Discussion supprimée",
+    "deleteFailed": "Impossible de supprimer la discussion"
   },
   "guidePage": {
     "advancedTab": "Advanced",

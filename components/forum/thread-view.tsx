@@ -41,10 +41,13 @@ import {
   toggleLike,
   trackDownload,
   markAsSolution,
+  updateThread,
+  deleteThread,
   type ForumThread,
   type ForumPost,
   type ForumCategory,
 } from '@/lib/social/forum';
+import { getCurrentUserId } from '@/lib/social/auth-bridge';
 import { formatDistanceToNow, format } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -72,7 +75,29 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [copied, setCopied] = useState(false);
-  
+
+  // Identità SUPABASE dell'utente. Serve perché `thread.author_id` è l'uid
+  // Supabase, mentre la prop `userId` è l'id del profilo LOCALE: confrontarli
+  // direttamente dava sempre falso, quindi all'autore non comparivano mai
+  // "Modifica" ed "Elimina" sul proprio thread.
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentUserId()
+      .then(uid => { if (!cancelled) setAuthUserId(uid); })
+      .catch(() => { /* backend community non raggiungibile: resta null */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const isAuthor = !!authUserId && !!thread && authUserId === thread.author_id;
+
   // ─── LOAD DATA ─────────────────────────────────────────────────────────────
   
   const { t } = useTranslation();
@@ -104,6 +129,51 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   
   // ─── HANDLERS ──────────────────────────────────────────────────────────────
   
+  const startEdit = () => {
+    if (!thread) return;
+    setEditTitle(thread.title);
+    setEditContent(thread.content);
+    setEditing(true);
+  };
+
+  const saveEdit = async () => {
+    if (!thread) return;
+    if (!editTitle.trim() || !editContent.trim()) {
+      toast.error(t('forum.editEmpty'));
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const ok = await updateThread(thread.id, { title: editTitle.trim(), content: editContent.trim() });
+      if (ok) {
+        setThread({ ...thread, title: editTitle.trim(), content: editContent.trim() });
+        setEditing(false);
+        toast.success(t('forum.editSaved'));
+      } else {
+        toast.error(t('forum.editFailed'));
+      }
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!thread) return;
+    setDeleting(true);
+    try {
+      const ok = await deleteThread(thread.id);
+      if (ok) {
+        toast.success(t('forum.deleteDone'));
+        onBack?.();
+      } else {
+        toast.error(t('forum.deleteFailed'));
+      }
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
+
   const handleLike = async () => {
     if (!userId) {
       toast.error('Devi essere loggato per mettere mi piace');
@@ -290,14 +360,55 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
           </div>
         )}
         
-        {/* Content */}
+        {/* Content — in modifica diventa un editor per titolo e testo */}
         <div className="px-5 py-4">
-          <div className="prose prose-invert prose-sm max-w-none">
-            {thread.content.split('\n').map((line, i) => (
-              <p key={i} className="text-slate-300">{line || <br />}</p>
-            ))}
-          </div>
+          {editing ? (
+            <div className="space-y-3">
+              <input
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                className="w-full rounded-md bg-slate-900/80 border border-slate-700 px-3 py-2 text-white"
+                placeholder={t('common.inserisciUnTitolo')}
+              />
+              <Textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                rows={8}
+                className="bg-slate-900/80 border-slate-700"
+                placeholder={t('common.inserisciUnContenuto')}
+              />
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={saveEdit} disabled={savingEdit}>
+                  {savingEdit ? t('common.salvataggio') : t('common.salva')}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={savingEdit}>
+                  {t('common.annulla')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-invert prose-sm max-w-none">
+              {thread.content.split('\n').map((line, i) => (
+                <p key={i} className="text-slate-300">{line || <br />}</p>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Conferma eliminazione: mai un delete a un solo click */}
+        {confirmDelete && (
+          <div className="mx-5 mb-4 rounded-lg border border-red-500/40 bg-red-500/10 p-4">
+            <p className="text-sm text-red-200">{t('forum.deleteConfirm')}</p>
+            <div className="flex items-center gap-2 mt-3">
+              <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? t('common.eliminazione') : t('common.elimina')}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>
+                {t('common.annulla')}
+              </Button>
+            </div>
+          </div>
+        )}
         
         {/* Actions */}
         <div className="px-5 py-3 border-t border-slate-700/50 flex items-center gap-2">
@@ -326,14 +437,14 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
               <DropdownMenuItem>
                 <Flag className="h-4 w-4 mr-2" /> Segnala
               </DropdownMenuItem>
-              {userId === thread.author_id && (
+              {isAuthor && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Edit className="h-4 w-4 mr-2" /> Modifica
+                  <DropdownMenuItem onClick={startEdit}>
+                    <Edit className="h-4 w-4 mr-2" /> {t('common.modifica')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-400">
-                    <Trash2 className="h-4 w-4 mr-2" /> Elimina
+                  <DropdownMenuItem className="text-red-400" onClick={() => setConfirmDelete(true)}>
+                    <Trash2 className="h-4 w-4 mr-2" /> {t('common.elimina')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -355,7 +466,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
             post={post}
             locale={locale}
             userId={userId}
-            isThreadAuthor={thread.author_id === userId}
+            isThreadAuthor={isAuthor}
             onReply={() => setReplyingTo(post)}
             onMarkSolution={() => handleMarkSolution(post.id)}
           />

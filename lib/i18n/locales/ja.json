@@ -3573,7 +3573,10 @@
     "ltLogPaused": "一時停止中",
     "ltLogResumed": "再開しました",
     "ltLogSkip": "スキップ",
-    "ltLogError": "エラー"
+    "ltLogError": "エラー",
+    "salva": "保存",
+    "salvataggio": "保存中…",
+    "eliminazione": "削除中…"
   },
   "languages": {
     "cs": "Čeština",
@@ -4688,7 +4691,13 @@
     "strings": "文字列",
     "loginRequired": "投稿するにはログインしてください",
     "loginRequiredHint": "GameStringer プロファイルを作成または選択すると、スレッドの作成やパックの共有ができます。",
-    "backendUnavailable": "コミュニティのバックエンドに接続できません。しばらくしてからもう一度お試しください。"
+    "backendUnavailable": "コミュニティのバックエンドに接続できません。しばらくしてからもう一度お試しください。",
+    "editEmpty": "タイトルと本文は空にできません",
+    "editSaved": "変更を保存しました",
+    "editFailed": "変更を保存できませんでした",
+    "deleteConfirm": "このスレッドを削除しますか？元に戻せません。",
+    "deleteDone": "スレッドを削除しました",
+    "deleteFailed": "スレッドを削除できませんでした"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",

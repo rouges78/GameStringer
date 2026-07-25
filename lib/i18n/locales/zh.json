@@ -3573,7 +3573,10 @@
     "ltLogPaused": "已暂停",
     "ltLogResumed": "已继续",
     "ltLogSkip": "跳过",
-    "ltLogError": "错误"
+    "ltLogError": "错误",
+    "salva": "保存",
+    "salvataggio": "保存中…",
+    "eliminazione": "删除中…"
   },
   "languages": {
     "cs": "Čeština",
@@ -4688,7 +4691,13 @@
     "strings": "条字符串",
     "loginRequired": "登录后即可发布",
     "loginRequiredHint": "创建或选择 GameStringer 配置文件，即可发起讨论并分享翻译包。",
-    "backendUnavailable": "无法连接社区后端，请稍后重试。"
+    "backendUnavailable": "无法连接社区后端，请稍后重试。",
+    "editEmpty": "标题和内容不能为空",
+    "editSaved": "更改已保存",
+    "editFailed": "无法保存更改",
+    "deleteConfirm": "确定删除该讨论吗？此操作无法撤销。",
+    "deleteDone": "讨论已删除",
+    "deleteFailed": "无法删除该讨论"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",
