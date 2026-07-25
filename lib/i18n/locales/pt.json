@@ -5075,7 +5075,10 @@
     "beTheFirst": "Seja o primeiro!",
     "emptyDescription": "Sem discussões ainda. Abra o primeiro tópico e comece uma conversa!",
     "searchPacks": "Buscar packs ou jogos…",
-    "strings": "strings"
+    "strings": "strings",
+    "loginRequired": "Entre para publicar",
+    "loginRequiredHint": "Crie ou selecione um perfil GameStringer para abrir discussões e compartilhar packs.",
+    "backendUnavailable": "Backend da comunidade indisponível. Tente novamente em instantes."
   },
   "voiceClone": {
     "title": "Clone de Voz",

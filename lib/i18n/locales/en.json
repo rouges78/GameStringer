@@ -4271,7 +4271,10 @@
     "beTheFirst": "Be the first!",
     "emptyDescription": "No discussions here yet. Open the first thread and start a conversation with the community!",
     "searchPacks": "Search packs or games…",
-    "strings": "strings"
+    "strings": "strings",
+    "loginRequired": "Sign in to post",
+    "loginRequiredHint": "Create or select a GameStringer profile to start discussions and share packs.",
+    "backendUnavailable": "Community backend unreachable. Please try again shortly."
   },
   "voiceClone": {
     "title": "Voice Clone Studio",

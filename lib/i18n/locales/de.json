@@ -4994,7 +4994,10 @@
     "beTheFirst": "Sei der Erste!",
     "emptyDescription": "Noch keine Diskussionen. Eröffne den ersten Thread und starte ein Gespräch!",
     "searchPacks": "Packs oder Spiele suchen…",
-    "strings": "Strings"
+    "strings": "Strings",
+    "loginRequired": "Zum Posten anmelden",
+    "loginRequiredHint": "Erstelle oder wähle ein GameStringer-Profil, um Diskussionen zu starten und Packs zu teilen.",
+    "backendUnavailable": "Community-Backend nicht erreichbar. Bitte versuche es gleich erneut."
   },
   "voiceClone": {
     "title": "Voice Clone Studio",

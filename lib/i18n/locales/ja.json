@@ -4685,7 +4685,10 @@
     "beTheFirst": "最初の一人になろう！",
     "emptyDescription": "まだディスカッションがありません。最初のスレッドを開いてコミュニティと会話を始めましょう！",
     "searchPacks": "パックやゲームを検索…",
-    "strings": "文字列"
+    "strings": "文字列",
+    "loginRequired": "投稿するにはログインしてください",
+    "loginRequiredHint": "GameStringer プロファイルを作成または選択すると、スレッドの作成やパックの共有ができます。",
+    "backendUnavailable": "コミュニティのバックエンドに接続できません。しばらくしてからもう一度お試しください。"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",

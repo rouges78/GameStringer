@@ -38,6 +38,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
+// `t()` ritorna la CHIAVE quando la traduzione manca (vedi lib/i18n/index.tsx),
+// quindi il vecchio `t(k) || cat.name` non ricadeva mai sul nome dal DB: una
+// categoria senza traduzione mostrava "forum.categoryNames.<slug>" a schermo.
+// Qui confrontiamo col valore della chiave per capire se la traduzione esiste.
+function useCategoryLabel(t: (k: string) => string) {
+  return (slug: string, fallbackName: string) => {
+    const key = `forum.categoryNames.${slug}`;
+    const value = t(key);
+    return value === key ? fallbackName : value;
+  };
+}
+
+
 type Locale = typeof it;
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -74,6 +87,7 @@ export function CommunityOverview({
   onGoPacks,
 }: CommunityOverviewProps) {
   const { t, language } = useTranslation();
+  const categoryLabel = useCategoryLabel(t);
   const router = useRouter();
   const locale = language === 'it' ? it : enUS;
 
@@ -262,7 +276,7 @@ export function CommunityOverview({
                   <Icon className={cn('h-4 w-4 flex-shrink-0', accent)} />
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-slate-200 truncate">
-                      {t(`forum.categoryNames.${cat.slug}`) || cat.name}
+                      {categoryLabel(cat.slug, cat.name)}
                     </div>
                     <div className="text-2xs text-slate-500">
                       {cat.thread_count || 0} {t('forum.discussions') || 'discussioni'}
@@ -366,6 +380,7 @@ function StarterCard({
 
 function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale: Locale; onClick: () => void }) {
   const { t } = useTranslation();
+  const categoryLabel = useCategoryLabel(t);
   const category = thread.category as ForumCategory | undefined;
   const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-indigo-400') : 'text-indigo-400';
 
@@ -377,7 +392,7 @@ function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale
       <div className="flex items-center gap-2 mb-2 text-2xs">
         {category && (
           <span className={cn('font-medium', accent)}>
-            {t(`forum.categoryNames.${category.slug}`) || category.name}
+            {categoryLabel(category.slug, category.name)}
           </span>
         )}
         {thread.is_translation_pack && (
@@ -407,6 +422,7 @@ function FeaturedCard({ thread, locale, onClick }: { thread: ForumThread; locale
 
 function ActivityRow({ thread, locale, onClick }: { thread: ForumThread; locale: Locale; onClick: () => void }) {
   const { t } = useTranslation();
+  const categoryLabel = useCategoryLabel(t);
   const category = thread.category as ForumCategory | undefined;
   const accent = category ? (CATEGORY_ACCENTS[category.slug] || 'text-indigo-400') : 'text-indigo-400';
 
@@ -426,7 +442,7 @@ function ActivityRow({ thread, locale, onClick }: { thread: ForumThread; locale:
         <div className="text-2xs text-slate-500 truncate">
           {thread.author_name}
           {category && (
-            <> · <span className={accent}>{t(`forum.categoryNames.${category.slug}`) || category.name}</span></>
+            <> · <span className={accent}>{categoryLabel(category.slug, category.name)}</span></>
           )}
           {' · '}
           {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true, locale })}

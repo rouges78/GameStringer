@@ -5075,7 +5075,10 @@
     "beTheFirst": "Bądź pierwszy!",
     "emptyDescription": "Brak dyskusji. Otwórz pierwszy wątek i rozpocznij rozmowę ze społecznością!",
     "searchPacks": "Szukaj paczek lub gier…",
-    "strings": "ciągów"
+    "strings": "ciągów",
+    "loginRequired": "Zaloguj się, aby publikować",
+    "loginRequiredHint": "Utwórz lub wybierz profil GameStringer, aby zakładać dyskusje i udostępniać paczki.",
+    "backendUnavailable": "Backend społeczności jest niedostępny. Spróbuj ponownie za chwilę."
   },
   "voiceClone": {
     "title": "Klon głosu",

@@ -5075,7 +5075,10 @@
     "beTheFirst": "첫 번째가 되세요!",
     "emptyDescription": "아직 토론이 없습니다. 첫 번째 스레드를 열고 커뮤니티와 대화를 시작하세요!",
     "searchPacks": "팩 또는 게임 검색…",
-    "strings": "문자열"
+    "strings": "문자열",
+    "loginRequired": "게시하려면 로그인하세요",
+    "loginRequiredHint": "GameStringer 프로필을 만들거나 선택하면 토론을 시작하고 팩을 공유할 수 있습니다.",
+    "backendUnavailable": "커뮤니티 백엔드에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요."
   },
   "voiceClone": {
     "title": "음성 복제",

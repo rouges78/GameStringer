@@ -52,6 +52,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
+// `t()` ritorna la CHIAVE quando la traduzione manca (vedi lib/i18n/index.tsx),
+// quindi il vecchio `t(k) || cat.name` non ricadeva mai sul nome dal DB: una
+// categoria senza traduzione mostrava "forum.categoryNames.<slug>" a schermo.
+// Qui confrontiamo col valore della chiave per capire se la traduzione esiste.
+function useCategoryLabel(t: (k: string) => string) {
+  return (slug: string, fallbackName: string) => {
+    const key = `forum.categoryNames.${slug}`;
+    const value = t(key);
+    return value === key ? fallbackName : value;
+  };
+}
+
+
 // ─── CATEGORY ICONS & ACCENTS ───────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -89,6 +102,7 @@ interface ForumHomeProps {
 
 export function ForumHome({ initialCategory, initialSearch, packsOnly = false, onOpenThread, onNewThread }: ForumHomeProps) {
   const { t, language } = useTranslation();
+  const categoryLabel = useCategoryLabel(t);
   const router = useRouter();
   const locale = language === 'it' ? it : enUS;
 
@@ -177,7 +191,7 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
               <CategoryChip
                 key={cat.id}
                 active={selectedCategory === cat.slug}
-                label={t(`forum.categoryNames.${cat.slug}`) || cat.name}
+                label={categoryLabel(cat.slug, cat.name)}
                 icon={<Icon className={cn('h-3.5 w-3.5', accent)} />}
                 onClick={() => setSelectedCategory(cat.slug)}
               />
@@ -336,6 +350,7 @@ interface ThreadRowProps {
 
 function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
   const { t } = useTranslation();
+  const categoryLabel = useCategoryLabel(t);
   const category = thread.category as ForumCategory | undefined;
   const accent = category ? (CATEGORY_ACCENTS[category.slug] || DEFAULT_ACCENT) : DEFAULT_ACCENT;
 
@@ -387,7 +402,7 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
           {category && (
             <>
               <span className="text-slate-700">·</span>
-              <span className={accent}>{t(`forum.categoryNames.${category.slug}`) || category.name}</span>
+              <span className={accent}>{categoryLabel(category.slug, category.name)}</span>
             </>
           )}
           <span className="text-slate-700">·</span>

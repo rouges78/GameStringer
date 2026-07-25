@@ -4994,7 +4994,10 @@
     "beTheFirst": "Soyez le premier !",
     "emptyDescription": "Pas encore de discussions. Ouvrez le premier fil et lancez la conversation !",
     "searchPacks": "Rechercher packs ou jeux…",
-    "strings": "chaînes"
+    "strings": "chaînes",
+    "loginRequired": "Connectez-vous pour publier",
+    "loginRequiredHint": "Créez ou sélectionnez un profil GameStringer pour lancer des discussions et partager des packs.",
+    "backendUnavailable": "Backend de la communauté injoignable. Réessayez dans un instant."
   },
   "guidePage": {
     "advancedTab": "Advanced",

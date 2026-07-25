@@ -4685,7 +4685,10 @@
     "beTheFirst": "成为第一个！",
     "emptyDescription": "还没有讨论。打开第一个主题，开始与社区对话！",
     "searchPacks": "搜索语言包或游戏…",
-    "strings": "条字符串"
+    "strings": "条字符串",
+    "loginRequired": "登录后即可发布",
+    "loginRequiredHint": "创建或选择 GameStringer 配置文件，即可发起讨论并分享翻译包。",
+    "backendUnavailable": "无法连接社区后端，请稍后重试。"
   },
   "voiceClone": {
     "title": "Voice Clone Studio",
