@@ -53,8 +53,8 @@ di questa sessione non ha.
 
 Piano proposto, un modulo per volta, ognuno con il suo `cargo check`:
 
-1. ~~`lip_sync.rs`~~ — **fatto**, vedi sotto.
-2. `ollama_streaming.rs` — 2 comandi, dipendenze già presenti.
+1. ~~`lip_sync.rs`~~ — **riattivato**, vedi sotto.
+2. ~~`ollama_streaming.rs`~~ — **cancellato**, vedi sotto: non era un modulo da compilare, era un abbozzo mai finito.
 3. `ollama_advanced.rs` — prima decidere `lazy_static` vs `OnceLock`, poi agganciare.
 
 ## Riattivato: `lip_sync.rs`
@@ -117,8 +117,9 @@ di far notare la registrazione mancante.
 
 `scripts/check-tauri-commands.js`, agganciato alla CI (`npm run tauri:check-cmds`)
 accanto al gate i18n. Funziona a ratchet come quello: la baseline versionata
-`scripts/.tauri-commands-baseline.json` elenca i 19 rotti noti **con la ragione di
-ciascuno**, e la CI fallisce solo se compare qualcosa di nuovo.
+`scripts/.tauri-commands-baseline.json` elenca i rotti noti **con la ragione di
+ciascuno** (19 all'inizio della giornata, 15 alla fine), e la CI fallisce solo se
+compare qualcosa di nuovo.
 
 Rispetto al `comm -23` di ieri copre: apici singoli, doppi e backtick; i generics
 (`invoke<string[]>('x')`); i wrapper `safeInvoke` e `invokeCmd`; ed esclude test
@@ -136,11 +137,57 @@ npm run tauri:check-cmds:update    # accetta il nuovo stato come baseline
 Il gate fallisce anche quando una voce di baseline viene **risolta** senza
 aggiornare il file: senza questo, la baseline marcisce e smette di dire il vero.
 
-## Cosa resta (19 in baseline)
+## Cancellato: `ollama_streaming.rs` (+ due hook)
 
-Undici sono i tre moduli orfani qui sopra. Gli altri otto sono quelli già
-triagiati ieri — coda batch (che comunque non traduce niente: barra finta con
-`setTimeout`), `tts_synthesize` (non esiste alcun motore di sintesi vocale fra i
-901 comandi), `extract_godot_pck`, `extract_renpy_rpa`, la cache/statistiche
-dell'injekt — più `export_cache` e `scan_game_files_with_info`, che il controllo
-di ieri non vedeva perché usano forme di `invoke` che la sua regex non copriva.
+Qui la domanda «perché non è registrato?» ha avuto una risposta diversa: perché non
+c'era niente da registrare. Guardando i chiamanti prima del codice:
+
+- l'unico chiamante dei due comandi era `lib/ai/use-streaming-translation.ts`
+  (264 righe) — **importato da nessun componente**;
+- esisteva un **secondo** hook omonimo, `hooks/use-streaming-translation.ts`
+  (170 righe), anch'esso mai importato, che puntava a `/api/translate/stream` —
+  una route che nel desktop risponde `501 not_available_in_desktop`;
+- nessuno ascoltava gli eventi `ollama-stream-*` / `ollama-batch-*` emessi dal Rust.
+
+Quindi la traduzione in streaming non era una funzione rotta: erano tre pezzi mai
+congiunti, nati nello stesso commit di giugno (`09a202c2`). Lo `stream: true` che si
+trova in `ollama-manager.ts` è il download dei modelli, non la traduzione.
+
+Due difetti in più, se lo si fosse registrato senza guardarci dentro:
+
+- **URL Ollama hardcoded** a `http://localhost:11434`, cioè la reintroduzione esatta
+  del bug chiuso il giorno prima (`fix(ollama): make the endpoint configurable`, sei
+  segnalazioni utente) invece di passare da `ollama_endpoint::ollama_base_url()`.
+- **Scavalca le garanzie della pipeline**: prompt di sistema costruito sul posto e
+  chiamata diretta a Ollama, quindi senza glossario, senza reflection e senza la
+  protezione dei placeholder — che è attiva sempre, per scelta esplicita.
+
+Cancellati modulo e due hook (465 + 170 righe). Stesso criterio applicato ieri a
+`lib/tauri-integration.ts`: quando il codice morto è più grande della funzione che
+dovrebbe svolgere, si toglie.
+
+**Conoscenza da non perdere con la cancellazione:** se un giorno si vuole lo
+streaming in desktop, la strada obbligata *è* un comando Rust. Dal webview Tauri una
+fetch verso Ollama è bloccata dal CORS (è il motivo per cui esiste
+`lib/ai/ollama-http.ts`), e `/api/translate/stream` è uno stub 501. Il modulo
+cancellato aveva l'idea giusta e l'esecuzione a metà. Il commento in `ollama-http.ts`
+che rimandava a `ollama_streaming` è stato corretto: mandava il lettore verso un file
+che non veniva compilato.
+
+## Cosa resta (15 in baseline)
+
+Dei tre moduli orfani ne resta uno: `ollama_advanced.rs`, che aspetta la decisione
+su `lazy_static` vs `OnceLock`. Dei suoi otto comandi, **sei** sono in baseline
+perché il frontend li invoca (`ollama_translate_advanced`, `detect_gpu`,
+`check_ollama_model_updates`, e le tre della cache traduzioni); gli altri due
+(`get_cache_stats`, `pull_ollama_model`) non sono chiamati da nessuno e quindi non
+compaiono nel gate — vanno guardati quando si aggancia il modulo, non prima.
+
+Le altre **nove** voci sono il debito triagiato ieri: la coda batch
+(`scan_folder_for_translation_files`, `count_translatable_strings` — che comunque
+non traduce niente, la barra è finta con `setTimeout`), `tts_synthesize` (non
+esiste alcun motore di sintesi vocale fra i 900 comandi), `extract_godot_pck`,
+`extract_renpy_rpa`, e la cache/statistiche dell'injekt (`import_cache`,
+`export_cache`, `get_stats`) — più `scan_game_files_with_info`. Gli ultimi due
+gruppi il controllo di ieri non li vedeva, perché usano forme di `invoke` che la
+sua regex non copriva.

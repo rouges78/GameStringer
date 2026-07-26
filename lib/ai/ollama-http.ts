@@ -10,8 +10,14 @@
  * nessun CORS). In browser/dev usiamo la fetch diretta. L'oggetto restituito è
  * "fetch-like" (ok / status / json() / text()) così i call-site cambiano di una riga.
  *
- * NB: gestisce solo chiamate NON-streaming (`stream:false`). Per lo streaming usare i
- * comandi Rust dedicati (ollama_streaming).
+ * NB: gestisce solo chiamate NON-streaming (`stream:false`). Lo streaming di traduzione
+ * OGGI NON ESISTE: il modulo `commands/ollama_streaming.rs` a cui questo commento
+ * rimandava non è mai stato dichiarato in mod.rs, quindi non è mai stato compilato, e i
+ * suoi due hook non erano montati in nessuna UI — cancellati il 26/07/2026.
+ * Se lo si vuole rifare, la strada obbligata resta un comando Rust: per il motivo di
+ * CORS spiegato qui sopra, una fetch streaming dal webview verso Ollama è bloccata, e
+ * /api/translate/stream risponde 501 nel desktop. Vedi
+ * docs/maintenance/2026-07-26-moduli-rust-orfani.md.
  */
 
 import { ollamaArgs } from './ollama-endpoint';

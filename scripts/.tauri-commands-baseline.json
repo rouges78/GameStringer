@@ -14,8 +14,6 @@
     "scan_folder_for_translation_files": "mancante — idem coda batch",
     "scan_game_files_with_info": "mancante — lib/file-watcher.ts",
     "set_cached_translation": "non-registrato — idem ollama_advanced.rs (cache traduzioni)",
-    "translate_batch_streaming": "non-registrato — commands/ollama_streaming.rs, stesso caso: modulo mai dichiarato",
-    "translate_with_streaming": "non-registrato — idem ollama_streaming.rs: la traduzione in streaming non parte mai",
     "tts_synthesize": "mancante — NESSUN comando di sintesi vocale fra i 901 definiti: il doppiaggio è una UI senza motore. Prima va scelto XTTS/Piper e come distribuirlo"
   }
 }
