@@ -14,6 +14,20 @@
  *
  * NON cambia il comportamento di default: senza override, l'URL composto è
  * identico byte per byte a quello che era hardcoded.
+ *
+ * ⚠️ VINCOLO CHE HA RESO NECESSARIO UN SECONDO PASSAGGIO — la `connect-src` della CSP
+ * in `src-tauri/tauri.conf.json` elenca **trenta origini fisse**, una per provider. Una
+ * `fetch()` verso un endpoint personalizzato verrebbe quindi bloccata dal webview, e la
+ * prima versione di questo modulo funzionava solo per i due provider che già passavano
+ * da `httpPostJson`. Ora **tutte** le chiamate ai provider usano `lib/ai/http-proxy.ts`,
+ * che dentro Tauri instrada dal comando Rust `http_post_json` (reqwest, nessuna CSP e
+ * nessun CORS) e fuori fa la fetch normale. È la stessa ragione per cui esiste
+ * `lib/ai/ollama-http.ts`.
+ *
+ * Ne segue una regola: **una nuova chiamata a un provider va aggiunta con
+ * `httpPostJson`, non con `fetch`**, altrimenti gli endpoint personalizzati smettono
+ * di funzionare per quel provider e nessun test se ne accorge — il difetto si vede
+ * solo a runtime, dentro il webview, con un endpoint custom configurato.
  */
 
 import { clientLogger } from '@/lib/client-logger';

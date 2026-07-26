@@ -150,16 +150,13 @@ async function translateWithGemini(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(
+  const res = await httpPostJson(
     `${providerUrl('gemini', `/models/${GEMINI_MODEL}:generateContent`)}?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
-      }),
-    }
+    { 'Content-Type': 'application/json' },
+    JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+    }),
   );
 
   if (res.status === 429) {
@@ -191,19 +188,16 @@ async function translateWithGemini31FlashLite(
   const prompt = buildTranslationPrompt(opts);
 
   // Gemini 3.1 Flash-Lite: fino a 1M token context, metà costo di Gemini 2.0
-  const res = await fetch(
+  const res = await httpPostJson(
     `${providerUrl('gemini', '/models/gemini-3.1-flash-lite:generateContent')}?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { 
-          temperature: 0.3, 
-          maxOutputTokens: 32768, // Aumentato per long-context
-        },
-      }),
-    }
+    { 'Content-Type': 'application/json' },
+    JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 32768, // Aumentato per long-context
+      },
+    })
   );
 
   if (res.status === 429) {
@@ -234,19 +228,19 @@ async function translateWithDeepSeek(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(providerUrl('deepseek', '/chat/completions'), {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    providerUrl('deepseek', '/chat/completions'),
+    {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model: 'deepseek-v4-flash',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 8192,
     }),
-  });
+  );
 
   if (res.status === 402 || res.status === 429) {
     blockProvider('deepseek');
@@ -275,19 +269,19 @@ async function translateWithGroq(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(providerUrl('groq', '/chat/completions'), {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    providerUrl('groq', '/chat/completions'),
+    {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 8192,
     }),
-  });
+  );
 
   if (res.status === 429) {
     throw new Error(`RateLimit`);
@@ -421,21 +415,21 @@ async function translateWithAnthropic(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(providerUrl('anthropic', '/messages'), {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    providerUrl('anthropic', '/messages'),
+    {
       'Content-Type': 'application/json',
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model,
       max_tokens: 8192,
       system: ANTHROPIC_TRANSLATION_SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     }),
-  });
+  );
 
   if (!res.ok) {
     blockProvider('anthropic');
@@ -477,19 +471,19 @@ async function translateWithOpenAICompatible(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    endpoint,
+    {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 8192,
     }),
-  });
+  );
 
   if (!res.ok) {
     blockProvider(providerName);
@@ -523,19 +517,19 @@ async function translateWithMistral(apiKey: string, opts: TranslateOptions): Pro
 async function translateWithCohere(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(providerUrl('cohere', '/chat'), {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    providerUrl('cohere', '/chat'),
+    {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model: 'command-r-plus-08-2024',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 8192,
     }),
-  });
+  );
 
   if (res.status === 429) {
     throw new Error(`RateLimit`);
@@ -580,21 +574,21 @@ async function translateWithFireworks(apiKey: string, opts: TranslateOptions): P
 async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch(providerUrl('openrouter', '/chat/completions'), {
-    method: 'POST',
-    headers: {
+  const res = await httpPostJson(
+    providerUrl('openrouter', '/chat/completions'),
+    {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
       'HTTP-Referer': 'https://gamestringer.app',
       'X-Title': 'GameStringer',
     },
-    body: JSON.stringify({
+    JSON.stringify({
       model: 'meta-llama/llama-3.3-70b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 8192,
     }),
-  });
+  );
 
   if (!res.ok) {
     blockProvider('openrouter');
