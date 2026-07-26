@@ -53,9 +53,49 @@ di questa sessione non ha.
 
 Piano proposto, un modulo per volta, ognuno con il suo `cargo check`:
 
-1. `lip_sync.rs` — il più piccolo (3 comandi, 4,6 KB), buon banco di prova.
+1. ~~`lip_sync.rs`~~ — **fatto**, vedi sotto.
 2. `ollama_streaming.rs` — 2 comandi, dipendenze già presenti.
 3. `ollama_advanced.rs` — prima decidere `lazy_static` vs `OnceLock`, poi agganciare.
+
+## Riattivato: `lip_sync.rs`
+
+`pub mod lip_sync;` in `commands/mod.rs` accanto ad `audio_patcher`, e i tre comandi
+(`check_rhubarb_available`, `generate_lip_sync`, `export_lip_sync_file`) nel
+`generate_handler!`. Nessun `State` da registrare, nessuna dipendenza da aggiungere:
+`serde_json` e `super::process_util::no_window_command` erano già a posto.
+
+Verificate le convenzioni prima di dichiararlo, perché un comando registrato ma
+chiamato male fallisce ugualmente:
+
+- **Argomenti.** Il frontend passa `audioPath`/`dialogText`; i parametri Rust sono
+  `audio_path`/`dialog_text` senza `rename_all`. È corretto: la documentazione di
+  Tauri v2 stabilisce che gli argomenti si passano in camelCase e vengono mappati
+  sui parametri snake_case — `rename_all = "snake_case"` serve al caso opposto.
+  (Ne segue che i 34 comandi del repo con `rename_all = "camelCase"` sono
+  ridondanti: chiedono il default. Innocui, non toccati.)
+- **Risultato.** `LipSyncResult` ha `#[serde(rename_all = "camelCase")]`, quindi
+  produce `{soundFile, duration, mouthCues}`, che è esattamente l'interfaccia
+  TypeScript. Combacia.
+
+### Un bug che la registrazione ha reso vivo
+
+Il pannello offriva due recognizer: `phonetic` e **`dataBased`**. Quel secondo
+valore **Rhubarb non lo conosce**: il CLI accetta solo `pocketSphinx` (solo
+inglese, più preciso, ed è il suo default) e `phonetic` (indipendente dalla
+lingua). Chi avesse scelto "più accurato" avrebbe fatto uscire Rhubarb con
+errore. Non se n'era accorto nessuno perché il comando non era registrato e
+quindi non partiva mai: il modulo orfano nascondeva un secondo difetto dentro di sé.
+
+Corretto in `lib/voice/rhubarb-lipsync.ts` e `components/tools/lip-sync-panel.tsx`;
+la chiave i18n `lipSyncPanel.dataBased` è diventata `lipSyncPanel.pocketSphinx` in
+tutti i 12 locale. Riscritte anche le due etichette, perché "veloce vs preciso"
+non era la scelta vera che l'utente sta facendo: ora dicono "tutte le lingue" e
+"solo inglese, più preciso", che è il criterio con cui decidere.
+
+La pagina `/lip-sync` è nel menu e il pannello gestisce già il caso "Rhubarb non
+installato" con link alla release e istruzioni per il PATH — finora mostrava
+sempre quello stato, perché `checkRhubarbAvailable` catturava il
+`command not found` e restituiva `false`. Ora la risposta è vera.
 
 ## Chiusi oggi
 

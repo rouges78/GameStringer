@@ -41,8 +41,15 @@ export interface LipSyncOptions {
   audioPath: string;
   /** Optional dialog text to improve accuracy */
   dialogText?: string;
-  /** Recognizer type: phonetic (faster) or dataBased (more accurate) */
-  recognizer?: 'phonetic' | 'dataBased';
+  /**
+   * Recognizer passato a Rhubarb con -r. Sono gli unici due valori che il CLI
+   * accetta: `pocketSphinx` riconosce solo l'inglese ma è più preciso (è il
+   * default di Rhubarb), `phonetic` è indipendente dalla lingua.
+   * NB: qui c'era 'dataBased', che Rhubarb non conosce — la voce "più accurato"
+   * del pannello avrebbe fatto uscire il CLI con errore. Non se n'era accorto
+   * nessuno perché il comando non era registrato e non partiva mai.
+   */
+  recognizer?: 'phonetic' | 'pocketSphinx';
   /** Output format for file export */
   exportFormat?: 'json' | 'xml' | 'tsv';
 }

@@ -1,14 +1,12 @@
 {
   "known": {
     "check_ollama_model_updates": "non-registrato — commands/ollama_advanced.rs NON è dichiarato in commands/mod.rs: il file non viene proprio compilato. Vedi docs/maintenance/2026-07-26-moduli-rust-orfani.md",
-    "check_rhubarb_available": "non-registrato — commands/lip_sync.rs, stesso caso: modulo mai dichiarato",
     "clear_translation_cache": "non-registrato — idem ollama_advanced.rs (cache traduzioni)",
     "count_translatable_strings": "mancante — coda batch. NB: il componente non traduce comunque nulla (barra finta con setTimeout). Decidere se implementare /batch-translation o rimuoverla",
     "detect_gpu": "non-registrato — idem ollama_advanced.rs",
     "export_cache": "mancante — injekt translator, esportazione cache",
     "extract_godot_pck": "mancante — esistono solo scan_godot_pck (elenca) ed extract_godot_file (un file per volta, solo testo). Manca l'estrazione dell'intero PCK su disco",
     "extract_renpy_rpa": "mancante — nessun lettore di archivi .rpa lato Rust; il patcher lavora solo su .rpy già estratti",
-    "generate_lip_sync": "non-registrato — idem lip_sync.rs",
     "get_cached_translation": "non-registrato — idem ollama_advanced.rs (cache traduzioni)",
     "get_stats": "mancante — injekt translator: il pannello statistiche mostra zeri, in silenzio",
     "import_cache": "mancante — injekt translator, importazione cache",

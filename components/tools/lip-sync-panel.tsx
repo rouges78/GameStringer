@@ -52,7 +52,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
   const [rhubarbAvailable, setRhubarbAvailable] = useState<boolean | null>(null);
   const [audioPath, setAudioPath] = useState(initialPath || '');
   const [dialogText, setDialogText] = useState(initialDialog || '');
-  const [recognizer, setRecognizer] = useState<'phonetic' | 'dataBased'>('phonetic');
+  const [recognizer, setRecognizer] = useState<'phonetic' | 'pocketSphinx'>('phonetic');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<LipSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -212,13 +212,13 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <Label className="text-xs text-zinc-500 mb-1 block">{t('lipSyncPanel.recognizer')}</Label>
-            <Select value={recognizer} onValueChange={(v) => setRecognizer(v as 'phonetic' | 'dataBased')}>
+            <Select value={recognizer} onValueChange={(v) => setRecognizer(v as 'phonetic' | 'pocketSphinx')}>
               <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="phonetic">{t('lipSyncPanel.phonetic')}</SelectItem>
-                <SelectItem value="dataBased">{t('lipSyncPanel.dataBased')}</SelectItem>
+                <SelectItem value="pocketSphinx">{t('lipSyncPanel.pocketSphinx')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -65,6 +65,10 @@ pub mod project_export;
 pub mod translation_diff;
 pub mod translation_stats;
 pub mod audio_patcher;
+// Committato il 27/04/2026 e mai dichiarato qui: per tre mesi il file non è
+// nemmeno stato compilato, mentre il frontend ne invocava i comandi.
+// Vedi docs/maintenance/2026-07-26-moduli-rust-orfani.md
+pub mod lip_sync;
 pub mod offline_translation;
 pub mod ollama_endpoint;
 pub mod ollama_manager;

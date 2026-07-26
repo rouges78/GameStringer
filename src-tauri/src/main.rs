@@ -1120,6 +1120,11 @@ fn main() {
             commands::audio_patcher::replace_audio_file,
             commands::audio_patcher::restore_audio_file,
 
+            // Lip Sync (Rhubarb CLI — visemi per il doppiaggio)
+            commands::lip_sync::check_rhubarb_available,
+            commands::lip_sync::generate_lip_sync,
+            commands::lip_sync::export_lip_sync_file,
+
             // Video Extractor (VMD, BIK, SMK, USM, ROQ — game video extraction & conversion)
             commands::video_extractor::scan_game_video_files,
             commands::video_extractor::analyze_video_header,
