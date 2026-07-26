@@ -7400,5 +7400,13 @@
     "saved": "Saved",
     "reset": "Reset to defaults",
     "appliesTo": "These parameters apply to translations run with local Ollama models (including reflection). They do not affect web providers (Gemini, Groq, etc.)."
+  },
+  "customEndpoints": {
+    "title": "Custom endpoints",
+    "description": "Alternative address for AI providers: useful behind a corporate proxy, where the official domain is unreachable, or with a compatible gateway. Leave empty to use the official address.",
+    "activeCount": "{n} customised",
+    "reset": "Restore default",
+    "invalid": "Invalid address: the official one will be used.",
+    "hint": "Enter only the service root, without /chat/completions — the app appends the rest."
   }
 }

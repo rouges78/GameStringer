@@ -40,7 +40,8 @@ import {
   Maximize2,
   Type,
   Columns,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Server
 } from 'lucide-react';
 import { getRssFeeds, saveRssFeeds, defaultRssFeeds, type RssFeed } from '@/components/ui/rss-ticker';
 import { toast } from 'sonner';
@@ -72,6 +73,10 @@ const MultiLlmComparisonSettings = dynamic(
 );
 const OllamaManager = dynamic(
   () => import('@/components/settings/ollama-manager').then(m => ({ default: m.OllamaManager })),
+  { ssr: false }
+);
+const CustomEndpointsCard = dynamic(
+  () => import('@/components/settings/custom-endpoints-card').then(m => ({ default: m.CustomEndpointsCard })),
   { ssr: false }
 );
 const VramSettingsCard = dynamic(
@@ -1437,6 +1442,16 @@ export default function SettingsPage() {
                     </div>
                     <p className="text-2xs text-muted-foreground">{t('settingsPage.qwen1m')}<a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
+                </div>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 select-none mb-2">
+                  <Server className="h-3.5 w-3.5" />
+                  {t('customEndpoints.title')}
+                </summary>
+                <div className="mt-3">
+                  <CustomEndpointsCard />
                 </div>
               </details>
 

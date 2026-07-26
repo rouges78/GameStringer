@@ -7400,5 +7400,13 @@
     "thanksTitle": "Merci pour votre commentaire !",
     "thanksDb": "Nous l'avons bien reçu : cela nous aide à améliorer l'application.",
     "thanksFallback": "Backend indisponible : utilisez E-mail ou Copier le rapport pour nous l'envoyer."
+  },
+  "customEndpoints": {
+    "title": "Points d'accès personnalisés",
+    "description": "Adresse alternative pour les fournisseurs d'IA : utile derrière un proxy d'entreprise, là où le domaine officiel est inaccessible, ou avec une passerelle compatible. Laissez vide pour utiliser l'adresse officielle.",
+    "activeCount": "{n} personnalisés",
+    "reset": "Rétablir la valeur par défaut",
+    "invalid": "Adresse non valide : l'adresse officielle sera utilisée.",
+    "hint": "Indiquez seulement la racine du service, sans /chat/completions — l'application ajoute le reste."
   }
 }

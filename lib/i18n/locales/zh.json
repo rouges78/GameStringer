@@ -7400,5 +7400,13 @@
     "thanksTitle": "感谢您的反馈！",
     "thanksDb": "我们已收到：它有助于我们改进应用。",
     "thanksFallback": "后端不可用：请使用“电子邮件”或“复制报告”发送给我们。"
+  },
+  "customEndpoints": {
+    "title": "自定义 API 地址",
+    "description": "AI 服务商的备用地址：适用于公司代理后、官方域名无法访问的地区，或兼容网关。留空则使用官方地址。",
+    "activeCount": "已自定义 {n} 个",
+    "reset": "恢复默认",
+    "invalid": "地址无效：将使用官方地址。",
+    "hint": "只需填写服务根地址，无需 /chat/completions —— 其余部分由应用补全。"
   }
 }

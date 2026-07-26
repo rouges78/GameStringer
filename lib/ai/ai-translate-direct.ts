@@ -7,6 +7,7 @@ import { ollamaFetch } from './ollama-http';
 import { buildOllamaOptions } from './ollama-options';
 import { httpPostJson } from './http-proxy';
 import { isTauri } from '@/lib/tauri-api';
+import { providerUrl } from './provider-endpoints';
 
 // Extracted modules
 import {
@@ -150,7 +151,7 @@ async function translateWithGemini(
   const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    `${providerUrl('gemini', `/models/${GEMINI_MODEL}:generateContent`)}?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -191,7 +192,7 @@ async function translateWithGemini31FlashLite(
 
   // Gemini 3.1 Flash-Lite: fino a 1M token context, metà costo di Gemini 2.0
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+    `${providerUrl('gemini', '/models/gemini-3.1-flash-lite:generateContent')}?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -233,7 +234,7 @@ async function translateWithDeepSeek(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.deepseek.com/chat/completions', {
+  const res = await fetch(providerUrl('deepseek', '/chat/completions'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -274,7 +275,7 @@ async function translateWithGroq(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch(providerUrl('groq', '/chat/completions'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -319,7 +320,7 @@ async function translateWithGroqGptOss(
 
   // POST via backend Rust (aggira il CORS del webview per le API cloud).
   const res = await httpPostJson(
-    'https://api.groq.com/openai/v1/chat/completions',
+    providerUrl('groq', '/chat/completions'),
     { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     JSON.stringify({
       model: 'openai/gpt-oss-120b',
@@ -361,7 +362,7 @@ async function translateWithOpenAI(
   // POST diretta al provider via backend Rust (aggira il CORS del webview).
   // Sostituisce il vecchio /api/llm-proxy (ora stub 501 nel build statico).
   const res = await httpPostJson(
-    'https://api.openai.com/v1/chat/completions',
+    providerUrl('openai', '/chat/completions'),
     { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     JSON.stringify({
       model: 'gpt-4o-mini',
@@ -420,7 +421,7 @@ async function translateWithAnthropic(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(providerUrl('anthropic', '/messages'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -512,7 +513,7 @@ async function translateWithOpenAICompatible(
 /** Mistral AI — free tier disponibile, ottima qualità */
 async function translateWithMistral(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
-    'https://api.mistral.ai/v1/chat/completions',
+    providerUrl('mistral', '/chat/completions'),
     'mistral-small-latest',
     'Mistral',
   );
@@ -522,7 +523,7 @@ async function translateWithMistral(apiKey: string, opts: TranslateOptions): Pro
 async function translateWithCohere(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.cohere.com/v2/chat', {
+  const res = await fetch(providerUrl('cohere', '/chat'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -560,7 +561,7 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
 /** Together AI — OpenAI-compatible, Llama 3.3 70B, $25 free credit */
 async function translateWithTogether(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
-    'https://api.together.xyz/v1/chat/completions',
+    providerUrl('together', '/chat/completions'),
     'meta-llama/Llama-3.3-70B-Instruct-Turbo',
     'Together',
   );
@@ -569,7 +570,7 @@ async function translateWithTogether(apiKey: string, opts: TranslateOptions): Pr
 /** Fireworks AI — OpenAI-compatible, velocissimo, free tier */
 async function translateWithFireworks(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
-    'https://api.fireworks.ai/inference/v1/chat/completions',
+    providerUrl('fireworks', '/chat/completions'),
     'accounts/fireworks/models/llama-v3p3-70b-instruct',
     'Fireworks',
   );
@@ -579,7 +580,7 @@ async function translateWithFireworks(apiKey: string, opts: TranslateOptions): P
 async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const res = await fetch(providerUrl('openrouter', '/chat/completions'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -617,7 +618,7 @@ async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): 
 /** Cerebras — velocissimo (Llama 70B in <1s), free tier generoso */
 async function translateWithCerebras(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
-    'https://api.cerebras.ai/v1/chat/completions',
+    providerUrl('cerebras', '/chat/completions'),
     'llama-3.3-70b',
     'Cerebras',
   );

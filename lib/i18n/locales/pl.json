@@ -7400,5 +7400,13 @@
     "thanksTitle": "Dziękujemy za opinię!",
     "thanksDb": "Otrzymaliśmy ją: pomaga nam ulepszać aplikację.",
     "thanksFallback": "Backend niedostępny: użyj E-mail lub Kopiuj raport, aby ją do nas wysłać."
+  },
+  "customEndpoints": {
+    "title": "Własne adresy API",
+    "description": "Alternatywny adres dla dostawców AI: przydatny za firmowym proxy, tam gdzie oficjalna domena jest niedostępna, lub ze zgodną bramą. Pozostaw puste, aby użyć oficjalnego adresu.",
+    "activeCount": "własne: {n}",
+    "reset": "Przywróć domyślny",
+    "invalid": "Nieprawidłowy adres: zostanie użyty oficjalny.",
+    "hint": "Podaj tylko główny adres usługi, bez /chat/completions — resztę dodaje aplikacja."
   }
 }

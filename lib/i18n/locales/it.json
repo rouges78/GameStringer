@@ -7400,5 +7400,13 @@
     "saved": "Salvato",
     "reset": "Ripristina default",
     "appliesTo": "Questi parametri si applicano alle traduzioni eseguite con i modelli Ollama locali (inclusa la reflection). Non influiscono sui provider web (Gemini, Groq, ecc.)."
+  },
+  "customEndpoints": {
+    "title": "Endpoint personalizzati",
+    "description": "Indirizzo alternativo per i provider AI: serve dietro un proxy aziendale, dove il dominio ufficiale non è raggiungibile, o con un gateway compatibile. Lascia vuoto per usare l'indirizzo ufficiale.",
+    "activeCount": "{n} personalizzati",
+    "reset": "Ripristina il predefinito",
+    "invalid": "Indirizzo non valido: verrà usato quello ufficiale.",
+    "hint": "Indica solo la radice del servizio, senza /chat/completions — il resto lo aggiunge l'app."
   }
 }

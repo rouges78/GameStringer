@@ -7400,5 +7400,13 @@
     "thanksTitle": "Obrigado pelo feedback!",
     "thanksDb": "Recebemos: isso nos ajuda a melhorar o aplicativo.",
     "thanksFallback": "Backend indisponível: use E-mail ou Copiar relatório para enviá-lo a nós."
+  },
+  "customEndpoints": {
+    "title": "Endpoints personalizados",
+    "description": "Endereço alternativo para os fornecedores de IA: útil atrás de um proxy corporativo, onde o domínio oficial não é acessível, ou com um gateway compatível. Deixe vazio para usar o endereço oficial.",
+    "activeCount": "{n} personalizados",
+    "reset": "Repor o predefinido",
+    "invalid": "Endereço inválido: será usado o oficial.",
+    "hint": "Indique apenas a raiz do serviço, sem /chat/completions — a app acrescenta o resto."
   }
 }

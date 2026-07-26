@@ -7400,5 +7400,13 @@
     "thanksTitle": "Danke für dein Feedback!",
     "thanksDb": "Wir haben es erhalten: Es hilft uns, die App zu verbessern.",
     "thanksFallback": "Backend nicht verfügbar: Verwende E-Mail oder Bericht kopieren, um es uns zu senden."
+  },
+  "customEndpoints": {
+    "title": "Benutzerdefinierte Endpunkte",
+    "description": "Alternative Adresse für KI-Anbieter: nützlich hinter einem Unternehmens-Proxy, wo die offizielle Domain nicht erreichbar ist, oder mit einem kompatiblen Gateway. Leer lassen, um die offizielle Adresse zu verwenden.",
+    "activeCount": "{n} angepasst",
+    "reset": "Standard wiederherstellen",
+    "invalid": "Ungültige Adresse: die offizielle wird verwendet.",
+    "hint": "Nur die Basis-Adresse angeben, ohne /chat/completions — den Rest ergänzt die App."
   }
 }
