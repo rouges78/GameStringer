@@ -38,7 +38,6 @@ const nextConfig = {
       'framer-motion',
       'cmdk',
       'recharts',
-      'react-hook-form',
       'class-variance-authority',
     ],
   },
