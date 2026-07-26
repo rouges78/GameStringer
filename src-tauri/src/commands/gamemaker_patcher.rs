@@ -535,6 +535,177 @@ fn find_language_dir(game_path: &str) -> Option<(PathBuf, PathBuf)> {
     None
 }
 
+// ── Formato Deltarune: lang/lang_<codice>[_ch<N>].json ──────────────────────
+//
+// Verificato sulla demo gratuita il 26/07/2026 (docs/maintenance/2026-07-26-deltarune-analisi.md):
+//
+//   lang/lang_en_ch1.json   6.242 chiavi   ← sorgente inglese, Chapter 1
+//   lang/lang_ja_ch1.json                  ← giapponese, Chapter 1
+//   lang/lang_ja.json      13.031 chiavi   ← giapponese, Chapter 2
+//
+// JSON piatto, chiave → stringa. Le chiavi sono nomi di script GameMaker
+// (`DEVICE_CONTACT_slash_Step_0_gml_6_0`) e i valori contengono i marcatori del
+// motore di dialogo: `^6` pausa, `&` a capo, `\M0` espressione del volto, `%` fine
+// messaggio. Vanno preservati: ci pensa il placeholder guard a monte.
+//
+// NB: `lang_en.json` (Chapter 2 inglese) NON esiste — quel testo sta dentro data.win,
+// solo il giapponese è esternalizzato. Qui copriamo i capitoli che hanno una sorgente
+// inglese su disco; per gli altri resta la via dello STRG chunk.
+//
+// Il gioco è a due lingue (`global.lang`, `os_get_language`, font paralleli
+// `fnt_ja_*`): per far comparire una traduzione si sovrascrive il file giapponese
+// corrispondente, che è ciò che fa `patch_json_lang_files`.
+
+/// File di lingua Deltarune: sorgente inglese e file giapponese da sovrascrivere.
+struct JsonLangPair {
+    source: PathBuf,
+    target: PathBuf,
+}
+
+/// `lang/` con almeno una coppia `lang_en*.json` + `lang_ja*.json`.
+fn find_json_lang_dir(game_path: &str) -> Option<(PathBuf, Vec<JsonLangPair>)> {
+    let lang_dir = Path::new(game_path).join("lang");
+    if !lang_dir.is_dir() {
+        return None;
+    }
+
+    let mut pairs: Vec<JsonLangPair> = Vec::new();
+    let mut names: Vec<String> = fs::read_dir(&lang_dir)
+        .ok()?
+        .flatten()
+        .filter_map(|e| {
+            let p = e.path();
+            if p.extension().is_some_and(|x| x == "json") {
+                p.file_name().map(|n| n.to_string_lossy().to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    names.sort();
+
+    for name in &names {
+        // `lang_en_ch1.json` → suffisso `_ch1`; `lang_en.json` → suffisso vuoto
+        let Some(rest) = name.strip_prefix("lang_en") else { continue };
+        let Some(suffix) = rest.strip_suffix(".json") else { continue };
+        let target_name = format!("lang_ja{}.json", suffix);
+        if names.iter().any(|n| n == &target_name) {
+            pairs.push(JsonLangPair {
+                source: lang_dir.join(name),
+                target: lang_dir.join(&target_name),
+            });
+        }
+    }
+
+    if pairs.is_empty() { None } else { Some((lang_dir, pairs)) }
+}
+
+/// Legge un file di lingua JSON come mappa piatta, saltando i valori non testuali.
+/// Tollera il BOM, che Deltarune usa su alcuni file.
+fn read_json_lang(path: &Path) -> Option<Vec<(String, String)>> {
+    let raw = fs::read_to_string(path).ok()?;
+    let cleaned = raw.trim_start_matches('\u{feff}');
+    let parsed: serde_json::Value = serde_json::from_str(cleaned).ok()?;
+    let obj = parsed.as_object()?;
+    Some(
+        obj.iter()
+            .filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string())))
+            .collect(),
+    )
+}
+
+/// Stringhe traducibili nei file JSON, in ordine stabile fra scansione e patch.
+fn count_json_lang_strings(pairs: &[JsonLangPair]) -> (usize, usize) {
+    let mut total = 0usize;
+    for pair in pairs {
+        if let Some(entries) = read_json_lang(&pair.source) {
+            total += entries
+                .iter()
+                .filter(|(k, v)| k != "date" && is_translatable(v))
+                .count();
+        }
+    }
+    (total, pairs.len())
+}
+
+fn extract_json_lang_strings(pairs: &[JsonLangPair]) -> Vec<GmString> {
+    let mut out = Vec::new();
+    let mut index = 0usize;
+    for pair in pairs {
+        let Some(entries) = read_json_lang(&pair.source) else { continue };
+        // `date` è un timestamp del gioco, non testo da tradurre
+        for (key, value) in entries.into_iter().filter(|(k, _)| k != "date") {
+            let translatable = is_translatable(&value);
+            out.push(GmString {
+                index,
+                offset: 0,
+                data_offset: 0,
+                length: value.len(),
+                original: value,
+                translated: None,
+                is_translatable: translatable,
+            });
+            index += 1;
+            let _ = &key;
+        }
+    }
+    out
+}
+
+/// Scrive le traduzioni nel file giapponese, che è quello che il gioco carica quando
+/// `global.lang` non è inglese. L'originale viene salvato una volta sola in `.bak`,
+/// così ripatchare non parte mai da un file già tradotto.
+fn patch_json_lang_files(
+    pairs: &[JsonLangPair],
+    translations: &HashMap<usize, String>,
+) -> Result<GmPatchResult, String> {
+    let mut index = 0usize;
+    let mut patched = 0usize;
+
+    for pair in pairs {
+        let backup = pair.target.with_extension("json.bak");
+        if !backup.exists() && pair.target.exists() {
+            fs::copy(&pair.target, &backup)
+                .map_err(|e| format!("Errore backup {}: {}", pair.target.display(), e))?;
+        }
+
+        let Some(entries) = read_json_lang(&pair.source) else { continue };
+        let mut out = serde_json::Map::new();
+        for (key, value) in entries {
+            if key == "date" {
+                out.insert(key, serde_json::Value::String(value));
+                continue;
+            }
+            let text = match translations.get(&index) {
+                Some(t) if !t.is_empty() => {
+                    patched += 1;
+                    t.clone()
+                }
+                _ => value,
+            };
+            out.insert(key, serde_json::Value::String(text));
+            index += 1;
+        }
+
+        let json = serde_json::to_string_pretty(&serde_json::Value::Object(out))
+            .map_err(|e| format!("Errore serializzazione JSON: {}", e))?;
+        fs::write(&pair.target, json)
+            .map_err(|e| format!("Errore scrittura {}: {}", pair.target.display(), e))?;
+        println!("[GM-JSON] Scritto {} ({} stringhe)", pair.target.display(), index);
+    }
+
+    Ok(GmPatchResult {
+        success: true,
+        patched_count: patched,
+        backup_path: pairs
+            .first()
+            .map(|p| p.target.with_extension("json.bak").to_string_lossy().to_string())
+            .unwrap_or_default(),
+        message: format!("{} stringhe scritte nei file di lingua JSON", patched),
+        truncated: Vec::new(),
+    })
+}
+
 /// Count translatable strings in .jn files (format: "English text|Japanese text" per line)
 fn count_jn_strings(eng_dir: &Path) -> (usize, usize) {
     let mut total = 0usize;
@@ -617,6 +788,32 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
     let chunk_names: Vec<String> = chunks.iter().map(|(name, _, _)| name.clone()).collect();
     let version = detect_version(&chunk_names);
     
+    // ── Priority 0: lang/*.json (Deltarune e simili) ──
+    // Prima dei .jn: chi ha questi file non ha bisogno di toccare data.win, quindi
+    // niente rischio di troncamento.
+    if let Some((lang_dir, pairs)) = find_json_lang_dir(&game_path) {
+        let (json_total, file_count) = count_json_lang_strings(&pairs);
+        println!(
+            "[GM] Language JSON trovati: {} coppie en→ja, {} stringhe in {}",
+            file_count, json_total, lang_dir.display()
+        );
+
+        return Ok(GmDataInfo {
+            file_path: data_win_path.to_string_lossy().to_string(),
+            file_size: data.len() as u64,
+            gm_version: format!("{} (Language JSON)", version),
+            total_strings: json_total,
+            translatable_strings: json_total,
+            chunks: chunk_names,
+            is_yyc: false,
+            exe_path: None,
+            has_language_files: true,
+            language_dir: Some(lang_dir.to_string_lossy().to_string()),
+            language_file_count: file_count,
+            string_source: "language_json".to_string(),
+        });
+    }
+
     // ── Priority 1: Check for language/*.jn files ──
     if let Some((lang_dir, eng_dir)) = find_language_dir(&game_path) {
         let (jn_total, jn_file_count) = count_jn_strings(&eng_dir);
@@ -703,6 +900,20 @@ pub async fn gm_extract_strings(
 ) -> Result<Vec<GmString>, String> {
     println!("[GM] Extracting strings from: {}", game_path);
     
+    // ── Priority 0: lang/*.json (Deltarune e simili) ──
+    if let Some((_lang_dir, pairs)) = find_json_lang_dir(&game_path) {
+        let mut strings = extract_json_lang_strings(&pairs);
+        println!("[GM] Language JSON mode — {} stringhe", strings.len());
+
+        if only_translatable.unwrap_or(true) {
+            strings.retain(|s| s.is_translatable);
+        }
+        if let Some(n) = limit {
+            strings.truncate(n);
+        }
+        return Ok(strings);
+    }
+
     // ── Priority 1: Language .jn files ──
     if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
         let mut strings = extract_jn_strings(&eng_dir);
@@ -777,6 +988,11 @@ pub async fn gm_patch_strings(
 ) -> Result<GmPatchResult, String> {
     println!("[GM] Patching {} strings in: {}", translations.len(), game_path);
     
+    // ── Priority 0: lang/*.json (Deltarune e simili) ──
+    if let Some((_lang_dir, pairs)) = find_json_lang_dir(&game_path) {
+        return patch_json_lang_files(&pairs, &translations);
+    }
+
     // ── Priority 1: Language .jn files → create itaLanguage/ ──
     if let Some((lang_dir, eng_dir)) = find_language_dir(&game_path) {
         return patch_language_files(&lang_dir, &eng_dir, &translations);
@@ -1229,6 +1445,21 @@ pub async fn gm_restore_backup(game_path: String) -> Result<String, String> {
         }
     }
     
+    // Ripristino dei lang/*.json (Deltarune e simili): ogni file giapponese ha il
+    // suo .bak accanto, scritto una sola volta prima della prima patch.
+    if let Some((_lang_dir, pairs)) = find_json_lang_dir(&game_path) {
+        for pair in &pairs {
+            let backup = pair.target.with_extension("json.bak");
+            if backup.exists() {
+                if let Err(e) = fs::copy(&backup, &pair.target) {
+                    println!("[GM-JSON] Ripristino fallito per {}: {}", pair.target.display(), e);
+                } else {
+                    restored.push("lang JSON");
+                }
+            }
+        }
+    }
+
     // Try restoring engLanguage.bak/ (language file games)
     if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
         let backup_dir = eng_dir.parent().unwrap_or(Path::new(".")).join("engLanguage.bak");
@@ -1261,8 +1492,10 @@ pub async fn gm_search_strings(
     query: String,
     only_translatable: Option<bool>,
 ) -> Result<Vec<GmString>, String> {
-    // ── Priority 1: Language .jn files ──
-    let strings = if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
+    // ── Priority 0: lang/*.json · Priority 1: language/*.jn ──
+    let strings = if let Some((_lang_dir, pairs)) = find_json_lang_dir(&game_path) {
+        extract_json_lang_strings(&pairs)
+    } else if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
         extract_jn_strings(&eng_dir)
     } else {
         // ── Priority 2/3: STRG or EXE ──
@@ -2025,5 +2258,97 @@ mod tests {
     #[test]
     fn test_exe_string_comment_prefix() {
         assert!(!is_translatable_exe_string("// this is some comment text here now"));
+    }
+
+    // ── lang/*.json (Deltarune) ───────────────────────────────────────────
+    // I casi riproducono la struttura verificata sulla demo il 26/07/2026:
+    // lang_en_ch1.json + lang_ja_ch1.json accoppiati, lang_ja.json senza sorgente
+    // inglese (quel testo sta dentro data.win) e quindi da ignorare.
+
+    fn scrivi_lang(dir: &Path, nome: &str, json: &str) {
+        fs::create_dir_all(dir.join("lang")).unwrap();
+        fs::write(dir.join("lang").join(nome), json).unwrap();
+    }
+
+    #[test]
+    fn json_lang_accoppia_solo_i_capitoli_con_sorgente_inglese() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(root, "lang_en_ch1.json", r#"{"date":"1","A":"HELLO"}"#);
+        scrivi_lang(root, "lang_ja_ch1.json", r#"{"date":"1","A":"こんにちは"}"#);
+        // Chapter 2: solo giapponese, nessuna sorgente inglese su disco
+        scrivi_lang(root, "lang_ja.json", r#"{"date":"1","B":"やあ"}"#);
+
+        let (_dir, pairs) = find_json_lang_dir(root.to_str().unwrap()).expect("lang/ va rilevata");
+        assert_eq!(pairs.len(), 1, "solo il capitolo 1 ha la coppia en→ja");
+        assert!(pairs[0].source.ends_with("lang_en_ch1.json"));
+        assert!(pairs[0].target.ends_with("lang_ja_ch1.json"));
+    }
+
+    #[test]
+    fn json_lang_ignora_cartelle_senza_coppie() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(root, "lang_ja.json", r#"{"A":"やあ"}"#);
+        assert!(find_json_lang_dir(root.to_str().unwrap()).is_none());
+    }
+
+    #[test]
+    fn json_lang_conta_saltando_date_e_non_testo() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        // `date` è un timestamp del gioco; "^6 %" sono soli marcatori, senza testo
+        scrivi_lang(
+            root,
+            "lang_en_ch1.json",
+            r#"{"date":"1540902565549","A":"ARE YOU^6& THERE^6?","B":"^6 %","C":"EXCELLENT^4."}"#,
+        );
+        scrivi_lang(root, "lang_ja_ch1.json", r#"{"date":"1","A":"","B":"","C":""}"#);
+
+        let (_d, pairs) = find_json_lang_dir(root.to_str().unwrap()).unwrap();
+        let (total, files) = count_json_lang_strings(&pairs);
+        assert_eq!(files, 1);
+        assert_eq!(total, 2, "A e C sono testo, B è solo marcatori, date non conta");
+    }
+
+    #[test]
+    fn json_lang_scrive_le_traduzioni_nel_file_giapponese() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(root, "lang_en_ch1.json", r#"{"date":"1","A":"HELLO","B":"BYE"}"#);
+        scrivi_lang(root, "lang_ja_ch1.json", r#"{"date":"1","A":"x","B":"y"}"#);
+
+        let (_d, pairs) = find_json_lang_dir(root.to_str().unwrap()).unwrap();
+        let mut tr = HashMap::new();
+        tr.insert(0usize, "ПРИВЕТ".to_string());
+
+        let res = patch_json_lang_files(&pairs, &tr).unwrap();
+        assert!(res.success);
+        assert_eq!(res.patched_count, 1);
+
+        let scritto: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(root.join("lang/lang_ja_ch1.json")).unwrap())
+                .unwrap();
+        assert_eq!(scritto["A"], "ПРИВЕТ", "la traduzione va nel file che il gioco carica");
+        assert_eq!(scritto["B"], "BYE", "senza traduzione resta il testo inglese");
+        assert_eq!(scritto["date"], "1", "date passa invariata");
+
+        // il backup dell'originale esiste e non viene sovrascritto da una seconda patch
+        let bak = root.join("lang/lang_ja_ch1.json.bak");
+        assert!(bak.exists(), "serve un backup prima di scrivere");
+        let orig: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&bak).unwrap()).unwrap();
+        assert_eq!(orig["A"], "x", "il backup conserva il giapponese originale");
+    }
+
+    #[test]
+    fn json_lang_tollera_il_bom() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(root, "lang_en_ch1.json", "\u{feff}{\"A\":\"HELLO\"}");
+        scrivi_lang(root, "lang_ja_ch1.json", "{\"A\":\"x\"}");
+        let (_d, pairs) = find_json_lang_dir(root.to_str().unwrap()).unwrap();
+        let letto = read_json_lang(&pairs[0].source).expect("il BOM non deve impedire il parse");
+        assert_eq!(letto.len(), 1);
     }
 }
