@@ -5,48 +5,91 @@
 > zero, e i primi giorni sono quelli in cui gli utenti vedono gli avvisi.
 > Helper: `npm run av:checklist` (elenca gli asset con sha256 e i passi).
 
-## 0. La soluzione DEFINITIVA: firma del codice (una volta sola)
+## 0. La firma del codice: cosa fa davvero (rivisto il 26/07/2026)
 
-> **Stato attuale (13/07/2026): gli installer NON sono code-signed.**
+> **Stato attuale: gli installer NON sono code-signed.**
 > `tauri.conf.json` non ha `certificateThumbprint`/`signCommand` e `release.yml`
 > non firma nulla. Gli aggiornamenti automatici (Tauri Updater) sono firmati
 > con minisign, ma quella è una cosa diversa dalla firma Authenticode
-> dell'installer che SmartScreen guarda. Un binario **firmato** con un
-> certificato reputato salta la maggior parte degli avvisi *alla radice* —
-> vale molto più di qualsiasi submission ripetuta.
+> dell'installer che SmartScreen guarda.
 
-> ⚠️ **Vincolo di licenza — verificato 13/07/2026.** GameStringer usa la
-> **"Source Available License v1.1"**, che NON è una licenza open-source
-> approvata OSI. Questo esclude le due opzioni gratuite più citate:
-> - **SignPath.io Foundation**: richiede *"an OSI-approved Open Source license
->   without commercial dual-licensing"* → **non eleggibile** con la licenza
->   attuale (fonte: signpath.org/terms).
-> - **Azure Artifact Signing (ex Trusted Signing), piano individuale**:
->   validazione identità individuale disponibile solo in **USA e Canada** →
->   **non disponibile per un individuo in Italia** (fonte: Microsoft Learn,
->   Artifact Signing FAQ).
+### ⚠️ Correzione importante: la firma NON è più "la soluzione definitiva"
 
-Opzioni realmente percorribili da qui (in ordine di rapporto costo/beneficio):
+Questa sezione, fino al 26/07/2026, diceva che un certificato EV azzera
+SmartScreen *subito* e che la firma «vale più di qualsiasi submission». **Era
+basata su un modello che Microsoft ha smontato nel 2024.**
 
-1. **Azure Artifact Signing come *organizzazione* UE** (~10–15 $/mese +
-   consumo). La validazione *organization* copre l'Unione Europea, quindi
-   funziona con una ditta/entità registrata (anche individuale con P.IVA, da
-   verificare col supporto Azure). Firma in cloud, nessun token hardware,
-   ottima reputazione SmartScreen. È la via migliore se hai (o apri) una
-   posizione fiscale. <https://azure.microsoft.com/products/artifact-signing>
-2. **Certificato OV da una CA** (Sectigo, DigiCert, SSL.com… ~150–300 €/anno,
-   **indipendente dalla licenza**). Con OV la reputazione SmartScreen si
-   costruisce nel tempo; le CA moderne offrono firma via **cloud HSM** (niente
-   chiavetta USB). Buon compromesso se non vuoi aprire un'entità.
-3. **Certificato EV** (~300–500 €/anno + HSM/token): dà reputazione SmartScreen
-   **immediata**, ma costa di più e richiede hardware o HSM cloud.
-4. **Rilicenziare a una licenza OSI** (MIT/GPL/…) per sbloccare SignPath
-   Foundation *gratis*: possibile ma è una scelta di prodotto — rinunceresti
-   alla protezione commerciale che la Source-Available ti dà oggi. Da valutare
-   solo se quella protezione non ti serve più.
+Ad agosto 2024 gli **OID EV sono stati rimossi dai root del Microsoft Trusted
+Root Program**: da allora SmartScreen tratta **tutti** i certificati di code
+signing allo stesso modo. Nessun tipo di certificato — EV, OV o IV — concede
+più reputazione immediata. La reputazione si costruisce solo con il volume di
+download.
 
-Nel frattempo, la mitigazione gratuita (submission + reputazione, §1–3 sotto)
-resta il piano di riserva.
+E soprattutto vale quello che questo runbook dice già nella sua prima riga: **la
+reputazione è per file.** Ogni nuova build ha un hash nuovo e riparte quasi da
+zero, firmata o no, anche se la versione precedente aveva mesi di storia buona.
+Il documento conteneva già l'informazione che smentiva la sua §0.
+
+**Conseguenza pratica, più importante della scelta del certificato:** con tre
+release in due settimane (v1.13 → v1.15, luglio 2026) nessun binario resta in
+circolazione abbastanza da accumulare fiducia. **Diradare le release pesa più
+che firmarle.**
+
+### Cosa la firma continua a dare
+
+- Toglie **«editore sconosciuto»**: al suo posto compare il nome del titolare.
+- Alcuni motori antivirus alzano il punteggio di sospetto sui binari non
+  firmati; firmare abbassa quel contributo (ma **non** i rilevamenti euristici
+  legati all'iniezione di DLL, che è il comportamento che gli AV segnalano in
+  GameStringer — vedi ANTIVIRUS.md).
+- Credibilità verso utenti tecnici e procurement aziendale.
+
+Non toglie l'avviso SmartScreen su un binario nuovo. Chi promette il contrario
+sta vendendo il modello pre-2024.
+
+### Opzioni per un individuo senza P.IVA (verificate 26/07/2026)
+
+1. **Certificato IV — Individual Validation** (~215–220 $/anno). Emesso a
+   **persone fisiche**, identità verificata con documenti personali: **non serve
+   una ditta**. È l'unica via realmente aperta oggi.
+   Due vincoli nuovi da mettere in conto:
+   - la chiave privata deve stare **in hardware** — token USB FIPS oppure un
+     servizio di firma in cloud (requisito CA/Browser Forum);
+   - dal 15/02/2026 la validità massima è **un anno** (458 giorni di transizione
+     dal 01/03/2026), quindi è un costo ricorrente, non una tantum.
+2. **Sole Proprietor EV** — esiste per individui, ma richiede lo status di
+   *sole proprietor*, cioè in Italia una ditta individuale con P.IVA. Non
+   percorribile senza quella. E dopo il 2024 non darebbe comunque un vantaggio
+   SmartScreen rispetto a un IV.
+3. **EV classico** — solo organizzazioni registrate. Fuori discussione, e ormai
+   senza il beneficio per cui lo si comprava.
+
+Restano non eleggibili, come già verificato il 13/07:
+
+- **SignPath.io Foundation**: richiede una licenza OSI-approved; la
+  *Source Available License v1.1* di GameStringer non lo è.
+- **Azure Artifact Signing**, piano individuale: validazione identità
+  individuale solo in USA e Canada; quello *organization* richiede un'entità
+  registrata.
+
+### Raccomandazione
+
+**Non comprare adesso.** Prima le due leve che costano zero e oggi pesano di
+più: **diradare le release** (perché la reputazione è per hash) e **continuare
+le submission** dei §1–3 qui sotto, che restano la mitigazione vera per i falsi
+positivi. La firma diventa un investimento sensato quando c'è un flusso di
+download costante su versioni che restano in circolazione, e la si compra per
+togliere «editore sconosciuto» — non per far sparire SmartScreen.
+
+Fonti della revisione: [Microsoft Learn — SmartScreen reputation for Windows app
+developers](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+· [Microsoft Trusted Root Program, rimozione OID
+EV](https://learn.microsoft.com/en-us/answers/questions/1846647/program-requirements-microsoft-trusted-root-progra)
+· [ToDesktop — EV certs do not grant immediate reputation
+anymore](https://www.todesktop.com/blog/posts/windows-apps-psa-ev-certs-do-not-grant-immediate-reputation-anymore)
+· [SSL.com — Individual Validated Code
+Signing](https://www.ssl.com/products/software-integrity/code-signing/iv/)
+· [CA/B Forum Code Signing 2026](https://accutivesecurity.com/code-signing-2026/)
 
 Quando hai un certificato, abilitarlo è a due passi:
 
@@ -58,12 +101,16 @@ Quando hai un certificato, abilitarlo è a due passi:
      "timestampUrl": "http://timestamp.digicert.com"
    }
    ```
-   (oppure, per firma in cloud/SignPath, usa `"signCommand": "<comando>"`).
+   (oppure, per firma in cloud, usa `"signCommand": "<comando>"` — con un
+   certificato IV la chiave sta su token o cloud HSM, quindi sarà quasi
+   sicuramente questa la strada, non il thumbprint di un certificato locale).
 2. Sul runner CI, importa il certificato dai GitHub Secrets prima di
-   `tauri build` (o lascia che SignPath firmi l'artefatto dopo la build).
+   `tauri build`, oppure firma l'artefatto dopo la build con il comando del
+   servizio cloud.
 
-Finché non c'è un certificato, restano validi i passi 1–3 qui sotto (submission
-+ reputazione) come mitigazione.
+Finché non c'è un certificato — cioè, secondo la raccomandazione qui sopra,
+ancora per un po' — i passi 1–3 qui sotto **non sono un ripiego: sono il piano
+principale**.
 
 ## 1. Microsoft (Defender + SmartScreen) — sempre
 

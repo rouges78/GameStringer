@@ -80,8 +80,11 @@ La generazione della coppia e la messa a segreto sono descritte in
 `cat priv.key | base64 -w0 | gh secret set TAURI_SIGNING_PRIVATE_KEY`.
 
 > Nota: la firma minisign dell'auto-update è **diversa** dalla firma
-> Authenticode del codice (quella che azzera SmartScreen). La seconda è una
-> decisione di prodotto ancora aperta — vedi [DEFENDER_SUBMISSION.md](./DEFENDER_SUBMISSION.md).
+> Authenticode del codice, quella che SmartScreen guarda. Attenzione, la seconda
+> **non azzera** l'avviso SmartScreen: dal 2024 nessun tipo di certificato dà
+> reputazione immediata, e la reputazione è comunque per hash del file. Decisione
+> rimandata, con le ragioni aggiornate in
+> [DEFENDER_SUBMISSION.md §0](./DEFENDER_SUBMISSION.md).
 
 ---
 
