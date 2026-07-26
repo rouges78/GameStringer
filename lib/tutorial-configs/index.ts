@@ -384,6 +384,10 @@ export const communityForumTutorial: TutorialConfig = {
       description: 'Open a new thread to request a translation, share a pack or report an issue.',
       target: '[data-testid="new-thread"]',
       position: 'bottom',
+      // L'unico passo interattivo del tour, come lo era "scrivi un messaggio"
+      // nel tutorial della chat rimossa il 25/07: aprire un thread è il gesto
+      // che porta l'utente dentro la community invece di limitarsi a mostrargliela.
+      action: 'click',
       optional: true
     },
     {

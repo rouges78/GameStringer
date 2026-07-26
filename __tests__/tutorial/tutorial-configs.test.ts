@@ -113,7 +113,9 @@ describe('Tutorial Configurations', () => {
         'neural-translator-guide',
         'editor-guide',
         'patches-guide',
-        'community-chat-guide',
+        // rinominato da 'community-chat-guide' il 25/07/2026, quando la chat
+        // in-app è stata rimossa e il forum è rimasto l'unico canale community
+        'community-forum-guide',
         'settings-guide'
       ];
 

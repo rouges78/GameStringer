@@ -117,17 +117,30 @@ const en = flatten(enJson as Json);
 // "Creativo"), pt +2 (param.temperature.label "Temperatura", feedback.categoryLabel
 // "Categoria"), pl +1 (param.temperature.label "Temperatura"). Baseline: es 64->66,
 // pt 84->86, pl 15->16. fr/de/ja/zh/ko/ru invariati (0 missing ovunque).
+// 2026-07-25 commit b081130c "stop forcing Italian on everyone": tradotte ~7.000
+// stringhe in 11 lingue con agenti paralleli. La suite è rimasta rossa una notte
+// perché nessuno l'ha rilanciata dopo. Esaminati a mano TUTTI i 72 nuovi casi
+// (es +23, fr +13, pt +24, pl +12): sono cognati e nomi di strumento legittimi,
+// non traduzioni mancanti — "Tipo"/"Formato:"/"Nota:"/"Temperatura"/"Adulto"/
+// "Neutro"/"Arcaico"/"Nome"/"Ambiente" sono corretti in es/pt; "Data" e
+// "Temperatura" sono corretti in polacco; "Patcher X" e "Tag Discord" tengono
+// l'ordine romanzo in francese; es "al" (en "to the") e pt "Cronologia"
+// (en "Timeline") sono le rese giuste. Baseline: es 66->89, fr 2->15, pt 86->110,
+// pl 16->28. de/ja/zh/ko/ru restano a 0 (nessun cognato possibile).
+// NB: questo test conta, non elenca — un conteggio che sale non distingue il
+// cognato legittimo dalla regressione vera, e va sempre ispezionato a mano prima
+// di alzare la soglia. Il modo per togliersi il dubbio è una allowlist per chiave.
 const locales: { name: string; json: Json; maxMissing: number; maxLeftover: number }[] = [
   { name: 'en', json: enJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ru', json: ruJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 66 },
-  { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 2 },
+  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 89 },
+  { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 15 },
   { name: 'de', json: deJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ja', json: jaJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'zh', json: zhJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ko', json: koJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 86 },
-  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 16 },
+  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 110 },
+  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 28 },
 ];
 
 describe('integrità dei locale i18n', () => {
