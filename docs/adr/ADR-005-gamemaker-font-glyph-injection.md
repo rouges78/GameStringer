@@ -1,6 +1,14 @@
 # ADR-005 — Glifi mancanti nei font GameMaker (cirillico e accenti)
 
-**Data:** 2026-07-26 · **Stato:** proposto · **Contesto misurato su:** DELTARUNE demo (Chapter 1 & 2)
+**Data:** 2026-07-26 · **Stato:** **verificato sperimentalmente** · **Contesto misurato su:** DELTARUNE demo (Chapter 1 & 2)
+
+> **Esito della verifica del 26/07, sera.** L'ipotesi regge: decoder e encoder della
+> variante GM-QOI ricostruiti, **round-trip byte-identico** sulla texture vera
+> (1.888.553 byte), 66 lettere cirilliche disegnate nell'atlante al posto di
+> altrettanti kanji, e blob ricompresso **più piccolo dell'originale**. I numeri e le
+> due sorprese sono nella sezione «Verifica sperimentale» in fondo.
+>
+> ![Cirillico iniettato nell'atlante di Deltarune](img/ADR-005-cirillico-iniettato.png)
 
 ## Il problema, con i numeri
 
@@ -103,9 +111,74 @@ non richiede ADR-004 e non tocca nessun offset.
 - **Aspettare ADR-004** e aggiungere i glifi allungando le strutture: corretto in teoria,
   ma rimanda tutto a un lavoro molto più grande e rischioso.
 
+## Verifica sperimentale (26/07/2026, sera)
+
+Fatta in C e Python sulla texture 25 del `data.win` vero, prima di scrivere una riga
+di Rust. Sorgenti di appoggio: `qoigm.c` (decoder) e `qoienc.c` (encoder).
+
+### 1. Il formato non è QOI standard
+
+Il primo decoder, scritto sulla specifica QOI 1.0, ha prodotto **rumore**. Il sintomo
+che ha smascherato l'errore non è stato un crash ma un numero troppo bello: il
+re-encode risultava la metà dell'originale. Guardare l'immagine è costato trenta
+secondi ed è stata l'unica verifica che contava.
+
+La variante GameMaker usa i **tag QOI pre-1.0** e un hash diverso
+(fonte: `UndertaleModLib/Util/QoiConverter.cs`, a sua volta port da dog-scepter):
+
+| | GM (pre-1.0) | QOI 1.0 |
+|---|---|---|
+| INDEX | `0x00`, mask 2 | `0x00`, mask 2 |
+| RUN | `0x40` a 5 bit · `0x60` a 13 bit | `0xC0` a 6 bit |
+| DIFF | `0x80` 8 bit · `0xC0` 16 bit · `0xE0` 24 bit | `0x40` · LUMA `0x80` |
+| COLOR | `0xF0` + bitmask dei canali | `0xFE` RGB · `0xFF` RGBA |
+| hash | `(r ^ g ^ b ^ a) & 63` | `(r*3 + g*5 + b*7 + a*11) % 64` |
+| pixel | **BGRA** | RGBA |
+
+Header: `fioq` (4) + width u16 + height u16 + length u32 = 12 byte, poi lo stream.
+
+**Round-trip byte-identico verificato**: `encode(decode(originale))` produce gli stessi
+1.888.553 byte. È la prova che il formato è capito, e la precondizione per poter
+modificare i pixel senza rischi.
+
+### 2. I glifi sono bicolore, e questo decide la dimensione
+
+Nell'atlante ogni pixel è `[0,0,0,0]` oppure `[255,255,255,255]`: **nessun
+antialiasing**. Il primo tentativo li ha scritti antialiasati e con RGB pieno anche
+sotto i pixel trasparenti: il blob è cresciuto di **4.256 byte** ed è finito fuori
+budget. Rasterizzando in binario (soglia 128) e rispettando la convenzione dei due
+soli valori, il conto è tornato.
+
+È il dettaglio da non perdere: **come si scrivono i pixel conta quanto quali pixel si
+scrivono.**
+
+### 3. Le misure
+
+66 lettere cirillico (А–я più Ёё) al posto di altrettanti kanji, su 1.478 disponibili:
+
+| Strategia | Blob bz2 | vs originale (230.197) | Esito |
+|---|---:|---:|---|
+| A — solo sostituzione | 230.017 | **+180 byte** | ci sta, ma il margine è un'inezia |
+| B — sostituzione + svuotamento dei kanji restanti | 198.125 | **+32.072 byte** | ci sta comodamente |
+
+**Si adotta B.** Svuotare i kanji che restano è gratis per chi installa una patch russa,
+e trasforma un margine di 180 byte — che su un altro gioco sparirebbe — in 32 KB. Il
+riempimento fino alla dimensione originale si fa con zeri dopo il marcatore di fine
+dello stream BZip2, che il decoder ignora.
+
+### Cosa resta da fare, ora che la strada è verificata
+
+Il pezzo dimostrato è la **texture**. Manca la **tabella dei glifi**: per ogni cella
+riusata vanno riscritti il `char` (2 byte) e le metriche (`w`, `h`, `shift`, `offset`),
+tutte a dimensione fissa e quindi in place. E va aggiunta la stessa cosa per
+`fnt_ja_small` e per i font non giapponesi, se si vuole coprire anche gli accenti
+latini su giochi senza font JA.
+
 ## Passi
 
-1. Estrattore/reinseritore texture QOI+BZip2 con test sulla texture reale di Deltarune.
+1. ~~Estrattore/reinseritore texture QOI+BZip2 con test sulla texture reale di Deltarune.~~
+   **Fatto e verificato** — vedi sopra. Da portare in Rust con le crate `bzip2` e un
+   codec GM-QOI scritto a mano (le crate `qoi` implementano la 1.0, che qui non serve).
 2. Lettore/scrittore della tabella glifi, con test che verifichi il round-trip
    byte-identico su un `data.win` non modificato.
 3. Rasterizzatore dei glifi mancanti a partire dalla lingua di destinazione.
