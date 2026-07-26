@@ -111,12 +111,13 @@ function getFormatColor(format: string): string {
 
 // ── Main Component ─────────────────────────────────────────────────────
 
+/** Sottoinsieme di GameInfo (src-tauri/src/models.rs) che serve al selettore. */
 interface LibraryGame {
   id: string;
-  app_id: string;
   title: string;
-  install_dir?: string;
+  install_path?: string;
   is_installed?: boolean;
+  steam_app_id?: number;
 }
 
 export default function VideoExtractorPage() {
@@ -189,9 +190,11 @@ export default function VideoExtractorPage() {
 
   const loadLibraryGames = async () => {
     try {
-      const games = await invoke<LibraryGame[]>('get_all_games');
+      // Era `get_all_games`, comando inesistente: il selettore dei giochi
+      // restava sempre vuoto e il catch qui sotto non diceva niente.
+      const games = await invoke<LibraryGame[]>('get_games');
       if (games) {
-        setLibraryGames(games.filter(g => g.is_installed && g.install_dir));
+        setLibraryGames(games.filter(g => g.is_installed && g.install_path));
       }
     } catch {
       // Library not available
@@ -199,23 +202,13 @@ export default function VideoExtractorPage() {
   };
 
   const selectGameFromLibrary = async (game: LibraryGame) => {
-    if (game.install_dir) {
-      try {
-        const path = await invoke<string>('find_game_install_path', { installDir: game.install_dir });
-        if (path) {
-          setGamePath(path);
-          setGameName(game.title);
-          setGameId(game.id || game.app_id);
-          setShowGamePicker(false);
-          setGamePickerSearch('');
-          return;
-        }
-      } catch {
-        // Fallback
-      }
+    // get_games restituisce già il percorso completo di installazione, quindi
+    // non serve più risolverlo da installdir con find_game_install_path.
+    if (game.install_path) {
+      setGamePath(game.install_path);
     }
     setGameName(game.title);
-    setGameId(game.id || game.app_id);
+    setGameId(game.id || String(game.steam_app_id ?? ''));
     setShowGamePicker(false);
     setGamePickerSearch('');
   };
@@ -496,13 +489,13 @@ export default function VideoExtractorPage() {
                       .slice(0, 50)
                       .map(game => (
                         <button
-                          key={game.id || game.app_id}
+                          key={game.id || game.steam_app_id}
                           className="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-purple-500/10 hover:text-white transition-colors border-b border-zinc-800/50 last:border-0"
                           onClick={() => selectGameFromLibrary(game)}
                         >
                           <div className="font-medium truncate">{game.title}</div>
-                          {game.install_dir && (
-                            <div className="text-[10px] text-zinc-500 truncate mt-0.5">{game.install_dir}</div>
+                          {game.install_path && (
+                            <div className="text-[10px] text-zinc-500 truncate mt-0.5">{game.install_path}</div>
                           )}
                         </button>
                       ))

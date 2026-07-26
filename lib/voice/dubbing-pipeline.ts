@@ -331,7 +331,9 @@ export class DubbingPipeline {
 
         // Read audio file as base64 via Tauri
         const { invoke } = await import('@tauri-apps/api/core');
-        const audioBase64 = await invoke<string>('read_file_base64', { path: segment.filePath });
+        // Era `read_file_base64`, che non esiste: la trascrizione falliva a ogni
+        // segmento. Il comando vero è read_binary_file_base64.
+        const audioBase64 = await invoke<string>('read_binary_file_base64', { path: segment.filePath });
 
         // Transcribe via API
         const response = await fetch('/api/voice/transcribe', {

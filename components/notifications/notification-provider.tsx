@@ -355,22 +355,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       try {
         clientLogger.debug('Initializing notification system for profile: ' + currentProfileId);
 
-        // Initialize Tauri notification system if available
-        if (typeof window !== 'undefined') {
-          const tauriGlobal = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
-          const tauriNs = tauriGlobal?.tauri as Record<string, unknown> | undefined;
-          const invokeCmd = tauriNs?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
-          if (invokeCmd) {
-            try {
-              await invokeCmd('initialize_notification_system', {
-                profile_id: currentProfileId
-              });
-              clientLogger.debug('Tauri notification system initialized');
-            } catch (error: unknown) {
-              clientLogger.warn('Error initializing Tauri notification system: ' + String(error));
-            }
-          }
-        }
+        // Qui c'era un blocco che chiamava `initialize_notification_system` via
+        // window.__TAURI__.tauri.invoke. Doppiamente morto: quel comando non
+        // esiste lato Rust, e il percorso __TAURI__.tauri è l'API di Tauri v1
+        // (in v2 è __TAURI__.core, e solo con withGlobalTauri), quindi la
+        // guardia era sempre falsa e il codice non veniva mai eseguito.
+        // Rimosso: le notifiche non hanno un sistema da inizializzare.
 
         // Show welcome notification if this is a new profile
         const isNewProfile = localStorage.getItem(`profile_${currentProfileId}_welcomed`) !== 'true';
@@ -500,17 +490,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   // General cleanup
   useEffect(() => {
     return () => {
-      // Cleanup notification system when provider unmounts
-      if (typeof window !== 'undefined') {
-        const tauriGlobal3 = (window as unknown as Record<string, unknown>).__TAURI__ as Record<string, unknown> | undefined;
-        const tauriNs3 = tauriGlobal3?.tauri as Record<string, unknown> | undefined;
-        const invokeCleanup = tauriNs3?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
-        if (invokeCleanup) {
-          invokeCleanup('cleanup_notification_system').catch((error: unknown) => {
-            clientLogger.warn('Error cleaning up notification system: ' + String(error));
-          });
-        }
-      }
+      // Speculare al blocco di init: `cleanup_notification_system` non esiste
+      // e girava sull'API globale di Tauri v1, quindi non è mai stato chiamato.
 
       // Cleanup event listeners
       systemEventListenersRef.current.forEach(fn => fn());

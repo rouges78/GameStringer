@@ -19,7 +19,7 @@ Confronto fra i comandi `invoke(...)` nel frontend e le funzioni annotate
 - **invocati ma inesistenti: 20** (dopo aver scartato 5 falsi positivi: funzioni
   `fn` non `pub fn`, che esistono e funzionano)
 
-## Risolti in questa sessione
+## Risolti — primo giro
 
 | Comando invocato | Sostituito con | Dove |
 |---|---|---|
@@ -30,32 +30,68 @@ Confronto fra i comandi `invoke(...)` nel frontend e le funzioni annotate
 | `list_running_processes` | `get_processes` | injekt-ui-enhanced |
 | `find_processes` | `get_processes` | injekt-translator |
 
-## Ancora rotti — funzionalità che falliscono al primo click
+## Risolti — secondo giro
 
-Ognuno richiede un comando Rust nuovo (o il collegamento a uno esistente).
-In ordine di quanto è visibile all'utente:
+| Comando invocato | Sostituito con | Dove |
+|---|---|---|
+| `read_file_base64` | `read_binary_file_base64` | lib/voice/dubbing-pipeline.ts |
+| `create_directory` | `ensure_directory` (crea anche i parent) | translation-wizard |
+| `write_binary_file` | `save_binary_file` (+ codifica base64 a blocchi) | translation-wizard |
+| `get_all_games` | `get_games` | app/video-extractor |
+| `get_epic_games` · `launch_game` · `get_system_info` | — | modulo cancellato |
+| `initialize_notification_system` · `cleanup_notification_system` | — | blocco rimosso |
+
+Tre note su questo giro:
+
+- **`lib/tauri-integration.ts` era codice morto**: nessun file lo importava
+  (verificato su tutto l'albero `.ts`/`.tsx`). Cancellato, e con lui tre comandi
+  inesistenti.
+- **Le due chiamate del sistema notifiche non erano nemmeno rotte: erano
+  irraggiungibili.** Giravano su `window.__TAURI__.tauri.invoke`, che è l'API
+  globale di Tauri **v1** (in v2 è `__TAURI__.core`, e solo con
+  `withGlobalTauri`): la guardia `if (invokeCmd)` era sempre falsa. Rimossi
+  entrambi i blocchi.
+- **`get_games` non restituisce la stessa forma** che il selettore
+  dell'estrattore video si aspettava: `GameInfo` ha `install_path` (percorso
+  completo) e `steam_app_id`, non `install_dir`/`app_id`. Adattata l'interfaccia
+  e tolto il passaggio intermedio `find_game_install_path`, che ora è superfluo.
+  Ricablare il nome senza guardare la forma avrebbe lasciato la lista vuota
+  esattamente come prima.
+
+## Ancora rotti
+
+Questi richiedono codice Rust nuovo, non un ricablaggio.
 
 | Comando | Funzione che non parte | File |
 |---|---|---|
-| `scan_folder_for_translation_files` | coda di traduzione batch: scansione cartella | components/tools/batch-translation-queue.tsx |
-| `count_translatable_strings` | coda batch: conteggio stringhe | components/tools/batch-translation-queue.tsx |
-| `tts_synthesize` | doppiaggio: sintesi vocale XTTS | components/audio-patcher.tsx |
-| `read_file_base64` | pipeline doppiaggio | lib/voice/dubbing-pipeline.ts |
-| `create_directory` | wizard traduzione | app/translation-wizard/page.tsx |
-| `write_binary_file` | wizard traduzione | app/translation-wizard/page.tsx |
+| `tts_synthesize` | doppiaggio: sintesi vocale | components/audio-patcher.tsx |
 | `extract_godot_pck` | raccomandazione traduzione (Godot) | components/translation-recommendation.tsx |
 | `extract_renpy_rpa` | raccomandazione traduzione (Ren'Py) | components/translation-recommendation.tsx |
-| `get_all_games` | estrattore video: elenco giochi | app/video-extractor/page.tsx |
-| `get_epic_games` | integrazione Epic | lib/tauri-integration.ts |
-| `launch_game` | avvio gioco (via tauri-integration) | lib/tauri-integration.ts |
-| `get_system_info` | info di sistema | lib/tauri-integration.ts |
-| `import_cache` · `get_stats` | injekt translator | lib/injekt-translator.ts |
-| `initialize_notification_system` · `cleanup_notification_system` | avvio/chiusura sistema notifiche | components/notifications/notification-provider.tsx |
+| `import_cache` · `get_stats` | injekt translator: cache e statistiche live | lib/injekt-translator.ts |
+| `scan_folder_for_translation_files` · `count_translatable_strings` | coda di traduzione batch | components/tools/batch-translation-queue.tsx |
 
-Nota su `lib/tauri-integration.ts`: quattro comandi su quattro non esistono, il
-che fa sospettare che l'intero modulo sia un residuo di un'API precedente mai
-completata. Vale la pena verificare se qualcuno lo usa davvero prima di
-implementare i comandi.
+Dettaglio, perché non sono tutti uguali:
+
+- **`tts_synthesize`**: non esiste **nessun** comando di sintesi vocale nel
+  backend (nessun match su tts/xtts/voice/speak fra i 901 comandi). Non è un
+  nome sbagliato: il motore di doppiaggio non c'è. Va deciso quale usare
+  (XTTS, Piper) e come distribuirlo, prima di scrivere il comando.
+- **`extract_godot_pck`**: esistono `scan_godot_pck` (elenca) e
+  `extract_godot_file` (estrae **un** file, e restituisce una `String`, quindi
+  solo testo). Manca l'estrazione dell'intero PCK su disco.
+- **`extract_renpy_rpa`**: nessun lettore di archivi `.rpa` lato Rust. Il
+  patcher Ren'Py lavora solo su `.rpy` già estratti.
+- **`import_cache` / `get_stats`**: il pannello statistiche dell'injekt mostra
+  zeri e la cache non viene mai passata al backend, in silenzio.
+- **Coda batch**: qui il comando mancante è il problema minore. Il componente
+  **non traduce niente**: `startProcessing` conta le stringhe (o usa 100 di
+  default), poi fa avanzare una barra con `setTimeout(100)` e segna il lavoro
+  come `completed` — nessuna chiamata di traduzione, nessun file scritto. Il
+  commento nel codice lo dice: *"Simulate progressive translation"*. Sistemare
+  la scansione senza sistemare il resto renderebbe la finzione più credibile,
+  quindi è stata lasciata intatta in attesa di una decisione: implementare la
+  coda per davvero (riusando `translateSmart`) o togliere la pagina
+  `/batch-translation`, che oggi non è raggiungibile dal menu.
 
 ## Come evitare che ricapiti
 
@@ -64,3 +100,21 @@ lato Rust, e un `invoke` verso il nulla fallisce solo a runtime. Un controllo
 come quello usato qui, eseguito in CI, lo trasformerebbe in un errore di build.
 Lo script sta in questa sessione; se lo si vuole permanente va messo in
 `scripts/` e agganciato alla pipeline, accanto al gate i18n che già esiste.
+
+Controllo rapido, da rilanciare dopo ogni giro:
+
+```bash
+# comandi definiti lato Rust
+grep -rhA3 -E '#\[(tauri::)?command' src-tauri/src --include=*.rs \
+  | grep -oE '\bfn [a-z_0-9]+' | sed 's/fn //' | sort -u > /tmp/cmds.txt
+# comandi invocati dal frontend
+grep -rhoE "invoke(<[^>]*>)?\(\s*'[a-z_0-9]+'" --include=*.ts --include=*.tsx \
+  app components lib hooks src | grep -oE "'[a-z_0-9]+'" | tr -d "'" | sort -u > /tmp/inv.txt
+comm -23 /tmp/inv.txt /tmp/cmds.txt
+```
+
+Attenzione ai limiti di questa versione: prende solo `invoke('nome')` con
+apici singoli e nome letterale, quindi **sottostima**. La versione da mettere in
+CI deve coprire anche template literal, doppi apici e i wrapper (`safeInvoke`,
+`invokeCmd`), e distinguere i comandi registrati in `main.rs` da quelli
+solamente definiti.
