@@ -58,6 +58,14 @@ jobs:
       - name: Tauri command guard
         run: npm run tauri:check-cmds
 
+      # Gate anti moduli morti (ratchet vs scripts/.dead-modules-baseline.json).
+      # 99 file su 606 non sono raggiunti da nessun import: 31.694 righe che costano
+      # due volte — quando le mantieni credendole vive, e quando ti fanno credere che
+      # una funzione esista già. Fallisce se ne compare uno NUOVO, così il debito può
+      # solo scendere. Prima di cancellare, leggere i limiti in cima allo script.
+      - name: Dead module guard
+        run: npm run dead:check
+
       # Gate BLOCCANTE dal 2026-06-11 (suite bonificata: 464 passed,
       # 0 failed, 37 skip documentati — vedi i TODO nei singoli file).
       - name: Unit tests
