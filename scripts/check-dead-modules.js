@@ -24,6 +24,10 @@
  *    riporta `mentioned`: quante volte il suo percorso appare come testo altrove nel
  *    progetto. `mentioned > 0` significa «verifica a mano prima di toccare».
  *  - Gli entry point di Next (page/layout/route/...) sono esclusi: li carica il framework.
+ *  - I moduli importati SOLO dai test sono marcati `SOLO-TEST`. Non sono usati in
+ *    produzione, ma cancellarli rompe la suite: vanno guardati, non potati al buio.
+ *    `lib/patchers/unreal-pak-parser.ts` è il caso tipico — 585 righe con un test a
+ *    fixture indipendente, e in parallelo la stessa funzione implementata in Rust.
  *  - Questo script dice «nessuno lo importa», non «è inutile». La domanda da farsi resta
  *    quella del 26/07: la funzione che promette esiste già altrove? Se sì si cancella;
  *    se no, forse va collegata.
@@ -47,7 +51,11 @@ const SOURCE_ROOTS = [...TARGET_ROOTS, 'scripts', 'src', 'e2e', '__tests__'];
 const SKIP_DIRS = new Set(['node_modules', '.next', 'dist', 'build', 'out', 'target', '.git', 'coverage']);
 const SOURCE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 const TARGET_EXT = new Set(['.ts', '.tsx']);
-const SKIP_FILE = /\.(test|spec|d)\.(ts|tsx|js|jsx)$/;
+const SKIP_FILE = /\.d\.(ts|tsx)$/;
+// I test contano come sorgente, ma a parte: un modulo che SOLO i test importano non è
+// usato in produzione, però non è nemmeno cancellabile senza rompere la suite. Vengono
+// segnati `solo-test`, che è una condizione da guardare, non da potare a occhi chiusi.
+const TEST_FILE = /\.(test|spec)\.(ts|tsx|js|jsx)$/;
 
 // Caricati dal framework, non da un import.
 const NEXT_ENTRY = /^app\/(.*\/)?(page|layout|template|loading|error|not-found|global-error|route|default|sitemap|robots|manifest|opengraph-image|icon|apple-icon)\.(ts|tsx)$/;
@@ -91,7 +99,10 @@ function main() {
     if (SOURCE_EXT.has(path.extname(f)) && !SKIP_FILE.test(f)) sources.push(f);
   }
   const targets = sources.filter(
-    (f) => TARGET_EXT.has(path.extname(f)) && TARGET_ROOTS.some((r) => f.startsWith(r + '/'))
+    (f) =>
+      TARGET_EXT.has(path.extname(f)) &&
+      !TEST_FILE.test(f) &&
+      TARGET_ROOTS.some((r) => f.startsWith(r + '/'))
   );
 
   const body = new Map();
@@ -104,9 +115,12 @@ function main() {
   }
 
   // 2. import risolvibili staticamente: `from '…'`, `import('…')`, `require('…')`
+  //    `reached` = raggiunto dal codice di produzione · `reachedByTests` = solo dai test
   const reached = new Set();
+  const reachedByTests = new Set();
   const IMPORT_RE = /(?:from\s*|import\s*\(\s*|require\s*\(\s*)['"]([^'"]+)['"]/g;
   for (const f of sources) {
+    const target = TEST_FILE.test(f) ? reachedByTests : reached;
     const src = body.get(f);
     // NB: il filtro deve accettare anche `export { X } from './y'`, altrimenti i barrel
     // di puro re-export (che non contengono la parola "import") vengono saltati e tutto
@@ -120,8 +134,8 @@ function main() {
       else if (spec.startsWith('.')) spec = path.posix.normalize(path.posix.join(path.posix.dirname(f), spec));
       else continue; // pacchetto npm
       spec = stripExt(spec);
-      reached.add(spec);
-      reached.add(spec + '/index'); // import di cartella → il suo barrel
+      target.add(spec);
+      target.add(spec + '/index'); // import di cartella → il suo barrel
     }
   }
 
@@ -148,18 +162,22 @@ function main() {
     const key = stripExt(f);
     if (reached.has(key)) continue;
     if (key.endsWith('/index') && reached.has(key.slice(0, -'/index'.length))) continue;
+    const onlyTests = reachedByTests.has(key) || reachedByTests.has(key + '/index');
     dead.push({
       module: f,
       lines: body.get(f).split('\n').length,
       mentioned: mentions(f),
+      onlyTests,
     });
   }
   dead.sort((a, b) => b.lines - a.lines);
   const totalLines = dead.reduce((s, d) => s + d.lines, 0);
 
+  const soloTest = dead.filter((d) => d.onlyTests).length;
   console.log(
-    `Moduli: ${targets.length} analizzati · ${dead.length} non raggiunti da nessun import ` +
-    `(${totalLines.toLocaleString('it-IT')} righe)`
+    `Moduli: ${targets.length} analizzati · ${dead.length} non raggiunti dal codice di produzione ` +
+    `(${totalLines.toLocaleString('it-IT')} righe)` +
+    (soloTest ? ` · di cui ${soloTest} usati SOLO dai test` : '')
   );
 
   const baseline = fs.existsSync(BASELINE_FILE)
@@ -172,7 +190,9 @@ function main() {
     for (const d of dead) {
       next.known[d.module] =
         known[d.module] ||
-        `${d.lines} righe${d.mentioned ? ` · citato ${d.mentioned}× come testo: verificare i registry prima di toccarlo` : ''}`;
+        `${d.lines} righe` +
+          (d.onlyTests ? ' · SOLO-TEST: lo importa la suite, cancellarlo la rompe' : '') +
+          (d.mentioned ? ` · citato ${d.mentioned}× come testo: verificare i registry prima di toccarlo` : '');
     }
     fs.writeFileSync(BASELINE_FILE, JSON.stringify(next, null, 2) + '\n');
     console.log(`✔ baseline aggiornata: ${dead.length} moduli morti noti`);
@@ -185,7 +205,9 @@ function main() {
   for (const d of report ? dead : nuovi) {
     const tag = d.module in known ? 'noto ' : 'NUOVO';
     console.log(
-      `  [${tag}] ${d.module} (${d.lines} righe${d.mentioned ? `, citato ${d.mentioned}× come testo` : ''})`
+      `  [${tag}] ${d.module} (${d.lines} righe` +
+        `${d.onlyTests ? ', SOLO-TEST' : ''}` +
+        `${d.mentioned ? `, citato ${d.mentioned}× come testo` : ''})`
     );
   }
 

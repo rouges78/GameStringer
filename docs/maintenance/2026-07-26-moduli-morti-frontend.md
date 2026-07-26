@@ -42,7 +42,7 @@ Verificato con tre prove prima di consegnarlo: un modulo nuovo non importato fa
 uscire 1; lo stesso modulo, una volta importato, sparisce dall'elenco; una voce di
 baseline che non corrisponde più fa uscire 1.
 
-### Due bug trovati scrivendolo
+### Tre bug trovati scrivendolo
 
 Vale la pena raccontarli, perché sono il tipo di errore che rende inutile uno strumento
 di analisi:
@@ -57,6 +57,19 @@ di analisi:
    risultava «citato 11 volte» perché la ricerca testuale trovava
    `community-hub-service` e `community-hub-backend`, che sono altri file. Ora il
    carattere successivo deve chiudere il path.
+3. **I moduli coperti solo dai test risultavano morti.** I file `*.test.ts` erano
+   esclusi dalle sorgenti, quindi i loro import non contavano.
+   `lib/patchers/unreal-pak-parser.ts` — 585 righe con un test a fixture
+   *indipendente dal parser*, scritto apposta per congelare il formato Unreal —
+   compariva nell'elenco come se fosse da buttare. Cancellarlo avrebbe fatto
+   fallire la suite. Ora quei moduli sono marcati **`SOLO-TEST`**: ce ne sono
+   **cinque** (`unreal-pak-parser`, `use-tutorial-trigger`, `utils/fuzzy-search`,
+   `notification-indicator`, `api-schemas`) e sono una categoria a sé — non usati in
+   produzione, ma non cancellabili senza toccare i test.
+
+Tre bug in uno strumento di un centinaio di righe, tutti trovati verificando a mano
+i risultati invece di fidarsi dell'output. Vale come promemoria: un'analisi statica
+appena scritta è un'ipotesi, non un verdetto.
 
 ## Limiti da conoscere prima di cancellare
 
