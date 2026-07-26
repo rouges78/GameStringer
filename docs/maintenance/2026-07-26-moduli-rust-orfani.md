@@ -1,4 +1,4 @@
-# Tre moduli Rust orfani e un gate per non ricascarci — 26/07/2026
+# Tre moduli Rust orfani, e un gate per non ricascarci — 26/07/2026
 
 Seguito di [2026-07-25-comandi-tauri-mancanti.md](2026-07-25-comandi-tauri-mancanti.md).
 Il controllo di ieri confrontava i comandi invocati dal frontend con quelli
@@ -40,22 +40,26 @@ Cosa non funziona, in pratica:
   streaming non parte mai.
 - **`generate_lip_sync` / `check_rhubarb_available`** — l'integrazione Rhubarb.
 
-### Perché non sono stati agganciati oggi
+### La valutazione iniziale (e perché era la domanda sbagliata)
 
-Riattivarli non è aggiungere tre righe: è **compilare per la prima volta** codice
-scritto mesi fa e mai passato dal compilatore. `ollama_advanced.rs` usa
-`lazy_static!`, e **`lazy_static` non è fra le dipendenze in `Cargo.toml`** — quindi
-oggi non compilerebbe (o si aggiunge la crate, o si riscrive con
-`std::sync::OnceLock`, che è nella std da Rust 1.70). Gli altri due sembrano a
-posto (`futures`, `reqwest` con feature `stream` e `super::process_util::no_window_command`
-esistono tutti), ma «sembrano» non basta: serve un `cargo check`, che l'ambiente
-di questa sessione non ha.
+Il primo istinto è stato di stimare la fatica di **compilarli per la prima volta**:
+`ollama_advanced.rs` usa `lazy_static!`, che non è fra le dipendenze in `Cargo.toml`,
+quindi non compilerebbe senza aggiungere la crate o riscrivere con
+`std::sync::OnceLock`; gli altri due avevano tutte le dipendenze a posto (`futures`,
+`reqwest` con feature `stream`, `super::process_util::no_window_command`).
+
+Domanda sbagliata. Quella giusta era **chi chiama questo codice, e quella funzione
+non esiste già?** — e la risposta ha portato a riattivarne uno solo e cancellare gli
+altri due. `lazy_static` non è mai servito.
 
 Piano proposto, un modulo per volta, ognuno con il suo `cargo check`:
 
 1. ~~`lip_sync.rs`~~ — **riattivato**, vedi sotto.
 2. ~~`ollama_streaming.rs`~~ — **cancellato**, vedi sotto: non era un modulo da compilare, era un abbozzo mai finito.
-3. `ollama_advanced.rs` — prima decidere `lazy_static` vs `OnceLock`, poi agganciare.
+3. ~~`ollama_advanced.rs`~~ — **cancellato**, vedi sotto: non incompleto, ma già rifatto meglio altrove.
+
+Nessuno dei tre ha richiesto `lazy_static`, alla fine: la decisione `lazy_static` vs
+`OnceLock` è diventata irrilevante appena si è guardato **chi chiamava** quel codice.
 
 ## Riattivato: `lip_sync.rs`
 
@@ -118,7 +122,7 @@ di far notare la registrazione mancante.
 `scripts/check-tauri-commands.js`, agganciato alla CI (`npm run tauri:check-cmds`)
 accanto al gate i18n. Funziona a ratchet come quello: la baseline versionata
 `scripts/.tauri-commands-baseline.json` elenca i rotti noti **con la ragione di
-ciascuno** (19 all'inizio della giornata, 15 alla fine), e la CI fallisce solo se
+ciascuno** (21 quando è nato, 9 alla fine della giornata), e la CI fallisce solo se
 compare qualcosa di nuovo.
 
 Rispetto al `comm -23` di ieri copre: apici singoli, doppi e backtick; i generics
@@ -174,16 +178,46 @@ cancellato aveva l'idea giusta e l'esecuzione a metà. Il commento in `ollama-ht
 che rimandava a `ollama_streaming` è stato corretto: mandava il lettore verso un file
 che non veniva compilato.
 
-## Cosa resta (15 in baseline)
+## Cancellato: `ollama_advanced.rs` (+ il suo service)
 
-Dei tre moduli orfani ne resta uno: `ollama_advanced.rs`, che aspetta la decisione
-su `lazy_static` vs `OnceLock`. Dei suoi otto comandi, **sei** sono in baseline
-perché il frontend li invoca (`ollama_translate_advanced`, `detect_gpu`,
-`check_ollama_model_updates`, e le tre della cache traduzioni); gli altri due
-(`get_cache_stats`, `pull_ollama_model`) non sono chiamati da nessuno e quindi non
-compaiono nel gate — vanno guardati quando si aggancia il modulo, non prima.
+Il modulo più grosso dei tre (8 comandi) e il più facile da liquidare, una volta
+guardato nell'ordine giusto. `lib/ai/ollama-advanced-service.ts` (509 righe), unico
+chiamante dei suoi comandi, ha **zero importatori per tutti e otto i suoi export** —
+verificati uno per uno. Ma il punto non è nemmeno quello: ogni funzione che il modulo
+prometteva **esiste già altrove, viva e in uso**.
 
-Le altre **nove** voci sono il debito triagiato ieri: la coda batch
+| Nel modulo orfano | Equivalente vivo |
+|---|---|
+| `detect_gpu` / `detectGPU` | `lib/vram-manager.ts`, `vram-settings-card`, `system-overlay`, `ollama-setup-wizard` |
+| `PARAMETER_PRESETS` (precise/balanced/creative/fast) | `lib/ai/ollama-options.ts` + pagina `/ollama-manager/advanced`, cablata su 5 call-site il 24/07 |
+| `TranslationCache` su SQLite + `get`/`set`/`clear_translation_cache` | translation memory + `lib/offline-cache.ts` |
+| `translateWithEnsemble` | `lib/translation/chain-presets.ts` |
+| `selectOptimalModel` / `recommendModels` | benchmark-aggregator + Auto-Select data-driven |
+| `GAME_GENRE_TEMPLATES` | `lib/ai/prompt-templates.ts` |
+| `checkModelUpdates` / `pull_ollama_model` | `lib/ollama-manager.ts` |
+
+Agganciarlo non avrebbe aggiunto una funzione: avrebbe creato **sette doppioni
+concorrenti** di funzioni già presenti, più una cache SQLite parallela alla TM.
+
+Cercato cosa valesse la pena travasare prima di cancellare. I template di genere
+dell'orfano (`visual_novel`, `action`, `strategy`) sembravano un'aggiunta, ma
+`prompt-templates.ts` ha già una `genreMap` che porta `visual_novel` → `jrpg` e
+`strategy` → `technical`, e i suoi template hanno glossario, regole, esempi few-shot,
+`preservePatterns`, temperatura e associazione al gioco — mentre quelli dell'orfano
+sono un `systemPrompt` e un esempio. Non c'è niente da salvare. L'unico genere non
+mappato è `action`/`shooter`, e non serve aggiungerlo: `autoSelectTemplate` cade già
+sul template `default`, che per UI concisa è la scelta giusta.
+
+Cancellati modulo e service (895 righe).
+
+## Cosa resta (9 in baseline)
+
+Dei moduli orfani non resta niente: uno riattivato, due cancellati. **Tutte e nove
+le voci residue sono di tipo "mancante"** — nessun `non-registrato` in baseline. Il
+che è il vero risultato della giornata: da qui in avanti un comando che non risponde
+è un comando da scrivere, non un modulo da ritrovare.
+
+Le nove voci sono il debito triagiato ieri: la coda batch
 (`scan_folder_for_translation_files`, `count_translatable_strings` — che comunque
 non traduce niente, la barra è finta con `setTimeout`), `tts_synthesize` (non
 esiste alcun motore di sintesi vocale fra i 900 comandi), `extract_godot_pck`,
