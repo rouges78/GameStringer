@@ -448,6 +448,7 @@ fn main() {
             commands::profiles::create_profile_backup,
             commands::profiles::get_auth_stats,
             commands::profiles::get_profile_avatar,
+            commands::profiles::get_profile_info,
             commands::profiles::update_profile_avatar,
             commands::profiles::is_session_expired,
             commands::profiles::renew_session,
@@ -803,6 +804,7 @@ fn main() {
             commands::notifications::get_system_notification_read_status,
             commands::notifications::expire_old_system_notifications,
             commands::notifications::get_profiles_for_notification_admin,
+            commands::notifications::notify_background_operation_completed,
 
             // Project Export/Import
             commands::project_export::export_translation_project,

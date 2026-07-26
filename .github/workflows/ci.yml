@@ -50,6 +50,14 @@ jobs:
       - name: i18n no-hardcoded guard
         run: npm run i18n:check
 
+      # Gate anti `invoke` nel vuoto (ratchet vs scripts/.tauri-commands-baseline.json).
+      # TypeScript non sa quali comandi esistano lato Rust: un invoke verso un comando
+      # inesistente — o esistente ma non nel generate_handler! — compila e fallisce solo
+      # a runtime, dentro un catch. È così che il pulsante Sfoglia dell'iniettore è
+      # rimasto rotto per mesi. Fallisce se compare un comando NUOVO fuori baseline.
+      - name: Tauri command guard
+        run: npm run tauri:check-cmds
+
       # Gate BLOCCANTE dal 2026-06-11 (suite bonificata: 464 passed,
       # 0 failed, 37 skip documentati — vedi i TODO nei singoli file).
       - name: Unit tests
