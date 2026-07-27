@@ -301,6 +301,33 @@ latini su giochi senza font JA.
    kanji da sacrificare: una patch russa che ne copra due mostrerebbe caselle vuote ogni
    volta che il gioco usa uno degli altri cinque. Il lavoro va moltiplicato per sette, o
    va deciso e **dichiarato** quali font restano scoperti.
+
+   ### ⚠️ Le coordinate dei glifi sono RELATIVE alla regione TPAG
+
+   Scoperto il 27/07 con un esperimento visivo, prima di scrivere il codice che disegna.
+   Era la premessa sbagliata più costosa possibile: `SourceX`/`SourceY` del glifo **non**
+   sono coordinate nella texture, ma nel riquadro che il font occupa dentro di essa.
+
+   Su `fnt_ja_main` i rettangoli dichiarati stanno in `x 1..1021, y 2..434`. Presi per
+   assoluti sarebbero finiti nell'angolo in alto a sinistra dell'atlante — mille pixel
+   sopra i glifi veri, su tutt'altra grafica. Sommando l'origine della regione si ottiene
+   `x 3..1023, y 1032..1464`, che è dove i glifi stanno davvero.
+
+   La regione si legge dal chunk **`TPAG`**, puntato dal campo a offset 28 dell'entry del
+   font. È una struttura di **22 byte fissi** (`UndertaleTexturePageItem`):
+   `SourceX/Y/W/H`, `TargetX/Y/W/H`, `BoundingW/H`, e in coda l'**indice della texture**
+   come `i16`.
+
+   Due riscontri indipendenti, entrambi tornati:
+
+   | Dato | Da TPAG | Ottenuto altrimenti |
+   |---|---|---|
+   | Regione di `fnt_ja_main` | `1024×512 a (2, 1030)` | misura a mano del 26/07 |
+   | Texture dell'atlante | `#25` | distanze fra gli offset dei blob, 27/07 |
+
+   L'indice della texture arriva ora dal formato invece che dalla firma dei 230.272 byte:
+   quella firma resta un utile controllo incrociato, ma non è più il modo di trovare
+   l'atlante.
 3. Rasterizzatore dei glifi mancanti a partire dalla lingua di destinazione.
 4. Comando Tauri `gm_inject_glyphs`, backup obbligatorio, e verifica della dimensione
    prima della scrittura.

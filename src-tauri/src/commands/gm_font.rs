@@ -89,6 +89,31 @@ pub struct Glyph {
     pub offset_x: i16,
 }
 
+/// Voce del chunk `TPAG`: la regione della texture occupata da una risorsa.
+///
+/// Struttura a 22 byte fissi (`UndertaleTexturePageItem`). Per un font indica
+/// **dove comincia il suo riquadro** dentro la pagina, e su quale texture.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Tpag {
+    pub offset: usize,
+    /// Origine della regione nella texture. Le coordinate dei glifi sono
+    /// relative a QUESTA, non all'angolo della texture.
+    pub source_x: u16,
+    pub source_y: u16,
+    pub source_w: u16,
+    pub source_h: u16,
+    pub target_x: u16,
+    pub target_y: u16,
+    pub target_w: u16,
+    pub target_h: u16,
+    pub bounding_w: u16,
+    pub bounding_h: u16,
+    /// Indice della texture nel chunk `TXTR`.
+    pub texture_index: i16,
+}
+
+pub const TPAG_SIZE: usize = 22;
+
 #[derive(Debug, Clone)]
 pub struct Font {
     /// Offset assoluto dell'entry.
@@ -98,7 +123,27 @@ pub struct Font {
     pub range_end: u32,
     /// Scostamento della lista glifi trovato per questa entry.
     pub scostamento_glifi: usize,
+    /// Regione della texture su cui vive questo font.
+    ///
+    /// `None` se il puntatore e' nullo o fuori dal file. Senza questa, le
+    /// coordinate dei glifi non sono utilizzabili per disegnare.
+    pub tpag: Option<Tpag>,
     pub glyphs: Vec<Glyph>,
+}
+
+impl Font {
+    /// Posizione ASSOLUTA di un glifo nella texture.
+    ///
+    /// **Misurato il 27/07 e non dedotto**: i `SourceX`/`SourceY` del glifo sono
+    /// relativi all'origine della regione TPAG. Su `fnt_ja_main` di Deltarune i
+    /// rettangoli dichiarati stanno in `x 1..1021, y 2..434`, cioe' dentro un
+    /// riquadro di 1024x512 — mentre la regione vive a (2, 1030) nella texture.
+    /// Disegnare alle coordinate grezze avrebbe scritto i glifi un migliaio di
+    /// pixel piu' in alto, su tutt'altra parte dell'atlante.
+    pub fn posizione_assoluta(&self, g: &Glyph) -> Option<(u16, u16)> {
+        let t = self.tpag.as_ref()?;
+        Some((t.source_x.checked_add(g.source_x)?, t.source_y.checked_add(g.source_y)?))
+    }
 }
 
 impl Font {
@@ -244,6 +289,27 @@ fn prova_lista_glifi(dati: &[u8], inizio: usize, fine_chunk: usize) -> Option<Ve
     Some(ptr)
 }
 
+/// Legge una voce TPAG dal suo puntatore. 22 byte a campi fissi.
+fn leggi_tpag(dati: &[u8], p: usize) -> Option<Tpag> {
+    if p == 0 || p + TPAG_SIZE > dati.len() {
+        return None;
+    }
+    Some(Tpag {
+        offset: p,
+        source_x: u16_at(dati, p)?,
+        source_y: u16_at(dati, p + 2)?,
+        source_w: u16_at(dati, p + 4)?,
+        source_h: u16_at(dati, p + 6)?,
+        target_x: u16_at(dati, p + 8)?,
+        target_y: u16_at(dati, p + 10)?,
+        target_w: u16_at(dati, p + 12)?,
+        target_h: u16_at(dati, p + 14)?,
+        bounding_w: u16_at(dati, p + 16)?,
+        bounding_h: u16_at(dati, p + 18)?,
+        texture_index: i16_at(dati, p + 20)?,
+    })
+}
+
 fn leggi_glifo(dati: &[u8], p: usize) -> Option<Glyph> {
     Some(Glyph {
         offset: p,
@@ -316,6 +382,8 @@ pub fn leggi_font(dati: &[u8]) -> Result<Vec<Font>, GmFontError> {
             range_start: u16_at(dati, ptr + 20).unwrap_or(0),
             range_end: u32_at(dati, ptr + 24).unwrap_or(0),
             scostamento_glifi: scostamento,
+            // Il puntatore alla regione TPAG sta a +28, subito dopo RangeEnd.
+            tpag: leggi_tpag(dati, u32_at(dati, ptr + 28).unwrap_or(0) as usize),
             glyphs,
         });
     }
@@ -523,6 +591,132 @@ mod tests {
         };
         assert!(!scrivi_glifo(&mut d, &g), "14 byte non entrano in 10");
         assert_eq!(d, vec![0u8; 10], "e non deve aver scritto niente");
+    }
+
+    /// ESPERIMENTO, non un'asserzione: disegna i rettangoli dichiarati dai
+    /// glifi sopra l'atlante vero e salva due PNG da guardare.
+    ///
+    /// Serve a togliere UNA incognita prima di scrivere il codice che disegna:
+    /// `SourceX`/`SourceY` sono coordinate assolute nella texture, o relative
+    /// alla regione TPAG del font? Dedurlo dalla documentazione non basta —
+    /// nella storia di questo ADR l'unico errore vero è stato smascherato
+    /// guardando un'immagine, non leggendo una specifica.
+    ///
+    /// ```text
+    /// GS_GM_DATA_WIN=... cargo test -- --ignored sovrapponi_rettangoli
+    /// ```
+    ///
+    /// Produce, nella cartella corrente:
+    ///   - `atlante-fnt_ja_main.png`      — l'atlante così com'è
+    ///   - `atlante-fnt_ja_main-rette.png` — con i rettangoli in rosso
+    ///
+    /// **Se i rettangoli inquadrano i glifi, le coordinate sono assolute** e si
+    /// può disegnare direttamente. Se sono spostati di un offset costante,
+    /// quello è l'origine della regione TPAG e va letta. Se sono sparsi a caso,
+    /// la texture scelta è quella sbagliata.
+    #[test]
+    #[ignore = "esperimento visivo: richiede GS_GM_DATA_WIN"]
+    fn sovrapponi_rettangoli_sull_atlante() {
+        use crate::commands::gm_texture;
+
+        // L'atlante individuato il 27/07 misurando le distanze fra le texture.
+        const OFFSET_ATLANTE: usize = 33_632_000;
+        const BLOB_ATLANTE: usize = 230_272;
+
+        let percorso = match std::env::var("GS_GM_DATA_WIN") {
+            Ok(p) => p,
+            Err(_) => return,
+        };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il data.win");
+        if dati.len() < OFFSET_ATLANTE + BLOB_ATLANTE {
+            eprintln!("non è la demo di Deltarune, si salta");
+            return;
+        }
+
+        let tex = gm_texture::leggi(&dati[OFFSET_ATLANTE..OFFSET_ATLANTE + BLOB_ATLANTE])
+            .expect("l'atlante non si legge");
+        let font = leggi_font(&dati).expect("chunk FONT illeggibile");
+        let f = font
+            .iter()
+            .find(|f| f.name == "fnt_ja_main")
+            .expect("fnt_ja_main non trovato");
+
+        let (w, h) = (tex.image.width as u32, tex.image.height as u32);
+
+        // L'atlante e' BGRA; l'immagine da salvare vuole RGBA.
+        let mut rgba = Vec::with_capacity((w * h * 4) as usize);
+        for px in tex.image.bgra.chunks_exact(4) {
+            rgba.extend_from_slice(&[px[2], px[1], px[0], 255]);
+        }
+        // I PNG vanno in target/, che e' gia' ignorato da git: scriverli nella
+        // cartella corrente li lascerebbe in `git status` a rischio di
+        // finire in un commit.
+        let dir = std::path::Path::new("target").join("adr005");
+        std::fs::create_dir_all(&dir).expect("impossibile creare target/adr005");
+
+        let originale = image::RgbaImage::from_raw(w, h, rgba.clone())
+            .expect("dimensioni incoerenti");
+        originale
+            .save(dir.join("atlante-fnt_ja_main.png"))
+            .expect("salvataggio dell'atlante fallito");
+
+        // Bordi rossi sui rettangoli dichiarati.
+        let mut segna = |x: i64, y: i64| {
+            if x >= 0 && y >= 0 && (x as u32) < w && (y as u32) < h {
+                let i = ((y as u32 * w + x as u32) * 4) as usize;
+                rgba[i] = 255;
+                rgba[i + 1] = 0;
+                rgba[i + 2] = 0;
+                rgba[i + 3] = 255;
+            }
+        };
+        let mut fuori = 0usize;
+        for g in &f.glyphs {
+            // Coordinate ASSOLUTE: relative + origine della regione TPAG.
+            let (ax, ay) = f
+                .posizione_assoluta(g)
+                .expect("senza TPAG non si sa dove disegnare");
+            let (x0, y0) = (ax as i64, ay as i64);
+            let (x1, y1) = (x0 + g.source_w as i64 - 1, y0 + g.source_h as i64 - 1);
+            if x1 >= w as i64 || y1 >= h as i64 {
+                fuori += 1;
+                continue;
+            }
+            for x in x0..=x1 {
+                segna(x, y0);
+                segna(x, y1);
+            }
+            for y in y0..=y1 {
+                segna(x0, y);
+                segna(x1, y);
+            }
+        }
+
+        image::RgbaImage::from_raw(w, h, rgba)
+            .expect("dimensioni incoerenti")
+            .save(dir.join("atlante-fnt_ja_main-rette.png"))
+            .expect("salvataggio della sovrapposizione fallito");
+
+        // Qualche numero utile a leggere le immagini.
+        let t = f.tpag.as_ref().expect("fnt_ja_main senza TPAG");
+        eprintln!("atlante {w}x{h}, glifi {}", f.glyphs.len());
+        eprintln!(
+            "regione TPAG: {}x{} a ({}, {}), texture #{}",
+            t.source_w, t.source_h, t.source_x, t.source_y, t.texture_index
+        );
+        let min_x = f.glyphs.iter().map(|g| g.source_x).min().unwrap_or(0);
+        let min_y = f.glyphs.iter().map(|g| g.source_y).min().unwrap_or(0);
+        let max_x = f.glyphs.iter().map(|g| g.source_x + g.source_w).max().unwrap_or(0);
+        let max_y = f.glyphs.iter().map(|g| g.source_y + g.source_h).max().unwrap_or(0);
+        eprintln!("glifi, coordinate RELATIVE: x {min_x}..{max_x}, y {min_y}..{max_y}");
+        eprintln!(
+            "glifi, coordinate ASSOLUTE:  x {}..{}, y {}..{}, fuori dai bordi: {fuori}",
+            min_x + t.source_x,
+            max_x + t.source_x,
+            min_y + t.source_y,
+            max_y + t.source_y
+        );
+        eprintln!("PNG salvati in: {:?}", dir.canonicalize().unwrap_or(dir.clone()));
     }
 
     /// Verifica sul `data.win` vero. Stessa attivazione degli altri:
