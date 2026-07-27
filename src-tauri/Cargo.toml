@@ -70,6 +70,10 @@ byteorder = "1.5"
 encoding_rs = "0.8"
 image = "0.24"
 libloading = "0.8"
+# Texture GameMaker (chunk TXTR): QOI compresso con BZip2 — vedi ADR-005.
+# Era gia' nel Cargo.lock a 0.4.4 come transitiva, quindi dichiararla diretta
+# non aggiunge nulla da compilare.
+bzip2 = "0.4"
 
 # === Windows-only dependencies ===
 [target.'cfg(windows)'.dependencies]
