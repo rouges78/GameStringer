@@ -76,6 +76,15 @@ describe('normalizeBaseUrl', () => {
     expect(normalizeBaseUrl('127.0.0.1:4000')).toBe('http://127.0.0.1:4000');
   });
 
+  // Un host con la porta e senza schema (`mio-proxy.local:8080`) somiglia a un
+  // URL con schema, perché anche gli schemi possono contenere punti e trattini.
+  // È la forma in cui un proxy aziendale viene scritto davvero, e il rifiuto
+  // degli schemi non-http non deve inghiottirla.
+  it('accetta host con porta anche senza schema', () => {
+    expect(normalizeBaseUrl('mio-proxy.local:8080/v1')).toBe('https://mio-proxy.local:8080/v1');
+    expect(normalizeBaseUrl('gateway.interno:3000')).toBe('https://gateway.interno:3000');
+  });
+
   it('tollera spazi intorno', () => {
     expect(normalizeBaseUrl('  https://x.example.com  ')).toBe('https://x.example.com');
   });

@@ -3211,6 +3211,7 @@
     "erroreNellaCreazioneDelThread": "スレッドの作成中にエラーが発生しました",
     "threadNonTrovato": "スレッドが見つかりません",
     "erroreNelCaricamentoDelThread": "スレッドの読み込み中にエラーが発生しました",
+    "deviEssereLoggatoPerMettereMiPiace": "いいねするにはログインが必要です",
     "downloadAvviato": "ダウンロードを開始しました！",
     "linkCopiato": "リンクをコピーしました！",
     "scriviQualcosaPrimaDiInviare": "送信する前に何か入力してください",

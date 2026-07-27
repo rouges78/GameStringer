@@ -176,14 +176,28 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
 
   const handleLike = async () => {
     if (!userId) {
-      toast.error('Devi essere loggato per mettere mi piace');
+      toast.error(t('common.deviEssereLoggatoPerMettereMiPiace'));
       return;
     }
-    
+
+    // Aggiornamento OTTIMISTICO. Prima si aspettava la risposta del server
+    // PRIMA di toccare l'interfaccia: il cuore restava spento per tutta la
+    // durata della chiamata e l'utente lo percepiva come un blocco.
+    const precedente = { liked, likeCount };
+    const nuovo = !liked;
+    setLiked(nuovo);
+    // Il conteggio non può scendere sotto zero. Senza questo limite un doppio
+    // clic — o uno stato locale disallineato da quello del server — lasciava
+    // il thread con "-1 mi piace", che è quello che si vedeva in pagina.
+    setLikeCount((prev) => Math.max(0, nuovo ? prev + 1 : prev - 1));
+
     const success = await toggleLike(userId, threadId);
-    if (success) {
-      setLiked(!liked);
-      setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    if (!success) {
+      // Rollback: se la scrittura non è andata a buon fine l'interfaccia deve
+      // tornare com'era, altrimenti mostra un like che sul server non esiste.
+      setLiked(precedente.liked);
+      setLikeCount(precedente.likeCount);
+      toast.error(t('common.impossibileSalvareLeModifiche'));
     }
   };
   

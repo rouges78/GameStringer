@@ -3304,6 +3304,7 @@
     "erroreNellaCreazioneDelThread": "Error creating thread",
     "threadNonTrovato": "Thread not found",
     "erroreNelCaricamentoDelThread": "Error loading the thread",
+    "deviEssereLoggatoPerMettereMiPiace": "You need to be signed in to like this",
     "downloadAvviato": "Download started!",
     "linkCopiato": "Link copied!",
     "scriviQualcosaPrimaDiInviare": "Write something before sending",

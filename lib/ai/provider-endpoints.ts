@@ -71,6 +71,24 @@ export function normalizeBaseUrl(raw: string | null | undefined): string | null 
   let s = String(raw).trim();
   if (!s) return null;
 
+  // Se uno schema c'è già, deve essere http(s).
+  //
+  // Senza questo controllo `ftp://x.example.com` non corrispondeva a
+  // /^https?:\/\// , si beccava un `https://` davanti e diventava
+  // `https://ftp//x.example.com`: un indirizzo plausibile invece di un rifiuto.
+  // Il controllo sul protocollo più sotto non poteva accorgersene, perché lo
+  // schema gliel'avevamo riscritto noi.
+  const schema = /^([a-z][a-z0-9+.-]*):/i.exec(s);
+  if (schema) {
+    const nome = schema[1].toLowerCase();
+    const dopoIDuePunti = s.slice(schema[0].length);
+    // `mio-proxy.local:8080` non è uno schema ma un host con la porta: dopo i
+    // due punti ci sono solo cifre. Va accettato, è una forma in cui la gente
+    // scrive davvero un indirizzo.
+    const eUnaPorta = /^\d+(\/|$)/.test(dopoIDuePunti);
+    if (!eUnaPorta && nome !== 'http' && nome !== 'https') return null;
+  }
+
   // niente schema → https, che è ciò che vuole chiunque tranne un proxy locale
   if (!/^https?:\/\//i.test(s)) {
     s = (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/i.test(s) ? 'http://' : 'https://') + s;
