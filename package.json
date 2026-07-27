@@ -32,6 +32,7 @@
     "i18n:check": "node scripts/i18n-no-hardcoded.js",
     "i18n:check:report": "node scripts/i18n-no-hardcoded.js --report",
     "i18n:check:update": "node scripts/i18n-no-hardcoded.js --update",
+    "audit:check": "node scripts/audit-gate.js --level=high",
     "dead:check": "node scripts/check-dead-modules.js",
     "dead:check:report": "node scripts/check-dead-modules.js --report",
     "dead:check:update": "node scripts/check-dead-modules.js --update",

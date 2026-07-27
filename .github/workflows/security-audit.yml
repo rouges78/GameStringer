@@ -29,12 +29,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # Non usiamo `npm ci` (build completa non necessaria): l'audit lavora sul lockfile.
+      # Il gate gira PRIMA dell'install: `npm audit` lavora sul lockfile e non ha
+      # bisogno di node_modules, così il verdetto di sicurezza arriva in fretta e
+      # non dipende dalla riuscita dell'install.
+      #
+      # `npm audit` non ha un equivalente di `cargo audit --ignore`: o passa tutto
+      # o fallisce. Il gate lo fa scripts/audit-gate.js, che blocca su
+      # high/critical e tollera solo le eccezioni motivate e datate elencate lì
+      # dentro (stessa regola dei RUSTSEC ignorati nel job cargo qui sotto).
       - name: npm audit (gate high/critical)
-        run: npm audit --audit-level=high
+        run: node scripts/audit-gate.js --level=high
+      # cyclonedx-npm, a differenza dell'audit, gira `npm ls` e SENZA node_modules
+      # muore con "missing: <pkg>, required by gamestringer". Serve l'albero
+      # installato; `--ignore-scripts` evita il postinstall (prisma generate),
+      # inutile per generare l'SBOM.
+      - name: Installa dipendenze (serve solo all'SBOM)
+        if: always()
+        run: npm ci --ignore-scripts
+      # Niente `|| true`: mascherava il fallimento e l'artefatto sbom-npm non
+      # veniva mai prodotto. continue-on-error lascia il job verde (l'SBOM è un
+      # artefatto, non un gate) ma rende il problema visibile in annotazione.
       - name: Genera SBOM CycloneDX (npm)
         if: always()
-        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.json || true
+        continue-on-error: true
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.json
       - name: Carica SBOM npm
         if: always()
         uses: actions/upload-artifact@v4
@@ -69,7 +87,8 @@ jobs:
         run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
       - name: Genera SBOM CycloneDX (cargo)
         if: always()
-        run: cargo cyclonedx --format json || true
+        continue-on-error: true # come sopra: visibile, ma non blocca
+        run: cargo cyclonedx --format json
       - name: Carica SBOM cargo
         if: always()
         uses: actions/upload-artifact@v4
