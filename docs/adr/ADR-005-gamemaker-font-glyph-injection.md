@@ -79,6 +79,20 @@ la tabella**.
   > **(c) Il riempimento DEVE essere di zeri.** Le texture sono allineate a 0x80 e il
   > lettore verifica il padding byte per byte (`throw new IOException("Padding error!")`
   > al primo byte non nullo). Riempire con altro rompe il file.
+  >
+  > **Misurato su Deltarune il 27/07** con `scripts/gm-inspect-texture.js` (89.903.138
+  > byte, 30 chunk IFF): **27 texture, tutte `2zoq`, tutte con header da 8 byte** —
+  > runtime precedente a 2022.5. Per *questo* gioco il campo del punto (a) non esiste e
+  > non c'è nulla da aggiornare; il patcher deve comunque gestire entrambe le varianti,
+  > perché altri giochi GameMaker useranno quella da 12.
+  >
+  > **Individuato l'atlante del font senza decomprimere nulla.** Le texture sono
+  > allineate a 0x80, quindi la distanza fra due offset consecutivi *è* la dimensione
+  > del blob. La texture a **offset 33.632.000** (indice **25**, 0-based; 2048×2048)
+  > occupa **230.272 byte**, cioè i **230.197** misurati il 26/07 più **75 byte** di
+  > riempimento fino al confine dei 128. Combacia, e conferma sia l'identità
+  > dell'atlante sia il margine di 32 KB calcolato con la strategia B. Lo script
+  > riconosce ora questa firma da solo.
 - **Posizione del font nella texture**: chunk `TPAG`. `fnt_main` occupa un'area di
   **128×128** a `(1806, 1274)` nella texture 24; `fnt_ja_main` occupa **1024×512** a
   `(2, 1030)` nella texture 25.
