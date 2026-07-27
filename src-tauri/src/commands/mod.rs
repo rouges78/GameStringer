@@ -141,6 +141,8 @@ pub mod gamemaker_patcher;
 pub mod gm_qoi;
 // Contenitore texture GameMaker (2zoq = QOI + BZip2) — secondo strato di ADR-005
 pub mod gm_texture;
+// Chunk FONT: tabella dei glifi — terzo strato di ADR-005
+pub mod gm_font;
 // Visionaire Studio 5 .vis archive patcher
 pub mod visionaire_patcher;
 // CRI Middleware patcher (Persona, Yakuza, Tales of, Dragon Ball, Danganronpa V3)

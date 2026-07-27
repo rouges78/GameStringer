@@ -227,7 +227,11 @@ fn is_translatable(s: &str) -> bool {
 // ── Main parsing ──
 
 /// Parse data.win and list all chunks
-fn parse_chunks(data: &[u8]) -> Vec<(String, u32, u64)> {
+///
+/// Restituisce `(magic, dimensione, offset dei dati)`. `pub(crate)` perché la
+/// usa anche `gm_font`: l'analisi IFF va fatta in un punto solo, o le due copie
+/// divergono al primo caso limite.
+pub(crate) fn parse_chunks(data: &[u8]) -> Vec<(String, u32, u64)> {
     let mut chunks = Vec::new();
     if data.len() < 8 { return chunks; }
     // Verify FORM header

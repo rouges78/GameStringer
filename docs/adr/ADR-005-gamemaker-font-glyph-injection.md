@@ -259,8 +259,48 @@ latini su giochi senza font JA.
    che coincidano significa che **la ricompressione non erode il margine**: i 32 KB della
    strategia B restano interi. Da NON trasformare in un'asserzione di test: è
    un'osservazione fortunata su questo file, non una proprietà del formato.
-2. Lettore/scrittore della tabella glifi, con test che verifichi il round-trip
-   byte-identico su un `data.win` non modificato.
+2. ~~Lettore/scrittore della tabella glifi.~~ **LETTORE FATTO E VERIFICATO — 27/07/2026**
+   (`src-tauri/src/commands/gm_font.rs`, 8 test + 1 su file reale).
+
+   L'entry del font ha **quattro campi opzionali** che compaiono a seconda della versione
+   (`AscenderOffset`, `Ascender`, `SDFSpread`, `LineHeight`), e la lista dei glifi viene
+   subito dopo: sbagliare di 4 byte significa leggere spazzatura. Ricostruire la versione
+   del runtime costa, in UndertaleModTool, centinaia di righe di euristiche. Si è fatto
+   come col contenitore `2zoq`: **si provano tutti e cinque gli scostamenti possibili
+   (40–56) e se ne pretende esattamente uno**, quello per cui il primo puntatore della
+   lista cade esattamente dopo l'array dei puntatori. Se ne sopravvivono due la lettura è
+   dichiarata ambigua invece di scegliere a caso.
+
+   > **Il glifo è 14 byte a campi fissi** (`Character` u16, rettangolo sorgente 4×u16,
+   > `Shift` i16, `Offset` i16), seguiti da una lista di kerning a lunghezza variabile.
+   > La coda variabile non è un problema: i 14 byte stanno a scostamento fisso dal
+   > puntatore del glifo, quindi si riscrivono in place. È la conferma dell'ipotesi
+   > centrale di questo ADR.
+
+   **Letto il `data.win` vero: i font sono 13, non 4.** I quattro misurati il 26/07
+   combaciano al glifo (`fnt_main`/`fnt_small` 96, `fnt_ja_main` 1.768, `fnt_ja_small`
+   1.714), ma accanto ce ne sono altri nove:
+
+   | Font latini (96 glifi, ASCII) | Font giapponesi | Glifi | Kanji |
+   |---|---|---:|---:|
+   | `fnt_main`, `fnt_small`, `fnt_mainbig` | `fnt_ja_main` | 1.768 | 1.347 |
+   | `fnt_comicsans`, `fnt_dotumche` | `fnt_ja_mainbig` | 1.768 | 1.347 |
+   | `fnt_tinynoelle` | `fnt_ja_comicsans` | 1.768 | 1.347 |
+   | | `fnt_ja_dotumche` | 1.767 | 1.346 |
+   | | `fnt_ja_small` | 1.714 | 1.296 |
+   | | `fnt_ja_kakugo` | 1.708 | 1.287 |
+   | | `fnt_ja_tinynoelle` | 1.316 | 936 |
+
+   **Cirillico: zero in tutti e tredici.** Tutti gli scostamenti valgono 44, cioè un solo
+   campo opzionale (`AscenderOffset`, bytecode ≥ 17) e nessuno dei tre più recenti: il
+   gioco è quindi precedente a GM 2022.2, il che concorda in modo indipendente con
+   l'header delle texture da 8 byte (pre-2022.5).
+
+   **Conseguenza sul piano.** Questo ADR prevedeva di trattare `fnt_ja_main` e
+   `fnt_ja_small`. Sono **sette** i font giapponesi, ognuno col proprio atlante e i propri
+   kanji da sacrificare: una patch russa che ne copra due mostrerebbe caselle vuote ogni
+   volta che il gioco usa uno degli altri cinque. Il lavoro va moltiplicato per sette, o
+   va deciso e **dichiarato** quali font restano scoperti.
 3. Rasterizzatore dei glifi mancanti a partire dalla lingua di destinazione.
 4. Comando Tauri `gm_inject_glyphs`, backup obbligatorio, e verifica della dimensione
    prima della scrittura.
