@@ -328,7 +328,42 @@ latini su giochi senza font JA.
    L'indice della texture arriva ora dal formato invece che dalla firma dei 230.272 byte:
    quella firma resta un utile controllo incrociato, ma non è più il modo di trovare
    l'atlante.
-3. Rasterizzatore dei glifi mancanti a partire dalla lingua di destinazione.
-4. Comando Tauri `gm_inject_glyphs`, backup obbligatorio, e verifica della dimensione
-   prima della scrittura.
+3. ~~Rasterizzatore dei glifi mancanti.~~ **FATTO 27/07** — `gm_glyph_raster.rs`, crate
+   `fontdue` (Rust puro). Sempre binarizzato a soglia 128. Il TTF arriva da
+   `font_installer.rs`, che scarica già NotoSans con cirillico.
+4. ~~Comando Tauri, backup obbligatorio, verifica della dimensione.~~ **FATTO 27/07** —
+   `gm_font_patcher.rs`, comando `gm_inject_glyphs` registrato in `generate_handler!`.
+   Con `apply = false` calcola tutto, compressione reale inclusa, e non tocca niente.
+   O tutto o niente: se una texture non rientra, non si scrive nulla. I font che
+   condividono una texture si applicano insieme prima di ricomprimere, altrimenti la
+   seconda scrittura cancella la prima.
+
+   ### ⚠️ Il vincolo vero non sono i byte, sono i pixel
+
+   Questo ADR ha dedicato una serata al budget compresso. Alla prova sul gioco vero, il
+   budget **non è mai stato il problema**: iniettando 12 accenti italiani in
+   `fnt_ja_main` e `fnt_ja_small` restano **31.278** e **73.809 byte liberi**. Coerente
+   con i ~32.000 stimati per la strategia B.
+
+   Il limite è la **dimensione delle celle**. La premessa «i kanji occupano celle molto
+   più grandi delle lettere latine» è **falsa**: in `fnt_ja_small` la cella riusabile più
+   capiente è **10×14** con maiuscole da 14 px, in `fnt_ja_main` è **15×16** con
+   maiuscole da 16. I kanji stanno nell'altezza di riga, non oltre. E una maiuscola
+   accentata, con l'accento sopra, è più alta della lettera nuda di circa tre pixel.
+
+   **Rimedio adottato: dimensionare una lettera alla volta.** Un corpo unico per tutte
+   faceva scendere ogni lettera da 14 a 11 px. Dimensionando ciascuna dentro la cella che
+   le si può garantire (l'`n`-esima più capiente, con `n` = lettere richieste), le sei
+   minuscole `à è é ì ò ù` restano a grandezza piena e cedono solo le sei maiuscole
+   accentate — rare in italiano. Le riduzioni sono **elencate per nome** negli avvisi:
+   `À (13px)`, `È (13px)`… Un avviso che dicesse solo «le lettere sono più piccole» non
+   permetterebbe di decidere se accettare la patch.
+
+   > **Nota di metodo.** Il primo avviso controllava l'altezza *totale* del glifo, che
+   > include l'accento: una `À` alta quanto il bersaglio passava il controllo pur avendo
+   > la lettera più bassa delle altre. Risultato: zero avvisi, tutto verde, e la
+   > diagnostica cieca proprio sul caso che doveva cogliere. Ripreso solo perché il
+   > numero non tornava con quello che si sa dei font — stessa forma dell'errore del
+   > 26/07 sul decoder QOI. **Il metro giusto è il corpo usato per ogni lettera**, non
+   > l'ingombro del glifo.
 5. Prova sul campo: una frase russa dentro Deltarune, letta a schermo.

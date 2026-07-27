@@ -107,7 +107,18 @@ pub enum Errore {
     /// Il font non ha la regione TPAG: senza, non si sa dove disegnare.
     TpagAssente,
     /// Non ci sono abbastanza celle libere e capienti.
-    DonatoriInsufficienti { servono: usize, trovati: usize },
+    ///
+    /// Porta con se' le misure che servono a capire il perche': senza sapere
+    /// quanto era grande il glifo che non entrava e quanto e' la cella piu'
+    /// capiente, "trovate 0" su un font con 1.296 kanji non e' una diagnosi.
+    DonatoriInsufficienti {
+        servono: usize,
+        trovati: usize,
+        /// Dimensione del glifo che non ha trovato posto.
+        serviva: (u16, u16),
+        /// La cella libera piu' capiente rimasta.
+        cella_piu_grande: (u16, u16),
+    },
     /// Una lettera richiesta esiste gia' nel font: sovrascriverla sarebbe un
     /// errore silenzioso.
     CarattereGiaPresente { carattere: u16 },
@@ -121,10 +132,12 @@ impl std::fmt::Display for Errore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::TpagAssente => write!(f, "il font non ha una regione TPAG: non si sa dove disegnare"),
-            Self::DonatoriInsufficienti { servono, trovati } => write!(
+            Self::DonatoriInsufficienti { servono, trovati, serviva, cella_piu_grande } => write!(
                 f,
-                "servono {servono} celle riusabili ma ne sono state trovate {trovati}: \
-                 allargare l'intervallo dei donatori o ridurre le lettere richieste"
+                "servivano {servono} celle riusabili, assegnate {trovati}: un glifo di {}x{} px \
+                 non entra nella cella libera piu' grande, che e' {}x{} px. \
+                 Rimpicciolire i glifi, o allargare l'intervallo dei donatori",
+                serviva.0, serviva.1, cella_piu_grande.0, cella_piu_grande.1
             ),
             Self::CarattereGiaPresente { carattere } => write!(
                 f,
@@ -207,10 +220,18 @@ pub fn pianifica(
                 assegnazioni.push((ic, ir));
             }
             None => {
+                let piu_grande = candidati
+                    .iter()
+                    .filter(|&&ic| !usati[ic])
+                    .map(|&ic| (font.glyphs[ic].source_w, font.glyphs[ic].source_h))
+                    .max_by_key(|(w, h)| (*w as u32) * (*h as u32))
+                    .unwrap_or((0, 0));
                 return Err(Errore::DonatoriInsufficienti {
                     servono: richieste.len(),
                     trovati: assegnazioni.len(),
-                })
+                    serviva: (b.w, b.h),
+                    cella_piu_grande: piu_grande,
+                });
             }
         }
     }

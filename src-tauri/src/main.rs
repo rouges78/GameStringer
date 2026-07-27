@@ -589,6 +589,7 @@ fn main() {
             commands::gamemaker_patcher::gm_patch_strings,
             commands::gamemaker_patcher::gm_restore_backup,
             commands::gamemaker_patcher::gm_search_strings,
+            commands::gm_font_patcher::gm_inject_glyphs,
 
             // Visionaire Studio 5 patcher
             commands::visionaire_patcher::detect_visionaire,

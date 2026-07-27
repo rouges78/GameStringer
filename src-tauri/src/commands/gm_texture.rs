@@ -272,6 +272,68 @@ pub fn scrivi(image: &GmImage, header: Header, spazio: usize) -> Result<Vec<u8>,
     Ok(out)
 }
 
+/// Byte che il blob occuperebbe **prima del riempimento**.
+///
+/// Serve a conoscere il margine vero: [`scrivi`] restituisce sempre un blob
+/// lungo esattamente quanto lo spazio disponibile, quindi confrontare la sua
+/// lunghezza col budget da' sempre zero e non dice niente.
+pub fn dimensione_necessaria(image: &GmImage, header: Header) -> Result<usize, GmTextureError> {
+    let qoi = gm_qoi::encode(image);
+    Ok(header.dimensione() + comprimi(&qoi)?.len())
+}
+
+/// Una texture individuata dentro un `data.win`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TexturaTrovata {
+    pub offset: usize,
+    /// Byte disponibili fino alla texture successiva, riempimento incluso:
+    /// e' il budget invalicabile per la riscrittura.
+    pub spazio: usize,
+    pub width: u16,
+    pub height: u16,
+}
+
+/// Elenca le texture di un `data.win`, in ordine di offset.
+///
+/// Si cercano i magic invece di seguire i puntatori del chunk `TXTR`, la cui
+/// struttura cambia fra versioni. Le texture sono allineate a 0x80, quindi la
+/// distanza dalla successiva **e'** lo spazio disponibile; per l'ultima si usa
+/// la fine del chunk `TXTR`, e se non si riesce a determinarla viene esclusa
+/// invece di indovinare un budget.
+pub fn elenca_texture(dati: &[u8]) -> Vec<TexturaTrovata> {
+    let mut offset = Vec::new();
+    let mut i = 0usize;
+    while i + 4 <= dati.len() {
+        if dati[i..i + 4] == MAGIC && riconosci_header(&dati[i..]).is_some() {
+            offset.push(i);
+            i += 4;
+        } else {
+            i += 1;
+        }
+    }
+
+    let fine_txtr = crate::commands::gamemaker_patcher::parse_chunks(dati)
+        .iter()
+        .find(|(m, _, _)| m == "TXTR")
+        .map(|(_, size, off)| *off as usize + *size as usize);
+
+    let mut out = Vec::with_capacity(offset.len());
+    for (n, &o) in offset.iter().enumerate() {
+        let succ = offset.get(n + 1).copied().or(fine_txtr);
+        let spazio = match succ {
+            Some(s) if s > o => s - o,
+            _ => continue,
+        };
+        out.push(TexturaTrovata {
+            offset: o,
+            spazio,
+            width: u16::from_le_bytes([dati[o + 4], dati[o + 5]]),
+            height: u16::from_le_bytes([dati[o + 6], dati[o + 7]]),
+        });
+    }
+    out
+}
+
 /// Arrotonda al confine di allineamento delle texture (0x80).
 pub fn arrotonda_allineamento(n: usize) -> usize {
     // Scritto a mano invece di `div_ceil` per non dipendere dalla versione

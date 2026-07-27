@@ -490,7 +490,10 @@ fn extract_exe_strings(data: &[u8], min_len: usize) -> Vec<GmString> {
 // ── Tauri Commands ──
 
 /// Find data.win in game directory
-fn find_data_win(game_path: &str) -> Option<PathBuf> {
+///
+/// `pub(crate)` perché la usa anche `gm_font_patcher`: la ricerca del file va
+/// fatta in un punto solo.
+pub(crate) fn find_data_win(game_path: &str) -> Option<PathBuf> {
     let dir = Path::new(game_path);
     // Direct data.win
     let dw = dir.join("data.win");
