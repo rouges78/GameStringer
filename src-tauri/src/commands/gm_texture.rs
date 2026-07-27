@@ -469,6 +469,139 @@ mod tests {
         );
     }
 
+    /// Verifica contro un `data.win` VERO. Non gira nella suite normale perché
+    /// il file pesa 89 MB e non sta nel repo; si lancia a mano:
+    ///
+    /// ```text
+    /// GS_GM_DATA_WIN="C:/.../DELTARUNEdemo/data.win" cargo test -- --ignored gm_texture
+    /// ```
+    ///
+    /// Serve perché tutto il resto è provato su immagini sintetiche, e in
+    /// questo lavoro l'unico errore vero (il decoder che produceva rumore) è
+    /// stato scoperto guardando il dato reale, non i test.
+    #[test]
+    #[ignore = "richiede GS_GM_DATA_WIN con il percorso di un data.win reale"]
+    fn round_trip_su_data_win_reale() {
+        let percorso = match std::env::var("GS_GM_DATA_WIN") {
+            Ok(p) => p,
+            Err(_) => {
+                eprintln!("GS_GM_DATA_WIN non impostata: niente da fare");
+                return;
+            }
+        };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il data.win");
+        eprintln!("{percorso}: {} byte", dati.len());
+
+        // Si individuano i blob cercando il magic, come fa
+        // scripts/gm-inspect-texture.js: seguire i puntatori del chunk TXTR
+        // richiederebbe di conoscerne la struttura, che cambia fra versioni.
+        let mut offset = Vec::new();
+        let mut i = 0usize;
+        while i + 4 <= dati.len() {
+            if dati[i..i + 4] == MAGIC && riconosci_header(&dati[i..]).is_some() {
+                offset.push(i);
+                i += 4;
+            } else {
+                i += 1;
+            }
+        }
+        assert!(!offset.is_empty(), "nessuna texture 2zoq trovata");
+        eprintln!("texture trovate: {}", offset.len());
+
+        // Le texture sono allineate a 0x80, quindi la distanza dal blob
+        // successivo E' lo spazio disponibile. L'ultima si salta: non se ne
+        // conosce il limite superiore senza leggere il chunk TXTR.
+        let mut esaminate = 0usize;
+        for w in offset.windows(2) {
+            let (inizio, spazio) = (w[0], w[1] - w[0]);
+            let blob = &dati[inizio..inizio + spazio];
+
+            let tex = leggi(blob)
+                .unwrap_or_else(|e| panic!("lettura fallita a offset {inizio}: {e}"));
+
+            // Il giro completo: si riscrive senza modifiche e deve rientrare
+            // nello spazio di partenza. E' la condizione che rende possibile
+            // l'iniezione dei glifi.
+            let riscritto = scrivi(&tex.image, tex.header, spazio).unwrap_or_else(|e| {
+                panic!(
+                    "offset {inizio} ({}x{}): la riscrittura non ci sta: {e}",
+                    tex.width, tex.height
+                )
+            });
+            assert_eq!(riscritto.len(), spazio);
+
+            // E rileggendo si deve ritrovare la stessa immagine.
+            let ritorno = leggi(&riscritto)
+                .unwrap_or_else(|e| panic!("rilettura fallita a offset {inizio}: {e}"));
+            assert_eq!(
+                ritorno.image, tex.image,
+                "offset {inizio}: l'immagine non ha fatto il giro intatta"
+            );
+
+            esaminate += 1;
+        }
+        eprintln!("texture verificate con round-trip completo: {esaminate}");
+        assert!(esaminate > 0);
+    }
+
+    /// L'atlante del font di Deltarune, con i numeri di ADR-005.
+    ///
+    /// Stessa attivazione del test qui sopra. Se questo passa, la strategia B
+    /// (svuotare i kanji per liberare 32 KB) poggia su misure e non su stime.
+    #[test]
+    #[ignore = "richiede GS_GM_DATA_WIN con il percorso del data.win di Deltarune"]
+    fn atlante_font_deltarune_combacia_con_adr005() {
+        const OFFSET_ATTESO: usize = 33_632_000;
+        const BLOB_ATTESO: usize = 230_272;
+        const QOI_ATTESO: usize = 1_888_553;
+
+        let percorso = match std::env::var("GS_GM_DATA_WIN") {
+            Ok(p) => p,
+            Err(_) => return,
+        };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il data.win");
+        if dati.len() < OFFSET_ATTESO + BLOB_ATTESO {
+            eprintln!("file più corto dell'atteso: non è la demo di Deltarune, si salta");
+            return;
+        }
+
+        let blob = &dati[OFFSET_ATTESO..OFFSET_ATTESO + BLOB_ATTESO];
+        let tex = leggi(blob).expect("l'atlante del font non si legge");
+
+        assert_eq!(tex.header, Header::Corto, "Deltarune è precedente a GM 2022.5");
+        assert_eq!((tex.width, tex.height), (2048, 2048));
+
+        // I 1.888.553 byte misurati il 26/07 sono la lunghezza del QOI
+        // decompresso: e' il numero che identifica questa texture.
+        let qoi = gm_qoi::encode(&tex.image);
+        assert_eq!(
+            qoi.len(),
+            QOI_ATTESO,
+            "il QOI ricodificato dovrebbe essere identico all'originale ({QOI_ATTESO} byte)"
+        );
+
+        // Strategia A: la sola ricompressione ci sta, ma di poco.
+        let solo_ricompresso = scrivi(&tex.image, tex.header, BLOB_ATTESO)
+            .expect("la sola ricompressione deve rientrare nel blob originale");
+        assert_eq!(solo_ricompresso.len(), BLOB_ATTESO);
+
+        // Strategia B: svuotando meta' dell'atlante il margine deve crescere in
+        // modo consistente, che e' la ragione per cui ADR-005 la preferisce.
+        let mut svuotato = tex.image.clone();
+        for y in 1024..2048u16 {
+            for x in 0..2048u16 {
+                svuotato.set_pixel(x, y, [0, 0, 0, 0]);
+            }
+        }
+        let n_intero = comprimi(&gm_qoi::encode(&tex.image)).unwrap().len();
+        let n_svuotato = comprimi(&gm_qoi::encode(&svuotato)).unwrap().len();
+        eprintln!("blob compresso: intero {n_intero} B, meta' svuotata {n_svuotato} B");
+        assert!(
+            n_svuotato < n_intero,
+            "svuotare deve liberare spazio: intero {n_intero} B, svuotato {n_svuotato} B"
+        );
+    }
+
     #[test]
     fn allineamento() {
         assert_eq!(arrotonda_allineamento(0), 0);

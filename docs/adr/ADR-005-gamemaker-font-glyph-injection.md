@@ -235,8 +235,30 @@ latini su giochi senza font JA.
 ## Passi
 
 1. ~~Estrattore/reinseritore texture QOI+BZip2 con test sulla texture reale di Deltarune.~~
-   **Fatto e verificato** — vedi sopra. Da portare in Rust con le crate `bzip2` e un
-   codec GM-QOI scritto a mano (le crate `qoi` implementano la 1.0, che qui non serve).
+   ~~Da portare in Rust con le crate `bzip2` e un codec GM-QOI scritto a mano.~~
+   **FATTO IN RUST E VERIFICATO SUL FILE VERO — 27/07/2026.**
+
+   - `src-tauri/src/commands/gm_qoi.rs` — codec GM-QOI, 24 test, zero dipendenze nuove.
+   - `src-tauri/src/commands/gm_texture.rs` — contenitore `2zoq`, 20 test, crate `bzip2`.
+   - `scripts/gm-inspect-texture.js` — ispettore delle texture di un `data.win`.
+
+   Verifica sul `data.win` di Deltarune (89.903.138 byte) con i due test `#[ignore]`
+   attivabili via `GS_GM_DATA_WIN`:
+
+   | Misura | Valore | Significato |
+   |---|---:|---|
+   | Texture trovate | 27 | combacia col conteggio del 26/07 |
+   | Round-trip leggi→riscrivi→rileggi | **26 su 26** | l'ultima si salta: non se ne conosce il limite superiore |
+   | QOI ricodificato dell'atlante | **1.888.553 B** | identico al prototipo in C del 26/07 |
+   | Blob ricompresso, atlante intero | **230.197 B** | **uguale all'originale** |
+   | Blob ricompresso, metà atlante svuotata | 127.850 B | −102.347 B |
+
+   **Il BZip2 di Rust a livello 9 ha prodotto esattamente la stessa lunghezza di quello
+   di GameMaker.** Non era garantito — sono implementazioni diverse, e `gm_texture`
+   dichiara apposta di non pretendere l'identità byte a byte a quel livello — ma il fatto
+   che coincidano significa che **la ricompressione non erode il margine**: i 32 KB della
+   strategia B restano interi. Da NON trasformare in un'asserzione di test: è
+   un'osservazione fortunata su questo file, non una proprietà del formato.
 2. Lettore/scrittore della tabella glifi, con test che verifichi il round-trip
    byte-identico su un `data.win` non modificato.
 3. Rasterizzatore dei glifi mancanti a partire dalla lingua di destinazione.
