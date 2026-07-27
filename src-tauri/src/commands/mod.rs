@@ -145,6 +145,8 @@ pub mod gm_texture;
 pub mod gm_font;
 // Scelta dei donatori e disegno dei glifi — quarto strato di ADR-005
 pub mod gm_glyph_inject;
+// Rasterizzazione da TTF a bitmap binaria — quinto strato di ADR-005
+pub mod gm_glyph_raster;
 // Visionaire Studio 5 .vis archive patcher
 pub mod visionaire_patcher;
 // CRI Middleware patcher (Persona, Yakuza, Tales of, Dragon Ball, Danganronpa V3)

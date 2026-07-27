@@ -74,6 +74,9 @@ libloading = "0.8"
 # Era gia' nel Cargo.lock a 0.4.4 come transitiva, quindi dichiararla diretta
 # non aggiunge nulla da compilare.
 bzip2 = "0.4"
+# Rasterizzazione dei glifi da TTF/OTF per ADR-005. Rust puro, niente
+# dipendenze native: serve solo a trasformare una lettera in pixel.
+fontdue = "0.9"
 
 # === Windows-only dependencies ===
 [target.'cfg(windows)'.dependencies]
