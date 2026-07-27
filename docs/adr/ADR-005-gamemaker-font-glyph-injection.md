@@ -51,6 +51,34 @@ la tabella**.
 - **Texture**: chunk `TXTR`, 27 texture. Il formato non è PNG ma **QOI compresso con
   BZip2** — magic `2zoq`, poi width/height in `u16`, poi lo stream `BZh9`. La texture
   del font giapponese è 2048×2048.
+
+  > **Precisato il 27/07 su `GMImage.cs` (UndertaleModLib), e va letto prima di
+  > scrivere.** Il contenitore `2zoq` ha **due varianti**:
+  >
+  > | offset | campo | note |
+  > |---|---|---|
+  > | 0 | magic `2zoq` | 4 byte |
+  > | 4 | width `i16` LE | |
+  > | 6 | height `i16` LE | |
+  > | 8 | **lunghezza del QOI decompresso, `i32` LE** | **solo GM ≥ 2022.5** |
+  > | 8 o 12 | stream BZip2 | lunghezza NON memorizzata |
+  >
+  > **(a) Il campo a offset 8 è la trappola.** Su GM 2022.5+ l'header è di 12 byte e
+  > contiene la dimensione del QOI *decompresso*. Iniettare glifi cambia quel valore, e
+  > il piano «si riscrive tutto in place della stessa dimensione» non lo copre: il campo
+  > è a dimensione fissa, quindi si aggiorna senza spostare nulla, ma **va aggiornato**.
+  > Dimenticarlo produce un file che sembra corretto e si rompe alla lettura. Prima di
+  > scrivere il patcher va accertata la versione del runtime di Deltarune.
+  >
+  > **(b) La lunghezza dello stream BZip2 non è scritta da nessuna parte.** Il lettore
+  > la ricava cercando *all'indietro* il magic di fine BZip2 (`17 72 45 38 50 90`, la
+  > radice di π) **a livello di bit, non di byte**. È il motivo meccanico per cui il
+  > riempimento con zeri funziona: i byte dopo il footer non vengono mai letti come
+  > stream.
+  >
+  > **(c) Il riempimento DEVE essere di zeri.** Le texture sono allineate a 0x80 e il
+  > lettore verifica il padding byte per byte (`throw new IOException("Padding error!")`
+  > al primo byte non nullo). Riempire con altro rompe il file.
 - **Posizione del font nella texture**: chunk `TPAG`. `fnt_main` occupa un'area di
   **128×128** a `(1806, 1274)` nella texture 24; `fnt_ja_main` occupa **1024×512** a
   `(2, 1030)` nella texture 25.
@@ -151,6 +179,22 @@ soli valori, il conto è tornato.
 
 È il dettaglio da non perdere: **come si scrivono i pixel conta quanto quali pixel si
 scrivono.**
+
+### 2-bis. In un atlante bicolore la tabella INDEX non serve a niente
+
+Emerso il 27/07 scrivendo il codec in Rust, da un test che sbagliava soglia.
+
+L'hash di GM-QOI è `(r ^ g ^ b ^ a) & 63`. Per il bianco pieno fa
+`255^255^255^255 = 0`; per il trasparente puro fa `0`. **I due soli colori di un
+atlante di font collidono nello stesso slot** e si sfrattano a vicenda a ogni
+transizione, quindi `QOI_INDEX` non viene mai emesso: ogni passaggio bianco↔vuoto
+costa un chunk `QOI_COLOR` da **5 byte** invece di 1.
+
+Conseguenza pratica sul budget: la dimensione del blob **non dipende da quanti pixel
+sono accesi, ma da quante transizioni ha il disegno**. È la spiegazione del perché
+svuotare i kanji rimasti libera 32 KB (toglie transizioni, non pixel), ed è il motivo
+per cui un glifo dai contorni frastagliati può costare più di uno pieno e compatto.
+Da tenere presente quando si sceglie il TTF di partenza.
 
 ### 3. Le misure
 
