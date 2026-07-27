@@ -367,17 +367,63 @@ pub async fn gm_inject_glyphs(
             let corpo = gm_glyph_raster::dimensione_per_altezza(&ttf, 'H', altezza, SOGLIA)
                 .map_err(|e| format!("'{}': {e}", f.name))?;
 
+            // Idempotenza: se il font ha gia' tutte le lettere richieste non
+            // c'e' niente da fare, e non e' un errore. Succede ogni volta che
+            // si rilancia l'operazione su un gioco gia' trattato — capitato
+            // subito, perche' `cargo test` esegue i test due volte (una per la
+            // libreria e una per il binario) e il secondo giro ha trovato il
+            // file gia' patchato.
+            let (prime, gia_saltati) = prepara(&ttf, f, &voluti, corpo);
+            if prime.is_empty() {
+                let tutte_presenti = gia_saltati.iter().all(|(_, m)| m.contains("gia' presente"));
+                if tutte_presenti {
+                    avvisi.push(format!(
+                        "'{}': le {} lettere richieste ci sono gia', niente da fare",
+                        f.name,
+                        gia_saltati.len()
+                    ));
+                } else {
+                    avvisi.push(format!(
+                        "'{}': nessuna lettera utilizzabile ({})",
+                        f.name,
+                        gia_saltati
+                            .iter()
+                            .map(|(c, m)| format!("{c}: {m}"))
+                            .collect::<Vec<_>>()
+                            .join("; ")
+                    ));
+                }
+                esiti_font.push(EsitoFont {
+                    font: f.name.clone(),
+                    texture: indice,
+                    iniettati: Vec::new(),
+                    saltati: gia_saltati,
+                    donatori_sacrificati: 0,
+                    donatori_svuotati: 0,
+                    altezza_glifi: 0,
+                    altezza_maiuscole_font: altezza,
+                });
+                continue;
+            }
+
             let (corpi, richieste, saltati) = corpo_che_ci_sta(&ttf, f, &voluti, corpo)
                 .ok_or_else(|| {
-                    let (r, _) = prepara(&ttf, f, &voluti, corpo);
-                    let g = r.iter().map(|r| (r.bitmap.w, r.bitmap.h)).max_by_key(|(w, h)| {
-                        (*w as u32) * (*h as u32)
-                    });
+                    let piu_grande = prime
+                        .iter()
+                        .map(|r| (r.bitmap.w, r.bitmap.h))
+                        .max_by_key(|(w, h)| (*w as u32) * (*h as u32))
+                        .map(|(w, h)| format!("{w}x{h} px"))
+                        .unwrap_or_else(|| "nessuno".into());
+                    let celle = cella_garantita(f, prime.len())
+                        .map(|(w, h)| format!("{w}x{h} px"))
+                        .unwrap_or_else(|| "nessuna disponibile".into());
                     format!(
                         "'{}': nessun corpo fra {CORPO_MINIMO} e {corpo:.1} produce lettere che \
-                         entrino nelle celle disponibili (all'altezza delle maiuscole, {altezza} px, \
-                         il glifo piu' grande sarebbe {:?})",
-                        f.name, g
+                         entrino nelle celle. All'altezza delle maiuscole ({altezza} px) il glifo \
+                         piu' grande sarebbe {piu_grande}, e la cella garantita a ciascuna delle \
+                         {} lettere e' {celle}.",
+                        f.name,
+                        prime.len()
                     )
                 })?;
 
@@ -534,6 +580,155 @@ mod tests {
         assert!(esito.is_err());
         let e = esito.unwrap_err();
         assert!(e.contains("data.win"), "messaggio poco chiaro: {e}");
+    }
+
+    /// Estrae dall'atlante di un `data.win` GIA' PATCHATO la regione del font,
+    /// segnando in rosso le lettere iniettate. Serve a vedere il risultato
+    /// senza dover avviare il gioco — utile perche' Deltarune non ha un menu
+    /// lingua e sceglie in base alla lingua di Windows.
+    ///
+    /// ```text
+    /// GS_GM_APPLY_DIR="G:/prove/DELTARUNEcopia" \
+    ///   cargo test -- --ignored esporta_atlante_patchato --nocapture
+    /// ```
+    ///
+    /// I PNG finiscono in `target/adr005/`.
+    #[tokio::test]
+    #[ignore = "richiede GS_GM_APPLY_DIR con una copia gia' patchata"]
+    async fn esporta_atlante_patchato() {
+        use crate::commands::gm_font::leggi_font;
+
+        let dir = match std::env::var("GS_GM_APPLY_DIR") {
+            Ok(d) => d,
+            Err(_) => return,
+        };
+        let percorso = find_data_win(&dir).expect("data.win non trovato");
+        let dati = std::fs::read(&percorso).expect("lettura fallita");
+
+        let font = leggi_font(&dati).expect("chunk FONT illeggibile");
+        let texture = gm_texture::elenca_texture(&dati);
+        let out = std::path::Path::new("target").join("adr005");
+        std::fs::create_dir_all(&out).expect("cartella non creata");
+
+        // Le lettere che abbiamo iniettato: si riconoscono dal codepoint.
+        let iniettate: Vec<u16> = "àèéìòùÀÈÉÌÒÙ".chars().map(|c| c as u16).collect();
+
+        for nome in ["fnt_ja_main", "fnt_ja_small"] {
+            let f = match font.iter().find(|f| f.name == nome) {
+                Some(f) => f,
+                None => continue,
+            };
+            let t = f.tpag.as_ref().expect("font senza TPAG");
+            let tex = match texture.get(t.texture_index.max(0) as usize) {
+                Some(x) => *x,
+                None => continue,
+            };
+            let letta = gm_texture::leggi(&dati[tex.offset..tex.offset + tex.spazio])
+                .expect("texture illeggibile");
+
+            // Si ritaglia la sola regione del font: l'atlante intero e' 2048x2048.
+            let (rw, rh) = (t.source_w as u32, t.source_h as u32);
+            let mut rgba = Vec::with_capacity((rw * rh * 4) as usize);
+            for y in 0..rh {
+                for x in 0..rw {
+                    let p = letta
+                        .image
+                        .get_pixel(t.source_x + x as u16, t.source_y + y as u16)
+                        .unwrap_or([0, 0, 0, 0]);
+                    // Su fondo nero i glifi bianchi si vedono; l'alfa si
+                    // appiattisce perche' un PNG trasparente non si legge.
+                    rgba.extend_from_slice(&[p[2], p[1], p[0], 255]);
+                }
+            }
+
+            let mut trovate = 0usize;
+            for g in f.glyphs.iter().filter(|g| iniettate.contains(&g.character)) {
+                trovate += 1;
+                let (x0, y0) = (g.source_x as i64, g.source_y as i64);
+                let (x1, y1) = (x0 + g.source_w as i64, y0 + g.source_h as i64);
+                let mut segna = |x: i64, y: i64| {
+                    if x >= 0 && y >= 0 && (x as u32) < rw && (y as u32) < rh {
+                        let i = ((y as u32 * rw + x as u32) * 4) as usize;
+                        rgba[i] = 255;
+                        rgba[i + 1] = 0;
+                        rgba[i + 2] = 0;
+                    }
+                };
+                // Riquadro un pixel FUORI dal glifo, per non coprirlo.
+                for x in (x0 - 1)..=x1 {
+                    segna(x, y0 - 1);
+                    segna(x, y1);
+                }
+                for y in (y0 - 1)..=y1 {
+                    segna(x0 - 1, y);
+                    segna(x1, y);
+                }
+                eprintln!(
+                    "  U+{:04X} '{}' a ({},{}) {}x{} px",
+                    g.character,
+                    char::from_u32(g.character as u32).unwrap_or('?'),
+                    g.source_x,
+                    g.source_y,
+                    g.source_w,
+                    g.source_h
+                );
+            }
+
+            let file = out.join(format!("{nome}-patchato.png"));
+            image::RgbaImage::from_raw(rw, rh, rgba)
+                .expect("dimensioni incoerenti")
+                .save(&file)
+                .expect("salvataggio fallito");
+            eprintln!("{nome}: {trovate} lettere iniettate trovate -> {}", file.display());
+            assert!(trovate > 0, "{nome}: nessuna lettera iniettata nella tabella");
+        }
+        eprintln!("PNG in: {:?}", out.canonicalize().unwrap_or(out.clone()));
+    }
+
+    /// **SCRIVE DAVVERO.** Applica l'iniezione a una copia della cartella del
+    /// gioco, per poterla poi avviare e guardare.
+    ///
+    /// ```text
+    /// GS_GM_APPLY_DIR="G:/prove/DELTARUNEcopia" GS_TTF="C:/Windows/Fonts/arial.ttf" \
+    ///   cargo test -- --ignored applica_su_una_copia --nocapture
+    /// ```
+    ///
+    /// La variabile e' DIVERSA da quella dell'anteprima apposta: non deve
+    /// bastare rilanciare il comando di prima per ritrovarsi il gioco
+    /// modificato. E se il percorso contiene `steamapps` il test si ferma: la
+    /// copia va fatta fuori dalla libreria Steam, cosi' un aggiornamento del
+    /// gioco non ci passa sopra e l'originale resta intatto.
+    #[tokio::test]
+    #[ignore = "SCRIVE: richiede GS_GM_APPLY_DIR (una COPIA) e GS_TTF"]
+    async fn applica_su_una_copia() {
+        let (dir, ttf) = match (std::env::var("GS_GM_APPLY_DIR"), std::env::var("GS_TTF")) {
+            (Ok(d), Ok(t)) => (d, t),
+            _ => return,
+        };
+        assert!(
+            !dir.to_lowercase().contains("steamapps"),
+            "GS_GM_APPLY_DIR punta dentro la libreria Steam ({dir}). \
+             Copiare la cartella del gioco altrove e riprovare: qui si scrive sul serio."
+        );
+
+        let esito = gm_inject_glyphs(
+            dir,
+            vec!["fnt_ja_main".into(), "fnt_ja_small".into()],
+            "àèéìòùÀÈÉÌÒÙ".into(),
+            ttf,
+            true,
+        )
+        .await
+        .expect("applicazione fallita");
+
+        assert!(esito.applicato);
+        eprintln!("data.win scritto: {}", esito.data_win);
+        eprintln!("backup: {:?}", esito.backup);
+        for f in &esito.font {
+            eprintln!("{}: {} lettere iniettate", f.font, f.iniettati.len());
+        }
+        assert!(esito.backup.is_some(), "il backup deve esistere");
+        assert!(esito.realizzabile);
     }
 
     /// La prova vera, in ANTEPRIMA: non scrive niente, ma calcola le

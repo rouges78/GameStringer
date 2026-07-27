@@ -129,8 +129,18 @@ non richiede ADR-004 e non tocca nessun offset.
 - Sblocca il cirillico e gli accenti su Deltarune e su ogni gioco GameMaker con font
   bitmap, che è la classe di giochi più richiesta dai nostri utenti.
 - Dà a GameStringer una capacità che **nessun altro strumento di quella community ha**.
-- Il font giapponese perde i kanji sostituiti: irrilevante per chi installa una patch
-  russa, ma va **dichiarato** e va garantito il ripristino da backup.
+- ⚠️ **Il font giapponese perde TUTTI i kanji, non solo quelli sostituiti.** La
+  formulazione originale di questo punto («perde i kanji sostituiti») era sbagliata e
+  sottostimava l'effetto: la strategia B svuota anche i donatori avanzati — su
+  `fnt_ja_main` sono **1.335 celle su 1.347** — ed è proprio da lì che vengono i 31 KB di
+  margine. Verificato a occhio il 27/07 esportando l'atlante patchato
+  (`target/adr005/fnt_ja_main-patchato.png`): sotto le righe di kana è quasi tutto nero.
+
+  Conseguenza pratica: **dopo la patch il gioco non è più in grado di scrivere in
+  giapponese**. Per chi installa una traduzione italiana o russa è il baratto voluto, ma
+  è un effetto molto più grande di «qualche ideogramma sacrificato» e va **dichiarato
+  prima dell'installazione**, non lasciato scoprire. Il ripristino da `data.win.bak` deve
+  restare a un clic.
 - Serve un renderer di glifi. Crate mature e già compatibili: `qoi`, `bzip2`,
   `ab_glyph` o `fontdue` per la rasterizzazione.
 
