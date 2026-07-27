@@ -1,0 +1,6 @@
+[submodule "ue-translator-dll/external/minhook"]
+	path = ue-translator-dll/external/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "unity-translator-dll/external/minhook"]
+	path = unity-translator-dll/external/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
