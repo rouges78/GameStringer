@@ -143,6 +143,8 @@ pub mod gm_qoi;
 pub mod gm_texture;
 // Chunk FONT: tabella dei glifi — terzo strato di ADR-005
 pub mod gm_font;
+// Scelta dei donatori e disegno dei glifi — quarto strato di ADR-005
+pub mod gm_glyph_inject;
 // Visionaire Studio 5 .vis archive patcher
 pub mod visionaire_patcher;
 // CRI Middleware patcher (Persona, Yakuza, Tales of, Dragon Ball, Danganronpa V3)
