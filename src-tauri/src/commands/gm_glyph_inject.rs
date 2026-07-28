@@ -414,6 +414,23 @@ mod tests {
 
     const GLIFO_PASSO: usize = 16;
 
+    /// Buffer di data.win finto COERENTE col font: lista puntatori (conteggio
+    /// + offset dei record) a `offset + scostamento_glifi`, e il `character`
+    /// iniziale scritto in ogni record. Serve dal 28/07: `applica()` riordina
+    /// la lista puntatori (il runtime fa ricerca binaria) e rifiuta i buffer
+    /// in cui la lista non combacia — come faceva il vecchio vec![0u8; 4096].
+    fn prepara_dati(f: &Font) -> Vec<u8> {
+        let mut d = vec![0u8; 4096];
+        let lista = f.offset + f.scostamento_glifi;
+        d[lista..lista + 4].copy_from_slice(&(f.glyphs.len() as u32).to_le_bytes());
+        for (i, g) in f.glyphs.iter().enumerate() {
+            let p = lista + 4 + i * 4;
+            d[p..p + 4].copy_from_slice(&(g.offset as u32).to_le_bytes());
+            d[g.offset..g.offset + 2].copy_from_slice(&g.character.to_le_bytes());
+        }
+        d
+    }
+
     fn lettera(carattere: u16, w: u16, h: u16) -> Richiesta {
         let mut b = Bitmap::nuova(w, h);
         // Una diagonale, così si vede se finisce nel posto giusto.
@@ -507,7 +524,7 @@ mod tests {
         let origine = (100u16, 200u16);
         let f = font_finto(4, 16, origine);
         let mut atlante = atlante_pieno(512, 512);
-        let mut dati = vec![0u8; 4096];
+        let mut dati = prepara_dati(&f);
 
         let richieste = vec![lettera(0x0410, 8, 8)];
         let piano = pianifica(&f, &richieste, KANJI, false).unwrap();
@@ -543,7 +560,7 @@ mod tests {
         let origine = (100u16, 200u16);
         let f = font_finto(4, 16, origine);
         let mut atlante = GmImage::new(512, 512); // tutto spento
-        let mut dati = vec![0u8; 4096];
+        let mut dati = prepara_dati(&f);
 
         let richieste = vec![lettera(0x0410, 8, 8)];
         let piano = pianifica(&f, &richieste, KANJI, false).unwrap();
@@ -566,7 +583,7 @@ mod tests {
     fn i_donatori_avanzati_vengono_svuotati_nell_atlante() {
         let f = font_finto(4, 16, (0, 0));
         let mut atlante = atlante_pieno(256, 256);
-        let mut dati = vec![0u8; 4096];
+        let mut dati = prepara_dati(&f);
 
         let richieste = vec![lettera(0x0410, 8, 8)];
         let piano = pianifica(&f, &richieste, KANJI, true).unwrap();
@@ -590,7 +607,7 @@ mod tests {
         let f = font_finto(4, 16, (0, 0));
         let mut atlante = atlante_pieno(256, 256);
         let prima = atlante.clone();
-        let mut dati = vec![0u8; 4096];
+        let mut dati = prepara_dati(&f);
 
         // Piano valido per due lettere, ma la seconda bitmap viene gonfiata
         // dopo la pianificazione: applica() deve accorgersene e non scrivere.
@@ -598,10 +615,11 @@ mod tests {
         let piano = pianifica(&f, &richieste, KANJI, false).unwrap();
         richieste[1].bitmap = Bitmap::nuova(64, 64);
 
+        let dati_prima = dati.clone();
         let esito = applica(&mut atlante, &mut dati, &f, &piano, &richieste);
         assert!(matches!(esito, Err(Errore::BitmapTroppoGrande { .. })));
         assert_eq!(atlante.bgra, prima.bgra, "l'atlante non doveva essere toccato");
-        assert_eq!(dati, vec![0u8; 4096], "il data.win non doveva essere toccato");
+        assert_eq!(dati, dati_prima, "il data.win non doveva essere toccato");
     }
 
     /// La lunghezza dei dati non cambia mai: e' la promessa che tiene in piedi
@@ -610,7 +628,7 @@ mod tests {
     fn la_lunghezza_dei_dati_non_cambia() {
         let f = font_finto(8, 16, (0, 0));
         let mut atlante = atlante_pieno(256, 256);
-        let mut dati = vec![0u8; 4096];
+        let mut dati = prepara_dati(&f);
         let n = dati.len();
 
         let richieste: Vec<_> = (0..4).map(|i| lettera(0x0410 + i, 8, 8)).collect();

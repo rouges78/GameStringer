@@ -248,10 +248,17 @@ fn stringa_da_puntatore(dati: &[u8], ptr: usize) -> String {
 /// Prova a leggere la lista glifi supponendo che cominci a `inizio`.
 ///
 /// Restituisce i puntatori solo se la lista e' coerente: conteggio plausibile,
-/// puntatori crescenti e dentro il file, e — vincolo decisivo — **il primo
-/// puntatore deve cadere esattamente dopo l'array dei puntatori**. E' cosi' che
-/// la struttura e' serializzata, e basta a distinguere lo scostamento giusto
-/// dagli altri quattro.
+/// puntatori dentro il chunk, e — vincolo decisivo — **il puntatore MINIMO
+/// deve cadere esattamente dopo l'array dei puntatori**: e' li' che vive il
+/// primo record fisico, e basta a distinguere lo scostamento giusto dagli
+/// altri quattro.
+///
+/// ⚠️ 28/07/2026: era "il PRIMO puntatore", con richiesta di ordine crescente.
+/// Ma dopo `riordina_puntatori_glifi` (obbligatorio: il runtime fa ricerca
+/// binaria per `character`) i puntatori sono ordinati per codepoint, non per
+/// indirizzo — e il nostro stesso parser non rileggeva piu' un file appena
+/// patchato. Il MINIMO e' invariante rispetto al riordino: stesso potere
+/// discriminante, nessuna pretesa sull'ordine.
 fn prova_lista_glifi(dati: &[u8], inizio: usize, fine_chunk: usize) -> Option<Vec<usize>> {
     let count = u32_at(dati, inizio)? as usize;
     // Un font con piu' di 65.536 glifi non esiste.
@@ -271,20 +278,20 @@ fn prova_lista_glifi(dati: &[u8], inizio: usize, fine_chunk: usize) -> Option<Ve
         return None;
     }
 
-    let primo = u32_at(dati, inizio + 4)? as usize;
-    if primo != fine_array {
-        return None;
-    }
-
     let mut ptr = Vec::with_capacity(count);
-    let mut precedente = 0usize;
+    let mut minimo = usize::MAX;
     for i in 0..count {
         let p = u32_at(dati, inizio + 4 + i * 4)? as usize;
-        if p < fine_array || p + GLYPH_FIXED > fine_chunk || p < precedente {
+        if p < fine_array || p + GLYPH_FIXED > fine_chunk {
             return None;
         }
-        precedente = p;
+        minimo = minimo.min(p);
         ptr.push(p);
+    }
+    // Il primo record fisico sta subito dopo l'array: e' il vincolo che
+    // distingue lo scostamento giusto, ed e' invariante rispetto all'ordine.
+    if minimo != fine_array {
+        return None;
     }
     Some(ptr)
 }

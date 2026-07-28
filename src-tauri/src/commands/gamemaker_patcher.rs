@@ -2471,7 +2471,10 @@ mod tests {
             serde_json::from_str(&fs::read_to_string(root.join("lang/lang_ja_ch1.json")).unwrap())
                 .unwrap();
         assert_eq!(scritto["A"], "ПРИВЕТ", "la traduzione va nel file che il gioco carica");
-        assert_eq!(scritto["B"], "BYE", "senza traduzione resta il testo inglese");
+        // 28/07/2026: prima qui si pretendeva l'INGLESE ("BYE") — era il bug:
+        // il file ja veniva ricostruito dalle chiavi del file en. Senza
+        // traduzione deve restare il GIAPPONESE originale.
+        assert_eq!(scritto["B"], "y", "senza traduzione resta il giapponese originale");
         assert_eq!(scritto["date"], "1", "date passa invariata");
 
         // il backup dell'originale esiste e non viene sovrascritto da una seconda patch
