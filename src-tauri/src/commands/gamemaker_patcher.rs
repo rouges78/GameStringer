@@ -621,6 +621,19 @@ fn read_json_lang(path: &Path) -> Option<Vec<(String, String)>> {
     )
 }
 
+/// Traducibilità per le stringhe dei file di lingua JSON (Deltarune-style).
+///
+/// NON usare `is_translatable`: quel filtro è pensato per il chunk STRG, dove
+/// convivono codice e testo, e scarta pattern da GML (`/`, `&&`, `global.`).
+/// Ma nei dialoghi Deltarune `/` è il marcatore "aspetta input" e `&&` sono
+/// due a capo consecutivi: applicarlo qui buttava via 4.650 stringhe vere su
+/// 6.121 (misurato il 28/07/2026 sulla demo: il contatore diceva 1471).
+/// In un file di lingua è GIÀ tutto testo: si salta solo ciò che non ha
+/// nemmeno una lettera, cioè le stringhe di soli marcatori/punteggiatura.
+fn is_translatable_json_lang(s: &str) -> bool {
+    s.chars().any(|c| c.is_alphabetic())
+}
+
 /// Stringhe traducibili nei file JSON, in ordine stabile fra scansione e patch.
 fn count_json_lang_strings(pairs: &[JsonLangPair]) -> (usize, usize) {
     let mut total = 0usize;
@@ -628,7 +641,7 @@ fn count_json_lang_strings(pairs: &[JsonLangPair]) -> (usize, usize) {
         if let Some(entries) = read_json_lang(&pair.source) {
             total += entries
                 .iter()
-                .filter(|(k, v)| k != "date" && is_translatable(v))
+                .filter(|(k, v)| k != "date" && is_translatable_json_lang(v))
                 .count();
         }
     }
@@ -642,7 +655,7 @@ fn extract_json_lang_strings(pairs: &[JsonLangPair]) -> Vec<GmString> {
         let Some(entries) = read_json_lang(&pair.source) else { continue };
         // `date` è un timestamp del gioco, non testo da tradurre
         for (key, value) in entries.into_iter().filter(|(k, _)| k != "date") {
-            let translatable = is_translatable(&value);
+            let translatable = is_translatable_json_lang(&value);
             out.push(GmString {
                 index,
                 offset: 0,
@@ -677,21 +690,41 @@ fn patch_json_lang_files(
         }
 
         let Some(entries) = read_json_lang(&pair.source) else { continue };
-        let mut out = serde_json::Map::new();
-        for (key, value) in entries {
+
+        // Traduzioni per CHIAVE, con la stessa numerazione di extract (indice
+        // progressivo sulle voci non-`date` del file sorgente).
+        let mut per_chiave: HashMap<String, String> = HashMap::new();
+        for (key, _) in &entries {
             if key == "date" {
-                out.insert(key, serde_json::Value::String(value));
                 continue;
             }
-            let text = match translations.get(&index) {
-                Some(t) if !t.is_empty() => {
-                    patched += 1;
-                    t.clone()
+            if let Some(t) = translations.get(&index) {
+                if !t.is_empty() {
+                    per_chiave.insert(key.clone(), t.clone());
                 }
-                _ => value,
-            };
-            out.insert(key, serde_json::Value::String(text));
+            }
             index += 1;
+        }
+
+        // ⚠️ 28/07/2026: si riscrive il file di DESTINAZIONE partendo dalle SUE
+        // voci, non da quelle del sorgente. La prima versione ricostruiva il
+        // file giapponese dalle chiavi inglesi: le chiavi solo-giapponesi
+        // sparivano e le voci non tradotte prendevano il testo INGLESE invece
+        // di conservare l'originale giapponese.
+        // Base = il BACKUP quando esiste: cosi' ripatchare parte sempre dal
+        // giapponese originale, mai da un file gia' tradotto.
+        let base = if backup.exists() { &backup } else { &pair.target };
+        let Some(voci_target) = read_json_lang(base) else { continue };
+        let mut out = serde_json::Map::new();
+        for (key, valore_ja) in voci_target {
+            if key != "date" {
+                if let Some(t) = per_chiave.get(&key) {
+                    patched += 1;
+                    out.insert(key, serde_json::Value::String(t.clone()));
+                    continue;
+                }
+            }
+            out.insert(key, serde_json::Value::String(valore_ja));
         }
 
         let json = serde_json::to_string_pretty(&serde_json::Value::Object(out))
@@ -915,9 +948,20 @@ pub async fn gm_extract_strings(
         if only_translatable.unwrap_or(true) {
             strings.retain(|s| s.is_translatable);
         }
-        if let Some(n) = limit {
-            strings.truncate(n);
-        }
+        // offset+limit come nel ramo .jn. Il bug (28/07/2026): questo ramo
+        // applicava solo `truncate(limit)` ignorando `offset`, quindi ogni
+        // "pagina" erano LE STESSE prime 100 stringhe → "Traduci tutto"
+        // girava all'infinito: pagina mai vuota, tutto già tradotto, barra
+        // ferma a N/N. Trovato da Davide alla prima traduzione completa.
+        let start = offset.unwrap_or(0);
+        let count = limit.unwrap_or(100);
+        let end = (start + count).min(strings.len());
+        strings = if start < strings.len() {
+            strings[start..end].to_vec()
+        } else {
+            Vec::new()
+        };
+        println!("[GM] Returning {} strings (offset={}, limit={}, source=json)", strings.len(), start, count);
         return Ok(strings);
     }
 
@@ -2316,6 +2360,96 @@ mod tests {
         let (total, files) = count_json_lang_strings(&pairs);
         assert_eq!(files, 1);
         assert_eq!(total, 2, "A e C sono testo, B è solo marcatori, date non conta");
+    }
+
+    #[test]
+    fn json_lang_non_scarta_i_dialoghi_coi_marcatori_da_codice() {
+        // Regressione 28/07/2026: `is_translatable` (filtro STRG) scartava i
+        // dialoghi Deltarune con `/` (aspetta input) e `&&` (doppio a capo):
+        // sulla demo vera il contatore diceva 1471 invece di 6121. In un file
+        // di lingua è tutto testo: si scarta solo ciò che non ha lettere.
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(
+            root,
+            "lang_en_ch1.json",
+            r#"{"date":"1540902565549","A":"Welcome to the DARK WORLD./","B":"First line&&third line^6?","C":"* (You feel... global. Somehow.)","D":"^6&/%"}"#,
+        );
+        scrivi_lang(root, "lang_ja_ch1.json", r#"{"date":"1","A":"","B":"","C":"","D":""}"#);
+
+        let (_d, pairs) = find_json_lang_dir(root.to_str().unwrap()).unwrap();
+        let (total, _files) = count_json_lang_strings(&pairs);
+        assert_eq!(total, 3, "A, B e C sono dialoghi veri nonostante / && e 'global.'; D è soli marcatori");
+
+        let estratte = extract_json_lang_strings(&pairs);
+        let traducibili: Vec<&str> = estratte
+            .iter()
+            .filter(|s| s.is_translatable)
+            .map(|s| s.original.as_str())
+            .collect();
+        assert_eq!(traducibili.len(), 3);
+        assert!(traducibili.iter().any(|s| s.contains('/')), "il marcatore / non deve scartare il dialogo");
+        assert!(traducibili.iter().any(|s| s.contains("&&")), "il doppio a capo && non deve scartare il dialogo");
+    }
+
+    #[test]
+    fn json_lang_patch_conserva_il_giapponese_e_le_chiavi_solo_ja() {
+        // Regressione 28/07/2026: la patch ricostruiva il file ja dalle chiavi
+        // INGLESI — chiavi solo-giapponesi perse, voci non tradotte riempite
+        // col testo inglese. Ora la base sono le voci del file giapponese.
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(
+            root,
+            "lang_en_ch1.json",
+            r#"{"date":"1","A":"Hello","B":"World"}"#,
+        );
+        scrivi_lang(
+            root,
+            "lang_ja_ch1.json",
+            r#"{"date":"1","A":"こんにちは","B":"せかい","SOLO_JA":"日本語だけ"}"#,
+        );
+
+        let (_d, pairs) = find_json_lang_dir(root.to_str().unwrap()).unwrap();
+        // Si traduce SOLO l'indice 0 ("A", ordine di lettura del sorgente).
+        let mut tr = HashMap::new();
+        tr.insert(0usize, "Привет".to_string());
+        let r = patch_json_lang_files(&pairs, &tr).unwrap();
+        assert_eq!(r.patched_count, 1);
+
+        let scritto = fs::read_to_string(root.join("lang").join("lang_ja_ch1.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&scritto).unwrap();
+        assert_eq!(v["A"], "Привет", "la voce tradotta va in russo");
+        assert_eq!(v["B"], "せかい", "la voce NON tradotta conserva il giapponese, non prende l'inglese");
+        assert_eq!(v["SOLO_JA"], "日本語だけ", "le chiavi solo-giapponesi non spariscono");
+        assert_eq!(v["date"], "1");
+    }
+
+    #[tokio::test]
+    async fn json_lang_rispetta_offset_e_limit() {
+        // Regressione 28/07/2026: il ramo JSON di gm_extract_strings applicava
+        // solo truncate(limit) IGNORANDO offset → ogni pagina erano le stesse
+        // prime N stringhe e "Traduci tutto" girava all'infinito (pagina mai
+        // vuota, tutto già tradotto, barra ferma a N/N).
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        scrivi_lang(
+            root,
+            "lang_en_ch1.json",
+            r#"{"date":"1","A":"Alpha","B":"Beta","C":"Gamma","D":"Delta","E":"Epsilon"}"#,
+        );
+        scrivi_lang(root, "lang_ja_ch1.json", r#"{"date":"1","A":"","B":"","C":"","D":"","E":""}"#);
+        let gp = root.to_str().unwrap().to_string();
+
+        let p0 = gm_extract_strings(gp.clone(), Some(true), Some(0), Some(2)).await.unwrap();
+        let p1 = gm_extract_strings(gp.clone(), Some(true), Some(2), Some(2)).await.unwrap();
+        assert_eq!(p0.len(), 2);
+        assert_eq!(p1.len(), 2);
+        assert_ne!(p0[0].original, p1[0].original, "pagine diverse devono dare stringhe diverse");
+
+        // Oltre la fine: pagina VUOTA, è la condizione d'uscita del ciclo UI.
+        let oltre = gm_extract_strings(gp, Some(true), Some(100), Some(2)).await.unwrap();
+        assert!(oltre.is_empty(), "offset oltre la fine deve dare pagina vuota, non le prime stringhe");
     }
 
     #[test]

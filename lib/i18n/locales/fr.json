@@ -297,7 +297,17 @@
     "truncatedOriginal": "Original",
     "truncatedRequested": "Traduction demandée",
     "truncatedWritten": "Écrit dans le fichier",
-    "truncatedBytes": "octets"
+    "truncatedBytes": "octets",
+    "jsonLang": "Langue JSON (lang/*.json)",
+    "applyBtn": "Appliquer les traductions ({n})",
+    "saveExeBtn": "Enregistrer dans l'EXE ({n})",
+    "saveDataWinBtn": "Enregistrer dans data.win ({n})",
+    "scanJsonToast": "Fichiers de langue JSON : {n} chaînes dans {f} paires lang/*.json",
+    "scanJnToast": "Fichiers de langue : {n} chaînes dans {f} fichiers .jn",
+    "scanExeToast": "YYC : {n} chaînes traduisibles depuis l'EXE",
+    "scanStrgToast": "data.win : {n} chaînes traduisibles",
+    "noteTextJson": "Les traductions sont écrites dans les fichiers lang/*.json (copie .bak automatique avant chaque modification ; « Restaurer » ramène l'original). Ce sont des fichiers texte : les traductions peuvent être plus longues que l'original, aucune troncature.",
+    "samePageTwice": "Le moteur a renvoyé deux fois la même page de chaînes : traduction arrêtée pour éviter une boucle infinie. Merci de signaler le problème."
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Texte copié dans le presse-papiers",
@@ -7409,5 +7419,35 @@
     "reset": "Rétablir la valeur par défaut",
     "invalid": "Adresse non valide : l'adresse officielle sera utilisée.",
     "hint": "Indiquez seulement la racine du service, sans /chat/completions — l'application ajoute le reste."
+  },
+  "gmGlyph": {
+    "title": "Glyphes GameMaker (data.win)",
+    "desc": "Les polices de ce jeu sont des images dans data.win : si des lettres manquent ({chars}), la traduction affiche des cases vides. L'aperçu calcule tout sans toucher au fichier.",
+    "preview": "Aperçu",
+    "previewing": "Calcul…",
+    "apply": "Appliquer à data.win",
+    "applying": "Écriture…",
+    "applied": "Glyphes injectés. Sauvegarde créée : en cas de problème, restaurez le fichier .bak.",
+    "feasible": "Faisable : toutes les textures tiennent dans le budget. Rien n'a encore été écrit.",
+    "notFeasible": "Infaisable : une texture dépasse le budget. Rien n'est écrit (jamais de data.win corrompu).",
+    "backupAt": "Sauvegarde",
+    "injectedN": "{n} injectés",
+    "skippedN": "{n} ignorés",
+    "smallerGlyphs": "lettres à {h}px (original {H}px)",
+    "texture": "Texture",
+    "marginOk": "tient, marge de {b} o",
+    "marginKo": "dépasse de {b} o",
+    "applyNote": "L'application crée une sauvegarde et n'écrit que si TOUT tient : tout ou rien."
+  },
+  "postTranslation": {
+    "verifiedTitle": "Traduction appliquée et vérifiée : {n} fichiers sur le disque ({pct}% des chaînes)",
+    "partialTitle": "Traduction partielle : {n} fichiers vérifiés, {missing} déclarés mais absents",
+    "unverifiedTitle": "Le moteur annonce un succès, mais aucun fichier n'a été vérifié sur le disque",
+    "unverifiedHint": "Le jeu est peut-être encore dans sa langue d'origine. Lancez-le pour vérifier ; s'il n'est pas traduit, essayez l'overlay OCR ou le patcher dédié du moteur.",
+    "stringsTranslated": "chaînes traduites",
+    "errors": "erreurs",
+    "ocrTitle": "Traduction OCR en direct",
+    "ocrDescUnverified": "Aucun fichier de traduction confirmé sur le disque : le texte de ce jeu n'est peut-être pas accessible via les fichiers. Traduisez-le à l'écran en temps réel avec l'overlay OCR.",
+    "ocrDescPartial": "Couverture partielle des fichiers ({pct}%) : le texte runtime/événement de ce RPG Maker n'est pas extractible des fichiers. Traduisez-le à l'écran en temps réel avec l'overlay OCR."
   }
 }

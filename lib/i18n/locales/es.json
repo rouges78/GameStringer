@@ -297,7 +297,17 @@
     "truncatedOriginal": "Original",
     "truncatedRequested": "Traducción solicitada",
     "truncatedWritten": "Escrito en el archivo",
-    "truncatedBytes": "bytes"
+    "truncatedBytes": "bytes",
+    "jsonLang": "Idioma JSON (lang/*.json)",
+    "applyBtn": "Aplicar traducciones ({n})",
+    "saveExeBtn": "Guardar en EXE ({n})",
+    "saveDataWinBtn": "Guardar en data.win ({n})",
+    "scanJsonToast": "Archivos de idioma JSON: {n} cadenas en {f} pares lang/*.json",
+    "scanJnToast": "Archivos de idioma: {n} cadenas en {f} archivos .jn",
+    "scanExeToast": "YYC: {n} cadenas traducibles del EXE",
+    "scanStrgToast": "data.win: {n} cadenas traducibles",
+    "noteTextJson": "Las traducciones se escriben en los archivos lang/*.json (copia .bak automática antes de cada cambio; «Restaurar» devuelve el original). Son archivos de texto: las traducciones pueden ser más largas que el original, sin truncamiento.",
+    "samePageTwice": "El motor devolvió dos veces la misma página de cadenas: traducción detenida para evitar un bucle infinito. Informa del problema."
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Texto copiado al portapapeles",
@@ -7409,5 +7419,35 @@
     "reset": "Restaurar el predeterminado",
     "invalid": "Dirección no válida: se usará la oficial.",
     "hint": "Indica solo la raíz del servicio, sin /chat/completions — la app añade el resto."
+  },
+  "gmGlyph": {
+    "title": "Glifos GameMaker (data.win)",
+    "desc": "Las fuentes de este juego son imágenes dentro de data.win: si faltan letras ({chars}), la traducción muestra recuadros vacíos. La vista previa lo calcula todo sin tocar el archivo.",
+    "preview": "Vista previa",
+    "previewing": "Calculando…",
+    "apply": "Aplicar a data.win",
+    "applying": "Escribiendo…",
+    "applied": "Glifos inyectados. Copia de seguridad creada: si algo falla, restaura el archivo .bak.",
+    "feasible": "Factible: todas las texturas caben en el presupuesto. Aún no se ha escrito nada.",
+    "notFeasible": "No factible: una textura excede el presupuesto. No se escribe nada (nunca un data.win corrupto).",
+    "backupAt": "Copia de seguridad",
+    "injectedN": "{n} inyectados",
+    "skippedN": "{n} omitidos",
+    "smallerGlyphs": "letras a {h}px (original {H}px)",
+    "texture": "Textura",
+    "marginOk": "cabe, margen de {b} B",
+    "marginKo": "excede en {b} B",
+    "applyNote": "Aplicar crea una copia de seguridad y escribe solo si TODO cabe: todo o nada."
+  },
+  "postTranslation": {
+    "verifiedTitle": "Traducción aplicada y verificada: {n} archivos en disco ({pct}% de cadenas)",
+    "partialTitle": "Traducción parcial: {n} archivos verificados, {missing} declarados pero ausentes",
+    "unverifiedTitle": "El motor declara éxito, pero ningún archivo se verificó en disco",
+    "unverifiedHint": "Puede que el juego siga en su idioma original. Ábrelo para comprobarlo; si no está traducido, prueba el overlay OCR o el parcheador del motor.",
+    "stringsTranslated": "cadenas traducidas",
+    "errors": "errores",
+    "ocrTitle": "Traducción OCR en vivo",
+    "ocrDescUnverified": "Ningún archivo de traducción confirmado en disco: el texto de este juego quizá no sea accesible por archivos. Tradúcelo en pantalla en tiempo real con el overlay OCR.",
+    "ocrDescPartial": "Cobertura parcial de archivos ({pct}%): el texto runtime/eventos de este RPG Maker no se puede extraer de los archivos. Tradúcelo en pantalla en tiempo real con el overlay OCR."
   }
 }

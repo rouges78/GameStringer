@@ -297,7 +297,17 @@
     "truncatedOriginal": "原文",
     "truncatedRequested": "请求的翻译",
     "truncatedWritten": "已写入文件",
-    "truncatedBytes": "字节"
+    "truncatedBytes": "字节",
+    "jsonLang": "JSON 语言 (lang/*.json)",
+    "applyBtn": "应用翻译 ({n})",
+    "saveExeBtn": "保存到 EXE ({n})",
+    "saveDataWinBtn": "保存到 data.win ({n})",
+    "scanJsonToast": "JSON 语言文件：{f} 对 lang/*.json 中有 {n} 条字符串",
+    "scanJnToast": "语言文件：{f} 个 .jn 文件中有 {n} 条字符串",
+    "scanExeToast": "YYC：EXE 中有 {n} 条可翻译字符串",
+    "scanStrgToast": "data.win：{n} 条可翻译字符串",
+    "noteTextJson": "翻译会写入 lang/*.json 文件（每次修改前自动创建 .bak 副本；「恢复」可回到原始状态）。它们是文本文件：翻译可以比原文更长，不会被截断。",
+    "samePageTwice": "引擎两次返回了同一页字符串：已停止翻译以避免无限循环。请报告此问题。"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "文本已复制到剪贴板",
@@ -7409,5 +7419,35 @@
     "reset": "恢复默认",
     "invalid": "地址无效：将使用官方地址。",
     "hint": "只需填写服务根地址，无需 /chat/completions —— 其余部分由应用补全。"
+  },
+  "gmGlyph": {
+    "title": "GameMaker 字形 (data.win)",
+    "desc": "此游戏的字体是 data.win 内的图像：如果缺少字母（{chars}），翻译会显示空方块。预览会在不改动文件的情况下完成全部计算。",
+    "preview": "预览",
+    "previewing": "计算中…",
+    "apply": "应用到 data.win",
+    "applying": "写入中…",
+    "applied": "字形已注入。已创建备份：如有问题，请恢复 .bak 文件。",
+    "feasible": "可行：所有纹理都在预算内。尚未写入任何内容。",
+    "notFeasible": "不可行：某个纹理超出预算。不写入任何内容（绝不产生损坏的 data.win）。",
+    "backupAt": "备份",
+    "injectedN": "已注入 {n} 个",
+    "skippedN": "已跳过 {n} 个",
+    "smallerGlyphs": "字母 {h}px（原 {H}px）",
+    "texture": "纹理",
+    "marginOk": "可容纳，余量 {b} B",
+    "marginKo": "超出 {b} B",
+    "applyNote": "应用时会创建备份，且只有全部容纳时才写入：要么全部，要么没有。"
+  },
+  "postTranslation": {
+    "verifiedTitle": "翻译已应用并验证：磁盘上有 {n} 个文件（{pct}% 字符串）",
+    "partialTitle": "部分翻译：已验证 {n} 个文件，{missing} 个已声明但缺失",
+    "unverifiedTitle": "引擎报告成功，但磁盘上没有任何文件得到验证",
+    "unverifiedHint": "游戏可能仍是原始语言。请启动检查；如未翻译，请尝试 OCR 叠加层或引擎专用补丁工具。",
+    "stringsTranslated": "条字符串已翻译",
+    "errors": "个错误",
+    "ocrTitle": "实时 OCR 翻译",
+    "ocrDescUnverified": "磁盘上未确认任何翻译文件：此游戏的文本可能无法通过文件访问。请使用 OCR 叠加层在屏幕上实时翻译。",
+    "ocrDescPartial": "文件覆盖率部分（{pct}%）：此 RPG Maker 的运行时/事件文本无法从文件提取。请使用 OCR 叠加层实时翻译。"
   }
 }

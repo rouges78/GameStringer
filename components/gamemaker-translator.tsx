@@ -61,11 +61,18 @@ interface GmPatchResult {
 interface GameMakerTranslatorProps {
   gamePath: string;
   gameName: string;
+  /**
+   * Lingua di destinazione della traduzione. Prima era 'it' CABLATO nelle due
+   * chiamate a translate_text_simple: con la UI in russo e target russo le
+   * traduzioni uscivano in italiano (bug della famiglia "italiano forzato",
+   * 28/07/2026). Il default 'it' resta solo per i mount legacy senza prop.
+   */
+  targetLang?: string;
 }
 
 const PAGE_SIZE = 50;
 
-export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorProps) {
+export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: GameMakerTranslatorProps) {
   // State
   const [dataInfo, setDataInfo] = useState<GmDataInfo | null>(null);
   const [strings, setStrings] = useState<GmString[]>([]);
@@ -95,17 +102,18 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       const info = await invoke<GmDataInfo>('gm_scan_data_win', { gamePath });
       setDataInfo(info);
       setTotalTranslatable(info.translatable_strings);
-      toast.success(info.has_language_files 
-        ? `Language Files: ${info.translatable_strings} stringhe in ${info.language_file_count} file .jn`
-        : info.is_yyc 
-          ? `YYC: ${info.translatable_strings} stringhe traducibili dall'EXE` 
-          : `data.win: ${info.translatable_strings} stringhe traducibili`);
+      const scanKey = info.string_source === 'language_json' ? 'scanJsonToast'
+        : info.has_language_files ? 'scanJnToast'
+          : info.is_yyc ? 'scanExeToast' : 'scanStrgToast';
+      toast.success(t(`gameMakerTranslator.${scanKey}`)
+        .replace('{n}', String(info.translatable_strings))
+        .replace('{f}', String(info.language_file_count)));
     } catch (e: unknown) {
       toast.error(e?.toString() || 'data.win non trovato');
     } finally {
       setIsScanning(false);
     }
-  }, [gamePath]);
+  }, [gamePath, t]);
 
   useEffect(() => {
     scanDataWin();
@@ -195,7 +203,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
         try {
           const result = await invoke<{ translated_text: string }>('translate_text_simple', {
             text: s.original,
-            targetLang: 'it',
+            targetLang,
           });
           if (result?.translated_text) {
             newTranslations[s.index] = result.translated_text;
@@ -228,6 +236,10 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
     const newTranslations: Record<number, string> = { ...translations };
     let done = 0;
     let pageNum = 0;
+    // Guardia anti-loop: se il backend restituisce la stessa pagina due volte
+    // (bug di paginazione, successo il 28/07 col ramo JSON che ignorava
+    // offset), si esce invece di girare per sempre con la barra piena.
+    let prevPageFirstIndex: number | null = null;
 
     while (!abortRef.current) {
       // Load page of strings
@@ -242,6 +254,11 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       } catch { break; }
 
       if (pageStrings.length === 0) break;
+      if (prevPageFirstIndex !== null && pageStrings[0]?.index === prevPageFirstIndex) {
+        toast.warning(t('gameMakerTranslator.samePageTwice'));
+        break;
+      }
+      prevPageFirstIndex = pageStrings[0]?.index ?? null;
 
       // Translate in batches of 5
       for (let i = 0; i < pageStrings.length; i += 5) {
@@ -258,7 +275,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           try {
             const result = await invoke<{ translated_text: string }>('translate_text_simple', {
               text: s.original,
-              targetLang: 'it',
+              targetLang,
             });
             if (result?.translated_text) {
               newTranslations[s.index] = result.translated_text;
@@ -407,7 +424,9 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               )}
               {dataInfo.has_language_files && (
                 <Badge variant="outline" className="text-2xs border-emerald-500/30 text-emerald-400">
-                  {t('gameMakerTranslator.jnFiles')} ({dataInfo.language_file_count})
+                  {dataInfo.string_source === 'language_json'
+                    ? t('gameMakerTranslator.jsonLang')
+                    : t('gameMakerTranslator.jnFiles')} ({dataInfo.language_file_count})
                 </Badge>
               )}
             </>
@@ -509,11 +528,12 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               onClick={patchDataWin}
               disabled={isPatching || translatedCount === 0}>
               {isPatching ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-              {dataInfo?.has_language_files 
-                ? `Applica Traduzioni (${translatedCount})` 
-                : dataInfo?.is_yyc 
-                  ? `Salva in EXE (${translatedCount})` 
-                  : `Salva in data.win (${translatedCount})`}
+              {(dataInfo?.has_language_files
+                ? t('gameMakerTranslator.applyBtn')
+                : dataInfo?.is_yyc
+                  ? t('gameMakerTranslator.saveExeBtn')
+                  : t('gameMakerTranslator.saveDataWinBtn')
+              ).replace('{n}', String(translatedCount))}
             </Button>
           </div>
 
@@ -683,7 +703,11 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
             <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
             <div className="text-[11px] text-amber-300/80 leading-relaxed">
-              <strong>{t('gameMakerTranslator.noteLabel')}</strong>  {t('gameMakerTranslator.noteText')}</div>
+              {/* La nota sui troncamenti vale per data.win/EXE (riscrittura in place).
+                  Per i file di lingua JSON è FALSA: sono testo e possono crescere. */}
+              <strong>{t('gameMakerTranslator.noteLabel')}</strong>  {dataInfo?.string_source === 'language_json'
+                ? t('gameMakerTranslator.noteTextJson')
+                : t('gameMakerTranslator.noteText')}</div>
           </div>
         </>
       ) : (

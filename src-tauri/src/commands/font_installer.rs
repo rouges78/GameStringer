@@ -416,6 +416,25 @@ pub async fn install_game_font(
     Ok(steps)
 }
 
+/// Assicura in cache il TTF adatto alla lingua e ne restituisce il percorso.
+///
+/// Serve all'iniezione glifi GameMaker (ADR-005, `gm_inject_glyphs`), che vuole
+/// un `ttf_path` esplicito. Differenza da `install_game_font`: per le lingue a
+/// base latina NON si rinuncia — i font GameMaker sono atlanti bitmap spesso
+/// SENZA accenti (misurato su Deltarune: zero accenti in tutti e quattro i
+/// font), quindi si ripiega su NotoSans LGC, che copre latino esteso,
+/// cirillico e greco.
+#[command(rename_all = "camelCase")]
+pub async fn gm_prepare_glyph_font(target_lang: String) -> Result<String, String> {
+    let pack = font_pack_for_lang(&target_lang)
+        // Lingua a base latina: NotoSans LGC (il pack del cirillico è lo stesso file).
+        .or_else(|| font_pack_for_lang("ru"))
+        .ok_or_else(|| format!("Nessun font disponibile per '{}'", target_lang))?;
+    let mut steps = Vec::new();
+    let path = ensure_font_cached(&pack, &mut steps).await?;
+    Ok(path.to_string_lossy().to_string())
+}
+
 /// Ripristina i font originali del gioco (annulla install_game_font).
 #[command(rename_all = "camelCase")]
 pub async fn remove_game_font(game_path: String, engine: String) -> Result<Vec<String>, String> {

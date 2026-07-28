@@ -53,6 +53,7 @@ import {
   UnityAssetsPanel,
   CompatCard,
   FontCheckCard,
+  GmGlyphCard,
 } from '@/components/game-detail';
 
 // Game interface based on mock data structure
@@ -319,6 +320,17 @@ export default function GameDetailPage() {
     targetLang: string;
     stringsTranslated: number;
     stringsTotal: number;
+    /**
+     * Verifica dell'EFFETTO (post-translation-truth): i file dichiarati dal
+     * motore esistono davvero sul disco? Il successo si dichiara solo se
+     * verified > 0; altrimenti il wizard mostra un avviso, non un verde.
+     */
+    verification?: {
+      checked: number;      // deliverable con un percorso da verificare
+      verified: number;     // quanti esistono davvero sul disco
+      missing: string[];    // percorsi dichiarati ma assenti
+      verifiedNames: string[]; // nomi file confermati (da mostrare all'utente)
+    };
   } | null>(null);
 
   // Pre-computed translation strategy (populated on page load)
@@ -498,12 +510,13 @@ export default function GameDetailPage() {
       } else if (eng.includes('gamemaker') || eng.includes('game maker')) {
         // GameMaker: check for .jn files or data.win
         try {
-          const gmInfo = await invoke<{has_language_files?: boolean; language_file_count?: number; translatable_strings?: number; is_yyc?: boolean}>('gm_scan_data_win', { gamePath: game.installPath });
+          const gmInfo = await invoke<{has_language_files?: boolean; language_file_count?: number; translatable_strings?: number; is_yyc?: boolean; string_source?: string}>('gm_scan_data_win', { gamePath: game.installPath });
           setTranslationStrategy({
             engine: detectedEngine || 'GameMaker',
             method: 'gamemaker',
+            // "coppie lang/*.json" per la fonte JSON (Deltarune-style), ".jn" per Undertale-style
             detail: gmInfo?.has_language_files
-              ? `${gmInfo.language_file_count} file .jn — ${gmInfo.translatable_strings} stringhe`
+              ? `${gmInfo.language_file_count} ${gmInfo.string_source === 'language_json' ? 'coppie lang/*.json' : 'file .jn'} — ${gmInfo.translatable_strings} stringhe`
               : gmInfo?.is_yyc
                 ? `YYC EXE — ${gmInfo.translatable_strings} stringhe`
                 : `data.win — ${gmInfo.translatable_strings} stringhe`,
@@ -2485,6 +2498,27 @@ export default function GameDetailPage() {
         });
       }
 
+      // ── VERIFICA DELL'EFFETTO (post-translation-truth) ──
+      // "Completata al 100% con 0 errori" col gioco ancora in inglese è la
+      // segnalazione più dettagliata del triage 26/07. Prima di dichiarare
+      // il successo si controlla che i file dichiarati dal motore ESISTANO
+      // sul disco. Fail-open sul singolo check (un errore di IO non deve
+      // trasformare un successo vero in un falso allarme), ma il conteggio
+      // finisce nel wizard: zero file verificati = niente verde.
+      const declaredPaths = (deliverables as { filePath?: string | null; deliverableName?: string }[])
+        .map(d => ({ path: d?.filePath || null, name: d?.deliverableName || d?.filePath || '' }))
+        .filter((d): d is { path: string; name: string } => !!d.path);
+      const missingPaths: string[] = [];
+      const verifiedNames: string[] = [];
+      for (const d of declaredPaths) {
+        try {
+          const exists = await invoke<boolean>('check_path_exists', { path: d.path });
+          if (exists) verifiedNames.push(d.name); else missingPaths.push(d.path);
+        } catch {
+          // Check non eseguibile: né verificato né mancante — non conta.
+        }
+      }
+
       // Save result for completion wizard
       setAutoTranslateResult({
         successRate: success,
@@ -2495,6 +2529,12 @@ export default function GameDetailPage() {
         targetLang: targetLang || language || 'it',
         stringsTranslated: executionResult?.translatedStrings || executionResult?.totalStrings || 0,
         stringsTotal: executionResult?.totalStrings || 0,
+        verification: {
+          checked: declaredPaths.length,
+          verified: verifiedNames.length,
+          missing: missingPaths,
+          verifiedNames,
+        },
       });
 
     } catch (error: unknown) {
@@ -3236,6 +3276,13 @@ export default function GameDetailPage() {
             targetLang={targetLang || language}
           />
 
+          {/* ═══ INIEZIONE GLIFI GAMEMAKER (ADR-005: accenti/cirillico nel data.win) ═══ */}
+          <GmGlyphCard
+            installPath={game.installPath}
+            engine={game.engine || engineInfo?.engine}
+            targetLang={targetLang || language}
+          />
+
           {/* ═══ DETTAGLI & STRUMENTI ═══ */}
           <GameToolsPanel
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3332,7 +3379,7 @@ export default function GameDetailPage() {
           {/* ── GameMaker Translator ── */}
           {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
             <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
-              <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name || ''} />
+              <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name || ''} targetLang={targetLang || language} />
             </div>
           )}
         </div>

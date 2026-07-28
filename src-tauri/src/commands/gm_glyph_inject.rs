@@ -126,6 +126,10 @@ pub enum Errore {
     BitmapTroppoGrande { carattere: u16, bitmap: (u16, u16), cella: (u16, u16) },
     /// La cella cade fuori dall'atlante.
     CellaFuoriDallAtlante { carattere: u16, x: u16, y: u16 },
+    /// La lista puntatori dei glifi non combacia col buffer: il riordino
+    /// post-iniezione (obbligatorio: il runtime fa ricerca binaria) non è
+    /// applicabile in sicurezza.
+    TabellaGlifiIncoerente { font: String },
 }
 
 impl std::fmt::Display for Errore {
@@ -151,6 +155,10 @@ impl std::fmt::Display for Errore {
             Self::CellaFuoriDallAtlante { carattere, x, y } => {
                 write!(f, "U+{carattere:04X}: la cella a ({x}, {y}) cade fuori dall'atlante")
             }
+            Self::TabellaGlifiIncoerente { font } => write!(
+                f,
+                "'{font}': la lista puntatori dei glifi non combacia col file, riordino non applicabile"
+            ),
         }
     }
 }
@@ -340,6 +348,16 @@ pub fn applica(
     // offset, cioe' ADR-004.
     for &ic in &piano.da_svuotare {
         svuota_cella(atlante, font, &font.glyphs[ic]);
+    }
+
+    // ⚠️ 28/07/2026: i codepoint sono cambiati (kanji→cirillico/accenti), la
+    // lista puntatori NON e' piu' ordinata per `character` — e il runtime
+    // GameMaker la consulta con una ricerca binaria. Senza questo riordino il
+    // gioco CRASHAVA all'avvio in giapponese, al primo disegno con un font
+    // modificato. In inglese partiva, perche' i font `fnt_ja_*` non venivano
+    // mai disegnati: il difetto era invisibile proprio dove non si provava.
+    if !gm_font::riordina_puntatori_glifi(dati, font) {
+        return Err(Errore::TabellaGlifiIncoerente { font: font.name.clone() });
     }
 
     Ok(aggiornati)

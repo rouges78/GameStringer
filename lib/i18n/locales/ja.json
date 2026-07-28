@@ -297,7 +297,17 @@
     "truncatedOriginal": "原文",
     "truncatedRequested": "依頼した翻訳",
     "truncatedWritten": "ファイルに書き込まれた内容",
-    "truncatedBytes": "バイト"
+    "truncatedBytes": "バイト",
+    "jsonLang": "JSON言語 (lang/*.json)",
+    "applyBtn": "翻訳を適用 ({n})",
+    "saveExeBtn": "EXEに保存 ({n})",
+    "saveDataWinBtn": "data.winに保存 ({n})",
+    "scanJsonToast": "JSON言語ファイル：{f}組のlang/*.jsonに{n}件の文字列",
+    "scanJnToast": "言語ファイル：{f}個の.jnファイルに{n}件の文字列",
+    "scanExeToast": "YYC：EXEから{n}件の翻訳可能な文字列",
+    "scanStrgToast": "data.win：{n}件の翻訳可能な文字列",
+    "noteTextJson": "翻訳はlang/*.jsonファイルに書き込まれます（変更前に自動で.bakコピーを作成。「復元」で元に戻せます）。テキストファイルなので翻訳が原文より長くても切り詰められません。",
+    "samePageTwice": "エンジンが同じページを2回返しました。無限ループを避けるため翻訳を停止しました。問題を報告してください。"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "テキストをクリップボードにコピーしました",
@@ -7409,5 +7419,35 @@
     "reset": "既定に戻す",
     "invalid": "無効なアドレスです。公式アドレスを使用します。",
     "hint": "サービスのルートのみを入力してください（/chat/completions は不要。アプリが補完します）。"
+  },
+  "gmGlyph": {
+    "title": "GameMakerグリフ (data.win)",
+    "desc": "このゲームのフォントはdata.win内の画像です。文字（{chars}）が欠けていると翻訳は空の四角で表示されます。プレビューはファイルに触れずすべて計算します。",
+    "preview": "プレビュー",
+    "previewing": "計算中…",
+    "apply": "data.winに適用",
+    "applying": "書き込み中…",
+    "applied": "グリフを注入しました。バックアップ作成済み：問題があれば.bakファイルを復元してください。",
+    "feasible": "実行可能：すべてのテクスチャが予算内です。まだ何も書き込まれていません。",
+    "notFeasible": "実行不可：テクスチャが予算を超えています。何も書き込みません（data.winを壊さないため）。",
+    "backupAt": "バックアップ",
+    "injectedN": "{n}件注入",
+    "skippedN": "{n}件スキップ",
+    "smallerGlyphs": "文字{h}px（元{H}px）",
+    "texture": "テクスチャ",
+    "marginOk": "収まる、余裕{b}B",
+    "marginKo": "{b}B超過",
+    "applyNote": "適用時はバックアップを作成し、すべて収まる場合のみ書き込みます：オール・オア・ナッシング。"
+  },
+  "postTranslation": {
+    "verifiedTitle": "翻訳を適用し検証済み：ディスク上に{n}ファイル（文字列{pct}%）",
+    "partialTitle": "部分的な翻訳：{n}ファイル検証済み、{missing}ファイルが宣言されたが見つかりません",
+    "unverifiedTitle": "エンジンは成功と報告していますが、ディスク上でファイルを検証できませんでした",
+    "unverifiedHint": "ゲームはまだ元の言語のままかもしれません。起動して確認してください。翻訳されていなければ、OCRオーバーレイか専用パッチャーをお試しください。",
+    "stringsTranslated": "文字列を翻訳",
+    "errors": "エラー",
+    "ocrTitle": "ライブOCR翻訳",
+    "ocrDescUnverified": "ディスク上で翻訳ファイルを確認できません：このゲームのテキストはファイル経由では届かない可能性があります。OCRオーバーレイでリアルタイムに画面上で翻訳してください。",
+    "ocrDescPartial": "ファイルカバレッジが部分的（{pct}%）：このRPG Makerのランタイム/イベントテキストはファイルから抽出できません。OCRオーバーレイでリアルタイムに翻訳してください。"
   }
 }

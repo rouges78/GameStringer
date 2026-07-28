@@ -297,7 +297,17 @@
     "truncatedOriginal": "Original",
     "truncatedRequested": "Requested translation",
     "truncatedWritten": "Written to file",
-    "truncatedBytes": "bytes"
+    "truncatedBytes": "bytes",
+    "jsonLang": "JSON language (lang/*.json)",
+    "applyBtn": "Apply translations ({n})",
+    "saveExeBtn": "Save to EXE ({n})",
+    "saveDataWinBtn": "Save to data.win ({n})",
+    "scanJsonToast": "JSON language files: {n} strings in {f} lang/*.json pairs",
+    "scanJnToast": "Language Files: {n} strings in {f} .jn files",
+    "scanExeToast": "YYC: {n} translatable strings from EXE",
+    "scanStrgToast": "data.win: {n} translatable strings",
+    "noteTextJson": "Translations are written to the lang/*.json files (automatic .bak copy before every change; use \"Restore\" to go back to the original). They are text files: translations may be longer than the original, no truncation.",
+    "samePageTwice": "The engine returned the same page of strings twice: translation stopped to avoid an infinite loop. Please report this."
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Text copied to clipboard",
@@ -7409,5 +7419,35 @@
     "reset": "Restore default",
     "invalid": "Invalid address: the official one will be used.",
     "hint": "Enter only the service root, without /chat/completions — the app appends the rest."
+  },
+  "gmGlyph": {
+    "title": "GameMaker glyphs (data.win)",
+    "desc": "This game's fonts are images inside data.win: if letters are missing ({chars}), the translation shows empty boxes. The preview computes everything without touching the file.",
+    "preview": "Preview",
+    "previewing": "Computing…",
+    "apply": "Apply to data.win",
+    "applying": "Writing…",
+    "applied": "Glyphs injected. Backup created: if anything goes wrong, restore the .bak file.",
+    "feasible": "Feasible: every texture fits its budget. Nothing has been written yet.",
+    "notFeasible": "Not feasible: a texture exceeds its budget. Nothing written (never a corrupted data.win).",
+    "backupAt": "Backup",
+    "injectedN": "{n} injected",
+    "skippedN": "{n} skipped",
+    "smallerGlyphs": "letters at {h}px (original {H}px)",
+    "texture": "Texture",
+    "marginOk": "fits, {b} B margin",
+    "marginKo": "over by {b} B",
+    "applyNote": "Applying creates a backup and writes only if EVERYTHING fits: all or nothing."
+  },
+  "postTranslation": {
+    "verifiedTitle": "Translation applied and verified: {n} files on disk ({pct}% strings)",
+    "partialTitle": "Partial translation: {n} files verified, {missing} declared but missing",
+    "unverifiedTitle": "The engine reports success, but no file was verified on disk",
+    "unverifiedHint": "The game may still be in its original language. Launch it to check; if it isn't translated, try the OCR overlay or the engine's dedicated patcher.",
+    "stringsTranslated": "strings translated",
+    "errors": "errors",
+    "ocrTitle": "Live OCR translation",
+    "ocrDescUnverified": "No translation file confirmed on disk: this game's text may not be reachable through files. Translate it on screen in real time with the OCR overlay.",
+    "ocrDescPartial": "Partial file coverage ({pct}%): this RPG Maker's runtime/event text cannot be extracted from files. Translate it on screen in real time with the OCR overlay."
   }
 }

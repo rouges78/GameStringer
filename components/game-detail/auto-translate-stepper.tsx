@@ -20,6 +20,13 @@ interface AutoTranslateResult {
   targetLang: string;
   stringsTranslated: number;
   stringsTotal: number;
+  /** Verifica dell'effetto: i file dichiarati esistono davvero sul disco? */
+  verification?: {
+    checked: number;
+    verified: number;
+    missing: string[];
+    verifiedNames: string[];
+  };
 }
 
 interface AutoTranslateStepperProps {
@@ -117,32 +124,70 @@ export function AutoTranslateStepper({
           </div>
         )}
 
-        {/* POST-TRANSLATION COMPLETION WIZARD */}
-        {result && steps.every(s => s.status === 'done') && (
+        {/* POST-TRANSLATION COMPLETION WIZARD
+            La verità prima del verde (post-translation-truth): il titolo
+            dichiara il successo SOLO se almeno un file dichiarato dal motore
+            esiste davvero sul disco. verification assente (percorsi non
+            forniti dal motore) o zero verificati → ambra, non verde, e si
+            dice cosa NON si è potuto verificare. */}
+        {result && steps.every(s => s.status === 'done') && (() => {
+          const v = result.verification;
+          const verifiedOk = !!v && v.verified > 0 && v.missing.length === 0;
+          const partial = !!v && v.verified > 0 && v.missing.length > 0;
+          const unverified = !v || v.verified === 0;
+          const tone = verifiedOk ? 'emerald' : partial ? 'amber' : 'amber';
+          return (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
-            className="mt-4 rounded-xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/50 overflow-hidden"
+            className={`mt-4 rounded-xl border overflow-hidden ${
+              tone === 'emerald'
+                ? 'border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/50'
+                : 'border-amber-500/30 bg-gradient-to-b from-amber-950/30 to-slate-950/50'
+            }`}
           >
             {/* Summary Header */}
-            <div className="px-5 py-4 border-b border-emerald-500/10">
+            <div className={`px-5 py-4 border-b ${tone === 'emerald' ? 'border-emerald-500/10' : 'border-amber-500/10'}`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                  <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tone === 'emerald' ? 'bg-emerald-500/15' : 'bg-amber-500/15'}`}>
+                  {tone === 'emerald'
+                    ? <CheckCircle className="h-5 w-5 text-emerald-400" />
+                    : <AlertTriangle className="h-5 w-5 text-amber-400" />}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-bold text-emerald-300">
-                    Traduzione completata al {(result.successRate * 100).toFixed(0)}%
-                    {result.errors === 0 ? ' con 0 errori' : ` con ${result.errors} errori`}
+                  <h3 className={`text-sm font-bold ${tone === 'emerald' ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    {verifiedOk && t('postTranslation.verifiedTitle')
+                      .replace('{n}', String(v.verified))
+                      .replace('{pct}', (result.successRate * 100).toFixed(0))}
+                    {partial && t('postTranslation.partialTitle')
+                      .replace('{n}', String(v.verified))
+                      .replace('{missing}', String(v.missing.length))}
+                    {unverified && t('postTranslation.unverifiedTitle')}
                   </h3>
                   <p className="text-2xs text-slate-400 mt-0.5">
-                    {result.stringsTranslated > 0 && `${result.stringsTranslated} stringhe tradotte | `}
+                    {result.stringsTranslated > 0 && `${result.stringsTranslated} ${t('postTranslation.stringsTranslated')} | `}
                     Engine: {result.engine} |
-                    Tempo: {result.duration.toFixed(1)} min |
-                    Lingua: {result.targetLang.toUpperCase()} |
-                    {result.deliverables} file generati
+                    {result.duration.toFixed(1)} min |
+                    {result.targetLang.toUpperCase()}
+                    {result.errors > 0 && ` | ${result.errors} ${t('postTranslation.errors')}`}
                   </p>
+                  {/* I file confermati, PER NOME: la prova che si offre all'utente */}
+                  {v && v.verifiedNames.length > 0 && (
+                    <p className="text-2xs text-slate-500 mt-1 font-mono truncate" title={v.verifiedNames.join(' · ')}>
+                      ✓ {v.verifiedNames.slice(0, 3).join(' · ')}{v.verifiedNames.length > 3 ? ` +${v.verifiedNames.length - 3}` : ''}
+                    </p>
+                  )}
+                  {unverified && (
+                    <p className="text-2xs text-amber-400/80 mt-1">
+                      {t('postTranslation.unverifiedHint')}
+                    </p>
+                  )}
+                  {partial && v && (
+                    <p className="text-2xs text-amber-400/80 mt-1 font-mono truncate" title={v.missing.join(' · ')}>
+                      ✗ {v.missing.slice(0, 2).join(' · ')}{v.missing.length > 2 ? ` +${v.missing.length - 2}` : ''}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -151,8 +196,10 @@ export function AutoTranslateStepper({
             <div className="px-5 py-4">
               <p className="text-xs text-slate-300 mb-4 font-medium">Cosa vuoi fare ora?</p>
 
-              {/* Fallback copertura parziale RPG Maker → Traduzione live OCR (palette blue/sky = Traduzione) */}
-              {(/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 0.9 && (
+              {/* Fallback → Traduzione live OCR (palette blue/sky = Traduzione):
+                  per RPG Maker con copertura parziale, e per QUALSIASI motore
+                  quando la verifica su disco non conferma nessun file. */}
+              {(((/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 0.9) || unverified) && (
                 <button
                   onClick={() => {
                     onClose();
@@ -172,9 +219,11 @@ export function AutoTranslateStepper({
                     <ScanText className="h-4 w-4 text-sky-400" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold text-sky-300 block">Traduzione live OCR</span>
+                    <span className="text-xs font-bold text-sky-300 block">{t('postTranslation.ocrTitle')}</span>
                     <span className="text-2xs text-slate-400 leading-tight block">
-                      Copertura file parziale ({(result.successRate * 100).toFixed(0)}%): il testo runtime/evento di questo RPG Maker non è estraibile dai file. Traducilo a schermo in tempo reale con l&apos;overlay OCR.
+                      {unverified
+                        ? t('postTranslation.ocrDescUnverified')
+                        : t('postTranslation.ocrDescPartial').replace('{pct}', (result.successRate * 100).toFixed(0))}
                     </span>
                   </div>
                 </button>
@@ -278,7 +327,8 @@ export function AutoTranslateStepper({
               </div>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
       </div>
     </motion.div>
   );

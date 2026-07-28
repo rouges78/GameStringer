@@ -545,6 +545,7 @@ fn main() {
             commands::unity_patcher::apply_xunity_font_override,
             commands::font_installer::install_game_font,
             commands::font_installer::remove_game_font,
+            commands::font_installer::gm_prepare_glyph_font,
             commands::unity_patcher::remove_unity_patch,
             commands::unity_patcher::detect_localization_files,
             commands::unity_patcher::apply_translation_file,

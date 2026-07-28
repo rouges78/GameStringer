@@ -297,7 +297,17 @@
     "truncatedOriginal": "원본",
     "truncatedRequested": "요청한 번역",
     "truncatedWritten": "파일에 기록됨",
-    "truncatedBytes": "바이트"
+    "truncatedBytes": "바이트",
+    "jsonLang": "JSON 언어 (lang/*.json)",
+    "applyBtn": "번역 적용 ({n})",
+    "saveExeBtn": "EXE에 저장 ({n})",
+    "saveDataWinBtn": "data.win에 저장 ({n})",
+    "scanJsonToast": "JSON 언어 파일: {f}쌍의 lang/*.json에 {n}개 문자열",
+    "scanJnToast": "언어 파일: {f}개의 .jn 파일에 {n}개 문자열",
+    "scanExeToast": "YYC: EXE에서 번역 가능한 문자열 {n}개",
+    "scanStrgToast": "data.win: 번역 가능한 문자열 {n}개",
+    "noteTextJson": "번역은 lang/*.json 파일에 기록됩니다(변경 전 자동 .bak 복사본 생성, \"복원\"으로 원본 복구). 텍스트 파일이므로 번역이 원문보다 길어도 잘리지 않습니다.",
+    "samePageTwice": "엔진이 같은 페이지를 두 번 반환했습니다. 무한 루프를 피하기 위해 번역을 중단했습니다. 문제를 신고해 주세요."
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "텍스트가 클립보드에 복사되었습니다",
@@ -7409,5 +7419,35 @@
     "reset": "기본값으로 되돌리기",
     "invalid": "잘못된 주소입니다. 공식 주소를 사용합니다.",
     "hint": "서비스 루트만 입력하세요. /chat/completions는 앱이 붙입니다."
+  },
+  "gmGlyph": {
+    "title": "GameMaker 글리프 (data.win)",
+    "desc": "이 게임의 폰트는 data.win 내부의 이미지입니다. 글자({chars})가 없으면 번역이 빈 사각형으로 표시됩니다. 미리보기는 파일을 건드리지 않고 모두 계산합니다.",
+    "preview": "미리보기",
+    "previewing": "계산 중…",
+    "apply": "data.win에 적용",
+    "applying": "쓰는 중…",
+    "applied": "글리프를 주입했습니다. 백업이 생성되었습니다. 문제가 생기면 .bak 파일을 복원하세요.",
+    "feasible": "가능: 모든 텍스처가 예산 내에 있습니다. 아직 아무것도 기록되지 않았습니다.",
+    "notFeasible": "불가능: 텍스처가 예산을 초과합니다. 아무것도 기록하지 않습니다 (손상된 data.win은 절대 만들지 않음).",
+    "backupAt": "백업",
+    "injectedN": "{n}개 주입됨",
+    "skippedN": "{n}개 건너뜀",
+    "smallerGlyphs": "글자 {h}px (원본 {H}px)",
+    "texture": "텍스처",
+    "marginOk": "맞음, 여유 {b}B",
+    "marginKo": "{b}B 초과",
+    "applyNote": "적용 시 백업을 만들고 모든 것이 맞을 때만 기록합니다: 전부 아니면 전무."
+  },
+  "postTranslation": {
+    "verifiedTitle": "번역 적용 및 확인 완료: 디스크에 {n}개 파일 (문자열 {pct}%)",
+    "partialTitle": "부분 번역: {n}개 파일 확인, {missing}개는 선언되었지만 없음",
+    "unverifiedTitle": "엔진은 성공이라고 하지만 디스크에서 확인된 파일이 없습니다",
+    "unverifiedHint": "게임이 아직 원래 언어일 수 있습니다. 실행해서 확인하세요. 번역되지 않았다면 OCR 오버레이나 엔진 전용 패처를 사용해 보세요.",
+    "stringsTranslated": "문자열 번역됨",
+    "errors": "오류",
+    "ocrTitle": "실시간 OCR 번역",
+    "ocrDescUnverified": "디스크에서 확인된 번역 파일이 없습니다. 이 게임의 텍스트는 파일로 접근할 수 없을 수 있습니다. OCR 오버레이로 화면에서 실시간 번역하세요.",
+    "ocrDescPartial": "파일 커버리지 부분적({pct}%): 이 RPG Maker의 런타임/이벤트 텍스트는 파일에서 추출할 수 없습니다. OCR 오버레이로 실시간 번역하세요."
   }
 }

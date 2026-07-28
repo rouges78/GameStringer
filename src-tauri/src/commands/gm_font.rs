@@ -393,6 +393,57 @@ pub fn leggi_font(dati: &[u8]) -> Result<Vec<Font>, GmFontError> {
 
 // ── Scrittura ──
 
+/// Riordina IN PLACE i puntatori della lista glifi per codepoint crescente.
+///
+/// **La lezione del 28/07/2026, pagata con un crash all'avvio**: il runtime
+/// GameMaker cerca i glifi con una RICERCA BINARIA sulla lista, che quindi
+/// dev'essere ordinata per `character`. La tabella originale lo e'; ADR-005
+/// pero' riscrive i `char` dei kanji (~U+4E00) con cirillico/accenti
+/// (~U+0410 e sotto) lasciando i record al loro posto → lista non piu'
+/// ordinata → il gioco crashava al primo disegno con un font `fnt_ja_*`
+/// (in inglese partiva: quei font non venivano mai disegnati).
+///
+/// Il rimedio non sposta un byte dei record: si riordina SOLO l'array dei
+/// puntatori (stessa lunghezza, stessi valori, altro ordine). Ogni record si
+/// porta dietro il proprio kerning, che vive dopo i 14 byte fissi.
+///
+/// I `char` si rileggono dal buffer (non dalla struct `Font`, che puo' essere
+/// stantia dopo `scrivi_glifo`). Ordinamento stabile: i duplicati non ballano.
+pub fn riordina_puntatori_glifi(dati: &mut [u8], font: &Font) -> bool {
+    let lista = font.offset + font.scostamento_glifi;
+    if lista + 4 > dati.len() {
+        return false;
+    }
+    let conteggio = u32::from_le_bytes([dati[lista], dati[lista + 1], dati[lista + 2], dati[lista + 3]]) as usize;
+    if conteggio != font.glyphs.len() {
+        return false; // la lista sul disco non combacia con cio' che crediamo di sapere
+    }
+    let inizio_array = lista + 4;
+    let fine_array = inizio_array + conteggio * 4;
+    if fine_array > dati.len() {
+        return false;
+    }
+
+    // (char attuale, puntatore) per ogni voce, col char letto dal buffer.
+    let mut voci: Vec<(u16, u32)> = Vec::with_capacity(conteggio);
+    for i in 0..conteggio {
+        let p = inizio_array + i * 4;
+        let ptr = u32::from_le_bytes([dati[p], dati[p + 1], dati[p + 2], dati[p + 3]]);
+        let rec = ptr as usize;
+        if rec + 2 > dati.len() {
+            return false;
+        }
+        let ch = u16::from_le_bytes([dati[rec], dati[rec + 1]]);
+        voci.push((ch, ptr));
+    }
+    voci.sort_by_key(|(ch, _)| *ch);
+    for (i, (_, ptr)) in voci.iter().enumerate() {
+        let p = inizio_array + i * 4;
+        dati[p..p + 4].copy_from_slice(&ptr.to_le_bytes());
+    }
+    true
+}
+
 /// Riscrive in place i 14 byte fissi di un glifo.
 ///
 /// Non sposta nulla e non cambia la lunghezza del file: e' il gesto che ADR-005
@@ -484,6 +535,34 @@ mod tests {
             assert_eq!(font[0].glyphs[0].character, 0x41);
             assert_eq!(font[0].glyphs[1].character, 0x42);
         }
+    }
+
+    /// Regressione 28/07/2026: dopo l'iniezione i codepoint cambiano (kanji→
+    /// cirillico) e la lista puntatori DEVE tornare ordinata per `character`,
+    /// perche' il runtime GameMaker fa ricerca binaria. Senza riordino il gioco
+    /// crashava all'avvio in giapponese — e partiva in inglese, dove i font
+    /// modificati non si disegnano mai.
+    #[test]
+    fn il_riordino_ripristina_l_ordine_dei_puntatori() {
+        // Tabella ordinata: A, B, C (come la produce GameMaker).
+        let mut d = data_win_finto(1, &[(0x41, 8, 12), (0x42, 8, 12), (0x43, 8, 12)]);
+        let font = leggi_font(&d).unwrap().remove(0);
+
+        // ADR-005 in miniatura: 'B' (in mezzo) diventa 'я' (U+044F, in coda).
+        let mut nuovo = font.glyphs[1].clone();
+        nuovo.character = 0x044F;
+        assert!(scrivi_glifo(&mut d, &nuovo));
+
+        // Ora la lista e' A, я, C: NON ordinata. Il riordino deve dare A, C, я.
+        assert!(riordina_puntatori_glifi(&mut d, &font));
+        let dopo = leggi_font(&d).unwrap().remove(0);
+        let chars: Vec<u16> = dopo.glyphs.iter().map(|g| g.character).collect();
+        assert_eq!(chars, vec![0x41, 0x43, 0x044F], "puntatori riordinati per codepoint");
+
+        // Idempotente: riordinare una lista gia' ordinata non cambia nulla.
+        let prima = d.clone();
+        assert!(riordina_puntatori_glifi(&mut d, &dopo));
+        assert_eq!(prima, d);
     }
 
     #[test]

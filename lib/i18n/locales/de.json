@@ -297,7 +297,17 @@
     "truncatedOriginal": "Original",
     "truncatedRequested": "Angeforderte Übersetzung",
     "truncatedWritten": "In Datei geschrieben",
-    "truncatedBytes": "Bytes"
+    "truncatedBytes": "Bytes",
+    "jsonLang": "JSON-Sprache (lang/*.json)",
+    "applyBtn": "Übersetzungen anwenden ({n})",
+    "saveExeBtn": "In EXE speichern ({n})",
+    "saveDataWinBtn": "In data.win speichern ({n})",
+    "scanJsonToast": "JSON-Sprachdateien: {n} Strings in {f} lang/*.json-Paaren",
+    "scanJnToast": "Sprachdateien: {n} Strings in {f} .jn-Dateien",
+    "scanExeToast": "YYC: {n} übersetzbare Strings aus der EXE",
+    "scanStrgToast": "data.win: {n} übersetzbare Strings",
+    "noteTextJson": "Übersetzungen werden in die lang/*.json-Dateien geschrieben (automatische .bak-Kopie vor jeder Änderung; „Wiederherstellen\" bringt das Original zurück). Es sind Textdateien: Übersetzungen dürfen länger sein als das Original, keine Kürzung.",
+    "samePageTwice": "Die Engine hat dieselbe Seite zweimal zurückgegeben: Übersetzung gestoppt, um eine Endlosschleife zu vermeiden. Bitte melden."
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Text in die Zwischenablage kopiert",
@@ -7409,5 +7419,35 @@
     "reset": "Standard wiederherstellen",
     "invalid": "Ungültige Adresse: die offizielle wird verwendet.",
     "hint": "Nur die Basis-Adresse angeben, ohne /chat/completions — den Rest ergänzt die App."
+  },
+  "gmGlyph": {
+    "title": "GameMaker-Glyphen (data.win)",
+    "desc": "Die Schriften dieses Spiels sind Bilder in data.win: fehlen Buchstaben ({chars}), zeigt die Übersetzung leere Kästchen. Die Vorschau berechnet alles, ohne die Datei anzufassen.",
+    "preview": "Vorschau",
+    "previewing": "Berechne…",
+    "apply": "Auf data.win anwenden",
+    "applying": "Schreibe…",
+    "applied": "Glyphen injiziert. Backup erstellt: falls etwas schiefgeht, die .bak-Datei wiederherstellen.",
+    "feasible": "Machbar: alle Texturen passen ins Budget. Es wurde noch nichts geschrieben.",
+    "notFeasible": "Nicht machbar: eine Textur sprengt das Budget. Nichts geschrieben (niemals eine defekte data.win).",
+    "backupAt": "Backup",
+    "injectedN": "{n} injiziert",
+    "skippedN": "{n} übersprungen",
+    "smallerGlyphs": "Buchstaben mit {h}px (Original {H}px)",
+    "texture": "Textur",
+    "marginOk": "passt, {b} B Spielraum",
+    "marginKo": "überschreitet um {b} B",
+    "applyNote": "Das Anwenden erstellt ein Backup und schreibt nur, wenn ALLES passt: alles oder nichts."
+  },
+  "postTranslation": {
+    "verifiedTitle": "Übersetzung angewendet und verifiziert: {n} Dateien auf der Festplatte ({pct}% Strings)",
+    "partialTitle": "Teilweise Übersetzung: {n} Dateien verifiziert, {missing} deklariert, aber fehlend",
+    "unverifiedTitle": "Die Engine meldet Erfolg, aber keine Datei wurde auf der Festplatte verifiziert",
+    "unverifiedHint": "Das Spiel ist möglicherweise noch in der Originalsprache. Starte es zum Prüfen; falls nicht übersetzt, versuche das OCR-Overlay oder den Engine-Patcher.",
+    "stringsTranslated": "Strings übersetzt",
+    "errors": "Fehler",
+    "ocrTitle": "Live-OCR-Übersetzung",
+    "ocrDescUnverified": "Keine Übersetzungsdatei auf der Festplatte bestätigt: der Text dieses Spiels ist über Dateien womöglich nicht erreichbar. Übersetze ihn in Echtzeit mit dem OCR-Overlay.",
+    "ocrDescPartial": "Teilweise Dateiabdeckung ({pct}%): der Runtime-/Event-Text dieses RPG Maker lässt sich nicht aus Dateien extrahieren. Übersetze ihn in Echtzeit mit dem OCR-Overlay."
   }
 }
