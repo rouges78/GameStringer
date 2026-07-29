@@ -6220,7 +6220,9 @@ pub struct StageExecutionResult {
     pub success: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// PartialEq/Eq: servono per confrontare lo stato nei test. Non cambiano la
+// serializzazione né il comportamento a runtime.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ExecutionStatus {
     Pending,
     Running,
@@ -9464,4 +9466,150 @@ pub async fn has_cached_prediction(
         age_minutes: 0,
         difficulty_score: None,
     })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Test — la prova dell'effetto (post-translation-truth)
+//
+// Questa logica decide che cosa l'utente CREDE sia successo al suo gioco, ed è
+// già stata sbagliata due volte in due giorni: il 28/07 con una verifica che
+// non poteva fallire, il 29/07 con un deliverable registrato prima che la
+// validazione potesse annullarlo. Da qui in avanti la si cambia solo con
+// questi test davanti.
+// ═══════════════════════════════════════════════════════════════════════════════
+#[cfg(test)]
+mod effect_proof_tests {
+    use super::*;
+
+    #[test]
+    fn un_patcher_che_ha_scritto_porta_il_conteggio() {
+        let d = ExecutionDeliverable::patched(
+            "del_gm_patch",
+            "GameMaker Patch (1477 strings)".into(),
+            Some("C:/Games/Deltarune".into()),
+            1477,
+        );
+        assert_eq!(d.proof, EffectProof::Patched);
+        assert_eq!(d.strings_written, 1477);
+        assert_eq!(d.status, ExecutionStatus::Completed);
+    }
+
+    #[test]
+    fn un_patcher_che_non_ha_scritto_niente_non_prova_niente() {
+        // Il caso che generava «100% con 0 errori» e il gioco in inglese: il
+        // motore dichiara la patch, ma il contatore è a zero. Il deliverable
+        // esiste, la prova no — e il frontend deve poterlo distinguere.
+        let d = ExecutionDeliverable::patched("del_x", "Patch (0 strings)".into(), None, 0);
+        assert_eq!(d.proof, EffectProof::Patched);
+        assert_eq!(d.strings_written, 0, "zero scritture non diventano una prova");
+    }
+
+    #[test]
+    fn il_traduttore_a_runtime_non_deve_contare_stringhe() {
+        // BepInEx/XUnity traduce mentre si gioca: qui zero è CORRETTO, e
+        // trattarlo come fallimento manderebbe l'utente a cercare un problema
+        // che non esiste.
+        let d = ExecutionDeliverable::runtime(
+            "del_unity_patch",
+            "BepInEx + XUnity.AutoTranslator".into(),
+            Some("C:/Games/X/BepInEx".into()),
+        );
+        assert_eq!(d.proof, EffectProof::Runtime);
+        assert_eq!(d.strings_written, 0);
+    }
+
+    #[test]
+    fn report_backup_e_cartelle_non_provano_l_effetto() {
+        // Il difetto del 28/07 in forma di test: queste tre cose esistono
+        // SEMPRE, anche quando la patch non ha scritto una riga. Se tornassero
+        // a valere come prova, il verde tornerebbe a essere garantito.
+        for (id, nome) in [
+            ("del_report", "Execution Report"),
+            ("del_backup", "Smart Backup (12 files)"),
+            ("del_translations", "Translations (1477 strings, 3 files)"),
+        ] {
+            let d = ExecutionDeliverable::neutral(id, nome.into(), Some("C:/x".into()), 0.01);
+            assert_eq!(d.proof, EffectProof::None, "{} non deve provare l'effetto", nome);
+            assert_eq!(d.strings_written, 0);
+        }
+    }
+
+    #[test]
+    fn il_frontend_riceve_i_campi_col_nome_giusto() {
+        // Il contratto con auto-translate-stepper.tsx: camelCase per i campi,
+        // minuscolo per il valore dell'enum. Se cambiano, la UI legge
+        // undefined e ricade in silenzio sul ramo "non verificato".
+        let d = ExecutionDeliverable::patched("id", "n".into(), None, 42);
+        let v: serde_json::Value = serde_json::to_value(&d).unwrap();
+        assert_eq!(v["proof"], "patched");
+        assert_eq!(v["stringsWritten"], 42);
+        assert!(v.get("strings_written").is_none(), "il frontend legge camelCase");
+
+        let r = ExecutionDeliverable::runtime("id", "n".into(), None);
+        assert_eq!(serde_json::to_value(&r).unwrap()["proof"], "runtime");
+        let n = ExecutionDeliverable::neutral("id", "n".into(), None, 0.0);
+        assert_eq!(serde_json::to_value(&n).unwrap()["proof"], "none");
+    }
+
+    #[test]
+    fn un_report_vecchio_si_rilegge_come_non_provante() {
+        // I report scritti prima del 29/07 non hanno i due campi. Rileggerli
+        // deve dare "non prova nulla", che è la lettura prudente: il contrario
+        // farebbe risultare verdi run di cui non sappiamo niente.
+        let vecchio = r#"{
+            "deliverableId": "del_report",
+            "deliverableName": "Execution Report",
+            "filePath": "C:/x/report.json",
+            "sizeMb": 0.01,
+            "status": "Completed",
+            "createdAt": "2026-07-20T10:00:00Z"
+        }"#;
+        let d: ExecutionDeliverable = serde_json::from_str(vecchio).unwrap();
+        assert_eq!(d.proof, EffectProof::None);
+        assert_eq!(d.strings_written, 0);
+    }
+
+    #[test]
+    fn il_giro_completo_json_conserva_la_prova() {
+        let d = ExecutionDeliverable::patched("del_injection", "Modified game files (3)".into(), None, 1200);
+        let round: ExecutionDeliverable =
+            serde_json::from_str(&serde_json::to_string(&d).unwrap()).unwrap();
+        assert_eq!(round.proof, EffectProof::Patched);
+        assert_eq!(round.strings_written, 1200);
+    }
+
+    #[test]
+    fn un_run_senza_scritture_non_offre_nessuna_prova() {
+        // Un run realistico in cui la patch NON ha scritto nulla, ma report,
+        // backup e cartella traduzioni ci sono tutti: prima del 29/07 questo
+        // era un verde pieno, perché quei tre esistono sempre.
+        //
+        // Il test NON riproduce il filtro del frontend (sarebbe verificare la
+        // propria copia della regola): controlla i DATI che il frontend
+        // riceve, cioè che l'unico deliverable probante dichiari zero.
+        let run = vec![
+            ExecutionDeliverable::neutral("del_backup", "Smart Backup (12 files)".into(), Some("C:/b".into()), 4.0),
+            ExecutionDeliverable::patched("del_gm_patch", "GameMaker Patch (0 strings)".into(), Some("C:/g".into()), 0),
+            ExecutionDeliverable::neutral("del_translations", "Translations".into(), Some("C:/t".into()), 0.5),
+            ExecutionDeliverable::neutral("del_report", "Execution Report".into(), Some("C:/r.json".into()), 0.01),
+        ];
+
+        let probanti = run.iter().filter(|d| d.proof != EffectProof::None).count();
+        assert_eq!(probanti, 1, "solo la patch pretende di aver cambiato il gioco");
+        assert_eq!(
+            run.iter().map(|d| d.strings_written).sum::<u32>(),
+            0,
+            "nessuna scrittura in tutto il run: non c'e' niente da dichiarare"
+        );
+    }
+
+    #[test]
+    fn i_sottoprodotti_non_ereditano_mai_un_conteggio() {
+        // Difesa contro la ricomparsa del difetto per distrazione: se un
+        // giorno qualcuno passasse un conteggio a un deliverable neutro, il
+        // frontend tornerebbe a vedere una prova dove non c'e'.
+        let n = ExecutionDeliverable::neutral("del_report", "Execution Report".into(), None, 0.01);
+        assert_eq!(n.strings_written, 0);
+        assert_eq!(n.proof, EffectProof::None);
+    }
 }

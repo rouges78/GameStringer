@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
+import { effectVerdict, type EffectVerification } from '@/lib/translation/effect-verdict';
 
 interface AutoTranslateStep {
   label: string;
@@ -24,17 +25,11 @@ interface AutoTranslateResult {
    * Verifica dell'effetto: il gioco è stato cambiato davvero? La prova è
    * `stringsWritten`, il contatore del patcher; l'esistenza dei file da sola
    * non basta (correzione 29/07/2026 — vedi game-detail-client).
+   *
+   * Il tipo è quello condiviso: tenerne una copia locale voleva dire due
+   * definizioni della stessa cosa, libere di divergere in silenzio.
    */
-  verification?: {
-    checked: number;
-    verified: number;
-    missing: string[];
-    verifiedNames: string[];
-    /** Stringhe realmente scritte nei file del gioco. */
-    stringsWritten?: number;
-    /** Traduzione a runtime (BepInEx/XUnity): non c'è nulla da riscrivere. */
-    runtimeOnly?: boolean;
-  };
+  verification?: EffectVerification;
 }
 
 interface AutoTranslateStepperProps {
@@ -143,12 +138,14 @@ export function AutoTranslateStepper({
             perché la traduzione avviene mentre si gioca.
             Niente prova → ambra, e si dice cosa non si è potuto verificare. */}
         {result && steps.every(s => s.status === 'done') && (() => {
-          const v = result.verification;
-          const wrote = (v?.stringsWritten ?? 0) > 0 || v?.runtimeOnly === true;
-          const verifiedOk = !!v && wrote && v.verified > 0 && v.missing.length === 0;
-          const partial = !!v && wrote && v.verified > 0 && v.missing.length > 0;
-          const unverified = !verifiedOk && !partial;
-          const tone = verifiedOk ? 'emerald' : 'amber';
+          // La regola sta in lib/translation/effect-verdict.ts, con i suoi test:
+          // qui dentro non era verificabile, ed è logica che si è già rotta due
+          // volte in due giorni. Il verdetto restituisce anche la verifica
+          // normalizzata, così qui non si maneggia più un oggetto opzionale.
+          const {
+            verifiedOk, partial, unverified, tone, nothingWritten,
+            stringsWritten, runtimeOnly, missing, verifiedNames,
+          } = effectVerdict(result.verification);
           return (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -174,13 +171,13 @@ export function AutoTranslateStepper({
                         quante stringhe sono finite NEL GIOCO. Con la
                         traduzione a runtime quel numero non esiste, e fingere
                         che esista sarebbe la stessa bugia di prima. */}
-                    {verifiedOk && v.runtimeOnly && t('postTranslation.runtimeTitle')}
-                    {verifiedOk && !v.runtimeOnly && t('postTranslation.writtenTitle')
-                      .replace('{n}', String(v.stringsWritten ?? 0))
+                    {verifiedOk && runtimeOnly && t('postTranslation.runtimeTitle')}
+                    {verifiedOk && !runtimeOnly && t('postTranslation.writtenTitle')
+                      .replace('{n}', String(stringsWritten))
                       .replace('{pct}', (result.successRate * 100).toFixed(0))}
                     {partial && t('postTranslation.partialTitle')
-                      .replace('{n}', String(v.stringsWritten ?? v.verified))
-                      .replace('{missing}', String(v.missing.length))}
+                      .replace('{n}', String(stringsWritten))
+                      .replace('{missing}', String(missing.length))}
                     {unverified && t('postTranslation.unverifiedTitle')}
                   </h3>
                   <p className="text-2xs text-slate-400 mt-0.5">
@@ -191,9 +188,9 @@ export function AutoTranslateStepper({
                     {result.errors > 0 && ` | ${result.errors} ${t('postTranslation.errors')}`}
                   </p>
                   {/* I file confermati, PER NOME: la prova che si offre all'utente */}
-                  {v && v.verifiedNames.length > 0 && (
-                    <p className="text-2xs text-slate-500 mt-1 font-mono truncate" title={v.verifiedNames.join(' · ')}>
-                      ✓ {v.verifiedNames.slice(0, 3).join(' · ')}{v.verifiedNames.length > 3 ? ` +${v.verifiedNames.length - 3}` : ''}
+                  {verifiedNames.length > 0 && (
+                    <p className="text-2xs text-slate-500 mt-1 font-mono truncate" title={verifiedNames.join(' · ')}>
+                      ✓ {verifiedNames.slice(0, 3).join(' · ')}{verifiedNames.length > 3 ? ` +${verifiedNames.length - 3}` : ''}
                     </p>
                   )}
                   {/* Il caso che generava le segnalazioni: la pipeline è
@@ -201,19 +198,17 @@ export function AutoTranslateStepper({
                       niente. Va detto per primo e senza giri di parole. */}
                   {unverified && (
                     <p className="text-2xs text-amber-400/80 mt-1">
-                      {/* Se il backend ha riportato la verifica e ne esce zero
-                          scritture, si può dire la cosa precisa. Vale anche
-                          quando `checked` è 0, cioè quando nessun patcher ha
-                          nemmeno provato: è il caso più frequente e merita il
-                          messaggio più chiaro, non quello generico. */}
-                      {v && (v.stringsWritten ?? 0) === 0 && !v.runtimeOnly
+                      {/* Sapere che non è entrato niente è diverso da non
+                          essere riusciti a controllare: il primo caso merita
+                          la frase precisa, il secondo quella prudente. */}
+                      {nothingWritten
                         ? t('postTranslation.nothingWrittenHint')
                         : t('postTranslation.unverifiedHint')}
                     </p>
                   )}
-                  {partial && v && (
-                    <p className="text-2xs text-amber-400/80 mt-1 font-mono truncate" title={v.missing.join(' · ')}>
-                      ✗ {v.missing.slice(0, 2).join(' · ')}{v.missing.length > 2 ? ` +${v.missing.length - 2}` : ''}
+                  {partial && (
+                    <p className="text-2xs text-amber-400/80 mt-1 font-mono truncate" title={missing.join(' · ')}>
+                      ✗ {missing.slice(0, 2).join(' · ')}{missing.length > 2 ? ` +${missing.length - 2}` : ''}
                     </p>
                   )}
                 </div>
@@ -231,7 +226,7 @@ export function AutoTranslateStepper({
               <p className="text-2xs text-slate-500 mb-4 leading-tight">
                 {unverified
                   ? t('postTranslation.nextStepNothing')
-                  : v?.runtimeOnly
+                  : runtimeOnly
                     ? t('postTranslation.nextStepRuntime')
                     : t('postTranslation.nextStepPatched')}
               </p>
