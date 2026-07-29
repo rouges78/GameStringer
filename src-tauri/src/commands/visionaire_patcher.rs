@@ -544,11 +544,19 @@ fn is_translatable_vis_string(s: &str) -> bool {
 
 // ── Patch strings back into VBIN data ──
 
+/// Restituisce il payload VBIN ricompresso e il NUMERO DI STRINGHE REALMENTE
+/// SOSTITUITE.
+///
+/// Il conteggio serve perché `translations.len()` è una promessa, non un
+/// risultato: nel ramo in-place una sostituzione viene saltata in silenzio se
+/// non entra nello spazio disponibile. Chi mostra "N stringhe applicate"
+/// all'utente deve avere il numero vero (correzione 29/07/2026).
 fn patch_vbin_strings(
     _original_vbin: &[u8],
     original_payload: &[u8],
     translations: &std::collections::HashMap<usize, String>,
-) -> Result<Vec<u8>, String> {
+) -> Result<(Vec<u8>, u32), String> {
+    let mut applied: u32 = 0;
     let mut patched = original_payload.to_vec();
     let mut offset_adjustments: i64 = 0;
     
@@ -580,6 +588,7 @@ fn patch_vbin_strings(
                 let new_bytes = translation.as_bytes();
                 if new_bytes.len() == orig_len && str_start + orig_len <= patched.len() {
                     patched[str_start..str_start + orig_len].copy_from_slice(new_bytes);
+                    applied += 1;
                 }
             }
         }
@@ -607,7 +616,8 @@ fn patch_vbin_strings(
                 write_le_u32(&mut rebuilt, new_len as u32);
                 rebuilt.extend_from_slice(new_bytes);
                 rebuilt.push(0); // null terminator
-                
+                applied += 1;
+
                 let old_entry_size = 4 + vis_str.text.len() + 1;
                 offset_adjustments += (4 + new_len) as i64 - old_entry_size as i64;
                 src_pos += old_entry_size;
@@ -641,8 +651,8 @@ fn patch_vbin_strings(
     
     write_le_u32(&mut vbin_out, compressed.len() as u32); // compressed size
     vbin_out.extend_from_slice(&compressed);
-    
-    Ok(vbin_out)
+
+    Ok((vbin_out, applied))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -798,7 +808,7 @@ pub async fn patch_vis_strings(
         .map_err(|e| format!("Decompressione fallita: {}", e))?;
     
     // Patch strings
-    let patched_vbin = patch_vbin_strings(&data, &payload, &translations)?;
+    let (patched_vbin, applied) = patch_vbin_strings(&data, &payload, &translations)?;
     
     // Replace VBIN block in the archive
     let vbin_end = vbin_pos + 16 + compressed;
@@ -815,11 +825,20 @@ pub async fn patch_vis_strings(
         .map_err(|e| format!("Errore scrittura: {}", e))?;
     
     invalidate_cache(); // file changed, cache stale
-    log::info!("[VIS] Archivio patchato con {} traduzioni", translations.len());
-    
+    log::info!(
+        "[VIS] Archivio patchato: {} stringhe applicate su {} proposte",
+        applied,
+        translations.len()
+    );
+
+    // `applied` è quanto è entrato davvero nell'archivio; `translations.len()`
+    // è quanto era stato proposto. Tenerli distinti evita di dichiarare
+    // all'utente scritture che non sono avvenute.
     Ok(serde_json::json!({
-        "success": true,
-        "message": format!("{} stringhe tradotte e applicate", translations.len()),
+        "success": applied > 0,
+        "message": format!("{} stringhe tradotte e applicate", applied),
+        "applied": applied,
+        "proposed": translations.len(),
         "backup": backup_path.to_string_lossy().to_string(),
     }))
 }
@@ -1314,7 +1333,8 @@ mod tests {
         let mut translations = std::collections::HashMap::new();
         translations.insert(0, replacement.to_string());
 
-        let result = patch_vbin_strings(&original_vbin, &payload, &translations).unwrap();
+        let (result, applied) = patch_vbin_strings(&original_vbin, &payload, &translations).unwrap();
+        assert_eq!(applied, 1, "la sostituzione in place deve essere contata");
 
         // Result should be a valid VBIN: magic + header + compressed data
         assert_eq!(&result[0..4], VBIN_MAGIC);
@@ -1353,7 +1373,8 @@ mod tests {
         let mut translations = std::collections::HashMap::new();
         translations.insert(0, replacement.to_string());
 
-        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        let (result, applied) = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        assert_eq!(applied, 1, "anche il ramo di rebuild deve contare la sostituzione");
 
         // Verify VBIN structure
         assert_eq!(&result[0..4], VBIN_MAGIC);
@@ -1376,7 +1397,8 @@ mod tests {
         let payload = make_string_entry(original_text);
         let translations = std::collections::HashMap::new();
 
-        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        let (result, applied) = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        assert_eq!(applied, 0, "nessuna traduzione proposta, nessuna applicata");
         assert_eq!(&result[0..4], VBIN_MAGIC);
 
         // Decompress and verify original text preserved
@@ -1394,7 +1416,8 @@ mod tests {
         let payload = make_string_entry("This is a test sentence here.");
         let translations = std::collections::HashMap::new();
 
-        let result = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        let (result, applied) = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        assert_eq!(applied, 0);
 
         // VBIN header: magic(4) + unknown(4) + uncompressed_size(4) + compressed_size(4) + data
         assert!(result.len() >= 16);

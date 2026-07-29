@@ -7440,14 +7440,20 @@
     "applyNote": "应用时会创建备份，且只有全部容纳时才写入：要么全部，要么没有。"
   },
   "postTranslation": {
-    "verifiedTitle": "翻译已应用并验证：磁盘上有 {n} 个文件（{pct}% 字符串）",
-    "partialTitle": "部分翻译：已验证 {n} 个文件，{missing} 个已声明但缺失",
+    "partialTitle": "部分翻译：已写入 {n} 条字符串，声明的 {missing} 个文件缺失",
     "unverifiedTitle": "引擎报告成功，但磁盘上没有任何文件得到验证",
     "unverifiedHint": "游戏可能仍是原始语言。请启动检查；如未翻译，请尝试 OCR 叠加层或引擎专用补丁工具。",
     "stringsTranslated": "条字符串已翻译",
     "errors": "个错误",
     "ocrTitle": "实时 OCR 翻译",
     "ocrDescUnverified": "磁盘上未确认任何翻译文件：此游戏的文本可能无法通过文件访问。请使用 OCR 叠加层在屏幕上实时翻译。",
-    "ocrDescPartial": "文件覆盖率部分（{pct}%）：此 RPG Maker 的运行时/事件文本无法从文件提取。请使用 OCR 叠加层实时翻译。"
+    "ocrDescPartial": "文件覆盖率部分（{pct}%）：此 RPG Maker 的运行时/事件文本无法从文件提取。请使用 OCR 叠加层实时翻译。",
+    "writtenTitle": "已向游戏文件写入 {n} 条字符串（成功率 {pct}%）",
+    "runtimeTitle": "已安装实时翻译器：游戏将在你游玩时被翻译",
+    "nothingWrittenHint": "没有任何字符串被写入游戏文件：游戏仍是原始语言。请尝试该引擎的专用补丁器或 OCR 叠加层。",
+    "whatNow": "接下来要做什么？",
+    "nextStepPatched": "游戏文件已被修改：启动游戏，确认文本是你选择的语言。如果某个菜单没有变化，说明那部分文本不在文件里。",
+    "nextStepRuntime": "启动游戏：翻译会在你游玩时自动进行。首次启动较慢，因为翻译器正在建立缓存。",
+    "nextStepNothing": "游戏没有任何改变。再试之前，请查看该引擎的专用补丁器，或用 OCR 叠加层翻译屏幕上的文字。"
   }
 }

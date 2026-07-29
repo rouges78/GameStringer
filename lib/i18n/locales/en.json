@@ -7440,14 +7440,20 @@
     "applyNote": "Applying creates a backup and writes only if EVERYTHING fits: all or nothing."
   },
   "postTranslation": {
-    "verifiedTitle": "Translation applied and verified: {n} files on disk ({pct}% strings)",
-    "partialTitle": "Partial translation: {n} files verified, {missing} declared but missing",
+    "partialTitle": "Partial translation: {n} strings written, {missing} declared files missing",
     "unverifiedTitle": "The engine reports success, but no file was verified on disk",
     "unverifiedHint": "The game may still be in its original language. Launch it to check; if it isn't translated, try the OCR overlay or the engine's dedicated patcher.",
     "stringsTranslated": "strings translated",
     "errors": "errors",
     "ocrTitle": "Live OCR translation",
     "ocrDescUnverified": "No translation file confirmed on disk: this game's text may not be reachable through files. Translate it on screen in real time with the OCR overlay.",
-    "ocrDescPartial": "Partial file coverage ({pct}%): this RPG Maker's runtime/event text cannot be extracted from files. Translate it on screen in real time with the OCR overlay."
+    "ocrDescPartial": "Partial file coverage ({pct}%): this RPG Maker's runtime/event text cannot be extracted from files. Translate it on screen in real time with the OCR overlay.",
+    "writtenTitle": "{n} strings written into the game files ({pct}% success)",
+    "runtimeTitle": "Live translator installed: the game will be translated as you play",
+    "nothingWrittenHint": "No string was written into the game files: the game is still in its original language. Try the engine's dedicated patcher or the OCR overlay.",
+    "whatNow": "What would you like to do now?",
+    "nextStepPatched": "The game files have already been modified: launch the game and check the text is in the language you chose. If a menu looks unchanged, that text isn't in the files.",
+    "nextStepRuntime": "Launch the game: translation happens on its own while you play. The first launch is slower, because the translator is building its cache.",
+    "nextStepNothing": "The game is unchanged. Before trying again, check the engine's dedicated patcher, or translate on screen with the OCR overlay."
   }
 }

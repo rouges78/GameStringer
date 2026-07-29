@@ -20,12 +20,20 @@ interface AutoTranslateResult {
   targetLang: string;
   stringsTranslated: number;
   stringsTotal: number;
-  /** Verifica dell'effetto: i file dichiarati esistono davvero sul disco? */
+  /**
+   * Verifica dell'effetto: il gioco è stato cambiato davvero? La prova è
+   * `stringsWritten`, il contatore del patcher; l'esistenza dei file da sola
+   * non basta (correzione 29/07/2026 — vedi game-detail-client).
+   */
   verification?: {
     checked: number;
     verified: number;
     missing: string[];
     verifiedNames: string[];
+    /** Stringhe realmente scritte nei file del gioco. */
+    stringsWritten?: number;
+    /** Traduzione a runtime (BepInEx/XUnity): non c'è nulla da riscrivere. */
+    runtimeOnly?: boolean;
   };
 }
 
@@ -126,16 +134,21 @@ export function AutoTranslateStepper({
 
         {/* POST-TRANSLATION COMPLETION WIZARD
             La verità prima del verde (post-translation-truth): il titolo
-            dichiara il successo SOLO se almeno un file dichiarato dal motore
-            esiste davvero sul disco. verification assente (percorsi non
-            forniti dal motore) o zero verificati → ambra, non verde, e si
-            dice cosa NON si è potuto verificare. */}
+            dichiara il successo SOLO se il motore ha davvero cambiato il
+            gioco. CORREZIONE 29/07/2026: prima bastava che i file dichiarati
+            esistessero, e quindi bastava sempre — i motori dichiarano la
+            cartella del gioco, e report/backup li scriviamo noi. Ora la prova
+            è `stringsWritten`, il contatore del patcher; l'unica eccezione è
+            `runtimeOnly` (BepInEx/XUnity), dove non c'è nulla da riscrivere
+            perché la traduzione avviene mentre si gioca.
+            Niente prova → ambra, e si dice cosa non si è potuto verificare. */}
         {result && steps.every(s => s.status === 'done') && (() => {
           const v = result.verification;
-          const verifiedOk = !!v && v.verified > 0 && v.missing.length === 0;
-          const partial = !!v && v.verified > 0 && v.missing.length > 0;
-          const unverified = !v || v.verified === 0;
-          const tone = verifiedOk ? 'emerald' : partial ? 'amber' : 'amber';
+          const wrote = (v?.stringsWritten ?? 0) > 0 || v?.runtimeOnly === true;
+          const verifiedOk = !!v && wrote && v.verified > 0 && v.missing.length === 0;
+          const partial = !!v && wrote && v.verified > 0 && v.missing.length > 0;
+          const unverified = !verifiedOk && !partial;
+          const tone = verifiedOk ? 'emerald' : 'amber';
           return (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -157,11 +170,16 @@ export function AutoTranslateStepper({
                 </div>
                 <div className="flex-1">
                   <h3 className={`text-sm font-bold ${tone === 'emerald' ? 'text-emerald-300' : 'text-amber-300'}`}>
-                    {verifiedOk && t('postTranslation.verifiedTitle')
-                      .replace('{n}', String(v.verified))
+                    {/* Il titolo dice la cosa che l'utente vuole sapere:
+                        quante stringhe sono finite NEL GIOCO. Con la
+                        traduzione a runtime quel numero non esiste, e fingere
+                        che esista sarebbe la stessa bugia di prima. */}
+                    {verifiedOk && v.runtimeOnly && t('postTranslation.runtimeTitle')}
+                    {verifiedOk && !v.runtimeOnly && t('postTranslation.writtenTitle')
+                      .replace('{n}', String(v.stringsWritten ?? 0))
                       .replace('{pct}', (result.successRate * 100).toFixed(0))}
                     {partial && t('postTranslation.partialTitle')
-                      .replace('{n}', String(v.verified))
+                      .replace('{n}', String(v.stringsWritten ?? v.verified))
                       .replace('{missing}', String(v.missing.length))}
                     {unverified && t('postTranslation.unverifiedTitle')}
                   </h3>
@@ -178,9 +196,19 @@ export function AutoTranslateStepper({
                       ✓ {v.verifiedNames.slice(0, 3).join(' · ')}{v.verifiedNames.length > 3 ? ` +${v.verifiedNames.length - 3}` : ''}
                     </p>
                   )}
+                  {/* Il caso che generava le segnalazioni: la pipeline è
+                      andata a termine ma nei file del gioco non è entrato
+                      niente. Va detto per primo e senza giri di parole. */}
                   {unverified && (
                     <p className="text-2xs text-amber-400/80 mt-1">
-                      {t('postTranslation.unverifiedHint')}
+                      {/* Se il backend ha riportato la verifica e ne esce zero
+                          scritture, si può dire la cosa precisa. Vale anche
+                          quando `checked` è 0, cioè quando nessun patcher ha
+                          nemmeno provato: è il caso più frequente e merita il
+                          messaggio più chiaro, non quello generico. */}
+                      {v && (v.stringsWritten ?? 0) === 0 && !v.runtimeOnly
+                        ? t('postTranslation.nothingWrittenHint')
+                        : t('postTranslation.unverifiedHint')}
                     </p>
                   )}
                   {partial && v && (
@@ -194,7 +222,19 @@ export function AutoTranslateStepper({
 
             {/* Action Prompt */}
             <div className="px-5 py-4">
-              <p className="text-xs text-slate-300 mb-4 font-medium">Cosa vuoi fare ora?</p>
+              <p className="text-xs text-slate-300 mb-1 font-medium">{t('postTranslation.whatNow')}</p>
+              {/* «Ho premuto traduci, ha tradotto, e poi?» (triage 26/07, 03/07):
+                  il passo successivo non è lo stesso per tutti. Con un patcher
+                  il gioco è già cambiato e va solo verificato; con BepInEx la
+                  traduzione avviene giocando e il primo avvio è lento; se non
+                  è stato scritto niente va detto che il gioco è invariato. */}
+              <p className="text-2xs text-slate-500 mb-4 leading-tight">
+                {unverified
+                  ? t('postTranslation.nextStepNothing')
+                  : v?.runtimeOnly
+                    ? t('postTranslation.nextStepRuntime')
+                    : t('postTranslation.nextStepPatched')}
+              </p>
 
               {/* Fallback → Traduzione live OCR (palette blue/sky = Traduzione):
                   per RPG Maker con copertura parziale, e per QUALSIASI motore

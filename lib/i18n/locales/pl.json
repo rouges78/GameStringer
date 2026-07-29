@@ -7440,14 +7440,20 @@
     "applyNote": "Zastosowanie tworzy kopię zapasową i zapisuje tylko, gdy WSZYSTKO się mieści: wszystko albo nic."
   },
   "postTranslation": {
-    "verifiedTitle": "Tłumaczenie zastosowane i zweryfikowane: {n} plików na dysku ({pct}% ciągów)",
-    "partialTitle": "Tłumaczenie częściowe: {n} plików zweryfikowanych, {missing} zadeklarowanych, ale brakujących",
+    "partialTitle": "Tłumaczenie częściowe: zapisano {n} ciągów, brakuje {missing} zadeklarowanych plików",
     "unverifiedTitle": "Silnik zgłasza sukces, ale żaden plik nie został zweryfikowany na dysku",
     "unverifiedHint": "Gra może wciąż być w oryginalnym języku. Uruchom ją, aby sprawdzić; jeśli nie jest przetłumaczona, spróbuj nakładki OCR lub dedykowanego patchera silnika.",
     "stringsTranslated": "ciągów przetłumaczonych",
     "errors": "błędów",
     "ocrTitle": "Tłumaczenie OCR na żywo",
     "ocrDescUnverified": "Żaden plik tłumaczenia nie został potwierdzony na dysku: tekst tej gry może być niedostępny przez pliki. Tłumacz go na ekranie w czasie rzeczywistym z nakładką OCR.",
-    "ocrDescPartial": "Częściowe pokrycie plików ({pct}%): tekstu runtime/zdarzeń tego RPG Makera nie da się wyodrębnić z plików. Tłumacz go na ekranie w czasie rzeczywistym z nakładką OCR."
+    "ocrDescPartial": "Częściowe pokrycie plików ({pct}%): tekstu runtime/zdarzeń tego RPG Makera nie da się wyodrębnić z plików. Tłumacz go na ekranie w czasie rzeczywistym z nakładką OCR.",
+    "writtenTitle": "Zapisano {n} ciągów w plikach gry ({pct}% powodzenia)",
+    "runtimeTitle": "Zainstalowano tłumacza na żywo: gra będzie tłumaczona podczas grania",
+    "nothingWrittenHint": "Żaden ciąg nie został zapisany w plikach gry: gra nadal jest w języku oryginalnym. Wypróbuj dedykowany patcher silnika albo nakładkę OCR.",
+    "whatNow": "Co chcesz teraz zrobić?",
+    "nextStepPatched": "Pliki gry zostały już zmienione: uruchom grę i sprawdź, czy tekst jest w wybranym języku. Jeśli jakieś menu wygląda tak samo, tego tekstu nie ma w plikach.",
+    "nextStepRuntime": "Uruchom grę: tłumaczenie działa samo podczas gry. Pierwsze uruchomienie jest wolniejsze, bo tłumacz buduje pamięć podręczną.",
+    "nextStepNothing": "Gra pozostała bez zmian. Zanim spróbujesz ponownie, sprawdź dedykowany patcher silnika albo tłumacz na ekranie nakładką OCR."
   }
 }

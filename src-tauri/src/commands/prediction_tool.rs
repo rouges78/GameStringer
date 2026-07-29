@@ -6229,6 +6229,33 @@ pub enum ExecutionStatus {
     Skipped,
 }
 
+/// Che cosa dimostra un deliverable riguardo all'EFFETTO sul gioco.
+///
+/// Nasce dal triage del 26/07/2026: la segnalazione più dettagliata dei 64
+/// messaggi era «Traduzione completata al 100% con 0 errori» col gioco ancora
+/// in inglese. Il 28/07 il wizard ha iniziato a verificare che i file
+/// dichiarati esistessero su disco — ma la maggioranza dei motori dichiara
+/// come `file_path` la CARTELLA DEL GIOCO, e report ed backup li scriviamo
+/// noi durante il run: esistono sempre, quindi la verifica passava sempre e
+/// il verde restava garantito anche a patch inefficace.
+///
+/// La prova vera i patcher ce l'hanno già in mano (`patched_count`,
+/// `strings_replaced`, `total_applied`, …): questo enum la porta fino alla UI
+/// invece di seppellirla dentro il nome del deliverable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EffectProof {
+    /// Scritture reali dentro i file del gioco: `strings_written` le conta.
+    Patched,
+    /// Il gioco tradurrà a runtime (BepInEx/XUnity): la prova è che il loader
+    /// è installato, non un conteggio di stringhe — che qui resta 0 per
+    /// costruzione e NON va letto come fallimento.
+    Runtime,
+    /// Non dimostra niente sull'effetto: report di esecuzione, backup,
+    /// cartelle di lavoro. Esistono anche quando la patch non scrive nulla.
+    None,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionDeliverable {
@@ -6238,6 +6265,57 @@ pub struct ExecutionDeliverable {
     pub size_mb: f64,
     pub status: ExecutionStatus,
     pub created_at: String,
+    /// Che cosa dimostra questo deliverable. `#[serde(default)]` perché i
+    /// report di esecuzione salvati su disco prima del 29/07/2026 non hanno
+    /// il campo: rileggendoli valgono `None`, cioè "non prova nulla", che è
+    /// la lettura prudente giusta.
+    #[serde(default = "effect_proof_none")]
+    pub proof: EffectProof,
+    /// Stringhe realmente scritte nei file del gioco. Significativo solo con
+    /// `proof == Patched`.
+    #[serde(default)]
+    pub strings_written: u32,
+}
+
+fn effect_proof_none() -> EffectProof {
+    EffectProof::None
+}
+
+impl ExecutionDeliverable {
+    fn build(
+        id: &str,
+        name: String,
+        file_path: Option<String>,
+        size_mb: f64,
+        proof: EffectProof,
+        strings_written: u32,
+    ) -> Self {
+        Self {
+            deliverable_id: id.to_string(),
+            deliverable_name: name,
+            file_path,
+            size_mb,
+            status: ExecutionStatus::Completed,
+            created_at: chrono::Utc::now().to_rfc3339(),
+            proof,
+            strings_written,
+        }
+    }
+
+    /// Un patcher ha riscritto `strings_written` stringhe dentro il gioco.
+    pub fn patched(id: &str, name: String, file_path: Option<String>, strings_written: u32) -> Self {
+        Self::build(id, name, file_path, 0.0, EffectProof::Patched, strings_written)
+    }
+
+    /// Un loader di traduzione a runtime è stato installato.
+    pub fn runtime(id: &str, name: String, file_path: Option<String>) -> Self {
+        Self::build(id, name, file_path, 0.0, EffectProof::Runtime, 0)
+    }
+
+    /// Sottoprodotto del run che non dice nulla sull'effetto nel gioco.
+    pub fn neutral(id: &str, name: String, file_path: Option<String>, size_mb: f64) -> Self {
+        Self::build(id, name, file_path, size_mb, EffectProof::None, 0)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -6391,14 +6469,13 @@ async fn execute_workflow_from_prediction(
                 backup_success = backed_up > 0;
                 
                 // Register deliverable
-                deliverables.push(ExecutionDeliverable {
-                    deliverable_id: "del_backup".to_string(),
-                    deliverable_name: format!("Smart Backup ({} files)", backed_up),
-                    file_path: Some(backup_dir.to_string_lossy().to_string()),
-                    size_mb: backup_size_mb,
-                    status: ExecutionStatus::Completed,
-                    created_at: chrono::Utc::now().to_rfc3339(),
-                });
+                // Neutro: il backup esiste anche se la patch poi non scrive nulla.
+                deliverables.push(ExecutionDeliverable::neutral(
+                    "del_backup",
+                    format!("Smart Backup ({} files)", backed_up),
+                    Some(backup_dir.to_string_lossy().to_string()),
+                    backup_size_mb,
+                ));
             }
             Err(e) => {
                 stage2_errors.push(format!("❌ Failed to create backup dir: {}", e));
@@ -6717,22 +6794,18 @@ async fn execute_workflow_from_prediction(
                     patch_outputs.push(format!("📂 Backup: {}", result.backup_path));
                     patch_success = result.success;
                     
-                    deliverables.push(ExecutionDeliverable {
-                        deliverable_id: "del_tyrano_patch".to_string(),
-                        deliverable_name: format!("TyranoScript Patch ({} strings)", result.strings_replaced),
-                        file_path: Some(game_path_str.clone()),
-                        size_mb: 0.0,
-                        status: ExecutionStatus::Completed,
-                        created_at: chrono::Utc::now().to_rfc3339(),
-                    });
-                    deliverables.push(ExecutionDeliverable {
-                        deliverable_id: "del_tyrano_backup".to_string(),
-                        deliverable_name: "TyranoScript Backup".to_string(),
-                        file_path: Some(result.backup_path),
-                        size_mb: 0.0,
-                        status: ExecutionStatus::Completed,
-                        created_at: chrono::Utc::now().to_rfc3339(),
-                    });
+                    deliverables.push(ExecutionDeliverable::patched(
+                        "del_tyrano_patch",
+                        format!("TyranoScript Patch ({} strings)", result.strings_replaced),
+                        Some(game_path_str.clone()),
+                        result.strings_replaced,
+                    ));
+                    deliverables.push(ExecutionDeliverable::neutral(
+                        "del_tyrano_backup",
+                        "TyranoScript Backup".to_string(),
+                        Some(result.backup_path),
+                        0.0,
+                    ));
                 }
                 Err(e) => {
                     patch_outputs.push(format!("❌ Patch fallita: {}", e));
@@ -6788,14 +6861,13 @@ async fn execute_workflow_from_prediction(
             let _ = std::fs::write(&report_path, &json_str);
         }
         
-        deliverables.push(ExecutionDeliverable {
-            deliverable_id: "del_report".to_string(),
-            deliverable_name: "Execution Report".to_string(),
-            file_path: Some(report_path.to_string_lossy().to_string()),
-            size_mb: 0.01,
-            status: ExecutionStatus::Completed,
-            created_at: chrono::Utc::now().to_rfc3339(),
-        });
+        // Neutro: lo scriviamo noi, esiste sempre. Non è una prova di traduzione.
+        deliverables.push(ExecutionDeliverable::neutral(
+            "del_report",
+            "Execution Report".to_string(),
+            Some(report_path.to_string_lossy().to_string()),
+            0.01,
+        ));
 
         // ── TYRANO: Final result ──
         let success_count = stages_completed.iter().filter(|s| s.success).count();
@@ -6957,12 +7029,12 @@ async fn execute_workflow_from_prediction(
                     p_outputs.push(format!("✅ Patchate {} stringhe", r.patched_count));
                     p_outputs.push(format!("📂 Backup: {}", r.backup_path));
                     patch_success = r.success;
-                    deliverables.push(ExecutionDeliverable {
-                        deliverable_id: "del_gm_patch".into(),
-                        deliverable_name: format!("GameMaker Patch ({} strings)", r.patched_count),
-                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
-                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
-                    });
+                    deliverables.push(ExecutionDeliverable::patched(
+                        "del_gm_patch",
+                        format!("GameMaker Patch ({} strings)", r.patched_count),
+                        Some(game_path_str.clone()),
+                        r.patched_count as u32,
+                    ));
                 }
                 Err(e) => {
                     p_outputs.push(format!("❌ Patch fallita: {}", e));
@@ -7121,12 +7193,12 @@ async fn execute_workflow_from_prediction(
                 patch_success = total_applied > 0;
                 p_outputs.insert(0, format!("✅ Applicate {} traduzioni in {} file", total_applied, game_info.data_files.len()));
                 if patch_success {
-                    deliverables.push(ExecutionDeliverable {
-                        deliverable_id: "del_rpg_patch".into(),
-                        deliverable_name: format!("RPG Maker Patch ({} translations)", total_applied),
-                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
-                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
-                    });
+                    deliverables.push(ExecutionDeliverable::patched(
+                        "del_rpg_patch",
+                        format!("RPG Maker Patch ({} translations)", total_applied),
+                        Some(game_path_str.clone()),
+                        total_applied,
+                    ));
                 }
             }
         }
@@ -7263,13 +7335,22 @@ async fn execute_workflow_from_prediction(
             match super::visionaire_patcher::patch_vis_strings(game_path_str.clone(), translations).await {
                 Ok(r) => {
                     p_outputs.push(format!("✅ {}", r.get("message").and_then(|m| m.as_str()).unwrap_or("Patch applicata")));
-                    patch_success = true;
-                    deliverables.push(ExecutionDeliverable {
-                        deliverable_id: "del_vis_patch".into(),
-                        deliverable_name: format!("Visionaire Patch ({} strings)", translated_count),
-                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
-                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
-                    });
+                    // `applied` = sostituzioni entrate davvero nell'archivio.
+                    // Prima qui si usava `translated_count` (le stringhe TRADOTTE)
+                    // e `patch_success` era cablato a true: due modi diversi di
+                    // dichiarare un successo che nessuno aveva verificato.
+                    let applied = r.get("applied").and_then(|a| a.as_u64()).unwrap_or(0) as u32;
+                    patch_success = applied > 0;
+                    if applied > 0 {
+                        deliverables.push(ExecutionDeliverable::patched(
+                            "del_vis_patch",
+                            format!("Visionaire Patch ({} strings)", applied),
+                            Some(game_path_str.clone()),
+                            applied,
+                        ));
+                    } else {
+                        p_outputs.push("⚠️ Nessuna stringa è entrata nell'archivio: il gioco NON è stato modificato".to_string());
+                    }
                 }
                 Err(e) => { p_outputs.push(format!("❌ {}", e)); }
             }
@@ -7400,12 +7481,12 @@ async fn execute_workflow_from_prediction(
                     Ok(r) => {
                         p_outputs.push(format!("✅ {}", r.message));
                         patch_success = r.success;
-                        deliverables.push(ExecutionDeliverable {
-                            deliverable_id: "del_ue_pak".into(),
-                            deliverable_name: format!("Unreal .pak ({} entries)", r.entries_count),
-                            file_path: Some(r.pak_path), size_mb: 0.0,
-                            status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
-                        });
+                        deliverables.push(ExecutionDeliverable::patched(
+                            "del_ue_pak",
+                            format!("Unreal .pak ({} entries)", r.entries_count),
+                            Some(r.pak_path),
+                            r.entries_count as u32,
+                        ));
                     }
                     Err(e) => { p_outputs.push(format!("❌ {}", e)); }
                 }
@@ -7487,14 +7568,14 @@ async fn execute_workflow_from_prediction(
                             errors: vec![],
                             success: patch.success,
                         });
-                        deliverables.push(ExecutionDeliverable {
-                            deliverable_id: "del_unity_patch".to_string(),
-                            deliverable_name: "BepInEx + XUnity.AutoTranslator".to_string(),
-                            file_path: Some(game_path.join("BepInEx").to_string_lossy().to_string()),
-                            size_mb: 0.0,
-                            status: ExecutionStatus::Completed,
-                            created_at: chrono::Utc::now().to_rfc3339(),
-                        });
+                        // Runtime: qui non si riscrive il gioco, si installa il
+                        // loader che traduce mentre si gioca. Zero stringhe
+                        // scritte è il comportamento corretto, non un fallimento.
+                        deliverables.push(ExecutionDeliverable::runtime(
+                            "del_unity_patch",
+                            "BepInEx + XUnity.AutoTranslator".to_string(),
+                            Some(game_path.join("BepInEx").to_string_lossy().to_string()),
+                        ));
 
                         emit_progress!("unity_done", 7, "✅ Patch Unity installata — avvia il gioco per la traduzione live", 95);
                         let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
@@ -7970,14 +8051,15 @@ async fn execute_workflow_from_prediction(
             .map(|m| m.len())
             .sum();
         
-        deliverables.push(ExecutionDeliverable {
-            deliverable_id: "del_translations".to_string(),
-            deliverable_name: format!("Translations ({} strings, {} files)", translated_count, translated_files.len()),
-            file_path: Some(translations_dir.to_string_lossy().to_string()),
-            size_mb: total_translation_size as f64 / (1024.0 * 1024.0),
-            status: ExecutionStatus::Completed,
-            created_at: chrono::Utc::now().to_rfc3339(),
-        });
+        // Neutro: sono i file di traduzione PRODOTTI da noi, in una cartella
+        // di lavoro. Finché non vengono iniettati il gioco resta com'era —
+        // è esattamente il caso «tradotto al 100%, gioco ancora in inglese».
+        deliverables.push(ExecutionDeliverable::neutral(
+            "del_translations",
+            format!("Translations ({} strings, {} files)", translated_count, translated_files.len()),
+            Some(translations_dir.to_string_lossy().to_string()),
+            total_translation_size as f64 / (1024.0 * 1024.0),
+        ));
     }
     
     if failed_count > translated_count && total_strings > 0 {
@@ -8010,14 +8092,19 @@ async fn execute_workflow_from_prediction(
     let stage_start = std::time::Instant::now();
     let mut stage6_outputs = Vec::new();
     let mut injected_count = 0u32;
-    
+    // Stringhe REALMENTE sostituite dentro i file, non file toccati:
+    // `injected_count` conta i file, e mostrarlo come "N stringhe scritte"
+    // farebbe leggere «3 stringhe» a chi ne ha appena tradotte 1200.
+    let mut injected_strings = 0u32;
+
     if translated_count > 0 {
         // For text-based files, we can do direct injection by replacing original content
         for (file_path, _strings) in extracted_strings.iter().take(50) {
             match std::fs::read_to_string(file_path) {
                 Ok(mut content) => {
                     let mut modified = false;
-                    
+                    let mut replaced_here = 0u32;
+
                     // Find corresponding translation file
                     if let Ok(relative) = file_path.strip_prefix(game_path) {
                         let translations_dir = dirs::data_local_dir()
@@ -8040,6 +8127,7 @@ async fn execute_workflow_from_prediction(
                                                 if content.contains(orig) {
                                                     content = content.replacen(orig, trans, 1);
                                                     modified = true;
+                                                    replaced_here += 1;
                                                 }
                                             }
                                         }
@@ -8052,6 +8140,7 @@ async fn execute_workflow_from_prediction(
                     if modified {
                         if std::fs::write(file_path, &content).is_ok() {
                             injected_count += 1;
+                            injected_strings += replaced_here;
                         }
                     }
                 }
@@ -8060,17 +8149,13 @@ async fn execute_workflow_from_prediction(
         }
         
         stage6_outputs.push(format!("💉 Injected translations into {} files", injected_count));
-        
-        if injected_count > 0 {
-            deliverables.push(ExecutionDeliverable {
-                deliverable_id: "del_injection".to_string(),
-                deliverable_name: format!("Modified game files ({})", injected_count),
-                file_path: Some(game_path_str.clone()),
-                size_mb: 0.0,
-                status: ExecutionStatus::Completed,
-                created_at: chrono::Utc::now().to_rfc3339(),
-            });
-        }
+
+        // NIENTE deliverable qui: lo stage 7 può ancora ripristinare dal backup
+        // i file risultati invalidi, azzerando le scritture. Registrarlo adesso
+        // congelerebbe un conteggio pre-ripristino, e il wizard mostrerebbe il
+        // verde con «N stringhe scritte» mentre il report dice, due righe più
+        // sotto, che il gioco NON è stato tradotto. Si registra dopo la
+        // validazione — vedi "del_injection" più avanti.
     } else {
         stage6_outputs.push("⏩ No translations to inject".to_string());
     }
@@ -8142,6 +8227,11 @@ async fn execute_workflow_from_prediction(
                                     // Fix issue #46: il file iniettato è stato annullato dal
                                     // ripristino — non deve contare come "gioco modificato".
                                     injected_count = injected_count.saturating_sub(1);
+                                    // Con l'ultimo file ripristinato cadono anche le
+                                    // stringhe: nessuna scrittura è sopravvissuta.
+                                    if injected_count == 0 {
+                                        injected_strings = 0;
+                                    }
                                 }
                             }
                         }
@@ -8154,9 +8244,22 @@ async fn execute_workflow_from_prediction(
         }
     }
     
-    stage7_outputs.push(format!("🎯 Translation coverage: {:.1}%", 
+    stage7_outputs.push(format!("🎯 Translation coverage: {:.1}%",
         if total_strings > 0 { translated_count as f64 / total_strings as f64 * 100.0 } else { 0.0 }));
-    
+
+    // Deliverable dell'iniezione, registrato SOLO ORA: i conteggi qui sono
+    // quelli sopravvissuti all'eventuale ripristino dello stage 7, quindi
+    // dicono davvero che cosa è rimasto dentro il gioco.
+    if injected_count > 0 && injected_strings > 0 {
+        deliverables.push(ExecutionDeliverable::patched(
+            "del_injection",
+            format!("Modified game files ({})", injected_count),
+            Some(game_path_str.clone()),
+            injected_strings,
+        ));
+    }
+
+
     stages_completed.push(StageExecutionResult {
         stage_id: 7,
         stage_name: "Validation & QA".to_string(),
@@ -8202,14 +8305,13 @@ async fn execute_workflow_from_prediction(
         let _ = std::fs::write(&report_path, &json_str);
     }
     
-    deliverables.push(ExecutionDeliverable {
-        deliverable_id: "del_report".to_string(),
-        deliverable_name: "Execution Report".to_string(),
-        file_path: Some(report_path.to_string_lossy().to_string()),
-        size_mb: 0.01,
-        status: ExecutionStatus::Completed,
-        created_at: chrono::Utc::now().to_rfc3339(),
-    });
+    // Neutro: lo scriviamo noi, esiste sempre. Non è una prova di traduzione.
+    deliverables.push(ExecutionDeliverable::neutral(
+        "del_report",
+        "Execution Report".to_string(),
+        Some(report_path.to_string_lossy().to_string()),
+        0.01,
+    ));
     
     stages_completed.push(StageExecutionResult {
         stage_id: 8,

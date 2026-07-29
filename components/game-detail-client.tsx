@@ -321,15 +321,19 @@ export default function GameDetailPage() {
     stringsTranslated: number;
     stringsTotal: number;
     /**
-     * Verifica dell'EFFETTO (post-translation-truth): i file dichiarati dal
-     * motore esistono davvero sul disco? Il successo si dichiara solo se
-     * verified > 0; altrimenti il wizard mostra un avviso, non un verde.
+     * Verifica dell'EFFETTO (post-translation-truth): il gioco è stato
+     * cambiato davvero? La prova è il contatore del patcher (`stringsWritten`),
+     * non l'esistenza dei file — vedi la correzione del 29/07/2026 nel punto
+     * in cui questo oggetto viene costruito. Il verde si dichiara solo se
+     * verified > 0; altrimenti il wizard mostra un avviso.
      */
     verification?: {
-      checked: number;      // deliverable con un percorso da verificare
-      verified: number;     // quanti esistono davvero sul disco
+      checked: number;      // deliverable che pretendono di aver cambiato il gioco
+      verified: number;     // quanti reggono alla controprova
       missing: string[];    // percorsi dichiarati ma assenti
-      verifiedNames: string[]; // nomi file confermati (da mostrare all'utente)
+      verifiedNames: string[]; // nomi confermati (da mostrare all'utente)
+      stringsWritten: number;  // stringhe realmente scritte nei file del gioco
+      runtimeOnly: boolean;    // traduzione a runtime (BepInEx): niente da scrivere
     };
   } | null>(null);
 
@@ -1850,6 +1854,14 @@ export default function GameDetailPage() {
             targetLang: tgt,
             stringsTranslated: r.translated,
             stringsTotal: r.total,
+            // Questo percorso ha già scritto i file di traduzione: senza
+            // `verification` il wizard lo tratterebbe come "non verificato" e
+            // direbbe che il gioco è rimasto com'era, che è falso.
+            verification: {
+              checked: 1, verified: r.translated > 0 ? 1 : 0, missing: [],
+              verifiedNames: r.translated > 0 ? ["Ren'Py"] : [],
+              stringsWritten: r.translated, runtimeOnly: false,
+            },
           });
           await rpTracker.done(r.translated, r.total);
           toast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte. Avvia il gioco e seleziona ${tgt.toUpperCase()}.`);
@@ -1950,6 +1962,11 @@ export default function GameDetailPage() {
             targetLang: tgt,
             stringsTranslated: r.translated,
             stringsTotal: r.total,
+            verification: {
+              checked: 1, verified: r.translated > 0 ? 1 : 0, missing: [],
+              verifiedNames: r.translated > 0 ? ['Visionaire Studio'] : [],
+              stringsWritten: r.translated, runtimeOnly: false,
+            },
           });
           progress.completeOperation(visOpId, { translated: r.translated, total: r.total });
           // Notifica tray (anche con finestra ridotta a icona) + aggiorna badge attivi
@@ -2055,6 +2072,13 @@ export default function GameDetailPage() {
             targetLang: tgt,
             stringsTranslated: r.translated,
             stringsTotal: r.total,
+            // `r.applied` (non `r.translated`): qui l'orchestratore distingue
+            // già fra tradotte e realmente applicate ai file.
+            verification: {
+              checked: 1, verified: r.applied > 0 ? 1 : 0, missing: [],
+              verifiedNames: r.applied > 0 ? ['TyranoScript'] : [],
+              stringsWritten: r.applied, runtimeOnly: false,
+            },
           });
           await tyTracker.done(r.translated, r.total);
           toast.success(t('heroJob.tyranoDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
@@ -2277,6 +2301,11 @@ export default function GameDetailPage() {
               targetLang: tgt,
               stringsTranslated: r.translated,
               stringsTotal: r.total,
+              verification: {
+                checked: 1, verified: r.translated > 0 ? 1 : 0, missing: [],
+                verifiedNames: r.translated > 0 ? [`RPG Maker ${r.version.toUpperCase()}`] : [],
+                stringsWritten: r.translated, runtimeOnly: false,
+              },
             });
             await rmTracker.done(r.translated, r.total);
             toast.success(`RPG Maker ${r.version.toUpperCase()}: ${r.translated}/${r.total} stringhe applicate a ${r.files} file. Rilancia il gioco.`);
@@ -2500,22 +2529,56 @@ export default function GameDetailPage() {
 
       // ── VERIFICA DELL'EFFETTO (post-translation-truth) ──
       // "Completata al 100% con 0 errori" col gioco ancora in inglese è la
-      // segnalazione più dettagliata del triage 26/07. Prima di dichiarare
-      // il successo si controlla che i file dichiarati dal motore ESISTANO
-      // sul disco. Fail-open sul singolo check (un errore di IO non deve
-      // trasformare un successo vero in un falso allarme), ma il conteggio
-      // finisce nel wizard: zero file verificati = niente verde.
-      const declaredPaths = (deliverables as { filePath?: string | null; deliverableName?: string }[])
-        .map(d => ({ path: d?.filePath || null, name: d?.deliverableName || d?.filePath || '' }))
-        .filter((d): d is { path: string; name: string } => !!d.path);
+      // segnalazione più dettagliata del triage 26/07.
+      //
+      // Prima versione (28/07): si controllava che i file dichiarati dal
+      // motore esistessero su disco. CORREZIONE 29/07 — quella verifica
+      // passava sempre, quindi non verificava niente: cinque motori su sette
+      // dichiarano come filePath la CARTELLA DEL GIOCO, e report, backup e
+      // cartella delle traduzioni li scriviamo noi durante il run. Tutta
+      // roba che esiste anche a patch completamente inefficace.
+      //
+      // Ora la prova la porta il backend: `proof` dice se il deliverable
+      // dimostra qualcosa ('patched' = scritture nel gioco, 'runtime' =
+      // loader installato che tradurrà giocando, 'none' = sottoprodotto) e
+      // `stringsWritten` porta il contatore vero del patcher. L'esistenza su
+      // disco resta come controprova per i deliverable probanti, ma da sola
+      // non basta più a fare il verde.
+      type Deliv = {
+        filePath?: string | null;
+        deliverableName?: string;
+        proof?: 'patched' | 'runtime' | 'none';
+        stringsWritten?: number;
+      };
+      const declared = deliverables as Deliv[];
+      // Solo i deliverable che pretendono di aver cambiato il gioco.
+      const proving = declared.filter(d => d?.proof === 'patched' || d?.proof === 'runtime');
+      // Un 'patched' che dichiara 0 stringhe non ha scritto niente: non prova.
+      const effective = proving.filter(d => d?.proof === 'runtime' || (d?.stringsWritten ?? 0) > 0);
+      const stringsWritten = declared.reduce(
+        (n, d) => n + (d?.proof === 'patched' ? (d?.stringsWritten ?? 0) : 0), 0,
+      );
+      const runtimeOnly = effective.length > 0 && effective.every(d => d?.proof === 'runtime');
+
       const missingPaths: string[] = [];
       const verifiedNames: string[] = [];
-      for (const d of declaredPaths) {
+      for (const d of effective) {
+        const name = d?.deliverableName || d?.filePath || '';
+        if (!d?.filePath) {
+          // Nessun percorso da controllare: la prova resta il contatore.
+          verifiedNames.push(name);
+          continue;
+        }
         try {
-          const exists = await invoke<boolean>('check_path_exists', { path: d.path });
-          if (exists) verifiedNames.push(d.name); else missingPaths.push(d.path);
+          const exists = await invoke<boolean>('check_path_exists', { path: d.filePath });
+          if (exists) verifiedNames.push(name); else missingPaths.push(d.filePath);
         } catch {
-          // Check non eseguibile: né verificato né mancante — non conta.
+          // Check non eseguibile (comando assente, permessi): fail-open sul
+          // contatore del patcher, che è comunque la prova principale. Si
+          // conta come verificato — se invece lo si scartasse, un ambiente in
+          // cui check_path_exists fallisce sempre trasformerebbe ogni patch
+          // riuscita in un falso allarme.
+          verifiedNames.push(name);
         }
       }
 
@@ -2530,10 +2593,12 @@ export default function GameDetailPage() {
         stringsTranslated: executionResult?.translatedStrings || executionResult?.totalStrings || 0,
         stringsTotal: executionResult?.totalStrings || 0,
         verification: {
-          checked: declaredPaths.length,
+          checked: proving.length,
           verified: verifiedNames.length,
           missing: missingPaths,
           verifiedNames,
+          stringsWritten,
+          runtimeOnly,
         },
       });
 

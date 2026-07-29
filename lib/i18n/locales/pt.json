@@ -7440,14 +7440,20 @@
     "applyNote": "Aplicar cria um backup e grava apenas se TUDO couber: tudo ou nada."
   },
   "postTranslation": {
-    "verifiedTitle": "Tradução aplicada e verificada: {n} arquivos no disco ({pct}% das strings)",
-    "partialTitle": "Tradução parcial: {n} arquivos verificados, {missing} declarados mas ausentes",
+    "partialTitle": "Tradução parcial: {n} cadeias escritas, {missing} ficheiros declarados em falta",
     "unverifiedTitle": "O motor declara sucesso, mas nenhum arquivo foi verificado no disco",
     "unverifiedHint": "O jogo pode ainda estar no idioma original. Abra-o para conferir; se não estiver traduzido, tente o overlay OCR ou o patcher do motor.",
     "stringsTranslated": "strings traduzidas",
     "errors": "erros",
     "ocrTitle": "Tradução OCR ao vivo",
     "ocrDescUnverified": "Nenhum arquivo de tradução confirmado no disco: o texto deste jogo pode não ser acessível por arquivos. Traduza-o na tela em tempo real com o overlay OCR.",
-    "ocrDescPartial": "Cobertura parcial de arquivos ({pct}%): o texto runtime/eventos deste RPG Maker não pode ser extraído dos arquivos. Traduza-o na tela em tempo real com o overlay OCR."
+    "ocrDescPartial": "Cobertura parcial de arquivos ({pct}%): o texto runtime/eventos deste RPG Maker não pode ser extraído dos arquivos. Traduza-o na tela em tempo real com o overlay OCR.",
+    "writtenTitle": "{n} cadeias escritas nos ficheiros do jogo ({pct}% concluído)",
+    "runtimeTitle": "Tradutor ao vivo instalado: o jogo será traduzido enquanto jogas",
+    "nothingWrittenHint": "Nenhuma cadeia foi escrita nos ficheiros do jogo: continua no idioma original. Experimenta o patcher dedicado do motor ou a sobreposição OCR.",
+    "whatNow": "O que queres fazer agora?",
+    "nextStepPatched": "Os ficheiros do jogo já foram modificados: abre-o e confirma que o texto está no idioma escolhido. Se algum menu continuar igual, esse texto não está nos ficheiros.",
+    "nextStepRuntime": "Abre o jogo: a tradução acontece sozinha enquanto jogas. O primeiro arranque é mais lento, porque o tradutor está a construir a cache.",
+    "nextStepNothing": "O jogo ficou igual. Antes de tentares de novo, vê o patcher dedicado do motor ou traduz no ecrã com a sobreposição OCR."
   }
 }

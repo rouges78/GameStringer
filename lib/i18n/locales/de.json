@@ -7440,14 +7440,20 @@
     "applyNote": "Das Anwenden erstellt ein Backup und schreibt nur, wenn ALLES passt: alles oder nichts."
   },
   "postTranslation": {
-    "verifiedTitle": "Übersetzung angewendet und verifiziert: {n} Dateien auf der Festplatte ({pct}% Strings)",
-    "partialTitle": "Teilweise Übersetzung: {n} Dateien verifiziert, {missing} deklariert, aber fehlend",
+    "partialTitle": "Teilweise übersetzt: {n} Zeichenketten geschrieben, {missing} angegebene Dateien fehlen",
     "unverifiedTitle": "Die Engine meldet Erfolg, aber keine Datei wurde auf der Festplatte verifiziert",
     "unverifiedHint": "Das Spiel ist möglicherweise noch in der Originalsprache. Starte es zum Prüfen; falls nicht übersetzt, versuche das OCR-Overlay oder den Engine-Patcher.",
     "stringsTranslated": "Strings übersetzt",
     "errors": "Fehler",
     "ocrTitle": "Live-OCR-Übersetzung",
     "ocrDescUnverified": "Keine Übersetzungsdatei auf der Festplatte bestätigt: der Text dieses Spiels ist über Dateien womöglich nicht erreichbar. Übersetze ihn in Echtzeit mit dem OCR-Overlay.",
-    "ocrDescPartial": "Teilweise Dateiabdeckung ({pct}%): der Runtime-/Event-Text dieses RPG Maker lässt sich nicht aus Dateien extrahieren. Übersetze ihn in Echtzeit mit dem OCR-Overlay."
+    "ocrDescPartial": "Teilweise Dateiabdeckung ({pct}%): der Runtime-/Event-Text dieses RPG Maker lässt sich nicht aus Dateien extrahieren. Übersetze ihn in Echtzeit mit dem OCR-Overlay.",
+    "writtenTitle": "{n} Zeichenketten in die Spieldateien geschrieben ({pct}% erfolgreich)",
+    "runtimeTitle": "Live-Übersetzer installiert: Das Spiel wird während des Spielens übersetzt",
+    "nothingWrittenHint": "Es wurde keine Zeichenkette in die Spieldateien geschrieben: Das Spiel ist weiterhin in der Originalsprache. Probiere den engine-spezifischen Patcher oder das OCR-Overlay.",
+    "whatNow": "Was möchtest du jetzt tun?",
+    "nextStepPatched": "Die Spieldateien wurden bereits geändert: Starte das Spiel und prüfe, ob der Text in der gewählten Sprache erscheint. Bleibt ein Menü unverändert, steht dieser Text nicht in den Dateien.",
+    "nextStepRuntime": "Starte das Spiel: Die Übersetzung läuft von selbst, während du spielst. Der erste Start dauert länger, weil der Übersetzer seinen Cache aufbaut.",
+    "nextStepNothing": "Das Spiel ist unverändert. Prüfe vor einem neuen Versuch den engine-spezifischen Patcher oder übersetze per OCR-Overlay auf dem Bildschirm."
   }
 }

@@ -7440,14 +7440,20 @@
     "applyNote": "Aplicar crea una copia de seguridad y escribe solo si TODO cabe: todo o nada."
   },
   "postTranslation": {
-    "verifiedTitle": "Traducción aplicada y verificada: {n} archivos en disco ({pct}% de cadenas)",
-    "partialTitle": "Traducción parcial: {n} archivos verificados, {missing} declarados pero ausentes",
+    "partialTitle": "Traducción parcial: {n} cadenas escritas, {missing} archivos declarados ausentes",
     "unverifiedTitle": "El motor declara éxito, pero ningún archivo se verificó en disco",
     "unverifiedHint": "Puede que el juego siga en su idioma original. Ábrelo para comprobarlo; si no está traducido, prueba el overlay OCR o el parcheador del motor.",
     "stringsTranslated": "cadenas traducidas",
     "errors": "errores",
     "ocrTitle": "Traducción OCR en vivo",
     "ocrDescUnverified": "Ningún archivo de traducción confirmado en disco: el texto de este juego quizá no sea accesible por archivos. Tradúcelo en pantalla en tiempo real con el overlay OCR.",
-    "ocrDescPartial": "Cobertura parcial de archivos ({pct}%): el texto runtime/eventos de este RPG Maker no se puede extraer de los archivos. Tradúcelo en pantalla en tiempo real con el overlay OCR."
+    "ocrDescPartial": "Cobertura parcial de archivos ({pct}%): el texto runtime/eventos de este RPG Maker no se puede extraer de los archivos. Tradúcelo en pantalla en tiempo real con el overlay OCR.",
+    "writtenTitle": "{n} cadenas escritas en los archivos del juego ({pct}% correcto)",
+    "runtimeTitle": "Traductor en vivo instalado: el juego se traducirá mientras juegas",
+    "nothingWrittenHint": "No se escribió ninguna cadena en los archivos del juego: sigue en su idioma original. Prueba el parcheador específico del motor o la superposición OCR.",
+    "whatNow": "¿Qué quieres hacer ahora?",
+    "nextStepPatched": "Los archivos del juego ya se han modificado: ábrelo y comprueba que el texto esté en el idioma elegido. Si algún menú sigue igual, ese texto no está en los archivos.",
+    "nextStepRuntime": "Abre el juego: la traducción se aplica sola mientras juegas. El primer arranque es más lento porque el traductor construye su caché.",
+    "nextStepNothing": "El juego sigue igual. Antes de volver a intentarlo, prueba el parcheador específico del motor o traduce en pantalla con la superposición OCR."
   }
 }

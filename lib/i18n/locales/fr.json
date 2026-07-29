@@ -7440,14 +7440,20 @@
     "applyNote": "L'application crée une sauvegarde et n'écrit que si TOUT tient : tout ou rien."
   },
   "postTranslation": {
-    "verifiedTitle": "Traduction appliquée et vérifiée : {n} fichiers sur le disque ({pct}% des chaînes)",
-    "partialTitle": "Traduction partielle : {n} fichiers vérifiés, {missing} déclarés mais absents",
+    "partialTitle": "Traduction partielle : {n} chaînes écrites, {missing} fichiers déclarés absents",
     "unverifiedTitle": "Le moteur annonce un succès, mais aucun fichier n'a été vérifié sur le disque",
     "unverifiedHint": "Le jeu est peut-être encore dans sa langue d'origine. Lancez-le pour vérifier ; s'il n'est pas traduit, essayez l'overlay OCR ou le patcher dédié du moteur.",
     "stringsTranslated": "chaînes traduites",
     "errors": "erreurs",
     "ocrTitle": "Traduction OCR en direct",
     "ocrDescUnverified": "Aucun fichier de traduction confirmé sur le disque : le texte de ce jeu n'est peut-être pas accessible via les fichiers. Traduisez-le à l'écran en temps réel avec l'overlay OCR.",
-    "ocrDescPartial": "Couverture partielle des fichiers ({pct}%) : le texte runtime/événement de ce RPG Maker n'est pas extractible des fichiers. Traduisez-le à l'écran en temps réel avec l'overlay OCR."
+    "ocrDescPartial": "Couverture partielle des fichiers ({pct}%) : le texte runtime/événement de ce RPG Maker n'est pas extractible des fichiers. Traduisez-le à l'écran en temps réel avec l'overlay OCR.",
+    "writtenTitle": "{n} chaînes écrites dans les fichiers du jeu ({pct}% réussi)",
+    "runtimeTitle": "Traducteur en direct installé : le jeu sera traduit pendant que vous jouez",
+    "nothingWrittenHint": "Aucune chaîne n'a été écrite dans les fichiers du jeu : il est toujours dans sa langue d'origine. Essayez le patcheur dédié du moteur ou la surcouche OCR.",
+    "whatNow": "Que voulez-vous faire maintenant ?",
+    "nextStepPatched": "Les fichiers du jeu ont déjà été modifiés : lancez-le et vérifiez que le texte est dans la langue choisie. Si un menu semble inchangé, ce texte ne se trouve pas dans les fichiers.",
+    "nextStepRuntime": "Lancez le jeu : la traduction se fait toute seule pendant que vous jouez. Le premier lancement est plus lent, car le traducteur construit son cache.",
+    "nextStepNothing": "Le jeu est inchangé. Avant de réessayer, regardez le patcheur dédié du moteur, ou traduisez à l'écran avec la surcouche OCR."
   }
 }

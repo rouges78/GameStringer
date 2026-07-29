@@ -591,6 +591,14 @@ interface ExecutionDeliverable {
   sizeMb: number;
   status: ExecutionStatus;
   createdAt: string;
+  /**
+   * Specchio di `EffectProof` in prediction_tool.rs: che cosa dimostra questo
+   * deliverable sull'effetto nel gioco. 'none' = report, backup, cartelle di
+   * lavoro — esistono anche a patch inefficace, quindi non provano nulla.
+   */
+  proof?: 'patched' | 'runtime' | 'none';
+  /** Stringhe realmente scritte nei file del gioco (solo con proof 'patched'). */
+  stringsWritten?: number;
 }
 
 interface ExecutionError {
