@@ -1246,7 +1246,13 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
         return Err("Nessun file .utoc trovato".into());
     }
     
-    // Carica Oodle
+    // Carica Oodle. Se manca NON si esce subito: i blocchi non compressi
+    // restano leggibili. Ma il fatto va tracciato, perché sui giochi reali è
+    // la causa dominante di "0 stringhe" (misurato il 29/07/2026: 2,6–6,4%
+    // di blocchi in chiaro, e i file alla portata sono enum e material
+    // function — 0,13 stringhe/file). Un tempo questo warning moriva nel log
+    // e l'utente non poteva distinguere "il gioco non ha testo" da "non ho
+    // potuto aprire niente".
     let oodle = match OodleLib::load() {
         Ok(lib) => {
             log::info!("✅ Oodle caricata con successo");
@@ -1257,6 +1263,8 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             None
         }
     };
+    // Quanti container dichiarano Oodle fra i metodi di compressione.
+    let mut contenitori_oodle = 0usize;
     
     // Contesto per fallback .uasset DataTable
     struct LocAssetCtx {
@@ -1300,7 +1308,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                 continue;
             }
         };
-        let (offset_lengths, compressed_blocks, compression_methods, files) = 
+        let (offset_lengths, compressed_blocks, compression_methods, files) =
             match parse_utoc_data(&utoc_data, &header) {
                 Ok(r) => r,
                 Err(e) => {
@@ -1308,6 +1316,9 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                     continue;
                 }
             };
+        if compression_methods.iter().any(|m| m.to_lowercase().contains("oodle")) {
+            contenitori_oodle += 1;
+        }
         
         // Cerca file .locres
         let locres_files: Vec<&IoStoreFile> = files.iter()
@@ -1583,12 +1594,44 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             });
         }
         
-        Err(format!(
-            "Trovati {} .uasset localizzazione, {} errori estrazione",
-            loc_asset_contexts.len(), extract_err_count
-        ))
+        // Diagnosi PRECISA, non generica: se Oodle manca e i container la
+        // usano, gli errori di estrazione sono quasi certamente quello — e
+        // dirlo cambia cosa l'utente può fare (procurarsi la DLL) rispetto a
+        // un "errori estrazione" che non dà appigli.
+        if oodle.is_none() && contenitori_oodle > 0 {
+            Err(format!(
+                "OODLE_MANCANTE: {} .uasset di localizzazione trovati ma i container \
+                 sono compressi con Oodle e la DLL (oo2core_*_win64.dll) non è sul PC. \
+                 Senza, i file compressi non si aprono ({} errori). La DLL è inclusa \
+                 in molti giochi UE4 e in Unreal Engine; copiala in \
+                 %APPDATA%/GameStringer/tools/",
+                loc_asset_contexts.len(), extract_err_count
+            ))
+        } else {
+            Err(format!(
+                "Trovati {} .uasset localizzazione, {} errori estrazione",
+                loc_asset_contexts.len(), extract_err_count
+            ))
+        }
+    } else if contenitori_oodle > 0 && oodle.is_none() {
+        // Il caso misurato sui giochi veri (29/07/2026): niente .locres, testi
+        // dentro i .uasset, e senza Oodle non possiamo nemmeno guardarci dentro.
+        Err(
+            "OODLE_MANCANTE: questo gioco non ha file .locres (non usa la \
+             localizzazione di Unreal: i testi stanno nei .uasset) e i container \
+             sono compressi con Oodle, ma la DLL (oo2core_*_win64.dll) non è sul \
+             PC. Senza, i .uasset non si possono esaminare. La DLL è inclusa in \
+             molti giochi UE4 e in Unreal Engine; copiala in \
+             %APPDATA%/GameStringer/tools/"
+            .into(),
+        )
     } else {
-        Err("Nessun file .locres trovato nei container IoStore".into())
+        Err(
+            "Nessun file .locres nei container IoStore: il gioco non usa la \
+             localizzazione di Unreal e nei .uasset non sono stati trovati asset \
+             di localizzazione riconoscibili"
+            .into(),
+        )
     }
 }
 
@@ -2619,5 +2662,340 @@ mod tests {
         assert_eq!(h.version, 7);
         assert_eq!(h.entry_count, 3);
         assert!(h.version > UTOC_MAX_KNOWN_VERSION);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Corpus reale — punto 6 dell'ADR-002
+    //
+    // «I test attuali sono tutti sintetici; non esiste una fixture da gioco
+    // reale.» Un container sintetico dimostra che il parser legge quello che
+    // il parser stesso ha scritto: è un'eco, non una verifica. Questi test
+    // girano su un `.utoc` di un gioco vero e riportano NUMERI, perché la
+    // domanda non è «il codice non va in panico» ma «quante stringhe
+    // traducibili esistono davvero là dentro».
+    //
+    //   GS_UE_UTOC="C:/.../Content/Paks/pakchunk0-Windows.utoc" \
+    //     cargo test --lib -- --ignored --nocapture utoc_reale
+    //
+    // Il .ucas deve stare accanto al .utoc, come nel gioco installato.
+    // ══════════════════════════════════════════════════════════════════
+
+    fn utoc_dal_ambiente() -> Option<std::path::PathBuf> {
+        match std::env::var("GS_UE_UTOC") {
+            Ok(p) if !p.trim().is_empty() => Some(std::path::PathBuf::from(p)),
+            _ => {
+                eprintln!("GS_UE_UTOC non impostata: niente da fare");
+                None
+            }
+        }
+    }
+
+    /// Il layout conosciuto regge su un container più recente della v5?
+    ///
+    /// Lo scanner `scripts/ue-inspect-games.js` dice di sì su UTOC v6 e v8
+    /// (29/07/2026, Beyond Hanwell e Oneirophobia Demo), ma lo dice con una
+    /// reimplementazione in JavaScript. Qui a leggere è il codice VERO, quello
+    /// che gira in produzione.
+    #[test]
+    #[ignore = "richiede GS_UE_UTOC con il percorso di un .utoc reale"]
+    fn utoc_reale_header_e_indice() {
+        let Some(percorso) = utoc_dal_ambiente() else { return };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il .utoc");
+        eprintln!("\n{}: {} byte", percorso.display(), dati.len());
+
+        let header = parse_utoc_header(&dati).expect("header UTOC non parsabile");
+        eprintln!(
+            "UTOC v{} · {} entry · {} blocchi · {} partizioni · blocco {} B",
+            header.version, header.entry_count, header.compressed_block_entry_count,
+            header.partition_count, header.compression_block_size
+        );
+        if header.version > UTOC_MAX_KNOWN_VERSION {
+            eprintln!(
+                "  (v{} è oltre la v{} dichiarata come testata: è proprio il caso da verificare)",
+                header.version, UTOC_MAX_KNOWN_VERSION
+            );
+        }
+
+        let (offsets, blocchi, metodi, files) =
+            parse_utoc_data(&dati, &header).expect("sezioni UTOC non parsabili");
+
+        eprintln!("compressione: {:?}", metodi);
+        eprintln!("file nell'indice: {}", files.len());
+
+        assert_eq!(offsets.len(), header.entry_count as usize,
+            "un OffsetAndLength per entry: se non torna, il layout è diverso");
+        assert_eq!(blocchi.len(), header.compressed_block_entry_count as usize,
+            "i blocchi compressi non corrispondono all'header");
+
+        // Il container global non ha indice: è normale e non va preteso.
+        let e_global = percorso.file_name()
+            .map(|n| n.to_string_lossy().to_lowercase().contains("global"))
+            .unwrap_or(false);
+        if e_global {
+            eprintln!("container global: nessun indice atteso");
+            return;
+        }
+
+        assert!(!files.is_empty(), "indice vuoto su un container che dovrebbe averlo");
+
+        // I percorsi devono essere testo, non byte a caso: è la prova che gli
+        // offset delle sezioni sono giusti.
+        let leggibili = files.iter()
+            .filter(|f| !f.path.is_empty() && f.path.is_ascii() && !f.path.contains('\u{0}'))
+            .count();
+        let quota = leggibili as f64 / files.len() as f64;
+        eprintln!("percorsi leggibili: {}/{} ({:.1}%)", leggibili, files.len(), quota * 100.0);
+        for f in files.iter().take(5) {
+            eprintln!("  {}", f.path);
+        }
+        assert!(quota > 0.95,
+            "solo il {:.1}% dei percorsi è leggibile: il layout NON regge su UTOC v{}",
+            quota * 100.0, header.version);
+
+        // Che cosa c'è dentro, per estensione: decide che cosa è traducibile.
+        let mut per_est: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        for f in &files {
+            if let Some(e) = f.path.rsplit('.').next() {
+                *per_est.entry(e.to_lowercase()).or_insert(0) += 1;
+            }
+        }
+        let mut classifica: Vec<_> = per_est.into_iter().collect();
+        classifica.sort_by(|a, b| b.1.cmp(&a.1));
+        eprintln!("estensioni: {:?}", &classifica[..classifica.len().min(8)]);
+
+        let locres = files.iter().filter(|f| f.path.ends_with(".locres")).count();
+        eprintln!("\n.locres nel container: {}", locres);
+        if locres == 0 {
+            eprintln!(
+                "  NESSUN .locres: il gioco non usa la localizzazione di Unreal.\n\
+                   I testi stanno nei .uasset, ed è il caso degli indie UE5\n\
+                   nati in una lingua sola — cioè quelli che gli utenti\n\
+                   chiedono di tradurre."
+            );
+        }
+    }
+
+    /// Quante stringhe TRADUCIBILI si tirano fuori davvero.
+    ///
+    /// Estrae un campione di `.uasset` dal `.ucas` (decomprimendo per davvero,
+    /// Oodle incluso) e ci passa sopra lo scanner di produzione. Serve a
+    /// distinguere due cose che da fuori si somigliano: «il gioco non ha
+    /// testo» e «il nostro estrattore non lo trova».
+    #[test]
+    #[ignore = "richiede GS_UE_UTOC e la DLL Oodle del gioco"]
+    fn utoc_reale_quante_stringhe_si_estraggono() {
+        let Some(percorso) = utoc_dal_ambiente() else { return };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il .utoc");
+        let header = parse_utoc_header(&dati).expect("header UTOC non parsabile");
+        let (offsets, blocchi, metodi, files) =
+            parse_utoc_data(&dati, &header).expect("sezioni UTOC non parsabili");
+
+        let ucas = percorso.with_extension("ucas");
+        if !ucas.exists() {
+            eprintln!("{}: manca il .ucas accanto al .utoc", ucas.display());
+            return;
+        }
+
+        // Oodle: senza, i blocchi compressi non si aprono e il test non può
+        // dire niente di utile. Va detto invece di far finta.
+        let oodle = match OodleLib::load() {
+            Ok(o) => Some(o),
+            Err(e) => {
+                eprintln!("Oodle non caricata ({e}).");
+                if metodi.iter().any(|m| m.to_lowercase().contains("oodle")) {
+                    eprintln!("Il container USA Oodle: senza la DLL questo test non prova nulla.");
+                    return;
+                }
+                None
+            }
+        };
+
+        let candidati: Vec<_> = files.iter()
+            .filter(|f| f.path.ends_with(".uasset") || f.path.ends_with(".locres"))
+            .take(40)
+            .collect();
+        eprintln!("\ncampione: {} file su {} nell'indice", candidati.len(), files.len());
+
+        let (mut estratti, mut falliti, mut totale_stringhe) = (0usize, 0usize, 0usize);
+        let mut esempi: Vec<String> = Vec::new();
+
+        for f in &candidati {
+            match extract_file_from_ucas(
+                &ucas, f.toc_entry_index as usize, &offsets, &blocchi,
+                &metodi, header.compression_block_size, &oodle,
+            ) {
+                Ok(contenuto) => {
+                    estratti += 1;
+                    let trovate = scan_uasset_strings(&contenuto, &f.path);
+                    totale_stringhe += trovate.len();
+                    for e in trovate.iter().take(2) {
+                        if esempi.len() < 10 {
+                            esempi.push(format!("{}: {}", f.path.rsplit('/').next().unwrap_or(""), e.value));
+                        }
+                    }
+                }
+                Err(e) => {
+                    falliti += 1;
+                    if falliti <= 3 {
+                        eprintln!("  estrazione fallita su {}: {}", f.path, e);
+                    }
+                }
+            }
+        }
+
+        eprintln!("estratti: {estratti} · falliti: {falliti} · stringhe traducibili: {totale_stringhe}");
+        for e in &esempi {
+            eprintln!("  · {e}");
+        }
+
+        assert!(estratti > 0,
+            "nessun file estratto su {} tentativi: la decompressione non funziona \
+             su questo container (v{})", candidati.len(), header.version);
+    }
+
+    /// Quanto si estrae SENZA la DLL Oodle.
+    ///
+    /// Misura del 29/07/2026 sui container reali: la quota di blocchi non
+    /// compressi va dal 2,6% al 6,4%, ma in valore assoluto sono gigabyte. La
+    /// percentuale però non risponde alla domanda utile — quei blocchi
+    /// contengono i `.uasset` col testo, o solo texture e audio?
+    ///
+    /// Un file è leggibile senza Oodle se TUTTI i blocchi che lo coprono sono
+    /// in chiaro (stessa regola di extract_file_from_ucas: indice 0, oppure
+    /// dimensione compressa uguale a quella non compressa).
+    ///
+    /// Il test non ha bisogno della DLL: passa `None` come Oodle, e se un file
+    /// richiedesse davvero la decompressione l'estrazione fallirebbe — il che
+    /// renderebbe il conteggio bugiardo, e infatti viene verificato.
+    #[test]
+    #[ignore = "richiede GS_UE_UTOC con il percorso di un .utoc reale"]
+    fn utoc_reale_quanto_si_legge_senza_oodle() {
+        let Some(percorso) = utoc_dal_ambiente() else { return };
+        let dati = std::fs::read(&percorso).expect("impossibile leggere il .utoc");
+        let header = parse_utoc_header(&dati).expect("header UTOC non parsabile");
+        let (offsets, blocchi, metodi, files) =
+            parse_utoc_data(&dati, &header).expect("sezioni UTOC non parsabili");
+
+        let bs = header.compression_block_size as u64;
+        assert!(bs > 0, "block size a zero: il container non ha senso");
+
+        let in_chiaro = |i: usize| -> bool {
+            match blocchi.get(i) {
+                Some(b) => b.compression_method_index == 0
+                    || b.compressed_size == b.uncompressed_size,
+                None => false,
+            }
+        };
+
+        // Un file è alla nostra portata se nessuno dei suoi blocchi è compresso.
+        let mut leggibili: Vec<&IoStoreFile> = Vec::new();
+        let mut per_estensione: std::collections::HashMap<String, (usize, usize)> =
+            std::collections::HashMap::new();
+
+        for f in &files {
+            let Some(oal) = offsets.get(f.toc_entry_index as usize) else { continue };
+            if oal.length == 0 { continue; }
+            let primo = (oal.offset / bs) as usize;
+            let ultimo = ((oal.offset + oal.length - 1) / bs) as usize;
+            let tutto_in_chiaro = (primo..=ultimo).all(in_chiaro);
+
+            let est = f.path.rsplit('.').next().unwrap_or("").to_lowercase();
+            let e = per_estensione.entry(est).or_insert((0, 0));
+            e.1 += 1;
+            if tutto_in_chiaro {
+                e.0 += 1;
+                leggibili.push(f);
+            }
+        }
+
+        eprintln!("\n=== senza la DLL Oodle ===");
+        eprintln!("file leggibili: {}/{}", leggibili.len(), files.len());
+        let mut classifica: Vec<_> = per_estensione.into_iter().collect();
+        classifica.sort_by(|a, b| b.1 .1.cmp(&a.1 .1));
+        for (est, (ok, tot)) in classifica.iter().take(8) {
+            eprintln!("  .{:<16} {}/{}", est, ok, tot);
+        }
+
+        let uasset_leggibili: Vec<_> = leggibili.iter()
+            .filter(|f| f.path.ends_with(".uasset") || f.path.ends_with(".locres"))
+            .collect();
+        eprintln!("\n.uasset/.locres alla portata: {}", uasset_leggibili.len());
+
+        if uasset_leggibili.is_empty() {
+            eprintln!(
+                "NESSUNO: senza la DLL non si estrae un solo file con del testo.\n\
+                 Il percorso IoStore su questo gioco è bloccato in lettura, non\n\
+                 in scrittura — ed è una decisione di prodotto, non di codice."
+            );
+            return;
+        }
+
+        // Estrazione VERA, con Oodle assente: se qualcosa qui fallisce, la
+        // classificazione qui sopra è sbagliata e va corretta.
+        let ucas = percorso.with_extension("ucas");
+        if !ucas.exists() {
+            eprintln!("manca il .ucas accanto al .utoc: niente prova");
+            return;
+        }
+
+        // TUTTI i file alla portata, non un campione: la prima versione di
+        // questo test ne prendeva 60 nell'ordine dell'indice, capitava sugli
+        // asset tecnici e concludeva che non c'era testo. I file sono in
+        // chiaro, leggerli tutti costa poco e toglie il dubbio.
+        let niente_oodle: Option<OodleLib> = None;
+        let (mut estratti, mut falliti, mut stringhe) = (0usize, 0usize, 0usize);
+        let mut esempi: Vec<String> = Vec::new();
+        let mut classifica_file: Vec<(usize, String)> = Vec::new();
+
+        for f in uasset_leggibili.iter().take(6000) {
+            match extract_file_from_ucas(
+                &ucas, f.toc_entry_index as usize, &offsets, &blocchi,
+                &metodi, header.compression_block_size, &niente_oodle,
+            ) {
+                Ok(contenuto) => {
+                    estratti += 1;
+                    let trovate = scan_uasset_strings(&contenuto, &f.path);
+                    stringhe += trovate.len();
+                    if !trovate.is_empty() {
+                        classifica_file.push((
+                            trovate.len(),
+                            f.path.rsplit('/').next().unwrap_or("").to_string(),
+                        ));
+                    }
+                    // Esempi dai file PIU' RICCHI, non dai primi che capitano:
+                    // se c'e' testo di gioco, e' li' che si trova.
+                    if trovate.len() >= 5 {
+                        for t in trovate.iter().take(2) {
+                            if esempi.len() < 15 {
+                                esempi.push(format!(
+                                    "{} [{}]: {}",
+                                    f.path.rsplit('/').next().unwrap_or(""),
+                                    trovate.len(),
+                                    t.value.chars().take(70).collect::<String>()
+                                ));
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    falliti += 1;
+                    if falliti <= 3 { eprintln!("  fallito {}: {}", f.path, e); }
+                }
+            }
+        }
+
+        eprintln!("estratti: {estratti} · falliti: {falliti} · stringhe traducibili: {stringhe}");
+
+        classifica_file.sort_by(|a, b| b.0.cmp(&a.0));
+        eprintln!("\nfile con piu' testo:");
+        for (n, nome) in classifica_file.iter().take(12) {
+            eprintln!("  {:>5}  {}", n, nome);
+        }
+        eprintln!("\nesempi dai file piu' ricchi:");
+        for e in &esempi { eprintln!("  · {e}"); }
+
+        assert_eq!(falliti, 0,
+            "un file classificato come non compresso non si è estratto: la \
+             regola che decide cosa è alla nostra portata è sbagliata");
     }
 }

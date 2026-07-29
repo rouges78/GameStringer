@@ -7455,5 +7455,9 @@
     "nextStepPatched": "Los archivos del juego ya se han modificado: ábrelo y comprueba que el texto esté en el idioma elegido. Si algún menú sigue igual, ese texto no está en los archivos.",
     "nextStepRuntime": "Abre el juego: la traducción se aplica sola mientras juegas. El primer arranque es más lento porque el traductor construye su caché.",
     "nextStepNothing": "El juego sigue igual. Antes de volver a intentarlo, prueba el parcheador específico del motor o traduce en pantalla con la superposición OCR."
+  },
+  "unrealWizard": {
+    "oodleMissing": "Este juego de UE5 está comprimido con Oodle y la DLL necesaria (oo2core) no está en tu PC: sin ella, los archivos del juego no se pueden abrir.",
+    "oodleHowTo": "La DLL viene incluida en muchos juegos de UE4 y en Unreal Engine. Copia una oo2core_*_win64.dll en %APPDATA%/GameStringer/tools/ y vuelve a intentarlo."
   }
 }

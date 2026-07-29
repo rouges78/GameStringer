@@ -7455,5 +7455,9 @@
     "nextStepPatched": "게임 파일은 이미 수정되었습니다. 게임을 실행해 선택한 언어로 표시되는지 확인하세요. 그대로인 메뉴가 있다면 그 텍스트는 파일에 없습니다.",
     "nextStepRuntime": "게임을 실행하세요. 플레이하는 동안 자동으로 번역됩니다. 첫 실행은 번역기가 캐시를 만드느라 더 느립니다.",
     "nextStepNothing": "게임은 그대로입니다. 다시 시도하기 전에 엔진 전용 패처를 확인하거나 OCR 오버레이로 화면을 번역해 보세요."
+  },
+  "unrealWizard": {
+    "oodleMissing": "이 UE5 게임은 Oodle로 압축되어 있는데 필요한 DLL(oo2core)이 PC에 없습니다. DLL이 없으면 게임 파일을 열 수 없습니다.",
+    "oodleHowTo": "이 DLL은 많은 UE4 게임과 Unreal Engine에 포함되어 있습니다. oo2core_*_win64.dll을 %APPDATA%/GameStringer/tools/에 복사한 뒤 다시 시도하세요."
   }
 }

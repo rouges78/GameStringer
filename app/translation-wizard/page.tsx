@@ -1439,6 +1439,7 @@ export default function TranslationWizardPage() {
     }
 
     // Step 2: If .pak extraction failed, try IoStore (.utoc/.ucas) for UE5 games
+    let oodleMancante = false;
     if (!extraction?.success || !extraction?.entries?.length) {
       log('  🔄 Provo estrazione IoStore (UE5)...');
       try {
@@ -1448,17 +1449,27 @@ export default function TranslationWizardPage() {
           log(`  📄 ${extraction.message}`);
         }
       } catch (e) {
+        // Il backend marca con OODLE_MANCANTE il caso misurato sui giochi
+        // reali (29/07/2026): container Oodle, DLL assente, zero estraibile.
+        // È la causa dominante di "0 stringhe" sui giochi UE5 e va detta per
+        // prima, non sepolta in una lista di ipotesi.
+        oodleMancante = String(e).includes('OODLE_MANCANTE');
         log(`  ⚠️ extract_iostore_localization: ${e}`);
       }
     }
 
     if (!extraction?.success || !extraction?.entries?.length) {
       log('\n  ❌ Nessuna stringa trovata nei file Unreal.');
-      log('  💡 Possibili cause:');
-      log('  • I .pak sono criptati (richiede chiave AES)');
-      log('  • Formato PAK v10+ (UE5 PathHash) non ancora supportato');
-      log('  • Il gioco non usa il sistema .locres standard');
-      log('  💡 Prova: esporta i .locres con FModel e usa "Importa .locres" nel UE Translator');
+      if (oodleMancante) {
+        log(`  🔑 ${t('unrealWizard.oodleMissing')}`);
+        log(`  💡 ${t('unrealWizard.oodleHowTo')}`);
+      } else {
+        log('  💡 Possibili cause:');
+        log('  • I .pak sono criptati (richiede chiave AES)');
+        log('  • Formato PAK v10+ (UE5 PathHash) non ancora supportato');
+        log('  • Il gioco non usa il sistema .locres standard');
+        log('  💡 Prova: esporta i .locres con FModel e usa "Importa .locres" nel UE Translator');
+      }
       return;
     }
 

@@ -108,3 +108,54 @@ collaudo: stesso principio dell'ADR-001, mai spedire un writer binario
 - Nessun nuovo rischio per l'utente: gli interventi di oggi tolgono un bug
   (testo finto) e aggiungono trasparenza, senza toccare il formato su disco dei
   container che già montano.
+
+---
+
+## Addendum 29/07/2026 — la prova sui giochi veri ribalta le priorità
+
+Il punto 6 chiedeva un corpus reale. Oggi c'è: due giochi UE5 installati
+(Beyond Hanwell, UTOC **v6**; Oneirophobia Demo, UTOC **v8**), letti con il
+codice di produzione tramite i test `#[ignore]` attivabili via `GS_UE_UTOC`
+(`utoc_reale_*` in `unreal_iostore.rs`) e con lo scanner
+`scripts/ue-inspect-games.js`.
+
+### Cosa è risultato, in ordine di sorpresa
+
+1. **Il reader regge su v6 e v8, al 100%.** 29.094/29.094 e 11.467/11.471
+   percorsi leggibili, avanzo 0 byte. `UTOC_MAX_KNOWN_VERSION = 5` è pessimista
+   di tre versioni e l'avviso "best-effort" è più allarmista del vero. Il
+   punto 4 (copertura versioni), temuto, in lettura è già a posto.
+
+2. **Nessuno dei due giochi ha un solo `.locres`.** Estensioni trovate:
+   `uasset`, `ubulk`, `umap`, `ushaderbytecode`, `uptnl`. I testi stanno nei
+   `.uasset` (FText nei blueprint e DataTable). Questo ADR dava per scontato il
+   modello `.locres`: per gli indie UE5 nati in una lingua sola — il caso dei
+   nostri utenti — quel modello **non esiste**.
+
+3. **Il blocco vero è Oodle, in lettura, non in scrittura.** Entrambi i giochi
+   comprimono con Oodle; la DLL `oo2core` non è distribuita coi giochi UE5
+   (il decoder è compilato nell'eseguibile) e non era presente in NESSUN gioco
+   della libreria di sviluppo. Senza DLL: 2,6–6,4% dei blocchi in chiaro, e i
+   file interamente in chiaro sono i piccoli — enum, material function. Misura
+   completa su tutti i file alla portata: **0,13 stringhe/file**, massimo 4
+   per file, zero testo di gioco. Il punto 1 di questo ADR ("encoder Oodle in
+   scrittura") presuppone una lettura che sulle macchine degli utenti non
+   funziona.
+
+### Decisioni conseguenti (29/07)
+
+- **Diagnosi onesta subito** (fatto): `extract_iostore_localization` ora
+  distingue e riporta i tre casi — Oodle mancante su container Oodle
+  (marcatore `OODLE_MANCANTE`, intercettato dalla UI e tradotto in 12 lingue,
+  con il rimedio), gioco senza `.locres`, errore generico. Prima il warning
+  moriva nel log e l'utente leggeva "0 stringhe" senza appigli.
+- **La strada per la DLL è una decisione di prodotto aperta**: assistente
+  in-app che la trova nei giochi UE4 dell'utente (legale, ma copre solo chi ne
+  ha) vs decoder libero reverse-engineered (copre tutti, da pesare con le
+  difese copyright/DMCA del progetto). Non si implementa nulla dei punti 1–5
+  prima di questa scelta: senza lettura funzionante dal lato utente, il writer
+  è un esercizio.
+- **Il modello dati va allargato oltre i `.locres`**: il percorso utile per
+  gli indie UE5 è FText/DataTable dentro i `.uasset`, che oggi esiste solo
+  come fallback marcato "localization" nel percorso — filtro che sui due
+  giochi reali non prende niente.

@@ -7455,5 +7455,9 @@
     "nextStepPatched": "ゲームファイルはすでに書き換えられています。ゲームを起動し、選んだ言語で表示されるか確認してください。変わっていないメニューがあれば、その文字列はファイル内にありません。",
     "nextStepRuntime": "ゲームを起動してください。プレイ中に自動で翻訳されます。初回はキャッシュを作るため起動が遅くなります。",
     "nextStepNothing": "ゲームは変更されていません。もう一度試す前に、エンジン専用のパッチャーを確認するか、OCR オーバーレイで画面上の文字を翻訳してください。"
+  },
+  "unrealWizard": {
+    "oodleMissing": "この UE5 ゲームは Oodle で圧縮されており、必要な DLL（oo2core）が PC にありません。DLL がないとゲームファイルを開けません。",
+    "oodleHowTo": "この DLL は多くの UE4 ゲームや Unreal Engine に同梱されています。oo2core_*_win64.dll を %APPDATA%/GameStringer/tools/ にコピーして再試行してください。"
   }
 }

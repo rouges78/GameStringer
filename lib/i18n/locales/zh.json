@@ -7455,5 +7455,9 @@
     "nextStepPatched": "游戏文件已被修改：启动游戏，确认文本是你选择的语言。如果某个菜单没有变化，说明那部分文本不在文件里。",
     "nextStepRuntime": "启动游戏：翻译会在你游玩时自动进行。首次启动较慢，因为翻译器正在建立缓存。",
     "nextStepNothing": "游戏没有任何改变。再试之前，请查看该引擎的专用补丁器，或用 OCR 叠加层翻译屏幕上的文字。"
+  },
+  "unrealWizard": {
+    "oodleMissing": "这款 UE5 游戏使用 Oodle 压缩，而所需的 DLL（oo2core）不在你的电脑上：没有它就无法打开游戏文件。",
+    "oodleHowTo": "许多 UE4 游戏和 Unreal Engine 都附带该 DLL。将 oo2core_*_win64.dll 复制到 %APPDATA%/GameStringer/tools/ 后重试。"
   }
 }

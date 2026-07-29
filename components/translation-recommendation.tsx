@@ -620,8 +620,15 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               extractResult = await invoke<ExtractResult | null>('extract_unreal_localization', { gamePath });
             } catch (pakErr) {
               const pakError = pakErr instanceof Error ? pakErr.message : String(pakErr);
+              // Se il backend ha marcato OODLE_MANCANTE, quella è LA causa e
+              // va mostrata in lingua, con il rimedio — non concatenata a un
+              // errore .pak che confonde (misura 29/07/2026: senza la DLL i
+              // giochi UE5 con Oodle non danno una sola stringa utile).
+              if (iostoreError.includes('OODLE_MANCANTE')) {
+                throw new Error(`${t('unrealWizard.oodleMissing')} ${t('unrealWizard.oodleHowTo')}`);
+              }
               // Combina errori IoStore + PAK per messaggio completo
-              const combined = iostoreError 
+              const combined = iostoreError
                 ? `IoStore: ${iostoreError}\nPAK: ${pakError}`
                 : pakError;
               throw new Error(combined);
