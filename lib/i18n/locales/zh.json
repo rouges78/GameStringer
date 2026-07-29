@@ -7458,6 +7458,9 @@
   },
   "unrealWizard": {
     "oodleMissing": "这款 UE5 游戏使用 Oodle 压缩，而所需的 DLL（oo2core）不在你的电脑上：没有它就无法打开游戏文件。",
-    "oodleHowTo": "许多 UE4 游戏和 Unreal Engine 都附带该 DLL。将 oo2core_*_win64.dll 复制到 %APPDATA%/GameStringer/tools/ 后重试。"
+    "oodleHowTo": "许多 UE4 游戏和 Unreal Engine 都附带该 DLL。将 oo2core_*_win64.dll 复制到 %APPDATA%/GameStringer/tools/ 后重试。",
+    "translatorNotActive": "游戏已启动，但 Unreal 的实时翻译尚不可用：游戏将以原始语言运行。若要现在翻译，请使用文件翻译或 OCR 叠加层。",
+    "launchedWithTranslator": "已启动游戏并启用翻译器。",
+    "anticheatBlocked": "这款游戏受反作弊保护：为了不让你的账号面临风险，GameStringer 不会注入任何内容。请使用不触碰进程的文件翻译或 OCR 叠加层。"
   }
 }

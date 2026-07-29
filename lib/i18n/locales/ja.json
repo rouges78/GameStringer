@@ -7458,6 +7458,9 @@
   },
   "unrealWizard": {
     "oodleMissing": "この UE5 ゲームは Oodle で圧縮されており、必要な DLL（oo2core）が PC にありません。DLL がないとゲームファイルを開けません。",
-    "oodleHowTo": "この DLL は多くの UE4 ゲームや Unreal Engine に同梱されています。oo2core_*_win64.dll を %APPDATA%/GameStringer/tools/ にコピーして再試行してください。"
+    "oodleHowTo": "この DLL は多くの UE4 ゲームや Unreal Engine に同梱されています。oo2core_*_win64.dll を %APPDATA%/GameStringer/tools/ にコピーして再試行してください。",
+    "translatorNotActive": "ゲームを起動しましたが、Unreal のリアルタイム翻訳はまだ利用できません。元の言語で起動します。今すぐ翻訳するには、ファイル翻訳か OCR オーバーレイをお使いください。",
+    "launchedWithTranslator": "翻訳を有効にしてゲームを起動しました。",
+    "anticheatBlocked": "このゲームはアンチチートで保護されています。アカウントを危険にさらさないため、GameStringer は何も注入しません。プロセスに触れないファイル翻訳か OCR オーバーレイをお使いください。"
   }
 }

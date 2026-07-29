@@ -252,22 +252,53 @@ pub async fn get_unreal_patch_status(game_path: String) -> Result<UnrealPatchSta
     })
 }
 
-/// Avvia un gioco con la patch di traduzione attiva
+/// Avvia un gioco con la patch di traduzione attiva.
+///
+/// ⚠️ L'INJECTION NON È IMPLEMENTATA (vedi il TODO più sotto). Fino al
+/// 29/07/2026 questa funzione avviava il gioco senza iniettare niente e
+/// restituiva «Gioco avviato con successo»: l'utente vedeva partire il gioco
+/// in lingua originale senza che nulla gli dicesse che la traduzione runtime
+/// non esiste. Stesso difetto del «100% con 0 errori» del triage, in un'altra
+/// stanza. Ora dichiara quello che fa davvero.
 #[tauri::command]
 pub async fn launch_with_translator(game_path: String, executable: String) -> Result<String, String> {
     let game_dir = Path::new(&game_path);
     let patch_dir = game_dir.join("GameStringer");
-    
+
     if !patch_dir.exists() {
         return Err("Patch non installata. Installa prima la patch.".to_string());
     }
-    
+
     let exe_path = game_dir.join(&executable);
     if !exe_path.exists() {
         return Err(format!("Eseguibile non trovato: {}", executable));
     }
-    
-    log::info!("🚀 Avvio gioco con translator: {}", executable);
+
+    // CANCELLO ANTI-CHEAT. Il rilevamento esisteva già in ue_translator.rs ma
+    // qui, dove il gioco viene AVVIATO, non era mai stato chiamato. Iniettare
+    // in un processo protetto da EAC o BattlEye significa far bannare
+    // l'utente: un danno che nessuna patch successiva ripara. Il controllo sta
+    // prima dell'avvio, non dopo.
+    let eac = game_dir.join("EasyAntiCheat").exists()
+        || game_dir.join("EasyAntiCheat_x64.dll").exists()
+        || game_dir.join("EasyAntiCheat_x86.dll").exists();
+    let battleye = game_dir.join("BattlEye").exists()
+        || game_dir.join("BEService.exe").exists()
+        || game_dir.join("BEClient_x64.dll").exists();
+    if eac || battleye {
+        let quale = if eac { "EasyAntiCheat" } else { "BattlEye" };
+        log::warn!("🛑 {} rilevato in {}: injection rifiutata", quale, game_path);
+        return Err(format!(
+            "ANTICHEAT_RILEVATO: questo gioco è protetto da {}. Iniettare una \
+             DLL in un gioco protetto può far sospendere o bloccare il tuo \
+             account: GameStringer non lo fa. Per questo gioco usa la \
+             traduzione dei file, oppure l'overlay OCR che non tocca il \
+             processo.",
+            quale
+        ));
+    }
+
+    log::info!("🚀 Avvio gioco: {} (injection NON implementata)", executable);
     
     // Avvia il gioco con injection della DLL
     // Per ora usiamo un approccio semplice con CreateRemoteThread
@@ -284,18 +315,33 @@ pub async fn launch_with_translator(game_path: String, executable: String) -> Re
             .spawn()
             .map_err(|e| format!("Errore avvio gioco: {}", e))?;
         
-        // TODO: Implementare injection DLL dopo avvio processo
-        // Questo richiede:
-        // 1. Ottenere PID del processo
-        // 2. OpenProcess con PROCESS_ALL_ACCESS
-        // 3. VirtualAllocEx per allocare memoria
-        // 4. WriteProcessMemory per scrivere path DLL
-        // 5. CreateRemoteThread per chiamare LoadLibraryW
-        
-        log::info!("✅ Gioco avviato! (Injection DLL in sviluppo)");
+        // TODO: Implementare injection DLL dopo avvio processo.
+        //
+        // Gli hook ci sono già: ue-translator-dll/src/text_hooks.h aggancia
+        // FText::FromString con MinHook. Manca il caricamento nel processo, e
+        // per Unity esiste già il pezzo che serve: gs_hook_injector.rs, che
+        // usa un helper esterno invece di CreateRemoteThread diretto (motivo
+        // spiegato nel suo commento in testa). La strada è riusare quello, non
+        // riscrivere l'injection da zero qui.
+        //
+        // ⚠️ Prima di completarla vanno pesati due costi noti: i falsi
+        // positivi antivirus (voce [av-fp] della roadmap, P0 aperta: prima
+        // causa di abbandono al primo avvio) e la fragilità del pattern
+        // scanning delle firme FText su binari UE5 strippati — il commento in
+        // text_hooks.h propone già l'IAT hooking come alternativa.
+        log::info!("ℹ️ Gioco avviato SENZA traduttore: injection non implementata");
     }
-    
-    Ok("Gioco avviato con successo".to_string())
+
+    // Messaggio onesto: il gioco è partito, la traduzione runtime no. Dirlo
+    // qui evita che l'utente resti a chiedersi perché il testo è invariato —
+    // che è esattamente la segnalazione più dettagliata del triage 26/07.
+    Ok(
+        "TRANSLATOR_NON_ATTIVO: gioco avviato, ma la traduzione in tempo reale \
+         per Unreal non è ancora disponibile (l'iniezione della DLL è in \
+         sviluppo). Il gioco partirà nella lingua originale. Per tradurre ora, \
+         usa la traduzione dei file dalla pagina del gioco o l'overlay OCR."
+            .to_string(),
+    )
 }
 
 // === Funzioni helper private ===

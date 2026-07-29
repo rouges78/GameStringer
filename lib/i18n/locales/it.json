@@ -7458,6 +7458,9 @@
   },
   "unrealWizard": {
     "oodleMissing": "Questo gioco UE5 è compresso con Oodle e la DLL necessaria (oo2core) non è sul tuo PC: senza, i file del gioco non si possono aprire.",
-    "oodleHowTo": "La DLL è inclusa in molti giochi UE4 e in Unreal Engine. Copia una oo2core_*_win64.dll nella cartella %APPDATA%/GameStringer/tools/ e riprova."
+    "oodleHowTo": "La DLL è inclusa in molti giochi UE4 e in Unreal Engine. Copia una oo2core_*_win64.dll nella cartella %APPDATA%/GameStringer/tools/ e riprova.",
+    "translatorNotActive": "Gioco avviato, ma la traduzione in tempo reale per Unreal non è ancora disponibile: partirà nella lingua originale. Per tradurlo ora usa la traduzione dei file o l'overlay OCR.",
+    "launchedWithTranslator": "Gioco avviato con il traduttore attivo.",
+    "anticheatBlocked": "Gioco protetto da anti-cheat: GameStringer non inietta nulla, per non mettere a rischio il tuo account. Usa la traduzione dei file oppure l'overlay OCR, che non toccano il processo."
   }
 }

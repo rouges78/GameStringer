@@ -1088,23 +1088,37 @@ export default function GameDetailPage() {
         gamePath: game.installPath
       });
       
-      await invoke('launch_with_translator', {
+      const esito = await invoke<string>('launch_with_translator', {
         gamePath: game.installPath,
         executable: gameInfo.executable
       });
-      
+
       // Traccia avvio gioco
       await activityHistory.trackGameLaunch(
         game.name || game.title,
         game.appid?.toString()
       );
-      
-      setPatchStatus({ success: true, message: 'Gioco avviato con traduttore!' });
+
+      // Il backend distingue i casi: l'injection per Unreal non è implementata,
+      // quindi il gioco parte in lingua originale. Dire «avviato con
+      // traduttore!» era falso (corretto il 29/07/2026).
+      const senzaTraduttore = String(esito).includes('TRANSLATOR_NON_ATTIVO');
+      setPatchStatus({
+        success: !senzaTraduttore,
+        message: senzaTraduttore
+          ? t('unrealWizard.translatorNotActive')
+          : t('unrealWizard.launchedWithTranslator'),
+      });
     } catch (error: unknown) {
       clientLogger.error('Errore avvio gioco:', String(error));
+      const msg = typeof error === 'string' ? error : String(error);
       setPatchStatus({
         success: false,
-        message: typeof error === 'string' ? error : 'Errore avvio gioco'
+        // L'anti-cheat non è un errore qualunque: è un rifiuto deliberato, e
+        // va spiegato perché altrimenti sembra un difetto nostro.
+        message: msg.includes('ANTICHEAT_RILEVATO')
+          ? t('unrealWizard.anticheatBlocked')
+          : (typeof error === 'string' ? error : 'Errore avvio gioco')
       });
     }
   };

@@ -7458,6 +7458,9 @@
   },
   "unrealWizard": {
     "oodleMissing": "This UE5 game is compressed with Oodle and the required DLL (oo2core) is not on your PC: without it, the game files cannot be opened.",
-    "oodleHowTo": "The DLL ships with many UE4 games and with Unreal Engine. Copy an oo2core_*_win64.dll into %APPDATA%/GameStringer/tools/ and try again."
+    "oodleHowTo": "The DLL ships with many UE4 games and with Unreal Engine. Copy an oo2core_*_win64.dll into %APPDATA%/GameStringer/tools/ and try again.",
+    "translatorNotActive": "Game launched, but real-time translation for Unreal is not available yet: it will start in its original language. To translate it now, use file translation or the OCR overlay.",
+    "launchedWithTranslator": "Game launched with the translator active.",
+    "anticheatBlocked": "This game is protected by anti-cheat: GameStringer will not inject anything, to avoid putting your account at risk. Use file translation or the OCR overlay, which leave the process untouched."
   }
 }

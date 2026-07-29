@@ -7458,6 +7458,9 @@
   },
   "unrealWizard": {
     "oodleMissing": "이 UE5 게임은 Oodle로 압축되어 있는데 필요한 DLL(oo2core)이 PC에 없습니다. DLL이 없으면 게임 파일을 열 수 없습니다.",
-    "oodleHowTo": "이 DLL은 많은 UE4 게임과 Unreal Engine에 포함되어 있습니다. oo2core_*_win64.dll을 %APPDATA%/GameStringer/tools/에 복사한 뒤 다시 시도하세요."
+    "oodleHowTo": "이 DLL은 많은 UE4 게임과 Unreal Engine에 포함되어 있습니다. oo2core_*_win64.dll을 %APPDATA%/GameStringer/tools/에 복사한 뒤 다시 시도하세요.",
+    "translatorNotActive": "게임을 실행했지만 Unreal 실시간 번역은 아직 사용할 수 없습니다. 원래 언어로 시작됩니다. 지금 번역하려면 파일 번역이나 OCR 오버레이를 사용하세요.",
+    "launchedWithTranslator": "번역기를 활성화한 상태로 게임을 실행했습니다.",
+    "anticheatBlocked": "이 게임은 안티치트로 보호됩니다. 계정이 위험해지지 않도록 GameStringer는 아무것도 주입하지 않습니다. 프로세스를 건드리지 않는 파일 번역이나 OCR 오버레이를 사용하세요."
   }
 }
