@@ -416,4 +416,41 @@ jobs:
           includeDebug: false
           args: --target x86_64-apple-darwin
 
+  # Annuncio su Discord — ULTIMO, e non può far fallire la release.
+  #
+  # Aspetta che i tre build siano finiti (`needs`), così l'annuncio non arriva
+  # prima che i file siano scaricabili: un link a una release senza asset fa
+  # tornare indietro le persone e non tornano una seconda volta.
+  #
+  # `if: always()` + `continue-on-error` = se Discord è giù, o il webhook non è
+  # configurato, la release resta VERDE. Un annuncio non pubblicato non è un
+  # rilascio fallito, e il contrario darebbe un rosso che spinge a "riparare"
+  # una release che invece è andata bene.
+  #
+  # Attivazione: Settings → Secrets → Actions → nuovo secret DISCORD_WEBHOOK_URL
+  # (URL del webhook del canale #annunci). Senza il secret, lo step salta e lo
+  # dice; non serve toccare questo file.
+  announce-discord:
+    needs: [build-windows, build-linux, build-macos]
+    if: always()
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Nessun `npm ci`: lo script usa solo fs e fetch, che Node 20 ha già.
+      # Installare le dipendenze qui costerebbe minuti per non usarle.
+      - name: Annuncia la release su Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node scripts/release/discord-announce.js "${{ github.event.inputs.version }}"
+
 
