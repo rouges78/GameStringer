@@ -444,7 +444,32 @@ function verdetto(n) {
 function main() {
   let exes = [];
   if (exeDaArgs) {
-    exes = [exeDaArgs];
+    // --exe accetta anche una CARTELLA: prima ci si finiva dentro con un
+    // "EISDIR: illegal operation on a directory" per ogni file, che sembra un
+    // difetto del binario invece che un argomento sbagliato.
+    let stat = null;
+    try {
+      stat = fs.statSync(exeDaArgs);
+    } catch (e) {
+      console.error(`Percorso non leggibile: ${exeDaArgs}\n  ${e.message}`);
+      process.exitCode = 2;
+      return;
+    }
+
+    if (stat.isDirectory()) {
+      if (!asJson) console.log(`--exe punta a una cartella: ci cerco dentro gli .exe Unreal.\n`);
+      exes = cercaExeUnreal(exeDaArgs);
+      if (!exes.length) {
+        console.error(
+          `Nessun eseguibile Unreal in ${exeDaArgs}.\n` +
+          "L'exe di shipping sta di solito in <Gioco>\\Binaries\\Win64\\<Nome>-Win64-Shipping.exe"
+        );
+        process.exitCode = 2;
+        return;
+      }
+    } else {
+      exes = [exeDaArgs];
+    }
   } else {
     const roots = rootsFromArgs.length ? rootsFromArgs : steamLibraries();
     if (!asJson) {
@@ -567,21 +592,44 @@ function main() {
   // e si scende al livello 2 (GDI).
   const primo = 'FText_ToString_UE5';
   if (Object.keys(PATTERNS).includes(primo)) {
-    const zero = referti.filter((r) => !r.errore && r.risultati[primo].match === 0);
-    const ambiguiUE5 = referti.filter((r) => !r.errore && r.risultati[primo].match > 1);
+    // ⚠️ I binari NON ANALIZZABILI vanno contati a parte, mai dedotti per
+    // differenza. Nella prima stesura di questo blocco il totale era
+    // `referti.length - zero - ambigui`, quindi un file che non si era
+    // nemmeno riusciti a leggere finiva nella casella "aggancerebbe": la
+    // sintesi affermava una cosa che non era stata misurata. È lo stesso
+    // difetto del '100% con 0 errori' del triage, dentro lo strumento che
+    // dovrebbe smascherarlo.
+    const illeggibili = referti.filter((r) => r.errore);
+    const letti = referti.filter((r) => !r.errore);
+    const zero = letti.filter((r) => r.risultati[primo].match === 0);
+    const ambiguiUE5 = letti.filter((r) => r.risultati[primo].match > 1);
+    const agganciano = letti.filter((r) => r.risultati[primo].match === 1);
 
     console.log('\nEFFETTO A RUNTIME (solo pattern UE5, match unico obbligatorio)');
-    console.log(
-      `  ${referti.length - zero.length - ambiguiUE5.length} binario/i aggancerebbero, ` +
-      `${zero.length} nessun match, ${ambiguiUE5.length} ambigui → rifiutati.`
-    );
-    for (const r of [...zero, ...ambiguiUE5]) {
-      console.log(`     · ${path.basename(r.file)} → fallback GDI`);
+    if (!letti.length) {
+      console.log('  NIENTE DA DIRE: nessun binario è stato letto davvero.');
+    } else {
+      console.log(
+        `  su ${letti.length} binario/i letti: ${agganciano.length} aggancerebbero, ` +
+        `${zero.length} nessun match, ${ambiguiUE5.length} ambigui → rifiutati.`
+      );
+      for (const r of agganciano) {
+        console.log(`     ✔ ${path.basename(r.file)} → hook engine`);
+      }
+      for (const r of [...zero, ...ambiguiUE5]) {
+        console.log(`     · ${path.basename(r.file)} → fallback GDI`);
+      }
+      console.log(
+        '  Nessuno di questi casi aggancia una funzione sbagliata: il caso\n' +
+        '  peggiore è "non traduce a livello engine", non "crasha il gioco".'
+      );
     }
-    console.log(
-      '  Nessuno di questi casi aggancia una funzione sbagliata: il caso\n' +
-      '  peggiore è "non traduce a livello engine", non "crasha il gioco".'
-    );
+    if (illeggibili.length) {
+      console.log(`\n  ⚠ ${illeggibili.length} binario/i NON analizzati (nessun verdetto per questi):`);
+      for (const r of illeggibili) {
+        console.log(`     · ${path.basename(r.file)}: ${r.errore}`);
+      }
+    }
   }
 }
 

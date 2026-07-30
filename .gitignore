@@ -144,3 +144,10 @@ _gs_split/
 .samples/*
 !.samples/README.md
 .i18n-work/
+
+# Estrazioni da dump di memoria: blob grezzi da megabyte, rigenerabili con
+# scripts/ue-locres-from-dump.js. Le fixture che vale la pena conservare vanno
+# in __tests__/fixtures/, tagliate e documentate — non lasciate qui.
+/estratti/
+/estratti2/
+/stringhe-dump.txt
