@@ -19,13 +19,18 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}          # build the current branch; tauri-action creates the tag
+          # gs-hook linka MinHook, che è un SUBMODULE
+          # (unity-translator-dll/external/minhook, vedi .gitmodules): senza
+          # questo la cartella arriva vuota e la build della DLL fallisce in
+          # configurazione, su add_subdirectory di una directory inesistente.
+          submodules: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,6 +59,44 @@ jobs:
           cd src-tauri
           cargo clean -p tauri-build || true
           cargo clean -p gamestringer || true
+
+      # ⚠️ Fino al 30/07/2026 questo passo NON ESISTEVA: le DLL sono gitignorate
+      # (.gitignore: src-tauri/resources/gs-hook/**/*.dll) e sotto resources/gs-hook
+      # era tracciato solo .gitkeep. Ogni release — FIRMATE INCLUSE — impacchettava
+      # due cartelle VUOTE, e inject_gs_hook rispondeva "DLL gs-hook non trovata".
+      # Non riguardava solo Unreal: gs-hook è anche il percorso Unity/Mono e GDI/OCR,
+      # cioè TUTTO il ramo "traduzione in tempo reale" non è mai stato spedito
+      # funzionante. Funzionava solo sul PC di Davide, con le DLL copiate a mano.
+      - name: Build gs-hook DLL + injector (x64 e x86)
+        shell: pwsh
+        run: .\gs-hook\build-all.ps1 -Config Release
+
+      # Se la build sopra fallisse in silenzio, il bundle uscirebbe di nuovo vuoto
+      # e ce ne accorgeremmo solo dall'utente. Meglio fermare la release qui.
+      - name: Verify gs-hook artifacts are present
+        shell: pwsh
+        run: |
+          $missing = @()
+          foreach ($arch in @('x64', 'x86')) {
+            foreach ($file in @('gs-hook.dll', 'gs-injector.exe')) {
+              $p = "src-tauri\resources\gs-hook\$arch\$file"
+              if (!(Test-Path $p)) {
+                $missing += "$p (assente)"
+              } elseif ((Get-Item $p).Length -lt 20KB) {
+                # Un file da 0 byte esiste ma non è una DLL: Test-Path da solo
+                # farebbe passare una build fallita a metà.
+                $missing += "$p (troppo piccolo: $((Get-Item $p).Length) byte)"
+              } else {
+                $kb = [math]::Round((Get-Item $p).Length / 1KB, 1)
+                Write-Host "OK  $p ($kb KB)"
+              }
+            }
+          }
+          if ($missing.Count -gt 0) {
+            Write-Host "::error::gs-hook non buildata: $($missing -join ', ')"
+            Write-Host "La release spedirebbe una cartella vuota e la traduzione in tempo reale non partirebbe."
+            exit 1
+          }
 
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
@@ -121,7 +164,24 @@ jobs:
             if (Test-Path $webview2) {
               Copy-Item $webview2 -Destination "$portableDir/"
             }
-            
+
+            # gs-hook: l'installer riceve queste risorse dal bundler Tauri, la
+            # portable NO — va copiata a mano o gs_hook_paths() cerca
+            # <exe_dir>\resources\gs-hook\<arch>\gs-hook.dll e non la trova,
+            # e la traduzione in tempo reale resta muta solo su questo canale.
+            if (Test-Path "src-tauri/resources") {
+              Copy-Item "src-tauri/resources" -Destination "$portableDir/resources" -Recurse -Force
+              $hookDll = "$portableDir/resources/gs-hook/x64/gs-hook.dll"
+              if (!(Test-Path $hookDll)) {
+                Write-Host "::error::portable senza gs-hook.dll ($hookDll)"
+                exit 1
+              }
+              Write-Host "OK  gs-hook incluso nella portable"
+            } else {
+              Write-Host "::error::src-tauri/resources assente: portable incompleta"
+              exit 1
+            }
+
             # Create portable marker file
             "GameStringer Portable Version $version" | Out-File -FilePath "$portableDir/PORTABLE"
             

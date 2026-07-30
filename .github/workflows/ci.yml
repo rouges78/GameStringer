@@ -103,6 +103,46 @@ jobs:
         working-directory: src-tauri
         run: cargo test --verbose
 
+  # ⚠️ Prima del 30/07/2026 NESSUN workflow compilava il C++ di gs-hook: la DLL
+  # esisteva solo sul PC di Davide (artefatti del 13/06) e un errore di
+  # compilazione non fermava niente. Da quando la release la builda davvero, un
+  # errore qui fermerebbe la RELEASE — cioè lo scopriremmo nel momento peggiore.
+  # Questo job lo scopre al push, che costa qualche minuto invece di un rilascio.
+  # Non produce artefatti: verifica solo che compili, dual-arch come in release.
+  build-gs-hook:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true   # MinHook è un submodule: senza, add_subdirectory fallisce
+
+      - name: Configure + build gs-hook (x64)
+        run: |
+          cmake -S gs-hook -B out-gs-hook-x64 -A x64
+          cmake --build out-gs-hook-x64 --config Release
+
+      - name: Configure + build gs-hook (x86)
+        run: |
+          cmake -S gs-hook -B out-gs-hook-x86 -A Win32
+          cmake --build out-gs-hook-x86 --config Release
+
+      - name: Gli artefatti attesi esistono
+        shell: pwsh
+        run: |
+          $expected = @(
+            "out-gs-hook-x64\bin\Release\gs-hook.dll",
+            "out-gs-hook-x64\bin\Release\gs-injector.exe",
+            "out-gs-hook-x86\bin\Release\gs-hook.dll",
+            "out-gs-hook-x86\bin\Release\gs-injector.exe"
+          )
+          $missing = $expected | Where-Object { !(Test-Path $_) }
+          if ($missing) {
+            Write-Host "::error::gs-hook: artefatti mancanti: $($missing -join ', ')"
+            Write-Host "Se i nomi sono cambiati, aggiornare anche gs-hook/build-all.ps1 e release.yml."
+            exit 1
+          }
+          $expected | ForEach-Object { Write-Host "OK  $_" }
+
   check-linux:
     runs-on: ubuntu-22.04
     steps:

@@ -33,6 +33,21 @@ $targets = @(
 foreach ($t in $targets) {
     $buildDir = Join-Path $hookDir $t.Out
 
+    # Una CMakeCache.txt ricorda il percorso ASSOLUTO da cui è stata generata:
+    # se il repo è stato spostato (o clonato altrove), cmake si rifiuta di
+    # riconfigurare con un errore che sembra un problema di sorgenti
+    # ("does not match the source ... used to generate cache"). Le build dir
+    # sono gitignorate e rigenerabili: se la cache non corrisponde, si butta.
+    $cache = Join-Path $buildDir 'CMakeCache.txt'
+    if (Test-Path $cache) {
+        $home_ = (Select-String -Path $cache -Pattern '^CMAKE_HOME_DIRECTORY:INTERNAL=(.*)$' |
+                  Select-Object -First 1).Matches.Groups[1].Value
+        if ($home_ -and ($home_.Replace('\', '/').TrimEnd('/') -ne $hookDir.Replace('\', '/').TrimEnd('/'))) {
+            Write-Host "==> Cache stantia in $buildDir (generata da $home_): la rimuovo" -ForegroundColor Yellow
+            Remove-Item -Recurse -Force $buildDir
+        }
+    }
+
     Write-Host "==> Configurazione $($t.Arch) in $buildDir" -ForegroundColor Cyan
     cmake -S $hookDir -B $buildDir -A $t.Arch
     if ($LASTEXITCODE -ne 0) { throw "cmake configure fallita per $($t.Arch)" }

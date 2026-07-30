@@ -9,19 +9,22 @@
 //
 // Porting completato riusando il core di unreal-translator (incluso da gs-hook
 // via CMake): `UE::Patterns::*` (firme byte di FText::ToString) e
-// `GSTranslator::Utils::PatternScan` vivono in ../unreal-translator/hook-dll e
-// NON sono duplicati qui.
+// `GSTranslator::Utils::PatternScanUnique` vivono in ../unreal-translator/hook-dll
+// e NON sono duplicati qui.
 //
 // LIMITI NOTI:
-//   • I pattern UE4.2x / UE5 sono **x64** (prefissi REX.W "48 ..."): per i (rari)
-//     giochi UE a 32-bit non agganciano → Activate ritorna Failed → fallback L2.
+//   • Si aggancia SOLO con il pattern UE5: quello UE4.2x è stato rimosso il
+//     30/07/2026 perché faceva 89-127 match sui giochi veri (vedi ue_types.h).
+//     Sui giochi UE4.2x questa sorgente quindi non aggancia → fallback L2.
+//   • Il pattern UE5 è **x64** (prefissi REX.W "48 ..."): per i (rari) giochi
+//     UE a 32-bit non aggancia → Activate ritorna Failed → fallback L2.
 //   • Sostituzione in-place SOLO se la traduzione entra nel buffer già allocato
 //     da UE (FString::ArrayMax). Espanderlo richiede l'allocatore UE
 //     (FMemory::Realloc) → TODO.
 //
 #include "text_source.h"
 #include "ue_types.h"   // UE::FString, UE::FText, UE::Patterns::FText_ToString_*
-#include "utils.h"      // GSTranslator::Utils::PatternScan
+#include "utils.h"      // GSTranslator::Utils::PatternScanUnique
 #include "gs_log.h"     // log unificato gs-hook (%TEMP%\gs-hook.log)
 #include <Windows.h>
 #include <MinHook.h>
@@ -103,19 +106,39 @@ public:
         HMODULE game = GetModuleHandleA(nullptr);
         if (!game) return Activation::Failed;
 
-        // Pattern-scan di FText::ToString: provo prima UE5, poi UE4.2x. PatternScan
-        // e i pattern sono riusati dal core (niente duplicazione delle firme).
-        const char* patterns[] = {
-            UE::Patterns::FText_ToString_UE5,
-            UE::Patterns::FText_ToString_UE427,
-        };
-        uintptr_t addr = 0;
-        for (const char* pat : patterns) {
-            addr = GSTranslator::Utils::PatternScan(game, pat);
-            if (addr) break;
-        }
+        // Pattern-scan di FText::ToString. UNICITÀ OBBLIGATORIA: PatternScanUnique
+        // ritorna un indirizzo solo se il pattern compare ESATTAMENTE una volta.
+        //
+        // Perché non basta il primo match (misurato il 30/07/2026 su 5 giochi UE
+        // reali, 71-140 MB, con scripts/ue-validate-ftext-pattern.js): il pattern
+        // UE5 è specifico — 1 solo match su 4 binari su 5 — ma il vecchio pattern
+        // UE4.27 ne faceva 89, 103, 104, 117 e 127, perché è il prologo MSVC
+        // standard di qualunque funzione a due argomenti che salva due registri.
+        // Prendere "il primo di 100" significa agganciare una funzione a caso con
+        // una firma sbagliata: crash, o peggio corruzione heap silenziosa.
+        // Per questo il pattern UE4.27 NON è più in questa lista (vedi ue_types.h)
+        // e il multi-match è un rifiuto, non un ripiego.
+        //
+        // Fallire qui è il caso BENIGNO: il dllmain scende al livello 2 (GDI).
+        size_t matches = 0;
+        uintptr_t addr = GSTranslator::Utils::PatternScanUnique(
+            game, UE::Patterns::FText_ToString_UE5, &matches);
+
         if (!addr) {
-            LogLineA("[gs-hook/UE] FText::ToString non trovato (pattern x64 UE4.2x/UE5)\n");
+            if (matches > 1) {
+                // Il conteggio è saturato al cap: oltre quella soglia diciamo
+                // "almeno N", non un numero che non abbiamo misurato.
+                const std::string quanti =
+                    (matches >= GSTranslator::Utils::PATTERN_SCAN_COUNT_CAP)
+                        ? "almeno " + std::to_string(matches)
+                        : std::to_string(matches);
+                const std::string msg =
+                    "[gs-hook/UE] pattern FText::ToString ambiguo: " + quanti +
+                    " match, hook RIFIUTATO (aggancerebbe la funzione sbagliata)\n";
+                LogLineA(msg.c_str());
+            } else {
+                LogLineA("[gs-hook/UE] FText::ToString non trovato (pattern x64 UE5)\n");
+            }
             return Activation::Failed; // → il dllmain scende a L2 (GDI)
         }
 
@@ -127,14 +150,22 @@ public:
             return Activation::Failed;
         }
 
+        hookedAddr_ = addr;
         LogLineW(L"[gs-hook/UE] hook FText::ToString installato\n");
         return Activation::Activated;
     }
 
     void Deactivate() override {
-        if (Original_FText_ToString)
-            MH_DisableHook(reinterpret_cast<LPVOID>(Original_FText_ToString));
+        // ⚠️ Qui si passava `Original_FText_ToString`, che è il TRAMPOLINO
+        // restituito da MinHook, non la funzione agganciata: MH_DisableHook
+        // vuole l'indirizzo TARGET, quindi l'hook non veniva mai disabilitato.
+        if (hookedAddr_)
+            MH_DisableHook(reinterpret_cast<LPVOID>(hookedAddr_));
     }
+
+private:
+    /// Indirizzo di FText::ToString su cui l'hook è stato installato.
+    uintptr_t hookedAddr_ = 0;
 };
 
 } // namespace

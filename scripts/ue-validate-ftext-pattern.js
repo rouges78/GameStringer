@@ -51,8 +51,13 @@ const path = require('path');
 // ── I pattern sotto esame ─────────────────────────────────────────────────
 // Copiati DA ue_types.h. Se là cambiano, qui va rifatto il giro: sono la cosa
 // che stiamo misurando, non una comodità locale.
+// AGGIORNATO 30/07/2026: dopo questa misura il pattern UE4.27 è stato TOLTO dal
+// codice (89-127 match) e in ue_types.h si chiama ora
+// `FText_ToString_UE427_INUTILIZZABILE`. Resta qui perché questo script serve
+// anche a provare firme candidate PRIMA di metterle nel codice: se qualcuno
+// scrive un nuovo pattern UE4.2x, lo misura con questo nome e deve vedere 1.
 const PATTERNS = {
-  FText_ToString_UE427:
+  FText_ToString_UE427_INUTILIZZABILE:
     '48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B F1',
   FText_ToString_UE5:
     '40 53 48 83 EC ?? 48 8B D9 48 85 C9 74 ?? 48 8B 01',
@@ -553,35 +558,30 @@ function main() {
     );
   }
 
-  // ORDINE DI PROVA — conta più del conteggio singolo.
-  // source_unreal_ftext.cpp prova i pattern in quest'ordine: UE5, poi UE427, e
-  // si ferma al primo che trova qualcosa. Quindi un UE427 ambiguo è INNOCUO
-  // finché UE5 aggancia, e diventa la funzione-a-caso solo sui binari dove UE5
-  // fa 0 match. Questa riga dice, per i binari misurati, se quel caso esiste.
-  const nomi = Object.keys(PATTERNS);
-  const primo = 'FText_ToString_UE5';   // come nell'array del sorgente
-  const secondo = 'FText_ToString_UE427';
-  if (nomi.includes(primo) && nomi.includes(secondo)) {
-    const esposti = referti.filter(
-      (r) =>
-        !r.errore &&
-        r.risultati[primo].match === 0 &&
-        r.risultati[secondo].match > 1
+  // COSA SUCCEDE ORA A RUNTIME (aggiornato 30/07/2026).
+  // Questa sezione descriveva l'ordine di prova UE5 → UE427 col "primo che
+  // aggancia vince". Non è più così, ed erano proprio queste misure a dire che
+  // non poteva restare così: il pattern UE4.27 è stato RIMOSSO dal codice e
+  // `PatternScanUnique` accetta solo i match unici. Quindi oggi un pattern
+  // ambiguo non è più "innocuo finché l'altro aggancia": è rifiutato e basta,
+  // e si scende al livello 2 (GDI).
+  const primo = 'FText_ToString_UE5';
+  if (Object.keys(PATTERNS).includes(primo)) {
+    const zero = referti.filter((r) => !r.errore && r.risultati[primo].match === 0);
+    const ambiguiUE5 = referti.filter((r) => !r.errore && r.risultati[primo].match > 1);
+
+    console.log('\nEFFETTO A RUNTIME (solo pattern UE5, match unico obbligatorio)');
+    console.log(
+      `  ${referti.length - zero.length - ambiguiUE5.length} binario/i aggancerebbero, ` +
+      `${zero.length} nessun match, ${ambiguiUE5.length} ambigui → rifiutati.`
     );
-    console.log('\nORDINE DI PROVA (UE5 → UE427, primo che aggancia vince)');
-    if (esposti.length === 0) {
-      console.log(
-        '  ✔ Su tutti i binari misurati UE5 aggancia, quindi il pattern UE427\n' +
-        '    ambiguo non viene mai raggiunto. È una fortuna dell\'ordine, non una\n' +
-        '    difesa: resta un fucile carico per il primo gioco dove UE5 fa 0.'
-      );
-    } else {
-      console.log(
-        `  ⛔ ${esposti.length} binario/i dove UE5 NON aggancia e si cade sul UE427\n` +
-        '     ambiguo → hook su funzione scelta a caso:'
-      );
-      for (const r of esposti) console.log('     · ' + path.basename(r.file));
+    for (const r of [...zero, ...ambiguiUE5]) {
+      console.log(`     · ${path.basename(r.file)} → fallback GDI`);
     }
+    console.log(
+      '  Nessuno di questi casi aggancia una funzione sbagliata: il caso\n' +
+      '  peggiore è "non traduce a livello engine", non "crasha il gioco".'
+    );
   }
 }
 

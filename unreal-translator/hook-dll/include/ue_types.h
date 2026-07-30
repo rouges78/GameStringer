@@ -65,17 +65,32 @@ typedef void (__fastcall* UTextBlock_SetText_t)(UTextBlock* This, const FText& I
 typedef void (__fastcall* STextBlock_SetText_t)(void* This, const FText& InText);
 
 // Pattern signatures per trovare le funzioni in memoria
+//
+// MISURATI il 30/07/2026 su 5 giochi UE reali (71-140 MB, tutti x64) con
+// `node scripts/ue-validate-ftext-pattern.js`, che conta TUTTE le occorrenze
+// nelle sezioni eseguibili invece di fermarsi alla prima. Un pattern serve a
+// installare un hook: quello che conta non è "trova qualcosa", è "trova UNA
+// COSA SOLA". Con più match si aggancia una funzione a caso con una firma
+// sbagliata → crash, o corruzione heap silenziosa.
+// Prima di aggiungere o cambiare un pattern qui, rimisurare con quello script.
 namespace Patterns {
-    // Questi pattern vanno aggiornati per ogni versione UE
-    // Formato: byte pattern con ?? per wildcard
-    
-    // UE 4.27 FText::ToString pattern (esempio)
-    constexpr const char* FText_ToString_UE427 = 
-        "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B F1";
-    
-    // UE 5.0+ FText::ToString pattern (esempio)
-    constexpr const char* FText_ToString_UE5 = 
+    // UE 5.0+ FText::ToString — USABILE.
+    // 1 solo match su 4 binari su 5 (eccezione: Father's Day, 4 match → lì
+    // PatternScanUnique rifiuta e si scende a GDI, che è il comportamento
+    // voluto). La sequenza `test rcx,rcx / je / mov rax,[rcx]` subito dopo
+    // `mov rbx,rcx` discrimina davvero, nonostante il prologo generico.
+    constexpr const char* FText_ToString_UE5 =
         "40 53 48 83 EC ?? 48 8B D9 48 85 C9 74 ?? 48 8B 01";
+
+    // ⛔ UE 4.27 FText::ToString — INUTILIZZABILE, NON REINSERIRE fra i pattern
+    // provati. Misurato: 89, 103, 104, 117 e 127 match sui cinque giochi.
+    // È il prologo MSVC standard di qualunque funzione a due argomenti che
+    // salva due registri (mov [rsp+X],rbx / mov [rsp+X],rsi / push rdi /
+    // sub rsp / mov rdi,rdx / mov rsi,rcx): compare in ogni binario grosso.
+    // Resta qui solo come documentazione di cosa NON funziona; serve una firma
+    // nuova, ricavata da un binario UE4.27 vero e verificata a match unico.
+    constexpr const char* FText_ToString_UE427_INUTILIZZABILE =
+        "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B F1";
 }
 
 } // namespace UE

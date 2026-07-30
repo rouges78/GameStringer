@@ -50,16 +50,22 @@ void __fastcall Hooked_UTextBlock_SetText(UE::UTextBlock* This, const UE::FText&
     Original_UTextBlock_SetText(This, InText);
 }
 
-// Pattern scanner
+// Pattern scanner — per installare un hook serve un match UNICO: prendere il
+// primo di N significa agganciare una funzione a caso con una firma sbagliata.
 uintptr_t FindPattern(const char* moduleName, const char* pattern) {
     HMODULE hModule = GetModuleHandleA(moduleName);
     if (!hModule) {
         hModule = GetModuleHandleA(nullptr); // Main module
     }
-    
+
     if (!hModule) return 0;
-    
-    return Utils::PatternScan(hModule, pattern);
+
+    size_t matches = 0;
+    uintptr_t addr = Utils::PatternScanUnique(hModule, pattern, &matches);
+    if (!addr && matches > 1) {
+        Utils::LogError("Pattern ambiguo: %zu match, hook rifiutato", matches);
+    }
+    return addr;
 }
 
 // Rileva versione UE analizzando il modulo
@@ -121,7 +127,13 @@ const char* GetFTextToStringPattern(UEVersion version) {
         case UEVersion::UE4_25:
         case UEVersion::UE4_26:
         case UEVersion::UE4_27:
-            return UE::Patterns::FText_ToString_UE427;
+            // ⛔ Nessun pattern usabile per UE4.2x: quello che c'era faceva
+            // 89-127 match sui giochi veri (misura 30/07/2026, vedi ue_types.h),
+            // cioè avrebbe agganciato una funzione a caso. Meglio dichiarare che
+            // non sappiamo trovarlo — il chiamante logga e rinuncia — che
+            // installare un hook su un indirizzo sbagliato e far crashare il
+            // gioco dell'utente.
+            return nullptr;
         case UEVersion::UE5_0:
         case UEVersion::UE5_1:
         case UEVersion::UE5_2:
@@ -147,8 +159,12 @@ bool InitializeHooks() {
     // Trova FText::ToString
     const char* pattern = GetFTextToStringPattern(g_ueVersion);
     if (!pattern) {
-        Utils::LogError("Pattern non disponibile per questa versione UE");
-        return false;
+        // DetectUEVersion() ripiega su UE4_27 quando non riconosce il gioco, e
+        // per UE4.2x non abbiamo un pattern usabile. Ma un UE5 non riconosciuto
+        // finisce nello stesso ramo: prima di rinunciare proviamo il pattern
+        // UE5, tanto PatternScanUnique rifiuta comunque i match ambigui.
+        Utils::LogWarning("Nessun pattern per la versione rilevata: provo il pattern UE5");
+        pattern = UE::Patterns::FText_ToString_UE5;
     }
     
     uintptr_t fTextToString = FindPattern(nullptr, pattern);

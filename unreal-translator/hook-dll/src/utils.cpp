@@ -32,60 +32,165 @@ std::string WideToUtf8(const std::wstring& wide) {
 }
 
 // Pattern scanning implementation
-uintptr_t PatternScan(HMODULE module, const char* signature) {
-    if (!module) return 0;
-    
-    MODULEINFO modInfo;
-    if (!GetModuleInformation(GetCurrentProcess(), module, &modInfo, sizeof(modInfo))) {
-        return 0;
-    }
-    
-    return PatternScanEx((uintptr_t)modInfo.lpBaseOfDll, modInfo.SizeOfImage, signature);
-}
 
-uintptr_t PatternScanEx(uintptr_t start, size_t size, const char* signature) {
-    // Parse signature
-    std::vector<int> pattern;
+/// Traduce una firma testuale ("48 89 ?? 24") in byte, -1 = wildcard.
+static void ParseSignature(const char* signature, std::vector<int>& pattern) {
     const char* sig = signature;
-    
+
     while (*sig) {
         if (*sig == ' ') {
             sig++;
             continue;
         }
-        
+
         if (*sig == '?') {
             pattern.push_back(-1); // Wildcard
             sig += (sig[1] == '?') ? 2 : 1;
         } else {
+            // Firma malformata (nibble spaiato in fondo): senza questo controllo
+            // `sig += 2` scavalca il terminatore e il ciclo legge fuori dalla stringa.
+            if (!sig[1]) break;
             char byte[3] = { sig[0], sig[1], 0 };
             pattern.push_back((int)strtol(byte, nullptr, 16));
             sig += 2;
         }
     }
-    
-    if (pattern.empty()) return 0;
-    
-    // Scan memory
-    uint8_t* data = (uint8_t*)start;
-    size_t patternSize = pattern.size();
-    
-    for (size_t i = 0; i < size - patternSize; i++) {
+}
+
+/// Scansione di un singolo intervallo che ACCUMULA in firstMatch/count.
+/// Si ferma al cap: al chiamante serve distinguere "uno" da "più di uno".
+static void ScanRangeAccumulate(uintptr_t start, size_t size,
+                                const std::vector<int>& pattern,
+                                uintptr_t& firstMatch, size_t& count) {
+    const size_t patternSize = pattern.size();
+    if (size < patternSize) return;
+
+    const uint8_t* data = (const uint8_t*)start;
+
+    for (size_t i = 0; i + patternSize <= size; i++) {
         bool found = true;
-        
+
         for (size_t j = 0; j < patternSize; j++) {
             if (pattern[j] != -1 && data[i + j] != (uint8_t)pattern[j]) {
                 found = false;
                 break;
             }
         }
-        
+
+        if (found) {
+            if (count == 0) firstMatch = start + i;
+            if (++count >= PATTERN_SCAN_COUNT_CAP) return;
+        }
+    }
+}
+
+uintptr_t PatternScan(HMODULE module, const char* signature) {
+    if (!module) return 0;
+
+    MODULEINFO modInfo;
+    if (!GetModuleInformation(GetCurrentProcess(), module, &modInfo, sizeof(modInfo))) {
+        return 0;
+    }
+
+    return PatternScanEx((uintptr_t)modInfo.lpBaseOfDll, modInfo.SizeOfImage, signature);
+}
+
+uintptr_t PatternScanEx(uintptr_t start, size_t size, const char* signature) {
+    std::vector<int> pattern;
+    ParseSignature(signature, pattern);
+
+    if (pattern.empty()) return 0;
+
+    // Scan memory
+    uint8_t* data = (uint8_t*)start;
+    size_t patternSize = pattern.size();
+
+    // ⚠️ `size - patternSize` su size_t: se il modulo è più piccolo del pattern
+    // il risultato va in underflow e diventa enorme → lettura fuori dal modulo.
+    // E il ciclo originale (`i < size - patternSize`) saltava anche l'ultima
+    // finestra valida.
+    if (size < patternSize) return 0;
+
+    for (size_t i = 0; i + patternSize <= size; i++) {
+        bool found = true;
+
+        for (size_t j = 0; j < patternSize; j++) {
+            if (pattern[j] != -1 && data[i + j] != (uint8_t)pattern[j]) {
+                found = false;
+                break;
+            }
+        }
+
         if (found) {
             return start + i;
         }
     }
-    
+
     return 0;
+}
+
+/// ⚠️ SOLO LE SEZIONI ESEGUIBILI, non tutta l'immagine.
+///
+/// Due ragioni, e la prima è un difetto che questa stessa funzione aveva nella
+/// sua prima stesura: contando TUTTI i match non si esce più al primo, quindi
+/// si percorrono tutti i `SizeOfImage` byte del modulo. Fra questi ci sono
+/// pagine mappate PAGE_EXECUTE senza lettura, e sezioni riprotette da
+/// packer/anti-tamper (VMProtect, Themida, Denuvo): leggerle solleva una
+/// access violation. Una modifica fatta per NON far crashare il gioco avrebbe
+/// aumentato la superficie di crash proprio sui titoli protetti.
+/// Seconda ragione: `scripts/ue-validate-ftext-pattern.js` conta i match nelle
+/// sole sezioni eseguibili. Se qui si contasse su tutta l'immagine, la misura
+/// che giustifica la soglia "match unico" e il controllo a runtime
+/// guarderebbero due domini diversi.
+uintptr_t PatternScanUnique(HMODULE module, const char* signature, size_t* outCount) {
+    if (outCount) *outCount = 0;
+    if (!module) return 0;
+
+    std::vector<int> pattern;
+    ParseSignature(signature, pattern);
+    if (pattern.empty()) return 0;
+
+    // Intestazioni PE del modulo già mappato in memoria
+    const uintptr_t base = (uintptr_t)module;
+    const IMAGE_DOS_HEADER* dos = (const IMAGE_DOS_HEADER*)base;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE) return 0;
+
+    const IMAGE_NT_HEADERS* nt = (const IMAGE_NT_HEADERS*)(base + dos->e_lfanew);
+    if (nt->Signature != IMAGE_NT_SIGNATURE) return 0;
+
+    uintptr_t firstMatch = 0;
+    size_t count = 0;
+
+    const IMAGE_SECTION_HEADER* sec = IMAGE_FIRST_SECTION(nt);
+    for (WORD i = 0; i < nt->FileHeader.NumberOfSections; i++, sec++) {
+        if (count >= PATTERN_SCAN_COUNT_CAP) break;
+
+        const DWORD ch = sec->Characteristics;
+        if (!(ch & IMAGE_SCN_MEM_EXECUTE) || !(ch & IMAGE_SCN_MEM_READ)) continue;
+
+        const size_t secSize = sec->Misc.VirtualSize ? sec->Misc.VirtualSize
+                                                     : sec->SizeOfRawData;
+        ScanRangeAccumulate(base + sec->VirtualAddress, secSize, pattern, firstMatch, count);
+    }
+
+    if (outCount) *outCount = count;
+    return count == 1 ? firstMatch : 0;
+}
+
+uintptr_t PatternScanUniqueEx(uintptr_t start, size_t size, const char* signature,
+                              size_t* outCount) {
+    if (outCount) *outCount = 0;
+
+    std::vector<int> pattern;
+    ParseSignature(signature, pattern);
+    if (pattern.empty()) return 0;
+
+    uintptr_t firstMatch = 0;
+    size_t count = 0;
+    ScanRangeAccumulate(start, size, pattern, firstMatch, count);
+
+    if (outCount) *outCount = count;
+    return count == 1 ? firstMatch : 0;
 }
 
 bool IsValidPointer(void* ptr) {
