@@ -10,10 +10,15 @@ come **regression suite**: ogni parser viene verificato ad ogni commit
 |---|---|---|
 | `formats/` | PO, XLIFF, RESX, .strings, JSON, INI, .properties, CSV | `__tests__/engines/file-formats.test.ts` → `lib/file-parsers.ts` |
 | `subtitles/` | SRT, VTT, ASS | `__tests__/engines/subtitles.test.ts` → `lib/subtitle-parser.ts` |
-| `unreal/` | `.locres` v0 (binario) | `__tests__/engines/unreal-locres.test.ts` → `lib/patchers/unreal-pak-parser.ts` |
+| `unreal/Game.locres` | Unreal `.locres` v0 Legacy (binario, NESSUN header) | **Rust** `engine_fixtures.rs` → `unreal_localization::parse_locres_file` |
 | `fonts/` | TTF subset reali (DejaVuSans via fonttools): `latin-only`, `latin-cyr-el` | `__tests__/engines/font-coverage.test.ts` → `lib/font-coverage.ts` |
 | `godot/test.pck` | Godot PCK v2 (Godot 4.3, directory in-line) | **Rust** `src-tauri/tests/engine_fixtures.rs` → `godot_patcher::scan_godot_pck` |
-| `unreal/Game_v2.locres` | Unreal `.locres` v2 (string array condivisa) | **Rust** `engine_fixtures.rs` → `unreal_localization::parse_locres_file` |
+| `unreal/Game_v2.locres` | Unreal `.locres` v2 (magic FGuid 16 byte + offset assoluto) | **Rust** `engine_fixtures.rs` → `unreal_localization::parse_locres_file` |
+
+**⚠️ Le `.locres` si rigenerano SOLO con `node scripts/dev/regen-locres-fixtures.js`**, che
+segue la specifica Epic (magic = FGuid `0x7574140E, 0xFC034A67, 0x9D90154A, 0x1B7F37C3`).
+Fino al 30/07/2026 erano generate dal nostro stesso writer, che aveva un magic inventato:
+congelavano l'errore, non il formato.
 | `danganronpa/test.stx` | Danganronpa STX (tabella UTF-16LE) | **Rust** `engine_fixtures.rs` → `danganronpa_patcher::parse_stx_file` |
 | `cri/test.cpk` | CRI CPK (tabelle @UTF big-endian: header + TOC, file MSG non compresso) | **Rust** `engine_fixtures.rs` → `cri_patcher::list_cpk_contents` / `extract_text_files_from_cpk` / `parse_cri_text_file` |
 | `bethesda/Skyrim_English.STRINGS` / `.DLSTRINGS` | String table Bethesda (zstring / size-prefixed) | **Rust** `engine_fixtures.rs` → `bethesda_patcher::extract_strings_file` |

@@ -81,10 +81,22 @@ describe('corpus fixture — integrità', () => {
     expect(ks).toContain('Welcome to the kingdom of Eldoria![l][r]');
   });
 
-  it('.locres: magic bytes corretti (0x0E14DA7A little-endian)', () => {
-    for (const f of ['unreal/Game.locres', 'unreal/Game_v2.locres']) {
-      expect(readFileSync(join(ROOT, f)).readUInt32LE(0)).toBe(0x0E14DA7A);
-    }
+  // ⚠️ Questo test asseriva 0x0E14DA7A, un magic che ci eravamo INVENTATI.
+  // Il magic vero è FGuid(0x7574140E, 0xFC034A67, 0x9D90154A, 0x1B7F37C3),
+  // cioè SEDICI byte (documentazione Epic, TextLocalizationResourceVersion.h).
+  // I file Legacy (v0) non ne hanno affatto uno: è stato aggiunto in v1.
+  it('.locres v2: magic = FGuid LocResMagic da 16 byte', () => {
+    const buf = readFileSync(join(ROOT, 'unreal/Game_v2.locres'));
+    expect([...buf.subarray(0, 16)]).toEqual([
+      0x0e, 0x14, 0x74, 0x75, 0x67, 0x4a, 0x03, 0xfc,
+      0x4a, 0x15, 0x90, 0x9d, 0xc3, 0x37, 0x7f, 0x1b,
+    ]);
+  });
+
+  it('.locres v0: Legacy senza magic, comincia dal conteggio dei namespace', () => {
+    const buf = readFileSync(join(ROOT, 'unreal/Game.locres'));
+    expect(buf.subarray(0, 4).toString('hex')).not.toBe('0e147475'); // niente magic
+    expect(buf.readInt32LE(0)).toBe(2); // 2 namespace: Dialog e UI
   });
 
   it('fixture binarie Rust: magic corretti (Godot GDPC, STX, CPK, BSA)', () => {
@@ -109,8 +121,19 @@ describe('corpus fixture — integrità', () => {
     expect(dl.readUInt32LE(0)).toBe(2); // 2 entry
   });
 
-  it('Unreal locres v2: versione 2 nel byte dopo il magic', () => {
-    // magic(4) + version(1): la fixture v2 deve dichiarare version=2
-    expect(readFileSync(join(ROOT, 'unreal/Game_v2.locres'))[4]).toBe(2);
+  it('Unreal locres v2: versione nel byte 16, dopo i 16 del magic', () => {
+    const buf = readFileSync(join(ROOT, 'unreal/Game_v2.locres'));
+    expect(buf[16]).toBe(2);
+  });
+
+  // Il campo dopo la versione è un OFFSET ASSOLUTO al string array, non il
+  // conteggio delle stringhe: UE ci fa un Seek. Scriverci un conteggio manda
+  // il motore a leggere nel mezzo del proprio header.
+  it('Unreal locres v2: l\'header contiene un offset, non un conteggio', () => {
+    const buf = readFileSync(join(ROOT, 'unreal/Game_v2.locres'));
+    const offset = Number(buf.readBigInt64LE(17));
+    expect(offset).toBeGreaterThan(25);
+    expect(offset).toBeLessThan(buf.length);
+    expect(buf.readInt32LE(offset)).toBe(4); // 4 stringhe condivise
   });
 });

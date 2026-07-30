@@ -136,17 +136,19 @@ fn read_fstring(data: &[u8], offset: &mut usize) -> Result<String, String> {
     }
     
     if length > 0 {
-        // UTF-8 string
+        // Lunghezza POSITIVA = ANSI a byte singolo, NON UTF-8: UE legge ogni
+        // byte come un ANSICHAR. Decodificarlo come UTF-8 trasformerebbe i byte
+        // alti in U+FFFD; Latin-1 è la lettura simmetrica a come scriviamo.
         let len = length as usize;
         if *offset + len > data.len() {
             return Err(format!("EOF reading FString({}) at offset {}", len, offset));
         }
         let bytes = &data[*offset..*offset + len];
         *offset += len;
-        
+
         // Remove null terminator
         let end = bytes.iter().position(|&b| b == 0).unwrap_or(bytes.len());
-        Ok(String::from_utf8_lossy(&bytes[..end]).to_string())
+        Ok(bytes[..end].iter().map(|&b| b as char).collect())
     } else {
         // UTF-16 string (negative length)
         let char_count = (-length) as usize;
@@ -193,16 +195,37 @@ fn write_u64(buf: &mut Vec<u8>, v: u64) {
     buf.extend_from_slice(&v.to_le_bytes());
 }
 
+/// Scrive una FString nel formato di UE.
+///
+/// ⚠️ La lunghezza POSITIVA in UE significa ANSI A BYTE SINGOLO, non UTF-8:
+/// il motore legge ogni byte come un ANSICHAR. Scrivere UTF-8 con lunghezza
+/// positiva fa uscire "perché" come "perchÃ©" — cioè rompe esattamente le
+/// lingue accentate (italiano, francese, spagnolo, tedesco).
+/// Quindi: ASCII puro → percorso a byte singolo; tutto il resto → UTF-16
+/// con lunghezza NEGATIVA, che è il modo in cui UE trasporta il non-ASCII.
+/// In entrambi i casi la lunghezza INCLUDE il terminatore nullo.
 fn write_fstring(buf: &mut Vec<u8>, s: &str) {
     if s.is_empty() {
         write_i32(buf, 0);
         return;
     }
-    // Write as UTF-8 with null terminator
-    let len = (s.len() + 1) as i32; // +1 for null terminator
-    write_i32(buf, len);
-    buf.extend_from_slice(s.as_bytes());
-    buf.push(0); // null terminator
+
+    if s.is_ascii() {
+        // ANSI: 1 byte per carattere + terminatore
+        let len = (s.len() + 1) as i32;
+        write_i32(buf, len);
+        buf.extend_from_slice(s.as_bytes());
+        buf.push(0);
+    } else {
+        // UTF-16LE: lunghezza negativa in UNITÀ da 16 bit, terminatore incluso
+        let units: Vec<u16> = s.encode_utf16().collect();
+        let len = -((units.len() + 1) as i32);
+        write_i32(buf, len);
+        for u in &units {
+            buf.extend_from_slice(&u.to_le_bytes());
+        }
+        buf.extend_from_slice(&[0u8, 0u8]); // terminatore UTF-16
+    }
 }
 
 #[allow(dead_code)]
@@ -389,10 +412,10 @@ fn extract_file_from_pak(data: &[u8], entry: &PakFileEntry) -> Result<Vec<u8>, S
     let search_end = std::cmp::min(start + 200, data.len());
     
     // Per file .locres, cerchiamo il magic
+    // NB: trova solo i .locres v1+ — i Legacy (v0) non hanno magic per definizione.
     if entry.filename.ends_with(".locres") {
-        let locres_magic_bytes: [u8; 4] = [0x0E, 0x14, 0xDA, 0x7A];
         for i in start..search_end {
-            if i + 4 <= data.len() && data[i..i + 4] == locres_magic_bytes {
+            if i + 16 <= data.len() && data[i..i + 16] == LOCRES_MAGIC {
                 let end = std::cmp::min(i + entry.uncompressed_size as usize, data.len());
                 return Ok(data[i..end].to_vec());
             }
@@ -412,43 +435,89 @@ fn extract_file_from_pak(data: &[u8], entry: &PakFileEntry) -> Result<Vec<u8>, S
 // LOCRES PARSER
 // ═══════════════════════════════════════════════════════════════════
 
-/// Parsa un file .locres UE4 e restituisce le entry di localizzazione
+/// Magic di un file .locres: è un FGuid da 16 BYTE, non un u32.
+///
+/// `FTextLocalizationResourceVersion::LocResMagic = FGuid(0x7574140E, 0xFC034A67,
+/// 0x9D90154A, 0x1B7F37C3)` (documentazione Epic, header
+/// Internationalization/TextLocalizationResourceVersion.h), serializzato come
+/// quattro u32 little-endian.
+///
+/// I file LEGACY (v0) NON hanno questo magic: è stato aggiunto in v1. UE lo
+/// rileva proprio così — legge 16 byte, se non combaciano torna a offset 0 e
+/// tratta il file come Legacy.
+const LOCRES_MAGIC: [u8; 16] = [
+    0x0E, 0x14, 0x74, 0x75, // 0x7574140E LE
+    0x67, 0x4A, 0x03, 0xFC, // 0xFC034A67 LE
+    0x4A, 0x15, 0x90, 0x9D, // 0x9D90154A LE
+    0xC3, 0x37, 0x7F, 0x1B, // 0x1B7F37C3 LE
+];
+
+/// Versioni note (`ELocResVersion`): 0 Legacy · 1 Compact · 2 Optimized
+/// (CityHash64/UTF-16) · 3 Optimized_CRC32.
+const LOCRES_MAX_KNOWN_VERSION: u8 = 3;
+
+/// Parsa un file .locres UE4/UE5 e restituisce le entry di localizzazione
 fn parse_locres(data: &[u8]) -> Result<(u8, Vec<LocEntry>), String> {
     let mut offset = 0usize;
-    
-    // Magic
-    let magic = read_u32(data, &mut offset)?;
-    if magic != 0x0E14DA7A {
-        // Prova senza magic (alcuni locres vecchi non lo hanno)
-        offset = 0;
-    }
-    
-    // Version
-    let version = read_u8(data, &mut offset)?;
+
+    // Magic da 16 byte: se c'è, segue il byte di versione; se manca, è Legacy
+    // e il file comincia DIRETTAMENTE dal conteggio dei namespace.
+    let version = if data.len() >= 16 && data[0..16] == LOCRES_MAGIC {
+        offset = 16;
+        read_u8(data, &mut offset)?
+    } else {
+        0 // Legacy: nessun header
+    };
     log::info!("📝 LocRes version: {}", version);
-    
-    if version > 3 {
-        return Err(format!("Versione LocRes {} non supportata (max 3)", version));
+
+    if version > LOCRES_MAX_KNOWN_VERSION {
+        return Err(format!(
+            "Versione LocRes {} non supportata (max {})",
+            version, LOCRES_MAX_KNOWN_VERSION
+        ));
     }
-    
-    // Localized String Array (versione >= 2 "Optimized")
+
+    // Localized String Array (versione >= 1): nell'header c'è un OFFSET i64
+    // ASSOLUTO, non l'array. L'array sta altrove nel file (di norma in fondo).
     let mut string_array: Vec<String> = Vec::new();
-    
-    if version >= 2 {
-        let str_count = read_i64(data, &mut offset)? as usize;
-        log::info!("📝 String array: {} stringhe condivise", str_count);
-        
-        if str_count > 1_000_000 {
-            return Err(format!("Troppe stringhe condivise: {}", str_count));
-        }
-        
-        for _ in 0..str_count {
-            let s = read_fstring(data, &mut offset)?;
-            let _ref_count = read_i32(data, &mut offset)?;
-            string_array.push(s);
+
+    if version >= 1 {
+        let array_offset = read_i64(data, &mut offset)?;
+
+        // -1 (INDEX_NONE) = nessun array condiviso
+        if array_offset >= 0 {
+            let mut o = array_offset as usize;
+            if o > data.len() {
+                return Err(format!(
+                    "Offset string array {} fuori dal file ({} byte)",
+                    array_offset,
+                    data.len()
+                ));
+            }
+
+            let str_count = read_i32(data, &mut o)?;
+            log::info!("📝 String array: {} stringhe condivise", str_count);
+
+            if !(0..=5_000_000).contains(&str_count) {
+                return Err(format!("Numero stringhe condivise sospetto: {}", str_count));
+            }
+
+            for _ in 0..str_count {
+                let s = read_fstring(data, &mut o)?;
+                // Il refcount per stringa compare dalla v2 in poi.
+                if version >= 2 {
+                    let _ref_count = read_i32(data, &mut o)?;
+                }
+                string_array.push(s);
+            }
         }
     }
-    
+
+    // v3 (Optimized_CRC32) antepone il totale delle entry
+    if version >= 3 {
+        let _entries_count = read_u32(data, &mut offset)?;
+    }
+
     // Namespaces
     let namespace_count = read_i32(data, &mut offset)?;
     log::info!("📝 Namespaces: {}", namespace_count);
@@ -460,28 +529,32 @@ fn parse_locres(data: &[u8]) -> Result<(u8, Vec<LocEntry>), String> {
     let mut entries = Vec::new();
     
     for _ in 0..namespace_count {
-        // Namespace key
-        let _ns_hash = if version >= 1 { read_u32(data, &mut offset)? } else { 0 };
+        // Namespace key — l'hash accompagna la stringa solo dalla v2 in poi
+        // (FTextKey::SerializeWithHash); prima è una FString e basta.
+        let _ns_hash = if version >= 2 { read_u32(data, &mut offset)? } else { 0 };
         let namespace = read_fstring(data, &mut offset)?;
-        
+
         // Entries in questo namespace
         let entry_count = read_i32(data, &mut offset)?;
-        
+
         for _ in 0..entry_count {
             // Entry key
-            let _key_hash = if version >= 1 { read_u32(data, &mut offset)? } else { 0 };
+            let _key_hash = if version >= 2 { read_u32(data, &mut offset)? } else { 0 };
             let key = read_fstring(data, &mut offset)?;
-            
+
             let source_hash = read_u32(data, &mut offset)?;
-            
-            let value = if version >= 2 {
-                // Indice nella string array
+
+            let value = if version >= 1 {
+                // Indice nella string array (dalla v1 "Compact" in poi)
                 let string_idx = read_i32(data, &mut offset)?;
                 if string_idx >= 0 && (string_idx as usize) < string_array.len() {
                     string_array[string_idx as usize].clone()
                 } else {
-                    // -1 = usa la key come valore
-                    key.clone()
+                    // -1 = nessuna stringa localizzata. Prima qui si usava la
+                    // KEY come valore: testo inventato che finiva nel conteggio,
+                    // all'AI e riscritto nel gioco. Vuoto = l'entry viene
+                    // scartata dal filtro qui sotto.
+                    String::new()
                 }
             } else {
                 // Stringa diretta
@@ -508,16 +581,18 @@ fn parse_locres(data: &[u8]) -> Result<(u8, Vec<LocEntry>), String> {
 // LOCRES WRITER
 // ═══════════════════════════════════════════════════════════════════
 
-/// Scrive un file .locres con le traduzioni (formato v0 Legacy, massima compatibilità)
+/// Scrive un file .locres in formato v0 "Legacy" (massima compatibilità).
+///
+/// ⚠️ Legacy NON ha header: niente magic, niente byte di versione. UE riconosce
+/// il formato proprio dall'ASSENZA del magic (legge 16 byte, non combaciano,
+/// torna a 0 e legge da lì il conteggio dei namespace). Scriverci un header
+/// davanti produce un file che il motore interpreta come spazzatura.
+///
+/// È anche l'unico formato SENZA hash di namespace/key: nessun valore inventato
+/// da parte nostra può far mancare una lookup a runtime.
 fn write_locres_v0(entries: &[LocEntry]) -> Vec<u8> {
     let mut buf = Vec::new();
-    
-    // Magic
-    write_u32(&mut buf, 0x0E14DA7A);
-    
-    // Version 0 (Legacy - massima compatibilità)
-    buf.push(0u8);
-    
+
     // Raggruppa per namespace
     let mut namespaces: std::collections::BTreeMap<&str, Vec<&LocEntry>> = std::collections::BTreeMap::new();
     for entry in entries {
@@ -551,13 +626,23 @@ fn write_locres_v0(entries: &[LocEntry]) -> Vec<u8> {
 
 /// Scrive un file .locres in formato v2 "Optimized" (UE4.25+ e UE5)
 /// Questo è il formato usato dalla maggior parte dei giochi moderni.
+///
+/// ⚠️ Il campo che segue il byte di versione è un OFFSET i64 ASSOLUTO al
+/// string array, non il conteggio delle stringhe: UE fa un Seek a quell'offset.
+/// Scrivere l'array in linea significa dare al motore un puntatore che vale
+/// "numero di stringhe" — cioè farlo saltare nel mezzo dell'header.
+/// Qui l'array va IN FONDO e l'offset viene ricucito a posteriori.
 fn write_locres_v2(entries: &[LocEntry]) -> Vec<u8> {
     let mut buf = Vec::new();
 
-    // Magic
-    write_u32(&mut buf, 0x0E14DA7A);
-    // Version 2
+    // Magic (16 byte) + versione
+    buf.extend_from_slice(&LOCRES_MAGIC);
     buf.push(2u8);
+
+    // Segnaposto per l'offset del string array: lo riscriviamo alla fine,
+    // quando sappiamo dove finiscono i namespace.
+    let array_offset_pos = buf.len();
+    write_i64(&mut buf, -1i64);
 
     // Costruisci stringa array deduplicata (mantenendo ordine di inserimento)
     let mut string_array: Vec<String> = Vec::new();
@@ -568,13 +653,6 @@ fn write_locres_v2(entries: &[LocEntry]) -> Vec<u8> {
             string_index.insert(entry.value.clone(), idx);
             string_array.push(entry.value.clone());
         }
-    }
-
-    // String Array: count (i64) + per ogni stringa: FString + refcount (i32)
-    write_i64(&mut buf, string_array.len() as i64);
-    for s in &string_array {
-        write_fstring(&mut buf, s);
-        write_i32(&mut buf, 1); // ref count = 1 (non critico)
     }
 
     // Raggruppa per namespace (ordine deterministico)
@@ -610,23 +688,46 @@ fn write_locres_v2(entries: &[LocEntry]) -> Vec<u8> {
         }
     }
 
+    // Ora l'array, in fondo: count (i32) + per ogni stringa FString + refcount (i32)
+    let array_offset = buf.len() as i64;
+    write_i32(&mut buf, string_array.len() as i32);
+    for s in &string_array {
+        write_fstring(&mut buf, s);
+        write_i32(&mut buf, 1); // refcount: UE lo usa per il GC delle stringhe, 1 è sicuro
+    }
+
+    // Ricuci l'offset nell'header
+    buf[array_offset_pos..array_offset_pos + 8].copy_from_slice(&array_offset.to_le_bytes());
+
     buf
 }
 
-/// CityHash32 — usato da UE per namespace/key hash (non critico per il caricamento,
-/// ma corrisponde a ciò che FModel e unreal_locres_tool generano)
+/// Hash di namespace/key per i formati v2/v3.
+///
+/// ⚠️ NON È L'HASH DI UE. UE usa CityHash64 su UTF-16 (v2) o FCrc::StrCrc32 su
+/// UTF-16 (v3); questo è un CRC32 moltiplicato per una costante, cioè un valore
+/// inventato. Se il motore si fida dell'hash salvato per indicizzare la mappa
+/// delle stringhe, un hash sbagliato rende le entry NON TROVABILI a runtime e
+/// il gioco resta in lingua originale senza dare errore.
+/// Domanda ancora APERTA, da chiudere confrontando gli hash di un .locres vero
+/// (`npm run ue:locres-check`), non deducendola. Finché è aperta, il percorso
+/// sicuro è v0 Legacy, che di hash non ne ha.
 fn cityhash32(s: &[u8]) -> u32 {
-    // Implementazione semplificata CRC32 come approssimazione:
-    // UE usa effettivamente un hash diverso ma il motore NON valida questi hash
-    // al caricamento (li usa solo per ricerche veloci, fallback alla stringa).
     let mut h = crc32fast::hash(s);
     h = h.wrapping_mul(0x9e3779b9);
     h
 }
 
-/// Scrive un locres usando la stessa versione del sorgente estratto
+/// Scrive un locres usando la stessa versione del sorgente estratto.
+///
+/// Nota: v0 Legacy è letto da OGNI versione di UE ed è privo di hash, quindi
+/// resta il ripiego più sicuro quando il sorgente non impone altro.
 pub fn write_locres_matching_version(entries: &[LocEntry], source_version: u8) -> Vec<u8> {
     if source_version >= 2 {
+        if source_version > 2 {
+            // Non sappiamo scrivere v3: downgrade dichiarato, non silenzioso.
+            log::info!("📝 Sorgente LocRes v{}: scrivo v2 (writer v3 non implementato)", source_version);
+        }
         write_locres_v2(entries)
     } else {
         write_locres_v0(entries)
@@ -1023,11 +1124,10 @@ pub async fn extract_unreal_localization(game_path: String) -> Result<Extraction
             Err(_) => continue,
         };
         
-        let locres_magic: [u8; 4] = [0x0E, 0x14, 0xDA, 0x7A];
-        
-        // Cerca il magic nel file
-        for i in 0..data.len().saturating_sub(4) {
-            if data[i..i + 4] == locres_magic {
+        // Cerca il magic nel file (solo v1+: i Legacy non ne hanno uno).
+        // ..= : l'ultima finestra valida è len-16 compresa.
+        for i in 0..=data.len().saturating_sub(16) {
+            if data.len() >= 16 && data[i..i + 16] == LOCRES_MAGIC {
                 log::info!("📝 Magic .locres trovato a offset {} in {}", i, pak_path.display());
                 
                 // Prova a parsare da qui
@@ -1080,8 +1180,18 @@ pub async fn apply_unreal_translation(
         }
     }).collect();
     
-    // Scrivi il .locres in formato v2 (Optimized — richiesto da UE4.25+ e UE5)
-    let locres_data = write_locres_v2(&loc_entries);
+    // Scrivi il .locres in formato v0 Legacy.
+    //
+    // ⚠️ Qui c'era write_locres_v2. La v2 porta un hash u32 per ogni namespace
+    // e per ogni key, e l'hash che sappiamo calcolare NON è quello di UE (vedi
+    // `cityhash32`): se il motore si fida dell'hash salvato per indicizzare le
+    // stringhe, le entry restano non trovabili e il gioco resta in lingua
+    // originale SENZA dare errore — il tipo di fallimento peggiore, quello muto.
+    // Il Legacy di hash non ne ha, ed è letto da ogni versione di UE (il
+    // motore lo riconosce dall'assenza del magic). Finché la domanda sull'hash
+    // non è chiusa su un file vero (`npm run ue:locres-check`), questo è
+    // l'unico formato che possiamo scrivere senza indovinare.
+    let locres_data = write_locres_v0(&loc_entries);
     
     // Determina il path del .locres nel .pak
     // Pattern standard: [ProjectName]/Content/Localization/Game/[lang]/Game.locres
@@ -1493,6 +1603,56 @@ mod tests {
         assert_eq!(read_fstring(&buf, &mut off).unwrap(), "Ciao");
     }
 
+    /// ⚠️ Il difetto che rompeva l'italiano: la lunghezza POSITIVA in UE è
+    /// ANSI a byte singolo, quindi "perché" scritto come UTF-8 con lunghezza
+    /// positiva veniva riletto dal motore come "perchÃ©". Il non-ASCII deve
+    /// uscire in UTF-16 con lunghezza NEGATIVA.
+    #[test]
+    fn fstring_non_ascii_is_written_as_utf16() {
+        let mut buf = Vec::new();
+        write_fstring(&mut buf, "perché");
+
+        let len = i32::from_le_bytes(buf[0..4].try_into().unwrap());
+        assert!(len < 0, "il non-ASCII deve avere lunghezza negativa (UTF-16), invece è {}", len);
+        // 6 caratteri + terminatore = 7 unità da 16 bit
+        assert_eq!(len, -7);
+        assert_eq!(buf.len(), 4 + 7 * 2);
+        // 'p' = 0x0070 little-endian
+        assert_eq!(&buf[4..6], &[0x70u8, 0x00][..]);
+        // terminatore UTF-16 in fondo
+        assert_eq!(&buf[buf.len() - 2..], &[0x00u8, 0x00][..]);
+
+        let mut off = 0;
+        assert_eq!(read_fstring(&buf, &mut off).unwrap(), "perché");
+    }
+
+    #[test]
+    fn fstring_ascii_stays_single_byte() {
+        let mut buf = Vec::new();
+        write_fstring(&mut buf, "Start");
+        let len = i32::from_le_bytes(buf[0..4].try_into().unwrap());
+        assert_eq!(len, 6); // 5 caratteri + terminatore
+        assert_eq!(buf.len(), 4 + 6);
+    }
+
+    /// Tutte le lingue accentate che il progetto dichiara di supportare devono
+    /// sopravvivere al giro completo, non solo l'italiano.
+    #[test]
+    fn locres_preserves_accented_languages() {
+        let entries = vec![
+            LocEntry { namespace: "UI".into(), key: "it".into(), source_hash: 1, value: "Perché però È".into() },
+            LocEntry { namespace: "UI".into(), key: "fr".into(), source_hash: 2, value: "Élève à côté".into() },
+            LocEntry { namespace: "UI".into(), key: "de".into(), source_hash: 3, value: "Grüße für Straße".into() },
+            LocEntry { namespace: "UI".into(), key: "ru".into(), source_hash: 4, value: "Привет".into() },
+            LocEntry { namespace: "UI".into(), key: "ja".into(), source_hash: 5, value: "こんにちは".into() },
+            LocEntry { namespace: "UI".into(), key: "emoji".into(), source_hash: 6, value: "ok 🎮".into() },
+        ];
+        for bytes in [write_locres_v0(&entries), write_locres_v2(&entries)] {
+            let (_v, parsed) = parse_locres(&bytes).unwrap();
+            assert_eq!(to_set(&parsed), to_set(&entries));
+        }
+    }
+
     #[test]
     fn fstring_empty_round_trip() {
         let mut buf = Vec::new();
@@ -1528,6 +1688,110 @@ mod tests {
         assert_eq!(to_set(&parsed), to_set(&entries));
     }
 
+    // ── Forma del file, non round-trip ──────────────────────────────────
+    // I test qui sotto NON usano il nostro parser per validare il nostro
+    // writer: controllano i byte contro la specifica. Un round-trip che passa
+    // dice solo che sappiamo rileggere quello che scriviamo, ed è esattamente
+    // il motivo per cui il magic sbagliato è sopravvissuto ai test per mesi.
+
+    /// Il magic è il FGuid documentato da Epic, 16 byte, non un u32.
+    #[test]
+    fn locres_v2_starts_with_the_ue_guid() {
+        let bytes = write_locres_v2(&sample_entries());
+        let atteso: [u8; 16] = [
+            0x0E, 0x14, 0x74, 0x75, 0x67, 0x4A, 0x03, 0xFC,
+            0x4A, 0x15, 0x90, 0x9D, 0xC3, 0x37, 0x7F, 0x1B,
+        ];
+        assert_eq!(
+            &bytes[0..16],
+            &atteso[..],
+            "magic .locres diverso da FGuid(0x7574140E, 0xFC034A67, 0x9D90154A, 0x1B7F37C3)"
+        );
+        assert_eq!(bytes[16], 2, "il byte di versione segue i 16 del magic");
+    }
+
+    /// Legacy non ha header: il file comincia dal conteggio dei namespace.
+    #[test]
+    fn locres_v0_has_no_header_at_all() {
+        let entries = sample_entries();
+        let bytes = write_locres_v0(&entries);
+        assert_ne!(&bytes[0..16], &LOCRES_MAGIC[..], "il Legacy NON deve avere il magic");
+        // 2 namespace distinti in sample_entries: Dialog e UI
+        let ns_count = i32::from_le_bytes(bytes[0..4].try_into().unwrap());
+        assert_eq!(ns_count, 2, "il primo campo di un Legacy è il conteggio dei namespace");
+    }
+
+    /// Il campo dopo la versione è un OFFSET assoluto, non un conteggio.
+    #[test]
+    fn locres_v2_header_holds_an_absolute_offset() {
+        let bytes = write_locres_v2(&sample_entries());
+        let offset = i64::from_le_bytes(bytes[17..25].try_into().unwrap());
+
+        assert!(offset > 25, "l'offset deve puntare oltre l'header, non valere 3 (il numero di stringhe)");
+        assert!((offset as usize) < bytes.len(), "offset fuori dal file");
+
+        // A quell'offset ci deve essere il conteggio delle stringhe condivise
+        let o = offset as usize;
+        let count = i32::from_le_bytes(bytes[o..o + 4].try_into().unwrap());
+        assert_eq!(count, 3, "3 valori distinti in sample_entries");
+    }
+
+    /// Fixture scritta a mano dalla specifica: se il nostro parser la legge,
+    /// il layout che assumiamo è quello di UE e non una nostra convenzione.
+    #[test]
+    fn parses_a_handbuilt_v3_fixture() {
+        fn ansi(buf: &mut Vec<u8>, s: &str) {
+            buf.extend_from_slice(&((s.len() + 1) as i32).to_le_bytes());
+            buf.extend_from_slice(s.as_bytes());
+            buf.push(0);
+        }
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&LOCRES_MAGIC);
+        buf.push(3u8); // Optimized_CRC32
+        let offset_pos = buf.len();
+        buf.extend_from_slice(&(-1i64).to_le_bytes()); // segnaposto
+        buf.extend_from_slice(&1u32.to_le_bytes()); // entries count (solo v3)
+        buf.extend_from_slice(&1i32.to_le_bytes()); // 1 namespace
+        buf.extend_from_slice(&0xAABBCCDDu32.to_le_bytes()); // ns hash
+        ansi(&mut buf, "UI");
+        buf.extend_from_slice(&1i32.to_le_bytes()); // 1 entry
+        buf.extend_from_slice(&0x11223344u32.to_le_bytes()); // key hash
+        ansi(&mut buf, "start");
+        buf.extend_from_slice(&111u32.to_le_bytes()); // source hash
+        buf.extend_from_slice(&0i32.to_le_bytes()); // indice nella string array
+
+        let array_offset = buf.len() as i64;
+        buf.extend_from_slice(&1i32.to_le_bytes()); // 1 stringa condivisa
+        ansi(&mut buf, "Avvia");
+        buf.extend_from_slice(&1i32.to_le_bytes()); // refcount
+        buf[offset_pos..offset_pos + 8].copy_from_slice(&array_offset.to_le_bytes());
+
+        let (version, entries) = parse_locres(&buf).unwrap();
+        assert_eq!(version, 3);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].namespace, "UI");
+        assert_eq!(entries[0].key, "start");
+        assert_eq!(entries[0].source_hash, 111);
+        assert_eq!(entries[0].value, "Avvia");
+    }
+
+    /// I file prodotti dal writer sbagliato (magic u32 0x0E14DA7A) non devono
+    /// essere accettati in silenzio: senza magic valido diventano "Legacy" e
+    /// il primo campo è spazzatura, quindi il parse deve FALLIRE.
+    #[test]
+    fn rejects_files_written_with_the_old_invented_magic() {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&0x0E14DA7Au32.to_le_bytes());
+        buf.push(2u8);
+        buf.extend_from_slice(&[0u8; 64]);
+        let err = parse_locres(&buf).unwrap_err();
+        // Deve fallire per il MOTIVO giusto: senza magic valido il file viene
+        // trattato da Legacy e il primo i32 (i byte del magic fasullo) è un
+        // conteggio namespace assurdo. Un errore qualsiasi non basterebbe.
+        assert!(err.contains("namespace"), "errore inatteso: {}", err);
+    }
+
     #[test]
     fn locres_v2_dedups_shared_strings() {
         // Due entry con lo stesso valore: la string array deve deduplicare ma il parse li recupera entrambi.
@@ -1555,7 +1819,7 @@ mod tests {
     #[test]
     fn parse_locres_rejects_future_version() {
         let mut bytes = Vec::new();
-        write_u32(&mut bytes, 0x0E14DA7A);
+        bytes.extend_from_slice(&LOCRES_MAGIC);
         bytes.push(5u8); // versione > 3
         assert!(parse_locres(&bytes).is_err());
     }

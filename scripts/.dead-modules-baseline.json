@@ -6,7 +6,6 @@
     "lib/voice/speech-to-text.ts": "697 righe",
     "components/injekt-ui-enhanced.tsx": "646 righe",
     "components/ocr-image-processor.tsx": "638 righe",
-    "lib/patchers/unreal-pak-parser.ts": "585 righe · SOLO-TEST: lo importa la suite, cancellarlo la rompe · citato 1× come testo: verificare i registry prima di toccarlo",
     "components/context-aware-translation.tsx": "578 righe",
     "components/notifications/notification-provider.tsx": "562 righe",
     "components/translator/character-profile-manager.tsx": "545 righe",

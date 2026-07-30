@@ -36,6 +36,7 @@
     "dead:check": "node scripts/check-dead-modules.js",
     "dead:check:report": "node scripts/check-dead-modules.js --report",
     "dead:check:update": "node scripts/check-dead-modules.js --update",
+    "ue:locres-check": "node scripts/ue-locres-check.js",
     "tauri:check-cmds": "node scripts/check-tauri-commands.js",
     "tauri:check-cmds:report": "node scripts/check-tauri-commands.js --report",
     "tauri:check-cmds:update": "node scripts/check-tauri-commands.js --update",

@@ -3,9 +3,16 @@
 //! Consuma le STESSE fixture del corpus condiviso (`__tests__/fixtures/engines/`)
 //! usato dai test vitest, ma qui esercita i parser RUST veri (Godot .pck,
 //! Unreal .locres v2, Danganronpa STX, RPG Maker MV JSON) tramite le loro API
-//! pubbliche. Ogni fixture binaria è stata generata replicando ESATTAMENTE il
-//! formato letto dal parser e validata a parte: se un parser regredisce, questi
-//! test lo dicono al commit, non al primo utente.
+//! pubbliche: se un parser regredisce, questi test lo dicono al commit, non al
+//! primo utente.
+//!
+//! ⚠️ LEZIONE 30/07/2026 — le fixture .locres erano state generate "replicando
+//! ESATTAMENTE il formato letto dal parser". Il parser però leggeva un magic che
+//! ci eravamo INVENTATI, quindi le fixture congelavano l'errore anziché il
+//! formato e questi test passavano su file che Unreal non caricherebbe mai.
+//! Una fixture generata dal codice che deve validare non prova niente.
+//! Ora le .locres si rigenerano dalla SPECIFICA con
+//! `node scripts/dev/regen-locres-fixtures.js` (che cita la fonte Epic).
 //!
 //! I parser sono nel crate lib `gamestringer` (src-tauri/Cargo.toml → [lib]).
 //! Nessuno di questi usa AppHandle/State, quindi si chiamano direttamente.

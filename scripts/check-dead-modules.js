@@ -26,8 +26,10 @@
  *  - Gli entry point di Next (page/layout/route/...) sono esclusi: li carica il framework.
  *  - I moduli importati SOLO dai test sono marcati `SOLO-TEST`. Non sono usati in
  *    produzione, ma cancellarli rompe la suite: vanno guardati, non potati al buio.
- *    `lib/patchers/unreal-pak-parser.ts` è il caso tipico — 585 righe con un test a
- *    fixture indipendente, e in parallelo la stessa funzione implementata in Rust.
+ *    (Il caso tipico ERA `lib/patchers/unreal-pak-parser.ts`: 585 righe doppione
+ *    del parser Rust, col magic .locres sbagliato in entrambi — cancellato col
+ *    suo test il 30/07/2026 quando il Rust è stato corretto. "Fixture
+ *    indipendente dal parser" non basta se segue la stessa specifica sbagliata.)
  *  - Questo script dice «nessuno lo importa», non «è inutile». La domanda da farsi resta
  *    quella del 26/07: la funzione che promette esiste già altrove? Se sì si cancella;
  *    se no, forse va collegata.
