@@ -58,6 +58,7 @@ export interface TranslateOptions {
   gameId?: string; // Usato per caricare il RAG locale
   useAgenticPipeline?: boolean; // Se true, usa il QA multi-agente per la massima qualità
   reflection?: ReflectionMode; // Pipeline auto-correttiva (write → reflect → refine): 'auto' (default, selettiva), 'always', 'off'
+  uncensored?: boolean; // OPT-IN anti-censura: localizza fedelmente contenuti maturi già presenti nella sorgente, senza censurare/ammorbidire/rifiutare. Default OFF. Solo provider LLM.
   styleInstruction?: string; // DeepL Custom Instructions — es. "Usa un tono informale e amichevole"
   tmContext?: string; // RAG dalla Translation Memory — traduzioni simili come riferimento stile/terminologia
   semanticRag?: 'auto' | 'off'; // RAG semantico (embeddings Ollama su TM/glossario): 'auto' (default), 'off' per i path latency-sensitive (es. Live OCR)

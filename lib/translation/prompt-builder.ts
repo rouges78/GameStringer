@@ -12,6 +12,7 @@ import { RagGlossary } from '../rag-glossary';
 import { harvestBatch, batchContextToPromptHint, type HarvestInput } from '../context-harvester';
 import { buildFewShotBlock } from '@/lib/ai/adaptive-mt';
 import { buildGenrePromptBlock } from '@/lib/ai/genre-prompts';
+import { buildFidelityPromptBlock } from '@/lib/ai/fidelity-prompt';
 import { findVoiceProfileForString, buildVoicePromptInjection } from '@/lib/voice/voice-profiles';
 import { clientLogger } from '@/lib/client-logger';
 // Import the interface type to avoid circular dependency
@@ -102,6 +103,13 @@ export function buildTranslationPrompt(opts: TranslateOptions): string {
   let prompt = genreBlock
     ? `${genreBlock}${customInstructions}\n\nTranslate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`
     : `Translate the following texts from ${srcLang} to ${opts.targetLanguage}${customInstructions ? ' following these instructions:' + customInstructions : ''}. Return ONLY a JSON array of translated strings, same order.`;
+
+  // Anti-censura (OPT-IN): fedeltà su contenuti maturi già presenti nella sorgente.
+  // Iniettato solo se opts.uncensored === true; nessun effetto sui provider MT puri.
+  const fidelityBlock = buildFidelityPromptBlock(opts.uncensored);
+  if (fidelityBlock) {
+    prompt += `\n\n${fidelityBlock}`;
+  }
 
   // RAG Dinamico: Estrae i termini dal glossario e li inietta nel prompt SOLO se rilevanti per questo blocco di testo
   if (opts.gameId) {
