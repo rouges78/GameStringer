@@ -66,6 +66,19 @@ jobs:
       - name: Dead module guard
         run: npm run dead:check
 
+      # Gate accessibilità (ratchet vs scripts/.a11y-baseline.json).
+      # 80 punti noti: 77 <div> cliccabili non raggiungibili da tastiera e 3 backdrop.
+      # L'audit del 24/07 ne contava 7 — nessuno li stava contando, e crescevano.
+      # ⚠️ I 3 backdrop NON vanno resi focusabili: il rimedio è Esc sul dialogo, e
+      # role+tabIndex li peggiorerebbe. I limiti sono scritti in cima allo script:
+      # leggerli prima di correggere in blocco quello che elenca.
+      # Non usa axe-core perché axe richiede un browser e l'app in esecuzione, e in
+      # playwright.config.ts il webServer è disabilitato: un gate che in CI non può
+      # partire dà solo l'impressione di essere protetti. axe resta il passo dopo,
+      # per contrasto e focus visibile, che solo il runtime può dire.
+      - name: Accessibility guard
+        run: npm run a11y:check
+
       # Gate BLOCCANTE dal 2026-06-11 (suite bonificata: 464 passed,
       # 0 failed, 37 skip documentati — vedi i TODO nei singoli file).
       - name: Unit tests

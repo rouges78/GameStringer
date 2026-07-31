@@ -1,0 +1,168 @@
+{
+  "_nota": "Conteggi noti per file e regola. Aggiornare SOLO dopo aver corretto o valutato: vedi i LIMITI in scripts/check-a11y.js — i backdrop non vanno resi focusabili.",
+  "aggiornato": "2026-07-31",
+  "totali": {
+    "div-onclick": 77,
+    "div-onclick-overlay": 3
+  },
+  "known": {
+    "app/ai-pipeline/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/auto-translate/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/binary-patcher/page.tsx": {
+      "div-onclick": 4
+    },
+    "app/context-harvester/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/danganronpa-patcher/page.tsx": {
+      "div-onclick": 4
+    },
+    "app/library/page.tsx": {
+      "div-onclick-overlay": 1
+    },
+    "app/memory/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/ocr-engines/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/prediction-tool/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/renpy-patcher/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/retro/page.tsx": {
+      "div-onclick": 3
+    },
+    "app/rpgmaker-patcher/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/unity-bundle/page.tsx": {
+      "div-onclick": 1
+    },
+    "app/video-extractor/page.tsx": {
+      "div-onclick": 2
+    },
+    "app/wolfrpg-patcher/page.tsx": {
+      "div-onclick": 1
+    },
+    "components/admin/logging-dashboard.tsx": {
+      "div-onclick": 1
+    },
+    "components/audio-patcher.tsx": {
+      "div-onclick": 1
+    },
+    "components/cover-picker.tsx": {
+      "div-onclick": 3
+    },
+    "components/game-detail/game-tools-panel.tsx": {
+      "div-onclick": 1
+    },
+    "components/game-detail/screenshot-gallery.tsx": {
+      "div-onclick": 1
+    },
+    "components/game-detail/screenshot-lightbox.tsx": {
+      "div-onclick": 1
+    },
+    "components/gamemaker-translator.tsx": {
+      "div-onclick": 1
+    },
+    "components/injekt-ui-enhanced.tsx": {
+      "div-onclick": 1
+    },
+    "components/notifications/keyboard-shortcuts-help.tsx": {
+      "div-onclick-overlay": 1,
+      "div-onclick": 1
+    },
+    "components/notifications/notification-center.tsx": {
+      "div-onclick-overlay": 1,
+      "div-onclick": 1
+    },
+    "components/onboarding/interactive-tutorial.tsx": {
+      "div-onclick": 1
+    },
+    "components/profiles/profile-header.tsx": {
+      "div-onclick": 1
+    },
+    "components/profiles/profile-manager.tsx": {
+      "div-onclick": 1
+    },
+    "components/profiles/profile-selector.tsx": {
+      "div-onclick": 1
+    },
+    "components/settings/auto-backup-settings.tsx": {
+      "div-onclick": 3
+    },
+    "components/settings/voice-profile-manager.tsx": {
+      "div-onclick": 1
+    },
+    "components/social/notifications-panel.tsx": {
+      "div-onclick": 1
+    },
+    "components/social/online-users-widget.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/ai-translation-assistant.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/export-dialog.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/manga-translator.tsx": {
+      "div-onclick": 5
+    },
+    "components/tools/player-feedback-panel.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/rom-patcher-ui.tsx": {
+      "div-onclick": 4
+    },
+    "components/tools/texture-translator.tsx": {
+      "div-onclick": 5
+    },
+    "components/tools/unity-ink-translator.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/visual-translation-editor.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/voice-clone-studio.tsx": {
+      "div-onclick": 1
+    },
+    "components/tools/wad-extractor.tsx": {
+      "div-onclick": 2
+    },
+    "components/translator-pro/file-selector.tsx": {
+      "div-onclick": 1
+    },
+    "components/translator/background-jobs-widget.tsx": {
+      "div-onclick": 1
+    },
+    "components/translator/batch-folder-translator.tsx": {
+      "div-onclick": 1
+    },
+    "components/translator/character-voice-editor.tsx": {
+      "div-onclick": 1
+    },
+    "components/translator/confidence-heatmap.tsx": {
+      "div-onclick": 1
+    },
+    "components/translator/mtpe-workflow.tsx": {
+      "div-onclick": 1
+    },
+    "components/tutorial/tutorial-overlay.tsx": {
+      "div-onclick": 1
+    },
+    "components/ui/drop-zone.tsx": {
+      "div-onclick": 1
+    },
+    "components/ui/featured-game-widget.tsx": {
+      "div-onclick": 2
+    }
+  }
+}
