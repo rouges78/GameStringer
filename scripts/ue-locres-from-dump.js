@@ -327,6 +327,31 @@ function perChunk(file, sovrapposizione, visita) {
  * refCount. Restituisce quante stringhe si leggono e un campione, fermandosi
  * dove i dati smettono di reggere — parziale è meglio di niente, come sopra.
  */
+/**
+ * Quota di caratteri "da testo" (lettere anche accentate, cifre, spazi,
+ * punteggiatura, tag tipo <Speaker>) su una stringa.
+ *
+ * PERCHÉ ESISTE — misurato il 31/07/2026 sui dump veri di Below: la sola
+ * plausibilità STRUTTURALE (lunghezze e refCount nei range) ha promosso
+ * CENTINAIA di candidati «752/752» che erano rumore binario: tabelle di
+ * offset e altre strutture reggono il parse per caso, ma decodificate danno
+ * mojibake. La forma non basta: bisogna guardare cosa c'è scritto.
+ */
+function leggibilita(s) {
+  if (!s) return 0;
+  let ok = 0;
+  for (const ch of s) {
+    const c = ch.codePointAt(0);
+    if (
+      (c >= 0x20 && c <= 0x7e) || // ASCII stampabile
+      (c >= 0xc0 && c <= 0x17f) || // latino accentato (es/fr/de/it…)
+      c === 0x0a || c === 0x0d || c === 0x09 ||
+      c === 0xa1 || c === 0xbf || c === 0xe9 // ¡ ¿ é e simili già coperti sopra
+    ) ok++;
+  }
+  return ok / [...s].length;
+}
+
 function provaArray(fd, dim, off, conteggioAtteso, maxByte) {
   const n = Math.min(maxByte, dim - off);
   const buf = Buffer.alloc(n);
@@ -335,6 +360,8 @@ function provaArray(fd, dim, off, conteggioAtteso, maxByte) {
   let lette = 0;
   const campione = [];
   let byteValidi = 4;
+  let sommaLeg = 0;
+  let nonVuote = 0;
   try {
     const c = r.i32();
     if (c !== conteggioAtteso) return null; // race col chiamante, non dovrebbe
@@ -344,12 +371,20 @@ function provaArray(fd, dim, off, conteggioAtteso, maxByte) {
       if (ref < 0 || ref > 1_000_000) throw new Error(`refCount implausibile: ${ref}`);
       lette++;
       byteValidi = r.p;
+      if (s && s.length >= 4) {
+        sommaLeg += leggibilita(s);
+        nonVuote++;
+      }
       if (campione.length < 3 && s && s.length > 12) campione.push(s);
     }
   } catch {
     /* ci si ferma dove i dati finiscono: `lette` è la misura */
   }
-  return { lette, campione, byteValidi };
+  // `testo`: media di leggibilità sulle stringhe non banali. Il rumore binario
+  // sta sotto 0,3; i dialoghi veri sopra 0,9. Con zero stringhe non banali il
+  // candidato è rumore per definizione (un array di localizzazione ha frasi).
+  const testo = nonVuote > 0 ? sommaLeg / nonVuote : 0;
+  return { lette, campione, byteValidi, testo, nonVuote };
 }
 
 function cercaArray(file, conteggio, minStringhe) {
@@ -387,21 +422,37 @@ function cercaArray(file, conteggio, minStringhe) {
     fs.closeSync(fd);
   }
 
-  candidati.sort((a, b) => b.lette - a.lette);
-  console.log(`Candidati con almeno ${minStringhe} stringhe leggibili: ${candidati.length}`);
-  for (const c of candidati.slice(0, 12)) {
-    console.log(`\n+ offset ${c.off} (0x${c.off.toString(16)}): ${c.lette}/${conteggio} stringhe · ${c.byteValidi} byte validi`);
+  // Il verdetto è CONTENUTO, non forma: misurato il 31/07 sui dump veri, la
+  // sola struttura promuove centinaia di falsi «752/752». Si separa per
+  // leggibilità e si dice quanto rumore c'era — nasconderlo sarebbe il solito
+  // referto che sembra una buona notizia.
+  const SOGLIA_TESTO = 0.7;
+  const veri = candidati.filter((c) => c.testo >= SOGLIA_TESTO);
+  const rumore = candidati.length - veri.length;
+  veri.sort((a, b) => b.lette - a.lette);
+
+  // Candidati sovrapposti (stesso buffer visto da offset vicini): si tiene il
+  // migliore per zona, gli altri sono la stessa scoperta ripetuta.
+  const distinti = [];
+  for (const c of veri) {
+    const doppione = distinti.find((d) => Math.abs(d.off - c.off) < Math.max(d.byteValidi, c.byteValidi));
+    if (!doppione) distinti.push(c);
+  }
+
+  console.log(`Candidati strutturalmente validi: ${candidati.length} · con TESTO leggibile (≥${SOGLIA_TESTO}): ${distinti.length} (${rumore} scartati come rumore binario)`);
+  for (const c of distinti.slice(0, 12)) {
+    console.log(`\n+ offset ${c.off} (0x${c.off.toString(16)}): ${c.lette}/${conteggio} stringhe · leggibilità ${c.testo.toFixed(2)} · ${c.byteValidi} byte validi`);
     for (const s of c.campione) console.log(`    «${s.replace(/\s+/g, ' ').slice(0, 70)}»`);
   }
-  if (!candidati.length) {
-    console.log('\nNessun array leggibile: o la copia intera non esiste in questo dump,');
-    console.log('o e\' spezzata su regioni non contigue nel file. Prossima misura:');
-    console.log('rifare la ricerca su un dump preso in un momento diverso.');
+  if (!distinti.length) {
+    console.log('\nNessun array con testo leggibile: o la copia intera non esiste in');
+    console.log('questo dump, o e\' spezzata su regioni non contigue nel file.');
+    console.log('Prossima misura: un dump nuovo, preso in un momento diverso.');
   } else {
     console.log('\nIl candidato va RILETTO per indirizzo virtuale prima di fidarsi:');
-    console.log(`  node scripts/ue-locres-from-dump.js "<dump>" --ricostruisci ${candidati[0].off} --bytes ${Math.max(candidati[0].byteValidi + 65536, 1048576)}`);
+    console.log(`  node scripts/ue-locres-from-dump.js "<dump>" --ricostruisci ${distinti[0].off} --bytes ${Math.max(distinti[0].byteValidi + 65536, 1048576)}`);
   }
-  return candidati;
+  return distinti;
 }
 
 function cercaCopie(file, testo) {
