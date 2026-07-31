@@ -3884,7 +3884,8 @@
     "pending": "待处理",
     "processing": "处理中",
     "noFiles": "队列中没有文件",
-    "dropFiles": "拖放文件到这里或点击选择"
+    "dropFiles": "拖放文件到这里或点击选择",
+    "notImplemented": "批量翻译尚未实现：扫描和文件选择可以使用，但不会翻译或写入任何文件。"
   },
   "library": {
     "title": "库",
@@ -4279,7 +4280,8 @@
     "pending": "待处理",
     "translating": "翻译中...",
     "done": "完成",
-    "error": "错误"
+    "error": "错误",
+    "notImplemented": "批量翻译尚未实现：扫描和文件选择可以使用，但不会翻译或写入任何文件。"
   },
   "subtitleTranslator": {
     "title": "字幕翻译器",

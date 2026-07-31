@@ -3965,7 +3965,8 @@
     "stopAll": "모두 중지",
     "filesInQueue": "대기열의 파일",
     "estimatedCost": "예상 비용",
-    "dropFiles": "여기에 파일을 드롭하거나 클릭하여 선택"
+    "dropFiles": "여기에 파일을 드롭하거나 클릭하여 선택",
+    "notImplemented": "일괄 번역은 아직 구현되지 않았습니다. 스캔과 파일 선택은 동작하지만 파일이 번역되거나 저장되지는 않습니다."
   },
   "gameDetails": {
     "gameLanguages": "게임 언어",
@@ -4494,7 +4495,8 @@
     "pending": "대기 중",
     "translating": "번역 중...",
     "done": "완료",
-    "error": "오류"
+    "error": "오류",
+    "notImplemented": "일괄 번역은 아직 구현되지 않았습니다. 스캔과 파일 선택은 동작하지만 파일이 번역되거나 저장되지는 않습니다."
   },
   "subtitleTranslator": {
     "title": "자막 번역기",

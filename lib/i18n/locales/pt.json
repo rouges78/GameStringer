@@ -3965,7 +3965,8 @@
     "stopAll": "Parar Todos",
     "filesInQueue": "arquivos na fila",
     "estimatedCost": "Custo estimado",
-    "dropFiles": "Arraste arquivos aqui ou clique para selecionar"
+    "dropFiles": "Arraste arquivos aqui ou clique para selecionar",
+    "notImplemented": "A tradução em lote ainda não está implementada: a análise e a seleção de ficheiros funcionam, mas nenhum ficheiro é traduzido ou gravado."
   },
   "gameDetails": {
     "gameLanguages": "Idiomas do jogo",
@@ -4494,7 +4495,8 @@
     "pending": "Pendente",
     "translating": "Traduzindo...",
     "done": "Concluído",
-    "error": "Erro"
+    "error": "Erro",
+    "notImplemented": "A tradução em lote ainda não está implementada: a análise e a seleção de ficheiros funcionam, mas nenhum ficheiro é traduzido ou gravado."
   },
   "subtitleTranslator": {
     "title": "Tradutor de Legendas",

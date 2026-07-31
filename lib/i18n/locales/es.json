@@ -3884,7 +3884,8 @@
     "pending": "Pendientes",
     "processing": "Procesando",
     "noFiles": "Sin archivos en cola",
-    "dropFiles": "Arrastra archivos aquí o haz clic para seleccionar"
+    "dropFiles": "Arrastra archivos aquí o haz clic para seleccionar",
+    "notImplemented": "La traducción por lotes aún no está implementada: el análisis y la selección de archivos funcionan, pero no se traduce ni se escribe ningún archivo."
   },
   "library": {
     "title": "Biblioteca",
@@ -4450,7 +4451,8 @@
     "pending": "Pendiente",
     "translating": "Traduciendo...",
     "done": "Completado",
-    "error": "Error"
+    "error": "Error",
+    "notImplemented": "La traducción por lotes aún no está implementada: el análisis y la selección de archivos funcionan, pero no se traduce ni se escribe ningún archivo."
   },
   "subtitleTranslator": {
     "title": "Traductor de subtítulos",

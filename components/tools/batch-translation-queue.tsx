@@ -170,6 +170,11 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
     setIsPaused(false);
 
     const pendingJobsList = queue.filter(j => j.status === 'pending');
+    // Contato QUI e non rileggendo `queue` alla fine: dentro questa callback
+    // `queue` è lo stato catturato prima del loop, quindi i lavori appena
+    // marcati falliti da setQueue non ci sarebbero ancora e il conteggio
+    // tornerebbe zero — cioè si rimetterebbe il toast verde.
+    let falliti = 0;
 
     for (const job of pendingJobsList) {
       if (isPaused) break;
@@ -182,65 +187,35 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
       ));
 
       try {
-        // Simulate file analysis to count strings
-        const { invoke } = await import('@tauri-apps/api/core');
-        
-        // Count strings in file
-        let stringCount = 100; // Default
-        try {
-          stringCount = await invoke<number>('count_translatable_strings', {
-            filePath: job.filePath
-          });
-        } catch {
-          clientLogger.warn('Unable to count strings, using default');
-        }
-
-        setQueue(prev => prev.map(j => 
-          j.id === job.id ? { ...j, totalStrings: stringCount } : j
-        ));
-
-        // Simulate progressive translation
-        for (let i = 0; i <= stringCount; i += Math.ceil(stringCount / 20)) {
-          if (isPaused) {
-            setQueue(prev => prev.map(j => 
-              j.id === job.id ? { ...j, status: 'paused' } : j
-            ));
-            break;
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          const progress = Math.min((i / stringCount) * 100, 100);
-          setQueue(prev => prev.map(j => 
-            j.id === job.id ? { 
-              ...j, 
-              progress, 
-              translatedStrings: i,
-              estimatedTime: Math.ceil((stringCount - i) * 0.05)
-            } : j
-          ));
-        }
-
-        // If not paused, complete
-        if (!isPaused) {
-          setQueue(prev => prev.map(j => 
-            j.id === job.id ? { 
-              ...j, 
-              status: 'completed', 
-              progress: 100, 
-              translatedStrings: stringCount,
-              endTime: Date.now()
-            } : j
-          ));
-        }
+        // ⛔ 31/07/2026 — QUESTA CODA NON HA MAI TRADOTTO NIENTE.
+        //
+        // Il codice rimosso: `count_translatable_strings` non esiste lato Rust,
+        // quindi il catch lasciava `stringCount` al DEFAULT INVENTATO di 100;
+        // poi venti giri da 100 ms di `setTimeout` — due secondi netti di barra
+        // che avanza — e infine `status: 'completed'`, `progress: 100`,
+        // `translatedStrings: 100`. Nessun file letto, nessuna AI chiamata,
+        // nessun byte scritto: solo un'animazione che finiva con "fatto".
+        //
+        // Meno dannosa del traduttore di cartelle (che i file falsi li scriveva
+        // per davvero), ma la stessa bugia: dichiarare un lavoro mai svolto,
+        // con tanto di conteggio di stringhe mai esistite.
+        //
+        // La coda resta perché è un pezzo di UI valido — aggiungere, mettere in
+        // pausa, riordinare i lavori — ma finché non c'è un motore sotto deve
+        // dire che non c'è.
+        throw new Error("BATCH_NON_IMPLEMENTATO");
 
       } catch (error: unknown) {
         clientLogger.error('Translation error:', error);
+        falliti++;
+        const grezzo = error instanceof Error ? error.message : 'Unknown error';
         setQueue(prev => prev.map(j =>
           j.id === job.id ? {
             ...j,
             status: 'failed',
-            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            errorMessage: grezzo === 'BATCH_NON_IMPLEMENTATO'
+              ? t('batch.notImplemented')
+              : grezzo,
             endTime: Date.now()
           } : j
         ));
@@ -249,11 +224,19 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
 
     setIsProcessing(false);
     setCurrentJobId(null);
-    
+
+    // ⚠️ Qui c'era `toast.success(t('common.queueProcessingCompleted'))`
+    // INCONDIZIONATO: anche con tutti i lavori falliti, l'ultima cosa che
+    // l'utente vedeva era un messaggio verde di successo. Era la bugia che
+    // sopravviveva a qualunque correzione fatta più a monte.
     if (!isPaused) {
-      toast.success(t('common.queueProcessingCompleted'));
+      if (falliti > 0) {
+        toast.error(t('batch.notImplemented'));
+      } else {
+        toast.success(t('common.queueProcessingCompleted'));
+      }
     }
-  }, [queue, isPaused]);
+  }, [queue, isPaused, t]);
 
   // Pause processing
   const pauseProcessing = useCallback(() => {
@@ -386,6 +369,17 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
 
   return (
     <div className="space-y-4">
+      {/* Detto PRIMA che l'utente accodi i file, non dopo avergli mostrato una
+          barra che arriva al 100%: la coda gestisce i lavori davvero, ma sotto
+          non c'è ancora un motore di traduzione. */}
+      <div
+        role="status"
+        className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3"
+      >
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+        <p className="text-sm text-amber-200/90">{t('batch.notImplemented')}</p>
+      </div>
+
       {/* Header with statistics */}
       <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-950/80 via-orange-950/60 to-red-950/80 p-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl" />

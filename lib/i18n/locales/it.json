@@ -5005,7 +5005,8 @@
     "pending": "In attesa",
     "translating": "Traduzione...",
     "done": "Completato",
-    "error": "Errore"
+    "error": "Errore",
+    "notImplemented": "La traduzione batch non è ancora implementata: la scansione e la selezione dei file funzionano, ma nessun file viene tradotto o scritto."
   },
   "subtitleTranslator": {
     "title": "Traduttore sottotitoli",
@@ -5707,7 +5708,8 @@
     "pending": "In attesa",
     "processing": "In elaborazione",
     "noFiles": "Nessun file in coda",
-    "dropFiles": "Trascina file qui o clicca per selezionare"
+    "dropFiles": "Trascina file qui o clicca per selezionare",
+    "notImplemented": "La traduzione batch non è ancora implementata: la scansione e la selezione dei file funzionano, ma nessun file viene tradotto o scritto."
   },
   "heatmap": {
     "title": "Mappa di calore della confidenza",

@@ -3965,7 +3965,8 @@
     "stopAll": "Zatrzymaj Wszystko",
     "filesInQueue": "pliki w kolejce",
     "estimatedCost": "Szacowany koszt",
-    "dropFiles": "Przeciągnij pliki tutaj lub kliknij, aby wybrać"
+    "dropFiles": "Przeciągnij pliki tutaj lub kliknij, aby wybrać",
+    "notImplemented": "Tłumaczenie wsadowe nie jest jeszcze zaimplementowane: skanowanie i wybór plików działają, ale żaden plik nie jest tłumaczony ani zapisywany."
   },
   "gameDetails": {
     "gameLanguages": "Języki gry",
@@ -4494,7 +4495,8 @@
     "pending": "Oczekujący",
     "translating": "Tłumaczenie...",
     "done": "Ukończono",
-    "error": "Błąd"
+    "error": "Błąd",
+    "notImplemented": "Tłumaczenie wsadowe nie jest jeszcze zaimplementowane: skanowanie i wybór plików działają, ale żaden plik nie jest tłumaczony ani zapisywany."
   },
   "subtitleTranslator": {
     "title": "Tłumacz napisów",

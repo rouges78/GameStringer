@@ -3884,7 +3884,8 @@
     "pending": "Ausstehend",
     "processing": "Verarbeitung",
     "noFiles": "Keine Dateien in Warteschlange",
-    "dropFiles": "Dateien hier ablegen oder klicken zum Auswählen"
+    "dropFiles": "Dateien hier ablegen oder klicken zum Auswählen",
+    "notImplemented": "Die Stapelübersetzung ist noch nicht implementiert: Scan und Dateiauswahl funktionieren, aber es wird keine Datei übersetzt oder geschrieben."
   },
   "library": {
     "title": "Bibliothek",
@@ -4450,7 +4451,8 @@
     "pending": "Ausstehend",
     "translating": "Übersetze...",
     "done": "Abgeschlossen",
-    "error": "Fehler"
+    "error": "Fehler",
+    "notImplemented": "Die Stapelübersetzung ist noch nicht implementiert: Scan und Dateiauswahl funktionieren, aber es wird keine Datei übersetzt oder geschrieben."
   },
   "subtitleTranslator": {
     "title": "Untertitel-Übersetzer",

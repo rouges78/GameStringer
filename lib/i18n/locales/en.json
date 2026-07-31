@@ -4831,7 +4831,8 @@
     "pending": "Pending",
     "translating": "Translating...",
     "done": "Completed",
-    "error": "Error"
+    "error": "Error",
+    "notImplemented": "Batch translation is not implemented yet: scanning and file selection work, but no file is translated or written."
   },
   "subtitleTranslator": {
     "title": "Subtitle Translator",
@@ -5707,7 +5708,8 @@
     "pending": "Pending",
     "processing": "Processing",
     "noFiles": "No files in queue",
-    "dropFiles": "Drop files here or click to select"
+    "dropFiles": "Drop files here or click to select",
+    "notImplemented": "Batch translation is not implemented yet: scanning and file selection work, but no file is translated or written."
   },
   "heatmap": {
     "title": "Confidence Heatmap",

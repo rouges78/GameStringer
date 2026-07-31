@@ -15,7 +15,8 @@ import {
   FolderTree,
   RefreshCw,
   Globe,
-  Edit3
+  Edit3,
+  AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,25 @@ import {
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
+
+/**
+ * ⛔ La traduzione batch NON è implementata — 31/07/2026.
+ *
+ * Fino a oggi questo componente FINGEVA di tradurre: leggeva il file, aspettava
+ * mezzo secondo e riscriveva il CONTENUTO ORIGINALE con il suffisso della lingua
+ * di destinazione, marcando poi il file come "completed / 100%". Il risultato
+ * erano artefatti sul disco dell'utente che sembravano traduzioni e non lo erano.
+ *
+ * Finché la traduzione vera non è collegata, questa costante resta `false`:
+ * scansione, filtri e selezione restano attivi (sono onesti e utili — dicono
+ * davvero quali file ci sono), ma l'avvio è disabilitato e la UI lo dichiara.
+ *
+ * ⚠️ NON metterla a `true` per "sbloccare" il pulsante. Rimetterla a `true`
+ * senza aver prima collegato `translateWithFallbackBatched` E aver deciso come
+ * segmentare il contenuto di un file generico significa ricominciare a scrivere
+ * file falsi. La decisione sul segmentamento è il lavoro vero, non la chiamata.
+ */
+const BATCH_TRADUZIONE_ATTIVA = false;
 
 interface BatchFile {
   path: string;
@@ -180,6 +200,10 @@ export function BatchFolderTranslator() {
 
   const handleTranslate = async () => {
     if (!scanResult || selectedFiles.size === 0) return;
+    // Difesa in profondità: il pulsante è già disabilitato, ma questa funzione
+    // scriveva file sul disco dell'utente — non deve poter partire nemmeno per
+    // vie traverse (scorciatoie, chiamate programmatiche, un futuro refactor).
+    if (!BATCH_TRADUZIONE_ATTIVA) return;
 
     setIsTranslating(true);
     setIsPaused(false);
@@ -210,36 +234,41 @@ export function BatchFolderTranslator() {
       });
 
       try {
-        // Leggi file
-        const content = await invoke<string>("read_file_for_translation", {
-          filePath: file.path,
-        });
-
-        // TODO: Traduci contenuto usando API
-        // Per ora simuliamo
-        await new Promise(r => setTimeout(r, 500));
-        
-        // Scrivi file tradotto
-        const _outputPath = await invoke<string>("write_translated_file", {
-          originalPath: file.path,
-          content: content, // In realtà dovrebbe essere tradotto
-          outputSuffix: `_${targetLang}`,
-          outputFolder: outputFolder || null,
-        });
-
-        setFileStatuses(prev => {
-          const next = new Map(prev);
-          next.set(file.path, { path: file.path, status: "completed", progress: 100 });
-          return next;
-        });
+        // ⛔ 31/07/2026 — QUI SI SCRIVEVANO FILE NON TRADOTTI, DICHIARANDO SUCCESSO.
+        //
+        // Il codice rimosso leggeva il file, aspettava 500 ms (`// Per ora
+        // simuliamo`) e poi chiamava `write_translated_file` passando
+        // `content: content`, cioè il CONTENUTO ORIGINALE, con tanto di commento
+        // `// In realtà dovrebbe essere tradotto`. Lato Rust `fs::write` scrive
+        // davvero: l'utente si ritrovava sul disco dei `nome_it.ext` pieni di
+        // inglese, e la UI segnava "completed / 100%".
+        //
+        // È la stessa famiglia di «traduzione completata al 100% con 0 errori»
+        // mentre il gioco resta in inglese, ma peggio: lascia artefatti che
+        // l'utente crede tradotti e potrebbe distribuire.
+        //
+        // Nessun gate poteva accorgersene: `read_file_for_translation` e
+        // `write_translated_file` esistono entrambi e fanno il loro lavoro
+        // correttamente — su dati che mentono.
+        //
+        // Il motore vero ESISTE (`translateWithFallbackBatched` in
+        // lib/ai/ai-translate-direct.ts, con callback di progresso). Quello che
+        // manca, ed è il motivo per cui era un TODO, è decidere COSA è
+        // traducibile dentro un file generico: spezzare riga per riga corrompe
+        // un JSON o un .rpy. Finché quella decisione non è presa, questa
+        // funzione NON deve scrivere niente.
+        throw new Error("BATCH_NON_IMPLEMENTATO");
       } catch (error: unknown) {
+        const grezzo = error instanceof Error ? error.message : String(error);
         setFileStatuses(prev => {
           const next = new Map(prev);
-          next.set(file.path, { 
-            path: file.path, 
-            status: "error", 
-            progress: 0, 
-            error: String(error) 
+          next.set(file.path, {
+            path: file.path,
+            status: "error",
+            progress: 0,
+            error: grezzo === "BATCH_NON_IMPLEMENTATO"
+              ? t('batchTranslator.notImplemented')
+              : grezzo
           });
           return next;
         });
@@ -343,6 +372,20 @@ export function BatchFolderTranslator() {
           {/* Controlli Traduzione */}
           <Card>
             <CardContent className="p-4">
+              {/* Dirlo prima che l'utente selezioni i file, non dopo averglieli
+                  "tradotti": la scansione qui sopra è reale e utile, la
+                  traduzione no. */}
+              {!BATCH_TRADUZIONE_ATTIVA && (
+                <div
+                  role="status"
+                  className="mb-4 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3"
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <p className="text-sm text-amber-200/90">
+                    {t('batchTranslator.notImplemented')}
+                  </p>
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <label className="text-xs text-muted-foreground mb-1 block">{t('batchTranslator.targetLanguage')}</label>
@@ -379,7 +422,8 @@ export function BatchFolderTranslator() {
                   {!isTranslating ? (
                     <Button
                       onClick={handleTranslate}
-                      disabled={selectedFiles.size === 0}
+                      disabled={!BATCH_TRADUZIONE_ATTIVA || selectedFiles.size === 0}
+                      title={!BATCH_TRADUZIONE_ATTIVA ? t('batchTranslator.notImplemented') : undefined}
                       className="bg-gradient-to-r from-emerald-600 to-teal-600"
                     >
                       <Play className="w-4 h-4 mr-2" />
