@@ -4,10 +4,24 @@ DLL unica iniettabile che unifica le DLL storiche (`unity-translator-dll`,
 `ue-translator-dll`, `unreal-translator`) in un'architettura a **plugin di
 sorgenti di testo**, con degradazione automatica L1 → L2 → L3.
 
-> `ue-translator-dll/` è stata **cancellata il 31/07/2026**: i suoi hook non si
-> installavano mai (`FindUEFunctions()` ritornava `true` senza assegnare gli
-> indirizzi) e dichiarava comunque successo. L'hook Unreal vivo è qui, in
-> `src/sources/source_unreal_ftext.cpp`.
+> ⛔ **ATTENZIONE — «storiche» NON vuol dire «cancellabili», e una delle tre è
+> PORTANTE.** La frase qui sopra si legge come se tutte e tre fossero superate.
+> Non è così, e il 31/07/2026 questo equivoco ha rischiato di far cancellare il
+> cuore del build:
+>
+> - `ue-translator-dll/` — **cancellata il 31/07/2026**, davvero morta: i suoi
+>   hook non si installavano mai (`FindUEFunctions()` ritornava `true` senza
+>   assegnare gli indirizzi) e dichiarava comunque successo.
+> - `unreal-translator/hook-dll/` — ⚠️ **VIVA E NECESSARIA. NON CANCELLARE.**
+>   È la `CORE_DIR` di questo CMakeLists (riga 21): `ue_types.h` (con
+>   `UE::Patterns::FText_ToString_*`) e `utils.h` (con `PatternScanUnique`) stanno
+>   lì, e `src/sources/source_unreal_ftext.cpp` li include. Toglierla rompe la
+>   build della DLL che la CI produce e spedisce a ogni release.
+> - `unity-translator-dll/` — contiene il submodule `external/minhook`, aggiunto
+>   come sottoprogetto CMake alla riga 47. Anche questa serve al build.
+>
+> L'hook Unreal vivo è in `src/sources/source_unreal_ftext.cpp`, ma **i pattern
+> e lo scanner che usa vivono in `unreal-translator/hook-dll`**.
 
 > Stato: **scaffold iniziale.** Compila come scheletro; le sorgenti L1 sono
 > portate dagli hook esistenti, la sorgente L2 (GDI) è il bersaglio dello spike,
