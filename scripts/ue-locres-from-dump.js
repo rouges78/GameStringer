@@ -57,6 +57,8 @@
  * Uso:
  *   node scripts/ue-locres-from-dump.js "<file.DMP>"
  *   node scripts/ue-locres-from-dump.js "<file.DMP>" --out estratti --json
+ *   node scripts/ue-locres-from-dump.js "<file.DMP>" --cerca-array 752
+ *   node scripts/ue-locres-from-dump.js "<file.DMP>" --copie "0A7FC84841C29B4DB6D3F2B1164F219D"
  */
 
 const fs = require('fs');
@@ -268,6 +270,213 @@ function scansiona(file) {
   }
 }
 
+// ── Ricerca di ALTRE COPIE (31/07/2026, Below) ────────────────────────────
+//
+// La scansione del magic ha trovato UN solo Game.locres per dump, con l'array
+// stringhe troncato a 204/752 e causa NON determinata. L'ipotesi da MISURARE:
+// se il gioco ha caricato la localizzazione più volte (avvio in en, poi cambio
+// in es), in memoria possono esistere ALTRE copie dei dati — anche parziali,
+// anche SENZA magic davanti (l'array stringhe è autosufficiente: int32
+// conteggio + FString). Il magic scan non le vede per definizione.
+//
+// Due misure, nessuna teoria:
+//   --cerca-array N   cerca ogni int32 LE == N (il conteggio dell'array, per
+//                     Below: 752) e prova a parsare da lì un array di FString
+//                     v>=2 (FString + int32 refCount). Il rumore muore al primo
+//                     FString implausibile; i candidati veri si riconoscono da
+//                     QUANTE stringhe si leggono. Se un candidato supera le 204
+//                     del blob noto, la copia buona esiste.
+//   --copie "testo"   cerca un'ancora nota (chiave dell'indice o frase dei
+//                     dialoghi) in ASCII e UTF-16LE, e per ogni occorrenza dice
+//                     se è un FString SERIALIZZATO (int32 di lunghezza che
+//                     combacia, col terminatore incluso — la stessa distinzione
+//                     imparata con ue-dump-strings: l'euristica vale su blob
+//                     serializzati, NON su FString vive in heap) e a che
+//                     distanza sta dal magic .locres più vicino.
+//
+// ⚠️ Gli offset riportati sono POSIZIONI NEL FILE .DMP: al confine fra due
+// regioni la lettura sequenziale sconfina in memoria di altri oggetti
+// (lezione di --ricostruisci). Un candidato promettente va sempre riletto per
+// indirizzo virtuale: --ricostruisci <offset>.
+
+/** Scansione streaming generica: chiama visita(vista, inizioAssoluto) per chunk. */
+function perChunk(file, sovrapposizione, visita) {
+  const fd = fs.openSync(file, 'r');
+  const dim = fs.statSync(file).size;
+  try {
+    let letto = 0;
+    while (letto < dim) {
+      const inizio = letto === 0 ? 0 : letto - sovrapposizione;
+      const quanti = Math.min(CHUNK, dim - inizio);
+      if (quanti <= sovrapposizione && letto !== 0) break;
+      const buf = Buffer.alloc(quanti);
+      const n = fs.readSync(fd, buf, 0, quanti, inizio);
+      if (n <= 0) break;
+      visita(buf.subarray(0, n), inizio);
+      letto = inizio + n;
+    }
+    return dim;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+/**
+ * Prova a leggere un array di stringhe .locres (v>=2) a partire da `off` nel
+ * file: int32 conteggio (già verificato dal chiamante), poi FString + int32
+ * refCount. Restituisce quante stringhe si leggono e un campione, fermandosi
+ * dove i dati smettono di reggere — parziale è meglio di niente, come sopra.
+ */
+function provaArray(fd, dim, off, conteggioAtteso, maxByte) {
+  const n = Math.min(maxByte, dim - off);
+  const buf = Buffer.alloc(n);
+  fs.readSync(fd, buf, 0, n, off);
+  const r = new Lettore(buf);
+  let lette = 0;
+  const campione = [];
+  let byteValidi = 4;
+  try {
+    const c = r.i32();
+    if (c !== conteggioAtteso) return null; // race col chiamante, non dovrebbe
+    for (let i = 0; i < c; i++) {
+      const s = r.fstring();
+      const ref = r.i32();
+      if (ref < 0 || ref > 1_000_000) throw new Error(`refCount implausibile: ${ref}`);
+      lette++;
+      byteValidi = r.p;
+      if (campione.length < 3 && s && s.length > 12) campione.push(s);
+    }
+  } catch {
+    /* ci si ferma dove i dati finiscono: `lette` è la misura */
+  }
+  return { lette, campione, byteValidi };
+}
+
+function cercaArray(file, conteggio, minStringhe) {
+  const ago = Buffer.alloc(4);
+  ago.writeInt32LE(conteggio, 0);
+  const grezzi = [];
+  const dim = perChunk(file, 3, (vista, base) => {
+    let i = 0;
+    while ((i = vista.indexOf(ago, i)) !== -1) {
+      grezzi.push(base + i);
+      i++;
+    }
+  });
+  const posizioni = [...new Set(grezzi)];
+  console.log(`Dump: ${path.basename(file)} (${(dim / 1024 ** 3).toFixed(2)} GB)`);
+  console.log(`int32==${conteggio}: ${posizioni.length} occorrenze — ora il parse di prova su ognuna.`);
+
+  const fd = fs.openSync(file, 'r');
+  const candidati = [];
+  try {
+    for (const off of posizioni) {
+      // Due stadi: un assaggio da 4 KB scarta il rumore (in un dump da 6 GB le
+      // occorrenze di un int32 qualsiasi si contano a migliaia, e allocare
+      // 64 MB per ognuna costerebbe minuti); solo chi regge l'assaggio viene
+      // riletto per intero.
+      // 64 KB e non meno: le prime FString possono essere dialoghi UTF-16 da
+      // centinaia di byte l'una, e un assaggio troppo corto leggerebbe 0
+      // stringhe COMPLETE da un candidato vero, scartandolo in silenzio.
+      const assaggio = provaArray(fd, dim, off, conteggio, 65536);
+      if (!assaggio || assaggio.lette < Math.min(minStringhe, 3)) continue;
+      const esito = provaArray(fd, dim, off, conteggio, MAX_BLOB);
+      if (esito && esito.lette >= minStringhe) candidati.push({ off, ...esito });
+    }
+  } finally {
+    fs.closeSync(fd);
+  }
+
+  candidati.sort((a, b) => b.lette - a.lette);
+  console.log(`Candidati con almeno ${minStringhe} stringhe leggibili: ${candidati.length}`);
+  for (const c of candidati.slice(0, 12)) {
+    console.log(`\n+ offset ${c.off} (0x${c.off.toString(16)}): ${c.lette}/${conteggio} stringhe · ${c.byteValidi} byte validi`);
+    for (const s of c.campione) console.log(`    «${s.replace(/\s+/g, ' ').slice(0, 70)}»`);
+  }
+  if (!candidati.length) {
+    console.log('\nNessun array leggibile: o la copia intera non esiste in questo dump,');
+    console.log('o e\' spezzata su regioni non contigue nel file. Prossima misura:');
+    console.log('rifare la ricerca su un dump preso in un momento diverso.');
+  } else {
+    console.log('\nIl candidato va RILETTO per indirizzo virtuale prima di fidarsi:');
+    console.log(`  node scripts/ue-locres-from-dump.js "<dump>" --ricostruisci ${candidati[0].off} --bytes ${Math.max(candidati[0].byteValidi + 65536, 1048576)}`);
+  }
+  return candidati;
+}
+
+function cercaCopie(file, testo) {
+  const forme = [
+    { nome: 'ascii', ago: Buffer.from(testo, 'latin1') },
+    { nome: 'utf16', ago: Buffer.from(testo, 'utf16le') },
+  ];
+  const sovr = Math.max(...forme.map((f) => f.ago.length)) - 1 + 16;
+  const occorrenze = [];
+  const magici = [];
+  const dim = perChunk(file, sovr, (vista, base) => {
+    let m = 0;
+    while ((m = vista.indexOf(MAGIC, m)) !== -1) {
+      magici.push(base + m);
+      m++;
+    }
+    for (const f of forme) {
+      let i = 0;
+      while ((i = vista.indexOf(f.ago, i)) !== -1) {
+        occorrenze.push({ off: base + i, forma: f.nome, lung: f.ago.length });
+        i++;
+      }
+    }
+  });
+
+  const uniche = [];
+  const visti = new Set();
+  for (const o of occorrenze) {
+    const k = `${o.forma}:${o.off}`;
+    if (!visti.has(k)) {
+      visti.add(k);
+      uniche.push(o);
+    }
+  }
+  uniche.sort((a, b) => a.off - b.off);
+  const magiciUnici = [...new Set(magici)].sort((a, b) => a - b);
+
+  console.log(`Dump: ${path.basename(file)} (${(dim / 1024 ** 3).toFixed(2)} GB)`);
+  console.log(`Ancora: «${testo}» → ${uniche.length} occorrenze (ascii+utf16) · magic .locres nel dump: ${magiciUnici.length}`);
+
+  const fd = fs.openSync(file, 'r');
+  try {
+    for (const o of uniche.slice(0, 40)) {
+      // FString serializzato? L'int32 subito prima deve dichiarare la
+      // lunghezza Col terminatore: ascii → n+1, utf16 → -(n+1).
+      const testa = Buffer.alloc(4);
+      let serializzato = false;
+      if (o.off >= 4) {
+        fs.readSync(fd, testa, 0, 4, o.off - 4);
+        const len = testa.readInt32LE(0);
+        const nUnita = o.forma === 'utf16' ? o.lung / 2 : o.lung;
+        serializzato = o.forma === 'utf16' ? len === -(nUnita + 1) : len === nUnita + 1;
+      }
+      let prec = null;
+      for (const m of magiciUnici) {
+        if (m <= o.off) prec = m;
+        else break;
+      }
+      const dist = prec === null ? null : o.off - prec;
+      console.log(
+        `  ${String(o.off).padStart(12)} (0x${o.off.toString(16)}) · ${o.forma}` +
+          ` · ${serializzato ? 'SERIALIZZATO (blob .locres?)' : 'vivo/altro'}` +
+          (dist === null ? ' · nessun magic prima' : ` · magic precedente a -${dist} byte`)
+      );
+    }
+    if (uniche.length > 40) console.log(`  … e altre ${uniche.length - 40}.`);
+  } finally {
+    fs.closeSync(fd);
+  }
+  console.log('\nCOME LEGGERLO: un\'occorrenza SERIALIZZATA lontana dai magic noti è un');
+  console.log('buffer che il magic scan non vede — ispezionala (--ispeziona <off>) e,');
+  console.log('se promette, rileggila per indirizzo virtuale (--ricostruisci <off>).');
+  return { occorrenze: uniche, magici: magiciUnici };
+}
+
 // ── Referto ───────────────────────────────────────────────────────────────
 
 /**
@@ -336,6 +545,13 @@ function ispeziona(f, off) {
 function main() {
   if (!file) {
     console.log('Uso: node scripts/ue-locres-from-dump.js "<file.DMP>" [--out cartella] [--json]');
+    console.log('  --cerca-array N     cerca copie dell\'array stringhe (N = conteggio atteso,');
+    console.log('                      es. 752 per Below) [--min-stringhe 8]');
+    console.log('  --copie "testo"     occorrenze di una chiave/frase nota, ascii+utf16,');
+    console.log('                      con verdetto serializzato/vivo e distanza dal magic');
+    console.log('  --ispeziona OFF     esadecimale commentato di un ritrovamento');
+    console.log('  --estrai OFF        salva il blob grezzo [--bytes N]');
+    console.log('  --ricostruisci OFF  come --estrai ma per indirizzo virtuale (corretto)');
     console.log('');
     console.log('Come ottenere il .DMP: avvia il gioco, arriva al MENU PRINCIPALE,');
     console.log('poi Gestione attivita\' -> Dettagli -> tasto destro sul processo');
@@ -346,6 +562,34 @@ function main() {
   if (!fs.existsSync(file)) {
     console.log(`File non trovato: ${file}`);
     process.exitCode = 2;
+    return;
+  }
+
+  // --cerca-array: la misura diretta per le stringhe mancanti di Below.
+  const idxArr = args.indexOf('--cerca-array');
+  if (idxArr >= 0) {
+    const conteggio = parseInt(args[idxArr + 1], 10);
+    if (!Number.isFinite(conteggio) || conteggio <= 0) {
+      console.error('--cerca-array vuole il conteggio atteso dell\'array (per Below: 752).');
+      process.exitCode = 2;
+      return;
+    }
+    const idxMin = args.indexOf('--min-stringhe');
+    const minS = idxMin >= 0 ? parseInt(args[idxMin + 1], 10) : 8;
+    cercaArray(file, conteggio, minS);
+    return;
+  }
+
+  // --copie: ancora testuale per trovare buffer che il magic scan non vede.
+  const idxCopie = args.indexOf('--copie');
+  if (idxCopie >= 0) {
+    const testo = args[idxCopie + 1];
+    if (!testo || testo.startsWith('--')) {
+      console.error('--copie vuole un testo (una chiave dell\'indice o una frase nota).');
+      process.exitCode = 2;
+      return;
+    }
+    cercaCopie(file, testo);
     return;
   }
 
