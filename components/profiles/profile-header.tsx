@@ -219,7 +219,8 @@ export function ProfileHeader() {
       )}
       <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-auto px-3 hover:bg-accent/50">
+          {/* Sotto `sm` resta solo l'avatar: il nome sparisce con lo span. */}
+        <Button variant="ghost" aria-label={currentProfile.name} className="relative h-10 w-auto px-3 hover:bg-accent/50">
             <div className="flex items-center space-x-3">
               {/* Avatar */}
               <Avatar className="h-8 w-8 ring-2 ring-indigo-500/20">

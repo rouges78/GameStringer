@@ -128,6 +128,8 @@ export default function OllamaAdvancedPage() {
             <Button
               variant="ghost"
               size="sm"
+              // Sotto `sm` resta la sola freccia: senza etichetta è un pulsante muto.
+              aria-label={t('ollamaAdvancedPage.back')}
               className="h-8 gap-1.5 text-white/80 hover:text-white hover:bg-white/10 border border-white/20"
             >
               <ArrowLeft className="h-4 w-4" />

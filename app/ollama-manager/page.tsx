@@ -182,7 +182,9 @@ export default function OllamaManagerPage() {
           <div className="flex items-center gap-2">
             {ollamaOnline === true && (
               <Link href="/ollama-manager/advanced">
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-white/80 hover:text-white hover:bg-white/10 border border-white/20">
+                {/* aria-label: sotto `sm` restano solo le due icone (Wand2 + ArrowRight)
+                    e il nome dell'azione sparisce con lo span. */}
+                <Button variant="ghost" size="sm" aria-label={t('ollamaManagerPage.advancedFeatures')} className="h-8 gap-1.5 text-white/80 hover:text-white hover:bg-white/10 border border-white/20">
                   <Wand2 className="h-4 w-4" />
                   <span className="hidden sm:inline">{t('ollamaManagerPage.advancedFeatures')}</span>
                   <ArrowRight className="h-3 w-3" />

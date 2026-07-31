@@ -113,7 +113,10 @@ export function SessionStatus() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="xs" className="gap-2">
+        {/* Sotto `sm` spariscono nome profilo e testo di stato: resta l'icona utente,
+            che da sola non dice di CHI è il profilo. Il nome è un dato, non una
+            stringa da tradurre, quindi non serve una chiave i18n. */}
+        <Button variant="ghost" size="xs" aria-label={currentProfile.name} className="gap-2">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
               <User className="w-3 h-3 text-white" />

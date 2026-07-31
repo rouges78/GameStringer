@@ -1847,6 +1847,10 @@ function LibraryListView() {
           <button
             onClick={scanLanguagesNow}
             disabled={filteredGames.length === 0}
+            // Sotto `sm` lo span col testo è nascosto e resta la sola icona: senza
+            // aria-label il bottone si annuncia come "pulsante" e basta. `title` non
+            // basta — non tutti gli screen reader lo leggono e da tastiera non compare.
+            aria-label={t('libraryPage.scanLanguages')}
             title={isScanningLangs ? t('libraryPage.scanLanguagesCancel') : t('libraryPage.scanLanguagesTitle')}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all border shadow-sm ${
               isScanningLangs
