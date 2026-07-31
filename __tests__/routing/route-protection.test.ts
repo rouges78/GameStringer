@@ -16,11 +16,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join, relative, sep } from 'path';
 import {
   isProtectedRoute,
   isPublicRoute,
+  isChromelessRoute,
+  CHROMELESS_ROUTES,
   PUBLIC_ROUTES,
   routes,
 } from '@/lib/route-config';
@@ -102,5 +104,60 @@ describe('gate profilo — le rotte reali contro route-config', () => {
     for (const r of PUBLIC_ROUTES) {
       expect(r.perche.length, `${r.path} senza motivazione`).toBeGreaterThan(10);
     }
+  });
+});
+
+describe('finestre senza chrome — overlay sopra il gioco', () => {
+  const reali = rotteReali();
+
+  it('le rotte senza chrome esistono davvero', () => {
+    const fantasmi = CHROMELESS_ROUTES.filter((p) => !reali.includes(p));
+    expect(fantasmi, `senza chrome ma inesistenti: ${fantasmi.join(', ')}`).toEqual([]);
+  });
+
+  it('ogni finestra trasparente aperta da Rust è senza chrome', () => {
+    // Fonte di verità: i sorgenti Rust che creano le finestre. Se qualcuno
+    // aggiunge una WebviewUrl::App e si dimentica di questo elenco, il test
+    // se ne accorge — è esattamente come /gs-overlay e /region-select sono
+    // finiti a disegnare la sidebar sopra la partita.
+    const sorgenti = [
+      join(__dirname, '..', '..', 'src-tauri', 'src', 'overlay_ipc.rs'),
+      join(__dirname, '..', '..', 'src-tauri', 'src', 'ocr_translator', 'mod.rs'),
+    ].filter(existsSync);
+    expect(sorgenti.length).toBeGreaterThan(0);
+
+    const rotteFinestre = new Set<string>();
+    for (const f of sorgenti) {
+      const src = readFileSync(f, 'utf8');
+      for (const m of src.matchAll(/WebviewUrl::App\(\s*"([^"]+)"/g)) {
+        const r = m[1];
+        if (r.endsWith('.html')) continue; // splash statica, non è una rotta Next
+        rotteFinestre.add(r);
+      }
+    }
+    expect(rotteFinestre.size).toBeGreaterThan(0);
+
+    const conChrome = [...rotteFinestre].filter((r) => !isChromelessRoute(r));
+    expect(
+      conChrome,
+      `finestre overlay che si porterebbero dietro MainLayout: ${conChrome.join(', ')}`
+    ).toEqual([]);
+  });
+
+  it('una pagina senza chrome non usa hook di profilo', () => {
+    // Uscendo prima di ProfilesProvider/ProfileAuthProvider, useProfileAuth e
+    // useProfiles lanciano. Il vincolo va verificato, non ricordato.
+    for (const r of CHROMELESS_ROUTES) {
+      const page = join(__dirname, '..', '..', 'app', ...r.split('/').filter(Boolean), 'page.tsx');
+      if (!existsSync(page)) continue;
+      const src = readFileSync(page, 'utf8');
+      expect(src, `${r} usa useProfileAuth fuori dal provider`).not.toMatch(/useProfileAuth/);
+      expect(src, `${r} usa useProfiles fuori dal provider`).not.toMatch(/useProfiles\b/);
+    }
+  });
+
+  it('le pagine con "overlay" nel nome ma normali mantengono il chrome', () => {
+    expect(isChromelessRoute('/overlay')).toBe(false);
+    expect(isChromelessRoute('/vr-overlay')).toBe(false);
   });
 });

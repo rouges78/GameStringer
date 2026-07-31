@@ -7,7 +7,7 @@ import { ProfilesProvider } from '@/hooks/use-profiles';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { MainLayout } from '@/components/layout/main-layout';
 import { sessionPersistence } from '@/lib/auth/session-persistence';
-import { isProtectedRoute } from '@/lib/route-config';
+import { isProtectedRoute, isChromelessRoute } from '@/lib/route-config';
 import { clientLogger } from '@/lib/client-logger';
 
 interface ProfileWrapperProps {
@@ -87,9 +87,12 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   // Determina se la route corrente richiede authentication
   const requireAuth = isProtectedRoute(pathname);
 
-  // Route che non devono avere NIENTE (ocr overlay trasparente)
-  const bareRoutes = ['/ocr-overlay'];
-  if (bareRoutes.some(route => pathname?.startsWith(route))) {
+  // Finestre trasparenti aperte da Rust sopra il gioco: niente chrome, niente
+  // provider di profilo. L'elenco sta in lib/route-config.ts ed è coperto dal
+  // test — qui era scritto a mano e conteneva solo /ocr-overlay, quindi
+  // /gs-overlay e /region-select si portavano dietro la sidebar sopra la
+  // partita (corretto il 31/07/2026).
+  if (pathname && isChromelessRoute(pathname)) {
     return <>{children}</>;
   }
 

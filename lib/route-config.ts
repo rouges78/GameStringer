@@ -77,6 +77,42 @@ export const isPublicRoute = (path: string): boolean =>
   PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + '/'));
 
 /**
+ * Rotte che devono renderizzare NUDE: nessuna sidebar, nessuna nav, nessun
+ * `MainLayout`. Sono le finestre trasparenti che Rust apre SOPRA il gioco.
+ *
+ * ⛔ CORRETTO IL 31/07/2026. `profile-wrapper.tsx` aveva questo elenco scritto a
+ * mano al suo interno, con dentro **solo** `/ocr-overlay`: quando sono arrivate
+ * le altre due finestre nessuno l'ha aggiornato. Conseguenza: `/gs-overlay`
+ * (`overlay_ipc.rs:117`, creata `transparent(true)` + `always_on_top` a
+ * 1920x1080 sopra la partita) e `/region-select` (`ocr_translator/mod.rs:751`,
+ * `fullscreen(true)`) renderizzavano dentro `MainLayout`, cioè disegnavano la
+ * sidebar dell'app (`bg-slate-950/95`) e la barra di navigazione **sopra il
+ * gioco**. L'elenco sta qui, accanto a quello delle rotte pubbliche, ed è
+ * coperto dal test: è la stessa dimenticanza che non deve ripetersi alla
+ * prossima finestra.
+ *
+ * ⚠️ NON è lo stesso insieme di PUBLIC_ROUTES, e non va derivato da quello:
+ * rispondono a due domande diverse. "Senza gate profilo" e "senza chrome" qui
+ * coincidono per le tre finestre overlay, ma NON per `/auth`, che è pubblica e
+ * tuttavia una pagina normale della finestra principale.
+ *
+ * ⚠️ Uscire prima di `MainLayout` significa anche uscire prima di
+ * `ProfilesProvider`/`ProfileAuthProvider`: una pagina in questo elenco NON può
+ * usare `useProfileAuth`/`useProfiles`, che lanciano fuori dal provider.
+ * Verificato il 31/07 che nessuna delle tre li usa. `I18nProvider` invece sta
+ * più in alto in `app/layout.tsx`, quindi `useTranslation` continua a
+ * funzionare (`/region-select` lo usa).
+ */
+export const CHROMELESS_ROUTES: readonly string[] = [
+  '/ocr-overlay',
+  '/gs-overlay',
+  '/region-select',
+];
+
+export const isChromelessRoute = (path: string): boolean =>
+  CHROMELESS_ROUTES.some((p) => path === p || path.startsWith(p + '/'));
+
+/**
  * Metadati (titolo/descrizione/adminOnly) delle rotte principali.
  *
  * ⚠️ Questo elenco NON decide più la protezione: una rotta assente qui è
