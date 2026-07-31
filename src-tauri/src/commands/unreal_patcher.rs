@@ -317,18 +317,36 @@ pub async fn launch_with_translator(game_path: String, executable: String) -> Re
         
         // TODO: Implementare injection DLL dopo avvio processo.
         //
-        // Gli hook ci sono già: ue-translator-dll/src/text_hooks.h aggancia
-        // FText::FromString con MinHook. Manca il caricamento nel processo, e
-        // per Unity esiste già il pezzo che serve: gs_hook_injector.rs, che
-        // usa un helper esterno invece di CreateRemoteThread diretto (motivo
-        // spiegato nel suo commento in testa). La strada è riusare quello, non
-        // riscrivere l'injection da zero qui.
+        // ⚠️ CORREZIONE 31/07/2026 — questo commento diceva «gli hook ci sono
+        // già: ue-translator-dll/src/text_hooks.h aggancia FText::FromString
+        // con MinHook, manca solo il caricamento». ERA FALSO, e ha mandato
+        // fuori strada almeno una volta chi l'ha letto. In quel file
+        // FindUEFunctions() si limitava a loggare i moduli e ritornava true
+        // senza mai assegnare Addr_FText_FromString, quindi MH_CreateHook non
+        // veniva MAI raggiunto: non mancava l'injection, mancava l'hook.
+        // ue-translator-dll è stata CANCELLATA il 31/07/2026 proprio per non
+        // lasciare in giro un'implementazione che sembra pronta e non lo è.
         //
-        // ⚠️ Prima di completarla vanno pesati due costi noti: i falsi
-        // positivi antivirus (voce [av-fp] della roadmap, P0 aperta: prima
-        // causa di abbandono al primo avvio) e la fragilità del pattern
-        // scanning delle firme FText su binari UE5 strippati — il commento in
-        // text_hooks.h propone già l'IAT hooking come alternativa.
+        // L'hook vero è in gs-hook/src/sources/source_unreal_ftext.cpp: hook su
+        // FText::ToString, pattern scan, MH install, sostituzione in-place con
+        // controllo di ArrayMax, e fallback a GDI se non aggancia.
+        // L'injection esiste ed è completa: gs_hook_injector.rs (dual-arch
+        // x86/x64, helper per-arch, gate anti-cheat come choke-point
+        // obbligatorio). Quindi la strada è collegare QUELLO, non riscrivere
+        // nulla qui.
+        //
+        // ⚠️ Due costi noti da pesare PRIMA, non dopo:
+        // 1. Falsi positivi antivirus — voce [av-fp] della roadmap, P0 aperta,
+        //    prima causa di abbandono al primo avvio. La DLL injection è
+        //    esattamente ciò che li fa scattare.
+        // 2. Fragilità del pattern scanning. Misurato staticamente con
+        //    scripts/ue-validate-ftext-pattern.js su 6 giochi UE reali
+        //    (30-31/07/2026): il pattern UE5 dà 1 solo match su 4 binari su 6
+        //    (buono), ma Father's Day ne dà 4 e Below, Rusted Gods 3; il
+        //    pattern UE427 ne dà 89-131 ed è da buttare. Un match unico
+        //    dimostra l'unicità, mai l'identità: agganciare la funzione
+        //    sbagliata con la firma sbagliata significa crash o corruzione
+        //    heap silenziosa, non un fallimento benigno.
         log::info!("ℹ️ Gioco avviato SENZA traduttore: injection non implementata");
     }
 

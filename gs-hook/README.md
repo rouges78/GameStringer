@@ -1,8 +1,13 @@
 # gs-hook — Universal Text Interception Framework (UTIF)
 
-DLL unica iniettabile che unifica le tre DLL storiche (`unity-translator-dll`,
+DLL unica iniettabile che unifica le DLL storiche (`unity-translator-dll`,
 `ue-translator-dll`, `unreal-translator`) in un'architettura a **plugin di
 sorgenti di testo**, con degradazione automatica L1 → L2 → L3.
+
+> `ue-translator-dll/` è stata **cancellata il 31/07/2026**: i suoi hook non si
+> installavano mai (`FindUEFunctions()` ritornava `true` senza assegnare gli
+> indirizzi) e dichiarava comunque successo. L'hook Unreal vivo è qui, in
+> `src/sources/source_unreal_ftext.cpp`.
 
 > Stato: **scaffold iniziale.** Compila come scheletro; le sorgenti L1 sono
 > portate dagli hook esistenti, la sorgente L2 (GDI) è il bersaglio dello spike,

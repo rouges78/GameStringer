@@ -24,7 +24,6 @@
 /tools/assetstools_inject/
 /tools/drat/
 /tools/esoteric_ebb_strings/
-/ue-translator-dll/build/
 /unity-translator-dll/build/
 *.pdb
 *.rlib

@@ -138,8 +138,8 @@ GameStringer/
 │   │   │   └── …
 │   │   └── engine_detector.rs         # Auto-detect 20+ engines from folder content
 │   └── Cargo.toml
-├── ue-translator-dll/        # Unreal Engine native DLL (MinHook)
-├── unity-translator-dll/     # Unity native DLL
+├── gs-hook/                  # Injectable DLL: text interception (Unreal FText, Unity/Mono, GDI)
+├── unity-translator-dll/     # Unity native DLL (legacy, superseded by gs-hook)
 ├── native/                   # Other native helpers
 ├── docs/                     # User guides (11 languages), VERSIONING, PROJECT_STATUS
 │   └── sito/                 # Marketing website

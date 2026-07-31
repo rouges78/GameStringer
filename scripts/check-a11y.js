@@ -60,7 +60,20 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const BASELINE_FILE = path.join(__dirname, '.a11y-baseline.json');
 const DIRS = ['app', 'components', 'hooks'];
-const IGNORA = /node_modules|\.next|dist|out|coverage/;
+// ⚠️ ANCORATA AL NOME ESATTO DELLA CARTELLA, non al path — correzione 31/07/2026.
+// Prima era /node_modules|\.next|dist|out|coverage/ e veniva applicata al PATH
+// ASSOLUTO: bastava che una qualsiasi porzione del percorso contenesse quelle
+// lettere perché il ramo sparisse dalla scansione, in silenzio e senza errori.
+// Due danni misurati:
+//  1. In questo repo `components/layout/` (3 file) NON è mai stato scansionato:
+//     "l-ay-OUT" contiene "out". Non era un'esenzione voluta, era un caso.
+//  2. Peggio, dipendeva da DOVE è clonato il repo: in un checkout sotto un path
+//     che contiene "out"/"dist"/"coverage" lo script non scendeva in NESSUNA
+//     sottocartella e riportava quasi zero difetti — cioè il gate dichiarava
+//     "tutto a posto" proprio quando non stava guardando niente.
+// Un gate che può diventare cieco senza dirlo è peggio di nessun gate: è la
+// stessa forma di "100% con 0 errori" e della verifica che passava sempre.
+const IGNORA = /^(node_modules|\.next|dist|out|coverage)$/;
 
 const REGOLE = {
   'img-no-alt': '<img> senza alt (WCAG 1.1.1)',
@@ -76,7 +89,7 @@ function elencaFile() {
     try { voci = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
     for (const v of voci) {
       const p = path.join(d, v.name);
-      if (v.isDirectory()) { if (!IGNORA.test(p)) walk(p); }
+      if (v.isDirectory()) { if (!IGNORA.test(v.name)) walk(p); }
       else if (/\.(tsx|jsx)$/.test(v.name)) out.push(path.relative(ROOT, p).replace(/\\/g, '/'));
     }
   };
