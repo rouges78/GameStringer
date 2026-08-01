@@ -58,8 +58,7 @@ export function MultiLlmComparisonSettings() {
           <Badge className="text-2xs bg-purple-600/80 text-white border-0 ml-1">NEW</Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
-          Invia la stessa traduzione a più provider in parallelo e scegli automaticamente la migliore.
-          Migliora la qualità confrontando i risultati di diversi LLM.
+          {t('multiLlmComparisonSettingsComp.description')}
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -69,8 +68,8 @@ export function MultiLlmComparisonSettings() {
             <Label className="text-sm font-medium">{t('multiLlmComparisonSettingsComp.abilitaMultillmComparison')}</Label>
             <p className="text-[11px] text-muted-foreground">
               {config.enabled
-                ? `Attivo — ${config.maxCandidates} provider in parallelo`
-                : 'Disattivato — usa fallback sequenziale standard'}
+                ? t('multiLlmComparisonSettingsComp.activeStatus').replace('{count}', String(config.maxCandidates))
+                : t('multiLlmComparisonSettingsComp.disabledStatus')}
             </p>
           </div>
           <Switch
@@ -85,15 +84,16 @@ export function MultiLlmComparisonSettings() {
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-white/5">
               <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
               <span className="text-xs text-muted-foreground">
-                <strong className="text-foreground">{availableCount}</strong> provider disponibili nella chain attiva.
-                Verranno usati i primi <strong className="text-foreground">{Math.min(config.maxCandidates, availableCount)}</strong>.
+                {t('multiLlmComparisonSettingsComp.availableProvidersInfo')
+                  .replace('{count}', String(availableCount))
+                  .replace('{used}', String(Math.min(config.maxCandidates, availableCount)))}
               </span>
             </div>
 
             {/* Numero candidati */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Candidati paralleli: {config.maxCandidates}</Label>
+                <Label className="text-sm">{t('multiLlmComparisonSettingsComp.parallelCandidates')} {config.maxCandidates}</Label>
                 <div className="flex gap-1">
                   {config.maxCandidates === 2 && <Badge variant="outline" className="text-2xs"><Zap className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.veloce')}</Badge>}
                   {config.maxCandidates === 3 && <Badge variant="outline" className="text-2xs"><Trophy className="h-3 w-3 mr-0.5" />{t('multiLlmComparisonSettingsComp.bilanciato')}</Badge>}
@@ -109,13 +109,13 @@ export function MultiLlmComparisonSettings() {
                 className="w-full [&_[data-slot=range]]:bg-purple-500 [&_[data-slot=thumb]]:bg-purple-500 [&_[data-slot=thumb]]:border-purple-500"
               />
               <p className="text-2xs text-muted-foreground">
-                2 = veloce e economico | 3 = consigliato | 4-6 = massima precisione ma più lento
+                {t('multiLlmComparisonSettingsComp.candidatesHint')}
               </p>
             </div>
 
             {/* Timeout */}
             <div className="space-y-2">
-              <Label className="text-sm">Timeout per provider: {(config.timeoutMs / 1000).toFixed(0)}s</Label>
+              <Label className="text-sm">{t('multiLlmComparisonSettingsComp.timeoutPerProvider')} {(config.timeoutMs / 1000).toFixed(0)}s</Label>
               <Slider
                 value={[config.timeoutMs]}
                 onValueChange={(v) => updateConfig({ timeoutMs: v[0] })}
@@ -132,12 +132,12 @@ export function MultiLlmComparisonSettings() {
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium flex items-center gap-1.5">
                     <Brain className="h-3.5 w-3.5 text-amber-400" />
-                    Giudice LLM
+                    {t('multiLlmComparisonSettingsComp.llmJudge')}
                   </Label>
                   <p className="text-[11px] text-muted-foreground">
                     {config.useLlmJudge
-                      ? 'Un LLM valuta e sceglie la traduzione migliore (60% euristico + 40% LLM)'
-                      : 'Solo scoring euristico (gratuito, veloce, nessun costo aggiuntivo)'}
+                      ? t('multiLlmComparisonSettingsComp.judgeOnDesc')
+                      : t('multiLlmComparisonSettingsComp.judgeOffDesc')}
                   </p>
                 </div>
                 <Switch
@@ -159,13 +159,13 @@ export function MultiLlmComparisonSettings() {
                     <SelectContent>
                       {JUDGE_PROVIDERS.map(p => (
                         <SelectItem key={p.value} value={p.value} className="text-xs">
-                          {p.label} {p.free && <span className="text-green-400 ml-1">(gratuito)</span>}
+                          {p.label} {p.free && <span className="text-green-400 ml-1">{t('multiLlmComparisonSettingsComp.free')}</span>}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-2xs text-muted-foreground">
-                    Usa un provider con API key configurata. Consigliato: Gemini o Groq (gratuiti).
+                    {t('multiLlmComparisonSettingsComp.judgeProviderHint')}
                   </p>
                 </div>
               )}
@@ -175,11 +175,11 @@ export function MultiLlmComparisonSettings() {
             <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/20 border border-amber-500/20">
               <Clock className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="text-[11px] text-muted-foreground space-y-0.5">
-                <p><strong className="text-amber-300">{t('multiLlmComparisonSettingsComp.nota')}</strong> La comparison invia la stessa richiesta a {config.maxCandidates} provider.</p>
-                <p>Se usi provider a pagamento, il costo per traduzione sarà ~{config.maxCandidates}x.
-                   {config.useLlmJudge && ` Il giudice LLM aggiunge 1 chiamata extra.`}
+                <p><strong className="text-amber-300">{t('multiLlmComparisonSettingsComp.nota')}</strong> {t('multiLlmComparisonSettingsComp.costNote').replace('{count}', String(config.maxCandidates))}</p>
+                <p>{t('multiLlmComparisonSettingsComp.costMultiplier').replace('{count}', String(config.maxCandidates))}
+                   {config.useLlmJudge && ` ${t('multiLlmComparisonSettingsComp.judgeExtraCall')}`}
                 </p>
-                <p>Con provider gratuiti (Gemini, Groq, Cerebras, MyMemory) il costo resta $0.</p>
+                <p>{t('multiLlmComparisonSettingsComp.freeProvidersNote')}</p>
               </div>
             </div>
           </>

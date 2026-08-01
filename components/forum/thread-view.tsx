@@ -219,7 +219,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   
   const handleReply = async () => {
     if (!userId || !userName) {
-      toast.error('Devi essere loggato per rispondere');
+      toast.error(t('forumThread.loginToReply'));
       return;
     }
     
@@ -255,7 +255,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   
   const handleMarkSolution = async (postId: string) => {
     if (!userId || thread?.author_id !== userId) {
-      toast.error('Solo l\'autore può segnare una soluzione');
+      toast.error(t('forumThread.onlyAuthorSolution'));
       return;
     }
     
@@ -284,7 +284,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
         <p>{t('common.threadNonTrovato')}</p>
         {onBack && (
           <Button variant="ghost" onClick={onBack} className="mt-4">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Torna indietro
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t('common.back')}
           </Button>
         )}
       </div>
@@ -311,17 +311,17 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
         
         {thread.is_pinned && (
           <Badge variant="outline" className="border-amber-500/50 text-amber-400">
-            <Pin className="h-3 w-3 mr-1" /> Pinnato
+            <Pin className="h-3 w-3 mr-1" /> {t('forum.pinned')}
           </Badge>
         )}
         {thread.is_locked && (
           <Badge variant="outline" className="border-red-500/50 text-red-400">
-            <Lock className="h-3 w-3 mr-1" /> Chiuso
+            <Lock className="h-3 w-3 mr-1" /> {t('forum.locked')}
           </Badge>
         )}
         {thread.is_solved && (
           <Badge variant="outline" className="border-emerald-500/50 text-emerald-400">
-            <CheckCircle2 className="h-3 w-3 mr-1" /> Risolto
+            <CheckCircle2 className="h-3 w-3 mr-1" /> {t('forum.solved')}
           </Badge>
         )}
       </div>
@@ -348,7 +348,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
             <span>•</span>
             <span className="flex items-center gap-1">
               <Eye className="h-3.5 w-3.5" />
-              {thread.view_count} visualizzazioni
+              {thread.view_count} {t('forumThread.views')}
             </span>
           </div>
         </div>
@@ -362,13 +362,13 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
                 <span className="font-semibold text-white">{thread.pack_data.game_name}</span>
               </div>
               <Badge variant="secondary">{thread.pack_data.source_lang} → {thread.pack_data.target_lang}</Badge>
-              <Badge variant="outline">{thread.pack_data.string_count?.toLocaleString()} stringhe</Badge>
+              <Badge variant="outline">{thread.pack_data.string_count?.toLocaleString()} {t('forum.strings')}</Badge>
               {thread.pack_data.version && <Badge variant="outline">v{thread.pack_data.version}</Badge>}
               {thread.pack_data.engine && <Badge variant="outline">{thread.pack_data.engine}</Badge>}
               
               <Button onClick={handleDownload} className="ml-auto bg-amber-600 hover:bg-amber-500">
                 <Download className="h-4 w-4 mr-2" />
-                Scarica Pack ({thread.download_count})
+                {t('forumThread.downloadPack')} ({thread.download_count})
               </Button>
             </div>
           </div>
@@ -438,7 +438,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
           
           <Button variant="ghost" size="sm" onClick={handleShare}>
             {copied ? <Check className="h-4 w-4 mr-1" /> : <Share2 className="h-4 w-4 mr-1" />}
-            {copied ? 'Copiato!' : 'Condividi'}
+            {copied ? t('forumThread.copied') : t('editorPage.share')}
           </Button>
           
           <DropdownMenu>
@@ -449,7 +449,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem>
-                <Flag className="h-4 w-4 mr-2" /> Segnala
+                <Flag className="h-4 w-4 mr-2" /> {t('forumThread.report')}
               </DropdownMenuItem>
               {isAuthor && (
                 <>
@@ -471,7 +471,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
-          {posts.length} {posts.length === 1 ? 'risposta' : 'risposte'}
+          {posts.length} {posts.length === 1 ? t('forumThread.replySingular') : t('forumThread.replyPlural')}
         </h2>
         
         {posts.map((post) => (
@@ -494,7 +494,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
             <div className="mb-3 p-2 rounded-lg bg-slate-700/50 border-l-2 border-blue-500 flex items-start gap-2">
               <Quote className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <span className="text-xs text-blue-400 font-medium">Rispondi a {replyingTo.author_name}</span>
+                <span className="text-xs text-blue-400 font-medium">{t('forumThread.replyingTo')} {replyingTo.author_name}</span>
                 <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{replyingTo.content}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)} className="h-6 w-6 p-0">
@@ -504,7 +504,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
           )}
           
           <Textarea
-            placeholder={userId ? "Scrivi una risposta..." : "Effettua il login per rispondere"}
+            placeholder={userId ? t('forumThread.writeReplyPlaceholder') : t('forumThread.loginToReplyPlaceholder')}
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             disabled={!userId}
@@ -514,7 +514,7 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
           <div className="flex justify-end mt-3">
             <Button onClick={handleReply} disabled={!userId || submitting || !replyContent.trim()}>
               <Send className="h-4 w-4 mr-2" />
-              {submitting ? 'Invio...' : 'Rispondi'}
+              {submitting ? t('forumThread.sending') : t('forumThread.reply')}
             </Button>
           </div>
         </div>
@@ -535,6 +535,7 @@ interface PostCardProps {
 }
 
 function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolution }: PostCardProps) {
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(post.user_liked || false);
   const [likeCount, setLikeCount] = useState(post.like_count);
   
@@ -553,7 +554,7 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
       {post.is_solution && (
         <div className="flex items-center gap-2 mb-3 text-emerald-400">
           <CheckCircle2 className="h-4 w-4" />
-          <span className="text-xs font-semibold">SOLUZIONE ACCETTATA</span>
+          <span className="text-xs font-semibold">{t('forumThread.acceptedSolution')}</span>
         </div>
       )}
       
@@ -575,7 +576,7 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
           <span className="text-sm font-medium text-white">{post.author_name}</span>
           <span className="text-xs text-slate-500 ml-2">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale })}
-            {post.is_edited && ' (modificato)'}
+            {post.is_edited && ` (${t('forumThread.edited')})`}
           </span>
         </div>
       </div>
@@ -594,13 +595,13 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
         
         <Button variant="ghost" size="sm" onClick={onReply}>
           <Reply className="h-3.5 w-3.5 mr-1" />
-          Rispondi
+          {t('forumThread.reply')}
         </Button>
         
         {isThreadAuthor && !post.is_solution && (
           <Button variant="ghost" size="sm" onClick={onMarkSolution} className="text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            Segna come soluzione
+            {t('forumThread.markSolution')}
           </Button>
         )}
       </div>

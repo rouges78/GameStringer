@@ -122,7 +122,7 @@ export default function WorkshopExportPage() {
           <div>
             <h1 className="text-base font-bold text-white">{t('workshopExportPage.title')}</h1>
             <p className="text-white/60 text-2xs">
-              Genera pacchetti di traduzione pronti per la pubblicazione su Steam Workshop
+              {t('workshopExportPage.subtitle')}
             </p>
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function WorkshopExportPage() {
                   <Input
                     value={config.gameName}
                     onChange={(e) => setConfig(prev => ({ ...prev, gameName: e.target.value }))}
-                    placeholder="es. Esoteric Ebb"
+                    placeholder={t('workshopExportPage.gameNamePlaceholder')}
                     className="h-8 text-xs"
                   />
                 </div>
@@ -152,7 +152,7 @@ export default function WorkshopExportPage() {
                     type="number"
                     value={config.gameAppId || ''}
                     onChange={(e) => setConfig(prev => ({ ...prev, gameAppId: parseInt(e.target.value) || 0 }))}
-                    placeholder="es. 730"
+                    placeholder={t('workshopExportPage.appIdPlaceholder')}
                     className="h-8 text-xs"
                   />
                 </div>
@@ -163,7 +163,7 @@ export default function WorkshopExportPage() {
                 <Input
                   value={config.title}
                   onChange={(e) => setConfig(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Auto-generato se vuoto"
+                  placeholder={t('workshopExportPage.titlePlaceholder')}
                   className="h-8 text-xs"
                 />
               </div>
@@ -192,7 +192,7 @@ export default function WorkshopExportPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">{t('workshopExportPage.visibilitagrave')}</Label>
+                  <Label className="text-xs">{t('workshopExportPage.visibility')}</Label>
                   <Select value={config.visibility} onValueChange={(v: 'public' | 'friends_only' | 'private') => setConfig(prev => ({ ...prev, visibility: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -210,7 +210,7 @@ export default function WorkshopExportPage() {
                   <Input
                     value={config.author}
                     onChange={(e) => setConfig(prev => ({ ...prev, author: e.target.value }))}
-                    placeholder="Il tuo nome/username"
+                    placeholder={t('workshopExportPage.authorPlaceholder')}
                     className="h-8 text-xs"
                   />
                 </div>
@@ -229,7 +229,7 @@ export default function WorkshopExportPage() {
                 <Textarea
                   value={config.description}
                   onChange={(e) => setConfig(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Auto-generata con BBCode Steam se vuota"
+                  placeholder={t('workshopExportPage.descriptionPlaceholder')}
                   className="text-xs min-h-[80px]"
                 />
               </div>
@@ -248,7 +248,7 @@ export default function WorkshopExportPage() {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                      placeholder="Aggiungi tag..."
+                      placeholder={t('workshopExportPage.addTagPlaceholder')}
                       className="h-6 text-2xs w-28"
                     />
                   </div>
@@ -315,7 +315,7 @@ export default function WorkshopExportPage() {
               ))}
               {validation.valid && validation.warnings.length === 0 && (
                 <div className="flex items-center gap-1 text-emerald-400 text-2xs">
-                  <CheckCircle2 className="h-3 w-3" /> Configurazione valida
+                  <CheckCircle2 className="h-3 w-3" /> {t('workshopExportPage.configValid')}
                 </div>
               )}
             </CardContent>
@@ -325,7 +325,7 @@ export default function WorkshopExportPage() {
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-1">
-                <Eye className="h-3 w-3" /> Preview Pacchetto
+                <Eye className="h-3 w-3" /> {t('workshopExportPage.packagePreview')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-2xs text-zinc-400">
@@ -337,7 +337,7 @@ export default function WorkshopExportPage() {
                 <div key={i} className="text-zinc-500">content/{f.name}</div>
               ))}
               <div className="pt-1 border-t border-zinc-800 text-zinc-500">
-                {files.length} file, ~{(files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0)} KB
+                {files.length} {t('common.file')}, ~{(files.reduce((s, f) => s + f.size, 0) / 1024).toFixed(0)} KB
               </div>
             </CardContent>
           </Card>
@@ -349,17 +349,16 @@ export default function WorkshopExportPage() {
             onClick={handleExport}
           >
             {exported ? (
-              <><CheckCircle2 className="h-4 w-4 mr-1" /> Esportato!</>
+              <><CheckCircle2 className="h-4 w-4 mr-1" /> {t('workshopExportPage.exported')}</>
             ) : exporting ? (
-              'Esportazione...'
+              t('workshopExportPage.exporting')
             ) : (
               <><Download className="h-4 w-4 mr-1" />{t('common.esportaPerWorkshop')}</>
             )}
           </Button>
           
           <p className="text-2xs text-zinc-600 text-center">
-            Il pacchetto ZIP generato contiene tutto il necessario per la pubblicazione su Steam Workshop
-            tramite SteamCMD o lo strumento di upload Workshop.
+            {t('workshopExportPage.footerNote')}
           </p>
         </div>
       </div>

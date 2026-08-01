@@ -98,6 +98,10 @@ export function AdvancedFilters({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
+  // I nomi degli engine sono marchi (Unity, Godot...) tranne 'other', che è testo UI.
+  const engineLabel = (id: string, name: string) =>
+    id === 'other' ? t('libraryFilters.engineOther') : name;
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filter.stores.length > 0) count++;
@@ -134,7 +138,7 @@ export function AdvancedFilters({
       {/* Search */}
       <div className="relative flex-1 max-w-md">
         <Input
-          aria-label={t('common.cerca')} placeholder="Cerca giochi..."
+          aria-label={t('common.cerca')} placeholder={t('libraryFilters.searchGames')}
           value={filter.search}
           onChange={(e) => updateFilter({ search: e.target.value })}
           className="pl-9"
@@ -172,7 +176,7 @@ export function AdvancedFilters({
         <PopoverTrigger asChild>
           <Button variant="outline" className="gap-2">
             <SlidersHorizontal className="h-4 w-4" />
-            Filtri
+            {t('library.filters')}
             {activeFilterCount > 0 && (
               <Badge variant="secondary" className="ml-1">
                 {activeFilterCount}
@@ -185,11 +189,11 @@ export function AdvancedFilters({
             <div className="flex items-center justify-between">
               <h4 className="font-medium flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4" />
-                Filtri Avanzati
+                {t('libraryFilters.advancedFilters')}
               </h4>
               <Button variant="ghost" size="sm" onClick={resetFilters}>
                 <RotateCcw className="h-3 w-3 mr-1" />
-                Reset
+                {t('libraryFilters.reset')}
               </Button>
             </div>
 
@@ -197,7 +201,7 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <Store className="h-4 w-4" />
-                Store
+                {t('nav.stores')}
               </Label>
               <div className="flex flex-wrap gap-1">
                 {STORES.map((store) => (
@@ -217,7 +221,7 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <Gamepad2 className="h-4 w-4" />
-                Engine
+                {t('plugins.engines')}
               </Label>
               <div className="flex flex-wrap gap-1">
                 {ENGINES.map((engine) => (
@@ -227,7 +231,7 @@ export function AdvancedFilters({
                     className="cursor-pointer"
                     onClick={() => toggleArrayItem(filter.engines, engine.id, 'engines')}
                   >
-                    {engine.name}
+                    {engineLabel(engine.id, engine.name)}
                   </Badge>
                 ))}
               </div>
@@ -237,13 +241,13 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <Languages className="h-4 w-4" />
-                Stato Traduzione
+                {t('libraryFilters.translationStatus')}
               </Label>
               <div className="flex gap-2">
                 {[
-                  { id: 'none', label: 'Non tradotto', color: 'bg-red-500' },
-                  { id: 'partial', label: 'Parziale', color: 'bg-yellow-500' },
-                  { id: 'complete', label: 'Completo', color: 'bg-green-500' },
+                  { id: 'none', label: t('libraryFilters.notTranslated'), color: 'bg-red-500' },
+                  { id: 'partial', label: t('common.parziale'), color: 'bg-yellow-500' },
+                  { id: 'complete', label: t('common.completo'), color: 'bg-green-500' },
                 ].map((status) => (
                   <Badge
                     key={status.id}
@@ -272,7 +276,7 @@ export function AdvancedFilters({
                 }
               />
               <Label htmlFor="hasItalian" className="text-sm cursor-pointer">
-                🇮🇹 Solo giochi con italiano ufficiale
+                🇮🇹 {t('libraryFilters.onlyOfficialItalian')}
               </Label>
             </div>
 
@@ -280,7 +284,7 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4" />
-                Tempo di gioco: {filter.minPlaytime}h - {filter.maxPlaytime === 10000 ? '∞' : `${filter.maxPlaytime}h`}
+                {t('libraryFilters.playtime')}: {filter.minPlaytime}h - {filter.maxPlaytime === 10000 ? '∞' : `${filter.maxPlaytime}h`}
               </Label>
               <Slider
                 min={0}
@@ -298,7 +302,7 @@ export function AdvancedFilters({
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <Tag className="h-4 w-4" />
-                Generi
+                {t('gameDetails.genres')}
               </Label>
               <div className="flex flex-wrap gap-1">
                 {GENRES.map((genre) => (
@@ -316,7 +320,7 @@ export function AdvancedFilters({
 
             {/* Stats */}
             <div className="pt-2 border-t text-sm text-muted-foreground">
-              Mostrando <strong>{filteredGames}</strong> di <strong>{totalGames}</strong> giochi
+              {t('libraryFilters.showing')} <strong>{filteredGames}</strong> {t('libraryFilters.of')} <strong>{totalGames}</strong> {t('common.games')}
             </div>
           </div>
         </PopoverContent>
@@ -336,7 +340,7 @@ export function AdvancedFilters({
           ))}
           {filter.engines.slice(0, 2).map(engine => (
             <Badge key={engine} variant="secondary" className="gap-1">
-              {ENGINES.find(e => e.id === engine)?.name}
+              {engineLabel(engine, ENGINES.find(e => e.id === engine)?.name ?? engine)}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => toggleArrayItem(filter.engines, engine, 'engines')}

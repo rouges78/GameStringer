@@ -118,13 +118,13 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       await onSubmit(steamId);
       
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Errore durante il login Steam');
+      setError(err instanceof Error ? err.message : t('steamModal.loginError'));
       setAuthStep('idle');
     }
   };
 
   const _handleManualCallback = async () => {
-    const callbackUrl = prompt('Incolla qui l\'URL completo dopo il login Steam:');
+    const callbackUrl = prompt(t('steamModal.pasteCallbackUrl'));
     if (!callbackUrl) return;
 
     setVerifying(true);
@@ -172,7 +172,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       await onSubmit(steamId);
       
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Verifica fallita');
+      setError(err instanceof Error ? err.message : t('steamModal.verificationFailed'));
       setVerifying(false);
     }
   };
@@ -181,7 +181,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
     if (steamUser) {
       // Verifica che l'API key sia stata inserita
       if (!apiKey.trim()) {
-        setError('Inserisci la tua Steam API Key per sincronizzare la libreria');
+        setError(t('steamModal.enterApiKey'));
         return;
       }
       
@@ -197,7 +197,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
         await onSubmit(steamUser.steam_id);
         onClose();
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Errore durante il salvataggio delle credenziali');
+        setError(err instanceof Error ? err.message : t('steamModal.saveCredentialsError'));
       } finally {
         setSavingCredentials(false);
       }
@@ -230,7 +230,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       const list = await invoke<unknown[]>('steam_get_wishlist', { steamId: steamUser.steam_id, apiKey });
       setWishlist(list);
     } catch (e: unknown) {
-      setError(typeof e === 'string' ? e : (e instanceof Error ? e.message : 'Errore importazione wishlist'));
+      setError(typeof e === 'string' ? e : (e instanceof Error ? e.message : t('steamModal.wishlistImportError')));
     }
     setLoadingWishlist(false);
   };
@@ -249,7 +249,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 bg-[#1b2838] rounded-lg flex items-center justify-center">
-            <img src="/logos/steam.png" alt="Steam" className="w-8 h-8" />
+            <img src="/logos/steam.png" alt={t('steamModal.steamLogoAlt')} className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-xl font-bold">{t('steamModalComp.connettiSteam')}</h2>
@@ -293,7 +293,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                     rel="noopener noreferrer"
                     className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1"
                   >
-                    Profilo Steam <ExternalLink className="h-3 w-3" />
+                    {t('steamModal.steamProfile')} <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
               </div>
@@ -302,7 +302,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             {/* API Key Input */}
             <div className="border-t pt-4">
               <label className="block text-sm font-medium mb-2">
-                Steam API Key <span className="text-destructive">*</span>
+                {t('steamModal.steamApiKey')} <span className="text-destructive">*</span>
               </label>
               <form onSubmit={(e) => e.preventDefault()}>
                 <input
@@ -320,7 +320,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                 rel="noopener noreferrer"
                 className="text-xs text-blue-500 hover:underline flex items-center gap-1"
               >
-                Ottieni la tua API Key da Steam <ExternalLink className="h-3 w-3" />
+                {t('steamModal.getApiKey')} <ExternalLink className="h-3 w-3" />
               </a>
             </div>
 
@@ -334,7 +334,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                 {loadingWishlist ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('steamModalComp.importando')}</>
                 ) : (
-                  <>📋 Importa Wishlist ({wishlist.length > 0 ? `${wishlist.length} giochi` : 'clicca per caricare'})</>
+                  <>📋 {t('steamModal.importWishlist')} ({wishlist.length > 0 ? `${wishlist.length} ${t('common.games')}` : t('steamModal.clickToLoad')})</>
                 )}
               </Button>
               
@@ -345,7 +345,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                     return <div key={(game.app_id as string) || idx} className="truncate py-0.5">{game.name as string}</div>;
                   })}
                   {wishlist.length > 10 && (
-                    <div className="text-muted-foreground">...e altri {wishlist.length - 10}</div>
+                    <div className="text-muted-foreground">+{wishlist.length - 10} {t('steamModal.moreItems')}</div>
                   )}
                 </div>
               )}
@@ -353,11 +353,11 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={handleLogout}>
-                Disconnetti
+                {t('steamModal.disconnect')}
               </Button>
               <Button className="flex-1" onClick={handleConfirmConnection} disabled={isLoading || savingCredentials || !apiKey.trim()}>
                 {(isLoading || savingCredentials) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Conferma
+                {t('common.confirm')}
               </Button>
             </div>
           </div>
@@ -370,12 +370,12 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                 <span className="font-medium">{t('steamModalComp.inAttesaDelLoginSteam')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Completa il login nel browser. La connessione avverrà automaticamente.
+                {t('steamModal.completeLoginInBrowser')}
               </p>
             </div>
 
             <Button variant="outline" className="w-full" onClick={() => setAuthStep('idle')}>
-              Annulla
+              {t('common.cancel')}
             </Button>
 
             {error && (
@@ -388,8 +388,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           /* Initial State */
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              Clicca il pulsante qui sotto per accedere con il tuo account Steam. 
-              Verrai reindirizzato al sito ufficiale di Steam per l&apos;autenticazione sicura.
+              {t('steamModal.loginInstructions')}
             </p>
 
             <Button 
@@ -403,7 +402,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               ) : (
                 <img src="/logos/steam.png" alt="" className="mr-2 h-5 w-5" />
               )}
-              Accedi con Steam
+              {t('steamModal.loginWithSteam')}
             </Button>
 
             <div className="text-xs text-muted-foreground text-center">
@@ -419,7 +418,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
             <div className="border-t pt-4 mt-4">
               <Button variant="outline" className="w-full" onClick={onClose}>
-                Annulla
+                {t('common.cancel')}
               </Button>
             </div>
           </div>

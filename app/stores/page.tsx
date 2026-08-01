@@ -446,17 +446,17 @@ export default function StoresPage() {
         const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
         localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
         setUtilityPreferences(newPrefs);
-        toast.success('HowLongToBeat attivato! Le informazioni sui tempi di gioco verranno mostrate automaticamente.');
+        toast.success(t('storesPage.hltbActivated'));
       } else if (utilityId === 'achievements') {
         const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
         localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
         setUtilityPreferences(newPrefs);
-        toast.success('Achievement Tracker attivato!');
+        toast.success(t('storesPage.achievementsActivated'));
       } else if (utilityId === 'playtime') {
         const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
         localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
         setUtilityPreferences(newPrefs);
-        toast.success('Playtime Stats attivato!');
+        toast.success(t('storesPage.playtimeActivated'));
       } else if (utilityId === 'pcgw') {
         const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
         localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
@@ -473,7 +473,7 @@ export default function StoresPage() {
         return;
       }
     } catch {
-      toast.error(`Errore durante l'attivazione di ${utilityId}`);
+      toast.error(t('storesPage.activationError').replace('{name}', utilityId));
     }
 
     setLoadingProvider(null);
@@ -487,9 +487,9 @@ export default function StoresPage() {
       delete newPrefs[utilityId];
       localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
       setUtilityPreferences(newPrefs);
-      toast.success(`${utilityId} disattivato con successo.`);
+      toast.success(t('storesPage.utilityDeactivated').replace('{name}', utilityId));
     } catch {
-      toast.error(`Errore durante la disattivazione di ${utilityId}`);
+      toast.error(t('storesPage.deactivationError').replace('{name}', utilityId));
     }
     
     setLoadingProvider(null);
@@ -583,11 +583,11 @@ export default function StoresPage() {
       await signOut(backendProviderId);
       if (providerId === 'ubisoft') setUbisoftConnected(false);
 
-      toast.success(`Account ${providerId} scollegato.`);
+      toast.success(t('storesPage.accountDisconnected').replace('{name}', providerId));
       await update();
     } catch (error: unknown) {
       clientLogger.error(`Disconnect error: ${String(error)}`);
-      toast.error(error instanceof Error ? error.message : 'error durante la disconnection');
+      toast.error(error instanceof Error ? error.message : t('storesPage.disconnectError'));
     }
     setLoadingProvider(null);
   };
@@ -613,17 +613,17 @@ export default function StoresPage() {
       });
 
       if (result?.error) {
-        toast.error(result.error || 'error durante la connection con Ubisoft.');
+        toast.error(result.error || t('storesPage.ubisoftConnectError'));
       } else {
         setUbisoftConnected(true);
-        toast.success(backendResult || 'Account Ubisoft collegato con successo!');
+        toast.success(backendResult || t('storesPage.ubisoftConnected'));
         setIsUbisoftModalOpen(false);
         setUbisoftCredentials({ email: '', password: '' });
         await update();
       }
     } catch (error: unknown) {
       clientLogger.error(`Ubisoft auth error: ${String(error)}`);
-      toast.error(error instanceof Error ? error.message : 'error durante la connection con Ubisoft. Verifica le Credentials.');
+      toast.error(error instanceof Error ? error.message : t('storesPage.ubisoftConnectErrorCheckCredentials'));
     }
     setLoadingProvider(null);
   };
@@ -665,17 +665,17 @@ export default function StoresPage() {
           toast.error(t('common.perFavoreInserisciIlCodice2fa'));
           // La modale gestirà la richiesta del codice 2FA
         } else {
-          toast.error(result.error || `error durante la connection con ${genericModalProvider}.`);
+          toast.error(result.error || t('storesPage.providerConnectError').replace('{name}', genericModalProvider));
         }
       } else {
-        toast.success(`Account ${genericModalProvider} collegato con successo!`);
+        toast.success(t('storesPage.accountConnected').replace('{name}', genericModalProvider));
         setGenericModalProvider(null);
         setGenericCredentials({ email: '', password: '' });
         await update();
       }
     } catch (error: unknown) {
       clientLogger.error(`${genericModalProvider} auth error: ${String(error)}`);
-      toast.error(`error durante la connection con ${genericModalProvider}.`);
+      toast.error(t('storesPage.providerConnectError').replace('{name}', String(genericModalProvider)));
     }
     setLoadingProvider(null);
   };
@@ -689,7 +689,7 @@ export default function StoresPage() {
     });
 
     if (result?.error) {
-      toast.error(result.error || 'error durante la connection con Steam.');
+      toast.error(result.error || t('storesPage.steamConnectError'));
       throw new Error(result.error);
     } else {
       toast.success(t('common.accountSteamCollegatoConSuccesso'));
@@ -727,7 +727,7 @@ export default function StoresPage() {
         await update();
       }
     } catch (error: unknown) {
-      toast.error('error durante la connection con itch.io');
+      toast.error(t('storesPage.itchioConnectError'));
       throw error;
     } finally {
       setLoadingProvider(null);
@@ -751,13 +751,13 @@ export default function StoresPage() {
           setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
           toast.success(t('common.howlongtobeatRaggiungibile'));
         } else {
-          throw new Error(hltb?.message || 'HowLongToBeat non raggiungibile');
+          throw new Error(hltb?.message || t('storesPage.hltbUnreachable'));
         }
       } else if (utilityId === 'steamgriddb') {
         // Test SteamGridDB API via Tauri command (no CORS)
         const apiKey = utilityPreferences[utilityId]?.apiKey;
         if (!apiKey) {
-          throw new Error('API key mancante');
+          throw new Error(t('storesPage.apiKeyMissing'));
         }
         
         const _result = await invoke<string | null>('fetch_steamgriddb_image', {
@@ -767,7 +767,7 @@ export default function StoresPage() {
         });
         // If no error thrown, the API key works
         setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
-        toast.success('SteamGridDB funziona correttamente!');
+        toast.success(t('storesPage.steamgriddbWorks'));
       } else if (utilityId === 'pcgw') {
         const result = await invoke<string>('test_pcgw_connection');
         setTestResults(prev => ({ ...prev, [utilityId]: { connected: true, message: result } }));
@@ -780,13 +780,13 @@ export default function StoresPage() {
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message
         : typeof error === 'string' && error ? error
-        : 'Test fallito';
+        : t('common.testFallito');
       if (error instanceof DOMException && error.name === 'AbortError') {
-        setTestResults(prev => ({ ...prev, [utilityId]: { error: 'Timeout - servizio non raggiungibile' } }));
-        toast.error(`${utilityId}: Timeout connessione`);
+        setTestResults(prev => ({ ...prev, [utilityId]: { error: t('storesPage.timeoutUnreachable') } }));
+        toast.error(t('storesPage.timeoutConnection').replace('{name}', utilityId));
       } else {
         setTestResults(prev => ({ ...prev, [utilityId]: { error: msg } }));
-        toast.error(`Problema con ${utilityId}: ${msg}`);
+        toast.error(t('storesPage.problemWith').replace('{name}', utilityId).replace('{msg}', msg));
       }
     }
     
@@ -833,14 +833,21 @@ export default function StoresPage() {
           const connected = result?.connected ?? result?.success ?? false;
           const testResult = {
             connected,
-            message: result?.message || (connected ? 'Connesso' : 'Non connesso'),
+            message: result?.message || (connected ? t('stores.connected') : t('stores.disconnected')),
             error: result?.error,
           };
           setTestResults(prev => ({ ...prev, [providerId]: testResult }));
           if (connected) {
-            toast.success(`Connessione ${providerId} verificata!${result?.games_count ? ` (${result.games_count} giochi)` : ''}`);
+            const suffix = result?.games_count
+              ? ` ${t('storesPage.gamesCountSuffix').replace('{count}', String(result.games_count))}`
+              : '';
+            toast.success(t('storesPage.connectionVerified').replace('{name}', providerId) + suffix);
           } else {
-            toast.error(`Problema con ${providerId}: ${result?.error || 'connessione non riuscita'}`);
+            toast.error(
+              t('storesPage.problemWith')
+                .replace('{name}', providerId)
+                .replace('{msg}', result?.error || t('stores.connectionFailed'))
+            );
           }
         }
       }
@@ -848,8 +855,8 @@ export default function StoresPage() {
       // Tauri rigetta con una stringa: non buttarla via con un generico "Test fallito"
       const errMsg = error instanceof Error ? error.message
         : typeof error === 'string' && error ? error
-        : 'Test fallito';
-      toast.error(`Errore nel test di ${providerId}: ${errMsg}`);
+        : t('common.testFallito');
+      toast.error(t('storesPage.testError').replace('{name}', providerId).replace('{msg}', errMsg));
       setTestResults(prev => ({ ...prev, [providerId]: { error: errMsg } }));
     }
     setTestingProvider(null);
@@ -884,14 +891,14 @@ export default function StoresPage() {
             <div className="flex items-center gap-1.5">
               <div className={`h-2 w-2 rounded-full ${connectedStores > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`} />
               <span className="text-xs text-slate-300">
-                <span className="font-semibold text-white">{connectedStores}</span>/{storesConfig.length} store
+                <span className="font-semibold text-white">{connectedStores}</span>/{storesConfig.length} {t('storesPage.storesCountLabel')}
               </span>
             </div>
             <div className="h-3 w-px bg-slate-700" />
             <div className="flex items-center gap-1.5">
               <div className={`h-2 w-2 rounded-full ${activeUtilities > 0 ? 'bg-orange-500 animate-pulse' : 'bg-slate-600'}`} />
               <span className="text-xs text-slate-300">
-                <span className="font-semibold text-white">{activeUtilities}</span>/{utilityServicesConfig.length} servizi
+                <span className="font-semibold text-white">{activeUtilities}</span>/{utilityServicesConfig.length} {t('storesPage.servicesCountLabel')}
               </span>
             </div>
           </div>
@@ -1012,7 +1019,7 @@ export default function StoresPage() {
                         size="sm"
                         className="h-7 px-2 text-2xs border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
                         onClick={() => setIsFamilySharingOpen(true)}
-                        title="Family Sharing"
+                        title={t('storesPage.familySharing')}
                       >
                         👨‍👩‍👧‍👦
                       </Button>
@@ -1023,7 +1030,7 @@ export default function StoresPage() {
                         size="sm"
                         className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
                         onClick={() => shellOpen('https://www.gog.com/account').catch(() => window.open('https://www.gog.com/account', '_blank'))}
-                        title="Apri GOG.com"
+                        title={t('storesPage.openGog')}
                       >
                         <ExternalLink className="h-3 w-3" />
                       </Button>
@@ -1036,7 +1043,7 @@ export default function StoresPage() {
                         className="h-7 w-7"
                         disabled={testingProvider === store.id}
                         onClick={() => testConnection(store.id)}
-                        title="Test"
+                        title={t('storesPage.test')}
                       >
                         {testingProvider === store.id ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -1078,7 +1085,7 @@ export default function StoresPage() {
                           size="sm"
                           className="h-7 px-2 text-2xs border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
                           onClick={() => shellOpen('https://www.gog.com/en/games').catch(() => window.open('https://www.gog.com/en/games', '_blank'))}
-                          title="GOG Store"
+                          title={t('storesPage.gogStore')}
                         >
                           <StoreIcon className="h-3 w-3" />
                         </Button>
@@ -1115,7 +1122,7 @@ export default function StoresPage() {
                   size="icon"
                   className="h-7 w-7"
                   disabled={testingProvider === store.id}
-                  title={`Test ${store.name} detection`}
+                  title={t('storesPage.testDetection').replace('{name}', store.name)}
                   onClick={async () => {
                     setTestingProvider(store.id);
                     try {
@@ -1252,7 +1259,7 @@ export default function StoresPage() {
                     className="h-7 w-7"
                     disabled={testingProvider === service.id}
                     onClick={() => testConnectionUtility(service.id)}
-                    title="Test"
+                    title={t('storesPage.test')}
                   >
                     {testingProvider === service.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -1334,7 +1341,7 @@ export default function StoresPage() {
             <DialogTitle>{t('storesPage.steamgriddbApiKey')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Inserisci la tua API key di SteamGridDB per scaricare automaticamente le copertine dei giochi.
+            {t('storesPage.steamgriddbApiKeyDesc')}
           </p>
           <a 
             href="https://www.steamgriddb.com/profile/preferences/api" 
@@ -1342,10 +1349,10 @@ export default function StoresPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm underline"
           >
-            Ottieni la tua API Key qui →
+            {t('storesPage.getApiKeyHere')}
           </a>
           <Input
-            placeholder="API Key"
+            placeholder={t('stores.apiKey')}
             value={steamGridDBApiKey}
             onChange={(e) => setSteamGridDBApiKey(e.target.value)}
             className="font-mono"
@@ -1358,7 +1365,7 @@ export default function StoresPage() {
                 setSteamGridDBApiKey('');
               }}
             >
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -1375,7 +1382,7 @@ export default function StoresPage() {
               }}
               className="bg-orange-500 hover:bg-orange-600 text-white"
             >
-              Conferma
+              {t('common.confirm')}
             </Button>
           </div>
         </DialogContent>

@@ -25,6 +25,14 @@ const ROOTS = ['app', 'components'];
 const EXTS = new Set(['.tsx', '.ts']);
 const ATTR = new Set(['placeholder', 'title', 'aria-label', 'alt', 'label', 'tooltip', 'description']);
 const CALLS = new Set(['success', 'error', 'info', 'warning', 'message', 'loading', 'alert', 'confirm']);
+// Oggetti che NON mostrano nulla all'utente: i loro .error/.info/.warn sono
+// messaggi di diagnostica, non testo da tradurre. Contarli gonfiava la baseline
+// di 179 voci su 1355 (misurato 01/08/2026: clientLogger 171, console 8) e
+// faceva fallire la CI per un log aggiunto in un catch.
+// ⚠️ L'esclusione è per NOME DELL'OGGETTO, non per percorso del file: un filtro
+// sul path è esattamente ciò che ha reso cieco il gate a11y il 31/07.
+// `toast` NON è qui e resta contato: quello sì che l'utente lo legge.
+const LOGGERS = new Set(['clientLogger', 'console', 'logger', 'log']);
 const BASELINE_FILE = path.join(__dirname, '.i18n-baseline.json');
 
 const hasLetter = (s) => /[A-Za-zÀ-ÿ]/.test(s);
@@ -63,7 +71,10 @@ function scan() {
       } else if (ts.isJsxAttribute(node) && node.initializer && ts.isStringLiteral(node.initializer)) {
         if (ATTR.has(node.name.getText()) && meaningful(node.initializer.text)) n++;
       } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
-        if (CALLS.has(node.expression.name.getText()) && node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && meaningful(node.arguments[0].text)) n++;
+        // radice della catena: clientLogger.error(...) → "clientLogger"
+        const radice = node.expression.expression.getText().split(/[.([]/)[0].trim();
+        if (!LOGGERS.has(radice)
+          && CALLS.has(node.expression.name.getText()) && node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && meaningful(node.arguments[0].text)) n++;
       } else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
         const m = node.expression.getText();
         if ((m === 'alert' || m === 'confirm') && node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && meaningful(node.arguments[0].text)) n++;

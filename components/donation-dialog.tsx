@@ -76,7 +76,7 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
             <Sparkles className="w-16 h-16 text-yellow-400 animate-pulse" />
             <h2 className="text-2xl font-bold">{t('donationDialogComp.grazieThankYou')}</h2>
             <p className="text-muted-foreground">
-              Traduzioni illimitate sbloccate!
+              {t('donationDialogComp.unlimitedTranslationsUnlocked')}
             </p>
           </div>
         </DialogContent>
@@ -90,23 +90,23 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Heart className="w-6 h-6 text-red-500 fill-red-500" />
-            Supporta GameStringer
+            {t('donationDialogComp.supportGameStringer')}
           </DialogTitle>
           <DialogDescription>
-            Hai tradotto <strong className="text-foreground">{count.toLocaleString()}</strong> stringhe gratis!
-            Il limite free è di <strong className="text-foreground">{FREE_LIMIT}</strong> stringhe.
+            {t('donationDialogComp.youHaveTranslated')} <strong className="text-foreground">{count.toLocaleString()}</strong>{' '}
+            {t('donationDialogComp.freeStringsLimitIntro')} <strong className="text-foreground">{FREE_LIMIT}</strong>{' '}
+            {t('donationDialogComp.stringsSuffix')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 rounded-lg p-4 text-sm">
             <p className="mb-2">
-              GameStringer è sviluppato da una sola persona con passione.
-              Una donazione di qualsiasi importo sblocca <strong>traduzioni illimitate</strong> e
-              aiuta a mantenere il progetto vivo.
+              {t('donationDialogComp.pitchPart1')} <strong>{t('donationDialogComp.pitchHighlight')}</strong>{' '}
+              {t('donationDialogComp.pitchPart2')}
             </p>
             <p className="text-muted-foreground">
-              Anche solo 1€ fa la differenza!
+              {t('donationDialogComp.evenOneEuroHelps')}
             </p>
           </div>
 
@@ -145,7 +145,7 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
           <div className="border-t pt-4">
             {!linkClicked ? (
               <p className="text-xs text-center text-muted-foreground py-2">
-                Clicca uno dei link sopra per donare, poi potrai sbloccare.
+                {t('donationDialogComp.clickLinkThenUnlock')}
               </p>
             ) : secondsLeft > 0 ? (
               <div className="flex flex-col items-center gap-1 py-2">
@@ -154,7 +154,7 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
                   <span>{t('donationDialogComp.completaLaDonazione')}</span>
                 </div>
                 <span className="text-xs text-muted-foreground/60">
-                  Sblocco disponibile tra {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
+                  {t('donationDialogComp.unlockAvailableIn')} {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
                 </span>
               </div>
             ) : (
@@ -165,10 +165,10 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
                   onClick={handleDonated}
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Ho donato — Sblocca traduzioni illimitate
+                  {t('donationDialogComp.iDonatedUnlock')}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground mt-1">
-                  Basato su fiducia. Grazie per il supporto!
+                  {t('donationDialogComp.trustBasedThanks')}
                 </p>
               </>
             )}

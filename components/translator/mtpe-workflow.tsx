@@ -182,7 +182,7 @@ export function MTPEWorkflow({
       ...currentItem,
       status: 'rejected',
       reviewedAt: new Date().toISOString(),
-      reviewerNotes: notes || 'Traduzione rifiutata'
+      reviewerNotes: notes || t('mtpeWorkflowComp.rejectedTranslation')
     };
     
     setItems(updated);
@@ -259,7 +259,7 @@ export function MTPEWorkflow({
     return (
       <Card className="bg-slate-900/50 border-slate-700">
         <CardContent className="p-6 text-center text-gray-400">
-          Nessuna traduzione da revisionare
+          {t('mtpeWorkflowComp.noTranslationsToReview')}
         </CardContent>
       </Card>
     );
@@ -297,19 +297,19 @@ export function MTPEWorkflow({
           <div className="flex gap-4 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-gray-400">Approvate: {stats.approved}</span>
+              <span className="text-gray-400">{t('mtpeWorkflowComp.approved')}: {stats.approved}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-gray-400">Modificate: {stats.edited}</span>
+              <span className="text-gray-400">{t('mtpeWorkflowComp.edited')}: {stats.edited}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-gray-400">Rifiutate: {stats.rejected}</span>
+              <span className="text-gray-400">{t('mtpeWorkflowComp.rejected')}: {stats.rejected}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-gray-500" />
-              <span className="text-gray-400">Saltate: {stats.skipped}</span>
+              <span className="text-gray-400">{t('mtpeWorkflowComp.skipped')}: {stats.skipped}</span>
             </div>
           </div>
         </CardContent>
@@ -367,7 +367,7 @@ export function MTPEWorkflow({
               {needsReview && currentItem?.status === 'pending' && (
                 <Badge className="bg-orange-500/20 text-orange-400">
                   <AlertTriangle className="h-3 w-3 mr-1" />
-                  Richiede revisione
+                  {t('mtpeWorkflowComp.requiresReview')}
                 </Badge>
               )}
             </div>
@@ -378,7 +378,7 @@ export function MTPEWorkflow({
           {/* Source Text */}
           <div>
             <label className="text-xs text-gray-500 uppercase tracking-wide">
-              Testo originale ({sourceLang.toUpperCase()})
+              {t('mtpeWorkflowComp.sourceText')} ({sourceLang.toUpperCase()})
             </label>
             <div className="mt-1 p-3 bg-slate-800/50 rounded-lg text-sm">
               {currentItem?.source}
@@ -389,14 +389,14 @@ export function MTPEWorkflow({
           <div>
             <label className="text-xs text-gray-500 uppercase tracking-wide flex items-center gap-2">
               <Sparkles className="h-3 w-3" />
-              Traduzione AI ({targetLang.toUpperCase()})
+              {t('mtpeWorkflowComp.aiTranslation')} ({targetLang.toUpperCase()})
             </label>
             {isEditing ? (
               <Textarea
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
                 className="mt-1 min-h-[100px] bg-slate-800/50 border-slate-600"
-                placeholder="Modifica la traduzione..."
+                placeholder={t('mtpeWorkflowComp.editTranslationPlaceholder')}
               />
             ) : (
               <div 
@@ -404,7 +404,7 @@ export function MTPEWorkflow({
                 onClick={() => setIsEditing(true)}
               >
                 {currentItem?.editedTranslation || currentItem?.machineTranslation}
-                <span className="text-xs text-gray-500 ml-2">(clicca per modificare)</span>
+                <span className="text-xs text-gray-500 ml-2">{t('mtpeWorkflowComp.clickToEdit')}</span>
               </div>
             )}
           </div>
@@ -434,7 +434,7 @@ export function MTPEWorkflow({
           {/* Suggestions */}
           {suggestions.length > 0 && (
             <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-              <div className="text-xs text-amber-400 font-medium mb-1">💡 Suggerimenti</div>
+              <div className="text-xs text-amber-400 font-medium mb-1">💡 {t('mtpeWorkflowComp.suggestions')}</div>
               <ul className="text-xs text-amber-300/80 space-y-0.5">
                 {suggestions.map((s, i) => (
                   <li key={i}>• {s}</li>
@@ -446,13 +446,13 @@ export function MTPEWorkflow({
           {/* Notes */}
           <div>
             <label className="text-xs text-gray-500 uppercase tracking-wide">
-              Note revisore (opzionale)
+              {t('mtpeWorkflowComp.reviewerNotes')}
             </label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="mt-1 h-16 bg-slate-800/50 border-slate-600 text-xs"
-              placeholder="Aggiungi note sulla revisione..."
+              placeholder={t('mtpeWorkflowComp.reviewNotesPlaceholder')}
             />
           </div>
 
@@ -465,7 +465,7 @@ export function MTPEWorkflow({
               disabled={currentItem?.status !== 'pending'}
             >
               <Check className="h-4 w-4 mr-1" />
-              Approva
+              {t('mtpeWorkflowComp.approve')}
             </Button>
             
             {isEditing ? (
@@ -475,7 +475,7 @@ export function MTPEWorkflow({
                 onClick={handleEdit}
               >
                 <Save className="h-4 w-4 mr-1" />
-                Salva modifiche
+                {t('mtpeWorkflowComp.saveChanges')}
               </Button>
             ) : (
               <Button
@@ -485,7 +485,7 @@ export function MTPEWorkflow({
                 disabled={currentItem?.status !== 'pending'}
               >
                 <Edit3 className="h-4 w-4 mr-1" />
-                Modifica
+                {t('common.edit')}
               </Button>
             )}
             
@@ -517,13 +517,13 @@ export function MTPEWorkflow({
             <CheckCircle2 className="h-8 w-8 text-green-400 mx-auto mb-2" />
             <div className="text-lg font-medium text-green-400">{t('mtpeWorkflowComp.revisioneCompletata')}</div>
             <div className="text-sm text-gray-400 mt-1">
-              {stats.approved} approvate, {stats.edited} modificate, {stats.rejected} rifiutate
+              {stats.approved} {t('mtpeWorkflowComp.approved')}, {stats.edited} {t('mtpeWorkflowComp.edited')}, {stats.rejected} {t('mtpeWorkflowComp.rejected')}
             </div>
             <Button 
               className="mt-3 bg-green-600 hover:bg-green-700"
               onClick={() => onComplete?.(items)}
             >
-              Esporta risultati
+              {t('mtpeWorkflowComp.exportResults')}
             </Button>
           </CardContent>
         </Card>

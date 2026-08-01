@@ -120,9 +120,9 @@ export default function RpgMakerPatcherPage() {
     try {
       const selected = await open({
         directory: true,
-        title: 'Seleziona cartella gioco RPG Maker',
+        title: t('rpgmakerPatcherPage.selectFolderTitle'),
       });
-      
+
       if (selected) {
         setLoading(true);
         const detected = await invoke<RpgMakerGame>('detect_rpgmaker_game', {
@@ -131,10 +131,10 @@ export default function RpgMakerPatcherPage() {
         setGame(detected);
         setStrings([]);
         setStats(null);
-        toast.success(`Rilevato: ${detected.title} (${detected.version})`);
+        toast.success(`${t('rpgmakerPatcherPage.detected')}: ${detected.title} (${detected.version})`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore: ${e}`);
+      toast.error(`${t('common.error')}: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -151,12 +151,12 @@ export default function RpgMakerPatcherPage() {
       
       if (result.success) {
         setStrings(result.strings);
-        toast.success(`Estratte ${result.total_count} stringhe`);
+        toast.success(`${t('rpgmakerPatcherPage.extractedStrings')}: ${result.total_count}`);
       } else {
         toast.error(result.message);
       }
     } catch (e: unknown) {
-      toast.error(`Errore estrazione: ${e}`);
+      toast.error(`${t('rpgmakerPatcherPage.extractError')}: ${e}`);
     } finally {
       setExtracting(false);
     }
@@ -174,10 +174,10 @@ export default function RpgMakerPatcherPage() {
           outputPath: filePath,
           strings,
         });
-        toast.success(`Salvate ${count} traduzioni`);
+        toast.success(`${t('rpgmakerPatcherPage.savedTranslations')}: ${count}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore salvataggio: ${e}`);
+      toast.error(`${t('rpgmakerPatcherPage.saveError')}: ${e}`);
     }
   };
 
@@ -185,18 +185,18 @@ export default function RpgMakerPatcherPage() {
     try {
       const filePath = await open({
         filters: [{ name: 'JSON', extensions: ['json'] }],
-        title: 'Carica traduzioni',
+        title: t('rpgmakerPatcherPage.loadTranslationsTitle'),
       });
-      
+
       if (filePath && typeof filePath === 'string') {
         const loaded = await invoke<RpgMakerString[]>('load_rpgmaker_translations', {
           inputPath: filePath,
         });
         setStrings(loaded);
-        toast.success(`Caricate ${loaded.length} traduzioni`);
+        toast.success(`${t('rpgmakerPatcherPage.loadedTranslations')}: ${loaded.length}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore caricamento: ${e}`);
+      toast.error(`${t('rpgmakerPatcherPage.loadError')}: ${e}`);
     }
   };
 
@@ -247,9 +247,9 @@ export default function RpgMakerPatcherPage() {
   const uniqueFiles = [...new Set(strings.map(s => s.file))];
 
   const RPGMAKER_STEPS: WizardStep[] = [
-    { num: 1, label: 'Selezione Gioco' },
-    { num: 2, label: 'Traduzioni' },
-    { num: 3, label: 'Esporta' },
+    { num: 1, label: t('rpgmakerPatcherPage.stepSelectGame') },
+    { num: 2, label: t('rpgmakerPatcherPage.stepTranslations') },
+    { num: 3, label: t('rpgmakerPatcherPage.stepExport') },
   ];
   const rpgmakerCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
 
@@ -305,7 +305,7 @@ export default function RpgMakerPatcherPage() {
           <div className="flex items-center gap-3">
             <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-blue-600 hover:bg-blue-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
-              Sfoglia
+              {t('rpgmakerPatcherPage.browse')}
             </Button>
             
             {game && (
@@ -313,7 +313,7 @@ export default function RpgMakerPatcherPage() {
                 <div className="flex items-center gap-2">
                   {getVersionBadge(game.version)}
                   <span className="font-medium">{game.title}</span>
-                  <Badge variant="outline" className="text-xs">{game.data_files.length} file</Badge>
+                  <Badge variant="outline" className="text-xs">{game.data_files.length} {t('rpgmakerPatcherPage.filesUnit')}</Badge>
                 </div>
                 
                 <Button 
@@ -323,7 +323,7 @@ export default function RpgMakerPatcherPage() {
                   className="h-8 bg-indigo-600 hover:bg-indigo-500 ml-auto"
                 >
                   {extracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
-                  Estrai Stringhe
+                  {t('common.estraiStringhe')}
                 </Button>
               </>
             )}
@@ -350,18 +350,18 @@ export default function RpgMakerPatcherPage() {
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span>{stats.translated} tradotte</span>
+                    <span>{stats.translated} {t('rpgmakerPatcherPage.translatedUnit')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <X className="w-4 h-4 text-red-500" />
-                    <span>{stats.untranslated} mancanti</span>
+                    <span>{stats.untranslated} {t('rpgmakerPatcherPage.missingUnit')}</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={loadTranslations} size="sm" className="h-8">
                   <Upload className="w-3 h-3 mr-1" />
-                  Carica
+                  {t('common.upload')}
                 </Button>
                 <Button onClick={saveTranslations} size="xs" className="bg-blue-600 hover:bg-blue-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
@@ -382,7 +382,7 @@ export default function RpgMakerPatcherPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileJson className="w-4 h-4 text-blue-400" />
-              Editor Traduzioni
+              {t('editor.title')}
               {strings.length > 0 && (
                 <Badge variant="outline" className="ml-2">{filteredStrings.length} / {strings.length}</Badge>
               )}
@@ -394,7 +394,7 @@ export default function RpgMakerPatcherPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  aria-label={t('common.cerca')} placeholder="Cerca testi..."
+                  aria-label={t('common.cerca')} placeholder={t('rpgmakerPatcherPage.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -473,7 +473,7 @@ export default function RpgMakerPatcherPage() {
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >
-                            {entry.translated || 'Clicca per tradurre...'}
+                            {entry.translated || t('rpgmakerPatcherPage.clickToTranslate')}
                           </div>
                         )}
                       </div>
@@ -482,7 +482,7 @@ export default function RpgMakerPatcherPage() {
                 })}
                 {filteredStrings.length > 100 && (
                   <p className="text-center text-sm text-muted-foreground py-4">
-                    Mostrando 100 di {filteredStrings.length} stringhe. Usa la ricerca per filtrare.
+                    {t('rpgmakerPatcherPage.showingFirst100')} ({filteredStrings.length}). {t('rpgmakerPatcherPage.useSearchToFilter')}
                   </p>
                 )}
               </div>
@@ -491,7 +491,7 @@ export default function RpgMakerPatcherPage() {
                 <Gamepad2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('rpgmakerPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un gioco RPG Maker e clicca &quot;Estrai Stringhe&quot;
+                  {t('rpgmakerPatcherPage.noStringsHint')}
                 </p>
               </div>
             ) : (
@@ -499,7 +499,7 @@ export default function RpgMakerPatcherPage() {
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('workshop.noResults')}</p>
                 <p className="text-sm mt-1">
-                  Prova con un altro termine di ricerca
+                  {t('rpgmakerPatcherPage.tryAnotherSearch')}
                 </p>
               </div>
             )}

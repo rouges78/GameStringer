@@ -109,9 +109,9 @@ export default function RenpyPatcherPage() {
     try {
       const selected = await open({
         directory: true,
-        title: "Seleziona cartella gioco Ren'Py",
+        title: t('renpyPatcherPage.selectGameFolderTitle'),
       });
-      
+
       if (selected) {
         setLoading(true);
         const detected = await invoke<RenpyGame>('detect_renpy_game', {
@@ -120,10 +120,10 @@ export default function RenpyPatcherPage() {
         setGame(detected);
         setStrings([]);
         setStats(null);
-        toast.success(`Rilevato: ${detected.title}`);
+        toast.success(`${t('renpyPatcherPage.detected')}: ${detected.title}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore: ${e}`);
+      toast.error(`${t('common.error')}: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -140,12 +140,12 @@ export default function RenpyPatcherPage() {
       
       if (result.success) {
         setStrings(result.strings);
-        toast.success(`Estratte ${result.total_count} stringhe`);
+        toast.success(`${result.total_count} ${t('renpyPatcherPage.stringsExtracted')}`);
       } else {
         toast.error(result.message);
       }
     } catch (e: unknown) {
-      toast.error(`Errore estrazione: ${e}`);
+      toast.error(`${t('renpyPatcherPage.extractionError')}: ${e}`);
     } finally {
       setExtracting(false);
     }
@@ -163,7 +163,7 @@ export default function RenpyPatcherPage() {
       });
       toast.success(result);
     } catch (e: unknown) {
-      toast.error(`Errore generazione: ${e}`);
+      toast.error(`${t('renpyPatcherPage.generationError')}: ${e}`);
     } finally {
       setGenerating(false);
     }
@@ -181,10 +181,10 @@ export default function RenpyPatcherPage() {
           outputPath: filePath,
           strings,
         });
-        toast.success(`Salvate ${count} traduzioni`);
+        toast.success(`${count} ${t('renpyPatcherPage.translationsSaved')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore salvataggio: ${e}`);
+      toast.error(`${t('common.erroreSalvataggio')}: ${e}`);
     }
   };
 
@@ -192,7 +192,7 @@ export default function RenpyPatcherPage() {
     try {
       const filePath = await open({
         filters: [{ name: 'JSON', extensions: ['json'] }],
-        title: 'Carica traduzioni',
+        title: t('common.caricaTraduzioni'),
       });
       
       if (filePath && typeof filePath === 'string') {
@@ -200,10 +200,10 @@ export default function RenpyPatcherPage() {
           inputPath: filePath,
         });
         setStrings(loaded);
-        toast.success(`Caricate ${loaded.length} traduzioni`);
+        toast.success(`${loaded.length} ${t('renpyPatcherPage.translationsLoaded')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore caricamento: ${e}`);
+      toast.error(`${t('renpyPatcherPage.loadError')}: ${e}`);
     }
   };
 
@@ -260,9 +260,9 @@ export default function RenpyPatcherPage() {
   });
 
   const RENPY_STEPS: WizardStep[] = [
-    { num: 1, label: 'Selezione Gioco' },
-    { num: 2, label: 'Traduzioni' },
-    { num: 3, label: 'Esporta' },
+    { num: 1, label: t('common.selezioneGioco') },
+    { num: 2, label: t('common.translations') },
+    { num: 3, label: t('common.esporta') },
   ];
   const renpyCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
 
@@ -292,7 +292,7 @@ export default function RenpyPatcherPage() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10 text-white text-xs hover:bg-black/50 transition-colors"
             >
               <Globe className="h-3.5 w-3.5" />
-              Docs
+              {t('renpyPatcherPage.docs')}
             </a>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function RenpyPatcherPage() {
           <div className="flex items-center gap-3">
             <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
-              Sfoglia
+              {t('renpyPatcherPage.browse')}
             </Button>
             
             {game && (
@@ -318,10 +318,10 @@ export default function RenpyPatcherPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{game.title}</span>
                   {game.version && <Badge variant="outline" className="text-xs">v{game.version}</Badge>}
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{game.script_files.length} script</Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{game.script_files.length} {t('renpyPatcherPage.scriptFiles')}</Badge>
                   {game.has_translations && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                      {game.available_languages.length} lingue
+                      {game.available_languages.length} {t('common.lingue')}
                     </Badge>
                   )}
                 </div>
@@ -333,7 +333,7 @@ export default function RenpyPatcherPage() {
                   className="h-8 bg-emerald-600 hover:bg-emerald-500 ml-auto"
                 >
                   {extracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
-                  Estrai Stringhe
+                  {t('common.estraiStringhe')}
                 </Button>
               </>
             )}
@@ -360,11 +360,11 @@ export default function RenpyPatcherPage() {
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span>{stats.translated} tradotte</span>
+                    <span>{stats.translated} {t('common.translated')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <X className="w-4 h-4 text-red-500" />
-                    <span>{stats.untranslated} mancanti</span>
+                    <span>{stats.untranslated} {t('common.missing')}</span>
                   </div>
                 </div>
                 <div className="flex gap-2 text-xs">
@@ -378,7 +378,7 @@ export default function RenpyPatcherPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={loadTranslations} size="sm" className="h-8">
                   <Upload className="w-3 h-3 mr-1" />
-                  Carica
+                  {t('common.upload')}
                 </Button>
                 <Button onClick={saveTranslations} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
@@ -396,7 +396,7 @@ export default function RenpyPatcherPage() {
               <Input
                 value={targetLanguage}
                 onChange={(e) => setTargetLanguage(e.target.value)}
-                placeholder="es: italian"
+                placeholder={t('renpyPatcherPage.langPlaceholder')}
                 className="w-32 h-8 bg-slate-950/50 border-slate-700 text-sm"
               />
               <Button 
@@ -406,7 +406,7 @@ export default function RenpyPatcherPage() {
                 className="h-8 bg-green-600 hover:bg-green-500"
               >
                 {generating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
-                Genera .rpy
+                {t('renpyPatcherPage.generateRpy')}
               </Button>
             </div>
           </CardContent>
@@ -419,7 +419,7 @@ export default function RenpyPatcherPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-emerald-400" />
-              Editor Traduzioni
+              {t('renpyPatcherPage.translationsEditor')}
               {strings.length > 0 && (
                 <Badge variant="outline" className="ml-2">{filteredStrings.length} / {strings.length}</Badge>
               )}
@@ -431,7 +431,7 @@ export default function RenpyPatcherPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  aria-label={t('common.cerca')} placeholder="Cerca testi o personaggi..."
+                  aria-label={t('common.cerca')} placeholder={t('renpyPatcherPage.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -519,7 +519,7 @@ export default function RenpyPatcherPage() {
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >
-                            {entry.translated || 'Clicca per tradurre...'}
+                            {entry.translated || t('renpyPatcherPage.clickToTranslate')}
                           </div>
                         )}
                       </div>
@@ -528,7 +528,7 @@ export default function RenpyPatcherPage() {
                 })}
                 {filteredStrings.length > 100 && (
                   <p className="text-center text-sm text-muted-foreground py-4">
-                    Mostrando 100 di {filteredStrings.length} stringhe. Usa la ricerca per filtrare.
+                    {t('renpyPatcherPage.showingFirst100')} ({filteredStrings.length}). {t('renpyPatcherPage.useSearchToFilter')}
                   </p>
                 )}
               </div>
@@ -537,7 +537,7 @@ export default function RenpyPatcherPage() {
                 <Heart className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('renpyPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un gioco Ren&apos;Py e clicca &quot;Estrai Stringhe&quot;
+                  {t('renpyPatcherPage.noStringsHint')}
                 </p>
               </div>
             ) : (
