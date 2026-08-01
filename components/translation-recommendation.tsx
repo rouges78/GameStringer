@@ -579,7 +579,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             updateProgress(100, '⚠️ Nessun file .pck trovato');
             toast.warning(t('translationRecommendationComp.noPckFound'));
           }
-        } catch {
+        } catch (err) {
+          // Errore reale (PCK criptato, troncato, permessi…): loggalo, non inghiottirlo.
+          clientLogger.error('extract_godot_pck fallito:', err);
           updateProgress(100, '📦 Usa gdsdecomp per estrarre il PCK manualmente');
           toast.info(t('translationRecommendationComp.godotHint'));
         }
@@ -854,7 +856,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           } else {
             updateProgress(100, '⚠️ Nessun file Ren\'Py trovato');
           }
-        } catch {
+        } catch (err) {
+          // Errore reale (RPA-1.0, indice corrotto, permessi…): loggalo, non inghiottirlo.
+          clientLogger.error('extract_renpy_rpa fallito:', err);
           updateProgress(100, '📦 Usa UnRPA per estrarre manualmente');
           toast.info(t('translationRecommendationComp.renpyHint'));
         }

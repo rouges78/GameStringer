@@ -572,6 +572,110 @@ pub async fn extract_godot_file(
     Err(format!("File '{}' non trovato nel PCK", file_path_in_pck))
 }
 
+// Per-file flags (Godot 4.x, file_access_pack.h): file cifrato / entry di rimozione.
+const PACK_FILE_ENCRYPTED: u32 = 1 << 0;
+const PACK_FILE_REMOVAL: u32 = 1 << 1;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GodotPckExtractAllResult {
+    pub success: bool,
+    pub output_path: String,
+    pub files_count: usize,
+    pub skipped_count: usize,
+    pub message: String,
+}
+
+/// Estrae TUTTI i file di un .pck (anche embedded nell'exe) su disco sotto `output_path`,
+/// preservando la struttura delle cartelle. Scrive byte grezzi: nessuna conversione.
+/// I path delle entry sono `res://…`: il prefisso viene rimosso e ogni componente
+/// è validato contro il path traversal (entry ostili tipo `res://../../x` vengono saltate).
+#[tauri::command]
+pub async fn extract_godot_pck(
+    pck_path: String,
+    output_path: String,
+) -> Result<GodotPckExtractAllResult, String> {
+    let data = fs::read(Path::new(&pck_path))
+        .map_err(|e| format!("Errore lettura {}: {}", pck_path, e))?;
+
+    let start = find_pck_magic(&data)
+        .ok_or_else(|| format!("Nessun magic GDPC trovato in {}", pck_path))?;
+    let pck_data = &data[start..];
+    let info = read_pck(pck_data)?;
+
+    let out_root = Path::new(&output_path);
+    fs::create_dir_all(out_root)
+        .map_err(|e| format!("Impossibile creare {}: {}", output_path, e))?;
+
+    let mut written = 0usize;
+    let mut skipped = 0usize;
+
+    for entry in &info.files {
+        // Entry cifrate o marcate come rimozione (patch pck): non estraibili/da ignorare.
+        if entry.flags & (PACK_FILE_ENCRYPTED | PACK_FILE_REMOVAL) != 0 {
+            skipped += 1;
+            continue;
+        }
+
+        let rel = entry
+            .path
+            .strip_prefix("res://")
+            .or_else(|| entry.path.strip_prefix("user://"))
+            .unwrap_or(&entry.path);
+
+        // Anti-traversal: niente path assoluti, niente "..", niente componenti vuoti.
+        let unsafe_path = rel.is_empty()
+            || Path::new(rel).is_absolute()
+            || rel.contains(':')
+            || rel
+                .split(['/', '\\'])
+                .any(|c| c.is_empty() || c == ".." || c == ".");
+        if unsafe_path {
+            log::warn!("PCK extract: entry saltata per path sospetto: {:?}", entry.path);
+            skipped += 1;
+            continue;
+        }
+
+        // entry.offset è relativo all'inizio del pck; per embedded si riapplica `start`.
+        let abs = start
+            .checked_add(entry.offset as usize)
+            .and_then(|o| o.checked_add(entry.size as usize).map(|end| (o, end)));
+        let (file_start, file_end) = match abs {
+            Some((s, e)) if e <= data.len() => (s, e),
+            _ => {
+                log::warn!("PCK extract: entry oltre EOF, saltata: {:?}", entry.path);
+                skipped += 1;
+                continue;
+            }
+        };
+
+        let dest = out_root.join(rel);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Impossibile creare {}: {}", parent.display(), e))?;
+        }
+        fs::write(&dest, &data[file_start..file_end])
+            .map_err(|e| format!("Errore scrittura {}: {}", dest.display(), e))?;
+        written += 1;
+    }
+
+    log::info!(
+        "📦 PCK extract: {} file scritti in {}, {} saltati",
+        written, output_path, skipped
+    );
+
+    Ok(GodotPckExtractAllResult {
+        success: written > 0,
+        output_path,
+        files_count: written,
+        skipped_count: skipped,
+        message: if skipped > 0 {
+            format!("{} file estratti, {} saltati (cifrati/rimozioni/path sospetti)", written, skipped)
+        } else {
+            format!("{} file estratti", written)
+        },
+    })
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // PCK CREATION (translation override)
 // ═══════════════════════════════════════════════════════════════════

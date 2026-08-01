@@ -124,9 +124,10 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
 
       if (folder) {
         const { invoke } = await import('@tauri-apps/api/core');
-        const files = await invoke<string[]>('scan_folder_for_translation_files', {
+        const scan = await invoke<{ files: Array<{ path: string }> }>('scan_folder_for_translation', {
           folderPath: folder
         });
+        const files = scan.files.map(f => f.path);
 
         if (files && files.length > 0) {
           const newJobs: TranslationJob[] = files.map((filePath, index) => {

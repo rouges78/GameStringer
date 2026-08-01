@@ -581,6 +581,7 @@ fn main() {
             commands::godot_patcher::detect_godot_engine,
             commands::godot_patcher::scan_godot_pck,
             commands::godot_patcher::extract_godot_file,
+            commands::godot_patcher::extract_godot_pck,
             commands::godot_patcher::create_godot_translation_pck,
             commands::godot_patcher::remove_godot_translation,
 
@@ -1099,7 +1100,8 @@ fn main() {
             commands::renpy_patcher::save_renpy_translations,
             commands::renpy_patcher::load_renpy_translations,
             commands::renpy_patcher::get_renpy_translation_stats,
-            
+            commands::rpa_extractor::extract_renpy_rpa,
+
             // Wolf RPG Patcher
             commands::wolfrpg_patcher::detect_wolfrpg_game,
             commands::wolfrpg_patcher::extract_wolfrpg_strings_basic,

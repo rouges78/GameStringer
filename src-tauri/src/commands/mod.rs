@@ -97,6 +97,7 @@ pub mod danganronpa_patcher;
 pub mod rpgmaker_patcher;
 pub mod hendrix_csv_patcher;
 pub mod renpy_patcher;
+pub mod rpa_extractor;
 pub mod wolfrpg_patcher;
 pub mod tyranoscript_patcher;
 
