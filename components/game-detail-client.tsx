@@ -940,10 +940,20 @@ export default function GameDetailPage() {
       const lang = language || 'it';
       const _gameName = game.title || game.name || 'Game';
 
-      // 1. Estrai stringhe di localizzazione dal gioco
+      // 1. Estrai stringhe di localizzazione dal gioco.
+      // PRIMA dal container IoStore (.utoc/.ucas, decompressione Oodle): è lì che
+      // i giochi UE5 moderni tengono il Game.locres. SOLO se è vuoto/assente si
+      // ripiega sui .locres sciolti su disco (extract_unreal_localization), che
+      // per un gioco IoStore trova al più qualche .locres di sistema (12 su Below).
       toast.info(t('common.estrazioneStringheDiLocalizzazioneUnreal'));
       interface UeEntry { namespace: string; key: string; source_hash: string; value: string; }
-      const extracted = await invoke<{entries?: UeEntry[]}>('extract_unreal_localization', { gamePath: game.installPath });
+      let extracted = await invoke<{entries?: UeEntry[]}>('extract_iostore_localization', { gamePath: game.installPath })
+        .catch((err) => { clientLogger.warn('[UE AI] IoStore non disponibile, fallback su disco:', String(err)); return null; });
+
+      if (!extracted?.entries?.length) {
+        extracted = await invoke<{entries?: UeEntry[]}>('extract_unreal_localization', { gamePath: game.installPath })
+          .catch((err) => { clientLogger.error('[UE AI] estrazione da disco fallita:', String(err)); return null; });
+      }
 
       if (!extracted?.entries?.length) {
         toast.error(t('gameDetail.errNoLocStrings'));

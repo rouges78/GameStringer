@@ -1,0 +1,48 @@
+{
+  "versione": 1,
+  "versioneNome": "Compact",
+  "voci": [
+    {
+      "namespace": "OnlinePresence",
+      "key": "Away",
+      "hashSorgente": 906562422,
+      "testo": "Abwesend",
+      "mancante": false
+    },
+    {
+      "namespace": "OnlinePresence",
+      "key": "Chat",
+      "hashSorgente": 1028621381,
+      "testo": "Chat",
+      "mancante": false
+    },
+    {
+      "namespace": "OnlinePresence",
+      "key": "DoNotDisturb",
+      "hashSorgente": 523548738,
+      "testo": "Do Not Disturb",
+      "mancante": false
+    },
+    {
+      "namespace": "OnlinePresence",
+      "key": "ExtendedAway",
+      "hashSorgente": 2629492667,
+      "testo": "Extended Away",
+      "mancante": false
+    },
+    {
+      "namespace": "OnlinePresence",
+      "key": "Offline",
+      "hashSorgente": 3317214507,
+      "testo": "Offline",
+      "mancante": false
+    },
+    {
+      "namespace": "OnlinePresence",
+      "key": "Online",
+      "hashSorgente": 3002416456,
+      "testo": "Online",
+      "mancante": false
+    }
+  ]
+}

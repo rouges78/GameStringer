@@ -233,10 +233,21 @@ impl OodleLib {
 pub fn find_oodle_dll_with_game(game_path: Option<&Path>) -> Vec<PathBuf> {
     let mut paths = Vec::new();
 
+    // Nomi possibili della Oodle Data DLL, dal più recente al più vecchio.
+    // ⚠️ UE 5.8 (2025) l'ha RINOMINATA da `oo2core_9_win64.dll` a `oo2core.dll`
+    // nuda (in .../runtimes/win-x64/native/). NON confondere con `oo2tex_*`
+    // (Oodle Texture) né `oo2texrt_*`: quelle non decomprimono i .locres.
+    let dll_names = [
+        "oo2core.dll",
+        "oo2core_9_win64.dll",
+        "oo2core_8_win64.dll",
+        "oo2core_7_win64.dll",
+    ];
+
     // 1. Cache GameStringer (%APPDATA%/GameStringer/tools/)
     if let Some(gs_tools) = dirs::data_dir().map(|d| d.join("GameStringer").join("tools")) {
-        for ver in &["9", "8", "7"] {
-            let p = gs_tools.join(format!("oo2core_{}_win64.dll", ver));
+        for dll in &dll_names {
+            let p = gs_tools.join(dll);
             if p.exists() { paths.push(p); }
         }
     }
@@ -255,42 +266,63 @@ pub fn find_oodle_dll_with_game(game_path: Option<&Path>) -> Vec<PathBuf> {
                 let sub = entry.path().join("Binaries").join("Win64");
                 if sub.is_dir() {
                     let _ = scan_roots.iter(); // solo per non aver warning
-                    for ver in &["9", "8", "7"] {
-                        let p = sub.join(format!("oo2core_{}_win64.dll", ver));
+                    for dll in &dll_names {
+                        let p = sub.join(dll);
                         if p.exists() { paths.push(p.clone()); }
                     }
                 }
             }
         }
         for root in &scan_roots {
-            for ver in &["9", "8", "7"] {
-                let p = root.join(format!("oo2core_{}_win64.dll", ver));
+            for dll in &dll_names {
+                let p = root.join(dll);
                 if p.exists() { paths.push(p.clone()); }
             }
         }
     }
 
-    // 3. Installazioni UE (tutte le versioni comuni)
-    let ue_bases = [
-        "C:\\UE_5.7", "C:\\UE_5.6", "C:\\UE_5.5", "C:\\UE_5.4", "C:\\UE_5.3",
-        "C:\\UE_5.2", "C:\\UE_5.1", "C:\\UE_5.0", "C:\\UE_4.27",
-        "C:\\Program Files\\Epic Games\\UE_5.7",
-        "C:\\Program Files\\Epic Games\\UE_5.5",
-        "C:\\Program Files\\Epic Games\\UE_5.4",
-        "C:\\Program Files\\Epic Games\\UE_4.27",
-    ];
+    // 3. Installazioni UE — scoperta DINAMICA invece di una lista fissa.
+    // La lista cablata (fino a UE_5.7) mancava la 5.8 e ogni futura release: qui
+    // enumeriamo le cartelle `UE_*` sotto le radici comuni, su OGNI disco, così
+    // qualsiasi versione (5.8, 5.9, …) viene trovata senza toccare il codice.
+    let mut ue_bases: Vec<PathBuf> = Vec::new();
+    let mut root_dirs: Vec<PathBuf> = Vec::new();
+    // Radici tipiche su tutti i dischi montati (Windows: A..Z).
+    for letter in b'C'..=b'Z' {
+        let drive = format!("{}:\\", letter as char);
+        root_dirs.push(PathBuf::from(&drive)); // es. C:\UE_5.8
+        root_dirs.push(PathBuf::from(&drive).join("Program Files").join("Epic Games"));
+        root_dirs.push(PathBuf::from(&drive).join("Epic Games"));
+    }
+    for root in &root_dirs {
+        if let Ok(entries) = std::fs::read_dir(root) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                let name = p.file_name().unwrap_or_default().to_string_lossy();
+                // UE_5.x / UE_4.27 / anche "UE5" senza punto.
+                if name.starts_with("UE_") || name.starts_with("UE5") || name.starts_with("UE4") {
+                    ue_bases.push(p);
+                }
+            }
+        }
+    }
     for base in &ue_bases {
-        let b = PathBuf::from(base);
-        for ver in &["9", "8", "7"] {
-            let dll = format!("oo2core_{}_win64.dll", ver);
+        let b = base.clone();
+        for dll in &dll_names {
             for subpath in &[
+                // UE 5.8+: `oo2core.dll` sta in runtimes/win-x64/native sotto vari tool .NET.
+                vec!["Engine", "Binaries", "DotNET", "AutomationTool", "runtimes", "win-x64", "native"],
+                vec!["Engine", "Binaries", "DotNET", "UnrealBuildTool", "runtimes", "win-x64", "native"],
+                // UE ≤5.7: Oodle era una ThirdParty accanto ai binari.
+                vec!["Engine", "Binaries", "ThirdParty", "Oodle", "Win64"],
+                vec!["Engine", "Binaries", "ThirdParty", "Oodle", "Mac"],
                 vec!["Engine", "Binaries", "Win64"],
                 vec!["Engine", "Binaries", "DotNET", "AutomationTool"],
                 vec!["Engine", "Binaries", "DotNET", "UnrealBuildTool"],
             ] {
                 let mut p = b.clone();
                 for s in subpath { p = p.join(s); }
-                p = p.join(&dll);
+                p = p.join(dll);
                 if p.exists() { paths.push(p); }
             }
         }
@@ -1225,6 +1257,31 @@ fn find_utoc_files(game_path: &Path) -> Vec<PathBuf> {
     utocs
 }
 
+/// Trova i .pak "originali" del gioco (esclude i nostri override _P.pak).
+fn find_pak_files(game_path: &Path) -> Vec<PathBuf> {
+    let mut paks = Vec::new();
+    if let Ok(entries) = fs::read_dir(game_path) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let dir = path.join("Content").join("Paks");
+                if let Ok(pe) = fs::read_dir(&dir) {
+                    for e in pe.flatten() {
+                        let p = e.path();
+                        if p.extension().map(|x| x == "pak").unwrap_or(false) {
+                            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+                            // salta i nostri override e le patch _P
+                            if name.contains("gamestringer") || name.ends_with("_p.pak") { continue; }
+                            paks.push(p);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    paks
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // TAURI COMMANDS
 // ═══════════════════════════════════════════════════════════════════
@@ -1272,6 +1329,11 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
         utoc_idx: usize,
     }
     let mut loc_asset_contexts: Vec<LocAssetCtx> = Vec::new();
+    // TUTTI i .locres trovati, con l'indice del container per estrarli dopo il
+    // loop. Prima si ritornava al PRIMO .locres del PRIMO container: su Below
+    // usciva un file di plugin (OnlineError, 12 voci) invece del Game.locres
+    // (752). Ora si raccoglie tutto e si sceglie/aggrega dopo.
+    let mut locres_candidates: Vec<(usize, IoStoreFile)> = Vec::new();
     let mut utoc_contexts: Vec<(
         PathBuf, // ucas_path
         UtocHeader,
@@ -1324,81 +1386,174 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
         let locres_files: Vec<&IoStoreFile> = files.iter()
             .filter(|f| f.path.ends_with(".locres"))
             .collect();
-        
-        if locres_files.is_empty() {
-            // Cerca .uasset di localizzazione come fallback
-            let loc_assets: Vec<_> = files.iter()
-                .filter(|f| {
-                    let p = f.path.to_lowercase();
-                    (p.contains("localization") || p.contains("localiz"))
-                        && f.path.ends_with(".uasset")
-                })
-                .collect();
-            if !loc_assets.is_empty() {
-                log::info!("📦 {} .uasset di localizzazione trovati in {} (no .locres)", loc_assets.len(), utoc_name);
-                let ctx_idx = utoc_contexts.len();
-                utoc_contexts.push((ucas_path.clone(), header, offset_lengths, compressed_blocks, compression_methods, utoc_data));
-                for a in &loc_assets {
-                    loc_asset_contexts.push(LocAssetCtx {
-                        file: (*a).clone(),
-                        utoc_idx: ctx_idx,
-                    });
-                }
-            } else {
-                log::info!("📦 Nessun .locres né .uasset localization in {}", utoc_name);
+
+        // Se ci sono .locres: RACCOGLILI, non estrarre-e-ritornare qui. Il
+        // Game.locres (i dialoghi) può stare in un container più avanti, e
+        // fermarsi al primo faceva vincere un .locres di plugin.
+        if !locres_files.is_empty() {
+            log::info!("📝 Trovati {} file .locres in {}", locres_files.len(), utoc_name);
+            let ctx_idx = utoc_contexts.len();
+            utoc_contexts.push((ucas_path.clone(), header, offset_lengths, compressed_blocks, compression_methods, utoc_data));
+            for f in &locres_files {
+                log::info!("  📄 {} (entry {})", f.path, f.toc_entry_index);
+                locres_candidates.push((ctx_idx, (*f).clone()));
             }
             continue;
         }
-        
-        log::info!("📝 Trovati {} file .locres", locres_files.len());
-        for f in &locres_files {
-            log::info!("  📄 {} (entry {})", f.path, f.toc_entry_index);
-        }
-        
-        // Preferisci la versione English del gioco (non engine)
-        let target = locres_files.iter()
-            .find(|f| {
+
+        // Nessun .locres: cerca .uasset di localizzazione come fallback
+        let loc_assets: Vec<_> = files.iter()
+            .filter(|f| {
                 let p = f.path.to_lowercase();
-                (p.contains("/en/") || p.contains("\\en\\")) && !p.contains("engine")
+                (p.contains("localization") || p.contains("localiz"))
+                    && f.path.ends_with(".uasset")
             })
-            .or_else(|| locres_files.iter().find(|f| {
-                let p = f.path.to_lowercase();
-                p.contains("/en/") || p.contains("\\en\\")
-            }))
-            .unwrap_or(&locres_files[0]);
-        
-        log::info!("📝 Estrazione: {}", target.path);
-        
-        // Estrai il file dal UCAS
-        let locres_data = extract_file_from_ucas(
-            &ucas_path,
-            target.toc_entry_index as usize,
-            &offset_lengths,
-            &compressed_blocks,
-            &compression_methods,
-            header.compression_block_size,
-            &oodle,
-        )?;
-        
-        log::info!("📝 Dati .locres estratti: {} bytes", locres_data.len());
-        
-        // Parsa il .locres
-        let (version, entries) = super::unreal_localization::parse_locres_pub(&locres_data)?;
-        let count = entries.len();
-        
-        return Ok(ExtractionResult {
-            success: true,
-            entries,
-            source_file: utoc_path.to_string_lossy().to_string(),
-            pak_version: 0,
-            locres_path: target.path.clone(),
-            message: format!(
-                "Estratte {} stringhe da IoStore {} (LocRes v{})",
-                count, utoc_name, version
-            ),
-        });
+            .collect();
+        if !loc_assets.is_empty() {
+            log::info!("📦 {} .uasset di localizzazione trovati in {} (no .locres)", loc_assets.len(), utoc_name);
+            let ctx_idx = utoc_contexts.len();
+            utoc_contexts.push((ucas_path.clone(), header, offset_lengths, compressed_blocks, compression_methods, utoc_data));
+            for a in &loc_assets {
+                loc_asset_contexts.push(LocAssetCtx {
+                    file: (*a).clone(),
+                    utoc_idx: ctx_idx,
+                });
+            }
+        } else {
+            log::info!("📦 Nessun .locres né .uasset localization in {}", utoc_name);
+        }
+        continue;
     }
-    
+
+    // ── Scelta e AGGREGAZIONE dei .locres raccolti da tutti i container ──────
+    // Obiettivo: i dialoghi del gioco (Game.locres), non i .locres di plugin.
+    if !locres_candidates.is_empty() {
+        let is_engine = |p: &str| {
+            let l = p.to_lowercase();
+            l.contains("engine/") || l.contains("engine\\")
+                || l.contains("/plugins/") || l.contains("\\plugins\\")
+        };
+        // 1) preferisci i .locres NON di motore/plugin (i dialoghi stanno lì);
+        //    se non ne restano, ripiega su tutti.
+        let non_engine: Vec<_> = locres_candidates.iter().filter(|(_, f)| !is_engine(&f.path)).cloned().collect();
+        let pool = if non_engine.is_empty() { locres_candidates.clone() } else { non_engine };
+        // 2) una sola cultura: preferisci /en/ (il gioco è in inglese di base),
+        //    così non si mescolano lingue diverse dello stesso testo.
+        let is_en = |p: &str| { let l = p.to_lowercase(); l.contains("/en/") || l.contains("\\en\\") || l.ends_with("/en") };
+        let has_en = pool.iter().any(|(_, f)| is_en(&f.path));
+        let chosen: Vec<_> = if has_en {
+            pool.iter().filter(|(_, f)| is_en(&f.path)).cloned().collect()
+        } else {
+            pool
+        };
+
+        // 3) estrai e AGGREGA tutti i .locres scelti, deduplicando (namespace,key).
+        let mut all_entries: Vec<super::unreal_localization::LocEntry> = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+        let mut chosen_paths: Vec<String> = Vec::new();
+        let mut version_seen: Option<u8> = None;
+
+        for (ctx_idx, f) in &chosen {
+            let (ref ucas_p, ref hdr, ref offs, ref blks, ref meths, _) = utoc_contexts[*ctx_idx];
+            let data = match extract_file_from_ucas(
+                ucas_p, f.toc_entry_index as usize, offs, blks, meths, hdr.compression_block_size, &oodle,
+            ) {
+                Ok(d) => d,
+                Err(e) => { log::warn!("⚠️ estrazione .locres {} fallita: {}", f.path, e); continue; }
+            };
+            match super::unreal_localization::parse_locres_pub(&data) {
+                Ok((version, entries)) => {
+                    version_seen = Some(version);
+                    let before = all_entries.len();
+                    for e in entries {
+                        if seen.insert((e.namespace.clone(), e.key.clone())) {
+                            all_entries.push(e);
+                        }
+                    }
+                    log::info!("📝 {} → +{} stringhe (v{}, {} byte)", f.path, all_entries.len() - before, version, data.len());
+                    chosen_paths.push(f.path.clone());
+                }
+                Err(e) => log::warn!("⚠️ parsing .locres {} fallito: {}", f.path, e),
+            }
+        }
+
+        if !all_entries.is_empty() {
+            let count = all_entries.len();
+            let ver = version_seen.unwrap_or(0);
+            log::info!("✅ IoStore: {} stringhe aggregate da {} .locres", count, chosen_paths.len());
+            return Ok(ExtractionResult {
+                success: true,
+                entries: all_entries,
+                source_file: game_path.clone(),
+                pak_version: 0,
+                locres_path: chosen_paths.join(", "),
+                message: format!(
+                    "Estratte {} stringhe da {} file .locres IoStore (LocRes v{})",
+                    count, chosen_paths.len(), ver
+                ),
+            });
+        }
+        log::warn!("⚠️ {} .locres candidati ma nessuna stringa estratta (Oodle?)", locres_candidates.len());
+    }
+
+    // ── Se l'IoStore non ha .locres, cercali nei .pak classici del gioco ────
+    // (Below tiene il Game.locres nel .pak principale, compresso Oodle.)
+    {
+        let pak_files = find_pak_files(game_dir);
+        if !pak_files.is_empty() {
+            log::info!("📦 Cerco .locres in {} .pak classici", pak_files.len());
+            let is_engine = |p: &str| { let l = p.to_lowercase(); l.contains("engine/") || l.contains("engine\\") || l.contains("/plugins/") || l.contains("\\plugins\\") };
+            let is_en = |p: &str| { let l = p.to_lowercase(); l.contains("/en/") || l.contains("\\en\\") };
+            let mut all_entries: Vec<super::unreal_localization::LocEntry> = Vec::new();
+            let mut seen = std::collections::HashSet::new();
+            let mut chosen_paths: Vec<String> = Vec::new();
+            let mut version_seen: Option<u8> = None;
+
+            for pak in &pak_files {
+                let locres_list = match extract_locres_from_pak(pak, &oodle) {
+                    Ok(l) => l,
+                    Err(e) => { log::warn!("⚠️ pak {}: {}", pak.display(), e); continue; }
+                };
+                let non_engine: Vec<_> = locres_list.iter().filter(|l| !is_engine(&l.path)).collect();
+                let pool = if non_engine.is_empty() { locres_list.iter().collect::<Vec<_>>() } else { non_engine };
+                let has_en = pool.iter().any(|l| is_en(&l.path));
+                for l in pool {
+                    if has_en && !is_en(&l.path) { continue; }
+                    match super::unreal_localization::parse_locres_pub(&l.data) {
+                        Ok((ver, entries)) => {
+                            version_seen = Some(ver);
+                            let before = all_entries.len();
+                            for e in entries {
+                                if seen.insert((e.namespace.clone(), e.key.clone())) {
+                                    all_entries.push(e);
+                                }
+                            }
+                            if all_entries.len() > before {
+                                log::info!("📝 {} → +{} stringhe (v{})", l.path, all_entries.len() - before, ver);
+                                chosen_paths.push(l.path.clone());
+                            }
+                        }
+                        Err(e) => log::warn!("⚠️ parse .locres {} fallito: {}", l.path, e),
+                    }
+                }
+            }
+
+            if !all_entries.is_empty() {
+                let count = all_entries.len();
+                let ver = version_seen.unwrap_or(0);
+                log::info!("✅ PAK: {} stringhe aggregate da {} .locres", count, chosen_paths.len());
+                return Ok(ExtractionResult {
+                    success: true,
+                    entries: all_entries,
+                    source_file: game_path.clone(),
+                    pak_version: 0,
+                    locres_path: chosen_paths.join(", "),
+                    message: format!("Estratte {} stringhe da {} .locres nel .pak (LocRes v{})", count, chosen_paths.len(), ver),
+                });
+            }
+        }
+    }
+
     // Fallback: estrai stringhe dai .uasset di localizzazione
     if !loc_asset_contexts.is_empty() {
         log::info!("📦 Fallback .uasset: analisi {} file di localizzazione", loc_asset_contexts.len());
@@ -2380,6 +2535,269 @@ pub async fn apply_datatable_translation(
     })
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// PAK READER (formato UE .pak v8–v11) — per i .locres che stanno nel .pak
+// classico invece che nell'IoStore. Below tiene lì il Game.locres, compresso
+// Oodle. Strategia difensiva: per l'estrazione ci si affida SOLO all'header
+// INLINE della entry (campi espliciti, niente bitfield), decodificando dagli
+// EncodedPakEntries il solo Offset (campo non ambiguo). I blocchi si leggono
+// contigui usando la loro DIMENSIONE (end-start), non la posizione assoluta:
+// robusto sui pak non cifrati. Un formato inatteso → errore rumoroso, mai
+// garbage (stessa disciplina di [locres-magic-sbagliato]).
+// ═══════════════════════════════════════════════════════════════════
+
+const PAK_MAGIC_LE: u32 = 0x5A6F12E1;
+
+fn pak_read_fstring(data: &[u8], pos: &mut usize) -> Result<String, String> {
+    if *pos + 4 > data.len() { return Err("FString: EOF su len".into()); }
+    let len = i32::from_le_bytes([data[*pos], data[*pos+1], data[*pos+2], data[*pos+3]]);
+    *pos += 4;
+    if len == 0 { return Ok(String::new()); }
+    if len < 0 {
+        let units = (-len) as usize;
+        let nb = units * 2;
+        if *pos + nb > data.len() { return Err("FString: EOF su UTF16".into()); }
+        let mut s = String::with_capacity(units);
+        for i in 0..units {
+            let u = u16::from_le_bytes([data[*pos + i*2], data[*pos + i*2 + 1]]);
+            if u == 0 { break; }
+            s.push(char::from_u32(u as u32).unwrap_or('?'));
+        }
+        *pos += nb;
+        Ok(s)
+    } else {
+        let nb = len as usize;
+        if *pos + nb > data.len() { return Err("FString: EOF su ASCII".into()); }
+        let end = if nb > 0 && data[*pos + nb - 1] == 0 { nb - 1 } else { nb };
+        let s = String::from_utf8_lossy(&data[*pos..*pos + end]).into_owned();
+        *pos += nb;
+        Ok(s)
+    }
+}
+
+fn rd_u32(d: &[u8], p: &mut usize) -> Result<u32, String> {
+    if *p + 4 > d.len() { return Err("EOF u32".into()); }
+    let v = u32::from_le_bytes([d[*p], d[*p+1], d[*p+2], d[*p+3]]); *p += 4; Ok(v)
+}
+fn rd_i32(d: &[u8], p: &mut usize) -> Result<i32, String> {
+    Ok(rd_u32(d, p)? as i32)
+}
+fn rd_u64(d: &[u8], p: &mut usize) -> Result<u64, String> {
+    if *p + 8 > d.len() { return Err("EOF u64".into()); }
+    let mut b = [0u8; 8]; b.copy_from_slice(&d[*p..*p+8]); *p += 8; Ok(u64::from_le_bytes(b))
+}
+
+struct PakFooter {
+    version: u32,
+    index_offset: u64,
+    index_size: u64,
+    compression_methods: Vec<String>, // index 0 = "None" implicito
+    encrypted_index: bool,
+}
+
+/// Legge il footer ancorandosi al MAGIC scansionato dalla fine: evita di dover
+/// indovinare la dimensione esatta del footer (varia per versione).
+fn pak_read_footer(data: &[u8]) -> Result<PakFooter, String> {
+    let magic_bytes = PAK_MAGIC_LE.to_le_bytes();
+    let start = data.len().saturating_sub(1024);
+    let mut magic_pos = None;
+    let mut i = data.len().saturating_sub(4);
+    while i >= start {
+        if data[i..i+4] == magic_bytes { magic_pos = Some(i); break; }
+        if i == 0 { break; }
+        i -= 1;
+    }
+    let m = magic_pos.ok_or("Magic PAK (0x5A6F12E1) non trovato nel footer")?;
+
+    let version = u32::from_le_bytes([data[m+4], data[m+5], data[m+6], data[m+7]]);
+    let index_offset = u64::from_le_bytes(data[m+8..m+16].try_into().unwrap());
+    let index_size = u64::from_le_bytes(data[m+16..m+24].try_into().unwrap());
+    // dopo l'hash (20) i nomi dei metodi di compressione, 32 byte l'uno fino a EOF.
+    let mut methods = vec!["None".to_string()];
+    let mut off = m + 24 + 20;
+    while off + 32 <= data.len() {
+        let raw = &data[off..off+32];
+        let name = String::from_utf8_lossy(raw).trim_end_matches('\0').trim().to_string();
+        if !name.is_empty() { methods.push(name); }
+        off += 32;
+    }
+    // bEncryptedIndex sta subito prima del magic.
+    let encrypted_index = m >= 1 && data[m-1] != 0;
+
+    Ok(PakFooter { version, index_offset, index_size, compression_methods: methods, encrypted_index })
+}
+
+struct PakLocres { path: String, data: Vec<u8> }
+
+/// Estrae e decomprime tutti i `.locres` da un file .pak. Ritorna (path, bytes).
+fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<Vec<PakLocres>, String> {
+    let data = fs::read(pak_path).map_err(|e| format!("lettura pak {}: {}", pak_path.display(), e))?;
+    let footer = pak_read_footer(&data)?;
+    log::info!("📦 PAK v{} · index@{} ({} byte) · metodi: {:?}",
+        footer.version, footer.index_offset, footer.index_size, footer.compression_methods);
+    if footer.encrypted_index {
+        return Err("Indice del pak cifrato (AES): non supportato".into());
+    }
+    let io = footer.index_offset as usize;
+    let ie = io + footer.index_size as usize;
+    if ie > data.len() { return Err("index oltre EOF".into()); }
+    let idx = &data[io..ie];
+
+    // ── Index (formato path-hash, UE 4.26+/v10+) ──────────────────────────
+    let mut p = 0usize;
+    let _mount = pak_read_fstring(idx, &mut p)?;
+    let _num_entries = rd_u32(idx, &mut p)?;
+    let _path_hash_seed = rd_u64(idx, &mut p)?;
+    let has_path_hash = rd_u32(idx, &mut p)? != 0;
+    if has_path_hash {
+        let _pho = rd_u64(idx, &mut p)?; let _phs = rd_u64(idx, &mut p)?;
+        p += 20; // hash
+    }
+    let has_fdi = rd_u32(idx, &mut p)? != 0;
+    if !has_fdi {
+        return Err("pak senza Full Directory Index: path non disponibili (formato legacy non gestito)".into());
+    }
+    let fdi_off = rd_u64(idx, &mut p)? as usize;
+    let fdi_size = rd_u64(idx, &mut p)? as usize;
+    p += 20; // fdi hash
+    let enc_size = rd_u32(idx, &mut p)? as usize;
+    if p + enc_size > idx.len() { return Err("EncodedPakEntries oltre l'index".into()); }
+    let encoded = &idx[p..p + enc_size];
+
+    if fdi_off + fdi_size > data.len() { return Err("FDI oltre EOF".into()); }
+    let fdi = &data[fdi_off..fdi_off + fdi_size];
+
+    // ── Full Directory Index: dir → (file → offset dentro `encoded`) ──────
+    let mut fp = 0usize;
+    let num_dirs = rd_u32(fdi, &mut fp)?;
+    if num_dirs > 1_000_000 { return Err(format!("num_dirs assurdo: {}", num_dirs)); }
+    let mut locres_targets: Vec<(String, u32)> = Vec::new();
+    for _ in 0..num_dirs {
+        let dir = pak_read_fstring(fdi, &mut fp)?;
+        let num_files = rd_u32(fdi, &mut fp)?;
+        for _ in 0..num_files {
+            let file = pak_read_fstring(fdi, &mut fp)?;
+            let enc_off = rd_u32(fdi, &mut fp)?;
+            if file.to_lowercase().ends_with(".locres") {
+                let full = format!("{}{}", dir, file);
+                locres_targets.push((full, enc_off));
+            }
+        }
+    }
+    log::info!("📦 PAK: {} file .locres nell'indice", locres_targets.len());
+
+    // ── Per ogni .locres: Offset dall'encoded entry, poi header inline ────
+    let mut out = Vec::new();
+    for (path, enc_off) in &locres_targets {
+        match pak_extract_one(&data, encoded, *enc_off as usize, &footer, oodle) {
+            Ok(bytes) => {
+                log::info!("  📄 {} → {} byte decompressi", path, bytes.len());
+                out.push(PakLocres { path: path.clone(), data: bytes });
+            }
+            Err(e) => log::warn!("  ⚠️ {} non estratto: {}", path, e),
+        }
+    }
+    Ok(out)
+}
+
+/// Decodifica il solo Offset dall'encoded entry (campo non ambiguo), poi legge
+/// l'header inline (campi espliciti) e ricompone i dati decomprimendo i blocchi.
+fn pak_extract_one(
+    data: &[u8], encoded: &[u8], enc_off: usize, footer: &PakFooter, oodle: &Option<OodleLib>,
+) -> Result<Vec<u8>, String> {
+    let mut ep = enc_off;
+    let value = rd_u32(encoded, &mut ep)?;
+    let b_offset_32 = value & (1 << 31) != 0;
+    let entry_offset = if b_offset_32 {
+        rd_u32(encoded, &mut ep)? as u64
+    } else {
+        rd_u64(encoded, &mut ep)?
+    };
+
+    // Header INLINE all'offset della entry (FPakEntry::Serialize).
+    let mut hp = entry_offset as usize;
+    let _off = rd_u64(data, &mut hp)?;
+    let size = rd_u64(data, &mut hp)?;             // dimensione compressa
+    let uncompressed = rd_u64(data, &mut hp)?;
+    let method_index = rd_u32(data, &mut hp)?;     // 0 = nessuna
+    hp += 20;                                       // hash SHA1
+    let mut blocks: Vec<(u64, u64)> = Vec::new();
+    if method_index != 0 {
+        let n = rd_i32(data, &mut hp)?;
+        if n < 0 || n > 100_000 { return Err(format!("block count assurdo: {}", n)); }
+        for _ in 0..n {
+            let s = rd_u64(data, &mut hp)?;
+            let e = rd_u64(data, &mut hp)?;
+            blocks.push((s, e));
+        }
+    }
+    let _flags = if hp < data.len() { let f = data[hp]; hp += 1; f } else { 0 };
+    let block_size = rd_u32(data, &mut hp).unwrap_or(0) as u64; // dim. blocco DECOMPRESSO
+    let data_start = hp; // i dati iniziano subito dopo l'header inline
+
+    let method = footer.compression_methods.get(method_index as usize)
+        .cloned().unwrap_or_else(|| "None".to_string());
+    let m = method.to_lowercase();
+
+    // Nessuna compressione: leggi `size` byte grezzi.
+    if method_index == 0 || m == "none" {
+        let end = data_start + size as usize;
+        if end > data.len() { return Err("dati non compressi oltre EOF".into()); }
+        return Ok(data[data_start..end].to_vec());
+    }
+
+    // Compressi a blocchi. Gli offset start/end dei blocchi sono RELATIVI
+    // all'Offset della entry (pak v8+ RelativeChunkOffsets, come Below v11):
+    // posizione assoluta = entry_offset + start. Ogni blocco decomprime a
+    // block_size, l'ultimo al resto. Usare gli offset (non la lettura contigua)
+    // rispetta l'eventuale padding di allineamento.
+    let base = entry_offset as usize;
+    let mut out = Vec::with_capacity(uncompressed as usize);
+    for (s, e) in &blocks {
+        let cs = base + *s as usize;
+        let ce = base + *e as usize;
+        if ce > data.len() || ce < cs { return Err("blocco fuori range".into()); }
+        let comp = &data[cs..ce];
+        let done = out.len() as u64;
+        let want = if block_size > 0 {
+            std::cmp::min(block_size, uncompressed - done)
+        } else {
+            uncompressed - done
+        } as usize;
+        let dec = pak_decompress_block(comp, want, &m, oodle)?;
+        out.extend_from_slice(&dec);
+    }
+    if out.len() as u64 != uncompressed {
+        log::warn!("pak: decompressi {} byte, attesi {}", out.len(), uncompressed);
+    }
+    Ok(out)
+}
+
+fn pak_decompress_block(comp: &[u8], want: usize, method: &str, oodle: &Option<OodleLib>) -> Result<Vec<u8>, String> {
+    if method.contains("oodle") || method == "mermaid" || method == "kraken" || method == "leviathan" || method == "selkie" {
+        match oodle {
+            Some(lib) => lib.decompress(comp, want),
+            None => Err("blocco Oodle ma DLL non disponibile".into()),
+        }
+    } else if method.contains("zlib") {
+        use flate2::read::ZlibDecoder;
+        use std::io::Read;
+        let mut d = ZlibDecoder::new(comp);
+        let mut v = Vec::new();
+        d.read_to_end(&mut v).map_err(|e| format!("zlib: {}", e))?;
+        Ok(v)
+    } else if method.contains("gzip") {
+        use flate2::read::GzDecoder;
+        use std::io::Read;
+        let mut d = GzDecoder::new(comp);
+        let mut v = Vec::new();
+        d.read_to_end(&mut v).map_err(|e| format!("gzip: {}", e))?;
+        Ok(v)
+    } else {
+        Err(format!("metodo compressione pak non gestito: {}", method))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2851,6 +3269,81 @@ mod tests {
         assert!(estratti > 0,
             "nessun file estratto su {} tentativi: la decompressione non funziona \
              su questo container (v{})", candidati.len(), header.version);
+    }
+
+    /// Diagnosi END-TO-END dell'estrazione come la vede la UI: chiama la funzione
+    /// vera `extract_iostore_localization` sulla CARTELLA del gioco (non un singolo
+    /// .utoc), così misura scelta+aggregazione dei .locres. Isola il problema dai
+    /// pulsanti del frontend.
+    ///
+    ///   GS_UE_BELOW="C:/Program Files (x86)/Steam/steamapps/common/BelowRustedGods" \
+    ///     cargo test --lib below_estrazione_completa -- --ignored --nocapture
+    ///
+    /// (la DLL Oodle va in %APPDATA%/GameStringer/tools/oo2core_9_win64.dll)
+    #[test]
+    #[ignore = "richiede GS_UE_BELOW = cartella gioco + DLL Oodle"]
+    fn below_estrazione_completa() {
+        let Ok(game) = std::env::var("GS_UE_BELOW") else {
+            eprintln!("GS_UE_BELOW non impostata: niente da fare");
+            return;
+        };
+        let res = match tauri::async_runtime::block_on(extract_iostore_localization(game)) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("\n❌ extract_iostore_localization ha restituito ERRORE:\n   {e}");
+                panic!("estrazione fallita: {e}");
+            }
+        };
+        eprintln!("\n=== ESITO ===");
+        eprintln!("messaggio : {}", res.message);
+        eprintln!("locres    : {}", res.locres_path);
+        eprintln!("STRINGHE  : {}", res.entries.len());
+        for e in res.entries.iter().take(10) {
+            let v: String = e.value.chars().take(60).collect();
+            eprintln!("  [{}] {} = {}", e.namespace, e.key, v);
+        }
+        assert!(res.entries.len() > 100,
+            "attese >100 stringhe (Game.locres ne ha ~752), trovate solo {}",
+            res.entries.len());
+    }
+
+    /// Isola il PAK READER: estrae i .locres direttamente dal .pak e stampa,
+    /// per ciascuno, byte + versione + conteggio + esempi. Serve a validare il
+    /// formato pak sul file vero, senza il resto della pipeline.
+    ///
+    ///   GS_UE_BELOW_PAK="C:/.../Content/Paks/BelowRustedGods-Windows.pak" \
+    ///     cargo test --lib below_pak_reader -- --ignored --nocapture
+    #[test]
+    #[ignore = "richiede GS_UE_BELOW_PAK + DLL Oodle"]
+    fn below_pak_reader() {
+        let Ok(pak) = std::env::var("GS_UE_BELOW_PAK") else {
+            eprintln!("GS_UE_BELOW_PAK non impostata: niente da fare");
+            return;
+        };
+        let oodle = OodleLib::load().ok();
+        eprintln!("Oodle: {}", if oodle.is_some() { "caricata" } else { "ASSENTE" });
+        let list = match extract_locres_from_pak(std::path::Path::new(&pak), &oodle) {
+            Ok(l) => l,
+            Err(e) => { eprintln!("\n❌ pak reader: {e}"); panic!("pak reader fallito: {e}"); }
+        };
+        eprintln!("\n=== {} .locres estratti dal pak ===", list.len());
+        let mut best = 0usize;
+        for l in &list {
+            match crate::commands::unreal_localization::parse_locres_pub(&l.data) {
+                Ok((v, e)) => {
+                    best = best.max(e.len());
+                    eprintln!("  {} : {} byte → v{} · {} stringhe", l.path, l.data.len(), v, e.len());
+                    if e.len() > 50 {
+                        for x in e.iter().take(3) {
+                            let val: String = x.value.chars().take(50).collect();
+                            eprintln!("       [{}] {} = {}", x.namespace, x.key, val);
+                        }
+                    }
+                }
+                Err(err) => eprintln!("  {} : {} byte → parse FALLITO: {}", l.path, l.data.len(), err),
+            }
+        }
+        assert!(best > 100, "il .locres più grande ha solo {} stringhe (atteso ~752)", best);
     }
 
     /// Quanto si estrae SENZA la DLL Oodle.
