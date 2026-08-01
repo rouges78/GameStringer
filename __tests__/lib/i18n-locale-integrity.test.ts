@@ -130,17 +130,34 @@ const en = flatten(enJson as Json);
 // NB: questo test conta, non elenca — un conteggio che sale non distingue il
 // cognato legittimo dalla regressione vera, e va sempre ispezionato a mano prima
 // di alzare la soglia. Il modo per togliersi il dubbio è una allowlist per chiave.
+// 2026-08-01 Bonifica hardcoded (10 file, 174 chiavi nuove × 12 lingue) + fix di
+// 6 chiavi usate nel codice ma ASSENTI dai locale (common.import/export/settings/
+// home/translationError, patchHub.title: l'utente vedeva la chiave grezza).
+// ⚠️ IL TEST ERA GIÀ ROSSO PRIMA DI QUESTO LAVORO, e l'ho verificato invece di
+// assumerlo: ricalcolando i leftover sui file di HEAD (git show) i conteggi sono
+// IDENTICI a quelli dopo la bonifica — es 91, fr 16, pt 111, pl 29, cioè già
+// oltre le soglie 89/15/110/28. Le 174 chiavi nuove hanno aggiunto ZERO
+// leftover (misurato per chiave, incrociando le chiavi aggiunte con l'elenco dei
+// leftover). Qualcuno ha aggiunto chiavi in una tappa precedente senza rialzare
+// le soglie: la CI era rossa da allora.
+// Ispezione dei casi oltre soglia, come pretende la nota qui sopra: sono tutti
+// cognati o nomi propri, nessuna traduzione mancante — "Formato
+// XUnity.AutoTranslator" (es/pt: "Formato" è la resa giusta, il resto è un nome
+// di strumento), "Problema con {name}: {msg}" (es), "Parser Telltale (.langdb,
+// .landb, .dlog)" e "Parser Godot Engine (…)" (pt/pl: "Parser" si usa tale quale,
+// il resto sono estensioni), "Community Hub — backend Supabase" (pl: due nomi
+// propri e un prestito). Soglie: es 89→91, fr 15→16, pt 110→111, pl 28→29.
 const locales: { name: string; json: Json; maxMissing: number; maxLeftover: number }[] = [
   { name: 'en', json: enJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ru', json: ruJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 89 },
-  { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 15 },
+  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 91 },
+  { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 16 },
   { name: 'de', json: deJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ja', json: jaJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'zh', json: zhJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ko', json: koJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 110 },
-  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 28 },
+  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 111 },
+  { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 29 },
 ];
 
 describe('integrità dei locale i18n', () => {
