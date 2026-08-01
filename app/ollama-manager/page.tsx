@@ -121,16 +121,16 @@ export default function OllamaManagerPage() {
 
   const handlePull = async (modelName: string) => {
     setPulling(modelName);
-    setPullProgress({ status: 'Avvio download...', percent: 0 });
+    setPullProgress({ status: t('ollamaManagerPage.startingDownload'), percent: 0 });
     try {
       await pullModel(modelName, (status, completed, total) => {
         const percent = completed && total ? Math.round((completed / total) * 100) : 0;
         setPullProgress({ status: status || 'downloading...', percent });
       });
-      setPullProgress({ status: 'Completato!', percent: 100 });
+      setPullProgress({ status: t('common.completato'), percent: 100 });
       await refresh();
     } catch (err: unknown) {
-      setPullProgress({ status: `Errore: ${err instanceof Error ? err.message : String(err)}`, percent: 0 });
+      setPullProgress({ status: `${t('common.errore')}: ${err instanceof Error ? err.message : String(err)}`, percent: 0 });
     }
     setTimeout(() => setPulling(null), 1500);
   };
@@ -214,7 +214,7 @@ export default function OllamaManagerPage() {
             <div>
               <p className="text-sm font-semibold text-amber-200">{t('offlineTranslator.ollamaNotRunning')}</p>
               <p className="text-xs text-amber-300/70 mt-0.5">
-                Installa e avvia Ollama da <a href="https://ollama.com" target="_blank" rel="noopener" className="underline">ollama.com</a> per usare modelli locali.
+                {t('ollamaManagerPage.installAndStartFrom')} <a href="https://ollama.com" target="_blank" rel="noopener" className="underline">ollama.com</a> {t('ollamaManagerPage.toUseLocalModels')}
               </p>
             </div>
           </CardContent>
@@ -228,7 +228,7 @@ export default function OllamaManagerPage() {
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
                 <HardDrive className="h-4 w-4 text-emerald-400" />
-                <span className="text-xs font-semibold text-emerald-400">Modelli Installati ({installed.length})</span>
+                <span className="text-xs font-semibold text-emerald-400">{t('ollamaManagerPage.installedModels')} ({installed.length})</span>
               </div>
               {installed.length === 0 ? (
                 <p className="text-xs text-muted-foreground">{t('ollamaManagerPage.nessunModelloInstallatoScarica')}</p>
@@ -253,13 +253,13 @@ export default function OllamaManagerPage() {
                             <div className="flex items-center gap-3 mt-0.5">
                               <span className="text-2xs text-emerald-300"><Zap className="h-2.5 w-2.5 inline mr-0.5" />{sr.tokensPerSecond.toFixed(1)} tok/s</span>
                               <span className="text-2xs text-muted-foreground">TTFT: {sr.firstTokenMs}ms</span>
-                              <span className="text-2xs text-muted-foreground">Total: {(sr.totalTimeMs / 1000).toFixed(1)}s</span>
+                              <span className="text-2xs text-muted-foreground">{t('common.totale')}: {(sr.totalTimeMs / 1000).toFixed(1)}s</span>
                             </div>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
-                            variant="ghost" size="icon" aria-label="Speed test" className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                            variant="ghost" size="icon" aria-label={t('ollamaManagerPage.speedTest')} className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
                             onClick={() => handleSpeedTest(m.name)}
                             disabled={speedTesting === m.name}
                           >
@@ -351,7 +351,7 @@ export default function OllamaManagerPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-purple-400" />
-                    <span className="text-xs font-semibold text-purple-400">Nuovi Modelli Disponibili ({discovered.length})</span>
+                    <span className="text-xs font-semibold text-purple-400">{t('ollamaManagerPage.newModelsAvailable')} ({discovered.length})</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
@@ -369,12 +369,12 @@ export default function OllamaManagerPage() {
                       disabled={discovering}
                     >
                       {discovering ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                      Aggiorna
+                      {t('common.aggiorna')}
                     </Button>
                   </div>
                 </div>
                 <p className="text-2xs text-muted-foreground mb-2">
-                  Modelli trovati automaticamente su ollama.com, filtrati per utilità alla traduzione. Non ancora installati né nella lista consigliati.
+                  {t('ollamaManagerPage.discoveryHint')}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {discovered.slice(0, 12).map(dm => {
@@ -390,7 +390,7 @@ export default function OllamaManagerPage() {
                               <span className="text-xs font-semibold">{dm.name}</span>
                               {dm.isNew && <Badge className="text-2xs h-3 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">{t('common.nuovo')}</Badge>}
                               <Badge variant="outline" className="text-2xs h-3 px-1 text-purple-400 border-purple-500/30">
-                                {dm.relevanceScore}% rilevante
+                                {dm.relevanceScore}% {t('ollamaManagerPage.relevant')}
                               </Badge>
                             </div>
                             {dm.description && (
@@ -399,7 +399,7 @@ export default function OllamaManagerPage() {
                             <div className="flex flex-wrap gap-1 mt-1">
                               {dm.pulls !== '0' && (
                                 <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-400 border-slate-500/30">
-                                  <TrendingUp className="h-2 w-2 mr-0.5" />{dm.pulls} pulls
+                                  <TrendingUp className="h-2 w-2 mr-0.5" />{dm.pulls} {t('ollamaManagerPage.pulls')}
                                 </Badge>
                               )}
                               {dm.sizes.length > 0 && (
@@ -466,7 +466,7 @@ export default function OllamaManagerPage() {
                       }
                     }}
                   >
-                    <Play className="h-3 w-3" /> Test Tutti
+                    <Play className="h-3 w-3" /> {t('ollamaManagerPage.testAll')}
                   </Button>
                 </div>
                 {speedResults.size > 0 && (
@@ -529,7 +529,7 @@ export default function OllamaManagerPage() {
                       className="w-full h-8 text-xs gap-1"
                     >
                       {comparing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowLeftRight className="h-3.5 w-3.5" />}
-                      {comparing ? 'Confronto in corso...' : 'Confronta'}
+                      {comparing ? t('ollamaManagerPage.comparingInProgress') : t('multiLlmCompare.compare')}
                     </Button>
                   </div>
                 </div>
@@ -538,7 +538,7 @@ export default function OllamaManagerPage() {
                   <Input
                     value={compareText}
                     onChange={e => setCompareText(e.target.value)}
-                    placeholder="Inserisci testo da tradurre..."
+                    placeholder={t('ollamaManagerPage.testTextPlaceholder')}
                     className="text-xs h-8"
                   />
                 </div>

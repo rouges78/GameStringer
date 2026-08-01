@@ -134,9 +134,9 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     setProgress(0);
     try {
       await invoke('download_ollama');
-      setProgressMessage('Installer avviato. Completa l\'installazione e premi Continua.');
+      setProgressMessage(t('ollamaSetupWizardComp.installerAvviato'));
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Errore durante il download');
+      setError(err instanceof Error ? err.message : t('ollamaSetupWizardComp.erroreDownload'));
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       await invoke('start_ollama', ollamaArgs());
       await checkStatus();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Impossibile avviare Ollama');
+      setError(err instanceof Error ? err.message : t('ollamaSetupWizardComp.impossibileAvviareOllama'));
     } finally {
       setLoading(false);
     }
@@ -164,18 +164,18 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
       await invoke('pull_ollama_model', { modelName: selectedModel, ...ollamaArgs() });
       setStep('done');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Errore download modello');
+      setError(err instanceof Error ? err.message : t('ollamaSetupWizardComp.erroreDownloadModello'));
     } finally {
       setLoading(false);
     }
   };
 
   const stepConfig = {
-    check: { title: 'Verifica Ollama', icon: RefreshCw, color: 'text-blue-400' },
-    install: { title: 'Installa Ollama', icon: Download, color: 'text-amber-400' },
-    start: { title: 'Avvia Ollama', icon: Play, color: 'text-emerald-400' },
-    model: { title: 'Scarica Modello AI', icon: Cpu, color: 'text-violet-400' },
-    done: { title: 'Tutto Pronto!', icon: CheckCircle2, color: 'text-emerald-400' },
+    check: { title: t('ollamaSetupWizardComp.verificaOllama'), icon: RefreshCw, color: 'text-blue-400' },
+    install: { title: t('ollamaSetupWizardComp.installaOllama'), icon: Download, color: 'text-amber-400' },
+    start: { title: t('ollamaSetupWizardComp.avviaOllama'), icon: Play, color: 'text-emerald-400' },
+    model: { title: t('ollamaSetupWizardComp.scaricaModelloAi'), icon: Cpu, color: 'text-violet-400' },
+    done: { title: t('ollamaSetupWizardComp.tuttoPronto'), icon: CheckCircle2, color: 'text-emerald-400' },
   };
 
   const StepIcon = stepConfig[step].icon;
@@ -230,7 +230,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
         {step === 'install' && (
           <div className="space-y-3">
             <p className="text-xs text-slate-400">
-              Ollama non è installato. È un runtime AI locale gratuito che permette di eseguire modelli di traduzione senza costi e senza connessione internet.
+              {t('ollamaSetupWizardComp.ollamaNonInstallatoDesc')}
             </p>
             {progress > 0 && (
               <div className="space-y-1">
@@ -241,11 +241,11 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             <div className="flex gap-2">
               <Button onClick={handleInstall} disabled={loading} className="flex-1" size="sm">
                 {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Download className="h-3 w-3 mr-1" />}
-                Scarica e Installa Ollama
+                {t('ollamaSetupWizardComp.scaricaEInstallaOllama')}
               </Button>
               <Button onClick={checkStatus} variant="outline" size="sm">
                 <RefreshCw className="h-3 w-3 mr-1" />
-                Ricontrolla
+                {t('ollamaSetupWizardComp.ricontrolla')}
               </Button>
             </div>
           </div>
@@ -256,12 +256,12 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
           <div className="space-y-3">
             <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs text-emerald-300">Ollama installato ({status?.version})</span>
+              <span className="text-xs text-emerald-300">{t('ollamaSetupWizardComp.ollamaInstallato')} ({status?.version})</span>
             </div>
-            <p className="text-xs text-slate-400">Ollama è installato ma non in esecuzione. Avvialo per iniziare a usare i modelli AI.</p>
+            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.ollamaInstallatoNonInEsecuzione')}</p>
             <Button onClick={handleStart} disabled={loading} className="w-full" size="sm">
               {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Play className="h-3 w-3 mr-1" />}
-              Avvia Ollama
+              {t('ollamaSetupWizardComp.avviaOllama')}
             </Button>
           </div>
         )}
@@ -273,7 +273,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               <span className="text-xs text-emerald-300">{t('ollamaSetupWizardComp.ollamaInEsecuzione')}</span>
             </div>
-            <p className="text-xs text-slate-400">Scegli un modello AI per la traduzione. I modelli più piccoli sono più veloci e usano meno VRAM.</p>
+            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.scegliModelloAi')}</p>
             
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {models.map(model => (
@@ -304,7 +304,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
 
             <Button onClick={handlePullModel} disabled={loading || !selectedModel} className="w-full" size="sm">
               {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Download className="h-3 w-3 mr-1" />}
-              Scarica {selectedModel?.split(':')[0] || 'modello'}
+              {t('ollamaSetupWizardComp.scarica')} {selectedModel?.split(':')[0] || t('ollamaSetupWizardComp.modello')}
             </Button>
           </div>
         )}
@@ -320,7 +320,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             <div>
               <p className="text-sm font-semibold text-emerald-300">{t('ollamaSetupWizardComp.aiLocaleConfigurata')}</p>
               <p className="text-xs text-slate-400 mt-1">
-                {status?.models.length || 0} modello/i installato/i. Puoi iniziare a tradurre.
+                {status?.models.length || 0} {t('ollamaSetupWizardComp.modelliInstallatiPuoiIniziare')}
               </p>
             </div>
             {status?.models && status.models.length > 0 && (
@@ -332,7 +332,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             )}
             <Button onClick={onComplete} size="sm" className="mt-2">
               <ArrowRight className="h-3 w-3 mr-1" />
-              Inizia a Tradurre
+              {t('ollamaSetupWizardComp.iniziaATradurre')}
             </Button>
           </div>
         )}
@@ -344,7 +344,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
               onClick={onComplete}
               className="text-2xs text-slate-500 hover:text-slate-300 transition-colors"
             >
-              Salta — userò un provider cloud (Gemini, DeepSeek, Groq)
+              {t('ollamaSetupWizardComp.saltaUseroProviderCloud')}
             </button>
           </div>
         )}

@@ -1341,9 +1341,9 @@ function LibraryListView() {
                 </button>
               )}
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
                 className="bg-indigo-600/90 hover:bg-indigo-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-indigo-500/50 hover:scale-110 border border-indigo-400/30"
-                title="String it!"
+                title={t('common.stringIt')}
               >
                 <Sparkles className="h-4 w-4" />
               </button>
@@ -1605,9 +1605,9 @@ function LibraryListView() {
                     {/* Quick actions lista */}
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300 pr-2">
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
                         className="flex items-center gap-1 bg-indigo-600/90 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-indigo-500/30"
-                        title={t('common.translationWizard')}
+                        title={t('common.stringIt')}
                       >
                         <Sparkles className="h-3 w-3" />
                         String it!

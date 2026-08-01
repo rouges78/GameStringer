@@ -82,25 +82,25 @@ function StatsCards({ stats }: { stats: QualityStats }) {
       <Card className="bg-emerald-950/30 border-emerald-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-emerald-400">{stats.human.toLocaleString()}</div>
-          <div className="text-2xs text-emerald-400/60">✍️ Human</div>
+          <div className="text-2xs text-emerald-400/60">✍️ {t('qualityScoringDashboardComp.human')}</div>
         </CardContent>
       </Card>
       <Card className="bg-blue-950/30 border-blue-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-blue-400">{stats.validated.toLocaleString()}</div>
-          <div className="text-2xs text-blue-400/60">✅ Validated</div>
+          <div className="text-2xs text-blue-400/60">✅ {t('qualityScoringDashboardComp.validated')}</div>
         </CardContent>
       </Card>
       <Card className="bg-amber-950/30 border-amber-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-amber-400">{stats.ai.toLocaleString()}</div>
-          <div className="text-2xs text-amber-400/60">🤖 AI</div>
+          <div className="text-2xs text-amber-400/60">🤖 {t('qualityScoringDashboardComp.ai')}</div>
         </CardContent>
       </Card>
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-zinc-400">{stats.captured.toLocaleString()}</div>
-          <div className="text-2xs text-zinc-500">📋 Captured</div>
+          <div className="text-2xs text-zinc-500">📋 {t('qualityScoringDashboardComp.captured')}</div>
         </CardContent>
       </Card>
     </div>
@@ -120,6 +120,7 @@ function EntryRow({
   onValidate: () => void;
   onEdit: (newText: string) => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(entry.translatedText);
 
@@ -152,14 +153,14 @@ function EntryRow({
           </div>
         ) : (
           <div className="text-white">
-            {entry.translatedText || <span className="text-zinc-600 italic">— not translated —</span>}
+            {entry.translatedText || <span className="text-zinc-600 italic">{t('qualityScoringDashboardComp.notTranslated')}</span>}
           </div>
         )}
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         {entry.tag === 'A' && (
           <Button size="sm" variant="ghost" className="h-6 px-1.5 text-2xs" onClick={onValidate}>
-            <CheckCircle2 className="h-3 w-3 mr-0.5" /> Validate
+            <CheckCircle2 className="h-3 w-3 mr-0.5" /> {t('common.validate')}
           </Button>
         )}
         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditText(entry.translatedText); setEditing(true); }}>
@@ -239,7 +240,7 @@ function ProjectDetail({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={onBack} className="h-7">
-            <ChevronRight className="h-4 w-4 rotate-180" /> Indietro
+            <ChevronRight className="h-4 w-4 rotate-180" /> {t('common.indietro')}
           </Button>
           <h2 className="text-lg font-bold">{project.gameName}</h2>
           <Badge variant="outline" className="text-xs">
@@ -249,10 +250,10 @@ function ProjectDetail({
         </div>
         <div className="flex items-center gap-1">
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleBatchValidate}>
-            <CheckCircle2 className="h-3 w-3 mr-1" /> Valida Tutti AI
+            <CheckCircle2 className="h-3 w-3 mr-1" /> {t('qualityScoringDashboardComp.validateAllAi')}
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleExport}>
-            <Download className="h-3 w-3 mr-1" /> Esporta
+            <Download className="h-3 w-3 mr-1" /> {t('common.esporta')}
           </Button>
         </div>
       </div>
@@ -262,9 +263,9 @@ function ProjectDetail({
 
       {/* Legend */}
       <div className="flex items-center gap-3 text-2xs">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Human</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('qualityScoringDashboardComp.human')}</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" />{t('common.validated')}</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> AI</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> {t('qualityScoringDashboardComp.ai')}</span>
       </div>
 
       {/* Filters */}
@@ -272,7 +273,7 @@ function ProjectDetail({
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-500" />
           <Input
-            aria-label={t('common.cerca')} placeholder="Cerca stringhe..."
+            aria-label={t('common.cerca')} placeholder={t('common.cercaStringhe')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-7 text-xs"
@@ -287,7 +288,7 @@ function ProjectDetail({
               className="h-7 text-2xs px-2"
               onClick={() => setFilterTag(tag)}
             >
-              {tag === 'all' ? 'Tutti' : getTagInfo(tag as QualityTag).icon + ' ' + getTagInfo(tag as QualityTag).label}
+              {tag === 'all' ? t('common.all') : getTagInfo(tag as QualityTag).icon + ' ' + getTagInfo(tag as QualityTag).label}
             </Button>
           ))}
         </div>
@@ -312,7 +313,7 @@ function ProjectDetail({
         </CardContent>
       </Card>
       <div className="text-xs text-zinc-500">
-        {filteredEntries.length.toLocaleString()} / {Object.keys(project.entries).length.toLocaleString()} stringhe
+        {`${filteredEntries.length.toLocaleString()} / ${Object.keys(project.entries).length.toLocaleString()} ${t('qualityScoringDashboardComp.stringhe')}`}
       </div>
     </div>
   );
@@ -430,7 +431,7 @@ export function QualityScoringDashboard() {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">{t('qualityScoringDashboardComp.progettiDiTraduzione')}</h3>
         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleImport} disabled={importing}>
-          <Upload className="h-3 w-3 mr-1" /> {importing ? 'Importando...' : 'Importa Progetto'}
+          <Upload className="h-3 w-3 mr-1" /> {importing ? t('qualityScoringDashboardComp.importing') : t('qualityScoringDashboardComp.importProject')}
         </Button>
       </div>
 
@@ -441,8 +442,7 @@ export function QualityScoringDashboard() {
             <Shield className="h-10 w-10 mx-auto text-zinc-600 mb-3" />
             <p className="text-zinc-400 text-sm mb-1">{t('qualityScoringDashboardComp.nessunProgettoDiTraduzione')}</p>
             <p className="text-zinc-600 text-xs">
-              I progetti vengono creati automaticamente quando traduci un gioco con GameStringer.
-              Puoi anche importare un file .gstranslation.json.
+              {t('qualityScoringDashboardComp.emptyHint')}
             </p>
           </CardContent>
         </Card>
@@ -483,7 +483,7 @@ export function QualityScoringDashboard() {
                   <span>✅ V:{project.stats.validated}</span>
                   <span>🤖 A:{project.stats.ai}</span>
                   <span>📋 C:{project.stats.captured}</span>
-                  <span className="ml-auto">{project.stats.completionPercent}% completo</span>
+                  <span className="ml-auto">{`${project.stats.completionPercent}% ${t('qualityScoringDashboardComp.completo')}`}</span>
                 </div>
               </CardContent>
             </Card>

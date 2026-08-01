@@ -84,15 +84,15 @@ export default function DryRunScanner() {
   const startScan = useCallback(async () => {
     setRunning(true);
     setReport(null);
-    setProgress({ current: 0, total: 0, message: 'Avvio scansione...' });
+    setProgress({ current: 0, total: 0, message: t('common.startingScan') });
     toast.info(t('common.dryRunScansioneDiTuttiIGiochiInstallati'));
 
     try {
       const result = await invoke('dry_run_scan_all_games') as DryRunReport;
       setReport(result);
-      toast.success(`✅ Scansione completata: ${result.ready}/${result.scanned} giochi pronti`);
+      toast.success(`✅ ${t('common.scanCompleted')}: ${result.ready}/${result.scanned} ${t('common.gamesReadyLabel')}`);
     } catch (err: unknown) {
-      toast.error(`❌ Errore: ${err instanceof Error ? err.message : 'Scansione fallita'}`);
+      toast.error(`❌ ${t('common.error')}: ${err instanceof Error ? err.message : t('common.scanFailed')}`);
     } finally {
       setRunning(false);
     }
@@ -112,10 +112,10 @@ export default function DryRunScanner() {
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-400" />
-            Dry Run — Scansione Pipeline
+            {t('common.dryRunPipelineScan')}
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Verifica automatica detect + extract su tutti i giochi installati (senza tradurre)
+            {t('common.dryRunPipelineScanDesc')}
           </p>
         </div>
         <Button
@@ -124,9 +124,9 @@ export default function DryRunScanner() {
           className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg"
         >
           {running ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Scansione...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('common.scanning')}</>
           ) : (
-            <><Search className="w-4 h-4 mr-2" /> Scan All Games</>
+            <><Search className="w-4 h-4 mr-2" /> {t('common.scanAllGames')}</>
           )}
         </Button>
       </div>
@@ -153,11 +153,11 @@ export default function DryRunScanner() {
       {report && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <SummaryCard label="Scansionati" value={report.scanned} icon={<Gamepad2 className="w-4 h-4" />} color="text-white" />
+            <SummaryCard label={t('common.scannedLabel')} value={report.scanned} icon={<Gamepad2 className="w-4 h-4" />} color="text-white" />
             <SummaryCard label={t('common.pronti')} value={report.ready} icon={<CheckCircle className="w-4 h-4" />} color="text-green-400" />
-            <SummaryCard label="Errori" value={report.errors} icon={<XCircle className="w-4 h-4" />} color="text-red-400" />
-            <SummaryCard label="Non supportati" value={report.unsupported} icon={<AlertTriangle className="w-4 h-4" />} color="text-zinc-400" />
-            <SummaryCard label="Tempo" value={`${report.duration_seconds.toFixed(0)}s`} icon={<BarChart3 className="w-4 h-4" />} color="text-indigo-400" />
+            <SummaryCard label={t('common.errors')} value={report.errors} icon={<XCircle className="w-4 h-4" />} color="text-red-400" />
+            <SummaryCard label={t('common.unsupportedLabel')} value={report.unsupported} icon={<AlertTriangle className="w-4 h-4" />} color="text-zinc-400" />
+            <SummaryCard label={t('common.tempo')} value={`${report.duration_seconds.toFixed(0)}s`} icon={<BarChart3 className="w-4 h-4" />} color="text-indigo-400" />
           </div>
 
           {/* Engine breakdown */}
@@ -177,9 +177,9 @@ export default function DryRunScanner() {
                   filter === f ? 'bg-indigo-600/20 text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                {f === 'all' ? `Tutti (${report.games.length})` :
-                 f === 'ready' ? `Pronti (${report.ready})` :
-                 f === 'errors' ? `Errori (${report.errors})` :
+                {f === 'all' ? `${t('common.all')} (${report.games.length})` :
+                 f === 'ready' ? `${t('common.pronti')} (${report.ready})` :
+                 f === 'errors' ? `${t('common.errors')} (${report.errors})` :
                  `N/D (${report.unsupported})`}
               </button>
             ))}
@@ -191,7 +191,7 @@ export default function DryRunScanner() {
               <thead className="bg-slate-900/80 sticky top-0">
                 <tr className="text-slate-500 uppercase tracking-wider">
                   <th className="text-left p-2">{t('common.gioco')}</th>
-                  <th className="text-left p-2">Engine</th>
+                  <th className="text-left p-2">{t('common.motore')}</th>
                   <th className="text-left p-2">Fast Path</th>
                   <th className="text-right p-2">{t('common.stringhe')}</th>
                   <th className="text-right p-2">{t('common.file')}</th>

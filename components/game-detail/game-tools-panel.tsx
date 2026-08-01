@@ -93,7 +93,7 @@ export function GameToolsPanel({
             className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
             onClick={onUpgradeUEWithAI}
             disabled={isUeAiUpgrading}
-            title="Estrae stringhe .locres, le traduce con Ollama AI e crea un _P.pak di override"
+            title={t('gameDetails.ueAiTooltip')}
           >
             {isUeAiUpgrading ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ueAiProgress ? `${ueAiProgress.current}/${ueAiProgress.total}` : '...'}</>
@@ -107,7 +107,7 @@ export function GameToolsPanel({
             className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all disabled:opacity-50"
             onClick={onUpgradeWithAI}
             disabled={isAiUpgrading}
-            title="Traduce le stringhe catturate da XUnity con Ollama AI e scrive il file di traduzione statica"
+            title={t('gameDetails.unityAiTooltip')}
           >
             {isAiUpgrading ? (
               <>
@@ -117,13 +117,13 @@ export function GameToolsPanel({
             ) : (
               <>
                 <Zap className="h-3.5 w-3.5" />
-                Migliora con AI
+                {t('common.miglioraConAi')}
               </>
             )}
           </button>
         )}
         <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-[#2a475e]/20 hover:bg-[#2a475e]/40 text-[#8f98a0] border border-[#2a475e]/30 transition-all" onClick={onOpenCoverPicker}>
-          <ImageIconLucide className="h-3.5 w-3.5" /> Cover
+          <ImageIconLucide className="h-3.5 w-3.5" /> {t('gameDetail.cover')}
         </button>
         <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={onOpenGspackExport}>
           <Package className="h-3 w-3" /> {t('gspack.exportBtn')}
@@ -140,7 +140,7 @@ export function GameToolsPanel({
           <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
             onClick={async () => { try { await invoke('open_path', { path: game.installPath }); } catch { toast.error(t('common.impossibileAprireLaCartella')); } }}
           >
-            <FolderOpen className="h-3 w-3" /> Cartella
+            <FolderOpen className="h-3 w-3" /> {t('gameDetails.folder')}
           </button>
         )}
       </div>
@@ -152,7 +152,7 @@ export function GameToolsPanel({
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabFiles')}</span>
             {(game.detectedFiles?.length || 0) > 0 && (
-              <span className="text-2xs font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles!.length} file</span>
+              <span className="text-2xs font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles!.length} {t('gameDetails.files')}</span>
             )}
           </div>
           {(game.detectedFiles?.length || 0) > 0 ? (
@@ -186,7 +186,7 @@ export function GameToolsPanel({
                   <div><span className="text-[11px] font-bold text-sky-300">XUnity AutoTranslator</span></div>
                 </div>
                 <Button size="xs" className="text-micro font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={onInstallUnityPatch} disabled={isInstallingPatch}>
-                  {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
+                  {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} {t('gamePatcher.install')}
                 </Button>
               </div>
             )}
@@ -197,7 +197,7 @@ export function GameToolsPanel({
                   <div><span className="text-[11px] font-bold text-violet-300">Unreal Translator</span></div>
                 </div>
                 <Button size="xs" className="text-micro font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={onInstallUnrealPatch} disabled={isInstallingPatch}>
-                  {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
+                  {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} {t('gamePatcher.install')}
                 </Button>
               </div>
             )}
@@ -218,13 +218,13 @@ export function GameToolsPanel({
               )}
               {(typeof game.release_date === 'object' && game.release_date?.date || game.releaseDate) && (
                 <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">Uscita</span>
+                  <span className="text-[#8f98a0]/60">{t('gameDetails.releaseDate')}</span>
                   <span className="text-[#c6d4df] font-medium">{typeof game.release_date === 'object' && game.release_date?.date || (typeof game.releaseDate === 'number' ? new Date(game.releaseDate * 1000).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }) : game.releaseDate)}</span>
                 </div>
               )}
               {showEngine && (
                 <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">Engine</span>
+                  <span className="text-[#8f98a0]/60">{t('gameDetails.engine')}</span>
                   <span className="text-sky-400 font-bold flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {engineLabel}</span>
                 </div>
               )}
@@ -243,7 +243,7 @@ export function GameToolsPanel({
               )}
               {game.playtime_forever && game.playtime_forever > 0 && (
                 <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">Giocato</span>
+                  <span className="text-[#8f98a0]/60">{t('gameDetails.playtime')}</span>
                   <span className="text-[#c6d4df] font-medium">{Math.round(game.playtime_forever / 60)}h</span>
                 </div>
               )}
@@ -252,7 +252,7 @@ export function GameToolsPanel({
             {/* DLC compatti */}
             {dlcGames.length > 0 && (
               <div className="pt-1 border-t border-[#2a475e]/30">
-                <span className="text-micro text-[#8f98a0]/60">DLC: {dlcGames.length}</span>
+                <span className="text-micro text-[#8f98a0]/60">{t('gameDetails.dlcLabel')}: {dlcGames.length}</span>
               </div>
             )}
           </div>

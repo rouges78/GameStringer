@@ -181,10 +181,10 @@ export function GameContextEditor({
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Settings className="h-4 w-4" />
-                  Contesto del game
+                  {t('gameContextEditorComp.gameContext')}
                 </CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  Aiuta l&apos;IA a capire il contesto per traduzioni migliori
+                  {t('gameContextEditorComp.gameContextDesc')}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export function GameContextEditor({
                   disabled={disabled}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Seleziona..." />
+                    <SelectValue placeholder={t('gameContextEditorComp.selectPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {GAME_GENRES.map(g => (
@@ -226,7 +226,7 @@ export function GameContextEditor({
                   disabled={disabled}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Seleziona..." />
+                    <SelectValue placeholder={t('gameContextEditorComp.selectPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {GLOSSARY_TONES.map(t => (
@@ -244,7 +244,7 @@ export function GameContextEditor({
                   disabled={disabled}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Seleziona..." />
+                    <SelectValue placeholder={t('gameContextEditorComp.selectPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {GAME_SETTINGS.map(s => (
@@ -259,12 +259,12 @@ export function GameContextEditor({
             <div>
               <Label className="text-xs flex items-center gap-1">
                 <Globe className="h-3 w-3" />
-                Contesto del Mondo
+                {t('gameContextEditorComp.worldContext')}
               </Label>
               <Textarea
                 value={metadata.worldContext || ''}
                 onChange={(e) => handleMetadataChange('worldContext', e.target.value)}
-                placeholder="Descrivi brevemente il mondo di game, la storia, elementi importanti..."
+                placeholder={t('gameContextEditorComp.worldContextPlaceholder')}
                 className="text-xs h-16 resize-none"
                 disabled={disabled}
               />
@@ -275,13 +275,13 @@ export function GameContextEditor({
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-xs flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  Characters ({metadata.characters?.length || 0})
+                  {t('smartContextPanelComp.charactersTab')} ({metadata.characters?.length || 0})
                 </Label>
                 <Dialog open={showCharacterDialog} onOpenChange={setShowCharacterDialog}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="xs" className="text-xs" disabled={disabled}>
                       <Plus className="h-3 w-3 mr-1" />
-                      Add
+                      {t('glossaryManager.add')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -294,7 +294,7 @@ export function GameContextEditor({
                         <Input
                           value={characterForm.name}
                           onChange={(e) => setCharacterForm({...characterForm, name: e.target.value})}
-                          placeholder="e.g. Commander Shepard"
+                          placeholder={t('gameContextEditorComp.namePlaceholder')}
                         />
                       </div>
                       <div>
@@ -302,7 +302,7 @@ export function GameContextEditor({
                         <Input
                           value={characterForm.role || ''}
                           onChange={(e) => setCharacterForm({...characterForm, role: e.target.value})}
-                          placeholder="e.g. Protagonist, Antagonist, NPC"
+                          placeholder={t('gameContextEditorComp.rolePlaceholder')}
                         />
                       </div>
                       <div>
@@ -310,7 +310,7 @@ export function GameContextEditor({
                         <Input
                           value={characterForm.personality || ''}
                           onChange={(e) => setCharacterForm({...characterForm, personality: e.target.value})}
-                          placeholder="e.g. sarcastic, serious, optimistic"
+                          placeholder={t('gameContextEditorComp.personalityPlaceholder')}
                         />
                       </div>
                       <div>
@@ -318,7 +318,7 @@ export function GameContextEditor({
                         <Input
                           value={characterForm.speechStyle || ''}
                           onChange={(e) => setCharacterForm({...characterForm, speechStyle: e.target.value})}
-                          placeholder="e.g. formal, slang, archaic, technical"
+                          placeholder={t('gameContextEditorComp.speechStylePlaceholder')}
                         />
                       </div>
                       <div>
@@ -339,7 +339,7 @@ export function GameContextEditor({
                         </Select>
                       </div>
                       <Button onClick={addCharacter} className="w-full">
-                        Add Character
+                        {t('gameContextEditorComp.addCharacter')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -369,7 +369,7 @@ export function GameContextEditor({
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground text-center py-2">
-                  Nessun personaggio definito
+                  {t('gameContextEditorComp.noCharacters')}
                 </p>
               )}
             </div>
@@ -378,13 +378,13 @@ export function GameContextEditor({
             <div>
               <Label className="text-xs flex items-center gap-1">
                 <MessageSquare className="h-3 w-3" />
-                Non tradurre mai
+                {t('gameContextEditorComp.neverTranslate')}
               </Label>
               <div className="flex gap-2 mt-1">
                 <Input
                   value={newDoNotTranslate}
                   onChange={(e) => setNewDoNotTranslate(e.target.value)}
-                  placeholder="es. Mana, HP, XP..."
+                  placeholder={t('gameContextEditorComp.neverTranslatePlaceholder')}
                   className="h-8 text-xs"
                   disabled={disabled}
                   onKeyDown={(e) => e.key === 'Enter' && addDoNotTranslate()}
@@ -422,7 +422,7 @@ export function GameContextEditor({
               <div className="p-2 bg-primary/5 rounded border border-primary/20">
                 <Label className="text-xs flex items-center gap-1 text-primary">
                   <Sparkles className="h-3 w-3" />
-                  Contesto per l&apos;IA
+                  {t('gameContextEditorComp.aiContext')}
                 </Label>
                 <pre className="text-2xs text-muted-foreground mt-1 whitespace-pre-wrap">
                   {generateContextPrompt()}

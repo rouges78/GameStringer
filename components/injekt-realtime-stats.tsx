@@ -99,7 +99,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
       <Card>
         <CardContent className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">
-            {isActive ? 'Loading...atistiche...' : 'Nessuna sessione attiva'}
+            {isActive ? t('injektRealtimeStatsComp.caricamentoStatistiche') : t('injektRealtimeStatsComp.nessunaSessioneAttiva')}
           </p>
         </CardContent>
       </Card>
@@ -123,13 +123,13 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              Traduzioni Totali
+              {t('injektRealtimeStatsComp.traduzioniTotali')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalTranslations}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.translationsPerMinute} al minuto
+              {stats.translationsPerMinute} {t('injektRealtimeStatsComp.alMinuto')}
             </p>
           </CardContent>
         </Card>
@@ -138,13 +138,13 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Timer className="w-4 h-4" />
-              Tempo Attivo
+              {t('injektRealtimeStatsComp.tempoAttivo')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatTime(stats.activeTime)}</div>
             <p className="text-xs text-muted-foreground">
-              Sessione corrente
+              {t('injektRealtimeStatsComp.sessioneCorrente')}
             </p>
           </CardContent>
         </Card>
@@ -166,7 +166,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <HardDrive className="w-4 h-4" />
-              Memoria
+              {t('injektRealtimeStatsComp.memoria')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -245,7 +245,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Zap className="w-4 h-4" />
-                  Tempo Medio Traduzione
+                  {t('injektRealtimeStatsComp.tempoMedioTraduzione')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -253,7 +253,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
                   {stats.performanceMetrics.avgTranslationTime.toFixed(0)} ms
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Per traduzione
+                  {t('injektRealtimeStatsComp.perTraduzione')}
                 </p>
               </CardContent>
             </Card>
@@ -262,7 +262,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Database className="w-4 h-4" />
-                  Cache Hit Rate
+                  {t('injektRealtimeStatsComp.cacheHitRate')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -280,7 +280,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Activity className="w-4 h-4" />
-                  Efficienza Memoria
+                  {t('injektRealtimeStatsComp.efficienzaMemoria')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

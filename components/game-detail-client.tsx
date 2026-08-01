@@ -215,6 +215,8 @@ export default function GameDetailPage() {
     }
     return language || 'it';
   });
+  // Strumenti avanzati: chiusi di default. String it! basta per il caso normale.
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
   const langPickerRef = useRef<HTMLDivElement>(null);
   // Onboarding "primo gioco": all'arrivo da ?firstGame=1 evidenzia e porta in vista
@@ -250,6 +252,29 @@ export default function GameDetailPage() {
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete('firstGame');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    } catch { /* no-op */ }
+    return () => { clearTimeout(scrollT); clearTimeout(clearT); };
+  }, [game, searchParams]);
+
+  // Arrivo da "String it!" premuto nella libreria (?stringit=1): stessa destinazione
+  // e stessa azione dell'hero, invece del vecchio salto al /translation-wizard —
+  // erano tre entry point con lo stesso nome e comportamenti diversi.
+  // Evidenzia e porta in vista SENZA avviare da solo: la traduzione passa dal gate
+  // legale e da quello P.T., e farli comparire a sorpresa sarebbe peggio di un clic.
+  useEffect(() => {
+    if (firstGameHandledRef.current) return;
+    if (searchParams.get('stringit') !== '1') return;
+    if (!game) return;
+    firstGameHandledRef.current = true;
+    setHighlightStringIt(true);
+    const scrollT = setTimeout(() => {
+      stringItBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    const clearT = setTimeout(() => setHighlightStringIt(false), 6000);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('stringit');
       window.history.replaceState(null, '', url.pathname + url.search + url.hash);
     } catch { /* no-op */ }
     return () => { clearTimeout(scrollT); clearTimeout(clearT); };
@@ -937,7 +962,11 @@ export default function GameDetailPage() {
     setUeAiProgress(null);
 
     try {
-      const lang = language || 'it';
+      // targetLang PRIMA di language: `language` è la lingua della UI, non quella
+      // scelta col selettore bandierina accanto a String it!. Usando `language`
+      // il picker non aveva effetto sulla traduzione Unreal — il gioco veniva
+      // tradotto nella lingua dell'interfaccia qualunque cosa scegliesse l'utente.
+      const lang = targetLang || language || 'it';
       const _gameName = game.title || game.name || 'Game';
 
       // 1. Estrai stringhe di localizzazione dal gioco.
@@ -3305,6 +3334,27 @@ export default function GameDetailPage() {
             </div>
           )}
 
+          {/* ═══ AVANZATE — tutto ciò che non serve al primo clic ═══
+              String it! da solo copre il caso normale (rileva → estrai → traduci
+              → applica). Gli strumenti qui sotto restano raggiungibili ma chiusi:
+              una schermata che offre sette strade diverse per la stessa cosa
+              costa fiducia quanto una funzione che non parte (lezione dei 64
+              feedback: la gente non trovava funzioni che c'erano già). */}
+          <button
+            type="button"
+            onClick={() => setShowAdvancedTools((v) => !v)}
+            aria-expanded={showAdvancedTools}
+            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-[#1b2838]/40 border border-white/5 hover:border-white/10 text-[#8f98a0] hover:text-[#c7d5e0] text-xs font-semibold transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <Wrench className="h-3.5 w-3.5" />
+              {t('gameDetail.advancedTools')}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedTools ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showAdvancedTools && (
+          <>
           {/* ═══ TRANSLATION RECOMMENDATION — compact banner ═══ */}
           {(game.is_installed || game.installPath) && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
@@ -3470,6 +3520,8 @@ export default function GameDetailPage() {
             <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
               <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name || ''} targetLang={targetLang || language} />
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

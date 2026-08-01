@@ -35,7 +35,7 @@ interface GlobalProgressWidgetProps {
 }
 
 export function GlobalProgressWidget({ projects, className }: GlobalProgressWidgetProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedView, setSelectedView] = useState<'overview' | 'projects' | 'insights'>('overview');
 
   // Aggregate stats
@@ -77,9 +77,9 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
     return milestoneThresholds.map(threshold => ({
       threshold,
       reached: stats.overallProgress >= threshold,
-      label: threshold === 100 ? '🎉 Completato!' : `${threshold}%`,
+      label: threshold === 100 ? `🎉 ${t('globalProgressWidgetComp.completato')}` : `${threshold}%`,
     }));
-  }, [stats.overallProgress]);
+  }, [stats.overallProgress, t]);
 
   // Streak calculation (mock)
   const [streak, setStreak] = useState(0);
@@ -127,7 +127,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
             </div>
             <div>
               <h3 className="font-semibold">{t('globalProgressWidgetComp.progressoGlobale')}</h3>
-              <p className="text-sm text-white/80">{stats.totalProjects} progetti attivi</p>
+              <p className="text-sm text-white/80">{stats.totalProjects} {t('globalProgressWidgetComp.progettiAttivi')}</p>
             </div>
           </div>
           
@@ -135,7 +135,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
           {streak > 0 && (
             <Badge className="bg-orange-500 text-white gap-1">
               <Flame className="h-3 w-3" />
-              {streak} giorni
+              {streak} {t('globalProgressWidgetComp.giorni')}
             </Badge>
           )}
         </div>
@@ -143,7 +143,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
         {/* Main Progress Bar */}
         <div className="mt-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span>{stats.translatedStrings.toLocaleString()} / {stats.totalStrings.toLocaleString()} stringhe</span>
+            <span>{stats.translatedStrings.toLocaleString()} / {stats.totalStrings.toLocaleString()} {t('globalProgressWidgetComp.stringhe')}</span>
             <span className="font-bold">{stats.overallProgress}%</span>
           </div>
           <div className="h-3 bg-white/20 rounded-full overflow-hidden">
@@ -187,9 +187,9 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
               className="flex-1 text-xs"
               onClick={() => setSelectedView(view)}
             >
-              {view === 'overview' && 'Panoramica'}
-              {view === 'projects' && 'Progetti'}
-              {view === 'insights' && 'Insights'}
+              {view === 'overview' && t('globalProgressWidgetComp.panoramica')}
+              {view === 'projects' && t('common.projects')}
+              {view === 'insights' && t('globalProgressWidgetComp.insights')}
             </Button>
           ))}
         </div>
@@ -205,7 +205,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
             />
             <StatCard
               icon={<CheckCircle2 className="h-4 w-4" />}
-              label="Completati"
+              label={t('globalProgressWidgetComp.completati')}
               value={`${stats.completedProjects}/${stats.totalProjects}`}
               color="text-green-500"
             />
@@ -217,7 +217,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
             />
             <StatCard
               icon={<TrendingUp className="h-4 w-4" />}
-              label="Revisionate"
+              label={t('globalProgressWidgetComp.revisionate')}
               value={`${stats.reviewProgress}%`}
               color="text-purple-500"
             />
@@ -228,7 +228,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
                 <div>
                   <p className="text-xs text-muted-foreground">{t('globalProgressWidgetComp.completamentoStimato')}</p>
                   <p className="font-medium">
-                    {estimatedCompletion.toLocaleDateString('it-IT', { 
+                    {estimatedCompletion.toLocaleDateString(language, {
                       day: 'numeric', 
                       month: 'long',
                       year: 'numeric'
@@ -245,7 +245,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {projects.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Nessun progetto attivo
+                {t('globalProgressWidgetComp.nessunProgettoAttivo')}
               </p>
             ) : (
               projects
@@ -271,7 +271,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
                       <Progress value={progress} className="h-1.5" />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{project.translatedStrings}/{project.totalStrings}</span>
-                        <span>Qualità: {project.qualityScore}%</span>
+                        <span>{t('common.qualità')}: {project.qualityScore}%</span>
                       </div>
                     </div>
                   );
@@ -288,7 +288,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
                 icon={<AlertTriangle className="h-4 w-4" />}
                 type="warning"
                 title={t('common.progressoLento')}
-                description="Considera la traduzione batch con AI per velocizzare"
+                description={t('globalProgressWidgetComp.progressoLentoDesc')}
               />
             )}
             {stats.avgQuality < 70 && (
@@ -296,31 +296,31 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
                 icon={<AlertTriangle className="h-4 w-4" />}
                 type="warning"
                 title={t('common.qualitàSottoLaMedia')}
-                description="Rivedi le traduzioni per migliorare il punteggio"
+                description={t('globalProgressWidgetComp.qualitaBassaDesc')}
               />
             )}
             {stats.reviewProgress < 30 && stats.translatedStrings > 100 && (
               <InsightCard
                 icon={<Target className="h-4 w-4" />}
                 type="info"
-                title="Revisioni in ritardo"
-                description={`${stats.translatedStrings - stats.reviewedStrings} stringhe da revisionare`}
+                title={t('globalProgressWidgetComp.revisioniInRitardo')}
+                description={`${stats.translatedStrings - stats.reviewedStrings} ${t('globalProgressWidgetComp.stringheDaRevisionare')}`}
               />
             )}
             {stats.completedProjects > 0 && (
               <InsightCard
                 icon={<CheckCircle2 className="h-4 w-4" />}
                 type="success"
-                title="Ottimo lavoro!"
-                description={`${stats.completedProjects} progetti completati al 100%`}
+                title={t('globalProgressWidgetComp.ottimoLavoro')}
+                description={`${stats.completedProjects} ${t('globalProgressWidgetComp.progettiCompletatiAl100')}`}
               />
             )}
             {streak >= 7 && (
               <InsightCard
                 icon={<Flame className="h-4 w-4" />}
                 type="success"
-                title="Streak settimanale!"
-                description={`${streak} giorni consecutivi di traduzioni`}
+                title={t('globalProgressWidgetComp.streakSettimanale')}
+                description={`${streak} ${t('globalProgressWidgetComp.giorniConsecutivi')}`}
               />
             )}
           </div>

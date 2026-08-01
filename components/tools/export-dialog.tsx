@@ -99,7 +99,7 @@ export function ExportDialog({
             id: 'gridly',
             name: 'Gridly CSV',
             extension: '.csv',
-            description: 'Formato multi-lingua compatibile Gridly/Lokalise/Crowdin — ID | source | target per ogni lingua',
+            description: t('exportDialogComp.gridlyDescription'),
             supportsImport: true,
             supportsExport: true,
           });
@@ -201,18 +201,18 @@ export function ExportDialog({
           });
           break;
         default:
-          throw new Error(`Formato non supportato: ${selectedFormat}`);
+          throw new Error(`${t('exportDialogComp.formatoNonSupportato')}: ${selectedFormat}`);
       }
 
       setResult(exportResult);
       toast({
-        title: '✅ Export completato!',
-        description: `${exportResult.entriesCount} traduzioni esportate in ${exportResult.format}`
+        title: `✅ ${t('exportDialogComp.exportCompletato')}`,
+        description: `${exportResult.entriesCount} ${t('exportDialogComp.traduzioniEsportateIn')} ${exportResult.format}`
       });
     } catch (e: unknown) {
       clientLogger.error('[Export] Error:', e);
       toast({
-        title: 'Errore export',
+        title: t('exportDialogComp.erroreExport'),
         description: String(e),
         variant: 'destructive'
       });
@@ -233,10 +233,10 @@ export function ExportDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="h-5 w-5 text-blue-400" />
-            Esporta Traduzioni
+            {t('exportDialogComp.esportaTraduzioni')}
           </DialogTitle>
           <DialogDescription>
-            {entries.length} traduzioni da esportare ({sourceLang} → {targetLang})
+            {entries.length} {t('exportDialogComp.traduzioniDaEsportare')} ({sourceLang} → {targetLang})
           </DialogDescription>
         </DialogHeader>
 
@@ -298,7 +298,7 @@ export function ExportDialog({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="include-context" className="text-sm text-slate-400">
-                    Includi contesto
+                    {t('exportDialogComp.includiContesto')}
                   </Label>
                   <Switch
                     id="include-context"
@@ -308,7 +308,7 @@ export function ExportDialog({
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="include-notes" className="text-sm text-slate-400">
-                    Includi note
+                    {t('exportDialogComp.includiNote')}
                   </Label>
                   <Switch
                     id="include-notes"
@@ -318,7 +318,7 @@ export function ExportDialog({
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="include-empty" className="text-sm text-slate-400">
-                    Includi traduzioni vuote
+                    {t('exportDialogComp.includiTraduzioniVuote')}
                   </Label>
                   <Switch
                     id="include-empty"
@@ -343,12 +343,12 @@ export function ExportDialog({
         <DialogFooter>
           {result ? (
             <Button onClick={() => onOpenChange(false)}>
-              Chiudi
+              {t('common.close')}
             </Button>
           ) : (
             <>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Annulla
+                {t('common.cancel')}
               </Button>
               <Button 
                 onClick={handleExport} 
@@ -358,12 +358,12 @@ export function ExportDialog({
                 {isExporting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Esportazione...
+                    {t('exportDialogComp.esportazioneInCorso')}
                   </>
                 ) : (
                   <>
                     <Download className="h-4 w-4 mr-2" />
-                    Esporta
+                    {t('exportDialogComp.esporta')}
                   </>
                 )}
               </Button>

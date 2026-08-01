@@ -235,7 +235,7 @@ export default function AIPipelinePage() {
           </div>
           {result && (
             <Badge className="bg-black/30 rounded-lg px-3 py-1.5 border border-white/10 text-white/90">
-              Score medio: {result.averageScore}%
+              {t('aiPipelinePage.avgScore')}: {result.averageScore}%
             </Badge>
           )}
         </div>
@@ -255,7 +255,7 @@ export default function AIPipelinePage() {
                 onChange={(e) => setInputText(e.target.value)}
                 rows={8}
                 className="text-xs font-mono"
-                placeholder="Incolla stringhe da tradurre..."
+                placeholder={t('aiPipelinePage.inputPlaceholder')}
               />
             </CardContent>
           </Card>
@@ -357,8 +357,8 @@ export default function AIPipelinePage() {
                       <p className="text-2xs text-muted-foreground">{t('common.ollamaOfflineONessunModelloInstallato')}</p>
                     ) : (
                       <>
-                        <p className="text-micro text-muted-foreground">Assegna modelli diversi a ogni step. Vuoto = usa provider chain di default.</p>
-                        {([['translate', '🔤 Traduzione', agentConfig.translate], ['autoFix', '🔧 Auto-Fix', agentConfig.autoFix], ['review', '👁 Review', agentConfig.review]] as [keyof MultiAgentConfig, string, AgentModelConfig | undefined][]).map(([role, label, current]) => (
+                        <p className="text-micro text-muted-foreground">{t('aiPipelinePage.agentsHint')}</p>
+                        {([['translate', `🔤 ${t('common.traduzione')}`, agentConfig.translate], ['autoFix', `🔧 ${t('aiReview.autoFix')}`, agentConfig.autoFix], ['review', `👁 ${t('aiPipelinePage.aiReview')}`, agentConfig.review]] as [keyof MultiAgentConfig, string, AgentModelConfig | undefined][]).map(([role, label, current]) => (
                           <div key={role}>
                             <Label className="text-2xs text-muted-foreground">{label}</Label>
                             <select
@@ -366,7 +366,7 @@ export default function AIPipelinePage() {
                               onChange={(e) => { updateAgent(role, e.target.value); setActivePresetId('custom'); }}
                               className="w-full h-6 text-2xs bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
                             >
-                              <option value="">Default (provider chain)</option>
+                              <option value="">{t('aiPipelinePage.defaultProviderChain')}</option>
                               {ollamaModels.map(m => (
                                 <option key={m} value={m}>{m}</option>
                               ))}
@@ -381,7 +381,7 @@ export default function AIPipelinePage() {
 
               <Button onClick={handleRun} disabled={isRunning} className="w-full h-8 text-xs">
                 {isRunning ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Play className="h-3 w-3 mr-1" />}
-                {isRunning ? "Pipeline in esecuzione..." : "Avvia Pipeline"}
+                {isRunning ? t('aiPipelinePage.running') : t('aiPipelinePage.startPipeline')}
               </Button>
             </CardContent>
           </Card>
@@ -463,7 +463,7 @@ export default function AIPipelinePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <Card className="lg:col-span-2">
                 <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
-                  <CardTitle className="text-xs">Traduzioni ({result.translations.length})</CardTitle>
+                  <CardTitle className="text-xs">{t('common.translations')} ({result.translations.length})</CardTitle>
                   <Button variant="ghost" size="xs" className="text-xs" onClick={handleExport}>
                     <Download className="h-3 w-3 mr-1" />{t('projects.export')}</Button>
                 </CardHeader>
@@ -515,7 +515,7 @@ export default function AIPipelinePage() {
               <Card>
                 <CardHeader className="py-2 px-4">
                   <CardTitle className="text-xs">
-                    {selectedReport ? `QA Report #${selectedString! + 1}` : "Seleziona una stringa"}
+                    {selectedReport ? `QA Report #${selectedString! + 1}` : t('aiPipelinePage.selectAString')}
                   </CardTitle>
                 </CardHeader>
                 {selectedReport ? (
@@ -536,9 +536,9 @@ export default function AIPipelinePage() {
                     <Progress value={selectedReport.overallScore} className="h-1.5" />
 
                     <div className="flex gap-3 text-xs">
-                      <div className="text-red-400">{selectedReport.summary.errors} errori</div>
-                      <div className="text-yellow-400">{selectedReport.summary.warnings} avvisi</div>
-                      <div className="text-blue-400">{selectedReport.summary.infos} info</div>
+                      <div className="text-red-400">{selectedReport.summary.errors} {t('aiPipelinePage.errorsLabel')}</div>
+                      <div className="text-yellow-400">{selectedReport.summary.warnings} {t('aiPipelinePage.warningsLabel')}</div>
+                      <div className="text-blue-400">{selectedReport.summary.infos} {t('aiPipelinePage.infosLabel')}</div>
                     </div>
 
                     <Separator />
@@ -581,7 +581,7 @@ export default function AIPipelinePage() {
                 ) : (
                   <CardContent className="px-4 pb-4">
                     <p className="text-xs text-muted-foreground text-center py-8">
-                      Clicca su una traduzione per il QA report
+                      {t('aiPipelinePage.clickTranslationForQa')}
                     </p>
                   </CardContent>
                 )}
@@ -597,7 +597,7 @@ export default function AIPipelinePage() {
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
           >
             <BarChart3 className="h-3 w-3" />
-            <span>Benchmark History ({benchmarkHistory.length})</span>
+            <span>{t('aiPipelinePage.benchmarkHistory')} ({benchmarkHistory.length})</span>
             <ChevronRight className={cn("h-3 w-3 transition-transform", showBenchmark && "rotate-90")} />
           </button>
 
@@ -609,10 +609,10 @@ export default function AIPipelinePage() {
                     <thead>
                       <tr className="border-b border-border/50 text-muted-foreground">
                         <th className="text-left py-1 pr-2">{t('common.data')}</th>
-                        <th className="text-left py-1 pr-2">Preset</th>
-                        <th className="text-right py-1 pr-2">Score</th>
-                        <th className="text-right py-1 pr-2">1st Pass</th>
-                        <th className="text-right py-1 pr-2">Fixed</th>
+                        <th className="text-left py-1 pr-2">{t('aiPipelinePage.preset')}</th>
+                        <th className="text-right py-1 pr-2">{t('aiPipelinePage.scoreLabel')}</th>
+                        <th className="text-right py-1 pr-2">{t('aiPipelinePage.firstPass')}</th>
+                        <th className="text-right py-1 pr-2">{t('aiPipelinePage.fixed')}</th>
                         <th className="text-right py-1 pr-2">{t('common.improved')}</th>
                         <th className="text-right py-1 pr-2">ms/str</th>
                         <th className="text-right py-1">{t('common.totale')}</th>

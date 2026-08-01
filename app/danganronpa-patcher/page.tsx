@@ -255,7 +255,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const selected = await open({
         filters: [{ name: 'WAD Files', extensions: ['wad'] }],
-        title: 'Seleziona file patch WAD',
+        title: t('common.selezionaFilePatchWad'),
       });
       
       if (selected && typeof selected === 'string') {
@@ -278,7 +278,7 @@ export default function DanganronpaPatcherPage() {
         }
       }
     } catch (e: unknown) {
-      toast.error(`Errore: ${e}`);
+      toast.error(`${t('common.error')}: ${e}`);
     } finally {
       setApplyingPatch(false);
     }
@@ -301,7 +301,7 @@ export default function DanganronpaPatcherPage() {
         toast.error(result.message);
       }
     } catch (e: unknown) {
-      toast.error(`Errore ripristino: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorRestore')} ${e}`);
     } finally {
       setApplyingPatch(false);
     }
@@ -317,7 +317,7 @@ export default function DanganronpaPatcherPage() {
       const outputPath = await save({
         defaultPath: 'Danganronpa_ITA_Patch_GameStringer.zip',
         filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
-        title: 'Salva Patch Distribuibile',
+        title: t('common.salvaPatchDistribuibile'),
       });
 
       if (!outputPath) return;
@@ -337,10 +337,10 @@ export default function DanganronpaPatcherPage() {
           zipSizeMb: result.zip_size_mb,
           filesIncluded: result.files_included,
         });
-        toast.success(`ZIP creato! ${result.zip_size_mb.toFixed(1)} MB`);
+        toast.success(`${t('danganronpaPatcher.zipCreatedShort')} ${result.zip_size_mb.toFixed(1)} MB`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore export: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorExport')} ${e}`);
     } finally {
       setExporting(false);
     }
@@ -350,7 +350,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const selected = await open({
         filters: [{ name: 'LIN Files', extensions: ['lin'] }],
-        title: 'Seleziona file LIN (script Danganronpa)',
+        title: t('danganronpaPatcher.selectLinFile'),
       });
       
       if (selected && typeof selected === 'string') {
@@ -362,13 +362,13 @@ export default function DanganronpaPatcherPage() {
         if (result.success) {
           setLinDialogues(result.dialogues);
           updateLinStats(result.dialogues);
-          toast.success(`Estratti ${result.total_count} dialoghi`);
+          toast.success(`${t('danganronpaPatcher.extractedLabel')} ${result.total_count} ${t('danganronpaPatcher.dialoguesLabel')}`);
         } else {
           toast.error(result.message);
         }
       }
     } catch (e: unknown) {
-      toast.error(`Errore estrazione LIN: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorLinExtraction')} ${e}`);
     } finally {
       setExtractingLin(false);
     }
@@ -387,19 +387,19 @@ export default function DanganronpaPatcherPage() {
     try {
       const filePath = await open({
         directory: true,
-        title: 'Seleziona cartella destinazione',
+        title: t('common.selezionaCartellaDestinazione'),
       });
-      
+
       if (filePath) {
         const outputPath = `${filePath}/danganronpa_dialogues.json`;
         const count = await invoke<number>('save_lin_dialogues', {
           outputPath,
           dialogues: linDialogues,
         });
-        toast.success(`Salvati ${count} dialoghi`);
+        toast.success(`${t('danganronpaPatcher.savedLabel')} ${count} ${t('danganronpaPatcher.dialoguesLabel')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore salvataggio: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorSave')} ${e}`);
     }
   };
 
@@ -426,7 +426,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const filePath = await open({
         filters: [{ name: 'JSON', extensions: ['json'] }],
-        title: 'Carica dialoghi',
+        title: t('common.caricaDialoghi'),
       });
       
       if (filePath && typeof filePath === 'string') {
@@ -435,10 +435,10 @@ export default function DanganronpaPatcherPage() {
         });
         setLinDialogues(dialogues);
         updateLinStats(dialogues);
-        toast.success(`Caricati ${dialogues.length} dialoghi`);
+        toast.success(`${t('danganronpaPatcher.loadedLabel')} ${dialogues.length} ${t('danganronpaPatcher.dialoguesLabel')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore caricamento: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorLoad')} ${e}`);
     }
   };
 
@@ -464,7 +464,7 @@ export default function DanganronpaPatcherPage() {
     
     try {
       const toTranslate = untranslated.slice(0, 50); // Max 50 alla volta
-      toast.info(`Traduzione di ${toTranslate.length} dialoghi in corso...`);
+      toast.info(`${t('danganronpaPatcher.translatingLabel')} ${toTranslate.length} ${t('danganronpaPatcher.dialoguesInProgress')}`);
       
       for (let i = 0; i < toTranslate.length; i += batchSize) {
         const batch = toTranslate.slice(i, i + batchSize);
@@ -510,9 +510,9 @@ export default function DanganronpaPatcherPage() {
         }
       }
       
-      toast.success(`Tradotti ${translatedCount} dialoghi con AI`);
+      toast.success(`${t('danganronpaPatcher.translatedLabel')} ${translatedCount} ${t('danganronpaPatcher.dialoguesWithAi')}`);
     } catch (e: unknown) {
-      toast.error(`Errore traduzione: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorTranslation')} ${e}`);
     } finally {
       setLoading(false);
     }
@@ -529,7 +529,7 @@ export default function DanganronpaPatcherPage() {
         filters: [
           { name: 'DRAT Export', extensions: ['json', 'txt'] }
         ],
-        title: 'Importa traduzioni da DRAT',
+        title: t('common.importaTraduzioniDaDrat'),
       });
       
       if (filePath && typeof filePath === 'string') {
@@ -548,7 +548,7 @@ export default function DanganronpaPatcherPage() {
         }
       }
     } catch (e: unknown) {
-      toast.error(`Errore import: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorImport')} ${e}`);
     }
   };
 
@@ -567,7 +567,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const selected = await open({
         directory: true,
-        title: 'Seleziona cartella gioco Danganronpa',
+        title: t('common.selezionaCartellaGiocoDanganronpa'),
       });
       
       if (selected) {
@@ -578,10 +578,10 @@ export default function DanganronpaPatcherPage() {
         setGame(detected);
         setSelectedPak(null);
         setPoFile(null);
-        toast.success(`Rilevato: ${getGameTypeName(detected.game_type)}`);
+        toast.success(`${t('danganronpaPatcher.detectedLabel')} ${getGameTypeName(detected.game_type)}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore: ${e}`);
+      toast.error(`${t('common.error')}: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -592,7 +592,7 @@ export default function DanganronpaPatcherPage() {
       case 'TriggerHappyHavoc': return 'Danganronpa: Trigger Happy Havoc';
       case 'GoodbyeDespair': return 'Danganronpa 2: Goodbye Despair';
       case 'AnotherEpisode': return 'Danganronpa Another Episode';
-      default: return 'Danganronpa (Sconosciuto)';
+      default: return t('danganronpaPatcher.gameUnknown');
     }
   };
 
@@ -601,9 +601,9 @@ export default function DanganronpaPatcherPage() {
       setLoading(true);
       const archive = await invoke<PakArchive>('read_pak_archive', { pakPath });
       setSelectedPak(archive);
-      toast.success(`PAK caricato: ${archive.entries.length} file`);
+      toast.success(`${t('danganronpaPatcher.pakLoadedLabel')} ${archive.entries.length} ${t('danganronpaPatcher.filesLabel')}`);
     } catch (e: unknown) {
-      toast.error(`Errore lettura PAK: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorReadPak')} ${e}`);
     } finally {
       setLoading(false);
     }
@@ -615,7 +615,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const outputDir = await open({
         directory: true,
-        title: 'Seleziona cartella di destinazione',
+        title: t('common.selezionaCartellaDiDestinazione'),
       });
       
       if (outputDir) {
@@ -624,10 +624,10 @@ export default function DanganronpaPatcherPage() {
           pakPath: selectedPak.path,
           outputDir,
         });
-        toast.success(`Estratti ${count} file`);
+        toast.success(`${t('danganronpaPatcher.extractedLabel')} ${count} ${t('danganronpaPatcher.filesLabel')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore estrazione: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorExtraction')} ${e}`);
     } finally {
       setLoading(false);
     }
@@ -637,7 +637,7 @@ export default function DanganronpaPatcherPage() {
     try {
       const selected = await open({
         filters: [{ name: 'PO Files', extensions: ['po', 'pot'] }],
-        title: 'Seleziona file PO',
+        title: t('common.selezionaFilePo'),
       });
       
       if (selected && typeof selected === 'string') {
@@ -646,10 +646,10 @@ export default function DanganronpaPatcherPage() {
         const stats = await invoke<PoStats>('get_po_stats', { poPath: selected });
         setPoFile(po);
         setPoStats(stats);
-        toast.success(`PO caricato: ${po.entries.length} entry`);
+        toast.success(`${t('danganronpaPatcher.poLoadedLabel')} ${po.entries.length} ${t('danganronpaPatcher.entriesLabel')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore lettura PO: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorReadPo')} ${e}`);
     } finally {
       setLoading(false);
     }
@@ -670,7 +670,7 @@ export default function DanganronpaPatcherPage() {
       
       toast.success(t('common.filePoSalvato'));
     } catch (e: unknown) {
-      toast.error(`Errore salvataggio: ${e}`);
+      toast.error(`${t('danganronpaPatcher.errorSave')} ${e}`);
     } finally {
       setLoading(false);
     }
@@ -701,9 +701,9 @@ export default function DanganronpaPatcherPage() {
   };
 
   const DANGANRONPA_STEPS: WizardStep[] = [
-    { num: 1, label: 'Selezione Gioco' },
-    { num: 2, label: 'File & Traduzioni' },
-    { num: 3, label: 'Applica Patch' },
+    { num: 1, label: t('common.selezioneGioco') },
+    { num: 2, label: t('danganronpaPatcher.stepFilesTranslations') },
+    { num: 3, label: t('common.applicaPatch') },
   ];
   const danganronpaCurrentStep = poFile || selectedPak ? 2 : game ? 2 : 1;
 
@@ -820,7 +820,7 @@ export default function DanganronpaPatcherPage() {
                     className="h-6 text-xs"
                   >
                     <Globe className="w-3 h-3 mr-1" />
-                    Traducibili ({game?.pak_files.filter(isTranslatablePak).length || 0})
+                    {t('danganronpaPatcher.translatable')} ({game?.pak_files.filter(isTranslatablePak).length || 0})
                   </Button>
                   <Button
                     size="sm"
@@ -828,7 +828,7 @@ export default function DanganronpaPatcherPage() {
                     onClick={() => setPakFilter('all')}
                     className="h-6 text-xs"
                   >
-                    Tutti ({game?.pak_files.length || 0})
+                    {t('common.all')} ({game?.pak_files.length || 0})
                   </Button>
                 </div>
                 <ScrollArea className="h-[300px]">
@@ -1043,7 +1043,7 @@ export default function DanganronpaPatcherPage() {
                                   isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                                 }`}
                               >
-                                {entry.msgstr || 'Clicca per tradurre...'}
+                                {entry.msgstr || t('danganronpaPatcher.clickToTranslate')}
                               </div>
                             )}
                           </div>
@@ -1072,9 +1072,9 @@ export default function DanganronpaPatcherPage() {
                 <CardTitle className="text-xs flex items-center gap-1.5">
                   <Globe className="w-3 h-3 text-emerald-400" />
                   {t('danganronpaPatcher.steamGamesDetected')}<span className="text-2xs font-normal text-muted-foreground ml-1">
-                    {steamGames.length > 0 
-                      ? `${steamGames.length} trovati`
-                      : 'Nessuno'}
+                    {steamGames.length > 0
+                      ? `${steamGames.length} ${t('danganronpaPatcher.foundLabel')}`
+                      : t('common.none')}
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -1245,7 +1245,7 @@ export default function DanganronpaPatcherPage() {
                           asChild
                         >
                           <a href={patch.download_url} target="_blank" rel="noopener noreferrer">
-                            Scarica ({patch.file_name})
+                            {t('danganronpaPatcher.download')} ({patch.file_name})
                           </a>
                         </Button>
                       </div>
@@ -1277,7 +1277,7 @@ export default function DanganronpaPatcherPage() {
                   ) : (
                     <Archive className="w-4 h-4 mr-2" />
                   )}
-                  {exporting ? 'Creazione ZIP...' : 'Esporta .zip'}
+                  {exporting ? t('danganronpaPatcher.creatingZipShort') : t('danganronpaPatcher.exportZip')}
                 </Button>
                 {!selectedSteamGame && (
                   <span className="text-xs text-muted-foreground">
@@ -1480,7 +1480,7 @@ export default function DanganronpaPatcherPage() {
                             </span>
                             <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
                             <span className={`text-xs truncate flex-1 ${isUntranslated ? 'italic text-yellow-500/70' : ''}`}>
-                              {dialogue.translated || '(da tradurre)'}
+                              {dialogue.translated || t('danganronpaPatcher.toTranslate')}
                             </span>
                           </div>
                         );
@@ -1543,7 +1543,7 @@ export default function DanganronpaPatcherPage() {
                                 isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                               }`}
                             >
-                              {dialogue.translated || 'Clicca per tradurre...'}
+                              {dialogue.translated || t('danganronpaPatcher.clickToTranslate')}
                             </div>
                           )}
                         </div>
@@ -1551,7 +1551,7 @@ export default function DanganronpaPatcherPage() {
                     })}
                     {filteredLinDialogues.length > 100 && (
                       <p className="text-center text-sm text-muted-foreground py-4">
-                        Mostrando 100 di {filteredLinDialogues.length} dialoghi. Usa la ricerca per filtrare.
+                        {t('danganronpaPatcher.showing100Of')} {filteredLinDialogues.length} {t('danganronpaPatcher.dialoguesUseSearchToFilter')}
                       </p>
                     )}
                   </div>

@@ -184,7 +184,7 @@ export function TranslationStatsWidget() {
             </div>
             <div>
               <h2 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
-                Statistiche Traduzione
+                {t('translationStatsWidgetComp.title')}
               </h2>
               <p className="text-sm text-blue-200/60">{t('translationStatsWidgetComp.panoramicaDelleTueAttività')}</p>
             </div>
@@ -198,7 +198,7 @@ export function TranslationStatsWidget() {
                 <span className="text-xs">{t('translationStatsWidgetComp.traduzioni')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.totalTranslations}</div>
-              <div className="text-xs text-blue-200/50">totali</div>
+              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.totali')}</div>
             </div>
             
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
@@ -207,7 +207,7 @@ export function TranslationStatsWidget() {
                 <span className="text-xs">{t('translationStatsWidgetComp.stringhe')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{formatNumber(stats.totalStrings)}</div>
-              <div className="text-xs text-blue-200/50">tradotte</div>
+              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.tradotte')}</div>
             </div>
             
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
@@ -216,7 +216,7 @@ export function TranslationStatsWidget() {
                 <span className="text-xs">{t('translationStatsWidgetComp.parole')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{formatNumber(stats.totalWords)}</div>
-              <div className="text-xs text-blue-200/50">elaborate</div>
+              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.elaborate')}</div>
             </div>
             
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
@@ -225,7 +225,7 @@ export function TranslationStatsWidget() {
                 <span className="text-xs">{t('translationStatsWidgetComp.progress')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.averageProgress}%</div>
-              <div className="text-xs text-blue-200/50">medio</div>
+              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.medio')}</div>
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ export function TranslationStatsWidget() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2 text-indigo-300">
               <TrendingUp className="h-4 w-4" />
-              Attività Settimanale
+              {t('translationStatsWidgetComp.weeklyActivity')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -278,7 +278,7 @@ export function TranslationStatsWidget() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2 text-emerald-300">
               <CheckCircle className="h-4 w-4" />
-              Progetti
+              {t('common.projects')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -303,7 +303,7 @@ export function TranslationStatsWidget() {
               <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm text-amber-200">
-                  Tempo stimato rimanente: <strong>{formatTime(stats.estimatedTimeRemaining)}</strong>
+                  {t('translationStatsWidgetComp.estimatedTimeRemaining')}: <strong>{formatTime(stats.estimatedTimeRemaining)}</strong>
                 </span>
               </div>
             )}
@@ -316,13 +316,13 @@ export function TranslationStatsWidget() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2 text-violet-300">
             <Languages className="h-4 w-4" />
-            Target Languages
+            {t('translationStatsWidgetComp.targetLanguages')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {stats.topLanguages.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground text-sm">
-              No translations yet
+              {t('translationStatsWidgetComp.noTranslationsYet')}
             </div>
           ) : (
             <div className="space-y-3">

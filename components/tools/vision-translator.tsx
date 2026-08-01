@@ -35,9 +35,9 @@ const TARGET_LANGUAGES = CANONICAL_TARGET_LANGUAGES.map(l => ({
 }));
 
 const VISION_PROVIDERS = [
-  { id: 'ollama' as const, label: 'Ollama (Locale)', icon: '🦙', description: 'LLaVA, Llama 3.2 Vision — Gratis, locale' },
-  { id: 'gemini' as const, label: 'Gemini', icon: '✨', description: 'Gemini 2.0 Flash — Free tier' },
-  { id: 'openai' as const, label: 'OpenAI', icon: '🤖', description: 'GPT-4o — A pagamento' },
+  { id: 'ollama' as const, label: 'Ollama', icon: '🦙', descriptionKey: 'visionTranslatorComp.providerOllamaDesc' },
+  { id: 'gemini' as const, label: 'Gemini', icon: '✨', descriptionKey: 'visionTranslatorComp.providerGeminiDesc' },
+  { id: 'openai' as const, label: 'OpenAI', icon: '🤖', descriptionKey: 'visionTranslatorComp.providerOpenaiDesc' },
 ];
 
 export function VisionTranslator() {
@@ -74,12 +74,12 @@ export function VisionTranslator() {
         setScreenshotBase64(base64);
         setScreenshotPreview(`data:image/png;base64,${base64}`);
       } else {
-        setError('Cattura schermo non disponibile. Carica un\'immagine manualmente.');
+        setError(t('visionTranslatorComp.catturaSchermoNonDisponibile'));
       }
     } catch {
-      setError('Cattura schermo fallita. Carica un\'immagine manualmente.');
+      setError(t('visionTranslatorComp.catturaSchermoFallita'));
     }
-  }, []);
+  }, [t]);
 
   // Upload immagine manuale
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +171,7 @@ export function VisionTranslator() {
                       <span className="text-sm">{p.icon}</span>
                       <span className="text-2xs font-medium text-slate-300">{p.label}</span>
                     </div>
-                    <p className="text-2xs text-slate-500 mt-0.5">{p.description}</p>
+                    <p className="text-2xs text-slate-500 mt-0.5">{t(p.descriptionKey)}</p>
                   </button>
                 ))}
               </div>
@@ -193,7 +193,7 @@ export function VisionTranslator() {
               {provider === 'ollama' && availableModels.length === 0 && (
                 <div className="mt-2 p-2 rounded bg-amber-500/10 border border-amber-500/20">
                   <p className="text-2xs text-amber-300">
-                    Nessun modello Vision trovato su Ollama. Installa uno con: <code className="bg-amber-500/20 px-1 rounded">ollama pull llava:13b</code>
+                    {t('visionTranslatorComp.nessunModelloVisionTrovato')} <code className="bg-amber-500/20 px-1 rounded">ollama pull llava:13b</code>
                   </p>
                 </div>
               )}
@@ -209,12 +209,12 @@ export function VisionTranslator() {
                 <div className="relative group">
                   <img
                     src={screenshotPreview}
-                    alt="Game screenshot"
+                    alt={t('visionTranslatorComp.screenshotDelGiocoAlt')}
                     className="w-full h-32 object-cover rounded-lg border border-fuchsia-500/20"
                   />
                   <div className="absolute top-1 right-1 flex gap-1">
                     <Badge className="bg-fuchsia-500/80 text-white text-2xs">
-                      <Eye className="h-2.5 w-2.5 mr-0.5" /> Vision attivo
+                      <Eye className="h-2.5 w-2.5 mr-0.5" /> {t('visionTranslatorComp.visionAttivo')}
                     </Badge>
                     <button
                       onClick={() => { setScreenshotBase64(null); setScreenshotPreview(null); }}
@@ -232,7 +232,7 @@ export function VisionTranslator() {
                     className="flex-1 h-8 text-xs border-fuchsia-500/20 hover:bg-fuchsia-500/10"
                     onClick={handleCaptureScreen}
                   >
-                    <Camera className="h-3 w-3 mr-1" /> Cattura Schermo
+                    <Camera className="h-3 w-3 mr-1" /> {t('visionTranslatorComp.catturaSchermo')}
                   </Button>
                   <Button
                     variant="outline"
@@ -240,7 +240,7 @@ export function VisionTranslator() {
                     className="flex-1 h-8 text-xs border-slate-700/30"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="h-3 w-3 mr-1" /> Carica Immagine
+                    <Upload className="h-3 w-3 mr-1" /> {t('visionTranslatorComp.caricaImmagine')}
                   </Button>
                   <input
                     ref={fileInputRef}
@@ -261,7 +261,7 @@ export function VisionTranslator() {
               <Textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder='es. "Open the chest to find the legendary sword"'
+                placeholder={t('visionTranslatorComp.testoPlaceholder')}
                 className="min-h-[80px] text-sm bg-slate-900/50 border-slate-700/30 resize-none"
               />
 
@@ -289,7 +289,7 @@ export function VisionTranslator() {
                   value={contextInput}
                   onChange={e => setContextInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addContext()}
-                  placeholder="Aggiungi frase precedente per contesto..."
+                  placeholder={t('visionTranslatorComp.contestoPlaceholder')}
                   className="h-7 text-xs bg-slate-900/50 border-slate-700/30"
                 />
                 <Button size="xs" className="px-2 text-xs" onClick={addContext} disabled={!contextInput.trim()}>+</Button>
@@ -317,7 +317,7 @@ export function VisionTranslator() {
             className="w-full h-10 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-semibold"
           >
             {loading ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Traduzione con Vision in corso...</>
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t('visionTranslatorComp.traduzioneInCorso')}</>
             ) : (
               <><Eye className="h-4 w-4 mr-2" />{t('common.traduciConVisionLlm')}</>
             )}
@@ -427,21 +427,20 @@ export function VisionTranslator() {
                 <Eye className="h-12 w-12 text-fuchsia-400/15 mx-auto mb-3" />
                 <h3 className="text-sm font-medium text-slate-400 mb-1">{t('visionTranslatorComp.liaVedeIlTuoGioco')}</h3>
                 <p className="text-2xs text-slate-500 max-w-xs mx-auto">
-                  Carica uno screenshot e inserisci il testo. L&apos;IA userà il contesto visivo per tradurre con precisione —
-                  niente più errori di genere, ambiguità o allucinazioni.
+                  {t('visionTranslatorComp.emptyStateDesc')}
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center max-w-sm mx-auto">
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Brain className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.disambigua')}<br/>parole</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.disambigua')}<br/>{t('visionTranslatorComp.parole')}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Monitor className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.rileva')}<br/>genere</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.rileva')}<br/>{t('visionTranslatorComp.genere')}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-900/30">
                     <Zap className="h-4 w-4 text-fuchsia-400/40 mx-auto mb-1" />
-                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.tono')}<br/>coerente</span>
+                    <span className="text-2xs text-slate-500">{t('visionTranslatorComp.tono')}<br/>{t('visionTranslatorComp.coerente')}</span>
                   </div>
                 </div>
               </CardContent>

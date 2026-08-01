@@ -131,15 +131,15 @@ export function ReviewStep({
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={onSaveAllFiles}>
               <CheckCircle className="mr-2 h-4 w-4" />
-              Save all (with backup)
+              {t('translatorProPage.saveAllWithBackup')}
             </Button>
             <Button variant="outline" size="sm" onClick={onDownloadAll}>
               <Download className="mr-2 h-4 w-4" />
-              Download all
+              {t('translatorProPage.downloadAll')}
             </Button>
             <Button variant="default" size="sm" onClick={onExportPatch} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
               <Package className="mr-2 h-4 w-4" />
-              Esporta Patch
+              {t('translatorProPage.exportPatch')}
             </Button>
           </div>
         </div>
@@ -156,7 +156,7 @@ export function ReviewStep({
               </p>
             </div>
             <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-              <Button variant="ghost" size="sm" onClick={() => onOpenInEditor(filename)} title="Apri nell'Editor" className="hover:bg-blue-500/20 hover:text-blue-400">
+              <Button variant="ghost" size="sm" onClick={() => onOpenInEditor(filename)} title={t('translatorProPage.openInEditor')} className="hover:bg-blue-500/20 hover:text-blue-400">
                 <FileText className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={() => onSaveFile(filename)} title={t('common.salvaConBackup')} className="hover:bg-green-500/20 hover:text-green-400">
@@ -176,10 +176,10 @@ export function ReviewStep({
           <div className="flex items-center justify-between">
             <h3 className="font-medium flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-purple-400" />
-              Dettaglio traduzioni ({translatedItems.length})
+              {t('translatorProPage.translationDetails')} ({translatedItems.length})
             </h3>
             <Badge variant="outline" className="text-2xs">
-              {translatedItems.filter(i => i.fromMemory).length} da memoria
+              {translatedItems.filter(i => i.fromMemory).length} {t('translatorProPage.fromMemoryLabel')}
             </Badge>
           </div>
           <div className="border rounded-lg overflow-hidden">
@@ -214,7 +214,7 @@ export function ReviewStep({
             </ScrollArea>
             {translatedItems.length > 200 && (
               <div className="px-3 py-2 text-center text-2xs text-muted-foreground bg-muted/20 border-t">
-                Mostrate 200 di {translatedItems.length} righe
+                {t('translatorProPage.shownFirst200Of')} {translatedItems.length} {t('translatorProPage.rows')}
               </div>
             )}
           </div>
@@ -226,12 +226,12 @@ export function ReviewStep({
         <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <h3 className="font-medium flex items-center gap-2 mb-3">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            Problemi di qualità ({currentJob.results.qualityIssues.length})
+            {t('translatorProPage.qualityIssues')} ({currentJob.results.qualityIssues.length})
           </h3>
           <ScrollArea className="h-32">
             {currentJob.results.qualityIssues.slice(0, 10).map((issue, i) => (
               <div key={i} className="text-sm mb-2">
-                <p className="font-mono text-xs truncate">&quot;{issue.sourceText}&quot;</p>
+                <p className="font-mono text-xs truncate">{`"${issue.sourceText}"`}</p>
                 <p className="text-amber-600 text-xs">{issue.issues.join(', ')}</p>
               </div>
             ))}
@@ -243,7 +243,7 @@ export function ReviewStep({
       <div className="flex justify-between items-center pt-4">
         <Button variant="outline" onClick={onNewTranslation}>
           <RotateCcw className="mr-2 h-4 w-4" />
-          Nuova traduzione
+          {t('dashboard.newTranslation')}
         </Button>
 
         {/* ONE-CLICK APPLY - The Magic Button */}
@@ -256,20 +256,20 @@ export function ReviewStep({
           {isApplying ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              {applyStatus === 'finding' && 'Cerco game...'}
-              {applyStatus === 'checking' && 'Verifico...'}
-              {applyStatus === 'installing' && 'Installo patcher...'}
-              {applyStatus === 'applying' && 'Applico...'}
+              {applyStatus === 'finding' && t('translatorProPage.applyFinding')}
+              {applyStatus === 'checking' && t('translatorProPage.applyChecking')}
+              {applyStatus === 'installing' && t('translatorProPage.applyInstalling')}
+              {applyStatus === 'applying' && t('translatorProPage.applyApplying')}
             </>
           ) : applyStatus === 'done' ? (
             <>
               <CheckCircle className="h-5 w-5" />
-              Applicato!
+              {t('translatorProPage.applied')}
             </>
           ) : (
             <>
               <Rocket className="h-5 w-5" />
-              Applica al game
+              {t('translatorProPage.applyToGame')}
             </>
           )}
         </Button>
@@ -281,7 +281,7 @@ export function ReviewStep({
             className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-md bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/25 transition-all text-white"
           >
             <Play className="h-5 w-5" />
-            Gioca
+            {t('gameDetails.playGame')}
           </a>
         )}
       </div>

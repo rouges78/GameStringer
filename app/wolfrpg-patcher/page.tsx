@@ -174,12 +174,12 @@ export default function WolfRpgPatcherPage() {
         toast.warning(result.message);
       } else if (result.success) {
         setStrings(prev => [...prev, ...result.strings]);
-        toast.success(`Estratte ${result.total_count} stringhe`);
+        toast.success(`${result.total_count} ${t('wolfrpgPatcherPage.extractedStrings')}`);
       } else {
         toast.error(result.message);
       }
     } catch (e: unknown) {
-      toast.error(`Errore estrazione: ${e}`);
+      toast.error(`${t('wolfrpgPatcherPage.extractError')}: ${e}`);
     } finally {
       setExtracting(false);
     }
@@ -197,10 +197,10 @@ export default function WolfRpgPatcherPage() {
           outputPath: filePath,
           strings,
         });
-        toast.success(`Salvate ${count} traduzioni`);
+        toast.success(`${count} ${t('wolfrpgPatcherPage.savedTranslations')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore salvataggio: ${e}`);
+      toast.error(`${t('wolfrpgPatcherPage.saveError')}: ${e}`);
     }
   };
 
@@ -208,18 +208,18 @@ export default function WolfRpgPatcherPage() {
     try {
       const filePath = await open({
         filters: [{ name: 'JSON', extensions: ['json'] }],
-        title: 'Carica traduzioni',
+        title: t('wolfrpgPatcherPage.loadTranslationsTitle'),
       });
-      
+
       if (filePath && typeof filePath === 'string') {
         const loaded = await invoke<WolfRpgString[]>('load_wolfrpg_translations', {
           inputPath: filePath,
         });
         setStrings(loaded);
-        toast.success(`Caricate ${loaded.length} traduzioni`);
+        toast.success(`${loaded.length} ${t('wolfrpgPatcherPage.loadedTranslations')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore caricamento: ${e}`);
+      toast.error(`${t('wolfrpgPatcherPage.loadError')}: ${e}`);
     }
   };
 
@@ -235,10 +235,10 @@ export default function WolfRpgPatcherPage() {
           strings,
           outputPath: filePath,
         });
-        toast.success(`Esportate ${count} stringhe in CSV`);
+        toast.success(`${count} ${t('wolfrpgPatcherPage.exportedStringsCsv')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore esportazione: ${e}`);
+      toast.error(`${t('wolfrpgPatcherPage.exportError')}: ${e}`);
     }
   };
 
@@ -246,18 +246,18 @@ export default function WolfRpgPatcherPage() {
     try {
       const filePath = await open({
         filters: [{ name: 'CSV', extensions: ['csv'] }],
-        title: 'Importa da CSV',
+        title: t('wolfrpgPatcherPage.importCsvTitle'),
       });
-      
+
       if (filePath && typeof filePath === 'string') {
         const imported = await invoke<WolfRpgString[]>('import_from_translator_plus', {
           inputPath: filePath,
         });
         setStrings(imported);
-        toast.success(`Importate ${imported.length} stringhe`);
+        toast.success(`${imported.length} ${t('wolfrpgPatcherPage.importedStrings')}`);
       }
     } catch (e: unknown) {
-      toast.error(`Errore importazione: ${e}`);
+      toast.error(`${t('wolfrpgPatcherPage.importError')}: ${e}`);
     }
   };
 
@@ -293,9 +293,9 @@ export default function WolfRpgPatcherPage() {
   );
 
   const WOLFRPG_STEPS: WizardStep[] = [
-    { num: 1, label: 'Selezione Gioco' },
-    { num: 2, label: 'Traduzioni' },
-    { num: 3, label: 'Esporta' },
+    { num: 1, label: t('wolfrpgPatcherPage.stepSelectGame') },
+    { num: 2, label: t('wolfrpgPatcherPage.stepTranslations') },
+    { num: 3, label: t('wolfrpgPatcherPage.stepExport') },
   ];
   const wolfrpgCurrentStep = stats && stats.translated > 0 ? 3 : strings.length > 0 ? 2 : 1;
 
@@ -343,17 +343,17 @@ export default function WolfRpgPatcherPage() {
           <div className="flex items-center gap-3">
             <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-orange-600 hover:bg-orange-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
-              Sfoglia
+              {t('wolfrpgPatcherPage.browse')}
             </Button>
             
             {game && (
               <div className="flex items-center gap-2">
                 <span className="font-medium">{game.title}</span>
                 <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                  {game.data_files.length} file
+                  {game.data_files.length} {t('wolfrpgPatcherPage.filesUnit')}
                 </Badge>
                 <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  {game.map_files.length} mappe
+                  {game.map_files.length} {t('wolfrpgPatcherPage.mapsUnit')}
                 </Badge>
                 {game.has_game_dat && (
                   <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
@@ -378,9 +378,7 @@ export default function WolfRpgPatcherPage() {
         <Alert className="border-yellow-500/50 bg-yellow-500/10">
           <AlertTriangle className="h-4 w-4 text-yellow-500" />
           <AlertDescription className="text-sm">
-            Questo gioco usa <strong>Game.dat</strong> (pacchetto criptato). 
-            Per estrarre i testi completi, usa <strong>Translator++</strong> con il plugin Wolf RPG.
-            I file .dat singoli possono essere estratti con metodo euristico.
+            {t('wolfrpgPatcherPage.gameDatWarning')}
           </AlertDescription>
         </Alert>
       )}
@@ -391,7 +389,7 @@ export default function WolfRpgPatcherPage() {
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Database className="w-4 h-4 text-orange-400" />
-              File Dati
+              {t('wolfrpgPatcherPage.dataFiles')}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -462,7 +460,7 @@ export default function WolfRpgPatcherPage() {
                 </Button>
                 <Button variant="outline" onClick={loadTranslations} size="sm" className="h-8">
                   <Upload className="w-3 h-3 mr-1" />
-                  Carica
+                  {t('wolfrpgPatcherPage.load')}
                 </Button>
                 <Button onClick={saveTranslations} size="xs" className="bg-orange-600 hover:bg-orange-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
@@ -485,7 +483,7 @@ export default function WolfRpgPatcherPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="w-4 h-4 text-orange-400" />
-              Editor Traduzioni
+              {t('wolfrpgPatcherPage.translationsEditor')}
               {strings.length > 0 && (
                 <Badge variant="outline" className="ml-2">{filteredStrings.length} / {strings.length}</Badge>
               )}
@@ -496,7 +494,7 @@ export default function WolfRpgPatcherPage() {
             <div className="relative mt-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                aria-label={t('common.cerca')} placeholder="Cerca testi..."
+                aria-label={t('common.cerca')} placeholder={t('wolfrpgPatcherPage.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 h-8 bg-slate-950/50 border-slate-700"
@@ -561,7 +559,7 @@ export default function WolfRpgPatcherPage() {
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >
-                            {entry.translated || 'Clicca per tradurre...'}
+                            {entry.translated || t('wolfrpgPatcherPage.clickToTranslate')}
                           </div>
                         )}
                       </div>
@@ -570,7 +568,7 @@ export default function WolfRpgPatcherPage() {
                 })}
                 {filteredStrings.length > 100 && (
                   <p className="text-center text-sm text-muted-foreground py-4">
-                    Mostrando 100 di {filteredStrings.length} stringhe
+                    {t('wolfrpgPatcherPage.showingFirst100')} ({filteredStrings.length})
                   </p>
                 )}
               </div>
@@ -579,7 +577,7 @@ export default function WolfRpgPatcherPage() {
                 <Database className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">{t('wolfrpgPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
-                  Seleziona un file .dat e clicca l&apos;icona ✨ per estrarre
+                  {t('wolfrpgPatcherPage.noStringsHint')}
                 </p>
               </div>
             ) : (

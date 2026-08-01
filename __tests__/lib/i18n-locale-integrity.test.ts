@@ -147,16 +147,25 @@ const en = flatten(enJson as Json);
 // .landb, .dlog)" e "Parser Godot Engine (…)" (pt/pl: "Parser" si usa tale quale,
 // il resto sono estensioni), "Community Hub — backend Supabase" (pl: due nomi
 // propri e un prestito). Soglie: es 89→91, fr 15→16, pt 110→111, pl 28→29.
+// 2026-08-01 (2) Secondo lotto di bonifica hardcoded: 19 file, 289 chiavi nuove
+// × 12 lingue. Gate hardcoded 1037 → 823. Nuovi leftover SOLO in es (+3) e pt
+// (+5), ispezionati uno per uno: sono tutti cognati reali, non traduzioni
+// mancanti — es "Narrativa"/"Sistema"/"Memoria" e pt "Narrativa"/"Sistema"/
+// "Poesia / Arte"/"Tempo"/"coerente" sono le parole GIUSTE in quelle lingue
+// (l'inglese diverge, ma è l'inglese a essere l'eccezione). Scriverle diverse
+// solo per far scendere un contatore peggiorerebbe la traduzione.
+// fr/pl/de/ja/zh/ko/ru invariati, 0 chiavi mancanti ovunque.
+// Soglie: es 91→94, pt 111→116.
 const locales: { name: string; json: Json; maxMissing: number; maxLeftover: number }[] = [
   { name: 'en', json: enJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ru', json: ruJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 91 },
+  { name: 'es', json: esJson as Json, maxMissing: 0, maxLeftover: 94 },
   { name: 'fr', json: frJson as Json, maxMissing: 0, maxLeftover: 16 },
   { name: 'de', json: deJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ja', json: jaJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'zh', json: zhJson as Json, maxMissing: 0, maxLeftover: 0 },
   { name: 'ko', json: koJson as Json, maxMissing: 0, maxLeftover: 0 },
-  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 111 },
+  { name: 'pt', json: ptJson as Json, maxMissing: 0, maxLeftover: 116 },
   { name: 'pl', json: plJson as Json, maxMissing: 0, maxLeftover: 29 },
 ];
 

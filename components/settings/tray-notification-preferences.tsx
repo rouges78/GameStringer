@@ -15,26 +15,28 @@ import {
   TrayNotificationType,
   NotificationPreferences,
 } from '@/lib/notifications/tray-notifications';
+import { useTranslation } from '@/lib/i18n';
 
 interface NotificationTypeConfig {
   key: keyof NotificationPreferences;
   type: TrayNotificationType;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const NOTIFICATION_TYPES: NotificationTypeConfig[] = [
-  { key: 'translationCompleted', type: 'translation_completed', label: 'Traduzioni Completate', description: 'Notifica quando una traduzione termina con successo', icon: Languages },
-  { key: 'translationFailed', type: 'translation_failed', label: 'Errori Traduzione', description: 'Notifica quando una traduzione fallisce', icon: AlertTriangle },
-  { key: 'systemErrors', type: 'system_error', label: 'Errori di Sistema', description: 'Notifiche per errori critici del sistema', icon: AlertTriangle },
-  { key: 'appUpdates', type: 'app_update', label: 'Aggiornamenti App', description: 'Notifica quando è disponibile un aggiornamento di GameStringer', icon: RefreshCw },
-  { key: 'gameUpdates', type: 'game_update', label: 'Aggiornamenti Giochi', description: 'Notifica quando un gioco aggiornato potrebbe aver invalidato la patch', icon: Gamepad2 },
-  { key: 'friendOnline', type: 'friend_online', label: 'Amici Online', description: 'Notifica quando un amico si connette', icon: Users },
-  { key: 'news', type: 'news', label: 'Novità', description: 'Notifiche per news e aggiornamenti community', icon: Newspaper },
+  { key: 'translationCompleted', type: 'translation_completed', labelKey: 'trayNotificationsComp.typeTranslationCompleted', descKey: 'trayNotificationsComp.typeTranslationCompletedDesc', icon: Languages },
+  { key: 'translationFailed', type: 'translation_failed', labelKey: 'trayNotificationsComp.typeTranslationFailed', descKey: 'trayNotificationsComp.typeTranslationFailedDesc', icon: AlertTriangle },
+  { key: 'systemErrors', type: 'system_error', labelKey: 'trayNotificationsComp.typeSystemErrors', descKey: 'trayNotificationsComp.typeSystemErrorsDesc', icon: AlertTriangle },
+  { key: 'appUpdates', type: 'app_update', labelKey: 'trayNotificationsComp.typeAppUpdates', descKey: 'trayNotificationsComp.typeAppUpdatesDesc', icon: RefreshCw },
+  { key: 'gameUpdates', type: 'game_update', labelKey: 'trayNotificationsComp.typeGameUpdates', descKey: 'trayNotificationsComp.typeGameUpdatesDesc', icon: Gamepad2 },
+  { key: 'friendOnline', type: 'friend_online', labelKey: 'trayNotificationsComp.typeFriendOnline', descKey: 'trayNotificationsComp.typeFriendOnlineDesc', icon: Users },
+  { key: 'news', type: 'news', labelKey: 'trayNotificationsComp.typeNews', descKey: 'trayNotificationsComp.typeNewsDesc', icon: Newspaper },
 ];
 
 export function TrayNotificationPreferences() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useState<NotificationPreferences>(getNotificationPrefs());
   const [testSending, setTestSending] = useState(false);
 
@@ -53,8 +55,8 @@ export function TrayNotificationPreferences() {
     try {
       await sendTrayNotification({
         type: 'news',
-        title: '🔔 Notifica di Prova',
-        body: 'Se vedi questo messaggio, le notifiche tray funzionano!',
+        title: t('trayNotificationsComp.testTitle'),
+        body: t('trayNotificationsComp.testBody'),
       });
     } catch { /* ignore */ }
     setTimeout(() => setTestSending(false), 2000);
@@ -65,19 +67,18 @@ export function TrayNotificationPreferences() {
       <CardHeader>
         <CardTitle as="h2" className="flex items-center gap-2 text-base">
           <Bell className="h-5 w-5" />
-          Notifiche System Tray
+          {t('trayNotificationsComp.title')}
         </CardTitle>
         <CardDescription>
-          Configura quali eventi generano notifiche native del sistema operativo.
-          Le notifiche appaiono nel tray icon e nel centro notifiche di Windows.
+          {t('trayNotificationsComp.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Global toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label className="text-sm font-medium">Notifiche Tray Attive</Label>
-            <p className="text-xs text-muted-foreground">Abilita/disabilita tutte le notifiche OS</p>
+            <Label className="text-sm font-medium">{t('trayNotificationsComp.enabled')}</Label>
+            <p className="text-xs text-muted-foreground">{t('trayNotificationsComp.enabledDesc')}</p>
           </div>
           <Switch
             checked={prefs.enabled}
@@ -89,8 +90,8 @@ export function TrayNotificationPreferences() {
 
         {/* Per-type toggles */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground">Tipi di Notifica</h3>
-          {NOTIFICATION_TYPES.map(({ key, type: _type, label, description, icon: Icon }) => (
+          <h3 className="text-sm font-semibold text-muted-foreground">{t('trayNotificationsComp.notificationTypes')}</h3>
+          {NOTIFICATION_TYPES.map(({ key, type: _type, labelKey, descKey, icon: Icon }) => (
             <div
               key={key}
               className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
@@ -102,8 +103,8 @@ export function TrayNotificationPreferences() {
                   <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">{label}</Label>
-                  <p className="text-xs text-muted-foreground">{description}</p>
+                  <Label className="text-sm font-medium">{t(labelKey)}</Label>
+                  <p className="text-xs text-muted-foreground">{t(descKey)}</p>
                 </div>
               </div>
               <Switch
@@ -122,7 +123,7 @@ export function TrayNotificationPreferences() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-sm font-medium">Ore di Silenzio</Label>
+              <Label className="text-sm font-medium">{t('trayNotificationsComp.quietHours')}</Label>
             </div>
             <Switch
               checked={prefs.quietHoursEnabled}
@@ -131,12 +132,12 @@ export function TrayNotificationPreferences() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Durante le ore di silenzio, le notifiche tray vengono soppresse (gli errori critici vengono comunque mostrati).
+            {t('trayNotificationsComp.quietHoursDesc')}
           </p>
           {prefs.quietHoursEnabled && (
             <div className="flex items-center gap-3 pl-6">
               <div className="flex items-center gap-2">
-                <Label className="text-xs">Dalle</Label>
+                <Label className="text-xs">{t('trayNotificationsComp.from')}</Label>
                 <Input
                   type="time"
                   value={prefs.quietHoursStart}
@@ -144,7 +145,7 @@ export function TrayNotificationPreferences() {
                   className="h-8 w-28 text-xs"
                 />
               </div>
-              <span className="text-xs text-muted-foreground">alle</span>
+              <span className="text-xs text-muted-foreground">{t('trayNotificationsComp.to')}</span>
               <div className="flex items-center gap-2">
                 <Input
                   type="time"
@@ -168,10 +169,10 @@ export function TrayNotificationPreferences() {
             disabled={!prefs.enabled || testSending}
           >
             <Send className="h-3.5 w-3.5 mr-1.5" />
-            {testSending ? 'Inviando...' : 'Invia Notifica di Prova'}
+            {testSending ? t('trayNotificationsComp.sending') : t('trayNotificationsComp.sendTest')}
           </Button>
           <span className="text-xs text-muted-foreground">
-            Verifica che le notifiche OS funzionino correttamente
+            {t('trayNotificationsComp.testHint')}
           </span>
         </div>
       </CardContent>

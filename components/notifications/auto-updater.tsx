@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, X, Sparkles } from 'lucide-react';
 import { useTauriUpdater } from '@/hooks/use-tauri-updater';
 import { useUpdateCheck } from '@/hooks/use-update-check';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '@/lib/i18n';
 
 /**
  * AutoUpdater - Notifica aggiornamento stile Claude Code
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Nessun popup, nessun dialog, nessuna segatura.
  */
 export function AutoUpdater() {
+  const { t } = useTranslation();
   const { updateInfo, hasUpdate, dismissUpdate } = useUpdateCheck();
   const {
     isDownloading,
@@ -93,7 +95,7 @@ export function AutoUpdater() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white">
-                Aggiornamento disponibile
+                {t('autoUpdaterComp.updateAvailable')}
               </p>
               <p className="text-xs text-slate-400">
                 v{updateInfo.current_version} → v{updateInfo.latest_version}
@@ -113,7 +115,7 @@ export function AutoUpdater() {
           {isDownloading && (
             <div className="px-4 py-2 bg-slate-800/50">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                <span>Download in corso...</span>
+                <span>{t('autoUpdaterComp.downloadInProgress')}</span>
                 <span>{Math.round(downloadProgress)}%</span>
               </div>
               <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
@@ -131,7 +133,7 @@ export function AutoUpdater() {
           {isInstalling && (
             <div className="px-4 py-3 bg-slate-800/50 flex items-center gap-2">
               <Loader2 className="h-4 w-4 text-emerald-400 animate-spin" />
-              <span className="text-sm text-emerald-400">Installazione... riavvio imminente</span>
+              <span className="text-sm text-emerald-400">{t('autoUpdaterComp.installingRestartSoon')}</span>
             </div>
           )}
           
@@ -153,17 +155,17 @@ export function AutoUpdater() {
                 {isDownloading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Scaricando...
+                    {t('autoUpdaterComp.downloading')}
                   </>
                 ) : updating ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Preparazione...
+                    {t('autoUpdaterComp.preparing')}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4" />
-                    Aggiorna ora
+                    {t('autoUpdaterComp.updateNow')}
                   </>
                 )}
               </button>

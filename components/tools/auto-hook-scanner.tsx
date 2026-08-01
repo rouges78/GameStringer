@@ -54,7 +54,7 @@ export function AutoHookScanner() {
       }) as HookScanResult;
       setResult(res);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Errore durante la scansione');
+      setError(err instanceof Error ? err.message : t('autoHookScannerComp.erroreDuranteLaScansione'));
     } finally {
       setLoading(false);
     }
@@ -77,8 +77,7 @@ export function AutoHookScanner() {
           </Badge>
         </div>
         <p className="text-xs text-slate-400 mt-1">
-          Scansiona la memoria del gioco per trovare automaticamente gli hook point. 
-          Niente più reverse engineering manuale — clicca sul testo e agganciati.
+          {t('autoHookScannerComp.intro')}
         </p>
       </CardHeader>
 
@@ -89,7 +88,7 @@ export function AutoHookScanner() {
             <Input
               value={processId}
               onChange={e => setProcessId(e.target.value.replace(/\D/g, ''))}
-              placeholder="es. 12345"
+              placeholder={t('autoHookScannerComp.pidPlaceholder')}
               className="h-8 text-xs bg-rose-950/30 border-rose-500/20"
             />
           </div>
@@ -98,7 +97,7 @@ export function AutoHookScanner() {
             <Input
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
-              placeholder="es. Health Potion"
+              placeholder={t('autoHookScannerComp.searchPlaceholder')}
               className="h-8 text-xs bg-rose-950/30 border-rose-500/20"
               onKeyDown={e => e.key === 'Enter' && handleScan()}
             />
@@ -112,9 +111,9 @@ export function AutoHookScanner() {
           size="sm"
         >
           {loading ? (
-            <><Loader2 className="h-3 w-3 animate-spin mr-1" /> Scansione memoria...</>
+            <><Loader2 className="h-3 w-3 animate-spin mr-1" /> {t('autoHookScannerComp.scanningMemory')}</>
           ) : (
-            <><Search className="h-3 w-3 mr-1" /> Scansiona</>
+            <><Search className="h-3 w-3 mr-1" /> {t('autoHookScannerComp.scan')}</>
           )}
         </Button>
 
@@ -129,7 +128,7 @@ export function AutoHookScanner() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-400">
-                {result.candidates.length} risultati in {result.scan_duration_ms}ms
+                {`${result.candidates.length} ${t('autoHookScannerComp.resultsIn')} ${result.scan_duration_ms}ms`}
               </span>
               <Badge variant="outline" className="text-micro">
                 {result.process_name}
@@ -138,7 +137,7 @@ export function AutoHookScanner() {
 
             {result.candidates.length === 0 ? (
               <div className="text-center py-4 text-xs text-slate-500">
-                Nessun hook trovato. Prova con un testo diverso visibile a schermo.
+                {t('autoHookScannerComp.noHookFound')}
               </div>
             ) : (
               <div className="space-y-1.5 max-h-60 overflow-y-auto">
@@ -190,7 +189,7 @@ export function AutoHookScanner() {
 
         <div className="text-micro text-slate-600 flex items-center gap-1">
           <Zap className="h-3 w-3" />
-          Suggerimento: Apri Task Manager, trova il PID del gioco, inserisci il testo visibile a schermo.
+          {t('autoHookScannerComp.hint')}
         </div>
       </CardContent>
     </Card>
