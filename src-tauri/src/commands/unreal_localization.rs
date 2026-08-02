@@ -1618,23 +1618,12 @@ pub async fn get_unreal_localization_status(game_path: String) -> Result<UnrealL
         }
     }
 
-    // Prova a contare le stringhe nel pak GS se presente
+    // Conta le stringhe nel pak GS col reader VERO (legacy v3-v9 E path-hash
+    // v10+), deduplicate per chiave. Il contatore precedente parsava l'indice
+    // con versione 4 CABLATA e su un pak repak-V11 falliva in silenzio:
+    // "0 stringhe tradotte" su una patch funzionante (02/08/2026).
     if let Some(ref pak_path) = gs_pak_path {
-        if let Ok(data) = fs::read(pak_path) {
-            if let Ok((_, index_offset, index_size, false)) = find_pak_footer(&data) {
-                if let Ok((_, pak_entries)) = parse_pak_index(&data, 4, index_offset, index_size) {
-                    for pe in &pak_entries {
-                        if pe.filename.ends_with(".locres") {
-                            if let Ok(locres_data) = extract_file_from_pak(&data, pe) {
-                                if let Ok((_, loc_entries)) = parse_locres(&locres_data) {
-                                    translated_entries += loc_entries.iter().filter(|e| !e.value.is_empty()).count();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        translated_entries = super::unreal_iostore::count_pak_translated_entries(Path::new(pak_path));
     }
 
     // Cerca .locres liberi

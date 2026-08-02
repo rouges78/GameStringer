@@ -2803,6 +2803,41 @@ pub fn read_game_locmeta(game_dir: &Path) -> Option<(String, Vec<u8>)> {
     best
 }
 
+/// Conta le entry CON TESTO nei .locres di un _P.pak nostro, deduplicate per
+/// (namespace, key): il pak può contenere lo stesso .locres sotto più culture
+/// (override en) e senza dedup il numero raddoppia (il famoso "1622").
+///
+/// Nato il 02/08/2026 sera: il pannello di stato diceva "0 stringhe tradotte"
+/// su una patch che metteva l'italiano A SCHERMO. Il vecchio contatore leggeva
+/// il footer, BUTTAVA VIA la versione e parsava l'indice con versione 4
+/// cablata: su un pak repak-V11 il parse falliva, l'if-let inghiottiva
+/// l'errore e il contatore restava 0 — un fallimento muto dentro il pannello
+/// che dovrebbe dire la verità sulla patch.
+pub fn count_pak_translated_entries(pak_path: &Path) -> usize {
+    let oodle = OodleLib::load().ok();
+    let list = match extract_files_by_ext_from_pak(pak_path, &oodle, ".locres") {
+        Ok(l) => l,
+        Err(e) => {
+            log::warn!("⚠️ conteggio patch: pak {} illeggibile: {}", pak_path.display(), e);
+            return 0;
+        }
+    };
+    let mut seen = std::collections::HashSet::new();
+    for f in list {
+        match super::unreal_localization::parse_locres_pub(&f.data) {
+            Ok((_v, entries)) => {
+                for e in entries {
+                    if !e.value.is_empty() {
+                        seen.insert((e.namespace, e.key));
+                    }
+                }
+            }
+            Err(e) => log::warn!("⚠️ conteggio patch: {} non parsabile: {}", f.path, e),
+        }
+    }
+    seen.len()
+}
+
 /// Decodifica il solo Offset dall'encoded entry (campo non ambiguo), poi legge
 /// l'header inline (campi espliciti) e ricompone i dati decomprimendo i blocchi.
 fn pak_extract_one(
