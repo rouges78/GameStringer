@@ -1307,13 +1307,24 @@ pub async fn apply_unreal_translation(
     let mut pak_files: Vec<(String, Vec<u8>)> = Vec::new();
     pak_files.push((locres_path_target.clone(), locres_data.clone()));
 
-    if target_language != "en" {
+    // GS_UE_SKIP_EN_OVERRIDE=1 salta l'override inglese. Serve all'ESPERIMENTO
+    // DISCRIMINANTE sul locmeta (02/08/2026): col pak che contiene ANCHE l'en
+    // in italiano, -culture=it dà italiano sia che il locmeta registri la
+    // cultura sia che non la registri (ripiego su en) — indistinguibile.
+    // Senza l'override en l'esito è binario: italiano = locmeta funziona,
+    // inglese = il motore lo ignora. In produzione la variabile non c'è e
+    // l'override resta: è la rete di sicurezza che oggi mette l'italiano
+    // a schermo.
+    let skip_en = std::env::var("GS_UE_SKIP_EN_OVERRIDE").map(|v| v == "1").unwrap_or(false);
+    if target_language != "en" && !skip_en {
         let locres_path_en = format!(
             "{}/Content/Localization/{}/en/{}.locres",
             project_name, LOC_TARGET, LOC_TARGET
         );
         log::info!("📦 Anche .locres override inglese: {}", locres_path_en);
         pak_files.push((locres_path_en, locres_data.clone()));
+    } else if skip_en {
+        log::warn!("🧪 GS_UE_SKIP_EN_OVERRIDE=1: NIENTE override en — pak solo {}/ (modalità esperimento locmeta)", target_language);
     }
 
     // ── .locmeta: registra la cultura target ──────────────────────────────
