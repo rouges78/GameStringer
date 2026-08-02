@@ -14,7 +14,7 @@
  * aggiungere; non copre quelli di domani. Il .gitignore ora usa un glob su
  * "estratti" seguito da qualsiasi cosa, ma un glob difende solo dal caso che
  * abbiamo già visto: la prossima cartella potrebbe chiamarsi "dump-ue5" o
- * "lavoro-below".
+ * "lavoro-tmp".
  *
  * Questo gate difende dall'ALTRO lato: non da come si chiama la cartella, ma da
  * COSA c'è dentro. Se un file con estensione da gioco risulta tracciato fuori
