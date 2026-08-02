@@ -99,7 +99,51 @@ async fn send_native_notification(
         .map_err(|e| format!("Errore notifica: {}", e))
 }
 
+/// Logger minimale sul terminale, senza dipendenze nuove.
+///
+/// ⚠️ SCOPERTO IL 02/08/2026: il crate `log` era in Cargo.toml ma NESSUN
+/// logger è mai stato installato — il facade `log` senza backend SCARTA ogni
+/// messaggio in silenzio. Ogni log::info!/warn!/error! del backend Rust,
+/// comprese le diagnosi dei fallimenti scritte apposta per essere lette
+/// («repak non disponibile», «locmeta non trovato», «pak non montabile»),
+/// è sempre finito nel vuoto. In terminale arrivavano solo i println!.
+/// Il sintomo che l'ha tradito: un apply completo senza UNA riga di log.
+struct TerminalLogger;
+
+impl log::Log for TerminalLogger {
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        // I crate esterni (reqwest, hyper, …) parlano tanto a livello Info:
+        // per loro solo Warn+, per il NOSTRO codice il livello configurato.
+        let nostro = metadata.target().starts_with("gamestringer");
+        if nostro {
+            metadata.level() <= log::max_level()
+        } else {
+            metadata.level() <= log::Level::Warn
+        }
+    }
+    fn log(&self, record: &log::Record) {
+        if self.enabled(record.metadata()) {
+            println!("[{}] [{}] {}", record.level(), record.target(), record.args());
+        }
+    }
+    fn flush(&self) {}
+}
+
+static TERMINAL_LOGGER: TerminalLogger = TerminalLogger;
+
 fn main() {
+    // Installa il logger PRIMA di qualunque altra cosa: un log emesso prima
+    // di set_logger è perso. RUST_LOG=debug alza il livello, default Info.
+    if log::set_logger(&TERMINAL_LOGGER).is_ok() {
+        let level = match std::env::var("RUST_LOG").as_deref() {
+            Ok("debug") | Ok("DEBUG") => log::LevelFilter::Debug,
+            Ok("trace") | Ok("TRACE") => log::LevelFilter::Trace,
+            _ => log::LevelFilter::Info,
+        };
+        log::set_max_level(level);
+        log::info!("logger attivo (livello {}) — prima di oggi questi messaggi finivano nel vuoto", level);
+    }
+
     // Usa la directory dei dati dell'app per evitare che Tauri riavvii quando i file cambiano
     let app_data_dir = if cfg!(debug_assertions) {
         // In dev, usa una directory temporanea fuori da src-tauri
