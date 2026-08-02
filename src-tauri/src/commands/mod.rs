@@ -130,6 +130,8 @@ pub mod game_update_tracker;
 pub mod gamestranslator_integration;
 // repak wrapper (PAK creation via repak binary)
 pub mod repak_wrapper;
+// retoc wrapper (coppia .utoc/.ucas per la tripletta IoStore)
+pub mod retoc_wrapper;
 // RSS proxy (bypass CORS per feed news)
 pub mod rss_proxy;
 // Rilevamento lingue gioco da file di localizzazione

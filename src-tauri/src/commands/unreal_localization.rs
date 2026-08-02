@@ -1383,17 +1383,53 @@ pub async fn apply_unreal_translation(
     
     let repak_result = super::repak_wrapper::create_pak(&pak_file_refs, &pak_path, None).await
         .map_err(|e| format!("Errore creazione PAK: {}", e))?;
-    
-    log::info!("✅ PAK traduzione salvato via {}: {} ({} entries)", 
+
+    log::info!("✅ PAK traduzione salvato via {}: {} ({} entries)",
         repak_result.method, pak_path.display(), loc_entries.len());
-    
+
+    // ── TRIPLETTA: coppia .utoc/.ucas accanto al pak ─────────────────────
+    // Nei giochi IoStore (UE5.6+) un _P.pak ORFANO non viene montato: patch
+    // "installata", gioco in lingua originale, nessun errore. Misurato su
+    // Below il 02/08/2026, due volte nello stesso pomeriggio — la seconda
+    // perché il Rimuovi cancella la coppia e l'apply ricreava solo il pak.
+    // Il gioco è IoStore se nella cartella Paks ci sono .utoc SUOI (non i
+    // nostri _GameStringer_). Se la coppia non si può generare, si FALLISCE:
+    // un pak orfano su un gioco IoStore è un file rotto con un altro nome.
+    let game_is_iostore = fs::read_dir(&paks_dir)
+        .map(|entries| entries.flatten().any(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            name.to_lowercase().ends_with(".utoc") && !name.contains("GameStringer")
+        }))
+        .unwrap_or(false);
+
+    let mut triple_note = String::new();
+    if game_is_iostore {
+        let (utoc, ucas) = super::retoc_wrapper::write_zen_pair_for(&pak_path).await
+            .map_err(|e| {
+                // Niente pak orfano in giro: meglio nessuna patch di una
+                // patch che sembra installata e non fa nulla.
+                let _ = fs::remove_file(&pak_path);
+                format!("Coppia .utoc/.ucas non generata: {} — il pak è stato rimosso per non lasciare una patch che sembra installata ma il gioco ignorerebbe.", e)
+            })?;
+        // Prova di effetto: la tripletta è su disco, tutti e tre i file.
+        for p in [&pak_path, &utoc, &ucas] {
+            if !p.exists() {
+                return Err(format!("Tripletta incompleta: manca {}", p.display()));
+            }
+        }
+        log::info!("✅ Tripletta completa: {} + .utoc + .ucas", pak_filename);
+        triple_note = " + coppia .utoc/.ucas (tripletta IoStore)".to_string();
+    } else {
+        log::info!("📦 Gioco senza IoStore: il _P.pak da solo basta, niente coppia zen");
+    }
+
     Ok(TranslationPakResult {
         success: true,
         pak_path: pak_path.to_string_lossy().to_string(),
         entries_count: loc_entries.len(),
         message: format!(
-            "Creato {} con {} traduzioni [{}]", 
-            pak_filename, loc_entries.len(), repak_result.method
+            "Creato {} con {} traduzioni [{}]{}",
+            pak_filename, loc_entries.len(), repak_result.method, triple_note
         ),
     })
 }
