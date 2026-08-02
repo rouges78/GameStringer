@@ -1,9 +1,3 @@
 {
-  "known": {
-    "export_cache": "mancante — injekt translator, esportazione cache. Call-site in lib/injekt-translator.ts, MODULO MORTO (mai importato, vedi dead-modules baseline): non implementare finché la UI non esiste",
-    "get_stats": "mancante — injekt translator: il pannello statistiche mostra zeri, in silenzio. Call-site in lib/injekt-translator.ts, MODULO MORTO. Nota: esiste già get_injection_stats (snake_case) in commands/injekt.rs se il modulo tornasse vivo",
-    "import_cache": "mancante — injekt translator, importazione cache. Call-site in lib/injekt-translator.ts, MODULO MORTO. La 'cache' lato Rust è simulata (injekt.rs:536): non c'è niente da importare/esportare",
-    "scan_game_files_with_info": "mancante — lib/file-watcher.ts, MODULO MORTO. Il fallback su scan_game_files c'è già; implementare (walk + metadata) solo se il watcher viene ricablato",
-    "tts_synthesize": "mancante — NESSUN comando di sintesi vocale fra quelli definiti: il doppiaggio è una UI senza motore (e components/audio-patcher.tsx è MODULO MORTO). Prima va scelto XTTS/Piper e come distribuirlo — decisione di prodotto"
-  }
+  "known": {}
 }
