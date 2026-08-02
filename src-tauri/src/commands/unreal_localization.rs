@@ -232,21 +232,25 @@ fn write_fstring(buf: &mut Vec<u8>, s: &str) {
 // .locmeta (FTextLocalizationMetaDataResource)
 // ═══════════════════════════════════════════════════════════════════
 
-/// Magic del .locmeta: FGuid(0xA14CEE4F, 0x83554746, 0xBE47CA61, 0xB0F7DEFD)
+/// Magic del .locmeta: FGuid(0xA14CEE4F, 0x83554868, 0xBD464C4C, 0x7C50DA70)
 /// serializzato come quattro u32 little-endian.
 ///
-/// ⚠️ FONTE: TextLocalizationResource.cpp di UE — NON ancora verificato su un
-/// Game.locmeta autentico (lezione [locres-magic]: il magic .locres "da
-/// documentazione" era inventato). La differenza rispetto ad allora: qui il
-/// magic è CONTROLLATO IN PARSE su un file che viene dal gioco vero prima di
-/// scrivere qualsiasi cosa — se è sbagliato, parse_locmeta fallisce forte e
-/// l'override locmeta semplicemente non viene prodotto (comportamento di
-/// oggi), invece di spedire un file che il motore ignora.
+/// ✅ VERIFICATO SU FILE AUTENTICO il 02/08/2026: Game.locmeta di Below,
+/// Rusted Gods (123 byte, estratto dal .pak del gioco), primi 16 byte
+/// `4F EE 4C A1 68 48 55 83 6C 4C 46 BD 70 DA 50 7C`, byte 17 = 01
+/// (versione AddedCompiledCultures).
+///
+/// STORIA: la prima versione di questa costante veniva "dalla sorgente UE"
+/// citata a memoria ed era SBAGLIATA in 12 byte su 16 — lezione locres-magic,
+/// seconda volta, identica. La differenza che ha salvato la giornata: il magic
+/// è controllato in parse su un file che viene dal gioco vero PRIMA di
+/// scrivere qualsiasi cosa, quindi l'errore si è annunciato in un log invece
+/// di uscire in un pak che il motore avrebbe ignorato in silenzio.
 const LOCMETA_MAGIC: [u8; 16] = [
     0x4F, 0xEE, 0x4C, 0xA1,
-    0x46, 0x47, 0x55, 0x83,
-    0x61, 0xCA, 0x47, 0xBE,
-    0xFD, 0xDE, 0xF7, 0xB0,
+    0x68, 0x48, 0x55, 0x83,
+    0x6C, 0x4C, 0x46, 0xBD,
+    0x70, 0xDA, 0x50, 0x7C,
 ];
 
 /// Contenuto di un .locmeta.
@@ -266,7 +270,16 @@ pub fn parse_locmeta(data: &[u8]) -> Result<LocMetaInfo, String> {
         return Err(format!("file troppo corto per un .locmeta: {} byte", data.len()));
     }
     if data[..16] != LOCMETA_MAGIC {
-        return Err("magic .locmeta non riconosciuto".to_string());
+        // Stampa i byte VERI: è così che si corregge un magic sbagliato — con
+        // il file autentico, non con un'altra citazione della documentazione.
+        // (02/08/2026: il magic preso dalla sorgente UE non corrispondeva al
+        // Game.locmeta reale di Below — lezione locres-magic, seconda volta.)
+        let trovato: String = data[..16].iter().map(|b| format!("{:02X} ", b)).collect();
+        let atteso: String = LOCMETA_MAGIC.iter().map(|b| format!("{:02X} ", b)).collect();
+        return Err(format!(
+            "magic .locmeta non riconosciuto — trovato: {}· atteso: {}· byte 17 (versione?): {:02X}",
+            trovato, atteso, data.get(16).copied().unwrap_or(0)
+        ));
     }
     let mut off = 16usize;
     let version = data[off];
