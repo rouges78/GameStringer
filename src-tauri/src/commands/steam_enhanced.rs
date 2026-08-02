@@ -1181,6 +1181,16 @@ pub fn find_game_path_by_appid(app_id: u32) -> Result<Option<String>, String> {
     }
 }
 
+/// Normalizza un nome per il confronto cartella ≈ nome gioco:
+/// tiene solo gli alfanumerici ASCII, in minuscolo.
+/// "Below, Rusted Gods" → "belowrustedgods" == "BelowRustedGods" normalizzato.
+fn normalize_install_dir(s: &str) -> String {
+    s.chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .map(|c| c.to_ascii_lowercase())
+        .collect()
+}
+
 /// 📁 Trova il percorso reale di un gioco cercando in tutte le librerie Steam
 #[tauri::command(rename_all = "camelCase")]
 pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
@@ -1210,6 +1220,43 @@ pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
                 }
             }
             
+            // 🔧 Il chiamante a volte passa il NOME del gioco ("Below, Rusted
+            // Gods") invece della cartella ("BelowRustedGods"): il frontend fa
+            // `game.install_dir || game.name` e quando install_dir manca arriva
+            // il nome con virgole e spazi. Misurato il 02/08/2026 proprio su
+            // Below: gioco installato, ricerca fallita, apply mai partito.
+            // Confronto normalizzato (solo alfanumerici, case-insensitive) con
+            // ogni cartella REALE di steamapps/common, prima di provare i
+            // percorsi indovinati D:\ / E:\.
+            let wanted = normalize_install_dir(&install_dir);
+            if !wanted.is_empty() {
+                let mut roots: Vec<std::path::PathBuf> =
+                    vec![steam_dir.path().join("steamapps").join("common")];
+                if let Ok(libraries) = steam_dir.libraries() {
+                    for library in libraries {
+                        if let Ok(lib) = library {
+                            roots.push(lib.path().join("steamapps").join("common"));
+                        }
+                    }
+                }
+                for root in roots {
+                    if let Ok(entries) = std::fs::read_dir(&root) {
+                        for entry in entries.flatten() {
+                            let p = entry.path();
+                            if !p.is_dir() { continue; }
+                            if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
+                                if normalize_install_dir(name) == wanted {
+                                    let path_str = p.to_string_lossy().to_string();
+                                    info!("✅ Gioco trovato con confronto normalizzato ('{}' ≈ '{}'): {}",
+                                        install_dir, name, path_str);
+                                    return Ok(path_str);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // 🔧 FALLBACK: Cerca in percorsi comuni manualmente (D:\, E:\, etc.)
             let mut fallback_paths = vec![
                 format!("D:\\SteamLibrary\\steamapps\\common\\{}", install_dir),
@@ -2662,4 +2709,34 @@ pub async fn steam_logout() -> Result<(), String> {
     }
     
     Ok(())
+}
+
+#[cfg(test)]
+mod tests_install_path {
+    use super::normalize_install_dir;
+
+    /// Il caso misurato il 02/08/2026: nome con virgola vs cartella compatta.
+    #[test]
+    fn nome_gioco_matcha_cartella() {
+        assert_eq!(normalize_install_dir("Below, Rusted Gods"), "belowrustedgods");
+        assert_eq!(
+            normalize_install_dir("Below, Rusted Gods"),
+            normalize_install_dir("BelowRustedGods")
+        );
+        assert_eq!(
+            normalize_install_dir("VA-11 Hall-A"),
+            normalize_install_dir("VA11HallA")
+        );
+    }
+
+    /// Nomi diversi NON devono collidere, e l'input senza alfanumerici dà
+    /// stringa vuota (il chiamante la scarta: match su vuoto = match su tutto).
+    #[test]
+    fn niente_falsi_match() {
+        assert_ne!(
+            normalize_install_dir("Below"),
+            normalize_install_dir("BelowRustedGods")
+        );
+        assert_eq!(normalize_install_dir("..., !!!"), "");
+    }
 }
