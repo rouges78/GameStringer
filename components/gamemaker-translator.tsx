@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 import {
   Loader2, Search, Languages, Download, Upload, RotateCcw, 
   ChevronLeft, ChevronRight, FileText, Zap, Check, X,
@@ -193,11 +194,19 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
     const newTranslations: Record<number, string> = { ...translations };
     let done = 0;
+    // ⚠️ Contatori di QUESTA sessione. Prima il totale finale era
+    // `Object.keys(newTranslations).length`, che parte da `{...translations}`:
+    // contava anche le traduzioni già presenti da prima, e quindi restava alto
+    // anche quando la rete era giù e non ne arrivava nessuna nuova. Il toast
+    // usciva verde su zero lavoro fatto.
+    let riuscite = 0;
+    let fallite = 0;
+    let primoErrore = '';
 
     // Batch translate in groups of 5
     for (let i = 0; i < toTranslate.length; i += 5) {
       if (abortRef.current) break;
-      
+
       const batch = toTranslate.slice(i, i + 5);
       const promises = batch.map(async (s) => {
         try {
@@ -207,9 +216,17 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
           });
           if (result?.translated_text) {
             newTranslations[s.index] = result.translated_text;
+            riuscite++;
+          } else {
+            fallite++;
           }
-        } catch {
-          // Skip failed translations
+        } catch (err) {
+          // Il `catch {}` vuoto che stava qui rendeva la rete assente
+          // indistinguibile da una traduzione perfetta: nessun log, nessun
+          // conteggio, e il successo dichiarato lo stesso.
+          fallite++;
+          if (!primoErrore) primoErrore = String(err);
+          clientLogger.error('[GameMaker] stringa non tradotta:', String(err));
         }
       });
 
@@ -220,8 +237,24 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
     }
 
     setIsTranslating(false);
-    const translated = Object.keys(newTranslations).length;
-    toast.success(`${translated} stringhe tradotte`);
+    if (riuscite === 0) {
+      toast.error(
+        t('gameMakerTranslator.noneTranslated')
+          .replace('{f}', String(fallite))
+          .replace('{n}', String(toTranslate.length)),
+        primoErrore ? { description: primoErrore } : undefined
+      );
+      return;
+    }
+    if (fallite > 0) {
+      toast.warning(
+        t('gameMakerTranslator.translatedWithFailures')
+          .replace('{n}', String(riuscite))
+          .replace('{f}', String(fallite))
+      );
+    } else {
+      toast.success(t('gameMakerTranslator.translatedToast').replace('{n}', String(riuscite)));
+    }
   };
 
   // Translate ALL strings (not just visible page)
@@ -236,6 +269,12 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
     const newTranslations: Record<number, string> = { ...translations };
     let done = 0;
     let pageNum = 0;
+    // Stessi contatori di translateBatch, e per la stessa ragione: il totale
+    // finale non può essere la dimensione della mappa, che include il lavoro
+    // di prima. Vedi il commento là sopra.
+    let riuscite = 0;
+    let fallite = 0;
+    let primoErrore = '';
     // Guardia anti-loop: se il backend restituisce la stessa pagina due volte
     // (bug di paginazione, successo il 28/07 col ramo JSON che ignorava
     // offset), si esce invece di girare per sempre con la barra piena.
@@ -279,8 +318,15 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
             });
             if (result?.translated_text) {
               newTranslations[s.index] = result.translated_text;
+              riuscite++;
+            } else {
+              fallite++;
             }
-          } catch {}
+          } catch (err) {
+            fallite++;
+            if (!primoErrore) primoErrore = String(err);
+            clientLogger.error('[GameMaker] stringa non tradotta:', String(err));
+          }
         });
 
         await Promise.all(promises);
@@ -298,9 +344,25 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
     setTranslations({ ...newTranslations });
     setIsTranslating(false);
-    
-    const total = Object.keys(newTranslations).length;
-    toast.success(`Traduzione completata: ${total} stringhe`);
+
+    if (riuscite === 0) {
+      toast.error(
+        t('gameMakerTranslator.noneTranslated')
+          .replace('{f}', String(fallite))
+          .replace('{n}', String(fallite)),
+        primoErrore ? { description: primoErrore } : undefined
+      );
+      return;
+    }
+    if (fallite > 0) {
+      toast.warning(
+        t('gameMakerTranslator.translatedWithFailures')
+          .replace('{n}', String(riuscite))
+          .replace('{f}', String(fallite))
+      );
+    } else {
+      toast.success(t('gameMakerTranslator.translatedToast').replace('{n}', String(riuscite)));
+    }
   };
 
   // Patch data.win with translations

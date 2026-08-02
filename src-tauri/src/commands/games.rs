@@ -637,25 +637,45 @@ pub async fn translate_text_simple(
         urlencoding::encode(&text)
     );
     
-    if let Ok(response) = client.get(&url).send().await {
-        if let Ok(json) = response.json::<serde_json::Value>().await {
-            // Formato risposta: [[["traduzione","originale",...],...],...]
-            if let Some(arr) = json.get(0).and_then(|v| v.as_array()) {
-                let mut result = String::new();
-                for item in arr {
-                    if let Some(translated) = item.get(0).and_then(|v| v.as_str()) {
-                        result.push_str(translated);
+    match client.get(&url).send().await {
+        Ok(response) => {
+            let status = response.status();
+            if !status.is_success() {
+                // 414 = URL troppo lungo: succede coi batch di dialoghi concatenati,
+                // perché la richiesta è una GET e il testo viaggia nella query string.
+                return Err(format!(
+                    "Google Translate ha risposto {} ({} caratteri inviati){}",
+                    status, text.len(),
+                    if status.as_u16() == 414 { " — batch troppo grande, riducilo" } else { "" }
+                ));
+            }
+            match response.json::<serde_json::Value>().await {
+                Ok(json) => {
+                    // Formato risposta: [[["traduzione","originale",...],...],...]
+                    if let Some(arr) = json.get(0).and_then(|v| v.as_array()) {
+                        let mut result = String::new();
+                        for item in arr {
+                            if let Some(translated) = item.get(0).and_then(|v| v.as_str()) {
+                                result.push_str(translated);
+                            }
+                        }
+                        if !result.is_empty() {
+                            return Ok(TranslateResult { translated_text: result });
+                        }
                     }
+                    Err("Risposta di traduzione vuota o in formato inatteso".to_string())
                 }
-                if !result.is_empty() {
-                    return Ok(TranslateResult { translated_text: result });
-                }
+                Err(e) => Err(format!("Risposta di traduzione illeggibile: {}", e)),
             }
         }
+        // ⚠️ Qui prima c'era `Ok(TranslateResult { translated_text: text })`, cioè
+        // il TESTO ORIGINALE restituito come se fosse una traduzione riuscita.
+        // Chi chiamava non aveva modo di accorgersene: il risultato di una rete
+        // assente era indistinguibile da quello di una traduzione perfetta, e
+        // finiva impacchettato in un .pak annunciato come "installato".
+        // Un errore esplicito lascia al chiamante la scelta; un falso successo no.
+        Err(e) => Err(format!("Traduzione non riuscita (rete o timeout): {}", e)),
     }
-    
-    // Fallback: ritorna testo originale
-    Ok(TranslateResult { translated_text: text })
 }
 
 #[tauri::command]

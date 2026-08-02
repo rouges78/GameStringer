@@ -307,7 +307,10 @@
     "scanExeToast": "YYC: {n} translatable strings from EXE",
     "scanStrgToast": "data.win: {n} translatable strings",
     "noteTextJson": "Translations are written to the lang/*.json files (automatic .bak copy before every change; use \"Restore\" to go back to the original). They are text files: translations may be longer than the original, no truncation.",
-    "samePageTwice": "The engine returned the same page of strings twice: translation stopped to avoid an infinite loop. Please report this."
+    "samePageTwice": "The engine returned the same page of strings twice: translation stopped to avoid an infinite loop. Please report this.",
+    "translatedToast": "{n} strings translated",
+    "translatedWithFailures": "{n} translated, {f} failed",
+    "noneTranslated": "No strings were translated: {f} attempts failed out of {n}"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Text copied to clipboard",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "I confirm I own the game",
     "whitelistBlocked": "This title is excluded from translation at the publisher's request.",
     "whitelistOfficialNotice": "This game already has an official localization in the selected language: a fan translation is probably unnecessary.",
-    "advancedTools": "Advanced tools"
+    "advancedTools": "Advanced tools",
+    "errNoTranslationEffect": "No strings were translated: patch not created",
+    "stringsTranslated": "strings translated"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Error loading DRAT info:",
@@ -4043,7 +4048,8 @@
     "gamesReadyLabel": "games ready",
     "dryRunPipelineScan": "Dry Run — Pipeline scan",
     "dryRunPipelineScanDesc": "Automatic detect + extract check on every installed game (without translating)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "failed"
   },
   "languages": {
     "cs": "Čeština",

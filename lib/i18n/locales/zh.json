@@ -307,7 +307,10 @@
     "scanExeToast": "YYC：EXE 中有 {n} 条可翻译字符串",
     "scanStrgToast": "data.win：{n} 条可翻译字符串",
     "noteTextJson": "翻译会写入 lang/*.json 文件（每次修改前自动创建 .bak 副本；「恢复」可回到原始状态）。它们是文本文件：翻译可以比原文更长，不会被截断。",
-    "samePageTwice": "引擎两次返回了同一页字符串：已停止翻译以避免无限循环。请报告此问题。"
+    "samePageTwice": "引擎两次返回了同一页字符串：已停止翻译以避免无限循环。请报告此问题。",
+    "translatedToast": "已翻译 {n} 条字符串",
+    "translatedWithFailures": "已翻译 {n} 条，{f} 条失败",
+    "noneTranslated": "没有字符串被翻译：{n} 条中有 {f} 条失败"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "文本已复制到剪贴板",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "确认，我拥有本游戏",
     "whitelistBlocked": "应发行商要求，该游戏已被排除在翻译之外。",
     "whitelistOfficialNotice": "该游戏已有所选语言的官方本地化：粉丝翻译可能没有必要。",
-    "advancedTools": "高级工具"
+    "advancedTools": "高级工具",
+    "errNoTranslationEffect": "没有翻译任何字符串：未创建补丁",
+    "stringsTranslated": "条字符串已翻译"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "加载 DRAT 信息时出错：",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "款游戏就绪",
     "dryRunPipelineScan": "Dry Run — 流程扫描",
     "dryRunPipelineScanDesc": "对所有已安装游戏自动执行检测与提取检查（不进行翻译）",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "失败"
   },
   "languages": {
     "cs": "Čeština",

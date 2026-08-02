@@ -121,6 +121,54 @@ function compatRefFor(game: Game): CompatGameRef {
   };
 }
 
+/** Separatore fra le stringhe concatenate in una sola richiesta di traduzione. */
+const SEP_TRADUZIONE = '\n||||\n';
+
+/**
+ * Traduce un gruppo di stringhe in una sola chiamata, dimezzando il gruppo e
+ * ritentando quando la richiesta è troppo grande.
+ *
+ * `translate_text_simple` è una **GET**: il testo viaggia nella query string,
+ * quindi il limite è sulla LUNGHEZZA COMPLESSIVA, non sul numero di stringhe.
+ * Con dialoghi lunghi un batch da 15 sfonda il limite e il server risponde 414.
+ * Prima il backend si limitava a dire «batch troppo grande, riducilo» e nessuno
+ * riduceva niente: l'intero gruppo finiva fra i falliti.
+ *
+ * Ritorna un array **della stessa lunghezza dell'input**, con `null` dove la
+ * traduzione non è arrivata. Il `null` è deliberato: restituire l'originale
+ * renderebbe di nuovo un fallimento indistinguibile da un successo, ed è
+ * esattamente il difetto che ha prodotto un .pak di 811 stringhe inglesi
+ * annunciato come «Patch installata».
+ */
+async function traduciConSplit(testi: string[], lang: string): Promise<(string | null)[]> {
+  if (testi.length === 0) return [];
+  try {
+    const res = await invoke<{ translated_text?: string }>('translate_text_simple', {
+      text: testi.join(SEP_TRADUZIONE),
+      targetLang: lang,
+    });
+    const parts = res?.translated_text ? res.translated_text.split(SEP_TRADUZIONE) : [];
+    // Meno pezzi del previsto = il servizio ha troncato: trattalo come "troppo
+    // grande" e lascia che il ramo di sotto dimezzi, invece di buttare via metà
+    // gruppo silenziosamente.
+    if (parts.length < testi.length && testi.length > 1) {
+      throw new Error(`risposta incompleta: ${parts.length}/${testi.length} pezzi`);
+    }
+    return testi.map((_, i) => parts[i]?.trim() || null);
+  } catch (err) {
+    const msg = String(err);
+    const troppoGrande = msg.includes('414') || /too long|incompleta/i.test(msg);
+    if (troppoGrande && testi.length > 1) {
+      const meta = Math.ceil(testi.length / 2);
+      const a = await traduciConSplit(testi.slice(0, meta), lang);
+      const b = await traduciConSplit(testi.slice(meta), lang);
+      return [...a, ...b];
+    }
+    clientLogger.error(`[traduzione] gruppo di ${testi.length} non tradotto:`, msg);
+    return testi.map(() => null);
+  }
+}
+
 export default function GameDetailPage() {
   const { t, language } = useTranslation();
   const progress = useProgress();
@@ -999,27 +1047,47 @@ export default function GameDetailPage() {
       // 2. Traduci in batch da 15
       const BATCH = 15;
       const translated: {namespace: string; key: string; source_hash: string; original: string; translated: string}[] = [];
+      let falliti = 0;
 
       for (let i = 0; i < toTranslate.length; i += BATCH) {
         const batch = toTranslate.slice(i, i + BATCH);
-        const combined = batch.map(e => e.value).join('\n||||\n');
 
-        try {
-          const result = await invoke<string>('translate_text_simple', { text: combined, targetLang: lang });
-          const parts = result ? result.split('\n||||\n') : [];
-          batch.forEach((e, idx) => {
-            translated.push({
-              namespace: e.namespace,
-              key: e.key,
-              source_hash: e.source_hash,
-              original: e.value,
-              translated: parts[idx]?.trim() || e.value,
-            });
+        // ⚠️ `translate_text_simple` ritorna un OGGETTO { translated_text }, non
+        // una stringa. Qui era tipizzato `invoke<string>` e si chiamava
+        // `result.split(...)`: eccezione a OGNI batch, catch che rimetteva gli
+        // originali, e un .pak con 811 stringhe inglesi annunciato come
+        // "Patch installata". Misurato: 0 su 811 differivano dall'originale.
+        // Ora la chiamata passa da traduciConSplit, che sul 414 dimezza invece
+        // di perdere tutto il gruppo.
+        const parts = await traduciConSplit(batch.map(e => e.value), lang);
+        batch.forEach((e, idx) => {
+          const tr = parts[idx];
+          if (!tr) falliti++;
+          translated.push({
+            namespace: e.namespace,
+            key: e.key,
+            source_hash: e.source_hash,
+            original: e.value,
+            translated: tr || e.value,
           });
-        } catch {
-          batch.forEach(e => translated.push({ namespace: e.namespace, key: e.key, source_hash: e.source_hash, original: e.value, translated: e.value }));
-        }
+        });
         setUeAiProgress({ current: Math.min(i + BATCH, total), total });
+      }
+
+      // ═══ PROVA DI EFFETTO — prima di impacchettare ═══
+      // Una patch identica all'originale si installa benissimo e lascia il gioco
+      // in lingua originale, senza un errore: è il fallimento muto. Qui si conta
+      // quante stringhe sono DAVVERO cambiate e, se sono troppo poche, si rifiuta
+      // di creare il .pak invece di dichiarare un successo che non c'è.
+      const cambiate = translated.filter(e => e.translated !== e.original).length;
+      if (cambiate === 0) {
+        const msg = t('gameDetail.errNoTranslationEffect');
+        clientLogger.error(`[UE AI] 0 stringhe cambiate su ${translated.length} (${falliti} fallite): pak NON creato`);
+        toast.error(msg, { description: `0/${translated.length} — ${falliti} ${t('common.failed')}` });
+        return;
+      }
+      if (falliti > 0) {
+        toast.warning(`${cambiate}/${translated.length} ${t('gameDetail.stringsTranslated')} — ${falliti} ${t('common.failed')}`);
       }
 
       // 3. Crea _P.pak con traduzioni
@@ -2209,14 +2277,29 @@ export default function GameDetailPage() {
           // Serve locres_count > 0: has_locres può essere true con count 0 (es. pak
           // criptati/formato custom) → l'estrazione scansionerebbe GB di pak per
           // minuti prima di fallire. Con 0 stringhe diamo subito il messaggio onesto.
-          if (st?.has_locres && (st?.locres_count ?? 0) > 0) {
+          let quanti = (st?.has_locres && (st?.locres_count ?? 0) > 0) ? (st?.locres_count ?? 0) : 0;
+          let dove = '.locres';
+
+          // Su disco niente: i giochi UE5 moderni tengono i .locres DENTRO i
+          // container (IoStore .utoc/.ucas) o dentro il .pak, compressi Oodle.
+          // Below è così: 0 file sciolti, 811 stringhe nel pak. Prima ci si
+          // fermava qui dichiarando "nessuna localizzazione estraibile" — falso.
+          if (quanti === 0) {
+            const daContainer = await invoke<{ entries?: unknown[] }>(
+              'extract_iostore_localization', { gamePath: game.installPath }
+            ).catch(() => null);
+            const n = daContainer?.entries?.length ?? 0;
+            if (n > 0) { quanti = n; dove = `${n} stringhe nel pak`; }
+          }
+
+          if (quanti > 0) {
             setAutoTranslateSteps([
-              { ...ueSteps[0], status: 'done', detail: `${st.locres_count || 0} .locres` },
+              { ...ueSteps[0], status: 'done', detail: dove === '.locres' ? `${quanti} .locres` : dove },
               { ...ueSteps[1], status: 'running' },
             ]);
             await upgradeUEWithAI(); // gestisce da sé toast/progress/errori
             setAutoTranslateSteps([
-              { ...ueSteps[0], status: 'done', detail: `${st.locres_count || 0} .locres` },
+              { ...ueSteps[0], status: 'done', detail: dove === '.locres' ? `${quanti} .locres` : dove },
               { ...ueSteps[1], status: 'done' },
             ]);
           } else {
@@ -2708,30 +2791,39 @@ export default function GameDetailPage() {
       const BATCH = 15;
       const translated: CapturedEntry[] = [...alreadyTranslated];
 
+      // Contatori di QUESTA sessione: `translated` parte da `alreadyTranslated`,
+      // quindi contare su di lui direbbe "tradotte" anche stringhe già presenti
+      // da prima. È la stessa aritmetica compiacente del toast GameMaker.
+      let cambiateOra = 0;
+      let fallitiOra = 0;
+
       for (let i = 0; i < toTranslate.length; i += BATCH) {
         const batch = toTranslate.slice(i, i + BATCH);
-        const combined = batch.map(e => e.original).join('\n||||\n');
 
-        try {
-          const result = await invoke<string>('translate_text_simple', {
-            text: combined,
-            targetLang: lang,
+        // Stesso difetto del path Unreal: il comando ritorna { translated_text },
+        // non una stringa. Con `invoke<string>` ogni batch andava in eccezione.
+        const parts = await traduciConSplit(batch.map(e => e.original), lang);
+        batch.forEach((e, idx) => {
+          const tr = parts[idx];
+          if (tr && tr !== e.original) cambiateOra++; else fallitiOra++;
+          translated.push({
+            original: e.original,
+            translated: tr || e.original,
+            line_number: e.line_number,
           });
-
-          const parts = result ? result.split('\n||||\n') : [];
-          batch.forEach((e, idx) => {
-            translated.push({
-              original: e.original,
-              translated: parts[idx]?.trim() || e.original,
-              line_number: e.line_number,
-            });
-          });
-        } catch {
-          // batch fallito → mantieni originale
-          batch.forEach(e => translated.push({ ...e }));
-        }
+        });
 
         setAiUpgradeProgress({ current: Math.min(i + BATCH, total), total });
+      }
+
+      // Nessuna stringa cambiata = file di traduzione identico all'originale:
+      // si scriverebbe senza errori e il gioco resterebbe in lingua originale.
+      if (cambiateOra === 0) {
+        clientLogger.error(`[AiUpgrade] 0 stringhe cambiate su ${toTranslate.length} (${fallitiOra} fallite): file NON scritto`);
+        toast.error(t('gameDetail.errNoTranslationEffect'), {
+          description: `0/${toTranslate.length} — ${fallitiOra} ${t('common.failed')}`,
+        });
+        return;
       }
 
       // 4. Scrivi file di traduzione statica
@@ -2742,7 +2834,11 @@ export default function GameDetailPage() {
         entries: translated,
       });
 
-      toast.success(`✅ Traduzione AI completata! ${translated.filter(e => e.translated !== e.original).length} stringhe scritte.`);
+      if (fallitiOra > 0) {
+        toast.warning(`${cambiateOra}/${toTranslate.length} ${t('gameDetail.stringsTranslated')} — ${fallitiOra} ${t('common.failed')}`);
+      } else {
+        toast.success(`✅ ${cambiateOra} ${t('gameDetail.stringsTranslated')}`);
+      }
       clientLogger.debug('[AiUpgrade] File scritto:', resultPath);
 
     } catch (e: unknown) {

@@ -307,7 +307,10 @@
     "scanExeToast": "YYC : {n} chaînes traduisibles depuis l'EXE",
     "scanStrgToast": "data.win : {n} chaînes traduisibles",
     "noteTextJson": "Les traductions sont écrites dans les fichiers lang/*.json (copie .bak automatique avant chaque modification ; « Restaurer » ramène l'original). Ce sont des fichiers texte : les traductions peuvent être plus longues que l'original, aucune troncature.",
-    "samePageTwice": "Le moteur a renvoyé deux fois la même page de chaînes : traduction arrêtée pour éviter une boucle infinie. Merci de signaler le problème."
+    "samePageTwice": "Le moteur a renvoyé deux fois la même page de chaînes : traduction arrêtée pour éviter une boucle infinie. Merci de signaler le problème.",
+    "translatedToast": "{n} chaînes traduites",
+    "translatedWithFailures": "{n} traduites, {f} échouées",
+    "noneTranslated": "Aucune chaîne traduite : {f} tentatives échouées sur {n}"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Texte copié dans le presse-papiers",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "Je confirme posséder le jeu",
     "whitelistBlocked": "Ce titre est exclu de la traduction à la demande de l'éditeur.",
     "whitelistOfficialNotice": "Ce jeu dispose déjà d'une localisation officielle dans la langue choisie : une traduction amateur est probablement superflue.",
-    "advancedTools": "Outils avancés"
+    "advancedTools": "Outils avancés",
+    "errNoTranslationEffect": "Aucune chaîne traduite : correctif non créé",
+    "stringsTranslated": "chaînes traduites"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Erreur lors du chargement des infos DRAT :",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "jeux prêts",
     "dryRunPipelineScan": "Dry Run — Analyse du pipeline",
     "dryRunPipelineScanDesc": "Vérification automatique de la détection et de l'extraction sur tous les jeux installés (sans traduire)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "échouées"
   },
   "languages": {
     "cs": "Čeština",

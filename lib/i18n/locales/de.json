@@ -307,7 +307,10 @@
     "scanExeToast": "YYC: {n} übersetzbare Strings aus der EXE",
     "scanStrgToast": "data.win: {n} übersetzbare Strings",
     "noteTextJson": "Übersetzungen werden in die lang/*.json-Dateien geschrieben (automatische .bak-Kopie vor jeder Änderung; „Wiederherstellen\" bringt das Original zurück). Es sind Textdateien: Übersetzungen dürfen länger sein als das Original, keine Kürzung.",
-    "samePageTwice": "Die Engine hat dieselbe Seite zweimal zurückgegeben: Übersetzung gestoppt, um eine Endlosschleife zu vermeiden. Bitte melden."
+    "samePageTwice": "Die Engine hat dieselbe Seite zweimal zurückgegeben: Übersetzung gestoppt, um eine Endlosschleife zu vermeiden. Bitte melden.",
+    "translatedToast": "{n} Zeichenketten übersetzt",
+    "translatedWithFailures": "{n} übersetzt, {f} fehlgeschlagen",
+    "noneTranslated": "Keine Zeichenkette übersetzt: {f} von {n} Versuchen fehlgeschlagen"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Text in die Zwischenablage kopiert",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "Ich bestätige, das Spiel zu besitzen",
     "whitelistBlocked": "Dieser Titel ist auf Wunsch des Publishers von der Übersetzung ausgeschlossen.",
     "whitelistOfficialNotice": "Dieses Spiel hat bereits eine offizielle Lokalisierung in der gewählten Sprache: eine Fan-Übersetzung ist wahrscheinlich überflüssig.",
-    "advancedTools": "Erweiterte Werkzeuge"
+    "advancedTools": "Erweiterte Werkzeuge",
+    "errNoTranslationEffect": "Keine Zeichenfolge wurde übersetzt: Patch nicht erstellt",
+    "stringsTranslated": "Zeichenfolgen übersetzt"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Fehler beim Laden der DRAT-Informationen:",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "Spiele bereit",
     "dryRunPipelineScan": "Dry Run — Pipeline-Scan",
     "dryRunPipelineScanDesc": "Automatische Erkennungs- und Extraktionsprüfung für alle installierten Spiele (ohne Übersetzung)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "fehlgeschlagen"
   },
   "languages": {
     "cs": "Čeština",

@@ -307,7 +307,10 @@
     "scanExeToast": "YYC: {n} stringhe traducibili dall'EXE",
     "scanStrgToast": "data.win: {n} stringhe traducibili",
     "noteTextJson": "Le traduzioni vengono scritte nei file lang/*.json (copia .bak automatica prima di ogni modifica; \"Ripristina\" per tornare all'originale). Sono file di testo: le traduzioni possono essere più lunghe dell'originale, nessun troncamento.",
-    "samePageTwice": "Il motore ha restituito due volte la stessa pagina di stringhe: traduzione interrotta per evitare un ciclo infinito. Segnala il problema."
+    "samePageTwice": "Il motore ha restituito due volte la stessa pagina di stringhe: traduzione interrotta per evitare un ciclo infinito. Segnala il problema.",
+    "translatedToast": "{n} stringhe tradotte",
+    "translatedWithFailures": "{n} tradotte, {f} non riuscite",
+    "noneTranslated": "Nessuna stringa tradotta: {f} tentativi falliti su {n}"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Testo copiato negli appunti",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "Confermo, possiedo il gioco",
     "whitelistBlocked": "Questo titolo è escluso dalla traduzione su richiesta del publisher.",
     "whitelistOfficialNotice": "Questo gioco ha già una localizzazione ufficiale nella lingua scelta: la traduzione amatoriale è probabilmente superflua.",
-    "advancedTools": "Strumenti avanzati"
+    "advancedTools": "Strumenti avanzati",
+    "errNoTranslationEffect": "Nessuna stringa è stata tradotta: patch non creata",
+    "stringsTranslated": "stringhe tradotte"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Errore caricamento info DRAT:",
@@ -4043,7 +4048,8 @@
     "gamesReadyLabel": "giochi pronti",
     "dryRunPipelineScan": "Dry Run — Scansione pipeline",
     "dryRunPipelineScanDesc": "Verifica automatica di rilevamento ed estrazione su tutti i giochi installati (senza tradurre)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "non riuscite"
   },
   "languages": {
     "cs": "Čeština",

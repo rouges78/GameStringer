@@ -1193,23 +1193,35 @@ pub async fn apply_unreal_translation(
     // l'unico formato che possiamo scrivere senza indovinare.
     let locres_data = write_locres_v0(&loc_entries);
     
-    // Determina il path del .locres nel .pak
-    // Pattern standard: [ProjectName]/Content/Localization/Game/[lang]/Game.locres
-    let project_name = find_project_name(game_dir).unwrap_or_else(|| "Game".to_string());
+    // Determina il path del .locres nel .pak.
+    // Pattern reale: [ProjectName]/Content/Localization/[Target]/[lang]/[Target].locres
+    //
+    // ⚠️ Il nome del file è quello del TARGET di localizzazione ("Game"), NON quello
+    // del progetto. Qui si scriveva `{project_name}.locres` — cioè, su Below,
+    // `BelowRustedGods.locres` invece di `Game.locres` — mentre il commento sopra
+    // diceva già "Game.locres": il codice non seguiva la sua stessa documentazione.
+    // Un override col nome sbagliato NON viene caricato e NON dà errore: il gioco
+    // resta in lingua originale, il fallimento muto peggiore.
+    // MISURATO 01/08/2026 leggendo il .pak di Below col pak reader nativo:
+    //   BelowRustedGods/Content/Localization/Game/en/Game.locres  ← il file vero
+    // "Game" è il nome del target di default di Unreal e vale per la quasi totalità
+    // dei giochi; resta da parametrizzare per i rari progetti che lo rinominano.
+    const LOC_TARGET: &str = "Game";
+    let project_name = find_project_name(game_dir).unwrap_or_else(|| LOC_TARGET.to_string());
     let locres_path_target = format!(
-        "{}/Content/Localization/Game/{}/{}.locres",
-        project_name, target_language, project_name
+        "{}/Content/Localization/{}/{}/{}.locres",
+        project_name, LOC_TARGET, target_language, LOC_TARGET
     );
-    
+
     // Crea il .locres anche al path "en" — UE5 potrebbe non caricare la cultura target
     // se il gioco non la supporta ufficialmente, ma caricherà sempre la cultura inglese.
     let mut pak_files: Vec<(String, Vec<u8>)> = Vec::new();
     pak_files.push((locres_path_target.clone(), locres_data.clone()));
-    
+
     if target_language != "en" {
         let locres_path_en = format!(
-            "{}/Content/Localization/Game/en/{}.locres",
-            project_name, project_name
+            "{}/Content/Localization/{}/en/{}.locres",
+            project_name, LOC_TARGET, LOC_TARGET
         );
         log::info!("📦 Anche .locres override inglese: {}", locres_path_en);
         pak_files.push((locres_path_en, locres_data.clone()));

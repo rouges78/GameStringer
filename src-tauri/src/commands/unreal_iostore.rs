@@ -2643,6 +2643,49 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
     if ie > data.len() { return Err("index oltre EOF".into()); }
     let idx = &data[io..ie];
 
+    // ── Indice LEGACY (pak v3–v9): mount + N × (FString path, FPakEntry) ───
+    // Serve per leggere i pak che scriviamo NOI: `create_pak_v4` dichiara footer
+    // versione 8 e scrive l'indice in questo formato, mentre i giochi UE5 recenti
+    // (Below: v11) usano l'indice path-hash + Full Directory Index. Senza questo
+    // ramo il reader falliva con "FDI oltre EOF" proprio sul nostro override.
+    if footer.version < 10 {
+        let mut p = 0usize;
+        let _mount = pak_read_fstring(idx, &mut p)?;
+        let n = rd_i32(idx, &mut p)?;
+        if n < 0 || n > 500_000 { return Err(format!("num entry legacy assurdo: {}", n)); }
+        let mut out = Vec::new();
+        for _ in 0..n {
+            let path = pak_read_fstring(idx, &mut p)?;
+            // FPakEntry inline nell'indice: offset,size,uncompressed,method,hash[20]
+            let entry_offset = rd_u64(idx, &mut p)?;
+            let size = rd_u64(idx, &mut p)?;
+            let uncompressed = rd_u64(idx, &mut p)?;
+            let method_index = rd_u32(idx, &mut p)?;
+            if p + 20 > idx.len() { return Err("indice legacy: EOF su hash".into()); }
+            p += 20;
+            if method_index != 0 {
+                let nb = rd_i32(idx, &mut p)?;
+                if nb < 0 || nb > 100_000 { return Err("indice legacy: block count assurdo".into()); }
+                p += (nb as usize) * 16;
+            }
+            if p + 5 > idx.len() { return Err("indice legacy: EOF su flags".into()); }
+            p += 1;  // encrypted flag
+            p += 4;  // block size
+
+            if !path.to_lowercase().ends_with(".locres") { continue; }
+            // I dati veri stanno a entry_offset, DOPO l'header inline ripetuto.
+            match pak_extract_at(&data, entry_offset as usize, size, uncompressed, method_index, &footer, oodle) {
+                Ok(bytes) => {
+                    log::info!("  📄 [legacy] {} → {} byte", path, bytes.len());
+                    out.push(PakLocres { path, data: bytes });
+                }
+                Err(e) => log::warn!("  ⚠️ [legacy] {} non estratto: {}", path, e),
+            }
+        }
+        log::info!("📦 PAK legacy v{}: {} .locres", footer.version, out.len());
+        return Ok(out);
+    }
+
     // ── Index (formato path-hash, UE 4.26+/v10+) ──────────────────────────
     let mut p = 0usize;
     let _mount = pak_read_fstring(idx, &mut p)?;
@@ -2655,7 +2698,7 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
     }
     let has_fdi = rd_u32(idx, &mut p)? != 0;
     if !has_fdi {
-        return Err("pak senza Full Directory Index: path non disponibili (formato legacy non gestito)".into());
+        return Err(format!("pak v{} senza Full Directory Index: path non disponibili", footer.version));
     }
     let fdi_off = rd_u64(idx, &mut p)? as usize;
     let fdi_size = rd_u64(idx, &mut p)? as usize;
@@ -2664,7 +2707,12 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
     if p + enc_size > idx.len() { return Err("EncodedPakEntries oltre l'index".into()); }
     let encoded = &idx[p..p + enc_size];
 
-    if fdi_off + fdi_size > data.len() { return Err("FDI oltre EOF".into()); }
+    if fdi_off + fdi_size > data.len() {
+        return Err(format!(
+            "FDI oltre EOF (pak v{}, fdi@{}+{} su {} byte): formato indice inatteso per questa versione",
+            footer.version, fdi_off, fdi_size, data.len()
+        ));
+    }
     let fdi = &data[fdi_off..fdi_off + fdi_size];
 
     // ── Full Directory Index: dir → (file → offset dentro `encoded`) ──────
@@ -2715,11 +2763,27 @@ fn pak_extract_one(
     };
 
     // Header INLINE all'offset della entry (FPakEntry::Serialize).
-    let mut hp = entry_offset as usize;
+    let mut hp0 = entry_offset as usize;
+    let _off = rd_u64(data, &mut hp0)?;
+    let size = rd_u64(data, &mut hp0)?;             // dimensione compressa
+    let uncompressed = rd_u64(data, &mut hp0)?;
+    let method_index = rd_u32(data, &mut hp0)?;     // 0 = nessuna
+    pak_extract_at(data, entry_offset as usize, size, uncompressed, method_index, footer, oodle)
+}
+
+/// Legge i dati di UNA entry a partire dal suo offset: salta l'header inline,
+/// poi decomprime i blocchi (o copia i byte se non compressa).
+/// Condiviso fra indice legacy (v3–v9) e path-hash (v10+): il layout dei dati
+/// è lo stesso, cambia solo da dove si è ricavato l'offset.
+fn pak_extract_at(
+    data: &[u8], entry_offset: usize, size: u64, uncompressed: u64, method_index: u32,
+    footer: &PakFooter, oodle: &Option<OodleLib>,
+) -> Result<Vec<u8>, String> {
+    let mut hp = entry_offset;
     let _off = rd_u64(data, &mut hp)?;
-    let size = rd_u64(data, &mut hp)?;             // dimensione compressa
-    let uncompressed = rd_u64(data, &mut hp)?;
-    let method_index = rd_u32(data, &mut hp)?;     // 0 = nessuna
+    let _size = rd_u64(data, &mut hp)?;
+    let _unc = rd_u64(data, &mut hp)?;
+    let _mi = rd_u32(data, &mut hp)?;
     hp += 20;                                       // hash SHA1
     let mut blocks: Vec<(u64, u64)> = Vec::new();
     if method_index != 0 {
@@ -3344,6 +3408,66 @@ mod tests {
             }
         }
         assert!(best > 100, "il .locres più grande ha solo {} stringhe (atteso ~752)", best);
+    }
+
+    /// La domanda che conta davvero: la patch è TRADOTTA o è una copia dell'originale?
+    /// Confronta, chiave per chiave, il .locres del nostro _P.pak con quello del gioco.
+    /// Serve perché "patch attiva — N stringhe" non dice NIENTE sul contenuto: un pak
+    /// pieno di testo inglese si installa benissimo e il gioco resta in inglese senza
+    /// un errore. Stessa forma del "tradotto al 100%" che non cambiava niente a schermo.
+    ///
+    ///   GS_UE_BELOW_PAK="…/BelowRustedGods-Windows.pak" \
+    ///   GS_UE_PATCH_PAK="…/BelowRustedGods_GameStringer_it_P.pak" \
+    ///     cargo test --lib patch_e_davvero_tradotta -- --ignored --nocapture
+    #[test]
+    #[ignore = "richiede GS_UE_BELOW_PAK (originale) + GS_UE_PATCH_PAK (patch)"]
+    fn patch_e_davvero_tradotta() {
+        let (Ok(orig), Ok(patch)) = (std::env::var("GS_UE_BELOW_PAK"), std::env::var("GS_UE_PATCH_PAK")) else {
+            eprintln!("Servono GS_UE_BELOW_PAK e GS_UE_PATCH_PAK");
+            return;
+        };
+        let oodle = OodleLib::load().ok();
+        let leggi = |p: &str, filtro: &str| -> Vec<(String, String)> {
+            let list = extract_locres_from_pak(std::path::Path::new(p), &oodle).unwrap_or_default();
+            for l in &list {
+                if l.path.to_lowercase().contains(filtro) {
+                    if let Ok((_, e)) = crate::commands::unreal_localization::parse_locres_pub(&l.data) {
+                        return e.into_iter().map(|x| (format!("{}|{}", x.namespace, x.key), x.value)).collect();
+                    }
+                }
+            }
+            Vec::new()
+        };
+        let a = leggi(&orig, "/en/");
+        let b = leggi(&patch, "/it/");
+        eprintln!("\noriginale (en): {} stringhe · patch (it): {} stringhe", a.len(), b.len());
+        if a.is_empty() || b.is_empty() { panic!("una delle due liste è vuota"); }
+
+        let mappa: std::collections::HashMap<_, _> = a.into_iter().collect();
+        let (mut uguali, mut diverse, mut mancanti) = (0usize, 0usize, 0usize);
+        let mut esempi = Vec::new();
+        for (k, v) in &b {
+            match mappa.get(k) {
+                Some(o) if o == v => uguali += 1,
+                Some(o) => {
+                    diverse += 1;
+                    if esempi.len() < 5 && o.len() > 12 {
+                        esempi.push(format!("  en: {}\n  it: {}", &o[..o.len().min(60)], &v[..v.len().min(60)]));
+                    }
+                }
+                None => mancanti += 1,
+            }
+        }
+        eprintln!("\n=== VERDETTO ===");
+        eprintln!("  DIVERSE dall'originale (tradotte) : {}", diverse);
+        eprintln!("  identiche all'originale           : {}", uguali);
+        eprintln!("  chiavi non presenti nell'originale: {}", mancanti);
+        for e in &esempi { eprintln!("{}", e); }
+        let perc = (diverse as f64) * 100.0 / (b.len().max(1) as f64);
+        eprintln!("\n  → {:.1}% del testo è cambiato", perc);
+        assert!(diverse > b.len() / 4,
+            "solo {} stringhe su {} differiscono dall'originale: la patch NON è tradotta",
+            diverse, b.len());
     }
 
     /// Quanto si estrae SENZA la DLL Oodle.

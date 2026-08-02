@@ -307,7 +307,10 @@
     "scanExeToast": "YYC：EXEから{n}件の翻訳可能な文字列",
     "scanStrgToast": "data.win：{n}件の翻訳可能な文字列",
     "noteTextJson": "翻訳はlang/*.jsonファイルに書き込まれます（変更前に自動で.bakコピーを作成。「復元」で元に戻せます）。テキストファイルなので翻訳が原文より長くても切り詰められません。",
-    "samePageTwice": "エンジンが同じページを2回返しました。無限ループを避けるため翻訳を停止しました。問題を報告してください。"
+    "samePageTwice": "エンジンが同じページを2回返しました。無限ループを避けるため翻訳を停止しました。問題を報告してください。",
+    "translatedToast": "{n} 件の文字列を翻訳しました",
+    "translatedWithFailures": "{n} 件翻訳、{f} 件失敗",
+    "noneTranslated": "翻訳された文字列はありません: {n} 件中 {f} 件が失敗しました"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "テキストをクリップボードにコピーしました",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "所有していることを確認",
     "whitelistBlocked": "このタイトルはパブリッシャーの要請により翻訳対象外です。",
     "whitelistOfficialNotice": "このゲームには選択した言語の公式ローカライズが既にあります。ファン翻訳はおそらく不要です。",
-    "advancedTools": "詳細ツール"
+    "advancedTools": "詳細ツール",
+    "errNoTranslationEffect": "翻訳された文字列がありません: パッチは作成されませんでした",
+    "stringsTranslated": "件の文字列を翻訳"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "本のゲームが準備完了",
     "dryRunPipelineScan": "Dry Run — パイプラインのスキャン",
     "dryRunPipelineScanDesc": "インストール済みのすべてのゲームで検出と抽出を自動チェックします（翻訳は行いません）",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "失敗"
   },
   "languages": {
     "cs": "Čeština",

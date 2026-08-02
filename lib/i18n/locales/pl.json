@@ -307,7 +307,10 @@
     "scanExeToast": "YYC: {n} ciągów do przetłumaczenia z EXE",
     "scanStrgToast": "data.win: {n} ciągów do przetłumaczenia",
     "noteTextJson": "Tłumaczenia zapisywane są w plikach lang/*.json (automatyczna kopia .bak przed każdą zmianą; „Przywróć\" wraca do oryginału). To pliki tekstowe: tłumaczenia mogą być dłuższe niż oryginał, bez obcinania.",
-    "samePageTwice": "Silnik dwukrotnie zwrócił tę samą stronę ciągów: tłumaczenie zatrzymane, aby uniknąć nieskończonej pętli. Zgłoś problem."
+    "samePageTwice": "Silnik dwukrotnie zwrócił tę samą stronę ciągów: tłumaczenie zatrzymane, aby uniknąć nieskończonej pętli. Zgłoś problem.",
+    "translatedToast": "Przetłumaczono {n} ciągów",
+    "translatedWithFailures": "{n} przetłumaczonych, {f} nieudanych",
+    "noneTranslated": "Nie przetłumaczono żadnego ciągu: {f} nieudanych prób z {n}"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "Tekst skopiowany do schowka",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "Potwierdzam, że posiadam grę",
     "whitelistBlocked": "Ten tytuł jest wyłączony z tłumaczenia na prośbę wydawcy.",
     "whitelistOfficialNotice": "Ta gra ma już oficjalną lokalizację w wybranym języku: tłumaczenie fanowskie jest prawdopodobnie zbędne.",
-    "advancedTools": "Narzędzia zaawansowane"
+    "advancedTools": "Narzędzia zaawansowane",
+    "errNoTranslationEffect": "Nie przetłumaczono żadnego ciągu: łatka nie została utworzona",
+    "stringsTranslated": "przetłumaczonych ciągów"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Błąd wczytywania informacji DRAT:",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "gier gotowych",
     "dryRunPipelineScan": "Dry Run — Skanowanie pipeline'u",
     "dryRunPipelineScanDesc": "Automatyczne sprawdzenie wykrywania i wyodrębniania we wszystkich zainstalowanych grach (bez tłumaczenia)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "nieudanych"
   },
   "languages": {
     "cs": "Čeština",

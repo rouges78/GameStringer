@@ -307,7 +307,10 @@
     "scanExeToast": "YYC: EXE에서 번역 가능한 문자열 {n}개",
     "scanStrgToast": "data.win: 번역 가능한 문자열 {n}개",
     "noteTextJson": "번역은 lang/*.json 파일에 기록됩니다(변경 전 자동 .bak 복사본 생성, \"복원\"으로 원본 복구). 텍스트 파일이므로 번역이 원문보다 길어도 잘리지 않습니다.",
-    "samePageTwice": "엔진이 같은 페이지를 두 번 반환했습니다. 무한 루프를 피하기 위해 번역을 중단했습니다. 문제를 신고해 주세요."
+    "samePageTwice": "엔진이 같은 페이지를 두 번 반환했습니다. 무한 루프를 피하기 위해 번역을 중단했습니다. 문제를 신고해 주세요.",
+    "translatedToast": "{n}개 문자열 번역됨",
+    "translatedWithFailures": "{n}개 번역, {f}개 실패",
+    "noneTranslated": "번역된 문자열이 없습니다: {n}개 중 {f}개 실패"
   },
   "ocrImageProcessor": {
     "copiedToClipboard": "텍스트가 클립보드에 복사되었습니다",
@@ -929,7 +932,9 @@
     "legalGateConfirm": "게임 소유를 확인합니다",
     "whitelistBlocked": "퍼블리셔의 요청으로 이 타이틀은 번역에서 제외되었습니다.",
     "whitelistOfficialNotice": "이 게임에는 이미 선택한 언어의 공식 현지화가 있습니다. 팬 번역은 아마 불필요합니다.",
-    "advancedTools": "고급 도구"
+    "advancedTools": "고급 도구",
+    "errNoTranslationEffect": "번역된 문자열이 없습니다: 패치가 생성되지 않았습니다",
+    "stringsTranslated": "개 문자열 번역됨"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",
@@ -3927,7 +3932,8 @@
     "gamesReadyLabel": "개 게임 준비됨",
     "dryRunPipelineScan": "Dry Run — 파이프라인 스캔",
     "dryRunPipelineScanDesc": "설치된 모든 게임에 대해 감지 및 추출을 자동으로 확인합니다 (번역은 하지 않음)",
-    "stringIt": "String it!"
+    "stringIt": "String it!",
+    "failed": "실패"
   },
   "languages": {
     "cs": "Čeština",
