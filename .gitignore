@@ -144,9 +144,16 @@ _gs_split/
 !.samples/README.md
 .i18n-work/
 
-# Estrazioni da dump di memoria: blob grezzi da megabyte, rigenerabili con
-# scripts/ue-locres-from-dump.js. Le fixture che vale la pena conservare vanno
-# in __tests__/fixtures/, tagliate e documentate — non lasciate qui.
-/estratti/
-/estratti2/
+# Estrazioni da dump di memoria e da .pak: blob grezzi, testo di giochi
+# commerciali, rigenerabili con scripts/ue-locres-from-dump.js. Le fixture che
+# vale la pena conservare vanno in __tests__/fixtures/, tagliate e documentate
+# — non lasciate qui.
+#
+# ⚠️ La regola è un GLOB, non un elenco. Fino al 02/08/2026 c'erano tre righe
+# esplicite (/estratti/, /estratti2/) e la terza cartella — estratti_pak/, nata
+# dopo con un nome nuovo — è finita DENTRO il repo pubblico: 18 file estratti
+# dal .pak di Below, già su origin/main (commit 9c6971e0). Un elenco copre solo
+# i nomi che qualcuno si è ricordato di aggiungere; il glob copre anche quelli
+# di domani. Se serve una cartella di lavoro nuova, chiamala estratti-<qualcosa>.
+/estratti*/
 /stringhe-dump.txt

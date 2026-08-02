@@ -36,6 +36,8 @@
     "a11y:check": "node scripts/check-a11y.js",
     "a11y:check:report": "node scripts/check-a11y.js --report",
     "a11y:check:update": "node scripts/check-a11y.js --update",
+    "assets:check": "node scripts/check-game-assets.js",
+    "assets:check:report": "node scripts/check-game-assets.js --report",
     "dead:check": "node scripts/check-dead-modules.js",
     "dead:check:report": "node scripts/check-dead-modules.js --report",
     "dead:check:update": "node scripts/check-dead-modules.js --update",
