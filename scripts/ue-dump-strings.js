@@ -5,7 +5,7 @@
  * PERCHÉ ESISTE
  * -------------
  * `ue-locres-from-dump.js` cerca il GUID magico dei .locres. Il 30/07/2026 su
- * Below, Rusted Gods ha trovato UN SOLO .locres decodificabile, con 24 voci nei
+ * il gioco di collaudo UE5 ha trovato UN SOLO .locres decodificabile, con 24 voci nei
  * namespace `OnlineError` e `OnlinePresence`: è il locres del MOTORE (plugin
  * OnlineSubsystem), non del gioco.
  *
@@ -311,7 +311,7 @@ function main() {
       // una FString è un TArray<TCHAR> in cui lunghezza e capacità stanno nella
       // struttura, mentre i caratteri vivono in un'ALLOCAZIONE HEAP SEPARATA.
       // Prima dei caratteri c'è l'header dell'allocatore, non la lunghezza.
-      // Sui 4 riscontri di Below usciva 23199744 / 0 / 464 / 0: non combaciava
+      // Sui 4 riscontri del gioco di collaudo usciva 23199744 / 0 / 464 / 0: non combaciava
       // nessuno, ed era corretto così. Lo lascio perché distingue un blob
       // serializzato da uno vivo, ma senza far passare il "non combacia" per
       // un esito negativo — è la NORMA in un dump di memoria.

@@ -1183,7 +1183,7 @@ pub fn find_game_path_by_appid(app_id: u32) -> Result<Option<String>, String> {
 
 /// Normalizza un nome per il confronto cartella ≈ nome gioco:
 /// tiene solo gli alfanumerici ASCII, in minuscolo.
-/// "Below, Rusted Gods" → "belowrustedgods" == "BelowRustedGods" normalizzato.
+/// "Il Mio, Gioco" → "ilmiogioco" == "IlMioGioco" normalizzato.
 fn normalize_install_dir(s: &str) -> String {
     s.chars()
         .filter(|c| c.is_ascii_alphanumeric())
@@ -1220,11 +1220,11 @@ pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
                 }
             }
             
-            // 🔧 Il chiamante a volte passa il NOME del gioco ("Below, Rusted
-            // Gods") invece della cartella ("BelowRustedGods"): il frontend fa
+            // 🔧 Il chiamante a volte passa il NOME del gioco (con virgole
+            // e spazi) invece del nome della CARTELLA: il frontend fa
             // `game.install_dir || game.name` e quando install_dir manca arriva
-            // il nome con virgole e spazi. Misurato il 02/08/2026 proprio su
-            // Below: gioco installato, ricerca fallita, apply mai partito.
+            // il nome con virgole e spazi. Misurato il 02/08/2026 su un
+            // gioco reale: installato, ricerca fallita, apply mai partito.
             // Confronto normalizzato (solo alfanumerici, case-insensitive) con
             // ogni cartella REALE di steamapps/common, prima di provare i
             // percorsi indovinati D:\ / E:\.
@@ -2718,10 +2718,10 @@ mod tests_install_path {
     /// Il caso misurato il 02/08/2026: nome con virgola vs cartella compatta.
     #[test]
     fn nome_gioco_matcha_cartella() {
-        assert_eq!(normalize_install_dir("Below, Rusted Gods"), "belowrustedgods");
+        assert_eq!(normalize_install_dir("Il Mio, Gioco"), "ilmiogioco");
         assert_eq!(
-            normalize_install_dir("Below, Rusted Gods"),
-            normalize_install_dir("BelowRustedGods")
+            normalize_install_dir("Il Mio, Gioco"),
+            normalize_install_dir("IlMioGioco")
         );
         assert_eq!(
             normalize_install_dir("VA-11 Hall-A"),
@@ -2734,8 +2734,8 @@ mod tests_install_path {
     #[test]
     fn niente_falsi_match() {
         assert_ne!(
-            normalize_install_dir("Below"),
-            normalize_install_dir("BelowRustedGods")
+            normalize_install_dir("Mio"),
+            normalize_install_dir("MioGioco")
         );
         assert_eq!(normalize_install_dir("..., !!!"), "");
     }

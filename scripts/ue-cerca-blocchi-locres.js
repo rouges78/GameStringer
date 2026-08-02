@@ -3,7 +3,7 @@
  * Cerca i BLOCCHI DECOMPRESSI SUCCESSIVI di un array di stringhe .locres
  * dentro un dump di memoria (o dentro un blob grezzo, per collaudo).
  *
- * PERCHÉ ESISTE — misurato il 01/08/2026 su Below, Rusted Gods
+ * PERCHÉ ESISTE — misurato il 01/08/2026 su un gioco UE5 reale
  * ------------------------------------------------------------
  * Il buffer del .locres trovato nel dump contiene **65.536 byte esatti** di dati
  * decompressi (64 KiB tondi, rottura su VA allineato, entropia 3,5 → 7,97 al
@@ -35,10 +35,11 @@
  *   3. da lì avanza contando i record validi, e misura l'ordinamento
  *   4. riporta solo le catene lunghe, con VA, e segnala quelle già note
  *
- * ⚠️ ONESTÀ SUL COLLAUDO: il controllo positivo è la fixture AUTENTICA
- * (`__tests__/fixtures/engines/unreal/below-rusted-gods-Game-es.locres`, presa
- * dalla memoria di un gioco vero) e il blob riletto per indirizzo virtuale —
- * NON un file generato da questo script. Vedi [locres-magic-sbagliato] e la
+ * ⚠️ ONESTÀ SUL COLLAUDO: il controllo positivo è un .locres AUTENTICO preso
+ * dalla memoria di un gioco vero — NON un file generato da questo script.
+ * Dal 02/08/2026 il riferimento autentico non vive più nel repo (conteneva
+ * testo di un gioco commerciale): sta in estratti/ (ignorata da git) e si
+ * passa via GS_UE_AUTHENTIC_LOCRES. Vedi [locres-magic-sbagliato] e la
  * lezione delle fixture che si validavano da sole.
  *
  * Uso:
@@ -70,7 +71,7 @@ function opz(nome, def) {
 
 const MIN_RECORD = parseInt(opz('--min-record', '12'), 10);
 const OUT_DIR = opz('--out', '');
-// Il blocco 1 di Below, per non riproporlo come scoperta.
+// Il blocco 1 del gioco di collaudo, per non riproporlo come scoperta.
 const NOTO = opz('--noto', '0x1d01f750000');
 const ANCORE = opz('--ancore', 'Operador,misión,protocolo,ascensor,abismo,control')
   .split(',')

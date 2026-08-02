@@ -1021,7 +1021,7 @@ export default function GameDetailPage() {
       // PRIMA dal container IoStore (.utoc/.ucas, decompressione Oodle): è lì che
       // i giochi UE5 moderni tengono il Game.locres. SOLO se è vuoto/assente si
       // ripiega sui .locres sciolti su disco (extract_unreal_localization), che
-      // per un gioco IoStore trova al più qualche .locres di sistema (12 su Below).
+      // per un gioco IoStore trova al più qualche .locres di sistema (12 sul gioco di collaudo).
       toast.info(t('common.estrazioneStringheDiLocalizzazioneUnreal'));
       interface UeEntry { namespace: string; key: string; source_hash: string; value: string; }
       let extracted = await invoke<{entries?: UeEntry[]}>('extract_iostore_localization', { gamePath: game.installPath })
@@ -2282,7 +2282,7 @@ export default function GameDetailPage() {
 
           // Su disco niente: i giochi UE5 moderni tengono i .locres DENTRO i
           // container (IoStore .utoc/.ucas) o dentro il .pak, compressi Oodle.
-          // Below è così: 0 file sciolti, 811 stringhe nel pak. Prima ci si
+          // I giochi IoStore sono così: 0 file sciolti, tutte le stringhe nel pak. Prima ci si
           // fermava qui dichiarando "nessuna localizzazione estraibile" — falso.
           if (quanti === 0) {
             const daContainer = await invoke<{ entries?: unknown[] }>(

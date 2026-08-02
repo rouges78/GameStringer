@@ -1330,7 +1330,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
     }
     let mut loc_asset_contexts: Vec<LocAssetCtx> = Vec::new();
     // TUTTI i .locres trovati, con l'indice del container per estrarli dopo il
-    // loop. Prima si ritornava al PRIMO .locres del PRIMO container: su Below
+    // loop. Prima si ritornava al PRIMO .locres del PRIMO container: sul gioco di collaudo
     // usciva un file di plugin (OnlineError, 12 voci) invece del Game.locres
     // (752). Ora si raccoglie tutto e si sceglie/aggrega dopo.
     let mut locres_candidates: Vec<(usize, IoStoreFile)> = Vec::new();
@@ -1497,7 +1497,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
     }
 
     // ── Se l'IoStore non ha .locres, cercali nei .pak classici del gioco ────
-    // (Below tiene il Game.locres nel .pak principale, compresso Oodle.)
+    // (alcuni giochi tengono il Game.locres nel .pak classico, compresso Oodle.)
     {
         let pak_files = find_pak_files(game_dir);
         if !pak_files.is_empty() {
@@ -2537,7 +2537,7 @@ pub async fn apply_datatable_translation(
 
 // ═══════════════════════════════════════════════════════════════════
 // PAK READER (formato UE .pak v8–v11) — per i .locres che stanno nel .pak
-// classico invece che nell'IoStore. Below tiene lì il Game.locres, compresso
+// classico invece che nell'IoStore. il gioco di collaudo teneva lì il Game.locres, compresso
 // Oodle. Strategia difensiva: per l'estrazione ci si affida SOLO all'header
 // INLINE della entry (campi espliciti, niente bitfield), decodificando dagli
 // EncodedPakEntries il solo Offset (campo non ambiguo). I blocchi si leggono
@@ -2652,7 +2652,7 @@ fn extract_files_by_ext_from_pak(pak_path: &Path, oodle: &Option<OodleLib>, ext:
     // ── Indice LEGACY (pak v3–v9): mount + N × (FString path, FPakEntry) ───
     // Serve per leggere i pak che scriviamo NOI: `create_pak_v4` dichiara footer
     // versione 8 e scrive l'indice in questo formato, mentre i giochi UE5 recenti
-    // (Below: v11) usano l'indice path-hash + Full Directory Index. Senza questo
+    // (esempio reale: v11) usano l'indice path-hash + Full Directory Index. Senza questo
     // ramo il reader falliva con "FDI oltre EOF" proprio sul nostro override.
     if footer.version < 10 {
         let mut p = 0usize;
@@ -2866,7 +2866,7 @@ fn pak_extract_at(
     }
 
     // Compressi a blocchi. Gli offset start/end dei blocchi sono RELATIVI
-    // all'Offset della entry (pak v8+ RelativeChunkOffsets, come Below v11):
+    // all'Offset della entry (pak v8+ RelativeChunkOffsets, come i v11 reali):
     // posizione assoluta = entry_offset + start. Ogni blocco decomprime a
     // block_size, l'ultimo al resto. Usare gli offset (non la lettura contigua)
     // rispetta l'eventuale padding di allineamento.
@@ -3395,15 +3395,15 @@ mod tests {
     /// .utoc), così misura scelta+aggregazione dei .locres. Isola il problema dai
     /// pulsanti del frontend.
     ///
-    ///   GS_UE_BELOW="C:/Program Files (x86)/Steam/steamapps/common/BelowRustedGods" \
+    ///   GS_UE_GAME_DIR="C:/Program Files (x86)/Steam/steamapps/common/<CartellaGioco>" \
     ///     cargo test --lib below_estrazione_completa -- --ignored --nocapture
     ///
     /// (la DLL Oodle va in %APPDATA%/GameStringer/tools/oo2core_9_win64.dll)
     #[test]
-    #[ignore = "richiede GS_UE_BELOW = cartella gioco + DLL Oodle"]
+    #[ignore = "richiede GS_UE_GAME_DIR = cartella gioco + DLL Oodle"]
     fn below_estrazione_completa() {
-        let Ok(game) = std::env::var("GS_UE_BELOW") else {
-            eprintln!("GS_UE_BELOW non impostata: niente da fare");
+        let Ok(game) = std::env::var("GS_UE_GAME_DIR") else {
+            eprintln!("GS_UE_GAME_DIR non impostata: niente da fare");
             return;
         };
         let res = match tauri::async_runtime::block_on(extract_iostore_localization(game)) {
@@ -3430,13 +3430,13 @@ mod tests {
     /// per ciascuno, byte + versione + conteggio + esempi. Serve a validare il
     /// formato pak sul file vero, senza il resto della pipeline.
     ///
-    ///   GS_UE_BELOW_PAK="C:/.../Content/Paks/BelowRustedGods-Windows.pak" \
+    ///   GS_UE_ORIG_PAK="C:/.../Content/Paks/<Gioco>-Windows.pak" \
     ///     cargo test --lib below_pak_reader -- --ignored --nocapture
     #[test]
-    #[ignore = "richiede GS_UE_BELOW_PAK + DLL Oodle"]
+    #[ignore = "richiede GS_UE_ORIG_PAK + DLL Oodle"]
     fn below_pak_reader() {
-        let Ok(pak) = std::env::var("GS_UE_BELOW_PAK") else {
-            eprintln!("GS_UE_BELOW_PAK non impostata: niente da fare");
+        let Ok(pak) = std::env::var("GS_UE_ORIG_PAK") else {
+            eprintln!("GS_UE_ORIG_PAK non impostata: niente da fare");
             return;
         };
         let oodle = OodleLib::load().ok();
@@ -3471,17 +3471,17 @@ mod tests {
     /// pieno di testo inglese si installa benissimo e il gioco resta in inglese senza
     /// un errore. Stessa forma del "tradotto al 100%" che non cambiava niente a schermo.
     ///
-    ///   GS_UE_BELOW_PAK="…/BelowRustedGods-Windows.pak" \
-    ///   GS_UE_PATCH_PAK="…/BelowRustedGods_GameStringer_it_P.pak" \
+    ///   GS_UE_ORIG_PAK="…/<Gioco>-Windows.pak" \
+    ///   GS_UE_PATCH_PAK="…/<Gioco>_GameStringer_it_P.pak" \
     ///     cargo test --lib patch_e_davvero_tradotta -- --ignored --nocapture
     #[test]
-    #[ignore = "richiede GS_UE_BELOW_PAK (originale) + GS_UE_PATCH_PAK (patch)"]
+    #[ignore = "richiede GS_UE_ORIG_PAK (originale) + GS_UE_PATCH_PAK (patch)"]
     fn patch_e_davvero_tradotta() {
-        let (Ok(orig), Ok(patch)) = (std::env::var("GS_UE_BELOW_PAK"), std::env::var("GS_UE_PATCH_PAK")) else {
+        let (Ok(orig), Ok(patch)) = (std::env::var("GS_UE_ORIG_PAK"), std::env::var("GS_UE_PATCH_PAK")) else {
             // panic, non return: un test --ignored lo si lancia apposta, e uscire
             // con `ok` senza le variabili è a sua volta un fallimento muto —
             // successo il 02/08, sembrava una misura ed era un no-op.
-            panic!("Servono GS_UE_BELOW_PAK e GS_UE_PATCH_PAK");
+            panic!("Servono GS_UE_ORIG_PAK e GS_UE_PATCH_PAK");
         };
         let oodle = OodleLib::load().ok();
         let leggi = |p: &str, filtro: &str| -> Vec<(String, String)> {
@@ -3529,14 +3529,14 @@ mod tests {
 
     /// ESPERIMENTO travestimento: riconfeziona il _P.pak esistente spostando il
     /// .locres italiano sotto la cartella di una cultura che il gioco CONOSCE
-    /// (default `es`). Below ha la lista lingue cablata nel menu: la cultura `it`
+    /// (default `es`). alcuni giochi hanno la lista lingue cablata nel menu: la cultura `it`
     /// non è selezionabile, quindi il nostro override `it/` non viene mai chiesto.
     /// Se col pak travestito il gioco impostato su Español mostra l'italiano, il
     /// mount funziona e il problema era SOLO la registrazione della cultura; se
     /// resta spagnolo, il pak non viene proprio montato (formato/versione) — due
     /// diagnosi opposte, un solo esperimento.
     ///
-    ///   GS_UE_PATCH_PAK="…/BelowRustedGods_GameStringer_it_P.pak" \
+    ///   GS_UE_PATCH_PAK="…/<Gioco>_GameStringer_it_P.pak" \
     ///   [GS_UE_MASK_CULTURE=es] \
     ///     cargo test --lib crea_pak_travestito -- --ignored --nocapture
     ///
@@ -3590,8 +3590,8 @@ mod tests {
     /// e la differenza — mount point, forma dei path, metodi di compressione —
     /// va LETTA dai byte, non dedotta.
     ///
-    ///   GS_UE_PAK_A="…/BelowRustedGods-Windows.pak" \
-    ///   GS_UE_PAK_B="…/BelowRustedGods_GameStringer_esmask_P.pak" \
+    ///   GS_UE_PAK_A="…/<Gioco>-Windows.pak" \
+    ///   GS_UE_PAK_B="…/<Gioco>_GameStringer_esmask_P.pak" \
     ///     cargo test --lib ispeziona_indice_pak -- --ignored --nocapture
     #[test]
     #[ignore = "richiede GS_UE_PAK_A e GS_UE_PAK_B"]

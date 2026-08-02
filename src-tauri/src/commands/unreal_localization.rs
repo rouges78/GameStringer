@@ -235,8 +235,8 @@ fn write_fstring(buf: &mut Vec<u8>, s: &str) {
 /// Magic del .locmeta: FGuid(0xA14CEE4F, 0x83554868, 0xBD464C4C, 0x7C50DA70)
 /// serializzato come quattro u32 little-endian.
 ///
-/// ✅ VERIFICATO SU FILE AUTENTICO il 02/08/2026: Game.locmeta di Below,
-/// Rusted Gods (123 byte, estratto dal .pak del gioco), primi 16 byte
+/// ✅ VERIFICATO SU FILE AUTENTICO il 02/08/2026: Game.locmeta AUTENTICO
+/// di un gioco UE5 commerciale (123 byte, estratto dal suo .pak), primi 16 byte
 /// `4F EE 4C A1 68 48 55 83 6C 4C 46 BD 70 DA 50 7C`, byte 17 = 01
 /// (versione AddedCompiledCultures).
 ///
@@ -273,7 +273,7 @@ pub fn parse_locmeta(data: &[u8]) -> Result<LocMetaInfo, String> {
         // Stampa i byte VERI: è così che si corregge un magic sbagliato — con
         // il file autentico, non con un'altra citazione della documentazione.
         // (02/08/2026: il magic preso dalla sorgente UE non corrispondeva al
-        // Game.locmeta reale di Below — lezione locres-magic, seconda volta.)
+        // Game.locmeta reale — lezione locres-magic, seconda volta.)
         let trovato: String = data[..16].iter().map(|b| format!("{:02X} ", b)).collect();
         let atteso: String = LOCMETA_MAGIC.iter().map(|b| format!("{:02X} ", b)).collect();
         return Err(format!(
@@ -1286,13 +1286,13 @@ pub async fn apply_unreal_translation(
     // Pattern reale: [ProjectName]/Content/Localization/[Target]/[lang]/[Target].locres
     //
     // ⚠️ Il nome del file è quello del TARGET di localizzazione ("Game"), NON quello
-    // del progetto. Qui si scriveva `{project_name}.locres` — cioè, su Below,
-    // `BelowRustedGods.locres` invece di `Game.locres` — mentre il commento sopra
+    // del progetto. Qui si scriveva `{project_name}.locres` — cioè
+    // `<NomeProgetto>.locres` invece di `Game.locres` — mentre il commento sopra
     // diceva già "Game.locres": il codice non seguiva la sua stessa documentazione.
     // Un override col nome sbagliato NON viene caricato e NON dà errore: il gioco
     // resta in lingua originale, il fallimento muto peggiore.
-    // MISURATO 01/08/2026 leggendo il .pak di Below col pak reader nativo:
-    //   BelowRustedGods/Content/Localization/Game/en/Game.locres  ← il file vero
+    // MISURATO 01/08/2026 leggendo il .pak di un gioco reale col reader nativo:
+    //   <Progetto>/Content/Localization/Game/en/Game.locres  ← il file vero
     // "Game" è il nome del target di default di Unreal e vale per la quasi totalità
     // dei giochi; resta da parametrizzare per i rari progetti che lo rinominano.
     const LOC_TARGET: &str = "Game";
@@ -1319,7 +1319,7 @@ pub async fn apply_unreal_translation(
     // ── .locmeta: registra la cultura target ──────────────────────────────
     // Il .locmeta v1 elenca le culture compilate del target: se quella
     // richiesta non c'è, il motore può ignorare i .locres anche se i file
-    // esistono — è la causa radice per cui su Below l'italiano ha dovuto
+    // esistono — è la causa radice per cui l'italiano ha dovuto
     // viaggiare travestito da spagnolo (02/08/2026).
     //
     // Regola: si parte SEMPRE dal locmeta ORIGINALE del gioco e si aggiunge
@@ -1330,7 +1330,7 @@ pub async fn apply_unreal_translation(
     // dichiarato nei log, non un file sbagliato spedito in silenzio.
     //
     // ⚠️ NON ANCORA PROVATO IN GIOCO: che il motore accetti un .locmeta da un
-    // override _P.pak è l'ipotesi da verificare su Below — lezione ADR-005,
+    // override _P.pak è l'ipotesi da verificare in gioco — lezione ADR-005,
     // i difetti veri escono solo in-app.
     match super::unreal_iostore::read_game_locmeta(game_dir) {
         Some((orig_path, bytes)) => match parse_locmeta(&bytes) {
@@ -1389,8 +1389,8 @@ pub async fn apply_unreal_translation(
 
     // ── TRIPLETTA: coppia .utoc/.ucas accanto al pak ─────────────────────
     // Nei giochi IoStore (UE5.6+) un _P.pak ORFANO non viene montato: patch
-    // "installata", gioco in lingua originale, nessun errore. Misurato su
-    // Below il 02/08/2026, due volte nello stesso pomeriggio — la seconda
+    // "installata", gioco in lingua originale, nessun errore. Misurato sul campo
+    // il 02/08/2026, due volte nello stesso pomeriggio — la seconda
     // perché il Rimuovi cancella la coppia e l'apply ricreava solo il pak.
     // Il gioco è IoStore se nella cartella Paks ci sono .utoc SUOI (non i
     // nostri _GameStringer_). Se la coppia non si può generare, si FALLISCE:

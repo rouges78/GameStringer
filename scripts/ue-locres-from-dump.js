@@ -6,7 +6,7 @@
  * -----------------
  * Su UE5 i .locres stanno in container compressi Oodle, e Oodle è compilato
  * dentro l'eseguibile: niente DLL da riusare. Misurato il 30/07/2026 su
- * Below, Rusted Gods (pak v11, unico metodo "Oodle", zero blob in chiaro).
+ * un gioco UE5 reale (pak v11, unico metodo "Oodle", zero blob in chiaro).
  *
  * Ma il gioco decomprime i propri dati da sé, all'avvio. Un .locres decompresso
  * è un buffer contiguo che comincia col GUID magico del formato:
@@ -157,7 +157,7 @@ function parseLocres(buf) {
     const n = ra.i32();
     if (n < 0 || n > 5_000_000) throw new Error(`conteggio stringhe assurdo: ${n}`);
     stringhe = new Array(n);
-    // ⚠️ PARZIALE È MEGLIO DI NIENTE — imparato il 30/07/2026 su Below.
+    // ⚠️ PARZIALE È MEGLIO DI NIENTE — imparato il 30/07/2026 sul gioco di collaudo.
     // Prima questo ciclo lasciava propagare l'eccezione e l'intero .locres
     // veniva scartato: il referto diceva «FString UTF-16 assurda» e ZERO voci,
     // mentre in realtà 204 stringhe su 752 erano perfettamente leggibili, con
@@ -270,7 +270,7 @@ function scansiona(file) {
   }
 }
 
-// ── Ricerca di ALTRE COPIE (31/07/2026, Below) ────────────────────────────
+// ── Ricerca di ALTRE COPIE (31/07/2026) ────────────────────────────
 //
 // La scansione del magic ha trovato UN solo Game.locres per dump, con l'array
 // stringhe troncato a 204/752 e causa NON determinata. L'ipotesi da MISURARE:
@@ -281,7 +281,7 @@ function scansiona(file) {
 //
 // Due misure, nessuna teoria:
 //   --cerca-array N   cerca ogni int32 LE == N (il conteggio dell'array, per
-//                     Below: 752) e prova a parsare da lì un array di FString
+//                     esempio reale: 752) e prova a parsare da lì un array di FString
 //                     v>=2 (FString + int32 refCount). Il rumore muore al primo
 //                     FString implausibile; i candidati veri si riconoscono da
 //                     QUANTE stringhe si leggono. Se un candidato supera le 204
@@ -331,7 +331,7 @@ function perChunk(file, sovrapposizione, visita) {
  * Quota di caratteri "da testo" (lettere anche accentate, cifre, spazi,
  * punteggiatura, tag tipo <Speaker>) su una stringa.
  *
- * PERCHÉ ESISTE — misurato il 31/07/2026 sui dump veri di Below: la sola
+ * PERCHÉ ESISTE — misurato il 31/07/2026 sui dump veri del gioco di collaudo: la sola
  * plausibilità STRUTTURALE (lunghezze e refCount nei range) ha promosso
  * CENTINAIA di candidati «752/752» che erano rumore binario: tabelle di
  * offset e altre strutture reggono il parse per caso, ma decodificate danno
@@ -533,7 +533,7 @@ function cercaCopie(file, testo) {
 /**
  * Mostra i byte grezzi di un ritrovamento, campo per campo.
  *
- * PERCHÉ SERVE — 30/07/2026, Below, Rusted Gods. In DUE dump indipendenti, a
+ * PERCHÉ SERVE — 30/07/2026, gioco di collaudo UE5. In DUE dump indipendenti, a
  * offset diversi, compare lo stesso blob con `versione 3` che il parser rifiuta
  * con «FString UTF-16 assurda: 37396165», sempre lo stesso numero. Un errore
  * identico in due catture diverse non è memoria sporca: è una STRUTTURA che il
@@ -597,7 +597,7 @@ function main() {
   if (!file) {
     console.log('Uso: node scripts/ue-locres-from-dump.js "<file.DMP>" [--out cartella] [--json]');
     console.log('  --cerca-array N     cerca copie dell\'array stringhe (N = conteggio atteso,');
-    console.log('                      es. 752 per Below) [--min-stringhe 8]');
+    console.log('                      es. 752) [--min-stringhe 8]');
     console.log('  --copie "testo"     occorrenze di una chiave/frase nota, ascii+utf16,');
     console.log('                      con verdetto serializzato/vivo e distanza dal magic');
     console.log('  --ispeziona OFF     esadecimale commentato di un ritrovamento');
@@ -616,12 +616,12 @@ function main() {
     return;
   }
 
-  // --cerca-array: la misura diretta per le stringhe mancanti di Below.
+  // --cerca-array: la misura diretta per le stringhe mancanti del gioco di collaudo.
   const idxArr = args.indexOf('--cerca-array');
   if (idxArr >= 0) {
     const conteggio = parseInt(args[idxArr + 1], 10);
     if (!Number.isFinite(conteggio) || conteggio <= 0) {
-      console.error('--cerca-array vuole il conteggio atteso dell\'array (per Below: 752).');
+      console.error('--cerca-array vuole il conteggio atteso dell\'array (per esempio reale: 752).');
       process.exitCode = 2;
       return;
     }

@@ -1,12 +1,12 @@
 //! retoc wrapper — genera la coppia .utoc/.ucas che completa la TRIPLETTA.
 //!
-//! PERCHÉ ESISTE. Nei giochi UE5 IoStore (5.6+, Below compreso) un `_P.pak`
+//! PERCHÉ ESISTE. Nei giochi UE5 IoStore (5.6+) un `_P.pak`
 //! da solo NON viene montato: il motore lo ignora senza dire niente — il pak
 //! esiste, la UI dice "patch installata", il gioco resta in lingua originale.
 //! Serve la tripletta `_P.pak + _P.utoc + _P.ucas`. La coppia può essere
 //! FITTIZIA (202+64 byte, zero asset): i .locres non sono asset, quindi
 //! `retoc to-zen` produce una coppia vuota ma VALIDA, che rinominata col nome
-//! base del pak lo fa montare. Misurato su Below il 02/08/2026: senza coppia
+//! base del pak lo fa montare. Misurato su un gioco reale il 02/08/2026: senza coppia
 //! patch invisibile, con la coppia l'italiano è A SCHERMO.
 //!
 //! Il 02/08 pomeriggio la trappola si è mostrata due volte in un'ora: il
@@ -29,7 +29,7 @@ use zip::ZipArchive;
 const RETOC_DOWNLOAD_URL: &str =
     "https://github.com/trumank/retoc/releases/latest/download/retoc_cli-x86_64-pc-windows-msvc.zip";
 
-/// Versione container passata a `to-zen`. Misurata su Below (UE5.6+): UE5_7
+/// Versione container passata a `to-zen`. Misurata su un gioco UE5.6+ reale: UE5_7
 /// produce una coppia che il gioco monta. Se un altro gioco la rifiutasse,
 /// questo è il primo posto dove guardare — e il rifiuto si vedrà nei log,
 /// perché la coppia mancante ora è un Err, non un silenzio.
@@ -147,7 +147,7 @@ pub async fn write_zen_pair_for(pak_path: &Path) -> Result<(PathBuf, PathBuf), S
 
     let tmp_ucas = tmp_utoc.with_extension("ucas");
     // Prova di effetto: "retoc è uscito 0" non basta. I file devono esistere
-    // e avere una taglia plausibile (misurata su Below: utoc 202, ucas 64).
+    // e avere una taglia plausibile (misurate sul campo: utoc 202, ucas 64).
     let utoc_len = fs::metadata(&tmp_utoc).map(|m| m.len()).unwrap_or(0);
     let ucas_len = fs::metadata(&tmp_ucas).map(|m| m.len()).unwrap_or(0);
     if utoc_len < 60 || ucas_len == 0 {
@@ -176,10 +176,10 @@ mod tests {
     #[test]
     fn coppia_accanto_al_pak_con_lo_stesso_nome_base() {
         let (utoc, ucas) = zen_pair_paths(Path::new(
-            r"C:\Giochi\Below\Content\Paks\BelowRustedGods_GameStringer_it_P.pak",
+            r"C:\Giochi\MioGioco\Content\Paks\MioGioco_GameStringer_it_P.pak",
         ));
-        assert!(utoc.to_string_lossy().ends_with("BelowRustedGods_GameStringer_it_P.utoc"));
-        assert!(ucas.to_string_lossy().ends_with("BelowRustedGods_GameStringer_it_P.ucas"));
+        assert!(utoc.to_string_lossy().ends_with("MioGioco_GameStringer_it_P.utoc"));
+        assert!(ucas.to_string_lossy().ends_with("MioGioco_GameStringer_it_P.ucas"));
         assert_eq!(utoc.parent(), ucas.parent());
     }
 }

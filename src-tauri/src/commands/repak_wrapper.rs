@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 // ⚠️ L'asset si chiama `repak_cli-…` (con _cli), non `repak-…`: con il nome
 // sbagliato entrambi gli URL davano 404 e si ripiegava SEMPRE sul writer
 // custom (footer v8) credendo di avere solo un fallback occasionale.
-// Scoperto 02/08/2026 su Below: il pak v8 non veniva montato dal gioco.
+// Scoperto 02/08/2026 su un gioco UE5 reale: il pak v8 non veniva montato.
 const REPAK_DOWNLOAD_URL: &str =
     "https://github.com/trumank/repak/releases/latest/download/repak_cli-x86_64-pc-windows-msvc.zip";
 const REPAK_FALLBACK_URL: &str =
@@ -143,7 +143,7 @@ pub struct RepakResult {
 /// Usa repak; il writer custom è un fallback SOLO quando produce un formato
 /// che il gioco può montare davvero.
 ///
-/// ⚠️ STORIA DEL FALLBACK MUTO (02/08/2026, Below): il writer custom
+/// ⚠️ STORIA DEL FALLBACK MUTO (02/08/2026, su un gioco pak v11): il writer custom
 /// `create_pak_v4` dichiara footer versione 8. Un gioco UE5 con pak v11 un
 /// pak v8 NON lo monta — e non dà nessun errore: il file esiste, la UI dice
 /// "Patch installata", il gioco resta in inglese. Per settimane il download

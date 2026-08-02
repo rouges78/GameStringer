@@ -4,7 +4,7 @@
  * leggere la memoria di un processo PER INDIRIZZO VIRTUALE invece che per
  * offset di file.
  *
- * PERCHÉ ESISTE — 30/07/2026, Below, Rusted Gods.
+ * PERCHÉ ESISTE — 30/07/2026, un gioco UE5 reale.
  * -----------------------------------------------
  * Cercando il `Game.locres` dentro il dump lo si trovava, se ne leggeva l'indice
  * per intero (811 chiavi su 811, perfette), e poi l'array delle stringhe si

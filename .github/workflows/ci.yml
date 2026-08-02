@@ -60,7 +60,7 @@ jobs:
 
       # Gate anti file-di-gioco nel repo.
       # Il 02/08/2026 estratti_pak/ è risultata TRACCIATA: 18 file estratti dal .pak
-      # di Below già su origin/main, cioè su un repo pubblico. Non per distrazione —
+      # di un gioco commerciale già su origin/main, cioè su un repo pubblico. Non per distrazione —
       # il .gitignore elencava le cartelle una a una e quella, nata dopo con un nome
       # nuovo, non era nell'elenco. Il .gitignore ora usa un glob, ma un glob copre
       # solo il nome che abbiamo già visto: questo gate guarda il CONTENUTO, cioè

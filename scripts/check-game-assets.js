@@ -4,7 +4,7 @@
  *
  * Il 02/08/2026, durante una ricognizione di routine, è saltato fuori che
  * `estratti_pak/` era TRACCIATA da git: 18 file (9 .locres estratti dal .pak di
- * Below, Rusted Gods, più 9 .json col testo in chiaro) entrati col commit
+ * un gioco UE5 commerciale, più 9 .json col testo in chiaro) entrati col commit
  * 9c6971e0 del 01/08 e già su origin/main, cioè su un repo PUBBLICO.
  *
  * Non era malizia e non era distrazione: era il modo in cui era scritta la
@@ -40,9 +40,10 @@
  *     indistinguibile da un file di gioco infilato lì per comodità.
  *
  *  3. Nessuna fixture oltre MAX_FIXTURE_BYTES. "Tagliata" è una parola che
- *     serve solo se qualcuno la misura. Oggi l'unica fixture autentica da gioco
- *     commerciale è below-rusted-gods-Game-es.locres (66 KB, documentata):
- *     il tetto tiene quella sotto controllo e impedisce che ne entri una intera.
+ *     serve solo se qualcuno la misura. Dal 02/08/2026 sera NESSUNA fixture
+ *     autentica da gioco commerciale è più nel repo (l'ultima, il .locres autentico, è stata spostata fuori: vive in estratti/, ignorata, e i test la
+ *     ricevono via GS_UE_AUTHENTIC_LOCRES). Il tetto resta come cintura di
+ *     sicurezza per le fixture sintetiche.
  *
  * COSA QUESTO GATE NON FA. Non guarda dentro i file: un .json pieno di dialoghi
  * di un gioco passa liscio, perché .json è l'estensione di mezzo progetto.

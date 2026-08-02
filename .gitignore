@@ -152,7 +152,7 @@ _gs_split/
 # ⚠️ La regola è un GLOB, non un elenco. Fino al 02/08/2026 c'erano tre righe
 # esplicite (/estratti/, /estratti2/) e la terza cartella — estratti_pak/, nata
 # dopo con un nome nuovo — è finita DENTRO il repo pubblico: 18 file estratti
-# dal .pak di Below, già su origin/main (commit 9c6971e0). Un elenco copre solo
+# dal .pak di un gioco commerciale, già su origin/main (commit 9c6971e0). Un elenco copre solo
 # i nomi che qualcuno si è ricordato di aggiungere; il glob copre anche quelli
 # di domani. Se serve una cartella di lavoro nuova, chiamala estratti-<qualcosa>.
 /estratti*/

@@ -118,7 +118,7 @@ function faiRva(sezs, off) {
 // confrontare i quattro campi con altrettanti IMMEDIATI nel flusso di
 // istruzioni (`cmp dword ptr [rcx], 7574140Eh` e così via). In quel caso la
 // costante da 16 byte NON esiste da nessuna parte, ed è ciò che abbiamo
-// osservato su BelowRustedGods.
+// osservato sul gioco di collaudo UE5.
 //
 // Quindi cerchiamo i quattro valori separatamente nelle sezioni ESEGUIBILI e poi
 // i punti dove almeno due valori DISTINTI cadono in una finestra ravvicinata.

@@ -342,7 +342,7 @@ pub async fn launch_with_translator(game_path: String, executable: String) -> Re
         // 2. Fragilità del pattern scanning. Misurato staticamente con
         //    scripts/ue-validate-ftext-pattern.js su 6 giochi UE reali
         //    (30-31/07/2026): il pattern UE5 dà 1 solo match su 4 binari su 6
-        //    (buono), ma Father's Day ne dà 4 e Below, Rusted Gods 3; il
+        //    (buono), ma altri UE reali ne danno 4 o 3; il
         //    pattern UE427 ne dà 89-131 ed è da buttare. Un match unico
         //    dimostra l'unicità, mai l'identità: agganciare la funzione
         //    sbagliata con la firma sbagliata significa crash o corruzione
