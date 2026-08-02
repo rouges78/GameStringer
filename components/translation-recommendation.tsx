@@ -1302,9 +1302,10 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
   const strategy = recommendation.optimal_strategy;
   const strategyReliability = strategy?.combined_reliability || recommendation.reliability;
   
-  const reliabilityColor = 
-    strategyReliability >= 80 ? 'text-emerald-400' :
-    strategyReliability >= 60 ? 'text-yellow-400' : 'text-orange-400';
+  // reliabilityColor rimosso col numero che colorava (02/08/2026).
+  // strategyReliability resta SOLO come soglia interna (>= 75) per decidere se
+  // mostrare l'azione combinata: usarlo per ramificare è legittimo, mostrarlo
+  // all'utente come "99%" no — non è una misura.
 
   return (
     <div className="rounded-xl bg-[#1b2838]/80 border border-[#2a475e]/50 p-3.5 backdrop-blur-md w-full space-y-3">
@@ -1331,12 +1332,14 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-0.5">
-          <span className={`text-sm font-bold ${reliabilityColor}`}>{strategyReliability}%</span>
-          <div className="w-20 h-1.5 bg-[#0e1419] rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all" style={{ width: `${strategyReliability}%`, background: strategyReliability >= 80 ? 'linear-gradient(90deg, #34d399, #22d3ee)' : strategyReliability >= 60 ? 'linear-gradient(90deg, #facc15, #fb923c)' : 'linear-gradient(90deg, #fb923c, #ef4444)' }} />
-          </div>
-        </div>
+        {/* Qui c'era una percentuale ("99%") con barra colorata. Rimossa il
+            02/08/2026: combined_reliability NON è una misura, è una formula
+            interna (reliability del miglior tool + 1/5 per ogni altro, cap 99)
+            e i valori dei singoli tool sono costanti scritte a mano. Un numero
+            preciso senza misura dietro è peggio di nessun numero: dà fiducia
+            che non abbiamo guadagnato. Se un giorno la fiducia si misura sul
+            campo (esiti reali per motore, come il benchmark provider), il
+            numero può tornare — con la sua fonte. */}
       </div>
 
       {/* ── ANTI-CHEAT WARNING ── */}
@@ -1368,7 +1371,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <span className="text-[11px] font-semibold text-[#c6d4df] group-hover:text-white transition-colors">{tool.name}</span>
                   <span className="text-2xs text-[#8f98a0] ml-2">{tool.reason}</span>
                 </div>
-                <span className={`text-2xs font-bold shrink-0 ${tool.reliability >= 80 ? 'text-emerald-400' : tool.reliability >= 60 ? 'text-yellow-400' : 'text-orange-400'}`}>{tool.reliability}%</span>
+                {/* percentuale per-tool rimossa: costante scritta a mano, non misura */}
                 <ChevronRight className="h-3 w-3 text-[#8f98a0]/40 group-hover:text-[#67c1f5] transition-colors shrink-0" />
               </button>
             ))}
@@ -1460,7 +1463,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               {strategy?.tools.map((tool, idx) => (
                 <div key={tool.id} className="flex items-center gap-2 text-xs text-slate-400">
                   <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xs">{idx + 2}</span>
-                  {tool.name} ({tool.reliability}%)
+                  {tool.name}
                 </div>
               ))}
               <div className="flex items-center gap-2 text-xs text-slate-400">

@@ -3563,6 +3563,40 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
             String::new()
         };
         
+        // ⚠️ ATTENZIONE AL FALLBACK CIECO (corretto il 02/08/2026): questo ramo
+        // scatta quando non si trovano file di localizzazione SCIOLTI. Su un
+        // gioco Unreal è la norma — i .locres stanno DENTRO i .pak — e il
+        // risultato era che a un utente UE la app raccomandava l'OCR al 65%
+        // mentre esisteva (e funzionava, provata a schermo) la via .locres.
+        // Un consiglio sbagliato dato con sicurezza è peggio di nessun consiglio.
+        let is_unreal = engine_check.engine_name.to_lowercase().contains("unreal");
+        if is_unreal {
+            TranslationRecommendation {
+                primary_method: "unreal_locres".to_string(),
+                method_description: "Localizzazione Unreal (.locres nei .pak)".to_string(),
+                reliability: 80,
+                recommended_ai: "gemini".to_string(),
+                reason: "Gioco Unreal: i testi non sono file sciolti, stanno nei .locres dentro i .pak. La app li legge e spedisce un override _P.pak senza toccare gli originali. Se il gioco non ha .locres, resta l'OCR.".to_string(),
+                alternatives: vec!["OCR con overlay (se il gioco non espone .locres)".to_string()],
+                has_existing_patch: false,
+                has_localization_files: false,
+                localization_format: Some("locres".to_string()),
+                missing_italian: true,
+                action_label: "🎮 Traduci (Unreal)".to_string(),
+                action_route: "/library".to_string(),
+                engine_name: engine_check.engine_name.clone(),
+                anti_cheat_detected: anti_cheat_name,
+                anti_cheat_warning: anti_cheat_warn,
+                translation_memory_count: tm_count,
+                community_packages_count: community_count,
+                best_community_package: best_pkg,
+                community_rating: community_avg,
+                translatable_files_count: files_count,
+                tips,
+                all_tools,
+                optimal_strategy,
+            }
+        } else {
         TranslationRecommendation {
             primary_method: "ocr".to_string(),
             method_description: "Traduzione OCR con overlay".to_string(),
@@ -3588,8 +3622,9 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
             all_tools,
             optimal_strategy,
         }
+        }
     };
-    
+
     log::info!("📊 Raccomandazione per '{}': {} ({}%)", game_name, recommendation.primary_method, recommendation.reliability);
     
     Ok(recommendation)

@@ -498,14 +498,19 @@ pub async fn detect_engine_for_game(
                 "📁 I testi tradotti vanno in BepInEx/Translation/".to_string(),
             ]
         ),
+        // ⚠️ Fino al 02/08/2026 qui c'era can_patch:false e il consiglio di
+        // scaricare UnrealLocres a mano: una tabella scritta quando la patch
+        // UE non esisteva, rimasta a dire il falso dopo che l'abbiamo fatta
+        // funzionare (override _P.pak + tripletta utoc/ucas, tutto interno,
+        // provato a schermo su un gioco UE5 IoStore reale).
         "Unreal Engine" | "Unreal" => (
-            false,
-            Some("UnrealLocres".to_string()),
-            Some("I giochi Unreal richiedono estrazione dei file .pak con UnrealLocres.".to_string()),
+            true,
+            Some("GameStringer — override _P.pak".to_string()),
+            Some("GameStringer legge i .locres dai .pak del gioco, li traduce e spedisce un override _P.pak: i file originali non vengono toccati.".to_string()),
             vec![
-                "🔧 Scarica UnrealLocres da GitHub".to_string(),
-                "📁 Cerca cartella Localization nei file .pak".to_string(),
-                "💡 I testi sono in file .locres".to_string(),
+                "✅ Unreal supportato: usa il pulsante di traduzione".to_string(),
+                "📁 I testi stanno nei .locres dentro i .pak (non file sciolti)".to_string(),
+                "💡 Sui giochi UE5 IoStore serve anche la coppia .utoc/.ucas: la crea la app".to_string(),
             ]
         ),
         "RPG Maker" | "RPG Maker MV" | "RPG Maker MZ" | "RPG Maker VX" | "RPG Maker VX Ace" => (
