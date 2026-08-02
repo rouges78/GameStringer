@@ -228,6 +228,82 @@ fn write_fstring(buf: &mut Vec<u8>, s: &str) {
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// .locmeta (FTextLocalizationMetaDataResource)
+// ═══════════════════════════════════════════════════════════════════
+
+/// Magic del .locmeta: FGuid(0xA14CEE4F, 0x83554746, 0xBE47CA61, 0xB0F7DEFD)
+/// serializzato come quattro u32 little-endian.
+///
+/// ⚠️ FONTE: TextLocalizationResource.cpp di UE — NON ancora verificato su un
+/// Game.locmeta autentico (lezione [locres-magic]: il magic .locres "da
+/// documentazione" era inventato). La differenza rispetto ad allora: qui il
+/// magic è CONTROLLATO IN PARSE su un file che viene dal gioco vero prima di
+/// scrivere qualsiasi cosa — se è sbagliato, parse_locmeta fallisce forte e
+/// l'override locmeta semplicemente non viene prodotto (comportamento di
+/// oggi), invece di spedire un file che il motore ignora.
+const LOCMETA_MAGIC: [u8; 16] = [
+    0x4F, 0xEE, 0x4C, 0xA1,
+    0x46, 0x47, 0x55, 0x83,
+    0x61, 0xCA, 0x47, 0xBE,
+    0xFD, 0xDE, 0xF7, 0xB0,
+];
+
+/// Contenuto di un .locmeta.
+/// version 0 = Initial (solo cultura nativa) · 1 = AddedCompiledCultures
+/// (aggiunge l'elenco delle culture compilate — è QUELLO l'elenco che
+/// registra una lingua agli occhi del motore nei giochi impacchettati).
+#[derive(Debug, Clone, PartialEq)]
+pub struct LocMetaInfo {
+    pub version: u8,
+    pub native_culture: String,          // es. "en"
+    pub native_locres: String,           // es. "en/Game.locres"
+    pub compiled_cultures: Vec<String>,  // vuoto per version 0
+}
+
+pub fn parse_locmeta(data: &[u8]) -> Result<LocMetaInfo, String> {
+    if data.len() < 17 {
+        return Err(format!("file troppo corto per un .locmeta: {} byte", data.len()));
+    }
+    if data[..16] != LOCMETA_MAGIC {
+        return Err("magic .locmeta non riconosciuto".to_string());
+    }
+    let mut off = 16usize;
+    let version = data[off];
+    off += 1;
+    if version > 1 {
+        return Err(format!("versione .locmeta {} non supportata (conosciamo 0 e 1)", version));
+    }
+    let native_culture = read_fstring(data, &mut off)?;
+    let native_locres = read_fstring(data, &mut off)?;
+    let mut compiled_cultures = Vec::new();
+    if version >= 1 {
+        let n = read_i32(data, &mut off)?;
+        if !(0..=10_000).contains(&n) {
+            return Err(format!("numero culture compilate assurdo: {}", n));
+        }
+        for _ in 0..n {
+            compiled_cultures.push(read_fstring(data, &mut off)?);
+        }
+    }
+    Ok(LocMetaInfo { version, native_culture, native_locres, compiled_cultures })
+}
+
+pub fn write_locmeta(meta: &LocMetaInfo) -> Vec<u8> {
+    let mut buf = Vec::new();
+    buf.extend_from_slice(&LOCMETA_MAGIC);
+    buf.push(meta.version);
+    write_fstring(&mut buf, &meta.native_culture);
+    write_fstring(&mut buf, &meta.native_locres);
+    if meta.version >= 1 {
+        write_i32(&mut buf, meta.compiled_cultures.len() as i32);
+        for c in &meta.compiled_cultures {
+            write_fstring(&mut buf, c);
+        }
+    }
+    buf
+}
+
 #[allow(dead_code)]
 fn write_bytes(buf: &mut Vec<u8>, data: &[u8]) {
     buf.extend_from_slice(data);
@@ -1226,8 +1302,54 @@ pub async fn apply_unreal_translation(
         log::info!("📦 Anche .locres override inglese: {}", locres_path_en);
         pak_files.push((locres_path_en, locres_data.clone()));
     }
-    
-    log::info!("📦 Creazione PAK con {} .locres: {}", pak_files.len(), locres_path_target);
+
+    // ── .locmeta: registra la cultura target ──────────────────────────────
+    // Il .locmeta v1 elenca le culture compilate del target: se quella
+    // richiesta non c'è, il motore può ignorare i .locres anche se i file
+    // esistono — è la causa radice per cui su Below l'italiano ha dovuto
+    // viaggiare travestito da spagnolo (02/08/2026).
+    //
+    // Regola: si parte SEMPRE dal locmeta ORIGINALE del gioco e si aggiunge
+    // solo la cultura target. NIENTE locmeta inventato da zero: un override
+    // che elencasse meno culture di quelle vere le cancellerebbe dal menu.
+    // Se l'originale non si trova o non si legge, non si scrive nulla e il
+    // comportamento resta quello di oggi (travestimento) — un downgrade
+    // dichiarato nei log, non un file sbagliato spedito in silenzio.
+    //
+    // ⚠️ NON ANCORA PROVATO IN GIOCO: che il motore accetti un .locmeta da un
+    // override _P.pak è l'ipotesi da verificare su Below — lezione ADR-005,
+    // i difetti veri escono solo in-app.
+    match super::unreal_iostore::read_game_locmeta(game_dir) {
+        Some((orig_path, bytes)) => match parse_locmeta(&bytes) {
+            Ok(mut meta) if meta.version >= 1 => {
+                if meta.compiled_cultures.iter().any(|c| c == &target_language) {
+                    log::info!("📗 locmeta: cultura '{}' già registrata dal gioco — nessun override necessario", target_language);
+                } else {
+                    meta.compiled_cultures.push(target_language.clone());
+                    let locmeta_path = format!(
+                        "{}/Content/Localization/{}/{}.locmeta",
+                        project_name, LOC_TARGET, LOC_TARGET
+                    );
+                    log::info!(
+                        "📗 locmeta: aggiungo cultura '{}' alle {} esistenti (da {}) → {}",
+                        target_language, meta.compiled_cultures.len() - 1, orig_path, locmeta_path
+                    );
+                    pak_files.push((locmeta_path, write_locmeta(&meta)));
+                }
+            }
+            Ok(meta) => {
+                log::info!("📗 locmeta v{} senza elenco culture: niente da registrare via locmeta", meta.version);
+            }
+            Err(e) => {
+                log::warn!("⚠️ locmeta del gioco ({}) non parsabile: {} — NON ne scrivo uno inventato", orig_path, e);
+            }
+        },
+        None => {
+            log::warn!("⚠️ Game.locmeta originale non trovato nei .pak — nessun override locmeta (comportamento invariato)");
+        }
+    }
+
+    log::info!("📦 Creazione PAK con {} file: {}", pak_files.len(), locres_path_target);
     
     // Trova la directory Paks
     let paks_dir = find_paks_dir(game_dir)
@@ -1834,6 +1956,73 @@ mod tests {
         bytes.extend_from_slice(&LOCRES_MAGIC);
         bytes.push(5u8); // versione > 3
         assert!(parse_locres(&bytes).is_err());
+    }
+
+    // ── .locmeta: round-trip e guardie ───────────────────────────────────
+    // ⚠️ Il round-trip prova solo che scriviamo ciò che leggiamo: NON prova
+    // che il formato sia quello di UE (fixture indipendente dal parser,
+    // lezione [locres-magic]). La prova vera è parse_locmeta su un
+    // Game.locmeta AUTENTICO estratto da un gioco — e poi lo schermo.
+
+    #[test]
+    fn locmeta_round_trip_v1() {
+        let meta = LocMetaInfo {
+            version: 1,
+            native_culture: "en".to_string(),
+            native_locres: "en/Game.locres".to_string(),
+            compiled_cultures: vec!["en", "es", "de", "fr"].into_iter().map(String::from).collect(),
+        };
+        let bytes = write_locmeta(&meta);
+        assert_eq!(&bytes[..16], &LOCMETA_MAGIC, "magic in testa");
+        let parsed = parse_locmeta(&bytes).expect("round-trip v1");
+        assert_eq!(parsed, meta);
+    }
+
+    #[test]
+    fn locmeta_round_trip_v0_ignores_cultures() {
+        let meta = LocMetaInfo {
+            version: 0,
+            native_culture: "en".to_string(),
+            native_locres: "en/Game.locres".to_string(),
+            compiled_cultures: vec![],
+        };
+        let parsed = parse_locmeta(&write_locmeta(&meta)).expect("round-trip v0");
+        assert_eq!(parsed, meta);
+        // v0 non serializza l'elenco: anche se qualcuno lo riempie, non esce.
+        let mut sporco = meta.clone();
+        sporco.compiled_cultures.push("it".to_string());
+        let riletto = parse_locmeta(&write_locmeta(&sporco)).expect("v0 con elenco pieno");
+        assert!(riletto.compiled_cultures.is_empty(), "v0 non deve serializzare culture");
+    }
+
+    #[test]
+    fn locmeta_rejects_bad_magic_and_future_version() {
+        assert!(parse_locmeta(&[0u8; 32]).is_err(), "magic sbagliato");
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&LOCMETA_MAGIC);
+        bytes.push(2u8); // versione ignota
+        bytes.extend_from_slice(&[0u8; 8]);
+        assert!(parse_locmeta(&bytes).is_err(), "versione futura");
+    }
+
+    #[test]
+    fn locmeta_add_culture_preserves_original() {
+        // Il flusso di apply_unreal_translation: locmeta del gioco + cultura target.
+        let originale = LocMetaInfo {
+            version: 1,
+            native_culture: "en".to_string(),
+            native_locres: "en/Game.locres".to_string(),
+            compiled_cultures: vec!["en", "es"].into_iter().map(String::from).collect(),
+        };
+        let mut modificato = parse_locmeta(&write_locmeta(&originale)).unwrap();
+        assert!(!modificato.compiled_cultures.iter().any(|c| c == "it"));
+        modificato.compiled_cultures.push("it".to_string());
+        let finale = parse_locmeta(&write_locmeta(&modificato)).unwrap();
+        assert_eq!(finale.native_culture, originale.native_culture, "cultura nativa intatta");
+        assert_eq!(finale.native_locres, originale.native_locres, "path nativo intatto");
+        assert_eq!(finale.compiled_cultures.len(), originale.compiled_cultures.len() + 1);
+        assert!(finale.compiled_cultures.iter().any(|c| c == "it"));
+        assert!(finale.compiled_cultures.iter().any(|c| c == "es"), "le culture del gioco restano");
     }
 
     // ── PAK writer + footer + index + estrazione (round-trip completo) ───

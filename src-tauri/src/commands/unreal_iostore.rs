@@ -2631,6 +2631,12 @@ struct PakLocres { path: String, data: Vec<u8> }
 
 /// Estrae e decomprime tutti i `.locres` da un file .pak. Ritorna (path, bytes).
 fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<Vec<PakLocres>, String> {
+    extract_files_by_ext_from_pak(pak_path, oodle, ".locres")
+}
+
+/// Come sopra ma con estensione parametrica (".locres", ".locmeta", …).
+/// Il filtro è un ends_with case-insensitive sul path dentro il pak.
+fn extract_files_by_ext_from_pak(pak_path: &Path, oodle: &Option<OodleLib>, ext: &str) -> Result<Vec<PakLocres>, String> {
     let data = fs::read(pak_path).map_err(|e| format!("lettura pak {}: {}", pak_path.display(), e))?;
     let footer = pak_read_footer(&data)?;
     log::info!("📦 PAK v{} · index@{} ({} byte) · metodi: {:?}",
@@ -2672,7 +2678,7 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
             p += 1;  // encrypted flag
             p += 4;  // block size
 
-            if !path.to_lowercase().ends_with(".locres") { continue; }
+            if !path.to_lowercase().ends_with(ext) { continue; }
             // I dati veri stanno a entry_offset, DOPO l'header inline ripetuto.
             match pak_extract_at(&data, entry_offset as usize, size, uncompressed, method_index, &footer, oodle) {
                 Ok(bytes) => {
@@ -2726,7 +2732,7 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
         for _ in 0..num_files {
             let file = pak_read_fstring(fdi, &mut fp)?;
             let enc_off = rd_u32(fdi, &mut fp)?;
-            if file.to_lowercase().ends_with(".locres") {
+            if file.to_lowercase().ends_with(ext) {
                 let full = format!("{}{}", dir, file);
                 locres_targets.push((full, enc_off));
             }
@@ -2746,6 +2752,55 @@ fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<
         }
     }
     Ok(out)
+}
+
+/// Cerca il `Game.locmeta` ORIGINALE del gioco dentro i suoi .pak.
+///
+/// Serve ad `apply_unreal_translation` per registrare la cultura target
+/// PARTENDO dai metadati veri del gioco: un locmeta inventato da zero che
+/// elencasse meno culture di quelle reali cancellerebbe lingue dal menu.
+/// Ritorna (path dentro il pak, bytes) del candidato migliore, oppure None —
+/// e None è una risposta legittima: chi chiama NON deve inventarsi il file.
+pub fn read_game_locmeta(game_dir: &Path) -> Option<(String, Vec<u8>)> {
+    let oodle = OodleLib::load().ok();
+    if oodle.is_none() {
+        log::warn!("⚠️ locmeta: Oodle non caricato — se il .locmeta è compresso non si estrarrà");
+    }
+    let is_engine = |p: &str| {
+        let l = p.to_lowercase();
+        l.contains("engine/") || l.contains("engine\\") || l.contains("/plugins/") || l.contains("\\plugins\\")
+    };
+
+    let mut best: Option<(String, Vec<u8>)> = None;
+    for pak in find_pak_files(game_dir) {
+        // I nostri override si chiamano *_GameStringer_*_P.pak: leggerli qui
+        // significherebbe partire dal NOSTRO locmeta della volta scorsa invece
+        // che da quello del gioco — un'eco, non una fonte.
+        if pak.file_name().and_then(|n| n.to_str()).map(|n| n.contains("GameStringer")).unwrap_or(false) {
+            continue;
+        }
+        let list = match extract_files_by_ext_from_pak(&pak, &oodle, ".locmeta") {
+            Ok(l) => l,
+            Err(e) => { log::warn!("⚠️ locmeta: pak {}: {}", pak.display(), e); continue; }
+        };
+        for f in list {
+            if is_engine(&f.path) { continue; }
+            let lp = f.path.to_lowercase();
+            let is_game_target = lp.ends_with("/game.locmeta") || lp.ends_with("\\game.locmeta");
+            // Primo candidato qualsiasi; poi un Game.locmeta scalza un non-Game.
+            let replace = match &best {
+                None => true,
+                Some((bp, _)) => is_game_target && !bp.to_lowercase().contains("game.locmeta"),
+            };
+            if replace {
+                best = Some((f.path, f.data));
+            }
+        }
+    }
+    if let Some((p, d)) = &best {
+        log::info!("📗 locmeta originale trovato: {} ({} byte)", p, d.len());
+    }
+    best
 }
 
 /// Decodifica il solo Offset dall'encoded entry (campo non ambiguo), poi legge
