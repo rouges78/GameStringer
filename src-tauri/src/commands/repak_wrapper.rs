@@ -17,10 +17,14 @@ use reqwest::Client;
 use zip::ZipArchive;
 use serde::{Deserialize, Serialize};
 
+// ⚠️ L'asset si chiama `repak_cli-…` (con _cli), non `repak-…`: con il nome
+// sbagliato entrambi gli URL davano 404 e si ripiegava SEMPRE sul writer
+// custom (footer v8) credendo di avere solo un fallback occasionale.
+// Scoperto 02/08/2026 su Below: il pak v8 non veniva montato dal gioco.
 const REPAK_DOWNLOAD_URL: &str =
-    "https://github.com/trumank/repak/releases/latest/download/repak-x86_64-pc-windows-msvc.zip";
+    "https://github.com/trumank/repak/releases/latest/download/repak_cli-x86_64-pc-windows-msvc.zip";
 const REPAK_FALLBACK_URL: &str =
-    "https://github.com/trumank/repak/releases/download/v0.2.3/repak-x86_64-pc-windows-msvc.zip";
+    "https://github.com/trumank/repak/releases/download/v0.2.3/repak_cli-x86_64-pc-windows-msvc.zip";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Path helpers
@@ -109,7 +113,9 @@ async fn try_download_repak(client: &Client, url: &str, dir: &Path) -> Result<Pa
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
         let name = file.mangled_name();
         let fname = name.file_name().unwrap_or_default().to_string_lossy().to_string();
-        if fname == "repak.exe" {
+        // Nome flessibile: nello zip _cli l'eseguibile può stare in una
+        // sottocartella e chiamarsi repak.exe — accetta repak*.exe ovunque.
+        if fname.starts_with("repak") && fname.ends_with(".exe") {
             let dest = dir.join("repak.exe");
             let mut out = fs::File::create(&dest).map_err(|e| e.to_string())?;
             std::io::copy(&mut file, &mut out).map_err(|e| e.to_string())?;

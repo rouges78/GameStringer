@@ -3423,8 +3423,10 @@ mod tests {
     #[ignore = "richiede GS_UE_BELOW_PAK (originale) + GS_UE_PATCH_PAK (patch)"]
     fn patch_e_davvero_tradotta() {
         let (Ok(orig), Ok(patch)) = (std::env::var("GS_UE_BELOW_PAK"), std::env::var("GS_UE_PATCH_PAK")) else {
-            eprintln!("Servono GS_UE_BELOW_PAK e GS_UE_PATCH_PAK");
-            return;
+            // panic, non return: un test --ignored lo si lancia apposta, e uscire
+            // con `ok` senza le variabili è a sua volta un fallimento muto —
+            // successo il 02/08, sembrava una misura ed era un no-op.
+            panic!("Servono GS_UE_BELOW_PAK e GS_UE_PATCH_PAK");
         };
         let oodle = OodleLib::load().ok();
         let leggi = |p: &str, filtro: &str| -> Vec<(String, String)> {
@@ -3468,6 +3470,109 @@ mod tests {
         assert!(diverse > b.len() / 4,
             "solo {} stringhe su {} differiscono dall'originale: la patch NON è tradotta",
             diverse, b.len());
+    }
+
+    /// ESPERIMENTO travestimento: riconfeziona il _P.pak esistente spostando il
+    /// .locres italiano sotto la cartella di una cultura che il gioco CONOSCE
+    /// (default `es`). Below ha la lista lingue cablata nel menu: la cultura `it`
+    /// non è selezionabile, quindi il nostro override `it/` non viene mai chiesto.
+    /// Se col pak travestito il gioco impostato su Español mostra l'italiano, il
+    /// mount funziona e il problema era SOLO la registrazione della cultura; se
+    /// resta spagnolo, il pak non viene proprio montato (formato/versione) — due
+    /// diagnosi opposte, un solo esperimento.
+    ///
+    ///   GS_UE_PATCH_PAK="…/BelowRustedGods_GameStringer_it_P.pak" \
+    ///   [GS_UE_MASK_CULTURE=es] \
+    ///     cargo test --lib crea_pak_travestito -- --ignored --nocapture
+    ///
+    /// Scrive `<dir del pak>/<nome>_GameStringer_<cultura>mask_P.pak`. Poi:
+    /// rimuovere il _P.pak italiano (o no: convivono), avviare il gioco,
+    /// selezionare la lingua sacrificata nel menu.
+    #[tokio::test]
+    #[ignore = "richiede GS_UE_PATCH_PAK (pak italiano da travestire)"]
+    async fn crea_pak_travestito() {
+        let Ok(patch) = std::env::var("GS_UE_PATCH_PAK") else {
+            panic!("Serve GS_UE_PATCH_PAK (pak italiano esistente)");
+        };
+        let mask = std::env::var("GS_UE_MASK_CULTURE").unwrap_or_else(|_| "es".to_string());
+        assert!(mask != "it", "travestire it da it non è un esperimento");
+
+        let oodle = OodleLib::load().ok();
+        let list = extract_locres_from_pak(std::path::Path::new(&patch), &oodle)
+            .expect("pak italiano illeggibile col nostro stesso reader");
+        let it: Vec<&PakLocres> = list.iter().filter(|l| l.path.contains("/it/")).collect();
+        assert!(!it.is_empty(), "nessun .locres sotto /it/ nel pak: {} file letti", list.len());
+
+        // Stessi byte, path con la cultura maschera. Niente altro nel pak:
+        // l'esperimento deve avere UNA variabile sola.
+        let files: Vec<(String, Vec<u8>)> = it.iter()
+            .map(|l| (l.path.replace("/it/", &format!("/{}/", mask)), l.data.clone()))
+            .collect();
+        for (p, d) in &files {
+            eprintln!("  → {} ({} byte)", p, d.len());
+        }
+        let refs: Vec<(&str, &[u8])> = files.iter().map(|(p, d)| (p.as_str(), d.as_slice())).collect();
+
+        let src = std::path::Path::new(&patch);
+        let out = src.with_file_name(
+            src.file_name().unwrap().to_string_lossy().replace("_it_P.pak", &format!("_{}mask_P.pak", mask))
+        );
+        assert_ne!(src, out, "nome output identico all'input");
+        let r = crate::commands::repak_wrapper::create_pak(&refs, &out, None).await
+            .expect("creazione pak travestito fallita");
+        // Prova di effetto: rileggi il pak APPENA scritto e verifica che contenga
+        // il .locres sotto la cultura maschera — "file creato" non basta.
+        let verifica = extract_locres_from_pak(&out, &oodle).expect("pak travestito illeggibile");
+        let trovati = verifica.iter().filter(|l| l.path.contains(&format!("/{}/", mask))).count();
+        assert!(trovati > 0, "il pak travestito non contiene .locres sotto /{}/", mask);
+        eprintln!("\n✅ [{}] {} — {} .locres sotto /{}/. Ora: avvia il gioco e seleziona la lingua '{}' nel menu.",
+            r.method, out.display(), trovati, mask, mask);
+    }
+
+    /// ISPEZIONE indici: confronta punto per punto l'indice del pak del GIOCO
+    /// con quello del NOSTRO override. Dopo il travestimento es/ in formato
+    /// repak-V11 il gioco resta in spagnolo: le ipotesi plausibili sono finite,
+    /// e la differenza — mount point, forma dei path, metodi di compressione —
+    /// va LETTA dai byte, non dedotta.
+    ///
+    ///   GS_UE_PAK_A="…/BelowRustedGods-Windows.pak" \
+    ///   GS_UE_PAK_B="…/BelowRustedGods_GameStringer_esmask_P.pak" \
+    ///     cargo test --lib ispeziona_indice_pak -- --ignored --nocapture
+    #[test]
+    #[ignore = "richiede GS_UE_PAK_A e GS_UE_PAK_B"]
+    fn ispeziona_indice_pak() {
+        let (Ok(a), Ok(b)) = (std::env::var("GS_UE_PAK_A"), std::env::var("GS_UE_PAK_B")) else {
+            panic!("Servono GS_UE_PAK_A (pak del gioco) e GS_UE_PAK_B (nostro override)");
+        };
+        let oodle = OodleLib::load().ok();
+        for (etichetta, percorso) in [("GIOCO", &a), ("NOSTRO", &b)] {
+            eprintln!("\n════ {} — {} ════", etichetta, percorso);
+            let data = fs::read(percorso).expect("pak illeggibile");
+            eprintln!("  dimensione file : {} byte", data.len());
+            let footer = pak_read_footer(&data).expect("footer illeggibile");
+            eprintln!("  versione footer : {}", footer.version);
+            eprintln!("  indice cifrato  : {}", footer.encrypted_index);
+            eprintln!("  metodi compress.: {:?}", footer.compression_methods);
+            let io = footer.index_offset as usize;
+            let idx = &data[io..io + footer.index_size as usize];
+            let mut p = 0usize;
+            let mount = pak_read_fstring(idx, &mut p).expect("mount illeggibile");
+            // Il mount va stampato con i delimitatori: uno spazio o uno slash
+            // finale in più sono invisibili a occhio e decisivi per il motore.
+            eprintln!("  mount point     : ⟦{}⟧ (len {})", mount, mount.len());
+            let num = rd_u32(idx, &mut p).unwrap_or(0);
+            eprintln!("  num entries     : {}", num);
+            match extract_locres_from_pak(std::path::Path::new(percorso), &oodle) {
+                Ok(list) => {
+                    eprintln!("  .locres nell'indice: {}", list.len());
+                    for l in list.iter().take(15) {
+                        eprintln!("    ⟦{}⟧ ({} byte)", l.path, l.data.len());
+                    }
+                }
+                Err(e) => eprintln!("  ⚠️ estrazione: {}", e),
+            }
+        }
+        eprintln!("\nConfronto fatto A OCCHIO qui sopra: cerca differenze in mount (slash finale?),\nprefisso dei path (con/senza nome progetto?), maiuscole, separatori.");
     }
 
     /// Quanto si estrae SENZA la DLL Oodle.
