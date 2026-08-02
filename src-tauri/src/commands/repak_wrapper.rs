@@ -134,33 +134,63 @@ async fn try_download_repak(client: &Client, url: &str, dir: &Path) -> Result<Pa
 pub struct RepakResult {
     pub success: bool,
     pub pak_path: String,
-    pub method: String, // "repak" | "custom"
+    pub method: String, // "repak-V<n>" | "custom-v8" (solo per giochi con pak <= v8)
     pub message: String,
 }
 
 /// Crea un _P.pak a partire da una mappa {path_nel_pak → bytes}.
-/// Usa repak se disponibile, fallback al writer custom.
+///
+/// Usa repak; il writer custom è un fallback SOLO quando produce un formato
+/// che il gioco può montare davvero.
+///
+/// ⚠️ STORIA DEL FALLBACK MUTO (02/08/2026, Below): il writer custom
+/// `create_pak_v4` dichiara footer versione 8. Un gioco UE5 con pak v11 un
+/// pak v8 NON lo monta — e non dà nessun errore: il file esiste, la UI dice
+/// "Patch installata", il gioco resta in inglese. Per settimane il download
+/// di repak falliva con un 404 (nome asset sbagliato), il codice ripiegava
+/// "occasionalmente" sul writer custom — cioè SEMPRE — e nessuno lo vedeva,
+/// perché il fallback era un `log::warn!` e il risultato era comunque
+/// `success: true`.
+///
+/// Regola adottata: se il gioco vuole un pak > v8, il writer custom non è un
+/// fallback — è un file rotto con un altro nome. Meglio un errore che spiega
+/// cosa fare di un successo che non è vero. Il fallback resta per i giochi
+/// con pak <= v8 dichiarato, dove il formato custom è quello giusto.
 pub async fn create_pak(
     files: &[(&str, &[u8])],
     output_path: &Path,
     pak_version_hint: Option<u32>,
 ) -> Result<RepakResult, String> {
-    // Prova repak (scarica se necessario ma non blocca se fallisce)
-    match ensure_repak().await {
-        Ok(repak) => {
-            match create_pak_with_repak(&repak, files, output_path, pak_version_hint) {
-                Ok(r) => return Ok(r),
-                Err(e) => {
-                    log::warn!("⚠️ repak fallito, uso writer custom: {}", e);
-                }
-            }
-        }
-        Err(e) => {
-            log::warn!("⚠️ repak non disponibile: {} — uso writer custom", e);
-        }
+    // I chiamanti di produzione passano None → 11: il default deve essere la
+    // versione dei giochi UE5 correnti, non quella che fa comodo al fallback.
+    let wanted_version = pak_version_hint.unwrap_or(11);
+
+    let repak_err = match ensure_repak().await {
+        Ok(repak) => match create_pak_with_repak(&repak, files, output_path, pak_version_hint) {
+            Ok(r) => return Ok(r),
+            Err(e) => format!("repak presente ma fallito: {}", e),
+        },
+        Err(e) => format!("repak non disponibile: {}", e),
+    };
+
+    // Da qui in giù repak non c'è. Il writer custom scrive SOLO footer v8:
+    // per un gioco che vuole v9+ sarebbe un pak che il motore ignora in
+    // silenzio — il fallimento muto peggiore. Ci si ferma con le istruzioni.
+    if wanted_version > 8 {
+        return Err(format!(
+            "Il gioco richiede un pak versione {} e repak non è utilizzabile ({}). \
+             Il writer interno produce solo pak v8, che questo gioco NON monterebbe: \
+             la patch sembrerebbe installata ma il gioco resterebbe in lingua originale. \
+             Rimedi: riprova (serve la rete per il primo download), oppure scarica \
+             repak_cli-x86_64-pc-windows-msvc.zip da https://github.com/trumank/repak/releases \
+             ed estrai repak.exe in {} — se il download viene bloccato, controlla \
+             antivirus/firewall.",
+            wanted_version, repak_err, repak_dir().display()
+        ));
     }
 
-    // Fallback: writer custom Rust
+    // Gioco con pak <= v8 dichiarato: qui il writer custom È il formato giusto.
+    log::warn!("⚠️ {} — writer custom v8 (il gioco dichiara pak v{})", repak_err, wanted_version);
     let pak_data = super::unreal_localization::create_pak_v4(files);
     fs::write(output_path, &pak_data)
         .map_err(|e| format!("Scrittura PAK: {}", e))?;
@@ -168,8 +198,11 @@ pub async fn create_pak(
     Ok(RepakResult {
         success: true,
         pak_path: output_path.to_string_lossy().to_string(),
-        method: "custom".to_string(),
-        message: format!("PAK creato con writer custom ({} bytes)", pak_data.len()),
+        method: "custom-v8".to_string(),
+        message: format!(
+            "PAK v8 creato con writer interno ({} bytes) — repak non disponibile: {}",
+            pak_data.len(), repak_err
+        ),
     })
 }
 
