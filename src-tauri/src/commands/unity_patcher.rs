@@ -3577,7 +3577,14 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
                 reliability: 80,
                 recommended_ai: "gemini".to_string(),
                 reason: "Gioco Unreal: i testi non sono file sciolti, stanno nei .locres dentro i .pak. La app li legge e spedisce un override _P.pak senza toccare gli originali. Se il gioco non ha .locres, resta l'OCR.".to_string(),
-                alternatives: vec!["OCR con overlay (se il gioco non espone .locres)".to_string()],
+                alternatives: vec![
+                    AlternativeMethod {
+                        method: "ocr".to_string(),
+                        description: "OCR Translator (se il gioco non espone .locres)".to_string(),
+                        reliability: 70,
+                        route: "/ocr-translator".to_string(),
+                    },
+                ],
                 has_existing_patch: false,
                 has_localization_files: false,
                 localization_format: Some("locres".to_string()),
