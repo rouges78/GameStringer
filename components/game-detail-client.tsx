@@ -1968,7 +1968,7 @@ export default function GameDetailPage() {
           rpStep(3, 'done', `${r.translated}/${r.total} stringhe${r.glossaryTerms ? ` · glossario ${r.glossaryTerms}` : ''}${r.voiceProfiles ? ` · voci ${r.voiceProfiles}` : ''}`);
           setAutoTranslateResult({
             successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,
-            duration: Math.round((Date.now() - t0) / 1000),
+            duration: Math.round((Date.now() - t0) / 60000), // MINUTI: il banner scrive "min" (il 03/08 mostrava 11731 "min" che erano secondi)
             deliverables: 1,
             errors: Math.max(0, r.total - r.translated),
             engine: "Ren'Py",
@@ -2076,7 +2076,7 @@ export default function GameDetailPage() {
           vStep(3, 'done', `${r.translated}/${r.total} stringhe`);
           setAutoTranslateResult({
             successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,
-            duration: Math.round((Date.now() - t0) / 1000),
+            duration: Math.round((Date.now() - t0) / 60000), // MINUTI: il banner scrive "min" (il 03/08 mostrava 11731 "min" che erano secondi)
             deliverables: 1,
             errors: Math.max(0, r.total - r.translated),
             engine: 'Visionaire Studio',
@@ -2186,7 +2186,7 @@ export default function GameDetailPage() {
           tyStep(3, 'done', `${r.applied}/${r.total}`);
           setAutoTranslateResult({
             successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,
-            duration: Math.round((Date.now() - t0) / 1000),
+            duration: Math.round((Date.now() - t0) / 60000), // MINUTI: il banner scrive "min" (il 03/08 mostrava 11731 "min" che erano secondi)
             deliverables: 1,
             errors: Math.max(0, r.total - r.translated),
             engine: 'TyranoScript',
@@ -2430,7 +2430,7 @@ export default function GameDetailPage() {
             rmStep(4, 'done', `${r.translated}/${r.total} stringhe · ${r.files} file${r.glossaryTerms ? ` · glossario ${r.glossaryTerms}` : ''}`);
             setAutoTranslateResult({
               successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,
-              duration: Math.round((Date.now() - t0) / 1000),
+              duration: Math.round((Date.now() - t0) / 60000), // MINUTI: il banner scrive "min" (il 03/08 mostrava 11731 "min" che erano secondi)
               deliverables: r.files,
               errors: Math.max(0, r.total - r.translated),
               engine: `RPG Maker ${r.version.toUpperCase()}`,
@@ -2720,7 +2720,10 @@ export default function GameDetailPage() {
 
       // Save result for completion wizard
       setAutoTranslateResult({
-        successRate: success,
+        // `success` qui è in scala 0-1 (dal success_rate Rust), ma il campo
+        // successRate del wizard viaggia in PERCENTO come negli altri 4
+        // percorsi: convertiamo QUI, alla frontiera — non nel componente.
+        successRate: Math.round(success * 100),
         duration,
         deliverables: deliverables.length,
         errors: errors.length,

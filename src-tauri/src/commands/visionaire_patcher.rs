@@ -556,92 +556,62 @@ fn patch_vbin_strings(
     original_payload: &[u8],
     translations: &std::collections::HashMap<usize, String>,
 ) -> Result<(Vec<u8>, u32), String> {
-    let mut applied: u32 = 0;
-    let mut patched = original_payload.to_vec();
-    let mut offset_adjustments: i64 = 0;
-    
-    // We need to rebuild with new string lengths
-    // For simplicity, we'll do in-place replacement where strings fit,
-    // or rebuild the entire payload for size changes
-    
-    // First pass: check if any string changes size
+    // ── SOLO sostituzione A PARITÀ DI REGIONE ────────────────────────────
+    // PROVATO IN-GAME il 03/08/2026 su Foolish Mortals: il runtime Visionaire
+    // indirizza le stringhe per OFFSET nel payload decompresso. Il vecchio
+    // ramo "rebuild" riscriveva le stringhe cambiandone le lunghezze: tutti
+    // gli offset successivi slittavano e il gioco mostrava le frasi SBAGLIATE
+    // (sottotitoli e parlato non combaciavano più; ripristinando il .gs_bak
+    // tornavano a combaciare — esperimento controllato, non ipotesi).
+    // Regola: ogni traduzione deve stare nella regione di byte dell'originale
+    // (il `len` del prefisso, null finali compresi); il resto si riempie di
+    // 0x00 come nell'originale. Se non ci sta, resta l'inglese e lo si CONTA:
+    // un contatore onesto oggi, una traduzione "più corta su misura" domani.
     let original_strings = extract_strings_from_binary(original_payload)?;
-    let mut needs_rebuild = false;
-    
+    let mut patched = original_payload.to_vec();
+    let mut applied: u32 = 0;
+    let mut too_long: u32 = 0;
     for vis_str in &original_strings {
-        if let Some(translation) = translations.get(&vis_str.index) {
-            let orig_bytes = vis_str.text.as_bytes();
-            let new_bytes = translation.as_bytes();
-            if orig_bytes.len() != new_bytes.len() {
-                needs_rebuild = true;
-                break;
-            }
+        let Some(translation) = translations.get(&vis_str.index) else { continue };
+        // Regione grezza dal prefisso: NON text.len() — il testo estratto è
+        // DECODIFICATO (può venire da Windows-1252) e i null finali non ne
+        // fanno parte: misurarsi su di lui sbaglierebbe i confini.
+        let region_len = read_le_u32(original_payload, vis_str.offset_in_veb) as usize;
+        let str_start = vis_str.offset_in_veb + 4;
+        if str_start + region_len > patched.len() { continue; }
+        let new_bytes = translation.as_bytes();
+        // Alcune regioni finiscono con null (e vanno preservati: il runtime
+        // potrebbe leggerle da C-string), altre no (e infilarci degli 0x00
+        // potrebbe mostrare glifi vuoti a chi legge (ptr,len)). Quindi:
+        // - c'erano null → tienine almeno uno e riempi di 0x00;
+        // - non c'erano → si può occupare tutta la regione, coda di spazi.
+        let region = &original_payload[str_start..str_start + region_len];
+        let trailing_nulls = region.iter().rev().take_while(|&&b| b == 0).count();
+        let (max_len, filler) = if trailing_nulls > 0 { (region_len - 1, 0u8) } else { (region_len, b' ') };
+        if new_bytes.len() <= max_len {
+            patched[str_start..str_start + new_bytes.len()].copy_from_slice(new_bytes);
+            for b in &mut patched[str_start + new_bytes.len()..str_start + region_len] { *b = filler; }
+            applied += 1;
+        } else {
+            too_long += 1;
         }
     }
-    
-    if !needs_rebuild {
-        // Simple in-place patching (same length strings)
-        for vis_str in &original_strings {
-            if let Some(translation) = translations.get(&vis_str.index) {
-                let str_start = vis_str.offset_in_veb + 4;
-                let orig_len = vis_str.text.len();
-                let new_bytes = translation.as_bytes();
-                if new_bytes.len() == orig_len && str_start + orig_len <= patched.len() {
-                    patched[str_start..str_start + orig_len].copy_from_slice(new_bytes);
-                    applied += 1;
-                }
-            }
-        }
+    if too_long > 0 {
+        log::warn!(
+            "[VIS] Patch a parità di offset: {} applicate, {} NON entrano nello spazio dell'originale (tenuto l'inglese)",
+            applied, too_long
+        );
     } else {
-        // Rebuild payload with new string sizes
-        let mut rebuilt = Vec::with_capacity(original_payload.len() + 4096);
-        let mut src_pos = 0;
-        
-        for vis_str in &original_strings {
-            // Copy everything before this string
-            let gap = vis_str.offset_in_veb as i64 + offset_adjustments;
-            if gap as usize > rebuilt.len() {
-                let copy_end = (vis_str.offset_in_veb).min(original_payload.len());
-                if src_pos < copy_end {
-                    rebuilt.extend_from_slice(&original_payload[src_pos..copy_end]);
-                }
-            }
-            src_pos = vis_str.offset_in_veb;
-            
-            if let Some(translation) = translations.get(&vis_str.index) {
-                let new_bytes = translation.as_bytes();
-                let new_len = new_bytes.len() + 1; // +1 for null terminator
-                
-                // Write new length prefix + translated string + null
-                write_le_u32(&mut rebuilt, new_len as u32);
-                rebuilt.extend_from_slice(new_bytes);
-                rebuilt.push(0); // null terminator
-                applied += 1;
-
-                let old_entry_size = 4 + vis_str.text.len() + 1;
-                offset_adjustments += (4 + new_len) as i64 - old_entry_size as i64;
-                src_pos += old_entry_size;
-            } else {
-                // Keep original
-                let old_entry_size = 4 + vis_str.text.len() + 1;
-                rebuilt.extend_from_slice(&original_payload[src_pos..src_pos + old_entry_size]);
-                src_pos += old_entry_size;
-            }
-        }
-        
-        // Copy remaining data
-        if src_pos < original_payload.len() {
-            rebuilt.extend_from_slice(&original_payload[src_pos..]);
-        }
-        
-        patched = rebuilt;
+        log::info!("[VIS] Patch a parità di offset: {} applicate", applied);
     }
-    
+
     // Recompress into VBIN format
     let mut vbin_out = Vec::new();
     vbin_out.extend_from_slice(VBIN_MAGIC);
-    // Skip the unknown u32 at offset 4, write 0
-    write_le_u32(&mut vbin_out, 0);
+    // Conserva la u32 sconosciuta dell'header originale: prima veniva
+    // AZZERATA — non sappiamo cosa sia, quindi non la tocchiamo.
+    let unknown = if _original_vbin.len() >= 8 { read_le_u32(_original_vbin, 4) } else { 0 };
+    write_le_u32(&mut vbin_out, unknown);
     write_le_u32(&mut vbin_out, patched.len() as u32); // uncompressed size
     
     // Compress with zlib
@@ -706,8 +676,23 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     
     let mut file = File::open(&vis_path)
         .map_err(|e| format!("Errore apertura: {}", e))?;
-    
-    let (version, file_count) = read_vis_header(&mut file)?;
+
+    // Header illeggibile + backup presente = quasi certamente una scrittura
+    // interrotta (visto il 03/08/2026: crash a metà patch, .vis troncato).
+    // L'errore deve dire all'utente COSA FARE, non solo cosa è rotto.
+    let (version, file_count) = read_vis_header(&mut file).map_err(|e| {
+        let backup = PathBuf::from(format!("{}.gs_bak", vis_path.display()));
+        if backup.exists() {
+            format!(
+                "Archivio del gioco illeggibile ({}): probabile scrittura interrotta. \
+                 C'è il backup originale accanto al file ({}): ripristinalo con il \
+                 pulsante Ripristina, oppure copialo a mano sopra l'archivio.",
+                e, backup.display()
+            )
+        } else {
+            format!("Archivio del gioco illeggibile ({}). Verifica i file del gioco da Steam.", e)
+        }
+    })?;
     let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
     
     let vbin_loc = find_vbin_in_file(&mut file, file_size)?;
@@ -820,9 +805,19 @@ pub async fn patch_vis_strings(
         new_data.extend_from_slice(&data[vbin_end..]);
     }
     
-    // Write patched archive
-    fs::write(&vis_path, &new_data)
-        .map_err(|e| format!("Errore scrittura: {}", e))?;
+    // Write patched archive — ATOMICO: prima su file temporaneo, poi rename.
+    // Il 03/08/2026 un crash a metà del vecchio fs::write in-place ha lasciato
+    // il .vis TRONCATO (header illeggibile, gioco rotto fino al ripristino del
+    // .gs_bak). Il rename sullo stesso volume è tutto-o-niente: o l'archivio
+    // vecchio o quello nuovo, mai una via di mezzo.
+    let tmp_path = PathBuf::from(format!("{}.gs_tmp", vis_path.display()));
+    fs::write(&tmp_path, &new_data)
+        .map_err(|e| format!("Errore scrittura file temporaneo: {}", e))?;
+    fs::rename(&tmp_path, &vis_path)
+        .map_err(|e| {
+            let _ = fs::remove_file(&tmp_path); // non lasciare il .gs_tmp orfano
+            format!("Errore rename atomico: {}", e)
+        })?;
     
     invalidate_cache(); // file changed, cache stale
     log::info!(
@@ -1357,12 +1352,14 @@ mod tests {
     }
 
     #[test]
-    fn test_patch_vbin_different_length() {
-        // String where the translation is longer
+    fn test_patch_vbin_longer_translation_is_rejected() {
+        // PROVATO IN-GAME (Foolish Mortals, 03/08/2026): il runtime Visionaire
+        // punta alle stringhe per OFFSET. Cambiare le lunghezze slitta tutto e
+        // il gioco mostra le frasi sbagliate. Una traduzione più lunga della
+        // regione originale NON deve entrare: si tiene l'inglese.
         let original_text = "Hello, how are you doing today?";
         let replacement = "Buongiorno, come stai facendo in questo bellissimo giorno?";
 
-        // Build payload with null terminator after string (as the rebuild path expects)
         let mut payload = Vec::new();
         let bytes = original_text.as_bytes();
         let entry_len = bytes.len() + 1; // +1 for null terminator
@@ -1374,21 +1371,51 @@ mod tests {
         translations.insert(0, replacement.to_string());
 
         let (result, applied) = patch_vbin_strings(&[], &payload, &translations).unwrap();
-        assert_eq!(applied, 1, "anche il ramo di rebuild deve contare la sostituzione");
+        assert_eq!(applied, 0, "una traduzione più lunga dell'originale va rifiutata, non applicata");
 
-        // Verify VBIN structure
-        assert_eq!(&result[0..4], VBIN_MAGIC);
-
-        // Decompress and check
+        // Il payload deve restare IDENTICO all'originale (stessa lunghezza,
+        // stesso testo): la dimensione decompressa non deve cambiare MAI.
+        let uncompressed_size = read_le_u32(&result, 8) as usize;
+        assert_eq!(uncompressed_size, payload.len(), "la dimensione del payload non deve cambiare");
         let compressed_size = read_le_u32(&result, 12) as usize;
-        let compressed_data = &result[16..16 + compressed_size];
-        let mut decoder = ZlibDecoder::new(compressed_data);
+        let mut decoder = ZlibDecoder::new(&result[16..16 + compressed_size]);
         let mut decompressed = Vec::new();
         decoder.read_to_end(&mut decompressed).unwrap();
+        assert_eq!(decompressed, payload, "payload intatto quando la traduzione non entra");
+    }
 
-        let found = decompressed.windows(replacement.len())
-            .any(|w| w == replacement.as_bytes());
-        assert!(found, "Replacement text not found in rebuilt output");
+    #[test]
+    fn test_patch_vbin_shorter_translation_padded_in_place() {
+        // Traduzione più corta: entra nella regione, la coda si riempie
+        // (qui l'originale finisce con null → padding di null, ne resta ≥1)
+        // e la dimensione totale del payload NON cambia.
+        let original_text = "Hello, how are you doing today my friend?";
+        let replacement = "Ciao, come va oggi?";
+
+        let mut payload = Vec::new();
+        let bytes = original_text.as_bytes();
+        let entry_len = bytes.len() + 1;
+        payload.extend_from_slice(&(entry_len as u32).to_le_bytes());
+        payload.extend_from_slice(bytes);
+        payload.push(0);
+
+        let mut translations = std::collections::HashMap::new();
+        translations.insert(0, replacement.to_string());
+
+        let (result, applied) = patch_vbin_strings(&[], &payload, &translations).unwrap();
+        assert_eq!(applied, 1);
+
+        let uncompressed_size = read_le_u32(&result, 8) as usize;
+        assert_eq!(uncompressed_size, payload.len(), "parità di byte: nessuno slittamento di offset");
+        let compressed_size = read_le_u32(&result, 12) as usize;
+        let mut decoder = ZlibDecoder::new(&result[16..16 + compressed_size]);
+        let mut decompressed = Vec::new();
+        decoder.read_to_end(&mut decompressed).unwrap();
+        assert_eq!(decompressed.len(), payload.len());
+        assert!(decompressed.windows(replacement.len()).any(|w| w == replacement.as_bytes()));
+        // dopo la traduzione, fino a fine regione, solo null
+        let start = 4 + replacement.len();
+        assert!(decompressed[start..4 + entry_len].iter().all(|&b| b == 0));
     }
 
     #[test]

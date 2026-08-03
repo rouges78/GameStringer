@@ -222,9 +222,9 @@ pub async fn offline_translate_batch(
     let ok_count = results.iter().filter(|r| !r.translated.starts_with("[ERRORE]")).count();
     let err_count = results.len() - ok_count;
     if err_count == 0 {
-        log::info!("[OFFLINE] Batch completato: {} testi tradotti", ok_count);
+        log::info!("[OFFLINE] Batch completato: {} testi tradotti con {}", ok_count, model_name);
     } else {
-        log::warn!("[OFFLINE] Batch: {} tradotti, {} FALLITI su {}", ok_count, err_count, results.len());
+        log::warn!("[OFFLINE] Batch: {} tradotti, {} FALLITI su {} (modello {})", ok_count, err_count, results.len(), model_name);
     }
     Ok(results)
 }
@@ -304,14 +304,28 @@ async fn get_installed_models() -> Vec<String> {
 }
 
 fn pick_best_translation_model(installed: &[String]) -> String {
-    // Priorità: gemma3 > qwen3 > llama3 > qualsiasi altro
-    let priorities = ["gemma3", "qwen3", "llama3"];
-    for prefix in &priorities {
-        if let Some(m) = installed.iter().find(|m| m.starts_with(prefix)) {
+    // Priorità AGGIORNATE 03/08/2026: la lista vecchia (gemma3>qwen3>llama3)
+    // non corrispondeva a NESSUNO dei modelli nuovi e ripiegava sul "primo
+    // della lista" — su Foolish Mortals ha scelto un 8B generico invece dello
+    // specialista di traduzione installato: ETA 13h invece di ~3h.
+    // Ordine: specialisti di traduzione prima (HY-MT #1 WMT25, TranslateGemma),
+    // poi i generici in ordine di generazione. `contains` e non `starts_with`
+    // sul primo: il nome reale è huihui_ai/hy-mt1.5-abliterated:7b.
+    let priorities: [(&str, fn(&str) -> bool); 7] = [
+        ("hy-mt", |m| m.contains("hy-mt")),
+        ("translategemma", |m| m.starts_with("translategemma")),
+        ("gemma4", |m| m.starts_with("gemma4")),
+        ("gemma3", |m| m.starts_with("gemma3")),
+        ("qwen3", |m| m.starts_with("qwen3")),
+        ("llama3", |m| m.starts_with("llama3")),
+        // llava e simili (visione) NON sono da traduzione: mai preferirli.
+        ("", |m| !m.starts_with("llava")),
+    ];
+    for (_, matches) in &priorities {
+        if let Some(m) = installed.iter().find(|m| matches(m.as_str())) {
             return m.clone();
         }
     }
-    // Fallback: primo modello disponibile
     installed.first().cloned().unwrap_or_default()
 }
 
@@ -593,6 +607,29 @@ mod batch_tests {
     fn resolve_model_empty_when_nothing_installed() {
         assert_eq!(resolve_model(Some("gemma4:e4b".into()), &[]), "");
         assert_eq!(resolve_model(None, &[]), "");
+    }
+
+    #[test]
+    fn pick_best_prefers_translation_specialists() {
+        // La libreria REALE di Davide al 03/08/2026: la priorità vecchia
+        // (gemma3>qwen3>llama3) non matchava niente e prendeva il primo
+        // della lista → ETA 13h. Deve vincere lo specialista HY-MT.
+        let installed = vec![
+            "gemma4:e4b".to_string(),
+            "translategemma:12b".to_string(),
+            "llava:latest".to_string(),
+            "huihui_ai/hy-mt1.5-abliterated:7b".to_string(),
+        ];
+        assert_eq!(pick_best_translation_model(&installed), "huihui_ai/hy-mt1.5-abliterated:7b");
+    }
+
+    #[test]
+    fn pick_best_never_prefers_vision_models() {
+        // llava è un modello di VISIONE: va scelto solo se non c'è altro.
+        let installed = vec!["llava:latest".to_string(), "gemma4:e4b".to_string()];
+        assert_eq!(pick_best_translation_model(&installed), "gemma4:e4b");
+        let only_llava = vec!["llava:latest".to_string()];
+        assert_eq!(pick_best_translation_model(&only_llava), "llava:latest");
     }
 
     #[test]

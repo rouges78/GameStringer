@@ -172,9 +172,13 @@ export function AutoTranslateStepper({
                         traduzione a runtime quel numero non esiste, e fingere
                         che esista sarebbe la stessa bugia di prima. */}
                     {verifiedOk && runtimeOnly && t('postTranslation.runtimeTitle')}
+                    {/* successRate arriva in PERCENTO (0-100) dai percorsi TS,
+                        ma in FRAZIONE (0-1) dal success_rate Rust: il 03/08 il
+                        62% è diventato "6200%". Normalizziamo qui, un punto
+                        solo: ≤1 è una frazione, sopra è già percento. */}
                     {verifiedOk && !runtimeOnly && t('postTranslation.writtenTitle')
                       .replace('{n}', String(stringsWritten))
-                      .replace('{pct}', (result.successRate * 100).toFixed(0))}
+                      .replace('{pct}', (result.successRate <= 1 ? result.successRate * 100 : result.successRate).toFixed(0))}
                     {partial && t('postTranslation.partialTitle')
                       .replace('{n}', String(stringsWritten))
                       .replace('{missing}', String(missing.length))}

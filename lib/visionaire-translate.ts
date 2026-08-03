@@ -97,6 +97,13 @@ export async function runVisionaireTranslation(opts: {
   // Checkpoint per questo gioco+lingua: index -> testo tradotto.
   // gamePathKey: chiave stabile anche se il path arriva con separatori/casing diversi.
   const ckptKey = `gs_vis_ckpt_${gamePathKey(opts.gamePath)}_${tgt}`;
+  // ⚠️ L'IndexedDB è legata all'ORIGINE del webview, e in dev la porta cambia
+  // a ogni avvio (port-manager): il 03/08/2026 un checkpoint da 16.164
+  // stringhe è "sparito" così — porta nuova, origine nuova, tutto da zero.
+  // Per questo il checkpoint vive ANCHE su disco (via Rust, accanto al
+  // gioco): sopravvive a porte, riavvii e reinstallazioni. idb resta come
+  // cache veloce; il file è la verità.
+  const diskCkptPath = `${opts.gamePath}/gamestringer_ckpt_${tgt}.json`;
   let translations: Record<number, string> =
     (await get<Record<number, string>>(ckptKey).catch(() => undefined)) || {};
   if (Object.keys(translations).length === 0) {
@@ -110,6 +117,16 @@ export async function runVisionaireTranslation(opts: {
         await del(legacyKey).catch(() => {});
       }
     }
+  }
+  if (Object.keys(translations).length === 0) {
+    // idb vuota (porta diversa o prima volta): prova il file su disco.
+    try {
+      const rows = await invoke<{ id: string; translated: string }[]>(
+        'load_hendrix_translations', { inputPath: diskCkptPath }
+      );
+      for (const r of rows) if (r.translated) translations[Number(r.id)] = r.translated;
+      if (rows.length > 0) await set(ckptKey, translations).catch(() => {});
+    } catch { /* nessun checkpoint su disco: si parte da zero davvero */ }
   }
 
   // Registra il gioco nella pagina "Progetti" (IndexedDB), così appare appena
@@ -164,6 +181,15 @@ export async function runVisionaireTranslation(opts: {
 
   const flush = async () => {
     await set(ckptKey, translations).catch(() => {});
+    // Copia su disco: è QUESTA la persistenza vera (vedi nota su diskCkptPath).
+    // original resta vuoto di proposito: il checkpoint mappa indice→testo,
+    // l'originale è ricostruibile dall'archivio.
+    await invoke('save_hendrix_translations', {
+      outputPath: diskCkptPath,
+      strings: Object.keys(translations).map(k => ({
+        id: String(k), original: '', translated: translations[Number(k)], context: '',
+      })),
+    }).catch(() => {});
     // patch_vis_strings è idempotente (backup .gs_bak creato una volta sola):
     // applica i risultati parziali così sono già provabili in-game.
     await invoke('patch_vis_strings', { gamePath: opts.gamePath, translations: toMap() }).catch(() => {});
