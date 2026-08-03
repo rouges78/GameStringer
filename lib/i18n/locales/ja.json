@@ -6357,7 +6357,8 @@
     "changeFile": "ファイルを変更",
     "installPack": "パックをインストール",
     "packInstalled": "インストール完了！",
-    "file": "ファイル"
+    "file": "ファイル",
+    "termsAndLiability": "利用条件と免責事項"
   },
   "vramManager": {
     "title": "VRAMマネージャー",
@@ -6483,7 +6484,8 @@
     "scanLanguagesCancel": "検出中 — クリックでキャンセル",
     "langScanDone": "{n}件のゲームの言語を検出しました",
     "langScanNone": "新しい言語は見つかりませんでした",
-    "langScanError": "言語の検出中にエラーが発生しました"
+    "langScanError": "言語の検出中にエラーが発生しました",
+    "addGameFromDiskHint": "ゲームが見つからない場合は、ディスク上のフォルダーを選んで追加できます（ストア外のゲームにも対応）。"
   },
   "unityBundlePage": {
     "auto": "自動",

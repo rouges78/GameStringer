@@ -75,6 +75,7 @@
     "components/update-notification.tsx": "160 righe",
     "components/error-boundary-wrapper.tsx": "146 righe",
     "components/notifications/notification-indicator.tsx": "126 righe · SOLO-TEST: lo importa la suite, cancellarlo la rompe",
+    "lib/types.ts": "108 righe · citato 35× come testo: verificare i registry prima di toccarlo",
     "lib/theme-utils.ts": "106 righe",
     "components/language-selector.tsx": "102 righe",
     "lib/font-size.ts": "100 righe",
@@ -87,12 +88,10 @@
     "app/utils/steam-local-files.ts": "81 righe",
     "components/lazy-page.tsx": "79 righe",
     "components/ui/calendar.tsx": "71 righe",
-    "app/components/HowLongToBeatDisplay.tsx": "57 righe",
     "components/ui/toggle.tsx": "50 righe",
     "components/ui/theme-toggle.tsx": "36 righe",
     "components/theme-toggle.tsx": "32 righe",
     "hooks/use-debounce.ts": "25 righe",
-    "app/components/providers.tsx": "22 righe",
     "lib/db.ts": "11 righe",
     "lib/notifications/notification-interference.ts": "1 righe"
   }

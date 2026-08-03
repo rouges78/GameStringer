@@ -6357,7 +6357,8 @@
     "changeFile": "更换文件",
     "installPack": "安装包",
     "packInstalled": "安装成功！",
-    "file": "文件"
+    "file": "文件",
+    "termsAndLiability": "使用条款与免责声明"
   },
   "vramManager": {
     "title": "VRAM管理器",
@@ -6483,7 +6484,8 @@
     "scanLanguagesCancel": "正在检测 — 点击取消",
     "langScanDone": "已检测 {n} 个游戏的语言",
     "langScanNone": "未找到新语言",
-    "langScanError": "检测语言时出错"
+    "langScanError": "检测语言时出错",
+    "addGameFromDiskHint": "如果没有找到你的游戏，可以选择磁盘上的文件夹手动添加——商店之外的游戏同样适用。"
   },
   "unityBundlePage": {
     "auto": "自动",

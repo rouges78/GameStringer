@@ -6357,7 +6357,8 @@
     "changeFile": "Datei ändern",
     "installPack": "Pack installieren",
     "packInstalled": "installiert!",
-    "file": "Dateien"
+    "file": "Dateien",
+    "termsAndLiability": "Nutzungsbedingungen und Haftung"
   },
   "vramManager": {
     "title": "VRAM-Manager",
@@ -6483,7 +6484,8 @@
     "scanLanguagesCancel": "Erkennung läuft — zum Abbrechen klicken",
     "langScanDone": "Sprachen für {n} Spiele erkannt",
     "langScanNone": "Keine neuen Sprachen gefunden",
-    "langScanError": "Fehler bei der Spracherkennung"
+    "langScanError": "Fehler bei der Spracherkennung",
+    "addGameFromDiskHint": "Wenn das Spiel fehlt, füge es über seinen Ordner auf der Festplatte hinzu — das funktioniert auch für Spiele außerhalb der Stores."
   },
   "unityBundlePage": {
     "auto": "Auto",

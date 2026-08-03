@@ -2033,7 +2033,8 @@
     "scanLanguagesCancel": "Detection in progress — click to cancel",
     "langScanDone": "Languages detected for {n} games",
     "langScanNone": "No new languages found",
-    "langScanError": "Error while detecting languages"
+    "langScanError": "Error while detecting languages",
+    "addGameFromDiskHint": "If your game isn't listed, add it by picking its folder on disk — this works for games outside the stores too."
   },
   "unityBundlePage": {
     "auto": "Auto",
@@ -6307,7 +6308,8 @@
     "changeFile": "Change file",
     "installPack": "Install Pack",
     "packInstalled": "installed!",
-    "file": "files"
+    "file": "files",
+    "termsAndLiability": "Terms and liability"
   },
   "vramManager": {
     "title": "VRAM Manager",

@@ -1413,6 +1413,70 @@ pub async fn apply_unreal_translation(
         }))
         .unwrap_or(false);
 
+    // ── LEGGIMI accanto alla patch ────────────────────────────────────────
+    // Chi apre la cartella Paks (l'utente fra sei mesi, un amico, un curioso,
+    // il supporto del gioco) trova tre file dal nome strano e nessuna
+    // spiegazione. Questo file dice cosa sono, chi li ha messi, come toglierli
+    // e a quali condizioni — inclusa l'assenza di garanzia e il fatto che
+    // GameStringer non è affiliata né al gioco né alla piattaforma.
+    // Non è burocrazia: è la stessa onestà che pretendiamo dai log.
+    let readme_path = paks_dir.join("GameStringer_LEGGIMI.txt");
+    let readme = format!(
+"GameStringer — traduzione non ufficiale
+========================================
+
+Questa cartella contiene una patch di traduzione generata da GameStringer
+sul computer di chi la sta usando. NON è un file originale del gioco.
+
+FILE AGGIUNTI (tutti col prefisso del gioco e la parola GameStringer):
+  {pak}
+  ... e, sui giochi Unreal Engine 5 IoStore, la coppia .utoc/.ucas con lo
+  stesso nome: senza di essa il motore ignorerebbe la patch.
+
+COSA FA
+  Aggiunge un file di localizzazione che il motore Unreal carica come
+  override. I file originali del gioco NON vengono modificati, spostati
+  o cancellati.
+
+COME SI TOGLIE
+  Dalla app: pulsante \"Rimuovi\" nella pagina del gioco.
+  A mano: cancella i file elencati sopra (e questo LEGGIMI). Il gioco torna
+  esattamente com'era.
+
+CONDIZIONI E LIMITI DI RESPONSABILITÀ
+  - GameStringer è un progetto indipendente. NON è affiliato, sponsorizzato
+    o approvato dagli sviluppatori del gioco, da Valve/Steam, da Epic Games
+    o da qualunque altra piattaforma o titolare di diritti.
+  - Il testo tradotto è un'opera derivata generata automaticamente: i diritti
+    sul testo originale restano dei rispettivi titolari.
+  - Questa patch va usata SOLO con una copia del gioco regolarmente
+    posseduta. Non aggira protezioni, non abilita copie non autorizzate.
+  - Il software è fornito \"COSÌ COM'È\", SENZA GARANZIA di alcun tipo.
+    Chi lo usa se ne assume il rischio: possibili malfunzionamenti del gioco,
+    testi troncati o errati, incompatibilità con aggiornamenti futuri.
+  - Gli autori non rispondono di danni diretti o indiretti a giochi, salvataggi,
+    account, installazioni o dati, né di conseguenze derivanti dalle regole
+    delle piattaforme di distribuzione.
+  - Se sei un titolare di diritti e vuoi che il tuo gioco non sia traducibile
+    con GameStringer, scrivici: la richiesta viene rispettata. Vedi DMCA.md
+    e ANTI_PIRACY.md nel progetto.
+
+Lingua della patch: {lang}
+Stringhe tradotte: {n}
+Generato il: {when}
+",
+        pak = pak_filename,
+        lang = target_language,
+        n = loc_entries.len(),
+        when = chrono::Local::now().format("%d/%m/%Y %H:%M"),
+    );
+    if let Err(e) = fs::write(&readme_path, readme) {
+        // Non bloccante: la patch resta valida anche senza il LEGGIMI.
+        log::warn!("⚠️ LEGGIMI non scritto ({}): {}", readme_path.display(), e);
+    } else {
+        log::info!("📄 LEGGIMI scritto accanto alla patch: {}", readme_path.display());
+    }
+
     let mut triple_note = String::new();
     if game_is_iostore {
         let (utoc, ucas) = super::retoc_wrapper::write_zen_pair_for(&pak_path).await
@@ -1704,8 +1768,11 @@ pub async fn remove_unreal_translation(game_path: String) -> Result<String, Stri
             let path = entry.path();
             if let Some(name) = path.file_name() {
                 let name_str = name.to_string_lossy();
-                if name_str.contains("GameStringer") && 
-                   (name_str.ends_with("_P.pak") || name_str.ends_with("_P.utoc") || name_str.ends_with("_P.ucas")) {
+                // Il LEGGIMI va via con la patch: lasciarlo orfano farebbe
+                // credere che ci sia ancora una traduzione installata.
+                if name_str.contains("GameStringer") &&
+                   (name_str.ends_with("_P.pak") || name_str.ends_with("_P.utoc")
+                    || name_str.ends_with("_P.ucas") || name_str == "GameStringer_LEGGIMI.txt") {
                     targets.push(path);
                 }
             }

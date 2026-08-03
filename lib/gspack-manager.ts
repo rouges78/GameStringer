@@ -50,7 +50,51 @@ export interface GspackManifest {
   checksum: string;
   /** SHA-256 del contenuto (file+glossario). Se presente, un mismatch BLOCCA l'import. */
   sha256?: string;
+  /**
+   * Condizioni d'uso e limiti di responsabilità, in chiaro dentro il pack.
+   *
+   * Gemello del GameStringer_LEGGIMI.txt che l'app scrive accanto alla patch
+   * installata (02/08/2026): là lo trova chi apre la cartella del gioco, qui
+   * chi riceve il .gspack da un'altra persona — che è il caso in cui il
+   * disclaimer serve DAVVERO, perché l'utente non ha visto nessuna schermata
+   * della nostra app. Viene mostrato PRIMA di installare, non dopo.
+   *
+   * Opzionale per retrocompatibilità: i pack esportati prima non ce l'hanno e
+   * devono restare importabili (l'import usa DEFAULT_PACK_DISCLAIMER).
+   */
+  disclaimer?: string;
 }
+
+/**
+ * Testo mostrato all'utente prima di installare un pack ricevuto da altri.
+ * Tenuto qui (non in i18n) di proposito: viaggia DENTRO il file .gspack, e
+ * deve restare leggibile anche a chi lo apre con un editor di testo, senza
+ * la nostra app e senza le nostre traduzioni.
+ */
+export const DEFAULT_PACK_DISCLAIMER = [
+  'GameStringer — pacchetto di traduzione non ufficiale.',
+  '',
+  'Questo pacchetto contiene una traduzione creata da un utente, non dagli',
+  'sviluppatori del gioco. Installandolo accetti quanto segue:',
+  '',
+  '• GameStringer è un progetto indipendente: NON è affiliato, sponsorizzato',
+  '  o approvato dagli sviluppatori del gioco, da Valve/Steam, da Epic Games',
+  '  o da altre piattaforme o titolari di diritti.',
+  '• La traduzione è un\'opera derivata: i diritti sul testo originale restano',
+  '  dei rispettivi titolari. Usa il pacchetto solo con una copia del gioco',
+  '  regolarmente posseduta.',
+  '• Il contenuto è fornito "COSÌ COM\'È", SENZA GARANZIA di alcun tipo:',
+  '  possibili errori di traduzione, testi troncati, incompatibilità con',
+  '  aggiornamenti del gioco.',
+  '• Né gli autori del pacchetto né GameStringer rispondono di danni diretti',
+  '  o indiretti a giochi, salvataggi, account o installazioni, né di',
+  '  conseguenze derivanti dalle regole delle piattaforme di distribuzione.',
+  '• I file originali del gioco non vengono sostituiti: la traduzione si',
+  '  applica come contenuto aggiuntivo ed è rimovibile dalla app.',
+  '',
+  'Se sei un titolare di diritti e non vuoi che il tuo gioco sia traducibile',
+  'con GameStringer, contattaci: la richiesta viene rispettata.',
+].join('\n');
 
 export interface GspackFile {
   path: string;
@@ -215,6 +259,7 @@ export async function createGspack(options: ExportOptions): Promise<{ data: stri
     createdAt: new Date().toISOString(),
     exportedWith: 'GameStringer',
     checksum: '',
+    disclaimer: DEFAULT_PACK_DISCLAIMER,
   };
 
   const glossary = options.includeGlossary && options.glossary ? options.glossary : [];
@@ -299,6 +344,14 @@ export async function importGspack(rawContent: string): Promise<ImportResult> {
 
     if (!data.files || !Array.isArray(data.files)) {
       return { success: false, error: 'Il pack non contiene file di traduzione', warnings };
+    }
+
+    // Il disclaimer viaggia nel manifest, ma un pack vecchio (o manomesso per
+    // toglierlo) non deve poter installare SENZA che l'utente lo veda: se manca
+    // si usa quello corrente. Chi importa un pack di un altro non ha visto
+    // nessuna schermata nostra — è l'unico momento in cui possiamo dirglielo.
+    if (!data.manifest.disclaimer) {
+      data.manifest.disclaimer = DEFAULT_PACK_DISCLAIMER;
     }
 
     if (data.files.length === 0) {

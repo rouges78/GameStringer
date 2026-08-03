@@ -1541,6 +1541,26 @@ function LibraryListView() {
               {t('libraryPage.refreshHint')}
             </p>
           )}
+
+          {/* "Aggiungi gioco dal disco" QUI, non solo nella barra in alto.
+              Otto messaggi su 64 (triage 26/07/2026) chiedevano come aggiungere
+              un gioco che la libreria non trova — e uno lo chiedeva ancora un
+              mese dopo che la funzione esisteva. Non era un buco di codice: il
+              pulsante stava in una fila di azioni rapide, a 11px, in cima a una
+              pagina piena. Questo è il momento esatto in cui serve: l'utente ha
+              cercato il suo gioco e non c'era. Una funzione che esiste ma non si
+              trova, per chi la cerca non esiste. */}
+          <button
+            onClick={handleAddGameFromDisk}
+            disabled={isAddingGame}
+            className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-900/50 text-emerald-300 hover:text-white hover:bg-emerald-600/30 rounded-xl transition-all border border-emerald-700/40 hover:border-emerald-500/50 disabled:opacity-60"
+          >
+            <FolderOpen className={`h-4 w-4 text-emerald-400 ${isAddingGame ? 'animate-pulse' : ''}`} />
+            <span className="text-xs font-semibold tracking-wide">
+              {isAddingGame ? t('heroJob.addingGame') : t('heroJob.addGame')}
+            </span>
+          </button>
+          <p className="text-xs text-gray-500 mt-2">{t('libraryPage.addGameFromDiskHint')}</p>
         </div>
       );
     }

@@ -377,6 +377,23 @@ export function GspackImportDialog({ open, onOpenChange, onImported }: ImportDia
                 <p className="text-xs text-slate-400">{result.notes}</p>
               </div>
             )}
+
+            {/* Condizioni d'uso — PRIMA di installare, non dopo.
+                Chi importa un pack ricevuto da un'altra persona non ha visto
+                nessuna schermata della nostra app: questo è l'unico momento
+                in cui possiamo dirgli a quali condizioni sta installando.
+                Il testo arriva dal manifest (o dal default se il pack è
+                vecchio) e NON è tradotto: viaggia dentro il file. */}
+            {result.manifest?.disclaimer && (
+              <details className="p-2 rounded-lg bg-amber-500/[0.06] border border-amber-500/20">
+                <summary className="text-micro font-bold text-amber-400/90 uppercase tracking-widest cursor-pointer select-none">
+                  {t('gspack.termsAndLiability')}
+                </summary>
+                <pre className="mt-2 text-[11px] leading-relaxed text-slate-400 whitespace-pre-wrap font-sans">
+                  {result.manifest.disclaimer}
+                </pre>
+              </details>
+            )}
           </div>
         ) : (
           <div className="py-8 text-center">

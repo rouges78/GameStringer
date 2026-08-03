@@ -2033,7 +2033,8 @@
     "scanLanguagesCancel": "Rilevamento in corso — clicca per annullare",
     "langScanDone": "Lingue rilevate per {n} giochi",
     "langScanNone": "Nessuna nuova lingua trovata",
-    "langScanError": "Errore durante il rilevamento delle lingue"
+    "langScanError": "Errore durante il rilevamento delle lingue",
+    "addGameFromDiskHint": "Se il gioco non compare, aggiungilo scegliendo la sua cartella sul disco: funziona anche per giochi fuori dai negozi."
   },
   "unityBundlePage": {
     "auto": "Auto",
@@ -6307,7 +6308,8 @@
     "changeFile": "Cambia file",
     "installPack": "Installa Pack",
     "packInstalled": "installato!",
-    "file": "file"
+    "file": "file",
+    "termsAndLiability": "Condizioni d'uso e responsabilità"
   },
   "vramManager": {
     "title": "Gestore VRAM",
