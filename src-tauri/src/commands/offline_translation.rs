@@ -106,7 +106,7 @@ pub async fn offline_translate_text(
     }
 
     let installed = get_installed_models().await;
-    let model_name = model.unwrap_or_else(|| pick_best_translation_model(&installed));
+    let model_name = resolve_model(model, &installed);
 
     if model_name.is_empty() {
         return Err("Nessun modello installato. Scarica un modello dalla sezione Setup.".to_string());
@@ -146,7 +146,12 @@ pub async fn offline_translate_batch(
     }
 
     let installed = get_installed_models().await;
-    let model_name = model.unwrap_or_else(|| pick_best_translation_model(&installed));
+    // Il modello richiesto dal frontend può NON esistere: il 03/08/2026 il
+    // default 'gemma4:e4b' (refuso copiaincollato in 5 call-site TS) ha
+    // prodotto 25.936 errori 404 su Foolish Mortals — tutti dichiarati
+    // "tradotti" dal vecchio contatore. Questa guardia copre tutti i chiamanti:
+    // modello non installato → selettore automatico, con avviso nel log.
+    let model_name = resolve_model(model, &installed);
 
     if model_name.is_empty() {
         return Err("Nessun modello installato.".to_string());
@@ -154,9 +159,44 @@ pub async fn offline_translate_batch(
 
     let mut results = Vec::with_capacity(texts.len());
 
-    for text in &texts {
+    // Prima passata: tutto il batch in UNA chiamata (righe numerate).
+    // Prima era un round-trip HTTP per stringa: 26k stringhe = 26k chiamate
+    // sequenziali, ore di attesa. Le stringhe multilinea (il \n romperebbe la
+    // numerazione) e quelle che il modello sbaglia ricadono sul per-stringa.
+    let mut prefill: Vec<Option<String>> = vec![None; texts.len()];
+    let batchable: Vec<usize> = texts.iter().enumerate()
+        .filter(|(_, t)| !t.contains('\n') && !t.trim().is_empty())
+        .map(|(i, _)| i).collect();
+    if batchable.len() > 1 {
+        let numbered = batchable.iter().enumerate()
+            .map(|(n, &i)| format!("{}. {}", n + 1, texts[i]))
+            .collect::<Vec<_>>().join("\n");
+        let prompt = format!(
+            "Translate each numbered line from {} to {}. \
+             Reply with the same numbering, one translated line per number. \
+             Output ONLY the numbered translations, nothing else. \
+             Keep any game control codes EXACTLY as they appear, in the same position — \
+             do not translate, remove, reorder or alter them \
+             (e.g. \\C[n] \\V[n] \\N[n] \\I[n] and other backslash codes, {{...}} tokens, %1..%9).\n\n{}",
+            source_lang, target_lang, numbered
+        );
+        if let Ok(text) = call_ollama_raw(&prompt, &model_name, 6144).await {
+            let parsed = parse_numbered_lines(&text, batchable.len());
+            for (n, &i) in batchable.iter().enumerate() {
+                if let Some(t) = parsed.get(n).and_then(|p| p.clone()) {
+                    prefill[i] = Some(t);
+                }
+            }
+        }
+    }
+
+    for (i, text) in texts.iter().enumerate() {
         let start = std::time::Instant::now();
-        match call_ollama_translate(text, &source_lang, &target_lang, &model_name).await {
+        let outcome = match prefill[i].take() {
+            Some(t) => Ok(t),
+            None => call_ollama_translate(text, &source_lang, &target_lang, &model_name).await,
+        };
+        match outcome {
             Ok(translated) => {
                 results.push(OfflineTranslationResult {
                     original: text.clone(),
@@ -177,8 +217,54 @@ pub async fn offline_translate_batch(
         }
     }
 
-    log::info!("[OFFLINE] Batch completato: {} testi tradotti", results.len());
+    // Contatore ONESTO: il vecchio log diceva "N testi tradotti" contando
+    // anche i falliti — 40 errori 404 diventavano "40 tradotti".
+    let ok_count = results.iter().filter(|r| !r.translated.starts_with("[ERRORE]")).count();
+    let err_count = results.len() - ok_count;
+    if err_count == 0 {
+        log::info!("[OFFLINE] Batch completato: {} testi tradotti", ok_count);
+    } else {
+        log::warn!("[OFFLINE] Batch: {} tradotti, {} FALLITI su {}", ok_count, err_count, results.len());
+    }
     Ok(results)
+}
+
+/// Modello richiesto se installato, altrimenti il migliore tra gli installati.
+/// Accetta sia il nome esatto ("gemma3:4b") sia il prefisso ("gemma3").
+fn resolve_model(requested: Option<String>, installed: &[String]) -> String {
+    if let Some(m) = requested {
+        if installed.iter().any(|i| i == &m) {
+            return m;
+        }
+        // Prefisso senza tag ("gemma3"): ritorna il nome INSTALLATO completo,
+        // non il prefisso — Ollama risolverebbe "gemma3" in "gemma3:latest",
+        // che può non esserci (il primo giro di questo test l'ha dimostrato).
+        if let Some(hit) = installed.iter().find(|i| i.starts_with(&format!("{}:", m))) {
+            return hit.clone();
+        }
+        let fallback = pick_best_translation_model(installed);
+        log::warn!("[OFFLINE] Modello richiesto '{}' NON installato: uso '{}'", m, fallback);
+        return fallback;
+    }
+    pick_best_translation_model(installed)
+}
+
+/// Estrae le traduzioni da una risposta a righe numerate ("1. ...", "2) ...").
+/// Ritorna un vettore lungo `expected`; None dove la riga manca o non si parsa.
+fn parse_numbered_lines(text: &str, expected: usize) -> Vec<Option<String>> {
+    let mut out: Vec<Option<String>> = vec![None; expected];
+    for line in text.lines() {
+        let line = line.trim();
+        let Some(dot) = line.find(['.', ')']) else { continue };
+        let Ok(n) = line[..dot].trim().parse::<usize>() else { continue };
+        if n >= 1 && n <= expected {
+            let t = line[dot + 1..].trim();
+            if !t.is_empty() {
+                out[n - 1] = Some(t.to_string());
+            }
+        }
+    }
+    out
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -227,6 +313,39 @@ fn pick_best_translation_model(installed: &[String]) -> String {
     }
     // Fallback: primo modello disponibile
     installed.first().cloned().unwrap_or_default()
+}
+
+/// Chiamata Ollama con prompt libero (usata dal batch a righe numerate).
+async fn call_ollama_raw(prompt: &str, model: &str, num_predict: u32) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(300))
+        .build()
+        .map_err(|e| format!("Errore client HTTP: {}", e))?;
+
+    let body = serde_json::json!({
+        "model": model,
+        "prompt": prompt,
+        "stream": false,
+        "options": { "temperature": 0.3, "top_p": 0.9, "num_predict": num_predict }
+    });
+
+    let url = format!("{}/api/generate", OLLAMA_API);
+    let resp = client.post(&url).json(&body).send().await
+        .map_err(|e| format!("Errore connessione Ollama: {}", e))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body_text = resp.text().await.unwrap_or_default();
+        return Err(format!("Ollama errore {}: {}", status, body_text));
+    }
+
+    let json: serde_json::Value = resp.json().await
+        .map_err(|e| format!("Errore parsing risposta: {}", e))?;
+    let response_text = json["response"].as_str().unwrap_or("").trim().to_string();
+    if response_text.is_empty() {
+        return Err("Ollama ha restituito una risposta vuota".to_string());
+    }
+    Ok(response_text)
 }
 
 async fn call_ollama_translate(
@@ -370,7 +489,7 @@ pub async fn offline_translate_batch_context(
     }
 
     let installed = get_installed_models().await;
-    let model_name = model.unwrap_or_else(|| pick_best_translation_model(&installed));
+    let model_name = resolve_model(model, &installed);
     if model_name.is_empty() {
         return Err("Nessun modello installato.".to_string());
     }
@@ -445,6 +564,60 @@ async fn call_ollama_with_prompt(prompt: &str, model: &str) -> Result<String, St
         return Err("Ollama ha restituito una risposta vuota".to_string());
     }
     Ok(response_text)
+}
+
+#[cfg(test)]
+mod batch_tests {
+    use super::*;
+
+    #[test]
+    fn resolve_model_keeps_installed_exact() {
+        let installed = vec!["gemma3:4b".to_string(), "qwen3:4b".to_string()];
+        assert_eq!(resolve_model(Some("qwen3:4b".into()), &installed), "qwen3:4b");
+    }
+
+    #[test]
+    fn resolve_model_accepts_prefix() {
+        let installed = vec!["gemma3:4b".to_string()];
+        assert_eq!(resolve_model(Some("gemma3".into()), &installed), "gemma3:4b");
+    }
+
+    #[test]
+    fn resolve_model_falls_back_when_phantom() {
+        // Il caso del 03/08/2026: 'gemma4:e4b' richiesto, mai installato.
+        let installed = vec!["gemma3:4b".to_string(), "qwen3:4b".to_string()];
+        assert_eq!(resolve_model(Some("gemma4:e4b".into()), &installed), "gemma3:4b");
+    }
+
+    #[test]
+    fn resolve_model_empty_when_nothing_installed() {
+        assert_eq!(resolve_model(Some("gemma4:e4b".into()), &[]), "");
+        assert_eq!(resolve_model(None, &[]), "");
+    }
+
+    #[test]
+    fn parse_numbered_lines_basic() {
+        let out = parse_numbered_lines("1. Ciao\n2. Mondo", 2);
+        assert_eq!(out[0].as_deref(), Some("Ciao"));
+        assert_eq!(out[1].as_deref(), Some("Mondo"));
+    }
+
+    #[test]
+    fn parse_numbered_lines_paren_and_holes() {
+        // Numerazione con ')' e riga 2 mancante: il buco resta None (→ fallback).
+        let out = parse_numbered_lines("1) Salve\n3) Tesoro", 3);
+        assert_eq!(out[0].as_deref(), Some("Salve"));
+        assert!(out[1].is_none());
+        assert_eq!(out[2].as_deref(), Some("Tesoro"));
+    }
+
+    #[test]
+    fn parse_numbered_lines_ignores_junk_and_out_of_range() {
+        // Preamboli del modello, numeri fuori range e righe vuote non sfondano.
+        let out = parse_numbered_lines("Here are the translations:\n0. no\n99. no\n1. Sì\n2.   ", 2);
+        assert_eq!(out[0].as_deref(), Some("Sì"));
+        assert!(out[1].is_none());
+    }
 }
 
 #[cfg(test)]

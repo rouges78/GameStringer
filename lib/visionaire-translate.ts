@@ -45,7 +45,9 @@ function lsGet(key: string): string | null {
 // Traduce un blocco di testi col backend scelto, restituendo le traduzioni
 // allineate per indice. Cloud = Gemini→fallback (veloce); Ollama = locale.
 async function translateChunk(
-  texts: string[], tgt: string, backend: VisionaireBackend, model: string
+  // model opzionale: se assente, il comando Rust sceglie il migliore tra i
+  // modelli installati (resolve_model) — vedi nota in runVisionaireTranslation.
+  texts: string[], tgt: string, backend: VisionaireBackend, model?: string
 ): Promise<string[]> {
   if (backend === 'cloud') {
     const res = await translateWithFallbackBatched(
@@ -73,7 +75,12 @@ export async function runVisionaireTranslation(opts: {
 }): Promise<{ applied: number; total: number; translated: number; backend: VisionaireBackend }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const backend: VisionaireBackend = opts.backend || 'ollama';
-  const model = opts.model || lsGet('gs_hendrix_model') || 'gemma4:e4b';
+  // Niente default cablato: 'gemma4:e4b' era un modello FANTASMA (03/08/2026:
+  // 25.936 errori 404 su Foolish Mortals). Con undefined il comando Rust
+  // sceglie il migliore tra i modelli DAVVERO installati (resolve_model),
+  // che ora fa anche da rete di sicurezza se localStorage contiene un
+  // modello disinstallato nel frattempo.
+  const model = opts.model || lsGet('gs_hendrix_model') || undefined;
   // Cloud parallelizza internamente → blocchi più grandi; Ollama è seriale.
   const CHUNK = opts.chunkSize || Number(lsGet('gs_vis_chunk')) || (backend === 'cloud' ? 200 : 40);
   const SAVE_EVERY = 400; // checkpoint + apply parziale ogni ~400 stringhe

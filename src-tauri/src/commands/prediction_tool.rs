@@ -7254,10 +7254,15 @@ async fn execute_workflow_from_prediction(
         });
 
         // Extract
+        // Il cap a 500 esiste da sempre ma era MUTO: l'utente vedeva "tradotte
+        // 500/500" e credeva il gioco completo. Ora lo dichiariamo nel progresso
+        // e nell'esito. Non lo alziamo qui: questo è il percorso rapido.
+        const VIS_FAST_CAP: usize = 500;
+        let total_in_game = vis_scan.as_ref().map(|i| i.total_strings).unwrap_or(0);
         emit_progress!("vis_extract", 6, "📝 Estrazione stringhe da game.veb...", 40);
         let stage_start = std::time::Instant::now();
         let vis_strings = super::visionaire_patcher::extract_vis_strings(
-            game_path_str.clone(), Some(0), Some(500),
+            game_path_str.clone(), Some(0), Some(VIS_FAST_CAP),
         ).await.unwrap_or_default();
         stages_completed.push(StageExecutionResult {
             stage_id: 4, stage_name: "Visionaire String Extraction".into(),
@@ -7268,7 +7273,10 @@ async fn execute_workflow_from_prediction(
         });
 
         // Translate
-        emit_progress!("vis_translate", 6, format!("🤖 Traduzione AI — {} stringhe...", vis_strings.len()), 50);
+        let cap_note = if total_in_game > vis_strings.len() {
+            format!(" — prime {} di {} (percorso rapido)", vis_strings.len(), total_in_game)
+        } else { String::new() };
+        emit_progress!("vis_translate", 6, format!("🤖 Traduzione AI — {} stringhe{}...", vis_strings.len(), cap_note), 50);
         let stage_start = std::time::Instant::now();
         let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
         let lang_name = match target_lang {
@@ -7282,9 +7290,12 @@ async fn execute_workflow_from_prediction(
         let mut translated_count = 0u64;
         let mut ollama_failed = false;
 
-        for batch_indices in (0..vis_strings.len().min(500)).collect::<Vec<_>>().chunks(10) {
-            let vis_pct = if vis_strings.is_empty() { 0 } else { translated_count as u32 * 100 / vis_strings.len().min(500) as u32 };
-            emit_progress!("vis_translate_batch", 6, format!("🤖 Visionaire: {}/{} stringhe ({}%)...", translated_count, vis_strings.len().min(500), vis_pct), 50 + vis_pct * 35 / 100);
+        // Batch da 40 (era 10): con 500 stringhe sono 13 round-trip a Ollama
+        // invece di 50. num_predict alzato di conseguenza (40 righe tradotte
+        // non stanno in 2048 token).
+        for batch_indices in (0..vis_strings.len().min(VIS_FAST_CAP)).collect::<Vec<_>>().chunks(40) {
+            let vis_pct = if vis_strings.is_empty() { 0 } else { translated_count as u32 * 100 / vis_strings.len().min(VIS_FAST_CAP) as u32 };
+            emit_progress!("vis_translate_batch", 6, format!("🤖 Visionaire: {}/{} stringhe ({}%)...", translated_count, vis_strings.len().min(VIS_FAST_CAP), vis_pct), 50 + vis_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| vis_strings[i].text.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
 
@@ -7293,7 +7304,7 @@ async fn execute_workflow_from_prediction(
                 let body = serde_json::json!({
                     "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
                     "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
-                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                    "stream": false, "options": { "temperature": 0.2, "num_predict": 6144 }
                 });
                 match client.post("http://localhost:11434/api/generate").json(&body).send().await {
                     Ok(resp) if resp.status().is_success() => {
@@ -7306,11 +7317,24 @@ async fn execute_workflow_from_prediction(
                     _ => { ollama_failed = true; }
                 }
             }
-            for (j, result) in results.iter_mut().enumerate() {
-                if result.is_none() {
-                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
-                        *result = Some(t);
-                    }
+            // Fallback Google per le stringhe rimaste: IN PARALLELO (8 alla
+            // volta). Il vecchio loop era un round-trip HTTP per stringa, in
+            // fila: senza Ollama, fino a 500 richieste sequenziali — era
+            // questo il "troppo lento", non la traduzione in sé.
+            let missing: Vec<usize> = results.iter().enumerate()
+                .filter(|(_, r)| r.is_none()).map(|(j, _)| j).collect();
+            if !missing.is_empty() {
+                use futures::stream::{self, StreamExt};
+                let fetched: Vec<(usize, Option<String>)> = stream::iter(missing.into_iter().map(|j| {
+                    let client = client.clone();
+                    let text = originals[j].to_string();
+                    async move { (j, google_translate_single(&client, &text, target_lang).await) }
+                }))
+                .buffer_unordered(8)
+                .collect()
+                .await;
+                for (j, t) in fetched {
+                    if let Some(t) = t { results[j] = Some(t); }
                 }
             }
             for (j, &idx) in batch_indices.iter().enumerate() {
@@ -7324,7 +7348,13 @@ async fn execute_workflow_from_prediction(
             stage_id: 5, stage_name: "AI Translation (Visionaire)".into(),
             status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
             duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
-            outputs: vec![format!("✅ Tradotte: {}/{}", translated_count, vis_strings.len())],
+            outputs: {
+                let mut o = vec![format!("✅ Tradotte: {}/{}", translated_count, vis_strings.len())];
+                if total_in_game > vis_strings.len() {
+                    o.push(format!("⚠️ Percorso rapido: tradotte le prime {} stringhe su {} totali nel gioco", vis_strings.len(), total_in_game));
+                }
+                o
+            },
             errors: vec![], success: translated_count > 0,
         });
 
