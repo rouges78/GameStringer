@@ -28,6 +28,14 @@ updates:
       # Next major va valutato a mano (config/build possono rompersi).
       - dependency-name: "next"
         update-types: ["version-update:semver-major"]
+      # Viaggiano CON il major di Next: eslint-config-next 16 pretende
+      # eslint ≥ 9 (PR Dependabot rossa del 03/08/2026, ERESOLVE) e la
+      # migrazione eslint 10 è debito tracciato dal 27/07 (plugin non pronti).
+      # Si sbloccano tutti e tre insieme, deliberatamente — non a pezzi.
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   # ── Cargo (backend Tauri/Rust) ─────────────────────────────────────────────
   - package-ecosystem: "cargo"
