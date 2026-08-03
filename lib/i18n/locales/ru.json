@@ -1108,7 +1108,9 @@
     "hintApiKey": "ключ API верный?",
     "hintOllama": "Ollama запущен?",
     "jobTitle": "Перевод — {name}",
-    "jobDescBg": "{engine} · в фоне"
+    "jobDescBg": "{engine} · в фоне",
+    "stoppedByUser": "остановлено пользователем",
+    "stoppedToast": "Перевод остановлен: {n} из {total} сохранено в контрольной точке — продолжайте в любой момент."
   },
   "autoTranslatePage": {
     "identical": "идентичных",

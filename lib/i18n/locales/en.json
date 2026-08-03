@@ -7434,7 +7434,9 @@
     "hintApiKey": "valid API key?",
     "hintOllama": "Ollama running?",
     "jobTitle": "Translation — {name}",
-    "jobDescBg": "{engine} · background"
+    "jobDescBg": "{engine} · background",
+    "stoppedByUser": "stopped by user",
+    "stoppedToast": "Translation stopped: {n} of {total} safe in the checkpoint — resume anytime."
   },
   "patchHubPage": {
     "title": "Patch Hub",

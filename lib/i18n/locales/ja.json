@@ -1108,7 +1108,9 @@
     "hintApiKey": "APIキーは有効ですか？",
     "hintOllama": "Ollamaは起動していますか？",
     "jobTitle": "翻訳 — {name}",
-    "jobDescBg": "{engine} · バックグラウンド"
+    "jobDescBg": "{engine} · バックグラウンド",
+    "stoppedByUser": "ユーザーにより停止",
+    "stoppedToast": "翻訳を停止しました：{n}/{total} はチェックポイントに保存済み。いつでも再開できます。"
   },
   "autoTranslatePage": {
     "identical": "同一",

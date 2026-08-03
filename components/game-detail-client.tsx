@@ -2049,6 +2049,15 @@ export default function GameDetailPage() {
           description: t('heroJob.jobDescBg').replace('{engine}', `Visionaire Studio · ${visBackend === 'cloud' ? 'Cloud' : 'Ollama'}`),
           isBackground: true,
           canMinimize: true,
+          // Il pulsante Annulla del widget ferma il job TRA un blocco e
+          // l'altro: checkpoint salvato (disco+idb) e patch parziale
+          // applicata. Fino al 03/08/2026 l'unico stop era chiudere la app.
+          canCancel: true,
+          onCancel: () => {
+            import('@/lib/visionaire-translate')
+              .then(m => m.requestVisionaireStop(game.installPath))
+              .catch(() => {});
+          },
         });
         // Badge tray: +1 traduzione in corso
         import('@/lib/notifications/tray-notifications').then(m => m.incrementActiveTranslations()).catch(() => {});
@@ -2073,6 +2082,19 @@ export default function GameDetailPage() {
               else if (p.phase === 'done') vStep(3, 'done');
             },
           });
+          if (r.stopped) {
+            // Interrotto dall'utente col pulsante Annulla: NON è né un
+            // successo da wizard né un errore — il lavoro è nel checkpoint
+            // e la patch parziale è applicata. Si chiude sobri.
+            vStep(2, 'done', `${r.translated}/${r.total} — ${t('heroJob.stoppedByUser')}`);
+            progress.completeOperation(visOpId, { translated: r.translated, total: r.total, stopped: true });
+            try {
+              const tray = await import('@/lib/notifications/tray-notifications');
+              await tray.decrementActiveTranslations();
+            } catch { /* tray non disponibile */ }
+            toast.info(t('heroJob.stoppedToast').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
+            return;
+          }
           vStep(3, 'done', `${r.translated}/${r.total} stringhe`);
           setAutoTranslateResult({
             successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,

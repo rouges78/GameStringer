@@ -22,6 +22,10 @@ export interface OperationProgress {
   error?: Error;
   result?: unknown;
   isBackground?: boolean;
+  /** Callback che AVVISA IL JOB della cancellazione (non serializzato: un
+   *  job non sopravvive al riavvio, e infatti le operazioni ripristinate
+   *  vengono marcate interrotte). Senza, Annulla era solo cosmesi. */
+  onCancel?: () => void;
 }
 
 export interface ProgressConfig {

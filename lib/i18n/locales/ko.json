@@ -1108,7 +1108,9 @@
     "hintApiKey": "유효한 API 키?",
     "hintOllama": "Ollama 실행 중?",
     "jobTitle": "번역 — {name}",
-    "jobDescBg": "{engine} · 백그라운드"
+    "jobDescBg": "{engine} · 백그라운드",
+    "stoppedByUser": "사용자가 중지함",
+    "stoppedToast": "번역 중지됨: {n}/{total} 체크포인트에 저장됨 — 언제든 재개할 수 있습니다."
   },
   "autoTranslatePage": {
     "identical": "동일",

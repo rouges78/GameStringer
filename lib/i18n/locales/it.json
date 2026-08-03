@@ -7434,7 +7434,9 @@
     "hintApiKey": "API key valida?",
     "hintOllama": "Ollama avviato?",
     "jobTitle": "Traduzione — {name}",
-    "jobDescBg": "{engine} · in background"
+    "jobDescBg": "{engine} · in background",
+    "stoppedByUser": "interrotta dall'utente",
+    "stoppedToast": "Traduzione interrotta: {n} su {total} al sicuro nel checkpoint — riprendi quando vuoi."
   },
   "patchHubPage": {
     "title": "Patch Hub",

@@ -1108,7 +1108,9 @@
     "hintApiKey": "API 密钥有效？",
     "hintOllama": "Ollama 已启动？",
     "jobTitle": "翻译 — {name}",
-    "jobDescBg": "{engine} · 后台"
+    "jobDescBg": "{engine} · 后台",
+    "stoppedByUser": "已由用户停止",
+    "stoppedToast": "翻译已停止：{n}/{total} 已保存到检查点，可随时继续。"
   },
   "autoTranslatePage": {
     "identical": "相同",

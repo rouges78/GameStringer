@@ -1108,7 +1108,9 @@
     "hintApiKey": "έγκυρο κλειδί API;",
     "hintOllama": "Το Ollama εκτελείται;",
     "jobTitle": "Μετάφραση — {name}",
-    "jobDescBg": "{engine} · στο παρασκήνιο"
+    "jobDescBg": "{engine} · στο παρασκήνιο",
+    "stoppedByUser": "διακόπηκε από τον χρήστη",
+    "stoppedToast": "Η μετάφραση διακόπηκε: {n} από {total} αποθηκεύτηκαν στο σημείο ελέγχου — συνεχίστε όποτε θέλετε."
   },
   "autoTranslatePage": {
     "identical": "πανομοιότυπα",

@@ -1108,7 +1108,9 @@
     "hintApiKey": "prawidłowy klucz API?",
     "hintOllama": "Ollama uruchomione?",
     "jobTitle": "Tłumaczenie — {name}",
-    "jobDescBg": "{engine} · w tle"
+    "jobDescBg": "{engine} · w tle",
+    "stoppedByUser": "zatrzymane przez użytkownika",
+    "stoppedToast": "Tłumaczenie zatrzymane: {n} z {total} zapisane w punkcie kontrolnym — wznów w dowolnym momencie."
   },
   "autoTranslatePage": {
     "identical": "identyczne",

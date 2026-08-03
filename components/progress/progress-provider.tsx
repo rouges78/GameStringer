@@ -48,7 +48,10 @@ function progressReducer(
         startTime: new Date(),
         canMinimize: config.canMinimize ?? true,
         canCancel: config.canCancel ?? false,
-        isBackground: config.isBackground ?? false
+        isBackground: config.isBackground ?? false,
+        // Senza questa copia il pulsante Annulla era una FINTA: la UI
+        // segnava "Cancelled" ma nessuno avvisava il job, che continuava.
+        onCancel: config.onCancel,
       };
 
       if (config.estimatedDuration) {

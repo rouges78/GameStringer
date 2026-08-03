@@ -1108,7 +1108,9 @@
     "hintApiKey": "Gültiger API-Schlüssel?",
     "hintOllama": "Ollama gestartet?",
     "jobTitle": "Übersetzung — {name}",
-    "jobDescBg": "{engine} · im Hintergrund"
+    "jobDescBg": "{engine} · im Hintergrund",
+    "stoppedByUser": "vom Benutzer gestoppt",
+    "stoppedToast": "Übersetzung gestoppt: {n} von {total} im Checkpoint gesichert — jederzeit fortsetzbar."
   },
   "autoTranslatePage": {
     "identical": "identisch",

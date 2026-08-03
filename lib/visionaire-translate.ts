@@ -42,6 +42,17 @@ function lsGet(key: string): string | null {
   try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
 }
 
+// ── Stop richiesto dall'utente ──────────────────────────────────────────────
+// Fino al 03/08/2026 un job da ore si fermava SOLO chiudendo la app (Ctrl+C
+// in dev): il pulsante Annulla del widget ora imposta questo flag e il loop
+// lo controlla tra un blocco e l'altro. Fermarsi TRA i blocchi significa:
+// checkpoint scritto (disco+idb), patch parziale applicata, niente stato a
+// metà. Il resume riparte esattamente da lì.
+const stopRequests = new Set<string>();
+export function requestVisionaireStop(gamePath: string): void {
+  stopRequests.add(gamePathKey(gamePath));
+}
+
 // Traduce un blocco di testi col backend scelto, restituendo le traduzioni
 // allineate per indice. Cloud = Gemini→fallback (veloce); Ollama = locale.
 async function translateChunk(
@@ -72,7 +83,7 @@ export async function runVisionaireTranslation(opts: {
   gameName?: string;
   gameImage?: string;
   onProgress?: (p: VisionaireProgress) => void;
-}): Promise<{ applied: number; total: number; translated: number; backend: VisionaireBackend }> {
+}): Promise<{ applied: number; total: number; translated: number; backend: VisionaireBackend; stopped?: boolean }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const backend: VisionaireBackend = opts.backend || 'ollama';
   // Niente default cablato: 'gemma4:e4b' era un modello FANTASMA (03/08/2026:
@@ -199,6 +210,13 @@ export async function runVisionaireTranslation(opts: {
   // 3) Traduzione a blocchi via Ollama
   let sinceSave = 0;
   for (let i = 0; i < todo.length; i += CHUNK) {
+    if (stopRequests.delete(gamePathKey(opts.gamePath))) {
+      // Stop pulito: salva e applica quanto fatto, poi esci senza errore.
+      await flush();
+      const translated = Object.keys(translations).length;
+      report({ phase: 'done', done, total });
+      return { applied: translated, total, translated, backend, stopped: true };
+    }
     const slice = todo.slice(i, i + CHUNK);
     const outs = await translateChunk(slice.map(s => s.text), tgt, backend, model);
     outs.forEach((raw, k) => {

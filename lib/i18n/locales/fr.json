@@ -1108,7 +1108,9 @@
     "hintApiKey": "clé API valide ?",
     "hintOllama": "Ollama démarré ?",
     "jobTitle": "Traduction — {name}",
-    "jobDescBg": "{engine} · en arrière-plan"
+    "jobDescBg": "{engine} · en arrière-plan",
+    "stoppedByUser": "interrompue par l'utilisateur",
+    "stoppedToast": "Traduction interrompue : {n} sur {total} sauvegardées dans le point de reprise — reprenez quand vous voulez."
   },
   "autoTranslatePage": {
     "identical": "identiques",

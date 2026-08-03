@@ -1108,7 +1108,9 @@
     "hintApiKey": "¿clave API válida?",
     "hintOllama": "¿Ollama iniciado?",
     "jobTitle": "Traducción — {name}",
-    "jobDescBg": "{engine} · en segundo plano"
+    "jobDescBg": "{engine} · en segundo plano",
+    "stoppedByUser": "detenida por el usuario",
+    "stoppedToast": "Traducción detenida: {n} de {total} guardadas en el checkpoint; reanuda cuando quieras."
   },
   "autoTranslatePage": {
     "identical": "idénticas",
