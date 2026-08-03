@@ -163,6 +163,20 @@ export class ProgressPersistence {
       const operations = new Map<string, OperationProgress>();
       validOperations.forEach(persisted => {
         const operation = deserializeOperation(persisted);
+        // Un'operazione "in corso" ripristinata da localStorage è un FANTASMA:
+        // il lavoro vero (loop JS) è morto con la chiusura della app, ma il
+        // widget la rimetteva in scena viva — contatore fermo, elapsed che
+        // corre, ETA inventata (visto il 03/08/2026 su Foolish Mortals:
+        // "400/25936, 53m rimanenti" con ZERO lavoro in corso). Dichiararla
+        // interrotta è l'unica cosa onesta: il lavoro fatto resta nel
+        // checkpoint e si riprende rilanciando la traduzione dal gioco.
+        if (operation.progress < 100 && !operation.error) {
+          operation.error = new Error(
+            'Operazione interrotta dalla chiusura della app. Il lavoro fatto è salvato: rilancia la traduzione dalla pagina del gioco per riprendere dal checkpoint.'
+          );
+          operation.status = 'Interrotta — riprendi dalla pagina del gioco';
+          operation.estimatedEndTime = undefined;
+        }
         operations.set(operation.id, operation);
       });
 
