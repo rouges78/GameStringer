@@ -3148,7 +3148,8 @@
     "version": "Wersja",
     "buildDate": "Data kompilacji",
     "gitHash": "Hash Git",
-    "branch": "Gałąź"
+    "branch": "Gałąź",
+    "unsavedChanges": "Niezapisane zmiany"
   },
   "common": {
     "loading": "Ładowanie...",

@@ -3148,7 +3148,8 @@
     "version": "版本",
     "buildDate": "构建日期",
     "gitHash": "Git哈希",
-    "branch": "分支"
+    "branch": "分支",
+    "unsavedChanges": "有未保存的更改"
   },
   "common": {
     "loading": "加载中...",

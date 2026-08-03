@@ -3148,7 +3148,8 @@
     "version": "버전",
     "buildDate": "빌드 날짜",
     "gitHash": "Git 해시",
-    "branch": "브랜치"
+    "branch": "브랜치",
+    "unsavedChanges": "저장되지 않은 변경 사항"
   },
   "common": {
     "loading": "로딩 중...",

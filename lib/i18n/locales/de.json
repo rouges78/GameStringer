@@ -3148,7 +3148,8 @@
     "version": "Version",
     "buildDate": "Build-Datum",
     "gitHash": "Git-Hash",
-    "branch": "Zweig"
+    "branch": "Zweig",
+    "unsavedChanges": "Nicht gespeicherte Änderungen"
   },
   "common": {
     "loading": "Laden...",

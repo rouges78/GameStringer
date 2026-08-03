@@ -3148,7 +3148,8 @@
     "version": "Version",
     "buildDate": "Date Build",
     "gitHash": "Hash Git",
-    "branch": "Branche"
+    "branch": "Branche",
+    "unsavedChanges": "Modifications non enregistrées"
   },
   "common": {
     "loading": "Chargement...",

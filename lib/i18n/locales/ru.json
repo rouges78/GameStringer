@@ -3148,7 +3148,8 @@
     "version": "Версия",
     "buildDate": "Дата сборки",
     "gitHash": "Git хэш",
-    "branch": "Ветка"
+    "branch": "Ветка",
+    "unsavedChanges": "Несохранённые изменения"
   },
   "common": {
     "loading": "Загрузка...",

@@ -3263,7 +3263,8 @@
     "version": "Version",
     "buildDate": "Build Date",
     "gitHash": "Git Hash",
-    "branch": "Branch"
+    "branch": "Branch",
+    "unsavedChanges": "Unsaved changes"
   },
   "common": {
     "loading": "Loading...",

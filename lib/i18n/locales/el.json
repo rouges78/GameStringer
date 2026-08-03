@@ -3307,7 +3307,8 @@
     "version": "Έκδοση",
     "buildDate": "Ημερομηνία build",
     "gitHash": "Hash Git",
-    "branch": "Κλάδος"
+    "branch": "Κλάδος",
+    "unsavedChanges": "Μη αποθηκευμένες αλλαγές"
   },
   "common": {
     "loading": "Φόρτωση...",

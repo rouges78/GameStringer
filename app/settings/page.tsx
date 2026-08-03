@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -812,6 +812,13 @@ export default function SettingsPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  // "Modifiche non salvate": il Salva sta in alto a destra e appena scorri
+  // sparisce — le API key si scrivono in fondo alla pagina e la gente
+  // (ragionevolmente) crede basti scriverle (03/08/2026, Davide compreso).
+  // La barra flottante compare quando lo stato differisce dall'ultimo
+  // salvataggio e porta il Salva dove serve: sotto i pollici.
+  const lastSavedRef = useRef<string>('');
+  const dirty = lastSavedRef.current !== '' && JSON.stringify(settings) !== lastSavedRef.current;
   const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({});
   const [activeTab, setActiveTab] = useState('translation');
 
@@ -824,19 +831,28 @@ export default function SettingsPage() {
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({
-          ...prev,
-          ...parsed,
-          translation: { ...prev.translation, ...(parsed.translation || {}) },
-          system: { ...prev.system, ...(parsed.system || {}) },
-          performance: { ...prev.performance, ...(parsed.performance || {}) },
-          display: { ...prev.display, ...(parsed.display || {}) },
-          privacy: { ...prev.privacy, ...(parsed.privacy || {}) },
-        }));
+        setSettings(prev => {
+          const merged = {
+            ...prev,
+            ...parsed,
+            translation: { ...prev.translation, ...(parsed.translation || {}) },
+            system: { ...prev.system, ...(parsed.system || {}) },
+            performance: { ...prev.performance, ...(parsed.performance || {}) },
+            display: { ...prev.display, ...(parsed.display || {}) },
+            privacy: { ...prev.privacy, ...(parsed.privacy || {}) },
+          };
+          // Baseline per la barra "modifiche non salvate".
+          lastSavedRef.current = JSON.stringify(merged);
+          return merged;
+        });
       } catch (error: unknown) {
         clientLogger.error('Error loading settings:', error);
       }
+    } else {
+      // Nessun salvataggio precedente: la baseline è lo stato iniziale.
+      lastSavedRef.current = JSON.stringify(settings);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveSettings = async () => {
@@ -862,8 +878,12 @@ export default function SettingsPage() {
       clientLogger.warn('localStorage.setItem settings fallito (non fatale):', String(e));
     }
     setIsSaving(false);
-    if (diskOk) toast.success(t('common.success'));
-    else toast.error(t('common.error'));
+    if (diskOk) {
+      lastSavedRef.current = JSON.stringify(settings); // la barra "non salvate" si spegne
+      toast.success(t('common.success'));
+    } else {
+      toast.error(t('common.error'));
+    }
   };
 
   const resetSettings = () => {
@@ -1911,6 +1931,22 @@ export default function SettingsPage() {
         </TabsContent>
       </form>
       </Tabs>
+
+      {/* Barra flottante: compare appena c'è qualcosa di non salvato.
+          Il Salva in alto a destra resta, ma non è più l'unico. */}
+      {dirty && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-slate-900/95 shadow-xl backdrop-blur">
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden />
+          <span className="text-xs text-amber-200">{t('settings.unsavedChanges')}</span>
+          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-7 text-xs">
+            {isSaving ? (
+              <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
+            ) : (
+              <><Save className="h-3.5 w-3.5 mr-1.5" />{t('settings.save')}</>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

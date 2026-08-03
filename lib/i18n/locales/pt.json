@@ -3148,7 +3148,8 @@
     "version": "Versão",
     "buildDate": "Data de Build",
     "gitHash": "Git Hash",
-    "branch": "Branch"
+    "branch": "Branch",
+    "unsavedChanges": "Alterações não salvas"
   },
   "common": {
     "loading": "Carregando...",

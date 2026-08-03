@@ -3263,7 +3263,8 @@
     "version": "Versione",
     "buildDate": "Data build",
     "gitHash": "Hash Git",
-    "branch": "Branch"
+    "branch": "Branch",
+    "unsavedChanges": "Modifiche non salvate"
   },
   "common": {
     "loading": "Caricamento...",
