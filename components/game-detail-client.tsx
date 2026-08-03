@@ -2054,8 +2054,12 @@ export default function GameDetailPage() {
           // applicata. Fino al 03/08/2026 l'unico stop era chiudere la app.
           canCancel: true,
           onCancel: () => {
+            // installPath è string|undefined e il narrowing non entra nelle
+            // closure: si rilegge e si controlla QUI, al momento del click.
+            const p = game.installPath;
+            if (!p) return;
             import('@/lib/visionaire-translate')
-              .then(m => m.requestVisionaireStop(game.installPath))
+              .then(m => m.requestVisionaireStop(p))
               .catch(() => {});
           },
         });
