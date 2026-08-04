@@ -886,11 +886,30 @@ export default function SettingsPage() {
     }
   };
 
-  const resetSettings = () => {
-    if (confirm(t('settings.confirmReset'))) {
-      localStorage.removeItem('gameStringerSettings');
-      window.location.reload();
+  const resetSettings = async () => {
+    if (!confirm(t('settings.confirmReset'))) return;
+    // Il Reset deve cancellare la FONTE DI VERITÀ, non la cache.
+    // Prima del 04/08/2026 qui c'era solo removeItem + reload: al riavvio
+    // SettingsBootGate chiamava hydrateSettingsFromDisk(), trovava
+    // settings.json ancora pieno e ricopiava tutto in localStorage. Il Reset
+    // ripristinava esattamente ciò che diceva di cancellare — API key comprese —
+    // e all'utente sembrava riuscito. Se il disco non si pulisce, NON ricarichiamo:
+    // meglio un errore visibile che un reset finto.
+    try {
+      const { invoke } = await import('@/lib/tauri-api');
+      await invoke('save_app_settings', { settings: {} });
+    } catch (e: unknown) {
+      clientLogger.error('reset: save_app_settings({}) fallito:', String(e));
+      toast.error(t('common.error'));
+      return;
     }
+    try {
+      localStorage.removeItem('gameStringerSettings');
+    } catch (e: unknown) {
+      // Cache non cancellabile: il disco è già vuoto, l'hydration la sovrascrive.
+      clientLogger.warn('reset: removeItem fallito (non fatale):', String(e));
+    }
+    window.location.reload();
   };
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);

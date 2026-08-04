@@ -23,6 +23,20 @@ import { clientLogger } from '@/lib/client-logger';
 const LS_KEY = 'gameStringerSettings';
 
 let hydrated = false;
+/**
+ * Diventa true solo quando l'hydration ha DAVVERO finito (riuscita o fallita).
+ * `hydrated` invece si alza all'ingresso della funzione, per garantire il
+ * "una volta sola": non dice nulla sul fatto che localStorage sia aggiornato.
+ *
+ * Serve a chiudere una corsa che poteva cancellare il disco (trovata 04/08/2026,
+ * leggendo il codice): SettingsBootGate monta comunque l'app dopo 1,5 s e
+ * registra il flush su `visibilitychange`/`beforeunload`. Se l'utente cambiava
+ * finestra o chiudeva l'app mentre load_app_settings era ancora in volo,
+ * persistSettingsToDisk() copiava su settings.json un localStorage NON ancora
+ * idratato — cioè vuoto — sovrascrivendo le impostazioni buone con {}.
+ * Finestra stretta, perdita totale: le API key sono lì dentro.
+ */
+let hydrationSettled = false;
 
 /**
  * Idrata localStorage dal file su disco. Da chiamare il prima possibile
@@ -62,7 +76,16 @@ export async function hydrateSettingsFromDisk(): Promise<void> {
   } catch (e: unknown) {
     // Non-Tauri o errore disco: si prosegue col solo localStorage.
     clientLogger.debug('hydrateSettingsFromDisk skipped:', String(e));
+  } finally {
+    // Anche in caso di errore: da qui in poi localStorage è la migliore
+    // versione che abbiamo, quindi scriverla su disco non distrugge nulla.
+    hydrationSettled = true;
   }
+}
+
+/** true quando l'hydration ha finito e il flush su disco è sicuro. */
+export function isHydrationSettled(): boolean {
+  return hydrationSettled;
 }
 
 /**
@@ -71,6 +94,14 @@ export async function hydrateSettingsFromDisk(): Promise<void> {
  */
 export async function persistSettingsToDisk(): Promise<void> {
   if (typeof window === 'undefined') return;
+  // Mai scrivere su disco prima che l'hydration abbia finito: localStorage
+  // potrebbe essere ancora vuoto e sovrascriverebbe settings.json (vedi
+  // hydrationSettled). Il salvataggio esplicito dalla pagina Impostazioni non
+  // passa di qui: chiama save_app_settings direttamente, quindi resta possibile.
+  if (!hydrationSettled) {
+    clientLogger.debug('persistSettingsToDisk saltato: hydration non conclusa');
+    return;
+  }
   try {
     const json = localStorage.getItem(LS_KEY);
     if (json) {

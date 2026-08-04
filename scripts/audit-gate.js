@@ -29,25 +29,16 @@ const ROOT = path.resolve(__dirname, '..');
  * non è raggiungibile da input di terzi, e cosa sblocca la rimozione.
  */
 const ALLOWLIST = [
-  {
-    id: 'GHSA-mh99-v99m-4gvg',
-    package: 'brace-expansion',
-    until: '2026-09-30',
-    reason: [
-      'DoS per espansione illimitata di pattern glob (CVSS 7.5). Corretta solo',
-      'in brace-expansion 5.0.8: nessun backport su 1.x/2.x/3.x/4.x, quindi ogni',
-      'copia nell\'albero risulta vulnerabile.',
-      '',
-      'Non è raggiungibile da input di terzi: i pattern glob li generiamo noi',
-      "(archiver .directory() per i .gspack, e la catena eslint gira solo in dev).",
-      'Nessun pattern arriva da file di gioco, pack scaricati o input utente.',
-      '',
-      'Rimozione: richiede archiver 8 (ESM-only, tocca lib/patch-manager.ts) per',
-      'la catena prod ed eslint 10 (flat config) per quella dev. Tracciato a parte:',
-      'non si forza con un override, perché il build CJS di brace-expansion 5.x',
-      'esporta un oggetto e non una funzione, e rompe minimatch 3.x a runtime.',
-    ].join('\n'),
-  },
+  // Vuota dal 04/08/2026 — e che resti vuota il più possibile.
+  //
+  // Storia dell'unica eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
+  // datata 30/09): al 27/07 il fix esisteva solo in 5.x, senza backport, e
+  // l'override era impossibile (il build CJS di 5.x esporta un oggetto e
+  // rompe minimatch 3.x a runtime). Il 04/08 i backport sono ARRIVATI
+  // (1.1.18 / 2.1.4, insieme al successore GHSA-rgw5-rvv9-x895) e un
+  // semplice `npm audit fix` ha chiuso tutto: eccezione pensionata IN
+  // ANTICIPO sulla scadenza. Morale: le eccezioni datate vanno riverificate
+  // a ogni giro — i backport che oggi non esistono domani possono esserci.
 ];
 
 const LEVELS = { info: 0, low: 1, moderate: 2, high: 3, critical: 4 };
