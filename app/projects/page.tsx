@@ -42,7 +42,7 @@ import { useTranslation } from '@/lib/i18n';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
 import { loadTranslatedFiles, deleteTranslatedFiles } from '@/lib/services/translated-files-store';
-import { importGspack } from '@/lib/gspack-manager';
+import { importGspack, createGspack, saveGspackToFile } from '@/lib/gspack-manager';
 import { installGspackAsProject } from '@/lib/services/gspack-install';
 import { toast } from 'sonner';
 
@@ -156,10 +156,21 @@ async function loadAllProjects(): Promise<UnifiedProject[]> {
         lastUpdated: p.lastActivityAt || p.updatedAt,
         source: 'active',
         status: p.status === 'completed' ? 'completed' : p.status === 'active' ? 'in_progress' : 'empty',
-        // Il dettaglio gioco basta id+nome; /auto-translate invece richiede
-        // gameId && gameName && installPath (che qui non abbiamo) e senza
-        // quelli restava inerte: "Apri" sembrava rotto.
-        openHref: `/library?id=${encodeURIComponent(p.gameId)}&name=${encodeURIComponent(p.gameName)}`,
+        // RIPRENDI (04/08/2026): /auto-translate richiede gameId && gameName &&
+        // installPath — e da oggi l'installPath CE L'ABBIAMO: tutti i chiamanti
+        // di createOrGetProject mettono il gamePath in files[0].path. Se è un
+        // path vero, "Apri" porta dritto al wizard: lì il banner "Riprendi
+        // traduzione" scatta da solo sul checkpoint. Eccezione Visionaire: il
+        // suo flusso vive nella scheda gioco (String it!), non nel wizard.
+        openHref: (() => {
+          const fp = p.files?.[0]?.path || '';
+          const isRealPath = /^[a-zA-Z]:[\\/]|^[\\/]/.test(fp);
+          const isVisionaire = (p.engine || '').toLowerCase().includes('visionaire');
+          if (isRealPath && !isVisionaire) {
+            return `/auto-translate?gameId=${encodeURIComponent(p.gameId)}&gameName=${encodeURIComponent(p.gameName)}&installPath=${encodeURIComponent(fp)}${p.gameImage ? `&gameImage=${encodeURIComponent(p.gameImage)}` : ''}`;
+          }
+          return `/library?id=${encodeURIComponent(p.gameId)}&name=${encodeURIComponent(p.gameName)}`;
+        })(),
       });
     }
     clientLogger.debug(`[Projects] Caricati ${activeProjects.length} progetti attivi`);
@@ -456,7 +467,9 @@ function ProjectCard({
               <Share2 className="w-3 h-3" />
             </Button>
           )}
-          {project.source === 'quality' && (
+          {/* Esporta: quality → .gsproj.json; active → .gspack dalle stringhe
+              persistite su disco (o dai file del pack importato). */}
+          {(project.source === 'quality' || project.source === 'active') && (
             <Button
               size="sm"
               variant="ghost"
@@ -505,6 +518,13 @@ export default function ProjectsPage() {
       try {
         const { backfillVisionaireProjects } = await import('@/lib/backfill-visionaire-projects');
         await backfillVisionaireProjects();
+      } catch { /* backfill best-effort */ }
+      // Backfill dai translation_session.json nelle cartelle dei giochi:
+      // recupera i lavori UE fatti PRIMA che l'apply registrasse i progetti
+      // (una volta per sessione app, vedi guard interna).
+      try {
+        const { backfillSessionProjects } = await import('@/lib/backfill-session-projects');
+        await backfillSessionProjects();
       } catch { /* backfill best-effort */ }
       // Fusione una-tantum dei duplicati storici: stesso gioco+lingua nato con
       // gameId diversi (backfill `vis-...` vs id di libreria). Senza questa
@@ -577,7 +597,7 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleExport = (p: UnifiedProject) => {
+  const handleExport = async (p: UnifiedProject) => {
     if (p.source === 'quality') {
       const qsId = p.id.replace(/^qs:/, '');
       const data = qualityScoringService.exportProject(qsId);
@@ -593,6 +613,72 @@ export default function ProjectsPage() {
         URL.revokeObjectURL(url);
         toast.success(t('projectsPage.projectExported'));
       }
+      return;
+    }
+
+    // Export .gspack per i progetti ATTIVI (04/08/2026). Contenuto, in ordine
+    // di preferenza: (1) le stringhe persistite su disco dall'apply
+    // (load_translation_strings — PRIMA chiamata frontend di questo comando
+    // Rust, orfano dalla nascita); (2) i file tradotti salvati dall'import
+    // .gspack. Se non c'è nessuno dei due, niente pack vuoto: stesso principio
+    // del publish ("non pubblicare un manifest di metadati").
+    if (p.source !== 'active') return;
+    try {
+      const files: Array<{ path: string; content: string; format: string }> = [];
+
+      const disk = await invoke<{
+        gameId: string; sourceLanguage: string; targetLanguage: string;
+        entries: Array<{ key: string; source: string; target: string }>;
+      } | null>('load_translation_strings', {
+        gameId: p.gameId, targetLanguage: p.targetLanguage,
+      }).catch(() => null);
+      if (disk?.entries?.length) {
+        // Mappa key→target: è il formato che countStrings() del gspack conta
+        // onestamente (stringhe totali = chiavi, tradotte = non vuote).
+        const map: Record<string, string> = {};
+        for (const e of disk.entries) map[e.key] = e.target;
+        files.push({
+          path: `strings_${p.targetLanguage}.json`,
+          content: JSON.stringify(map, null, 2),
+          format: 'json',
+        });
+      } else {
+        const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
+        if (stored?.length) {
+          for (const f of stored) files.push({ path: f.path, content: f.content, format: 'json' });
+        }
+      }
+
+      if (files.length === 0) {
+        toast.error(t('projectsPage.publishNoContent'));
+        return;
+      }
+
+      let authorName = 'GameStringer';
+      try {
+        const prof = JSON.parse(localStorage.getItem('gamestringer_current_profile') || 'null');
+        if (prof?.name) authorName = String(prof.name);
+      } catch { /* profilo assente: default */ }
+
+      const pack = await createGspack({
+        gameName: p.gameName,
+        platform: p.platform || 'pc',
+        engine: p.platform,
+        sourceLanguage: p.sourceLanguage || 'en',
+        targetLanguage: p.targetLanguage,
+        authorName,
+        packName: `${p.gameName} — ${p.targetLanguage.toUpperCase()}`,
+        description: '',
+        quality: p.status === 'completed' ? 'final' : 'draft',
+        includeGlossary: false,
+        includeNotes: false,
+        files,
+      });
+      const ok = await saveGspackToFile(pack.data, pack.filename);
+      if (ok) toast.success(t('projectsPage.projectExported'));
+    } catch (e: unknown) {
+      clientLogger.error('[Projects] Export .gspack fallito:', e);
+      toast.error(t('projectsPage.publishNoContent'));
     }
   };
 
