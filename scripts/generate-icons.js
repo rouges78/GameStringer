@@ -1,5 +1,13 @@
 const sharp = require('sharp');
-const toIco = require('to-ico');
+// png-to-ico, NON to-ico: facevano la stessa cosa (erano installati ENTRAMBI),
+// ma il bump Dependabot to-ico 1.0.1→1.1.5 del 04/08/2026 ha portato dentro
+// resize-img→jimp@0.2.28 (2016) con request/form-data/jpeg-js/minimist vulnerabili:
+// 12 advisory di colpo, 5 critical, audit-gate rosso. Un convertitore basta.
+// png-to-ico 3.x è transpilato da ESM: require() ritorna { __esModule, default },
+// non la funzione. Senza il .default il primo run è morto con
+// "pngToIco is not a function" — trovato dalla prova d'effetto, non dai gate.
+const pngToIcoModule = require('png-to-ico');
+const pngToIco = pngToIcoModule.default || pngToIcoModule;
 const path = require('path');
 const fs = require('fs');
 
@@ -40,7 +48,7 @@ async function generateIcons() {
   const pngDir = path.join(iconsDir, 'png');
   if (!fs.existsSync(pngDir)) fs.mkdirSync(pngDir);
   
-  const icoBuffers = [];
+  const icoPngPaths = [];
   for (const size of icoSizes) {
     const buffer = await sharp(svgBuffer)
       .resize(size, size)
@@ -48,13 +56,13 @@ async function generateIcons() {
       .toBuffer();
     const pngPath = path.join(pngDir, `icon-${size}.png`);
     fs.writeFileSync(pngPath, buffer);
-    icoBuffers.push(buffer);
+    icoPngPaths.push(pngPath);
     console.log(`✅ ICO layer ${size}x${size}`);
   }
 
-  // Genera icon.ico automaticamente con to-ico
+  // Genera icon.ico dai layer PNG appena scritti su disco
   try {
-    const icoBuffer = await toIco(icoBuffers);
+    const icoBuffer = await pngToIco(icoPngPaths);
     fs.writeFileSync(path.join(iconsDir, 'icon.ico'), icoBuffer);
     console.log('✅ icon.ico generato automaticamente!');
   } catch (e) {
