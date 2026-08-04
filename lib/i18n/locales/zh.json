@@ -1100,7 +1100,7 @@
     "unityRouteFail": "XUnity 安装失败 — 详情请查看 Unity 面板。",
     "unrealStepDetect": "检测本地化（.locres）",
     "unrealStepTranslate": "AI 翻译 → pak 覆盖（_P.pak）",
-    "unrealNoLocres": "未找到 .locres 文件：该 Unreal 游戏未提供可提取的本地化。请使用 Unreal 面板或实时 OCR 翻译。",
+    "unrealNoLocres": "这款 Unreal 游戏把文本保存在无法读取的压缩文件中，因此无法进行文件翻译。仍可使用屏幕翻译（OCR），它会在你游玩时读取文字。",
     "godotRouteMsg": "Godot 在 String it! 中没有自动流程：请使用专用的 Godot Translator 翻译本地化文件（.csv、.po、.tres）。",
     "godotRouteToast": "Godot：打开 Godot Translator",
     "visDone": "Visionaire：已翻译 {n}/{total} 条字符串。启动游戏。",
@@ -1110,7 +1110,9 @@
     "jobTitle": "翻译 — {name}",
     "jobDescBg": "{engine} · 后台",
     "stoppedByUser": "已由用户停止",
-    "stoppedToast": "翻译已停止：{n}/{total} 已保存到检查点，可随时继续。"
+    "stoppedToast": "翻译已停止：{n}/{total} 已保存到检查点，可随时继续。",
+    "unrealNoLocresShort": "该游戏未提供可提取的文本",
+    "tryLiveOcr": "试试屏幕翻译"
   },
   "autoTranslatePage": {
     "identical": "相同",

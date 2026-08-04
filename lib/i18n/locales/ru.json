@@ -1100,7 +1100,7 @@
     "unityRouteFail": "Установка XUnity не удалась — подробности в панели Unity.",
     "unrealStepDetect": "Обнаружение локализации (.locres)",
     "unrealStepTranslate": "ИИ-перевод → pak-переопределение (_P.pak)",
-    "unrealNoLocres": "Файлы .locres не найдены: эта игра на Unreal не предоставляет извлекаемую локализацию. Используйте панель Unreal или живой OCR-перевод.",
+    "unrealNoLocres": "Эта игра на Unreal хранит тексты в сжатых нечитаемых файлах: перевод файлов невозможен. Остаётся экранный перевод (OCR), который читает текст во время игры.",
     "godotRouteMsg": "У Godot нет автоматического конвейера в String it!: используйте специальный Godot Translator для перевода файлов локализации (.csv, .po, .tres).",
     "godotRouteToast": "Godot: откройте Godot Translator",
     "visDone": "Visionaire: переведено {n}/{total} строк. Запустите игру.",
@@ -1110,7 +1110,9 @@
     "jobTitle": "Перевод — {name}",
     "jobDescBg": "{engine} · в фоне",
     "stoppedByUser": "остановлено пользователем",
-    "stoppedToast": "Перевод остановлен: {n} из {total} сохранено в контрольной точке — продолжайте в любой момент."
+    "stoppedToast": "Перевод остановлен: {n} из {total} сохранено в контрольной точке — продолжайте в любой момент.",
+    "unrealNoLocresShort": "Игра не предоставляет извлекаемый текст",
+    "tryLiveOcr": "Попробовать перевод на экране"
   },
   "autoTranslatePage": {
     "identical": "идентичных",

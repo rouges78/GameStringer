@@ -1100,7 +1100,7 @@
     "unityRouteFail": "XUnity 설치 실패 — 자세한 내용은 Unity 패널을 확인하세요.",
     "unrealStepDetect": "현지화 감지 (.locres)",
     "unrealStepTranslate": "AI 번역 → pak 오버라이드 (_P.pak)",
-    "unrealNoLocres": ".locres 파일을 찾을 수 없습니다: 이 Unreal 게임은 추출 가능한 현지화를 제공하지 않습니다. Unreal 패널 또는 라이브 OCR 번역을 사용하세요.",
+    "unrealNoLocres": "이 언리얼 게임은 텍스트를 읽을 수 없는 압축 파일에 보관하므로 파일 번역이 불가능합니다. 플레이 중 화면의 글자를 읽는 화면 번역(OCR)은 사용할 수 있습니다.",
     "godotRouteMsg": "Godot에는 String it! 자동 파이프라인이 없습니다: 전용 Godot Translator로 현지화 파일(.csv, .po, .tres)을 번역하세요.",
     "godotRouteToast": "Godot: Godot Translator를 여세요",
     "visDone": "Visionaire: {n}/{total} 문자열 번역됨. 게임을 실행하세요.",
@@ -1110,7 +1110,9 @@
     "jobTitle": "번역 — {name}",
     "jobDescBg": "{engine} · 백그라운드",
     "stoppedByUser": "사용자가 중지함",
-    "stoppedToast": "번역 중지됨: {n}/{total} 체크포인트에 저장됨 — 언제든 재개할 수 있습니다."
+    "stoppedToast": "번역 중지됨: {n}/{total} 체크포인트에 저장됨 — 언제든 재개할 수 있습니다.",
+    "unrealNoLocresShort": "이 게임은 추출 가능한 텍스트를 제공하지 않습니다",
+    "tryLiveOcr": "화면 번역 사용해 보기"
   },
   "autoTranslatePage": {
     "identical": "동일",

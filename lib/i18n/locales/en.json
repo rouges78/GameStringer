@@ -7429,7 +7429,7 @@
     "unityRouteFail": "XUnity installation failed — see the Unity panel for details.",
     "unrealStepDetect": "Detecting localization (.locres)",
     "unrealStepTranslate": "AI translation → pak override (_P.pak)",
-    "unrealNoLocres": "No .locres files found: this Unreal game does not expose extractable localization. Use the Unreal panel or live OCR translation.",
+    "unrealNoLocres": "This Unreal game keeps its text in compressed files we cannot read, so file-based translation is not possible. On-screen (OCR) translation still works: it reads the text while you play.",
     "godotRouteMsg": "Godot has no automatic pipeline in String it!: use the dedicated Godot Translator to translate the localization files (.csv, .po, .tres).",
     "godotRouteToast": "Godot: open the Godot Translator",
     "visDone": "Visionaire: {n}/{total} strings translated. Launch the game.",
@@ -7439,7 +7439,9 @@
     "jobTitle": "Translation — {name}",
     "jobDescBg": "{engine} · background",
     "stoppedByUser": "stopped by user",
-    "stoppedToast": "Translation stopped: {n} of {total} safe in the checkpoint — resume anytime."
+    "stoppedToast": "Translation stopped: {n} of {total} safe in the checkpoint — resume anytime.",
+    "unrealNoLocresShort": "This game exposes no extractable text",
+    "tryLiveOcr": "Try on-screen translation"
   },
   "patchHubPage": {
     "title": "Patch Hub",

@@ -30,6 +30,9 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 // AudioPatcher import removed — not currently used
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
+import { translateWithFallback } from '@/lib/ai/ai-translate-direct';
+import { projectService } from '@/lib/services/translation-projects';
+import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
 import { runRenpyTranslation } from '@/lib/renpy-translate';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
@@ -1044,25 +1047,41 @@ export default function GameDetailPage() {
 
       toast.info(`Trovate ${total} stringhe — traduzione AI in corso...`);
 
-      // 2. Traduci in batch da 15
+      // 2. Traduci in batch da 15 con la CATENA COMPLETA (translateWithFallback).
+      //
+      // ⚠️ Prima del 04/08/2026 sera qui girava `traduciConSplit`, che chiama
+      // `translate_text_simple`: un solo provider, testi uniti da un separatore
+      // e rispezzati. Tre difetti, tutti silenziosi:
+      //  1. NIENTE placeholder guard — {variabili}, tag e soprattutto gli A CAPO
+      //     reali si perdevano (è il difetto misurato su Greed: 169 → 45), e il
+      //     testo usciva dallo schermo;
+      //  2. niente catena di fallback: se il provider inciampa, stringa persa;
+      //  3. il join/split è fragile proprio sui testi multiriga, cioè i dialoghi.
+      // translateWithFallback passa da reflection + autoFixPlaceholders, quindi
+      // String it! su Unreal ha ora la stessa qualità del percorso "Traduci Tutto".
       const BATCH = 15;
       const translated: {namespace: string; key: string; source_hash: string; original: string; translated: string}[] = [];
       let falliti = 0;
 
       for (let i = 0; i < toTranslate.length; i += BATCH) {
         const batch = toTranslate.slice(i, i + BATCH);
-
-        // ⚠️ `translate_text_simple` ritorna un OGGETTO { translated_text }, non
-        // una stringa. Qui era tipizzato `invoke<string>` e si chiamava
-        // `result.split(...)`: eccezione a OGNI batch, catch che rimetteva gli
-        // originali, e un .pak con 811 stringhe inglesi annunciato come
-        // "Patch installata". Misurato: 0 su 811 differivano dall'originale.
-        // Ora la chiamata passa da traduciConSplit, che sul 414 dimezza invece
-        // di perdere tutto il gruppo.
-        const parts = await traduciConSplit(batch.map(e => e.value), lang);
+        let parts: (string | null)[] = [];
+        try {
+          const res = await translateWithFallback({
+            texts: batch.map(e => e.value),
+            targetLanguage: lang,
+            sourceLanguage: 'en',
+            gameId: game.id || game.appid?.toString() || gameId,
+          });
+          parts = res?.translations || [];
+        } catch (err: unknown) {
+          clientLogger.error(`[UE AI] batch ${i}: ${String(err)}`);
+        }
         batch.forEach((e, idx) => {
           const tr = parts[idx];
-          if (!tr) falliti++;
+          // Una traduzione identica all'originale NON è una traduzione: contala
+          // come fallita, così il conteggio finale resta onesto.
+          if (!tr || tr === e.value) falliti++;
           translated.push({
             namespace: e.namespace,
             key: e.key,
@@ -1096,6 +1115,73 @@ export default function GameDetailPage() {
         translations: translated,
         targetLanguage: lang,
       });
+
+      // 4. La patch non deve nascere e morire nella cartella del gioco
+      //    (patch-lifecycle, 04/08/2026): sessione su disco per i re-apply e il
+      //    backfill, progetto registrato, stringhe persistite per l'export.
+      //    Stesso corredo del percorso "Traduci Tutto". Fail-open: la patch
+      //    esiste già, un intoppo qui si logga e basta.
+      try {
+        const cambiateList = translated.filter(e => e.translated !== e.original);
+        await invoke('ensure_directory', { path: `${game.installPath}/GameStringer` });
+        await invoke('write_text_file', {
+          path: `${game.installPath}/GameStringer/translation_session.json`,
+          content: JSON.stringify({
+            gameName: game.title || game.name || '',
+            gameId: game.id || game.appid?.toString() || gameId || '',
+            gamePath: game.installPath,
+            sourceLanguage: 'en',
+            targetLanguage: lang,
+            provider: 'string-it',
+            createdAt: new Date().toISOString(),
+            totalStrings: translated.length,
+            entries: translated.map(e => ({
+              namespace: e.namespace,
+              key: e.key,
+              source_hash: e.source_hash,
+              original: e.original,
+              translated: e.translated,
+            })),
+          }, null, 2),
+        });
+
+        const pathKey = gamePathKey(game.installPath);
+        const proj = await projectService.createOrGetProject({
+          gameId: game.id || game.appid?.toString() || gameId || pathKey,
+          gameName: game.title || game.name || pathKey,
+          gameImage: game.headerImage || game.coverUrl,
+          engine: 'Unreal Engine',
+          sourceLanguage: 'en',
+          targetLanguage: lang,
+          gamePathKey: pathKey,
+          files: [{ path: game.installPath, name: 'translation_session', type: 'unreal', strings: translated.length }],
+        });
+        proj.totalStrings = Math.max(proj.totalStrings || 0, translated.length);
+        proj.translatedStrings = Math.max(proj.translatedStrings || 0, cambiateList.length);
+        proj.progress = proj.totalStrings > 0
+          ? Math.min(100, Math.round((proj.translatedStrings / proj.totalStrings) * 100))
+          : proj.progress;
+        await projectService.saveProject(proj);
+
+        await invoke('save_translation_strings', {
+          strings: {
+            gameId: proj.gameId,
+            sourceLanguage: 'en',
+            targetLanguage: lang,
+            exportedAt: new Date().toISOString(),
+            entries: translated.map(e => ({
+              key: e.namespace ? `${e.namespace}::${e.key}` : e.key,
+              source: e.original,
+              target: e.translated,
+              filePath: null,
+              context: e.namespace || null,
+              status: e.translated !== e.original ? 'translated' : 'pending',
+            })),
+          },
+        });
+      } catch (regErr: unknown) {
+        clientLogger.warn(`[UE AI] registrazione progetto/sessione fallita: ${String(regErr)}`);
+      }
 
       await loadUeLocStatus();
       toast.success(`✅ ${result?.message || `PAK creato con ${translated.filter(e => e.translated !== e.original).length} stringhe`}`);
@@ -2329,9 +2415,20 @@ export default function GameDetailPage() {
               { ...ueSteps[1], status: 'done' },
             ]);
           } else {
+            // Il gioco non espone testi estraibili (misurato: succede sui giochi
+            // UE che tengono tutto in .uasset compressi). Il messaggio resta
+            // onesto, ma NON si rimanda l'utente a cercare strumenti: si offre
+            // UNA azione cliccabile (principio UN PULSANTE, 04/08/2026 sera).
+            // Il toast duplicava parola per parola il pannello: tolto.
             setAutoTranslateSteps([{ ...ueSteps[0], status: 'error', detail: t('heroJob.unrealNoLocres') }]);
             setAutoTranslateError(t('heroJob.unrealNoLocres'));
-            toast.error(t('heroJob.unrealNoLocres'));
+            toast.error(t('heroJob.unrealNoLocresShort'), {
+              action: {
+                label: t('heroJob.tryLiveOcr'),
+                onClick: () => router.push(`/ocr-translator?gamePath=${encodeURIComponent(game.installPath || '')}`),
+              },
+              duration: 10000,
+            });
           }
         } finally {
           setAutoTranslateBusy(false);

@@ -1100,7 +1100,7 @@
     "unityRouteFail": "XUnityのインストールに失敗しました — 詳細はUnityパネルを確認してください。",
     "unrealStepDetect": "ローカライズを検出（.locres）",
     "unrealStepTranslate": "AI翻訳 → pakオーバーライド（_P.pak）",
-    "unrealNoLocres": ".locresファイルが見つかりません：このUnrealゲームは抽出可能なローカライズを公開していません。UnrealパネルまたはライブOCR翻訳を使用してください。",
+    "unrealNoLocres": "この Unreal ゲームはテキストを読み取れない圧縮ファイルに保持しているため、ファイル翻訳はできません。プレイ中に文字を読み取る画面翻訳（OCR）は利用できます。",
     "godotRouteMsg": "GodotにはString it!の自動パイプラインがありません：専用のGodot Translatorでローカライズファイル（.csv、.po、.tres）を翻訳してください。",
     "godotRouteToast": "Godot：Godot Translatorを開いてください",
     "visDone": "Visionaire：{n}/{total} 文字列を翻訳しました。ゲームを起動してください。",
@@ -1110,7 +1110,9 @@
     "jobTitle": "翻訳 — {name}",
     "jobDescBg": "{engine} · バックグラウンド",
     "stoppedByUser": "ユーザーにより停止",
-    "stoppedToast": "翻訳を停止しました：{n}/{total} はチェックポイントに保存済み。いつでも再開できます。"
+    "stoppedToast": "翻訳を停止しました：{n}/{total} はチェックポイントに保存済み。いつでも再開できます。",
+    "unrealNoLocresShort": "このゲームは抽出可能なテキストを公開していません",
+    "tryLiveOcr": "画面翻訳を試す"
   },
   "autoTranslatePage": {
     "identical": "同一",

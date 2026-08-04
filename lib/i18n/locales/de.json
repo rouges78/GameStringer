@@ -1100,7 +1100,7 @@
     "unityRouteFail": "XUnity-Installation fehlgeschlagen — Details im Unity-Panel.",
     "unrealStepDetect": "Erkennung der Lokalisierung (.locres)",
     "unrealStepTranslate": "KI-Übersetzung → Pak-Override (_P.pak)",
-    "unrealNoLocres": "Keine .locres-Dateien gefunden: dieses Unreal-Spiel stellt keine extrahierbare Lokalisierung bereit. Nutze das Unreal-Panel oder die Live-OCR-Übersetzung.",
+    "unrealNoLocres": "Dieses Unreal-Spiel hält seine Texte in komprimierten, nicht lesbaren Dateien: Dateibasierte Übersetzung ist nicht möglich. Es bleibt die Bildschirmübersetzung (OCR), die den Text beim Spielen liest.",
     "godotRouteMsg": "Godot hat keine automatische Pipeline in String it!: Nutze den dedizierten Godot Translator, um die Lokalisierungsdateien (.csv, .po, .tres) zu übersetzen.",
     "godotRouteToast": "Godot: Godot Translator öffnen",
     "visDone": "Visionaire: {n}/{total} Strings übersetzt. Starte das Spiel.",
@@ -1110,7 +1110,9 @@
     "jobTitle": "Übersetzung — {name}",
     "jobDescBg": "{engine} · im Hintergrund",
     "stoppedByUser": "vom Benutzer gestoppt",
-    "stoppedToast": "Übersetzung gestoppt: {n} von {total} im Checkpoint gesichert — jederzeit fortsetzbar."
+    "stoppedToast": "Übersetzung gestoppt: {n} von {total} im Checkpoint gesichert — jederzeit fortsetzbar.",
+    "unrealNoLocresShort": "Dieses Spiel legt keine extrahierbaren Texte offen",
+    "tryLiveOcr": "Bildschirmübersetzung versuchen"
   },
   "autoTranslatePage": {
     "identical": "identisch",

@@ -1100,7 +1100,7 @@
     "unityRouteFail": "L'installation de XUnity a échoué — voir le panneau Unity pour les détails.",
     "unrealStepDetect": "Détection de la localisation (.locres)",
     "unrealStepTranslate": "Traduction IA → pak override (_P.pak)",
-    "unrealNoLocres": "Aucun fichier .locres trouvé : ce jeu Unreal n'expose pas de localisation extractible. Utilisez le panneau Unreal ou la traduction OCR en direct.",
+    "unrealNoLocres": "Ce jeu Unreal garde ses textes dans des fichiers compressés illisibles : la traduction par fichiers est impossible. Reste la traduction à l'écran (OCR), qui lit le texte pendant que vous jouez.",
     "godotRouteMsg": "Godot n'a pas de pipeline automatique dans String it! : utilisez le Godot Translator dédié pour traduire les fichiers de localisation (.csv, .po, .tres).",
     "godotRouteToast": "Godot : ouvrez le Godot Translator",
     "visDone": "Visionaire : {n}/{total} chaînes traduites. Lancez le jeu.",
@@ -1110,7 +1110,9 @@
     "jobTitle": "Traduction — {name}",
     "jobDescBg": "{engine} · en arrière-plan",
     "stoppedByUser": "interrompue par l'utilisateur",
-    "stoppedToast": "Traduction interrompue : {n} sur {total} sauvegardées dans le point de reprise — reprenez quand vous voulez."
+    "stoppedToast": "Traduction interrompue : {n} sur {total} sauvegardées dans le point de reprise — reprenez quand vous voulez.",
+    "unrealNoLocresShort": "Ce jeu n'expose aucun texte extractible",
+    "tryLiveOcr": "Essayer la traduction à l'écran"
   },
   "autoTranslatePage": {
     "identical": "identiques",
