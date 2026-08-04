@@ -1269,7 +1269,14 @@ export default function AutoTranslatePage() {
                 translations.push({
                   namespace: entry.namespace || '',
                   key: entry.key || '',
-                  source_hash: 0,
+                  // ⚠️ NON cablare 0 (04/08/2026, trovato su Greed Stays Home):
+                  // UE confronta il source hash della stringa viva con quello
+                  // compilato nel .locres — hash sbagliato = entry SCARTATA in
+                  // silenzio, gioco in inglese senza un errore. Il flusso di
+                  // estrazione ha gli hash veri e da oggi li salva in sessione;
+                  // per le sessioni vecchie senza hash resta 0 (e il rimedio è
+                  // rifare l'estrazione, non fingere).
+                  source_hash: typeof entry.source_hash === 'number' ? entry.source_hash : 0,
                   original: entry.original,
                   translated: entry.translated,
                 })

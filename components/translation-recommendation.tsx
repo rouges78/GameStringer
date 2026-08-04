@@ -760,6 +760,10 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   entries: extractResult.entries.map(e => ({
                     namespace: e.namespace,
                     key: e.key,
+                    // Senza il source hash originale, ogni re-apply futuro dalla
+                    // sessione scriverebbe locres che UE scarta in silenzio
+                    // (protezione anti-stale). Trovato su Greed il 04/08/2026.
+                    source_hash: e.source_hash,
                     original: e.value,
                     translated: translations[`${e.namespace}::${e.key}`] || e.value,
                   })),

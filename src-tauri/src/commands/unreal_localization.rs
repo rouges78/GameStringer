@@ -1509,19 +1509,44 @@ Generato il: {when}
     })
 }
 
-/// Trova il nome del progetto UE dalla struttura delle directory
+/// Trova il nome del progetto UE dalla struttura delle directory.
+///
+/// ⚠️ STORIA (04/08/2026, trovata dalla prova in-game su Greed Stays Home):
+/// questa funzione prendeva la PRIMA directory con dentro `Content/`, in
+/// ordine di filesystem — e alfabeticamente "Engine" viene prima di quasi
+/// ogni nome di progetto. I giochi UE distribuiscono anche `Engine/Content/`,
+/// quindi il pak veniva costruito con i path `Engine/Content/Localization/...`:
+/// un mount che il motore non consulta mai per i testi del gioco. Risultato:
+/// tripletta perfetta, 122 traduzioni, QA 100/100 — e il gioco in inglese,
+/// senza un solo errore. Il commento qui sopra diceva già "Content/Paks";
+/// il codice controllava solo "Content". Ora:
+///  1) mai "Engine": non è un progetto;
+///  2) preferisci la directory con `Content/Paks` (il progetto vero la ha);
+///  3) ripiego: la prima non-Engine con `Content/`.
 pub fn find_project_name(game_dir: &Path) -> Option<String> {
-    // Cerca directory con Content/Paks dentro
+    let mut fallback: Option<String> = None;
     if let Ok(entries) = fs::read_dir(game_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() && path.join("Content").exists() {
-                return path.file_name()
-                    .map(|n| n.to_string_lossy().to_string());
+            if !path.is_dir() || !path.join("Content").exists() {
+                continue;
+            }
+            let name = match path.file_name() {
+                Some(n) => n.to_string_lossy().to_string(),
+                None => continue,
+            };
+            if name.eq_ignore_ascii_case("Engine") {
+                continue;
+            }
+            if path.join("Content").join("Paks").exists() {
+                return Some(name); // il progetto vero: ha i pak
+            }
+            if fallback.is_none() {
+                fallback = Some(name);
             }
         }
     }
-    None
+    fallback
 }
 
 /// Wrapper pubblico per parse_locres (usato da unreal_iostore)
@@ -2189,6 +2214,36 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         touch(tmp.path(), "MyGame/Content/placeholder");
         assert_eq!(find_project_name(tmp.path()).as_deref(), Some("MyGame"));
+    }
+
+    /// Il caso Greed Stays Home (04/08/2026): il gioco distribuisce ANCHE
+    /// Engine/Content/, e alfabeticamente "Engine" < "GreedStaysHome".
+    /// La versione vecchia ritornava "Engine" → pak costruito su un mount
+    /// che il motore non consulta → gioco in inglese senza errori.
+    #[test]
+    fn find_project_name_skips_engine_dir() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "Engine/Content/placeholder");
+        touch(tmp.path(), "GreedStaysHome/Content/Paks/g.pak");
+        assert_eq!(find_project_name(tmp.path()).as_deref(), Some("GreedStaysHome"));
+    }
+
+    /// A parità di Content/, vince chi ha Content/Paks (il progetto vero).
+    #[test]
+    fn find_project_name_prefers_dir_with_paks() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "AAAData/Content/placeholder");
+        touch(tmp.path(), "ZZZGame/Content/Paks/z.pak");
+        assert_eq!(find_project_name(tmp.path()).as_deref(), Some("ZZZGame"));
+    }
+
+    /// Solo Engine con Content: meglio nessun nome (il chiamante ripiega su
+    /// "Game") che il mount sbagliato.
+    #[test]
+    fn find_project_name_none_when_only_engine() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "Engine/Content/placeholder");
+        assert_eq!(find_project_name(tmp.path()), None);
     }
 
     #[test]

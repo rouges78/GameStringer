@@ -35,7 +35,12 @@ interface SessionFile {
 
 interface InstalledGame { id: string; title: string; path: string; engine?: string; image?: string }
 
-let ran = false;
+// Guardia a TEMPO, non una-tantum (corretta 04/08 sera, trovata alla prima
+// prova reale): con il flag "una volta per sessione", il progetto di una
+// traduzione appena finita non compariva finché non riavviavi l'app.
+// 60 secondi tengono la pagina reattiva senza rifare gli scan a ogni click.
+let lastRunAt = 0;
+const MIN_INTERVAL_MS = 60_000;
 
 async function listInstalledGames(): Promise<InstalledGame[]> {
   const games: InstalledGame[] = [];
@@ -75,8 +80,8 @@ async function listInstalledGames(): Promise<InstalledGame[]> {
 }
 
 export async function backfillSessionProjects(): Promise<number> {
-  if (ran) return 0;
-  ran = true;
+  if (Date.now() - lastRunAt < MIN_INTERVAL_MS) return 0;
+  lastRunAt = Date.now();
 
   const games = await listInstalledGames();
   if (games.length === 0) return 0;
