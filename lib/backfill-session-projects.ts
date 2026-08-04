@@ -156,7 +156,7 @@ export async function backfillSessionProjects(): Promise<number> {
       created++;
       clientLogger.debug(`[SessionBackfill] Progetto ricostruito: ${proj.gameName} (${translated}/${entries.length} ${targetLang})`);
     } catch (e: unknown) {
-      clientLogger.warn('[SessionBackfill] fallito per', game.title, String(e));
+      clientLogger.warn(`[SessionBackfill] fallito per ${game.title}: ${String(e)}`);
     }
   }
 

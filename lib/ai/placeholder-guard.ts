@@ -121,8 +121,14 @@ export function placeholdersPreserved(source: string, translation: string): bool
  *  3. Token mancanti (la traduzione ne ha meno) → i mancanti vengono aggiunti
  *     in coda, così sopravvivono comunque (la posizione può richiedere review).
  *  4. Solo token "inventati" in più e nessuno mancante → testo lasciato intatto.
+ *
+ * In coda, SEMPRE: ripristino degli a capo reali (vedi autoFixLineBreaks).
  */
 export function autoFixPlaceholders(source: string, translation: string): string {
+  return autoFixLineBreaks(source, fixTokens(source, translation));
+}
+
+function fixTokens(source: string, translation: string): string {
   if (!source || translation == null) return translation;
   const { missing, extra, src, tr } = diffPlaceholders(source, translation);
   if (missing.length === 0 && extra.length === 0) return translation;
@@ -142,4 +148,83 @@ export function autoFixPlaceholders(source: string, translation: string): string
 
   // Caso 4: solo token inventati in più → non cancellare contenuto
   return translation;
+}
+
+/** A capo reali (CRLF/LF/CR) — NON gli escape testuali "\n" già coperti dal pattern. */
+const LINE_BREAK_RE = /\r\n|\n|\r/g;
+
+/** Conta gli a capo reali in una stringa. */
+export function countLineBreaks(text: string): number {
+  if (!text) return 0;
+  return (text.match(LINE_BREAK_RE) || []).length;
+}
+
+/**
+ * Ripristina gli a capo reali persi dalla traduzione.
+ *
+ * Storia (04/08/2026, Greed Stays Home): le note lunghe del gioco impaginano
+ * con \r\n dentro la stringa; la catena di traduzione li ha appiattiti
+ * (169 a capo negli originali → 45 nelle traduzioni) e a schermo le frasi
+ * uscivano come un'unica riga tagliata ai bordi. Gli a capo sono formattazione
+ * che il gioco interpreta: vanno garantiti come le {variabili}.
+ *
+ * Strategia:
+ *  - la traduzione ha ALMENO tanti a capo quanti il sorgente → intatta
+ *    (a capo in più non si cancellano: stessa filosofia dei token inventati);
+ *  - ne ha di meno → si riappiattisce e si rispezza in tanti segmenti quanti
+ *    quelli del sorgente, in PROPORZIONE alle lunghezze originali, tagliando
+ *    allo spazio più vicino al punto ideale. Lo stile dell'a capo (\r\n vs \n)
+ *    si eredita dal sorgente. Deterministico, zero LLM.
+ */
+export function autoFixLineBreaks(source: string, translation: string): string {
+  if (!source || translation == null) return translation;
+  const srcBreaks: string[] = source.match(LINE_BREAK_RE) || [];
+  const wanted = srcBreaks.length;
+  if (wanted === 0) return translation;
+  const trBreaks = translation.match(LINE_BREAK_RE) || [];
+  if (trBreaks.length >= wanted) return translation;
+
+  const eol = srcBreaks.includes('\r\n') ? '\r\n' : srcBreaks[0];
+  const srcSegs = source.split(LINE_BREAK_RE);
+  const flat = translation.replace(LINE_BREAK_RE, ' ').replace(/[ \t]+/g, ' ').trim();
+  if (!flat) return translation;
+
+  const weights = srcSegs.map(s => Math.max(s.trim().length, 1));
+  const out: string[] = [];
+  let rest = flat;
+  let remainingWeight = weights.reduce((a, b) => a + b, 0);
+
+  for (let i = 0; i < srcSegs.length - 1; i++) {
+    if (!rest) { out.push(''); continue; } // meno testo che righe: righe vuote in coda
+    const ideal = Math.round((rest.length * weights[i]) / remainingWeight);
+    remainingWeight -= weights[i];
+    // Punto di taglio: entro una finestra attorno all'ideale, PREFERISCI lo
+    // spazio che segue punteggiatura (. ! ? … ,) — righe che finiscono a fine
+    // frase invece che a metà (raffinato 04/08 sera: il taglio "allo spazio
+    // più vicino" produceva righe innaturali). Fuori finestra o senza
+    // punteggiatura: lo spazio più vicino, come prima.
+    const window = Math.max(8, Math.round(rest.length / (srcSegs.length - i) / 2));
+    let cut = -1;
+    let bestPunct = -1;
+    let bestPunctDist = Infinity;
+    for (let d = 0; d < rest.length; d++) {
+      const left = ideal - d;
+      const right = ideal + d;
+      for (const pos of [left, right]) {
+        if (pos <= 0 || pos >= rest.length || rest[pos] !== ' ') continue;
+        if (cut < 0) cut = pos; // primo spazio: il fallback di sempre
+        const prev = rest[pos - 1];
+        if (d <= window && bestPunctDist > d && (prev === '.' || prev === '!' || prev === '?' || prev === '…' || prev === ',')) {
+          bestPunct = pos; bestPunctDist = d;
+        }
+      }
+      if (cut >= 0 && d > window) break; // oltre la finestra: basta cercare punteggiatura
+    }
+    if (bestPunct > 0) cut = bestPunct;
+    if (cut <= 0) { out.push(''); continue; } // una parola sola: niente taglio forzato
+    out.push(rest.slice(0, cut));
+    rest = rest.slice(cut + 1);
+  }
+  out.push(rest);
+  return out.join(eol);
 }
