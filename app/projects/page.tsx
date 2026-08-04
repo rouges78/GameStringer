@@ -506,6 +506,12 @@ export default function ProjectsPage() {
         const { backfillVisionaireProjects } = await import('@/lib/backfill-visionaire-projects');
         await backfillVisionaireProjects();
       } catch { /* backfill best-effort */ }
+      // Fusione una-tantum dei duplicati storici: stesso gioco+lingua nato con
+      // gameId diversi (backfill `vis-...` vs id di libreria). Senza questa
+      // pulizia lo stesso gioco appariva due volte e il contatore sommava.
+      try {
+        await projectService.mergeDuplicateProjects();
+      } catch { /* merge best-effort */ }
       const data = await loadAllProjects();
       setProjects(data);
     } catch (e: unknown) {

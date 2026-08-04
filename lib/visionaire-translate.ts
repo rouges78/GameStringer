@@ -152,6 +152,10 @@ export async function runVisionaireTranslation(opts: {
         engine: 'Visionaire Studio',
         sourceLanguage: 'en',
         targetLanguage: tgt,
+        // Identità per percorso: senza, il backfill (gameId `vis-<path>`) e
+        // questo job (gameId di libreria) creavano DUE progetti per lo stesso
+        // gioco e la pagina Progetti ne sommava i contatori.
+        gamePathKey: gamePathKey(opts.gamePath),
         files: [{ path: opts.gamePath, name: 'data.vis', type: 'visionaire', strings: total }],
       });
       projectId = proj.id;

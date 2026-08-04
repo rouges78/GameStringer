@@ -1308,7 +1308,9 @@
     "compatibleWith": "Weblate, Crowdin, OmegaT, Trados互換",
     "translationProvidersExhausted": "翻訳プロバイダーを使い切りました",
     "wait25MinutesAndClick": "25分待ってからクリック",
-    "configureAnAiProviderGeminiDee": "AIプロバイダー（Gemini、DeepSeek など）を設定する場所"
+    "configureAnAiProviderGeminiDee": "AIプロバイダー（Gemini、DeepSeek など）を設定する場所",
+    "tpLogProjectSaved": "プロジェクトを更新しました: {count} 件の文字列をプロジェクトに保存（再開・エクスポート・公開はそちらから）",
+    "tpLogProjectSaveFailed": "パッチは適用されましたが、プロジェクトの登録に失敗しました: {err}"
   },
   "aiPipelinePage": {
     "title": "AI翻訳パイプライン",

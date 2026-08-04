@@ -1308,7 +1308,9 @@
     "compatibleWith": "Совместим с Weblate, Crowdin, OmegaT, Trados",
     "translationProvidersExhausted": "Провайдеры перевода исчерпаны",
     "wait25MinutesAndClick": "Подождите 25 минут и нажмите",
-    "configureAnAiProviderGeminiDee": "Настройте AI-провайдера (Gemini, DeepSeek и т.д.) в"
+    "configureAnAiProviderGeminiDee": "Настройте AI-провайдера (Gemini, DeepSeek и т.д.) в",
+    "tpLogProjectSaved": "Проект обновлён: {count} строк сохранено в Проектах (продолжить, экспортировать или опубликовать оттуда)",
+    "tpLogProjectSaveFailed": "Патч применён, но регистрация проекта не удалась: {err}"
   },
   "aiPipelinePage": {
     "title": "ИИ Конвейер Перевода",

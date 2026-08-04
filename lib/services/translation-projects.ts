@@ -3,11 +3,21 @@
 import { get, set } from 'idb-keyval';
 import { getSupabase } from '@/lib/social/community-hub-backend';
 import { clientLogger } from '@/lib/client-logger';
+import { gamePathKey as normalizePathKey } from '@/lib/game-path';
 
 export interface TranslationProject {
   id: string;
   gameId: string;
   gameName: string;
+  /**
+   * Chiave identità derivata dal percorso di installazione (lib/game-path.ts).
+   * Aggiunta 04/08/2026: i chiamanti inventavano gameId diversi per lo stesso
+   * gioco (id di libreria, `vis-<path>` dal backfill, gamePathKey dal fallback
+   * hero) e findProject — che confronta solo gameId+lingua — non li vedeva come
+   * lo stesso progetto: due schede per Foolish Mortals, contatore che sommava.
+   * Il percorso su disco è l'unica identità che tutti i chiamanti condividono.
+   */
+  gamePathKey?: string;
   gameImage?: string;
   engine?: string;
   sourceLanguage: string;
@@ -70,11 +80,14 @@ class TranslationProjectService {
     engine?: string;
     sourceLanguage: string;
     targetLanguage: string;
+    gamePathKey?: string;
     files?: { path: string; name: string; type: string; strings: number }[];
   }): Promise<TranslationProject> {
-    // Cerca progetto esistente per questo gioco + lingua
-    const existing = await this.findProject(params.gameId, params.targetLanguage);
-    
+    // Cerca progetto esistente per questo gioco + lingua. Il percorso, se
+    // fornito, vale quanto il gameId: due chiamanti con id diversi ma stesso
+    // path stanno parlando dello stesso gioco.
+    const existing = await this.findProject(params.gameId, params.targetLanguage, params.gamePathKey);
+
     if (existing) {
       clientLogger.debug(`[Projects] Progetto esistente trovato: ${existing.id}`);
       // Aggiorna lastActivityAt
@@ -82,6 +95,17 @@ class TranslationProjectService {
       existing.updatedAt = new Date().toISOString();
       if (existing.status === 'paused' || existing.status === 'abandoned') {
         existing.status = 'active';
+      }
+      // Arricchisci l'identità invece di duplicarla: se il progetto era nato
+      // dal backfill (gameId sintetico `vis-...`) e ora arriva l'id vero di
+      // libreria, adottalo — con nome e copertina, che sono migliori.
+      if (params.gamePathKey && !existing.gamePathKey) {
+        existing.gamePathKey = params.gamePathKey;
+      }
+      if (existing.gameId.startsWith('vis-') && !params.gameId.startsWith('vis-')) {
+        existing.gameId = params.gameId;
+        existing.gameName = params.gameName;
+        if (params.gameImage) existing.gameImage = params.gameImage;
       }
       await this.saveProject(existing);
       await this.setActiveProject(existing.id);
@@ -92,6 +116,7 @@ class TranslationProjectService {
     const project: TranslationProject = {
       id: `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       gameId: params.gameId,
+      gamePathKey: params.gamePathKey,
       gameName: params.gameName,
       gameImage: params.gameImage,
       engine: params.engine,
@@ -129,13 +154,85 @@ class TranslationProjectService {
   /**
    * Trova un progetto esistente
    */
-  async findProject(gameId: string, targetLanguage: string): Promise<TranslationProject | null> {
+  async findProject(gameId: string, targetLanguage: string, pathKey?: string): Promise<TranslationProject | null> {
     const projects = await this.getAllProjects();
-    return projects.find(p => 
-      p.gameId === gameId && 
+    return projects.find(p =>
       p.targetLanguage === targetLanguage &&
-      p.status !== 'abandoned'
+      p.status !== 'abandoned' &&
+      (p.gameId === gameId ||
+        // Stesso percorso su disco = stesso gioco, qualunque sia il gameId.
+        // effectivePathKey copre anche i record vecchi senza campo gamePathKey.
+        (!!pathKey && this.effectivePathKey(p) === pathKey))
     ) || null;
+  }
+
+  /**
+   * Chiave-percorso di un progetto, ricostruita anche per i record storici:
+   * (1) campo esplicito; (2) gameId sintetico `vis-<pathKey>` del backfill
+   * (che dentro ha già la chiave normalizzata); (3) path del primo file,
+   * che i chiamanti Visionaire/hero hanno sempre valorizzato con gamePath.
+   */
+  private effectivePathKey(p: TranslationProject): string | null {
+    if (p.gamePathKey) return p.gamePathKey;
+    if (p.gameId.startsWith('vis-')) return p.gameId.slice(4);
+    const filePath = p.files?.[0]?.path;
+    if (filePath && /[\\/]/.test(filePath)) return normalizePathKey(filePath);
+    return null;
+  }
+
+  /**
+   * Fonde i progetti duplicati nati PRIMA dell'identità per percorso
+   * (04/08/2026): stesso gioco+lingua registrato con gameId diversi.
+   * Vince il record con l'id di libreria (non `vis-`); i contatori prendono
+   * il massimo, non la somma — sommarli era esattamente la bugia del
+   * contatore in pagina Progetti. Ritorna quanti duplicati ha rimosso.
+   */
+  async mergeDuplicateProjects(): Promise<number> {
+    const projects = await this.getAllProjects();
+    const byIdentity = new Map<string, TranslationProject[]>();
+    for (const p of projects) {
+      if (p.status === 'abandoned') continue;
+      const pk = this.effectivePathKey(p);
+      if (!pk) continue; // senza percorso non c'è prova che siano lo stesso gioco
+      const identity = `${pk}|${p.targetLanguage}`;
+      const group = byIdentity.get(identity) || [];
+      group.push(p);
+      byIdentity.set(identity, group);
+    }
+
+    let removed = 0;
+    let survivors = projects;
+    for (const group of byIdentity.values()) {
+      if (group.length < 2) continue;
+      // Il migliore: id non sintetico prima, poi il più recente.
+      const winner = [...group].sort((a, b) => {
+        const aVis = a.gameId.startsWith('vis-') ? 1 : 0;
+        const bVis = b.gameId.startsWith('vis-') ? 1 : 0;
+        if (aVis !== bVis) return aVis - bVis;
+        return (b.lastActivityAt || '').localeCompare(a.lastActivityAt || '');
+      })[0];
+
+      for (const loser of group) {
+        if (loser.id === winner.id) continue;
+        winner.totalStrings = Math.max(winner.totalStrings, loser.totalStrings);
+        winner.translatedStrings = Math.max(winner.translatedStrings, loser.translatedStrings);
+        winner.gamePathKey = winner.gamePathKey || this.effectivePathKey(winner) || undefined;
+        winner.isShared = winner.isShared || loser.isShared;
+        winner.supabaseId = winner.supabaseId || loser.supabaseId;
+        survivors = survivors.filter(p => p.id !== loser.id);
+        removed++;
+        clientLogger.debug(`[Projects] Duplicato fuso: ${loser.id} (${loser.gameId}) → ${winner.id} (${winner.gameId})`);
+      }
+      winner.progress = winner.totalStrings > 0
+        ? Math.min(100, Math.round((winner.translatedStrings / winner.totalStrings) * 100))
+        : winner.progress;
+      winner.updatedAt = new Date().toISOString();
+    }
+
+    if (removed > 0) {
+      await set(PROJECTS_KEY, survivors);
+    }
+    return removed;
   }
 
   /**

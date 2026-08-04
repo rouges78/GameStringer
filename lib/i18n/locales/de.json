@@ -1308,7 +1308,9 @@
     "compatibleWith": "Kompatibel mit Weblate, Crowdin, OmegaT, Trados",
     "translationProvidersExhausted": "Übersetzungsanbieter erschöpft",
     "wait25MinutesAndClick": "Warten Sie 25 Minuten und klicken Sie",
-    "configureAnAiProviderGeminiDee": "Konfigurieren Sie einen KI-Anbieter (Gemini, DeepSeek usw.) in"
+    "configureAnAiProviderGeminiDee": "Konfigurieren Sie einen KI-Anbieter (Gemini, DeepSeek usw.) in",
+    "tpLogProjectSaved": "Projekt aktualisiert: {count} Strings in Projekte gespeichert (dort fortsetzen, exportieren oder veröffentlichen)",
+    "tpLogProjectSaveFailed": "Patch angewendet, aber Projektregistrierung fehlgeschlagen: {err}"
   },
   "aiPipelinePage": {
     "title": "KI-Übersetzungspipeline",

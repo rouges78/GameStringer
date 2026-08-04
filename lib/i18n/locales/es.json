@@ -1308,7 +1308,9 @@
     "compatibleWith": "Compatible con Weblate, Crowdin, OmegaT, Trados",
     "translationProvidersExhausted": "Proveedores de traducción agotados",
     "wait25MinutesAndClick": "Espera 25 minutos y haz clic",
-    "configureAnAiProviderGeminiDee": "Configura un proveedor de IA (Gemini, DeepSeek, etc.) en"
+    "configureAnAiProviderGeminiDee": "Configura un proveedor de IA (Gemini, DeepSeek, etc.) en",
+    "tpLogProjectSaved": "Proyecto actualizado: {count} cadenas guardadas en Proyectos (reanuda, exporta o publica desde allí)",
+    "tpLogProjectSaveFailed": "Parche aplicado, pero falló el registro del proyecto: {err}"
   },
   "aiPipelinePage": {
     "title": "Pipeline de Traducción IA",

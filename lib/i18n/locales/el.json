@@ -1308,7 +1308,9 @@
     "compatibleWith": "Συμβατό με Weblate, Crowdin, OmegaT, Trados",
     "translationProvidersExhausted": "Εξαντλήθηκαν οι πάροχοι μετάφρασης",
     "wait25MinutesAndClick": "Περιμένετε 25 λεπτά και κάντε κλικ",
-    "configureAnAiProviderGeminiDee": "Ρυθμίστε έναν πάροχο AI (Gemini, DeepSeek, κ.λπ.) στο"
+    "configureAnAiProviderGeminiDee": "Ρυθμίστε έναν πάροχο AI (Gemini, DeepSeek, κ.λπ.) στο",
+    "tpLogProjectSaved": "Το έργο ενημερώθηκε: {count} συμβολοσειρές αποθηκεύτηκαν στα Έργα (συνέχισε, εξήγαγε ή δημοσίευσε από εκεί)",
+    "tpLogProjectSaveFailed": "Το patch εφαρμόστηκε, αλλά η καταχώριση του έργου απέτυχε: {err}"
   },
   "aiPipelinePage": {
     "title": "Pipeline μετάφρασης AI",

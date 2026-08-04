@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils"
 import { invoke } from "@/lib/tauri-api"
 import { detectFormat, parseFile, type ParseResult } from "@/lib/file-parsers"
 import { projectService } from "@/lib/services/translation-projects"
+import { gamePathKey } from "@/lib/game-path"
 import { translateSmart } from "@/lib/ai/ai-translate-direct"
 import { runQualityGates, type QualityReport } from "@/lib/quality/quality-gates"
 import { harvestBatch, type HarvestInput } from "@/lib/context-harvester"
@@ -765,6 +766,7 @@ export default function AutoTranslatePage() {
           gameImage: gameInfo.gameImage,
           sourceLanguage: sourceLang,
           targetLanguage: targetLang,
+          gamePathKey: gameInfo.installPath ? gamePathKey(gameInfo.installPath) : undefined,
           files: files.map(f => ({
             path: f.name,
             name: f.name,
@@ -1365,6 +1367,57 @@ export default function AutoTranslatePage() {
             return
           }
         }
+
+        // ============================================================
+        // La patch esiste sul disco: da qui in poi NON deve più nascere
+        // e morire nella cartella del gioco (patch-lifecycle, 04/08/2026).
+        // 1) registra/aggiorna il progetto (pagina Progetti);
+        // 2) persiste le stringhe in %LOCALAPPDATA%\GameStringer\projects\
+        //    via save_translation_strings — il comando Rust esisteva dal
+        //    progetto export ma aveva ZERO chiamanti nel frontend. Da lì
+        //    le stringhe sopravvivono ai cambi di origine e diventano la
+        //    base per riprendere/esportare/pubblicare.
+        // Fail-open: la patch è già applicata; se la registrazione fallisce
+        // si logga e non si spaventa l'utente con un errore.
+        // ============================================================
+        try {
+          const pathKey = gamePathKey(gameInfo.installPath)
+          const proj = await projectService.createOrGetProject({
+            gameId: gameInfo.gameId || pathKey,
+            gameName: gameInfo.gameName || gameInfo.gameId,
+            engine: 'Unreal Engine',
+            sourceLanguage: sourceLang || 'en',
+            targetLanguage: targetLang,
+            gamePathKey: pathKey,
+            files: [{ path: gameInfo.installPath, name: 'translation_session', type: 'unreal', strings: translations.length }],
+          })
+          if (translations.length > (proj.totalStrings || 0)) proj.totalStrings = translations.length
+          proj.translatedStrings = Math.max(proj.translatedStrings || 0, translations.length)
+          proj.progress = proj.totalStrings > 0
+            ? Math.min(100, Math.round((proj.translatedStrings / proj.totalStrings) * 100))
+            : proj.progress
+          await projectService.saveProject(proj)
+
+          await invoke('save_translation_strings', {
+            strings: {
+              gameId: proj.gameId,
+              sourceLanguage: sourceLang || 'en',
+              targetLanguage: targetLang,
+              exportedAt: new Date().toISOString(),
+              entries: translations.map(tr => ({
+                key: tr.namespace ? `${tr.namespace}::${tr.key}` : tr.key,
+                source: tr.original,
+                target: tr.translated,
+                filePath: null,
+                context: tr.namespace || null,
+                status: 'translated',
+              })),
+            },
+          })
+          addTestLog(t('autoTranslatePage.tpLogProjectSaved').replace('{count}', String(translations.length)))
+        } catch (regErr: unknown) {
+          addTestLog(t('autoTranslatePage.tpLogProjectSaveFailed').replace('{err}', String(regErr)))
+        }
       } catch (err: unknown) {
         addTestLog(t('autoTranslatePage.tpLogErrApplyUE').replace('{err}', String(err)))
         setTestPatchStatus('error')
@@ -1492,7 +1545,7 @@ export default function AutoTranslatePage() {
       addTestLog(t('autoTranslatePage.tpLogPakNoMonitor'))
       addTestLog(t('autoTranslatePage.tpLogVerifyInGame'))
     }
-  }, [patchResult, gameInfo, addTestLog, translatedStrings, targetLang, isUnrealEngine, t])
+  }, [patchResult, gameInfo, addTestLog, translatedStrings, targetLang, sourceLang, isUnrealEngine, t])
 
   const handleRestorePatch = useCallback(async () => {
     // Ferma il monitoraggio

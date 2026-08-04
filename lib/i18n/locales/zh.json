@@ -1308,7 +1308,9 @@
     "compatibleWith": "兼容Weblate、Crowdin、OmegaT、Trados",
     "translationProvidersExhausted": "翻译服务商已用尽",
     "wait25MinutesAndClick": "等待 25 分钟后点击",
-    "configureAnAiProviderGeminiDee": "在此配置 AI 服务商（Gemini、DeepSeek 等）"
+    "configureAnAiProviderGeminiDee": "在此配置 AI 服务商（Gemini、DeepSeek 等）",
+    "tpLogProjectSaved": "项目已更新：{count} 条字符串已保存到“项目”（可在那里继续、导出或发布）",
+    "tpLogProjectSaveFailed": "补丁已应用，但项目注册失败：{err}"
   },
   "aiPipelinePage": {
     "title": "AI翻译管线",

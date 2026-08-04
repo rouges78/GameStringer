@@ -62,11 +62,22 @@ export async function backfillVisionaireProjects(): Promise<number> {
         engine: 'Visionaire Studio',
         sourceLanguage: 'en',
         targetLanguage: lang,
+        // gamePath qui viene dalla chiave del checkpoint, che è GIÀ la chiave
+        // normalizzata (gs_vis_ckpt_<gamePathKey>_<lang>): passandola, il
+        // backfill ritrova il progetto vero del job invece di crearne un
+        // gemello `vis-...` col nome della cartella.
+        gamePathKey: gamePath,
         files: [{ path: gamePath, name: 'data.vis', type: 'visionaire', strings: total }],
       });
-      proj.totalStrings = total;
-      proj.translatedStrings = translated;
-      proj.progress = total > 0 ? Math.min(100, Math.round((translated / total) * 100)) : 0;
+      // Solo ALZARE, mai abbassare: con l'identità per percorso (04/08) qui
+      // può arrivare il progetto VERO del job, che conosce il totale pieno
+      // dallo scan (es. 25.936); il checkpoint ne vede meno (es. 16.978) e
+      // sovrascrivere lo ridurrebbe — il backfill integra, non corregge.
+      proj.totalStrings = Math.max(proj.totalStrings || 0, total);
+      proj.translatedStrings = Math.max(proj.translatedStrings || 0, translated);
+      proj.progress = proj.totalStrings > 0
+        ? Math.min(100, Math.round((proj.translatedStrings / proj.totalStrings) * 100))
+        : 0;
       if (proj.progress >= 100) proj.status = 'completed';
       await projectService.saveProject(proj);
       created++;

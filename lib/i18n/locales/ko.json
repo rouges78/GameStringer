@@ -1308,7 +1308,9 @@
     "compatibleWith": "Weblate, Crowdin, OmegaT, Trados 호환",
     "translationProvidersExhausted": "번역 제공자 한도 소진",
     "wait25MinutesAndClick": "25분 기다린 후 클릭하세요",
-    "configureAnAiProviderGeminiDee": "다음에서 AI 제공자(Gemini, DeepSeek 등)를 설정하세요:"
+    "configureAnAiProviderGeminiDee": "다음에서 AI 제공자(Gemini, DeepSeek 등)를 설정하세요:",
+    "tpLogProjectSaved": "프로젝트 업데이트됨: {count}개 문자열이 프로젝트에 저장됨 (재개·내보내기·게시는 거기서)",
+    "tpLogProjectSaveFailed": "패치는 적용되었지만 프로젝트 등록에 실패했습니다: {err}"
   },
   "aiPipelinePage": {
     "title": "AI 번역 파이프라인",

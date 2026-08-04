@@ -101,6 +101,9 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
             engine: meta.engineLabel,
             sourceLanguage: meta.sourceLang || 'en',
             targetLanguage: meta.targetLang,
+            // Identità per percorso: aggancia lo stesso progetto anche quando
+            // gid è il fallback di path e altrove si usa l'id di libreria.
+            gamePathKey: meta.gamePath ? gamePathKey(meta.gamePath) : undefined,
             files: [{ path: meta.gamePath, name: meta.engineLabel, type: meta.engineId, strings: Math.max(total, 0) }],
           });
           projectId = proj.id;
