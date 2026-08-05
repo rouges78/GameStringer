@@ -3755,7 +3755,14 @@ export default function GameDetailPage() {
 
       {game && (
         <>
-          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name || ''} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} gameId={(game.appid ?? 0).toString()} targetLanguage={targetLang} />
+          {/* gameId: DEVE essere lo stesso identificatore con cui l'apply ha
+              persistito le stringhe (riga ~1150/1168: game.id || appid), perché
+              load_translation_strings cerca strings_<gameId>_<lang>.json. Con il
+              solo appid («3200460» invece di «steam_3200460») il dialog non
+              trovava nulla e rifiutava l'export ANCHE su un gioco tradotto —
+              falso negativo trovato il 05/08 guardando il file su disco prima
+              della prova in-app. */}
+          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name || ''} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} gameId={game.id || game.appid?.toString() || gameId || ''} targetLanguage={targetLang} />
           <GspackImportDialog open={showGspackImport} onOpenChange={setShowGspackImport} />
         </>
       )}
