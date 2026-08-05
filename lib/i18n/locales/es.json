@@ -2218,7 +2218,15 @@
     "altroGioco": "Otro juego",
     "traduciUnAltroTitolo": "Traducir otro título",
     "vaiAlTraduttore": "Ir al traductor",
-    "modificaSingoleStringhe": "Editar cadenas individuales"
+    "modificaSingoleStringhe": "Editar cadenas individuales",
+    "translationCompleted": "Traducción completada",
+    "stringsTranslated": "cadenas traducidas",
+    "playNow": "JUGAR AHORA",
+    "details": "Detalles",
+    "toReview": "Por revisar",
+    "titleRunning": "Traduciendo…",
+    "titleError": "Error",
+    "titleDone": "¡Completado!"
   },
   "secretsDashboardComp": {
     "loadFailed": "No se pudo cargar el estado de los secrets",
@@ -6365,7 +6373,8 @@
     "installPack": "Instalar Pack",
     "packInstalled": "¡instalado!",
     "file": "archivos",
-    "termsAndLiability": "Condiciones de uso y responsabilidad"
+    "termsAndLiability": "Condiciones de uso y responsabilidad",
+    "noStringsToExport": "Aún no hay cadenas traducidas para exportar. Traduce el juego primero."
   },
   "vramManager": {
     "title": "Gestor de VRAM",

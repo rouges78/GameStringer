@@ -3755,7 +3755,7 @@ export default function GameDetailPage() {
 
       {game && (
         <>
-          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name || ''} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} />
+          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name || ''} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} gameId={(game.appid ?? 0).toString()} targetLanguage={targetLang} />
           <GspackImportDialog open={showGspackImport} onOpenChange={setShowGspackImport} />
         </>
       )}

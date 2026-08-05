@@ -2218,7 +2218,15 @@
     "altroGioco": "別のゲーム",
     "traduciUnAltroTitolo": "別のタイトルを翻訳",
     "vaiAlTraduttore": "翻訳ツールへ移動",
-    "modificaSingoleStringhe": "個々の文字列を編集"
+    "modificaSingoleStringhe": "個々の文字列を編集",
+    "translationCompleted": "翻訳完了",
+    "stringsTranslated": "文字列を翻訳",
+    "playNow": "今すぐプレイ",
+    "details": "詳細",
+    "toReview": "要確認",
+    "titleRunning": "翻訳中…",
+    "titleError": "エラー",
+    "titleDone": "完了！"
   },
   "secretsDashboardComp": {
     "loadFailed": "シークレットのステータスの読み込みに失敗しました",
@@ -6365,7 +6373,8 @@
     "installPack": "パックをインストール",
     "packInstalled": "インストール完了！",
     "file": "ファイル",
-    "termsAndLiability": "利用条件と免責事項"
+    "termsAndLiability": "利用条件と免責事項",
+    "noStringsToExport": "エクスポートする翻訳済みテキストがありません。先にゲームを翻訳してください。"
   },
   "vramManager": {
     "title": "VRAMマネージャー",

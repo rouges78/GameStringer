@@ -1694,21 +1694,25 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               ) : (
                 <CheckCircle2 className="h-5 w-5 text-emerald-400" />
               )}
-              {autoState.isRunning ? 'Traduzione in corso...' : autoState.error ? 'Errore' : 'Completato!'}
+              {autoState.isRunning ? t('translationRecommendationComp.titleRunning') : autoState.error ? t('translationRecommendationComp.titleError') : t('translationRecommendationComp.titleDone')}
             </DialogTitle>
             <DialogDescription className="sr-only">
               {t('translationRecommendationComp.autoTranslationProgress')}</DialogDescription>
           </DialogHeader>
           
+          {/* Progresso + step tecnici: SOLO durante il lavoro o su errore.
+              A completamento pulito spariscono — l'utente vede l'esito, non i
+              6 step con nomi interni (ridisegno UN PULSANTE, 05/08/2026). */}
+          {(autoState.isRunning || !!autoState.error || autoState.steps.length === 0 || !autoState.steps.every(s => s.status === 'completed')) && (
           <div className="space-y-3 py-2">
             {/* Progress globale */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-400">
                 <span>{t('translationRecommendationComp.progressoTotale')}</span>
-                <span>{Math.round((autoState.steps.filter(s => s.status === 'completed').length / autoState.steps.length) * 100)}%</span>
+                <span>{Math.round((autoState.steps.filter(s => s.status === 'completed').length / Math.max(1, autoState.steps.length)) * 100)}%</span>
               </div>
-              <Progress 
-                value={(autoState.steps.filter(s => s.status === 'completed').length / autoState.steps.length) * 100} 
+              <Progress
+                value={(autoState.steps.filter(s => s.status === 'completed').length / Math.max(1, autoState.steps.length)) * 100}
                 className="h-2"
               />
             </div>
@@ -1755,10 +1759,45 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               </p>
             )}
           </div>
+          )}
 
-          {/* Pannello post-completamento */}
+          {/* Pannello post-completamento — UN PULSANTE: esito, quante stringhe, GIOCA ORA. */}
           {!autoState.isRunning && !autoState.error && autoState.steps.length > 0 && autoState.steps.every(s => s.status === 'completed') && (
-            <div className="space-y-3 max-h-[420px] overflow-y-auto">
+            <div className="space-y-4 max-h-[440px] overflow-y-auto py-1">
+              {/* Esito + conteggio: le sole due cose che l'utente deve vedere subito */}
+              <div className="text-center space-y-1.5 py-1">
+                <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                </div>
+                <p className="text-base font-bold text-emerald-300">{t('translationRecommendationComp.translationCompleted')}</p>
+                {translationStats && (
+                  <p className="text-sm text-slate-300">
+                    <span className="font-bold text-emerald-400">{translationStats.translatedStrings}</span> {t('translationRecommendationComp.stringsTranslated')}
+                    {validationResult && validationResult.score < 90 && (
+                      <span className="ml-2 text-2xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded px-1.5 py-0.5">
+                        {t('translationRecommendationComp.toReview')} · QA {validationResult.score}/100
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              {/* GIOCA ORA — azione primaria. Cabla action:launch_game, che la
+                  pagina gioco instrada a steam://rungameid (onActionClick). */}
+              <Button
+                onClick={() => { setShowProgressDialog(false); handleAction('action:launch_game'); }}
+                className="w-full h-12 text-base font-bold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white shadow-lg shadow-emerald-500/20"
+              >
+                <Play className="h-5 w-5 mr-2" /> {t('translationRecommendationComp.playNow')}
+              </Button>
+
+              {/* Tutto il resto — path, QA per esteso, export, altre azioni — ripiegato. */}
+              <details className="group">
+                <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-300 select-none list-none flex items-center gap-1.5">
+                  <span className="inline-block transition-transform group-open:rotate-90">▸</span>
+                  {t('translationRecommendationComp.details')}
+                </summary>
+                <div className="mt-3 space-y-3">
               {/* File creato */}
               <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
                 <FileCheck className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -1958,6 +1997,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   </div>
                 </button>
               </div>
+                </div>
+              </details>
             </div>
           )}
 

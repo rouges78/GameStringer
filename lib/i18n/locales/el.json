@@ -2377,7 +2377,15 @@
     "altroGioco": "Άλλο παιχνίδι",
     "traduciUnAltroTitolo": "Μετάφρασε έναν άλλο τίτλο",
     "vaiAlTraduttore": "Μετάβαση στον Μεταφραστή",
-    "modificaSingoleStringhe": "Επεξεργασία μεμονωμένων συμβολοσειρών"
+    "modificaSingoleStringhe": "Επεξεργασία μεμονωμένων συμβολοσειρών",
+    "translationCompleted": "Η μετάφραση ολοκληρώθηκε",
+    "stringsTranslated": "συμβολοσειρές μεταφράστηκαν",
+    "playNow": "ΠΑΙΞΕ ΤΩΡΑ",
+    "details": "Λεπτομέρειες",
+    "toReview": "Προς έλεγχο",
+    "titleRunning": "Μετάφραση…",
+    "titleError": "Σφάλμα",
+    "titleDone": "Έτοιμο!"
   },
   "secretsDashboardComp": {
     "loadFailed": "Αποτυχία φόρτωσης κατάστασης secrets",
@@ -6328,7 +6336,8 @@
     "installPack": "Εγκατάσταση πακέτου",
     "packInstalled": "εγκαταστάθηκε!",
     "file": "αρχεία",
-    "termsAndLiability": "Όροι χρήσης και ευθύνη"
+    "termsAndLiability": "Όροι χρήσης και ευθύνη",
+    "noStringsToExport": "Δεν υπάρχουν ακόμη μεταφρασμένες συμβολοσειρές για εξαγωγή. Μεταφράστε πρώτα το παιχνίδι."
   },
   "vramManager": {
     "title": "Διαχείριση VRAM",

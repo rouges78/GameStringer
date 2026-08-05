@@ -2218,7 +2218,15 @@
     "altroGioco": "其他游戏",
     "traduciUnAltroTitolo": "翻译另一款游戏",
     "vaiAlTraduttore": "前往翻译器",
-    "modificaSingoleStringhe": "编辑单条字符串"
+    "modificaSingoleStringhe": "编辑单条字符串",
+    "translationCompleted": "翻译完成",
+    "stringsTranslated": "条文本已翻译",
+    "playNow": "立即游玩",
+    "details": "详情",
+    "toReview": "待校对",
+    "titleRunning": "翻译中…",
+    "titleError": "错误",
+    "titleDone": "完成！"
   },
   "secretsDashboardComp": {
     "loadFailed": "加载 secret 状态失败",
@@ -6365,7 +6373,8 @@
     "installPack": "安装包",
     "packInstalled": "安装成功！",
     "file": "文件",
-    "termsAndLiability": "使用条款与免责声明"
+    "termsAndLiability": "使用条款与免责声明",
+    "noStringsToExport": "暂无可导出的已翻译文本。请先翻译游戏。"
   },
   "vramManager": {
     "title": "VRAM管理器",

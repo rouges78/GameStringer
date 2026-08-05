@@ -2218,7 +2218,15 @@
     "altroGioco": "Другая игра",
     "traduciUnAltroTitolo": "Перевести другую игру",
     "vaiAlTraduttore": "Перейти к переводчику",
-    "modificaSingoleStringhe": "Редактировать отдельные строки"
+    "modificaSingoleStringhe": "Редактировать отдельные строки",
+    "translationCompleted": "Перевод завершён",
+    "stringsTranslated": "строк переведено",
+    "playNow": "ИГРАТЬ",
+    "details": "Подробности",
+    "toReview": "На проверку",
+    "titleRunning": "Перевод…",
+    "titleError": "Ошибка",
+    "titleDone": "Готово!"
   },
   "secretsDashboardComp": {
     "loadFailed": "Не удалось загрузить статус secrets",
@@ -6365,7 +6373,8 @@
     "installPack": "Установить пакет",
     "packInstalled": "Установлено успешно!",
     "file": "файл",
-    "termsAndLiability": "Условия использования и ответственность"
+    "termsAndLiability": "Условия использования и ответственность",
+    "noStringsToExport": "Пока нет переведённых строк для экспорта. Сначала переведите игру."
   },
   "vramManager": {
     "title": "Менеджер VRAM",

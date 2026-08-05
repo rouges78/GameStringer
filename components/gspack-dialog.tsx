@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,12 +63,52 @@ interface ExportDialogProps {
   platform: string;
   engine?: string;
   files?: Array<{ path: string; content: string; format: string }>;
+  // Quando i `files` non vengono passati (es. dalla pagina gioco), il dialog
+  // se li carica da solo dal disco con gameId+targetLanguage — così non
+  // esporta più un pack VUOTO fingendo successo (bugia #4A, 05/08/2026).
+  gameId?: string;
+  targetLanguage?: string;
 }
 
 export function GspackExportDialog({
   open, onOpenChange, gameName, gameAppId, platform, engine, files = [],
+  gameId, targetLanguage,
 }: ExportDialogProps) {
   const { t } = useTranslation();
+  const targetLang = targetLanguage || 'it';
+
+  // Se non arrivano `files` dal chiamante ma abbiamo un gameId, carichiamo le
+  // stringhe persistite dall'apply (load_translation_strings, lo stesso comando
+  // usato dalla pagina Progetti). Niente stringhe = niente pack: la guardia sta
+  // in handleExport, qui riempiamo solo la fonte.
+  const [loadedFiles, setLoadedFiles] = useState<Array<{ path: string; content: string; format: string }>>([]);
+  const [loadingStrings, setLoadingStrings] = useState(false);
+  const effectiveFiles = files.length ? files : loadedFiles;
+
+  useEffect(() => {
+    if (!open || files.length || !gameId) return;
+    let annullato = false;
+    setLoadingStrings(true);
+    (async () => {
+      const disk = await invoke<{
+        entries: Array<{ key: string; source: string; target: string }>;
+      } | null>('load_translation_strings', { gameId, targetLanguage: targetLang }).catch(() => null);
+      if (annullato) return;
+      if (disk?.entries?.length) {
+        const map: Record<string, string> = {};
+        for (const e of disk.entries) map[e.key] = e.target;
+        setLoadedFiles([{
+          path: `strings_${targetLang}.json`,
+          content: JSON.stringify(map, null, 2),
+          format: 'json',
+        }]);
+      } else {
+        setLoadedFiles([]);
+      }
+      setLoadingStrings(false);
+    })();
+    return () => { annullato = true; };
+  }, [open, files.length, gameId, targetLang]);
   const [packName, setPackName] = useState(`${gameName} — Traduzione IT`);
   const [description, setDescription] = useState('');
   const [authorName, setAuthorName] = useState('');
@@ -83,6 +124,12 @@ export function GspackExportDialog({
       toast.error(t('gspack.nameAndAuthorRequired'));
       return;
     }
+    // GUARDIA ONESTA (#4A): niente stringhe = niente pack. Prima qui il dialog
+    // impacchettava `files = []` e dichiarava successo con un archivio vuoto.
+    if (effectiveFiles.length === 0) {
+      toast.error(t('gspack.noStringsToExport'));
+      return;
+    }
     setExporting(true);
     try {
       const options: ExportOptions = {
@@ -91,7 +138,7 @@ export function GspackExportDialog({
         platform,
         engine,
         sourceLanguage: 'en',
-        targetLanguage: 'it',
+        targetLanguage: targetLang,
         authorName: authorName.trim(),
         packName: packName.trim(),
         description: description.trim(),
@@ -99,7 +146,7 @@ export function GspackExportDialog({
         includeGlossary,
         includeNotes,
         notes: notes.trim(),
-        files,
+        files: effectiveFiles,
       };
 
       const { data, filename, manifest } = await createGspack(options);
@@ -149,9 +196,17 @@ export function GspackExportDialog({
                 <p className="text-2xs text-slate-500">{platform} {engine ? `• ${engine}` : ''} {gameAppId ? `• ID ${gameAppId}` : ''}</p>
               </div>
               <Badge className="ml-auto text-micro bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
-                {files.length} {t('gspack.file')}
+                {loadingStrings ? '…' : effectiveFiles.length} {t('gspack.file')}
               </Badge>
             </div>
+
+            {/* Avviso onesto: nessuna stringa da esportare (#4A) */}
+            {!loadingStrings && effectiveFiles.length === 0 && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-2xs text-amber-300">{t('gspack.noStringsToExport')}</p>
+              </div>
+            )}
 
             {/* Nome pack */}
             <div className="space-y-1.5">
@@ -206,8 +261,8 @@ export function GspackExportDialog({
         {!exported && (
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t('gspack.cancel')}</Button>
-            <Button onClick={handleExport} disabled={exporting || !packName.trim() || !authorName.trim()}>
-              {exporting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+            <Button onClick={handleExport} disabled={exporting || loadingStrings || effectiveFiles.length === 0 || !packName.trim() || !authorName.trim()}>
+              {exporting || loadingStrings ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
               {t('gspack.exportBtn')}
             </Button>
           </DialogFooter>

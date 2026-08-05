@@ -2218,7 +2218,15 @@
     "altroGioco": "다른 게임",
     "traduciUnAltroTitolo": "다른 작품 번역하기",
     "vaiAlTraduttore": "번역기로 이동",
-    "modificaSingoleStringhe": "개별 문자열 편집"
+    "modificaSingoleStringhe": "개별 문자열 편집",
+    "translationCompleted": "번역 완료",
+    "stringsTranslated": "문자열 번역됨",
+    "playNow": "지금 플레이",
+    "details": "세부정보",
+    "toReview": "검토 필요",
+    "titleRunning": "번역 중…",
+    "titleError": "오류",
+    "titleDone": "완료!"
   },
   "secretsDashboardComp": {
     "loadFailed": "secret 상태 로드 실패",
@@ -6365,7 +6373,8 @@
     "installPack": "팩 설치",
     "packInstalled": "설치 완료!",
     "file": "파일",
-    "termsAndLiability": "이용 약관 및 책임"
+    "termsAndLiability": "이용 약관 및 책임",
+    "noStringsToExport": "내보낼 번역된 문자열이 없습니다. 먼저 게임을 번역하세요."
   },
   "vramManager": {
     "title": "VRAM 관리자",

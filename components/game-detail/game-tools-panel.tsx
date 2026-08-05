@@ -45,7 +45,11 @@ interface GameToolsPanelProps {
   dlcGames: unknown[];
   onScan: () => void;
   onInstallUnityPatch: () => void;
-  onInstallUnrealPatch: () => void;
+  // Opzionale dal 05/08/2026: il pulsante «Unreal Translator» (bugia #4B) è stato
+  // rimosso dalla UI perché install_unreal_patch dichiarava una patch mai iniettata.
+  // La prop resta nell'interfaccia per non rompere il chiamante; cleanup completo
+  // della catena (handleInstallUnrealPatch + comando Rust) da fare col gate dead-code.
+  onInstallUnrealPatch?: () => void;
   onUpgradeWithAI: () => void;
   onUpgradeUEWithAI: () => void;
   onOpenCoverPicker: () => void;
@@ -67,7 +71,6 @@ export function GameToolsPanel({
   dlcGames,
   onScan,
   onInstallUnityPatch,
-  onInstallUnrealPatch,
   onUpgradeWithAI,
   onUpgradeUEWithAI,
   onOpenCoverPicker,
@@ -190,17 +193,14 @@ export function GameToolsPanel({
                 </Button>
               </div>
             )}
-            {game.engine === 'Unreal Engine' && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-violet-500/[0.06] border border-violet-500/15">
-                <div className="flex items-center gap-2">
-                  <Cpu className="h-3.5 w-3.5 text-violet-400" />
-                  <div><span className="text-[11px] font-bold text-violet-300">Unreal Translator</span></div>
-                </div>
-                <Button size="xs" className="text-micro font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={onInstallUnrealPatch} disabled={isInstallingPatch}>
-                  {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} {t('gamePatcher.install')}
-                </Button>
-              </div>
-            )}
+            {/* Bugia #4B rimossa (05/08/2026): «Unreal Translator» → install_unreal_patch
+                scriveva un marker .gs_installed e dichiarava «Patch installata», ma
+                l'injection della DLL non è mai implementata (launch_with_translator è
+                un TODO) → il gioco restava in lingua originale. Per i giochi Unreal la
+                via VERA è «Migliora con AI UE» (onUpgradeUEWithAI, .pak reale con prova
+                di effetto), già presente qui sopra nella riga strumenti. Il tool
+                sperimentale resta accessibile dalla sua pagina dedicata /unreal-translator,
+                dove i badge «sperimentale» e i warning onesti già esistono (issue #52). */}
             {patchStatus && (
               <div className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${patchStatus.success ? 'bg-emerald-500/[0.06] border border-emerald-500/15 text-emerald-300' : 'bg-red-500/[0.06] border border-red-500/15 text-red-300'}`}>
                 {patchStatus.success ? <CheckCircle className="h-3.5 w-3.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
