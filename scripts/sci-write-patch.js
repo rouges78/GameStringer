@@ -26,6 +26,12 @@
  *   # rimozione delle patch scritte da noi
  *   node scripts/sci-write-patch.js "<gioco>" --remove
  *
+ * In --apply lo script scrive anche <gioco>/GameStringer/translation_session.json
+ * — la STESSA traccia che lascia il flusso Unreal: è ciò che il backfill della
+ * pagina Progetti legge per ricostruire la card (lib/backfill-session-projects.ts).
+ * Senza, il lavoro esiste solo su disco e i Progetti non lo vedono (è il motivo
+ * per cui Larry 3 non compariva). Opzioni: --game-name "Nome" --lang it
+ *
  * I file originali NON vengono modificati: le patch si tolgono cancellandole.
  */
 const fs = require('fs');
@@ -40,6 +46,8 @@ const opt = (n) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 
 const modoMarker = argv.includes('--marker');
 const modoRemove = argv.includes('--remove');
 const applyFile = opt('apply');
+const gameName = opt('game-name');
+const targetLang = opt('lang') || 'it';
 const estrattiFile = opt('estratti') || 'estratti-larry3/testi-estratti.json';
 
 if (!gameDir || !fs.existsSync(gameDir)) {
@@ -152,6 +160,37 @@ for (const [chiave, orig] of Object.entries(estratti)) {
 }
 
 fs.writeFileSync(REGISTRO, scritte.join('\n') + '\n');
+
+// ── traccia per la pagina Progetti ──────────────────────────────────────────
+// Stesso formato del flusso Unreal: entries con namespace (risorsa) + key
+// (indice). TUTTE le stringhe, non solo le tradotte: così totalStrings del
+// progetto è il conteggio vero e il progresso è onesto. Le risorse rifiutate
+// dalla guardia restano con translated assente (= pending), non con un falso.
+const sessionEntries = [];
+for (const [chiave, orig] of Object.entries(estratti)) {
+  const tradotte = trad[chiave];
+  const valide = Array.isArray(tradotte) && tradotte.length === orig.length;
+  for (let i = 0; i < orig.length; i++) {
+    const t = valide ? tradotte[i] : undefined;
+    const entry = { namespace: chiave, key: String(i), original: orig[i] };
+    if (typeof t === 'string' && t.length && t !== orig[i]) entry.translated = t;
+    sessionEntries.push(entry);
+  }
+}
+const sessionDir = path.join(gameDir, 'GameStringer');
+fs.mkdirSync(sessionDir, { recursive: true });
+const sessionPath = path.join(sessionDir, 'translation_session.json');
+fs.writeFileSync(sessionPath, JSON.stringify({
+  gameName: gameName || path.basename(gameDir),
+  gamePath: gameDir,
+  engine: 'SierraSCI',
+  sourceLanguage: 'en',
+  targetLanguage: targetLang,
+  updatedAt: new Date().toISOString(),
+  entries: sessionEntries,
+}, null, 1));
+console.log(`\n🗂️ Sessione per la pagina Progetti: ${sessionPath} (${sessionEntries.length} entries)`);
+
 console.log(`\n📊 ${risorseScritte} risorse patchate · ${stringheTradotte} stringhe tradotte · ${rifiutate} rifiutate`);
 console.log(`📝 Registro: ${REGISTRO} (serve al --remove)`);
 if (rifiutate > 0) console.log('⚠️ Le risorse rifiutate restano in inglese: meglio inglese che indici sballati.');
