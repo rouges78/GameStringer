@@ -1,7 +1,7 @@
 // GameStringer guide i18n — 12 lingue (it, en, es, fr, de, pt, pl, ru, ja, zh, ko, el)
 window.GS_GUIDE_I18N = {
   it: {
-    "g.v115.label": "// Novità v1.15.0",
+    "g.v115.label": "// Novità v1.16.0",
     "g.v115.h2": "Più controllo sull'AI locale, e le patch a portata di mano",
     "g.v115.sub": "La 1.15.0 porta i parametri di inferenza di Ollama, il ponte tra Progetti e Patch Hub, un widget di feedback dentro l'app e un Patch Hub più veloce.",
     "g.v115.c1t": "🎛️ Parametri di inferenza Ollama",
@@ -176,7 +176,7 @@ window.GS_GUIDE_I18N = {
   },
 
   en: {
-    "g.v115.label": "// New in v1.15.0",
+    "g.v115.label": "// New in v1.16.0",
     "g.v115.h2": "More control over local AI, and patches within reach",
     "g.v115.sub": "1.15.0 brings Ollama inference parameters, the bridge between Projects and the Patch Hub, an in-app feedback widget and a faster Patch Hub.",
     "g.v115.c1t": "🎛️ Ollama inference parameters",
@@ -351,7 +351,7 @@ window.GS_GUIDE_I18N = {
   },
 
   es: {
-    "g.v115.label": "// Novedades de la v1.15.0",
+    "g.v115.label": "// Novedades de la v1.16.0",
     "g.v115.h2": "Más control sobre la IA local, y los packs al alcance de la mano",
     "g.v115.sub": "La 1.15.0 trae los parámetros de inferencia de Ollama, el puente entre Proyectos y Patch Hub, un widget de feedback dentro de la app y un Patch Hub más rápido.",
     "g.v115.c1t": "🎛️ Parámetros de inferencia de Ollama",
@@ -610,7 +610,7 @@ window.GS_GUIDE_I18N = {
   },
 
   fr: {
-    "g.v115.label": "// Nouveautés de la v1.15.0",
+    "g.v115.label": "// Nouveautés de la v1.16.0",
     "g.v115.h2": "Plus de contrôle sur l'IA locale, et les patchs à portée de main",
     "g.v115.sub": "La 1.15.0 apporte les paramètres d'inférence d'Ollama, le pont entre Projets et Patch Hub, un widget de feedback dans l'app et un Patch Hub plus rapide.",
     "g.v115.c1t": "🎛️ Paramètres d'inférence d'Ollama",
@@ -869,7 +869,7 @@ window.GS_GUIDE_I18N = {
   },
 
   de: {
-    "g.v115.label": "// Neu in v1.15.0",
+    "g.v115.label": "// Neu in v1.16.0",
     "g.v115.h2": "Mehr Kontrolle über die lokale KI und Patches griffbereit",
     "g.v115.sub": "1.15.0 bringt die Inferenz-Parameter von Ollama, die Brücke zwischen Projekten und Patch Hub, ein Feedback-Widget in der App und einen schnelleren Patch Hub.",
     "g.v115.c1t": "🎛️ Ollama-Inferenzparameter",
@@ -1128,7 +1128,7 @@ window.GS_GUIDE_I18N = {
   },
 
   pt: {
-    "g.v115.label": "// Novidades da v1.15.0",
+    "g.v115.label": "// Novidades da v1.16.0",
     "g.v115.h2": "Mais controlo sobre a IA local, e os packs à mão",
     "g.v115.sub": "A 1.15.0 traz os parâmetros de inferência do Ollama, a ponte entre Projetos e Patch Hub, um widget de feedback dentro da app e um Patch Hub mais rápido.",
     "g.v115.c1t": "🎛️ Parâmetros de inferência do Ollama",
@@ -1387,7 +1387,7 @@ window.GS_GUIDE_I18N = {
   },
 
   pl: {
-    "g.v115.label": "// Nowości w v1.15.0",
+    "g.v115.label": "// Nowości w v1.16.0",
     "g.v115.h2": "Więcej kontroli nad lokalną AI i patche pod ręką",
     "g.v115.sub": "Wersja 1.15.0 wprowadza parametry inferencji Ollamy, most między Projektami a Patch Hub, widżet feedbacku w aplikacji i szybszy Patch Hub.",
     "g.v115.c1t": "🎛️ Parametry inferencji Ollamy",
@@ -1646,7 +1646,7 @@ window.GS_GUIDE_I18N = {
   },
 
   ru: {
-    "g.v115.label": "// Новое в v1.15.0",
+    "g.v115.label": "// Новое в v1.16.0",
     "g.v115.h2": "Больше контроля над локальным ИИ, и патчи под рукой",
     "g.v115.sub": "1.15.0 приносит параметры инференса Ollama, мост между Проектами и Patch Hub, виджет обратной связи внутри приложения и более быстрый Patch Hub.",
     "g.v115.c1t": "🎛️ Параметры инференса Ollama",
@@ -1905,7 +1905,7 @@ window.GS_GUIDE_I18N = {
   },
 
   ja: {
-    "g.v115.label": "// v1.15.0 の新機能",
+    "g.v115.label": "// v1.16.0 の新機能",
     "g.v115.h2": "ローカル AI をより細かく、パッチをより手軽に",
     "g.v115.sub": "1.15.0 は Ollama の推論パラメータ、プロジェクトと Patch Hub をつなぐ橋、アプリ内フィードバックウィジェット、そしてより速い Patch Hub をもたらします。",
     "g.v115.c1t": "🎛️ Ollama の推論パラメータ",
@@ -2164,7 +2164,7 @@ window.GS_GUIDE_I18N = {
   },
 
   zh: {
-    "g.v115.label": "// v1.15.0 新功能",
+    "g.v115.label": "// v1.16.0 新功能",
     "g.v115.h2": "对本地 AI 更有掌控，补丁触手可及",
     "g.v115.sub": "1.15.0 带来 Ollama 推理参数、连接“项目”与 Patch Hub 的桥梁、应用内反馈组件，以及更快的 Patch Hub。",
     "g.v115.c1t": "🎛️ Ollama 推理参数",
@@ -2423,7 +2423,7 @@ window.GS_GUIDE_I18N = {
   },
 
   ko: {
-    "g.v115.label": "// v1.15.0 새 기능",
+    "g.v115.label": "// v1.16.0 새 기능",
     "g.v115.h2": "로컬 AI를 더 세밀하게, 패치를 더 손쉽게",
     "g.v115.sub": "1.15.0은 Ollama 추론 파라미터, 프로젝트와 Patch Hub를 잇는 다리, 앱 내 피드백 위젯, 그리고 더 빠른 Patch Hub를 제공합니다.",
     "g.v115.c1t": "🎛️ Ollama 추론 파라미터",
@@ -2682,7 +2682,7 @@ window.GS_GUIDE_I18N = {
   },
 
   el: {
-    "g.v115.label": "// Τι νέο στην v1.15.0",
+    "g.v115.label": "// Τι νέο στην v1.16.0",
     "g.v115.h2": "Περισσότερος έλεγχος στο τοπικό AI, και τα patch στο χέρι",
     "g.v115.sub": "Η 1.15.0 φέρνει τις παραμέτρους inference του Ollama, τη γέφυρα ανάμεσα σε Έργα και Patch Hub, ένα widget σχολίων μέσα στην εφαρμογή και ένα πιο γρήγορο Patch Hub.",
     "g.v115.c1t": "🎛️ Παράμετροι inference του Ollama",
