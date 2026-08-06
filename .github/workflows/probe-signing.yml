@@ -1,0 +1,60 @@
+# Sonda diagnostica dei secret di firma updater — 06/08/2026.
+#
+# Contesto: la release v1.16.0 muore alla firma con «failed to decode secret
+# key: incorrect updater private key password: Missing comment in secret key»,
+# ma tutto il resto è stato scagionato CON LE MISURE: tauri-action stesso SHA
+# della release verde del 24/07 (84b9d35b), CLI identica (2.10.1), conf e
+# workflow invariati sul percorso firma. Resta il contenuto dei due secret.
+#
+# Questa sonda NON stampa mai i segreti (solo lunghezze e OK/FAIL; GitHub
+# maschera comunque i valori nei log) e riproduce la firma in ~2 minuti
+# invece dei ~25 di una build completa.
+name: probe-signing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Forma dei secret (nessun valore stampato)
+        shell: bash
+        env:
+          K: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          P: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          echo "lunghezza chiave: ${#K}"
+          echo "lunghezza password: ${#P}   (attesa: 0, la chiave non ha password)"
+          if printf '%s' "$K" | base64 -d > /tmp/k 2>/dev/null; then
+            echo "decodifica base64: OK ($(wc -c < /tmp/k) byte, $(wc -l < /tmp/k) righe)"
+          else
+            echo "decodifica base64: FAIL — il secret NON è base64 valido"
+          fi
+          if head -c 40 /tmp/k 2>/dev/null | grep -q "untrusted comment"; then
+            echo "riga 'untrusted comment': PRESENTE"
+          else
+            echo "riga 'untrusted comment': ASSENTE — è questo il «Missing comment»"
+          fi
+
+      - name: Firma di prova con la CLI della release (2.10.1)
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          npm i -g --no-fund --no-audit @tauri-apps/cli@2.10.1
+          echo "file di prova" > /tmp/da-firmare.txt
+          echo "— tentativo 1: chiave via variabili d'ambiente (come fa la release) —"
+          if tauri signer sign /tmp/da-firmare.txt; then
+            echo "ESITO: FIRMA OK — i secret funzionano, il colpevole è altrove"
+          else
+            echo "ESITO: FIRMA FALLITA — errore della release RIPRODOTTO in 2 minuti"
+            echo "— tentativo 2: passando la chiave decodificata (raw, due righe) —"
+            printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" | base64 -d > /tmp/k.raw 2>/dev/null || true
+            if tauri signer sign -k "$(cat /tmp/k.raw)" /tmp/da-firmare.txt; then
+              echo "ESITO 2: OK col contenuto RAW → la CLI non gradisce più il base64: fix = ri-registrare il secret in chiaro (due righe)"
+            else
+              echo "ESITO 2: fallita anche raw → il contenuto del secret è danneggiato: serve priv.key per ri-registrarlo"
+            fi
+          fi
