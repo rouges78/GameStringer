@@ -37,6 +37,10 @@ function versionKey(version) {
 }
 
 function detectProvider() {
+  // Ollama per primo se richiesto esplicitamente: gira in locale, non costa
+  // nulla e non dipende dal credito di un account (06/08/2026: la traduzione
+  // del changelog v1.16.0 si è fermata proprio su un credito esaurito).
+  if (process.env.OLLAMA_MODEL) return 'ollama';
   if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
   if (process.env.OPENAI_API_KEY) return 'openai';
   if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) return 'gemini';
@@ -83,6 +87,9 @@ async function translateChunk(provider, targetLang, italianChanges) {
       });
       const j = await res.json();
       content = j?.content?.[0]?.text;
+      // 06/08/2026: l'errore API veniva INGOIATO (content undefined → return
+      // null muto) e il retry sembrava un fallimento senza causa. Dichiararlo.
+      if (!content && j?.error) console.warn(`   ⚠️  API anthropic (${targetLang}): ${j.error.type}: ${j.error.message}`);
     } else if (provider === 'openai') {
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -109,6 +116,22 @@ async function translateChunk(provider, targetLang, italianChanges) {
       });
       const j = await res.json();
       content = j?.candidates?.[0]?.content?.parts?.[0]?.text;
+    } else if (provider === 'ollama') {
+      // Locale, gratis: OLLAMA_MODEL=<modello> [OLLAMA_HOST=http://127.0.0.1:11434]
+      const host = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+      const res = await fetch(`${host}/api/chat`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: process.env.OLLAMA_MODEL,
+          stream: false,
+          options: { temperature: 0 },
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: user }],
+        }),
+      });
+      const j = await res.json();
+      content = j?.message?.content;
+      if (!content && j?.error) console.warn(`   ⚠️  API ollama (${targetLang}): ${j.error}`);
     } else if (provider === 'deepl') {
       // DeepL non capisce JSON array: traduce voce per voce.
       const out = [];

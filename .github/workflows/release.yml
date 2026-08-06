@@ -77,14 +77,20 @@ jobs:
         shell: pwsh
         run: |
           $missing = @()
+          # Soglie PER FILE, misurate sugli artefatti buoni (build locale 30/07):
+          # gs-hook.dll 109/93 KB, gs-injector.exe 12/11 KB. La prima run CI
+          # (06/08, v1.16.0) usava 20KB per tutto e ha RESPINTO una build sana:
+          # l'injector e' semplicemente un exe piccolo. 20KB resta per la DLL,
+          # 6KB smaschera comunque uno stub vuoto al posto dell'injector.
+          $minSize = @{ 'gs-hook.dll' = 20KB; 'gs-injector.exe' = 6KB }
           foreach ($arch in @('x64', 'x86')) {
             foreach ($file in @('gs-hook.dll', 'gs-injector.exe')) {
               $p = "src-tauri\resources\gs-hook\$arch\$file"
               if (!(Test-Path $p)) {
                 $missing += "$p (assente)"
-              } elseif ((Get-Item $p).Length -lt 20KB) {
-                # Un file da 0 byte esiste ma non è una DLL: Test-Path da solo
-                # farebbe passare una build fallita a metà.
+              } elseif ((Get-Item $p).Length -lt $minSize[$file]) {
+                # Un file da 0 byte esiste ma non e' una DLL: Test-Path da solo
+                # farebbe passare una build fallita a meta'.
                 $missing += "$p (troppo piccolo: $((Get-Item $p).Length) byte)"
               } else {
                 $kb = [math]::Round((Get-Item $p).Length / 1KB, 1)
