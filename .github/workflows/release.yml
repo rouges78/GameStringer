@@ -116,8 +116,12 @@ jobs:
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
           updaterJsonKeepUniversal: true
           releaseBody: |
+            > ⚠️ **Se hai la v1.15.0 o precedente: scarica e installa questa versione MANUALMENTE (una volta sola).**
+            > La chiave di firma degli aggiornamenti è stata ruotata, quindi l'auto-update dalla 1.15 non può verificare questa release. Dalla 1.16 in poi l'aggiornamento automatico riprende normalmente.
+            > *(If you are on v1.15.0 or older: download this version manually — one time only. The update signing key was rotated; auto-update resumes from 1.16 onward.)*
+
             ## Download
-            
+
             ### Windows
             - **GameStringer_x.x.x_x64-setup.exe** - Installer (consigliato)
             - **GameStringer_x.x.x_x64_en-US.msi** - MSI Installer
