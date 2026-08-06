@@ -89,7 +89,7 @@
 
 **Where to post:** [GitHub Discussions](https://github.com/rouges78/GameStringer/discussions) · the in-app **Community Hub** (Supporto / Showcase / Richieste) · bugs → [Issues](https://github.com/rouges78/GameStringer/issues).
 
-GameStringer is free and source-available; the website and AI costs come out of my own pocket, so if it saves you time a coffee is appreciated but **never** expected: [Buy Me a Coffee](https://buymeacoffee.com/gamestringer) · [Ko-fi](https://ko-fi.com/gamestringer) · [GitHub Sponsors](https://github.com/sponsors/rouges78).
+GameStringer is free and source-available; the website and AI costs come out of my own pocket, so if it saves you time a coffee is appreciated but **never** expected: [Ko-fi](https://ko-fi.com/gamestringer) · [GitHub Sponsors](https://github.com/sponsors/rouges78).
 
 ---
 
@@ -515,9 +515,6 @@ Rust backend: `cd src-tauri && cargo check` to verify the Tauri commands compile
 If GameStringer helped you play games in your language:
 
 <p align="center">
-  <a href="https://buymeacoffee.com/gamestringer">
-    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
-  </a>
   <a href="https://ko-fi.com/gamestringer">
     <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?logo=ko-fi&logoColor=white" alt="Ko-fi" />
   </a>

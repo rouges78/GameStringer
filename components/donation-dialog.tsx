@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Heart, Coffee, ExternalLink, Gift, Sparkles, Timer } from 'lucide-react';
+import { Heart, ExternalLink, Gift, Sparkles, Timer } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -111,19 +111,13 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
           </div>
 
           <div className="grid gap-2">
+            {/* 07/08/2026: rimosso il pulsante Buy Me a Coffee — la pagina
+                buymeacoffee.com/gamestringer NON ESISTE (404 verificato):
+                un pulsante di donazione che punta nel nulla brucia fiducia.
+                Ko-fi (vivo e verificato) promosso a canale primario. */}
             <Button
               variant="default"
-              className="w-full bg-[#FFDD00] hover:bg-[#FFCC00] text-black font-semibold h-11"
-              onClick={() => openUrl('https://buymeacoffee.com/gamestringer')}
-            >
-              <Coffee className="w-5 h-5 mr-2" />
-              Buy Me a Coffee
-              <ExternalLink className="w-4 h-4 ml-auto opacity-50" />
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full h-11 border-[#FF5E5B] text-[#FF5E5B] hover:bg-[#FF5E5B]/10"
+              className="w-full bg-[#FF5E5B] hover:bg-[#E54D4A] text-white font-semibold h-11"
               onClick={() => openUrl('https://ko-fi.com/gamestringer')}
             >
               <Heart className="w-5 h-5 mr-2" />
