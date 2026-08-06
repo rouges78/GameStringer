@@ -50,8 +50,8 @@ function listLocaleLangs() {
     .map((f) => f.replace('.json', ''));
 }
 
-/** Traduce un array di stringhe IT -> targetLang. Ritorna array o null se fallisce. */
-async function translateArray(provider, targetLang, italianChanges) {
+/** Traduce UN blocco di voci -> targetLang. Ritorna array o null se fallisce. */
+async function translateChunk(provider, targetLang, italianChanges) {
   const langName = LANG_NAMES[targetLang] || targetLang;
   const sys = `You are a professional software localizer for a video-game translation desktop app called GameStringer. ` +
     `Translate the given Italian changelog bullet points into ${langName}. ` +
@@ -72,7 +72,11 @@ async function translateArray(provider, targetLang, italianChanges) {
         },
         body: JSON.stringify({
           model: process.env.ANTHROPIC_MODEL || 'claude-opus-4-8',
-          max_tokens: 2000,
+          // 06/08/2026: era 2000 e il changelog v1.16.0 (90 voci) non ci
+          // stava MAI: JSON troncato → parse fallito → fallback silenzioso
+          // per ogni lingua. Il chunking in translateArray tiene i blocchi
+          // piccoli, ma il tetto resta largo per non ricaderci.
+          max_tokens: 8000,
           system: sys,
           messages: [{ role: 'user', content: user }],
         }),
@@ -132,6 +136,24 @@ async function translateArray(provider, targetLang, italianChanges) {
   }
 }
 
+/**
+ * Traduce un array di voci -> targetLang, A BLOCCHI (12 voci per chiamata).
+ * Il changelog v1.16.0 aveva 90 voci: una chiamata sola sforava max_tokens e
+ * falliva in silenzio. Ritorna l'array completo o null se UN blocco fallisce
+ * (mai risultati parziali: o tutto tradotto o fallback dichiarato).
+ */
+async function translateArray(provider, targetLang, italianChanges) {
+  if (provider === 'deepl') return translateChunk(provider, targetLang, italianChanges); // già voce-per-voce
+  const CHUNK = 12;
+  const out = [];
+  for (let i = 0; i < italianChanges.length; i += CHUNK) {
+    const part = await translateChunk(provider, targetLang, italianChanges.slice(i, i + CHUNK));
+    if (!part) return null;
+    out.push(...part);
+  }
+  return out;
+}
+
 function setVersionKeys(localePath, vKey, items) {
   const data = JSON.parse(fs.readFileSync(localePath, 'utf8'));
   data.changelog ||= {};
@@ -172,10 +194,14 @@ async function writeChangelogKeys(version, italianChanges, opts = {}) {
     process.stdout.write(`   ${translated ? '✅' : '↩️ '} ${lang}`);
   }
   process.stdout.write('\n');
-  return { translated: true, provider, langs: done };
+  // 06/08/2026: prima ritornava translated:true anche quando OGNI lingua era
+  // andata in fallback (done = solo 'it') e la ship stampava «tradotto con
+  // anthropic» su un fallimento totale — contatore bugiardo. Tradotto è vero
+  // solo se almeno una lingua oltre alla sorgente è stata tradotta davvero.
+  return { translated: done.length > 1, provider, langs: done };
 }
 
-module.exports = { writeChangelogKeys, versionKey, detectProvider, listLocaleLangs };
+module.exports = { writeChangelogKeys, versionKey, detectProvider, listLocaleLangs, translateArray, setVersionKeys };
 
 if (require.main === module) {
   // Test manuale: node translate-changelog.js 9.9.9 "✨ Test feature" "🐛 Test fix"
