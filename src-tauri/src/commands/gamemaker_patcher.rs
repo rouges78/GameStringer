@@ -194,24 +194,17 @@ fn is_translatable(s: &str) -> bool {
     let has_space = s.contains(' ');
     
     if !has_space {
-        // No space: only allow if it looks like a single real word (no underscores, not camelCase)
-        // e.g. "Yes", "No", "OK", "Cancel", "STAMINA", "REASON" are legit short words
-        if s.contains('_') { return false; } // snake_case identifier
-        // Check for camelCase: lowercase followed by uppercase
-        let chars: Vec<char> = s.chars().collect();
-        for i in 1..chars.len() {
-            if chars[i-1].is_lowercase() && chars[i].is_uppercase() {
-                return false; // camelCase identifier
-            }
-        }
-        // Single word with no underscore and no camelCase — could be a label
-        // But skip if it looks like a known resource naming pattern
-        if lower.starts_with("new_") || lower.starts_with("combat_") || lower.starts_with("select_")
-           || lower.starts_with("theme_") || lower.starts_with("terminal_") {
-            return false;
-        }
-        // Allow single real words (labels, UI elements)
-        return true;
+        // Single words are NOT translatable in the STRG path. Measured on the
+        // real Deltarune demo data.win (06/08/2026, scripts/gm-strg-probe.js):
+        // 6,963 single words passed the old heuristics, of which 6,087 all-
+        // lowercase GML literals ("actcon", "abletotarget", "left", "idle")
+        // that the game compares with `==` — translating them to Cyrillic
+        // kills the boot WITHOUT corrupting the file (the telemetry pattern
+        // "patch success → boot failure" on 1.14.0/1.15.0). No lexical rule
+        // separates "Cancel" from "active": real labels and load-bearing
+        // literals are the same English words. An untranslated label is
+        // recoverable; a game that no longer boots is not.
+        return false;
     }
 
     // Has spaces — very likely real text. Final sanity checks:
@@ -1783,10 +1776,16 @@ mod tests {
     }
 
     #[test]
-    fn test_is_translatable_short_labels() {
-        assert!(is_translatable("Yes"));
-        assert!(is_translatable("Cancel"));
-        assert!(is_translatable("STAMINA"));
+    fn test_is_translatable_single_words_are_excluded() {
+        // Regression for the 1.14.0/1.15.0 "patch success → boot failure"
+        // pattern: single words in STRG are indistinguishable from load-bearing
+        // GML literals (measured: 6,087 lowercase literals on Deltarune demo).
+        assert!(!is_translatable("Yes"));
+        assert!(!is_translatable("Cancel"));
+        assert!(!is_translatable("STAMINA"));
+        assert!(!is_translatable("actcon"));
+        assert!(!is_translatable("abletotarget"));
+        assert!(!is_translatable("idle"));
     }
 
     #[test]
@@ -2179,9 +2178,12 @@ mod tests {
 
     #[test]
     fn test_is_translatable_single_real_word() {
-        // Single words without underscores or camelCase should pass
-        assert!(is_translatable("ATTACK"));
-        assert!(is_translatable("Inventory"));
+        // Changed 06/08/2026: single words no longer pass, even real-looking
+        // ones — on the Deltarune demo data.win the same rule admitted 6,087
+        // lowercase GML literals and broke the boot (see the single-word
+        // comment in is_translatable).
+        assert!(!is_translatable("ATTACK"));
+        assert!(!is_translatable("Inventory"));
     }
 
     #[test]

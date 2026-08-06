@@ -157,3 +157,6 @@ _gs_split/
 # di domani. Se serve una cartella di lavoro nuova, chiamala estratti-<qualcosa>.
 /estratti*/
 /stringhe-dump.txt
+# Dump della sonda gm-strg-probe (stringhe di gioco: mai nel repo, stesso
+# motivo di /estratti*/ — vedi il commento sopra)
+/gm-strg-translatable.txt
