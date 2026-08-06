@@ -3044,7 +3044,8 @@
     "plugins": "Wtyczki",
     "activity": "Aktywność",
     "statistics": "Statystyki",
-    "tutorialAndGuide": "Samouczek i Przewodnik"
+    "tutorialAndGuide": "Samouczek i Przewodnik",
+    "feedback": "Opinie"
   },
   "settings": {
     "title": "Ustawienia",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "Użyj przycisku E-mail lub Kopiuj raport, aby wysłać nam swoją opinię.",
     "thanksTitle": "Dziękujemy za opinię!",
     "thanksDb": "Otrzymaliśmy ją: pomaga nam ulepszać aplikację.",
-    "thanksFallback": "Backend niedostępny: użyj E-mail lub Kopiuj raport, aby ją do nas wysłać."
+    "thanksFallback": "Backend niedostępny: użyj E-mail lub Kopiuj raport, aby ją do nas wysłać.",
+    "pageTitle": "Wyślij opinię",
+    "pageDesc": "Napisz, co nie zadziałało albo czego brakuje. Czytamy każdą wiadomość.",
+    "pageWhatTitle": "Co pomaga nam najbardziej",
+    "pageWhatBug": "Błąd: co robiłeś, z którą grą i co stało się zamiast tego.",
+    "pageWhatIdea": "Pomysł: funkcja, której brakuje, albo krok, który zabiera czas.",
+    "inviteTitle": "Jak poszło tłumaczenie?",
+    "inviteDesc": "Wystarczą dwa zdania — pokazują nam, co naprawdę działa.",
+    "inviteAccept": "Napisz opinię",
+    "inviteDecline": "Nie teraz"
   },
   "customEndpoints": {
     "title": "Własne adresy API",

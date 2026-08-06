@@ -3157,7 +3157,8 @@
     "plugins": "Plugins",
     "activity": "Activity",
     "statistics": "Statistics",
-    "tutorialAndGuide": "Tutorial & Guide"
+    "tutorialAndGuide": "Tutorial & Guide",
+    "feedback": "Feedback"
   },
   "settings": {
     "title": "Settings",
@@ -7696,7 +7697,16 @@
     "sentFallbackManual": "Use the Email or Copy report button to send us your feedback.",
     "thanksTitle": "Thanks for the feedback!",
     "thanksDb": "We received it: it helps us improve the app.",
-    "thanksFallback": "Backend unavailable: use Email or Copy report to send it to us."
+    "thanksFallback": "Backend unavailable: use Email or Copy report to send it to us.",
+    "pageTitle": "Send feedback",
+    "pageDesc": "Tell us what went wrong or what you're missing. Every message gets read.",
+    "pageWhatTitle": "What helps us most",
+    "pageWhatBug": "A bug: what you were doing, with which game, and what happened instead.",
+    "pageWhatIdea": "An idea: the feature you're missing or the step that wastes your time.",
+    "inviteTitle": "How did the translation go?",
+    "inviteDesc": "A couple of lines is enough — it tells us what actually works.",
+    "inviteAccept": "Write feedback",
+    "inviteDecline": "Not now"
   },
   "fontCheck": {
     "title": "Font check",

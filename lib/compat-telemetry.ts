@@ -127,11 +127,15 @@ export interface CompatOptInContext {
  * retroattivamente il report della run appena conclusa e arma la conferma boot
  * (così il primo contributo non va perso). Se rifiuta o ignora, non viene mai
  * più riproposto (il toggle resta nei settings, tab Community).
+ *
+ * Ritorna `true` se il toast è stato effettivamente proposto in questa
+ * occasione: serve ai chiamanti per non impilare un secondo toast subito dopo
+ * (vedi `maybeInviteFeedbackAfterRun` in `lib/feedback-invite.ts`).
  */
-export function maybeOfferCompatOptIn(ctx: CompatOptInContext): void {
+export function maybeOfferCompatOptIn(ctx: CompatOptInContext): boolean {
   try {
-    if (isCompatTelemetryEnabled()) return;
-    if (localStorage.getItem(OPTIN_PROMPT_KEY)) return;
+    if (isCompatTelemetryEnabled()) return false;
+    if (localStorage.getItem(OPTIN_PROMPT_KEY)) return false;
     localStorage.setItem(OPTIN_PROMPT_KEY, String(Date.now())); // one-time, comunque vada
     void import('sonner').then(({ toast }) => {
       toast(tStatic('compat.optinTitle'), {
@@ -159,7 +163,9 @@ export function maybeOfferCompatOptIn(ctx: CompatOptInContext): void {
         },
       });
     }).catch(() => {});
+    return true;
   } catch { /* fail-open */ }
+  return false;
 }
 
 // ── Game key & environment helpers ─────────────────────────

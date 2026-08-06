@@ -22,6 +22,7 @@ import {
   classifyCompatError, maybeOfferCompatOptIn, type CompatStep, type CompatGameRef,
 } from '@/lib/compat-telemetry';
 import { reportCrash } from '@/lib/crash-reporter';
+import { maybeInviteFeedbackAfterRun } from '@/lib/feedback-invite';
 
 export interface HeroTrackMeta {
   engineId: string;     // 'renpy' | 'hendrix' | 'rpgmaker' | 'visionaire'
@@ -215,7 +216,7 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
         engine: meta.engineId,
       });
       // Telemetria OFF? Propone l'opt-in una sola volta (report retroattivo se accetta).
-      maybeOfferCompatOptIn({
+      const optInShown = maybeOfferCompatOptIn({
         runId: compatRunId,
         game: compatGame,
         engine: meta.engineId,
@@ -225,6 +226,9 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
         sourceLang: meta.sourceLang,
         targetLang: meta.targetLang,
       });
+      // Se l'opt-in non è stato proposto, lo slot è libero: invita al feedback
+      // (una sola volta). Mai i due toast insieme.
+      if (!optInShown) maybeInviteFeedbackAfterRun();
       try {
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationCompleted(meta.gameName || 'Gioco', translated);

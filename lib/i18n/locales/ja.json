@@ -3044,7 +3044,8 @@
     "plugins": "プラグイン",
     "activity": "アクティビティ",
     "statistics": "統計",
-    "tutorialAndGuide": "チュートリアルとガイド"
+    "tutorialAndGuide": "チュートリアルとガイド",
+    "feedback": "フィードバック"
   },
   "settings": {
     "title": "設定",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "「メール」または「レポートをコピー」ボタンを使ってフィードバックをお送りください。",
     "thanksTitle": "フィードバックありがとうございます！",
     "thanksDb": "受け取りました：アプリの改善に役立ちます。",
-    "thanksFallback": "バックエンドを利用できません：「メール」または「レポートをコピー」で送信してください。"
+    "thanksFallback": "バックエンドを利用できません：「メール」または「レポートをコピー」で送信してください。",
+    "pageTitle": "フィードバックを送る",
+    "pageDesc": "うまくいかなかったこと、足りないものを教えてください。すべてのメッセージに目を通しています。",
+    "pageWhatTitle": "特に役立つ情報",
+    "pageWhatBug": "不具合：何をしていたか、どのゲームか、代わりに何が起きたか。",
+    "pageWhatIdea": "アイデア：足りない機能や、時間がかかってしまう手順。",
+    "inviteTitle": "翻訳はいかがでしたか？",
+    "inviteDesc": "二行で十分です。何が本当に機能しているかが分かります。",
+    "inviteAccept": "フィードバックを書く",
+    "inviteDecline": "今はしない"
   },
   "customEndpoints": {
     "title": "カスタムエンドポイント",

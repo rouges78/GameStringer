@@ -3044,7 +3044,8 @@
     "plugins": "플러그인",
     "activity": "활동",
     "statistics": "통계",
-    "tutorialAndGuide": "튜토리얼 및 가이드"
+    "tutorialAndGuide": "튜토리얼 및 가이드",
+    "feedback": "피드백"
   },
   "settings": {
     "title": "설정",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "이메일 또는 보고서 복사 버튼을 사용하여 피드백을 보내주세요.",
     "thanksTitle": "피드백을 보내주셔서 감사합니다!",
     "thanksDb": "잘 받았습니다: 앱을 개선하는 데 도움이 됩니다.",
-    "thanksFallback": "백엔드를 사용할 수 없습니다: 이메일 또는 보고서 복사를 사용하여 보내주세요."
+    "thanksFallback": "백엔드를 사용할 수 없습니다: 이메일 또는 보고서 복사를 사용하여 보내주세요.",
+    "pageTitle": "피드백 보내기",
+    "pageDesc": "무엇이 잘 안 됐는지, 무엇이 부족한지 알려주세요. 모든 메시지를 읽습니다.",
+    "pageWhatTitle": "가장 도움이 되는 정보",
+    "pageWhatBug": "버그: 무엇을 하고 있었는지, 어떤 게임인지, 대신 무슨 일이 일어났는지.",
+    "pageWhatIdea": "아이디어: 부족한 기능이나 시간이 오래 걸리는 단계.",
+    "inviteTitle": "번역은 어떠셨나요?",
+    "inviteDesc": "두 줄이면 충분합니다. 무엇이 실제로 작동하는지 알 수 있습니다.",
+    "inviteAccept": "피드백 쓰기",
+    "inviteDecline": "나중에"
   },
   "customEndpoints": {
     "title": "사용자 지정 엔드포인트",

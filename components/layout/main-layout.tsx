@@ -44,7 +44,8 @@ import {
   Languages,
   Shield,
   Disc,
-  Store
+  Store,
+  MessageSquarePlus
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 // Image import removed — not currently used
@@ -212,6 +213,7 @@ const getNavGroups = (t: (key: string) => string) => [
       { name: 'Ollama / AI', href: '/ollama-manager', icon: Package, ollamaIndicator: true },
       { name: t('nav.settings'), href: '/settings', icon: Settings },
       { name: t('nav.guide'), href: '/guide', icon: BookOpen },
+      { name: t('nav.feedback'), href: '/feedback', icon: MessageSquarePlus },
     ],
     colorClass: 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/20',
     activeClass: 'bg-orange-400/20 backdrop-blur-md text-orange-400 border border-orange-500/30 shadow-lg shadow-orange-500/20',

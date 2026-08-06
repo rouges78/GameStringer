@@ -3044,7 +3044,8 @@
     "plugins": "Plugins",
     "activity": "Actividad",
     "statistics": "Estadísticas",
-    "tutorialAndGuide": "Tutorial y Guía"
+    "tutorialAndGuide": "Tutorial y Guía",
+    "feedback": "Comentarios"
   },
   "settings": {
     "title": "Ajustes",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "Usa el botón Correo electrónico o Copiar informe para enviarnos tus comentarios.",
     "thanksTitle": "¡Gracias por tus comentarios!",
     "thanksDb": "Lo hemos recibido: nos ayuda a mejorar la aplicación.",
-    "thanksFallback": "Backend no disponible: usa Correo electrónico o Copiar informe para enviárnoslo."
+    "thanksFallback": "Backend no disponible: usa Correo electrónico o Copiar informe para enviárnoslo.",
+    "pageTitle": "Enviar comentarios",
+    "pageDesc": "Cuéntanos qué no funcionó o qué echas en falta. Leemos todos los mensajes.",
+    "pageWhatTitle": "Lo que más nos ayuda",
+    "pageWhatBug": "Un error: qué estabas haciendo, con qué juego y qué ocurrió en su lugar.",
+    "pageWhatIdea": "Una idea: la función que te falta o el paso que te hace perder tiempo.",
+    "inviteTitle": "¿Qué tal fue la traducción?",
+    "inviteDesc": "Con dos líneas basta: nos dicen qué funciona de verdad.",
+    "inviteAccept": "Escribir comentarios",
+    "inviteDecline": "Ahora no"
   },
   "customEndpoints": {
     "title": "Endpoints personalizados",

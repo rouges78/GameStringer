@@ -3044,7 +3044,8 @@
     "plugins": "Plugins",
     "activity": "Aktivität",
     "statistics": "Statistiken",
-    "tutorialAndGuide": "Tutorial & Anleitung"
+    "tutorialAndGuide": "Tutorial & Anleitung",
+    "feedback": "Feedback"
   },
   "settings": {
     "title": "Einstellungen",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "Verwende die Schaltfläche E-Mail oder Bericht kopieren, um uns dein Feedback zu senden.",
     "thanksTitle": "Danke für dein Feedback!",
     "thanksDb": "Wir haben es erhalten: Es hilft uns, die App zu verbessern.",
-    "thanksFallback": "Backend nicht verfügbar: Verwende E-Mail oder Bericht kopieren, um es uns zu senden."
+    "thanksFallback": "Backend nicht verfügbar: Verwende E-Mail oder Bericht kopieren, um es uns zu senden.",
+    "pageTitle": "Feedback senden",
+    "pageDesc": "Sag uns, was nicht funktioniert hat oder was dir fehlt. Jede Nachricht wird gelesen.",
+    "pageWhatTitle": "Was uns am meisten hilft",
+    "pageWhatBug": "Ein Fehler: was du gemacht hast, mit welchem Spiel, und was stattdessen passiert ist.",
+    "pageWhatIdea": "Eine Idee: die Funktion, die dir fehlt, oder der Schritt, der dich Zeit kostet.",
+    "inviteTitle": "Wie lief die Übersetzung?",
+    "inviteDesc": "Zwei Zeilen genügen — sie zeigen uns, was wirklich funktioniert.",
+    "inviteAccept": "Feedback schreiben",
+    "inviteDecline": "Nicht jetzt"
   },
   "customEndpoints": {
     "title": "Benutzerdefinierte Endpunkte",

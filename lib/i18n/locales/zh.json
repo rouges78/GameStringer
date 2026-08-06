@@ -3044,7 +3044,8 @@
     "plugins": "插件",
     "activity": "活动",
     "statistics": "统计",
-    "tutorialAndGuide": "教程与指南"
+    "tutorialAndGuide": "教程与指南",
+    "feedback": "反馈"
   },
   "settings": {
     "title": "设置",
@@ -7810,7 +7811,16 @@
     "sentFallbackManual": "使用“电子邮件”或“复制报告”按钮向我们发送反馈。",
     "thanksTitle": "感谢您的反馈！",
     "thanksDb": "我们已收到：它有助于我们改进应用。",
-    "thanksFallback": "后端不可用：请使用“电子邮件”或“复制报告”发送给我们。"
+    "thanksFallback": "后端不可用：请使用“电子邮件”或“复制报告”发送给我们。",
+    "pageTitle": "发送反馈",
+    "pageDesc": "告诉我们哪里出了问题，或者缺少什么。每条消息我们都会读。",
+    "pageWhatTitle": "最有帮助的信息",
+    "pageWhatBug": "缺陷：你当时在做什么、用的哪款游戏、实际发生了什么。",
+    "pageWhatIdea": "想法：你缺少的功能，或者浪费时间的步骤。",
+    "inviteTitle": "这次翻译效果如何？",
+    "inviteDesc": "两行字就够了，它能告诉我们什么才真正有用。",
+    "inviteAccept": "写反馈",
+    "inviteDecline": "暂不"
   },
   "customEndpoints": {
     "title": "自定义 API 地址",

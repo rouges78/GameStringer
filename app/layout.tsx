@@ -13,6 +13,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { ScreenProvider } from '@/components/providers/screen-provider';
 import { SettingsBootGate } from '@/components/providers/settings-boot-gate';
 import { AnimatedBackground } from '@/components/ui/animated-background';
+import { FeedbackHost } from '@/components/feedback/feedback-host';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -48,6 +49,8 @@ export default function RootLayout({
                 <Toaster richColors position="top-right" />
                 {/* Progress UI Manager */}
                 <ProgressUIManager />
+                {/* Dialog di feedback apribile da ovunque (sidebar, invito post-run) */}
+                <FeedbackHost />
                 {/* Debug Monitor disabilitato - problema risolto */}
                 {/* {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />} */}
               </ProgressProvider>
