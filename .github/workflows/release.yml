@@ -432,7 +432,13 @@ jobs:
   # prima che i file siano scaricabili: un link a una release senza asset fa
   # tornare indietro le persone e non tornano una seconda volta.
   #
-  # `if: always()` + `continue-on-error` = se Discord è giù, o il webhook non è
+  # L'`if` guarda i RESULT dei tre build: si annuncia SOLO se tutti e tre sono
+  # 'success'. Il vecchio `if: always()` annunciava anche le release FALLITE —
+  # esattamente il «link a una release senza asset» che il paragrafo sopra
+  # diceva di voler evitare (successo il 06/08/2026 con la run #73, morta alla
+  # firma updater e annunciata lo stesso). Difetto n°10 della ship v1.16.0.
+  #
+  # `continue-on-error` resta: se Discord è giù, o il webhook non è
   # configurato, la release resta VERDE. Un annuncio non pubblicato non è un
   # rilascio fallito, e il contrario darebbe un rosso che spinge a "riparare"
   # una release che invece è andata bene.
@@ -442,7 +448,7 @@ jobs:
   # dice; non serve toccare questo file.
   announce-discord:
     needs: [build-windows, build-linux, build-macos]
-    if: always()
+    if: ${{ needs.build-windows.result == 'success' && needs.build-linux.result == 'success' && needs.build-macos.result == 'success' }}
     runs-on: ubuntu-22.04
     continue-on-error: true
     steps:
