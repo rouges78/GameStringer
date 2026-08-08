@@ -58,6 +58,15 @@ jobs:
       - name: Tauri command guard
         run: npm run tauri:check-cmds
 
+      # Gate npm-vs-crate (difetto 6 della ship v1.16.0).
+      # La PR Dependabot npm-minor-patch del 04/08 ha portato @tauri-apps/cli+api
+      # a 2.11 col crate tauri fermo a 2.10.3: `tauri build` rifiuta i minor
+      # disallineati, ma il danno si è visto SOLO in release. Questo gate confronta
+      # le versioni RISOLTE nei due lockfile (npm e Cargo) e ferma la CI — quindi
+      # anche la PR Dependabot stessa — quando i minor divergono.
+      - name: Tauri npm-vs-crate parity guard
+        run: npm run tauri:parity
+
       # Gate anti file-di-gioco nel repo.
       # Il 02/08/2026 estratti_pak/ è risultata TRACCIATA: 18 file estratti dal .pak
       # di un gioco commerciale già su origin/main, cioè su un repo pubblico. Non per distrazione —

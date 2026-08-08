@@ -160,3 +160,4 @@ _gs_split/
 # Dump della sonda gm-strg-probe (stringhe di gioco: mai nel repo, stesso
 # motivo di /estratti*/ — vedi il commento sopra)
 /gm-strg-translatable.txt
+.release-state.json

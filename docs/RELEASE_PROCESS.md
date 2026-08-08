@@ -251,6 +251,8 @@ prerelease permanently.
 | No `.sig` files in build output | Missing `createUpdaterArtifacts` in tauri.conf.json | Add `"createUpdaterArtifacts": "v1Compatible"` to the `bundle` object |
 | Workflow fails at checkout | Tag does not exist yet when the workflow tries `ref: inputs.version` | Create and push the tag **before** dispatching the workflow |
 | `latest.json` missing from release | merge-updater job failed or was skipped | Check workflow logs; usually caused by one of the above issues |
+| Ship dies mid-way (e.g. stale `index.lock` at step 8) | Any step failure after the version bump | **`npm run ship -- --resume`** — resumes from the failed step with the SAME version and changelog (state in `.release-state.json`, gitignored, removed on success). Never re-run a plain `npm run ship` after a partial one: it would bump again. The script now refuses to start a fresh run while an interrupted one exists. |
+| `tauri build` refuses: npm/crate minor mismatch | Dependabot grouped bump moved `@tauri-apps/cli`+`api` without the Rust side (defect 6 of the v1.16.0 ship) | `npm run tauri:parity` shows the three resolved versions; realign npm (`npm install @tauri-apps/cli@<ver> @tauri-apps/api@<ver> --save-exact`) or crate (`cd src-tauri && cargo update -p tauri`), then `cargo check` cold. The guard runs in CI and in the ship preflight. |
 
 ---
 
