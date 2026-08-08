@@ -2079,11 +2079,21 @@ export default function GameDetailPage() {
             },
           });
           rpStep(3, 'done', `${r.translated}/${r.total} stringhe${r.glossaryTerms ? ` · glossario ${r.glossaryTerms}` : ''}${r.voiceProfiles ? ` · voci ${r.voiceProfiles}` : ''}`);
+          // Percentuale ed errori si misurano su ciò che è stato TENTATO in
+          // questa passata, non sul copione intero. Con un lotto di prova (o
+          // dopo un checkpoint) il vecchio calcolo diceva «0% riuscito, 83.340
+          // errori» su 149 stringhe tradotte bene: due cifre false nello stesso
+          // banner. Le 83.340 non erano errori — non erano mai state tentate.
+          // Famiglia [fallimenti-muti] al contrario: qui un successo veniva
+          // riportato come disastro, e la cura è la stessa — misurare la cosa
+          // giusta invece di dividere per il numero più grande a portata.
+          const attempted = r.attempted ?? r.total;
+          const accepted = r.accepted ?? r.translated;
           setAutoTranslateResult({
-            successRate: r.total ? Math.round((100 * r.translated) / r.total) : 0,
+            successRate: attempted ? Math.round((100 * accepted) / attempted) : 0,
             duration: Math.round((Date.now() - t0) / 60000), // MINUTI: il banner scrive "min" (il 03/08 mostrava 11731 "min" che erano secondi)
             deliverables: 1,
-            errors: Math.max(0, r.total - r.translated),
+            errors: Math.max(0, attempted - accepted),
             engine: "Ren'Py",
             targetLang: tgt,
             stringsTranslated: r.translated,

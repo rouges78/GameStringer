@@ -207,7 +207,22 @@ export async function runRenpyTranslation(opts: {
    */
   limit?: number;
   onProgress?: (p: RenpyProgress) => void;
-}): Promise<{ translated: number; total: number; files: string; glossaryTerms: number; voiceProfiles: number }> {
+}): Promise<{
+  translated: number;
+  total: number;
+  files: string;
+  glossaryTerms: number;
+  voiceProfiles: number;
+  /**
+   * Stringhe uniche TENTATE in questa passata e quante ne sono state accettate.
+   * Servono a non mentire quando c'è un tetto o un checkpoint precedente:
+   * riportare 149/83.489 come «0% riuscito, 83.340 errori» — come faceva il
+   * banner l'08/08/2026 sul primo lotto di prova — è falso in entrambe le
+   * cifre. Le 83.340 non erano errori: non sono mai state tentate.
+   */
+  attempted: number;
+  accepted: number;
+}> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const src = (opts.sourceLang || 'en').toLowerCase();
   const backend: TranslationBackend = opts.backend || getTranslationBackend('renpy');
@@ -296,13 +311,36 @@ export async function runRenpyTranslation(opts: {
   ));
   // Il tetto vale sulle stringhe NUOVE, non sul totale: un lotto di prova da
   // 200 dopo un checkpoint da 5.000 traduce 200 righe, non zero.
+  //
+  // MA L'ORDINE CONTA PIÙ DEL NUMERO (lezione dell'08/08/2026, imparata
+  // sbagliando): la prima versione prendeva le prime N in ordine di file, e su
+  // Scarlet Hollow le prime 200 cadevano in 01virtual_keyboard.rpy e
+  // clinic_solo_incident.rpy — una scena a metà partita. Il lotto ERA tradotto
+  // e la prova d'effetto restava comunque impossibile, perché nessuno vede
+  // quelle righe senza giocare per ore. Un campione che non si può guardare non
+  // è un campione.
+  // Ora il tetto pesca PRIMA le stringhe di interfaccia (string_type 'String':
+  // menu, opzioni, pulsanti — finiscono nei blocchi `strings` di screens_*.rpy
+  // e gui_*.rpy), che sono le prime che il giocatore vede all'avvio. Il resto
+  // segue nell'ordine naturale. Senza tetto l'ordine resta quello originale:
+  // in una run completa non cambia nulla.
+  const uiFirst = (list: string[]): string[] => {
+    const typeOf = new Map<string, string>();
+    for (const r of rows) if (!typeOf.has(r.original)) typeOf.set(r.original, r.string_type);
+    const ui = list.filter(o => typeOf.get(o) === 'String');
+    const rest = list.filter(o => typeOf.get(o) !== 'String');
+    return [...ui, ...rest];
+  };
   const pendingOriginals = opts.limit && opts.limit > 0
-    ? allPending.slice(0, opts.limit)
+    ? uiFirst(allPending).slice(0, opts.limit)
     : allPending;
   if (pendingOriginals.length < allPending.length) {
+    const uiCount = pendingOriginals.filter(o =>
+      rows.find(r => r.original === o)?.string_type === 'String').length;
     clientLogger.info(
       `Ren'Py: LOTTO DI PROVA — ${pendingOriginals.length} stringhe su ${allPending.length} da tradurre ` +
-      `(backend "${backend}"). I file tl/ verranno generati lo stesso: italiano dove tradotto, inglese altrove.`
+      `(backend "${backend}"), di cui ${uiCount} di interfaccia: quelle si vedono nel menu appena avvii il gioco. ` +
+      `I file tl/ verranno generati lo stesso: italiano dove tradotto, inglese altrove.`
     );
   }
 
@@ -406,5 +444,11 @@ export async function runRenpyTranslation(opts: {
 
   const translated = rows.filter(r => r.translated).length;
   report({ phase: 'done', done: translated, total });
-  return { translated, total, files, glossaryTerms: glossary.length, voiceProfiles: voiceProfilesUsed };
+  return {
+    translated, total, files,
+    glossaryTerms: glossary.length,
+    voiceProfiles: voiceProfilesUsed,
+    attempted: pendingOriginals.length,
+    accepted: pendingOriginals.filter(o => byOriginal[o]).length,
+  };
 }

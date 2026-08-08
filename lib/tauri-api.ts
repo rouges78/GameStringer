@@ -89,6 +89,21 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
     } else if (errorMessage.includes('Credenziali corrotte') || errorMessage.includes('Riconnettiti a Steam')) {
       // Credenziali corrotte - messaggio già gestito, non loggare come errore
       clientLogger.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');
+    } else if (cmd === 'load_renpy_translations' && errorMessage.includes('os error 2')) {
+      // Nessun checkpoint precedente: è la NORMA alla prima traduzione di un
+      // gioco, e il chiamante ha già `catch { /* nessun checkpoint */ }`.
+      // In rosso sembrava un guasto proprio nel momento in cui l'utente guarda
+      // la barra con più ansia.
+      clientLogger.debug(`🔎 ${cmd}: nessun checkpoint precedente (atteso).`);
+    } else if (cmd === 'extract_all_renpy_strings' && errorMessage.includes('.rpy')) {
+      // Tentativo-1 del flusso Ren'Py: i giochi commerciali tengono i copioni
+      // DENTRO game/*.rpa, quindi "Nessun file .rpy trovato" è l'esito ATTESO
+      // prima che runRenpyTranslation ripieghi sull'estrazione dagli archivi
+      // (il chiamante ha .catch(() => null) proprio per questo). Loggarlo in
+      // rosso faceva sembrare guasto un percorso che funziona — e su Scarlet
+      // Hollow l'errore compariva a schermo mentre la traduzione partiva.
+      // Stessa logica dei probe detect_*: esito atteso con fallback → debug.
+      clientLogger.debug(`🔎 ${cmd}: nessun .rpy sciolto (atteso) — provo gli archivi .rpa.`);
     } else if (cmd.startsWith('detect_') && errorMessage.includes('Non sembra essere')) {
       // Probe di rilevamento engine: "non è questo engine" è un esito ATTESO (il chiamante
       // ha un fallback), non un errore → debug, niente rumore rosso in console.

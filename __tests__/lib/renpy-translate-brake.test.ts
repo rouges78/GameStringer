@@ -26,7 +26,7 @@ const ROWS = Array.from({ length: 120 }, (_, i) => ({
   translated: '',
   file: 'script.rpy',
   line_number: i + 1,
-  string_type: 'Dialogue' as const,
+  string_type: 'Dialogue' as 'String' | 'Dialogue',
   character: null as string | null,
 }));
 
@@ -148,10 +148,46 @@ describe("freno del flusso Ren'Py", () => {
     // Il tetto morde: 45 stringhe nuove, non 120.
     expect(res.translated).toBe(45);
     expect(res.total).toBe(120);
+
+    // E i contatori NON mentono. Il banner calcolava la percentuale su `total`
+    // e finiva per dire «0% riuscito, 83.340 errori» su un lotto in cui era
+    // andato tutto: le non tentate finivano nella casella "errori". Qui 45 su
+    // 45 tentate = 100%, e zero errori.
+    expect(res.attempted).toBe(45);
+    expect(res.accepted).toBe(45);
+    expect(res.attempted - res.accepted).toBe(0);
     // E QUESTO è il punto del lotto di prova: i file tl/ si generano lo stesso,
     // altrimenti non ci sarebbe niente da guardare in gioco e la prova
     // d'effetto resterebbe impossibile finché non si spende tutto.
     expect(generateCalled).toBe(true);
+  });
+
+  it("il lotto di prova pesca PRIMA l'interfaccia, non le prime righe del copione", async () => {
+    // La prima versione prendeva le prime N in ordine di file: su Scarlet
+    // Hollow finivano tutte in una scena a metà partita, quindi il lotto era
+    // tradotto ma invisibile. Qui le righe UI stanno IN FONDO all'elenco: se
+    // l'ordinamento non funziona, non ne viene tradotta nemmeno una.
+    ROWS.forEach((r, i) => {
+      r.string_type = (i >= 110 ? 'String' : 'Dialogue') as 'String' | 'Dialogue';
+    });
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    const seen: string[] = [];
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) => {
+        seen.push(...texts);
+        return { translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true };
+      }
+    );
+
+    await runRenpyTranslation({
+      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud', limit: 10,
+    });
+
+    // Tutte e 10 devono essere quelle di interfaccia (indici 110-119).
+    expect(seen).toHaveLength(10);
+    expect(seen.every((t) => Number(t.replace('Line number ', '')) >= 110)).toBe(true);
+
+    ROWS.forEach((r) => { r.string_type = 'Dialogue' as 'String' | 'Dialogue'; });
   });
 
   it('un backend che traduce davvero arriva in fondo (il freno non è un falso positivo)', async () => {
