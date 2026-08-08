@@ -495,14 +495,22 @@ export async function saveGspackToFile(data: string, filename: string): Promise<
       filters: [{ name: 'GameStringer Pack', extensions: ['gspack'] }],
     });
 
-    if (filePath) {
-      await writeTextFile(filePath, data);
-      return true;
-    }
-    return false;
+    // Annullamento del dialog: nessun percorso, nessun errore. Questo è
+    // l'UNICO caso in cui `false` è legittimo — l'utente ha cambiato idea.
+    if (!filePath) return false;
+
+    await writeTextFile(filePath, data);
+    return true;
   } catch (e: unknown) {
+    // Un fallimento VERO della scrittura non deve più tornare `false`: i due
+    // chiamanti (projects/page, gspack-dialog) agiscono solo su `if (ok)`,
+    // senza ramo else, quindi un `false` da errore faceva sparire l'export
+    // in totale silenzio — l'utente cliccava «esporta» e non succedeva nulla
+    // (fs-scope-audit, 08/08: il permesso negato sui percorsi fuori app-dir
+    // finiva esattamente qui). Rilanciamo: entrambi i chiamanti hanno già un
+    // try/catch con toast.error, che così finalmente scatta.
     clientLogger.error('[GsPack] Errore salvataggio:', e);
-    return false;
+    throw e instanceof Error ? e : new Error(String(e));
   }
 }
 
@@ -536,13 +544,15 @@ export async function loadGspackFromFile(): Promise<string | null> {
       multiple: false,
     });
 
-    if (filePath && typeof filePath === 'string') {
-      return await readTextFile(filePath);
-    }
-    return null;
+    // Annullamento: nessun percorso scelto → null, senza errore.
+    if (!filePath || typeof filePath !== 'string') return null;
+    return await readTextFile(filePath);
   } catch (e: unknown) {
+    // Come per il salvataggio: un errore di lettura VERO va rilanciato, non
+    // travestito da «niente selezionato». Il chiamante distingue così un file
+    // corrotto/negato da un dialog chiuso a vuoto.
     clientLogger.error('[GsPack] Errore caricamento:', e);
-    return null;
+    throw e instanceof Error ? e : new Error(String(e));
   }
 }
 
