@@ -317,18 +317,32 @@ pub struct RpaExtractResult {
 /// Estrae un archivio Ren'Py .rpa (RPA-3.0 / RPA-2.0) sotto `output_path`,
 /// preservando la struttura delle cartelle (i nomi nell'indice sono relativi a game/).
 /// Ogni nome è validato contro il path traversal.
+///
+/// `extensions`: se presente, estrae SOLO i file con quelle estensioni
+/// (es. ["rpy"]) — per la traduzione servono i copioni, non 7.500 PNG.
+///
+/// 07/08/2026, lezione Scarlet Hollow (archive.rpa da 5,6 GB): la prima
+/// versione faceva `fs::read` dell'INTERO archivio — la stessa trappola del
+/// pak di Arcadia. Ora si legge con SEEK: header dai primi byte, indice dalla
+/// coda, e ogni entry selezionata con una read mirata.
 #[tauri::command]
 pub async fn extract_renpy_rpa(
     rpa_path: String,
     output_path: String,
+    extensions: Option<Vec<String>>,
 ) -> Result<RpaExtractResult, String> {
-    let data = fs::read(Path::new(&rpa_path))
-        .map_err(|e| format!("Errore lettura {}: {}", rpa_path, e))?;
+    use std::io::{Read as _, Seek, SeekFrom};
 
-    // Header: prima riga ASCII terminata da \n.
-    let nl = data.iter().take(64).position(|&b| b == b'\n')
+    let mut file = fs::File::open(Path::new(&rpa_path))
+        .map_err(|e| format!("Errore apertura {}: {}", rpa_path, e))?;
+    let file_len = file.metadata().map_err(|e| e.to_string())?.len();
+
+    // Header: prima riga ASCII terminata da \n, nei primi 64 byte.
+    let mut head = [0u8; 64];
+    let head_read = file.read(&mut head).map_err(|e| e.to_string())?;
+    let nl = head[..head_read].iter().position(|&b| b == b'\n')
         .ok_or("Header RPA non trovato (nessun newline nei primi 64 byte)")?;
-    let header = String::from_utf8_lossy(&data[..nl]);
+    let header = String::from_utf8_lossy(&head[..nl]);
     let parts: Vec<&str> = header.split_whitespace().collect();
 
     let (index_offset, key) = match parts.as_slice() {
@@ -352,21 +366,30 @@ pub async fn extract_renpy_rpa(
         }
     };
 
-    let idx_start = index_offset as usize;
-    if idx_start >= data.len() {
+    if index_offset >= file_len {
         return Err(format!(
             "Offset indice ({}) oltre la fine del file ({} byte): archivio troncato?",
-            idx_start, data.len()
+            index_offset, file_len
         ));
     }
 
-    // Indice: zlib → pickle.
-    let mut decoder = ZlibDecoder::new(&data[idx_start..]);
+    // Indice: coda del file (seek), poi zlib → pickle. La coda è piccola
+    // (centinaia di KB) anche su archivi da GB.
+    let tail_len = (file_len - index_offset) as usize;
+    let mut tail = vec![0u8; tail_len];
+    file.seek(SeekFrom::Start(index_offset)).map_err(|e| e.to_string())?;
+    file.read_exact(&mut tail).map_err(|e| format!("Lettura indice fallita: {}", e))?;
+    let mut decoder = ZlibDecoder::new(&tail[..]);
     let mut pickled = Vec::new();
     decoder.read_to_end(&mut pickled)
         .map_err(|e| format!("Indice RPA: decompressione zlib fallita: {}", e))?;
     let index = PickleReader::new(&pickled).parse()?;
     let entries = parse_rpa_index(index, key)?;
+
+    // Filtro estensioni (minuscole, senza punto).
+    let ext_filter: Option<Vec<String>> = extensions
+        .map(|v| v.into_iter().map(|e| e.trim_start_matches('.').to_lowercase()).collect());
+    let ext_of = |name: &str| name.rsplit('.').next().unwrap_or("").to_lowercase();
 
     let out_root = Path::new(&output_path);
     fs::create_dir_all(out_root)
@@ -376,6 +399,12 @@ pub async fn extract_renpy_rpa(
     let mut skipped = 0usize;
 
     for entry in &entries {
+        // Filtro estensioni: fuori lista = né scritta né contata come saltata.
+        if let Some(ref exts) = ext_filter {
+            if !exts.contains(&ext_of(&entry.name)) {
+                continue;
+            }
+        }
         // Anti-traversal.
         let unsafe_path = entry.name.is_empty()
             || Path::new(&entry.name).is_absolute()
@@ -389,29 +418,30 @@ pub async fn extract_renpy_rpa(
             continue;
         }
 
-        // Contenuto = prefix + data[offset .. offset + length - len(prefix)].
+        // Contenuto = prefix + file[offset .. offset + length - len(prefix)],
+        // letto con una read MIRATA (mai l'archivio intero in memoria).
         let body_len = (entry.length as usize).saturating_sub(entry.prefix.len());
-        let span = (entry.offset as usize)
-            .checked_add(body_len)
-            .filter(|end| *end <= data.len())
-            .map(|end| (entry.offset as usize, end));
-        let (s, e) = match span {
-            Some(se) => se,
-            None => {
-                log::warn!("RPA extract: entry oltre EOF, saltata: {:?}", entry.name);
-                skipped += 1;
-                continue;
-            }
-        };
+        let end_ok = entry.offset.checked_add(body_len as u64)
+            .map(|end| end <= file_len)
+            .unwrap_or(false);
+        if !end_ok {
+            log::warn!("RPA extract: entry oltre EOF, saltata: {:?}", entry.name);
+            skipped += 1;
+            continue;
+        }
 
         let dest = out_root.join(&entry.name);
         if let Some(parent) = dest.parent() {
             fs::create_dir_all(parent)
                 .map_err(|e2| format!("Impossibile creare {}: {}", parent.display(), e2))?;
         }
+        let mut body = vec![0u8; body_len];
+        file.seek(SeekFrom::Start(entry.offset)).map_err(|e2| e2.to_string())?;
+        file.read_exact(&mut body)
+            .map_err(|e2| format!("Lettura entry {:?} fallita: {}", entry.name, e2))?;
         let mut content = Vec::with_capacity(entry.length as usize);
         content.extend_from_slice(&entry.prefix);
-        content.extend_from_slice(&data[s..e]);
+        content.extend_from_slice(&body);
         fs::write(&dest, &content)
             .map_err(|e2| format!("Errore scrittura {}: {}", dest.display(), e2))?;
         written += 1;
@@ -521,6 +551,7 @@ mod tests {
         let res = tauri::async_runtime::block_on(extract_renpy_rpa(
             rpa_path.to_string_lossy().to_string(),
             out.to_string_lossy().to_string(),
+            None,
         ))
         .unwrap();
 
@@ -548,6 +579,7 @@ mod tests {
         let res = tauri::async_runtime::block_on(extract_renpy_rpa(
             rpa_path.to_string_lossy().to_string(),
             out.to_string_lossy().to_string(),
+            None,
         ))
         .unwrap();
 
@@ -569,6 +601,7 @@ mod tests {
         let res = tauri::async_runtime::block_on(extract_renpy_rpa(
             rpa_path.to_string_lossy().to_string(),
             dir.join("out").to_string_lossy().to_string(),
+            None,
         ));
         assert!(res.is_err());
         let _ = fs::remove_dir_all(&dir);

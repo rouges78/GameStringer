@@ -13,6 +13,8 @@
 
 import { invoke } from '@/lib/tauri-api';
 import { cleanGamePath } from '@/lib/game-path';
+import { clientLogger } from '@/lib/client-logger';
+import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
 import {
   loadVoiceProfiles,
   getVoiceProfile,
@@ -123,6 +125,54 @@ export async function loadGlossary(sourceLang: string, targetLang: string, gameI
   }
 }
 
+/**
+ * Estrae i SOLI .rpy dagli archivi game/*.rpa in <gioco>/GameStringer/rpa_src/game/.
+ * Ritorna la radice da passare a extract_all_renpy_strings (contiene game/, così
+ * detect_renpy_game la riconosce), o null se non ci sono .rpa o sorgenti.
+ */
+async function extractRpaSources(gamePath: string): Promise<string | null> {
+  // Niente catch muti: ogni ramo che rinuncia DICE perché (lezione della
+  // notte del 07/08: la prima versione inghiottiva l'errore vero).
+  try {
+    const { readDir, exists } = await import('@tauri-apps/plugin-fs');
+    const sep = gamePath.includes('\\') ? '\\' : '/';
+    const gameDir = `${gamePath}${sep}game`;
+    if (!(await exists(gameDir))) {
+      clientLogger.warn(`Ren'Py rpa: cartella game/ non trovata: ${gameDir}`);
+      return null;
+    }
+    const entries = await readDir(gameDir);
+    const rpas = entries
+      .filter((e) => !e.isDirectory && /\.rpa$/i.test(e.name))
+      .map((e) => `${gameDir}${sep}${e.name}`);
+    if (rpas.length === 0) {
+      clientLogger.warn(`Ren'Py rpa: nessun .rpa in ${gameDir} (${entries.length} voci)`);
+      return null;
+    }
+
+    const srcRoot = `${gamePath}${sep}GameStringer${sep}rpa_src`;
+    const outGame = `${srcRoot}${sep}game`;
+    let total = 0;
+    for (const rpa of rpas) {
+      try {
+        const res = await invoke<{ files_count: number }>('extract_renpy_rpa', {
+          rpaPath: rpa,
+          outputPath: outGame,
+          extensions: ['rpy'],
+        });
+        total += res?.files_count ?? 0;
+      } catch (e: unknown) {
+        clientLogger.warn(`Ren'Py rpa: estrazione fallita per ${rpa}: ${String(e)}`);
+      }
+    }
+    clientLogger.info(`Ren'Py rpa: estratti ${total} .rpy da ${rpas.length} archivi`);
+    return total > 0 ? srcRoot : null;
+  } catch (e: unknown) {
+    clientLogger.warn(`Ren'Py rpa: fase estrazione sorgenti saltata: ${String(e)}`);
+    return null;
+  }
+}
+
 export async function runRenpyTranslation(opts: {
   gamePath: string;
   targetLang?: string;
@@ -131,10 +181,19 @@ export async function runRenpyTranslation(opts: {
   glossary?: GlossaryPair[];
   model?: string;
   chunkSize?: number;
+  /**
+   * 'cloud' = sistema provider dell'app (translateWithFallbackBatched: chiavi
+   * API dalle Impostazioni, reflection + guard placeholder inclusi);
+   * 'ollama' = locale come prima. Default: localStorage 'gs_renpy_backend',
+   * altrimenti 'ollama' (nessuna spesa API a sorpresa per chi aggiorna).
+   */
+  backend?: 'cloud' | 'ollama';
   onProgress?: (p: RenpyProgress) => void;
 }): Promise<{ translated: number; total: number; files: string; glossaryTerms: number; voiceProfiles: number }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const src = (opts.sourceLang || 'en').toLowerCase();
+  const backend: 'cloud' | 'ollama' =
+    opts.backend || (lsGet('gs_renpy_backend') === 'cloud' ? 'cloud' : 'ollama');
   const model = opts.model || lsGet('gs_renpy_model') || lsGet('gs_hendrix_model') || 'gemma4:e4b';
   const CHUNK = opts.chunkSize || Number(lsGet('gs_renpy_chunk')) || 30;
   const SAVE_EVERY = 300;
@@ -142,10 +201,25 @@ export async function runRenpyTranslation(opts: {
 
   // -- Estrazione --
   report({ phase: 'extract', done: 0, total: 0 });
-  const extraction = await invoke<RenpyExtractionResult>('extract_all_renpy_strings', {
+  // I giochi commerciali tengono i copioni DENTRO game/*.rpa: l'estrattore
+  // Rust (extract_renpy_rpa) esisteva da tempo ma nessun flusso lo chiamava —
+  // Scarlet Hollow (07/08/2026) moriva con «Nessun file .rpy trovato» davanti
+  // a un archivio con 199 sorgenti. Prima si prova coi .rpy sciolti; se non ce
+  // ne sono, si estraggono SOLO i .rpy dagli .rpa (letture mirate, mai 5,6 GB
+  // in RAM) in GameStringer/rpa_src/game/ — MAI dentro game/: Ren'Py
+  // caricherebbe i duplicati sciolti e andrebbe in conflitto di label.
+  let extraction = await invoke<RenpyExtractionResult>('extract_all_renpy_strings', {
     gamePath: opts.gamePath,
-  });
-  if (!extraction.success) throw new Error(extraction.message || "Estrazione Ren'Py fallita");
+  }).catch(() => null);
+  if (!extraction || !extraction.success || extraction.strings.length === 0) {
+    const srcRoot = await extractRpaSources(opts.gamePath);
+    if (srcRoot) {
+      extraction = await invoke<RenpyExtractionResult>('extract_all_renpy_strings', {
+        gamePath: srcRoot,
+      });
+    }
+  }
+  if (!extraction || !extraction.success) throw new Error(extraction?.message || "Estrazione Ren'Py fallita (né .rpy sciolti né sorgenti negli .rpa)");
   const rows = extraction.strings;
   const total = rows.length;
   if (total === 0) throw new Error('Nessuna stringa traducibile trovata (.rpy)');
@@ -209,7 +283,12 @@ export async function runRenpyTranslation(opts: {
     await invoke('save_renpy_translations', { outputPath: progressPath, strings: rows }).catch(() => {});
   };
 
-  // -- Traduzione a chunk via Ollama, con masking + glossario + voce --
+  // -- Traduzione a chunk (cloud: provider dell'app / ollama: locale), con
+  //    masking + glossario + voce. Il guard sui tag e il checkpoint sono gli
+  //    stessi per entrambi i backend.
+  const glossaryHint = backend === 'cloud' && glossary.length
+    ? glossary.map((g) => `${g.source}=${g.target}`).join('; ').slice(0, 1500)
+    : undefined;
   let sinceSave = 0;
   for (let i = 0; i < pendingOriginals.length; i += CHUNK) {
     const slice = pendingOriginals.slice(i, i + CHUNK);
@@ -221,12 +300,32 @@ export async function runRenpyTranslation(opts: {
       if (!sp) return null;
       return voiceDescOf[sp] ?? sp;
     });
-    const res = await invoke<{ translated: string }[]>('offline_translate_batch_context', {
-      texts: raws, contexts, glossary, sourceLang: src, targetLang: tgt, model,
-    });
-    res.forEach((tr, k) => {
-      const out = (tr.translated || '').trim();
-      const bad = !out || out.startsWith('[ERRORE]');
+    let outs: string[];
+    if (backend === 'cloud') {
+      // Il batch cloud ha UN contesto per chiamata: si passa il riassunto dei
+      // parlanti del blocco (la granularità per-riga resta al ramo Ollama).
+      const speakers = Array.from(new Set(contexts.filter(Boolean) as string[])).slice(0, 4);
+      const res = await translateWithFallbackBatched({
+        texts: raws,
+        targetLanguage: tgt,
+        sourceLanguage: src,
+        gameId: opts.gameId,
+        context: [
+          "Ren'Py visual novel dialogue. Preserve ALL {tags}, [variables] and escape sequences exactly.",
+          speakers.length ? `Speakers in this batch — keep each voice consistent: ${speakers.join(' | ')}` : '',
+        ].filter(Boolean).join('\n'),
+        glossaryHint,
+      }, 20);
+      outs = res.translations;
+    } else {
+      const res = await invoke<{ translated: string }[]>('offline_translate_batch_context', {
+        texts: raws, contexts, glossary, sourceLang: src, targetLang: tgt, model,
+      });
+      outs = res.map(r => r.translated);
+    }
+    outs.forEach((translatedText, k) => {
+      const out = (translatedText || '').trim();
+      const bad = !out || out.startsWith('[ERRORE]') || out === raws[k];
       // Accetta solo se i tag {..}/[..] combaciano; altrimenti lascia non tradotto (retry al resume).
       if (!bad && codeKey(out) === codeKey(raws[k])) byOriginal[slice[k]] = out;
     });

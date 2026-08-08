@@ -528,11 +528,14 @@ fn is_renpy(path: &Path) -> bool {
         }
     }
     
-    // Check for lib/pythonXX folder (Ren'Py bundled Python)
+    // Check for lib/pythonXX folder (Ren'Py bundled Python).
+    // 07/08/2026: i Ren'Py 8 recenti usano lib/py3-windows-x86_64 e simili —
+    // «py3» non inizia con «python», quindi il check vecchio li mancava se
+    // (come nei build senza cartella renpy/) questo era l'unico indizio.
     if let Ok(entries) = std::fs::read_dir(path.join("lib")) {
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_lowercase();
-            if name.starts_with("python") || name.contains("renpy") {
+            if name.starts_with("python") || name.starts_with("py3-") || name.contains("renpy") {
                 return true;
             }
         }

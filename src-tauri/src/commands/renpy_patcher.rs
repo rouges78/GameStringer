@@ -133,8 +133,11 @@ fn find_rpy_files(game_path: &str) -> Result<Vec<RenpyScriptFile>, String> {
     
     let mut files = Vec::new();
     
+    // 07/08/2026: max_depth era 5 e Scarlet Hollow tiene i copioni a
+    // profondità 6 (scripts/_day_3/<caccia>/<luogo>/<personaggio>/file.rpy):
+    // i più annidati sparivano IN SILENZIO dal conteggio. 12 copre con margine.
     for entry in walkdir::WalkDir::new(&search_folder)
-        .max_depth(5)
+        .max_depth(12)
         .into_iter()
         .filter_map(|e| e.ok())
     {

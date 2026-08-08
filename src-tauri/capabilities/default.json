@@ -21,6 +21,10 @@
     "core:menu:default",
     "core:tray:default",
     "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    },
     "fs:allow-read-text-file",
     "fs:allow-read-file",
     "fs:allow-write-file",
