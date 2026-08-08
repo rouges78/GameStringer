@@ -8079,6 +8079,8 @@
     "local": "Local",
     "cloud": "Cloud",
     "localHint": "Ollama local — gratuit, nécessite Ollama démarré et un modèle installé.",
-    "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit."
+    "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit.",
+    "testBatch": "Lot d’essai ({n})",
+    "testBatchHint": "Ne traduit que {n} chaînes mais génère quand même les fichiers tl/, pour voir le résultat en jeu avant de lancer le script entier. L’exécution complète reprend ici."
   }
 }

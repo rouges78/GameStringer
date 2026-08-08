@@ -8079,6 +8079,8 @@
     "local": "本地",
     "cloud": "云端",
     "localHint": "本地 Ollama — 免费，需要 Ollama 已启动并安装模型。",
-    "cloudHint": "云端服务商 — 使用设置中的 API 密钥，会消耗额度。"
+    "cloudHint": "云端服务商 — 使用设置中的 API 密钥，会消耗额度。",
+    "testBatch": "试运行（{n} 条）",
+    "testBatchHint": "仅翻译 {n} 条字符串，但仍会生成 tl/ 文件，可在处理整个剧本前先在游戏中查看效果。完整运行会从此处继续。"
   }
 }

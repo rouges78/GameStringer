@@ -8079,6 +8079,8 @@
     "local": "Local",
     "cloud": "Nube",
     "localHint": "Ollama local: gratis, requiere Ollama en ejecución y un modelo instalado.",
-    "cloudHint": "Proveedores en la nube: usa las claves API de Ajustes y consume crédito."
+    "cloudHint": "Proveedores en la nube: usa las claves API de Ajustes y consume crédito.",
+    "testBatch": "Lote de prueba ({n})",
+    "testBatchHint": "Traduce solo {n} cadenas pero genera igualmente los archivos tl/, para ver el resultado en el juego antes de procesar el guion completo. La ejecución completa continúa desde aquí."
   }
 }

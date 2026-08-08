@@ -193,6 +193,19 @@ export async function runRenpyTranslation(opts: {
    * l'altro.
    */
   backend?: TranslationBackend;
+  /**
+   * Tetto alle stringhe NUOVE tradotte in questa passata. Serve alla prova
+   * d'effetto: su Scarlet Hollow (83.489 stringhe, ~4M token) l'unico modo di
+   * sapere se il gioco parla italiano era spendere tutto e guardare alla fine.
+   * Con un tetto, un lotto piccolo arriva comunque FINO a
+   * generate_renpy_translation e produce un tl/ VERO — il generatore salta le
+   * righe non tradotte (renpy_patcher.rs: `if s.translated.is_empty()
+   * { continue }`, inchiodato da un test), quindi il risultato è italiano dove
+   * abbiamo tradotto e inglese altrove: verificabile a schermo per pochi
+   * centesimi. Il checkpoint è lo stesso, quindi la run completa riprende da
+   * dove ha lasciato il lotto di prova, senza ritradurre nulla.
+   */
+  limit?: number;
   onProgress?: (p: RenpyProgress) => void;
 }): Promise<{ translated: number; total: number; files: string; glossaryTerms: number; voiceProfiles: number }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
@@ -278,9 +291,20 @@ export async function runRenpyTranslation(opts: {
   let done = rows.filter(r => r.translated).length;
   report({ phase: 'translate', done, total });
 
-  const pendingOriginals = Array.from(new Set(
+  const allPending = Array.from(new Set(
     rows.filter(r => !r.translated).map(r => r.original)
   ));
+  // Il tetto vale sulle stringhe NUOVE, non sul totale: un lotto di prova da
+  // 200 dopo un checkpoint da 5.000 traduce 200 righe, non zero.
+  const pendingOriginals = opts.limit && opts.limit > 0
+    ? allPending.slice(0, opts.limit)
+    : allPending;
+  if (pendingOriginals.length < allPending.length) {
+    clientLogger.info(
+      `Ren'Py: LOTTO DI PROVA — ${pendingOriginals.length} stringhe su ${allPending.length} da tradurre ` +
+      `(backend "${backend}"). I file tl/ verranno generati lo stesso: italiano dove tradotto, inglese altrove.`
+    );
+  }
 
   const applyAndSave = async () => {
     for (const r of rows) if (byOriginal[r.original]) r.translated = byOriginal[r.original];

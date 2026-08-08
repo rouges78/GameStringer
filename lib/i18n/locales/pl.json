@@ -8081,6 +8081,8 @@
     "local": "Lokalnie",
     "cloud": "Chmura",
     "localHint": "Lokalna Ollama — za darmo, wymaga uruchomionej Ollamy i zainstalowanego modelu.",
-    "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki."
+    "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki.",
+    "testBatch": "Partia próbna ({n})",
+    "testBatchHint": "Tłumaczy tylko {n} ciągów, ale i tak generuje pliki tl/, więc możesz sprawdzić efekt w grze przed przetworzeniem całego skryptu. Pełne uruchomienie wznowi się stąd."
   }
 }

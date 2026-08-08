@@ -132,6 +132,28 @@ describe("freno del flusso Ren'Py", () => {
     expect(generateCalled).toBe(false);
   });
 
+  it('il lotto di prova traduce poco MA genera comunque i file tl/', async () => {
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) => {
+        batchCalls++;
+        return { translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true };
+      }
+    );
+
+    const res = await runRenpyTranslation({
+      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud', limit: 45,
+    });
+
+    // Il tetto morde: 45 stringhe nuove, non 120.
+    expect(res.translated).toBe(45);
+    expect(res.total).toBe(120);
+    // E QUESTO è il punto del lotto di prova: i file tl/ si generano lo stesso,
+    // altrimenti non ci sarebbe niente da guardare in gioco e la prova
+    // d'effetto resterebbe impossibile finché non si spende tutto.
+    expect(generateCalled).toBe(true);
+  });
+
   it('un backend che traduce davvero arriva in fondo (il freno non è un falso positivo)', async () => {
     const direct = await import('@/lib/ai/ai-translate-direct');
     vi.mocked(direct.translateWithFallbackBatched).mockImplementation(

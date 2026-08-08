@@ -439,6 +439,14 @@ export default function GameDetailPage() {
     setTranslationBackend('renpy', v);
   };
 
+  // Lotto di prova: traduce poche stringhe ma genera comunque i file tl/, così
+  // si VEDE il risultato in gioco prima di impegnare un copione intero (su
+  // Scarlet Hollow: 83.489 stringhe, ~4M token). Volutamente NON persistito —
+  // se restasse acceso tra un avvio e l'altro, qualcuno crederebbe di aver
+  // tradotto tutto il gioco avendone tradotto duecento righe.
+  const RENPY_TEST_BATCH_SIZE = 200;
+  const [renpyTestBatch, setRenpyTestBatch] = useState(false);
+
   // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
   const [isAiUpgrading, setIsAiUpgrading] = useState(false);
   const [aiUpgradeProgress, setAiUpgradeProgress] = useState<{current: number, total: number} | null>(null);
@@ -2057,6 +2065,7 @@ export default function GameDetailPage() {
             // Esplicito, mai implicito: prima dell'08/08/2026 questo chiamante
             // non passava `backend` e la scelta restava sepolta in localStorage.
             backend: renpyBackend,
+            limit: renpyTestBatch ? RENPY_TEST_BATCH_SIZE : undefined,
             onProgress: (p) => {
               if (p.phase === 'extract') rpStep(0, 'running');
               else if (p.phase === 'glossary') { rpStep(0, 'done'); rpStep(1, 'running'); }
@@ -3422,11 +3431,26 @@ export default function GameDetailPage() {
                   file-based hanno lo stesso problema e useranno questo stesso
                   componente — vedi lib/translation-backend.ts. */}
               {translationStrategy?.method === 'renpy' && (
-                <BackendPicker
-                  value={renpyBackend}
-                  onChange={changeRenpyBackend}
-                  disabled={autoTranslateBusy}
-                />
+                <>
+                  <BackendPicker
+                    value={renpyBackend}
+                    onChange={changeRenpyBackend}
+                    disabled={autoTranslateBusy}
+                  />
+                  <label
+                    className="mt-1 flex items-center gap-1.5 text-micro font-bold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                    title={t('translationBackend.testBatchHint').replace('{n}', String(RENPY_TEST_BATCH_SIZE))}
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-3 w-3 accent-indigo-500"
+                      checked={renpyTestBatch}
+                      disabled={autoTranslateBusy}
+                      onChange={(e) => setRenpyTestBatch(e.target.checked)}
+                    />
+                    {t('translationBackend.testBatch').replace('{n}', String(RENPY_TEST_BATCH_SIZE))}
+                  </label>
+                </>
               )}
               {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi
                   TM + glossario + lore si scaldano senza passare da Impostazioni. ── */}

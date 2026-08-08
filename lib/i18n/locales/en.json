@@ -8079,6 +8079,8 @@
     "local": "Local",
     "cloud": "Cloud",
     "localHint": "Local Ollama — free, needs Ollama running and a model installed.",
-    "cloudHint": "Cloud providers — uses the API keys from Settings and consumes credit."
+    "cloudHint": "Cloud providers — uses the API keys from Settings and consumes credit.",
+    "testBatch": "Test batch ({n})",
+    "testBatchHint": "Translates only {n} strings but still writes the tl/ files, so you can check the result in-game before committing to the whole script. The next full run resumes from here."
   }
 }

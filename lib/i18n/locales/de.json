@@ -8079,6 +8079,8 @@
     "local": "Lokal",
     "cloud": "Cloud",
     "localHint": "Lokales Ollama — kostenlos, erfordert laufendes Ollama und ein installiertes Modell.",
-    "cloudHint": "Cloud-Anbieter — nutzt die API-Schlüssel aus den Einstellungen und verbraucht Guthaben."
+    "cloudHint": "Cloud-Anbieter — nutzt die API-Schlüssel aus den Einstellungen und verbraucht Guthaben.",
+    "testBatch": "Testlauf ({n})",
+    "testBatchHint": "Übersetzt nur {n} Zeichenketten, erzeugt aber trotzdem die tl/-Dateien, damit du das Ergebnis im Spiel prüfen kannst, bevor du das ganze Skript startest. Der vollständige Lauf setzt hier fort."
   }
 }
