@@ -278,6 +278,24 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
         let line = lines[line_idx];
         let trimmed = line.trim();
 
+        // Skip comments and blank lines PRIMA di toccare lo stack dei blocchi.
+        //
+        // 08/08/2026, il difetto che ha spento la traduzione dei menu di OGNI
+        // gioco Ren'Py: una riga vuota ha indentazione 0, e il pop stava PRIMA
+        // di questo salto — quindi la prima riga vuota dentro uno `screen`
+        // (screens.rpy ne è pieno) chiudeva il blocco Screen. Da lì in poi ogni
+        // `text "..."` cadeva nell'estrazione generica: «text» è alfanumerico,
+        // diventava il nome del personaggio, e la stringa finiva Dialogue nel
+        // filtro say — che il testo delle screen non lo tocca. Misurato su
+        // Scarlet Hollow: 2.127 stringhe UI in screens.rpy+gui.rpy, di cui
+        // SOLO 3 classificate String (le uniche prima della prima riga vuota);
+        // 435 Dialogue con speaker "text"/"textbutton". Per Ren'Py una riga
+        // vuota o un commento non chiudono un blocco: nemmeno per noi.
+        if trimmed.starts_with('#') || trimmed.is_empty() {
+            line_idx += 1;
+            continue;
+        }
+
         // Measure indentation (spaces; treat tab as 4 spaces)
         let indent: usize = line.chars().take_while(|c| c.is_whitespace())
             .map(|c| if c == '\t' { 4 } else { 1 }).sum();
@@ -288,12 +306,6 @@ pub fn extract_renpy_strings(file_path: String) -> Result<RenpyExtractionResult,
         }
 
         let in_python = block_stack.iter().any(|b| b.kind == BlockKind::Python);
-
-        // Skip comments and blank lines
-        if trimmed.starts_with('#') || trimmed.is_empty() {
-            line_idx += 1;
-            continue;
-        }
 
         // Skip if we are inside a python block
         if in_python {
@@ -644,22 +656,44 @@ pub fn generate_renpy_translation(
     let mut generated_files: Vec<String> = Vec::new();
 
     // ── Blocco `strings` old/new per il testo UI delle screen ───────────
+    // Dedup GLOBALE per lingua, non per file: Ren'Py rifiuta con eccezione
+    // FATALE («A translation for "X" already exists») un `old` ripetuto
+    // OVUNQUE dentro tl/<lang>/ — scoperto l'08/08/2026 sul campo, quando
+    // Scarlet Hollow è morto all'avvio su `old "Case"` scritto due volte in
+    // 01virtual_keyboard_it.rpy (la tastiera virtuale ripete le etichette per
+    // la riga maiuscole/minuscole). Il filtro say deduplicava già, questo
+    // ramo no: stessa famiglia dei 233 duplicati della mappa di Larry 3. La
+    // prima occorrenza vince, come fa `seen` nel filtro.
+    let mut ui_seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     for (file, file_strings) in &ui_strings {
         let output_filename = file.replace(".rpy", &format!("_{}.rpy", language));
         let output_path = tl_folder.join(&output_filename);
 
         let mut content = format!("# Translation file for {}\n\n", file);
         content.push_str(&format!("translate {} strings:\n\n", language));
+        let mut wrote_any = false;
 
         for s in file_strings {
             // L'estrazione conserva gli escape sorgente (\" \n …). La stringa
             // runtime con cui Ren'Py confronta `old` è de-escapata: de-escapiamo
             // e poi ri-escapiamo per il literal, evitando il doppio escape.
-            let key = escape_renpy_string(&unescape_renpy_string(&s.original));
+            let runtime_key = unescape_renpy_string(&s.original);
+            if !ui_seen.insert(runtime_key.clone()) {
+                continue; // già tradotta altrove: un secondo `old` è un crash
+            }
+            let key = escape_renpy_string(&runtime_key);
             let val = escape_renpy_string(&s.translated);
             content.push_str(&format!("    # {}:{}\n", s.file, s.line_number));
             content.push_str(&format!("    old \"{}\"\n", key));
             content.push_str(&format!("    new \"{}\"\n\n", val));
+            wrote_any = true;
+        }
+
+        // Un file di soli duplicati sarebbe un `translate strings:` vuoto —
+        // inutile, e per Ren'Py un blocco senza contenuto è comunque un file
+        // da compilare. Non lo scriviamo proprio.
+        if !wrote_any {
+            continue;
         }
 
         fs::write(&output_path, content)
@@ -1144,6 +1178,78 @@ mod tests {
         let result = write_rpy_and_extract("# This is a comment\n    e \"Hello\"");
         assert_eq!(result.total_count, 1);
         assert_eq!(result.strings[0].original, "Hello");
+    }
+
+    #[test]
+    fn test_generate_dedupes_old_strings_globally() {
+        // 08/08/2026: `old "Case"` scritto due volte ha ucciso Scarlet Hollow
+        // ALL'AVVIO («A translation for "Case" already exists») — Ren'Py vuole
+        // un solo old per lingua in tutto tl/<lang>/, anche tra file diversi.
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("game")).unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+
+        // Stesso original due volte nello stesso file E una terza in un altro.
+        let mut a = make_string("Case", "Maiusc", RenpyStringType::String);
+        a.file = "01virtual_keyboard.rpy".to_string();
+        let mut b = make_string("Case", "Maiusc", RenpyStringType::String);
+        b.file = "01virtual_keyboard.rpy".to_string();
+        let mut c = make_string("Case", "Maiusc", RenpyStringType::String);
+        c.file = "screens.rpy".to_string();
+        let mut d = make_string("Start", "Inizia", RenpyStringType::String);
+        d.file = "screens.rpy".to_string();
+
+        generate_renpy_translation(game_path, "it".to_string(), vec![a, b, c, d]).unwrap();
+
+        let tl = tmp.path().join("game").join("tl").join("it");
+        let mut total_case = 0;
+        for name in ["01virtual_keyboard_it.rpy", "screens_it.rpy"] {
+            let p = tl.join(name);
+            if p.exists() {
+                total_case += fs::read_to_string(p).unwrap().matches("old \"Case\"").count();
+            }
+        }
+        assert_eq!(total_case, 1, "`old \"Case\"` deve comparire UNA volta in tutta tl/it");
+        // La stringa non duplicata sopravvive.
+        let screens = fs::read_to_string(tl.join("screens_it.rpy")).unwrap();
+        assert!(screens.contains("old \"Start\""));
+    }
+
+    #[test]
+    fn test_screen_block_survives_blank_lines() {
+        // 08/08/2026, misurato su Scarlet Hollow: la riga vuota (indent 0)
+        // chiudeva il blocco Screen perché il pop dello stack stava PRIMA del
+        // salto vuote/commenti. Da lì `text "..."` diventava Dialogue con
+        // speaker "text" e finiva nel filtro say, che il testo delle screen
+        // non lo tocca: 2.124 stringhe UI su 2.127 nel canale sbagliato, cioè
+        // il menu di OGNI gioco Ren'Py mai tradotto davvero. Questo test è il
+        // file screens.rpy minimo che riproduce il caso: se il blocco Screen
+        // non sopravvive alla riga vuota, "Load Game" non è String e il test
+        // è rosso.
+        let content = "screen main_menu():\n    text \"New Game\"\n\n    text \"Load Game\"\n\n    # commento indentato\n    textbutton \"Options\"\n";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 3, "attese 3 stringhe UI: {:?}", result.strings);
+        for s in &result.strings {
+            assert!(
+                matches!(s.string_type, RenpyStringType::String),
+                "'{}' doveva essere String, è {:?} (character: {:?})",
+                s.original, s.string_type, s.character
+            );
+            assert_eq!(s.character, None, "il testo di screen non ha parlante");
+        }
+    }
+
+    #[test]
+    fn test_screen_block_still_pops_on_dedent() {
+        // Il contrappeso del fix: uscire DAVVERO dal blocco (dedent su codice
+        // vero, non su una riga vuota) deve continuare a chiudere lo Screen —
+        // il dialogo dopo la screen resta Dialogue, non diventa UI.
+        let content = "screen hud():\n    text \"Score\"\nlabel start:\n    e \"Hello\"\n";
+        let result = write_rpy_and_extract(content);
+        assert_eq!(result.total_count, 2);
+        assert!(matches!(result.strings[0].string_type, RenpyStringType::String));
+        assert!(matches!(result.strings[1].string_type, RenpyStringType::Dialogue));
+        assert_eq!(result.strings[1].character, Some("e".to_string()));
     }
 
     #[test]
@@ -1715,7 +1821,14 @@ mod tests {
 
     #[test]
     fn test_extract_skips_python_block() {
-        let content = "python:\n    x = \"not extractable\"\n    y = 42\n\n    e \"After python\"";
+        // 08/08/2026: il fixture originale metteva il dialogo "dopo" il blocco
+        // ALLA STESSA INDENTAZIONE del corpo python — per Ren'Py è ancora
+        // dentro il blocco, e il test passava solo grazie al bug della riga
+        // vuota che chiudeva lo stack (lo stesso che spegneva i menu, vedi
+        // test_screen_block_survives_blank_lines). Fixture che validava il
+        // difetto, non il comportamento: ora il dialogo esce col DEDENT, come
+        // in un .rpy vero.
+        let content = "python:\n    x = \"not extractable\"\n    y = 42\n\ne \"After python\"";
         let result = write_rpy_and_extract(content);
         assert_eq!(result.total_count, 1);
         assert_eq!(result.strings[0].original, "After python");
@@ -1723,7 +1836,8 @@ mod tests {
 
     #[test]
     fn test_extract_skips_init_python_block() {
-        let content = "init python:\n    config.foo = \"bar\"\n\n    e \"After init python\"";
+        // Stesso fixture-che-validava-il-bug del test sopra: dedent vero.
+        let content = "init python:\n    config.foo = \"bar\"\n\ne \"After init python\"";
         let result = write_rpy_and_extract(content);
         assert_eq!(result.total_count, 1);
         assert_eq!(result.strings[0].original, "After init python");
