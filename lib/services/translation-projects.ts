@@ -1,6 +1,7 @@
 'use client';
 
 import { get, set } from 'idb-keyval';
+import { persistProjectsToDisk } from '@/lib/projects-persistence';
 import { getSupabase } from '@/lib/social/community-hub-backend';
 import { clientLogger } from '@/lib/client-logger';
 import { gamePathKey as normalizePathKey } from '@/lib/game-path';
@@ -231,6 +232,7 @@ class TranslationProjectService {
 
     if (removed > 0) {
       await set(PROJECTS_KEY, survivors);
+      void persistProjectsToDisk(); // write-through: IndexedDB è per-origine, il disco no
     }
     return removed;
   }
@@ -261,6 +263,7 @@ class TranslationProjectService {
     }
     
     await set(PROJECTS_KEY, projects);
+    void persistProjectsToDisk(); // write-through: IndexedDB è per-origine, il disco no
   }
 
   /**
@@ -302,6 +305,7 @@ class TranslationProjectService {
    */
   async setActiveProject(projectId: string): Promise<void> {
     await set(ACTIVE_PROJECT_KEY, projectId);
+    void persistProjectsToDisk(); // write-through: IndexedDB è per-origine, il disco no
   }
 
   /**
@@ -443,6 +447,9 @@ class TranslationProjectService {
     const projects = await this.getAllProjects();
     const filtered = projects.filter(p => p.id !== projectId);
     await set(PROJECTS_KEY, filtered);
+    // allowEmpty: cancellare l'ULTIMO progetto deve svuotare anche il disco,
+    // sennò risorge alla prossima hydration.
+    void persistProjectsToDisk({ allowEmpty: true });
     
     // Rimuovi da Supabase se condiviso
     const project = projects.find(p => p.id === projectId);

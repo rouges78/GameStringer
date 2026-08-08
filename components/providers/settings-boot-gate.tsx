@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { hydrateSettingsFromDisk, persistSettingsToDisk } from '@/lib/settings-persistence';
+import { hydrateProjectsFromDisk, persistProjectsToDisk } from '@/lib/projects-persistence';
 import { installGlobalCrashHandlers } from '@/lib/crash-reporter';
 
 /**
@@ -32,13 +33,16 @@ export function SettingsBootGate({ children }: { children: React.ReactNode }) {
     // sulle impostazioni privacy viene ricontrollato a ogni report.
     installGlobalCrashHandlers();
 
-    hydrateSettingsFromDisk().finally(() => {
+    // Impostazioni e progetti si idratano in parallelo: entrambi per-origine
+    // in web-storage, entrambi con la copia su disco come fonte di verità
+    // ([storage-per-origine]; i progetti dal 07/08/2026).
+    Promise.allSettled([hydrateSettingsFromDisk(), hydrateProjectsFromDisk()]).then(() => {
       clearTimeout(timer);
       finish();
     });
 
     // Flush su disco quando l'app perde focus / viene chiusa.
-    const flush = () => { void persistSettingsToDisk(); };
+    const flush = () => { void persistSettingsToDisk(); void persistProjectsToDisk(); };
     const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
 
     window.addEventListener('beforeunload', flush);
