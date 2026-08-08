@@ -8073,5 +8073,12 @@
     "testHint": "Verifica che le notifiche di sistema funzionino correttamente",
     "testTitle": "🔔 Notifica di prova",
     "testBody": "Se vedi questo messaggio, le notifiche di sistema funzionano!"
+  },
+  "translationBackend": {
+    "label": "Motore AI",
+    "local": "Locale",
+    "cloud": "Cloud",
+    "localHint": "Ollama locale — gratis, richiede Ollama avviato e un modello installato.",
+    "cloudHint": "Provider cloud — usa le chiavi API delle Impostazioni e consuma credito."
   }
 }

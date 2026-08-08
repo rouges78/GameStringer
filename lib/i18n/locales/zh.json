@@ -8073,5 +8073,12 @@
     "testHint": "检查系统通知是否正常工作",
     "testTitle": "🔔 测试通知",
     "testBody": "如果你看到这条消息，说明系统通知正常工作！"
+  },
+  "translationBackend": {
+    "label": "AI 引擎",
+    "local": "本地",
+    "cloud": "云端",
+    "localHint": "本地 Ollama — 免费，需要 Ollama 已启动并安装模型。",
+    "cloudHint": "云端服务商 — 使用设置中的 API 密钥，会消耗额度。"
   }
 }

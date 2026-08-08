@@ -8073,5 +8073,12 @@
     "testHint": "Prüfen, ob Systembenachrichtigungen korrekt funktionieren",
     "testTitle": "🔔 Testbenachrichtigung",
     "testBody": "Wenn du diese Nachricht siehst, funktionieren die Systembenachrichtigungen!"
+  },
+  "translationBackend": {
+    "label": "KI-Engine",
+    "local": "Lokal",
+    "cloud": "Cloud",
+    "localHint": "Lokales Ollama — kostenlos, erfordert laufendes Ollama und ein installiertes Modell.",
+    "cloudHint": "Cloud-Anbieter — nutzt die API-Schlüssel aus den Einstellungen und verbraucht Guthaben."
   }
 }

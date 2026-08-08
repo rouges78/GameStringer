@@ -8073,5 +8073,12 @@
     "testHint": "Vérifiez que les notifications système fonctionnent correctement",
     "testTitle": "🔔 Notification de test",
     "testBody": "Si vous voyez ce message, les notifications système fonctionnent !"
+  },
+  "translationBackend": {
+    "label": "Moteur IA",
+    "local": "Local",
+    "cloud": "Cloud",
+    "localHint": "Ollama local — gratuit, nécessite Ollama démarré et un modèle installé.",
+    "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit."
   }
 }

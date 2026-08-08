@@ -8075,5 +8075,12 @@
     "testHint": "Sprawdź, czy powiadomienia systemowe działają poprawnie",
     "testTitle": "🔔 Powiadomienie testowe",
     "testBody": "Jeśli widzisz tę wiadomość, powiadomienia systemowe działają!"
+  },
+  "translationBackend": {
+    "label": "Silnik AI",
+    "local": "Lokalnie",
+    "cloud": "Chmura",
+    "localHint": "Lokalna Ollama — za darmo, wymaga uruchomionej Ollamy i zainstalowanego modelu.",
+    "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki."
   }
 }

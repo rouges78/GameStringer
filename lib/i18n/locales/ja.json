@@ -8075,5 +8075,12 @@
     "testHint": "OS の通知が正しく動作するか確認します",
     "testTitle": "🔔 テスト通知",
     "testBody": "このメッセージが見えていれば、システム通知は正常に動作しています！"
+  },
+  "translationBackend": {
+    "label": "AIエンジン",
+    "local": "ローカル",
+    "cloud": "クラウド",
+    "localHint": "ローカルのOllama — 無料。Ollamaの起動とモデルのインストールが必要です。",
+    "cloudHint": "クラウドプロバイダー — 設定のAPIキーを使用し、クレジットを消費します。"
   }
 }

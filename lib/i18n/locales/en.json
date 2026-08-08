@@ -8073,5 +8073,12 @@
     "testHint": "Check that OS notifications work correctly",
     "testTitle": "🔔 Test notification",
     "testBody": "If you can see this message, system notifications are working!"
+  },
+  "translationBackend": {
+    "label": "AI engine",
+    "local": "Local",
+    "cloud": "Cloud",
+    "localHint": "Local Ollama — free, needs Ollama running and a model installed.",
+    "cloudHint": "Cloud providers — uses the API keys from Settings and consumes credit."
   }
 }

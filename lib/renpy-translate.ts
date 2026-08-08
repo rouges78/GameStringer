@@ -15,6 +15,7 @@ import { invoke } from '@/lib/tauri-api';
 import { cleanGamePath } from '@/lib/game-path';
 import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
 import {
   loadVoiceProfiles,
   getVoiceProfile,
@@ -184,16 +185,19 @@ export async function runRenpyTranslation(opts: {
   /**
    * 'cloud' = sistema provider dell'app (translateWithFallbackBatched: chiavi
    * API dalle Impostazioni, reflection + guard placeholder inclusi);
-   * 'ollama' = locale come prima. Default: localStorage 'gs_renpy_backend',
-   * altrimenti 'ollama' (nessuna spesa API a sorpresa per chi aggiorna).
+   * 'ollama' = locale come prima. Se non passato lo decide
+   * getTranslationBackend('renpy') — che di default risponde 'ollama', così
+   * chi aggiorna non trova spese API a sorpresa. Dall'08/08/2026 il chiamante
+   * lo passa SEMPRE esplicito: il selettore in pagina è la fonte di verità, e
+   * l'impostazione salvata serve solo a ricordare la scelta tra un avvio e
+   * l'altro.
    */
-  backend?: 'cloud' | 'ollama';
+  backend?: TranslationBackend;
   onProgress?: (p: RenpyProgress) => void;
 }): Promise<{ translated: number; total: number; files: string; glossaryTerms: number; voiceProfiles: number }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const src = (opts.sourceLang || 'en').toLowerCase();
-  const backend: 'cloud' | 'ollama' =
-    opts.backend || (lsGet('gs_renpy_backend') === 'cloud' ? 'cloud' : 'ollama');
+  const backend: TranslationBackend = opts.backend || getTranslationBackend('renpy');
   const model = opts.model || lsGet('gs_renpy_model') || lsGet('gs_hendrix_model') || 'gemma4:e4b';
   const CHUNK = opts.chunkSize || Number(lsGet('gs_renpy_chunk')) || 30;
   const SAVE_EVERY = 300;
@@ -290,6 +294,16 @@ export async function runRenpyTranslation(opts: {
     ? glossary.map((g) => `${g.source}=${g.target}`).join('; ').slice(0, 1500)
     : undefined;
   let sinceSave = 0;
+  // FRENO (08/08/2026). translateWithFallbackBatched, quando un batch fallisce,
+  // riempie i buchi con la SORGENTE ("safety net") e ritorna success se anche
+  // UN SOLO batch del lotto è andato: leggendo solo res.translations, un cloud
+  // che smette di rispondere è indistinguibile da un cloud che traduce male.
+  // Su 83.489 stringhe (Scarlet Hollow) un credito esaurito — già successo alla
+  // ship v1.16.0 — significherebbe ~2.800 chiamate, zero traduzioni scritte e
+  // una barra che arriva serenamente al 100%. Famiglia [fallimenti-muti]: qui
+  // il contatore onesto non basta, serve qualcosa che SI FERMI e lo dica.
+  const MAX_EMPTY_CHUNKS = 3;
+  let emptyChunks = 0;
   for (let i = 0; i < pendingOriginals.length; i += CHUNK) {
     const slice = pendingOriginals.slice(i, i + CHUNK);
     const raws = slice.map(orig => unescapeRenpy(orig));
@@ -323,13 +337,34 @@ export async function runRenpyTranslation(opts: {
       });
       outs = res.map(r => r.translated);
     }
+    let acceptedHere = 0;
     outs.forEach((translatedText, k) => {
       const out = (translatedText || '').trim();
       const bad = !out || out.startsWith('[ERRORE]') || out === raws[k];
       // Accetta solo se i tag {..}/[..] combaciano; altrimenti lascia non tradotto (retry al resume).
-      if (!bad && codeKey(out) === codeKey(raws[k])) byOriginal[slice[k]] = out;
+      if (!bad && codeKey(out) === codeKey(raws[k])) { byOriginal[slice[k]] = out; acceptedHere++; }
     });
+
+    // Un chunk può legittimamente accettare zero righe (tutti tag rotti, o un
+    // blocco di sole stringhe identiche in entrambe le lingue), ma TRE di fila
+    // a zero non è più sfortuna: è il motore che non risponde. Ci si ferma
+    // salvando il lavoro fatto, così il resume riparte da qui invece di
+    // ricominciare — e si dice quale backend ha smesso, perché la cura è
+    // diversa (credito/chiave per il cloud, `ollama serve` per il locale).
     done = rows.filter(r => byOriginal[r.original] || r.translated).length;
+    emptyChunks = acceptedHere === 0 ? emptyChunks + 1 : 0;
+    if (emptyChunks >= MAX_EMPTY_CHUNKS) {
+      await applyAndSave();
+      const why = backend === 'cloud'
+        ? 'controlla credito e chiave API nelle Impostazioni'
+        : "controlla che Ollama sia avviato e che il modello sia installato";
+      throw new Error(
+        `Traduzione interrotta: ${MAX_EMPTY_CHUNKS} blocchi consecutivi senza nemmeno una stringa accettata ` +
+        `(backend "${backend}", ${done}/${total} completate e salvate). Nessuna stringa persa: ` +
+        `riavvia la traduzione per riprendere da qui. Causa probabile: ${why}.`
+      );
+    }
+
     sinceSave += slice.length;
     report({ phase: 'translate', done, total });
 

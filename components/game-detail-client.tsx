@@ -35,6 +35,8 @@ import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
 import { runRenpyTranslation } from '@/lib/renpy-translate';
+import { BackendPicker } from '@/components/translation/backend-picker';
+import { getTranslationBackend, setTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
 import { startHeroTracking } from '@/lib/hero-job-tracking';
 import {
@@ -423,6 +425,19 @@ export default function GameDetailPage() {
     ready: boolean;
   } | null>(null);
   const strategyComputedRef = useRef<string | null>(null);
+
+  // Motore AI per la pipeline Ren'Py: cloud (chiavi API delle Impostazioni)
+  // oppure Ollama locale. Fino all'08/08/2026 questa scelta esisteva SOLO come
+  // chiave localStorage senza UI, e infatti la run notturna su Scarlet Hollow è
+  // finita sul locale mentre credevamo di usare il cloud. Si legge dopo il
+  // mount (localStorage non esiste in SSR) e si passa SEMPRE esplicita a
+  // runRenpyTranslation, così il pulsante e il codice non possono divergere.
+  const [renpyBackend, setRenpyBackend] = useState<TranslationBackend>('ollama');
+  useEffect(() => { setRenpyBackend(getTranslationBackend('renpy')); }, []);
+  const changeRenpyBackend = (v: TranslationBackend) => {
+    setRenpyBackend(v);
+    setTranslationBackend('renpy', v);
+  };
 
   // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
   const [isAiUpgrading, setIsAiUpgrading] = useState(false);
@@ -2039,6 +2054,9 @@ export default function GameDetailPage() {
             targetLang: tgt,
             sourceLang: 'en',
             gameId: game.id || (game.appid ? String(game.appid) : undefined),
+            // Esplicito, mai implicito: prima dell'08/08/2026 questo chiamante
+            // non passava `backend` e la scelta restava sepolta in localStorage.
+            backend: renpyBackend,
             onProgress: (p) => {
               if (p.phase === 'extract') rpStep(0, 'running');
               else if (p.phase === 'glossary') { rpStep(0, 'done'); rpStep(1, 'running'); }
@@ -2074,7 +2092,14 @@ export default function GameDetailPage() {
           toast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte. Avvia il gioco e seleziona ${tgt.toUpperCase()}.`);
         } catch (e) {
           rpStep(2, 'error', String(e));
-          setAutoTranslateError(`Ren'Py: ${String(e)} — Ollama è avviato?`);
+          // Il suggerimento deve seguire il backend scelto: dire "Ollama è
+          // avviato?" a chi sta usando il cloud manda a cercare nel posto
+          // sbagliato (e viceversa).
+          setAutoTranslateError(
+            `Ren'Py: ${String(e)} — ${renpyBackend === 'cloud'
+              ? 'chiave API e credito sono a posto nelle Impostazioni?'
+              : 'Ollama è avviato?'}`
+          );
           await rpTracker.fail(e);
           toast.error(t('gameDetail.errRenpy'), { description: String(e) });
         } finally {
@@ -3389,6 +3414,19 @@ export default function GameDetailPage() {
                 <div className="text-2xs text-center mt-1 text-slate-500 tracking-wide">
                   {translationStrategy.engine} · {translationStrategy.detail}
                 </div>
+              )}
+              {/* ── Motore AI (solo Ren'Py, per ora) ──────────────────────────
+                  Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
+                  pilotabile SOLO da localStorage: nessun pulsante, quindi per
+                  l'utente non esisteva. Gli altri quattro traduttori
+                  file-based hanno lo stesso problema e useranno questo stesso
+                  componente — vedi lib/translation-backend.ts. */}
+              {translationStrategy?.method === 'renpy' && (
+                <BackendPicker
+                  value={renpyBackend}
+                  onChange={changeRenpyBackend}
+                  disabled={autoTranslateBusy}
+                />
               )}
               {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi
                   TM + glossario + lore si scaldano senza passare da Impostazioni. ── */}

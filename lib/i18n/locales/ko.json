@@ -8073,5 +8073,12 @@
     "testHint": "운영체제 알림이 제대로 작동하는지 확인합니다",
     "testTitle": "🔔 테스트 알림",
     "testBody": "이 메시지가 보이면 시스템 알림이 정상 작동하는 것입니다!"
+  },
+  "translationBackend": {
+    "label": "AI 엔진",
+    "local": "로컬",
+    "cloud": "클라우드",
+    "localHint": "로컬 Ollama — 무료이며 Ollama 실행과 모델 설치가 필요합니다.",
+    "cloudHint": "클라우드 제공자 — 설정의 API 키를 사용하며 크레딧을 소모합니다."
   }
 }
