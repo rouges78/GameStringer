@@ -78,6 +78,56 @@ function codeKey(s: string): string {
   return (s.match(CODE) ?? []).slice().sort().join('');
 }
 
+/**
+ * ANTI-ECO: distinguere l'identità LEGITTIMA dall'eco del modello.
+ *
+ * Il problema (misurato l'08/08/2026 su Scarlet Hollow). La guardia scartava
+ * OGNI traduzione uguale alla sorgente. Sui dialoghi è prudenza: una frase
+ * intera che torna identica è quasi sempre il modello che rimbalza l'input, o
+ * la safety net del cloud che riempie i buchi con la sorgente. Sull'interfaccia
+ * è un falso positivo STRUTTURALE: «OK», «Auto», «Slot», «Menu» in italiano si
+ * scrivono così e basta. Conseguenze, tutte silenziose:
+ *  - quelle righe non venivano mai segnate come fatte → a ogni resume si
+ *    ritentavano all'infinito, spendendo token per riottenere la stessa parola;
+ *  - un blocco di sole etichette UI accettava zero righe e faceva scattare il
+ *    FRENO dei 3 blocchi a vuoto su un motore perfettamente sano;
+ *  - il contatore diceva «130 accettate su ~400 tentate» e sembrava un crollo
+ *    di qualità, mentre erano parole che non dovevano cambiare.
+ *
+ * La regola. L'identità è legittima quando la stringa non è "abbastanza lingua"
+ * perché una traduzione debba per forza differire: solo codici/numeri, oppure
+ * una o due parole (etichette, nomi propri), oppure un'etichetta UI corta.
+ * Tutto il resto — una frase vera che torna identica — resta eco e si scarta.
+ */
+const HAS_LETTER = /\p{L}/u;
+// Una FRASE finisce con punteggiatura di chiusura; un'etichetta no. È il
+// discrimine più affidabile che abbiamo, e la prima versione di questa
+// funzione non ce l'aveva: «Thank you.» e «Are you sure?» passavano per
+// etichette (2-3 parole, sotto i 32 caratteri) e l'eco del modello finiva
+// scritta come traduzione definitiva.
+const SENTENCE_END = /[.!?…:;,]$/u;
+// Nomi propri e titoli: «Dr. Elizabeth Warren», «The Dead Rabbit Bar». Restano
+// uguali in italiano ed è giusto accettarli; senza questa regola venivano
+// ritentati a ogni resume per sempre.
+function isTitleCase(bare: string): boolean {
+  const words = bare.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return false;
+  return words.every(w => {
+    const first = w.replace(/^[^\p{L}]+/u, '')[0];
+    return !first || first === first.toUpperCase();
+  });
+}
+export function isLegitimateIdentity(raw: string, type?: RenpyStringType): boolean {
+  const bare = raw.replace(CODE, ' ').trim(); // via i tag {..} e le variabili [..]
+  if (!bare || !HAS_LETTER.test(bare)) return true;  // "42", "---", solo codici
+  if (SENTENCE_END.test(bare)) return false;         // "Thank you.", "Are you sure?"
+  const words = bare.split(/\s+/).filter(Boolean).length;
+  if (words <= 2) return true;                       // "OK", "Auto", "New Game"
+  if (isTitleCase(bare)) return true;                // "The Dead Rabbit Bar"
+  if (type === 'String' && words <= 3 && bare.length <= 24) return true; // etichetta UI
+  return false;                                      // frase vera identica = eco
+}
+
 // De-escape mirror di unescape_renpy_string (Rust): \\->\, \"->", \n->newline, \t->tab.
 function unescapeRenpy(s: string): string {
   let out = '';
@@ -206,6 +256,20 @@ export async function runRenpyTranslation(opts: {
    * dove ha lasciato il lotto di prova, senza ritradurre nulla.
    */
   limit?: number;
+  /**
+   * STOP. Fino all'08/08/2026 una run partita non si poteva fermare: l'unico
+   * modo era chiudere l'app, e chiudere l'app a metà chunk significava perdere
+   * fino a 300 stringhe di lavoro non ancora salvate. Su ~83k stringhe (~4M
+   * token) «non interrompibile» vuol dire anche «non ripensabile»: se il
+   * risultato non piace dopo mille righe, si paga comunque tutto il resto.
+   *
+   * Lo Stop qui è cooperativo e ONESTO: si controlla tra un chunk e l'altro
+   * (non si abortisce una chiamata a metà, che lascerebbe il conteggio
+   * ambiguo), si SALVA il checkpoint, e poi si va COMUNQUE a generare i file
+   * tl/ con quello che c'è — così fermarsi produce un gioco giocabile in
+   * italiano parziale, non un cestino. La ripresa riparte esattamente da lì.
+   */
+  signal?: AbortSignal;
   onProgress?: (p: RenpyProgress) => void;
 }): Promise<{
   translated: number;
@@ -213,6 +277,14 @@ export async function runRenpyTranslation(opts: {
   files: string;
   glossaryTerms: number;
   voiceProfiles: number;
+  /** true se la run è stata fermata dall'utente prima di finire i chunk. */
+  stopped: boolean;
+  /**
+   * Righe accettate identiche alla sorgente perché legittimamente uguali
+   * («OK», «Auto», nomi propri). Non sono errori e non sono traduzioni: se
+   * finiscono in una delle due caselle il banner mente in entrambi i sensi.
+   */
+  identical: number;
   /**
    * Stringhe uniche TENTATE in questa passata e quante ne sono state accettate.
    * Servono a non mentire quando c'è un tetto o un checkpoint precedente:
@@ -324,9 +396,9 @@ export async function runRenpyTranslation(opts: {
   // e gui_*.rpy), che sono le prime che il giocatore vede all'avvio. Il resto
   // segue nell'ordine naturale. Senza tetto l'ordine resta quello originale:
   // in una run completa non cambia nulla.
+  const typeOf = new Map<string, RenpyStringType>();
+  for (const r of rows) if (!typeOf.has(r.original)) typeOf.set(r.original, r.string_type);
   const uiFirst = (list: string[]): string[] => {
-    const typeOf = new Map<string, string>();
-    for (const r of rows) if (!typeOf.has(r.original)) typeOf.set(r.original, r.string_type);
     const ui = list.filter(o => typeOf.get(o) === 'String');
     const rest = list.filter(o => typeOf.get(o) !== 'String');
     return [...ui, ...rest];
@@ -356,6 +428,9 @@ export async function runRenpyTranslation(opts: {
     ? glossary.map((g) => `${g.source}=${g.target}`).join('; ').slice(0, 1500)
     : undefined;
   let sinceSave = 0;
+  // Righe accettate perché legittimamente identiche («OK» → «OK»). Contarle a
+  // parte è ciò che rende il banner onesto: non sono né errori né traduzioni.
+  let identityKept = 0;
   // FRENO (08/08/2026). translateWithFallbackBatched, quando un batch fallisce,
   // riempie i buchi con la SORGENTE ("safety net") e ritorna success se anche
   // UN SOLO batch del lotto è andato: leggendo solo res.translations, un cloud
@@ -366,8 +441,26 @@ export async function runRenpyTranslation(opts: {
   // il contatore onesto non basta, serve qualcosa che SI FERMI e lo dica.
   const MAX_EMPTY_CHUNKS = 3;
   let emptyChunks = 0;
+  let stopped = false;
+  // Le stringhe DAVVERO passate al motore. Con lo Stop, `pendingOriginals` è
+  // il piano, non il consuntivo: usarlo come denominatore trasformerebbe una
+  // run fermata a mano in «migliaia di errori» — lo stesso sbaglio del banner
+  // che divideva per 83.489 (vedi `attempted`/`accepted` qui sotto).
+  const attemptedOriginals: string[] = [];
   for (let i = 0; i < pendingOriginals.length; i += CHUNK) {
+    // STOP cooperativo, controllato PRIMA di spendere il chunk successivo: chi
+    // preme Stop non deve pagare altre 30 stringhe per essere ascoltato.
+    if (opts.signal?.aborted) {
+      stopped = true;
+      await applyAndSave();
+      clientLogger.info(
+        `Ren'Py: STOP richiesto — ${done}/${total} completate e salvate. ` +
+        `I file tl/ vengono generati con quanto tradotto finora; riavviando si riprende da qui.`
+      );
+      break;
+    }
     const slice = pendingOriginals.slice(i, i + CHUNK);
+    attemptedOriginals.push(...slice);
     const raws = slice.map(orig => unescapeRenpy(orig));
     // Contesto per riga: descrittore voce ricco se il parlante ha un profilo,
     // altrimenti il solo nome del parlante (o null per narrazione/UI senza parlante).
@@ -399,13 +492,41 @@ export async function runRenpyTranslation(opts: {
       });
       outs = res.map(r => r.translated);
     }
-    let acceptedHere = 0;
+    // LA DECISIONE SULL'IDENTITÀ SI PRENDE PER BLOCCO, NON PER RIGA.
+    //
+    // Guardando una riga sola, «OK» → «OK» è indistinguibile da un motore
+    // morto che rimbalza la sorgente. Guardando il BLOCCO invece si distingue
+    // benissimo: se almeno una riga è stata davvero cambiata, il motore è vivo
+    // e le identità dello stesso blocco sono credibili; se NESSUNA riga è
+    // cambiata, non c'è nessun motivo di credere a nessuna di quelle identità.
+    //
+    // Quindi le identità restano "in sospeso" (`identityPending`) e vengono
+    // scritte nel checkpoint solo a fine blocco, se il blocco ha dato prova di
+    // vita. Senza questa sospensione un cloud a credito zero avrebbe scritto
+    // l'inglese come DEFINITIVO nel checkpoint (il resume salta le righe già
+    // "tradotte"), e nessuna run futura le avrebbe più ritentate.
+    //
+    // Nota su chi comanda il freno: `realAcceptedHere`, cioè le righe davvero
+    // cambiate. La prima versione di questa modifica lo condizionava al numero
+    // di righe "sostanziali" del blocco, e con `uiFirst` — che mette in testa
+    // proprio le etichette corte — il lotto di prova finiva per essere l'unica
+    // run SENZA freno. Esattamente il contrario di ciò che serviva.
+    let realAcceptedHere = 0;
+    const identityPending: Array<[string, string]> = [];
     outs.forEach((translatedText, k) => {
       const out = (translatedText || '').trim();
-      const bad = !out || out.startsWith('[ERRORE]') || out === raws[k];
+      const legitIdentity = isLegitimateIdentity(raws[k], typeOf.get(slice[k]));
+      const echoed = out === raws[k] && !legitIdentity;
+      const bad = !out || out.startsWith('[ERRORE]') || echoed;
       // Accetta solo se i tag {..}/[..] combaciano; altrimenti lascia non tradotto (retry al resume).
-      if (!bad && codeKey(out) === codeKey(raws[k])) { byOriginal[slice[k]] = out; acceptedHere++; }
+      if (!bad && codeKey(out) === codeKey(raws[k])) {
+        if (out !== raws[k]) { byOriginal[slice[k]] = out; realAcceptedHere++; }
+        else identityPending.push([slice[k], out]);
+      }
     });
+    if (realAcceptedHere > 0) {
+      for (const [orig, out] of identityPending) { byOriginal[orig] = out; identityKept++; }
+    }
 
     // Un chunk può legittimamente accettare zero righe (tutti tag rotti, o un
     // blocco di sole stringhe identiche in entrambe le lingue), ma TRE di fila
@@ -414,16 +535,21 @@ export async function runRenpyTranslation(opts: {
     // ricominciare — e si dice quale backend ha smesso, perché la cura è
     // diversa (credito/chiave per il cloud, `ollama serve` per il locale).
     done = rows.filter(r => byOriginal[r.original] || r.translated).length;
-    emptyChunks = acceptedHere === 0 ? emptyChunks + 1 : 0;
+    emptyChunks = realAcceptedHere === 0 ? emptyChunks + 1 : 0;
     if (emptyChunks >= MAX_EMPTY_CHUNKS) {
       await applyAndSave();
       const why = backend === 'cloud'
         ? 'controlla credito e chiave API nelle Impostazioni'
         : "controlla che Ollama sia avviato e che il modello sia installato";
+      // Un arresto in più su un motore sano costa un riavvio (il checkpoint
+      // riprende da qui); un arresto in meno su un motore morto costa ~2.800
+      // chiamate a vuoto, il credito, e un gioco in inglese dichiarato
+      // tradotto. L'asimmetria decide: in caso di dubbio ci si ferma.
       throw new Error(
-        `Traduzione interrotta: ${MAX_EMPTY_CHUNKS} blocchi consecutivi senza nemmeno una stringa accettata ` +
-        `(backend "${backend}", ${done}/${total} completate e salvate). Nessuna stringa persa: ` +
-        `riavvia la traduzione per riprendere da qui. Causa probabile: ${why}.`
+        `Traduzione interrotta: ${MAX_EMPTY_CHUNKS} blocchi consecutivi in cui il motore non ha cambiato ` +
+        `nemmeno una stringa (backend "${backend}", ${done}/${total} completate e salvate). Nessuna stringa ` +
+        `persa: riavvia la traduzione per riprendere da qui. Causa probabile: ${why}. ` +
+        `Se invece erano davvero tutte etichette identiche in ${tgt.toUpperCase()}, riavvia e proseguirà.`
       );
     }
 
@@ -448,7 +574,9 @@ export async function runRenpyTranslation(opts: {
     translated, total, files,
     glossaryTerms: glossary.length,
     voiceProfiles: voiceProfilesUsed,
-    attempted: pendingOriginals.length,
-    accepted: pendingOriginals.filter(o => byOriginal[o]).length,
+    stopped,
+    identical: identityKept,
+    attempted: attemptedOriginals.length,
+    accepted: attemptedOriginals.filter(o => byOriginal[o]).length,
   };
 }

@@ -8083,6 +8083,9 @@
     "localHint": "Lokalna Ollama — za darmo, wymaga uruchomionej Ollamy i zainstalowanego modelu.",
     "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki.",
     "testBatch": "Partia próbna ({n})",
-    "testBatchHint": "Tłumaczy tylko {n} ciągów, ale i tak generuje pliki tl/, więc możesz sprawdzić efekt w grze przed przetworzeniem całego skryptu. Pełne uruchomienie wznowi się stąd."
+    "testBatchHint": "Tłumaczy tylko {n} ciągów, ale i tak generuje pliki tl/, więc możesz sprawdzić efekt w grze przed przetworzeniem całego skryptu. Pełne uruchomienie wznowi się stąd.",
+    "stop": "Zatrzymaj",
+    "stopping": "Zatrzymywanie…",
+    "stopHint": "Zatrzymuje się po bieżącym bloku — zależnie od modelu może to potrwać kilka minut. To, co już przetłumaczone, zostaje zapisane, a pliki tl/ i tak powstają; kolejne uruchomienie wznawia od tego miejsca."
   }
 }

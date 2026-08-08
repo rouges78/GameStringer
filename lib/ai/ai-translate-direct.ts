@@ -399,12 +399,13 @@ const ANTHROPIC_MODEL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ANTHROPIC_MODEL) ||
   'claude-sonnet-4-6';
 
-/** Variante "premium" — Claude Opus 4.8 (frontier, 28/05/2026) per asset complessi,
- *  Lore Assistant e OCR/Vision dove serve la massima qualità. Stesso pattern env di
+/** Variante "premium" — Claude Opus 5 (08/2026, stringa `claude-opus-5`) per asset
+ *  complessi, Lore Assistant e OCR/Vision dove serve la massima qualità. Prezzo
+ *  invariato rispetto a Opus 4.8 (5$/25$ per Mtok). Stesso pattern env di
  *  ANTHROPIC_MODEL: override via NEXT_PUBLIC_ANTHROPIC_MODEL_PREMIUM. */
 const ANTHROPIC_MODEL_PREMIUM =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ANTHROPIC_MODEL_PREMIUM) ||
-  'claude-opus-4-8';
+  'claude-opus-5';
 
 const ANTHROPIC_TRANSLATION_SYSTEM =
   'You are a translation API. Output ONLY a JSON array of translated strings, in the same order as the input. No prose, no preamble, no markdown code fences, no surrounding tags.';

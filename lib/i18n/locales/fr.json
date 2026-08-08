@@ -8081,6 +8081,9 @@
     "localHint": "Ollama local — gratuit, nécessite Ollama démarré et un modèle installé.",
     "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit.",
     "testBatch": "Lot d’essai ({n})",
-    "testBatchHint": "Ne traduit que {n} chaînes mais génère quand même les fichiers tl/, pour voir le résultat en jeu avant de lancer le script entier. L’exécution complète reprend ici."
+    "testBatchHint": "Ne traduit que {n} chaînes mais génère quand même les fichiers tl/, pour voir le résultat en jeu avant de lancer le script entier. L’exécution complète reprend ici.",
+    "stop": "Arrêter",
+    "stopping": "Arrêt…",
+    "stopHint": "S’arrête après le bloc en cours — selon le modèle, cela peut prendre quelques minutes. Ce qui est déjà traduit est enregistré et les fichiers tl/ sont quand même générés ; une nouvelle exécution reprend ici."
   }
 }

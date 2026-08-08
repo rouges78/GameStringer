@@ -219,7 +219,7 @@ const ANTHROPIC_MODEL =
   'claude-sonnet-4-6';
 const ANTHROPIC_MODEL_PREMIUM =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ANTHROPIC_MODEL_PREMIUM) ||
-  'claude-opus-4-8';
+  'claude-opus-5';
 
 function chatOpenAICompatible(endpoint: string, model: string, extraHeaders?: Record<string, string>): ChatFn {
   return async (key, system, user) => {

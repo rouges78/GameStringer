@@ -627,6 +627,15 @@ pub fn generate_renpy_translation(
     let path = Path::new(&game_path);
     let tl_folder = path.join("game").join("tl").join(&language);
 
+    // PRIMA di creare qualsiasi cosa: game/ esisteva già? Serve più avanti,
+    // e va misurato ADESSO. La prima versione lo controllava dopo la
+    // create_dir_all qui sotto — che game/ la crea — quindi la guardia
+    // «questa cartella non è un gioco Ren'Py, non ci scrivo» non poteva mai
+    // scattare: su un percorso sbagliato GameStringer si inventava un albero
+    // game/tl/it/ e dichiarava successo. Una protezione scritta nel commento
+    // e assente nei fatti è peggio di nessuna protezione.
+    let had_game_dir = path.join("game").is_dir();
+
     // Crea cartella traduzione
     fs::create_dir_all(&tl_folder)
         .map_err(|e| format!("Errore creazione cartella: {}", e))?;
@@ -703,7 +712,7 @@ pub fn generate_renpy_translation(
 
     // ── Filtro runtime per dialoghi / narrazione / scelte menu ──────────
     if !dialogue_like.is_empty() {
-        let filter_filename = "gamestringer_say_filter.rpy".to_string();
+        let filter_filename = GS_FILTER_FILENAME.to_string();
         let filter_path = tl_folder.join(&filter_filename);
 
         // Deduplica per chiave runtime (l'ultima traduzione vince)
@@ -754,19 +763,208 @@ pub fn generate_renpy_translation(
     }
 
     let count = generated_files.len();
+
+    // ── Attivazione della lingua (game/gs_language.rpy) ─────────────────
+    // Senza questo passo tutto il resto è irraggiungibile: i blocchi
+    // `translate <lang> strings:` e il filtro say si attivano SOLO quando
+    // `preferences.language == <lang>`, e un gioco monolingua non ha nessun
+    // menu lingue con cui selezionarla. L'08/08/2026 Scarlet Hollow aveva i
+    // file tl/ scritti e corretti e restava in inglese: il file di
+    // attivazione era stato scritto A MANO. Se resta a mano, ogni Ren'Py
+    // monolingua che passa di qui nasce spento — la sesta comparsa in 24 ore
+    // del pattern "lavoro completo e irraggiungibile".
+    let activator = if count > 0 {
+        // NON con `?`: se l'attivatore non si scrive (permessi, disco pieno)
+        // la traduzione è comunque tutta sul disco, e far fallire l'intero
+        // comando direbbe all'utente «non è stato scritto niente», che è
+        // falso. Si degrada dicendo cosa manca, invece di buttare via un
+        // successo vero.
+        match write_language_activator(path, &language, had_game_dir) {
+            Ok(note) => note,
+            Err(e) => {
+                log::warn!("Attivazione lingua NON scritta: {}", e);
+                Some(format!(
+                    " ⚠ attivazione NON scritta ({}): la traduzione c'è ma il gioco non la accende — \
+                     crea a mano game/gs_language.rpy con `init 999 python: config.language = \"{}\"`",
+                    e, language
+                ))
+            }
+        }
+    } else {
+        // Nessun file scritto = niente da attivare. Puntare config.language a
+        // una lingua vuota non tradurrebbe nulla e cambierebbe comunque le
+        // stringhe interne di Ren'Py: un effetto senza beneficio.
+        None
+    };
+
     log::info!(
-        "✅ Generati {} file di traduzione in game/tl/{}/ ({} dialoghi/menu via filtro runtime)",
+        "✅ Generati {} file di traduzione in game/tl/{}/ ({} dialoghi/menu via filtro runtime){}",
         count,
         language,
-        dialogue_like.len()
+        dialogue_like.len(),
+        activator.as_deref().unwrap_or(" — attivazione NON scritta")
     );
 
     Ok(format!(
-        "Generati {} file in game/tl/{}/ ({} stringhe dialogo/menu via filtro runtime)",
+        "Generati {} file in game/tl/{}/ ({} stringhe dialogo/menu via filtro runtime){}",
         count,
         language,
-        dialogue_like.len()
+        dialogue_like.len(),
+        activator.as_deref().unwrap_or("")
     ))
+}
+
+/// Nomi di cartelle sotto `game/tl/` che NON sono lingue selezionabili.
+const TL_NON_LANGUAGES: [&str; 2] = ["None", "common"];
+
+/// Filtro runtime dei dialoghi: è anche il marcatore che riconosce una
+/// cartella `tl/<lang>` come generata da GameStringer.
+const GS_FILTER_FILENAME: &str = "gamestringer_say_filter.rpy";
+
+/// Prima riga di `game/gs_language.rpy`: la nostra firma. Serve a riconoscere
+/// un attivatore che abbiamo scritto noi da uno messo lì dall'utente o dal
+/// gioco — l'unico caso in cui è lecito sovrascriverlo.
+const GS_ACTIVATOR_SIGNATURE: &str = "# GameStringer — attivazione della lingua";
+
+/// Scrive `game/gs_language.rpy` per attivare `language` nei giochi che non
+/// offrono un menu lingue.
+///
+/// **Perché serve.** Ren'Py applica una traduzione solo quando quella lingua è
+/// *selezionata*. Un gioco pensato per una lingua sola non ha nulla che la
+/// selezioni: i file in `tl/<lang>/` esistono e non li legge nessuno.
+///
+/// **Perché così.** La documentazione Ren'Py (Translation → *Unsanctioned
+/// Translations* e *Default Language*) indica esattamente questa strada: un
+/// blocco `init python` che imposta [`config.language`], che «sets the language
+/// to use at game launch, overriding any memorized choice made by the user».
+/// `_preferences.language` è invece dichiarato read-only, quindi scriverci
+/// sarebbe la strada sbagliata — verificato sui doc PRIMA di scegliere.
+/// Priorità 999: dopo l'init normale del gioco (offset 0), così vince su un
+/// eventuale `config.language` già definito in options.rpy, e prima del filtro
+/// say generato a 1900.
+///
+/// **Quando NON si scrive.** Se il gioco ha già altre lingue *sue* in `tl/`,
+/// quasi certamente ha un menu lingue: forzare `config.language` scavalcherebbe
+/// per sempre la scelta del giocatore (lo dice la documentazione stessa). In
+/// quel caso la traduzione si seleziona dal menu del gioco e questo file non
+/// serve. Attenzione a cosa vuol dire «sue»: le cartelle che abbiamo generato
+/// NOI non contano — vedi `other_languages_in_tl`.
+///
+/// Ritorna `Some(nota)` se il file è stato scritto, `None` se saltato.
+fn write_language_activator(
+    game_root: &Path,
+    language: &str,
+    had_game_dir: bool,
+) -> Result<Option<String>, String> {
+    let game_dir = game_root.join("game");
+    if !had_game_dir {
+        // Nessuna cartella game/ PRIMA che iniziassimo: non è un layout Ren'Py
+        // standard. Non inventiamo un percorso — meglio dirlo che scrivere in
+        // un posto che il gioco non legge (sarebbe di nuovo un file
+        // irraggiungibile).
+        log::warn!(
+            "Attivazione lingua saltata: {} non conteneva una cartella game/",
+            game_root.display()
+        );
+        return Ok(None);
+    }
+
+    let out = game_dir.join("gs_language.rpy");
+    // Un attivatore con la NOSTRA firma è la prova che questo gioco era
+    // monolingua quando ci siamo passati la prima volta: qualunque cosa ci sia
+    // ora in tl/ (la nostra traduzione precedente) non è un menu lingue.
+    let ours_already = fs::read_to_string(&out)
+        .map(|c| c.starts_with(GS_ACTIVATOR_SIGNATURE))
+        .unwrap_or(false);
+
+    let others = other_languages_in_tl(&game_dir, language);
+    if !others.is_empty() && !ours_already {
+        log::info!(
+            "Attivazione lingua saltata: il gioco ha già {} lingua/e sue in tl/ ({}) — \
+             ha un menu lingue, la scelta resta al giocatore",
+            others.len(),
+            others.join(", ")
+        );
+        return Ok(None);
+    }
+
+    let lang = escape_renpy_string(language);
+    let content = format!(
+        "# GameStringer — attivazione della lingua \"{0}\".\n\
+         # Generato automaticamente: non modificare a mano.\n\
+         #\n\
+         # Questo gioco non offre un menu delle lingue, quindi la traduzione in\n\
+         # game/tl/{0}/ non sarebbe selezionabile da nessuno. config.language\n\
+         # la imposta all'avvio (doc Ren'Py, «Unsanctioned Translations»).\n\
+         #\n\
+         # PER TORNARE ALLA LINGUA ORIGINALE non basta cancellare questo file:\n\
+         # al primo avvio Ren'Py ha MEMORIZZATO la lingua nei dati persistenti\n\
+         # (_init_language chiama change_language, che scrive in preferences),\n\
+         # quindi senza config.language il gioco ricadrebbe comunque su \"{0}\".\n\
+         # Servono DUE cose: cancellare questo file E la cartella game/tl/{0}/.\n\
+         \n\
+         init 999 python:\n\
+         \x20   config.language = \"{0}\"\n",
+        lang
+    );
+
+    fs::write(&out, content)
+        .map_err(|e| format!("Errore scrittura game/gs_language.rpy: {}", e))?;
+
+    // Ren'Py preferisce il .rpyc quando è più recente del .rpy: un .rpyc
+    // rimasto da un'attivazione precedente (lingua diversa, o file cancellato
+    // a mano per tornare all'originale) continuerebbe a comandare e il file
+    // appena scritto non avrebbe alcun effetto — un file scritto e ignorato,
+    // di nuovo. Si rimuove, Ren'Py lo ricompila al primo avvio.
+    let stale = game_dir.join("gs_language.rpyc");
+    if stale.exists() {
+        if let Err(e) = fs::remove_file(&stale) {
+            log::warn!("gs_language.rpyc vecchio non rimosso ({}): il gioco potrebbe usare quello", e);
+        }
+    }
+
+    log::info!(
+        "✅ Attivazione lingua scritta: game/gs_language.rpy (config.language = \"{}\")",
+        language
+    );
+    Ok(Some(format!(
+        " + game/gs_language.rpy: la lingua «{}» si attiva da sola all'avvio",
+        language
+    )))
+}
+
+/// Lingue del GIOCO già presenti in `game/tl/` — cioè la prova che esiste un
+/// menu lingue. Escluse: le cartelle di servizio (`None`, `common`), quella che
+/// stiamo generando adesso, e **quelle generate da GameStringer in una run
+/// precedente**.
+///
+/// Quest'ultima esclusione non è un dettaglio. Senza, bastava tradurre prima in
+/// italiano e poi in francese perché la seconda run vedesse `tl/it` (la NOSTRA)
+/// e concludesse «il gioco ha un menu lingue»: attivatore non scritto, il
+/// vecchio `gs_language.rpy` con `"it"` lasciato sul disco a comandare, e
+/// `tl/fr/` completo e irraggiungibile — con il messaggio che invita a
+/// selezionare FR da un menu che non esiste. Il pattern «lavoro completo e
+/// irraggiungibile» reintrodotto proprio dal codice scritto per eliminarlo.
+///
+/// Il marcatore è `gamestringer_say_filter.rpy`, che generiamo noi in ogni
+/// lingua con almeno un dialogo. Per le traduzioni di sola UI (nessun dialogo,
+/// nessun filtro) resta il secondo riconoscimento in `write_language_activator`:
+/// un `gs_language.rpy` che porta la nostra firma.
+fn other_languages_in_tl(game_dir: &Path, language: &str) -> Vec<String> {
+    let tl = game_dir.join("tl");
+    let entries = match fs::read_dir(&tl) {
+        Ok(e) => e,
+        Err(_) => return Vec::new(), // nessuna cartella tl/ = nessun'altra lingua
+    };
+    let mut out: Vec<String> = entries
+        .flatten()
+        .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .filter_map(|e| e.file_name().to_str().map(str::to_string))
+        .filter(|n| !TL_NON_LANGUAGES.contains(&n.as_str()) && n != language)
+        .filter(|n| !tl.join(n).join(GS_FILTER_FILENAME).exists())
+        .collect();
+    out.sort();
+    out
 }
 
 /// Escape caratteri speciali per stringhe Ren'Py (literal `"..."`).
@@ -1054,6 +1252,154 @@ mod tests {
         let tl = tmp.path().join("game").join("tl").join("it");
         let filter = fs::read_to_string(tl.join("gamestringer_say_filter.rpy")).unwrap();
         assert!(filter.contains(r#"u"He said \"go\"": u"Disse \"vai\"","#));
+    }
+
+    // ── attivazione lingua (game/gs_language.rpy) ───────────────────────
+    //
+    // Prova d'effetto in miniatura: non «il file è stato scritto», ma «il file
+    // contiene la riga che accende la lingua». La versione a mano dell'08/08
+    // funzionava; questi test servono a non perderla generandola.
+
+    #[test]
+    fn test_generate_writes_language_activator_for_monolingual_game() {
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+        // game/ deve PREESISTERE: è ciò che distingue un gioco Ren'Py da una
+        // cartella qualsiasi, e la guardia lo misura prima di creare alcunché.
+        fs::create_dir_all(tmp.path().join("game")).unwrap();
+
+        let mut ui = make_string("Start Game", "Inizia partita", RenpyStringType::String);
+        ui.file = "screens.rpy".to_string();
+
+        let msg = generate_renpy_translation(game_path, "it".to_string(), vec![ui]).unwrap();
+
+        let act = tmp.path().join("game").join("gs_language.rpy");
+        assert!(act.exists(), "gs_language.rpy non scritto: la traduzione resterebbe spenta");
+        let body = fs::read_to_string(&act).unwrap();
+        assert!(
+            body.contains("config.language = \"it\""),
+            "manca la riga che attiva davvero la lingua:\n{}",
+            body
+        );
+        assert!(body.contains("init 999 python:"), "priorità init assente:\n{}", body);
+        // Il messaggio all'utente deve DIRE che la lingua si attiva da sola,
+        // altrimenti Davide continua a scrivere il file a mano per sicurezza.
+        assert!(msg.contains("gs_language.rpy"), "messaggio muto sull'attivazione: {}", msg);
+    }
+
+    #[test]
+    fn test_generate_skips_activator_when_game_has_other_languages() {
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+        // Il gioco ha già una traduzione giapponese ⇒ ha un menu lingue.
+        // Forzare config.language scavalcherebbe PER SEMPRE la scelta del
+        // giocatore (lo dice la documentazione Ren'Py): non si tocca.
+        fs::create_dir_all(tmp.path().join("game").join("tl").join("japanese")).unwrap();
+
+        let mut ui = make_string("Start Game", "Inizia partita", RenpyStringType::String);
+        ui.file = "screens.rpy".to_string();
+
+        generate_renpy_translation(game_path, "it".to_string(), vec![ui]).unwrap();
+
+        assert!(
+            !tmp.path().join("game").join("gs_language.rpy").exists(),
+            "attivazione forzata su un gioco che ha già un menu lingue"
+        );
+    }
+
+    #[test]
+    fn test_generate_activator_ignores_none_and_common_folders() {
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+        // tl/None e tl/common ci sono in QUASI OGNI gioco Ren'Py e non sono
+        // lingue selezionabili: contarle avrebbe spento l'attivazione ovunque.
+        fs::create_dir_all(tmp.path().join("game").join("tl").join("None")).unwrap();
+        fs::create_dir_all(tmp.path().join("game").join("tl").join("common")).unwrap();
+
+        let mut ui = make_string("Options", "Opzioni", RenpyStringType::String);
+        ui.file = "screens.rpy".to_string();
+
+        generate_renpy_translation(game_path, "it".to_string(), vec![ui]).unwrap();
+
+        assert!(tmp.path().join("game").join("gs_language.rpy").exists());
+    }
+
+    #[test]
+    fn test_generate_no_activator_when_nothing_was_written() {
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+
+        // Nessuna stringa tradotta ⇒ nessun file tl/ ⇒ attivare una lingua
+        // vuota cambierebbe le stringhe interne di Ren'Py senza tradurre nulla.
+        let untr = make_string("Nothing", "", RenpyStringType::Dialogue);
+        generate_renpy_translation(game_path, "it".to_string(), vec![untr]).unwrap();
+
+        assert!(!tmp.path().join("game").join("gs_language.rpy").exists());
+    }
+
+    #[test]
+    fn test_generate_activator_second_language_on_our_own_monolingual_game() {
+        // IL CASO CHE LA PRIMA VERSIONE SBAGLIAVA. Gioco monolingua tradotto
+        // prima in italiano da noi, poi in francese: `tl/it` esiste ma è
+        // NOSTRA, non è la prova di un menu lingue. Prima l'attivatore veniva
+        // saltato e restava quello vecchio con "it" → tl/fr/ completo e
+        // irraggiungibile, con l'app che invitava a scegliere FR da un menu
+        // inesistente.
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+        let game_dir = tmp.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+
+        let mut ui_it = make_string("Start Game", "Inizia partita", RenpyStringType::String);
+        ui_it.file = "screens.rpy".to_string();
+        let mut dlg_it = make_string("Hello", "Ciao", RenpyStringType::Dialogue);
+        dlg_it.file = "script.rpy".to_string();
+        generate_renpy_translation(game_path.clone(), "it".to_string(), vec![ui_it, dlg_it]).unwrap();
+        assert!(game_dir.join("gs_language.rpy").exists());
+
+        let mut ui_fr = make_string("Start Game", "Nouvelle partie", RenpyStringType::String);
+        ui_fr.file = "screens.rpy".to_string();
+        generate_renpy_translation(game_path, "fr".to_string(), vec![ui_fr]).unwrap();
+
+        let body = fs::read_to_string(game_dir.join("gs_language.rpy")).unwrap();
+        assert!(
+            body.contains("config.language = \"fr\""),
+            "l'attivatore è rimasto sulla lingua vecchia:\n{}",
+            body
+        );
+    }
+
+    #[test]
+    fn test_generate_no_activator_when_there_was_no_game_dir() {
+        // La guardia «non è un gioco Ren'Py» era codice morto: veniva
+        // controllata DOPO la create_dir_all che game/ la crea. Qui il
+        // percorso è una cartella qualsiasi e l'attivatore non deve nascere.
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+
+        let mut ui = make_string("Options", "Opzioni", RenpyStringType::String);
+        ui.file = "screens.rpy".to_string();
+        generate_renpy_translation(game_path, "it".to_string(), vec![ui]).unwrap();
+
+        assert!(!tmp.path().join("game").join("gs_language.rpy").exists());
+    }
+
+    #[test]
+    fn test_generate_activator_removes_stale_rpyc() {
+        let tmp = TempDir::new().unwrap();
+        let game_path = tmp.path().to_str().unwrap().to_string();
+        let game_dir = tmp.path().join("game");
+        fs::create_dir_all(&game_dir).unwrap();
+        // Un .rpyc più recente vince sul .rpy: senza rimozione, il file appena
+        // scritto sarebbe l'ennesimo file ignorato dal gioco.
+        fs::write(game_dir.join("gs_language.rpyc"), b"stale").unwrap();
+
+        let mut ui = make_string("Options", "Opzioni", RenpyStringType::String);
+        ui.file = "screens.rpy".to_string();
+        generate_renpy_translation(game_path, "it".to_string(), vec![ui]).unwrap();
+
+        assert!(!game_dir.join("gs_language.rpyc").exists());
+        assert!(game_dir.join("gs_language.rpy").exists());
     }
 
     // ── get_renpy_translation_stats ─────────────────────────────────────

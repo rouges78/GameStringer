@@ -82,7 +82,7 @@ vi.mock('@/lib/client-logger', () => ({
   clientLogger: { info: vi.fn(), warn: vi.fn(), debug: vi.fn(), error: vi.fn() },
 }));
 
-import { runRenpyTranslation } from '@/lib/renpy-translate';
+import { runRenpyTranslation, isLegitimateIdentity } from '@/lib/renpy-translate';
 
 describe("freno del flusso Ren'Py", () => {
   beforeEach(() => {
@@ -188,6 +188,148 @@ describe("freno del flusso Ren'Py", () => {
     expect(seen.every((t) => Number(t.replace('Line number ', '')) >= 110)).toBe(true);
 
     ROWS.forEach((r) => { r.string_type = 'Dialogue' as 'String' | 'Dialogue'; });
+  });
+
+  // ── ANTI-ECO ──────────────────────────────────────────────────────────────
+  // La guardia scartava OGNI traduzione uguale alla sorgente. Sui dialoghi è
+  // prudenza; sull'interfaccia è un falso positivo strutturale: «OK» in
+  // italiano si scrive «OK». Effetto misurato l'08/08/2026: 130 accettate su
+  // ~400 tentate, quelle righe mai segnate come fatte e ritentate a ogni
+  // resume, e un blocco di sole etichette capace di far scattare il freno.
+
+  it('accetta «OK» che resta «OK» invece di ritentarlo per sempre', () => {
+    expect(isLegitimateIdentity('OK', 'String')).toBe(true);
+    expect(isLegitimateIdentity('Auto', 'String')).toBe(true);
+    expect(isLegitimateIdentity('Slot', 'String')).toBe(true);
+    expect(isLegitimateIdentity('Skip', 'String')).toBe(true);
+    expect(isLegitimateIdentity('42', 'String')).toBe(true);
+    expect(isLegitimateIdentity('{i}[player_name]{/i}', 'Dialogue')).toBe(true);
+    expect(isLegitimateIdentity('Sayori', 'Dialogue')).toBe(true);
+    // Nomi propri e titoli: restano uguali in italiano. Senza la regola del
+    // Title Case venivano ritentati a ogni resume, per sempre.
+    expect(isLegitimateIdentity('The Dead Rabbit Bar', 'Dialogue')).toBe(true);
+    expect(isLegitimateIdentity('Dr. Elizabeth Warren', 'Dialogue')).toBe(true);
+  });
+
+  it("continua a chiamare eco una FRASE che torna identica", () => {
+    // Questo è il caso che il freno deve poter vedere: la safety net del cloud
+    // che rimbalza la sorgente. Se lo dichiarassimo legittimo, un provider
+    // morto passerebbe per un provider preciso.
+    expect(isLegitimateIdentity('I have no idea what you are talking about.', 'Dialogue')).toBe(false);
+    expect(isLegitimateIdentity('Are you sure you want to delete this save?', 'String')).toBe(false);
+    // I casi che la PRIMA versione sbagliava: due o tre parole corte, sotto la
+    // soglia UI, ma con la punteggiatura di una frase vera.
+    expect(isLegitimateIdentity('Thank you.', 'Dialogue')).toBe(false);
+    expect(isLegitimateIdentity('Wait!', 'Dialogue')).toBe(false);
+    expect(isLegitimateIdentity('Are you sure?', 'String')).toBe(false);
+    expect(isLegitimateIdentity('Hello, [name].', 'Dialogue')).toBe(false);
+    // Etichetta UI di 4 parole tutte minuscole: non è un titolo, va tradotta.
+    expect(isLegitimateIdentity('Start a new game', 'String')).toBe(false);
+  });
+
+  it("le identità NON vanno nel checkpoint se il blocco non ha cambiato nulla", async () => {
+    // IL DIFETTO PIÙ GRAVE DELLA PRIMA VERSIONE, trovato dalla revisione
+    // ostile. Con il cloud a credito zero la safety net rimbalza la sorgente:
+    // ogni riga torna identica. Se le accettassimo riga per riga, l'inglese
+    // finirebbe nel checkpoint come DEFINITIVO (il resume salta le righe già
+    // "tradotte") e nessuna run futura le ritenterebbe. E siccome `uiFirst`
+    // mette le etichette in testa, il lotto di prova sarebbe l'unica run
+    // completamente senza freno: barra al 100%, gioco in inglese.
+    ROWS.forEach((r, i) => {
+      r.original = `Label ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i % 26]}${Math.floor(i / 26)}`;
+      r.string_type = 'String' as 'String' | 'Dialogue';
+    });
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) => {
+        batchCalls++;
+        return { translations: [...texts], provider: 'anthropic', success: true };
+      }
+    );
+
+    await expect(
+      runRenpyTranslation({ gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud' })
+    ).rejects.toThrow(/non ha cambiato/i);
+
+    expect(batchCalls).toBe(3);           // si ferma, non macina i 4 chunk
+    expect(generateCalled).toBe(false);   // e non scrive tl/ pieni di inglese
+    // Nessuna identità è finita nel checkpoint: restano tutte ritentabili.
+    const last = saved[saved.length - 1] as Array<{ translated: string }>;
+    expect(last.every((r) => r.translated === '')).toBe(true);
+
+    ROWS.forEach((r, i) => {
+      r.original = `Line number ${i}`;
+      r.string_type = 'Dialogue' as 'String' | 'Dialogue';
+    });
+  });
+
+  it('le identità di un blocco VIVO vengono invece accettate', async () => {
+    // Stesso blocco di etichette, ma il motore ne traduce una davvero: allora
+    // è vivo, e «OK» → «OK» delle altre è credibile. Questa è la decisione per
+    // BLOCCO che sostituisce quella per riga.
+    ROWS.forEach((r, i) => {
+      r.original = i === 0 ? 'Start Game' : `Label ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i % 26]}${Math.floor(i / 26)}`;
+      r.string_type = 'String' as 'String' | 'Dialogue';
+    });
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) =>
+        ({ translations: texts.map((t) => (t === 'Start Game' ? 'Inizia partita' : t)), provider: 'anthropic', success: true })
+    );
+
+    const res = await runRenpyTranslation({
+      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud', limit: 30,
+    });
+
+    expect(res.identical).toBe(29);       // le 29 etichette accettate
+    expect(res.attempted - res.accepted).toBe(0); // e NON contate come errori
+    expect(generateCalled).toBe(true);
+
+    ROWS.forEach((r, i) => {
+      r.original = `Line number ${i}`;
+      r.string_type = 'Dialogue' as 'String' | 'Dialogue';
+    });
+  });
+
+  // ── STOP ──────────────────────────────────────────────────────────────────
+
+  it('lo Stop ferma la run, salva, e genera COMUNQUE i file tl/', async () => {
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    const ac = new AbortController();
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) => {
+        batchCalls++;
+        if (batchCalls === 1) ac.abort(); // Stop premuto durante il primo blocco
+        return { translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true };
+      }
+    );
+
+    const res = await runRenpyTranslation({
+      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud', signal: ac.signal,
+    });
+
+    // Si ferma al blocco successivo, non macina tutti e quattro.
+    expect(batchCalls).toBe(1);
+    expect(res.stopped).toBe(true);
+    expect(res.translated).toBe(30);
+    // IL PUNTO: fermarsi lascia un gioco giocabile, non un cestino.
+    expect(generateCalled).toBe(true);
+    expect(saved.length).toBeGreaterThan(0);
+    // E il consuntivo non conta come errori le righe mai tentate: con 120 in
+    // programma e 30 tentate, «90 errori» sarebbe la stessa bugia del banner
+    // che divideva per 83.489.
+    expect(res.attempted).toBe(30);
+    expect(res.accepted).toBe(30);
+  });
+
+  it('una run senza signal si comporta esattamente come prima', async () => {
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) => ({ translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true })
+    );
+    const res = await runRenpyTranslation({ gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud' });
+    expect(res.stopped).toBe(false);
+    expect(res.translated).toBe(120);
   });
 
   it('un backend che traduce davvero arriva in fondo (il freno non è un falso positivo)', async () => {

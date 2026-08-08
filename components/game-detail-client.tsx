@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Gamepad2, Settings, Search, Play, Loader2, Database,
-  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck
+  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck, Square
 } from 'lucide-react';
 import { matchWhitelist, type PublisherWhitelist } from '@/lib/social/publisher-whitelist';
 import publisherWhitelistData from '@/data/publisher-whitelist.json';
@@ -446,6 +446,22 @@ export default function GameDetailPage() {
   // tradotto tutto il gioco avendone tradotto duecento righe.
   const RENPY_TEST_BATCH_SIZE = 200;
   const [renpyTestBatch, setRenpyTestBatch] = useState(false);
+
+  // STOP. Prima dell'08/08/2026 una run Ren'Py partita non si poteva fermare:
+  // l'unica uscita era chiudere l'app, e chiudere l'app a metà chunk buttava
+  // via fino a 300 stringhe non ancora salvate. Su un copione da ~83k stringhe
+  // «non interrompibile» significa anche «non ripensabile». Il controller vive
+  // in un ref (un re-render non deve poterlo sostituire a metà run) e lo Stop è
+  // cooperativo: la pipeline lo legge tra un chunk e l'altro, salva, e genera
+  // comunque i tl/ con quello che ha — fermarsi lascia un gioco giocabile.
+  const renpyAbortRef = useRef<AbortController | null>(null);
+  const [renpyStopping, setRenpyStopping] = useState(false);
+  const stopRenpyRun = () => {
+    if (!renpyAbortRef.current || renpyAbortRef.current.signal.aborted) return;
+    renpyAbortRef.current.abort();
+    setRenpyStopping(true);
+    toast.info(t('translationBackend.stopping'));
+  };
 
   // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
   const [isAiUpgrading, setIsAiUpgrading] = useState(false);
@@ -2056,6 +2072,11 @@ export default function GameDetailPage() {
         setAutoTranslateResult(null);
         setAutoTranslateSteps([...rpSteps]);
         setAutoTranslateActive(true);
+        // Controller NUOVO a ogni run: riusarne uno già abortito farebbe
+        // partire la run successiva già ferma — uno Stop che si ricorda di
+        // essere stato premuto ieri.
+        renpyAbortRef.current = new AbortController();
+        setRenpyStopping(false);
         try {
           const r = await runRenpyTranslation({
             gamePath: game.installPath,
@@ -2066,6 +2087,7 @@ export default function GameDetailPage() {
             // non passava `backend` e la scelta restava sepolta in localStorage.
             backend: renpyBackend,
             limit: renpyTestBatch ? RENPY_TEST_BATCH_SIZE : undefined,
+            signal: renpyAbortRef.current.signal,
             onProgress: (p) => {
               if (p.phase === 'extract') rpStep(0, 'running');
               else if (p.phase === 'glossary') { rpStep(0, 'done'); rpStep(1, 'running'); }
@@ -2108,7 +2130,24 @@ export default function GameDetailPage() {
             },
           });
           await rpTracker.done(r.translated, r.total);
-          toast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte. Avvia il gioco e seleziona ${tgt.toUpperCase()}.`);
+          // Il "cosa faccio adesso" deve dire la verità sul gioco che ha
+          // davanti. Se la pipeline ha scritto game/gs_language.rpy la lingua
+          // si accende da sola e mandare l'utente a cercare un menu lingue
+          // che NON ESISTE è il modo migliore per fargli credere che non abbia
+          // funzionato niente (è esattamente com'è andata l'08/08 a mano).
+          const selfActivating = typeof r.files === 'string' && r.files.includes('gs_language.rpy');
+          const next = selfActivating
+            ? `Avvia il gioco: la lingua si attiva da sola.`
+            : `Avvia il gioco e seleziona ${tgt.toUpperCase()} dal menu delle lingue.`;
+          const identicalNote = r.identical ? ` (${r.identical} invariate: uguali in ${tgt.toUpperCase()})` : '';
+          if (r.stopped) {
+            toast.info(
+              `Ren'Py: fermato a ${r.translated}/${r.total} stringhe${identicalNote}. ` +
+              `I file tl/ sono stati generati lo stesso — riavviando riprende da qui. ${next}`
+            );
+          } else {
+            toast.success(`Ren'Py: ${r.translated}/${r.total} stringhe tradotte${identicalNote}. ${next}`);
+          }
         } catch (e) {
           rpStep(2, 'error', String(e));
           // Il suggerimento deve seguire il backend scelto: dire "Ollama è
@@ -2125,6 +2164,8 @@ export default function GameDetailPage() {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
           autoTranslateRunningRef.current = false;
+          renpyAbortRef.current = null;
+          setRenpyStopping(false);
         }
         return;
       }
@@ -3460,6 +3501,25 @@ export default function GameDetailPage() {
                     />
                     {t('translationBackend.testBatch').replace('{n}', String(RENPY_TEST_BATCH_SIZE))}
                   </label>
+                  {/* ── Stop ──────────────────────────────────────────────
+                      Compare SOLO mentre la run gira, perché un pulsante
+                      Stop sempre visibile e inerte è peggio che non averlo.
+                      Non è un annullamento: ferma tra un blocco e l'altro,
+                      salva il checkpoint e i file tl/ vengono generati lo
+                      stesso — quindi il testo dice «Ferma», non «Annulla». */}
+                  {autoTranslateBusy && (
+                    <button
+                      type="button"
+                      onClick={stopRenpyRun}
+                      disabled={renpyStopping}
+                      title={t('translationBackend.stopHint')}
+                      className="h-7 mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 hover:text-red-200 text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                    >
+                      {renpyStopping
+                        ? <><Loader2 className="h-3 w-3 animate-spin" /> {t('translationBackend.stopping')}</>
+                        : <><Square className="h-3 w-3" /> {t('translationBackend.stop')}</>}
+                    </button>
+                  )}
                 </>
               )}
               {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi
