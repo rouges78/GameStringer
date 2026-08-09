@@ -464,7 +464,8 @@
     "deleteConfirm": "Projekt löschen",
     "deleteError": "Löschen fehlgeschlagen",
     "projectImported": "Projekt importiert",
-    "publishLive": "Der Patch ist online: im Patch Hub sichtbar."
+    "publishLive": "Der Patch ist online: im Patch Hub sichtbar.",
+    "publishViewPack": "Pack ansehen"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",

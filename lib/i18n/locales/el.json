@@ -464,7 +464,8 @@
     "deleteConfirm": "Διαγραφή του έργου",
     "deleteError": "Η διαγραφή απέτυχε",
     "projectImported": "το έργο εισήχθη",
-    "publishLive": "Το patch είναι online: ορατό στο Patch Hub."
+    "publishLive": "Το patch είναι online: ορατό στο Patch Hub.",
+    "publishViewPack": "Άνοιγμα pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Δεν είναι δυνατή η ανάγνωση του προχείρου",

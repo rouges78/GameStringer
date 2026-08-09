@@ -464,7 +464,8 @@
     "deleteConfirm": "プロジェクトを削除しますか",
     "deleteError": "削除に失敗しました",
     "projectImported": "プロジェクトをインポートしました",
-    "publishLive": "パッチは公開されました。Patch Hub で表示されます。"
+    "publishLive": "パッチは公開されました。Patch Hub で表示されます。",
+    "publishViewPack": "パックを表示"
   },
   "emulatorTranslator": {
     "clipboardError": "クリップボードを読み取れません",

@@ -464,7 +464,8 @@
     "deleteConfirm": "Eliminare il progetto",
     "deleteError": "Eliminazione non riuscita",
     "projectImported": "progetto importato",
-    "publishLive": "La patch è online: visibile nel Patch Hub."
+    "publishLive": "La patch è online: visibile nel Patch Hub.",
+    "publishViewPack": "Apri il pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossibile leggere gli appunti",

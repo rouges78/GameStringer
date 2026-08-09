@@ -464,7 +464,8 @@
     "deleteConfirm": "Supprimer le projet",
     "deleteError": "Échec de la suppression",
     "projectImported": "projet importé",
-    "publishLive": "Le patch est en ligne : visible dans le Patch Hub."
+    "publishLive": "Le patch est en ligne : visible dans le Patch Hub.",
+    "publishViewPack": "Voir le pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",

@@ -175,12 +175,22 @@ export async function getProfileByUsername(username: string): Promise<UserProfil
 export async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
   const supabase = await getSupabase();
-  
+
+  // Fino al 09/08/2026 questa funzione era un fallimento muto TRIPLO:
+  // filtrava su `user_id` (colonna inesistente: la PK è `id`) → 0 righe
+  // toccate, scriveva `display_name`/`updated_at` (colonne inesistenti:
+  // display_name è solo client, vedi normalizeProfile) → errore Postgres,
+  // e ritornava `true` comunque per i consumer che non controllavano.
+  // Nessuna modifica al profilo è MAI arrivata al DB da questo percorso.
+  const rest: Record<string, unknown> = { ...updates };
+  delete rest.user_id;
+  delete rest.display_name;
   const { error } = await supabase
     .from('user_profiles')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('user_id', userId);
-  
+    .update(rest)
+    .eq('id', userId);
+
+  if (error) console.warn('[Social] updateProfile fallito:', error.message);
   return !error;
 }
 

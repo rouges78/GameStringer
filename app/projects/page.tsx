@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Rocket,
   Search,
@@ -339,12 +340,14 @@ function ProjectCard({
   onExport,
   onPublish,
   onApply,
+  publishing = false,
 }: {
   project: UnifiedProject;
   onDelete: (p: UnifiedProject) => void;
   onExport: (p: UnifiedProject) => void;
   onPublish: (p: UnifiedProject) => void;
   onApply: (p: UnifiedProject) => void;
+  publishing?: boolean;
 }) {
   const { t } = useTranslation();
   const pct = percent(project.completedStrings, project.totalStrings);
@@ -420,7 +423,9 @@ function ProjectCard({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-2xs">
             <span className="text-slate-400">
-              {project.completedStrings.toLocaleString()} / {project.totalStrings.toLocaleString()}  {t('projectsPage.stringsUnit')}</span>
+              {/* Clamp: l'aggregazione può contare due volte (es. dizionari
+                  sommati senza dedup) → mai mostrare 126/122 */}
+              {Math.min(project.completedStrings, project.totalStrings).toLocaleString()} / {project.totalStrings.toLocaleString()}  {t('projectsPage.stringsUnit')}</span>
             <span className="text-slate-300 font-semibold">{pct}%</span>
           </div>
           <Progress value={pct} className="h-1.5" />
@@ -462,9 +467,13 @@ function ProjectCard({
               variant="ghost"
               className="h-7 w-7 p-0 text-slate-400 hover:text-emerald-300"
               onClick={() => onPublish(project)}
+              disabled={publishing}
+              aria-busy={publishing}
               title={t('projectsPage.publishTitle')}
             >
-              <Share2 className="w-3 h-3" />
+              {publishing
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <Share2 className="w-3 h-3" />}
             </Button>
           )}
           {/* Esporta: quality → .gsproj.json; active → .gspack dalle stringhe
@@ -503,8 +512,13 @@ function ProjectCard({
 
 export default function ProjectsPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [projects, setProjects] = useState<UnifiedProject[]>([]);
   const [loading, setLoading] = useState(true);
+  // Publish in corso: id del progetto, o null. Il ref è la serratura
+  // (sincrona), lo state il cartello (disabilita il pulsante nella card).
+  const publishingRef = useRef<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [filterLang, setFilterLang] = useState<string>('all');
@@ -713,7 +727,22 @@ export default function ProjectsPage() {
 
   // Ponte verso il Patch Hub: pubblica il progetto via publishPack (Supabase).
   // Il pack entra in stato "pending" (moderazione).
+  // Anti doppio pack: il ref blocca il secondo click in modo SINCRONO (lo
+  // state di React arriva un render dopo, troppo tardi per un doppio click),
+  // lo state serve solo a disabilitare visivamente il pulsante.
   const handlePublish = async (p: UnifiedProject) => {
+    if (publishingRef.current) return;
+    publishingRef.current = p.id;
+    setPublishingId(p.id);
+    try {
+      await doPublish(p);
+    } finally {
+      publishingRef.current = null;
+      setPublishingId(null);
+    }
+  };
+
+  const doPublish = async (p: UnifiedProject) => {
     // UNA SOLA FONTE, la stessa dell'export. Fino al 09/08/2026 questa
     // funzione guardava SOLO in IndexedDB — che ha un unico scrittore in tutto
     // il repo, l'import di un .gspack. Conseguenza: un progetto tradotto dalla
@@ -733,7 +762,11 @@ export default function ProjectsPage() {
     const tid = toast.loading(t('projectsPage.publishing'));
     try {
       const { publishPack } = await import('@/lib/social/community-hub-backend');
-      const pct = p.totalStrings > 0 ? Math.round((p.completedStrings / p.totalStrings) * 100) : 0;
+      // Clamp: l'aggregazione dei progetti può sommare le stesse stringhe due
+      // volte (dizionari senza dedup) → 126/122 = «103%» sul Hub. Un pack non
+      // può dichiarare più stringhe tradotte di quante ne esistano.
+      const translated = Math.min(p.completedStrings, p.totalStrings);
+      const pct = percent(translated, p.totalStrings);
       const published = await publishPack({
         name: `${p.gameName} — ${p.targetLanguage.toUpperCase()}`,
         gameId: p.gameId,
@@ -741,7 +774,7 @@ export default function ProjectsPage() {
         sourceLanguage: p.sourceLanguage,
         targetLanguage: p.targetLanguage,
         totalStrings: p.totalStrings,
-        translatedStrings: p.completedStrings,
+        translatedStrings: translated,
         completionPercentage: pct,
       }, files);
       // Lo status arriva dal DB (trigger enforce_pack_status), non da una
@@ -757,6 +790,14 @@ export default function ProjectsPage() {
         description: isLive
           ? t('projectsPage.publishLive')
           : t('projectsPage.publishModeration'),
+        // Cablaggio Progetti→Hub: il pack appena pubblicato dev'essere a un
+        // click, non da cercare a mano nel Patch Hub.
+        action: published?.id
+          ? {
+              label: t('projectsPage.publishViewPack'),
+              onClick: () => router.push(`/patch-hub?id=${encodeURIComponent(published.id)}`),
+            }
+          : undefined,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -992,6 +1033,7 @@ export default function ProjectsPage() {
               onExport={handleExport}
               onPublish={handlePublish}
               onApply={handleApply}
+              publishing={publishingId === project.id}
             />
           ))}
         </div>

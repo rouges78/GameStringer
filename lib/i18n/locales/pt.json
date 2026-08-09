@@ -464,7 +464,8 @@
     "deleteConfirm": "Eliminar o projeto",
     "deleteError": "Falha ao eliminar",
     "projectImported": "projeto importado",
-    "publishLive": "O patch está publicado: visível no Patch Hub."
+    "publishLive": "O patch está publicado: visível no Patch Hub.",
+    "publishViewPack": "Ver o pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Não foi possível ler a área de transferência",

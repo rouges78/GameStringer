@@ -464,7 +464,8 @@
     "deleteConfirm": "Удалить проект",
     "deleteError": "Не удалось удалить",
     "projectImported": "проект импортирован",
-    "publishLive": "Патч опубликован: виден в Patch Hub."
+    "publishLive": "Патч опубликован: виден в Patch Hub.",
+    "publishViewPack": "Открыть пак"
   },
   "emulatorTranslator": {
     "clipboardError": "Не удалось прочитать буфер обмена",

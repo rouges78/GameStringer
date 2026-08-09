@@ -464,7 +464,8 @@
     "deleteConfirm": "¿Eliminar el proyecto",
     "deleteError": "No se pudo eliminar",
     "projectImported": "proyecto importado",
-    "publishLive": "El parche está publicado: visible en el Patch Hub."
+    "publishLive": "El parche está publicado: visible en el Patch Hub.",
+    "publishViewPack": "Ver el pack"
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",

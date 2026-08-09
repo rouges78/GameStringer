@@ -464,7 +464,8 @@
     "deleteConfirm": "Delete the project",
     "deleteError": "Delete failed",
     "projectImported": "project imported",
-    "publishLive": "The patch is live: visible in the Patch Hub."
+    "publishLive": "The patch is live: visible in the Patch Hub.",
+    "publishViewPack": "View pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",

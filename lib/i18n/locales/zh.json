@@ -464,7 +464,8 @@
     "deleteConfirm": "删除项目",
     "deleteError": "删除失败",
     "projectImported": "项目已导入",
-    "publishLive": "补丁已发布：可在 Patch Hub 中查看。"
+    "publishLive": "补丁已发布：可在 Patch Hub 中查看。",
+    "publishViewPack": "查看补丁包"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",

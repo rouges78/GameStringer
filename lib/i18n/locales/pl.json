@@ -464,7 +464,8 @@
     "deleteConfirm": "Usunąć projekt",
     "deleteError": "Nie udało się usunąć",
     "projectImported": "projekt zaimportowany",
-    "publishLive": "Łatka jest opublikowana: widoczna w Patch Hub."
+    "publishLive": "Łatka jest opublikowana: widoczna w Patch Hub.",
+    "publishViewPack": "Zobacz pack"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",

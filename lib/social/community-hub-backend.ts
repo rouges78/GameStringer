@@ -325,54 +325,98 @@ export async function publishPack(pack: Partial<TranslationPack>, files: File[])
 
   if (packError) throw new Error(`Errore pubblicazione: ${packError.message}`);
 
-  // 2. Upload files to Supabase Storage (con SHA-256 per l'integrità)
+  // 2. Upload files to Supabase Storage (con SHA-256 per l'integrità).
+  // ATOMICO: se anche UN file fallisce (nome invalido, upload, record), il
+  // pack intero viene ritirato (Storage + pack_files + riga) e si lancia.
+  // Prima qui c'era un `continue` che produceva pack pubblicati e VUOTI:
+  // la UI diceva successo, il download non aveva niente da scaricare.
   const { sha256Hex, aggregatePackSha256, sanitizePackFileName } = await import('@/lib/pack-integrity');
   const uploadedFiles: PackFile[] = [];
   const fileHashes: Array<{ name: string; sha256: string }> = [];
-  for (const file of files) {
-    // Mai fidarsi del nome file: solo basename, niente separatori/traversal.
-    const safeName = sanitizePackFileName(file.name);
-    if (!safeName) {
-      clientLogger.warn(`Nome file non valido, saltato:`, file.name);
-      continue;
-    }
-    const fileSha256 = await sha256Hex(await file.arrayBuffer());
-    const storagePath = `packs/${packData.id}/${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('translation-packs').upload(storagePath, file);
-    if (uploadError) {
-      clientLogger.warn(`Upload fallito per ${safeName}:`, String(uploadError));
-      continue;
-    }
+  const uploadedPaths: string[] = [];
 
-    // 3. Insert file record
-    const ext = safeName.split('.').pop()?.toLowerCase() || 'json';
-    const { data: fileData } = await supabase.from('pack_files').insert({
-      pack_id: packData.id,
-      name: safeName,
-      path: storagePath,
-      type: ext,
-      size: file.size,
-      string_count: 0,
-      sha256: fileSha256,
-    }).select().single();
+  // Ritorna l'errore invece di lanciarlo: i call-site fanno `throw await ...`
+  // così il narrowing di TypeScript vede l'uscita dal flusso.
+  const rollbackPack = async (reason: string): Promise<Error> => {
+    // Best-effort: se il rollback stesso fallisce lo logghiamo ma lanciamo
+    // comunque l'errore originale (il chiamante deve sapere che NON è pubblicato).
+    try {
+      if (uploadedPaths.length > 0) {
+        const { error: rmError } = await supabase.storage.from('translation-packs').remove(uploadedPaths);
+        if (rmError) clientLogger.warn('Rollback Storage incompleto:', String(rmError));
+      }
+      const { error: delFilesError } = await supabase.from('pack_files').delete().eq('pack_id', packData.id);
+      if (delFilesError) clientLogger.warn('Rollback pack_files incompleto:', String(delFilesError));
+      const { error: delPackError } = await supabase.from('translation_packs').delete().eq('id', packData.id);
+      if (delPackError) clientLogger.warn('Rollback translation_packs incompleto:', String(delPackError));
+    } catch (e) {
+      clientLogger.warn('Rollback pack fallito:', String(e));
+    }
+    return new Error(`Pubblicazione annullata: ${reason}`);
+  };
 
-    if (fileData) {
+  // Il try/catch copre anche le ECCEZIONI (arrayBuffer, rete che lancia
+  // invece di tornare un error-object): qualunque uscita anomala dopo
+  // l'INSERT della riga deve passare dal rollback, o resta un pack orfano.
+  try {
+    for (const file of files) {
+      // Mai fidarsi del nome file: solo basename, niente separatori/traversal.
+      const safeName = sanitizePackFileName(file.name);
+      if (!safeName) {
+        throw await rollbackPack(`nome file non valido (${file.name})`);
+      }
+      const fileSha256 = await sha256Hex(await file.arrayBuffer());
+      const storagePath = `packs/${packData.id}/${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('translation-packs').upload(storagePath, file);
+      if (uploadError) {
+        throw await rollbackPack(`upload fallito per ${safeName} (${uploadError.message || String(uploadError)})`);
+      }
+      uploadedPaths.push(storagePath);
+
+      // 3. Insert file record
+      const ext = safeName.split('.').pop()?.toLowerCase() || 'json';
+      const { data: fileData, error: fileError } = await supabase.from('pack_files').insert({
+        pack_id: packData.id,
+        name: safeName,
+        path: storagePath,
+        type: ext,
+        size: file.size,
+        string_count: 0,
+        sha256: fileSha256,
+      }).select().single();
+
+      if (fileError || !fileData) {
+        throw await rollbackPack(`record file non salvato per ${safeName}${fileError ? ` (${fileError.message})` : ''}`);
+      }
       uploadedFiles.push(mapFileRow(fileData));
       fileHashes.push({ name: safeName, sha256: fileSha256 });
     }
-  }
 
-  // 3b. Hash aggregato del pack (badge integrità + verifica al download)
-  if (fileHashes.length > 0) {
+    // Un pack senza nemmeno un file scaricabile non deve esistere.
+    if (uploadedFiles.length === 0) {
+      throw await rollbackPack('nessun file da pubblicare');
+    }
+
+    // 3b. Hash aggregato del pack (badge integrità + verifica al download).
+    // Anche questo è vincolante: senza content_sha256 la verifica al download
+    // non ha una baseline — meglio nessun pack che un pack non verificabile.
     const contentSha256 = await aggregatePackSha256(fileHashes);
-    await supabase.from('translation_packs')
+    const { error: hashError } = await supabase.from('translation_packs')
       .update({ content_sha256: contentSha256 })
       .eq('id', packData.id);
+    if (hashError) {
+      throw await rollbackPack(`hash di integrità non salvato (${hashError.message})`);
+    }
     packData.content_sha256 = contentSha256;
+  } catch (e) {
+    // Errori già passati dal rollback: rilancia e basta (niente doppio rollback).
+    if (e instanceof Error && e.message.startsWith('Pubblicazione annullata')) throw e;
+    throw await rollbackPack(`errore inatteso (${e instanceof Error ? e.message : String(e)})`);
   }
 
-  // 4. Update user contribution count
-  await supabase.rpc('increment_contributions', { user_id: user.id });
+  // 4. Update user contribution count (non vincolante: il pack è già valido)
+  const { error: rpcError } = await supabase.rpc('increment_contributions', { user_id: user.id });
+  if (rpcError) clientLogger.warn('increment_contributions fallito:', rpcError.message);
 
   return mapPackRow({ ...packData, pack_files: uploadedFiles, author: user });
 }
@@ -1057,6 +1101,10 @@ export async function fetchHubStats(): Promise<HubStats> {
 function mapPackRow(row: Record<string, any>): TranslationPack {
   const author: CommunityAuthor = row.author ? {
     id: row.author.id,
+    // NB: user_profiles NON ha display_name (verificato sullo schema remoto
+    // 09/08/2026 — è un campo solo client, normalizeProfile in social.ts).
+    // Se lo username è illeggibile (user_xxxx da auth-bridge) il fix è
+    // rinominarlo nel profilo, non cercare colonne che non esistono.
     username: row.author.username,
     avatar: row.author.avatar_url,
     reputation: row.author.reputation || 0,
@@ -1079,8 +1127,11 @@ function mapPackRow(row: Record<string, any>): TranslationPack {
     contributors: [],
     description: row.description || '',
     totalStrings: row.total_strings || 0,
-    translatedStrings: row.translated_strings || 0,
-    completionPercentage: row.completion_percentage || 0,
+    // Clamp in LETTURA: in DB esistono righe storiche con 126/122 → «103%».
+    // Qualunque consumer (Patch Hub, profili, showcase) non deve mai vedere
+    // più di 100 — la sorgente è già clampata, questo copre il pregresso.
+    translatedStrings: Math.min(row.translated_strings || 0, row.total_strings || 0),
+    completionPercentage: Math.min(100, row.completion_percentage || 0),
     rating: row.rating || 0,
     ratingCount: row.rating_count || 0,
     downloads: row.downloads || 0,
