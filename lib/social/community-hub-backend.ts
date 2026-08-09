@@ -335,6 +335,7 @@ export async function publishPack(pack: Partial<TranslationPack>, files: File[])
     game_id: pack.gameId,
     game_name: pack.gameName,
     game_app_id: pack.gameAppId,
+    cover_image: pack.coverImage,
     platform: pack.platform,
     source_language: pack.sourceLanguage,
     target_language: pack.targetLanguage,

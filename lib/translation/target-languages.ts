@@ -15,6 +15,19 @@ export interface TargetLanguage {
   flag: string;
 }
 
+/**
+ * Percorso dell'SVG bandiera per un codice lingua, o null se sconosciuto.
+ * PERCHÉ SVG e non emoji: su Windows le emoji bandiera NON esistono nei font
+ * di sistema — WebView2 mostra le due lettere (🇮🇹 → «IT»), quindi le card
+ * mostravano «IT EN → IT». Gli SVG stanno in public/flags/<code>.svg
+ * (estratti da flag-icons, MIT — licenza accanto ai file), uno per ogni
+ * lingua di QUESTA lista: aggiungendo una lingua, aggiungere anche l'SVG.
+ */
+export function langFlagSrc(code: string): string | null {
+  const c = (code || '').toLowerCase();
+  return TARGET_LANGUAGES.some(l => l.code === c) ? `/flags/${c}.svg` : null;
+}
+
 export const TARGET_LANGUAGES: TargetLanguage[] = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
   { code: 'en', name: 'English', flag: '🇬🇧' },

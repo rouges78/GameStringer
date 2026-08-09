@@ -41,6 +41,7 @@ import { invoke } from '@/lib/tauri-api';
 import { ensureArray } from '@/lib/array-utils';
 import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
+import { langFlagSrc } from '@/lib/translation/target-languages';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
 import { loadTranslatedFiles, deleteTranslatedFiles } from '@/lib/services/translated-files-store';
@@ -71,19 +72,15 @@ type FilterStatus = 'all' | 'in_progress' | 'completed' | 'empty';
 
 // ─── Helpers ─────────────────────────────────────────────────
 
-const LANG_FLAGS: Record<string, string> = {
-  en: '🇬🇧',
-  it: '🇮🇹',
-  es: '🇪🇸',
-  fr: '🇫🇷',
-  de: '🇩🇪',
-  pt: '🇵🇹',
-  ru: '🇷🇺',
-  ja: '🇯🇵',
-  zh: '🇨🇳',
-  ko: '🇰🇷',
-  pl: '🇵🇱',
-};
+// Bandiere come SVG locali (public/flags), non emoji: su Windows le emoji
+// bandiera non esistono nei font e WebView2 mostrava le lettere («GB → IT»
+// doppio accanto ai codici). Lista lingue UNIFICATA via langFlagSrc.
+function FlagIcon({ code, className = 'h-3 w-4' }: { code: string; className?: string }) {
+  const src = langFlagSrc(code);
+  if (!src) return <Globe className="w-3 h-3 text-slate-500" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={code.toUpperCase()} className={cn(className, 'rounded-[2px] object-cover ring-1 ring-slate-700/60 inline-block')} />;
+}
 
 const SOURCE_LABELS: Record<UnifiedProject['source'], { label: string; color: string; icon: typeof BookOpen }> = {
   active: { label: 'In Traduzione', color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', icon: Rocket },
@@ -415,9 +412,9 @@ function ProjectCard({
 
         {/* Languages */}
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <span className="text-base leading-none">{LANG_FLAGS[project.sourceLanguage] || '🌐'}</span>
+          <FlagIcon code={project.sourceLanguage} />
           <ArrowRight className="w-3 h-3" />
-          <span className="text-base leading-none">{LANG_FLAGS[project.targetLanguage] || '🌐'}</span>
+          <FlagIcon code={project.targetLanguage} />
           <span className="text-slate-500 ml-1">
             {project.sourceLanguage.toUpperCase()} → {project.targetLanguage.toUpperCase()}
           </span>
@@ -824,6 +821,7 @@ export default function ProjectsPage() {
         name: `${p.gameName} — ${p.targetLanguage.toUpperCase()}`,
         gameId: p.gameId,
         gameName: p.gameName,
+        coverImage: p.coverUrl,
         sourceLanguage: p.sourceLanguage,
         targetLanguage: p.targetLanguage,
         totalStrings: p.totalStrings,
@@ -1054,7 +1052,7 @@ export default function ProjectsPage() {
             <SelectItem value="all">{t('projectsPage.allLanguages')}</SelectItem>
             {availableLangs.map(lang => (
               <SelectItem key={lang} value={lang}>
-                {LANG_FLAGS[lang] || '🌐'} {lang.toUpperCase()}
+                <span className="inline-flex items-center gap-1.5"><FlagIcon code={lang} /> {lang.toUpperCase()}</span>
               </SelectItem>
             ))}
           </SelectContent>
