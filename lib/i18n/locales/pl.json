@@ -469,7 +469,8 @@
     "projectImported": "projekt zaimportowany",
     "publishLive": "Łatka jest opublikowana: widoczna w Patch Hub.",
     "publishViewPack": "Zobacz pack",
-    "openPackTitle": "Opublikowano — otwórz pack w Patch Hub"
+    "openPackTitle": "Opublikowano — otwórz pack w Patch Hub",
+    "deleteDerivedCard": "Ta karta pochodzi z innych danych (Translation Memory lub biblioteki) i nie można jej stąd usunąć"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",

@@ -894,7 +894,8 @@ export default function EditorPage() {
   };
 
   const _deleteTranslation = async (id: string) => {
-    if (!confirm(t('editorPage.confirmDelete'))) return;
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('editorPage.confirmDelete')))) return;
     try {
       await removeEditorTranslation(id);
       setTranslations(prev => prev.filter(t => t.id !== id));

@@ -70,8 +70,9 @@ export default function BlogPage() {
     toast.success(t('common.newsUpdated'));
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm(t('common.deleteThisNews'))) {
+  const handleDelete = async (id: string) => {
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (await confirmDialog(t('common.deleteThisNews'))) {
       blogService.deletePost(id);
       setPosts(blogService.getPosts());
       toast.success(t('common.newsDeleted'));

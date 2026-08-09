@@ -71,8 +71,9 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
     toast.success(`History exported as ${format.toUpperCase()}`);
   };
 
-  const handleClear = () => {
-    if (confirm('Delete all translation history?')) {
+  const handleClear = async () => {
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (await confirmDialog('Delete all translation history?')) {
       translationHistory.clearHistory();
       loadData();
       toast.success('History deleted');

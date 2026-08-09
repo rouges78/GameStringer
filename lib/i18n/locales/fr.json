@@ -469,7 +469,8 @@
     "projectImported": "projet importé",
     "publishLive": "Le patch est en ligne : visible dans le Patch Hub.",
     "publishViewPack": "Voir le pack",
-    "openPackTitle": "Publié — ouvrir le pack dans le Patch Hub"
+    "openPackTitle": "Publié — ouvrir le pack dans le Patch Hub",
+    "deleteDerivedCard": "Cette carte est dérivée d'autres données (Translation Memory ou bibliothèque) et ne peut pas être supprimée ici"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",

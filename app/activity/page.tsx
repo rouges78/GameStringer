@@ -121,7 +121,8 @@ export default function ActivityHistoryPage() {
 
   // Cancella tutto
   const handleClearAll = async () => {
-    if (!confirm(t('activity.clearConfirm'))) return;
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('activity.clearConfirm')))) return;
     
     const success = await activityHistory.clear();
     if (success) {

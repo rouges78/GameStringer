@@ -899,7 +899,8 @@ export default function GameDetailPage() {
   const _handleUninstallUnityPatch = async () => {
     if (!game?.installPath) return;
 
-    if (!confirm(t('gameDetail.confirmRemoveUnity'))) return;
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('gameDetail.confirmRemoveUnity')))) return;
     
     setIsInstallingPatch(true);
     try {
@@ -1292,8 +1293,9 @@ export default function GameDetailPage() {
 
   const _handleUninstallUnrealPatch = async () => {
     if (!game?.installPath) return;
-    
-    if (!confirm(t('gameDetail.confirmRemoveTranslation'))) return;
+
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('gameDetail.confirmRemoveTranslation')))) return;
     
     try {
       const result = await invoke<string>('uninstall_unreal_patch', {

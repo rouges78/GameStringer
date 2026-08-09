@@ -14,6 +14,7 @@
 import { keys, get } from 'idb-keyval';
 import { invoke } from '@/lib/tauri-api';
 import { projectService } from '@/lib/services/translation-projects';
+import { isProjectTombstoned } from '@/lib/projects-persistence';
 
 const PREFIX = 'gs_vis_ckpt_';
 
@@ -54,6 +55,10 @@ export async function backfillVisionaireProjects(): Promise<number> {
 
     const name = gamePath.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || gamePath;
     const gameId = `vis-${gamePath}`;
+
+    // Card eliminata dall'utente: non risorgerla dal checkpoint (stessa
+    // regola del backfill session — «Elimina» deve restare eliminato).
+    if (isProjectTombstoned(gameId, lang)) continue;
 
     try {
       const proj = await projectService.createOrGetProject({

@@ -469,7 +469,8 @@
     "projectImported": "Projekt importiert",
     "publishLive": "Der Patch ist online: im Patch Hub sichtbar.",
     "publishViewPack": "Pack ansehen",
-    "openPackTitle": "Veröffentlicht — Pack im Patch Hub öffnen"
+    "openPackTitle": "Veröffentlicht — Pack im Patch Hub öffnen",
+    "deleteDerivedCard": "Diese Karte leitet sich aus anderen Daten ab (Translation Memory oder Bibliothek) und kann hier nicht gelöscht werden"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",

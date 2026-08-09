@@ -469,7 +469,8 @@
     "projectImported": "progetto importato",
     "publishLive": "La patch è online: visibile nel Patch Hub.",
     "publishViewPack": "Apri il pack",
-    "openPackTitle": "Pubblicato — apri il pack sul Patch Hub"
+    "openPackTitle": "Pubblicato — apri il pack sul Patch Hub",
+    "deleteDerivedCard": "Questa scheda deriva da altri dati (Translation Memory o libreria) e non si elimina da qui"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossibile leggere gli appunti",

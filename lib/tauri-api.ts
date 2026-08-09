@@ -108,6 +108,15 @@ export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unk
       // Probe di rilevamento engine: "non è questo engine" è un esito ATTESO (il chiamante
       // ha un fallback), non un errore → debug, niente rumore rosso in console.
       clientLogger.debug(`🔎 ${cmd}: engine non corrispondente (atteso).`);
+    } else if (cmd === 'notify_background_operation_completed' && errorMessage.includes('non inizializzato')) {
+      // Il sottosistema eventi-notifiche non è MAI stato inizializzato in
+      // main.rs (event_system/auto_integration/system_event_integration nascono
+      // tutti None): questo comando fallisce così dalla nascita, a ogni
+      // traduzione completata. La notifica visibile all'utente passa comunque
+      // dal tray bridge (bg-translation-event). Esito noto → debug; la
+      // decisione vera (inizializzare il sottosistema o amputarlo) è in
+      // roadmap [notifications-dead-subsystem].
+      clientLogger.debug(`🔎 ${cmd}: sottosistema eventi-notifiche mai inizializzato (noto).`);
     } else {
       clientLogger.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
     }

@@ -43,10 +43,36 @@ interface DiskBlob {
   savedAt: string;
   activeProjectId?: string;
   projects: ProjectLike[];
+  /** Tombstone `gameId:lang` dei progetti ELIMINATI dall'utente: i backfill
+   *  (session/visionaire) li saltano, sennò la card eliminata risorge dal
+   *  translation_session.json al giro dopo (il backfill gira ogni 60s).
+   *  Una NUOVA traduzione vera ripassa dall'apply, che registra il progetto
+   *  direttamente: la card ricompare senza toccare il tombstone. */
+  deletedKeys?: string[];
 }
 
 let hydrated = false;
 let hydrationSettled = false;
+// Cache in memoria dei tombstone (idratata dal disco, aggiornata sui delete).
+let tombstones = new Set<string>();
+
+/** Chiave tombstone canonica. */
+export function projectTombstoneKey(gameId: string, targetLanguage: string): string {
+  return `${gameId}:${targetLanguage}`;
+}
+
+/** true se questo gioco+lingua è stato eliminato dall'utente. */
+export function isProjectTombstoned(gameId: string, targetLanguage: string): boolean {
+  return tombstones.has(projectTombstoneKey(gameId, targetLanguage));
+}
+
+/** Registra l'eliminazione e la persiste su disco (fire-and-forget). */
+export async function addProjectTombstone(gameId: string, targetLanguage: string): Promise<void> {
+  tombstones.add(projectTombstoneKey(gameId, targetLanguage));
+  // Il flush normale porta i tombstone su disco insieme al registro; qui lo
+  // forziamo subito perché un delete è un'azione esplicita dell'utente.
+  await persistProjectsToDisk({ allowEmpty: true }).catch(() => { /* già loggato */ });
+}
 
 /** Percorso di $DATA/GameStringer/projects.json; null fuori da Tauri. */
 async function diskFilePath(): Promise<string | null> {
@@ -134,6 +160,11 @@ export async function hydrateProjectsFromDisk(): Promise<void> {
     const disk = await readDisk();
     const local = (await get<ProjectLike[]>(PROJECTS_KEY)) || [];
 
+    // I tombstone si idratano SEMPRE, anche con zero progetti su disco.
+    if (disk?.deletedKeys?.length) {
+      tombstones = new Set([...tombstones, ...disk.deletedKeys]);
+    }
+
     if (disk && disk.projects.length > 0) {
       const merged = mergeProjects(disk.projects, local);
       await set(PROJECTS_KEY, merged);
@@ -142,13 +173,13 @@ export async function hydrateProjectsFromDisk(): Promise<void> {
       }
       // Riallinea il disco al merge, così la prossima hydration è coerente.
       // Non fatale (il merge è già in IndexedDB) ma MAI muto.
-      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: disk.activeProjectId, projects: merged })
+      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: disk.activeProjectId, projects: merged, deletedKeys: [...tombstones] })
         .catch((e: unknown) => clientLogger.warn('riallineamento disco post-hydration fallito:', String(e)));
       clientLogger.debug(`projects hydration: ${disk.projects.length} da disco + ${local.length} locali → ${merged.length}`);
     } else if (local.length > 0) {
       // Migrazione una-tantum: IndexedDB esistente → disco.
       const active = await get<string>(ACTIVE_PROJECT_KEY);
-      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: active, projects: local });
+      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: active, projects: local, deletedKeys: [...tombstones] });
       clientLogger.debug(`projects hydration: migrati ${local.length} progetti su disco`);
     }
   } catch (e: unknown) {
@@ -184,7 +215,7 @@ export async function persistProjectsToDisk(opts: { allowEmpty?: boolean } = {})
     // eccezione il progetto cancellato risorgerebbe alla prossima hydration.
     if (projects.length === 0 && !opts.allowEmpty) return;
     const active = await get<string>(ACTIVE_PROJECT_KEY);
-    await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: active, projects });
+    await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: active, projects, deletedKeys: [...tombstones] });
   } catch (e: unknown) {
     // warn, non debug: se il registro non si salva è un rischio di perdita
     // dati, non un dettaglio di sviluppo (writeDisk ha già avvisato l'utente

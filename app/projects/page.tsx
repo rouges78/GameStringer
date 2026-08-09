@@ -614,7 +614,10 @@ export default function ProjectsPage() {
   }, [projects]);
 
   const handleDelete = async (p: UnifiedProject) => {
-    if (!confirm(`${t('projectsPage.deleteConfirm')} "${p.gameName}"?`)) return;
+    // confirmDialog è AWAITabile: in Tauri window.confirm è async e la vecchia
+    // `if (!confirm(...))` non aspettava mai (vedi lib/confirm-dialog.ts).
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(`${t('projectsPage.deleteConfirm')} "${p.gameName}"?`))) return;
     if (p.source === 'quality') {
       const qsId = p.id.replace(/^qs:/, '');
       qualityScoringService.deleteProject(qsId);
@@ -629,13 +632,36 @@ export default function ProjectsPage() {
       try {
         await projectService.deleteProject(projectId);
         await deleteTranslatedFiles(p.gameId, p.targetLanguage);
+        // TOMBSTONE: senza, i backfill (che girano ogni 60s) risorgevano la
+        // card dal translation_session.json o dal checkpoint — «Elimina» era
+        // una bugia a tempo. Una traduzione NUOVA ripassa dall'apply e la
+        // card ricompare per lavoro vero.
+        const { addProjectTombstone } = await import('@/lib/projects-persistence');
+        await addProjectTombstone(p.gameId, p.targetLanguage);
         toast.success(t('projectsPage.projectDeleted'));
         reload();
       } catch (e: unknown) {
         clientLogger.error(`[Projects] delete failed: ${String(e)}`);
         toast.error(t('projectsPage.deleteError'));
       }
+      return;
     }
+    if (p.source === 'dictionary') {
+      // Il dizionario è un file reale su disco: lo cancella il comando Rust.
+      try {
+        await invoke('delete_dictionary', { gameId: p.gameId, targetLang: p.targetLanguage });
+        toast.success(t('projectsPage.projectDeleted'));
+        reload();
+      } catch (e: unknown) {
+        clientLogger.error(`[Projects] delete dictionary failed: ${String(e)}`);
+        toast.error(t('projectsPage.deleteError'), { description: String(e).slice(0, 140) });
+      }
+      return;
+    }
+    // translation_memory / game: card DERIVATE (TM condivisa, statistiche di
+    // libreria) — da qui non si possono eliminare, e fino a oggi il click
+    // faceva FINTA di niente dopo la conferma. Meglio dire il perché.
+    toast.info(t('projectsPage.deleteDerivedCard'));
   };
 
   /**

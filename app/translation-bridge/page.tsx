@@ -209,7 +209,8 @@ export default function TranslationBridgePage() {
 
   // Clear dictionary
   const handleClear = async () => {
-    if (!confirm(t('translationBridge.confirmClear'))) return;
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('translationBridge.confirmClear')))) return;
     
     setIsLoading(true);
     try {

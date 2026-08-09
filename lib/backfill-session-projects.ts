@@ -22,6 +22,7 @@ import { invoke } from '@/lib/tauri-api';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey, cleanGamePath } from '@/lib/game-path';
 import { clientLogger } from '@/lib/client-logger';
+import { isProjectTombstoned } from '@/lib/projects-persistence';
 
 interface SessionEntry { namespace?: string; key: string; original: string; translated?: string }
 interface SessionFile {
@@ -111,6 +112,15 @@ export async function backfillSessionProjects(): Promise<number> {
 
     const targetLang = session.targetLanguage || 'it';
     const gameId = session.gameId || game.id || pathKey;
+
+    // L'utente ha ELIMINATO questa card: non risorgerla dal session file (il
+    // backfill gira ogni 60s — senza tombstone «Elimina» era una bugia a
+    // tempo). Una traduzione NUOVA ripassa dall'apply e registra il progetto
+    // direttamente, quindi la card ricompare per lavoro vero.
+    if (isProjectTombstoned(gameId, targetLang) || isProjectTombstoned(game.id, targetLang)) {
+      clientLogger.debug(`[SessionBackfill] saltato (eliminato dall'utente): ${game.title} ${targetLang}`);
+      continue;
+    }
 
     try {
       const proj = await projectService.createOrGetProject({

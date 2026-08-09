@@ -171,8 +171,9 @@ export function TranslationProfileManager({
     setEditingProfile(null);
   };
 
-  const handleDeleteProfile = (id: string) => {
-    if (confirm(t('translationProfileManager.confirmDelete'))) {
+  const handleDeleteProfile = async (id: string) => {
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (await confirmDialog(t('translationProfileManager.confirmDelete'))) {
       translationProfileManager.deleteProfile(id);
       loadProfiles();
       if (selectedProfile?.id === id) {

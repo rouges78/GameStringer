@@ -469,7 +469,8 @@
     "projectImported": "проект импортирован",
     "publishLive": "Патч опубликован: виден в Patch Hub.",
     "publishViewPack": "Открыть пак",
-    "openPackTitle": "Опубликован — открыть пак в Patch Hub"
+    "openPackTitle": "Опубликован — открыть пак в Patch Hub",
+    "deleteDerivedCard": "Эта карточка получена из других данных (Translation Memory или библиотека) и не может быть удалена отсюда"
   },
   "emulatorTranslator": {
     "clipboardError": "Не удалось прочитать буфер обмена",

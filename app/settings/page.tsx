@@ -887,7 +887,8 @@ export default function SettingsPage() {
   };
 
   const resetSettings = async () => {
-    if (!confirm(t('settings.confirmReset'))) return;
+    const { confirmDialog } = await import('@/lib/confirm-dialog');
+    if (!(await confirmDialog(t('settings.confirmReset')))) return;
     // Il Reset deve cancellare la FONTE DI VERITÀ, non la cache.
     // Prima del 04/08/2026 qui c'era solo removeItem + reload: al riavvio
     // SettingsBootGate chiamava hydrateSettingsFromDisk(), trovava

@@ -469,7 +469,8 @@
     "projectImported": "proyecto importado",
     "publishLive": "El parche está publicado: visible en el Patch Hub.",
     "publishViewPack": "Ver el pack",
-    "openPackTitle": "Publicado — abrir el pack en el Patch Hub"
+    "openPackTitle": "Publicado — abrir el pack en el Patch Hub",
+    "deleteDerivedCard": "Esta tarjeta deriva de otros datos (Translation Memory o biblioteca) y no se puede eliminar desde aquí"
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",
