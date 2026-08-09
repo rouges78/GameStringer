@@ -27,6 +27,7 @@ import {
   BookOpen,
   Scan,
   ShoppingBag,
+  Package,
   Workflow,
   ShieldCheck,
   Eye
@@ -63,6 +64,7 @@ export function CommandPalette() {
     { id: 'voice', title: t('nav.voice'), description: t('commandPalette.voiceDesc'), icon: <Mic className="h-4 w-4" />, action: () => router.push('/voice-translator'), keywords: ['voice', 'voce', 'audio'], category: 'navigation' },
     { id: 'patcher', title: t('nav.patcher'), description: t('commandPalette.patcherDesc'), icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/unity-patcher'), keywords: ['unity', 'patch', 'bepinex'], category: 'navigation' },
     { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share', 'comunità'], category: 'navigation' },
+    { id: 'patch-hub', title: t('patchHubPage.title'), description: t('patchHubPage.subtitle'), icon: <Package className="h-4 w-4" />, action: () => router.push('/patch-hub'), keywords: ['patch', 'pack', 'traduzioni', 'hub'], category: 'navigation' },
     { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options', 'impostazioni'], category: 'navigation' },
     { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation' },
     { id: 'guide', title: t('nav.guide'), description: t('commandPalette.settingsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/guide'), keywords: ['guide', 'help', 'guida'], category: 'navigation' },

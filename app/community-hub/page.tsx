@@ -19,6 +19,7 @@ import {
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { ForumHome, CommunityOverview, ThreadView, NewThread } from '@/components/forum';
+import { PacksTab } from '@/components/community/packs-tab';
 import { NotificationsPanel, OnlineIndicator, Showcase, UserProfileView } from '@/components/social';
 import { useProfiles } from '@/hooks/use-profiles';
 import { updatePresence } from '@/lib/social/social';
@@ -77,8 +78,13 @@ export default function CommunityHubPage() {
 
   const initialCategory = searchParams.get('category') || undefined;
   const initialSearch = searchParams.get('query') || undefined;
+  // ?profile=<username>: unico deep-link ai profili compatibile con
+  // l'export statico — /u/[username] con dynamicParams=false emette solo
+  // /u/_, quindi i link diretti 404ano in build. Chi vuole linkare un
+  // profilo (es. autore di un pack) passa da qui.
+  const initialProfile = searchParams.get('profile') || undefined;
 
-  const [view, setView] = useState<View>('home');
+  const [view, setView] = useState<View>(initialProfile ? 'profile' : 'home');
   // Se arrivo con ?category o ?query vado dritto alle discussioni
   const [homeTab, setHomeTab] = useState<HomeTab>(initialCategory || initialSearch ? 'threads' : 'overview');
   const [threadsCategory, setThreadsCategory] = useState<string | undefined>(initialCategory);
@@ -86,7 +92,7 @@ export default function CommunityHubPage() {
   const [selectedThread, setSelectedThread] = useState<ForumThread | null>(null);
   const [newThreadCategory, setNewThreadCategory] = useState<string | undefined>(initialCategory);
   const [stats, setStats] = useState<ForumStats | null>(null);
-  const [profileUsername, setProfileUsername] = useState<string | null>(null);
+  const [profileUsername, setProfileUsername] = useState<string | null>(initialProfile ?? null);
 
   const userId = currentProfile?.id || '';
   const userName = currentProfile?.name || '';
@@ -255,14 +261,11 @@ export default function CommunityHubPage() {
               />
             )}
 
-            {view === 'home' && homeTab === 'packs' && (
-              <ForumHome
-                key="packs"
-                packsOnly
-                onOpenThread={handleOpenThread}
-                onNewThread={handleNewThread}
-              />
-            )}
+            {/* Pack VERI da translation_packs (stessa fonte del Patch Hub).
+                Prima qui c'era ForumHome packsOnly, che mostrava i THREAD del
+                forum marcati is_translation_pack: dataset scollegato dai pack
+                pubblicati — la tab restava vuota anche a Hub popolato. */}
+            {view === 'home' && homeTab === 'packs' && <PacksTab />}
 
             {view === 'home' && homeTab === 'showcase' && (
               <Showcase onOpenProfile={handleOpenProfile} />

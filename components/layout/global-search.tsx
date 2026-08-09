@@ -17,8 +17,9 @@ import {
   Puzzle, 
   Scan, 
   Wand2, 
-  Subtitles, 
-  Users, 
+  Subtitles,
+  Users,
+  Package,
   Settings,
   Database,
   ArrowRight,
@@ -58,6 +59,7 @@ const navigationItems: SearchItem[] = [
   { id: 'fixer', title: 'Fixer', description: 'Fix translation tags', icon: Wand2, path: '/fixer', category: 'navigation' },
   { id: 'overlay', title: 'Overlay', description: 'In-game subtitles', icon: Subtitles, path: '/overlay', category: 'navigation' },
   { id: 'community', title: 'Community', description: 'Community translations hub', icon: Users, path: '/community-hub', category: 'navigation' },
+  { id: 'patch-hub', title: 'Patch Hub', description: 'Translation packs', icon: Package, path: '/patch-hub', category: 'navigation' },
   { id: 'settings', title: 'Settings', description: 'Configure GameStringer', icon: Settings, path: '/settings', category: 'navigation' },
 ];
 

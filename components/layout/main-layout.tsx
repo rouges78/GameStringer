@@ -23,6 +23,7 @@ import {
   Puzzle,
   Sparkles,
   Package,
+  PackageOpen,
   Wifi,
   WifiOff,
   Search,
@@ -209,6 +210,10 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { name: t('nav.community'), href: '/community-hub', icon: Users },
+      // Prima del 09/08/2026 il Patch Hub NON era in nessuna navigazione:
+      // ci si arrivava solo da bottoni dentro il Community Hub, quasi tutti
+      // visibili solo a community vuota. "patchHubPage.title" = nome proprio.
+      { name: t('patchHubPage.title'), href: '/patch-hub', icon: PackageOpen },
       { name: t('nav.stores'), href: '/stores', icon: Store },
       { name: 'Ollama / AI', href: '/ollama-manager', icon: Package, ollamaIndicator: true },
       { name: t('nav.settings'), href: '/settings', icon: Settings },

@@ -34,6 +34,7 @@ import {
   type ForumThread,
 } from '@/lib/social/forum';
 import { newsFeedService, type NewsFeedItem } from '@/lib/news-feeds';
+import { communityHubService, type TranslationPack } from '@/lib/social/community-hub-service';
 import { formatDistanceToNow } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -94,7 +95,7 @@ export function CommunityOverview({
   const [loading, setLoading] = useState(true);
   const [trending, setTrending] = useState<ForumThread[]>([]);
   const [recent, setRecent] = useState<ForumThread[]>([]);
-  const [packs, setPacks] = useState<ForumThread[]>([]);
+  const [packs, setPacks] = useState<TranslationPack[]>([]);
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [news, setNews] = useState<NewsFeedItem[]>([]);
   const [totalThreads, setTotalThreads] = useState(0);
@@ -105,7 +106,10 @@ export function CommunityOverview({
       const [trendingRes, recentRes, packsRes, catsRes] = await Promise.allSettled([
         getThreads({ sort: 'popular', limit: 4, page: 1 }),
         getThreads({ sort: 'newest', limit: 6, page: 1 }),
-        getThreads({ sort: 'newest', is_translation_pack: true, limit: 3, page: 1 }),
+        // Pack VERI da translation_packs (stessa fonte del Patch Hub e della
+        // tab Pack). Prima: getThreads(is_translation_pack) → thread del
+        // forum, dataset scollegato dai pack pubblicati.
+        communityHubService.searchPacks({ sortBy: 'updated', sortOrder: 'desc', limit: 3 }),
         getCategories(),
       ]);
       if (cancelled) return;
@@ -114,7 +118,7 @@ export function CommunityOverview({
         setRecent(recentRes.value.threads);
         setTotalThreads(recentRes.value.total);
       }
-      if (packsRes.status === 'fulfilled') setPacks(packsRes.value.threads);
+      if (packsRes.status === 'fulfilled') setPacks(packsRes.value.packs);
       if (catsRes.status === 'fulfilled') setCategories(catsRes.value);
       setLoading(false);
     })();
@@ -226,8 +230,12 @@ export function CommunityOverview({
             />
             {packs.length > 0 ? (
               <div className="space-y-2">
-                {packs.map((thread) => (
-                  <PackCard key={thread.id} thread={thread} onClick={() => onOpenThread(thread)} />
+                {packs.map((pack) => (
+                  <PackRow
+                    key={pack.id}
+                    pack={pack}
+                    onClick={() => router.push(`/patch-hub?id=${encodeURIComponent(pack.id)}`)}
+                  />
                 ))}
               </div>
             ) : (
@@ -455,7 +463,9 @@ function ActivityRow({ thread, locale, onClick }: { thread: ForumThread; locale:
   );
 }
 
-function PackCard({ thread, onClick }: { thread: ForumThread; onClick: () => void }) {
+// Riga compatta per un pack vero (translation_packs). Fino al 09/08/2026 qui
+// c'era una card basata su ForumThread.pack_data.
+function PackRow({ pack, onClick }: { pack: TranslationPack; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -463,17 +473,15 @@ function PackCard({ thread, onClick }: { thread: ForumThread; onClick: () => voi
     >
       <div className="flex items-center gap-2 mb-1">
         <Package className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-        <span className="text-xs font-medium text-slate-200 truncate">{thread.title}</span>
+        <span className="text-xs font-medium text-slate-200 truncate">{pack.name}</span>
       </div>
-      {thread.pack_data && (
-        <div className="flex items-center gap-2 text-2xs text-slate-500 pl-[1.375rem]">
-          <span className="truncate">{thread.pack_data.game_name}</span>
-          <span className="font-mono flex-shrink-0">{thread.pack_data.source_lang}→{thread.pack_data.target_lang}</span>
-          <span className="flex items-center gap-1 text-amber-400/80 flex-shrink-0">
-            <Download className="h-3 w-3" />{thread.download_count}
-          </span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-2xs text-slate-500 pl-[1.375rem]">
+        <span className="truncate">{pack.gameName}</span>
+        <span className="font-mono flex-shrink-0 uppercase">{pack.sourceLanguage}→{pack.targetLanguage}</span>
+        <span className="flex items-center gap-1 text-amber-400/80 flex-shrink-0">
+          <Download className="h-3 w-3" />{pack.downloads}
+        </span>
+      </div>
     </button>
   );
 }
