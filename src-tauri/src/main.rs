@@ -1108,6 +1108,7 @@ fn main() {
             commands::danganronpa_patcher::export_for_drat,
             commands::danganronpa_patcher::export_danganronpa_patch,
             commands::danganronpa_patcher::rebuild_danganronpa_wad,
+            commands::danganronpa_patcher::extract_danganronpa_wad_text,
             commands::danganronpa_patcher::extract_danganronpa_dialogues,
             commands::danganronpa_patcher::auto_translate_danganronpa,
 

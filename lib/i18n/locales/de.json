@@ -941,7 +941,13 @@
     "whitelistOfficialNotice": "Dieses Spiel hat bereits eine offizielle Lokalisierung in der gewählten Sprache: eine Fan-Übersetzung ist wahrscheinlich überflüssig.",
     "advancedTools": "Erweiterte Werkzeuge",
     "errNoTranslationEffect": "Keine Zeichenfolge wurde übersetzt: Patch nicht erstellt",
-    "stringsTranslated": "Zeichenfolgen übersetzt"
+    "stringsTranslated": "Zeichenfolgen übersetzt",
+    "dr1Extracting": "Danganronpa: Dialoge werden aus dem WAD extrahiert…",
+    "dr1Translating": "Danganronpa: Übersetzung {done}/{total}… (Checkpoint gespeichert)",
+    "dr1Rebuilding": "Danganronpa: WAD wird neu erstellt…",
+    "dr1Done": "Danganronpa übersetzt: WAD neu erstellt und verifiziert",
+    "dr1Stopped": "Danganronpa: gestoppt — Fortschritt gespeichert, WAD teilweise neu erstellt",
+    "dr1Error": "Danganronpa: Übersetzung fehlgeschlagen"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Fehler beim Laden der DRAT-Informationen:",

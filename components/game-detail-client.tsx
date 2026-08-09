@@ -35,6 +35,7 @@ import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
 import { runRenpyTranslation } from '@/lib/renpy-translate';
+import { runDanganronpaTranslation, requestDanganronpaStop } from '@/lib/danganronpa-translate';
 import { BackendPicker } from '@/components/translation/backend-picker';
 import { getTranslationBackend, setTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
@@ -1944,7 +1945,7 @@ export default function GameDetailPage() {
     // generico (execute_complete_workflow) → per questi niente dialog, si parte.
     {
       const engDirect = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
-      const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot'];
+      const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot', 'spike', 'danganronpa'];
       if (DIRECT_ENGINES.some(k => engDirect.includes(k))) {
         startAutoTranslate();
         return;
@@ -1991,6 +1992,67 @@ export default function GameDetailPage() {
     autoTranslateRunningRef.current = true;
     setAutoTranslateBusy(true);
     setAutoTranslateProgress('');
+
+    // ── Danganronpa DR1 (Spike Chunsoft, WAD AGAR) ──
+    // Regola: UN pulsante. estrai (contratto rebuild) → traduci offline con
+    // checkpoint → rebuild WAD in Rust con verifica interna. Stop dal widget.
+    {
+      const engD = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      if (engD.includes('spike') || engD.includes('danganronpa')) {
+        const tgt = (targetLang || language || 'it').toLowerCase();
+        // catturata come const: il narrowing del guard non entra nelle closure
+        const gPath: string = game.installPath;
+        const dTracker = startHeroTracking(progress, {
+          engineId: 'danganronpa', engineLabel: 'Danganronpa', gamePath: gPath,
+          gameId: game.id || game.appid?.toString() || gameId, gameName: game.name || game.title,
+          gameImage: game.headerImage || game.coverUrl, sourceLang: 'en', targetLang: tgt,
+          opTitle: t('heroJob.jobTitle').replace('{name}', game.name || game.title || 'Danganronpa'),
+          opDesc: t('heroJob.jobDescBg').replace('{engine}', 'Danganronpa'),
+          canCancel: true,
+          onCancel: () => requestDanganronpaStop(gPath),
+        });
+        if (!dTracker) {
+          toast.info(t('heroJob.alreadyRunning'));
+          setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
+          return;
+        }
+        const toastId = toast.loading(t('gameDetail.dr1Extracting'));
+        try {
+          const r = await runDanganronpaTranslation({
+            gamePath: gPath,
+            targetLang: tgt,
+            onProgress: (p) => {
+              if (p.phase === 'translate') {
+                toast.loading(
+                  t('gameDetail.dr1Translating').replace('{done}', String(p.done)).replace('{total}', String(p.total)),
+                  { id: toastId }
+                );
+                dTracker.onProgress(p.done, p.total);
+              } else if (p.phase === 'rebuild') {
+                toast.loading(t('gameDetail.dr1Rebuilding'), { id: toastId });
+              }
+            },
+          });
+          await dTracker.done(r.totalTranslated, r.total);
+          const detail = r.rebuild
+            ? `${r.totalTranslated}/${r.total} · ${r.rebuild.wads_rebuilt.join(', ')} · ${r.rebuild.strings_written} nel WAD · verifica ${r.rebuild.verified_sample}/${r.rebuild.verified_sample_total}`
+            : `${r.totalTranslated}/${r.total}`;
+          if (r.stopped) {
+            toast.warning(t('gameDetail.dr1Stopped'), { id: toastId, description: detail });
+          } else {
+            toast.success(t('gameDetail.dr1Done'), { id: toastId, description: detail });
+          }
+        } catch (e) {
+          await dTracker.fail(e);
+          toast.error(t('gameDetail.dr1Error'), { id: toastId, description: String(e).slice(0, 180) });
+        } finally {
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+        }
+        return;
+      }
+    }
 
     // ── Hendrix_Localization (RPG Maker MV/MZ con game_messages.csv) ──
     // Via CSV nativa del gioco: riempiamo la colonna lingua, abilitiamo il plugin

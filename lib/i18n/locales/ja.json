@@ -941,7 +941,13 @@
     "whitelistOfficialNotice": "このゲームには選択した言語の公式ローカライズが既にあります。ファン翻訳はおそらく不要です。",
     "advancedTools": "詳細ツール",
     "errNoTranslationEffect": "翻訳された文字列がありません: パッチは作成されませんでした",
-    "stringsTranslated": "件の文字列を翻訳"
+    "stringsTranslated": "件の文字列を翻訳",
+    "dr1Extracting": "Danganronpa: WAD からダイアログを抽出中…",
+    "dr1Translating": "Danganronpa: 翻訳中 {done}/{total}…（チェックポイント保存済み）",
+    "dr1Rebuilding": "Danganronpa: WAD を再構築中…",
+    "dr1Done": "Danganronpa 翻訳完了: WAD を再構築し検証しました",
+    "dr1Stopped": "Danganronpa: 停止 — 進行状況を保存し、WAD を部分的に再構築",
+    "dr1Error": "Danganronpa: 翻訳に失敗しました"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",

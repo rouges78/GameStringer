@@ -941,7 +941,13 @@
     "whitelistOfficialNotice": "Questo gioco ha già una localizzazione ufficiale nella lingua scelta: la traduzione amatoriale è probabilmente superflua.",
     "advancedTools": "Strumenti avanzati",
     "errNoTranslationEffect": "Nessuna stringa è stata tradotta: patch non creata",
-    "stringsTranslated": "stringhe tradotte"
+    "stringsTranslated": "stringhe tradotte",
+    "dr1Extracting": "Danganronpa: estrazione dialoghi dal WAD…",
+    "dr1Translating": "Danganronpa: traduzione {done}/{total}… (checkpoint salvato)",
+    "dr1Rebuilding": "Danganronpa: ricostruzione WAD…",
+    "dr1Done": "Danganronpa tradotto: WAD ricostruito e verificato",
+    "dr1Stopped": "Danganronpa: fermato — progressi salvati e WAD ricostruito parziale",
+    "dr1Error": "Danganronpa: traduzione fallita"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Errore caricamento info DRAT:",

@@ -941,7 +941,13 @@
     "whitelistOfficialNotice": "이 게임에는 이미 선택한 언어의 공식 현지화가 있습니다. 팬 번역은 아마 불필요합니다.",
     "advancedTools": "고급 도구",
     "errNoTranslationEffect": "번역된 문자열이 없습니다: 패치가 생성되지 않았습니다",
-    "stringsTranslated": "개 문자열 번역됨"
+    "stringsTranslated": "개 문자열 번역됨",
+    "dr1Extracting": "Danganronpa: WAD에서 대사 추출 중…",
+    "dr1Translating": "Danganronpa: 번역 중 {done}/{total}… (체크포인트 저장됨)",
+    "dr1Rebuilding": "Danganronpa: WAD 재구성 중…",
+    "dr1Done": "Danganronpa 번역 완료: WAD 재구성 및 검증됨",
+    "dr1Stopped": "Danganronpa: 중지됨 — 진행 상황 저장, WAD 부분 재구성",
+    "dr1Error": "Danganronpa: 번역 실패"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",

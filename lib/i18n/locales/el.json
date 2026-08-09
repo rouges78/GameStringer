@@ -941,7 +941,13 @@
     "whitelistOfficialNotice": "Αυτό το παιχνίδι έχει ήδη επίσημη τοπικοποίηση στη γλώσσα που επέλεξες: η ερασιτεχνική μετάφραση μάλλον είναι περιττή.",
     "advancedTools": "Προηγμένα εργαλεία",
     "errNoTranslationEffect": "Δεν μεταφράστηκε καμία συμβολοσειρά: δεν δημιουργήθηκε ενημέρωση",
-    "stringsTranslated": "συμβολοσειρές μεταφράστηκαν"
+    "stringsTranslated": "συμβολοσειρές μεταφράστηκαν",
+    "dr1Extracting": "Danganronpa: εξαγωγή διαλόγων από το WAD…",
+    "dr1Translating": "Danganronpa: μετάφραση {done}/{total}… (checkpoint αποθηκεύτηκε)",
+    "dr1Rebuilding": "Danganronpa: ανακατασκευή WAD…",
+    "dr1Done": "Danganronpa μεταφράστηκε: WAD ανακατασκευάστηκε και επαληθεύτηκε",
+    "dr1Stopped": "Danganronpa: διακόπηκε — η πρόοδος αποθηκεύτηκε, μερικό WAD",
+    "dr1Error": "Danganronpa: η μετάφραση απέτυχε"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Σφάλμα φόρτωσης πληροφοριών DRAT:",

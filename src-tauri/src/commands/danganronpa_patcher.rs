@@ -5033,3 +5033,85 @@ pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildRe
     );
     Ok(result)
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Estrazione col CONTRATTO DEL REBUILD: stesse funzioni gs_* di pulizia e
+// filtro, quindi gli `original` combaciano per costruzione e la verifica del
+// rebuild non può produrre mismatch da divergenza di estrattore (la trappola
+// dei tre contratti: extract-wad-text `index`, vecchi patcher `line_index`,
+// v15 per testo).
+// ═══════════════════════════════════════════════════════════════════
+
+#[derive(Debug, Serialize)]
+pub struct GsWadExtractedString {
+    pub file: String,
+    pub index: i64,
+    pub original: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GsWadExtractResult {
+    pub success: bool,
+    pub wad: String,
+    pub lin_files: u32,
+    pub strings: Vec<GsWadExtractedString>,
+}
+
+/// Estrae i dialoghi .lin da dr1_data_us.wad con il contratto del rebuild.
+#[command]
+pub async fn extract_danganronpa_wad_text(game_path: String) -> Result<GsWadExtractResult, String> {
+    let game_dir = Path::new(&game_path);
+    let wad_path = game_dir.join("dr1_data_us.wad");
+    if !wad_path.exists() {
+        return Err("dr1_data_us.wad non trovato nella cartella del gioco".into());
+    }
+    // Se esiste già il backup, estrai da QUELLO: il wad corrente potrebbe
+    // essere già patchato in italiano e gli original non combacerebbero più.
+    let backup = wad_path.with_extension("wad.gsbackup");
+    let source = if backup.exists() { backup } else { wad_path.clone() };
+
+    let mut f = File::open(&source).map_err(|e| e.to_string())?;
+    let (table_start, count) = gs_parse_wad_header(&mut f)?;
+    let (entries, table_end) = gs_read_wad_entries(&mut f, table_start, count)?;
+
+    let mut out = Vec::new();
+    let mut lin_files = 0u32;
+    for e in &entries {
+        if !e.name.ends_with(".lin") { continue; }
+        let mut buf = vec![0u8; e.size as usize];
+        f.seek(SeekFrom::Start(table_end + e.offset)).map_err(|er| er.to_string())?;
+        f.read_exact(&mut buf).map_err(|er| format!("{}: {}", e.name, er))?;
+        let enc = gs_detect_encoding(&buf);
+        let units = gs_decode_units(&buf, enc);
+
+        let mut delims: Vec<usize> = Vec::new();
+        for (i, &u) in units.iter().enumerate() { if u == 0x00FF { delims.push(i); } }
+        if delims.is_empty() { continue; }
+        let mut regions: Vec<(usize, usize)> = Vec::new();
+        if delims[0] > 0 { regions.push((0, delims[0])); }
+        for (i, &d) in delims.iter().enumerate() {
+            let start = d + 1;
+            let end = if i + 1 < delims.len() { delims[i + 1] } else { units.len() };
+            if start < end { regions.push((start, end)); }
+        }
+
+        let mut filtered: i64 = 0;
+        let mut had_any = false;
+        for &(start, end) in &regions {
+            let cleaned = gs_clean_entry(&units[start..end]);
+            if !gs_passes_filter(&cleaned) { continue; }
+            out.push(GsWadExtractedString { file: e.name.clone(), index: filtered, original: cleaned });
+            filtered += 1;
+            had_any = true;
+        }
+        if had_any { lin_files += 1; }
+    }
+
+    log::info!("🧩 WAD extract (contratto rebuild): {} stringhe da {} file .lin", out.len(), lin_files);
+    Ok(GsWadExtractResult {
+        success: !out.is_empty(),
+        wad: source.file_name().unwrap_or_default().to_string_lossy().to_string(),
+        lin_files,
+        strings: out,
+    })
+}
