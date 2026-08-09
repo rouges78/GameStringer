@@ -70,6 +70,16 @@ export async function runDanganronpaTranslation(opts: {
   );
   const rows: TranslationRow[] = extraction.strings.map(s => ({ ...s, translated: '' }));
   const total = rows.length;
+  // GUARDIA DI SANITÀ (la lezione del 09/08: un parser sbagliato produsse 235
+  // stringhe invece di ~48.000 e il rebuild cancellò il resto). DR1 ha decine
+  // di migliaia di battute: se ne troviamo un pugno, il parser è rotto e NON
+  // si tocca il WAD.
+  if (total < 1000) {
+    throw new Error(
+      `Estrazione sospetta: solo ${total} stringhe dal WAD (attese decine di migliaia). ` +
+      `Il parser .lin non riconosce il formato: rebuild annullato per non danneggiare il gioco.`
+    );
+  }
   const key = (r: { file: string; index: number }) => `${r.file}#${r.index}`;
   const byKey = new Map(rows.map(r => [key(r), r]));
 

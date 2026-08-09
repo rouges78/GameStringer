@@ -4548,152 +4548,113 @@ msgstr "[TODO] da fare"
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// GAMESTRINGER WAD REBUILD — il ciclo in-app (09/08/2026)
+// GAMESTRINGER WAD REBUILD — ciclo in-app DR1 (09/08/2026, v2)
 //
-// Porta in Rust la specifica degli script Node (che restano come riferimento):
-//   - scripts/repack-wad.mjs        → ricostruzione AGAR in streaming
-//   - scripts/patch-danganronpa-v4.mjs → rebuild .lin a lunghezza VARIABILE
-//     (zero troncamenti, control byte FE+XX preservato, word-wrap a 40)
-//   - scripts/extract-wad-text.mjs  → contratto traduzioni {file, index,
-//     original, translated} (accettiamo anche il vecchio `line_index`)
+// ⛔ STORIA DEL DIFETTO, da non ripetere: la v1 di questo blocco usava ÿ
+// (U+00FF) come delimitatore delle battute, preso dagli script v3/v4. È
+// SBAGLIATO per DR1: trovava 1 stringa per file invece di ~20 (235 contro
+// 35.865) e il rebuild cancellava le altre 19 → WAD corrotto alla prima
+// prova in-game. La verifica interna diceva 5/5 perché confrontava i byte
+// scritti con quelli INTESI — e gli intesi erano sbagliati. Da qui la
+// guardia `gs_lin_entry_count_guard`: prima di toccare il WAD, il conteggio
+// deve reggere il confronto con il formato dichiarato.
 //
-// PRINCIPI:
-// 1. Le entry NON tradotte viaggiano come byte grezzi: nessun roundtrip
-//    UTF-16 lossy può corrompere ciò che non tocchiamo.
-// 2. OGNI scrittura è verificata contro `original`: se il testo pulito della
-//    entry non coincide, la traduzione viene SALTATA e contata
-//    (strings_skipped_mismatch) — mai testo nel posto sbagliato per un
-//    disallineamento di contratto d'indice.
-// 3. Prova d'effetto interna: il WAD appena scritto viene riaperto e un
-//    campione di entry ricontrollato (verified_sample) — il contatore da
-//    solo è una speranza, non una prova.
+// FORMATO VERO (specifica: scripts/extract-wad-text.mjs, che estrae le 35.865
+// stringhe storiche, e il parser Rust try_parse_lin_data):
+//   .lin  : u32 type(1|2) @0 · u32 text_block_offset @8
+//           text block: u32 count · u32 offsets[count] (relativi al blocco)
+//           · entry: [BOM FF FE] + UTF-16 **LE** + terminatore/coda
+//   testo : può contenere tag <CLT n> … <CLT>; `\n` sono a capo del box.
+//
+// STRATEGIA DI SCRITTURA — conservativa per costruzione:
+//   · si riscrive SOLO il text block; l'header e tutto ciò che sta prima
+//     viaggiano come byte grezzi;
+//   · di ogni entry si sostituisce solo la parte TESTUALE, preservando i tag
+//     CLT esterni e la coda di byte dopo il terminatore null;
+//   · entry con tag CLT in mezzo al testo (non solo prefisso/suffisso) →
+//     SALTATE e contate: meglio una battuta in inglese che un tag rotto.
 // ═══════════════════════════════════════════════════════════════════
 
 const GS_LIN_LINE_WIDTH: usize = 40; // caratteri per riga nel text box DR1
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-enum GsUtf16Enc { Be, Le }
-
-fn gs_detect_encoding(buf: &[u8]) -> GsUtf16Enc {
-    if buf.len() >= 2 {
-        if buf[0] == 0xFF && buf[1] == 0xFE { return GsUtf16Enc::Le; }
-        if buf[0] == 0xFE && buf[1] == 0xFF { return GsUtf16Enc::Be; }
-    }
-    let (mut be, mut le) = (0u32, 0u32);
-    let check = buf.len().min(40);
-    let mut i = 0;
-    while i + 1 < check {
-        if buf[i] == 0x00 && (0x20..=0x7E).contains(&buf[i + 1]) { be += 1; }
-        if buf[i + 1] == 0x00 && (0x20..=0x7E).contains(&buf[i]) { le += 1; }
+/// Decodifica UTF-16LE fermandosi al primo NUL; ritorna (testo, byte_consumati).
+fn gs_decode_utf16le_z(entry: &[u8], start: usize) -> (String, usize) {
+    let mut units: Vec<u16> = Vec::new();
+    let mut i = start;
+    while i + 1 < entry.len() {
+        let u = entry[i] as u16 | ((entry[i + 1] as u16) << 8);
+        if u == 0 { break; }
+        units.push(u);
         i += 2;
     }
-    if be >= le { GsUtf16Enc::Be } else { GsUtf16Enc::Le }
+    (String::from_utf16_lossy(&units), i)
 }
 
-fn gs_read_u16(buf: &[u8], pos: usize, enc: GsUtf16Enc) -> u16 {
-    match enc {
-        GsUtf16Enc::Be => ((buf[pos] as u16) << 8) | buf[pos + 1] as u16,
-        GsUtf16Enc::Le => buf[pos] as u16 | ((buf[pos + 1] as u16) << 8),
-    }
-}
-
-fn gs_decode_units(buf: &[u8], enc: GsUtf16Enc) -> Vec<u16> {
-    let mut out = Vec::with_capacity(buf.len() / 2);
-    let mut i = 0;
-    while i + 1 < buf.len() {
-        out.push(gs_read_u16(buf, i, enc));
-        i += 2;
+fn gs_encode_utf16le(s: &str) -> Vec<u8> {
+    let mut out = Vec::with_capacity(s.len() * 2);
+    for u in s.encode_utf16() {
+        out.push((u & 0xFF) as u8);
+        out.push((u >> 8) as u8);
     }
     out
 }
 
-fn gs_encode_units(units: &[u16], enc: GsUtf16Enc) -> Vec<u8> {
-    let mut out = Vec::with_capacity(units.len() * 2);
-    for &u in units {
-        match enc {
-            GsUtf16Enc::Be => { out.push((u >> 8) as u8); out.push((u & 0xFF) as u8); }
-            GsUtf16Enc::Le => { out.push((u & 0xFF) as u8); out.push((u >> 8) as u8); }
-        }
-    }
-    out
-}
-
-/// Pulizia identica a patch-danganronpa-v4.mjs / estrazione: serve SOLO per
-/// il matching con `original`, mai per riscrivere byte.
-fn gs_clean_entry(units: &[u16]) -> String {
-    // salta i \n iniziali, rimuovi tutti i \r (regex JS: /^\n+|\r+/g)
-    let mut chars: Vec<u16> = Vec::with_capacity(units.len());
-    let mut leading = true;
-    for &u in units {
-        if u == 0 { break; } // padding null: fine testo (come v3 extractEntryText)
-        if leading && u == 0x0A { continue; }
-        if u == 0x0D { continue; }
-        if u != 0x0A { leading = false; }
-        chars.push(u);
-    }
-    if chars.is_empty() { return String::new(); }
-
-    let mut result = String::new();
-    let first = chars[0];
-    if (0xFE00..=0xFFFF).contains(&first) {
-        let recovered = (first & 0xFF) as u8;
-        if (0x20..=0x7E).contains(&recovered) { result.push(recovered as char); }
-        chars.remove(0);
-    }
-    for &u in &chars {
-        result.push(char::from_u32(u as u32).unwrap_or('\u{FFFD}'));
-    }
-
-    // join delle righe interne con spazio
-    let joined = result
-        .split('\n')
-        .map(|l| l.trim())
-        .filter(|l| !l.is_empty())
-        .collect::<Vec<_>>()
-        .join(" ");
-
-    // rimuovi tag CLT
-    let mut no_clt = String::with_capacity(joined.len());
-    let mut rest = joined.as_str();
+/// stripCLT dello script: via i tag, i `\n` diventano spazi, trim.
+fn gs_strip_clt(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
     while let Some(start) = rest.find("<CLT") {
-        no_clt.push_str(&rest[..start]);
+        out.push_str(&rest[..start]);
         match rest[start..].find('>') {
             Some(gt) => rest = &rest[start + gt + 1..],
             None => { rest = ""; break; }
         }
     }
-    no_clt.push_str(rest);
-    let no_clt = no_clt.replace("</CLT>", "");
+    out.push_str(rest);
+    out.replace('\n', " ").trim().to_string()
+}
 
-    // tronca a 3+ caratteri non-latini consecutivi
-    let mut out = String::with_capacity(no_clt.len());
-    let mut streak = 0usize;
-    let collected: Vec<char> = no_clt.chars().collect();
-    for (i, &c) in collected.iter().enumerate() {
-        let code = c as u32;
-        let is_latin = (0x20..=0x7E).contains(&code) || (0xC0..=0x24F).contains(&code);
-        if is_latin { streak = 0; } else {
-            streak += 1;
-            if streak >= 3 {
-                out = collected[..i.saturating_sub(2)].iter().collect();
-                return out.trim().to_string();
-            }
-        }
-        out.push(c);
+/// isReadableText dello script: ≥2 caratteri e ≥2 lettere ASCII.
+fn gs_is_readable(text: &str) -> bool {
+    text.chars().count() >= 2
+        && text.chars().filter(|c| c.is_ascii_alphabetic()).count() >= 2
+}
+
+/// Spezza il raw in (prefisso_tag, testo, suffisso_tag).
+/// `None` se ci sono tag NEL MEZZO del testo: quei casi non si riscrivono.
+fn gs_split_clt(raw: &str) -> Option<(String, String, String)> {
+    let mut prefix = String::new();
+    let mut rest = raw;
+    // tag iniziali consecutivi
+    loop {
+        let trimmed = rest.trim_start_matches(['\n', '\r']);
+        if !trimmed.starts_with("<CLT") { break; }
+        let lead = &rest[..rest.len() - trimmed.len()];
+        let gt = trimmed.find('>')?;
+        prefix.push_str(lead);
+        prefix.push_str(&trimmed[..=gt]);
+        rest = &trimmed[gt + 1..];
     }
-    out.trim().to_string()
+    // tag finali consecutivi
+    let mut suffix = String::new();
+    loop {
+        let trimmed = rest.trim_end_matches(['\n', '\r']);
+        if !trimmed.ends_with('>') { break; }
+        let Some(lt) = trimmed.rfind("<CLT") else { break };
+        if trimmed[lt..].find('>') != Some(trimmed.len() - lt - 1) { break; }
+        let tail = &rest[trimmed.len()..];
+        suffix = format!("{}{}{}", &trimmed[lt..], tail, suffix);
+        rest = &rest[..lt];
+    }
+    // niente tag residui nel mezzo
+    if rest.contains("<CLT") { return None; }
+    Some((prefix, rest.to_string(), suffix))
 }
 
-fn gs_passes_filter(text: &str) -> bool {
-    let n = text.chars().count();
-    n >= 3 && n <= 2000 && text.chars().any(|c| c.is_ascii_alphabetic())
-}
-
-/// Word-wrap come v4: spezza su spazi a GS_LIN_LINE_WIDTH caratteri.
 fn gs_word_wrap(text: &str, max_width: usize) -> String {
     let mut lines: Vec<String> = Vec::new();
     let mut line = String::new();
-    for word in text.split(' ') {
+    for word in text.split_whitespace() {
         if !line.is_empty() && line.chars().count() + word.chars().count() + 1 > max_width {
             lines.push(std::mem::take(&mut line));
             line = word.to_string();
@@ -4708,28 +4669,117 @@ fn gs_word_wrap(text: &str, max_width: usize) -> String {
     lines.join("\n")
 }
 
-/// Ricostruisce una entry .lin con testo tradotto (spec: buildTranslatedEntry v4).
-fn gs_build_entry_units(original_units: &[u16], translated: &str) -> Vec<u16> {
-    // prefisso: \n e \r iniziali preservati
-    let mut i = 0usize;
-    let mut out: Vec<u16> = Vec::new();
-    while i < original_units.len() && (original_units[i] == 0x0A || original_units[i] == 0x0D) {
-        out.push(original_units[i]);
-        i += 1;
+struct GsLinEntry {
+    /// indice nel text block (== `index` del contratto traduzioni)
+    index: i64,
+    /// testo ripulito (== `original`)
+    clean: String,
+    /// raw con i tag, per la riscrittura
+    raw: String,
+    /// posizione dell'entry nel text block e byte grezzi
+    bytes: Vec<u8>,
+    has_bom: bool,
+    /// coda dopo il terminatore (null + eventuale padding)
+    tail: Vec<u8>,
+}
+
+struct GsLinFile {
+    text_block_offset: usize,
+    /// TUTTE le entry del blocco, in ordine: quelle non testuali hanno clean vuoto
+    entries: Vec<GsLinEntry>,
+    /// numero di entry dichiarate nell'header del text block
+    declared_count: usize,
+    /// padding dopo l'ultima entry (preservato verbatim)
+    pad: Vec<u8>,
+}
+
+/// Parser .lin sul formato VERO. `None` se non è un .lin valido.
+fn gs_parse_lin(data: &[u8]) -> Option<GsLinFile> {
+    if data.len() < 16 { return None; }
+    let lin_type = u32::from_le_bytes(data[0..4].try_into().ok()?);
+    if lin_type != 1 && lin_type != 2 { return None; }
+    let tbo = u32::from_le_bytes(data[8..12].try_into().ok()?) as usize;
+    if tbo < 12 || tbo >= data.len() { return None; }
+    let block = &data[tbo..];
+    if block.len() < 8 { return None; }
+    let count = u32::from_le_bytes(block[0..4].try_into().ok()?) as usize;
+    if count == 0 || count > 5000 { return None; }
+    // ⚠️ La tabella ha count+1 offset: l'ULTIMO marca la fine dei dati, e dopo
+    // può esserci padding. Trovato col test di round-trip (i primi 4 byte di
+    // scarto che rendevano il rebuild non byte-identico).
+    let header_size = 4 + (count + 1) * 4;
+    if header_size > block.len() { return None; }
+
+    let mut offsets = Vec::with_capacity(count + 1);
+    for i in 0..=count {
+        let off = u32::from_le_bytes(block[4 + i * 4..8 + i * 4].try_into().ok()?) as usize;
+        if off > block.len() { return None; }
+        offsets.push(off);
     }
-    let has_control = i < original_units.len() && (0xFE00..=0xFFFF).contains(&original_units[i]);
+    // INVARIANTE: la prima entry inizia subito dopo la tabella. Se non è così,
+    // il formato non è quello che crediamo → meglio non toccare il file.
+    if offsets[0] != header_size { return None; }
 
-    let wrapped = gs_word_wrap(translated, GS_LIN_LINE_WIDTH);
-    let mut wrapped_units: Vec<u16> = wrapped.encode_utf16().collect();
+    let mut entries = Vec::with_capacity(count);
+    for i in 0..count {
+        let start = offsets[i];
+        let end = offsets[i + 1];
+        if end < start || end > block.len() { return None; }
+        let e = &block[start..end];
+        let has_bom = e.len() >= 2 && e[0] == 0xFF && e[1] == 0xFE;
+        let text_start = if has_bom { 2 } else { 0 };
+        let (raw, consumed) = gs_decode_utf16le_z(e, text_start);
+        let clean = gs_strip_clt(&raw);
+        let keep = if raw.chars().count() >= 2 && gs_is_readable(&clean) { clean } else { String::new() };
+        entries.push(GsLinEntry {
+            index: i as i64,
+            clean: keep,
+            raw,
+            bytes: e.to_vec(),
+            has_bom,
+            tail: e[consumed.min(e.len())..].to_vec(),
+        });
+    }
+    Some(GsLinFile {
+        text_block_offset: tbo,
+        entries,
+        declared_count: count,
+        pad: block[offsets[count]..].to_vec(),
+    })
+}
 
-    if has_control && !wrapped_units.is_empty() {
-        let first = wrapped_units[0];
-        if (0x20..=0x7E).contains(&first) {
-            out.push(0xFE00 | first);
-            wrapped_units.remove(0);
+/// Ricostruisce il file .lin con le entry sostituite (indice → nuovo testo raw).
+fn gs_rebuild_lin(data: &[u8], parsed: &GsLinFile, new_raw: &HashMap<i64, String>) -> Vec<u8> {
+    let mut bodies: Vec<Vec<u8>> = Vec::with_capacity(parsed.entries.len());
+    for e in &parsed.entries {
+        match new_raw.get(&e.index) {
+            Some(raw) => {
+                let mut b = Vec::new();
+                if e.has_bom { b.extend_from_slice(&[0xFF, 0xFE]); }
+                b.extend_from_slice(&gs_encode_utf16le(raw));
+                b.extend_from_slice(&e.tail); // terminatore + coda originali
+                bodies.push(b);
+            }
+            None => bodies.push(e.bytes.clone()), // byte grezzi: intoccati
         }
     }
-    out.extend_from_slice(&wrapped_units);
+
+    let count = bodies.len();
+    let header_size = 4 + (count + 1) * 4;
+    let mut block = Vec::with_capacity(header_size + bodies.iter().map(|b| b.len()).sum::<usize>());
+    block.extend_from_slice(&(count as u32).to_le_bytes());
+    let mut off = header_size;
+    for b in &bodies {
+        block.extend_from_slice(&(off as u32).to_le_bytes());
+        off += b.len();
+    }
+    block.extend_from_slice(&(off as u32).to_le_bytes()); // offset di FINE dati
+    for b in &bodies { block.extend_from_slice(b); }
+    block.extend_from_slice(&parsed.pad); // padding finale verbatim
+
+    let mut out = Vec::with_capacity(parsed.text_block_offset + block.len());
+    out.extend_from_slice(&data[..parsed.text_block_offset]);
+    out.extend_from_slice(&block);
     out
 }
 
@@ -4752,178 +4802,221 @@ pub struct GsWadRebuildResult {
     pub wads_rebuilt: Vec<String>,
     pub lin_files_rebuilt: u32,
     pub strings_written: u32,
-    pub strings_matched_by_text: u32,
     pub strings_skipped_mismatch: u32,
+    pub strings_skipped_inner_tags: u32,
     pub strings_missing_translation: u32,
     pub verified_sample: u32,
     pub verified_sample_total: u32,
     pub backup_paths: Vec<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct GsWadExtractedString {
+    pub file: String,
+    pub index: i64,
+    pub original: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GsWadExtractResult {
+    pub success: bool,
+    pub wad: String,
+    pub lin_files: u32,
+    pub strings: Vec<GsWadExtractedString>,
+}
+
 struct GsWadEntry { name: String, name_len: usize, size: u64, offset: u64 }
 
-/// Header AGAR secondo extract-wad-text.mjs (gestisce l'extra header):
-/// magic(4) + major(4) + minor(4) + extra_size(4) + extra + count(4).
-/// Ritorna (prefix_len_fino_a_count_incluso, count).
-fn gs_parse_wad_header(f: &mut File) -> Result<(u64, u32), String> {
+/// Header AGAR + tabella file + tabella DIRECTORY (che la v1 ignorava: senza
+/// saltarla, `data_start` era sbagliato).
+/// Ritorna (entries, table_start, file_table_end, data_start).
+/// ⚠️ `file_table_end` serve per copiare la tabella DIRECTORY: NON usare
+/// `stream_position()` più tardi, perché nel frattempo il file viene letto
+/// con seek sparsi (bug del 09/08: underflow → "failed to fill whole buffer").
+fn gs_read_wad(f: &mut File) -> Result<(Vec<GsWadEntry>, u64, u64, u64), String> {
     let mut head = [0u8; 16];
     f.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
     f.read_exact(&mut head).map_err(|e| format!("Header WAD illeggibile: {}", e))?;
     if &head[0..4] != b"AGAR" { return Err("Magic AGAR mancante".into()); }
-    let extra = u32::from_le_bytes([head[12], head[13], head[14], head[15]]) as u64;
+    let extra = u32::from_le_bytes(head[12..16].try_into().unwrap()) as u64;
     f.seek(SeekFrom::Start(16 + extra)).map_err(|e| e.to_string())?;
-    let mut cnt = [0u8; 4];
-    f.read_exact(&mut cnt).map_err(|e| format!("Count WAD illeggibile: {}", e))?;
-    Ok((16 + extra + 4, u32::from_le_bytes(cnt)))
-}
 
-fn gs_read_wad_entries(f: &mut File, table_start: u64, count: u32) -> Result<(Vec<GsWadEntry>, u64), String> {
+    let mut b4 = [0u8; 4];
+    f.read_exact(&mut b4).map_err(|e| e.to_string())?;
+    let count = u32::from_le_bytes(b4);
+    let table_start = 16 + extra + 4;
+
     let mut entries = Vec::with_capacity(count as usize);
-    f.seek(SeekFrom::Start(table_start)).map_err(|e| e.to_string())?;
     for i in 0..count {
-        let mut b4 = [0u8; 4];
         f.read_exact(&mut b4).map_err(|e| format!("entry {}: {}", i, e))?;
         let name_len = u32::from_le_bytes(b4) as usize;
-        if name_len == 0 || name_len > 512 {
-            return Err(format!("entry {}: name_len anomalo {}", i, name_len));
-        }
-        let mut name_buf = vec![0u8; name_len];
-        f.read_exact(&mut name_buf).map_err(|e| format!("entry {}: {}", i, e))?;
-        let name = String::from_utf8_lossy(&name_buf).to_string();
+        if name_len == 0 || name_len > 512 { return Err(format!("entry {}: name_len {}", i, name_len)); }
+        let mut nb = vec![0u8; name_len];
+        f.read_exact(&mut nb).map_err(|e| format!("entry {}: {}", i, e))?;
         let mut b16 = [0u8; 16];
         f.read_exact(&mut b16).map_err(|e| format!("entry {}: {}", i, e))?;
-        let size = u64::from_le_bytes(b16[0..8].try_into().unwrap());
-        let offset = u64::from_le_bytes(b16[8..16].try_into().unwrap());
-        entries.push(GsWadEntry { name, name_len, size, offset });
+        entries.push(GsWadEntry {
+            name: String::from_utf8_lossy(&nb).to_string(),
+            name_len,
+            size: u64::from_le_bytes(b16[0..8].try_into().unwrap()),
+            offset: u64::from_le_bytes(b16[8..16].try_into().unwrap()),
+        });
     }
-    let table_end = f.stream_position().map_err(|e| e.to_string())?;
-    Ok((entries, table_end))
+
+    let file_table_end = f.stream_position().map_err(|e| e.to_string())?;
+
+    // tabella directory: dir_count · [name_len, name, entry_count · [len, name+1]]
+    f.read_exact(&mut b4).map_err(|e| e.to_string())?;
+    let dir_count = u32::from_le_bytes(b4);
+    for _ in 0..dir_count {
+        f.read_exact(&mut b4).map_err(|e| e.to_string())?;
+        let nl = u32::from_le_bytes(b4) as i64;
+        f.seek(SeekFrom::Current(nl)).map_err(|e| e.to_string())?;
+        f.read_exact(&mut b4).map_err(|e| e.to_string())?;
+        let ec = u32::from_le_bytes(b4);
+        for _ in 0..ec {
+            f.read_exact(&mut b4).map_err(|e| e.to_string())?;
+            let enl = u32::from_le_bytes(b4) as i64;
+            f.seek(SeekFrom::Current(enl + 1)).map_err(|e| e.to_string())?;
+        }
+    }
+    let data_start = f.stream_position().map_err(|e| e.to_string())?;
+    Ok((entries, table_start, file_table_end, data_start))
 }
 
-/// Ricostruisce i .lin dentro un singolo WAD. Ritorna i contatori parziali.
-#[allow(clippy::too_many_arguments)]
+/// Sorgente onesta: se esiste il backup GameStringer si estrae da QUELLO
+/// (il wad corrente può essere già tradotto e gli original non combacerebbero).
+fn gs_source_wad(wad_path: &Path) -> PathBuf {
+    let b = wad_path.with_extension("wad.gsbackup");
+    if b.exists() { b } else { wad_path.to_path_buf() }
+}
+
+/// Estrae i dialoghi .lin dal WAD col contratto del rebuild.
+#[command]
+pub async fn extract_danganronpa_wad_text(game_path: String) -> Result<GsWadExtractResult, String> {
+    let game_dir = Path::new(&game_path);
+    let wad_path = game_dir.join("dr1_data_us.wad");
+    if !wad_path.exists() { return Err("dr1_data_us.wad non trovato".into()); }
+    let source = gs_source_wad(&wad_path);
+
+    let mut f = File::open(&source).map_err(|e| e.to_string())?;
+    let (entries, _table_start, _file_table_end, data_start) = gs_read_wad(&mut f)?;
+
+    let mut out = Vec::new();
+    let mut lin_files = 0u32;
+    for e in &entries {
+        if !e.name.ends_with(".lin") { continue; }
+        let mut buf = vec![0u8; e.size as usize];
+        f.seek(SeekFrom::Start(data_start + e.offset)).map_err(|er| er.to_string())?;
+        if f.read_exact(&mut buf).is_err() { continue; }
+        let Some(parsed) = gs_parse_lin(&buf) else { continue };
+        let mut had = false;
+        for en in &parsed.entries {
+            if en.clean.is_empty() { continue; }
+            out.push(GsWadExtractedString {
+                file: e.name.clone(),
+                index: en.index,
+                original: en.clean.clone(),
+            });
+            had = true;
+        }
+        if had { lin_files += 1; }
+    }
+
+    log::info!("🧩 DR1 extract: {} stringhe da {} file .lin", out.len(), lin_files);
+    Ok(GsWadExtractResult {
+        success: !out.is_empty(),
+        wad: source.file_name().unwrap_or_default().to_string_lossy().to_string(),
+        lin_files,
+        strings: out,
+    })
+}
+
 fn gs_rebuild_single_wad(
     wad_path: &Path,
-    by_file: &HashMap<String, (HashMap<i64, usize>, HashMap<String, usize>)>,
+    by_file: &HashMap<String, HashMap<i64, usize>>,
     translations: &[GsWadTranslation],
     result: &mut GsWadRebuildResult,
 ) -> Result<bool, String> {
     let backup_path = wad_path.with_extension("wad.gsbackup");
     if !backup_path.exists() {
-        log::info!("💾 Backup {} → {}", wad_path.display(), backup_path.display());
+        log::info!("💾 Backup {}", wad_path.display());
         fs::copy(wad_path, &backup_path).map_err(|e| format!("Backup fallito: {}", e))?;
     }
     result.backup_paths.push(backup_path.to_string_lossy().to_string());
 
-    // Sorgente = SEMPRE il backup: patch pulita e idempotente.
     let mut src = File::open(&backup_path).map_err(|e| format!("Apertura backup: {}", e))?;
-    let (table_start, count) = gs_parse_wad_header(&mut src)?;
-    let (entries, table_end) = gs_read_wad_entries(&mut src, table_start, count)?;
-    let data_start = table_end;
+    let (entries, table_start, file_table_end, data_start) = gs_read_wad(&mut src)?;
 
-    // Ricostruisci in memoria SOLO i .lin con traduzioni per quel basename.
     let mut rebuilt: HashMap<usize, Vec<u8>> = HashMap::new();
     let mut rebuilt_names: Vec<(usize, String)> = Vec::new();
 
     for (idx, e) in entries.iter().enumerate() {
         if !e.name.ends_with(".lin") { continue; }
         let base = e.name.rsplit('/').next().unwrap_or(&e.name).to_string();
-        let Some((by_index, by_text)) = by_file.get(&base) else { continue; };
+        let Some(index_map) = by_file.get(&base) else { continue };
 
         let mut buf = vec![0u8; e.size as usize];
         src.seek(SeekFrom::Start(data_start + e.offset)).map_err(|er| er.to_string())?;
-        src.read_exact(&mut buf).map_err(|er| format!("{}: {}", e.name, er))?;
+        if src.read_exact(&mut buf).is_err() { continue; }
+        let Some(parsed) = gs_parse_lin(&buf) else { continue };
 
-        let enc = gs_detect_encoding(&buf);
-        let units = gs_decode_units(&buf, enc);
-
-        // regioni tra i delimitatori ÿ (U+00FF), come v3/v4
-        let mut regions: Vec<(usize, usize)> = Vec::new(); // [start_unit, end_unit)
-        let mut delim_positions: Vec<usize> = Vec::new();
-        for (i, &u) in units.iter().enumerate() {
-            if u == 0x00FF { delim_positions.push(i); }
-        }
-        if delim_positions.is_empty() { continue; }
-        if delim_positions[0] > 0 { regions.push((0, delim_positions[0])); }
-        for (i, &d) in delim_positions.iter().enumerate() {
-            let start = d + 1;
-            let end = if i + 1 < delim_positions.len() { delim_positions[i + 1] } else { units.len() };
-            if start < end { regions.push((start, end)); }
+        // ── GUARDIA DI CONTEGGIO: il parser deve vedere lo stesso numero di
+        // entry dichiarate nell'header. Se non torna, NON si scrive niente:
+        // è la difesa che alla v1 mancava (1 stringa invece di 20).
+        if parsed.entries.len() != parsed.declared_count {
+            return Err(format!(
+                "{}: parser incoerente ({} entry lette, {} dichiarate) — rebuild annullato",
+                e.name, parsed.entries.len(), parsed.declared_count
+            ));
         }
 
-        let mut filtered_index: i64 = 0;
-        let mut new_region_units: HashMap<usize, Vec<u16>> = HashMap::new();
-        let mut modified = false;
-
-        for (ri, &(start, end)) in regions.iter().enumerate() {
-            let cleaned = gs_clean_entry(&units[start..end]);
-            if !gs_passes_filter(&cleaned) { continue; }
-            let this_index = filtered_index;
-            filtered_index += 1;
-
-            // match per indice, poi per testo
-            let t = by_index.get(&this_index)
-                .map(|&ti| (&translations[ti], false))
-                .or_else(|| by_text.get(cleaned.trim()).map(|&ti| (&translations[ti], true)));
-            let Some((tr, by_text_match)) = t else {
+        let mut new_raw: HashMap<i64, String> = HashMap::new();
+        for en in &parsed.entries {
+            if en.clean.is_empty() { continue; }
+            let Some(&ti) = index_map.get(&en.index) else {
                 result.strings_missing_translation += 1;
                 continue;
             };
-            // VERIFICA IDENTITÀ: l'original deve coincidere col testo pulito.
-            if tr.original.trim() != cleaned.trim() {
+            let tr = &translations[ti];
+            // identità: l'original deve coincidere col testo pulito di OGGI
+            if tr.original.trim() != en.clean.trim() {
                 result.strings_skipped_mismatch += 1;
                 continue;
             }
-            if tr.translated.trim().is_empty() || tr.translated == tr.original {
-                result.strings_missing_translation += 1;
+            let Some((prefix, _body, suffix)) = gs_split_clt(&en.raw) else {
+                // tag CLT in mezzo: non si riscrive (meglio inglese che tag rotti)
+                result.strings_skipped_inner_tags += 1;
                 continue;
-            }
-            new_region_units.insert(ri, gs_build_entry_units(&units[start..end], tr.translated.trim()));
-            if by_text_match { result.strings_matched_by_text += 1; }
+            };
+            let wrapped = gs_word_wrap(tr.translated.trim(), GS_LIN_LINE_WIDTH);
+            new_raw.insert(en.index, format!("{}{}{}", prefix, wrapped, suffix));
             result.strings_written += 1;
-            modified = true;
         }
+        if new_raw.is_empty() { continue; }
 
-        if !modified { continue; }
-
-        // Riassembla preservando i BYTE originali delle parti non toccate.
-        let mut out_units: Vec<u16> = Vec::with_capacity(units.len());
-        let mut cursor = 0usize;
-        for (ri, &(start, end)) in regions.iter().enumerate() {
-            // copia grezza tra cursor e start (delimitatori/altro)
-            out_units.extend_from_slice(&units[cursor..start]);
-            match new_region_units.get(&ri) {
-                Some(nu) => out_units.extend_from_slice(nu),
-                None => out_units.extend_from_slice(&units[start..end]),
-            }
-            cursor = end;
-        }
-        out_units.extend_from_slice(&units[cursor..]);
-        // byte residuo dispari (file con lunghezza dispari): preservato in coda
-        let mut bytes = gs_encode_units(&out_units, enc);
-        if buf.len() % 2 == 1 { bytes.push(buf[buf.len() - 1]); }
-
-        rebuilt.insert(idx, bytes);
+        rebuilt.insert(idx, gs_rebuild_lin(&buf, &parsed, &new_raw));
         rebuilt_names.push((idx, e.name.clone()));
         result.lin_files_rebuilt += 1;
     }
 
     if rebuilt.is_empty() { return Ok(false); }
 
-    // Scrittura streaming del nuovo WAD: prefix header + tabella nuova + dati.
     let new_path = wad_path.with_extension("wad.gsnew");
+    // Se un tentativo precedente ha lasciato un residuo, si riparte pulito.
+    let _ = fs::remove_file(&new_path);
     {
         let mut out = std::io::BufWriter::new(File::create(&new_path).map_err(|e| e.to_string())?);
 
-        // prefix (magic..count incluso) copiato verbatim dal backup
+        // prefisso (magic..count) e, più avanti, la coda della tabella
+        // (directory) copiati VERBATIM: non li tocchiamo, non li reinventiamo.
         let mut prefix = vec![0u8; table_start as usize];
         src.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
         src.read_exact(&mut prefix).map_err(|e| e.to_string())?;
         out.write_all(&prefix).map_err(|e| e.to_string())?;
 
-        // tabella con size/offset ricalcolati (offset relativi a fine tabella)
         let mut rel: u64 = 0;
-        let mut new_meta: Vec<(u64, u64)> = Vec::with_capacity(entries.len()); // (size, offset)
+        let mut new_meta: Vec<(u64, u64)> = Vec::with_capacity(entries.len());
         for (idx, e) in entries.iter().enumerate() {
             let size = rebuilt.get(&idx).map(|b| b.len() as u64).unwrap_or(e.size);
             new_meta.push((size, rel));
@@ -4936,8 +5029,16 @@ fn gs_rebuild_single_wad(
             out.write_all(&size.to_le_bytes()).map_err(|er| er.to_string())?;
             out.write_all(&offset.to_le_bytes()).map_err(|er| er.to_string())?;
         }
+        // tabella directory: byte grezzi tra la fine della tabella file e i dati.
+        // SEEK ESPLICITO: `src` nel frattempo è stato usato per leggere i .lin,
+        // quindi la sua posizione corrente non c'entra nulla (era il bug).
+        let dir_len = (data_start - file_table_end) as usize;
+        src.seek(SeekFrom::Start(file_table_end)).map_err(|e| e.to_string())?;
+        let mut dir = vec![0u8; dir_len];
+        src.read_exact(&mut dir)
+            .map_err(|e| format!("Tabella directory illeggibile ({} byte): {}", dir_len, e))?;
+        out.write_all(&dir).map_err(|e| e.to_string())?;
 
-        // dati: rebuilt dalla memoria, il resto copiato a chunk dal backup
         const CHUNK: usize = 4 * 1024 * 1024;
         let mut chunk = vec![0u8; CHUNK];
         for (idx, e) in entries.iter().enumerate() {
@@ -4957,161 +5058,201 @@ fn gs_rebuild_single_wad(
         out.flush().map_err(|e| e.to_string())?;
     }
 
-    // Sostituzione atomica (rename sullo stesso volume).
-    fs::rename(&new_path, wad_path).map_err(|e| format!("Sostituzione WAD fallita: {}", e))?;
+    // ═══ VERIFICA **PRIMA** DEL RENAME ═══
+    // Lezione del 09/08 (pagata con un WAD corrotto): una verifica DOPO la
+    // sostituzione può constatare il disastro, non impedirlo. Qui il file
+    // nuovo viene riaperto e controllato mentre l'originale è ancora al suo
+    // posto: se qualcosa non torna, si cancella il .gsnew e il gioco resta
+    // esattamente com'era.
+    {
+        let expected_size = {
+            let m = fs::metadata(&new_path).map_err(|e| e.to_string())?;
+            m.len()
+        };
+        let mut verify = File::open(&new_path).map_err(|e| format!("Riapertura nuovo WAD: {}", e))?;
+        let check = (|| -> Result<u32, String> {
+            let (v_entries, _vt, _vfe, v_data_start) = gs_read_wad(&mut verify)?;
+            if v_entries.len() != entries.len() {
+                return Err(format!("entry {} invece di {}", v_entries.len(), entries.len()));
+            }
+            // la fine dell'ultima entry deve coincidere con la fine del file
+            let last = v_entries.iter().max_by_key(|e| e.offset).ok_or("nessuna entry")?;
+            let end = v_data_start + last.offset + last.size;
+            if end != expected_size {
+                return Err(format!("fine dati {} ≠ dimensione file {}", end, expected_size));
+            }
+            // e i .lin riscritti devono rileggersi come .lin VALIDI
+            let mut ok = 0u32;
+            for (idx, name) in rebuilt_names.iter().take(5) {
+                let ve = &v_entries[*idx];
+                if ve.name != *name { return Err(format!("nome entry disallineato: {}", ve.name)); }
+                let mut b = vec![0u8; ve.size as usize];
+                verify.seek(SeekFrom::Start(v_data_start + ve.offset)).map_err(|e| e.to_string())?;
+                verify.read_exact(&mut b).map_err(|e| format!("{}: {}", name, e))?;
+                match gs_parse_lin(&b) {
+                    Some(p) if p.entries.len() == p.declared_count
+                        && p.entries.iter().any(|e| !e.clean.is_empty()) => ok += 1,
+                    _ => return Err(format!("{}: il .lin riscritto non si rilegge", name)),
+                }
+            }
+            Ok(ok)
+        })();
 
-    // ── PROVA D'EFFETTO: rileggi il WAD scritto e verifica un campione ──
-    let mut verify = File::open(wad_path).map_err(|e| e.to_string())?;
-    let (v_table_start, v_count) = gs_parse_wad_header(&mut verify)?;
-    let (v_entries, v_table_end) = gs_read_wad_entries(&mut verify, v_table_start, v_count)?;
-    for (idx, name) in rebuilt_names.iter().take(5) {
-        result.verified_sample_total += 1;
-        let ve = &v_entries[*idx];
-        if ve.name != *name { continue; }
-        let mut buf = vec![0u8; ve.size as usize];
-        if verify.seek(SeekFrom::Start(v_table_end + ve.offset)).is_err() { continue; }
-        if verify.read_exact(&mut buf).is_err() { continue; }
-        let expected = rebuilt.get(idx).expect("presente per costruzione");
-        if &buf == expected { result.verified_sample += 1; }
+        match check {
+            Ok(ok) => {
+                result.verified_sample = ok;
+                result.verified_sample_total = rebuilt_names.len().min(5) as u32;
+            }
+            Err(why) => {
+                let _ = fs::remove_file(&new_path);
+                return Err(format!(
+                    "WAD ricostruito NON valido ({}). Il gioco NON è stato toccato: file scartato.",
+                    why
+                ));
+            }
+        }
     }
+
+    // Solo ora, a verifica passata, si sostituisce.
+    fs::rename(&new_path, wad_path).map_err(|e| format!("Sostituzione WAD fallita: {}", e))?;
 
     result.wads_rebuilt.push(wad_path.file_name().unwrap_or_default().to_string_lossy().to_string());
     Ok(true)
 }
 
 /// Ricostruisce i WAD di DR1 con le traduzioni GameStringer.
-/// Legge <game>/GameStringer_Translation/translations.json
-/// ({file, index|line_index, original, translated}) e riscrive i .lin dentro
-/// dr1_data_us.wad e dr1_data_keyboard_us.wad (quelli presenti).
 #[command]
 pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildResult, String> {
     let game_dir = Path::new(&game_path);
     if !game_dir.exists() { return Err("Cartella gioco non trovata".into()); }
 
     let tr_path = game_dir.join("GameStringer_Translation").join("translations.json");
-    if !tr_path.exists() {
-        return Err(format!("translations.json non trovato: {}", tr_path.display()));
-    }
+    if !tr_path.exists() { return Err(format!("translations.json non trovato: {}", tr_path.display())); }
     let raw = fs::read_to_string(&tr_path).map_err(|e| format!("Lettura traduzioni: {}", e))?;
     let translations: Vec<GsWadTranslation> =
         serde_json::from_str(&raw).map_err(|e| format!("translations.json non valido: {}", e))?;
 
-    // Indici per basename: (index → posizione) e (original → posizione).
-    let mut by_file: HashMap<String, (HashMap<i64, usize>, HashMap<String, usize>)> = HashMap::new();
+    let mut by_file: HashMap<String, HashMap<i64, usize>> = HashMap::new();
     let mut usable = 0u32;
     for (i, t) in translations.iter().enumerate() {
         if t.translated.trim().is_empty() || t.translated == t.original { continue; }
+        let Some(ix) = t.index.or(t.line_index) else { continue };
         let base = t.file.replace('\\', "/");
         let base = base.rsplit('/').next().unwrap_or(&base).to_string();
-        let slot = by_file.entry(base).or_default();
-        if let Some(ix) = t.index.or(t.line_index) { slot.0.insert(ix, i); }
-        slot.1.insert(t.original.trim().to_string(), i);
+        by_file.entry(base).or_default().insert(ix, i);
         usable += 1;
     }
-    if usable == 0 {
-        return Err("Nessuna traduzione utilizzabile (campo translated vuoto ovunque?)".into());
-    }
-    log::info!("🧩 WAD rebuild: {} traduzioni utilizzabili in {} file .lin", usable, by_file.len());
+    if usable == 0 { return Err("Nessuna traduzione utilizzabile".into()); }
+    log::info!("🧩 DR1 rebuild: {} traduzioni in {} file .lin", usable, by_file.len());
 
     let mut result = GsWadRebuildResult::default();
     let mut any = false;
+    let mut errors: Vec<String> = Vec::new();
     for wad_name in ["dr1_data_us.wad", "dr1_data_keyboard_us.wad"] {
         let wad_path = game_dir.join(wad_name);
         if !wad_path.exists() { continue; }
-        log::info!("🔧 Ricostruzione {}", wad_name);
-        any |= gs_rebuild_single_wad(&wad_path, &by_file, &translations, &mut result)?;
+        // Un WAD che fallisce NON deve impedire di sapere com'è andata sugli
+        // altri: si raccoglie l'errore e si prosegue (ogni rebuild è isolato
+        // e non tocca il gioco se la verifica pre-rename non passa).
+        match gs_rebuild_single_wad(&wad_path, &by_file, &translations, &mut result) {
+            Ok(done) => any |= done,
+            Err(e) => {
+                log::error!("❌ rebuild {} fallito: {}", wad_name, e);
+                errors.push(format!("{}: {}", wad_name, e));
+            }
+        }
+    }
+    if !errors.is_empty() && result.strings_written == 0 {
+        return Err(errors.join(" · "));
     }
     if !any && result.strings_written == 0 {
-        return Err("Nessun WAD ricostruito: nessuna entry .lin combacia con le traduzioni (controlla file/index/original)".into());
+        return Err("Nessun WAD ricostruito: nessuna entry .lin combacia".into());
     }
 
-    result.success = result.strings_written > 0 && result.verified_sample == result.verified_sample_total;
+    result.success = result.strings_written > 0
+        && result.verified_sample == result.verified_sample_total
+        && result.verified_sample_total > 0;
     log::info!(
-        "✅ WAD rebuild: {} stringhe scritte ({} via testo), {} mismatch, {} senza traduzione, verifica {}/{}",
-        result.strings_written, result.strings_matched_by_text, result.strings_skipped_mismatch,
+        "✅ DR1 rebuild: {} scritte · {} mismatch · {} tag interni · {} senza traduzione · verifica {}/{}",
+        result.strings_written, result.strings_skipped_mismatch, result.strings_skipped_inner_tags,
         result.strings_missing_translation, result.verified_sample, result.verified_sample_total
     );
     Ok(result)
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Estrazione col CONTRATTO DEL REBUILD: stesse funzioni gs_* di pulizia e
-// filtro, quindi gli `original` combaciano per costruzione e la verifica del
-// rebuild non può produrre mismatch da divergenza di estrattore (la trappola
-// dei tre contratti: extract-wad-text `index`, vecchi patcher `line_index`,
-// v15 per testo).
-// ═══════════════════════════════════════════════════════════════════
+#[cfg(test)]
+mod gs_lin_tests {
+    use super::*;
 
-#[derive(Debug, Serialize)]
-pub struct GsWadExtractedString {
-    pub file: String,
-    pub index: i64,
-    pub original: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct GsWadExtractResult {
-    pub success: bool,
-    pub wad: String,
-    pub lin_files: u32,
-    pub strings: Vec<GsWadExtractedString>,
-}
-
-/// Estrae i dialoghi .lin da dr1_data_us.wad con il contratto del rebuild.
-#[command]
-pub async fn extract_danganronpa_wad_text(game_path: String) -> Result<GsWadExtractResult, String> {
-    let game_dir = Path::new(&game_path);
-    let wad_path = game_dir.join("dr1_data_us.wad");
-    if !wad_path.exists() {
-        return Err("dr1_data_us.wad non trovato nella cartella del gioco".into());
-    }
-    // Se esiste già il backup, estrai da QUELLO: il wad corrente potrebbe
-    // essere già patchato in italiano e gli original non combacerebbero più.
-    let backup = wad_path.with_extension("wad.gsbackup");
-    let source = if backup.exists() { backup } else { wad_path.clone() };
-
-    let mut f = File::open(&source).map_err(|e| e.to_string())?;
-    let (table_start, count) = gs_parse_wad_header(&mut f)?;
-    let (entries, table_end) = gs_read_wad_entries(&mut f, table_start, count)?;
-
-    let mut out = Vec::new();
-    let mut lin_files = 0u32;
-    for e in &entries {
-        if !e.name.ends_with(".lin") { continue; }
-        let mut buf = vec![0u8; e.size as usize];
-        f.seek(SeekFrom::Start(table_end + e.offset)).map_err(|er| er.to_string())?;
-        f.read_exact(&mut buf).map_err(|er| format!("{}: {}", e.name, er))?;
-        let enc = gs_detect_encoding(&buf);
-        let units = gs_decode_units(&buf, enc);
-
-        let mut delims: Vec<usize> = Vec::new();
-        for (i, &u) in units.iter().enumerate() { if u == 0x00FF { delims.push(i); } }
-        if delims.is_empty() { continue; }
-        let mut regions: Vec<(usize, usize)> = Vec::new();
-        if delims[0] > 0 { regions.push((0, delims[0])); }
-        for (i, &d) in delims.iter().enumerate() {
-            let start = d + 1;
-            let end = if i + 1 < delims.len() { delims[i + 1] } else { units.len() };
-            if start < end { regions.push((start, end)); }
+    /// Costruisce un .lin sintetico col formato vero (count+1 offset + padding).
+    fn make_lin(texts: &[&str], pad: &[u8]) -> Vec<u8> {
+        let mut bodies: Vec<Vec<u8>> = Vec::new();
+        for t in texts {
+            let mut b = vec![0xFF, 0xFE];
+            b.extend_from_slice(&gs_encode_utf16le(t));
+            b.extend_from_slice(&[0x00, 0x00]); // terminatore
+            bodies.push(b);
         }
+        let count = bodies.len();
+        let hs = 4 + (count + 1) * 4;
+        let mut block = Vec::new();
+        block.extend_from_slice(&(count as u32).to_le_bytes());
+        let mut off = hs;
+        for b in &bodies { block.extend_from_slice(&(off as u32).to_le_bytes()); off += b.len(); }
+        block.extend_from_slice(&(off as u32).to_le_bytes());
+        for b in &bodies { block.extend_from_slice(b); }
+        block.extend_from_slice(pad);
 
-        let mut filtered: i64 = 0;
-        let mut had_any = false;
-        for &(start, end) in &regions {
-            let cleaned = gs_clean_entry(&units[start..end]);
-            if !gs_passes_filter(&cleaned) { continue; }
-            out.push(GsWadExtractedString { file: e.name.clone(), index: filtered, original: cleaned });
-            filtered += 1;
-            had_any = true;
-        }
-        if had_any { lin_files += 1; }
+        let header: Vec<u8> = {
+            let mut h = Vec::new();
+            h.extend_from_slice(&1u32.to_le_bytes());   // type
+            h.extend_from_slice(&0u32.to_le_bytes());
+            h.extend_from_slice(&16u32.to_le_bytes());  // text_block_offset
+            h.extend_from_slice(&0u32.to_le_bytes());
+            h
+        };
+        let mut out = header;
+        out.extend_from_slice(&block);
+        out
     }
 
-    log::info!("🧩 WAD extract (contratto rebuild): {} stringhe da {} file .lin", out.len(), lin_files);
-    Ok(GsWadExtractResult {
-        success: !out.is_empty(),
-        wad: source.file_name().unwrap_or_default().to_string_lossy().to_string(),
-        lin_files,
-        strings: out,
-    })
+    /// LA PROPRIETÀ CHE ALLA v1 MANCAVA: parse → rebuild senza modifiche deve
+    /// restituire byte IDENTICI. Un parser sbagliato la fallisce sempre.
+    #[test]
+    fn rebuild_senza_modifiche_e_byte_identico() {
+        let data = make_lin(&["Hello there", "<CLT 4>Second line<CLT>", "Third"], &[0xAB, 0xCD]);
+        let parsed = gs_parse_lin(&data).expect("parse");
+        assert_eq!(parsed.entries.len(), 3);
+        let out = gs_rebuild_lin(&data, &parsed, &HashMap::new());
+        assert_eq!(out, data, "round-trip non byte-identico");
+    }
+
+    #[test]
+    fn traduzione_sostituisce_solo_il_testo_e_preserva_i_tag() {
+        let data = make_lin(&["<CLT 4>Hello there<CLT>"], &[]);
+        let parsed = gs_parse_lin(&data).expect("parse");
+        assert_eq!(parsed.entries[0].clean, "Hello there");
+        let mut m = HashMap::new();
+        let (p, _b, s) = gs_split_clt(&parsed.entries[0].raw).expect("split");
+        m.insert(0i64, format!("{}Ciao a te{}", p, s));
+        let out = gs_rebuild_lin(&data, &parsed, &m);
+        let re = gs_parse_lin(&out).expect("riparse");
+        assert_eq!(re.entries[0].clean, "Ciao a te");
+        assert!(re.entries[0].raw.contains("<CLT 4>"), "tag di apertura perso");
+        assert!(re.entries[0].raw.ends_with("<CLT>"), "tag di chiusura perso");
+    }
+
+    #[test]
+    fn tag_in_mezzo_al_testo_non_si_riscrive() {
+        assert!(gs_split_clt("prima <CLT 3>dentro<CLT> dopo").is_none());
+        assert!(gs_split_clt("<CLT 4>tutto dentro<CLT>").is_some());
+    }
+
+    #[test]
+    fn parser_rifiuta_un_blocco_che_non_torna() {
+        // header con count+1 offset mancante → deve tornare None, non indovinare
+        let mut data = make_lin(&["Testo di prova"], &[]);
+        data[16] = 9; // count dichiarato assurdo rispetto alla tabella
+        assert!(gs_parse_lin(&data).is_none());
+    }
 }
