@@ -16,7 +16,6 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::io::Read;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
 use flate2::read::ZlibDecoder;

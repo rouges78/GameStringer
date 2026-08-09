@@ -1024,7 +1024,13 @@
     "errorLoad": "Błąd wczytywania:",
     "errorTranslation": "Błąd tłumaczenia:",
     "errorReadPak": "Błąd odczytu PAK:",
-    "errorReadPo": "Błąd odczytu PO:"
+    "errorReadPo": "Błąd odczytu PO:",
+    "rebuildWadButton": "Przebuduj WAD (tłumaczenia GameStringer)",
+    "rebuildingWad": "Przebudowywanie WAD…",
+    "rebuildDone": "WAD przebudowany i zweryfikowany",
+    "rebuildPartial": "WAD przebudowany z zastrzeżeniami",
+    "rebuildError": "Przebudowa WAD nie powiodła się",
+    "rebuildStrings": "ciągów"
   },
   "characterVoiceEditor": {
     "title": "Głos postaci AI",

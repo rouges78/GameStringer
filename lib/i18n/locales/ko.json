@@ -1024,7 +1024,13 @@
     "errorLoad": "불러오기 오류:",
     "errorTranslation": "번역 오류:",
     "errorReadPak": "PAK 읽기 오류:",
-    "errorReadPo": "PO 읽기 오류:"
+    "errorReadPo": "PO 읽기 오류:",
+    "rebuildWadButton": "WAD 재구성 (GameStringer 번역)",
+    "rebuildingWad": "WAD 재구성 중…",
+    "rebuildDone": "WAD 재구성 및 검증 완료",
+    "rebuildPartial": "WAD 재구성됨 (확인 필요)",
+    "rebuildError": "WAD 재구성 실패",
+    "rebuildStrings": "문자열"
   },
   "characterVoiceEditor": {
     "title": "캐릭터 보이스 AI",

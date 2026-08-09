@@ -1024,7 +1024,13 @@
     "errorLoad": "Σφάλμα φόρτωσης:",
     "errorTranslation": "Σφάλμα μετάφρασης:",
     "errorReadPak": "Σφάλμα ανάγνωσης PAK:",
-    "errorReadPo": "Σφάλμα ανάγνωσης PO:"
+    "errorReadPo": "Σφάλμα ανάγνωσης PO:",
+    "rebuildWadButton": "Ανακατασκευή WAD (μεταφράσεις GameStringer)",
+    "rebuildingWad": "Ανακατασκευή WAD…",
+    "rebuildDone": "Το WAD ανακατασκευάστηκε και επαληθεύτηκε",
+    "rebuildPartial": "WAD ανακατασκευάστηκε με επιφυλάξεις",
+    "rebuildError": "Η ανακατασκευή του WAD απέτυχε",
+    "rebuildStrings": "συμβολοσειρές"
   },
   "characterVoiceEditor": {
     "title": "AI φωνής χαρακτήρα",

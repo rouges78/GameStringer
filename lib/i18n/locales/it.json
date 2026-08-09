@@ -1024,7 +1024,13 @@
     "errorLoad": "Errore caricamento:",
     "errorTranslation": "Errore traduzione:",
     "errorReadPak": "Errore lettura PAK:",
-    "errorReadPo": "Errore lettura PO:"
+    "errorReadPo": "Errore lettura PO:",
+    "rebuildWadButton": "Ricostruisci WAD (traduzioni GameStringer)",
+    "rebuildingWad": "Ricostruzione WAD in corso…",
+    "rebuildDone": "WAD ricostruito e verificato",
+    "rebuildPartial": "WAD ricostruito con riserve",
+    "rebuildError": "Ricostruzione WAD fallita",
+    "rebuildStrings": "stringhe"
   },
   "characterVoiceEditor": {
     "title": "Voce personaggio AI",

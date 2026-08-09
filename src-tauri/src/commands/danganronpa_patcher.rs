@@ -4546,3 +4546,490 @@ msgstr "[TODO] da fare"
         assert!(result.is_empty());
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// GAMESTRINGER WAD REBUILD — il ciclo in-app (09/08/2026)
+//
+// Porta in Rust la specifica degli script Node (che restano come riferimento):
+//   - scripts/repack-wad.mjs        → ricostruzione AGAR in streaming
+//   - scripts/patch-danganronpa-v4.mjs → rebuild .lin a lunghezza VARIABILE
+//     (zero troncamenti, control byte FE+XX preservato, word-wrap a 40)
+//   - scripts/extract-wad-text.mjs  → contratto traduzioni {file, index,
+//     original, translated} (accettiamo anche il vecchio `line_index`)
+//
+// PRINCIPI:
+// 1. Le entry NON tradotte viaggiano come byte grezzi: nessun roundtrip
+//    UTF-16 lossy può corrompere ciò che non tocchiamo.
+// 2. OGNI scrittura è verificata contro `original`: se il testo pulito della
+//    entry non coincide, la traduzione viene SALTATA e contata
+//    (strings_skipped_mismatch) — mai testo nel posto sbagliato per un
+//    disallineamento di contratto d'indice.
+// 3. Prova d'effetto interna: il WAD appena scritto viene riaperto e un
+//    campione di entry ricontrollato (verified_sample) — il contatore da
+//    solo è una speranza, non una prova.
+// ═══════════════════════════════════════════════════════════════════
+
+const GS_LIN_LINE_WIDTH: usize = 40; // caratteri per riga nel text box DR1
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum GsUtf16Enc { Be, Le }
+
+fn gs_detect_encoding(buf: &[u8]) -> GsUtf16Enc {
+    if buf.len() >= 2 {
+        if buf[0] == 0xFF && buf[1] == 0xFE { return GsUtf16Enc::Le; }
+        if buf[0] == 0xFE && buf[1] == 0xFF { return GsUtf16Enc::Be; }
+    }
+    let (mut be, mut le) = (0u32, 0u32);
+    let check = buf.len().min(40);
+    let mut i = 0;
+    while i + 1 < check {
+        if buf[i] == 0x00 && (0x20..=0x7E).contains(&buf[i + 1]) { be += 1; }
+        if buf[i + 1] == 0x00 && (0x20..=0x7E).contains(&buf[i]) { le += 1; }
+        i += 2;
+    }
+    if be >= le { GsUtf16Enc::Be } else { GsUtf16Enc::Le }
+}
+
+fn gs_read_u16(buf: &[u8], pos: usize, enc: GsUtf16Enc) -> u16 {
+    match enc {
+        GsUtf16Enc::Be => ((buf[pos] as u16) << 8) | buf[pos + 1] as u16,
+        GsUtf16Enc::Le => buf[pos] as u16 | ((buf[pos + 1] as u16) << 8),
+    }
+}
+
+fn gs_decode_units(buf: &[u8], enc: GsUtf16Enc) -> Vec<u16> {
+    let mut out = Vec::with_capacity(buf.len() / 2);
+    let mut i = 0;
+    while i + 1 < buf.len() {
+        out.push(gs_read_u16(buf, i, enc));
+        i += 2;
+    }
+    out
+}
+
+fn gs_encode_units(units: &[u16], enc: GsUtf16Enc) -> Vec<u8> {
+    let mut out = Vec::with_capacity(units.len() * 2);
+    for &u in units {
+        match enc {
+            GsUtf16Enc::Be => { out.push((u >> 8) as u8); out.push((u & 0xFF) as u8); }
+            GsUtf16Enc::Le => { out.push((u & 0xFF) as u8); out.push((u >> 8) as u8); }
+        }
+    }
+    out
+}
+
+/// Pulizia identica a patch-danganronpa-v4.mjs / estrazione: serve SOLO per
+/// il matching con `original`, mai per riscrivere byte.
+fn gs_clean_entry(units: &[u16]) -> String {
+    // salta i \n iniziali, rimuovi tutti i \r (regex JS: /^\n+|\r+/g)
+    let mut chars: Vec<u16> = Vec::with_capacity(units.len());
+    let mut leading = true;
+    for &u in units {
+        if u == 0 { break; } // padding null: fine testo (come v3 extractEntryText)
+        if leading && u == 0x0A { continue; }
+        if u == 0x0D { continue; }
+        if u != 0x0A { leading = false; }
+        chars.push(u);
+    }
+    if chars.is_empty() { return String::new(); }
+
+    let mut result = String::new();
+    let first = chars[0];
+    if (0xFE00..=0xFFFF).contains(&first) {
+        let recovered = (first & 0xFF) as u8;
+        if (0x20..=0x7E).contains(&recovered) { result.push(recovered as char); }
+        chars.remove(0);
+    }
+    for &u in &chars {
+        result.push(char::from_u32(u as u32).unwrap_or('\u{FFFD}'));
+    }
+
+    // join delle righe interne con spazio
+    let joined = result
+        .split('\n')
+        .map(|l| l.trim())
+        .filter(|l| !l.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    // rimuovi tag CLT
+    let mut no_clt = String::with_capacity(joined.len());
+    let mut rest = joined.as_str();
+    while let Some(start) = rest.find("<CLT") {
+        no_clt.push_str(&rest[..start]);
+        match rest[start..].find('>') {
+            Some(gt) => rest = &rest[start + gt + 1..],
+            None => { rest = ""; break; }
+        }
+    }
+    no_clt.push_str(rest);
+    let no_clt = no_clt.replace("</CLT>", "");
+
+    // tronca a 3+ caratteri non-latini consecutivi
+    let mut out = String::with_capacity(no_clt.len());
+    let mut streak = 0usize;
+    let collected: Vec<char> = no_clt.chars().collect();
+    for (i, &c) in collected.iter().enumerate() {
+        let code = c as u32;
+        let is_latin = (0x20..=0x7E).contains(&code) || (0xC0..=0x24F).contains(&code);
+        if is_latin { streak = 0; } else {
+            streak += 1;
+            if streak >= 3 {
+                out = collected[..i.saturating_sub(2)].iter().collect();
+                return out.trim().to_string();
+            }
+        }
+        out.push(c);
+    }
+    out.trim().to_string()
+}
+
+fn gs_passes_filter(text: &str) -> bool {
+    let n = text.chars().count();
+    n >= 3 && n <= 2000 && text.chars().any(|c| c.is_ascii_alphabetic())
+}
+
+/// Word-wrap come v4: spezza su spazi a GS_LIN_LINE_WIDTH caratteri.
+fn gs_word_wrap(text: &str, max_width: usize) -> String {
+    let mut lines: Vec<String> = Vec::new();
+    let mut line = String::new();
+    for word in text.split(' ') {
+        if !line.is_empty() && line.chars().count() + word.chars().count() + 1 > max_width {
+            lines.push(std::mem::take(&mut line));
+            line = word.to_string();
+        } else if line.is_empty() {
+            line = word.to_string();
+        } else {
+            line.push(' ');
+            line.push_str(word);
+        }
+    }
+    if !line.is_empty() { lines.push(line); }
+    lines.join("\n")
+}
+
+/// Ricostruisce una entry .lin con testo tradotto (spec: buildTranslatedEntry v4).
+fn gs_build_entry_units(original_units: &[u16], translated: &str) -> Vec<u16> {
+    // prefisso: \n e \r iniziali preservati
+    let mut i = 0usize;
+    let mut out: Vec<u16> = Vec::new();
+    while i < original_units.len() && (original_units[i] == 0x0A || original_units[i] == 0x0D) {
+        out.push(original_units[i]);
+        i += 1;
+    }
+    let has_control = i < original_units.len() && (0xFE00..=0xFFFF).contains(&original_units[i]);
+
+    let wrapped = gs_word_wrap(translated, GS_LIN_LINE_WIDTH);
+    let mut wrapped_units: Vec<u16> = wrapped.encode_utf16().collect();
+
+    if has_control && !wrapped_units.is_empty() {
+        let first = wrapped_units[0];
+        if (0x20..=0x7E).contains(&first) {
+            out.push(0xFE00 | first);
+            wrapped_units.remove(0);
+        }
+    }
+    out.extend_from_slice(&wrapped_units);
+    out
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GsWadTranslation {
+    pub file: String,
+    #[serde(default)]
+    pub index: Option<i64>,
+    #[serde(default)]
+    pub line_index: Option<i64>,
+    #[serde(default)]
+    pub original: String,
+    #[serde(default)]
+    pub translated: String,
+}
+
+#[derive(Debug, Serialize, Default)]
+pub struct GsWadRebuildResult {
+    pub success: bool,
+    pub wads_rebuilt: Vec<String>,
+    pub lin_files_rebuilt: u32,
+    pub strings_written: u32,
+    pub strings_matched_by_text: u32,
+    pub strings_skipped_mismatch: u32,
+    pub strings_missing_translation: u32,
+    pub verified_sample: u32,
+    pub verified_sample_total: u32,
+    pub backup_paths: Vec<String>,
+}
+
+struct GsWadEntry { name: String, name_len: usize, size: u64, offset: u64 }
+
+/// Header AGAR secondo extract-wad-text.mjs (gestisce l'extra header):
+/// magic(4) + major(4) + minor(4) + extra_size(4) + extra + count(4).
+/// Ritorna (prefix_len_fino_a_count_incluso, count).
+fn gs_parse_wad_header(f: &mut File) -> Result<(u64, u32), String> {
+    let mut head = [0u8; 16];
+    f.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+    f.read_exact(&mut head).map_err(|e| format!("Header WAD illeggibile: {}", e))?;
+    if &head[0..4] != b"AGAR" { return Err("Magic AGAR mancante".into()); }
+    let extra = u32::from_le_bytes([head[12], head[13], head[14], head[15]]) as u64;
+    f.seek(SeekFrom::Start(16 + extra)).map_err(|e| e.to_string())?;
+    let mut cnt = [0u8; 4];
+    f.read_exact(&mut cnt).map_err(|e| format!("Count WAD illeggibile: {}", e))?;
+    Ok((16 + extra + 4, u32::from_le_bytes(cnt)))
+}
+
+fn gs_read_wad_entries(f: &mut File, table_start: u64, count: u32) -> Result<(Vec<GsWadEntry>, u64), String> {
+    let mut entries = Vec::with_capacity(count as usize);
+    f.seek(SeekFrom::Start(table_start)).map_err(|e| e.to_string())?;
+    for i in 0..count {
+        let mut b4 = [0u8; 4];
+        f.read_exact(&mut b4).map_err(|e| format!("entry {}: {}", i, e))?;
+        let name_len = u32::from_le_bytes(b4) as usize;
+        if name_len == 0 || name_len > 512 {
+            return Err(format!("entry {}: name_len anomalo {}", i, name_len));
+        }
+        let mut name_buf = vec![0u8; name_len];
+        f.read_exact(&mut name_buf).map_err(|e| format!("entry {}: {}", i, e))?;
+        let name = String::from_utf8_lossy(&name_buf).to_string();
+        let mut b16 = [0u8; 16];
+        f.read_exact(&mut b16).map_err(|e| format!("entry {}: {}", i, e))?;
+        let size = u64::from_le_bytes(b16[0..8].try_into().unwrap());
+        let offset = u64::from_le_bytes(b16[8..16].try_into().unwrap());
+        entries.push(GsWadEntry { name, name_len, size, offset });
+    }
+    let table_end = f.stream_position().map_err(|e| e.to_string())?;
+    Ok((entries, table_end))
+}
+
+/// Ricostruisce i .lin dentro un singolo WAD. Ritorna i contatori parziali.
+#[allow(clippy::too_many_arguments)]
+fn gs_rebuild_single_wad(
+    wad_path: &Path,
+    by_file: &HashMap<String, (HashMap<i64, usize>, HashMap<String, usize>)>,
+    translations: &[GsWadTranslation],
+    result: &mut GsWadRebuildResult,
+) -> Result<bool, String> {
+    let backup_path = wad_path.with_extension("wad.gsbackup");
+    if !backup_path.exists() {
+        log::info!("💾 Backup {} → {}", wad_path.display(), backup_path.display());
+        fs::copy(wad_path, &backup_path).map_err(|e| format!("Backup fallito: {}", e))?;
+    }
+    result.backup_paths.push(backup_path.to_string_lossy().to_string());
+
+    // Sorgente = SEMPRE il backup: patch pulita e idempotente.
+    let mut src = File::open(&backup_path).map_err(|e| format!("Apertura backup: {}", e))?;
+    let (table_start, count) = gs_parse_wad_header(&mut src)?;
+    let (entries, table_end) = gs_read_wad_entries(&mut src, table_start, count)?;
+    let data_start = table_end;
+
+    // Ricostruisci in memoria SOLO i .lin con traduzioni per quel basename.
+    let mut rebuilt: HashMap<usize, Vec<u8>> = HashMap::new();
+    let mut rebuilt_names: Vec<(usize, String)> = Vec::new();
+
+    for (idx, e) in entries.iter().enumerate() {
+        if !e.name.ends_with(".lin") { continue; }
+        let base = e.name.rsplit('/').next().unwrap_or(&e.name).to_string();
+        let Some((by_index, by_text)) = by_file.get(&base) else { continue; };
+
+        let mut buf = vec![0u8; e.size as usize];
+        src.seek(SeekFrom::Start(data_start + e.offset)).map_err(|er| er.to_string())?;
+        src.read_exact(&mut buf).map_err(|er| format!("{}: {}", e.name, er))?;
+
+        let enc = gs_detect_encoding(&buf);
+        let units = gs_decode_units(&buf, enc);
+
+        // regioni tra i delimitatori ÿ (U+00FF), come v3/v4
+        let mut regions: Vec<(usize, usize)> = Vec::new(); // [start_unit, end_unit)
+        let mut delim_positions: Vec<usize> = Vec::new();
+        for (i, &u) in units.iter().enumerate() {
+            if u == 0x00FF { delim_positions.push(i); }
+        }
+        if delim_positions.is_empty() { continue; }
+        if delim_positions[0] > 0 { regions.push((0, delim_positions[0])); }
+        for (i, &d) in delim_positions.iter().enumerate() {
+            let start = d + 1;
+            let end = if i + 1 < delim_positions.len() { delim_positions[i + 1] } else { units.len() };
+            if start < end { regions.push((start, end)); }
+        }
+
+        let mut filtered_index: i64 = 0;
+        let mut new_region_units: HashMap<usize, Vec<u16>> = HashMap::new();
+        let mut modified = false;
+
+        for (ri, &(start, end)) in regions.iter().enumerate() {
+            let cleaned = gs_clean_entry(&units[start..end]);
+            if !gs_passes_filter(&cleaned) { continue; }
+            let this_index = filtered_index;
+            filtered_index += 1;
+
+            // match per indice, poi per testo
+            let t = by_index.get(&this_index)
+                .map(|&ti| (&translations[ti], false))
+                .or_else(|| by_text.get(cleaned.trim()).map(|&ti| (&translations[ti], true)));
+            let Some((tr, by_text_match)) = t else {
+                result.strings_missing_translation += 1;
+                continue;
+            };
+            // VERIFICA IDENTITÀ: l'original deve coincidere col testo pulito.
+            if tr.original.trim() != cleaned.trim() {
+                result.strings_skipped_mismatch += 1;
+                continue;
+            }
+            if tr.translated.trim().is_empty() || tr.translated == tr.original {
+                result.strings_missing_translation += 1;
+                continue;
+            }
+            new_region_units.insert(ri, gs_build_entry_units(&units[start..end], tr.translated.trim()));
+            if by_text_match { result.strings_matched_by_text += 1; }
+            result.strings_written += 1;
+            modified = true;
+        }
+
+        if !modified { continue; }
+
+        // Riassembla preservando i BYTE originali delle parti non toccate.
+        let mut out_units: Vec<u16> = Vec::with_capacity(units.len());
+        let mut cursor = 0usize;
+        for (ri, &(start, end)) in regions.iter().enumerate() {
+            // copia grezza tra cursor e start (delimitatori/altro)
+            out_units.extend_from_slice(&units[cursor..start]);
+            match new_region_units.get(&ri) {
+                Some(nu) => out_units.extend_from_slice(nu),
+                None => out_units.extend_from_slice(&units[start..end]),
+            }
+            cursor = end;
+        }
+        out_units.extend_from_slice(&units[cursor..]);
+        // byte residuo dispari (file con lunghezza dispari): preservato in coda
+        let mut bytes = gs_encode_units(&out_units, enc);
+        if buf.len() % 2 == 1 { bytes.push(buf[buf.len() - 1]); }
+
+        rebuilt.insert(idx, bytes);
+        rebuilt_names.push((idx, e.name.clone()));
+        result.lin_files_rebuilt += 1;
+    }
+
+    if rebuilt.is_empty() { return Ok(false); }
+
+    // Scrittura streaming del nuovo WAD: prefix header + tabella nuova + dati.
+    let new_path = wad_path.with_extension("wad.gsnew");
+    {
+        let mut out = std::io::BufWriter::new(File::create(&new_path).map_err(|e| e.to_string())?);
+
+        // prefix (magic..count incluso) copiato verbatim dal backup
+        let mut prefix = vec![0u8; table_start as usize];
+        src.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+        src.read_exact(&mut prefix).map_err(|e| e.to_string())?;
+        out.write_all(&prefix).map_err(|e| e.to_string())?;
+
+        // tabella con size/offset ricalcolati (offset relativi a fine tabella)
+        let mut rel: u64 = 0;
+        let mut new_meta: Vec<(u64, u64)> = Vec::with_capacity(entries.len()); // (size, offset)
+        for (idx, e) in entries.iter().enumerate() {
+            let size = rebuilt.get(&idx).map(|b| b.len() as u64).unwrap_or(e.size);
+            new_meta.push((size, rel));
+            rel += size;
+        }
+        for (idx, e) in entries.iter().enumerate() {
+            out.write_all(&(e.name_len as u32).to_le_bytes()).map_err(|er| er.to_string())?;
+            out.write_all(e.name.as_bytes()).map_err(|er| er.to_string())?;
+            let (size, offset) = new_meta[idx];
+            out.write_all(&size.to_le_bytes()).map_err(|er| er.to_string())?;
+            out.write_all(&offset.to_le_bytes()).map_err(|er| er.to_string())?;
+        }
+
+        // dati: rebuilt dalla memoria, il resto copiato a chunk dal backup
+        const CHUNK: usize = 4 * 1024 * 1024;
+        let mut chunk = vec![0u8; CHUNK];
+        for (idx, e) in entries.iter().enumerate() {
+            if let Some(bytes) = rebuilt.get(&idx) {
+                out.write_all(bytes).map_err(|er| er.to_string())?;
+            } else {
+                let mut remaining = e.size;
+                src.seek(SeekFrom::Start(data_start + e.offset)).map_err(|er| er.to_string())?;
+                while remaining > 0 {
+                    let to_read = remaining.min(CHUNK as u64) as usize;
+                    src.read_exact(&mut chunk[..to_read]).map_err(|er| format!("{}: {}", e.name, er))?;
+                    out.write_all(&chunk[..to_read]).map_err(|er| er.to_string())?;
+                    remaining -= to_read as u64;
+                }
+            }
+        }
+        out.flush().map_err(|e| e.to_string())?;
+    }
+
+    // Sostituzione atomica (rename sullo stesso volume).
+    fs::rename(&new_path, wad_path).map_err(|e| format!("Sostituzione WAD fallita: {}", e))?;
+
+    // ── PROVA D'EFFETTO: rileggi il WAD scritto e verifica un campione ──
+    let mut verify = File::open(wad_path).map_err(|e| e.to_string())?;
+    let (v_table_start, v_count) = gs_parse_wad_header(&mut verify)?;
+    let (v_entries, v_table_end) = gs_read_wad_entries(&mut verify, v_table_start, v_count)?;
+    for (idx, name) in rebuilt_names.iter().take(5) {
+        result.verified_sample_total += 1;
+        let ve = &v_entries[*idx];
+        if ve.name != *name { continue; }
+        let mut buf = vec![0u8; ve.size as usize];
+        if verify.seek(SeekFrom::Start(v_table_end + ve.offset)).is_err() { continue; }
+        if verify.read_exact(&mut buf).is_err() { continue; }
+        let expected = rebuilt.get(idx).expect("presente per costruzione");
+        if &buf == expected { result.verified_sample += 1; }
+    }
+
+    result.wads_rebuilt.push(wad_path.file_name().unwrap_or_default().to_string_lossy().to_string());
+    Ok(true)
+}
+
+/// Ricostruisce i WAD di DR1 con le traduzioni GameStringer.
+/// Legge <game>/GameStringer_Translation/translations.json
+/// ({file, index|line_index, original, translated}) e riscrive i .lin dentro
+/// dr1_data_us.wad e dr1_data_keyboard_us.wad (quelli presenti).
+#[command]
+pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildResult, String> {
+    let game_dir = Path::new(&game_path);
+    if !game_dir.exists() { return Err("Cartella gioco non trovata".into()); }
+
+    let tr_path = game_dir.join("GameStringer_Translation").join("translations.json");
+    if !tr_path.exists() {
+        return Err(format!("translations.json non trovato: {}", tr_path.display()));
+    }
+    let raw = fs::read_to_string(&tr_path).map_err(|e| format!("Lettura traduzioni: {}", e))?;
+    let translations: Vec<GsWadTranslation> =
+        serde_json::from_str(&raw).map_err(|e| format!("translations.json non valido: {}", e))?;
+
+    // Indici per basename: (index → posizione) e (original → posizione).
+    let mut by_file: HashMap<String, (HashMap<i64, usize>, HashMap<String, usize>)> = HashMap::new();
+    let mut usable = 0u32;
+    for (i, t) in translations.iter().enumerate() {
+        if t.translated.trim().is_empty() || t.translated == t.original { continue; }
+        let base = t.file.replace('\\', "/");
+        let base = base.rsplit('/').next().unwrap_or(&base).to_string();
+        let slot = by_file.entry(base).or_default();
+        if let Some(ix) = t.index.or(t.line_index) { slot.0.insert(ix, i); }
+        slot.1.insert(t.original.trim().to_string(), i);
+        usable += 1;
+    }
+    if usable == 0 {
+        return Err("Nessuna traduzione utilizzabile (campo translated vuoto ovunque?)".into());
+    }
+    log::info!("🧩 WAD rebuild: {} traduzioni utilizzabili in {} file .lin", usable, by_file.len());
+
+    let mut result = GsWadRebuildResult::default();
+    let mut any = false;
+    for wad_name in ["dr1_data_us.wad", "dr1_data_keyboard_us.wad"] {
+        let wad_path = game_dir.join(wad_name);
+        if !wad_path.exists() { continue; }
+        log::info!("🔧 Ricostruzione {}", wad_name);
+        any |= gs_rebuild_single_wad(&wad_path, &by_file, &translations, &mut result)?;
+    }
+    if !any && result.strings_written == 0 {
+        return Err("Nessun WAD ricostruito: nessuna entry .lin combacia con le traduzioni (controlla file/index/original)".into());
+    }
+
+    result.success = result.strings_written > 0 && result.verified_sample == result.verified_sample_total;
+    log::info!(
+        "✅ WAD rebuild: {} stringhe scritte ({} via testo), {} mismatch, {} senza traduzione, verifica {}/{}",
+        result.strings_written, result.strings_matched_by_text, result.strings_skipped_mismatch,
+        result.strings_missing_translation, result.verified_sample, result.verified_sample_total
+    );
+    Ok(result)
+}

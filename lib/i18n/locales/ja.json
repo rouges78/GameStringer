@@ -1024,7 +1024,13 @@
     "errorLoad": "読み込みエラー:",
     "errorTranslation": "翻訳エラー:",
     "errorReadPak": "PAK 読み込みエラー:",
-    "errorReadPo": "PO 読み込みエラー:"
+    "errorReadPo": "PO 読み込みエラー:",
+    "rebuildWadButton": "WAD を再構築（GameStringer の翻訳）",
+    "rebuildingWad": "WAD を再構築中…",
+    "rebuildDone": "WAD を再構築し検証しました",
+    "rebuildPartial": "WAD を再構築（要確認あり）",
+    "rebuildError": "WAD の再構築に失敗しました",
+    "rebuildStrings": "文字列"
   },
   "characterVoiceEditor": {
     "title": "キャラクターボイス AI",

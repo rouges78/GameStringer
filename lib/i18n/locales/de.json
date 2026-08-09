@@ -1024,7 +1024,13 @@
     "errorLoad": "Fehler beim Laden:",
     "errorTranslation": "Fehler bei der Übersetzung:",
     "errorReadPak": "Fehler beim Lesen der PAK:",
-    "errorReadPo": "Fehler beim Lesen der PO:"
+    "errorReadPo": "Fehler beim Lesen der PO:",
+    "rebuildWadButton": "WAD neu erstellen (GameStringer-Übersetzungen)",
+    "rebuildingWad": "WAD wird neu erstellt…",
+    "rebuildDone": "WAD neu erstellt und verifiziert",
+    "rebuildPartial": "WAD mit Vorbehalten neu erstellt",
+    "rebuildError": "WAD-Neuerstellung fehlgeschlagen",
+    "rebuildStrings": "Strings"
   },
   "characterVoiceEditor": {
     "title": "KI-Charakterstimme",

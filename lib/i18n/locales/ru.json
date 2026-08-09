@@ -1024,7 +1024,13 @@
     "errorLoad": "Ошибка загрузки:",
     "errorTranslation": "Ошибка перевода:",
     "errorReadPak": "Ошибка чтения PAK:",
-    "errorReadPo": "Ошибка чтения PO:"
+    "errorReadPo": "Ошибка чтения PO:",
+    "rebuildWadButton": "Пересобрать WAD (переводы GameStringer)",
+    "rebuildingWad": "Пересборка WAD…",
+    "rebuildDone": "WAD пересобран и проверен",
+    "rebuildPartial": "WAD пересобран с оговорками",
+    "rebuildError": "Пересборка WAD не удалась",
+    "rebuildStrings": "строк"
   },
   "characterVoiceEditor": {
     "title": "AI-голос персонажа",

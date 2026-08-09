@@ -1024,7 +1024,13 @@
     "errorLoad": "加载出错:",
     "errorTranslation": "翻译出错:",
     "errorReadPak": "读取 PAK 出错:",
-    "errorReadPo": "读取 PO 出错:"
+    "errorReadPo": "读取 PO 出错:",
+    "rebuildWadButton": "重建 WAD（GameStringer 翻译）",
+    "rebuildingWad": "正在重建 WAD…",
+    "rebuildDone": "WAD 已重建并验证",
+    "rebuildPartial": "WAD 已重建（有保留项）",
+    "rebuildError": "WAD 重建失败",
+    "rebuildStrings": "条字符串"
   },
   "characterVoiceEditor": {
     "title": "角色语音 AI",

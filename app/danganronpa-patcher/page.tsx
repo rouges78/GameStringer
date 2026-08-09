@@ -28,6 +28,7 @@ import {
   Loader2,
   RefreshCw,
   Archive,
+  Wrench,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WadExtractor } from '@/components/tools/wad-extractor';
@@ -279,6 +280,40 @@ export default function DanganronpaPatcherPage() {
       }
     } catch (e: unknown) {
       toast.error(`${t('common.error')}: ${e}`);
+    } finally {
+      setApplyingPatch(false);
+    }
+  };
+
+  // Ciclo IN-APP (09/08/2026): ricostruisce i WAD con le traduzioni
+  // GameStringer (rebuild .lin a lunghezza variabile, zero troncamenti).
+  // Prima il repack esisteva solo negli script Node fuori dalla app.
+  const rebuildWad = async () => {
+    if (!selectedSteamGame) {
+      toast.error(t('common.selezionaPrimaUnGioco'));
+      return;
+    }
+    setApplyingPatch(true);
+    const tid = toast.loading(t('danganronpaPatcher.rebuildingWad'));
+    try {
+      const r = await invoke<{
+        success: boolean; wads_rebuilt: string[]; lin_files_rebuilt: number;
+        strings_written: number; strings_matched_by_text: number;
+        strings_skipped_mismatch: number; strings_missing_translation: number;
+        verified_sample: number; verified_sample_total: number;
+      }>('rebuild_danganronpa_wad', { gamePath: selectedSteamGame.path });
+      const detail = `${r.wads_rebuilt.join(', ')} · ${r.lin_files_rebuilt} .lin · ${r.strings_written} ${t('danganronpaPatcher.rebuildStrings')}`
+        + (r.strings_skipped_mismatch > 0 ? ` · ${r.strings_skipped_mismatch} mismatch` : '')
+        + ` · verifica ${r.verified_sample}/${r.verified_sample_total}`;
+      if (r.success) {
+        toast.success(t('danganronpaPatcher.rebuildDone'), { id: tid, description: detail });
+      } else {
+        // Contatori onesti anche quando qualcosa non torna
+        toast.warning(t('danganronpaPatcher.rebuildPartial'), { id: tid, description: detail });
+      }
+      loadBackups(selectedSteamGame.path);
+    } catch (e: unknown) {
+      toast.error(t('danganronpaPatcher.rebuildError'), { id: tid, description: String(e).slice(0, 180) });
     } finally {
       setApplyingPatch(false);
     }
@@ -1137,6 +1172,20 @@ export default function DanganronpaPatcherPage() {
                     <Upload className="w-4 h-4 mr-2" />
                   )}
                   {t('danganronpaPatcher.selectWadPatch')}</Button>
+
+                {/* Ciclo in-app: WAD ricostruito dalle traduzioni GameStringer */}
+                <Button
+                  onClick={rebuildWad}
+                  disabled={!selectedSteamGame || applyingPatch}
+                  size="sm"
+                  className="w-full h-8 bg-violet-600 hover:bg-violet-500 text-xs"
+                >
+                  {applyingPatch ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wrench className="w-4 h-4 mr-2" />
+                  )}
+                  {t('danganronpaPatcher.rebuildWadButton')}</Button>
 
                 {selectedSteamGame && selectedSteamGame.wad_files.length > 0 && (
                   <div className="space-y-2">
