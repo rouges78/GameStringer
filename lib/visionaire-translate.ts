@@ -86,11 +86,17 @@ export async function runVisionaireTranslation(opts: {
 }): Promise<{ applied: number; total: number; translated: number; backend: VisionaireBackend; stopped?: boolean }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const backend: VisionaireBackend = opts.backend || 'ollama';
-  // Niente default cablato: 'gemma4:e4b' era un modello FANTASMA (03/08/2026:
-  // 25.936 errori 404 su Foolish Mortals). Con undefined il comando Rust
-  // sceglie il migliore tra i modelli DAVVERO installati (resolve_model),
-  // che ora fa anche da rete di sicurezza se localStorage contiene un
-  // modello disinstallato nel frattempo.
+  // Niente default cablato. Il 03/08/2026 'gemma4:e4b' hardcoded ha prodotto
+  // 25.936 errori 404 su Foolish Mortals — e la diagnosi di allora («modello
+  // fantasma, nome inventato») era SBAGLIATA: gemma4:e4b esiste eccome nella
+  // libreria Ollama (verificato 08/08/2026). Il 404 di Ollama significa
+  // «modello non presente IN LOCALE», non «modello inesistente»: era
+  // semplicemente non scaricato su quella macchina. La cura non cambia — un
+  // default cablato è sbagliato comunque, perché nomina un modello che non
+  // sappiamo se l'utente ha — ma la causa sì, e una causa sbagliata scritta
+  // nei commenti si ripete per anni. Con undefined il comando Rust sceglie il
+  // migliore tra i modelli DAVVERO installati (resolve_model), che fa anche da
+  // rete di sicurezza se localStorage contiene un modello disinstallato.
   const model = opts.model || lsGet('gs_hendrix_model') || undefined;
   // Cloud parallelizza internamente → blocchi più grandi; Ollama è seriale.
   const CHUNK = opts.chunkSize || Number(lsGet('gs_vis_chunk')) || (backend === 'cloud' ? 200 : 40);

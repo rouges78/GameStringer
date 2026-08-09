@@ -146,10 +146,13 @@ pub async fn offline_translate_batch(
     }
 
     let installed = get_installed_models().await;
-    // Il modello richiesto dal frontend può NON esistere: il 03/08/2026 il
-    // default 'gemma4:e4b' (refuso copiaincollato in 5 call-site TS) ha
-    // prodotto 25.936 errori 404 su Foolish Mortals — tutti dichiarati
-    // "tradotti" dal vecchio contatore. Questa guardia copre tutti i chiamanti:
+    // Il modello richiesto dal frontend può NON essere installato: il
+    // 03/08/2026 il default 'gemma4:e4b' cablato in 5 call-site TS ha prodotto
+    // 25.936 errori 404 su Foolish Mortals — tutti dichiarati "tradotti" dal
+    // vecchio contatore. Precisazione dell'08/08/2026: quel modello ESISTE
+    // nella libreria Ollama, non era un nome inventato — il 404 diceva «non ce
+    // l'hai in locale». Il difetto resta lo stesso (nominare un modello senza
+    // sapere se l'utente ce l'ha) e questa guardia copre tutti i chiamanti:
     // modello non installato → selettore automatico, con avviso nel log.
     let model_name = resolve_model(model, &installed);
 
@@ -597,8 +600,10 @@ mod batch_tests {
     }
 
     #[test]
-    fn resolve_model_falls_back_when_phantom() {
-        // Il caso del 03/08/2026: 'gemma4:e4b' richiesto, mai installato.
+    fn resolve_model_falls_back_when_not_installed() {
+        // Il caso del 03/08/2026: 'gemma4:e4b' richiesto, non installato su
+        // quella macchina (il modello ESISTE nella libreria Ollama — il 404
+        // parla del disco locale, non del registry: verificato l'08/08/2026).
         let installed = vec!["gemma3:4b".to_string(), "qwen3:4b".to_string()];
         assert_eq!(resolve_model(Some("gemma4:e4b".into()), &installed), "gemma3:4b");
     }
