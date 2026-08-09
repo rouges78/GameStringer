@@ -12,7 +12,7 @@
 // de-escapa la chiave e ri-escapa il valore in modo coerente).
 
 import { invoke } from '@/lib/tauri-api';
-import { cleanGamePath } from '@/lib/game-path';
+import { cleanGamePath, gamePathKey } from '@/lib/game-path';
 import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
 import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
@@ -146,6 +146,32 @@ function unescapeRenpy(s: string): string {
   return out;
 }
 
+/**
+ * STOP. Fino all'08/08/2026 una run Ren'Py partita non si poteva fermare:
+ * l'unico modo era chiudere l'app, e chiuderla a metà chunk buttava via fino a
+ * 300 stringhe non ancora salvate. Su ~83k stringhe (~4M token) «non
+ * interrompibile» vuol dire anche «non ripensabile».
+ *
+ * Perché un Set a livello di modulo e non un AbortSignal passato dalla pagina
+ * (che è come l'avevo scritto la prima volta): un signal vive nel componente,
+ * e se l'utente torna in libreria il componente si smonta — la run continua a
+ * spendere e il pulsante per fermarla non esiste più. Con la chiave stabile
+ * `gamePathKey` la richiesta di stop è raggiungibile da qualunque punto
+ * dell'app, incluso il widget di progresso globale montato nel layout. È
+ * esattamente il pattern che Visionaire usa dal 03/08/2026
+ * (`requestVisionaireStop`): esisteva già, e non averlo cercato prima di
+ * inventarne un altro è la lezione di [blocchi-mai-verificati].
+ *
+ * Lo stop è COOPERATIVO e onesto: viene letto tra un chunk e l'altro (non
+ * abortisce una chiamata a metà, che lascerebbe il conteggio ambiguo), salva
+ * il checkpoint e poi genera COMUNQUE i file tl/ con quello che c'è — fermarsi
+ * lascia un gioco giocabile in italiano parziale, non un cestino.
+ */
+const stopRequests = new Set<string>();
+export function requestRenpyStop(gamePath: string): void {
+  stopRequests.add(gamePathKey(gamePath));
+}
+
 function lsGet(key: string): string | null {
   try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
 }
@@ -256,20 +282,6 @@ export async function runRenpyTranslation(opts: {
    * dove ha lasciato il lotto di prova, senza ritradurre nulla.
    */
   limit?: number;
-  /**
-   * STOP. Fino all'08/08/2026 una run partita non si poteva fermare: l'unico
-   * modo era chiudere l'app, e chiudere l'app a metà chunk significava perdere
-   * fino a 300 stringhe di lavoro non ancora salvate. Su ~83k stringhe (~4M
-   * token) «non interrompibile» vuol dire anche «non ripensabile»: se il
-   * risultato non piace dopo mille righe, si paga comunque tutto il resto.
-   *
-   * Lo Stop qui è cooperativo e ONESTO: si controlla tra un chunk e l'altro
-   * (non si abortisce una chiamata a metà, che lascerebbe il conteggio
-   * ambiguo), si SALVA il checkpoint, e poi si va COMUNQUE a generare i file
-   * tl/ con quello che c'è — così fermarsi produce un gioco giocabile in
-   * italiano parziale, non un cestino. La ripresa riparte esattamente da lì.
-   */
-  signal?: AbortSignal;
   onProgress?: (p: RenpyProgress) => void;
 }): Promise<{
   translated: number;
@@ -450,7 +462,8 @@ export async function runRenpyTranslation(opts: {
   for (let i = 0; i < pendingOriginals.length; i += CHUNK) {
     // STOP cooperativo, controllato PRIMA di spendere il chunk successivo: chi
     // preme Stop non deve pagare altre 30 stringhe per essere ascoltato.
-    if (opts.signal?.aborted) {
+    // `delete` consuma la richiesta: una run successiva non nasce già ferma.
+    if (stopRequests.delete(gamePathKey(opts.gamePath))) {
       stopped = true;
       await applyAndSave();
       clientLogger.info(

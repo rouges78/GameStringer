@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Gamepad2, Settings, Search, Play, Loader2, Database,
-  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck, Square
+  ArrowLeft, Languages, Sparkles, Image as ImageIcon, Cpu, Globe, Clock, Brain, ChevronDown, Film, Wrench, ShieldCheck
 } from 'lucide-react';
 import { matchWhitelist, type PublisherWhitelist } from '@/lib/social/publisher-whitelist';
 import publisherWhitelistData from '@/data/publisher-whitelist.json';
@@ -447,20 +447,21 @@ export default function GameDetailPage() {
   const RENPY_TEST_BATCH_SIZE = 200;
   const [renpyTestBatch, setRenpyTestBatch] = useState(false);
 
-  // STOP. Prima dell'08/08/2026 una run Ren'Py partita non si poteva fermare:
-  // l'unica uscita era chiudere l'app, e chiudere l'app a metà chunk buttava
-  // via fino a 300 stringhe non ancora salvate. Su un copione da ~83k stringhe
-  // «non interrompibile» significa anche «non ripensabile». Il controller vive
-  // in un ref (un re-render non deve poterlo sostituire a metà run) e lo Stop è
-  // cooperativo: la pipeline lo legge tra un chunk e l'altro, salva, e genera
-  // comunque i tl/ con quello che ha — fermarsi lascia un gioco giocabile.
-  const renpyAbortRef = useRef<AbortController | null>(null);
-  const [renpyStopping, setRenpyStopping] = useState(false);
+  // STOP Ren'Py: nessuno stato locale e nessun pulsante in pagina. La
+  // richiesta va a `requestRenpyStop` (chiave stabile sul path) e il pulsante
+  // è l'Annulla del widget di progresso GLOBALE, passato via startHeroTracking
+  // — vedi il commento in hero-job-tracking.ts. Un pulsante di pagina sparisce
+  // quando l'utente torna in libreria, mentre la run continua a spendere:
+  // esattamente il difetto che aveva la prima versione di questo Stop.
   const stopRenpyRun = () => {
-    if (!renpyAbortRef.current || renpyAbortRef.current.signal.aborted) return;
-    renpyAbortRef.current.abort();
-    setRenpyStopping(true);
-    toast.info(t('translationBackend.stopping'));
+    // Si rilegge il path QUI, al momento del click: il narrowing di `game`
+    // non entra nelle closure (stessa nota dell'onCancel di Visionaire).
+    const p = game?.installPath;
+    if (!p) return;
+    import('@/lib/renpy-translate')
+      .then(m => m.requestRenpyStop(p))
+      .then(() => toast.info(t('translationBackend.stopping')))
+      .catch(() => {});
   };
 
   // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
@@ -2062,6 +2063,11 @@ export default function GameDetailPage() {
           gameImage: game.headerImage || game.coverUrl, sourceLang: 'en', targetLang: tgt,
           opTitle: t('heroJob.jobTitle').replace('{name}', game.name || game.title || "Ren'Py"),
           opDesc: t('heroJob.jobDescBg').replace('{engine}', "Ren'Py"),
+          // Annulla sul widget globale: sopravvive al cambio pagina, come per
+          // Visionaire. Ferma tra un blocco e l'altro, salva il checkpoint e
+          // genera comunque i tl/ con quanto tradotto.
+          canCancel: true,
+          onCancel: stopRenpyRun,
         });
         if (!rpTracker) {
           toast.info(t('heroJob.alreadyRunning'));
@@ -2072,11 +2078,6 @@ export default function GameDetailPage() {
         setAutoTranslateResult(null);
         setAutoTranslateSteps([...rpSteps]);
         setAutoTranslateActive(true);
-        // Controller NUOVO a ogni run: riusarne uno già abortito farebbe
-        // partire la run successiva già ferma — uno Stop che si ricorda di
-        // essere stato premuto ieri.
-        renpyAbortRef.current = new AbortController();
-        setRenpyStopping(false);
         try {
           const r = await runRenpyTranslation({
             gamePath: game.installPath,
@@ -2087,7 +2088,6 @@ export default function GameDetailPage() {
             // non passava `backend` e la scelta restava sepolta in localStorage.
             backend: renpyBackend,
             limit: renpyTestBatch ? RENPY_TEST_BATCH_SIZE : undefined,
-            signal: renpyAbortRef.current.signal,
             onProgress: (p) => {
               if (p.phase === 'extract') rpStep(0, 'running');
               else if (p.phase === 'glossary') { rpStep(0, 'done'); rpStep(1, 'running'); }
@@ -2164,8 +2164,6 @@ export default function GameDetailPage() {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
           autoTranslateRunningRef.current = false;
-          renpyAbortRef.current = null;
-          setRenpyStopping(false);
         }
         return;
       }
@@ -3501,25 +3499,9 @@ export default function GameDetailPage() {
                     />
                     {t('translationBackend.testBatch').replace('{n}', String(RENPY_TEST_BATCH_SIZE))}
                   </label>
-                  {/* ── Stop ──────────────────────────────────────────────
-                      Compare SOLO mentre la run gira, perché un pulsante
-                      Stop sempre visibile e inerte è peggio che non averlo.
-                      Non è un annullamento: ferma tra un blocco e l'altro,
-                      salva il checkpoint e i file tl/ vengono generati lo
-                      stesso — quindi il testo dice «Ferma», non «Annulla». */}
-                  {autoTranslateBusy && (
-                    <button
-                      type="button"
-                      onClick={stopRenpyRun}
-                      disabled={renpyStopping}
-                      title={t('translationBackend.stopHint')}
-                      className="h-7 mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 hover:text-red-200 text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50"
-                    >
-                      {renpyStopping
-                        ? <><Loader2 className="h-3 w-3 animate-spin" /> {t('translationBackend.stopping')}</>
-                        : <><Square className="h-3 w-3" /> {t('translationBackend.stop')}</>}
-                    </button>
-                  )}
+                  {/* Nessun pulsante Stop qui: vive sul widget di progresso
+                      globale (canCancel/onCancel passati a startHeroTracking),
+                      che resta raggiungibile anche cambiando pagina. */}
                 </>
               )}
               {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi

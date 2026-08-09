@@ -82,7 +82,7 @@ vi.mock('@/lib/client-logger', () => ({
   clientLogger: { info: vi.fn(), warn: vi.fn(), debug: vi.fn(), error: vi.fn() },
 }));
 
-import { runRenpyTranslation, isLegitimateIdentity } from '@/lib/renpy-translate';
+import { runRenpyTranslation, isLegitimateIdentity, requestRenpyStop } from '@/lib/renpy-translate';
 
 describe("freno del flusso Ren'Py", () => {
   beforeEach(() => {
@@ -295,17 +295,19 @@ describe("freno del flusso Ren'Py", () => {
 
   it('lo Stop ferma la run, salva, e genera COMUNQUE i file tl/', async () => {
     const direct = await import('@/lib/ai/ai-translate-direct');
-    const ac = new AbortController();
     vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
       async ({ texts }: { texts: string[] }) => {
         batchCalls++;
-        if (batchCalls === 1) ac.abort(); // Stop premuto durante il primo blocco
+        // Stop premuto durante il primo blocco, da FUORI: è il punto del
+        // pattern a chiave stabile — chi ferma non deve avere in mano un
+        // oggetto della pagina, basta il percorso del gioco.
+        if (batchCalls === 1) requestRenpyStop('C:/Games/Test');
         return { translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true };
       }
     );
 
     const res = await runRenpyTranslation({
-      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud', signal: ac.signal,
+      gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud',
     });
 
     // Si ferma al blocco successivo, non macina tutti e quattro.
@@ -322,7 +324,42 @@ describe("freno del flusso Ren'Py", () => {
     expect(res.accepted).toBe(30);
   });
 
-  it('una run senza signal si comporta esattamente come prima', async () => {
+  it('una richiesta di Stop si CONSUMA: la run dopo non nasce già ferma', async () => {
+    // Il difetto speculare: se la richiesta restasse nel Set, il rilancio si
+    // fermerebbe al primo blocco senza che nessuno abbia premuto niente —
+    // uno Stop che si ricorda di essere stato premuto ieri.
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) =>
+        ({ translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true })
+    );
+
+    requestRenpyStop('C:/Games/Test');
+    const stopped = await runRenpyTranslation({ gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud' });
+    expect(stopped.stopped).toBe(true);
+
+    ROWS.forEach((r) => { r.translated = ''; });
+    const after = await runRenpyTranslation({ gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud' });
+    expect(after.stopped).toBe(false);
+    expect(after.translated).toBe(120);
+  });
+
+  it("lo Stop di un gioco NON ferma la run di un altro", async () => {
+    // La chiave è il percorso normalizzato: senza, un unico flag globale
+    // avrebbe fermato la traduzione sbagliata.
+    const direct = await import('@/lib/ai/ai-translate-direct');
+    vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
+      async ({ texts }: { texts: string[] }) =>
+        ({ translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true })
+    );
+
+    requestRenpyStop('C:/Games/AltroGioco');
+    const res = await runRenpyTranslation({ gamePath: 'C:/Games/Test', targetLang: 'it', backend: 'cloud' });
+    expect(res.stopped).toBe(false);
+    expect(res.translated).toBe(120);
+  });
+
+  it('una run senza richieste di Stop si comporta esattamente come prima', async () => {
     const direct = await import('@/lib/ai/ai-translate-direct');
     vi.mocked(direct.translateWithFallbackBatched).mockImplementation(
       async ({ texts }: { texts: string[] }) => ({ translations: texts.map((t) => `IT:${t}`), provider: 'anthropic', success: true })

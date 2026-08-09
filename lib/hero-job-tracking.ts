@@ -36,6 +36,17 @@ export interface HeroTrackMeta {
   // Testi già tradotti per l'operazione di progress (dal componente, via t()).
   opTitle?: string;
   opDesc?: string;
+  /**
+   * Pulsante Annulla sul widget di progresso GLOBALE (quello montato nel
+   * layout). È il posto giusto per uno Stop, e non un pulsante nella pagina
+   * del gioco: il widget sopravvive alla navigazione, la pagina no — un
+   * pulsante che sparisce quando l'utente torna in libreria lascia la run a
+   * spendere senza più alcun modo di fermarla. Visionaire lo fa così dal
+   * 03/08/2026 chiamando `progress.startOperation` a mano; qui la stessa cosa
+   * passa dal tracker, così ogni motore la ottiene gratis.
+   */
+  canCancel?: boolean;
+  onCancel?: () => void;
 }
 
 export interface HeroTracker {
@@ -79,6 +90,8 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
     description: meta.opDesc || `${meta.engineLabel} · background`,
     isBackground: true,
     canMinimize: true,
+    canCancel: meta.canCancel ?? false,
+    ...(meta.onCancel ? { onCancel: meta.onCancel } : {}),
   });
   void import('@/lib/notifications/tray-notifications').then(m => m.incrementActiveTranslations()).catch(() => {});
 
