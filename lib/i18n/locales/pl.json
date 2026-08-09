@@ -463,7 +463,8 @@
     "applyPickFolder": "Wybierz folder instalacji gry",
     "deleteConfirm": "Usunąć projekt",
     "deleteError": "Nie udało się usunąć",
-    "projectImported": "projekt zaimportowany"
+    "projectImported": "projekt zaimportowany",
+    "publishLive": "Łatka jest opublikowana: widoczna w Patch Hub."
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",
@@ -8084,8 +8085,6 @@
     "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki.",
     "testBatch": "Partia próbna ({n})",
     "testBatchHint": "Tłumaczy tylko {n} ciągów, ale i tak generuje pliki tl/, więc możesz sprawdzić efekt w grze przed przetworzeniem całego skryptu. Pełne uruchomienie wznowi się stąd.",
-    "stop": "Zatrzymaj",
-    "stopping": "Zatrzymywanie…",
-    "stopHint": "Zatrzymuje się po bieżącym bloku — zależnie od modelu może to potrwać kilka minut. To, co już przetłumaczone, zostaje zapisane, a pliki tl/ i tak powstają; kolejne uruchomienie wznawia od tego miejsca."
+    "stopping": "Zatrzymywanie…"
   }
 }

@@ -463,7 +463,8 @@
     "applyPickFolder": "选择游戏安装文件夹",
     "deleteConfirm": "删除项目",
     "deleteError": "删除失败",
-    "projectImported": "项目已导入"
+    "projectImported": "项目已导入",
+    "publishLive": "补丁已发布：可在 Patch Hub 中查看。"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",
@@ -8082,8 +8083,6 @@
     "cloudHint": "云端服务商 — 使用设置中的 API 密钥，会消耗额度。",
     "testBatch": "试运行（{n} 条）",
     "testBatchHint": "仅翻译 {n} 条字符串，但仍会生成 tl/ 文件，可在处理整个剧本前先在游戏中查看效果。完整运行会从此处继续。",
-    "stop": "停止",
-    "stopping": "正在停止…",
-    "stopHint": "在当前区块结束后停止 — 视模型而定可能需要几分钟。已翻译的内容会被保存，tl/ 文件仍会生成；再次运行将从此处继续。"
+    "stopping": "正在停止…"
   }
 }

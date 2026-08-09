@@ -463,7 +463,8 @@
     "applyPickFolder": "Wähle den Installationsordner des Spiels",
     "deleteConfirm": "Projekt löschen",
     "deleteError": "Löschen fehlgeschlagen",
-    "projectImported": "Projekt importiert"
+    "projectImported": "Projekt importiert",
+    "publishLive": "Der Patch ist online: im Patch Hub sichtbar."
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",
@@ -8082,8 +8083,6 @@
     "cloudHint": "Cloud-Anbieter — nutzt die API-Schlüssel aus den Einstellungen und verbraucht Guthaben.",
     "testBatch": "Testlauf ({n})",
     "testBatchHint": "Übersetzt nur {n} Zeichenketten, erzeugt aber trotzdem die tl/-Dateien, damit du das Ergebnis im Spiel prüfen kannst, bevor du das ganze Skript startest. Der vollständige Lauf setzt hier fort.",
-    "stop": "Stopp",
-    "stopping": "Wird gestoppt …",
-    "stopHint": "Hält nach dem laufenden Block an — je nach Modell kann das einige Minuten dauern. Das Übersetzte wird gespeichert und die tl/-Dateien werden trotzdem erzeugt; ein neuer Lauf setzt hier fort."
+    "stopping": "Wird gestoppt …"
   }
 }

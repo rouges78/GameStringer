@@ -463,7 +463,8 @@
     "applyPickFolder": "Elige la carpeta de instalación del juego",
     "deleteConfirm": "¿Eliminar el proyecto",
     "deleteError": "No se pudo eliminar",
-    "projectImported": "proyecto importado"
+    "projectImported": "proyecto importado",
+    "publishLive": "El parche está publicado: visible en el Patch Hub."
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",
@@ -8082,8 +8083,6 @@
     "cloudHint": "Proveedores en la nube: usa las claves API de Ajustes y consume crédito.",
     "testBatch": "Lote de prueba ({n})",
     "testBatchHint": "Traduce solo {n} cadenas pero genera igualmente los archivos tl/, para ver el resultado en el juego antes de procesar el guion completo. La ejecución completa continúa desde aquí.",
-    "stop": "Detener",
-    "stopping": "Deteniendo…",
-    "stopHint": "Se detiene tras el bloque en curso: según el modelo puede tardar unos minutos. Lo ya traducido se guarda y los archivos tl/ se generan igualmente; una nueva ejecución continúa desde aquí."
+    "stopping": "Deteniendo…"
   }
 }

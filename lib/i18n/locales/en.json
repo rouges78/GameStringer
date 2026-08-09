@@ -463,7 +463,8 @@
     "applyPickFolder": "Choose the game install folder",
     "deleteConfirm": "Delete the project",
     "deleteError": "Delete failed",
-    "projectImported": "project imported"
+    "projectImported": "project imported",
+    "publishLive": "The patch is live: visible in the Patch Hub."
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",
@@ -8082,8 +8083,6 @@
     "cloudHint": "Cloud providers — uses the API keys from Settings and consumes credit.",
     "testBatch": "Test batch ({n})",
     "testBatchHint": "Translates only {n} strings but still writes the tl/ files, so you can check the result in-game before committing to the whole script. The next full run resumes from here.",
-    "stop": "Stop",
-    "stopping": "Stopping…",
-    "stopHint": "Stops after the block in progress — depending on the model this can take a few minutes. What is already translated is saved and the tl/ files are still generated; a new run resumes from here."
+    "stopping": "Stopping…"
   }
 }

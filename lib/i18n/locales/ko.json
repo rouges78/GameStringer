@@ -463,7 +463,8 @@
     "applyPickFolder": "게임 설치 폴더 선택",
     "deleteConfirm": "프로젝트를 삭제할까요",
     "deleteError": "삭제하지 못했습니다",
-    "projectImported": "프로젝트를 가져왔습니다"
+    "projectImported": "프로젝트를 가져왔습니다",
+    "publishLive": "패치가 게시되었습니다. Patch Hub에서 볼 수 있습니다."
   },
   "emulatorTranslator": {
     "clipboardError": "클립보드를 읽을 수 없습니다",
@@ -8082,8 +8083,6 @@
     "cloudHint": "클라우드 제공자 — 설정의 API 키를 사용하며 크레딧을 소모합니다.",
     "testBatch": "테스트 배치({n}개)",
     "testBatchHint": "{n}개 문자열만 번역하지만 tl/ 파일은 생성되므로, 전체 스크립트를 처리하기 전에 게임에서 결과를 확인할 수 있습니다. 전체 실행은 여기서 이어집니다.",
-    "stop": "중지",
-    "stopping": "중지하는 중…",
-    "stopHint": "진행 중인 블록이 끝난 뒤 중지합니다. 모델에 따라 몇 분이 걸릴 수 있습니다. 이미 번역된 내용은 저장되고 tl/ 파일도 생성되며, 다시 실행하면 여기서 이어집니다."
+    "stopping": "중지하는 중…"
   }
 }

@@ -463,7 +463,8 @@
     "applyPickFolder": "Escolha a pasta de instalação do jogo",
     "deleteConfirm": "Eliminar o projeto",
     "deleteError": "Falha ao eliminar",
-    "projectImported": "projeto importado"
+    "projectImported": "projeto importado",
+    "publishLive": "O patch está publicado: visível no Patch Hub."
   },
   "emulatorTranslator": {
     "clipboardError": "Não foi possível ler a área de transferência",
@@ -8082,8 +8083,6 @@
     "cloudHint": "Provedores na nuvem — usa as chaves de API das Definições e consome crédito.",
     "testBatch": "Lote de teste ({n})",
     "testBatchHint": "Traduz apenas {n} cadeias mas gera na mesma os ficheiros tl/, para veres o resultado no jogo antes de processar o guião completo. A execução completa retoma daqui.",
-    "stop": "Parar",
-    "stopping": "A parar…",
-    "stopHint": "Para depois do bloco em curso — consoante o modelo, pode demorar alguns minutos. O que já foi traduzido é guardado e os ficheiros tl/ são gerados na mesma; uma nova execução continua daqui."
+    "stopping": "A parar…"
   }
 }

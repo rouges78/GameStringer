@@ -463,7 +463,8 @@
     "applyPickFolder": "Choisissez le dossier d'installation du jeu",
     "deleteConfirm": "Supprimer le projet",
     "deleteError": "Échec de la suppression",
-    "projectImported": "projet importé"
+    "projectImported": "projet importé",
+    "publishLive": "Le patch est en ligne : visible dans le Patch Hub."
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",
@@ -8082,8 +8083,6 @@
     "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit.",
     "testBatch": "Lot d’essai ({n})",
     "testBatchHint": "Ne traduit que {n} chaînes mais génère quand même les fichiers tl/, pour voir le résultat en jeu avant de lancer le script entier. L’exécution complète reprend ici.",
-    "stop": "Arrêter",
-    "stopping": "Arrêt…",
-    "stopHint": "S’arrête après le bloc en cours — selon le modèle, cela peut prendre quelques minutes. Ce qui est déjà traduit est enregistré et les fichiers tl/ sont quand même générés ; une nouvelle exécution reprend ici."
+    "stopping": "Arrêt…"
   }
 }

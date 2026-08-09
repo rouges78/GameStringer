@@ -312,7 +312,12 @@ export async function publishPack(pack: Partial<TranslationPack>, files: File[])
     translated_strings: pack.translatedStrings || 0,
     completion_percentage: pack.completionPercentage || 0,
     tags: pack.tags || [],
-    status: 'pending', // Richiede moderazione
+    // NIENTE `status` qui. Lo decide il trigger enforce_pack_status
+    // (migration 20260809): 'published' per gli autori verificati, 'pending'
+    // per gli altri, e solo un moderatore può cambiarlo dopo. Mandarlo dal
+    // client sarebbe teatro — il trigger lo sovrascrive comunque, e prima del
+    // trigger chiunque poteva scrivere 'published' e saltare la coda.
+    // Lo status VERO si legge dalla riga restituita, qui sotto.
     patch_format: pack.patchFormat,
     patch_instructions: pack.patchInstructions,
     compatibility: pack.compatibility || [],

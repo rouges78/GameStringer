@@ -597,6 +597,62 @@ export default function ProjectsPage() {
     }
   };
 
+  /**
+   * IL CONTENUTO REALE DI UN PROGETTO — una fonte sola per Esporta e Pubblica.
+   *
+   * Perché esiste. Prima del 09/08/2026 i due pulsanti leggevano da posti
+   * diversi: Esporta guardava le stringhe su disco e poi IndexedDB, Pubblica
+   * SOLO IndexedDB. E IndexedDB ha un unico scrittore in tutto il repo —
+   * l'import di un .gspack — quindi tutto ciò che nasceva dalla pipeline vera
+   * era esportabile ma NON pubblicabile, con un «nessun contenuto» che dava la
+   * colpa al progetto invece che al codice. Non è un fallback mancante: è la
+   * stessa domanda («cosa contiene questo progetto?») con due risposte.
+   *
+   * Ordine di preferenza:
+   *  1. stringhe persistite su disco dall'apply (`load_translation_strings`);
+   *  2. file tradotti salvati dall'import .gspack (IndexedDB);
+   *  3. export del progetto quality.
+   *
+   * NB: NON è la fonte giusta per «Applica al gioco». Lì servono i file veri
+   * del gioco (con il loro originalPath); una mappa chiave→traduzione
+   * scriverebbe un JSON inerte nella cartella del gioco — un file scritto che
+   * nessuno legge, che è il difetto che inseguiamo da giorni.
+   */
+  const collectProjectContent = async (
+    p: UnifiedProject
+  ): Promise<Array<{ path: string; content: string }>> => {
+    const disk = await invoke<{
+      gameId: string; sourceLanguage: string; targetLanguage: string;
+      entries: Array<{ key: string; source: string; target: string }>;
+    } | null>('load_translation_strings', {
+      gameId: p.gameId, targetLanguage: p.targetLanguage,
+    }).catch(() => null);
+    if (disk?.entries?.length) {
+      // Mappa key→target: è il formato che countStrings() del gspack conta
+      // onestamente (stringhe totali = chiavi, tradotte = non vuote).
+      const map: Record<string, string> = {};
+      for (const e of disk.entries) map[e.key] = e.target;
+      return [{
+        path: `strings_${p.targetLanguage}.json`,
+        content: JSON.stringify(map, null, 2),
+      }];
+    }
+
+    const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
+    if (stored?.length) return stored.map(f => ({ path: f.path, content: f.content }));
+
+    if (p.source === 'quality') {
+      const content = qualityScoringService.exportProject(p.id.replace(/^qs:/, '')) || '';
+      if (content) {
+        return [{
+          path: `${p.gameName.replace(/[^\w-]/g, '_')}_${p.targetLanguage}.gsproj.json`,
+          content,
+        }];
+      }
+    }
+    return [];
+  };
+
   const handleExport = async (p: UnifiedProject) => {
     if (p.source === 'quality') {
       const qsId = p.id.replace(/^qs:/, '');
@@ -616,38 +672,11 @@ export default function ProjectsPage() {
       return;
     }
 
-    // Export .gspack per i progetti ATTIVI (04/08/2026). Contenuto, in ordine
-    // di preferenza: (1) le stringhe persistite su disco dall'apply
-    // (load_translation_strings — PRIMA chiamata frontend di questo comando
-    // Rust, orfano dalla nascita); (2) i file tradotti salvati dall'import
-    // .gspack. Se non c'è nessuno dei due, niente pack vuoto: stesso principio
-    // del publish ("non pubblicare un manifest di metadati").
     if (p.source !== 'active') return;
     try {
-      const files: Array<{ path: string; content: string; format: string }> = [];
-
-      const disk = await invoke<{
-        gameId: string; sourceLanguage: string; targetLanguage: string;
-        entries: Array<{ key: string; source: string; target: string }>;
-      } | null>('load_translation_strings', {
-        gameId: p.gameId, targetLanguage: p.targetLanguage,
-      }).catch(() => null);
-      if (disk?.entries?.length) {
-        // Mappa key→target: è il formato che countStrings() del gspack conta
-        // onestamente (stringhe totali = chiavi, tradotte = non vuote).
-        const map: Record<string, string> = {};
-        for (const e of disk.entries) map[e.key] = e.target;
-        files.push({
-          path: `strings_${p.targetLanguage}.json`,
-          content: JSON.stringify(map, null, 2),
-          format: 'json',
-        });
-      } else {
-        const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
-        if (stored?.length) {
-          for (const f of stored) files.push({ path: f.path, content: f.content, format: 'json' });
-        }
-      }
+      const files = (await collectProjectContent(p)).map(
+        f => ({ path: f.path, content: f.content, format: 'json' })
+      );
 
       if (files.length === 0) {
         toast.error(t('projectsPage.publishNoContent'));
@@ -682,32 +711,30 @@ export default function ProjectsPage() {
     }
   };
 
-  // Ponte verso il Patch Hub: pubblica il progetto completato via publishPack
-  // (Supabase). Il pack entra in stato "pending" (moderazione). Contenuto: export
-  // completo per i progetti quality, altrimenti un manifest con i metadati.
+  // Ponte verso il Patch Hub: pubblica il progetto via publishPack (Supabase).
+  // Il pack entra in stato "pending" (moderazione).
   const handlePublish = async (p: UnifiedProject) => {
-    // Preferisci SEMPRE il file tradotto reale se persistito (es. da import .gspack):
-    // così si pubblica la traduzione vera, non un manifest di metadati.
-    const stored = await loadTranslatedFiles(p.gameId, p.targetLanguage);
-    let files: File[];
-    if (stored && stored.length) {
-      files = stored.map(f => new File([f.content], f.path, { type: 'application/json' }));
-    } else if (p.source === 'quality') {
-      const qsId = p.id.replace(/^qs:/, '');
-      const content = qualityScoringService.exportProject(qsId) || '';
-      if (!content) { toast.error(t('projectsPage.publishNoContent')); return; }
-      const safeName = `${p.gameName.replace(/[^\w-]/g, '_')}_${p.targetLanguage}.gsproj.json`;
-      files = [new File([content], safeName, { type: 'application/json' })];
-    } else {
+    // UNA SOLA FONTE, la stessa dell'export. Fino al 09/08/2026 questa
+    // funzione guardava SOLO in IndexedDB — che ha un unico scrittore in tutto
+    // il repo, l'import di un .gspack. Conseguenza: un progetto tradotto dalla
+    // pipeline vera finiva sempre nel ramo «nessun contenuto» e non si poteva
+    // pubblicare, mentre lo STESSO progetto si esportava benissimo, perché
+    // l'export legge anche le stringhe da disco. Due pulsanti accanto,
+    // due fonti diverse, e solo uno con il fallback giusto.
+    const collected = await collectProjectContent(p);
+    if (!collected.length) {
       // Nessun contenuto reale disponibile: non pubblicare un manifest vuoto.
       toast.error(t('projectsPage.publishNoContent'));
       return;
     }
+    const files: File[] = collected.map(
+      f => new File([f.content], f.path, { type: 'application/json' })
+    );
     const tid = toast.loading(t('projectsPage.publishing'));
     try {
       const { publishPack } = await import('@/lib/social/community-hub-backend');
       const pct = p.totalStrings > 0 ? Math.round((p.completedStrings / p.totalStrings) * 100) : 0;
-      await publishPack({
+      const published = await publishPack({
         name: `${p.gameName} — ${p.targetLanguage.toUpperCase()}`,
         gameId: p.gameId,
         gameName: p.gameName,
@@ -717,7 +744,20 @@ export default function ProjectsPage() {
         translatedStrings: p.completedStrings,
         completionPercentage: pct,
       }, files);
-      toast.success(t('projectsPage.publishSuccess'), { id: tid, description: t('projectsPage.publishModeration') });
+      // Lo status arriva dal DB (trigger enforce_pack_status), non da una
+      // nostra ipotesi: un autore verificato pubblica subito, gli altri vanno
+      // in coda. Dire «in moderazione» a chi ha appena pubblicato — o il
+      // contrario — è una bugia piccola che fa cercare il pack nel posto
+      // sbagliato.
+      const isLive = published?.status === 'published'
+        || published?.status === 'verified'
+        || published?.status === 'featured';
+      toast.success(t('projectsPage.publishSuccess'), {
+        id: tid,
+        description: isLive
+          ? t('projectsPage.publishLive')
+          : t('projectsPage.publishModeration'),
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes('autenticato')) {
