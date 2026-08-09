@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { clientLogger } from '@/lib/client-logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -111,7 +112,11 @@ export function WadExtractor() {
           const data: WadTextEntry[] = JSON.parse(content);
           setEntries(data);
           toast.success(`Caricati ${data.length} stringhe da WAD`);
-        } catch {
+        } catch (fsErr: unknown) {
+          // Il catch era VUOTO: l'errore Tauri reale (es. permesso negato)
+          // spariva dietro un fallback fetch che in build desktop fallisce
+          // quasi sempre → messaggio fuorviante. Ora la causa vera è nei log.
+          clientLogger.warn('[WAD] readTextFile fallita, provo il fallback dev:', String(fsErr));
           // Fallback: try fetch for dev mode
           const response = await fetch(`/api/read-file?path=${encodeURIComponent(selected)}`);
           if (response.ok) {
@@ -155,8 +160,11 @@ export function WadExtractor() {
             }));
           await writeTextFile(selected, JSON.stringify(exportData, null, 2));
           toast.success(`Salvate ${exportData.length} traduzioni`);
-        } catch {
-          toast.error(t('common.erroreSalvataggio'));
+        } catch (fsErr: unknown) {
+          clientLogger.error('[WAD] writeTextFile fallita:', String(fsErr));
+          toast.error(t('common.erroreSalvataggio'), {
+            description: String(fsErr).slice(0, 140),
+          });
         }
       }
     } catch (e: unknown) {

@@ -458,6 +458,9 @@
     "applyTitle": "Applica al gioco",
     "applying": "Applico al gioco…",
     "applySuccess": "Traduzione applicata al gioco",
+    "applyPartial": "Traduzione applicata solo in parte",
+    "applySkipped": "saltati (backup non riuscito)",
+    "applyFailed": "falliti",
     "applyError": "Applicazione non riuscita",
     "applyNoContent": "Nessun file tradotto salvato per questo progetto. Re-importa il pacchetto.",
     "applyPickFolder": "Scegli la cartella d'installazione del gioco",
@@ -465,7 +468,8 @@
     "deleteError": "Eliminazione non riuscita",
     "projectImported": "progetto importato",
     "publishLive": "La patch è online: visibile nel Patch Hub.",
-    "publishViewPack": "Apri il pack"
+    "publishViewPack": "Apri il pack",
+    "openPackTitle": "Pubblicato — apri il pack sul Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossibile leggere gli appunti",

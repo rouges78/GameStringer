@@ -458,6 +458,9 @@
     "applyTitle": "ゲームに適用",
     "applying": "ゲームに適用中…",
     "applySuccess": "翻訳をゲームに適用しました",
+    "applyPartial": "翻訳は一部のみ適用されました",
+    "applySkipped": "スキップ（バックアップ失敗）",
+    "applyFailed": "失敗",
     "applyError": "適用に失敗しました",
     "applyNoContent": "このプロジェクトに保存された翻訳済みファイルがありません。パックを再インポートしてください。",
     "applyPickFolder": "ゲームのインストールフォルダーを選択",
@@ -465,7 +468,8 @@
     "deleteError": "削除に失敗しました",
     "projectImported": "プロジェクトをインポートしました",
     "publishLive": "パッチは公開されました。Patch Hub で表示されます。",
-    "publishViewPack": "パックを表示"
+    "publishViewPack": "パックを表示",
+    "openPackTitle": "公開済み — Patch Hub でパックを開く"
   },
   "emulatorTranslator": {
     "clipboardError": "クリップボードを読み取れません",

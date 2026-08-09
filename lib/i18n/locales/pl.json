@@ -458,6 +458,9 @@
     "applyTitle": "Zastosuj do gry",
     "applying": "Stosowanie do gry…",
     "applySuccess": "Tłumaczenie zastosowane do gry",
+    "applyPartial": "Tłumaczenie zastosowane tylko częściowo",
+    "applySkipped": "pominięte (kopia zapasowa nie powiodła się)",
+    "applyFailed": "nieudane",
     "applyError": "Zastosowanie nie powiodło się",
     "applyNoContent": "Brak zapisanych przetłumaczonych plików dla tego projektu. Zaimportuj pakiet ponownie.",
     "applyPickFolder": "Wybierz folder instalacji gry",
@@ -465,7 +468,8 @@
     "deleteError": "Nie udało się usunąć",
     "projectImported": "projekt zaimportowany",
     "publishLive": "Łatka jest opublikowana: widoczna w Patch Hub.",
-    "publishViewPack": "Zobacz pack"
+    "publishViewPack": "Zobacz pack",
+    "openPackTitle": "Opublikowano — otwórz pack w Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Nie można odczytać schowka",

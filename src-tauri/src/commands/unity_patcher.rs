@@ -2068,11 +2068,65 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
         return Err("Cartella del gioco non trovata".to_string());
     }
 
-    let exe_path = game_dir.join(&game_exe_name);
-    
-    // Verifica che l'eseguibile esista
+    let mut game_exe_name = game_exe_name;
+    let mut exe_path = game_dir.join(&game_exe_name);
+
+    // Il nome exe può arrivare INDOVINATO dal frontend (fallback: nome gioco
+    // senza spazi → «Suite776.exe» per un exe che si chiama «Suite 776.exe»).
+    // Prima di fallire, cerca il .exe VERO nella cartella con le stesse regole
+    // condivise dei patcher (niente installer/redist/crash-handler, punteggio
+    // per somiglianza col nome cartella, poi dimensione).
     if !exe_path.exists() {
-        return Err(format!("Eseguibile del gioco '{}' non trovato nella cartella specificata", game_exe_name));
+        let folder_name = game_dir
+            .file_name()
+            .map(|n| n.to_string_lossy().to_lowercase())
+            .unwrap_or_default();
+        let mut best: Option<(u8, u64, String)> = None;
+        if let Ok(entries) = fs::read_dir(game_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let is_exe = path
+                    .extension()
+                    .map(|e| e.to_string_lossy().to_lowercase() == "exe")
+                    .unwrap_or(false);
+                if !is_exe {
+                    continue;
+                }
+                let Some(name) = path.file_name().map(|n| n.to_string_lossy().to_string()) else {
+                    continue;
+                };
+                let lower = name.to_lowercase();
+                if super::game_exe::is_junk_executable(&lower) {
+                    continue;
+                }
+                let stem = lower.trim_end_matches(".exe");
+                let score = super::game_exe::name_match_score(stem, &folder_name);
+                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                if best
+                    .as_ref()
+                    .map(|(bs, bz, _)| (score, size) > (*bs, *bz))
+                    .unwrap_or(true)
+                {
+                    best = Some((score, size, name));
+                }
+            }
+        }
+        match best {
+            Some((_, _, found)) => {
+                steps.push(format!(
+                    "⚠ '{}' non trovato: uso '{}' rilevato nella cartella",
+                    game_exe_name, found
+                ));
+                game_exe_name = found;
+                exe_path = game_dir.join(&game_exe_name);
+            }
+            None => {
+                return Err(format!(
+                    "Eseguibile del gioco '{}' non trovato nella cartella specificata (e nessun altro .exe presente)",
+                    game_exe_name
+                ));
+            }
+        }
     }
 
     // Verifica che sia effettivamente un gioco Unity

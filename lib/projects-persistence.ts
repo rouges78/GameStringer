@@ -68,18 +68,44 @@ async function readDisk(): Promise<DiskBlob | null> {
     const blob = JSON.parse(await readTextFile(path)) as DiskBlob;
     return Array.isArray(blob?.projects) ? blob : null;
   } catch (e: unknown) {
-    clientLogger.debug('projects readDisk skipped:', String(e));
+    // warn: qui si arriva solo DENTRO Tauri (fuori, diskFilePath è già null),
+    // quindi un errore è un projects.json corrotto o illeggibile — trattarlo
+    // come «nessun progetto» in silenzio nasconderebbe una perdita dati.
+    clientLogger.warn('projects readDisk fallita (file corrotto?):', String(e));
     return null;
   }
 }
+
+// Un solo avviso per sessione: il flush è fire-and-forget e può ritentare
+// spesso — un toast a ogni retry sarebbe rumore, zero toast era il silenzio
+// che ha già fatto sparire un checkpoint (03/08).
+let writeFailureNotified = false;
 
 async function writeDisk(blob: DiskBlob): Promise<void> {
   const path = await diskFilePath();
   if (!path) return;
   const { mkdir, writeTextFile } = await import('@tauri-apps/plugin-fs');
   const dir = path.slice(0, path.length - 'projects.json'.length - 1);
-  await mkdir(dir, { recursive: true }).catch(() => {});
-  await writeTextFile(path, JSON.stringify(blob, null, 2));
+  // Il mkdir NON è best-effort: se la cartella non è creabile, la write sotto
+  // fallisce comunque — meglio un errore con la causa vera che due bugie.
+  await mkdir(dir, { recursive: true }).catch((e: unknown) => {
+    clientLogger.warn('projects mkdir fallita (la write sotto dirà il resto):', String(e));
+  });
+  try {
+    await writeTextFile(path, JSON.stringify(blob, null, 2));
+  } catch (e: unknown) {
+    clientLogger.error('projects.json NON scritto su disco:', String(e));
+    if (!writeFailureNotified) {
+      writeFailureNotified = true;
+      try {
+        const { toast } = await import('sonner');
+        toast.warning('Registro progetti non salvato su disco', {
+          description: String(e).slice(0, 140),
+        });
+      } catch { /* sonner non disponibile (test/SSR): resta il log */ }
+    }
+    throw e;
+  }
 }
 
 /** Merge per id: vince l'updatedAt più recente; gli sconosciuti si sommano. */
@@ -115,7 +141,9 @@ export async function hydrateProjectsFromDisk(): Promise<void> {
         await set(ACTIVE_PROJECT_KEY, disk.activeProjectId);
       }
       // Riallinea il disco al merge, così la prossima hydration è coerente.
-      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: disk.activeProjectId, projects: merged }).catch(() => {});
+      // Non fatale (il merge è già in IndexedDB) ma MAI muto.
+      await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: disk.activeProjectId, projects: merged })
+        .catch((e: unknown) => clientLogger.warn('riallineamento disco post-hydration fallito:', String(e)));
       clientLogger.debug(`projects hydration: ${disk.projects.length} da disco + ${local.length} locali → ${merged.length}`);
     } else if (local.length > 0) {
       // Migrazione una-tantum: IndexedDB esistente → disco.
@@ -158,6 +186,9 @@ export async function persistProjectsToDisk(opts: { allowEmpty?: boolean } = {})
     const active = await get<string>(ACTIVE_PROJECT_KEY);
     await writeDisk({ savedAt: new Date().toISOString(), activeProjectId: active, projects });
   } catch (e: unknown) {
-    clientLogger.debug('persistProjectsToDisk skipped:', String(e));
+    // warn, non debug: se il registro non si salva è un rischio di perdita
+    // dati, non un dettaglio di sviluppo (writeDisk ha già avvisato l'utente
+    // una volta per sessione).
+    clientLogger.warn('persistProjectsToDisk fallito:', String(e));
   }
 }

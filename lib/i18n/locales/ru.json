@@ -458,6 +458,9 @@
     "applyTitle": "Применить к игре",
     "applying": "Применение к игре…",
     "applySuccess": "Перевод применён к игре",
+    "applyPartial": "Перевод применён лишь частично",
+    "applySkipped": "пропущено (резервная копия не создана)",
+    "applyFailed": "с ошибкой",
     "applyError": "Не удалось применить",
     "applyNoContent": "Для этого проекта нет сохранённых переведённых файлов. Повторно импортируйте пакет.",
     "applyPickFolder": "Выберите папку установки игры",
@@ -465,7 +468,8 @@
     "deleteError": "Не удалось удалить",
     "projectImported": "проект импортирован",
     "publishLive": "Патч опубликован: виден в Patch Hub.",
-    "publishViewPack": "Открыть пак"
+    "publishViewPack": "Открыть пак",
+    "openPackTitle": "Опубликован — открыть пак в Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Не удалось прочитать буфер обмена",

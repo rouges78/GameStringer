@@ -458,6 +458,9 @@
     "applyTitle": "Aplicar ao jogo",
     "applying": "Aplicando ao jogo…",
     "applySuccess": "Tradução aplicada ao jogo",
+    "applyPartial": "Tradução aplicada apenas parcialmente",
+    "applySkipped": "ignorados (backup falhou)",
+    "applyFailed": "falharam",
     "applyError": "Falha ao aplicar",
     "applyNoContent": "Nenhum arquivo traduzido salvo para este projeto. Reimporte o pacote.",
     "applyPickFolder": "Escolha a pasta de instalação do jogo",
@@ -465,7 +468,8 @@
     "deleteError": "Falha ao eliminar",
     "projectImported": "projeto importado",
     "publishLive": "O patch está publicado: visível no Patch Hub.",
-    "publishViewPack": "Ver o pack"
+    "publishViewPack": "Ver o pack",
+    "openPackTitle": "Publicado — abrir o pack no Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Não foi possível ler a área de transferência",

@@ -458,6 +458,9 @@
     "applyTitle": "게임에 적용",
     "applying": "게임에 적용 중…",
     "applySuccess": "번역을 게임에 적용했습니다",
+    "applyPartial": "번역이 일부만 적용되었습니다",
+    "applySkipped": "건너뜀 (백업 실패)",
+    "applyFailed": "실패",
     "applyError": "적용 실패",
     "applyNoContent": "이 프로젝트에 저장된 번역 파일이 없습니다. 팩을 다시 가져오세요.",
     "applyPickFolder": "게임 설치 폴더 선택",
@@ -465,7 +468,8 @@
     "deleteError": "삭제하지 못했습니다",
     "projectImported": "프로젝트를 가져왔습니다",
     "publishLive": "패치가 게시되었습니다. Patch Hub에서 볼 수 있습니다.",
-    "publishViewPack": "팩 보기"
+    "publishViewPack": "팩 보기",
+    "openPackTitle": "게시됨 — Patch Hub에서 팩 열기"
   },
   "emulatorTranslator": {
     "clipboardError": "클립보드를 읽을 수 없습니다",

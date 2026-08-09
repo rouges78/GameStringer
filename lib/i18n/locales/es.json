@@ -458,6 +458,9 @@
     "applyTitle": "Aplicar al juego",
     "applying": "Aplicando al juego…",
     "applySuccess": "Traducción aplicada al juego",
+    "applyPartial": "Traducción aplicada solo parcialmente",
+    "applySkipped": "omitidos (copia de seguridad fallida)",
+    "applyFailed": "fallidos",
     "applyError": "Error al aplicar",
     "applyNoContent": "No hay archivos traducidos guardados para este proyecto. Vuelve a importar el paquete.",
     "applyPickFolder": "Elige la carpeta de instalación del juego",
@@ -465,7 +468,8 @@
     "deleteError": "No se pudo eliminar",
     "projectImported": "proyecto importado",
     "publishLive": "El parche está publicado: visible en el Patch Hub.",
-    "publishViewPack": "Ver el pack"
+    "publishViewPack": "Ver el pack",
+    "openPackTitle": "Publicado — abrir el pack en el Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "No se puede leer el portapapeles",

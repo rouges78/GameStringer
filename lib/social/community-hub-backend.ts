@@ -280,6 +280,39 @@ export async function fetchPacks(filters: PackSearchFilters = {}): Promise<{ pac
   return { packs, total: count || 0 };
 }
 
+/**
+ * Indice dei pack pubblicati dall'utente corrente: `${game_id}:${target_language}` → pack id.
+ * Serve alla pagina Progetti per mostrare il link diretto al pack sulla card
+ * (badge «Pubblicata» persistente: sopravvive a cambi porta/macchina perché
+ * viene dal DB, non da localStorage). Fail-open: senza login o con errore
+ * ritorna {} e la card semplicemente non mostra il link.
+ * La RLS «Authors read own packs» fa vedere all'autore anche i pending.
+ */
+export async function fetchMyPacksIndex(): Promise<Record<string, string>> {
+  try {
+    const supabase = await getSupabase();
+    const user = await getCurrentUser();
+    if (!user) return {};
+    const { data, error } = await supabase
+      .from('translation_packs')
+      .select('id, game_id, target_language, created_at')
+      .eq('author_id', user.id)
+      .order('created_at', { ascending: true });
+    if (error || !data) return {};
+    const index: Record<string, string> = {};
+    // ascending + sovrascrittura ⇒ per ogni gioco+lingua vince il più recente
+    for (const row of data) {
+      if (row.game_id && row.target_language) {
+        index[`${row.game_id}:${row.target_language}`] = row.id;
+      }
+    }
+    return index;
+  } catch (e: unknown) {
+    clientLogger.debug('fetchMyPacksIndex fallita (fail-open):', String(e));
+    return {};
+  }
+}
+
 export async function fetchPackById(packId: string): Promise<TranslationPack | null> {
   const supabase = await getSupabase();
   const { data, error } = await supabase

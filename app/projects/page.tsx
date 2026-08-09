@@ -23,6 +23,7 @@ import {
   Languages,
   TrendingUp,
   Share2,
+  Package,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -341,6 +342,7 @@ function ProjectCard({
   onPublish,
   onApply,
   publishing = false,
+  packId,
 }: {
   project: UnifiedProject;
   onDelete: (p: UnifiedProject) => void;
@@ -348,6 +350,8 @@ function ProjectCard({
   onPublish: (p: UnifiedProject) => void;
   onApply: (p: UnifiedProject) => void;
   publishing?: boolean;
+  /** id del pack sul Patch Hub se questo progetto è già stato pubblicato */
+  packId?: string;
 }) {
   const { t } = useTranslation();
   const pct = percent(project.completedStrings, project.totalStrings);
@@ -476,6 +480,19 @@ function ProjectCard({
                 : <Share2 className="w-3 h-3" />}
             </Button>
           )}
+          {/* Già pubblicato → link DIRETTO al pack sul Patch Hub */}
+          {packId && (
+            <Link href={`/patch-hub?id=${encodeURIComponent(packId)}`}>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0 text-amber-400 hover:text-amber-300"
+                title={t('projectsPage.openPackTitle')}
+              >
+                <Package className="w-3 h-3" />
+              </Button>
+            </Link>
+          )}
           {/* Esporta: quality → .gsproj.json; active → .gspack dalle stringhe
               persistite su disco (o dai file del pack importato). */}
           {(project.source === 'quality' || project.source === 'active') && (
@@ -519,6 +536,10 @@ export default function ProjectsPage() {
   // (sincrona), lo state il cartello (disabilita il pulsante nella card).
   const publishingRef = useRef<string | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  // «gameId:lang» → pack id dei MIEI pack sul Hub: la card di un progetto già
+  // pubblicato mostra il link diretto al pack. Dal DB, non da localStorage
+  // (che in dev muore a ogni cambio porta). Fail-open: vuoto se offline.
+  const [packIndex, setPackIndex] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [filterLang, setFilterLang] = useState<string>('all');
@@ -526,6 +547,12 @@ export default function ProjectsPage() {
 
   const reload = async () => {
     setLoading(true);
+    // In parallelo, non bloccante: l'indice dei miei pack sul Hub per i link
+    // diretti sulle card. Se fallisce, le card restano senza link e basta.
+    import('@/lib/social/community-hub-backend')
+      .then(m => m.fetchMyPacksIndex())
+      .then(setPackIndex)
+      .catch(() => { /* fail-open, già loggato dentro */ });
     try {
       // Backfill: ricrea i progetti dai checkpoint Visionaire già salvati (giochi
       // su cui hai già lavorato prima che Progetti li registrasse).
@@ -799,6 +826,10 @@ export default function ProjectsPage() {
             }
           : undefined,
       });
+      // Aggiorna subito l'indice: il link sulla card compare senza reload.
+      if (published?.id) {
+        setPackIndex(prev => ({ ...prev, [`${p.gameId}:${p.targetLanguage}`]: published.id }));
+      }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes('autenticato')) {
@@ -829,33 +860,55 @@ export default function ProjectsPage() {
     if (!dir) return;
 
     const tid = toast.loading(t('projectsPage.applying'));
-    try {
-      const fsp = await import('@tauri-apps/plugin-fs');
-      let written = 0; let skipped = 0;
-      for (const f of stored) {
-        const rel = (f.originalPath || f.path).replace(/\\/g, '/').replace(/^\/+/, '');
-        const target = `${dir}/${rel}`;
-        const folder = target.slice(0, target.lastIndexOf('/'));
-        // Backup obbligatorio se il file esiste già
-        try {
-          if (await fsp.exists(target)) {
-            await fsp.copyFile(target, `${target}.bak`);
-          }
-        } catch {
-          skipped++; // backup fallito → non sovrascrivere
-          continue;
+    // PER-FILE, non transazionale-a-metà: prima un errore su un file
+    // interrompeva il ciclo e lasciava l'installazione in stato misto senza
+    // dire quanti file erano già stati scritti. Ora ogni file ha il suo
+    // esito e il toast finale dice la verità intera (scritti/saltati/falliti).
+    const fsp = await import('@tauri-apps/plugin-fs');
+    let written = 0; let skipped = 0;
+    const failed: string[] = [];
+    for (const f of stored) {
+      const rel = (f.originalPath || f.path).replace(/\\/g, '/').replace(/^\/+/, '');
+      const target = `${dir}/${rel}`;
+      const folder = target.slice(0, target.lastIndexOf('/'));
+      // Backup obbligatorio se il file esiste già
+      try {
+        if (await fsp.exists(target)) {
+          await fsp.copyFile(target, `${target}.bak`);
         }
-        try { await fsp.mkdir(folder, { recursive: true }); } catch { /* già esiste */ }
+      } catch (e: unknown) {
+        // backup fallito → non sovrascrivere MAI il file originale
+        clientLogger.warn(`[Apply] backup fallito per ${rel}, file saltato:`, String(e));
+        skipped++;
+        continue;
+      }
+      try {
+        // NB: il vecchio `catch { /* già esiste */ }` sul mkdir assumeva che
+        // l'unico errore possibile fosse EEXIST — su Program Files senza
+        // elevazione è un permesso negato, e il commento mandava il debug
+        // nella direzione sbagliata. Con recursive:true un EEXIST non è un
+        // errore: se il mkdir fallisce, fallisce per un motivo vero, e lo
+        // sentirà comunque la write qui sotto con la causa giusta.
+        await fsp.mkdir(folder, { recursive: true }).catch((e: unknown) => {
+          clientLogger.warn(`[Apply] mkdir fallita per ${folder}:`, String(e));
+        });
         await fsp.writeTextFile(target, f.content);
         written++;
+      } catch (e: unknown) {
+        clientLogger.error(`[Apply] scrittura fallita per ${rel}:`, String(e));
+        failed.push(rel);
       }
-      if (written > 0) {
-        toast.success(t('projectsPage.applySuccess'), { id: tid, description: `${written} file · ${skipped} saltati` });
-      } else {
-        toast.error(t('projectsPage.applyError'), { id: tid, description: `${skipped} saltati (backup non riuscito)` });
-      }
-    } catch (e: unknown) {
-      toast.error(t('projectsPage.applyError'), { id: tid, description: e instanceof Error ? e.message : String(e) });
+    }
+    const parts = [`${written} file`];
+    if (skipped > 0) parts.push(`${skipped} ${t('projectsPage.applySkipped')}`);
+    if (failed.length > 0) parts.push(`${failed.length} ${t('projectsPage.applyFailed')}: ${failed.slice(0, 3).join(', ')}${failed.length > 3 ? '…' : ''}`);
+    if (written > 0 && failed.length === 0) {
+      toast.success(t('projectsPage.applySuccess'), { id: tid, description: parts.join(' · ') });
+    } else if (written > 0) {
+      // Successo parziale: dirlo com'è, non scegliere tra le due bugie.
+      toast.warning(t('projectsPage.applyPartial'), { id: tid, description: parts.join(' · ') });
+    } else {
+      toast.error(t('projectsPage.applyError'), { id: tid, description: parts.join(' · ') });
     }
   };
 
@@ -1034,6 +1087,7 @@ export default function ProjectsPage() {
               onPublish={handlePublish}
               onApply={handleApply}
               publishing={publishingId === project.id}
+              packId={packIndex[`${project.gameId}:${project.targetLanguage}`]}
             />
           ))}
         </div>

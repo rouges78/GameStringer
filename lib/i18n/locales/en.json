@@ -458,6 +458,9 @@
     "applyTitle": "Apply to game",
     "applying": "Applying to game…",
     "applySuccess": "Translation applied to the game",
+    "applyPartial": "Translation only partially applied",
+    "applySkipped": "skipped (backup failed)",
+    "applyFailed": "failed",
     "applyError": "Apply failed",
     "applyNoContent": "No saved translated files for this project. Re-import the pack.",
     "applyPickFolder": "Choose the game install folder",
@@ -465,7 +468,8 @@
     "deleteError": "Delete failed",
     "projectImported": "project imported",
     "publishLive": "The patch is live: visible in the Patch Hub.",
-    "publishViewPack": "View pack"
+    "publishViewPack": "View pack",
+    "openPackTitle": "Published — open the pack on the Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",

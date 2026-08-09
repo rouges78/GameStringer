@@ -458,6 +458,9 @@
     "applyTitle": "Εφαρμογή στο παιχνίδι",
     "applying": "Εφαρμογή στο παιχνίδι…",
     "applySuccess": "Η μετάφραση εφαρμόστηκε στο παιχνίδι",
+    "applyPartial": "Η μετάφραση εφαρμόστηκε μόνο εν μέρει",
+    "applySkipped": "παραλείφθηκαν (αποτυχία αντιγράφου ασφαλείας)",
+    "applyFailed": "απέτυχαν",
     "applyError": "Η εφαρμογή απέτυχε",
     "applyNoContent": "Δεν υπάρχουν αποθηκευμένα μεταφρασμένα αρχεία για αυτό το έργο. Εισαγάγετε ξανά το πακέτο.",
     "applyPickFolder": "Επιλέξτε τον φάκελο εγκατάστασης του παιχνιδιού",
@@ -465,7 +468,8 @@
     "deleteError": "Η διαγραφή απέτυχε",
     "projectImported": "το έργο εισήχθη",
     "publishLive": "Το patch είναι online: ορατό στο Patch Hub.",
-    "publishViewPack": "Άνοιγμα pack"
+    "publishViewPack": "Άνοιγμα pack",
+    "openPackTitle": "Δημοσιεύτηκε — άνοιγμα του pack στο Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Δεν είναι δυνατή η ανάγνωση του προχείρου",

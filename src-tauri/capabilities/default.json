@@ -23,7 +23,15 @@
     "fs:default",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }]
+      "allow": [{ "path": "**" }],
+      "deny": [
+        { "path": "C:\\Windows\\**" },
+        { "path": "C:/Windows/**" },
+        { "path": "$HOME/.ssh/**" },
+        { "path": "$HOME/AppData/Roaming/Microsoft/Credentials/**" },
+        { "path": "$HOME/AppData/Roaming/Microsoft/Protect/**" },
+        { "path": "$HOME/AppData/Local/Microsoft/Credentials/**" }
+      ]
     },
     "fs:allow-read-text-file",
     "fs:allow-read-file",
@@ -32,8 +40,6 @@
     "fs:allow-read-dir",
     "fs:allow-exists",
     "fs:allow-mkdir",
-    "fs:allow-remove",
-    "fs:allow-rename",
     "shell:allow-open",
     "process:default",
     "dialog:default",

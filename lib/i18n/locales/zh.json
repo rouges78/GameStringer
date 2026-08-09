@@ -458,6 +458,9 @@
     "applyTitle": "应用到游戏",
     "applying": "正在应用到游戏…",
     "applySuccess": "翻译已应用到游戏",
+    "applyPartial": "翻译仅部分应用",
+    "applySkipped": "已跳过（备份失败）",
+    "applyFailed": "失败",
     "applyError": "应用失败",
     "applyNoContent": "此项目没有保存已翻译的文件。请重新导入该包。",
     "applyPickFolder": "选择游戏安装文件夹",
@@ -465,7 +468,8 @@
     "deleteError": "删除失败",
     "projectImported": "项目已导入",
     "publishLive": "补丁已发布：可在 Patch Hub 中查看。",
-    "publishViewPack": "查看补丁包"
+    "publishViewPack": "查看补丁包",
+    "openPackTitle": "已发布 — 在 Patch Hub 中打开补丁包"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",

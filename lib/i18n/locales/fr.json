@@ -458,6 +458,9 @@
     "applyTitle": "Appliquer au jeu",
     "applying": "Application au jeu…",
     "applySuccess": "Traduction appliquée au jeu",
+    "applyPartial": "Traduction appliquée seulement en partie",
+    "applySkipped": "ignorés (sauvegarde échouée)",
+    "applyFailed": "échoués",
     "applyError": "Échec de l'application",
     "applyNoContent": "Aucun fichier traduit enregistré pour ce projet. Réimportez le pack.",
     "applyPickFolder": "Choisissez le dossier d'installation du jeu",
@@ -465,7 +468,8 @@
     "deleteError": "Échec de la suppression",
     "projectImported": "projet importé",
     "publishLive": "Le patch est en ligne : visible dans le Patch Hub.",
-    "publishViewPack": "Voir le pack"
+    "publishViewPack": "Voir le pack",
+    "openPackTitle": "Publié — ouvrir le pack dans le Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Impossible de lire le presse-papiers",

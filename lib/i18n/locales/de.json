@@ -458,6 +458,9 @@
     "applyTitle": "Auf Spiel anwenden",
     "applying": "Wird auf das Spiel angewendet…",
     "applySuccess": "Übersetzung auf das Spiel angewendet",
+    "applyPartial": "Übersetzung nur teilweise angewendet",
+    "applySkipped": "übersprungen (Backup fehlgeschlagen)",
+    "applyFailed": "fehlgeschlagen",
     "applyError": "Anwenden fehlgeschlagen",
     "applyNoContent": "Keine gespeicherten übersetzten Dateien für dieses Projekt. Importiere das Paket erneut.",
     "applyPickFolder": "Wähle den Installationsordner des Spiels",
@@ -465,7 +468,8 @@
     "deleteError": "Löschen fehlgeschlagen",
     "projectImported": "Projekt importiert",
     "publishLive": "Der Patch ist online: im Patch Hub sichtbar.",
-    "publishViewPack": "Pack ansehen"
+    "publishViewPack": "Pack ansehen",
+    "openPackTitle": "Veröffentlicht — Pack im Patch Hub öffnen"
   },
   "emulatorTranslator": {
     "clipboardError": "Zwischenablage kann nicht gelesen werden",
