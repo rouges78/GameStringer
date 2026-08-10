@@ -331,6 +331,43 @@ sub.forEach((s, i) => {
     const c = g.cp >= 32 && g.cp < 127 ? `'${String.fromCharCode(g.cp)}'` : `U+${g.cp.toString(16).toUpperCase().padStart(4, '0')}`;
     console.log(`    #${k} ${c.padEnd(8)} x=${String(g.x).padStart(4)} y=${String(g.y).padStart(4)} w=${String(g.w).padStart(3)} h=${String(g.h).padStart(3)}  coda=${g.coda}`);
   });
+  // ── LA TABELLA DI LOOKUP (campo @16): pezzo decisivo per la scrittura.
+  // Se esiste una mappa codepoint→indice-glifo, cambiare il codepoint di un
+  // record senza aggiornarla scriverebbe un glifo IRRAGGIUNGIBILE: il gioco
+  // continuerebbe a non trovare la lettera e mostrerebbe il .notdef, con la
+  // patch "riuscita" e nessun errore. È il pattern che ci perseguita.
+  // IPOTESI DA VERIFICARE: alla posizione del codepoint C c'è l'indice del
+  // record che ha quel codepoint. Si prova su lettere note.
+  {
+    const offLookup = s.readUInt32LE(16);
+    const offGlifi = s.readUInt32LE(12);
+    console.log(`\n── TABELLA @16 (offset ${offLookup}, lunga ${offGlifi - offLookup} byte fino alla tabella glifi)`);
+    const prove = [0x41, 0x42, 0x61, 0x30, 0x20];
+    for (const passo of [1, 2]) {
+      const esiti = prove.map(cp => {
+        const idx = t.glifi.findIndex(g => g.cp === cp);
+        if (idx < 0) return null;
+        const p = offLookup + cp * passo;
+        if (p + passo > s.length) return null;
+        const val = passo === 1 ? s[p] : s.readUInt16LE(p);
+        return { cp, atteso: idx, letto: val, ok: val === idx };
+      }).filter(Boolean);
+      const giusti = esiti.filter(e => e.ok).length;
+      console.log(`   passo ${passo} byte → ${giusti}/${esiti.length} corrispondenze  ${esiti.map(e => `U+${e.cp.toString(16)}: atteso ${e.atteso} letto ${e.letto}`).join(' · ')}`);
+      if (giusti === esiti.length && esiti.length >= 3) {
+        console.log(`   ✅ È UNA LOOKUP codepoint→indice a passo ${passo}: va AGGIORNATA insieme al record,`);
+        console.log(`      altrimenti il glifo nuovo resta scritto e irraggiungibile.`);
+      }
+    }
+    // se nessuna delle due regge, dove sono i valori non-ffff?
+    let primi = [];
+    for (let p = offLookup; p < Math.min(offLookup + 4000, offGlifi - 1) && primi.length < 8; p += 2) {
+      const v = s.readUInt16LE(p);
+      if (v !== 0xffff) primi.push(`@${p - offLookup}=${v}`);
+    }
+    console.log(`   primi valori diversi da ffff (offset relativo): ${primi.length ? primi.join(' ') : 'nessuno nei primi 4000 byte'}`);
+  }
+
   const cps = new Set(t.glifi.map(g => g.cp));
   const min = Math.min(...cps), max = Math.max(...cps);
   console.log(`  copertura: ${cps.size} codepoint distinti, da U+${min.toString(16).toUpperCase().padStart(4, '0')} a U+${max.toString(16).toUpperCase().padStart(4, '0')}`);
@@ -591,8 +628,34 @@ if (atlante) {
     console.log(`   (x=${bersaglio.x} y=${bersaglio.y} w=${bersaglio.w} h=${bersaglio.h}). Se compare una A, il formato è capito.`);
     disegna(atlante, Math.max(0, bersaglio.x - 1), Math.max(0, bersaglio.y - 1), bersaglio.w + 2, bersaglio.h + 2, sfondo);
   }
+  // ── SPAZIO LIBERO: prima di pianificare COME procurarsi spazio, si verifica
+  // se ce n'è già (lezione [blocchi-mai-verificati]). Se l'atlante ha righe
+  // vuote in fondo, i glifi nuovi ci stanno senza sacrificare nessun carattere.
+  {
+    const vivo = (v) => v !== undefined && (alpha ? alpha[v] >= 16 : v !== sfondo);
+    const rigaVuota = (y) => {
+      const yf = capovolta ? atlante.h - 1 - y : y;
+      for (let x = 0; x < atlante.w; x += 2) if (vivo(atlante.dati[yf * atlante.w + x])) return false;
+      return true;
+    };
+    let ultimaPiena = -1;
+    for (let y = 0; y < atlante.h; y++) if (!rigaVuota(y)) ultimaPiena = y;
+    const libere = atlante.h - 1 - ultimaPiena;
+    const tt = tabelle.find(x => x.idx === ATL + 1);
+    const hGlifo = tt ? tt.glifi[0].h : 39;
+    console.log(`\n── SPAZIO LIBERO NELL'ATLANTE (dove mettere i glifi nuovi)`);
+    console.log(`   ultima riga con inchiostro: ${ultimaPiena} · righe libere in fondo: ${libere} (su ${atlante.h})`);
+    console.log(`   con glifi alti ${hGlifo} ci stanno ${Math.floor(libere / hGlifo)} righe di testo nuove`);
+    if (libere >= hGlifo) {
+      console.log(`   ✅ C'È SPAZIO VERGINE: i glifi nuovi si disegnano lì, senza sacrificare`);
+      console.log(`      nessun carattere esistente (niente kanji da cannibalizzare).`);
+    } else {
+      console.log(`   ⚠️ spazio insufficiente in fondo: servirà riusare celle di glifi inutili in italiano.`);
+    }
+  }
+
   console.log('\nfinestra generica richiesta:');
-  disegna(atlante, VX, VY, VW, VH, sfondo);
+  disegna(atlante, VX, VY, VW, VH, sfondo, capovolta, alpha);
 }
 
 console.log(`\n${'═'.repeat(70)}`);

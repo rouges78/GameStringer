@@ -94,6 +94,34 @@ function scriviPak(originale, parti, offs) {
   return out;
 }
 
+/**
+ * ⭐ LA MAPPA carattere → indice glifo. Trovata il 10/08 DOPO il secondo
+ * fallimento in-game, rileggendo i dati della prima sonda con l'informazione
+ * nuova («il gioco non usa il campo codepoint del record»).
+ *
+ * La sonda aveva segnalato «una corsa di codepoint consecutivi a offset 162».
+ * NON erano codepoint: erano INDICI. Infatti 32 + 0x41*2 = 162, cioè la
+ * posizione della lettera 'A' in una tabella che parte a 32, indicizzata per
+ * codepoint, u16 per voce — e il valore lì è 32, che è esattamente l'indice
+ * del record di 'A'. La «corsa» erano gli indici di A,B,C… consecutivi.
+ *
+ * Cioè: `mappa[codepoint] = indice del glifo`, 0xFFFF = carattere assente
+ * (ed è per questo che la zona è quasi tutta ffff: il font copre 323 caratteri
+ * su 65536 possibili).
+ */
+const MAPPA_OFF = 32;
+function leggiMappa(b, cp) {
+  const p = MAPPA_OFF + cp * 2;
+  if (p + 2 > b.length) return null;
+  return b.readUInt16LE(p);
+}
+function scriviMappa(b, cp, idx) {
+  const p = MAPPA_OFF + cp * 2;
+  if (p + 2 > b.length) return false;
+  b.writeUInt16LE(idx, p);
+  return true;
+}
+
 // ─────────────────────────────────────────────── tabella glifi SpFt
 function leggiGlifi(b) {
   const n = b.readUInt32LE(8), off = b.readUInt32LE(12);
@@ -159,6 +187,38 @@ const pak = leggiPak(pakBuf);
 console.log(`${nome} — ${pakBuf.length} byte · ${pak.count} sotto-file\n`);
 
 // ── MODO 1: ROUND-TRIP (il gate di tutto)
+// ── VERIFICA DELL'IPOTESI SULLA MAPPA (prima di scriverci dentro)
+if (has('--mappa')) {
+  for (const idxTab of [1, 3]) {
+    const tab = pak.parti[idxTab];
+    if (!tab || tab.buf.subarray(0, 4).toString('ascii') !== 'tFpS') continue;
+    const t = leggiGlifi(tab.buf);
+    console.log(`\n── FONT [${idxTab}]: la mappa a offset ${MAPPA_OFF} è davvero codepoint→indice?`);
+    let ok = 0, tot = 0;
+    const campione = t.glifi.filter((g, i) => i % 17 === 0 || g.cp === 0x41 || g.cp === 0xe0).slice(0, 20);
+    for (const g of campione) {
+      const letto = leggiMappa(tab.buf, g.cp);
+      const giusto = letto === g.i;
+      if (giusto) ok++;
+      tot++;
+      const ch = g.cp >= 33 && g.cp < 127 ? `'${String.fromCharCode(g.cp)}'` : `U+${g.cp.toString(16).toUpperCase()}`;
+      console.log(`   ${ch.padEnd(8)} record #${String(g.i).padStart(3)} · mappa[${g.cp}] = ${letto === 0xffff ? 'ffff (assente)' : letto}  ${giusto ? '✅' : '⛔'}`);
+    }
+    console.log(`   → ${ok}/${tot} corrispondenze`);
+    if (ok === tot) {
+      console.log('   ✅ IPOTESI CONFERMATA: mappa[codepoint] = indice del glifo.');
+      console.log('      È QUI che il gioco cerca — ecco perché cambiare il codepoint del record non bastava.');
+      // e i caratteri che ci servono?
+      for (const ch of 'àéóèìòùÀÈÉÌÒÙ') {
+        const v = leggiMappa(tab.buf, ch.codePointAt(0));
+        console.log(`      ${ch} → ${v === 0xffff ? 'ffff = ASSENTE (il gioco mostra .notdef)' : `indice ${v}`}`);
+      }
+    } else {
+      console.log('   ⛔ ipotesi NON confermata: la mappa è altrove o ha un altro formato.');
+    }
+  }
+}
+
 if (has('--roundtrip')) {
   const ricostruito = scriviPak(pakBuf, pak.parti, pak.offs);
   const identico = ricostruito.equals(pakBuf);
@@ -368,17 +428,44 @@ if (has('--applica') || has('--prova')) {
     tabNuovo.writeUInt16LE(p.y, off + 4);
     tabNuovo.writeUInt16LE(p.w, off + 6);
     tabNuovo.writeUInt16LE(p.h, off + 8);
+
+    // ⭐ E LA MAPPA — il pezzo che mancava ai primi due tentativi.
+    // Il gioco cerca in mappa[codepoint], non nel campo codepoint del record:
+    // senza questa riga il glifo è scritto, perfetto e IRRAGGIUNGIBILE, e il
+    // gioco continua a disegnare il .notdef. Il donatore va anche tolto dalla
+    // mappa, altrimenti resterebbe a puntare a un glifo che ora è un'altra
+    // lettera (un ideogramma che disegna «è»).
+    scriviMappa(tabNuovo, p.don.cp, 0xffff);
+    scriviMappa(tabNuovo, p.cpAcc, p.don.i);
   }
 
-  // ── i record vanno tenuti ORDINATI per codepoint: ADR-005 insegna che un
-  // runtime può fare ricerca binaria, e una lista disordinata = crash all'avvio.
-  // Qui non è dimostrato che DR1 lo faccia, ma riordinare è gratis e sicuro;
-  // non riordinare sarebbe una scommessa.
-  const rec = [];
-  for (let i = 0; i < t.n; i++) rec.push(Buffer.from(tabNuovo.subarray(t.off + i * 16, t.off + i * 16 + 16)));
-  rec.sort((a, b) => a.readUInt16LE(0) - b.readUInt16LE(0));
-  rec.forEach((r, i) => r.copy(tabNuovo, t.off + i * 16));
-  console.log(`   record riordinati per codepoint (${t.n})`);
+  // ⛔⛔ IL RIORDINO ERA SBAGLIATO — smentito dalla prova in-game del 10/08.
+  //
+  // Avevo riordinato i record per codepoint scrivendo che «ADR-005 insegna che
+  // un runtime può fare ricerca binaria, quindi riordinare è gratis e sicuro;
+  // non riordinare sarebbe una scommessa». Era ESATTAMENTE il contrario, e la
+  // frase stessa conteneva l'errore: avevo scritto poco prima che la cosa
+  // andava «VERIFICATA prima, non assunta», e poi l'ho assunta lo stesso.
+  // Una precauzione presa in prestito da un altro motore è un'assunzione
+  // travestita da prudenza.
+  //
+  // COSA HA MOSTRATO IL GIOCO: `già`→«giÈ», `abilità`→«abilitÈ» (à trovata ma
+  // con l'indice spostato) e TUTTE le minuscole nuove →«ó» (non trovate, e
+  // cadute sul .notdef che dopo il riordino non era più ≡ ma ó). Due fatti:
+  //   1. il gioco indirizza i glifi per POSIZIONE: riordinare rompe tutto;
+  //   2. il gioco NON cerca nel campo codepoint del record, altrimenti
+  //      avrebbe trovato le lettere nuove (i loro record c'erano).
+  // Quindi da qui in poi: NON si riordina, e si verifica se cambiare il
+  // codepoint basti — è la domanda che l'esperimento qui sotto risponde.
+  if (has('--riordina')) {
+    const rec = [];
+    for (let i = 0; i < t.n; i++) rec.push(Buffer.from(tabNuovo.subarray(t.off + i * 16, t.off + i * 16 + 16)));
+    rec.sort((a, b) => a.readUInt16LE(0) - b.readUInt16LE(0));
+    rec.forEach((r, i) => r.copy(tabNuovo, t.off + i * 16));
+    console.log(`   ⚠️ record RIORDINATI per codepoint (${t.n}) — provato il 10/08: ROMPE il gioco.`);
+  } else {
+    console.log(`   record lasciati al loro posto (nessun riordino): il gioco indirizza per posizione`);
+  }
 
   // ── ANTEPRIMA DEL RISULTATO: si guarda prima di scrivere
   const tW = leggiGlifi(tabNuovo);
@@ -398,7 +485,13 @@ if (has('--applica') || has('--prova')) {
   check.push(['dimensione atlante invariata', atlNuovo.length === atlBuf.length]);
   check.push(['dimensione tabella invariata', tabNuovo.length === tabBuf.length]);
   check.push(['numero glifi invariato', tW.n === t.n]);
-  check.push(['record ordinati per codepoint', tW.glifi.every((g, i) => i === 0 || tW.glifi[i - 1].cp <= g.cp)]);
+  // ⚠️ NON si controlla più che i record siano ordinati: la prova in-game ha
+  // mostrato che il gioco li indirizza per POSIZIONE, quindi l'ordine va
+  // lasciato com'è. Si controlla invece che i record NON toccati siano rimasti
+  // esattamente dove stavano — che è la proprietà che conta davvero.
+  const posizioniIntatte = t.glifi.every(g =>
+    piano.some(p => p.don.i === g.i) || tW.glifi[g.i] && tW.glifi[g.i].cp === g.cp);
+  check.push(['record non toccati rimasti al loro INDICE', posizioniIntatte]);
   check.push(['tutte le accentate presenti', piano.every(p => tW.glifi.some(g => g.cp === p.cpAcc))]);
   check.push(['ogni accentata ha inchiostro', piano.every(p => { const g = tW.glifi.find(x => x.cp === p.cpAcc); return g && ritaglia(atlW, g).some(r => r.some(v => atlW.alpha[v] >= 16)); })]);
   // i glifi ESISTENTI devono essere intatti: si confrontano i pixel di quelli
@@ -426,6 +519,19 @@ if (has('--applica') || has('--prova')) {
     return primaPiena > 0;               // c'è almeno una riga vuota sopra l'accento
   });
   check.push(['accento NON tagliato dal bordo superiore', nonTagliato]);
+
+  // ⭐ LA VERIFICA CHE MANCAVA AI PRIMI DUE TENTATIVI: il glifo dev'essere
+  // RAGGIUNGIBILE, non solo presente. Si controlla la mappa esattamente come
+  // la legge il gioco, e si controlla anche che i donatori non puntino più a
+  // niente (sennò un ideogramma disegnerebbe «è»).
+  const raggiungibili = piano.every(p => leggiMappa(tabNuovo, p.cpAcc) === p.don.i);
+  check.push(['accentate RAGGIUNGIBILI dalla mappa (come le cerca il gioco)', raggiungibili]);
+  const donatoriLiberati = piano.every(p => leggiMappa(tabNuovo, p.don.cp) === 0xffff);
+  check.push(['donatori tolti dalla mappa (non puntano più al glifo cambiato)', donatoriLiberati]);
+  // e i caratteri che il gioco già trovava devono continuare a trovarli
+  const mappaIntatta = t.glifi.filter(g => !piano.some(p => p.don.i === g.i))
+    .every(g => leggiMappa(tabNuovo, g.cp) === leggiMappa(tabBuf, g.cp));
+  check.push(['mappa dei caratteri NON toccati invariata', mappaIntatta]);
   let tutteOk = true;
   for (const [nome2, ok] of check) { console.log(`   ${ok ? '✅' : '⛔'} ${nome2}`); if (!ok) tutteOk = false; }
 
