@@ -16,10 +16,8 @@ import { matchWhitelist, type PublisherWhitelist } from '@/lib/social/publisher-
 import publisherWhitelistData from '@/data/publisher-whitelist.json';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import InlineTranslator from '@/components/inline-translator';
 import { LanguageFlags, getCountryCode } from '@/components/ui/language-flags';
 import { activityHistory } from '@/lib/activity-history';
-import { TranslationRecommendation } from '@/components/translation-recommendation';
 import { useTranslation } from '@/lib/i18n';
 import { useProgress } from '@/components/progress/progress-provider';
 import { CoverPicker } from '@/components/cover-picker';
@@ -210,7 +208,6 @@ export default function GameDetailPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [dlcGames, setDlcGames] = useState<Record<string, unknown>[]>([]);
-  const [showTranslation, setShowTranslation] = useState(false);
   const [_steamDetails, setSteamDetails] = useState<unknown>(null);
   const [imageError, setImageError] = useState(false);
 
@@ -227,11 +224,7 @@ export default function GameDetailPage() {
   const [isDetectingEngine, setIsDetectingEngine] = useState(false);
   
   // Editor traduzioni XUnity
-  const [xunityTranslations, setXunityTranslations] = useState<{original: string, translated: string, line_number: number}[]>([]);
-  const [_isLoadingTranslations, setIsLoadingTranslations] = useState(false);
-  const [_showTranslationEditor, setShowTranslationEditor] = useState(false);
   const [_translationSearch, _setTranslationSearch] = useState('');
-  const [_editingEntry, setEditingEntry] = useState<{original: string, translated: string} | null>(null);
 
   // Lightbox screenshot (indice per navigazione)
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
@@ -1438,53 +1431,7 @@ export default function GameDetailPage() {
     }
   };
 
-  // Carica traduzioni XUnity
-  const _loadXunityTranslations = async () => {
-    if (!game?.installPath) return;
-    
-    setIsLoadingTranslations(true);
-    try {
-      const entries = await invoke<{original: string, translated: string, line_number: number}[]>(
-        'read_xunity_translations', 
-        { gamePath: game.installPath }
-      );
-      setXunityTranslations(entries);
-      setShowTranslationEditor(true);
-    } catch (error: unknown) {
-      clientLogger.error('Errore caricamento traduzioni:', String(error));
-      alert(typeof error === 'string' ? error : 'Errore caricamento traduzioni');
-    } finally {
-      setIsLoadingTranslations(false);
-    }
-  };
 
-  // Salva traduzione modificata
-  const _saveTranslation = async (original: string, newTranslation: string) => {
-    if (!game?.installPath) return;
-    
-    try {
-      await invoke('save_xunity_translation', {
-        gamePath: game.installPath,
-        original,
-        newTranslation
-      });
-      
-      // Aggiorna lista locale
-      setXunityTranslations(prev => 
-        prev.map(e => e.original === original ? { ...e, translated: newTranslation } : e)
-      );
-      setEditingEntry(null);
-    } catch (error: unknown) {
-      clientLogger.error('Errore salvataggio:', String(error));
-      alert(t('gameDetail.alertSaveError'));
-    }
-  };
-
-  // Filtra traduzioni per ricerca
-  const _filteredTranslations = xunityTranslations.filter(t =>
-    t.original.toLowerCase().includes(_translationSearch.toLowerCase()) ||
-    t.translated.toLowerCase().includes(_translationSearch.toLowerCase())
-  );
 
   useEffect(() => {
     clientLogger.debug(`[GameDetail] useEffect triggered — gameId: ${gameId}, ref: ${gameDataLoadedRef.current}, url: ${window.location.search}`);
@@ -3199,15 +3146,6 @@ export default function GameDetailPage() {
     }
   };
 
-  const _getPlatformColor = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'steam': return 'bg-blue-500/10 text-blue-500';
-      case 'epic games': return 'bg-gray-500/10 text-gray-500';
-      case 'gog': return 'bg-purple-500/10 text-purple-500';
-      case 'ea app': return 'bg-orange-500/10 text-orange-500';
-      default: return 'bg-gray-500/10 text-gray-500';
-    }
-  };
 
   if (isLoading) {
     return (
@@ -3856,32 +3794,30 @@ export default function GameDetailPage() {
 
           {showAdvancedTools && (
           <>
-          {/* ═══ TRANSLATION RECOMMENDATION — compact banner ═══ */}
-          {(game.is_installed || game.installPath) && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <TranslationRecommendation
-                gamePath={game.installPath || ''}
-                gameName={game.title || game.name || ''}
-                onActionClick={async (route) => {
-                  if (route === 'action:launch_game') {
-                    if (game.appid && game.appid > 0) {
-                      const steamUrl = `steam://rungameid/${game.appid}`;
-                      try {
-                        const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
-                        await shellOpen(steamUrl);
-                      } catch { window.location.href = steamUrl; }
-                    } else if (game.installPath) {
-                      try {
-                        const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-                        if (exeList?.length > 0) await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                      } catch (e: unknown) { clientLogger.error('[GameDetail] Errore avvio:', String(e)); }
-                    }
-                  } else if (route === '/unity-patcher') { handleInstallUnityPatch(); }
-                  else { router.push(route); }
-                }}
-              />
-            </motion.div>
-          )}
+          {/* ═══ «Strategia Ottimale» RIMOSSA da questa pagina — 10/08/2026 ═══
+              Era una SECONDA pipeline completa, parallela e concorrente a
+              «String it!», con un suo «Traduci Tutto». Due motivi per toglierla,
+              il secondo dei quali è dirimente:
+
+              1. Duplicazione: due pulsanti che promettono la stessa cosa sulla
+                 stessa schermata, più una terza copia del motore rilevato e una
+                 seconda fonte per lo stato della patch. La regola di questo
+                 progetto è UN pulsante (String it!), e due CTA in concorrenza
+                 la violano nel punto più visibile dell'app.
+
+              2. ⛔ «Traduci Tutto» DICHIARAVA FALSI SUCCESSI: per Wolf RPG,
+                 KiriKiri e GameMaker mostrava solo un toast «usa il tool X», e
+                 il ramo `default` SIMULAVA la barra da 0 a 100; dopodiché tutti
+                 gli step risultavano completati e si apriva il pannello
+                 «Traduzione completata!» con «GIOCA ORA». Nessuna stringa
+                 tradotta, successo annunciato — la famiglia di difetti che
+                 questo progetto insegue da mesi ([fallimenti-muti]), e che nello
+                 stepper di String it! era già stata estirpata.
+
+              Il componente resta nel repo (non è stato cancellato): se serve,
+              va ricablato DOPO aver sostituito la barra simulata con un esito
+              onesto. Le informazioni che dava e che valeva la pena tenere —
+              lingue del gioco, motore — sono già nell'hero. */}
 
           {/* ═══ BANNER TRADUZIONE COMUNITARIA (gamestranslator.it) ═══ */}
           <CommunityTranslationsBanner
@@ -4028,9 +3964,6 @@ export default function GameDetailPage() {
       </div>
 
       {/* ═══ MODALS & DIALOGS (outside scroll container) ═══ */}
-      {showTranslation && game && (
-        <InlineTranslator gameId={(game.appid ?? 0).toString()} gameName={game.name || game.title} gamePath={game.installPath} onClose={() => setShowTranslation(false)} />
-      )}
 
       {game && (
         <>
