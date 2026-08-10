@@ -8101,6 +8101,11 @@
     "cloudHint": "云端服务商 — 使用设置中的 API 密钥，会消耗额度。",
     "testBatch": "试运行（{n} 条）",
     "testBatchHint": "仅翻译 {n} 条字符串，但仍会生成 tl/ 文件，可在处理整个剧本前先在游戏中查看效果。完整运行会从此处继续。",
-    "stopping": "正在停止…"
+    "stopping": "正在停止…",
+    "globalTitle": "翻译：本地或在线",
+    "globalLocalHint": "使用 Ollama 时一切都留在你的电脑上：免费且无限制，但速度较慢，长文本质量较差。",
+    "globalCloudHint": "使用下方配置的在线服务商（Gemini、Anthropic、OpenAI…）：更快且译文更佳，但会消耗你的密钥额度。",
+    "overridesActive": "部分游戏有自己的设置，优先于此项：{list}。",
+    "clearOverrides": "让全部跟随通用设置"
   }
 }

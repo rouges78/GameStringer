@@ -8101,6 +8101,11 @@
     "cloudHint": "Provedores na nuvem — usa as chaves de API das Definições e consome crédito.",
     "testBatch": "Lote de teste ({n})",
     "testBatchHint": "Traduz apenas {n} cadeias mas gera na mesma os ficheiros tl/, para veres o resultado no jogo antes de processar o guião completo. A execução completa retoma daqui.",
-    "stopping": "A parar…"
+    "stopping": "A parar…",
+    "globalTitle": "Tradução: local ou online",
+    "globalLocalHint": "Tudo fica no teu computador com o Ollama: gratuito e sem limites, mas mais lento e com menos qualidade em textos longos.",
+    "globalCloudHint": "Usa os fornecedores online configurados abaixo (Gemini, Anthropic, OpenAI…): mais rápido e melhor escrito, mas consome o crédito das tuas chaves.",
+    "overridesActive": "Alguns jogos têm uma escolha própria que tem prioridade sobre esta: {list}.",
+    "clearOverrides": "Fazer todos seguirem a definição geral"
   }
 }

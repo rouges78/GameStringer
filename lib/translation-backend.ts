@@ -27,8 +27,8 @@
 
 export type TranslationBackend = 'cloud' | 'ollama';
 
-/** Motori file-based che leggono questa impostazione. Oggi ha UI solo 'renpy'. */
-export type BackendEngine = 'renpy' | 'rpgmaker' | 'tyrano' | 'visionaire' | 'hendrix';
+/** Motori file-based che leggono questa impostazione. */
+export type BackendEngine = 'renpy' | 'rpgmaker' | 'tyrano' | 'visionaire' | 'hendrix' | 'danganronpa';
 
 /**
  * Chiave per-motore. `gs_renpy_backend` è la chiave che il flusso Ren'Py già
@@ -72,3 +72,40 @@ export function setTranslationBackend(engine: BackendEngine, value: TranslationB
     // la sessione tramite lo stato React, non si perde nulla di irrecuperabile.
   }
 }
+
+/**
+ * ── SCELTA GLOBALE (Impostazioni) ────────────────────────────────────────
+ * Richiesta di Davide, 10/08: «io metterei SEMPRE a scelta utente
+ * (LOCALE/ONLINE)». La chiave condivisa esisteva dall'08/08 ma non la
+ * scriveva nessuno: era una preferenza che nessuno poteva esprimere.
+ *
+ * Precedenza: impostazione del singolo motore → questa → 'ollama'. Cioè il
+ * globale è il DEFAULT, non un ordine: chi ha già scelto per Ren'Py o
+ * Danganronpa si tiene la sua scelta. Il contrario (globale che sovrascrive)
+ * farebbe sparire in silenzio una preferenza già data — e una scelta che
+ * cambia da sola è peggio di una scelta assente.
+ */
+export function getGlobalTranslationBackend(): TranslationBackend | null {
+  return parse(lsGet(SHARED_KEY));
+}
+
+export function setGlobalTranslationBackend(value: TranslationBackend): void {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(SHARED_KEY, value);
+  } catch { /* storage negato: vale per la sessione */ }
+}
+
+/**
+ * Dimentica la scelta di un motore, così tornerà a seguire il globale.
+ * Serve al pulsante «usa l'impostazione generale»: senza, l'utente che ha
+ * toccato una volta il picker di un gioco resterebbe legato a quella scelta
+ * per sempre, senza capire perché il globale non ha effetto.
+ */
+export function clearTranslationBackend(engine: BackendEngine): void {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(backendKey(engine));
+  } catch { /* storage negato */ }
+}
+
+/** Motori che oggi leggono davvero questa impostazione (per la UI). */
+export const BACKEND_ENGINES: BackendEngine[] = ['renpy', 'danganronpa', 'visionaire', 'tyrano', 'rpgmaker', 'hendrix'];

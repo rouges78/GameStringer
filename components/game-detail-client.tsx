@@ -440,6 +440,18 @@ export default function GameDetailPage() {
     setTranslationBackend('renpy', v);
   };
 
+  // Stessa cosa per Danganronpa: il ramo cloud c'è dal 10/08 e senza pulsante
+  // sarebbe nato già irraggiungibile, cioè ripetendo esattamente l'errore che
+  // il commento qui sopra descrive. Su DR1 la scelta pesa più che altrove:
+  // sono 47.999 stringhe, quindi «gratis ma lento» contro «a pagamento ma
+  // scritto in italiano vero» è una decisione che deve prendere l'utente.
+  const [dr1Backend, setDr1Backend] = useState<TranslationBackend>('ollama');
+  useEffect(() => { setDr1Backend(getTranslationBackend('danganronpa')); }, []);
+  const changeDr1Backend = (v: TranslationBackend) => {
+    setDr1Backend(v);
+    setTranslationBackend('danganronpa', v);
+  };
+
   // Lotto di prova: traduce poche stringhe ma genera comunque i file tl/, così
   // si VEDE il risultato in gioco prima di impegnare un copione intero (su
   // Scarlet Hollow: 83.489 stringhe, ~4M token). Volutamente NON persistito —
@@ -550,6 +562,16 @@ export default function GameDetailPage() {
     }
     return null;
   };
+
+  // ⚠️ Per mostrare il selettore Locale/Online di Danganronpa NON si può usare
+  //    `translationStrategy.method`: quell'union (r.422) non contempla
+  //    'danganronpa'/'spike', quindi DR1 finisce su 'generic' e il pulsante
+  //    non comparirebbe MAI — cioè il ramo cloud nascerebbe irraggiungibile,
+  //    lo stesso difetto che stiamo chiudendo. Si usa lo STESSO criterio del
+  //    dispatch in startAutoTranslate, che è l'unico che riconosce il motore.
+  const isDanganronpa = /spike|danganronpa/.test(
+    (game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '').toLowerCase()
+  );
 
   // Rileva motore quando il gioco è caricato
   const detectEngine = async () => {
@@ -2021,6 +2043,11 @@ export default function GameDetailPage() {
           const r = await runDanganronpaTranslation({
             gamePath: gPath,
             targetLang: tgt,
+            // passata SEMPRE esplicita: così il pulsante e il codice non
+            // possono divergere (è il bug che su Ren'Py mandò una run notturna
+            // sul locale mentre credevamo di usare il cloud)
+            backend: dr1Backend,
+            gameId: String(game?.appid ?? game?.name ?? ''),
             onProgress: (p) => {
               if (p.phase === 'translate') {
                 toast.loading(
@@ -3537,12 +3564,23 @@ export default function GameDetailPage() {
                   {translationStrategy.engine} · {translationStrategy.detail}
                 </div>
               )}
-              {/* ── Motore AI (solo Ren'Py, per ora) ──────────────────────────
+              {/* ── Motore AI: LOCALE o ONLINE, sceglie l'utente ─────────────
                   Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
                   pilotabile SOLO da localStorage: nessun pulsante, quindi per
-                  l'utente non esisteva. Gli altri quattro traduttori
-                  file-based hanno lo stesso problema e useranno questo stesso
-                  componente — vedi lib/translation-backend.ts. */}
+                  l'utente non esisteva. Dal 10/08 anche Danganronpa ha il ramo
+                  cloud, montato QUI insieme al suo pulsante — un ramo senza
+                  interruttore nasce già irraggiungibile.
+                  Restano da cablare Visionaire e Tyrano (il ramo ce l'hanno,
+                  ma oggi scelgono da soli guardando se esiste una API key:
+                  vedi il blocco di auto-detect in startAutoTranslate) e da
+                  scrivere Hendrix e RPG Maker — vedi lib/translation-backend.ts */}
+              {isDanganronpa && (
+                <BackendPicker
+                  value={dr1Backend}
+                  onChange={changeDr1Backend}
+                  disabled={autoTranslateBusy}
+                />
+              )}
               {translationStrategy?.method === 'renpy' && (
                 <>
                   <BackendPicker

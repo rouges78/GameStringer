@@ -8101,6 +8101,11 @@
     "cloudHint": "Cloud-Anbieter — nutzt die API-Schlüssel aus den Einstellungen und verbraucht Guthaben.",
     "testBatch": "Testlauf ({n})",
     "testBatchHint": "Übersetzt nur {n} Zeichenketten, erzeugt aber trotzdem die tl/-Dateien, damit du das Ergebnis im Spiel prüfen kannst, bevor du das ganze Skript startest. Der vollständige Lauf setzt hier fort.",
-    "stopping": "Wird gestoppt …"
+    "stopping": "Wird gestoppt …",
+    "globalTitle": "Übersetzung: lokal oder online",
+    "globalLocalHint": "Alles bleibt mit Ollama auf deinem Rechner: kostenlos und unbegrenzt, aber langsamer und schwächer bei langen Texten.",
+    "globalCloudHint": "Nutzt die unten konfigurierten Online-Anbieter (Gemini, Anthropic, OpenAI…): schneller und sprachlich besser, verbraucht aber dein API-Guthaben.",
+    "overridesActive": "Einige Spiele haben eine eigene Einstellung, die dieser vorgeht: {list}.",
+    "clearOverrides": "Alle der allgemeinen Einstellung folgen lassen"
   }
 }

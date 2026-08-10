@@ -8101,6 +8101,11 @@
     "cloudHint": "Provider cloud — usa le chiavi API delle Impostazioni e consuma credito.",
     "testBatch": "Lotto di prova ({n})",
     "testBatchHint": "Traduce solo {n} stringhe ma genera comunque i file tl/, così puoi vedere il risultato in gioco prima di impegnare il copione intero. La run completa riprende da qui.",
-    "stopping": "Sto fermando…"
+    "stopping": "Sto fermando…",
+    "globalTitle": "Traduzione: Locale o Online",
+    "globalLocalHint": "Tutto resta sul tuo computer con Ollama: gratis e senza limiti, ma più lento e con qualità inferiore sui testi lunghi.",
+    "globalCloudHint": "Usa i provider online configurati qui sotto (Gemini, Anthropic, OpenAI…): più veloce e con italiano migliore, ma consuma il credito delle tue chiavi.",
+    "overridesActive": "Alcuni giochi hanno una scelta propria che ha la precedenza su questa: {list}.",
+    "clearOverrides": "Fai seguire a tutti l'impostazione generale"
   }
 }

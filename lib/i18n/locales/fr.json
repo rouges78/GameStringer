@@ -8101,6 +8101,11 @@
     "cloudHint": "Fournisseurs cloud — utilise les clés API des Paramètres et consomme du crédit.",
     "testBatch": "Lot d’essai ({n})",
     "testBatchHint": "Ne traduit que {n} chaînes mais génère quand même les fichiers tl/, pour voir le résultat en jeu avant de lancer le script entier. L’exécution complète reprend ici.",
-    "stopping": "Arrêt…"
+    "stopping": "Arrêt…",
+    "globalTitle": "Traduction : locale ou en ligne",
+    "globalLocalHint": "Tout reste sur votre ordinateur avec Ollama : gratuit et illimité, mais plus lent et de moindre qualité sur les longs textes.",
+    "globalCloudHint": "Utilise les fournisseurs en ligne configurés ci-dessous (Gemini, Anthropic, OpenAI…) : plus rapide et mieux écrit, mais consomme le crédit de vos clés.",
+    "overridesActive": "Certains jeux ont leur propre choix qui prime sur celui-ci : {list}.",
+    "clearOverrides": "Tout aligner sur le réglage général"
   }
 }

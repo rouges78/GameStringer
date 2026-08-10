@@ -13,6 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
+import { BackendPicker } from '@/components/translation/backend-picker';
+import {
+  getGlobalTranslationBackend, setGlobalTranslationBackend, clearTranslationBackend,
+  backendKey, BACKEND_ENGINES, type TranslationBackend,
+} from '@/lib/translation-backend';
 import { 
   Save,
   RotateCcw,
@@ -820,6 +825,23 @@ export default function SettingsPage() {
   const lastSavedRef = useRef<string>('');
   const dirty = lastSavedRef.current !== '' && JSON.stringify(settings) !== lastSavedRef.current;
   const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({});
+
+  // Scelta globale Locale/Online. Si legge dopo il mount: localStorage non
+  // esiste in SSR, e leggerlo nell'inizializzatore darebbe un mismatch di
+  // idratazione (il server renderizza 'ollama', il client un'altra cosa).
+  const [globalBackend, setGlobalBackend] = useState<TranslationBackend | null>(null);
+  // Quali motori hanno una scelta PROPRIA che scavalca il globale: senza
+  // dirlo, chi cambia l'impostazione generale e non vede effetto sul suo gioco
+  // penserebbe che il pulsante è rotto.
+  const [perGameOverrides, setPerGameOverrides] = useState<string[]>([]);
+  useEffect(() => {
+    setGlobalBackend(getGlobalTranslationBackend());
+    try {
+      setPerGameOverrides(
+        BACKEND_ENGINES.filter(e => localStorage.getItem(backendKey(e)) !== null)
+      );
+    } catch { /* storage negato */ }
+  }, []);
   const [activeTab, setActiveTab] = useState('translation');
 
   // Debug API functions
@@ -1294,9 +1316,45 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              {/* ── LOCALE o ONLINE, scelta globale ────────────────────────
+                  Richiesta di Davide (10/08): «SEMPRE a scelta utente». Sta
+                  QUI, sopra le API key, perché è la domanda che viene prima:
+                  se scegli Locale le chiavi sotto non servono. La scelta per
+                  singolo gioco (BackendPicker nella pagina del gioco) ha la
+                  precedenza su questa — questo è il default, non un ordine. */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">{t('translationBackend.globalTitle')}</h3>
+                <BackendPicker
+                  value={globalBackend ?? 'ollama'}
+                  onChange={(v) => { setGlobalBackend(v); setGlobalTranslationBackend(v); }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {globalBackend === 'cloud'
+                    ? t('translationBackend.globalCloudHint')
+                    : t('translationBackend.globalLocalHint')}
+                </p>
+                {perGameOverrides.length > 0 && (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                    <p className="text-xs text-amber-200/90">
+                      {t('translationBackend.overridesActive').replace('{list}', perGameOverrides.join(', '))}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        BACKEND_ENGINES.forEach(e => clearTranslationBackend(e));
+                        setPerGameOverrides([]);
+                      }}
+                    >
+                      {t('translationBackend.clearOverrides')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-sm font-medium text-muted-foreground">{t('settingsPage.apiKeysFallback')}</h3>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="translation-api-key">{t('settingsPage.geminiHeader')}</Label>
                   <div className="flex space-x-2">

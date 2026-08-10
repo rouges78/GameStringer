@@ -8101,6 +8101,11 @@
     "cloudHint": "Proveedores en la nube: usa las claves API de Ajustes y consume crédito.",
     "testBatch": "Lote de prueba ({n})",
     "testBatchHint": "Traduce solo {n} cadenas pero genera igualmente los archivos tl/, para ver el resultado en el juego antes de procesar el guion completo. La ejecución completa continúa desde aquí.",
-    "stopping": "Deteniendo…"
+    "stopping": "Deteniendo…",
+    "globalTitle": "Traducción: local u online",
+    "globalLocalHint": "Todo se queda en tu ordenador con Ollama: gratis y sin límites, pero más lento y con menor calidad en textos largos.",
+    "globalCloudHint": "Usa los proveedores online configurados abajo (Gemini, Anthropic, OpenAI…): más rápido y mejor redacción, pero consume el crédito de tus claves.",
+    "overridesActive": "Algunos juegos tienen su propia elección que tiene prioridad sobre esta: {list}.",
+    "clearOverrides": "Que todos sigan la configuración general"
   }
 }

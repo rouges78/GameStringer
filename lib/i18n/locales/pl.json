@@ -8103,6 +8103,11 @@
     "cloudHint": "Dostawcy w chmurze — używa kluczy API z Ustawień i zużywa środki.",
     "testBatch": "Partia próbna ({n})",
     "testBatchHint": "Tłumaczy tylko {n} ciągów, ale i tak generuje pliki tl/, więc możesz sprawdzić efekt w grze przed przetworzeniem całego skryptu. Pełne uruchomienie wznowi się stąd.",
-    "stopping": "Zatrzymywanie…"
+    "stopping": "Zatrzymywanie…",
+    "globalTitle": "Tłumaczenie: lokalne lub online",
+    "globalLocalHint": "Wszystko zostaje na twoim komputerze dzięki Ollamie: za darmo i bez limitów, ale wolniej i słabiej przy długich tekstach.",
+    "globalCloudHint": "Używa dostawców online skonfigurowanych poniżej (Gemini, Anthropic, OpenAI…): szybciej i lepszym językiem, ale zużywa środki z twoich kluczy.",
+    "overridesActive": "Niektóre gry mają własny wybór, który ma pierwszeństwo przed tym: {list}.",
+    "clearOverrides": "Niech wszystkie używają ustawienia ogólnego"
   }
 }

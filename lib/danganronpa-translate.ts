@@ -13,6 +13,8 @@
 import { invoke } from '@/lib/tauri-api';
 import { acceptOfflineTranslation } from '@/lib/hendrix-translate';
 import { clientLogger } from '@/lib/client-logger';
+import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
 
 export interface DanganronpaProgress {
   phase: 'extract' | 'translate' | 'rebuild' | 'done';
@@ -54,11 +56,17 @@ export async function runDanganronpaTranslation(opts: {
   targetLang?: string;
   model?: string;
   chunkSize?: number;
+  /** 'ollama' = locale e gratis · 'cloud' = provider online con le tue API key.
+   *  Se non passato si legge la scelta dell'utente (BackendPicker). */
+  backend?: TranslationBackend;
+  gameId?: string;
   onProgress?: (p: DanganronpaProgress) => void;
-}): Promise<{ translatedNow: number; totalTranslated: number; total: number; stopped: boolean; rebuild: DanganronpaRebuildResult | null }> {
+}): Promise<{ translatedNow: number; totalTranslated: number; total: number; stopped: boolean; frenato: boolean; rebuild: DanganronpaRebuildResult | null }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const model = opts.model || lsGet('gs_hendrix_model') || 'gemma4:e4b';
-  const CHUNK = opts.chunkSize || 15;
+  const backend = opts.backend || getTranslationBackend('danganronpa');
+  // Il batch cloud costa per chiamata: conviene più grande di quello locale.
+  const CHUNK = opts.chunkSize || (backend === 'cloud' ? 20 : 15);
   const SAVE_EVERY = 300;
   const report = opts.onProgress || (() => {});
   STOPS.delete(opts.gamePath);
@@ -130,20 +138,71 @@ export async function runDanganronpaTranslation(opts: {
   const todo = rows.filter(r => !r.translated);
   let stopped = false;
   let sinceSave = 0;
+  // ⛔ FRENO ANTI-BATCH-A-VUOTO (lezione [renpy-cloud-guard], 08/08).
+  // translateWithFallbackBatched, se un batch fallisce, riempie i buchi con la
+  // SORGENTE e ritorna comunque success: con il credito esaurito si
+  // brucerebbero migliaia di chiamate su 47.999 stringhe scrivendo ZERO
+  // traduzioni e dichiarando «finito». Asimmetria che decide il dubbio: un
+  // arresto di troppo costa un riavvio (il checkpoint riprende), uno di meno
+  // costa il credito.
+  const MAX_VUOTI = 3;
+  let batchVuoti = 0;
+  let frenato = false;
   for (let i = 0; i < todo.length; i += CHUNK) {
     if (STOPS.has(opts.gamePath)) { stopped = true; break; }
     const slice = todo.slice(i, i + CHUNK);
-    const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-      texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model,
-    });
-    res.forEach((tr, k) => {
-      const accepted = acceptOfflineTranslation(slice[k].original, (tr.translated || '').trim());
+
+    // ── LOCALE o ONLINE: la scelta è dell'utente, non nostra.
+    // Stesso pattern di renpy-translate.ts:486. Il ramo cloud usa la catena di
+    // provider configurata nelle Impostazioni (Gemini/Anthropic/OpenAI…), il
+    // ramo locale Ollama. La validazione a valle è la STESSA per entrambi:
+    // acceptOfflineTranslation controlla i control code, e vale a maggior
+    // ragione sul cloud, dove una risposta rimbalzata costa soldi.
+    let outs: string[];
+    if (backend === 'cloud') {
+      const res = await translateWithFallbackBatched({
+        texts: slice.map(r => r.original),
+        targetLanguage: tgt,
+        sourceLanguage: 'en',
+        gameId: opts.gameId,
+        context: [
+          'Danganronpa visual novel dialogue (Spike Chunsoft).',
+          'Preserve ALL control tags like <CLT> and <CLT n> EXACTLY as they appear.',
+          'Keep the tone colloquial and character-driven: this is spoken dialogue, not prose.',
+        ].join('\n'),
+      }, CHUNK);
+      outs = res.translations;
+    } else {
+      const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
+        texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model,
+      });
+      outs = res.map(r => r.translated);
+    }
+
+    let accettateNelBatch = 0;
+    outs.forEach((raw, k) => {
+      const accepted = acceptOfflineTranslation(slice[k].original, (raw || '').trim());
       if (accepted !== null && accepted !== slice[k].original) {
         slice[k].translated = accepted;
         translatedNow++;
         translatedTotal++;
+        accettateNelBatch++;
       }
     });
+
+    // un batch che non accetta NIENTE è sospetto; tre di fila sono un guasto
+    if (accettateNelBatch === 0) {
+      batchVuoti++;
+      clientLogger.warn(`[DR1] batch senza traduzioni accettate (${batchVuoti}/${MAX_VUOTI}) — backend: ${backend}`);
+      if (batchVuoti >= MAX_VUOTI) {
+        clientLogger.error(`[DR1] FERMO: ${MAX_VUOTI} batch di fila a vuoto. Cause tipiche: credito/API key esaurita (cloud) o modello non installato (Ollama). Salvo e ricostruisco con quanto c'è.`);
+        frenato = true;
+        stopped = true;
+        break;
+      }
+    } else {
+      batchVuoti = 0;
+    }
     sinceSave += slice.length;
     report({ phase: 'translate', done: translatedTotal, total });
     if (sinceSave >= SAVE_EVERY) { await saveCheckpoint(); sinceSave = 0; }
@@ -162,5 +221,8 @@ export async function runDanganronpaTranslation(opts: {
 
   report({ phase: 'done', done: translatedTotal, total });
   STOPS.delete(opts.gamePath);
-  return { translatedNow, totalTranslated: translatedTotal, total, stopped, rebuild };
+  // `frenato` distingue «l'utente ha premuto Stop» da «il motore si è rotto»:
+  // sono due esiti diversi e il chiamante deve poterli dire all'utente in modo
+  // diverso — un contatore che li confonde è un fallimento muto.
+  return { translatedNow, totalTranslated: translatedTotal, total, stopped, frenato, rebuild };
 }
