@@ -947,7 +947,10 @@
     "dr1Rebuilding": "Danganronpa: WAD 재구성 중…",
     "dr1Done": "Danganronpa 번역 완료: WAD 재구성 및 검증됨",
     "dr1Stopped": "Danganronpa: 중지됨 — 진행 상황 저장, WAD 부분 재구성",
-    "dr1Error": "Danganronpa: 번역 실패"
+    "dr1Error": "Danganronpa: 번역 실패",
+    "unityMonoDetail": "Unity Mono — 텍스트를 게임 파일에서 번역할 수 있습니다.",
+    "unityIl2cppDetail": "Unity IL2CPP — 텍스트가 바이너리에 컴파일되어 있어 BepInEx + XUnity로 플레이 중에 번역됩니다.",
+    "unityUnknownRuntime": "Unity — 런타임을 확인하지 못했습니다 (BepInEx + XUnity)."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",

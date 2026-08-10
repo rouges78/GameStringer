@@ -611,7 +611,16 @@ export default function GameDetailPage() {
         installPath: game.installPath || null
       });
       setEngineInfo(result);
-      setGame(prev => prev ? { ...prev, engine: result.engine } : null);
+      // ⭐ «Unknown» è una STRINGA TRUTHY: salvandola in `game.engine`, ogni
+      //    `game.engine || engineInfo?.engine || detectEngineByName(...)` si
+      //    ferma su di essa e il fallback per nome non viene MAI provato.
+      //    Un «non so» si propaga così come se fosse un motore riconosciuto —
+      //    ed è metà del caso Scarlet Hollow (l'altra metà era la cache a 24h).
+      //    Si scrive solo un esito VERO; un non-esito lascia il campo vuoto,
+      //    che è la sua rappresentazione onesta.
+      const engineNoto = result.engine && result.engine.trim() !== ''
+        && result.engine.toLowerCase() !== 'unknown' ? result.engine : '';
+      setGame(prev => prev ? { ...prev, engine: engineNoto } : null);
     } catch {
       // Fallback client-side: detection per nome
       const gameName = game.name || game.title;
@@ -693,7 +702,33 @@ export default function GameDetailPage() {
           setTranslationStrategy({ engine: detectedEngine || 'GameMaker', method: 'gamemaker', detail: 'GameMaker rilevato', fileCount: 0, stringCount: 0, ready: true });
         }
       } else if (eng.includes('unity')) {
-        setTranslationStrategy({ engine: detectedEngine, method: 'unity', detail: 'BepInEx + XUnity AutoTranslator', fileCount: 0, stringCount: 0, ready: true });
+        // ⛔ PRIMA: detail hardcoded «BepInEx + XUnity AutoTranslator» per OGNI
+        //    Unity, Mono o IL2CPP che fosse. Eppure `check_game_engine`
+        //    (unity_patcher.rs:1196) calcola già `is_il2cpp` guardando
+        //    GameAssembly.dll + i metadata, e compone perfino il messaggio
+        //    giusto per i due casi: l'informazione nasceva in Rust, attraversava
+        //    il confine Tauri e moriva sul filo, perché NESSUNO dei call-site la
+        //    leggeva e questa pagina non chiamava affatto quel comando.
+        //    Per l'utente la differenza è sostanziale: su Mono i testi si possono
+        //    tradurre nei file, su IL2CPP sono dentro i binari e l'unica via è
+        //    il runtime — sapere quale dei due si ha in mano cambia cosa aspettarsi.
+        try {
+          const uCheck = await invoke<{
+            is_il2cpp: boolean; engine_name: string; has_bepinex: boolean; has_xunity: boolean;
+          }>('check_game_engine', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: uCheck.engine_name || detectedEngine,   // contiene già «(Mono)» o «(IL2CPP)»
+            method: 'unity',
+            detail: uCheck.is_il2cpp
+              ? t('gameDetail.unityIl2cppDetail')
+              : t('gameDetail.unityMonoDetail'),
+            fileCount: 0, stringCount: 0, ready: true,
+          });
+        } catch {
+          // il comando può fallire su percorsi non leggibili: si resta sul
+          // messaggio generico, ma senza fingere di sapere quale runtime sia
+          setTranslationStrategy({ engine: detectedEngine, method: 'unity', detail: t('gameDetail.unityUnknownRuntime'), fileCount: 0, stringCount: 0, ready: true });
+        }
       } else if (eng.includes('unreal')) {
         try {
           const locStatus = await invoke<{has_gs_pak?: boolean; translated_entries?: number; has_locres?: boolean; locres_count?: number; total_entries?: number}>('get_unreal_localization_status', { gamePath: game.installPath });

@@ -947,7 +947,10 @@
     "dr1Rebuilding": "Danganronpa: WAD を再構築中…",
     "dr1Done": "Danganronpa 翻訳完了: WAD を再構築し検証しました",
     "dr1Stopped": "Danganronpa: 停止 — 進行状況を保存し、WAD を部分的に再構築",
-    "dr1Error": "Danganronpa: 翻訳に失敗しました"
+    "dr1Error": "Danganronpa: 翻訳に失敗しました",
+    "unityMonoDetail": "Unity Mono — テキストはゲームのファイル内で翻訳できます。",
+    "unityIl2cppDetail": "Unity IL2CPP — テキストはバイナリに埋め込まれているため、BepInEx + XUnity でプレイ中に翻訳します。",
+    "unityUnknownRuntime": "Unity — ランタイム不明（BepInEx + XUnity）。"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",

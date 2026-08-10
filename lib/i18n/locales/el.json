@@ -947,7 +947,10 @@
     "dr1Rebuilding": "Danganronpa: ανακατασκευή WAD…",
     "dr1Done": "Danganronpa μεταφράστηκε: WAD ανακατασκευάστηκε και επαληθεύτηκε",
     "dr1Stopped": "Danganronpa: διακόπηκε — η πρόοδος αποθηκεύτηκε, μερικό WAD",
-    "dr1Error": "Danganronpa: η μετάφραση απέτυχε"
+    "dr1Error": "Danganronpa: η μετάφραση απέτυχε",
+    "unityMonoDetail": "Unity Mono — τα κείμενα μεταφράζονται μέσα στα αρχεία του παιχνιδιού.",
+    "unityIl2cppDetail": "Unity IL2CPP — τα κείμενα είναι μεταγλωττισμένα στα binaries: μεταφράζονται όσο παίζεις, με BepInEx + XUnity.",
+    "unityUnknownRuntime": "Unity — δεν προσδιορίστηκε το runtime (BepInEx + XUnity)."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Σφάλμα φόρτωσης πληροφοριών DRAT:",

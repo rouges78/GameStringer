@@ -947,7 +947,10 @@
     "dr1Rebuilding": "Danganronpa: пересборка WAD…",
     "dr1Done": "Danganronpa переведена: WAD пересобран и проверен",
     "dr1Stopped": "Danganronpa: остановлено — прогресс сохранён, WAD пересобран частично",
-    "dr1Error": "Danganronpa: перевод не удался"
+    "dr1Error": "Danganronpa: перевод не удался",
+    "unityMonoDetail": "Unity Mono — тексты можно переводить прямо в файлах игры.",
+    "unityIl2cppDetail": "Unity IL2CPP — тексты вкомпилированы в бинарники: они переводятся во время игры через BepInEx + XUnity.",
+    "unityUnknownRuntime": "Unity — среда выполнения не определена (BepInEx + XUnity)."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Ошибка загрузки информации DRAT:",

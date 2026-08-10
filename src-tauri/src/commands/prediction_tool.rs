@@ -1199,8 +1199,27 @@ impl PredictionCacheEntry {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        // Cache valida per 24 ore
-        now - self.timestamp > 86400
+        now - self.timestamp > self.ttl_secs()
+    }
+
+    /// ⭐ UN «NON SO» NON È UN FATTO, e non va conservato come tale.
+    ///
+    /// Caso Scarlet Hollow (07/08/2026): la prima rilevazione partì MENTRE
+    /// Steam stava ancora scaricando — cartella presente, `renpy/` non ancora
+    /// estratta → Unknown legittimo *in quell'istante*. Ma quel verdetto è
+    /// rimasto incollato qui per 24 ore, e la pagina del gioco continuava a
+    /// dire «Unknown, 0 file traducibili» su un Ren'Py da manuale. Il codice
+    /// era giusto: era la cache a ricordare un'ignoranza temporanea.
+    ///
+    /// Un esito RICONOSCIUTO descrive il contenuto della cartella e dura;
+    /// un esito Unknown descrive solo il momento in cui abbiamo guardato.
+    /// Quindi: 24 ore per i primi, 5 minuti per i secondi — abbastanza da non
+    /// martellare il disco durante una singola sessione, abbastanza poco da
+    /// non sopravvivere a un download che finisce.
+    fn ttl_secs(&self) -> u64 {
+        let sconosciuto = self.result.engine.trim().is_empty()
+            || self.result.engine.eq_ignore_ascii_case("unknown");
+        if sconosciuto { 300 } else { 86400 }
     }
 }
 
@@ -3115,9 +3134,18 @@ pub async fn analyze_game_translation(
     
     if let Some(entry) = cache.get(&cache_key) {
         if entry.path_hash == path_hash && !entry.is_expired() {
-            info!("🔮 P.T. Cache hit: {} ({} mins old)", game_title, 
+            info!("🔮 P.T. Cache hit: {} ({} mins old)", game_title,
                 (SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() - entry.timestamp) / 60);
             return Ok(entry.result.clone());
+        }
+        // Perché un hit può essere rifiutato, per il log: il sintomo del caso
+        // Scarlet Hollow era proprio un «Cache hit» che sembrava una notizia
+        // buona mentre serviva un verdetto vecchio e sbagliato.
+        if entry.path_hash == path_hash {
+            info!("🔮 P.T. cache SCADUTA per {} (esito precedente: '{}', ttl {}s) — ririlevo",
+                game_title, entry.result.engine, entry.ttl_secs());
+        } else {
+            info!("🔮 P.T. cache IGNORATA per {}: il contenuto della cartella è cambiato", game_title);
         }
     }
 

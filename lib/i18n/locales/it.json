@@ -947,7 +947,10 @@
     "dr1Rebuilding": "Danganronpa: ricostruzione WAD…",
     "dr1Done": "Danganronpa tradotto: WAD ricostruito e verificato",
     "dr1Stopped": "Danganronpa: fermato — progressi salvati e WAD ricostruito parziale",
-    "dr1Error": "Danganronpa: traduzione fallita"
+    "dr1Error": "Danganronpa: traduzione fallita",
+    "unityMonoDetail": "Unity Mono — i testi si possono tradurre nei file del gioco.",
+    "unityIl2cppDetail": "Unity IL2CPP — i testi sono compilati nei binari: si traducono mentre giochi, con BepInEx + XUnity.",
+    "unityUnknownRuntime": "Unity — runtime non determinato (BepInEx + XUnity)."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Errore caricamento info DRAT:",
