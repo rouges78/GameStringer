@@ -23,7 +23,13 @@ Invia una notifica all'agente designato includendo **tutti** questi elementi
 6. La tua **firma** (fisica o elettronica).
 
 **Agente designato / contatto:** `dmca@gamestringer.ai`
-_(da configurare da Davide; in alternativa il canale contatti del sito.)_
+_(⚠️ **non ancora configurata** — verificato il 10/08/2026. Finché non esiste,
+una notifica inviata a quell'indirizzo non arriva a nessuno e l'SLA di 72 ore
+qui sotto non è misurabile: nel frattempo vale il canale contatti del sito.)_
+
+**Come si esegue materialmente un takedown:** vedi il runbook
+[`runbooks/dmca-takedown.md`](runbooks/dmca-takedown.md) — comandi verificati
+sullo schema reale del database.
 
 ## Cosa succede dopo (SLA)
 
@@ -58,5 +64,20 @@ Per trasparenza manteniamo un registro pubblico delle rimozioni (data, titolo/ID
 del pack, esito), senza dati personali del segnalante. È alimentato dal
 `moderation_log` del Patch Hub.
 
+## ⚠️ Stato di attuazione (10/08/2026)
+
+Onestà su cosa è pronto e cosa no — un documento che descrive una capacità che
+non esiste è peggio di un documento assente, perché ci si conta sopra:
+
+| Pezzo | Stato |
+|---|---|
+| Tabelle `moderation_log` e `pack_reports` | ✅ esistono in produzione (verificate) |
+| Trigger su `translation_packs` | ✅ `publish_guard` + `enforce_pack_status` |
+| Nascondere un pack riportandolo a `pending` | ✅ possibile, reversibile |
+| Runbook operativo coi comandi | ✅ [`runbooks/dmca-takedown.md`](runbooks/dmca-takedown.md) |
+| **Takedown mai eseguito, nemmeno di prova** | ⛔ `moderation_log` ha 0 righe |
+| **Email `dmca@`** | ⛔ non configurata |
+| **Registro pubblico** dei takedown | ⛔ nessuna pagina lo mostra |
+
 _Questo documento descrive un processo operativo e non costituisce consulenza
-legale. Ultimo aggiornamento: 2026-07-15._
+legale. Ultimo aggiornamento: 2026-08-10._
