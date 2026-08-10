@@ -2948,7 +2948,8 @@
     "clickLinkThenUnlock": "点击上方任一链接捐赠，之后即可解锁。",
     "unlockAvailableIn": "解锁倒计时",
     "iDonatedUnlock": "我已捐赠 — 解锁无限翻译",
-    "trustBasedThanks": "基于信任。感谢你的支持！"
+    "trustBasedThanks": "基于信任。感谢你的支持！",
+    "thanksPitch": "GameStringer 由一个人满怀热情开发。如果它对你有帮助，一份支持能让项目持续下去，并支持更多游戏引擎。"
   },
   "translationStatsComp": {
     "progressoGenerale": "总体进度",

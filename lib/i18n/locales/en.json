@@ -3061,7 +3061,8 @@
     "clickLinkThenUnlock": "Click one of the links above to donate, then you can unlock.",
     "unlockAvailableIn": "Unlock available in",
     "iDonatedUnlock": "I donated — Unlock unlimited translations",
-    "trustBasedThanks": "Based on trust. Thanks for your support!"
+    "trustBasedThanks": "Based on trust. Thanks for your support!",
+    "thanksPitch": "GameStringer is built by one person, with passion. If it was useful to you, a contribution helps keep it alive and add support for new game engines."
   },
   "translationStatsComp": {
     "progressoGenerale": "Overall progress",

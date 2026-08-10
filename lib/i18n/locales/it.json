@@ -3061,7 +3061,8 @@
     "clickLinkThenUnlock": "Clicca uno dei link sopra per donare, poi potrai sbloccare.",
     "unlockAvailableIn": "Sblocco disponibile tra",
     "iDonatedUnlock": "Ho donato — Sblocca traduzioni illimitate",
-    "trustBasedThanks": "Basato su fiducia. Grazie per il supporto!"
+    "trustBasedThanks": "Basato su fiducia. Grazie per il supporto!",
+    "thanksPitch": "GameStringer è sviluppato da una sola persona, con passione. Se ti è stato utile, un contributo aiuta a tenerlo vivo e ad aggiungere nuovi motori di gioco."
   },
   "translationStatsComp": {
     "progressoGenerale": "Progresso Generale",

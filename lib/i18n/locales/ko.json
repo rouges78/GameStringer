@@ -2948,7 +2948,8 @@
     "clickLinkThenUnlock": "위 링크 중 하나를 눌러 후원하면 잠금을 해제할 수 있습니다.",
     "unlockAvailableIn": "잠금 해제까지",
     "iDonatedUnlock": "후원했습니다 — 무제한 번역 잠금 해제",
-    "trustBasedThanks": "신뢰를 바탕으로 합니다. 응원해 주셔서 감사합니다!"
+    "trustBasedThanks": "신뢰를 바탕으로 합니다. 응원해 주셔서 감사합니다!",
+    "thanksPitch": "GameStringer는 한 사람이 열정으로 만들고 있습니다. 도움이 되셨다면, 후원은 프로젝트를 계속 유지하고 새로운 게임 엔진을 지원하는 데 큰 힘이 됩니다."
   },
   "translationStatsComp": {
     "progressoGenerale": "전체 진행률",

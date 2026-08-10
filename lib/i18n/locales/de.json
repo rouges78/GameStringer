@@ -2948,7 +2948,8 @@
     "clickLinkThenUnlock": "Klicke oben auf einen der Links, um zu spenden – danach kannst du freischalten.",
     "unlockAvailableIn": "Freischaltung verfügbar in",
     "iDonatedUnlock": "Ich habe gespendet — Unbegrenzte Übersetzungen freischalten",
-    "trustBasedThanks": "Auf Vertrauensbasis. Danke für deine Unterstützung!"
+    "trustBasedThanks": "Auf Vertrauensbasis. Danke für deine Unterstützung!",
+    "thanksPitch": "GameStringer wird von einer einzigen Person mit Leidenschaft entwickelt. Wenn es dir geholfen hat, trägt ein Beitrag dazu bei, es am Leben zu erhalten und neue Spiel-Engines zu unterstützen."
   },
   "translationStatsComp": {
     "progressoGenerale": "Gesamtfortschritt",

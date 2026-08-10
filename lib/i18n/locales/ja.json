@@ -2948,7 +2948,8 @@
     "clickLinkThenUnlock": "上のリンクから寄付すると、アンロックできるようになります。",
     "unlockAvailableIn": "アンロックまで",
     "iDonatedUnlock": "寄付しました — 無制限の翻訳をアンロック",
-    "trustBasedThanks": "信頼にもとづく仕組みです。ご支援ありがとうございます！"
+    "trustBasedThanks": "信頼にもとづく仕組みです。ご支援ありがとうございます！",
+    "thanksPitch": "GameStringer は一人の開発者が情熱を込めて作っています。お役に立てたなら、ご支援いただくことでプロジェクトの継続と新しいゲームエンジンへの対応が進みます。"
   },
   "translationStatsComp": {
     "progressoGenerale": "全体的な進捗",

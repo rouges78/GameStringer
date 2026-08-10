@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { effectVerdict, type EffectVerification } from '@/lib/translation/effect-verdict';
+import { addTranslationCount, shouldAskForSupport, markSupportAsked } from '@/lib/donation-gate';
+import { DonationDialog } from '@/components/donation-dialog';
 
 interface AutoTranslateStep {
   label: string;
@@ -57,6 +60,49 @@ export function AutoTranslateStepper({
   game,
 }: AutoTranslateStepperProps) {
   const { t } = useTranslation();
+
+  /* ── RINGRAZIAMENTO DOPO UN SUCCESSO VERO (10/08/2026) ────────────────────
+   * Il contatore delle stringhe e la richiesta di supporto vivevano in
+   * `translation-recommendation.tsx`, la pipeline che SIMULAVA la traduzione:
+   * contavano stringhe mai scritte e chiedevano una donazione dopo un successo
+   * inventato, mentre «String it!» — l'unico percorso con prova d'effetto —
+   * non contava e non chiedeva niente. Rimossa quella pipeline, il contatore
+   * è rimasto senza chiamanti.
+   *
+   * Ora l'aggancio è qui, sull'UNICA condizione che il progetto considera un
+   * successo dimostrato: `verifiedOk` (scrittura reale nel gioco + controprova
+   * su disco, vedi lib/translation/effect-verdict.ts). Ambra, parziale e
+   * «non risulta cambiato niente» NON contano e non chiedono nulla — chiedere
+   * un contributo dopo una patch che forse non è entrata è il modo più rapido
+   * di bruciare la fiducia che si sta chiedendo di premiare.
+   *
+   * ⚠️ `contatoRef` tiene l'oggetto `result` già conteggiato, non un booleano:
+   * il pannello si ri-renderizza a ogni cambio di stato del wizard, e un flag
+   * «fatto» andrebbe azzerato a mano al risultato successivo — cioè si
+   * conterebbe due volte, oppure mai più. */
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportStrings, setSupportStrings] = useState(0);
+  const contatoRef = useRef<AutoTranslateResult | null>(null);
+
+  useEffect(() => {
+    if (!result || contatoRef.current === result) return;
+    const v = effectVerdict(result.verification);
+    if (!v.verifiedOk) return;
+    contatoRef.current = result;
+
+    // Con la traduzione a runtime (BepInEx/XUnity) non si riscrive niente nel
+    // gioco: `stringsWritten` è 0 per costruzione, ma le stringhe tradotte
+    // esistono eccome. Contarle come zero le renderebbe invisibili.
+    const scritte = v.stringsWritten > 0 ? v.stringsWritten : (result.stringsTranslated || 0);
+    if (scritte <= 0) return;
+
+    addTranslationCount(scritte);
+    if (shouldAskForSupport()) {
+      markSupportAsked();
+      setSupportStrings(scritte);
+      setSupportOpen(true);
+    }
+  }, [result]);
 
   return (
     <motion.div
@@ -369,6 +415,16 @@ export function AutoTranslateStepper({
           );
         })()}
       </div>
+
+      {/* Il ringraziamento arriva SOLO dopo un verde meritato (vedi l'effetto
+          più in alto): mode='thanks' non blocca niente e non promette sblocchi
+          che non esistono. */}
+      <DonationDialog
+        open={supportOpen}
+        onOpenChange={setSupportOpen}
+        mode="thanks"
+        stringsJustWritten={supportStrings}
+      />
     </motion.div>
   );
 }
