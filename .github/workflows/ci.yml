@@ -80,12 +80,26 @@ jobs:
         run: npm run assets:check
 
       # Gate anti moduli morti (ratchet vs scripts/.dead-modules-baseline.json).
-      # 99 file su 606 non sono raggiunti da nessun import: 31.694 righe che costano
+      # 95 file su 618 non sono raggiunti da nessun import: 32.126 righe che costano
       # due volte — quando le mantieni credendole vive, e quando ti fanno credere che
       # una funzione esista già. Fallisce se ne compare uno NUOVO, così il debito può
       # solo scendere. Prima di cancellare, leggere i limiti in cima allo script.
       - name: Dead module guard
         run: npm run dead:check
+
+      # Gate anti dipendenze orfane (scripts/check-orphan-deps.js).
+      # Il 03/08 ne sono state rimosse 20 in un colpo solo: il problema non era
+      # rimuoverle, era che si erano accumulate senza che nessuno se ne accorgesse.
+      # ⚠️ Il gate dice «nessuno la importa», NON «è inutile»: gli usi impliciti
+      # (autoprefixer & C. caricati per nome da postcss.config.js) stanno in
+      # USI_IMPLICITI dentro lo script, ognuno CON IL MOTIVO — rimuoverli avrebbe
+      # rotto build CSS e typecheck con un errore che non somiglia alla causa.
+      # ⛔ Cablato qui il 10/08/2026: lo script esisteva ed era verde dal 10/08, ma
+      # non era in package.json né in questo file — nessuno lo eseguiva mai. Un gate
+      # scollegato è peggio del nulla: la sua esistenza dà per chiusa una questione
+      # aperta. Provato a fallire con una dipendenza finta prima di dichiararlo vivo.
+      - name: Orphan dependency guard
+        run: npm run deps:check
 
       # Gate accessibilità (ratchet vs scripts/.a11y-baseline.json).
       # 80 punti noti: 77 <div> cliccabili non raggiungibili da tastiera e 3 backdrop.
