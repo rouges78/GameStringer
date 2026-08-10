@@ -109,3 +109,38 @@ export function clearTranslationBackend(engine: BackendEngine): void {
 
 /** Motori che oggi leggono davvero questa impostazione (per la UI). */
 export const BACKEND_ENGINES: BackendEngine[] = ['renpy', 'danganronpa', 'visionaire', 'tyrano', 'rpgmaker', 'hendrix'];
+
+const MIGRATED_KEY = 'gs_backend_migrated_v1';
+
+/**
+ * ── MIGRAZIONE UNA TANTUM (10/08/2026) ───────────────────────────────────
+ * Fino a oggi Visionaire e Tyrano DEDUCEVANO il backend: «c'è una API key?
+ * allora cloud». Ora la scelta è esplicita, e il default è 'ollama' — ma per
+ * chi ha già una chiave configurata questo sarebbe un cambio di comportamento
+ * SILENZIOSO al primo aggiornamento: la traduzione passerebbe da cloud a
+ * locale senza che nessuno l'abbia chiesto, e senza dirlo.
+ *
+ * Quindi una volta sola, se l'utente non ha ancora espresso NESSUNA scelta,
+ * si trasforma la vecchia deduzione in una preferenza esplicita: da lì in poi
+ * è scritta, visibile nelle Impostazioni e modificabile.
+ *
+ * Il flag impedisce che rifaccia effetto in futuro: chi dopo la migrazione
+ * sceglie 'ollama' non se lo deve ritrovare cambiato al riavvio.
+ */
+export function migrateLegacyBackendChoice(): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem(MIGRATED_KEY)) return;
+    localStorage.setItem(MIGRATED_KEY, '1');
+
+    const giaScelto = getGlobalTranslationBackend() !== null
+      || BACKEND_ENGINES.some(e => parse(lsGet(backendKey(e))) !== null);
+    if (giaScelto) return;
+
+    const s = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+    const tr = s.translation || {};
+    const haChiavi = !!(tr.apiKey || tr.openaiApiKey || tr.deepseekApiKey || tr.anthropicApiKey
+      || tr.groqApiKey || tr.mistralApiKey || tr.openrouterApiKey);
+    if (haChiavi) setGlobalTranslationBackend('cloud');
+  } catch { /* storage negato o settings illeggibili: resta il default 'ollama' */ }
+}

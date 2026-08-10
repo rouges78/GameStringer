@@ -37,7 +37,7 @@ import { runHendrixTranslation } from '@/lib/hendrix-translate';
 import { runRenpyTranslation } from '@/lib/renpy-translate';
 import { runDanganronpaTranslation, requestDanganronpaStop } from '@/lib/danganronpa-translate';
 import { BackendPicker } from '@/components/translation/backend-picker';
-import { getTranslationBackend, setTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
+import { getTranslationBackend, setTranslationBackend, migrateLegacyBackendChoice, type TranslationBackend } from '@/lib/translation-backend';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
 import { startHeroTracking } from '@/lib/hero-job-tracking';
 import {
@@ -450,6 +450,28 @@ export default function GameDetailPage() {
   const changeDr1Backend = (v: TranslationBackend) => {
     setDr1Backend(v);
     setTranslationBackend('danganronpa', v);
+  };
+
+  // Visionaire e Tyrano: il ramo cloud c'era dal 07/08, ma il backend veniva
+  // DEDOTTO («c'è una API key? allora cloud»). Avere una chiave non significa
+  // volerla spendere su questo gioco, e non c'era modo di forzare il locale.
+  // Ora leggono la scelta come tutti gli altri.
+  const [visBackendChoice, setVisBackendChoice] = useState<TranslationBackend>('ollama');
+  const [tyBackendChoice, setTyBackendChoice] = useState<TranslationBackend>('ollama');
+  useEffect(() => {
+    // prima la migrazione una-tantum (chi aveva una API key otteneva il cloud
+    // per deduzione: quella deduzione diventa una scelta scritta), poi si legge
+    migrateLegacyBackendChoice();
+    setVisBackendChoice(getTranslationBackend('visionaire'));
+    setTyBackendChoice(getTranslationBackend('tyrano'));
+  }, []);
+  const changeVisBackend = (v: TranslationBackend) => {
+    setVisBackendChoice(v);
+    setTranslationBackend('visionaire', v);
+  };
+  const changeTyBackend = (v: TranslationBackend) => {
+    setTyBackendChoice(v);
+    setTranslationBackend('tyrano', v);
   };
 
   // Lotto di prova: traduce poche stringhe ma genera comunque i file tl/, così
@@ -2281,15 +2303,12 @@ export default function GameDetailPage() {
         }
         VIS_RUNNING.add(game.installPath);
         const visOpId = `visionaire-${game.installPath}`;
-        // Backend automatico: cloud (Gemini→fallback) se è configurata una API key,
-        // altrimenti Ollama offline. Il cloud è molto più veloce su grandi volumi.
-        let useCloud = false;
-        try {
-          const s = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-          const tr = s.translation || {};
-          useCloud = !!(tr.apiKey || tr.openaiApiKey || tr.deepseekApiKey || tr.anthropicApiKey || tr.groqApiKey || tr.mistralApiKey || tr.openrouterApiKey);
-        } catch { /* nessuna key → Ollama */ }
-        const visBackend: 'cloud' | 'ollama' = useCloud ? 'cloud' : 'ollama';
+        // ⛔ PRIMA: «cloud se esiste una API key, altrimenti Ollama» — dedotto,
+        //    mai chiesto. Avere una chiave configurata NON vuol dire volerla
+        //    spendere su questo gioco, e l'utente non poteva forzare il locale
+        //    in nessun modo. Dal 10/08 la scelta è SUA (BackendPicker qui
+        //    accanto, oppure l'impostazione generale): si legge, non si indovina.
+        const visBackend: TranslationBackend = visBackendChoice;
         const vSteps = [
           { label: `📂 ${t('heroJob.stepScan')}`, status: 'pending' as const },
           { label: `📜 ${t('heroJob.stepExtract')}`, status: 'pending' as const },
@@ -2416,14 +2435,9 @@ export default function GameDetailPage() {
       if (engT.includes('tyrano') || engT.includes('nw.js') || engT.includes('electron')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
-        // Backend automatico: cloud se è configurata una API key, altrimenti Ollama.
-        let useCloud = false;
-        try {
-          const s = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-          const tr = s.translation || {};
-          useCloud = !!(tr.apiKey || tr.openaiApiKey || tr.deepseekApiKey || tr.anthropicApiKey || tr.groqApiKey || tr.mistralApiKey || tr.openrouterApiKey);
-        } catch { /* nessuna key → Ollama */ }
-        const tyBackend: 'cloud' | 'ollama' = useCloud ? 'cloud' : 'ollama';
+        // Come Visionaire: la scelta è dell'utente, non dedotta dalla presenza
+        // di una API key (vedi il commento nel ramo Visionaire).
+        const tyBackend: TranslationBackend = tyBackendChoice;
         const tySteps = [
           { label: `🔍 ${t('heroJob.tyranoStepDetect')}`, status: 'pending' as const },
           { label: `📂 ${t('heroJob.tyranoStepExtract')}`, status: 'pending' as const },
@@ -3578,6 +3592,20 @@ export default function GameDetailPage() {
                 <BackendPicker
                   value={dr1Backend}
                   onChange={changeDr1Backend}
+                  disabled={autoTranslateBusy}
+                />
+              )}
+              {translationStrategy?.method === 'visionaire' && (
+                <BackendPicker
+                  value={visBackendChoice}
+                  onChange={changeVisBackend}
+                  disabled={autoTranslateBusy}
+                />
+              )}
+              {translationStrategy?.method === 'tyranoscript' && (
+                <BackendPicker
+                  value={tyBackendChoice}
+                  onChange={changeTyBackend}
                   disabled={autoTranslateBusy}
                 />
               )}
