@@ -47,9 +47,15 @@ const IDX_SFONDO = 255;
 const leggi = (fd, pos, len) => { const b = Buffer.alloc(len); readSync(fd, b, 0, len, pos); return b; };
 
 // ─────────────────────────────────────────────────── WAD → font.pak
-function caricaFontPak() {
-  const percorso = join(GIOCO, 'dr1_data_us.wad');
-  if (!existsSync(percorso)) { console.error('dr1_data_us.wad non trovato'); process.exit(1); }
+/**
+ * @param percorso quale WAD leggere. Serve poter puntare anche al `.gsbackup`:
+ * il rebuild (String it!) legge DA LÌ e ricopia verbatim tutte le entry che non
+ * sono .lin — font compreso. Se il backup tiene il font originale, ogni
+ * traduzione futura riporta i ≡ senza un errore e senza un avviso: l'utente
+ * rilancia «String it!» e gli accenti spariscono. Va patchato anche quello.
+ */
+function caricaFontPak(percorso = join(GIOCO, 'dr1_data_us.wad')) {
+  if (!existsSync(percorso)) { console.error(`${percorso} non trovato`); process.exit(1); }
   const fd = openSync(percorso, 'r');
   const head = leggi(fd, 0, 16);
   if (head.subarray(0, 4).toString('ascii') !== 'AGAR') { console.error('magic AGAR mancante'); process.exit(1); }
@@ -390,6 +396,15 @@ if (has('--applica') || has('--prova')) {
     xCursore += gb.w + 2;
   }
 
+  // Il font è già patchato? Allora il piano è vuoto e non si scriverebbe nulla
+  // — col rischio di lasciare il .gsbackup vergine e credere di aver finito.
+  if (piano.length === 0) {
+    console.log('\n⚠️ NESSUN GLIFO DA AGGIUNGERE: le accentate ci sono già (font già patchato).');
+    console.log('   Se stai cercando di patchare anche il .gsbackup, prima riporta tutto');
+    console.log('   all\'originale con --ripristina e poi rilancia --applica.');
+    process.exit(0);
+  }
+
   console.log(`── PIANO: ${piano.length} glifi in area vergine a y=${yNuovo} (ultimo glifo esistente finiva a ${ultimaUsata})`);
   for (const p of piano) {
     console.log(`   ${p.acc} = '${p.base}' + accento · donatore U+${p.don.cp.toString(16).toUpperCase()} (#${p.don.i}) · x=${p.x} w=${p.w}${p.stretto ? ' ⚠️ poco spazio sopra: accento alzato al bordo' : ''}${p.tagliaPuntino ? ' · puntino della i rimosso' : ''}`);
@@ -552,17 +567,45 @@ if (has('--applica') || has('--prova')) {
     if (!existsSync(bk)) { writeFileSync(bk, pakBuf); console.log(`   backup originale → ${bk}`); }
     else console.log(`   backup già presente (non sovrascritto): ${bk}`);
     const { openSync: openW, writeSync, closeSync: closeW } = await import('fs');
-    const fdw = openW(percorsoWad, 'r+');
-    writeSync(fdw, nuovoPak, 0, nuovoPak.length, posAssoluta);
-    closeW(fdw);
-    // prova d'effetto: rileggo DAL WAD e ricontrollo che le accentate ci siano
-    const ric = caricaFontPak();
-    const pr = leggiPak(ric.buf);
-    const tr = leggiGlifi(pr.parti[idxTab].buf);
-    const trovate = piano.filter(p => tr.glifi.some(g => g.cp === p.cpAcc)).length;
-    console.log(`   prova d'effetto (riletta dal WAD su disco): ${trovate}/${piano.length} accentate presenti`);
-    if (trovate !== piano.length) { console.error('   ⛔ RILETTURA INCOERENTE: ripristina con --ripristina'); process.exit(1); }
-    console.log(`   ✅ scritto in place nel WAD (${nuovoPak.length} byte, dimensione invariata)`);
+
+    // ⭐ SI SCRIVE IN DUE POSTI, e il secondo è quello che rende il lavoro
+    // permanente: `gs_rebuild_single_wad` (il rebuild dietro «String it!») legge
+    // dal .gsbackup e ricopia verbatim tutto ciò che non è .lin. Senza patchare
+    // anche il backup, la prossima traduzione riporterebbe i ≡ IN SILENZIO.
+    // ⚠️ L'offset del font nel backup NON è quello nel WAD corrente: il rebuild
+    // cambia la dimensione dei .lin e quindi tutti gli offset a valle. Va
+    // ricalcolato leggendo il backup, non riusato.
+    const bersagli = [{ nome: 'WAD', percorso: percorsoWad, pos: posAssoluta, len: pakBuf.length }];
+    const gsbk = percorsoWad.replace(/\.wad$/i, '.wad.gsbackup');
+    if (existsSync(gsbk)) {
+      const info = caricaFontPak(gsbk);
+      if (info.buf.length !== nuovoPak.length) {
+        console.log(`   ⚠️ il font nel .gsbackup ha dimensione diversa (${info.buf.length} vs ${nuovoPak.length}): NON lo tocco.`);
+      } else {
+        bersagli.push({ nome: '.gsbackup', percorso: gsbk, pos: info.posAssoluta, len: info.buf.length });
+      }
+    } else {
+      console.log('   (nessun .gsbackup: verrà creato dal primo rebuild, e conterrà già il font patchato)');
+    }
+
+    for (const b of bersagli) {
+      const fdw = openW(b.percorso, 'r+');
+      writeSync(fdw, nuovoPak, 0, nuovoPak.length, b.pos);
+      closeW(fdw);
+      // prova d'effetto su OGNI bersaglio: riletto da disco, non dedotto
+      const ric = caricaFontPak(b.percorso);
+      const tr = leggiGlifi(leggiPak(ric.buf).parti[idxTab].buf);
+      const trovate = piano.filter(p => tr.glifi.some(g => g.cp === p.cpAcc)).length;
+      const raggiungibili = piano.filter(p => leggiMappa(leggiPak(ric.buf).parti[idxTab].buf, p.cpAcc) !== 0xffff).length;
+      console.log(`   ✅ ${b.nome}: scritto e riletto → ${trovate}/${piano.length} accentate, ${raggiungibili}/${piano.length} raggiungibili dalla mappa`);
+      if (trovate !== piano.length || raggiungibili !== piano.length) {
+        console.error(`   ⛔ ${b.nome}: RILETTURA INCOERENTE — ripristina con --ripristina`);
+        process.exit(1);
+      }
+    }
+    if (bersagli.length > 1) {
+      console.log('   → il font è patchato ANCHE nel backup: «String it!» non riporterà più i ≡.');
+    }
     console.log('   → PROVA IN GIOCO: apri il prologo e cerca «può», «lì», «È». Se il ≡ è sparito, è fatta.');
   }
 }
@@ -575,13 +618,22 @@ if (has('--ripristina')) {
   if (!existsSync(bk)) { console.error(`⛔ backup non trovato: ${bk}`); process.exit(1); }
   const orig = readFileSync(bk);
   if (orig.length !== pakBuf.length) { console.error(`⛔ il backup è lungo ${orig.length}, il font attuale ${pakBuf.length}: NON sovrascrivo alla cieca.`); process.exit(1); }
-  const fdw = openW(percorsoWad, 'r+');
-  writeSync(fdw, orig, 0, orig.length, posAssoluta);
-  closeW(fdw);
-  const ric = caricaFontPak();
-  console.log(ric.buf.equals(orig)
-    ? '✅ font originale ripristinato e riletto dal WAD: identico al backup.'
-    : '⛔ la rilettura NON coincide col backup: controllare a mano.');
+  // si ripristina ovunque si sia scritto: WAD e .gsbackup
+  const dove = [{ nome: 'WAD', percorso: percorsoWad, pos: posAssoluta }];
+  const gsbk = percorsoWad.replace(/\.wad$/i, '.wad.gsbackup');
+  if (existsSync(gsbk)) {
+    const info = caricaFontPak(gsbk);
+    if (info.buf.length === orig.length) dove.push({ nome: '.gsbackup', percorso: gsbk, pos: info.posAssoluta });
+  }
+  for (const d of dove) {
+    const fdw = openW(d.percorso, 'r+');
+    writeSync(fdw, orig, 0, orig.length, d.pos);
+    closeW(fdw);
+    const ric = caricaFontPak(d.percorso);
+    console.log(ric.buf.equals(orig)
+      ? `✅ ${d.nome}: font originale ripristinato e riletto, identico al backup.`
+      : `⛔ ${d.nome}: la rilettura NON coincide col backup — controllare a mano.`);
+  }
   process.exit(0);
 }
 
