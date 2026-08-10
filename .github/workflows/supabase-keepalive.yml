@@ -1,8 +1,14 @@
 name: Supabase Keep-Alive
 
-# Evita la pausa per inattività del piano Free di Supabase (sospensione dopo
-# 7 giorni senza traffico). Fa una query leggera ogni 3 giorni = il progetto
-# resta sempre "attivo". Costo: 0 (GitHub Actions gratis sui repo pubblici).
+# Ping leggero ogni 3 giorni per tenere il progetto "attivo".
+#
+# ⚠️ CORREZIONE 09/08/2026: questo file nasceva per la pausa da inattività del
+# piano FREE, ma l'organizzazione è su piano PRO (verificato via API), dove
+# quella sospensione non si applica e ci sono backup giornalieri automatici
+# (retention 7 giorni). Il workflow resta come rete di sicurezza a costo zero
+# — e utile se un giorno si scendesse di piano — ma NON è la difesa dei dati:
+# quella è in docs/runbooks/supabase-disaster-recovery.md (i backup Supabase
+# NON includono lo Storage, dove stanno i file dei pack).
 #
 # NOTE:
 #   - L'anon key qui sotto è la stessa già pubblica nel codice
