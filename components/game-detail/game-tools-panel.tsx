@@ -79,8 +79,6 @@ export function GameToolsPanel({
 }: GameToolsPanelProps) {
   const { t } = useTranslation();
   const router = useRouter();
-  const showEngine = engineInfo?.engine && engineInfo.engine !== 'Unknown' && engineInfo.engine !== 'Sconosciuto';
-  const engineLabel = engineInfo?.engine || game.engine;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -208,46 +206,16 @@ export function GameToolsPanel({
               </div>
             )}
 
-            {/* Info compatte */}
-            <div className="space-y-1.5 pt-1 border-t border-[#2a475e]/30">
-              {game.developers?.[0] && (
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">{t('common.sviluppatore')}</span>
-                  <span className="text-[#c6d4df] font-medium">{game.developers.join(', ')}</span>
-                </div>
-              )}
-              {(typeof game.release_date === 'object' && game.release_date?.date || game.releaseDate) && (
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">{t('gameDetails.releaseDate')}</span>
-                  <span className="text-[#c6d4df] font-medium">{typeof game.release_date === 'object' && game.release_date?.date || (typeof game.releaseDate === 'number' ? new Date(game.releaseDate * 1000).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' }) : game.releaseDate)}</span>
-                </div>
-              )}
-              {showEngine && (
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">{t('gameDetails.engine')}</span>
-                  <span className="text-sky-400 font-bold flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {engineLabel}</span>
-                </div>
-              )}
-              {game.metacritic?.score && (
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">Metacritic</span>
-                  <a
-                    href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`font-bold hover:underline ${game.metacritic.score >= 80 ? 'text-emerald-400' : game.metacritic.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}
-                  >
-                    {game.metacritic.score}
-                  </a>
-                </div>
-              )}
-              {game.playtime_forever && game.playtime_forever > 0 && (
-                <div className="flex items-center justify-between text-2xs">
-                  <span className="text-[#8f98a0]/60">{t('gameDetails.playtime')}</span>
-                  <span className="text-[#c6d4df] font-medium">{Math.round(game.playtime_forever / 60)}h</span>
-                </div>
-              )}
-            </div>
+            {/* ── Riquadro info RIMOSSO — 10/08/2026 ──────────────────────
+                Ripeteva sviluppatore, data d'uscita, MOTORE, Metacritic e ore
+                giocate: cinque dati che stanno TUTTI nell'hero della pagina,
+                poche centinaia di pixel più in alto e sempre visibili, mentre
+                questi erano sepolti dentro «Strumenti avanzati» (chiuso di
+                default). Il motore in particolare compariva così in quattro
+                punti diversi della stessa schermata.
+                Ripetere un dato non lo rende più chiaro: aggiunge solo un
+                posto in cui può divergere. Qui resta ciò che è specifico di
+                questa card — lo stato della patch e le azioni. */}
 
             {/* DLC compatti */}
             {dlcGames.length > 0 && (
