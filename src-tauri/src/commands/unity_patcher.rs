@@ -2510,7 +2510,11 @@ async fn ensure_tmp_fonts(game_dir: &Path, lang: &str, tmp_font: &str, steps: &m
         let archive_path = cache_dir.join("TMP_Font_AssetBundles.7z");
         let tmp_fonts_url = resolve_gh_asset("bbepis/XUnity.AutoTranslator", &["tmp", "font"], &[], TMP_FONTS_URL).await;
         match download_to_file(&tmp_fonts_url, &archive_path).await {
-            Ok(_) => match sevenz_rust::decompress_file(&archive_path, &cache_dir) {
+            // sevenz-rust2: il crate originale era vulnerabile a path traversal in
+            // estrazione (RUSTSEC-2026-0245) ed è abbandonato. Qui l'archivio arriva
+            // da GitHub e non dall'utente, ma un decompressore che scrive dove gli
+            // pare non è una cosa da tenere in casa: il successore valida i nomi.
+            Ok(_) => match sevenz_rust2::decompress_file(&archive_path, &cache_dir) {
                 Ok(_) => {
                     let _ = fs::remove_file(&archive_path);
                     steps.push("✓ Font bundle estratti nella cache locale".to_string());

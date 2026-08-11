@@ -83,6 +83,14 @@ jobs:
       #   terzi né dai file di gioco su quel percorso. Da rimuovere quando
       #   plist / tauri-winrt-notification passano a quick-xml >= 0.41.
       #   Revisione prevista: 2026-10-01, o prima a ogni bump di Tauri.
+      #
+      # RUSTSEC-2026-0245 / 0246 — sevenz-rust: NESSUN ignore, RISOLTO ALLA RADICE
+      #   l'11/08/2026 migrando a `sevenz-rust2`. Vale la pena scrivere perché non
+      #   è stato messo un ignore, visto che era la strada più corta: qui
+      #   `patched = []` e il progetto è abbandonato col repository CANCELLATO —
+      #   un ignore non avrebbe avuto alcuna condizione di uscita, sarebbe
+      #   scaduto mai e diventato permanente. Un'eccezione che non può essere
+      #   chiusa non è un'eccezione, è una rinuncia scritta in un commento.
       - name: cargo audit
         run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
       - name: Genera SBOM CycloneDX (cargo)
