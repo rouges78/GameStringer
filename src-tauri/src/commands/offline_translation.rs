@@ -1,7 +1,15 @@
 use tauri::command;
 use serde::{Deserialize, Serialize};
 
-const OLLAMA_API: &str = "http://localhost:11434";
+// L'indirizzo di Ollama NON si scrive qui. Fino all'11/08/2026 questo file aveva
+// `const OLLAMA_API: &str = "http://localhost:11434"` cablato in sei punti:
+// l'impostazione dell'utente e `OLLAMA_HOST` non arrivavano MAI alla traduzione,
+// e per giunta con `localhost`, che su Windows risolve prima su IPv6 (::1) dove
+// Ollama non ascolta. Effetto misurato: la sidebar — che l'indirizzo lo risolveva
+// davvero — diceva «Online» mentre la traduzione falliva. Una spia verde sopra un
+// motore spento è peggio di una spia rossa: manda a cercare il guasto ovunque
+// tranne dove sta. Punto unico di verità: `ollama_endpoint.rs`.
+use super::ollama_endpoint::ollama_base_url;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OfflineTranslationResult {
@@ -29,10 +37,11 @@ pub struct OfflineStatus {
 
 /// Controlla se Ollama è attivo e quali modelli sono disponibili
 #[command]
-pub async fn offline_translation_status() -> Result<OfflineStatus, String> {
-    let running = check_ollama_running().await;
+pub async fn offline_translation_status(base_url: Option<String>) -> Result<OfflineStatus, String> {
+    let base = ollama_base_url(base_url.as_deref());
+    let running = check_ollama_running(&base).await;
     let models = if running {
-        get_installed_models().await
+        get_installed_models(&base).await
     } else {
         vec![]
     };
@@ -49,8 +58,9 @@ pub async fn offline_translation_status() -> Result<OfflineStatus, String> {
 
 /// Ottieni lista modelli consigliati per traduzione con stato installazione
 #[command]
-pub async fn offline_translation_models() -> Result<Vec<OfflineModelInfo>, String> {
-    let installed = get_installed_models().await;
+pub async fn offline_translation_models(base_url: Option<String>) -> Result<Vec<OfflineModelInfo>, String> {
+    let base = ollama_base_url(base_url.as_deref());
+    let installed = get_installed_models(&base).await;
 
     let recommended = vec![
         OfflineModelInfo {
@@ -100,12 +110,14 @@ pub async fn offline_translate_text(
     source_lang: String,
     target_lang: String,
     model: Option<String>,
+    base_url: Option<String>,
 ) -> Result<OfflineTranslationResult, String> {
-    if !check_ollama_running().await {
+    let base = ollama_base_url(base_url.as_deref());
+    if !check_ollama_running(&base).await {
         return Err("Ollama non è in esecuzione. Avvialo dalla sezione Setup.".to_string());
     }
 
-    let installed = get_installed_models().await;
+    let installed = get_installed_models(&base).await;
     let model_name = resolve_model(model, &installed);
 
     if model_name.is_empty() {
@@ -113,7 +125,7 @@ pub async fn offline_translate_text(
     }
 
     let start = std::time::Instant::now();
-    let translated = call_ollama_translate(&text, &source_lang, &target_lang, &model_name).await?;
+    let translated = call_ollama_translate(&text, &source_lang, &target_lang, &model_name, &base).await?;
     let duration_ms = start.elapsed().as_millis() as u64;
 
     log::info!(
@@ -140,12 +152,14 @@ pub async fn offline_translate_batch(
     source_lang: String,
     target_lang: String,
     model: Option<String>,
+    base_url: Option<String>,
 ) -> Result<Vec<OfflineTranslationResult>, String> {
-    if !check_ollama_running().await {
+    let base = ollama_base_url(base_url.as_deref());
+    if !check_ollama_running(&base).await {
         return Err("Ollama non è in esecuzione.".to_string());
     }
 
-    let installed = get_installed_models().await;
+    let installed = get_installed_models(&base).await;
     // Il modello richiesto dal frontend può NON essere installato: il
     // 03/08/2026 il default 'gemma4:e4b' cablato in 5 call-site TS ha prodotto
     // 25.936 errori 404 su Foolish Mortals — tutti dichiarati "tradotti" dal
@@ -183,7 +197,7 @@ pub async fn offline_translate_batch(
              (e.g. \\C[n] \\V[n] \\N[n] \\I[n] and other backslash codes, {{...}} tokens, %1..%9).\n\n{}",
             source_lang, target_lang, numbered
         );
-        if let Ok(text) = call_ollama_raw(&prompt, &model_name, 6144).await {
+        if let Ok(text) = call_ollama_raw(&prompt, &model_name, 6144, &base).await {
             let parsed = parse_numbered_lines(&text, batchable.len());
             for (n, &i) in batchable.iter().enumerate() {
                 if let Some(t) = parsed.get(n).and_then(|p| p.clone()) {
@@ -197,7 +211,7 @@ pub async fn offline_translate_batch(
         let start = std::time::Instant::now();
         let outcome = match prefill[i].take() {
             Some(t) => Ok(t),
-            None => call_ollama_translate(text, &source_lang, &target_lang, &model_name).await,
+            None => call_ollama_translate(text, &source_lang, &target_lang, &model_name, &base).await,
         };
         match outcome {
             Ok(translated) => {
@@ -274,22 +288,22 @@ fn parse_numbered_lines(text: &str, expected: usize) -> Vec<Option<String>> {
 // FUNZIONI INTERNE
 // ═══════════════════════════════════════════════════════════════════
 
-async fn check_ollama_running() -> bool {
+async fn check_ollama_running(base: &str) -> bool {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(2))
         .build()
         .unwrap_or_default();
 
-    client.get(OLLAMA_API).send().await.is_ok()
+    client.get(base).send().await.is_ok()
 }
 
-async fn get_installed_models() -> Vec<String> {
+async fn get_installed_models(base: &str) -> Vec<String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(3))
         .build()
         .unwrap_or_default();
 
-    let url = format!("{}/api/tags", OLLAMA_API);
+    let url = format!("{}/api/tags", base);
     match client.get(&url).send().await {
         Ok(resp) => {
             if let Ok(json) = resp.json::<serde_json::Value>().await {
@@ -333,7 +347,7 @@ fn pick_best_translation_model(installed: &[String]) -> String {
 }
 
 /// Chiamata Ollama con prompt libero (usata dal batch a righe numerate).
-async fn call_ollama_raw(prompt: &str, model: &str, num_predict: u32) -> Result<String, String> {
+async fn call_ollama_raw(prompt: &str, model: &str, num_predict: u32, base: &str) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(300))
         .build()
@@ -346,7 +360,7 @@ async fn call_ollama_raw(prompt: &str, model: &str, num_predict: u32) -> Result<
         "options": { "temperature": 0.3, "top_p": 0.9, "num_predict": num_predict }
     });
 
-    let url = format!("{}/api/generate", OLLAMA_API);
+    let url = format!("{}/api/generate", base);
     let resp = client.post(&url).json(&body).send().await
         .map_err(|e| format!("Errore connessione Ollama: {}", e))?;
 
@@ -370,6 +384,7 @@ async fn call_ollama_translate(
     source_lang: &str,
     target_lang: &str,
     model: &str,
+    base: &str,
 ) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
@@ -397,7 +412,7 @@ async fn call_ollama_translate(
         }
     });
 
-    let url = format!("{}/api/generate", OLLAMA_API);
+    let url = format!("{}/api/generate", base);
     let resp = client
         .post(&url)
         .json(&body)
@@ -500,12 +515,14 @@ pub async fn offline_translate_batch_context(
     source_lang: String,
     target_lang: String,
     model: Option<String>,
+    base_url: Option<String>,
 ) -> Result<Vec<OfflineTranslationResult>, String> {
-    if !check_ollama_running().await {
+    let base = ollama_base_url(base_url.as_deref());
+    if !check_ollama_running(&base).await {
         return Err("Ollama non è in esecuzione.".to_string());
     }
 
-    let installed = get_installed_models().await;
+    let installed = get_installed_models(&base).await;
     let model_name = resolve_model(model, &installed);
     if model_name.is_empty() {
         return Err("Nessun modello installato.".to_string());
@@ -516,7 +533,7 @@ pub async fn offline_translate_batch_context(
         let ctx = contexts.get(i).and_then(|c| c.as_deref());
         let prompt = build_context_prompt(text, ctx, &glossary, &source_lang, &target_lang);
         let start = std::time::Instant::now();
-        match call_ollama_with_prompt(&prompt, &model_name).await {
+        match call_ollama_with_prompt(&prompt, &model_name, &base).await {
             Ok(translated) => results.push(OfflineTranslationResult {
                 original: text.clone(),
                 translated,
@@ -544,7 +561,7 @@ pub async fn offline_translate_batch_context(
 }
 
 /// Invia un prompt già costruito a Ollama e ritorna la risposta.
-async fn call_ollama_with_prompt(prompt: &str, model: &str) -> Result<String, String> {
+async fn call_ollama_with_prompt(prompt: &str, model: &str, base: &str) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()
@@ -557,7 +574,7 @@ async fn call_ollama_with_prompt(prompt: &str, model: &str) -> Result<String, St
         "options": { "temperature": 0.3, "top_p": 0.9, "num_predict": 2048 }
     });
 
-    let url = format!("{}/api/generate", OLLAMA_API);
+    let url = format!("{}/api/generate", base);
     let resp = client
         .post(&url)
         .json(&body)

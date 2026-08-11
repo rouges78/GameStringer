@@ -71,8 +71,8 @@ export default function OfflineTranslator() {
   const refreshStatus = useCallback(async () => {
     try {
       const [s, m] = await Promise.all([
-        invoke<OfflineStatus>('offline_translation_status'),
-        invoke<OfflineModelInfo[]>('offline_translation_models'),
+        invoke<OfflineStatus>('offline_translation_status', ollamaArgs()),
+        invoke<OfflineModelInfo[]>('offline_translation_models', ollamaArgs()),
       ]);
       setStatus(s);
       setModels(m);
@@ -133,6 +133,7 @@ export default function OfflineTranslator() {
         sourceLang: sourceLang,
         targetLang: targetLang,
         model: selectedModel || null,
+        ...ollamaArgs(),
       });
       setResults(prev => [result, ...prev]);
       toast.success(`${t('offlineTranslator.translatedIn')} ${result.duration_ms}ms`);
@@ -158,6 +159,7 @@ export default function OfflineTranslator() {
         sourceLang: sourceLang,
         targetLang: targetLang,
         model: selectedModel || null,
+        ...ollamaArgs(),
       });
       setResults(prev => [...batchResults.reverse(), ...prev]);
       toast.success(`${t('offlineTranslator.batchComplete')} ${batchResults.length} ${t('offlineTranslator.textsTranslated')}`, { id: toastId });

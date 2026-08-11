@@ -5,6 +5,7 @@
 
 import { invoke } from '@/lib/tauri-api';
 import { autoFixPlaceholders } from '@/lib/ai/placeholder-guard';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 export interface HendrixProgress {
   phase: 'detect' | 'extract' | 'translate' | 'apply' | 'enable' | 'done';
@@ -102,7 +103,7 @@ export async function runHendrixTranslation(opts: {
   for (let i = 0; i < todo.length; i += CHUNK) {
     const slice = todo.slice(i, i + CHUNK);
     const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-      texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model,
+      texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model, ...ollamaArgs(),
     });
     res.forEach((tr, k) => {
       const orig = slice[k].original;

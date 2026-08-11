@@ -13,6 +13,7 @@ import { get, set, del } from 'idb-keyval';
 import { gamePathKey } from '@/lib/game-path';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
 import { projectService } from '@/lib/services/translation-projects';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 export type VisionaireBackend = 'ollama' | 'cloud';
 
@@ -67,7 +68,7 @@ async function translateChunk(
     return res.translations;
   }
   const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-    texts, sourceLang: 'en', targetLang: tgt, model,
+    texts, sourceLang: 'en', targetLang: tgt, model, ...ollamaArgs(),
   });
   return res.map(r => r.translated);
 }

@@ -16,6 +16,7 @@ import { cleanGamePath, gamePathKey } from '@/lib/game-path';
 import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
 import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 import {
   loadVoiceProfiles,
   getVoiceProfile,
@@ -501,7 +502,7 @@ export async function runRenpyTranslation(opts: {
       outs = res.translations;
     } else {
       const res = await invoke<{ translated: string }[]>('offline_translate_batch_context', {
-        texts: raws, contexts, glossary, sourceLang: src, targetLang: tgt, model,
+        texts: raws, contexts, glossary, sourceLang: src, targetLang: tgt, model, ...ollamaArgs(),
       });
       outs = res.map(r => r.translated);
     }

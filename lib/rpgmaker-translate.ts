@@ -17,6 +17,7 @@
 import { invoke } from '@/lib/tauri-api';
 import { cleanGamePath } from '@/lib/game-path';
 import { loadGlossary, type GlossaryPair } from '@/lib/renpy-translate';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 export interface RpgmakerProgress {
   phase: 'detect' | 'extract' | 'glossary' | 'translate' | 'apply' | 'done';
@@ -104,7 +105,7 @@ export async function runRpgmakerTranslation(opts: {
   for (let i = 0; i < pending.length; i += CHUNK) {
     const slice = pending.slice(i, i + CHUNK);
     const res = await invoke<{ translated: string }[]>('offline_translate_batch_context', {
-      texts: slice, contexts: slice.map(() => null), glossary, sourceLang: src, targetLang: tgt, model,
+      texts: slice, contexts: slice.map(() => null), glossary, sourceLang: src, targetLang: tgt, model, ...ollamaArgs(),
     });
     res.forEach((tr, k) => {
       const out = (tr.translated || '').trim();

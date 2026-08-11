@@ -765,11 +765,18 @@ pub async fn translate_po_entries(
     po_path: String,
     source_lang: String,
     target_lang: String,
+    // L'indirizzo di Ollama scelto dall'utente deve arrivare FIN QUI: questo
+    // comando chiama i comandi offline_* da Rust, non dal frontend, e per
+    // questo l'11/08/2026 era sfuggito al primo giro (i call-site erano stati
+    // cercati solo in TypeScript). Senza, la sidebar userebbe l'indirizzo
+    // giusto e la traduzione PO quello di default: la stessa contraddizione
+    // che si stava correggendo, spostata di un piano.
+    base_url: Option<String>,
 ) -> Result<u32, String> {
     let mut po_file = read_po_file(po_path.clone())?;
     
     // Verifica che Ollama sia attivo e trova un modello
-    let status = super::offline_translation::offline_translation_status().await
+    let status = super::offline_translation::offline_translation_status(base_url.clone()).await
         .map_err(|e| format!("Ollama non disponibile: {}", e))?;
     
     if !status.ollama_running {
@@ -799,6 +806,7 @@ pub async fn translate_po_entries(
             source_lang.clone(),
             target_lang.clone(),
             Some(model.clone()),
+            base_url.clone(),
         ).await {
             Ok(result) => {
                 entry.msgstr = result.translated;
@@ -2406,6 +2414,7 @@ pub async fn auto_translate_danganronpa(
     game_path: String,
     target_lang: String,
     ai_provider: String,
+    base_url: Option<String>,
 ) -> Result<AutoTranslateResult, String> {
     log::info!("🚀 Avvio traduzione automatica Danganronpa: {}", game_path);
     
@@ -2485,7 +2494,7 @@ pub async fn auto_translate_danganronpa(
         log::info!("📤 Batch {}/{}: {} testi", batch_idx + 1, total_batches, texts.len());
         
         // Chiama API traduzione (integra con sistema esistente)
-        match translate_batch_internal(&texts, "en", &target_lang, &ai_provider).await {
+        match translate_batch_internal(&texts, "en", &target_lang, &ai_provider, base_url.clone()).await {
             Ok(translations) => {
                 // Applica traduzioni
                 let start_idx = batch_idx * batch_size;
@@ -2897,12 +2906,14 @@ async fn translate_batch_internal(
     source_lang: &str,
     target_lang: &str,
     _ai_provider: &str,
+    base_url: Option<String>,
 ) -> Result<Vec<String>, String> {
     let results = super::offline_translation::offline_translate_batch(
         texts.to_vec(),
         source_lang.to_string(),
         target_lang.to_string(),
         None,
+        base_url,
     ).await?;
     
     Ok(results.into_iter().map(|r| r.translated).collect())

@@ -15,6 +15,7 @@ import { acceptOfflineTranslation } from '@/lib/hendrix-translate';
 import { clientLogger } from '@/lib/client-logger';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
 import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 export interface DanganronpaProgress {
   phase: 'extract' | 'translate' | 'rebuild' | 'done';
@@ -174,7 +175,7 @@ export async function runDanganronpaTranslation(opts: {
       outs = res.translations;
     } else {
       const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-        texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model,
+        texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model, ...ollamaArgs(),
       });
       outs = res.map(r => r.translated);
     }

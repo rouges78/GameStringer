@@ -17,6 +17,7 @@ import { invoke } from '@/lib/tauri-api';
 import { get, set, del } from 'idb-keyval';
 import { gamePathKey } from '@/lib/game-path';
 import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 export type TyranoBackend = 'ollama' | 'cloud';
 
@@ -71,7 +72,7 @@ async function translateChunk(
     return res.translations;
   }
   const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-    texts, sourceLang: src, targetLang: tgt, model,
+    texts, sourceLang: src, targetLang: tgt, model, ...ollamaArgs(),
   });
   return res.map(r => r.translated);
 }
