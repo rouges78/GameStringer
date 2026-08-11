@@ -435,7 +435,68 @@ fn is_unreal(path: &Path) -> bool {
         }
     }
 
+    // 7. LAYOUT CON SOTTOCARTELLA DI PIATTAFORMA — i sei test qui sopra guardano
+    //    SOLO il livello che ricevono, e Steam registra la RADICE del gioco.
+    //    Caso reale (M.O.L.E, 11/08/2026): `common/M.O.L.E/` contiene solo
+    //    `Windows/`, e tutte le firme stanno lì dentro (`Engine/`, `MOLE.exe`,
+    //    `Mole/Content/Paks/Mole-Windows.utoc`). Il test 5 ci passava a un pelo:
+    //    cerca `WindowsNoEditor`/`WindowsServer`, i nomi del packaging UE4 —
+    //    ma UE5 ha rinominato quella cartella in `Windows` liscio. Risultato:
+    //    motore «Unknown» su un Unreal da manuale, e la pagina gioco che tace.
+    //
+    //    ⚠️ Non si accetta una cartella per il NOME: «Windows» è troppo comune
+    //    per essere una prova. Si scende e si cerca la firma vera — una
+    //    directory `Paks` che contenga davvero `.pak`/`.utoc`, oppure i
+    //    `Manifest_*FSFiles_*.txt` che genera solo il packaging Unreal.
+    //    È la stessa prudenza di `find_paks_dir` (unreal_localization.rs:1004),
+    //    che scende fino a 5 livelli e VERIFICA il contenuto: la pipeline di
+    //    traduzione sapeva già scendere, il rilevatore no — e a fermare tutto
+    //    era quello che parla per primo.
+    if has_unreal_payload(path, 0) {
+        return true;
+    }
+
     false
+}
+
+/// Cerca in profondità (max 3 livelli) le due firme Unreal che non ammettono
+/// equivoci: una directory `Paks` con dentro `.pak`/`.utoc`, oppure i manifest
+/// `Manifest_UFSFiles_*.txt` / `Manifest_NonUFSFiles_*.txt`.
+///
+/// Il limite di 3 livelli copre i layout reali (`<Root>/Windows/<Progetto>/Content/Paks`
+/// è profondo 3) senza trasformare il rilevamento in una scansione dell'intero disco.
+fn has_unreal_payload(dir: &Path, depth: usize) -> bool {
+    if depth > 3 {
+        return false;
+    }
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return false;
+    };
+    let mut subdirs = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        if path.is_dir() {
+            if name == "Paks" {
+                // Una cartella «Paks» vuota non prova niente: serve il contenuto.
+                if let Ok(inner) = std::fs::read_dir(&path) {
+                    if inner.flatten().any(|e| {
+                        e.path()
+                            .extension()
+                            .is_some_and(|ext| ext == "pak" || ext == "utoc")
+                    }) {
+                        return true;
+                    }
+                }
+            }
+            subdirs.push(path);
+        } else if name.starts_with("Manifest_") && name.ends_with(".txt")
+            && (name.contains("UFSFiles") || name.contains("NonUFSFiles"))
+        {
+            return true;
+        }
+    }
+    subdirs.iter().any(|d| has_unreal_payload(d, depth + 1))
 }
 
 fn is_godot(path: &Path) -> bool {
@@ -2075,4 +2136,72 @@ fn detect_engine_from_pe_imports(data: &[u8]) -> Option<GameEngine> {
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    /// Crea un file (e le cartelle intermedie) sotto `root`.
+    fn touch(root: &Path, rel: &str) {
+        let p = root.join(rel);
+        fs::create_dir_all(p.parent().unwrap()).unwrap();
+        fs::write(&p, b"x").unwrap();
+    }
+
+    /// Il caso che ha aperto la voce, riprodotto dal vero: M.O.L.E su Steam.
+    /// `common/M.O.L.E/` contiene SOLO `Windows/`, e le firme stanno lì sotto.
+    /// Prima del fix questo test falliva — ed è la ragione per cui esiste:
+    /// il rilevatore rispondeva «Unknown» su un Unreal da manuale.
+    #[test]
+    fn unreal_detected_through_platform_subfolder() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path().join("M.O.L.E");
+        touch(&root, "Windows/MOLE.exe");
+        touch(&root, "Windows/Manifest_UFSFiles_Win64.txt");
+        touch(&root, "Windows/Engine/Binaries/placeholder.txt");
+        touch(&root, "Windows/Mole/Content/Paks/Mole-Windows.utoc");
+        assert!(is_unreal(&root), "layout UE5 con sottocartella Windows/ non riconosciuto");
+        assert_eq!(detect_engine(&root), GameEngine::Unreal);
+    }
+
+    /// UE4: la cartella si chiama `WindowsNoEditor`. Copertura di non-regressione
+    /// del percorso che già funzionava.
+    #[test]
+    fn unreal_detected_with_ue4_windowsnoeditor_layout() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "WindowsNoEditor/Game/Content/Paks/Game-WindowsNoEditor.pak");
+        assert!(is_unreal(tmp.path()));
+    }
+
+    /// ⛔ CONTROLLO POSITIVO DEL CONTRARIO: una cartella chiamata `Paks` ma VUOTA
+    /// non è una prova. Senza questa asserzione il test sopra direbbe solo che
+    /// il rilevatore sa dire «sì», non che lo dice al momento giusto.
+    #[test]
+    fn empty_paks_folder_is_not_enough() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("Windows/Game/Content/Paks")).unwrap();
+        assert!(!is_unreal(tmp.path()), "una cartella Paks vuota non prova che sia Unreal");
+    }
+
+    /// Un gioco che NON è Unreal non deve diventarlo per via della discesa:
+    /// `.pak` fuori da una cartella `Paks` non basta (li usano id Tech, Quake…).
+    #[test]
+    fn unrelated_game_with_pak_is_not_unreal() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "data/base.pak");
+        touch(tmp.path(), "game.exe");
+        assert!(!is_unreal(tmp.path()));
+    }
+
+    /// La discesa si ferma: una firma oltre il quarto livello non viene raccolta,
+    /// altrimenti il rilevamento diventa una scansione del disco.
+    #[test]
+    fn descent_stops_at_depth_limit() {
+        let tmp = TempDir::new().unwrap();
+        touch(tmp.path(), "a/b/c/d/e/Content/Paks/x.pak");
+        assert!(!is_unreal(tmp.path()));
+    }
 }
