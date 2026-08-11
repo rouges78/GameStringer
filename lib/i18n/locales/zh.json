@@ -5987,6 +5987,8 @@
   },
   "gameDetails": {
     "gameLanguages": "游戏语言",
+    "targetLangMissing": "{lang}：缺少 — 可翻译",
+    "targetLangPresent": "{lang}：已包含",
     "mbUnit": "MB ·",
     "screenshots": "截图",
     "noScreenshots": "没有截图",

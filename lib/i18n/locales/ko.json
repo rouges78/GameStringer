@@ -4353,6 +4353,8 @@
   },
   "gameDetails": {
     "gameLanguages": "게임 언어",
+    "targetLangMissing": "{lang}: 없음 — 번역 가능",
+    "targetLangPresent": "{lang}: 이미 포함됨",
     "mbUnit": "MB ·",
     "screenshots": "스크린샷",
     "noScreenshots": "스크린샷 없음",

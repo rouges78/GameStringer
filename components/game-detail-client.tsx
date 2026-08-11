@@ -3472,6 +3472,20 @@ export default function GameDetailPage() {
                 if (key && !seen.has(key)) { seen.add(key); merged.push(l.trim()); }
               }
               if (merged.length === 0) return null;
+              // ⭐ LA DOMANDA PER CUI L'UTENTE APRE QUESTA PAGINA È UNA SOLA:
+              //    «il gioco è nella mia lingua?». Fino all'11/08/2026 doveva
+              //    dedurla da un massimo di 12 bandierine — e due di quelle si
+              //    somigliano al punto da rendere la deduzione sbagliata:
+              //    lo spagnolo latinoamericano usa 🇲🇽 (language-flags.tsx:13),
+              //    che a 16px è lo stesso tricolore verticale dell'italiano.
+              //    Successo reale il giorno stesso su M.O.L.E: la bandiera
+              //    messicana è stata letta come italiana e il gioco è sembrato
+              //    già tradotto. È un falso negativo che costa una traduzione
+              //    mai fatta — il contrario esatto dello scopo dell'app.
+              //    Quindi la risposta si SCRIVE, non si fa dedurre.
+              const targetCc = (getCountryCode(targetLang) ?? targetLang).toUpperCase();
+              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc);
+              const targetName = currentFlag?.label ?? targetLang.toUpperCase();
               return (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-2xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
@@ -3479,6 +3493,18 @@ export default function GameDetailPage() {
                   </span>
                   <LanguageFlags supportedLanguages={merged} maxFlags={12} />
                   <span className="text-2xs text-slate-500">({merged.length})</span>
+                  <span
+                    className={`text-2xs font-bold px-2 py-0.5 rounded-md border ${
+                      hasTarget
+                        ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20'
+                        : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
+                    }`}
+                  >
+                    {(hasTarget
+                      ? t('gameDetails.targetLangPresent')
+                      : t('gameDetails.targetLangMissing')
+                    ).replace('{lang}', targetName)}
+                  </span>
                 </div>
               );
             })()}

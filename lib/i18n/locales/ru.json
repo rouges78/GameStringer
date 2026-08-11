@@ -4353,6 +4353,8 @@
   },
   "gameDetails": {
     "gameLanguages": "Языки игры",
+    "targetLangMissing": "{lang}: отсутствует — можно перевести",
+    "targetLangPresent": "{lang}: уже есть",
     "mbUnit": "MB ·",
     "screenshots": "Скриншоты",
     "noScreenshots": "Нет скриншотов",

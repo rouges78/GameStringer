@@ -5962,6 +5962,8 @@
   },
   "gameDetails": {
     "gameLanguages": "Γλώσσες παιχνιδιού",
+    "targetLangMissing": "{lang}: λείπει — μεταφράσιμο",
+    "targetLangPresent": "{lang}: υπάρχει ήδη",
     "mbUnit": "MB ·",
     "screenshots": "Στιγμιότυπα",
     "noScreenshots": "Χωρίς στιγμιότυπα",

@@ -4353,6 +4353,8 @@
   },
   "gameDetails": {
     "gameLanguages": "Języki gry",
+    "targetLangMissing": "{lang}: brak — można przetłumaczyć",
+    "targetLangPresent": "{lang}: już dostępny",
     "mbUnit": "MB ·",
     "screenshots": "Zrzuty ekranu",
     "noScreenshots": "Brak zrzutów",

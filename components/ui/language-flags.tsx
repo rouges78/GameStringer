@@ -71,6 +71,40 @@ export const languageToCountryCode: { [key: string]: string } = {
     'Latvian': 'LV',
     'Lithuanian': 'LT',
     'Estonian': 'EE',
+    // ── NOMI NATIVI (endonimi) ──────────────────────────────────────────────
+    // Aggiunti l'11/08/2026: la mappa conosceva i nomi INGLESI e i codici ISO,
+    // ma di tutti gli endonimi solo «English». Un gioco che dichiara le proprie
+    // lingue come le mostra il suo menu — «Deutsch», «Polski», «Русский» — non
+    // riceveva nessuna bandiera, e il confronto con la lingua dell'utente dava
+    // ASSENTE su una lingua presente. Trovato provando la logica con i dati
+    // veri di M.O.L.E: 15 endonimi su 16 mancavano.
+    'Italiano': 'IT',
+    'Deutsch': 'DE',
+    'Español': 'ES',
+    'Français': 'FR',
+    'Português': 'PT',
+    'Nederlands': 'NL',
+    'Polski': 'PL',
+    'Русский': 'RU',
+    'Українська': 'UA',
+    'Ελληνικά': 'GR',
+    'Türkçe': 'TR',
+    'Svenska': 'SE',
+    'Norsk': 'NO',
+    'Dansk': 'DK',
+    'Suomi': 'FI',
+    'Čeština': 'CZ',
+    'Magyar': 'HU',
+    'Română': 'RO',
+    'Български': 'BG',
+    '日本語': 'JP',
+    '한국어': 'KR',
+    '简体中文': 'CN',
+    '繁體中文': 'TW',
+    'ไทย': 'TH',
+    'Tiếng Việt': 'VN',
+    'العربية': 'SA',
+    'עברית': 'IL',
     // Codici ISO brevi
     'en': 'GB',
     'fr': 'FR',

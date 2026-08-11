@@ -5987,6 +5987,8 @@
   },
   "gameDetails": {
     "gameLanguages": "ゲームの言語",
+    "targetLangMissing": "{lang}：なし — 翻訳可能",
+    "targetLangPresent": "{lang}：収録済み",
     "mbUnit": "MB ·",
     "screenshots": "スクリーンショット",
     "noScreenshots": "スクリーンショットなし",
