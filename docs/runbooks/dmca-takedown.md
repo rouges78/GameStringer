@@ -3,10 +3,33 @@
 Questo è il **come si fa**, comando per comando. La policy (cosa deve contenere
 una notifica valida, gli SLA, la contro-notifica) sta in [`../DMCA.md`](../DMCA.md).
 
-> ⚠️ **Stato al 10/08/2026: procedura MAI ESEGUITA.** `moderation_log` e
-> `pack_reports` hanno 0 righe. Una procedura scritta e mai provata è una
-> speranza, non una difesa: la prima volta che serve non è il momento di
-> scoprire che un comando non funziona. Vedi in fondo la **prova a freddo**.
+> ✅ **Prova a freddo ESEGUITA il 10/08/2026** (sera, in produzione, su un pack
+> fittizio `[TEST]` — id `2c1a5e50-4013-41ff-b359-3bdd050f9409`, lasciato in
+> `pending` con 3 righe di `moderation_log` e 1 di `pack_reports` come prova).
+> Ciclo completo: pubblicazione → segnalazione → takedown → verifica RLS da
+> `anon` (il pack sparisce, i 3 veri restano) → ripristino → riverifica (torna
+> visibile) → archiviazione. **E ha stanato due guasti che il documento da solo
+> non poteva vedere:**
+>
+> 1. ⛔ **Zero moderatori in produzione.** `is_moderator` era `false` su TUTTI
+>    gli account: il passo 3 non lo poteva eseguire nessuno, da nessun client.
+>    Corretto la sera stessa (`rouges78` → moderatore). Se cambia l'account di
+>    moderazione, ricordarsi che questo flag È la procedura.
+> 2. ⛔ **Il fallimento è MUTO.** Il takedown tentato da un non-moderatore non
+>    dà errore: `trg_enforce_pack_status` rimette lo status com'era e l'UPDATE
+>    «riesce». Misurato: update a `pending` da account non moderatore → nessun
+>    errore, status ancora `published`. La verifica d'effetto del passo 3 non è
+>    prudenza, è l'UNICO modo di accorgersene.
+>
+> ⚠️ Nota per chi esegue da console SQL (non dall'app): `auth.uid()` viene dal
+> JWT, quindi da console è `null` e si è SEMPRE non-moderatori — il takedown
+> verrebbe annullato in silenzio (guasto 2). Prima dei comandi, nella stessa
+> transazione:
+> `select set_config('request.jwt.claims', '{"sub":"<UUID-MODERATORE>","role":"authenticated"}', true);`
+> E la verifica «da fuori» si fa con `set local role anon;` + select + `reset role;`.
+>
+> ⛔ **Non cancellare il pack `[TEST]`**: `moderation_log` e `pack_reports` gli
+> sono agganciati con `ON DELETE CASCADE` — cancellarlo cancellerebbe la prova.
 
 ## Schema reale (verificato sul DB di produzione il 10/08/2026)
 

@@ -17,6 +17,12 @@
 /src-tauri/target/
 /src-tauri/Cargo.lock
 
+# Internal working notes — local only, by decision (11/08/2026).
+# The roadmap carries raw internal notes (mistakes, costs, spend decisions)
+# and the repo is source-available: it is updated every session but NEVER
+# committed. It was tracked until dd57f150; untracked via `git rm --cached`.
+/ROADMAP.html
+
 # External tools & large binaries (download separately)
 /tools/AssetRipper/
 /tools/UABEA/
