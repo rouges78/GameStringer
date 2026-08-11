@@ -1,4 +1,10 @@
 use serde::{Deserialize, Serialize};
+// L'indirizzo di Ollama si risolve in UN posto solo: chi lo riscrive a mano
+// costruisce un secondo Ollama che l'utente non può configurare — e infatti
+// fino all'11/08/2026 qui c'erano NOVE `http://localhost:11434` cablati, per
+// giunta con `localhost`, che su Windows risolve prima su IPv6 (::1) dove
+// Ollama non ascolta. Punto unico di verità: `ollama_endpoint.rs`.
+use super::ollama_endpoint::ollama_base_url;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -6365,8 +6371,11 @@ async fn execute_workflow_from_prediction(
     game_path: &Path,
     prediction: &PredictionResult,
     target_lang_param: &str,
+    base_url: Option<String>,
 ) -> Result<WorkflowExecutionResult, String> {
     use tauri::Emitter;
+    // Risolto UNA volta e riusato: override utente → OLLAMA_HOST → 127.0.0.1.
+    let ollama_base = ollama_base_url(base_url.as_deref());
     let start = std::time::Instant::now();
     let execution_id = format!("exec_{}", chrono::Utc::now().timestamp());
     let game_path_str = game_path.to_string_lossy().to_string();
@@ -6628,7 +6637,7 @@ async fn execute_workflow_from_prediction(
             .unwrap_or_default();
         
         let ollama_model: Option<String> = match client
-            .get("http://localhost:11434/api/tags")
+            .get(format!("{}/api/tags", ollama_base))
             .timeout(std::time::Duration::from_secs(3))
             .send()
             .await
@@ -6723,7 +6732,7 @@ async fn execute_workflow_from_prediction(
                         "options": { "temperature": 0.2, "num_predict": 2048 }
                     });
                     
-                    match client.post("http://localhost:11434/api/generate")
+                    match client.post(format!("{}/api/generate", ollama_base))
                         .json(&body)
                         .send()
                         .await
@@ -6989,7 +6998,7 @@ async fn execute_workflow_from_prediction(
         };
 
         let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
-        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
         let use_ollama = ollama_model.is_some();
         let translation_method = ollama_model.as_ref().map(|m| format!("Ollama ({})", m)).unwrap_or("Google Translate".into());
         t_outputs.push(format!("🤖 {}", translation_method));
@@ -7012,7 +7021,7 @@ async fn execute_workflow_from_prediction(
                     "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
                     "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
                 });
-                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         if let Ok(json) = resp.json::<serde_json::Value>().await {
                             if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
@@ -7146,7 +7155,7 @@ async fn execute_workflow_from_prediction(
             "pt" => "Portuguese", "ru" => "Russian", "pl" => "Polish", other => other,
         };
         let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
-        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
         let use_ollama = ollama_model.is_some();
         let mut translations_map: HashMap<String, String> = HashMap::new();
         let mut translated_count = 0u64;
@@ -7166,7 +7175,7 @@ async fn execute_workflow_from_prediction(
                     "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
                     "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
                 });
-                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         if let Ok(json) = resp.json::<serde_json::Value>().await {
                             if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
@@ -7312,7 +7321,7 @@ async fn execute_workflow_from_prediction(
             "de" => "German", "ja" => "Japanese", other => other,
         };
         let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
-        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
         let use_ollama = ollama_model.is_some();
         let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
         let mut translated_count = 0u64;
@@ -7334,7 +7343,7 @@ async fn execute_workflow_from_prediction(
                     "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
                     "stream": false, "options": { "temperature": 0.2, "num_predict": 6144 }
                 });
-                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         if let Ok(json) = resp.json::<serde_json::Value>().await {
                             if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
@@ -7471,7 +7480,7 @@ async fn execute_workflow_from_prediction(
                 "de" => "German", "ja" => "Japanese", other => other,
             };
             let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
-            let ollama_model: Option<String> = detect_ollama_model(&client).await;
+            let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
             let use_ollama = ollama_model.is_some();
             let mut translated_entries: Vec<super::unreal_localization::TranslatedEntry> = Vec::new();
             let mut translated_count = 0u64;
@@ -7491,7 +7500,7 @@ async fn execute_workflow_from_prediction(
                         "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
                         "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
                     });
-                    match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                    match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
                         Ok(resp) if resp.status().is_success() => {
                             if let Ok(json) = resp.json::<serde_json::Value>().await {
                                 if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
@@ -7902,7 +7911,7 @@ async fn execute_workflow_from_prediction(
         .unwrap_or_default();
     
     let ollama_model: Option<String> = match client
-        .get("http://localhost:11434/api/tags")
+        .get(format!("{}/api/tags", ollama_base))
         .timeout(std::time::Duration::from_secs(3))
         .send()
         .await
@@ -8010,7 +8019,7 @@ async fn execute_workflow_from_prediction(
                         "options": { "temperature": 0.2, "num_predict": 2048 }
                     });
                     
-                    match client.post("http://localhost:11434/api/generate")
+                    match client.post(format!("{}/api/generate", ollama_base))
                         .json(&body).send().await
                     {
                         Ok(resp) => {
@@ -8453,6 +8462,7 @@ pub async fn execute_complete_workflow(
     engine: Option<String>,
     source_lang: String,
     target_lang: String,
+    base_url: Option<String>,
 ) -> Result<WorkflowExecutionResult, String> {
     use tauri::Emitter;
     let game_path = PathBuf::from(&install_path);
@@ -8478,7 +8488,7 @@ pub async fn execute_complete_workflow(
     }));
 
     // Step 2: Execute workflow based on prediction
-    let execution_result = execute_workflow_from_prediction(&app, &game_path, &prediction_result, &target_lang).await?;
+    let execution_result = execute_workflow_from_prediction(&app, &game_path, &prediction_result, &target_lang, base_url).await?;
 
     info!("🎉 Complete workflow finished for: {}", game_title);
     Ok(execution_result)
@@ -9205,8 +9215,8 @@ fn estimate_translation_costs(selected_tools: &SelectedTools) -> f64 {
 // ══════════════════════════════════════════════════════════════════════════════
 
 /// Detect the best available Ollama model
-async fn detect_ollama_model(client: &reqwest::Client) -> Option<String> {
-    let resp = client.get("http://localhost:11434/api/tags")
+async fn detect_ollama_model(client: &reqwest::Client, base: &str) -> Option<String> {
+    let resp = client.get(format!("{}/api/tags", base))
         .timeout(std::time::Duration::from_secs(3))
         .send().await.ok()?;
     let json: serde_json::Value = resp.json().await.ok()?;

@@ -17,6 +17,7 @@ import publisherWhitelistData from '@/data/publisher-whitelist.json';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { LanguageFlags, getCountryCode } from '@/components/ui/language-flags';
+import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 import { useProgress } from '@/components/progress/progress-provider';
@@ -2870,6 +2871,7 @@ export default function GameDetailPage() {
         engine: game.engine || undefined,
         sourceLang: 'en',
         targetLang: targetLang || language || 'it',
+        ...ollamaArgs(),
       });
 
       // Cleanup listener
