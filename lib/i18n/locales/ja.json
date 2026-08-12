@@ -1012,6 +1012,8 @@
     "exportZip": ".zip をエクスポート",
     "selectLinFile": "LIN ファイルを選択（Danganronpa スクリプト）",
     "extractedLabel": "抽出:",
+    "notExtractable": "抽出できません",
+    "notExtractableHint": "この形式ではファイル内のデータ位置がまだ分かりません。抽出すると誤ったバイト列になります。",
     "savedLabel": "保存:",
     "loadedLabel": "読み込み:",
     "dialoguesLabel": "件の会話",

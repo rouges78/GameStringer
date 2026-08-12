@@ -1012,6 +1012,8 @@
     "exportZip": "Εξαγωγή .zip",
     "selectLinFile": "Επίλεξε αρχείο LIN (σενάριο Danganronpa)",
     "extractedLabel": "Εξήχθησαν",
+    "notExtractable": "μη εξαγώγιμο",
+    "notExtractableHint": "Για αυτή τη μορφή δεν γνωρίζουμε ακόμη πού βρίσκονται τα δεδομένα στο αρχείο: η εξαγωγή θα παρήγαγε λανθασμένα byte.",
     "savedLabel": "Αποθηκεύτηκαν",
     "loadedLabel": "Φορτώθηκαν",
     "dialoguesLabel": "διάλογοι",

@@ -1012,6 +1012,8 @@
     "exportZip": "Eksportuj .zip",
     "selectLinFile": "Wybierz plik LIN (skrypt Danganronpa)",
     "extractedLabel": "Wyodrębniono",
+    "notExtractable": "nie do wypakowania",
+    "notExtractableHint": "Dla tego formatu nie wiemy jeszcze, gdzie w pliku znajdują się dane: wypakowanie dałoby błędne bajty.",
     "savedLabel": "Zapisano",
     "loadedLabel": "Wczytano",
     "dialoguesLabel": "dialogów",

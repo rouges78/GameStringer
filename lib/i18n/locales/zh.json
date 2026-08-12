@@ -1012,6 +1012,8 @@
     "exportZip": "导出 .zip",
     "selectLinFile": "选择 LIN 文件（Danganronpa 脚本）",
     "extractedLabel": "已提取",
+    "notExtractable": "无法提取",
+    "notExtractableHint": "该格式的数据在文件中的位置尚未确定：提取会产生错误的字节。",
     "savedLabel": "已保存",
     "loadedLabel": "已加载",
     "dialoguesLabel": "条对话",

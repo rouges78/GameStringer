@@ -1012,6 +1012,8 @@
     "exportZip": "Export .zip",
     "selectLinFile": "Select a LIN file (Danganronpa script)",
     "extractedLabel": "Extracted",
+    "notExtractable": "not extractable",
+    "notExtractableHint": "For this format we don't yet know where the data sits in the file: extracting would produce wrong bytes.",
     "savedLabel": "Saved",
     "loadedLabel": "Loaded",
     "dialoguesLabel": "dialogues",

@@ -46,8 +46,16 @@ interface DanganronpaGame {
 
 interface PakEntry {
   name: string;
+  /** Offset ASSOLUTO dall'inizio del file (rebasato dal backend). */
   offset: number;
   size: number;
+  /**
+   * `false` = la voce si vede nell'elenco ma NON si può estrarre, perché per
+   * quel formato non conosciamo la posizione dei dati (oggi: i `.cpk`).
+   * Prima del 12/08/2026 questo campo non esisteva e l'estrazione produceva
+   * file VUOTI senza errore: vedi la nota su `PakEntry` in danganronpa_patcher.rs.
+   */
+  extractable: boolean;
 }
 
 interface PakArchive {
@@ -915,7 +923,15 @@ export default function DanganronpaPatcherPage() {
                     )}
                   </div>
                   {selectedPak && (
-                    <Button onClick={extractAllPak} disabled={loading} size="xs" className="bg-emerald-600 hover:bg-emerald-500">
+                    <Button
+                      onClick={extractAllPak}
+                      // Se NESSUNA voce è estraibile il pulsante non promette un
+                      // lavoro che finirebbe in un errore: lo dice prima del click.
+                      disabled={loading || !selectedPak.entries.some((e) => e.extractable)}
+                      title={selectedPak.entries.some((e) => e.extractable) ? undefined : t('danganronpaPatcher.notExtractableHint')}
+                      size="xs"
+                      className="bg-emerald-600 hover:bg-emerald-500"
+                    >
                       {loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
                       {t('danganronpaPatcher.extract')}</Button>
                   )}
@@ -931,9 +947,24 @@ export default function DanganronpaPatcherPage() {
                           className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-accent/50"
                         >
                           <span className="text-sm font-mono">{entry.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {(entry.size / 1024).toFixed(1)} KB
-                          </span>
+                          {/*
+                            Una voce non estraibile lo DICE. Prima il .cpk mostrava
+                            righe identiche alle altre e l'estrazione consegnava file
+                            vuoti senza un errore: l'utente non aveva modo di sapere
+                            che quei nomi non portavano da nessuna parte.
+                          */}
+                          {entry.extractable ? (
+                            <span className="text-xs text-muted-foreground">
+                              {(entry.size / 1024).toFixed(1)} KB
+                            </span>
+                          ) : (
+                            <span
+                              className="text-xs text-amber-500 shrink-0"
+                              title={t('danganronpaPatcher.notExtractableHint')}
+                            >
+                              {t('danganronpaPatcher.notExtractable')}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

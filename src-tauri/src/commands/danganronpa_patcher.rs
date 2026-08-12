@@ -14,11 +14,30 @@ use zip::ZipWriter;
 // STRUTTURE DATI
 // ============================================================================
 
+/// Voce di un archivio Danganronpa (WAD/AGAR, CPK, PAK classico).
+///
+/// ⚠️ INVARIANTE, e fino al 12/08/2026 era violata da due rami su tre:
+/// `offset` è **ASSOLUTO dall'inizio del file**, perché è così che lo consumano
+/// `extract_pak_file` e `extract_all_pak` (`seek(SeekFrom::Start(offset))`).
+/// Chi costruisce una `PakEntry` deve rebasare da sé:
+///   · WAD/AGAR — gli offset nella tabella sono RELATIVI a `data_start`
+///     (l'inizio della sezione dati, dopo la tabella directory): va sommato.
+///   · PAK classico — gli offset sono già assoluti e vengono validati.
+///   · CPK — non esiste ancora un parser del TOC: nessun offset è noto.
+///
+/// `extractable` esiste perché l'alternativa era il silenzio: prima il ramo CPK
+/// scriveva `offset: file_index, size: 0`, cioè un contatore progressivo al posto
+/// di un offset — e l'estrazione faceva `seek(3)` + `read` di ZERO byte,
+/// producendo file VUOTI senza un solo errore. Un'entry che non sappiamo estrarre
+/// ora lo DICE, invece di consegnare byte sbagliati con l'aria di aver funzionato.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PakEntry {
     pub name: String,
-    pub offset: u32,
-    pub size: u32,
+    /// Offset ASSOLUTO dall'inizio del file. Vedi invariante sopra.
+    pub offset: u64,
+    pub size: u64,
+    /// `false` = elencabile ma NON estraibile (offset/dimensione non affidabili).
+    pub extractable: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,109 +196,95 @@ pub fn read_pak_archive(pak_path: String) -> Result<PakArchive, String> {
     }
 }
 
-/// Parser WAD per Danganronpa
+/// Parser WAD per Danganronpa.
+///
+/// ⚠️ RISCRITTO IL 12/08/2026, e la parte che conta è ciò che è stato CANCELLATO.
+/// Qui viveva una SECONDA implementazione del parser AGAR, scritta a mano e più
+/// povera di `gs_read_wad` — che sta 4.600 righe più sotto, nello stesso file, ed
+/// è quella che ha ricostruito il WAD di Danganronpa 1 byte per byte con la prova
+/// in gioco. Due lettori dello stesso formato nello stesso file, e sul percorso
+/// dell'utente c'era quello mai validato: la forma esatta di `ue-translator-dll`
+/// contro `gs-hook`. Differenze misurate, tutte a sfavore di quella cancellata:
+///   1. leggeva `file_count` a offset 16 fisso, ignorando il campo `extra`
+///      dell'header (righe 12..16) — corretto solo se `extra == 0`;
+///   2. NON saltava la tabella DIRECTORY, quindi non sapeva dove comincia la
+///      sezione dati e restituiva offset RELATIVI spacciandoli per assoluti;
+///   3. troncava `size` e `offset` da u64 a u32 (WAD oltre 4 GB → byte sbagliati);
+///   4. faceva `fs::read` dell'INTERO WAD in RAM — i WAD di DR1 sono gigabyte,
+///      la stessa trappola del pak da 12 GB di American Arcadia.
+/// Ora si legge in streaming e si ritorna `data_start + offset`, cioè l'assoluto
+/// che `extract_pak_file` si è sempre aspettato di ricevere.
 fn read_wad_archive(wad_path: &str) -> Result<PakArchive, String> {
     let path = Path::new(wad_path);
-    let data = fs::read(wad_path)
-        .map_err(|e| format!("Errore lettura WAD: {}", e))?;
-    
-    if data.len() < 24 {
+    let wad_name = path.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown");
+    let pak_type = classify_pak_type(wad_name);
+
+    let file_size = fs::metadata(wad_path)
+        .map_err(|e| format!("Errore lettura WAD: {}", e))?
+        .len();
+
+    if file_size < 24 {
         return Err("File WAD troppo piccolo".to_string());
     }
-    
-    let mut entries = Vec::new();
-    let magic = &data[0..4];
-    
-    if magic == b"AGAR" {
-        // Formato AGAR (DR1, DR2, DRAE, V3)
-        // Header: AGAR(4) + version(4) + ?(4) + ?(4) + file_count(4) = 20 bytes
-        let file_count = u32::from_le_bytes([data[16], data[17], data[18], data[19]]) as usize;
-        
-        log::info!("📦 WAD AGAR: {} file dichiarati", file_count);
-        
-        // Entry table starts at offset 20
-        // Each entry: name_len(4) + name(name_len) + size(4) + offset(8)
-        let mut pos = 20;
-        
-        for _i in 0..file_count.min(50000) {
-            if pos + 4 > data.len() {
-                break;
-            }
-            
-            // Leggi lunghezza nome
-            let name_len = u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]) as usize;
-            pos += 4;
-            
-            if name_len == 0 || name_len > 512 || pos + name_len > data.len() {
-                break;
-            }
-            
-            // Leggi nome
-            let name = String::from_utf8_lossy(&data[pos..pos + name_len]).to_string();
-            pos += name_len;
-            
-            // Leggi size (8 bytes) e offset (8 bytes)
-            if pos + 16 > data.len() {
-                break;
-            }
-            
-            let size = u64::from_le_bytes([
-                data[pos], data[pos + 1], data[pos + 2], data[pos + 3],
-                data[pos + 4], data[pos + 5], data[pos + 6], data[pos + 7],
-            ]) as u32;
-            pos += 8;
-            
-            let offset = u64::from_le_bytes([
-                data[pos], data[pos + 1], data[pos + 2], data[pos + 3],
-                data[pos + 4], data[pos + 5], data[pos + 6], data[pos + 7],
-            ]) as u32;
-            pos += 8;
-            
-            if !name.is_empty() {
+
+    let mut f = File::open(wad_path)
+        .map_err(|e| format!("Errore apertura WAD: {}", e))?;
+
+    let mut entries: Vec<PakEntry> = Vec::new();
+    let mut fuori_range = 0usize;
+
+    match gs_read_wad(&mut f) {
+        Ok((gs_entries, _table_start, _file_table_end, data_start)) => {
+            log::info!("📦 WAD AGAR: {} file dichiarati · sezione dati a {}", gs_entries.len(), data_start);
+
+            for e in gs_entries {
+                if e.name.is_empty() {
+                    continue;
+                }
+                // Rebase: l'offset nella tabella è relativo alla sezione dati.
+                let assoluto = data_start.saturating_add(e.offset);
+                // Un'entry che esce dal file NON viene nascosta né estratta: si
+                // elenca marcata, così il difetto è visibile invece che muto.
+                let dentro = assoluto.saturating_add(e.size) <= file_size;
+                if !dentro {
+                    fuori_range += 1;
+                }
                 entries.push(PakEntry {
-                    name,
-                    offset,
-                    size,
+                    name: e.name,
+                    offset: assoluto,
+                    size: e.size,
+                    extractable: dentro,
                 });
             }
+
+            if fuori_range > 0 {
+                log::warn!(
+                    "⚠️ WAD {}: {} entry su {} cadono FUORI dal file ({} byte) — marcate non estraibili, non silenziate",
+                    wad_name, fuori_range, entries.len(), file_size
+                );
+            }
+            log::info!("📦 WAD AGAR: {} entry lette, {} estraibili", entries.len(), entries.len() - fuori_range);
         }
-        
-        log::info!("📦 WAD AGAR: {} file estratti", entries.len());
-    } else {
-        // Formato non-AGAR: prova come raw archive
-        let file_size = data.len() as u32;
-        let wad_name = path.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown");
-        
-        entries.push(PakEntry {
-            name: format!("{} ({:.1} MB)", wad_name, file_size as f64 / 1024.0 / 1024.0),
-            offset: 0,
-            size: file_size,
-        });
+        Err(err) => {
+            // Non-AGAR (o header illeggibile): si mostra il WAD come blocco unico.
+            // È estraibile davvero — offset 0, dimensione dell'intero file.
+            log::info!("📦 WAD {} non in formato AGAR ({}): mostrato come file singolo", wad_name, err);
+        }
     }
-    
-    // Se nessun file trovato, mostra almeno il WAD stesso
+
     if entries.is_empty() {
-        let file_size = data.len() as u32;
-        let wad_name = path.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown");
-        
         entries.push(PakEntry {
             name: format!("{} ({:.1} MB)", wad_name, file_size as f64 / 1024.0 / 1024.0),
             offset: 0,
             size: file_size,
+            extractable: true,
         });
     }
-    
-    let pak_name = path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
-    let pak_type = classify_pak_type(pak_name);
-    
+
     log::info!("📦 WAD letto: {} ({} entries)", wad_path, entries.len());
-    
+
     Ok(PakArchive {
         path: wad_path.to_string(),
         entries,
@@ -343,11 +348,12 @@ fn read_cpk_archive(cpk_path: &str) -> Result<PakArchive, String> {
                 if &data[i..i+4] == b"ITOC" {
                     log::info!("📦 CPK ITOC trovato a offset {}", i);
                     // ITOC usa indici numerici invece di nomi
-                    let file_size = data.len() as u32;
+                    let file_size = data.len() as u64;
                     entries.push(PakEntry {
                         name: format!("CPK con ITOC ({} file indicizzati)", file_size / 1024 / 1024),
                         offset: 0,
                         size: file_size,
+                        extractable: true,
                     });
                     break;
                 }
@@ -357,15 +363,16 @@ fn read_cpk_archive(cpk_path: &str) -> Result<PakArchive, String> {
     
     // Fallback
     if entries.is_empty() {
-        let file_size = data.len() as u32;
+        let file_size = data.len() as u64;
         let cpk_name = path.file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("unknown");
-        
+
         entries.push(PakEntry {
             name: format!("{} ({:.1} MB)", cpk_name, file_size as f64 / 1024.0 / 1024.0),
             offset: 0,
             size: file_size,
+            extractable: true,
         });
     }
     
@@ -407,8 +414,7 @@ fn parse_cpk_utf_table(data: &[u8], utf_start: usize) -> Result<Vec<PakEntry>, S
     
     // Estrai nomi dalla string table
     let mut string_pos = string_base;
-    let mut file_index = 0u32;
-    
+
     while string_pos < data.len() && entries.len() < num_rows.min(10000) {
         // Cerca stringhe null-terminated che sembrano nomi file
         let start = string_pos;
@@ -421,12 +427,22 @@ fn parse_cpk_utf_table(data: &[u8], utf_start: usize) -> Result<Vec<PakEntry>, S
             
             // Filtra solo nomi che sembrano file (contengono . o /)
             if name.contains('.') || name.contains('/') {
+                // ⚠️ 12/08/2026 — QUI STAVA IL DIFETTO PEGGIORE DEI TRE.
+                // Prima: `offset: file_index, size: 0`, cioè un contatore 0,1,2,…
+                // messo nel campo che `extract_pak_file` usa per fare
+                // `seek(SeekFrom::Start(offset))`. Estrarre da un `.cpk` voleva
+                // dire posizionarsi al byte 3 e leggere ZERO byte: un file vuoto,
+                // preso dal punto sbagliato, consegnato SENZA alcun errore.
+                // Questa funzione non parsa il TOC del CPK: raccoglie i NOMI dalla
+                // string table e basta. I nomi sono un dato vero e utile (l'utente
+                // vede cosa c'è dentro); gli offset non li conosciamo, e ora la
+                // struttura lo dichiara invece di inventarli.
                 entries.push(PakEntry {
                     name,
-                    offset: file_index,
-                    size: 0, // Size sconosciuto senza parsing completo
+                    offset: 0,
+                    size: 0,
+                    extractable: false,
                 });
-                file_index += 1;
             }
         }
         
@@ -493,10 +509,14 @@ fn read_pak_archive_internal(pak_path: &str) -> Result<PakArchive, String> {
                 let size = u32::from_le_bytes([data[pos+4], data[pos+5], data[pos+6], data[pos+7]]);
                 pos += 8;
                 
+                // Unico dei tre rami con offset genuinamente ASSOLUTI, ed è anche
+                // l'unico che li validava già prima (controllo `valid` sopra:
+                // offset >= header && offset+size <= file_size).
                 entries.push(PakEntry {
                     name: format!("file_{:04}", i),
-                    offset,
-                    size,
+                    offset: offset as u64,
+                    size: size as u64,
+                    extractable: true,
                 });
             }
             
@@ -512,11 +532,12 @@ fn read_pak_archive_internal(pak_path: &str) -> Result<PakArchive, String> {
     }
     
     // Non è un archivio: mostra come file singolo
-    let file_size = data.len() as u32;
+    let file_size = data.len() as u64;
     entries.push(PakEntry {
         name: pak_name.to_string(),
         offset: 0,
         size: file_size,
+        extractable: true,
     });
     
     let pak_type = classify_pak_type(pak_name);
@@ -546,69 +567,179 @@ fn classify_pak_type(pak_name: &str) -> PakType {
     }
 }
 
+/// Unisce `base` e un nome di file che viene DALL'ARCHIVIO, rifiutando la fuga
+/// dalla cartella di destinazione.
+///
+/// ⚠️ Scritta il 12/08/2026 perché `extract_all_pak` faceva
+/// `Path::new(&output_dir).join(&entry.name)` con `entry.name` letto dal file:
+/// un archivio con una entry chiamata `../../qualcosa` scriveva FUORI dalla
+/// cartella scelta dall'utente, e con un percorso assoluto (`C:\...`, `/etc/...`)
+/// `join` scarta del tutto la base e ci va dritto. È la stessa identica forma di
+/// RUSTSEC-2026-0245 su `sevenz-rust`, chiusa ieri migrando a `sevenz-rust2` —
+/// che quella classe di bug l'aveva proprio lì. Averla appena vista in una
+/// dipendenza e lasciarla in casa sarebbe stato il peggiore dei due errori.
+fn safe_output_path(base: &Path, entry_name: &str) -> Result<PathBuf, String> {
+    use std::path::Component;
+
+    // I WAD Danganronpa usano `/`; su Windows anche `\` va trattato da separatore.
+    let normalizzato = entry_name.replace('\\', "/");
+    let candidato = Path::new(&normalizzato);
+
+    let mut relativo = PathBuf::new();
+    for c in candidato.components() {
+        match c {
+            Component::Normal(part) => relativo.push(part),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                return Err(format!("Nome entry rifiutato (risale la gerarchia): {}", entry_name));
+            }
+            Component::RootDir | Component::Prefix(_) => {
+                return Err(format!("Nome entry rifiutato (percorso assoluto): {}", entry_name));
+            }
+        }
+    }
+
+    if relativo.as_os_str().is_empty() {
+        return Err(format!("Nome entry vuoto o non utilizzabile: {}", entry_name));
+    }
+
+    Ok(base.join(relativo))
+}
+
+/// Legge i byte di una entry dal file, con i controlli che prima non c'erano.
+///
+/// ⚠️ La riga che conta è il confronto con la lunghezza REALE del file: prima si
+/// faceva `seek` e `read_exact` fidandosi dell'offset, e su un `.cpk` (dove
+/// l'offset era un indice progressivo e la dimensione zero) il risultato era un
+/// file VUOTO consegnato come successo.
+fn read_entry_bytes(file: &mut File, file_len: u64, entry: &PakEntry) -> Result<Vec<u8>, String> {
+    if !entry.extractable {
+        return Err(format!(
+            "«{}» non è estraibile: per questo formato non conosciamo la posizione dei dati nel file. \
+             Il nome viene dall'indice dell'archivio, ma un parser del TOC non esiste ancora — \
+             estrarla produrrebbe byte sbagliati.",
+            entry.name
+        ));
+    }
+
+    if entry.size == 0 {
+        return Err(format!("«{}» ha dimensione dichiarata ZERO: non c'è niente da estrarre", entry.name));
+    }
+
+    let fine = entry.offset.checked_add(entry.size)
+        .ok_or_else(|| format!("«{}»: offset+dimensione va in overflow", entry.name))?;
+    if fine > file_len {
+        return Err(format!(
+            "«{}» esce dal file: offset {} + {} byte > {} byte totali. \
+             L'indice dell'archivio non corrisponde al file.",
+            entry.name, entry.offset, entry.size, file_len
+        ));
+    }
+
+    file.seek(SeekFrom::Start(entry.offset))
+        .map_err(|e| format!("Errore seek su «{}»: {}", entry.name, e))?;
+
+    let mut data = vec![0u8; entry.size as usize];
+    file.read_exact(&mut data)
+        .map_err(|e| format!("Errore lettura «{}»: {}", entry.name, e))?;
+
+    Ok(data)
+}
+
 /// Estrai un file specifico da un PAK
 #[command]
 pub fn extract_pak_file(pak_path: String, entry_index: u32, output_path: String) -> Result<(), String> {
     let archive = read_pak_archive(pak_path.clone())?;
-    
+
     let entry = archive.entries.get(entry_index as usize)
         .ok_or("Indice entry non valido")?;
-    
+
+    let file_len = fs::metadata(&pak_path)
+        .map_err(|e| format!("Errore lettura archivio: {}", e))?
+        .len();
+
     let mut file = File::open(&pak_path)
         .map_err(|e| format!("Errore apertura PAK: {}", e))?;
-    
-    file.seek(SeekFrom::Start(entry.offset as u64))
-        .map_err(|e| format!("Errore seek: {}", e))?;
-    
-    let mut data = vec![0u8; entry.size as usize];
-    file.read_exact(&mut data)
-        .map_err(|e| format!("Errore lettura dati: {}", e))?;
-    
+
+    let data = read_entry_bytes(&mut file, file_len, entry)?;
+
     fs::write(&output_path, &data)
         .map_err(|e| format!("Errore scrittura output: {}", e))?;
-    
-    log::info!("📤 Estratto: {} -> {}", entry.name, output_path);
-    
+
+    log::info!("📤 Estratto: {} ({} byte) -> {}", entry.name, data.len(), output_path);
+
     Ok(())
 }
 
-/// Estrai tutti i file da un PAK
+/// Estrai tutti i file da un PAK.
+///
+/// ⚠️ Non si ferma alla prima entry problematica (un archivio con una voce rotta
+/// non deve buttare via le altre 5.000), ma NON dichiara successo a vuoto: se
+/// nessuna entry è estraibile ritorna un errore che dice il perché, invece di
+/// «Estratti 0 file» con l'aria di aver funzionato.
 #[command]
 pub fn extract_all_pak(pak_path: String, output_dir: String) -> Result<u32, String> {
     let archive = read_pak_archive(pak_path.clone())?;
-    
-    fs::create_dir_all(&output_dir)
+
+    let base = Path::new(&output_dir);
+    fs::create_dir_all(base)
         .map_err(|e| format!("Errore creazione directory: {}", e))?;
-    
+
+    let file_len = fs::metadata(&pak_path)
+        .map_err(|e| format!("Errore lettura archivio: {}", e))?
+        .len();
+
     let mut file = File::open(&pak_path)
         .map_err(|e| format!("Errore apertura PAK: {}", e))?;
-    
+
     let mut extracted = 0u32;
-    
+    let mut saltate: Vec<String> = Vec::new();
+
     for (i, entry) in archive.entries.iter().enumerate() {
-        file.seek(SeekFrom::Start(entry.offset as u64))
-            .map_err(|e| format!("Errore seek entry {}: {}", i, e))?;
-        
-        let mut data = vec![0u8; entry.size as usize];
-        file.read_exact(&mut data)
-            .map_err(|e| format!("Errore lettura entry {}: {}", i, e))?;
-        
-        let output_path = Path::new(&output_dir).join(&entry.name);
-        
-        // Crea sottocartelle se necessario
+        let data = match read_entry_bytes(&mut file, file_len, entry) {
+            Ok(d) => d,
+            Err(e) => {
+                log::warn!("⏭️ entry {} saltata: {}", i, e);
+                saltate.push(e);
+                continue;
+            }
+        };
+
+        let output_path = match safe_output_path(base, &entry.name) {
+            Ok(p) => p,
+            Err(e) => {
+                log::warn!("⏭️ entry {} saltata: {}", i, e);
+                saltate.push(e);
+                continue;
+            }
+        };
+
         if let Some(parent) = output_path.parent() {
             fs::create_dir_all(parent)
                 .map_err(|e| format!("Errore creazione directory {}: {}", parent.display(), e))?;
         }
-        
+
         fs::write(&output_path, &data)
             .map_err(|e| format!("Errore scrittura {}: {}", entry.name, e))?;
-        
+
         extracted += 1;
     }
-    
-    log::info!("📤 Estratti {} file da {}", extracted, pak_path);
-    
+
+    if extracted == 0 {
+        let motivo = saltate.first().cloned()
+            .unwrap_or_else(|| "l'archivio non contiene entry".to_string());
+        return Err(format!(
+            "Nessun file estratto da {} entry. Prima causa: {}",
+            archive.entries.len(), motivo
+        ));
+    }
+
+    if !saltate.is_empty() {
+        log::warn!("📤 {} file estratti, {} entry saltate da {}", extracted, saltate.len(), pak_path);
+    } else {
+        log::info!("📤 Estratti {} file da {}", extracted, pak_path);
+    }
+
     Ok(extracted)
 }
 
@@ -3933,37 +4064,209 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// Costruisce un WAD AGAR valido: header (con `extra`), tabella file,
+    /// tabella DIRECTORY, poi la sezione dati. Gli offset delle entry sono
+    /// RELATIVI all'inizio della sezione dati, come nel formato vero.
+    /// Ritorna (bytes, data_start).
+    fn build_test_wad(files: &[(&str, &[u8])], extra_len: usize) -> (Vec<u8>, u64) {
+        let mut d = Vec::new();
+        d.extend_from_slice(b"AGAR");
+        d.extend_from_slice(&1u32.to_le_bytes()); // version major
+        d.extend_from_slice(&1u32.to_le_bytes()); // version minor
+        d.extend_from_slice(&(extra_len as u32).to_le_bytes()); // extra
+        d.extend_from_slice(&vec![0xAAu8; extra_len]); // header extra data
+
+        d.extend_from_slice(&(files.len() as u32).to_le_bytes()); // file_count
+
+        // tabella file: name_len(4) + name + size(8) + offset(8)
+        let mut rel = 0u64;
+        for (name, body) in files {
+            d.extend_from_slice(&(name.len() as u32).to_le_bytes());
+            d.extend_from_slice(name.as_bytes());
+            d.extend_from_slice(&(body.len() as u64).to_le_bytes());
+            d.extend_from_slice(&rel.to_le_bytes()); // offset RELATIVO
+            rel += body.len() as u64;
+        }
+
+        // tabella directory: dir_count · [name_len, name, entry_count · [len, name+1]]
+        d.extend_from_slice(&1u32.to_le_bytes()); // dir_count = 1
+        let dir_name = b"";
+        d.extend_from_slice(&(dir_name.len() as u32).to_le_bytes());
+        d.extend_from_slice(dir_name);
+        d.extend_from_slice(&(files.len() as u32).to_le_bytes());
+        for (name, _) in files {
+            d.extend_from_slice(&(name.len() as u32).to_le_bytes());
+            d.extend_from_slice(name.as_bytes());
+            d.push(0u8); // is_directory
+        }
+
+        let data_start = d.len() as u64;
+        for (_, body) in files {
+            d.extend_from_slice(body);
+        }
+        (d, data_start)
+    }
+
+    /// ⚠️ Questo test SOSTITUISCE una versione precedente che asseriva
+    /// `offset == 200`, cioè l'offset GREZZO letto dalla tabella — certificava
+    /// il bug invece di stanarlo. Un test può assolvere un guasto: qui lo faceva,
+    /// e per questo il difetto è sopravvissuto a ogni suite verde.
     #[test]
-    fn wad_archive_agar_with_entries() {
+    fn wad_archive_agar_offsets_are_absolute() {
         let dir = std::env::temp_dir().join("dr_test_wad_agar_entries");
         let _ = fs::create_dir_all(&dir);
         let wad_path = dir.join("test.wad");
 
-        let mut data = Vec::new();
-        // AGAR header (20 bytes)
-        data.extend_from_slice(b"AGAR");
-        data.extend_from_slice(&0u32.to_le_bytes()); // version
-        data.extend_from_slice(&0u32.to_le_bytes()); // ?
-        data.extend_from_slice(&0u32.to_le_bytes()); // ?
-        data.extend_from_slice(&1u32.to_le_bytes()); // file_count = 1
-
-        // Entry: name_len(4) + name(name_len) + size(8) + offset(8)
-        let name = b"hello.txt";
-        data.extend_from_slice(&(name.len() as u32).to_le_bytes());
-        data.extend_from_slice(name);
-        data.extend_from_slice(&100u64.to_le_bytes()); // size
-        data.extend_from_slice(&200u64.to_le_bytes()); // offset
-
-        // Pad to make file big enough
-        data.resize(300, 0);
-
+        // Binding tipati: dentro un array literal `b"..."` è `&[u8; N]` e due
+        // lunghezze diverse non unificano.
+        let uno: &[u8] = b"CIAO-MONDO";
+        let due: &[u8] = b"XYZ";
+        let (data, data_start) = build_test_wad(&[("hello.txt", uno), ("altro.bin", due)], 0);
         fs::write(&wad_path, &data).unwrap();
+
         let result = read_wad_archive(wad_path.to_str().unwrap()).unwrap();
-        assert_eq!(result.entries.len(), 1);
+        assert_eq!(result.entries.len(), 2);
+
         assert_eq!(result.entries[0].name, "hello.txt");
-        assert_eq!(result.entries[0].size, 100);
-        assert_eq!(result.entries[0].offset, 200);
+        assert_eq!(result.entries[0].size, 10);
+        // L'offset relativo della prima entry è 0: quello assoluto DEVE essere data_start.
+        assert_eq!(result.entries[0].offset, data_start, "offset non rebasato su data_start");
+        assert!(result.entries[0].extractable);
+
+        assert_eq!(result.entries[1].name, "altro.bin");
+        assert_eq!(result.entries[1].offset, data_start + 10);
+
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// L'header AGAR ha un campo `extra` che il vecchio parser ignorava, leggendo
+    /// `file_count` a offset 16 fisso. Con `extra != 0` leggeva byte a caso.
+    #[test]
+    fn wad_archive_agar_honours_extra_header_field() {
+        let dir = std::env::temp_dir().join("dr_test_wad_extra");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("extra.wad");
+
+        let corpo: &[u8] = b"CONTENUTO";
+        let (data, data_start) = build_test_wad(&[("solo.txt", corpo)], 12);
+        fs::write(&wad_path, &data).unwrap();
+
+        let result = read_wad_archive(wad_path.to_str().unwrap()).unwrap();
+        assert_eq!(result.entries.len(), 1, "extra header non saltato: entry perse");
+        assert_eq!(result.entries[0].name, "solo.txt");
+        assert_eq!(result.entries[0].offset, data_start);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// PROVA INCROCIATA — la sola che dimostra davvero la correzione:
+    /// i byte estratti devono essere ESATTAMENTE quelli che abbiamo scritto,
+    /// per due percorsi diversi (singolo e massivo). Un offset sbagliato passa i
+    /// controlli di forma e fallisce qui.
+    #[test]
+    fn wad_extraction_roundtrip_matches_source_bytes() {
+        let dir = std::env::temp_dir().join("dr_test_wad_roundtrip");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("rt.wad");
+        let out_dir = dir.join("out");
+
+        let primo: &[u8] = b"PRIMO-FILE-0123456789";
+        let secondo: &[u8] = b"SECONDO";
+        let (data, _) = build_test_wad(&[("a/primo.txt", primo), ("secondo.bin", secondo)], 4);
+        fs::write(&wad_path, &data).unwrap();
+
+        // percorso 1: estrazione singola
+        let single = dir.join("single.bin");
+        extract_pak_file(
+            wad_path.to_str().unwrap().to_string(),
+            0,
+            single.to_str().unwrap().to_string(),
+        ).unwrap();
+        assert_eq!(fs::read(&single).unwrap(), primo, "estrazione singola: byte sbagliati");
+
+        // percorso 2: estrazione massiva — stesso file, stessi byte
+        let n = extract_all_pak(
+            wad_path.to_str().unwrap().to_string(),
+            out_dir.to_str().unwrap().to_string(),
+        ).unwrap();
+        assert_eq!(n, 2);
+        assert_eq!(fs::read(out_dir.join("a").join("primo.txt")).unwrap(), primo);
+        assert_eq!(fs::read(out_dir.join("secondo.bin")).unwrap(), secondo);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// CONTROLLO POSITIVO del test qui sopra: se l'offset NON viene rebasato su
+    /// `data_start`, l'estrazione deve diventare rossa. Senza questa prova non
+    /// sapremmo se il roundtrip passa perché il codice è giusto o perché il test
+    /// è cieco — la lezione di [gate-che-diventano-ciechi].
+    #[test]
+    fn wad_extraction_fails_when_offset_is_not_rebased() {
+        let dir = std::env::temp_dir().join("dr_test_wad_control");
+        let _ = fs::create_dir_all(&dir);
+        let wad_path = dir.join("ctrl.wad");
+
+        let corpo: &[u8] = b"CONTENUTO-VERO";
+        let (data, data_start) = build_test_wad(&[("x.txt", corpo)], 0);
+        fs::write(&wad_path, &data).unwrap();
+
+        let archive = read_pak_archive(wad_path.to_str().unwrap().to_string()).unwrap();
+        let buona = &archive.entries[0];
+        assert_eq!(buona.offset, data_start);
+
+        // Ricostruiamo la entry com'era PRIMA della correzione: offset grezzo.
+        let bacata = PakEntry {
+            name: buona.name.clone(),
+            offset: buona.offset - data_start, // = 0, l'offset relativo
+            size: buona.size,
+            extractable: true,
+        };
+
+        let file_len = fs::metadata(&wad_path).unwrap().len();
+        let mut f = File::open(&wad_path).unwrap();
+        let letti = read_entry_bytes(&mut f, file_len, &bacata).unwrap();
+        assert_ne!(letti, corpo, "l'offset grezzo NON deve produrre i byte giusti");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Il ramo CPK non ha un parser del TOC: le sue entry devono RIFIUTARSI di
+    /// essere estratte, invece di produrre file vuoti senza errore.
+    #[test]
+    fn cpk_entries_refuse_extraction_instead_of_writing_empty_files() {
+        let entry = PakEntry {
+            name: "qualcosa.pak".to_string(),
+            offset: 0,
+            size: 0,
+            extractable: false,
+        };
+        let dir = std::env::temp_dir().join("dr_test_cpk_refuse");
+        let _ = fs::create_dir_all(&dir);
+        let f_path = dir.join("dummy.bin");
+        fs::write(&f_path, b"0123456789").unwrap();
+        let mut f = File::open(&f_path).unwrap();
+
+        let err = read_entry_bytes(&mut f, 10, &entry).unwrap_err();
+        assert!(err.contains("non è estraibile"), "errore poco chiaro: {}", err);
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Path traversal: un nome di entry che risale la gerarchia o è assoluto deve
+    /// essere rifiutato. Stessa classe di RUSTSEC-2026-0245 (`sevenz-rust`).
+    #[test]
+    fn safe_output_path_rejects_traversal_and_absolute() {
+        let base = Path::new("/tmp/estrazione");
+
+        assert!(safe_output_path(base, "../fuori.txt").is_err());
+        assert!(safe_output_path(base, "a/../../fuori.txt").is_err());
+        assert!(safe_output_path(base, "..\\fuori.txt").is_err(), "separatore Windows non normalizzato");
+        assert!(safe_output_path(base, "/etc/passwd").is_err());
+        assert!(safe_output_path(base, "").is_err());
+
+        // I nomi legittimi passano, sottocartelle comprese.
+        assert_eq!(safe_output_path(base, "a/b/c.txt").unwrap(), base.join("a").join("b").join("c.txt"));
+        assert_eq!(safe_output_path(base, "./file.bin").unwrap(), base.join("file.bin"));
     }
 
     // ----------------------------------------------------------------
