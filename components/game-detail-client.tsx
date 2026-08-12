@@ -912,6 +912,11 @@ export default function GameDetailPage() {
           const bridge = await invoke<{ url: string; port: number }>('start_xunity_bridge', {
             port: null,
             model: 'huihui_ai/hy-mt1.5-abliterated:1.8b',
+            // Senza questo l'indirizzo di Ollama era cablato nel bridge: chi lo
+            // esegue su un'altra porta vedeva lo stato «Attivo» e il gioco
+            // restare in inglese, perché stato e traduzione guardavano posti
+            // diversi. Vedi lib/ai/ollama-endpoint.ts e issue #49/#52.
+            ...ollamaArgs(),
           });
           bridgeUrl = bridge.url;
           clientLogger.debug('[Patch] bridge Ollama avviato:', bridge.url);

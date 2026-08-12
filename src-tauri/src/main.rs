@@ -1274,11 +1274,20 @@ fn main() {
             ])?;
 
             // ── Verifica stato Ollama in background ──────────
+            // ⚠️ L'indirizzo si RIRISOLVE a ogni giro, non una volta sola: se
+            // l'utente cambia l'impostazione mentre l'app è aperta, il ciclo
+            // successivo la vede. Fino al 12/08/2026 qui c'era
+            // `http://localhost:11434` cablato, quindi questa spia diceva
+            // «Offline» a chiunque avesse Ollama su un'altra porta, in WSL o in
+            // Docker — mentre i pannelli in-app, che passano dall'endpoint
+            // risolto, dicevano «Attivo». Due parti della stessa app che
+            // guardavano due posti diversi.
             let ollama_status_clone = ollama_status.clone();
             tauri::async_runtime::spawn(async move {
                 loop {
+                    let base = commands::ollama_endpoint::ollama_base_url_remembered();
                     let is_online = reqwest::Client::new()
-                        .get("http://localhost:11434/api/tags")
+                        .get(format!("{}/api/tags", base))
                         .timeout(std::time::Duration::from_secs(3))
                         .send()
                         .await

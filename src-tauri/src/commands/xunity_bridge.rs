@@ -9,7 +9,7 @@
 //! su file, quindi ogni stringa arriva una sola volta anche tra sessioni.
 
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use serde::Serialize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -25,14 +25,33 @@ pub struct BridgeInfo {
 
 /// Avvia il bridge di traduzione locale per XUnity. Idempotente: se già attivo
 /// restituisce l'URL esistente.
+///
+/// ⚠️ `base_url` è l'indirizzo di Ollama scelto dall'utente (Impostazioni →
+/// Indirizzo server Ollama). Fino al 12/08/2026 non c'era: `translate_with_ollama`
+/// aveva `http://127.0.0.1:11434` CABLATO, quindi chi esegue Ollama su un'altra
+/// porta, in WSL, in Docker o su un'altra macchina vedeva l'app dichiarare
+/// «Attivo · N modelli» — perché lo STATO passa da `ollama_base_url` — e poi il
+/// gioco restare in inglese, perché la TRADUZIONE no. La spia guardava un posto,
+/// il motore un altro. Cfr. issue #49/#52.
+///
+/// L'endpoint si risolve UNA VOLTA all'avvio del bridge e viaggia con le
+/// connessioni: il server vive finché vive l'app, e rileggere l'impostazione a
+/// ogni richiesta significherebbe cambiarla sotto i piedi a una sessione di
+/// gioco in corso.
 #[tauri::command]
-pub async fn start_xunity_bridge(port: Option<u16>, model: String) -> Result<BridgeInfo, String> {
+pub async fn start_xunity_bridge(
+    port: Option<u16>,
+    model: String,
+    base_url: Option<String>,
+) -> Result<BridgeInfo, String> {
     let port = port.unwrap_or(48920);
     let url = format!("http://127.0.0.1:{}/translate", port);
 
     if RUNNING.swap(true, Ordering::SeqCst) {
         return Ok(BridgeInfo { url, port });
     }
+
+    let ollama_base = super::ollama_endpoint::ollama_base_url(base_url.as_deref());
 
     let listener = match TcpListener::bind(("127.0.0.1", port)).await {
         Ok(l) => l,
@@ -42,17 +61,26 @@ pub async fn start_xunity_bridge(port: Option<u16>, model: String) -> Result<Bri
         }
     };
 
-    log::info!("[xunity-bridge] in ascolto su {} (model={})", url, model);
+    // L'endpoint risolto va nel log: se le traduzioni non arrivano, questa riga
+    // dice subito CON CHI stavamo parlando, invece di lasciarlo dedurre.
+    log::info!(
+        "[xunity-bridge] in ascolto su {} (model={}, ollama={})",
+        url, model, ollama_base
+    );
 
     tokio::spawn(async move {
         let cache: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
+        // Contatore di fallimenti consecutivi: vedi `handle_conn`.
+        let falliti: Arc<AtomicUsize> = Arc::new(AtomicUsize::new(0));
         loop {
             match listener.accept().await {
                 Ok((stream, _)) => {
                     let cache = cache.clone();
                     let model = model.clone();
+                    let ollama_base = ollama_base.clone();
+                    let falliti = falliti.clone();
                     tokio::spawn(async move {
-                        if let Err(e) = handle_conn(stream, cache, model).await {
+                        if let Err(e) = handle_conn(stream, cache, model, ollama_base, falliti).await {
                             log::debug!("[xunity-bridge] conn error: {}", e);
                         }
                     });
@@ -69,6 +97,8 @@ async fn handle_conn(
     mut stream: TcpStream,
     cache: Arc<Mutex<HashMap<String, String>>>,
     model: String,
+    ollama_base: String,
+    falliti: Arc<AtomicUsize>,
 ) -> Result<(), String> {
     // Per una GET la request-line è nei primi byte; 64KB coprono URL lunghi.
     let mut buf = vec![0u8; 65536];
@@ -87,13 +117,39 @@ async fn handle_conn(
         let cached = { cache.lock().unwrap().get(&key).cloned() };
         match cached {
             Some(hit) => hit,
-            None => match translate_with_ollama(&text, &from, &to, &model).await {
+            None => match translate_with_ollama(&text, &from, &to, &model, &ollama_base).await {
                 Ok(tr) if !tr.is_empty() && tr != text => {
+                    falliti.store(0, Ordering::Relaxed);
                     cache.lock().unwrap().insert(key, tr.clone());
                     tr
                 }
-                // Fallback: originale. Mai un messaggio d'errore: XUnity lo cacherebbe.
-                _ => text.clone(),
+                // Fallback: si restituisce l'originale. Mai un messaggio d'errore,
+                // perché XUnity lo scriverebbe nella sua cache su file e il gioco
+                // resterebbe con quella stringa per sempre.
+                //
+                // ⚠️ MA IL FALLBACK È MUTO PER COSTRUZIONE: l'utente vede il gioco
+                // in inglese e nessun errore da nessuna parte — è il difetto #1 di
+                // questo progetto. Non potendo rispondere con l'errore, lo si
+                // scrive nel LOG, una volta ogni 20 fallimenti consecutivi (non a
+                // ogni stringa: un gioco ne manda migliaia e il log diventerebbe
+                // illeggibile proprio quando serve). La riga dice l'ENDPOINT, che è
+                // l'informazione che mancava quando le traduzioni sparivano.
+                esito => {
+                    let n = falliti.fetch_add(1, Ordering::Relaxed) + 1;
+                    if n == 1 || n % 20 == 0 {
+                        let motivo = match esito {
+                            Err(e) => e,
+                            Ok(_) => "risposta vuota o identica all'originale".to_string(),
+                        };
+                        log::warn!(
+                            "[xunity-bridge] {} traduzioni consecutive NON riuscite con ollama={} (model={}): {} \
+                             — il gioco resta nella lingua originale. Se Ollama è su un'altra porta, \
+                             impostala in Impostazioni → Indirizzo server Ollama.",
+                            n, ollama_base, model, motivo
+                        );
+                    }
+                    text.clone()
+                }
             },
         }
     };
@@ -159,14 +215,23 @@ fn url_decode(s: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-async fn translate_with_ollama(text: &str, from: &str, to: &str, model: &str) -> Result<String, String> {
+/// ⚠️ `ollama_base` arriva risolto da `start_xunity_bridge`. Non rimettere qui
+/// un indirizzo cablato: era il difetto che faceva fallire la traduzione Unity
+/// mentre la spia dell'app diceva «Attivo».
+async fn translate_with_ollama(
+    text: &str,
+    from: &str,
+    to: &str,
+    model: &str,
+    ollama_base: &str,
+) -> Result<String, String> {
     let prompt = format!(
         "Translate from {} to {}. Return ONLY the translation, no notes, no quotes.\n\n{}",
         from, to, text
     );
     let client = reqwest::Client::new();
     let resp = client
-        .post("http://127.0.0.1:11434/api/generate")
+        .post(format!("{}/api/generate", ollama_base))
         .json(&serde_json::json!({
             "model": model,
             "prompt": prompt,

@@ -67,6 +67,47 @@ pub fn ollama_base_url(override_url: Option<&str>) -> String {
     DEFAULT_OLLAMA_URL.to_string()
 }
 
+/// Ultimo indirizzo passato dal frontend, memorizzato per chi NON può riceverlo
+/// come parametro.
+///
+/// ⚠️ Il caso concreto è la spia «🟢 Ollama: Online» del menu tray
+/// (`main.rs`): gira in un task di background avviato al setup dell'app, non è
+/// un comando invocato dal frontend, quindi non ha nessun `base_url` da cui
+/// partire. Fino al 12/08/2026 aveva `http://localhost:11434` cablato e diceva
+/// «Offline» a chiunque avesse Ollama altrove — il contrario esatto del difetto
+/// di `xunity_bridge`, ma la stessa causa.
+///
+/// L'impostazione utente vive nel `localStorage` del frontend
+/// (`gameStringerSettings.translation.ollamaUrl`) e il Rust non la legge: non
+/// c'è modo di andarla a prendere. Quindi la si **ricorda al passaggio**, dai
+/// comandi che già la ricevono. Nessun comando nuovo da inventare e nessun
+/// cablaggio in più nel frontend che qualcuno possa dimenticare di fare — che è
+/// il modo in cui in questo progetto nascono i pezzi completi e mai chiamati.
+static LAST_USER_OVERRIDE: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// Memorizza l'indirizzo scelto dall'utente. Va chiamata dai comandi che lo
+/// ricevono dal frontend; `None` non cancella quello già noto (una chiamata
+/// senza override non significa «l'utente ha tolto l'impostazione», significa
+/// solo che quel chiamante non l'ha passata).
+pub fn remember_user_override(override_url: Option<&str>) {
+    if let Some(u) = override_url.and_then(normalize_ollama_url) {
+        if let Ok(mut slot) = LAST_USER_OVERRIDE.lock() {
+            *slot = Some(u);
+        }
+    }
+}
+
+/// Base URL per chi non ha un `base_url` da passare (task di background).
+/// Precedenza: ultimo override ricordato → `OLLAMA_HOST` → default IPv4.
+pub fn ollama_base_url_remembered() -> String {
+    if let Ok(slot) = LAST_USER_OVERRIDE.lock() {
+        if let Some(u) = slot.as_ref() {
+            return u.clone();
+        }
+    }
+    ollama_base_url(None)
+}
+
 /// Coppia host/porta per il probe TCP, ricavata dalla base URL.
 pub fn ollama_host_port(base_url: &str) -> (String, u16) {
     let no_scheme = base_url
@@ -145,5 +186,105 @@ mod tests {
     #[test]
     fn host_port_defaults_when_missing() {
         assert_eq!(ollama_host_port("http://myhost"), ("myhost".to_string(), 11434));
+    }
+
+    #[test]
+    fn remembered_override_wins_and_survives_a_none() {
+        remember_user_override(Some("http://192.168.1.9:12345"));
+        assert_eq!(ollama_base_url_remembered(), "http://192.168.1.9:12345");
+
+        // Un chiamante che non passa l'indirizzo NON deve cancellare quello noto:
+        // «non l'ho passato» non è «l'utente l'ha tolto».
+        remember_user_override(None);
+        assert_eq!(ollama_base_url_remembered(), "http://192.168.1.9:12345");
+
+        // Ripristino per non condizionare gli altri test dello stesso processo.
+        if let Ok(mut slot) = LAST_USER_OVERRIDE.lock() {
+            *slot = None;
+        }
+    }
+
+    /// ⚠️ GATE, non un test di comportamento: cerca gli indirizzi di Ollama
+    /// CABLATI nel resto del backend.
+    ///
+    /// Perché esiste: `11434` è stato cablato in nove punti, corretto in tre
+    /// riprese diverse (10/08, 11/08, 12/08) e ogni volta si era dichiarato
+    /// chiuso mentre altri call-site erano ancora lì — la spia risolveva
+    /// l'indirizzo, il motore no. Un difetto che ricompare tre volte non si
+    /// chiude con l'attenzione: si chiude con qualcosa che lo conta.
+    ///
+    /// Il gate legge i sorgenti dal disco. Se un giorno la struttura delle
+    /// cartelle cambia e i file non si trovano, il test FALLISCE invece di
+    /// passare a vuoto: un gate che non trova niente da controllare e dice
+    /// «verde» è la trappola di [gate-che-diventano-ciechi].
+    #[test]
+    fn no_hardcoded_ollama_address_outside_this_module() {
+        use std::path::Path;
+
+        // Questo file è l'unico posto legittimo: qui `11434` è il default e i
+        // casi di prova. Gli altri sono elencati con la ragione.
+        // Un solo file ammesso, di proposito. `ollama_manager.rs` era in questa
+        // lista per un messaggio d'errore che diceva «non risponde sulla porta
+        // 11434» a chiunque: l'ho corretto perché nominasse l'indirizzo vero,
+        // invece di allargare l'eccezione. Un'eccezione in un gate è un posto
+        // dove il difetto può tornare a nascondersi.
+        const AMMESSI: &[&str] = &["ollama_endpoint.rs"];
+
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        assert!(base.is_dir(), "cartella src non trovata: il gate non ha controllato NULLA");
+
+        let mut colpevoli: Vec<String> = Vec::new();
+        let mut file_visti = 0usize;
+
+        fn scandisci(
+            dir: &Path,
+            ammessi: &[&str],
+            colpevoli: &mut Vec<String>,
+            file_visti: &mut usize,
+        ) {
+            let Ok(entries) = std::fs::read_dir(dir) else { return };
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.is_dir() {
+                    scandisci(&p, ammessi, colpevoli, file_visti);
+                    continue;
+                }
+                if p.extension().and_then(|x| x.to_str()) != Some("rs") {
+                    continue;
+                }
+                let nome = p.file_name().and_then(|x| x.to_str()).unwrap_or("");
+                if ammessi.contains(&nome) {
+                    continue;
+                }
+                let Ok(testo) = std::fs::read_to_string(&p) else { continue };
+                *file_visti += 1;
+                for (i, riga) in testo.lines().enumerate() {
+                    let t = riga.trim_start();
+                    // I commenti raccontano la storia del difetto: non sono il difetto.
+                    if t.starts_with("//") {
+                        continue;
+                    }
+                    if riga.contains("11434") {
+                        colpevoli.push(format!("{}:{}: {}", nome, i + 1, riga.trim()));
+                    }
+                }
+            }
+        }
+
+        scandisci(&base, AMMESSI, &mut colpevoli, &mut file_visti);
+
+        // Controllo positivo: se non ho letto nessun file, il verde non vale.
+        assert!(
+            file_visti > 20,
+            "il gate ha letto solo {} file: non sta controllando davvero",
+            file_visti
+        );
+
+        assert!(
+            colpevoli.is_empty(),
+            "indirizzo Ollama CABLATO in {} punto/i — deve passare da ollama_base_url():\n{}",
+            colpevoli.len(),
+            colpevoli.join("\n")
+        );
     }
 }

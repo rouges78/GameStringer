@@ -132,6 +132,12 @@ async fn get_installed_models(base_url: &str) -> Vec<String> {
 /// connettersi».
 #[tauri::command]
 pub async fn check_ollama_status(base_url: Option<String>) -> Result<OllamaStatus, String> {
+    // Questo comando è il posto giusto per ricordare l'indirizzo: lo riceve dal
+    // frontend ed è già chiamato al boot (main-layout.tsx) e a ogni apertura
+    // delle Impostazioni. La spia del tray, che gira in background e non ha modo
+    // di leggere il localStorage, legge di qui — vedi `remember_user_override`.
+    super::ollama_endpoint::remember_user_override(base_url.as_deref());
+
     let endpoint = ollama_base_url(base_url.as_deref());
     let ollama_path = find_ollama_path();
     let running = is_ollama_running(&endpoint);
@@ -268,7 +274,10 @@ pub async fn start_ollama(base_url: Option<String>) -> Result<String, String> {
         }
     }
     
-    Err("Ollama avviato ma non risponde sulla porta 11434".to_string())
+    // Il messaggio nomina l'indirizzo REALMENTE contattato. Prima diceva sempre
+    // «porta 11434» anche a chi aveva Ollama altrove: mandava a cercare il guasto
+    // dalla parte sbagliata, che è peggio di un messaggio generico.
+    Err(format!("Ollama avviato ma non risponde su {}", endpoint))
 }
 
 #[tauri::command]
