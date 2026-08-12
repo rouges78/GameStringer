@@ -189,6 +189,12 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
           { name: 'Bethesda', href: '/bethesda-patcher', icon: Shield },
           { name: 'CRI Middleware', href: '/cri-patcher', icon: Disc },
+          // ⚠️ Aggiunta il 12/08/2026: la pagina esisteva dalla v1.6.0 con tre
+          // comandi Tauri registrati (read_pak_archive, extract_pak_file,
+          // extract_all_pak) e NON era in nessun menu. Compariva solo nella
+          // pagina Guida, che legge da lib/tools-registry.ts — l'unico
+          // consumatore di quel registro. Per l'utente non esisteva.
+          { name: 'Visual Novel (Danganronpa)', href: '/danganronpa-patcher', icon: Package },
         ],
       },
       { name: 'Universal Injector', href: '/injector', icon: Wand2 },
