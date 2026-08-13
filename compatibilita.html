@@ -187,9 +187,19 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 
 async function load(){
   try{
+    // Timeout esplicito (15s). Senza, un database che ACCETTA la connessione ma
+    // non risponde mai (successo 13/08/2026: istanza appesa dalle 06:20, pagina
+    // ferma su «Carico i report…» per ore) lascia la promise pendente per
+    // sempre: né then né catch, e lo stato di errore qui sotto — scritto,
+    // tradotto in 12 lingue e collaudato — resta irraggiungibile. L'errore
+    // scattava solo se il server RIFIUTAVA; il caso «non risponde» è peggiore
+    // e più realistico, ed era l'unico non coperto.
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),15000);
     const res=await fetch(`${SUPABASE_URL}/rest/v1/compat_game_summary?select=*&order=last_report_at.desc&limit=2000`,{
-      headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`}
-    });
+      headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`},
+      signal:ctrl.signal
+    }).finally(()=>clearTimeout(timer));
     if(!res.ok) throw new Error('HTTP '+res.status);
     const rows=await res.json();
     const byKey=new Map();
