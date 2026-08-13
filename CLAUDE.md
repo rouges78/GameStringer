@@ -25,3 +25,6 @@ GameStringer — Next.js + Tauri (Rust) desktop app. Prisma + Supabase for data,
 
 - Port management is scripted (`scripts/port-manager.js`, dev on 3002) — don't hardcode ports.
 - Native module in `native/` built with node-gyp (`npm run build:native`).
+
+- parlami sempre in italiano ma committa in inglese
+- uso sempre git bash e quando mi mandi codice pronto da copia/incolla inserisci sempre la directory di destinazione
