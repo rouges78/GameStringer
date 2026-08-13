@@ -6,7 +6,7 @@ use crate::notifications::{
     models::{
         CreateNotificationRequest, NotificationType, NotificationPriority, NotificationMetadata
     },
-    errors::NotificationResult,
+    errors::{NotificationError, NotificationResult},
 };
 
 /// Eventi di sistema che possono generare notifiche
@@ -203,10 +203,26 @@ impl SystemEventHandler {
     /// Crea notifica broadcast per tutti i profili attivi
     async fn create_broadcast_notification(&self, request: CreateNotificationRequest) -> NotificationResult<Vec<String>> {
         let profiles = self.active_profiles.lock().await.clone();
+
+        // Senza profili attivi il `for` qui sotto non esegue MAI e la funzione
+        // restituirebbe `Ok(vec![])`: successo dichiarato, zero notifiche create.
+        // È il difetto n.1 di questo progetto (codice che fallisce e dice di essere
+        // riuscito), e qui era particolarmente insidioso perché `active_profiles`
+        // nasce vuoto e nessuno lo popolava. Chi chiama deve poter distinguere
+        // "nessuna notifica perché l'evento non lo meritava" da "nessuna notifica
+        // perché non so a chi mandarla".
+        if profiles.is_empty() {
+            return Err(NotificationError::InvalidContent(
+                "Nessun profilo attivo registrato: impossibile recapitare la notifica di sistema. \
+                 Il profilo va registrato con update_system_active_profiles/add_system_active_profile."
+                    .to_string(),
+            ));
+        }
+
         let mut created_notifications = Vec::new();
-        
+
         let manager = self.notification_manager.lock().await;
-        
+
         for profile_id in profiles {
             let mut profile_request = request.clone();
             profile_request.profile_id = profile_id.clone();
@@ -501,8 +517,13 @@ impl SystemEventHandler {
     async fn handle_background_operation_completed(&self, operation_type: String, operation_id: String, success: bool, details: String) -> NotificationResult<Vec<String>> {
         // Solo notifica se l'operazione è importante o è fallita
         if !success || self.is_important_operation(&operation_type) {
+            // Priorità Normal (non Low) per i successi, dal 13/08/2026: le
+            // preferenze di DEFAULT hanno soglia Normal per le notifiche System,
+            // quindi una notifica Low veniva soppressa dal priority gating per
+            // ogni utente che non ha mai toccato le impostazioni. Qui si arriva
+            // solo per operazioni già classificate importanti: Normal è coerente.
             let (title, priority, icon) = if success {
-                (format!("Operazione {} Completata", operation_type), NotificationPriority::Low, "check-circle")
+                (format!("Operazione {} Completata", operation_type), NotificationPriority::Normal, "check-circle")
             } else {
                 (format!("Operazione {} Fallita", operation_type), NotificationPriority::High, "x-circle")
             };
@@ -777,7 +798,14 @@ impl SystemEventHandler {
         // match esatto non sarebbero mai riconosciuti come importanti → le operazioni
         // riuscite non notificherebbero mai.
         let op = operation_type.to_lowercase();
-        ["backup", "restore", "migration", "sync", "update", "cleanup", "repair"]
+        // "translation" e "patch" aggiunti il 13/08/2026: il frontend chiama
+        // notify_background_operation_completed con operationType 'translation'
+        // a OGNI traduzione completata (auto-translate/page.tsx), ma la parola
+        // non era in questa lista — quindi l'evento CENTRALE dell'app veniva
+        // scartato qui come «non importante», in silenzio, con esito Ok.
+        // Stanato dal test di regressione anti-bugia, che usa 'translation'
+        // come fixture proprio perché è il caso d'uso reale.
+        ["backup", "restore", "migration", "sync", "update", "cleanup", "repair", "translation", "patch"]
             .iter()
             .any(|kw| op.contains(kw))
     }

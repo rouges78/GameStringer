@@ -186,7 +186,8 @@ impl AutoEventIntegration {
 }
 
 /// Statistiche dell'integrazione automatica
-#[derive(Debug, Clone)]
+// Serialize: attraversa l'IPC da quando get_auto_integration_stats è registrato (13/08/2026).
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct IntegrationStats {
     /// Se il sistema eventi è attivo
     pub event_system_active: bool,
@@ -195,7 +196,8 @@ pub struct IntegrationStats {
 }
 
 /// Stato di salute dell'integrazione
-#[derive(Debug, Clone, PartialEq)]
+// Serialize: attraversa l'IPC da quando check_auto_integration_health è registrato (13/08/2026).
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub enum IntegrationHealthStatus {
     /// Integrazione funzionante
     Healthy,

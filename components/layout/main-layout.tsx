@@ -61,6 +61,7 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { UpdateBell } from '@/components/notifications/update-bell';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { AutoUpdater } from '@/components/notifications/auto-updater';
 import { FeaturedGameWidget } from '@/components/ui/featured-game-widget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -1255,6 +1256,9 @@ export function MainLayout({ children }: MainLayoutProps) {
               
               <ProfileHeader />
               <UpdateBell />
+              {/* Fino al 13/08/2026 il NotificationCenter qui sotto si apriva SOLO
+                  da scorciatoia da tastiera: nessuno poteva sapere che esistesse. */}
+              <NotificationBell onOpen={() => setNotificationCenterOpen(true)} />
               
               <Button
                 variant="ghost"

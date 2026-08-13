@@ -228,7 +228,11 @@ impl NotificationEventSystem {
 }
 
 /// Statistiche del sistema di eventi
-#[derive(Debug, Clone)]
+// Serialize: dal 13/08/2026 questa struct attraversa il confine IPC di Tauri
+// (get_notification_event_system_stats è registrato in generate_handler!).
+// Finché il comando era definito ma mai registrato, il derive non serviva —
+// motivo per cui è mancato per due anni senza che nessuno se ne accorgesse.
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct EventSystemStats {
     /// Se il sistema è attivo
     pub is_active: bool,

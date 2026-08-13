@@ -412,6 +412,20 @@ if (typeof window !== 'undefined') {
   window.addEventListener('bg-translation-event', ((e: CustomEvent) => {
     const { type, job } = e.detail || {};
     if (!job) return;
+
+    // ⛔ DEDUP AGGIUNTO IL 13/08/2026, col cablaggio del sottosistema notifiche.
+    // Da oggi lo stesso evento produce DUE cose: la notifica di sistema (questa)
+    // e la voce nel centro notifiche col pallino sulla campanella in header.
+    // Sono complementari solo finché l'utente NON sta guardando l'app: se la
+    // finestra è a fuoco, il popup dell'OS si sovrappone a un badge che l'utente
+    // vede già, e due avvisi per lo stesso fatto sono rumore, non servizio.
+    // Regola: l'OS avvisa quando sei altrove, il centro tiene sempre lo storico.
+    const appInPrimoPiano =
+      typeof document !== 'undefined' &&
+      document.visibilityState === 'visible' &&
+      document.hasFocus();
+    if (appInPrimoPiano) return;
+
     if (type === 'job_completed') {
       notifyTranslationCompleted(job.gameName || 'Gioco', job.translatedCount || 0);
     } else if (type === 'job_failed') {

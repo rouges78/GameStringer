@@ -30,7 +30,32 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   useEffect(() => {
     setRenderKey(prev => prev + 1);
   }, [currentProfile]);
-  
+
+  // ⛔ CABLAGGIO 13/08/2026 — senza questo, le notifiche di sistema NON arrivano
+  // a nessuno, in silenzio. Lato Rust `SystemEventHandler` recapita iterando su
+  // `active_profiles`, una lista che nasce VUOTA e che non veniva popolata da
+  // nessuno: il `for` non eseguiva mai e la funzione restituiva comunque
+  // successo ([fallimenti-muti]). Qui registriamo il profilo autenticato appena
+  // esiste, perché questo è l'unico punto dell'app che sa QUALE profilo è.
+  useEffect(() => {
+    if (!currentProfile?.id) return;
+    let annullato = false;
+    (async () => {
+      try {
+        const { invoke } = await import('@/lib/tauri-api');
+        if (annullato) return;
+        await invoke('add_system_active_profile', { profileId: currentProfile.id });
+        clientLogger.debug(`🔔 Profilo ${currentProfile.id} registrato per le notifiche di sistema.`);
+      } catch (err) {
+        // Non blocca il login: senza registrazione si perdono le notifiche di
+        // sistema, non l'accesso. Ma va LOGGATO — se resta muto qui, il sintomo
+        // che si vede è "le notifiche non arrivano" senza nessuna traccia.
+        clientLogger.warn('Registrazione profilo per notifiche di sistema fallita:', String(err));
+      }
+    })();
+    return () => { annullato = true; };
+  }, [currentProfile?.id]);
+
   // Listen to auth changes from other hook instances and refresh local state
   useEffect(() => {
     const handler = () => {

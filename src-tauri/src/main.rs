@@ -189,12 +189,30 @@ fn main() {
     let notif_integration = std::sync::Arc::new(tokio::sync::Mutex::new(
         notifications::ProfileNotificationIntegration::new(notif_manager.clone())
     ));
+    // Sottosistema eventi-notifiche. Fino al 13/08/2026 questi tre campi nascevano
+    // `None`, quindi i 43 comandi che ne dipendono rispondevano tutti "non
+    // inizializzato" — incluso `notify_background_operation_completed`, che il
+    // frontend chiama a OGNI traduzione completata (auto-translate/page.tsx) e che
+    // quindi falliva dalla nascita dell'app.
+    let notif_event_system = std::sync::Arc::new(
+        notifications::NotificationEventSystem::new(notif_manager.clone(), notif_integration.clone())
+    );
+    let notif_auto_integration = std::sync::Arc::new(
+        notifications::AutoEventIntegration::new(notif_event_system.clone())
+    );
+    let notif_system_event_handler = std::sync::Arc::new(
+        notifications::SystemEventHandler::new(notif_manager.clone())
+    );
+    let notif_system_integration = std::sync::Arc::new(
+        notifications::SystemEventIntegration::new(notif_system_event_handler)
+    );
+
     let notification_state = NotificationManagerState {
         manager: notif_manager,
         profile_integration: notif_integration,
-        event_system: None,
-        auto_integration: None,
-        system_event_integration: None,
+        event_system: Some(notif_event_system),
+        auto_integration: Some(notif_auto_integration),
+        system_event_integration: Some(notif_system_integration),
     };
 
     tauri::Builder::default()
@@ -852,6 +870,58 @@ fn main() {
             commands::notifications::expire_old_system_notifications,
             commands::notifications::get_profiles_for_notification_admin,
             commands::notifications::notify_background_operation_completed,
+
+            // Sottosistema eventi-notifiche. Questi comandi erano DEFINITI ma mai
+            // registrati qui: 43 su 85, quindi irraggiungibili dal frontend anche
+            // quando lo stato fosse stato inizializzato. Registrarli è la seconda
+            // metà del cablaggio — senza, i tre campi accesi in cima non servono.
+            commands::notifications::start_notification_event_system,
+            commands::notifications::stop_notification_event_system,
+            commands::notifications::is_notification_event_system_active,
+            commands::notifications::get_notification_event_system_stats,
+            commands::notifications::emit_profile_event_manual,
+            commands::notifications::start_auto_event_integration,
+            commands::notifications::stop_auto_event_integration,
+            commands::notifications::get_auto_integration_stats,
+            commands::notifications::check_auto_integration_health,
+            commands::notifications::start_system_event_integration,
+            commands::notifications::stop_system_event_integration,
+            commands::notifications::is_system_event_integration_active,
+            commands::notifications::get_system_event_integration_stats,
+            // Registro dei profili a cui recapitare le notifiche di sistema:
+            // senza questi la lista resta vuota e il broadcast non ha destinatari.
+            commands::notifications::update_system_active_profiles,
+            commands::notifications::add_system_active_profile,
+            commands::notifications::remove_system_active_profile,
+            // Eventi di sistema (tutti e 14 i tipi, come deciso il 13/08)
+            commands::notifications::notify_update_available,
+            commands::notifications::notify_update_installed,
+            commands::notifications::notify_update_error,
+            commands::notifications::notify_maintenance_scheduled,
+            commands::notifications::notify_maintenance_started,
+            commands::notifications::notify_maintenance_completed,
+            commands::notifications::notify_system_error,
+            commands::notifications::notify_security_alert,
+            commands::notifications::notify_background_operation_failed,
+            commands::notifications::notify_system_status_changed,
+            commands::notifications::notify_resource_warning,
+            commands::notifications::notify_database_issue,
+            commands::notifications::notify_network_status_changed,
+            commands::notifications::notify_disk_space_warning,
+            commands::notifications::notify_memory_warning,
+            commands::notifications::notify_application_started,
+            commands::notifications::notify_application_stopped,
+            commands::notifications::notify_backup_completed,
+            commands::notifications::notify_sync_completed,
+            // Trigger eventi profilo
+            commands::notifications::trigger_profile_created_event,
+            commands::notifications::trigger_profile_authenticated_event,
+            commands::notifications::trigger_profile_switched_event,
+            commands::notifications::trigger_profile_deleted_event,
+            commands::notifications::trigger_profile_logged_out_event,
+            commands::notifications::trigger_authentication_failed_event,
+            commands::notifications::trigger_credential_operation_event,
+            commands::notifications::trigger_settings_updated_event,
 
             // Project Export/Import
             commands::project_export::export_translation_project,

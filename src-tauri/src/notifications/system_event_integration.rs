@@ -380,7 +380,8 @@ impl SystemEventIntegration {
 }
 
 /// Statistiche del sistema di integrazione eventi di sistema
-#[derive(Debug, Clone)]
+// Serialize: attraversa l'IPC da quando get_system_event_integration_stats è registrato (13/08/2026).
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SystemIntegrationStats {
     /// Se il sistema è attivo
     pub is_active: bool,

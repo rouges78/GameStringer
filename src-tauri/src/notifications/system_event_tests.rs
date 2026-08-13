@@ -193,6 +193,52 @@ mod tests {
         assert!(!info_ids.is_empty());
     }
 
+    /// ⛔ REGRESSIONE 13/08/2026 — il difetto n.1 di questo progetto, dentro il
+    /// sottosistema notifiche: `create_broadcast_notification` itera su
+    /// `active_profiles`, una lista che nasce VUOTA. Senza profili registrati il
+    /// `for` non eseguiva mai e la funzione restituiva `Ok(vec![])`: successo
+    /// dichiarato, zero notifiche recapitate, nessun modo di accorgersene.
+    ///
+    /// Era il fallimento muto perfetto, perché il chiamante non poteva
+    /// distinguere "l'evento non meritava una notifica" da "non so a chi
+    /// mandarla". Questo test è la prova che ora la seconda cosa si vede: senza
+    /// profili la chiamata FALLISCE, e con un profilo registrato riesce.
+    /// Il test vale in entrambe le direzioni — se qualcuno rimettesse il
+    /// `Ok(vec![])`, la prima metà diventa rossa.
+    #[tokio::test]
+    async fn test_broadcast_senza_profili_attivi_fallisce_invece_di_mentire() {
+        let integration = create_test_system_event_integration().await;
+        integration.start().await.unwrap();
+
+        // Nessun add_active_profile: la lista è vuota, com'era in produzione.
+        let esito = integration.notify_background_operation_completed(
+            "translation".to_string(),
+            "job_senza_destinatario".to_string(),
+            true,
+            "Traduzione completata".to_string(),
+        ).await;
+
+        assert!(
+            esito.is_err(),
+            "senza profili attivi la notifica non ha destinatari: deve fallire, non restituire Ok(vec![])"
+        );
+
+        // Controprova: con un profilo registrato lo stesso evento riesce. Senza
+        // questa metà il test passerebbe anche se la funzione fosse rotta sempre.
+        let profile_id = "test_profile_destinatario";
+        integration.add_active_profile(profile_id.to_string()).await;
+        allow_low_priority_all(&integration, profile_id).await;
+
+        let ids = integration.notify_background_operation_completed(
+            "translation".to_string(),
+            "job_con_destinatario".to_string(),
+            true,
+            "Traduzione completata".to_string(),
+        ).await.unwrap();
+
+        assert!(!ids.is_empty(), "con un profilo attivo la notifica deve essere creata davvero");
+    }
+
     #[tokio::test]
     async fn test_background_operation_notifications() {
         let integration = create_test_system_event_integration().await;
