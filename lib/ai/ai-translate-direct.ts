@@ -854,7 +854,7 @@ async function translateWithTranslateGemma(
       throw new Error('TranslateGemma non installato. Esegui: ollama pull translategemma');
     }
   } catch (err: unknown) {
-    blockProvider('translategemma', false); // Errore rete → cooldown 30s
+    blockProvider('translategemma', false, 'Ollama non raggiungibile'); // → cooldown, con la causa vera
     throw err;
   }
 
@@ -953,7 +953,7 @@ async function translateWithHYMT(
       throw new Error('HY-MT1.5 non installato. Vai in Settings → Ollama e premi Pull su HY-MT');
     }
   } catch (err: unknown) {
-    blockProvider('hymt', false); // Errore rete → cooldown 30s
+    blockProvider('hymt', false, 'Ollama non raggiungibile'); // → cooldown, con la causa vera
     throw err;
   }
 
@@ -2101,11 +2101,17 @@ export async function translateWithFallback(
         
         clientLogger.warn(`[translateWithFallback] ${provider.name} failed: ${String(err)}`, 'TRANSLATE');
         const isFreeProvider = FREE_PROVIDERS.has(provider.name);
-        if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
+        // ⚠️ Un guasto di RETE non è una colpa del provider (14/08/2026: DNS di
+        // casa giù → Gemini «bloccato permanentemente per errore fatale», e a
+        // rete tornata la sessione non lo riprovava più). Rete → cooldown breve.
+        const isNetworkError = /dns error|Host sconosciuto|tcp connect|error trying to connect|Impossibile stabilire la connessione|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|Ollama non raggiungibile|timed? ?out/i.test(errMsg);
+        if (isNetworkError) {
+          blockProvider(provider.name, false, 'rete non raggiungibile');
+        } else if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
           // Rate-limit/payload o provider gratuito: cooldown temporaneo (mai blocco permanente)
           blockProvider(provider.name, false);
         } else {
-          // Errore fatale (402, 404, auth, offline) su provider a pagamento: blocco permanente
+          // Errore fatale (402, 404, auth) su provider a pagamento: blocco permanente
           blockProvider(provider.name, true);
         }
         break;

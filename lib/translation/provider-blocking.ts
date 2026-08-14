@@ -16,7 +16,7 @@ export const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'nllb', 'gemini', '
 // Provider che richiedono sourceLanguage corretto (web API con traduzione letterale)
 export const LANG_SENSITIVE_PROVIDERS = new Set(['mymemory', 'lingva']);
 
-export function blockProvider(name: string, permanent = true) {
+export function blockProvider(name: string, permanent = true, reason = 'rate-limit') {
   if (permanent) {
     blockedProviders.add(name);
     clientLogger.warn(`[Session] ${name} bloccato permanentemente (errore fatale)`);
@@ -30,7 +30,10 @@ export function blockProvider(name: string, permanent = true) {
     const cooldownMs = baseCooldown * multiplier;
     const unblockAt = Date.now() + cooldownMs;
     cooldownProviders.set(name, unblockAt);
-    clientLogger.warn(`[Session] ${name} in cooldown ${Math.round(cooldownMs / 1000)}s (rate-limit, fail #${fails})`);
+    // Il motivo va detto per nome: prima OGNI cooldown veniva etichettato
+    // «rate-limit», anche quando la causa era «Ollama spento» o «DNS giù» —
+    // e chi leggeva il log cercava il guasto nel posto sbagliato (14/08/2026).
+    clientLogger.warn(`[Session] ${name} in cooldown ${Math.round(cooldownMs / 1000)}s (${reason}, fail #${fails})`);
   }
 }
 

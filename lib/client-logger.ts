@@ -60,6 +60,24 @@ class ClientLogger {
     return levels[level] >= levels[this.config.level];
   }
 
+  /**
+   * Censura segreti DENTRO le stringhe di messaggio, non solo nei campi dei
+   * metadata. Il caso reale (14/08/2026): un errore HTTP di reqwest stampa
+   * l'URL COMPLETO, `?key=AIza...` incluso — la API key Gemini dell'utente è
+   * finita in chiaro nella console e da lì in un log incollato altrove. La
+   * difesa giusta sta QUI, al lavandino: qualunque log futuro che trasporti
+   * un URL con credenziali passa da questa funzione.
+   */
+  private redactSecrets(text: string): string {
+    return text
+      // query string: ?key= / &api_key= / &token= / &access_token= / &apikey=
+      .replace(/([?&](?:key|api[_-]?key|token|access[_-]?token|secret)=)[^&\s"']+/gi, '$1[REDACTED]')
+      // Google API key (AIza…), OpenAI/Anthropic (sk-…), header Bearer
+      .replace(/AIza[0-9A-Za-z_-]{30,}/g, '[REDACTED-KEY]')
+      .replace(/\bsk-[A-Za-z0-9_-]{20,}/g, '[REDACTED-KEY]')
+      .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{15,}/g, 'Bearer [REDACTED]');
+  }
+
   private sanitizeData(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
       return data;
@@ -72,6 +90,8 @@ class ClientLogger {
         key.toLowerCase().includes(field.toLowerCase())
       )) {
         sanitized[key] = '[REDACTED]';
+      } else if (typeof sanitized[key] === 'string') {
+        sanitized[key] = this.redactSecrets(sanitized[key] as string);
       } else if (typeof sanitized[key] === 'object') {
         sanitized[key] = this.sanitizeData(sanitized[key]);
       }
@@ -89,7 +109,7 @@ class ClientLogger {
     return {
       timestamp: new Date().toISOString(),
       level,
-      message,
+      message: this.redactSecrets(message),
       component,
       // Guard: in ambiente test (dopo il teardown di jsdom) o SSR, window/navigator
       // possono non esistere → un log tardivo di una async non cancellata crasherebbe.
