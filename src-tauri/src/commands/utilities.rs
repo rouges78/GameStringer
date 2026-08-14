@@ -1149,6 +1149,58 @@ mod work_file_guard_tests {
         }
     }
 
+    /// ⭐ IL TEST CHE CONTA: prova il CABLAGGIO, non la funzione.
+    ///
+    /// I tre test qui accanto verificano che `is_gamestringer_work_file`
+    /// risponda giusto — ma resterebbero verdi anche cancellando la chiamata
+    /// dentro `scan_translatable_files`, cioè col difetto tornato. È la
+    /// trappola di [gate-che-diventano-ciechi], e ci sono cascato scrivendoli.
+    /// Questo invece costruisce una cartella di gioco finta, con dentro un
+    /// checkpoint come quello reale, e chiede allo scanner cosa offrirebbe da
+    /// tradurre: se il checkpoint compare, il difetto del 14/08 è tornato.
+    #[test]
+    fn lo_scanner_non_offre_il_proprio_checkpoint() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let root = dir.path();
+
+        // File VERI del gioco (RPG Maker MV)
+        std::fs::create_dir_all(root.join("www/data")).unwrap();
+        std::fs::write(root.join("www/data/Map001.json"), r#"[{"note":"hello"}]"#).unwrap();
+        std::fs::write(root.join("www/data/System.json"), r#"{"gameTitle":"Test"}"#).unwrap();
+        // I NOSTRI file di lavoro
+        std::fs::write(root.join("gs_rpgmaker_progress_it.json"), r#"{"hello":"ciao"}"#).unwrap();
+        std::fs::create_dir_all(root.join("GameStringer")).unwrap();
+        std::fs::write(root.join("GameStringer/translation_session.json"), "{}").unwrap();
+
+        let found = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(super::scan_translatable_files(root.to_string_lossy().to_string()))
+            .expect("scan ok");
+
+        let names: Vec<String> = found
+            .iter()
+            .map(|p| Path::new(p).file_name().unwrap().to_string_lossy().to_lowercase())
+            .collect();
+
+        assert!(
+            !names.iter().any(|n| n.starts_with("gs_")),
+            "lo scanner offre il proprio checkpoint da tradurre: {:?}",
+            names
+        );
+        assert!(
+            !names.iter().any(|n| n == "translation_session.json"),
+            "lo scanner offre la sessione di traduzione: {:?}",
+            names
+        );
+        // Controllo positivo: i file del gioco devono esserci, altrimenti la
+        // guardia sta filtrando tutto e il test passerebbe per il motivo sbagliato.
+        assert!(
+            names.iter().any(|n| n == "map001.json"),
+            "lo scanner non vede più i file del gioco: {:?}",
+            names
+        );
+    }
+
     /// Controllo positivo: la guardia non deve mangiarsi i file VERI del gioco
     /// (una guardia troppo larga è cieca quanto una assente — [gate-che-diventano-ciechi]).
     #[test]
