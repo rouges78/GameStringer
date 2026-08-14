@@ -1172,7 +1172,12 @@ export default function SettingsPage() {
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
         {/* Translation Tab */}
         <TabsContent value="translation" className="space-y-6">
-          <OllamaManager />
+          {/* L'indirizzo del server sta QUI, nella card Ollama — non più
+              sepolto nella card LM Studio dove nessuno lo trovava (14/08). */}
+          <OllamaManager
+            ollamaUrl={settings.translation?.ollamaUrl || ''}
+            onOllamaUrlChange={(v) => updateSetting('translation', 'ollamaUrl', v)}
+          />
           <FineTuningManager />
           
           {/* LM Studio Settings */}
@@ -1187,19 +1192,6 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground">
                 {t('settingsPage.lmStudioDesc')}
               </p>
-              {/* Indirizzo Ollama: prima era cablato nel backend, quindi chi lo
-                  esegue su un'altra porta, in WSL/Docker o su un'altra macchina
-                  non poteva usarlo. Vuoto = rilevamento automatico. */}
-              <div className="space-y-2 pb-2 border-b border-border/40">
-                <Label>{t('settingsPage.ollamaUrlLabel')}</Label>
-                <Input
-                  value={settings.translation?.ollamaUrl || ''}
-                  onChange={(e) => updateSetting('translation', 'ollamaUrl', e.target.value)}
-                  placeholder="http://127.0.0.1:11434"
-                  className="font-mono text-xs"
-                />
-                <p className="text-2xs text-muted-foreground">{t('settingsPage.ollamaUrlHint')}</p>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">

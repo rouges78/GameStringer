@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -41,7 +43,14 @@ interface DownloadProgress {
   message: string;
 }
 
-export function OllamaManager() {
+interface OllamaManagerProps {
+  /** Indirizzo del server Ollama scelto dall'utente (impostazione condivisa). */
+  ollamaUrl?: string;
+  /** Chiamato a ogni modifica del campo indirizzo. */
+  onOllamaUrlChange?: (url: string) => void;
+}
+
+export function OllamaManager({ ollamaUrl, onOllamaUrlChange }: OllamaManagerProps = {}) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -235,6 +244,22 @@ export function OllamaManager() {
         <p className="text-xs text-muted-foreground">
           {t('ollamaManagerComp.descrizioneBreve')}
         </p>
+
+        {/* Indirizzo del server: PRIMA stava nella card «LM Studio (locale)»,
+            dove nessuno lo cercava — Davide stesso non lo trovava (14/08).
+            L'indirizzo di Ollama vive nella card di Ollama. */}
+        {onOllamaUrlChange && (
+          <div className="space-y-2 pb-2 border-b border-border/40">
+            <Label>{t('settingsPage.ollamaUrlLabel')}</Label>
+            <Input
+              value={ollamaUrl || ''}
+              onChange={(e) => onOllamaUrlChange(e.target.value)}
+              placeholder="http://127.0.0.1:11434"
+              className="font-mono text-xs"
+            />
+            <p className="text-2xs text-muted-foreground">{t('settingsPage.ollamaUrlHint')}</p>
+          </div>
+        )}
 
         {/* Azioni lifecycle + link Model Manager */}
         <div className="flex flex-wrap items-center gap-2">

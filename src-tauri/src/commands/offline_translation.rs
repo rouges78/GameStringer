@@ -129,12 +129,13 @@ pub async fn offline_translate_text(
     let duration_ms = start.elapsed().as_millis() as u64;
 
     log::info!(
-        "[OFFLINE] Tradotto '{}' ({} → {}) in {}ms con {}",
+        "[OFFLINE] Tradotto '{}' ({} → {}) in {}ms con {} via {}/api/generate",
         &text.chars().take(50).collect::<String>(),
         source_lang,
         target_lang,
         duration_ms,
-        model_name
+        model_name,
+        base
     );
 
     Ok(OfflineTranslationResult {
@@ -238,10 +239,13 @@ pub async fn offline_translate_batch(
     // anche i falliti — 40 errori 404 diventavano "40 tradotti".
     let ok_count = results.iter().filter(|r| !r.translated.starts_with("[ERRORE]")).count();
     let err_count = results.len() - ok_count;
+    // L'endpoint nel log è la PROVA IN CAMPO di [ollama-detection-030x]: senza,
+    // il log dice cosa è stato tradotto ma non DA DOVE — e il difetto storico
+    // era proprio la richiesta che partiva verso l'indirizzo sbagliato.
     if err_count == 0 {
-        log::info!("[OFFLINE] Batch completato: {} testi tradotti con {}", ok_count, model_name);
+        log::info!("[OFFLINE] Batch completato: {} testi tradotti con {} via {}/api/generate", ok_count, model_name, base);
     } else {
-        log::warn!("[OFFLINE] Batch: {} tradotti, {} FALLITI su {} (modello {})", ok_count, err_count, results.len(), model_name);
+        log::warn!("[OFFLINE] Batch: {} tradotti, {} FALLITI su {} (modello {}, endpoint {})", ok_count, err_count, results.len(), model_name, base);
     }
     Ok(results)
 }
