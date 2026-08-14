@@ -836,6 +836,40 @@ pub async fn get_steam_playtime(steam_id: String, api_key: String) -> Result<ser
     }))
 }
 
+/// I file che GameStringer scrive DENTRO la cartella del gioco per lavorare:
+/// checkpoint di traduzione, sessioni, manifest di patch. Non sono contenuto
+/// del gioco e non vanno MAI offerti come materiale traducibile — tradurli
+/// corrompe il lavoro in corso (14/08/2026: 200 voci di checkpoint perse).
+///
+/// Riconosce per nome, non per percorso: il file di checkpoint sta nella
+/// radice del gioco, non in una cartella nostra, quindi escludere solo la
+/// cartella `GameStringer/` non basterebbe.
+pub fn is_gamestringer_work_file(path: &std::path::Path) -> bool {
+    let name = match path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n.to_lowercase(),
+        None => return false,
+    };
+    // gs_rpgmaker_progress_it.json, gs_renpy_progress_*.json, gs_*_checkpoint…
+    if name.starts_with("gs_") {
+        return true;
+    }
+    matches!(
+        name.as_str(),
+        "translation_session.json"
+            | "translations.json"
+            | "gamestringer.json"
+            | "gs_manifest.json"
+            | ".gamestringer"
+    ) || name.ends_with(".gspack")
+        // Qualsiasi cosa dentro una nostra cartella di lavoro.
+        || path.components().any(|c| {
+            c.as_os_str()
+                .to_str()
+                .map(|s| s.eq_ignore_ascii_case("gamestringer") || s.eq_ignore_ascii_case("gamestringer_backup"))
+                .unwrap_or(false)
+        })
+}
+
 /// Scansiona i file traducibili in una cartella di gioco
 #[tauri::command]
 pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, String> {
@@ -884,10 +918,12 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
     ];
     
     // Cartelle da escludere (runtime engine, vcs, cache)
+    // ⛔⛔ "gamestringer": i NOSTRI file di lavoro (14/08/2026). Vedi sotto.
     let excluded_dirs = [
         "monobleedingedge", "__pycache__", "node_modules",
         ".git", ".svn", ".hg", "crashhandler",
         "python-packages", "dist-info", "renpy",
+        "gamestringer",
     ];
     
     let mut found_files: Vec<String> = Vec::new();
@@ -917,8 +953,25 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
         
         if entry.file_type().is_file() {
             let file_path = entry.path();
+
+            // ⛔⛔ CHECK 0 — NON TRADURRE I NOSTRI FILE DI LAVORO (14/08/2026).
+            // Successo reale: su Fear & Hunger 2 la traduzione automatica ha
+            // preso `gs_rpgmaker_progress_it.json` — il CHECKPOINT della
+            // traduzione stessa — come materiale da tradurre (è un .json, e il
+            // Check 1 accetta ogni .json). Ha ritradotto testo già italiano
+            // («tentacola» → «tentacola», visibile nell'anteprima live) e
+            // riscrivendolo ha ERO SO le chiavi originali: il checkpoint è
+            // passato da 1.391 a 1.191 voci — 200 traduzioni pagate e perse.
+            // L'app che mangia i propri dati è peggio di un fallimento muto:
+            // qui il danno è permanente. La difesa sta PRIMA di ogni altro
+            // check, perché i nostri file passerebbero da tre strade diverse
+            // (estensione .json, nome contenente "translation", cartella).
+            if is_gamestringer_work_file(file_path) {
+                continue;
+            }
+
             let mut is_translatable = false;
-            
+
             // Check 1: estensione nota
             if let Some(ext) = file_path.extension() {
                 let ext_lower = ext.to_string_lossy().to_lowercase();
@@ -1065,4 +1118,48 @@ pub async fn apply_translation_patch(
     
     log::info!("✅ Patch applicata: {} file copiati", applied_count);
     Ok(applied_count > 0)
+}
+
+#[cfg(test)]
+mod work_file_guard_tests {
+    use super::is_gamestringer_work_file;
+    use std::path::Path;
+
+    /// Il caso REALE del 14/08/2026: lo scanner ha offerto alla traduzione il
+    /// checkpoint della traduzione stessa, che è stato riscritto perdendo 200
+    /// voci. Questo test fallisce se qualcuno rimuove la guardia.
+    // NB: separatori "/" anche per i percorsi Windows — `Path` splitta i "\"
+    // solo su Windows, e questi test devono valere anche nella CI Linux.
+    #[test]
+    fn checkpoint_del_gioco_non_e_traducibile() {
+        let p = Path::new("C:/Steam/steamapps/common/Fear & Hunger 2 Termina/gs_rpgmaker_progress_it.json");
+        assert!(is_gamestringer_work_file(p), "il checkpoint NON deve essere traducibile");
+    }
+
+    #[test]
+    fn altri_file_di_lavoro_esclusi() {
+        for f in [
+            "C:/g/GameStringer/translation_session.json",
+            "C:/g/GameStringer/translations.json",
+            "C:/g/gs_renpy_progress_fr.json",
+            "C:/g/mio-pack.gspack",
+            "C:/g/GameStringer_backup/Map001.json",
+        ] {
+            assert!(is_gamestringer_work_file(Path::new(f)), "doveva essere escluso: {}", f);
+        }
+    }
+
+    /// Controllo positivo: la guardia non deve mangiarsi i file VERI del gioco
+    /// (una guardia troppo larga è cieca quanto una assente — [gate-che-diventano-ciechi]).
+    #[test]
+    fn i_file_del_gioco_restano_traducibili() {
+        for f in [
+            "C:/g/www/data/Map001.json",
+            "C:/g/www/data/CommonEvents.json",
+            "C:/g/game/tl/italian/strings.rpy",
+            "C:/g/localization/strings.json",
+        ] {
+            assert!(!is_gamestringer_work_file(Path::new(f)), "NON doveva essere escluso: {}", f);
+        }
+    }
 }
