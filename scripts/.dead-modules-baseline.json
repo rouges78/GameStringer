@@ -1,9 +1,9 @@
 {
   "known": {
+    "components/translation-recommendation.tsx": "2047 righe · IN FRIGO dal 10/08/2026, NON ricablare cosi' com'e': il suo «Traduci Tutto» dichiarava FALSI SUCCESSI (rami wolfrpg/kirikiri/gamemaker solo toast, ramo default con barra SIMULATA 0->100 e poi «Traduzione completata! GIOCA ORA» senza aver tradotto nulla). Scollegato dalla pagina gioco anche perche' era una seconda pipeline in concorrenza con «String it!». Prima di riusarlo va sostituita la barra finta con un esito reale; le parti buone sono i tips e il selettore di chain LLM.",
     "lib/steam-utils.ts": "1031 righe",
     "components/audio-translation.tsx": "775 righe",
     "components/community-translations.tsx": "738 righe",
-    "lib/voice/speech-to-text.ts": "697 righe",
     "components/injekt-ui-enhanced.tsx": "646 righe",
     "components/ocr-image-processor.tsx": "638 righe",
     "components/context-aware-translation.tsx": "578 righe",
@@ -93,7 +93,6 @@
     "components/theme-toggle.tsx": "32 righe",
     "hooks/use-debounce.ts": "25 righe",
     "lib/db.ts": "11 righe",
-    "lib/notifications/notification-interference.ts": "1 righe",
-    "components/translation-recommendation.tsx": "2047 righe · IN FRIGO dal 10/08/2026, NON ricablare cosi' com'e': il suo «Traduci Tutto» dichiarava FALSI SUCCESSI (rami wolfrpg/kirikiri/gamemaker solo toast, ramo default con barra SIMULATA 0->100 e poi «Traduzione completata! GIOCA ORA» senza aver tradotto nulla). Scollegato dalla pagina gioco anche perche' era una seconda pipeline in concorrenza con «String it!». Prima di riusarlo va sostituita la barra finta con un esito reale; le parti buone sono i tips e il selettore di chain LLM."
+    "lib/notifications/notification-interference.ts": "1 righe"
   }
 }
