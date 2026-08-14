@@ -96,6 +96,74 @@ function parseGodotTres(content: string): LocaleEntry[] {
   return entries;
 }
 
+/**
+ * Il testo di un Godot commerciale sta quasi sempre DENTRO il .pck (o dentro
+ * l'exe, per i build con pck embedded): sul disco non c'è nessun .csv/.po da
+ * leggere. Questa funzione usa la pipeline PCK che esisteva già in Rust ma che
+ * nessuna pagina chiamava: rileva il pacchetto, guarda se contiene file
+ * traducibili, lo estrae in una cartella di lavoro e li legge coi parser di
+ * sempre.
+ *
+ * L'estrazione va in `<gioco>/GameStringer/godot_pck/`: cartella NOSTRA, quindi
+ * esclusa dallo scanner dei traducibili (guardia del 14/08) — così non
+ * finiremo mai a tradurre ciò che abbiamo appena estratto.
+ */
+async function scanInsidePck(
+  projectPath: string,
+  log: (m: string) => void,
+): Promise<LocaleFile[]> {
+  try {
+    const det = await invoke('detect_godot_engine', { gamePath: projectPath }) as {
+      is_godot: boolean; pck_path: string | null; pck_embedded: boolean; godot_version: string;
+    };
+    if (!det?.is_godot || !det.pck_path) return [];
+
+    log(`📦 Pacchetto Godot rilevato (${det.godot_version || 'versione ignota'}${det.pck_embedded ? ', embedded nell\'exe' : ''}): guardo dentro…`);
+
+    const inside = await invoke('scan_godot_pck', { pckPath: det.pck_path }) as {
+      success: boolean; total_strings: number; message: string;
+      files: { path_in_pck: string; file_type: string; size: number }[];
+    };
+    const candidates = (inside?.files || []).filter(f =>
+      ['translation', 'csv', 'text'].includes(f.file_type),
+    );
+    if (!inside?.success || candidates.length === 0) {
+      log(`ℹ️ Il pacchetto non contiene file di localizzazione leggibili${inside?.message ? `: ${inside.message}` : ''}.`);
+      return [];
+    }
+    log(`📦 ${candidates.length} file di localizzazione nel pacchetto — estraggo…`);
+
+    const outDir = `${projectPath.replace(/[\\/]+$/, '')}/GameStringer/godot_pck`;
+    await invoke('extract_godot_pck', { pckPath: det.pck_path, outputPath: outDir });
+
+    const extracted = await invoke('scan_directory_files', {
+      directory: outDir,
+      extensions: ['csv', 'po', 'tres', 'translation'],
+      recursive: true,
+    }) as { files: { path: string; name: string; content: string }[] };
+
+    const out: LocaleFile[] = [];
+    for (const f of extracted.files || []) {
+      const ext = f.name.split('.').pop()?.toLowerCase() || '';
+      let entries: LocaleEntry[] = [];
+      if (ext === 'csv') entries = parseGodotCsv(f.content, f.name);
+      else if (ext === 'po') entries = parseGodotPo(f.content);
+      else if (ext === 'tres' || ext === 'translation') entries = parseGodotTres(f.content);
+      if (entries.length > 0) {
+        out.push({ name: f.name, path: f.path, format: ext as LocaleFile['format'], entries, doneCount: 0 });
+      }
+    }
+    if (out.length === 0) {
+      log('⚠️ Estrazione riuscita ma nessuna stringa leggibile: i file del pacchetto sono in un formato non ancora supportato.');
+    }
+    return out;
+  } catch (e: unknown) {
+    // Il fallback non deve mai far fallire lo scan normale: dillo e basta.
+    log(`⚠️ Lettura del pacchetto non riuscita: ${e}`);
+    return [];
+  }
+}
+
 export default function GodotTranslatorPage() {
   const { t: _t } = useTranslation();
   const [status, setStatus] = useState<Status>('idle');
@@ -182,9 +250,31 @@ export default function GodotTranslatorPage() {
         }
       }
 
+      // ⛔ «0 file» NON è un successo: su un Godot commerciale il testo sta
+      //    DENTRO il .pck, non sciolto sul disco (14/08/2026, The Incident at
+      //    Galley House: galleyhouse.pck accanto all'exe, e questa pagina
+      //    diceva «✅ 0 file, 0 stringhe» con la spunta verde). Il lettore PCK
+      //    esisteva già in Rust (scan_godot_pck/extract_godot_pck) — non lo
+      //    chiamava nessuno: nona comparsa di «capacità presente, strada
+      //    dell'utente che non ci passa». Qui la strada ci passa.
+      if (localeFiles.length === 0) {
+        const fromPck = await scanInsidePck(projectPath, log);
+        if (fromPck.length > 0) {
+          setFiles(fromPck);
+          const tot = fromPck.reduce((s, f) => s + f.entries.length, 0);
+          log(`✅ ${fromPck.length} file, ${tot} stringhe (dal pacchetto .pck)`);
+          setStatus('idle');
+          return;
+        }
+      }
+
       setFiles(localeFiles);
       const total = localeFiles.reduce((s, f) => s + f.entries.length, 0);
-      log(`✅ ${localeFiles.length} file, ${total} stringhe`);
+      if (localeFiles.length === 0) {
+        log('⚠️ Nessun file di localizzazione trovato: né sciolto sul disco, né dentro un .pck.');
+      } else {
+        log(`✅ ${localeFiles.length} file, ${total} stringhe`);
+      }
 
       // Auto-detect genre
       const sampleTexts = localeFiles.flatMap(f => f.entries.map(e => e.english)).slice(0, 300);
