@@ -6983,6 +6983,12 @@ async fn execute_workflow_from_prediction(
         let mut gm_outputs = Vec::new();
 
         let gm_scan = super::gamemaker_patcher::gm_scan_data_win(game_path_str.clone()).await;
+        // Il totale VERO del gioco, non quello del lotto. Provato sul campo il
+        // 15/08 con DELTARUNE Demo: l'estrazione è cappata a 500, quindi
+        // gm_str_vec.len() diceva 500 e il wizard mostrava «500/500 (100%)»
+        // su un gioco da 6.242 chiavi — l'8% dichiarato come tutto. Lo scan
+        // il numero giusto lo aveva già.
+        let gm_total_in_game = gm_scan.as_ref().map(|i| i.translatable_strings).unwrap_or(0);
         match &gm_scan {
             Ok(info) => {
                 gm_outputs.push(format!("🎮 GameMaker {} — {}", info.gm_version, info.string_source));
@@ -7004,10 +7010,28 @@ async fn execute_workflow_from_prediction(
         emit_progress!("gm_extract", 6, "📝 Estrazione stringhe GameMaker...", 40);
         let stage_start = std::time::Instant::now();
         let mut ext_outputs = Vec::new();
-        let gm_strings = super::gamemaker_patcher::gm_extract_strings(
-            game_path_str.clone(), Some(true), Some(0), Some(500),
-        ).await;
-        let gm_str_vec = gm_strings.unwrap_or_default();
+        // TUTTE le pagine, non solo la prima. Fino al 15/08 qui c'era
+        // `Some(0), Some(500)` e basta: String it! traduceva le prime 500 su
+        // 6.242 e dichiarava «100% riuscito» — Davide ha visto il gioco in
+        // inglese e aveva ragione lui. Principio UN PULSANTE: String it! FINISCE
+        // il lavoro; il ritmo lo dice la barra, non il cap. La paginazione
+        // riusa l'offset riparato il 28/07 (prima di quel fix ogni pagina
+        // erano le stesse 100).
+        let mut gm_str_vec: Vec<super::gamemaker_patcher::GmString> = Vec::new();
+        {
+            const PAGE: usize = 500;
+            let mut page = 0usize;
+            loop {
+                let batch = super::gamemaker_patcher::gm_extract_strings(
+                    game_path_str.clone(), Some(true), Some(page * PAGE), Some(PAGE),
+                ).await.unwrap_or_default();
+                let n = batch.len();
+                gm_str_vec.extend(batch);
+                if n < PAGE { break; }
+                page += 1;
+                emit_progress!("gm_extract_page", 6, format!("📝 Estrazione: {} stringhe...", gm_str_vec.len()), 42);
+            }
+        }
         ext_outputs.push(format!("📝 Estratte {} stringhe", gm_str_vec.len()));
         stages_completed.push(StageExecutionResult {
             stage_id: 4, stage_name: "GameMaker String Extraction".into(),
@@ -7038,9 +7062,10 @@ async fn execute_workflow_from_prediction(
         let mut ollama_failed = false;
         let batch_size = 10;
 
-        for batch_indices in (0..gm_str_vec.len().min(500)).collect::<Vec<_>>().chunks(batch_size) {
-            let gm_pct = if gm_str_vec.is_empty() { 0 } else { translated_count as u32 * 100 / gm_str_vec.len().min(500) as u32 };
-            emit_progress!("gm_translate_batch", 6, format!("🤖 GameMaker: {}/{} stringhe ({}%)...", translated_count, gm_str_vec.len().min(500), gm_pct), 50 + gm_pct * 35 / 100);
+        // Niente più `.min(500)`: si traduce tutto quello che si è estratto.
+        for batch_indices in (0..gm_str_vec.len()).collect::<Vec<_>>().chunks(batch_size) {
+            let gm_pct = if gm_str_vec.is_empty() { 0 } else { translated_count as u32 * 100 / gm_str_vec.len() as u32 };
+            emit_progress!("gm_translate_batch", 6, format!("🤖 GameMaker: {}/{} stringhe ({}%)...", translated_count, gm_str_vec.len(), gm_pct), 50 + gm_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| gm_str_vec[i].original.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
 
@@ -7095,6 +7120,11 @@ async fn execute_workflow_from_prediction(
         // Stringhe entrate davvero nel data.win: fuori dal match, la legge il
         // risultato finale. Resta 0 se la patch fallisce o non parte.
         let mut gm_injected = 0u64;
+        // true se la patch è passata dallo slot giapponese (lang_ja*.json,
+        // Deltarune e simili): la traduzione ESISTE ma si vede solo mettendo
+        // la lingua del gioco su Giapponese. Il 15/08 Davide ha concluso «vedo
+        // in inglese» su una patch riuscita, perché nessuno glielo diceva.
+        let mut gm_ja_slot = false;
         if !translations.is_empty() {
             match super::gamemaker_patcher::gm_patch_strings(game_path_str.clone(), translations).await {
                 Ok(r) => {
@@ -7102,6 +7132,7 @@ async fn execute_workflow_from_prediction(
                     p_outputs.push(format!("📂 Backup: {}", r.backup_path));
                     patch_success = r.success;
                     gm_injected = r.patched_count as u64;
+                    gm_ja_slot = r.backup_path.contains("lang_ja");
                     deliverables.push(ExecutionDeliverable::patched(
                         "del_gm_patch",
                         format!("GameMaker Patch ({} strings)", r.patched_count),
@@ -7131,12 +7162,29 @@ async fn execute_workflow_from_prediction(
         let success_rate = success_count as f64 / total_count as f64;
         let mut next_steps = vec![];
         if patch_success { next_steps.push("🎮 Avvia il gioco per testare la traduzione".into()); }
+        if patch_success && gm_ja_slot {
+            // Senza questa riga la patch sembra non funzionare: il gioco
+            // continua a leggere l'inglese, che non è stato toccato.
+            next_steps.push("🇯🇵 La traduzione è nello slot giapponese: nelle Opzioni del gioco scegli Japanese/日本語 per vederla".into());
+        }
+        if patch_success && gm_total_in_game > gm_injected as usize {
+            // Dal 15/08 String it! estrae TUTTE le pagine, quindi questo scarto
+            // non è più il cap: sono stringhe rimaste senza traduzione (provider
+            // che ha saltato) o non applicate in patch. Va detto, non nascosto.
+            next_steps.push(format!(
+                "⚠️ Scritte {} stringhe su {}: le restanti non hanno ricevuto una traduzione o non sono state applicate — un nuovo String it! ritenta l'intero lavoro",
+                gm_injected, gm_total_in_game
+            ));
+        }
         return Ok(WorkflowExecutionResult {
             execution_id, game_title: prediction.game_title.clone(), engine: "GameMaker".into(),
             total_duration_minutes: elapsed_total, stages_completed,
             final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
             deliverables, errors, success_rate, next_steps,
-            total_strings: gm_str_vec.len() as u64,
+            // Il totale del GIOCO (dallo scan), non del lotto estratto: con
+            // quello del lotto una run parziale si dichiarava completa.
+            // Fallback al lotto solo se lo scan non ha saputo contare.
+            total_strings: if gm_total_in_game > 0 { gm_total_in_game as u64 } else { gm_str_vec.len() as u64 },
             translated_strings: translated_count,
             injected_strings: gm_injected,
             runtime_translation: false,
