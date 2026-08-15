@@ -6240,6 +6240,27 @@ pub struct WorkflowExecutionResult {
     pub errors: Vec<ExecutionError>,
     pub success_rate: f64,
     pub next_steps: Vec<String>,
+    // ── Conteggi reali delle stringhe ────────────────────────────────────────
+    // Prima del 15/08 questi campi NON esistevano: il TS li dichiarava
+    // opzionali, faceva `undefined || 0` e mandava 0 alla telemetria di
+    // compatibilità. Risultato: 12 report su 12 con strings_total = 0, cioè un
+    // database che certificava «riuscito» senza una sola prova. I valori
+    // c'erano già, calcolati e poi buttati via al momento di costruire il
+    // risultato. Ora escono.
+    //
+    // I tre numeri NON sono sinonimi e non vanno collassati: la distanza fra
+    // `translated_strings` e `injected_strings` È il difetto «tradotto al 100%
+    // e il gioco resta in inglese». Solo `injected_strings` è prova d'effetto.
+    /// Stringhe trovate nel gioco (il totale vero, non quello del lotto).
+    pub total_strings: u64,
+    /// Stringhe tradotte in memoria. NON prova che il gioco sia cambiato.
+    pub translated_strings: u64,
+    /// Stringhe scritte davvero nei file di gioco. Questa è la prova d'effetto.
+    pub injected_strings: u64,
+    /// true = traduzione a runtime (hook/loader: XUnity, gs-hook). Qui
+    /// `injected_strings` == 0 è il comportamento CORRETTO, non un fallimento:
+    /// chi legge questi numeri deve saperlo distinguere.
+    pub runtime_translation: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -6818,6 +6839,10 @@ async fn execute_workflow_from_prediction(
         let mut patch_outputs = Vec::new();
         let mut patch_success = false;
         
+        // Sostituzioni entrate DAVVERO nei file: vive fuori dal match perché il
+        // risultato finale deve poterlo leggere. Resta 0 se la patch fallisce.
+        let mut tyrano_injected = 0u64;
+
         if translated_count > 0 {
             // Filtra solo stringhe con traduzione
             let patched_strings: Vec<_> = tyrano_strings.iter()
@@ -6832,6 +6857,7 @@ async fn execute_workflow_from_prediction(
                     patch_outputs.push(format!("✅ Patch applicata: {} file, {} stringhe sostituite", result.files_patched, result.strings_replaced));
                     patch_outputs.push(format!("📂 Backup: {}", result.backup_path));
                     patch_success = result.success;
+                    tyrano_injected = result.strings_replaced as u64;
                     
                     deliverables.push(ExecutionDeliverable::patched(
                         "del_tyrano_patch",
@@ -6936,6 +6962,10 @@ async fn execute_workflow_from_prediction(
             errors,
             success_rate,
             next_steps,
+            total_strings: tyrano_strings.len() as u64,
+            translated_strings: translated_count,
+            injected_strings: tyrano_injected,
+            runtime_translation: false,
         });
     }
 
@@ -7062,12 +7092,16 @@ async fn execute_workflow_from_prediction(
         let stage_start = std::time::Instant::now();
         let mut p_outputs = Vec::new();
         let mut patch_success = false;
+        // Stringhe entrate davvero nel data.win: fuori dal match, la legge il
+        // risultato finale. Resta 0 se la patch fallisce o non parte.
+        let mut gm_injected = 0u64;
         if !translations.is_empty() {
             match super::gamemaker_patcher::gm_patch_strings(game_path_str.clone(), translations).await {
                 Ok(r) => {
                     p_outputs.push(format!("✅ Patchate {} stringhe", r.patched_count));
                     p_outputs.push(format!("📂 Backup: {}", r.backup_path));
                     patch_success = r.success;
+                    gm_injected = r.patched_count as u64;
                     deliverables.push(ExecutionDeliverable::patched(
                         "del_gm_patch",
                         format!("GameMaker Patch ({} strings)", r.patched_count),
@@ -7102,6 +7136,10 @@ async fn execute_workflow_from_prediction(
             total_duration_minutes: elapsed_total, stages_completed,
             final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
             deliverables, errors, success_rate, next_steps,
+            total_strings: gm_str_vec.len() as u64,
+            translated_strings: translated_count,
+            injected_strings: gm_injected,
+            runtime_translation: false,
         });
     }
 
@@ -7261,6 +7299,10 @@ async fn execute_workflow_from_prediction(
             total_duration_minutes: elapsed_total, stages_completed,
             final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
             deliverables, errors, success_rate, next_steps,
+            total_strings: rpg_strings.len() as u64,
+            translated_strings: translated_count,
+            injected_strings: total_applied as u64,
+            runtime_translation: false,
         });
     }
 
@@ -7400,6 +7442,9 @@ async fn execute_workflow_from_prediction(
         let stage_start = std::time::Instant::now();
         let mut patch_success = false;
         let mut p_outputs = Vec::new();
+        // Sostituzioni entrate nell'archivio: fuori dal match, la legge il
+        // risultato finale. Resta 0 se la patch fallisce o non parte.
+        let mut vis_injected = 0u64;
         if !translations.is_empty() {
             match super::visionaire_patcher::patch_vis_strings(game_path_str.clone(), translations).await {
                 Ok(r) => {
@@ -7410,6 +7455,7 @@ async fn execute_workflow_from_prediction(
                     // dichiarare un successo che nessuno aveva verificato.
                     let applied = r.get("applied").and_then(|a| a.as_u64()).unwrap_or(0) as u32;
                     patch_success = applied > 0;
+                    vis_injected = applied as u64;
                     if applied > 0 {
                         deliverables.push(ExecutionDeliverable::patched(
                             "del_vis_patch",
@@ -7441,6 +7487,13 @@ async fn execute_workflow_from_prediction(
             total_duration_minutes: elapsed_total, stages_completed,
             final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
             deliverables, errors, success_rate, next_steps,
+            // `total_in_game`, non `vis_strings.len()`: il percorso rapido
+            // traduce solo le prime N, ma il totale del GIOCO è un altro numero
+            // e va detto, altrimenti «tradotte 500 su 500» nasconde le altre.
+            total_strings: total_in_game as u64,
+            translated_strings: translated_count,
+            injected_strings: vis_injected,
+            runtime_translation: false,
         });
     }
 
@@ -7543,6 +7596,9 @@ async fn execute_workflow_from_prediction(
             let stage_start = std::time::Instant::now();
             let mut patch_success = false;
             let mut p_outputs = Vec::new();
+            // Entries finite nel _P.pak: fuori dal match, la legge il risultato
+            // finale. Resta 0 se la creazione del pak fallisce o non parte.
+            let mut ue_injected = 0u64;
             if !translated_entries.is_empty() {
                 match super::unreal_localization::apply_unreal_translation(
                     game_path_str.clone(), translated_entries, target_lang.to_string(),
@@ -7550,6 +7606,7 @@ async fn execute_workflow_from_prediction(
                     Ok(r) => {
                         p_outputs.push(format!("✅ {}", r.message));
                         patch_success = r.success;
+                        ue_injected = r.entries_count as u64;
                         deliverables.push(ExecutionDeliverable::patched(
                             "del_ue_pak",
                             format!("Unreal .pak ({} entries)", r.entries_count),
@@ -7577,6 +7634,10 @@ async fn execute_workflow_from_prediction(
                 total_duration_minutes: elapsed_total, stages_completed,
                 final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
                 deliverables, errors, success_rate, next_steps,
+                total_strings: entries.len() as u64,
+                translated_strings: translated_count,
+                injected_strings: ue_injected,
+                runtime_translation: false,
             });
         }
     }
@@ -7666,6 +7727,14 @@ async fn execute_workflow_from_prediction(
                             errors,
                             success_rate,
                             next_steps,
+                            // Traduzione a RUNTIME: XUnity traduce mentre si
+                            // gioca, nessun file di gioco viene riscritto. Tre
+                            // zeri qui NON sono un fallimento — il flag accanto
+                            // è ciò che impedisce di leggerli come tale.
+                            total_strings: 0,
+                            translated_strings: 0,
+                            injected_strings: 0,
+                            runtime_translation: true,
                         });
                     }
                     Err(e) => {
@@ -8451,6 +8520,13 @@ async fn execute_workflow_from_prediction(
         errors,
         success_rate,
         next_steps,
+        // I tre numeri esistevano già venti righe più su ed erano appena stati
+        // usati per decidere `success_rate` e `next_steps`: mancava solo che
+        // uscissero da questa funzione.
+        total_strings,
+        translated_strings: translated_count,
+        injected_strings: injected_count as u64,
+        runtime_translation: false,
     })
 }
 

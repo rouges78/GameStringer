@@ -44,6 +44,7 @@ import {
   classifyCompatError, maybeOfferCompatOptIn, type CompatGameRef,
 } from '@/lib/compat-telemetry';
 import { reportCrash } from '@/lib/crash-reporter';
+import { decidePatchOutcome } from '@/lib/translation/patch-outcome';
 import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { LANG_TO_CODE } from '@/lib/translation/language-mappings';
 import { useWarmIndex } from '@/hooks/use-warm-index';
@@ -2869,7 +2870,13 @@ export default function GameDetailPage() {
       const executionResult = await invoke<{
         successRate?: number; totalDurationMinutes?: number; finalStatus?: string;
         deliverables?: unknown[]; errors?: unknown[]; nextSteps?: string[];
+        // Dal 15/08 il Rust manda davvero questi campi. Prima erano dichiarati
+        // qui e non esistevano dall'altra parte: `undefined || 0` → 0, e la
+        // telemetria archiviava 12 «riuscito» su 12 senza una sola stringa.
+        // Restano opzionali perché un client vecchio può non mandarli, ma ora
+        // l'assenza si distingue dallo zero (vedi decidePatchOutcome).
         translatedStrings?: number; totalStrings?: number;
+        injectedStrings?: number; runtimeTranslation?: boolean;
       }>('execute_complete_workflow', {
         installPath: game.installPath,
         gameTitle: game.title || game.name || 'Unknown Game',
@@ -2887,14 +2894,31 @@ export default function GameDetailPage() {
       const finalStatus = executionResult?.finalStatus;
       const workflowFailed = finalStatus === 'Failed';
 
-      if (!workflowFailed && success >= 0.8) {
-        updateStep(6, 'done', `Traduzione completata: ${(success * 100).toFixed(0)}% successo in ${duration.toFixed(1)}min`);
+      // Il messaggio a schermo dice quante stringhe sono ENTRATE nel gioco, non
+      // che percentuale di stadi ha completato: «100% successo» con zero righe
+      // scritte è esattamente la bugia che gli utenti hanno segnalato.
+      const injectedNow = executionResult?.injectedStrings;
+      const totalNow = executionResult?.totalStrings;
+      const runtimeNow = executionResult?.runtimeTranslation === true;
+      const esitoReale =
+        runtimeNow
+          ? 'loader installato — la traduzione avviene mentre giochi'
+          : typeof injectedNow === 'number' && typeof totalNow === 'number'
+            ? `${injectedNow}/${totalNow} stringhe scritte nel gioco`
+            : `${(success * 100).toFixed(0)}% degli stadi completati`;
+
+      if (!workflowFailed && !runtimeNow && injectedNow === 0) {
+        // Tutti gli stadi verdi e nessuna riga nel gioco: questo caso prima
+        // finiva nel ramo «completata». Non è un successo parziale, è un buco.
+        updateStep(6, 'error', `Nessuna stringa è entrata nel gioco — ${executionResult?.nextSteps?.[0] || 'prova il patcher engine-specific dalla pagina del gioco'}`);
+      } else if (!workflowFailed && success >= 0.8) {
+        updateStep(6, 'done', `Traduzione completata: ${esitoReale}, in ${duration.toFixed(1)}min`);
       } else if (workflowFailed) {
         // Fix issue #46: niente verde se il gioco non è stato modificato davvero
         const hint = executionResult?.nextSteps?.[0] || 'Prova il patcher engine-specific dalla pagina del gioco';
         updateStep(6, 'error', `Il gioco NON è stato tradotto — ${hint}`);
       } else {
-        updateStep(6, 'error', `Parzialmente completata: ${(success * 100).toFixed(0)}% successo`);
+        updateStep(6, 'error', `Parzialmente completata: ${esitoReale}`);
       }
       await new Promise(r => setTimeout(r, 800));
 
@@ -2905,6 +2929,21 @@ export default function GameDetailPage() {
       const deliverables = executionResult?.deliverables || [];
       const errors = executionResult?.errors || [];
       const totalStr = executionResult?.totalStrings || 0;
+
+      // ── L'ESITO LO DECIDE UNA REGOLA SOLA ─────────────────────────────────
+      // `decidePatchOutcome` sta in lib/translation/patch-outcome.ts con i suoi
+      // test: qui non si ricopia la logica, la si chiama. Prima l'esito
+      // derivava da `successRate` (frazione di STADI completati), e un workflow
+      // con tutti gli stadi verdi e zero righe scritte finiva nel database come
+      // «riuscito».
+      const verdict = decidePatchOutcome({
+        totalStrings: executionResult?.totalStrings,
+        translatedStrings: executionResult?.translatedStrings,
+        injectedStrings: executionResult?.injectedStrings,
+        runtimeTranslation: executionResult?.runtimeTranslation,
+        successRate: executionResult?.successRate,
+      });
+      const patchResult = verdict.outcome;
 
       // Messaggio onesto: nessun deliverable e nessuna stringa estraibile = motore non
       // supportato (file-based) o niente da tradurre. Niente falso "successo".
@@ -2943,9 +2982,12 @@ export default function GameDetailPage() {
         void reportCompatStep({
           runId: compatRunId, game: compatGame,
           engine: predictionResult?.engine || game.engine,
-          step: 'patch', result: success >= 0.8 ? 'success' : 'partial',
-          stringsTotal: totalStr,
-          stringsTranslated: executionResult?.translatedStrings || 0,
+          step: 'patch', result: patchResult,
+          // null, non 0: «non misurato» e «misurato zero» sono fatti diversi e
+          // la vista pubblica li conta in modo diverso.
+          stringsTotal: verdict.stringsTotal,
+          stringsTranslated: verdict.stringsTranslated,
+          errorCategory: patchResult === 'failure' ? 'patch_write' : undefined,
           targetLang: compatLang,
         });
         setPendingBootCheck({
@@ -2956,9 +2998,9 @@ export default function GameDetailPage() {
         maybeOfferCompatOptIn({
           runId: compatRunId, game: compatGame,
           engine: predictionResult?.engine || game.engine,
-          result: success >= 0.8 ? 'success' : 'partial',
-          stringsTotal: totalStr,
-          stringsTranslated: executionResult?.translatedStrings || 0,
+          result: patchResult,
+          stringsTotal: verdict.stringsTotal,
+          stringsTranslated: verdict.stringsTranslated,
           targetLang: compatLang,
         });
       }
@@ -3029,8 +3071,13 @@ export default function GameDetailPage() {
         errors: errors.length,
         engine: game.engine || 'Unknown',
         targetLang: targetLang || language || 'it',
-        stringsTranslated: executionResult?.translatedStrings || executionResult?.totalStrings || 0,
-        stringsTotal: executionResult?.totalStrings || 0,
+        // ⚠️ Qui c'era `translatedStrings || totalStrings || 0`: quando le
+        // tradotte erano 0 il fallback mostrava IL TOTALE al posto loro, cioè
+        // il numero più alto possibile proprio nel caso peggiore. Il wizard
+        // diceva «1477 stringhe tradotte» su una run che non ne aveva scritta
+        // nessuna. Ora mostra le stringhe entrate davvero nel gioco.
+        stringsTranslated: executionResult?.injectedStrings ?? executionResult?.translatedStrings ?? 0,
+        stringsTotal: executionResult?.totalStrings ?? 0,
         verification: {
           checked: proving.length,
           verified: verifiedNames.length,
