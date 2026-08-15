@@ -472,13 +472,31 @@ pub async fn scan_godot_pck(pck_path: String) -> Result<GodotExtractionResult, S
         // Leggi preview del contenuto
         let abs_offset = entry.offset as usize;
         let file_end = abs_offset + entry.size as usize;
+        let mut is_binary = false;
         let preview = if file_end <= data.len() + start {
             let file_data = &data[start + abs_offset..start + file_end];
-            // Conta stringhe approssimative
-            let text = String::from_utf8_lossy(file_data);
-            let line_count = text.lines().count();
-            total_strings += line_count;
-            text.chars().take(200).collect::<String>()
+            // ── ONESTÀ SUL FORMATO (15/08/2026) ─────────────────────────────
+            // Prima qui si faceva from_utf8_lossy + lines().count() su QUALSIASI
+            // file, compresi i .translation binari (RSRC): il conteggio degli
+            // a-capo dentro un binario veniva mostrato come «stringhe» — un
+            // numero inventato che sembrava un dato. Un file che non sappiamo
+            // leggere deve DIRLO, non diventare un conteggio.
+            is_binary = file_data.starts_with(b"RSRC")
+                || file_data.starts_with(b"RSCC") // RSRC compresso
+                || file_data.iter().take(512).any(|&b| b == 0);
+            if is_binary {
+                let fmt = if file_data.starts_with(b"RSRC") || file_data.starts_with(b"RSCC") {
+                    "RSRC (risorsa binaria Godot)"
+                } else {
+                    "binario"
+                };
+                format!("[NON LEGGIBILE: formato {} — parser non ancora implementato]", fmt)
+            } else {
+                let text = String::from_utf8_lossy(file_data);
+                let line_count = text.lines().count();
+                total_strings += line_count;
+                text.chars().take(200).collect::<String>()
+            }
         } else {
             String::new()
         };
@@ -486,20 +504,39 @@ pub async fn scan_godot_pck(pck_path: String) -> Result<GodotExtractionResult, S
         translatable.push(GodotTranslatableFile {
             path_in_pck: entry.path.clone(),
             size: entry.size,
-            file_type: file_type.to_string(),
+            file_type: if is_binary { "binary_unsupported".to_string() } else { file_type.to_string() },
             content_preview: preview,
         });
     }
 
     let file_count = translatable.len();
-    log::info!("📦 PCK scan: {} file traducibili, ~{} stringhe", file_count, total_strings);
+    let binary_count = translatable.iter().filter(|f| f.file_type == "binary_unsupported").count();
+    let readable_count = file_count - binary_count;
+    log::info!("📦 PCK scan: {} file ({} leggibili, {} binari non supportati), ~{} stringhe", file_count, readable_count, binary_count, total_strings);
+
+    // Il messaggio dice la verità anche quando è scomoda: se i file di
+    // localizzazione ci sono ma sono tutti RSRC, l'utente deve saperlo QUI,
+    // non dedurlo da uno zero.
+    let message = if binary_count > 0 && readable_count == 0 {
+        format!(
+            "Trovati {} file di localizzazione, ma sono TUTTI in formato binario Godot (RSRC) che non sappiamo ancora leggere: 0 stringhe estraibili. Non è un gioco senza testi — è un formato non supportato.",
+            binary_count
+        )
+    } else if binary_count > 0 {
+        format!(
+            "Trovati {} file leggibili (~{} stringhe) + {} file binari RSRC non ancora supportati",
+            readable_count, total_strings, binary_count
+        )
+    } else {
+        format!("Trovati {} file traducibili (~{} stringhe)", file_count, total_strings)
+    };
 
     Ok(GodotExtractionResult {
         success: true,
         files: translatable,
         total_strings,
         pck_info: Some(info),
-        message: format!("Trovati {} file traducibili (~{} stringhe)", file_count, total_strings),
+        message,
     })
 }
 

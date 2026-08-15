@@ -8115,5 +8115,9 @@
     "globalCloudHint": "아래에 설정한 온라인 제공자(Gemini, Anthropic, OpenAI…)를 사용합니다. 더 빠르고 문장이 자연스럽지만 API 크레딧을 씁니다.",
     "overridesActive": "일부 게임은 이 설정보다 우선하는 자체 설정이 있습니다: {list}.",
     "clearOverrides": "모두 일반 설정을 따르게 하기"
+  },
+  "godotTranslator": {
+    "unsupportedTitle": "Format not supported yet",
+    "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
   }
 }

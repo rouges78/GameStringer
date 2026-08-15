@@ -8115,5 +8115,9 @@
     "globalCloudHint": "Usa i provider online configurati qui sotto (Gemini, Anthropic, OpenAI…): più veloce e con italiano migliore, ma consuma il credito delle tue chiavi.",
     "overridesActive": "Alcuni giochi hanno una scelta propria che ha la precedenza su questa: {list}.",
     "clearOverrides": "Fai seguire a tutti l'impostazione generale"
+  },
+  "godotTranslator": {
+    "unsupportedTitle": "Formato non ancora supportato",
+    "unsupportedHint": "Il supporto ai .translation binari (RSRC) è in roadmap. Questo non è un errore del gioco né tuo."
   }
 }

@@ -111,12 +111,12 @@ function parseGodotTres(content: string): LocaleEntry[] {
 async function scanInsidePck(
   projectPath: string,
   log: (m: string) => void,
-): Promise<LocaleFile[]> {
+): Promise<{ files: LocaleFile[]; unsupported: string | null }> {
   try {
     const det = await invoke('detect_godot_engine', { gamePath: projectPath }) as {
       is_godot: boolean; pck_path: string | null; pck_embedded: boolean; godot_version: string;
     };
-    if (!det?.is_godot || !det.pck_path) return [];
+    if (!det?.is_godot || !det.pck_path) return { files: [], unsupported: null };
 
     log(`📦 Pacchetto Godot rilevato (${det.godot_version || 'versione ignota'}${det.pck_embedded ? ', embedded nell\'exe' : ''}): guardo dentro…`);
 
@@ -124,12 +124,22 @@ async function scanInsidePck(
       success: boolean; total_strings: number; message: string;
       files: { path_in_pck: string; file_type: string; size: number }[];
     };
+    // Dal 15/08 il Rust classifica i binari come 'binary_unsupported' invece di
+    // contarne gli a-capo: qui vanno CONTATI e DETTI, non filtrati nel silenzio.
+    const binari = (inside?.files || []).filter(f => f.file_type === 'binary_unsupported').length;
     const candidates = (inside?.files || []).filter(f =>
       ['translation', 'csv', 'text'].includes(f.file_type),
     );
     if (!inside?.success || candidates.length === 0) {
+      if (binari > 0) {
+        // Il caso Galley House: i file CI SONO, è il formato che non sappiamo
+        // leggere. «0 file» sarebbe una bugia; questo è un limite nostro.
+        const msg = `${binari} file di localizzazione trovati nel pacchetto, ma sono in formato binario Godot (RSRC) non ancora supportato. Il gioco HA i testi: è GameStringer che non sa ancora leggerli.`;
+        log(`⛔ ${msg}`);
+        return { files: [], unsupported: msg };
+      }
       log(`ℹ️ Il pacchetto non contiene file di localizzazione leggibili${inside?.message ? `: ${inside.message}` : ''}.`);
-      return [];
+      return { files: [], unsupported: null };
     }
     log(`📦 ${candidates.length} file di localizzazione nel pacchetto — estraggo…`);
 
@@ -140,7 +150,14 @@ async function scanInsidePck(
       directory: outDir,
       extensions: ['csv', 'po', 'tres', 'translation'],
       recursive: true,
-    }) as { files: { path: string; name: string; content: string }[] };
+    }) as {
+      files: { path: string; name: string; content: string }[];
+      skipped?: { path: string; name: string; reason: string }[];
+    };
+    const skippedBin = (extracted.skipped || []).filter(s => s.reason === 'binary').length;
+    if (skippedBin > 0) {
+      log(`⚠️ ${skippedBin} file estratti ma binari (RSRC): non leggibili con i parser attuali.`);
+    }
 
     const out: LocaleFile[] = [];
     for (const f of extracted.files || []) {
@@ -154,13 +171,18 @@ async function scanInsidePck(
       }
     }
     if (out.length === 0) {
-      log('⚠️ Estrazione riuscita ma nessuna stringa leggibile: i file del pacchetto sono in un formato non ancora supportato.');
+      const tot = binari + skippedBin;
+      const msg = tot > 0
+        ? `Estrazione riuscita, ma i ${tot} file di localizzazione sono binari (RSRC) non ancora supportati. Il gioco HA i testi: manca il parser.`
+        : 'Estrazione riuscita ma nessuna stringa leggibile: formato non riconosciuto.';
+      log(`⛔ ${msg}`);
+      return { files: [], unsupported: msg };
     }
-    return out;
+    return { files: out, unsupported: null };
   } catch (e: unknown) {
     // Il fallback non deve mai far fallire lo scan normale: dillo e basta.
     log(`⚠️ Lettura del pacchetto non riuscita: ${e}`);
-    return [];
+    return { files: [], unsupported: null };
   }
 }
 
@@ -174,6 +196,9 @@ export default function GodotTranslatorPage() {
   const [prog, setProg] = useState({ cur: 0, tot: 0, file: '' });
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  // Formato trovato ma non supportato (es. .translation RSRC): banner a
+  // schermo, perché «File 0» su un gioco che i file li ha è una bugia.
+  const [formatNotice, setFormatNotice] = useState<string | null>(null);
   const [targetLang, setTargetLang] = useState('en');
   useDefaultTargetLang(setTargetLang);
   const [model, setModel] = useState('');
@@ -222,6 +247,7 @@ export default function GodotTranslatorPage() {
     if (!projectPath) return;
     setStatus('scanning');
     setFiles([]);
+    setFormatNotice(null);
     log('🔍 Scansione file di localizzazione Godot...');
     try {
       // Scan for .csv, .po, .tres, .translation files
@@ -259,11 +285,20 @@ export default function GodotTranslatorPage() {
       //    dell'utente che non ci passa». Qui la strada ci passa.
       if (localeFiles.length === 0) {
         const fromPck = await scanInsidePck(projectPath, log);
-        if (fromPck.length > 0) {
-          setFiles(fromPck);
-          const tot = fromPck.reduce((s, f) => s + f.entries.length, 0);
-          log(`✅ ${fromPck.length} file, ${tot} stringhe (dal pacchetto .pck)`);
+        if (fromPck.files.length > 0) {
+          setFiles(fromPck.files);
+          const tot = fromPck.files.reduce((s, f) => s + f.entries.length, 0);
+          log(`✅ ${fromPck.files.length} file, ${tot} stringhe (dal pacchetto .pck)`);
           setStatus('idle');
+          return;
+        }
+        if (fromPck.unsupported) {
+          // Formato trovato ma non leggibile: NON è «0 file» e non è «idle».
+          // Banner a schermo + log aperto — la verità non vive in un pannello
+          // chiuso di default (era il terzo fallimento muto di questa pagina).
+          setFormatNotice(fromPck.unsupported);
+          setShowLogs(true);
+          setStatus('error');
           return;
         }
       }
@@ -424,6 +459,18 @@ export default function GodotTranslatorPage() {
       </div>
 
       <WizardStepper steps={GODOT_STEPS} currentStep={godotCurrentStep} size="sm" />
+
+      {/* Formato trovato ma non supportato: la verità sta QUI, non nel log chiuso */}
+      {formatNotice && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
+          <span className="text-xl leading-none mt-0.5">⛔</span>
+          <div>
+            <div className="text-sm font-bold text-amber-300">{t('godotTranslator.unsupportedTitle')}</div>
+            <p className="text-xs text-amber-200/80 mt-1">{formatNotice}</p>
+            <p className="text-2xs text-amber-200/50 mt-1.5">{t('godotTranslator.unsupportedHint')}</p>
+          </div>
+        </div>
+      )}
 
       {/* Step 1: Select */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">

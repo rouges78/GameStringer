@@ -8115,5 +8115,9 @@
     "globalCloudHint": "使用下方配置的在线服务商（Gemini、Anthropic、OpenAI…）：更快且译文更佳，但会消耗你的密钥额度。",
     "overridesActive": "部分游戏有自己的设置，优先于此项：{list}。",
     "clearOverrides": "让全部跟随通用设置"
+  },
+  "godotTranslator": {
+    "unsupportedTitle": "Format not supported yet",
+    "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
   }
 }

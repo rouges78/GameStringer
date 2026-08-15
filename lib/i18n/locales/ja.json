@@ -8117,5 +8117,9 @@
     "globalCloudHint": "下で設定したオンラインのプロバイダ（Gemini、Anthropic、OpenAI…）を使います。速く自然な訳文になりますが、APIの残高を消費します。",
     "overridesActive": "一部のゲームには、この設定より優先される独自の設定があります：{list}。",
     "clearOverrides": "すべて全体設定に従わせる"
+  },
+  "godotTranslator": {
+    "unsupportedTitle": "Format not supported yet",
+    "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
   }
 }

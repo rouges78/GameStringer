@@ -249,6 +249,20 @@ pub struct ScannedFile {
 #[derive(serde::Serialize)]
 pub struct ScanDirectoryResult {
     pub files: Vec<ScannedFile>,
+    /// File con l'estensione giusta ma NON leggibili come testo (binari,
+    /// troppo grandi, encoding rotto). Fino al 15/08/2026 venivano scartati
+    /// con `Err(_) => {}`: un .translation binario Godot spariva in silenzio
+    /// e a schermo restava «0 file» — il fallimento muto per costruzione.
+    /// Chi chiama DEVE mostrarli, non è un campo decorativo.
+    pub skipped: Vec<SkippedFile>,
+}
+
+#[derive(serde::Serialize)]
+pub struct SkippedFile {
+    pub path: String,
+    pub name: String,
+    /// Perché non è leggibile: "binary", "too_large", "read_error".
+    pub reason: String,
 }
 
 /// Scansiona ricorsivamente una directory e restituisce i file con le estensioni richieste
@@ -271,6 +285,7 @@ pub async fn scan_directory_files(
         ext_set: &[String],
         recursive: bool,
         files: &mut Vec<ScannedFile>,
+        skipped: &mut Vec<SkippedFile>,
         max_files: usize,
     ) -> Result<(), String> {
         let entries = fs::read_dir(dir)
@@ -287,7 +302,7 @@ pub async fn scan_directory_files(
                 if dir_name.starts_with('.') || dir_name == "node_modules" || dir_name == "__pycache__" {
                     continue;
                 }
-                let _ = walk_dir(&path, ext_set, recursive, files, max_files);
+                let _ = walk_dir(&path, ext_set, recursive, files, skipped, max_files);
             } else if path.is_file() {
                 let ext = path.extension()
                     .and_then(|e| e.to_str())
@@ -295,25 +310,40 @@ pub async fn scan_directory_files(
                     .unwrap_or_default();
 
                 if ext_set.contains(&ext) {
-                    // Read file content (skip binary/large files >2MB)
+                    let name = path.file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("unknown")
+                        .to_string();
+                    // Read file content (binary/large files → REGISTRATI, non scartati)
                     let metadata = fs::metadata(&path).ok();
                     let size = metadata.map(|m| m.len()).unwrap_or(0);
                     if size > 2 * 1024 * 1024 {
+                        skipped.push(SkippedFile {
+                            path: path.to_string_lossy().to_string(),
+                            name,
+                            reason: "too_large".to_string(),
+                        });
                         continue;
                     }
                     match fs::read_to_string(&path) {
                         Ok(content) => {
-                            let name = path.file_name()
-                                .and_then(|n| n.to_str())
-                                .unwrap_or("unknown")
-                                .to_string();
                             files.push(ScannedFile {
                                 path: path.to_string_lossy().to_string(),
                                 name,
                                 content,
                             });
                         }
-                        Err(_) => {} // Skip files that can't be read as text
+                        Err(_) => {
+                            // Non-UTF8 = quasi sempre binario (es. .translation
+                            // RSRC di Godot). Prima: `Err(_) => {}` e il file
+                            // SPARIVA — l'utente vedeva «0 file» su un gioco
+                            // che i file li aveva. Ora il chiamante lo sa.
+                            skipped.push(SkippedFile {
+                                path: path.to_string_lossy().to_string(),
+                                name,
+                                reason: "binary".to_string(),
+                            });
+                        }
                     }
                 }
             }
@@ -321,9 +351,10 @@ pub async fn scan_directory_files(
         Ok(())
     }
 
-    walk_dir(dir_path, &ext_set, recursive, &mut files, 500)?;
+    let mut skipped = Vec::new();
+    walk_dir(dir_path, &ext_set, recursive, &mut files, &mut skipped, 500)?;
 
-    Ok(ScanDirectoryResult { files })
+    Ok(ScanDirectoryResult { files, skipped })
 }
 
 /// Legge un file dalla directory app data di GameStringer

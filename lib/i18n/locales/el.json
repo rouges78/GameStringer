@@ -8117,5 +8117,9 @@
     "globalCloudHint": "Χρησιμοποιεί τους online παρόχους που ρυθμίζεις πιο κάτω (Gemini, Anthropic, OpenAI…): πιο γρήγορα και με καλύτερο λόγο, αλλά ξοδεύει το υπόλοιπο των κλειδιών σου.",
     "overridesActive": "Κάποια παιχνίδια έχουν δική τους επιλογή που υπερισχύει αυτής: {list}.",
     "clearOverrides": "Να ακολουθούν όλα τη γενική ρύθμιση"
+  },
+  "godotTranslator": {
+    "unsupportedTitle": "Format not supported yet",
+    "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
   }
 }
