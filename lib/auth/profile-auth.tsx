@@ -1,22 +1,14 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useProfileSettings } from '@/hooks/use-profile-settings';
-import { UserProfile } from '@/types/profiles';
 import { clientLogger } from '@/lib/client-logger';
-
-interface ProfileAuthContextType {
-  isAuthenticated: boolean;
-  currentProfile: UserProfile | null;
-  isLoading: boolean;
-  sessionTimeRemaining: number | null;
-  isSessionExpired: boolean;
-  renewSession: () => Promise<boolean>;
-  logout: () => Promise<void>;
-}
-
-const ProfileAuthContext = createContext<ProfileAuthContextType | undefined>(undefined);
+// Context e hook vivono in profile-auth-context.ts (15/08/2026): esportarli da
+// qui — un file che esporta anche un componente — spegneva il Fast Refresh
+// (doppio click su ogni pagina in dev). I file .ts importano da là, non da qui.
+import { ProfileAuthContext, type ProfileAuthContextType } from './profile-auth-context';
+import type { UserProfile } from '@/types/profiles';
 
 interface ProfileAuthProviderProps {
   children: ReactNode;
@@ -197,13 +189,9 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   );
 }
 
-export function useProfileAuth() {
-  const context = useContext(ProfileAuthContext);
-  if (context === undefined) {
-    throw new Error('useProfileAuth must be used within a ProfileAuthProvider');
-  }
-  return context;
-}
+// Re-export per i componenti che già importano da qui; i file NON-React
+// (hooks/use-notifications.ts e simili) devono usare ./profile-auth-context.
+export { useProfileAuth } from './profile-auth-context';
 
 
 

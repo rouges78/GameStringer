@@ -11,7 +11,7 @@
  * opt-in della telemetria di compatibilità (che occupa già lo stesso momento).
  */
 
-import { tStatic } from '@/lib/i18n';
+import { tStatic } from '@/lib/i18n/t-static';
 import { openFeedback } from '@/lib/feedback-bus';
 
 const INVITE_KEY = 'gs-feedback-invite-prompted';

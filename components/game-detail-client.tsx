@@ -453,12 +453,19 @@ export default function GameDetailPage() {
   // Ora leggono la scelta come tutti gli altri.
   const [visBackendChoice, setVisBackendChoice] = useState<TranslationBackend>('ollama');
   const [tyBackendChoice, setTyBackendChoice] = useState<TranslationBackend>('ollama');
+  // Hendrix e RPG Maker: gli ultimi due senza picker (15/08). RPG Maker aveva
+  // il ramo cloud dal 14/08 ma onorava solo il default globale; Hendrix
+  // ignorava la scelta del tutto.
+  const [hxBackendChoice, setHxBackendChoice] = useState<TranslationBackend>('ollama');
+  const [rpgBackendChoice, setRpgBackendChoice] = useState<TranslationBackend>('ollama');
   useEffect(() => {
     // prima la migrazione una-tantum (chi aveva una API key otteneva il cloud
     // per deduzione: quella deduzione diventa una scelta scritta), poi si legge
     migrateLegacyBackendChoice();
     setVisBackendChoice(getTranslationBackend('visionaire'));
     setTyBackendChoice(getTranslationBackend('tyrano'));
+    setHxBackendChoice(getTranslationBackend('hendrix'));
+    setRpgBackendChoice(getTranslationBackend('rpgmaker'));
   }, []);
   const changeVisBackend = (v: TranslationBackend) => {
     setVisBackendChoice(v);
@@ -467,6 +474,14 @@ export default function GameDetailPage() {
   const changeTyBackend = (v: TranslationBackend) => {
     setTyBackendChoice(v);
     setTranslationBackend('tyrano', v);
+  };
+  const changeHxBackend = (v: TranslationBackend) => {
+    setHxBackendChoice(v);
+    setTranslationBackend('hendrix', v);
+  };
+  const changeRpgBackend = (v: TranslationBackend) => {
+    setRpgBackendChoice(v);
+    setTranslationBackend('rpgmaker', v);
   };
 
   // Lotto di prova: traduce poche stringhe ma genera comunque i file tl/, così
@@ -2119,6 +2134,8 @@ export default function GameDetailPage() {
             gamePath: game.installPath,
             targetLang: tgt,
             targetName: tgtName[tgt] || tgt.toUpperCase(),
+            gameId: game.id || (game.appid ? String(game.appid) : undefined),
+            backend: hxBackendChoice,
             onProgress: (p) => {
               if (p.phase === 'translate') { toast.loading(`Hendrix: traduzione ${p.done}/${p.total}... (ripresa salvata)`, { id: toastId }); hTracker.onProgress(p.done, p.total); }
               else if (p.phase === 'apply') toast.loading(t('gameDetail.loadingHendrixApply'), { id: toastId });
@@ -2713,6 +2730,7 @@ export default function GameDetailPage() {
               gamePath: game.installPath,
               targetLang: tgt,
               sourceLang: 'en',
+              backend: rpgBackendChoice,
               gameId: game.id || (game.appid ? String(game.appid) : undefined),
               onProgress: (p) => {
                 if (p.phase === 'detect') rmStep(0, 'running');
@@ -3634,13 +3652,12 @@ export default function GameDetailPage() {
               {/* ── Motore AI: LOCALE o ONLINE, sceglie l'utente ─────────────
                   Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
                   pilotabile SOLO da localStorage: nessun pulsante, quindi per
-                  l'utente non esisteva. Dal 10/08 anche Danganronpa ha il ramo
-                  cloud, montato QUI insieme al suo pulsante — un ramo senza
-                  interruttore nasce già irraggiungibile.
-                  Restano da cablare Visionaire e Tyrano (il ramo ce l'hanno,
-                  ma oggi scelgono da soli guardando se esiste una API key:
-                  vedi il blocco di auto-detect in startAutoTranslate) e da
-                  scrivere Hendrix e RPG Maker — vedi lib/translation-backend.ts */}
+                  l'utente non esisteva — un ramo senza interruttore nasce già
+                  irraggiungibile. Dal 15/08 TUTTI e sei i motori file-based
+                  hanno ramo cloud E picker montato qui. ⚠️ Questo commento è
+                  già stato bugiardo due volte (diceva «restano Hendrix e RPG
+                  Maker» a lavoro fatto) e la roadmap l'ha copiato: se cambi i
+                  rami qui sotto, cambia ANCHE queste righe. */}
               {isDanganronpa && (
                 <BackendPicker
                   value={dr1Backend}
@@ -3659,6 +3676,20 @@ export default function GameDetailPage() {
                 <BackendPicker
                   value={tyBackendChoice}
                   onChange={changeTyBackend}
+                  disabled={autoTranslateBusy}
+                />
+              )}
+              {translationStrategy?.method === 'hendrix' && (
+                <BackendPicker
+                  value={hxBackendChoice}
+                  onChange={changeHxBackend}
+                  disabled={autoTranslateBusy}
+                />
+              )}
+              {translationStrategy?.method === 'rpgmaker' && (
+                <BackendPicker
+                  value={rpgBackendChoice}
+                  onChange={changeRpgBackend}
                   disabled={autoTranslateBusy}
                 />
               )}

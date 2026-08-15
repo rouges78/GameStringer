@@ -15,7 +15,7 @@
 
 import { projectService } from '@/lib/services/translation-projects';
 import type { ProgressState } from '@/lib/types/progress';
-import { tStatic } from '@/lib/i18n';
+import { tStatic } from '@/lib/i18n/t-static';
 import { gamePathKey } from '@/lib/game-path';
 import {
   reportCompatStep, newCompatRunId, compatGameKey, setPendingBootCheck,

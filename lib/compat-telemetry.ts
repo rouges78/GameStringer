@@ -22,7 +22,7 @@
 
 import { getSupabase, getCurrentUser } from '@/lib/social/community-hub-backend';
 import { clientLogger } from './client-logger';
-import { tStatic } from '@/lib/i18n';
+import { tStatic } from '@/lib/i18n/t-static';
 
 // ── Types ──────────────────────────────────────────────────
 

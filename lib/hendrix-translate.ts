@@ -6,6 +6,9 @@
 import { invoke } from '@/lib/tauri-api';
 import { autoFixPlaceholders } from '@/lib/ai/placeholder-guard';
 import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
+import { translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { getTranslationBackend, type TranslationBackend } from '@/lib/translation-backend';
+import { clientLogger } from '@/lib/client-logger';
 
 export interface HendrixProgress {
   phase: 'detect' | 'extract' | 'translate' | 'apply' | 'enable' | 'done';
@@ -53,13 +56,20 @@ export async function runHendrixTranslation(opts: {
   gamePath: string;
   targetLang?: string;
   targetName?: string;
+  gameId?: string;
   model?: string;
   chunkSize?: number;
+  backend?: TranslationBackend;
   onProgress?: (p: HendrixProgress) => void;
 }): Promise<{ applied: number; total: number }> {
   const tgt = (opts.targetLang || 'it').toLowerCase();
   const name = opts.targetName || 'Italiano';
   const model = opts.model || lsGet('gs_hendrix_model') || 'gemma4:e4b';
+  // LOCALE o ONLINE: la scelta è dell'utente. Fino al 15/08/2026 Hendrix era
+  // l'ULTIMO motore con una via sola: chi sceglieva ONLINE veniva ignorato in
+  // silenzio e il job partiva comunque su Ollama — un fallimento muto
+  // travestito da preferenza. Era l'ultima voce di [backend-locale-online].
+  const backend = opts.backend || getTranslationBackend('hendrix');
   const CHUNK = opts.chunkSize || Number(lsGet('gs_hendrix_chunk')) || 40;
   const SAVE_EVERY = 400; // salva checkpoint + applica al CSV ogni ~400 stringhe
   const report = opts.onProgress || (() => {});
@@ -99,17 +109,53 @@ export async function runHendrixTranslation(opts: {
     }).catch(() => {});
   };
 
+  // ⛔ Freno anti-batch-a-vuoto (stessa lezione di rpgmaker/danganronpa:
+  // sul cloud un batch vuoto costa credito, in locale segnala Ollama giù).
+  const MAX_VUOTI = 3;
+  let batchVuoti = 0;
   let sinceSave = 0;
   for (let i = 0; i < todo.length; i += CHUNK) {
     const slice = todo.slice(i, i + CHUNK);
-    const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
-      texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model, ...ollamaArgs(),
-    });
-    res.forEach((tr, k) => {
+    let outs: string[];
+    if (backend === 'cloud') {
+      const res = await translateWithFallbackBatched({
+        texts: slice.map(r => r.original),
+        targetLanguage: tgt,
+        sourceLanguage: 'en',
+        gameId: opts.gameId,
+        context: [
+          'Hendrix_Localization game text (game_messages.csv): dialogue and system strings.',
+          'Preserve ALL control codes EXACTLY as they appear, in the same position:',
+          'backslash codes like \\C[n] \\N[n] \\V[n] \\I[n], \\. \\! \\| \\^,',
+          'curly-brace tokens like {ITEM}, and %1..%9 placeholders.',
+          'Do not translate, remove, reorder or alter them.',
+        ].join('\n'),
+      }, CHUNK);
+      outs = res.translations;
+    } else {
+      const res = await invoke<{ translated: string }[]>('offline_translate_batch', {
+        texts: slice.map(r => r.original), sourceLang: 'en', targetLang: tgt, model, ...ollamaArgs(),
+      });
+      outs = res.map(r => r.translated);
+    }
+    // Stessa validazione per ENTRAMBE le vie: anche il cloud può perdere i
+    // codici, e un codice rotto in gioco è peggio di una stringa non tradotta.
+    let accettateNelBatch = 0;
+    outs.forEach((raw, k) => {
       const orig = slice[k].original;
-      const accepted = acceptOfflineTranslation(orig, (tr.translated || '').trim());
-      if (accepted !== null) translations[orig] = accepted;
+      const accepted = acceptOfflineTranslation(orig, (raw || '').trim());
+      if (accepted !== null) { translations[orig] = accepted; accettateNelBatch++; }
     });
+    if (accettateNelBatch === 0) {
+      batchVuoti++;
+      clientLogger.warn(`[Hendrix] batch senza traduzioni accettate (${batchVuoti}/${MAX_VUOTI}) — backend: ${backend}`);
+      if (batchVuoti >= MAX_VUOTI) {
+        clientLogger.error(`[Hendrix] FERMO: ${MAX_VUOTI} batch di fila a vuoto — backend: ${backend}. Cause tipiche: ${backend === 'cloud' ? 'credito/API key esaurita o non configurata' : 'Ollama spento o modello non installato'}. Salvo il checkpoint e applico quanto c'è.`);
+        break;
+      }
+    } else {
+      batchVuoti = 0;
+    }
     done += slice.length;
     sinceSave += slice.length;
     report({ phase: 'translate', done, total });
