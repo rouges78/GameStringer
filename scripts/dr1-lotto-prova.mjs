@@ -27,9 +27,11 @@
  *   node scripts/dr1-lotto-prova.mjs "<percorso>" --model claude-haiku-4-5-20251001
  *   node scripts/dr1-lotto-prova.mjs "<percorso>" --n 300
  *
- * Modelli utili al confronto (listini verificati 10/08/2026 — RIDATARLI):
+ * Modelli utili al confronto (listini riverificati il 16/08/2026):
  *   claude-haiku-4-5-20251001   (~$4,30 per tutto il gioco)
- *   claude-sonnet-5             (~$8,60 oggi; +50% dal 01/09)
+ *   claude-sonnet-5             (~$8,60 — ✅ NESSUN AUMENTO: il +50% previsto per
+ *                                il 01/09 è stato annullato il 10/08, $2/$10 è
+ *                                permanente. Non c'è fretta di decidere)
  *   claude-opus-5               (~$21,49)
  */
 import { readFileSync, writeFileSync, existsSync } from 'fs';

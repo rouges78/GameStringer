@@ -1,16 +1,23 @@
 /**
  * Quanto costa tradurre questo gioco? — stima da un checkpoint reale.
  *
- * Nasce il 10/08/2026 per una decisione con scadenza: il prezzo introduttivo di
- * Claude Sonnet 5 ($2/$10 per Mtoken) vale fino al 31/08/2026; dal 1° settembre
- * passa a $3/$15 (+50%). E il tokenizer nuovo conta ~30% di token in più a
- * parità di testo, quindi il salto REALE è maggiore del 50%.
+ * Nasce il 10/08/2026 per una decisione con scadenza. ⚠️ QUELLA SCADENZA NON
+ * ESISTE PIÙ, e questo commento è rimasto a mentire per sei giorni: il 10/08
+ * Anthropic ha ANNULLATO l'aumento previsto per il 1° settembre e reso
+ * permanente il prezzo di $2/$10 per Mtoken su Sonnet 5. Riverificato il
+ * 15/08 e di nuovo il 16/08. Non c'è nessuna fretta di spendere entro il 31/08.
+ *
+ * ⏰ LA SCADENZA VERA, oggi, è un'altra e riguarda DeepSeek: dalle 16:00 UTC
+ * del 16/08/2026 la famiglia V4 passa a tariffe a fasce (picco / fuori picco a
+ * metà prezzo). Su V4-Flash l'input cache-miss va da $0.14 a $0.44 di picco e
+ * l'output da $0.28 a $1.32: fino a 4,7 volte. Fascia di picco 01:00-04:00 e
+ * 06:00-10:00 UTC, cioè in Italia le 08:00-12:00 — la mattina.
  *
  * Serve a rispondere con numeri, non a naso, a tre domande diverse:
  *   1. quanto costa finire ciò che manca
  *   2. quanto costa RIFARE tutto meglio (se il grosso è già tradotto in locale
  *      e la qualità non convince: è una decisione diversa dalla 1)
- *   3. quanto si risparmia facendolo entro il 31/08
+ *   3. quanto cambia il conto a seconda del fornitore e dell'ORA del giorno
  *
  * ⚠️ È UNA STIMA, e va detto: il conteggio token è approssimato a 4 caratteri
  * per token (regola d'uso comune per l'inglese) e l'overhead di prompt e
@@ -55,22 +62,25 @@ console.log(`  token input  : ~${(tokIn / 1e6).toFixed(2)} M  (con overhead prom
 console.log(`  token output : ~${(tokOut / 1e6).toFixed(2)} M`);
 
 // Prezzi in $ per milione di token: [fascia, nome, input, output, nota].
-// ⚠️ DATARE SEMPRE questa tabella. Un listino vecchio travestito da fatto è il
-// modo più facile per sbagliare una decisione — e in questo progetto è già
-// successo: remote-config.ts raccomandava 'claude-3-5-sonnet' nel 2026, due
-// generazioni dopo. Verificato con ricerca il 10/08/2026.
+// ⚠️ DATARE SEMPRE questa tabella, VOCE PER VOCE. Un listino vecchio travestito
+// da fatto è il modo più facile per sbagliare una decisione — e in questo
+// progetto è già successo due volte: remote-config.ts raccomandava
+// 'claude-3-5-sonnet' nel 2026 (due generazioni dopo), e l'intestazione di
+// QUESTO file ha continuato a parlare di una scadenza al 31/08 per sei giorni
+// dopo che era stata annullata. La data accanto al numero non è pedanteria: è
+// l'unica cosa che distingue un prezzo da una diceria.
 const LISTINI = [
-  ['ALTA', 'GPT-5.6 Sol', 5, 30, 'la più cara della tabella'],
-  ['ALTA', 'Claude Opus 5', 5, 25, 'massima qualità Anthropic'],
-  ['ALTA', 'Sonnet 5 — dal 01/09/2026', 3, 15, '+50%: è questo che scatta a settembre'],
-  ['MEDIA', 'Sonnet 5 — entro il 31/08/2026', 2, 10, '⏰ prezzo introduttivo, scade'],
-  ['MEDIA', 'GPT-5.6 Terra', 2, 12, 'fascia bilanciata OpenAI'],
-  ['MEDIA', 'Gemini 3.1 Pro', 2, 12, 'fino a 200K token di prompt'],
-  ['BASSA', 'Haiku 4.5', 1, 5, 'buon compromesso, meno voce sui dialoghi'],
-  ['BASSA', 'Gemini (fascia Flash)', 0.3, 2.5, 'ordine di grandezza, verificare'],
-  ['BASSA', 'GPT-5.6 Luna', 0.2, 1.2, 'la più economica fra le cloud'],
-  ['BASSA', 'DeepSeek', 0.28, 1.1, '⚠️ rincaro annunciato il 06/08/2026, cifre ignote'],
-  ['LOCALE', 'Ollama', 0, 0, 'gratis: si paga in ore e in qualità'],
+  ['ALTA', 'GPT-5.6 Sol', 5, 30, 'la più cara della tabella · non riverificata dal 10/08'],
+  ['ALTA', 'Claude Opus 5', 5, 25, 'massima qualità Anthropic · non riverificata dal 10/08'],
+  ['MEDIA', 'Claude Sonnet 5', 2, 10, '✅ $2/$10 PERMANENTE: l\'aumento del 01/09 è stato annullato il 10/08 (riverificato 16/08)'],
+  ['MEDIA', 'GPT-5.6 Terra', 2, 12, 'fascia bilanciata OpenAI · non riverificata dal 10/08'],
+  ['MEDIA', 'Gemini 3.1 Pro', 2, 12, 'fino a 200K token di prompt · non riverificata dal 10/08'],
+  ['BASSA', 'Haiku 4.5', 1, 5, 'buon compromesso, meno voce sui dialoghi · non riverificata dal 10/08'],
+  ['BASSA', 'Gemini 3.7 Flash', 0.75, 3.75, '🆕 uscito il 13/08/2026, prezzo introduttivo: metà di Gemini 3.6 Flash (verificato 16/08). NON è ancora il consigliato dell\'app: prima va misurato'],
+  ['BASSA', 'GPT-5.6 Luna', 0.2, 1.2, 'la più economica fra le cloud · non riverificata dal 10/08'],
+  ['BASSA', 'DeepSeek V4 Flash — PICCO', 0.44, 1.32, '⏰ dal 16/08/2026 16:00 UTC. Picco = 01:00-04:00 e 06:00-10:00 UTC (in Italia 08:00-12:00, la mattina)'],
+  ['BASSA', 'DeepSeek V4 Flash — fuori picco', 0.22, 0.66, '⭐ metà prezzo: tutte le altre ore. Su una run lunga è la differenza fra due conti diversi'],
+  ['LOCALE', 'Ollama', 0, 0, 'gratis: si paga in ore e in qualità · qwen3.8:27b è uscito il 14/08 (Apache 2.0, ~18 GB)'],
 ];
 
 console.log(`\n${'─'.repeat(64)}`);
@@ -97,11 +107,19 @@ console.log(`\n  ⚠️ I modelli Anthropic recenti contano ~30% di token in pi�
 console.log(`     di testo: confrontare i prezzi per-token fra fornitori diversi`);
 console.log(`     sovrastima il vantaggio dei più economici.`);
 
-const conIntro = (tokIn / 1e6) * 2 + (tokOut / 1e6) * 10;
-const conPieno = (tokIn / 1e6) * 3 + (tokOut / 1e6) * 15;
-console.log(`\n⏰ FARLO ENTRO IL 31/08 FA RISPARMIARE: $${(conPieno - conIntro).toFixed(2)}`);
-console.log(`   (e il tokenizer nuovo di Sonnet 5 conta ~30% di token in più a`);
-console.log(`    parità di testo: il salto reale è maggiore del +50% nominale)`);
+// La decisione con l'orologio non è più «entro il 31/08» (quell'aumento è stato
+// annullato): è l'ORA DEL GIORNO in cui si lancia una run su DeepSeek.
+const dsPicco = (tokIn / 1e6) * 0.44 + (tokOut / 1e6) * 1.32;
+const dsFuori = (tokIn / 1e6) * 0.22 + (tokOut / 1e6) * 0.66;
+const dsPrima = (tokIn / 1e6) * 0.14 + (tokOut / 1e6) * 0.28;
+console.log(`\n⏰ DEEPSEEK V4 FLASH — cosa cambia dalle 16:00 UTC del 16/08/2026:`);
+console.log(`     prima del rincaro : $${dsPrima.toFixed(2)}`);
+console.log(`     in fascia di PICCO: $${dsPicco.toFixed(2)}   (×${(dsPicco / dsPrima).toFixed(1)} — 08:00-12:00 ora italiana)`);
+console.log(`     FUORI picco       : $${dsFuori.toFixed(2)}   (×${(dsFuori / dsPrima).toFixed(1)} — tutte le altre ore)`);
+console.log(`   ⭐ Aspettare il pomeriggio fa risparmiare $${(dsPicco - dsFuori).toFixed(2)} su questa run.`);
+console.log(`\n✅ Su Claude Sonnet 5 NON c'è più nessuna scadenza: $2/$10 è permanente`);
+console.log(`   dal 10/08/2026. (Il tokenizer recente conta ~30% di token in più a`);
+console.log(`   parità di testo, quindi il confronto per-token resta ottimista.)`);
 console.log(`\n⚠️ Stima, non preventivo: 4 char/token è una regola pratica e`);
 console.log(`   l'overhead è un moltiplicatore. Prima di impegnare la cifra piena,`);
 console.log(`   fare un LOTTO DI PROVA e misurare il costo reale su quello.`);

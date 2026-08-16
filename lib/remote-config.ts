@@ -48,16 +48,40 @@ export interface RemoteModelConfig {
 
 // ── Default bundled (allineati ai valori spediti) ──────────
 
+// ⚠️ DATARE SEMPRE questa tabella, e scrivere ACCANTO A OGNI VOCE quando è stata
+// verificata l'ultima volta. Un listino vecchio travestito da fatto è il modo più
+// facile per sbagliare una decisione di spesa — ed è già successo qui: fino al
+// 16/08/2026 questo catalogo raccomandava `claude-3-5-sonnet`, `gpt-4o-mini` e
+// `gemini-2.0-flash` mentre il resto del codice usava già `claude-sonnet-4-6` e
+// `gemini-3.5-flash`. Due verità diverse nello stesso repo: chi leggeva di qui
+// vedeva un'app di due generazioni prima di quella che stava usando.
+//
+// I modelli qui sotto sono ALLINEATI ai default che il codice usa davvero
+// (ai-translate-direct.ts:400 e :408, smart-content-router.ts:360,
+// reflection-translator.ts:216). Non sono una scelta nuova: sono la fotografia
+// corretta di quella già fatta. I modelli usciti ad agosto 2026 (Gemini 3.7
+// Flash, DeepSeek-V4-Pro-0813, Qwen3.8-27B) NON sono qui di proposito: entrano
+// quando passano da un benchmark, non perché sono nuovi.
 export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
   version: 1,
-  updatedAt: '2026-07-15',
+  updatedAt: '2026-08-16',
   pricing: {
-    openai: { per1kUsd: 0.00015, note: 'GPT-4o-mini ($0.15/1M input)' },
-    gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input)' },
-    gemini: { per1kUsd: 0.000125, note: 'Gemini 2.0 Flash ($0.10/1M input)' },
-    claude: { per1kUsd: 0.003, note: 'Claude 3.5 Sonnet ($3/1M input)' },
-    deepseek: { per1kUsd: 0.00014, note: 'DeepSeek V3 ($0.14/1M input)' },
-    mistral: { per1kUsd: 0.002, note: 'Mistral Large ($2/1M input)' },
+    openai: { per1kUsd: 0.00015, note: 'GPT-4o mini ($0.15/1M input) · prezzo non riverificato dal 15/07/2026' },
+    gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input) · prezzo non riverificato dal 15/07/2026' },
+    gemini: { per1kUsd: 0.000125, note: 'etichetta corretta il 16/08: il default del codice è gemini-3.5-flash, non 2.0 · ⚠️ PREZZO NON RIVERIFICATO (era quello di Gemini 2.0 Flash)' },
+    claude: { per1kUsd: 0.003, note: 'etichetta corretta il 16/08: il default del codice è claude-sonnet-4-6 · ⚠️ PREZZO NON RIVERIFICATO (era quello di Claude 3.5 Sonnet)' },
+    // ⏰ DeepSeek — VERIFICATO IL 16/08/2026 con ricerca (api-docs.deepseek.com non
+    // rispondeva; cifre confermate da due ricerche indipendenti). Dalle 16:00 UTC
+    // del 16/08/2026 la famiglia V4 ha tariffe a fasce:
+    //   V4-Flash PICCO      (01:00-04:00 e 06:00-10:00 UTC): $0.44/1M input cache-miss · $1.32/1M output
+    //   V4-Flash FUORI PICCO (tutte le altre ore)           : $0.22/1M input cache-miss · $0.66/1M output
+    //   prima del 16/08: $0.14 input · $0.28 output (cache-hit $0.0028, 50× più basso)
+    // Qui sta il prezzo DI PICCO by design: una stima deve sbagliare per eccesso.
+    // Una fattura più alta del preventivo è il difetto peggiore che possa fare
+    // questo numero. Nota per chi lo legge: la fascia di picco 06:00-10:00 UTC è
+    // 08:00-12:00 in Italia, cioè la mattina — tradurre il pomeriggio costa metà.
+    deepseek: { per1kUsd: 0.00044, note: 'DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss, dal 16/08/2026 16:00 UTC) · fuori picco costa la metà' },
+    mistral: { per1kUsd: 0.002, note: 'Mistral Large ($2/1M input) · prezzo non riverificato dal 15/07/2026' },
     openrouter: { per1kUsd: 0.001, note: 'Varia per modello' },
     deepl: { per1kUsd: 0.02, note: 'DeepL Pro' },
     google: { per1kUsd: 0.00002, note: 'Google Translate' },
@@ -69,12 +93,13 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
       { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     ],
     claude: [
-      { id: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet', recommended: true },
-      { id: 'claude-3-5-haiku', label: 'Claude 3.5 Haiku' },
+      { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', recommended: true },
+      { id: 'claude-opus-5', label: 'Claude Opus 5' },
+      { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
     ],
     gemini: [
-      { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', recommended: true },
-      { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+      { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', recommended: true },
+      { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
     mistral: [{ id: 'mistral-large-latest', label: 'Mistral Large' }],
