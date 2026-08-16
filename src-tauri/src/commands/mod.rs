@@ -140,6 +140,9 @@ pub mod game_lang_scan;
 pub mod godot_patcher;
 // GameMaker data.win string extractor & patcher
 pub mod gamemaker_patcher;
+/// Protezione dei codici di controllo GameMaker (`&`, `^6`, `\M0`, `/%`) durante
+/// la traduzione. Il guard TypeScript non raggiunge il fast path, che è Rust.
+pub mod gm_placeholder;
 // Codec QOI variante GameMaker (chunk TXTR) — base di ADR-005, iniezione glifi
 pub mod gm_qoi;
 // Contenitore texture GameMaker (2zoq = QOI + BZip2) — secondo strato di ADR-005

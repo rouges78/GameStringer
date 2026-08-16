@@ -7060,6 +7060,15 @@ async fn execute_workflow_from_prediction(
         let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
         let mut translated_count = 0u64;
         let mut ollama_failed = false;
+        // Traduzioni rifiutate perché avevano perso un codice di controllo.
+        // Va CONTATO e detto: un rifiuto muto è come non averlo mai fatto, e
+        // questo numero è la misura di quanto il modello scelto rispetti i
+        // codici. Se è alto, il modello è quello sbagliato.
+        let mut gm_codes_lost = 0u64;
+        // Lotti in cui il modello ha risposto con MENO righe di quante gliene
+        // sono state chieste: sintomo di risposta troncata. Con num_predict
+        // proporzionale dovrebbe restare a 0; se non lo è, il tetto va alzato.
+        let mut gm_truncated_batches = 0u64;
         let batch_size = 10;
 
         // Niente più `.min(500)`: si traduce tutto quello che si è estratto.
@@ -7069,18 +7078,41 @@ async fn execute_workflow_from_prediction(
             let originals: Vec<&str> = batch_indices.iter().map(|&i| gm_str_vec[i].original.as_str()).collect();
             let mut results: Vec<Option<String>> = vec![None; originals.len()];
 
+            // I codici di controllo escono dal testo PRIMA di vedere il modello.
+            // Senza questo passaggio il modello li traduce come parole: il 15/08
+            // `&` è diventato «E» in 442 stringhe e Deltarune si è fermato a
+            // «LO ACCETTI?». Riparare dopo significherebbe indovinare dove
+            // andava un codice; mascherare prima toglie la possibilità di
+            // sbagliare. Vedi commands/gm_placeholder.rs.
+            let masked: Vec<(String, Vec<String>)> =
+                originals.iter().map(|s| super::gm_placeholder::mask_gm_codes(s)).collect();
+
             if use_ollama && !ollama_failed {
-                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
+                let numbered: String = masked.iter().enumerate()
+                    .map(|(i, (m, _))| format!("{}. {}", i + 1, m))
+                    .collect::<Vec<_>>().join("\n");
+                // num_predict proporzionale al lotto. Era fisso a 2048 su lotti
+                // da 10: le risposte lunghe venivano TRONCATE a metà e il parser
+                // riempiva i primi elementi lasciando gli altri vuoti, senza che
+                // nessuno lo dicesse. ~4 caratteri per token, l'italiano è più
+                // lungo dell'inglese, più la numerazione: 3× con un minimo che
+                // copre i lotti piccoli e un tetto che protegge dai lotti enormi.
+                let batch_chars: usize = masked.iter().map(|(m, _)| m.len()).sum();
+                let num_predict = ((batch_chars / 4) * 3).clamp(512, 8192);
                 let body = serde_json::json!({
                     "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
-                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Copy any [[0]], [[1]] markers EXACTLY as they appear, do not translate or remove them. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+                    "stream": false, "options": { "temperature": 0.2, "num_predict": num_predict }
                 });
                 match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         if let Ok(json) = resp.json::<serde_json::Value>().await {
                             if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
-                                parse_numbered_translations(text, &mut results, originals.len());
+                                let filled = parse_numbered_translations(text, &mut results, originals.len());
+                                if filled < originals.len() {
+                                    // Risposta troncata: prima non lo sapeva nessuno.
+                                    gm_truncated_batches += 1;
+                                }
                             }
                         }
                     }
@@ -7088,11 +7120,31 @@ async fn execute_workflow_from_prediction(
                 }
             }
 
-            // Google fallback
+            // Google fallback — mascherato anch'esso: `google_translate_single`
+            // manda il testo grezzo, ed è la seconda via per cui i codici si
+            // perdevano.
             for (j, result) in results.iter_mut().enumerate() {
                 if result.is_none() {
-                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
+                    if let Some(t) = google_translate_single(&client, &masked[j].0, target_lang).await {
                         *result = Some(t);
+                    }
+                }
+            }
+
+            // I codici rientrano al loro posto, e si verifica che ci siano
+            // TUTTI. Una traduzione che ha perso un codice non viene scartata
+            // in silenzio: si tiene l'originale, perché una stringa non
+            // tradotta è un fastidio, mentre una stringa senza il suo
+            // terminatore è un soft-lock — il gioco si pianta e l'utente non
+            // sa perché. Erano 179 sulla run del 15/08.
+            for (j, result) in results.iter_mut().enumerate() {
+                if let Some(t) = result.take() {
+                    let restored = super::gm_placeholder::unmask_gm_codes(&t, &masked[j].1);
+                    if super::gm_placeholder::codes_preserved(originals[j], &restored) {
+                        *result = Some(restored);
+                    } else {
+                        gm_codes_lost += 1;
+                        // niente Some(): la stringa resta com'era nel gioco
                     }
                 }
             }
@@ -7105,6 +7157,19 @@ async fn execute_workflow_from_prediction(
             }
         }
         t_outputs.push(format!("✅ Tradotte: {}/{}", translated_count, gm_str_vec.len()));
+        if gm_truncated_batches > 0 {
+            t_outputs.push(format!(
+                "⚠️ {} lotti con risposta incompleta dal modello (recuperati dal fallback): se il numero è alto conviene un modello con più contesto.",
+                gm_truncated_batches
+            ));
+        }
+        if gm_codes_lost > 0 {
+            // Detto all'utente, non solo loggato: è una scelta che lo riguarda.
+            t_outputs.push(format!(
+                "🛡️ {} stringhe lasciate in originale: la traduzione aveva perso i codici di controllo del gioco (a capo, pause, fine messaggio). Tradurle così avrebbe potuto bloccare i dialoghi. Un modello più grande di solito li rispetta meglio.",
+                gm_codes_lost
+            ));
+        }
         stages_completed.push(StageExecutionResult {
             stage_id: 5, stage_name: "AI Translation (GameMaker)".into(),
             status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
@@ -9360,18 +9425,32 @@ async fn detect_ollama_model(client: &reqwest::Client, base: &str) -> Option<Str
 }
 
 /// Parse numbered translation responses (e.g. "1. testo\n2. testo")
-fn parse_numbered_translations(text: &str, results: &mut [Option<String>], max_items: usize) {
+/// Riempie `results` dalle righe numerate della risposta del modello.
+///
+/// Restituisce **quanti elementi ha riempito**. Il chiamante può confrontarlo
+/// con `max_items` per accorgersi di una risposta TRONCATA: fino al 16/08/2026
+/// questa funzione non contava niente, quindi una risposta tagliata a metà
+/// riempiva i primi elementi e lasciava gli altri vuoti senza che nessuno lo
+/// sapesse. I vuoti cadevano poi sul fallback Google e il difetto restava
+/// invisibile — il troncamento è una delle tre cause delle 891 stringhe con i
+/// codici rotti trovate su Deltarune.
+fn parse_numbered_translations(text: &str, results: &mut [Option<String>], max_items: usize) -> usize {
+    let mut filled = 0usize;
     for line in text.lines() {
         let trimmed = line.trim();
         if let Some(dot_pos) = trimmed.find(|c: char| c == '.' || c == ')' || c == ':') {
             if let Ok(num) = trimmed[..dot_pos].trim().parse::<usize>() {
                 let t = trimmed[dot_pos + 1..].trim();
                 if num >= 1 && num <= max_items && !t.is_empty() {
+                    if results[num - 1].is_none() {
+                        filled += 1;
+                    }
                     results[num - 1] = Some(t.to_string());
                 }
             }
         }
     }
+    filled
 }
 
 /// Single-string Google Translate fallback (free gtx endpoint)
