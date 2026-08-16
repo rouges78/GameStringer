@@ -171,7 +171,11 @@ async function scanInsidePck(
       }
     }
     if (out.length === 0) {
-      const tot = binari + skippedBin;
+      // NON sommare: sono gli STESSI file visti due volte (prima dentro il
+      // pck, poi estratti su disco). Provato su Galley House il 15/08: la
+      // somma diceva «12» su 6 file reali — un banner onesto col numero
+      // gonfiato è disonesto anche lui.
+      const tot = Math.max(binari, skippedBin);
       const msg = tot > 0
         ? `Estrazione riuscita, ma i ${tot} file di localizzazione sono binari (RSRC) non ancora supportati. Il gioco HA i testi: manca il parser.`
         : 'Estrazione riuscita ma nessuna stringa leggibile: formato non riconosciuto.';
