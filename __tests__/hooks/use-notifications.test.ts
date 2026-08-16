@@ -1,11 +1,17 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useProfileAuth } from '@/lib/auth/profile-auth';
+// ⚠️ Il percorso conta: `useProfileAuth` è stato estratto da `profile-auth.tsx`
+// a `profile-auth-context.ts` il 15/08/2026 (commit 9ee126d5, per riabilitare
+// Fast Refresh). Il mock qui sotto è rimasto puntato al modulo vecchio, che non
+// esporta più l'hook: il mock creava un modulo fantasma, quello VERO girava
+// davvero, e 35 test sono diventati rossi senza che nessuno li guardasse.
+// Se sposti di nuovo l'hook, sposta anche questo import e il vi.mock.
+import { useProfileAuth } from '@/lib/auth/profile-auth-context';
 import { NotificationType, NotificationPriority } from '@/types/notifications';
 
 // Mock delle dipendenze
-vi.mock('@/lib/auth/profile-auth', () => ({
+vi.mock('@/lib/auth/profile-auth-context', () => ({
   useProfileAuth: vi.fn()
 }));
 

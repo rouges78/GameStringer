@@ -1,10 +1,12 @@
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useProfileAuth } from '@/lib/auth/profile-auth';
+// ⚠️ Vedi la nota in use-notifications.test.ts: l'hook vive in
+// `profile-auth-context.ts` dal 15/08/2026, non più in `profile-auth.tsx`.
+import { useProfileAuth } from '@/lib/auth/profile-auth-context';
 
 // Mock delle dipendenze
-vi.mock('@/lib/auth/profile-auth', () => ({
+vi.mock('@/lib/auth/profile-auth-context', () => ({
   useProfileAuth: vi.fn()
 }));
 
