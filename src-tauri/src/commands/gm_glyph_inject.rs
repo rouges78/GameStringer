@@ -140,7 +140,7 @@ impl std::fmt::Display for Errore {
                 f,
                 "servivano {servono} celle riusabili, assegnate {trovati}: un glifo di {}x{} px \
                  non entra nella cella libera piu' grande, che e' {}x{} px. \
-                 Rimpicciolire i glifi, o allargare l'intervallo dei donatori",
+                 Rimpicciolire i glifi, o allargare l'insieme dei donatori",
                 serviva.0, serviva.1, cella_piu_grande.0, cella_piu_grande.1
             ),
             Self::CarattereGiaPresente { carattere } => write!(
@@ -184,6 +184,47 @@ pub fn pianifica(
     donatori: (u16, u16),
     svuota_resto: bool,
 ) -> Result<Piano, Errore> {
+    // Firma e comportamento IDENTICI a prima del 16/08: il percorso kanji e'
+    // provato in-game su Deltarune e non si tocca. Cambia solo la forma —
+    // l'intervallo diventa un predicato, cosi' la stessa pianificazione serve
+    // anche ai font latini, dove i donatori non sono un intervallo contiguo.
+    pianifica_con_predicato(
+        font,
+        richieste,
+        &|c| c >= donatori.0 && c <= donatori.1,
+        svuota_resto,
+    )
+}
+
+/// Come [`pianifica`], ma i donatori sono una **lista esplicita** di codepoint.
+///
+/// Serve ai font latini (16/08: la traduzione italiana di Deltarune vive nello
+/// slot inglese, disegnato da `fnt_main` e soci, che non hanno kanji): li' non
+/// esiste un intervallo di glifi sacrificabili, esistono i candidati misurati
+/// sul corpus del gioco. Con `svuota_resto` si svuotano SOLO i candidati della
+/// lista rimasti inutilizzati — gli altri glifi del font sono testo vivo e
+/// nessuno deve toccarli.
+pub fn pianifica_da_lista(
+    font: &Font,
+    richieste: &[Richiesta],
+    candidati: &[u16],
+    svuota_resto: bool,
+) -> Result<Piano, Errore> {
+    let insieme: std::collections::HashSet<u16> = candidati.iter().copied().collect();
+    pianifica_con_predicato(font, richieste, &|c| insieme.contains(&c), svuota_resto)
+}
+
+/// L'implementazione vera: chi e' donatore lo decide il predicato.
+///
+/// L'ordinamento per capienza resta qui dentro (dal piu' grande al piu'
+/// piccolo, con `sort_by_key` stabile): a parita' di area l'ordine dei glifi
+/// nel font decide, quindi due esecuzioni identiche producono lo stesso piano.
+fn pianifica_con_predicato(
+    font: &Font,
+    richieste: &[Richiesta],
+    e_donatore: &dyn Fn(u16) -> bool,
+    svuota_resto: bool,
+) -> Result<Piano, Errore> {
     if font.tpag.is_none() {
         return Err(Errore::TpagAssente);
     }
@@ -199,7 +240,7 @@ pub fn pianifica(
         .glyphs
         .iter()
         .enumerate()
-        .filter(|(_, g)| g.character >= donatori.0 && g.character <= donatori.1)
+        .filter(|(_, g)| e_donatore(g.character))
         .map(|(i, _)| i)
         .collect();
     candidati.sort_by_key(|&i| {
@@ -620,6 +661,56 @@ mod tests {
         assert!(matches!(esito, Err(Errore::BitmapTroppoGrande { .. })));
         assert_eq!(atlante.bgra, prima.bgra, "l'atlante non doveva essere toccato");
         assert_eq!(dati, dati_prima, "il data.win non doveva essere toccato");
+    }
+
+    /// La lista esplicita e' un contratto: i glifi fuori lista non si toccano,
+    /// ne' come donatori ne' come celle da svuotare.
+    #[test]
+    fn pianifica_da_lista_rispetta_la_lista() {
+        let f = font_finto(6, 16, (0, 0)); // kanji 0x4E00..0x4E05
+        let lista = vec![0x4E01u16, 0x4E03];
+
+        let piano = pianifica_da_lista(&f, &[lettera(0x00E0, 8, 8)], &lista, true).unwrap();
+
+        assert_eq!(piano.assegnazioni.len(), 1);
+        let (ic, _) = piano.assegnazioni[0];
+        assert!(
+            lista.contains(&f.glyphs[ic].character),
+            "donatore U+{:04X} fuori dalla lista",
+            f.glyphs[ic].character
+        );
+        // svuota_resto con lista esplicita: si svuota SOLO il candidato in
+        // lista non usato, non gli altri quattro glifi del font.
+        assert_eq!(piano.da_svuotare.len(), 1);
+        assert!(lista.contains(&f.glyphs[piano.da_svuotare[0]].character));
+    }
+
+    #[test]
+    fn pianifica_da_lista_fallisce_quando_la_lista_non_basta() {
+        let f = font_finto(6, 16, (0, 0));
+        let lista = vec![0x4E01u16]; // un solo candidato per due lettere
+        let richieste: Vec<_> = (0..2u16).map(|i| lettera(0x00E0 + i, 8, 8)).collect();
+        assert!(matches!(
+            pianifica_da_lista(&f, &richieste, &lista, false),
+            Err(Errore::DonatoriInsufficienti { servono: 2, trovati: 1, .. })
+        ));
+    }
+
+    /// Il refactoring a predicato non deve aver mosso niente sul percorso
+    /// kanji, quello provato in-game: stesse assegnazioni, stessi svuotati,
+    /// donatori tutti nell'intervallo CJK.
+    #[test]
+    fn pianifica_classico_invariato_sul_caso_kanji() {
+        let f = font_finto(10, 16, (0, 0));
+        let richieste: Vec<_> = (0..3u16).map(|i| lettera(0x0410 + i, 8, 8)).collect();
+
+        let piano = pianifica(&f, &richieste, KANJI, true).unwrap();
+        assert_eq!(piano.assegnazioni.len(), 3);
+        assert_eq!(piano.da_svuotare.len(), 7, "10 kanji meno 3 usati");
+        for &(ic, _) in &piano.assegnazioni {
+            let c = f.glyphs[ic].character;
+            assert!((KANJI.0..=KANJI.1).contains(&c), "U+{c:04X} non e' un kanji");
+        }
     }
 
     /// La lunghezza dei dati non cambia mai: e' la promessa che tiene in piedi
