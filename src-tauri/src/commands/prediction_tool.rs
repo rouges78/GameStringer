@@ -7234,12 +7234,32 @@ async fn execute_workflow_from_prediction(
         }
         if patch_success && gm_total_in_game > gm_injected as usize {
             // Dal 15/08 String it! estrae TUTTE le pagine, quindi questo scarto
-            // non è più il cap: sono stringhe rimaste senza traduzione (provider
-            // che ha saltato) o non applicate in patch. Va detto, non nascosto.
-            next_steps.push(format!(
-                "⚠️ Scritte {} stringhe su {}: le restanti non hanno ricevuto una traduzione o non sono state applicate — un nuovo String it! ritenta l'intero lavoro",
-                gm_injected, gm_total_in_game
-            ));
+            // non è più il cap. Dal 16/08 ha DUE cause diverse, e dirle insieme
+            // sarebbe una mezza verità: le stringhe rifiutate dal guard non sono
+            // «mancate», sono state protette — e per quelle «riprova» è un
+            // consiglio sbagliato, perché lo stesso modello perderà di nuovo gli
+            // stessi codici. Il rimedio lì è cambiare modello, non insistere.
+            let mancanti = gm_total_in_game as u64 - gm_injected;
+            if gm_codes_lost > 0 {
+                next_steps.push(format!(
+                    "🛡️ Scritte {} stringhe su {}. Di quelle rimaste in inglese, {} sono state PROTETTE di proposito: la traduzione aveva perso i codici che il gioco usa per andare a capo, mettere in pausa e chiudere i dialoghi, e usarla avrebbe potuto bloccare una conversazione. È una scelta, non un errore.",
+                    gm_injected, gm_total_in_game, gm_codes_lost
+                ));
+                if mancanti > gm_codes_lost {
+                    next_steps.push(format!(
+                        "⚠️ Le altre {} non hanno proprio ricevuto una traduzione: su queste un nuovo String it! può ritentare.",
+                        mancanti - gm_codes_lost
+                    ));
+                }
+                next_steps.push(
+                    "💡 Se le protette sono molte, il rimedio non è ripetere la stessa run: un modello più grande rispetta meglio i codici di controllo.".into()
+                );
+            } else {
+                next_steps.push(format!(
+                    "⚠️ Scritte {} stringhe su {}: le restanti non hanno ricevuto una traduzione o non sono state applicate — un nuovo String it! ritenta l'intero lavoro",
+                    gm_injected, gm_total_in_game
+                ));
+            }
         }
         return Ok(WorkflowExecutionResult {
             execution_id, game_title: prediction.game_title.clone(), engine: "GameMaker".into(),
