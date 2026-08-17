@@ -103,6 +103,13 @@ export async function prepareGlyphFont(targetLang: string): Promise<string> {
 /**
  * Anteprima o applicazione dell'iniezione.
  * `fontNames` vuoto = tutti i font con glifi donatori.
+ *
+ * `donatoriForzati` sono i simboli che l'utente accetta di sacrificare ANCHE
+ * SE il gioco li disegna. Serve quando i veti del corpus vengono da stringhe
+ * tecniche che il giocatore non vede mai (su Deltarune: `|`, `\`, `_`, che da
+ * soli valgono il salto da 9 a 12 donatori). È una decisione PER GIOCO: qui
+ * non c'è nessun default, e ogni simbolo sdoganato ricompare negli avvisi
+ * dell'esito con la stringa che perderà il disegno.
  */
 export async function injectGlyphs(opts: {
   gamePath: string;
@@ -110,6 +117,7 @@ export async function injectGlyphs(opts: {
   ttfPath: string;
   fontNames?: string[];
   apply: boolean;
+  donatoriForzati?: string;
 }): Promise<GmEsitoIniezione> {
   return invoke<GmEsitoIniezione>('gm_inject_glyphs', {
     gamePath: opts.gamePath,
@@ -117,6 +125,7 @@ export async function injectGlyphs(opts: {
     characters: glyphsToInject(opts.targetLang),
     ttfPath: opts.ttfPath,
     apply: opts.apply,
+    donatoriForzati: opts.donatoriForzati ?? '',
   });
 }
 

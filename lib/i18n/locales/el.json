@@ -7966,7 +7966,11 @@
     "texture": "Υφή",
     "marginOk": "χωράει, περιθώριο {b} B",
     "marginKo": "υπερβαίνει κατά {b} B",
-    "applyNote": "Η εφαρμογή δημιουργεί αντίγραφο ασφαλείας και γράφει μόνο αν χωρούν ΟΛΑ: όλα ή τίποτα."
+    "applyNote": "Η εφαρμογή δημιουργεί αντίγραφο ασφαλείας και γράφει μόνο αν χωρούν ΟΛΑ: όλα ή τίποτα.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Μερική μετάφραση: {n} συμβολοσειρές γράφτηκαν, {missing} δηλωμένα αρχεία λείπουν",

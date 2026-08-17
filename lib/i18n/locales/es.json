@@ -7964,7 +7964,11 @@
     "texture": "Textura",
     "marginOk": "cabe, margen de {b} B",
     "marginKo": "excede en {b} B",
-    "applyNote": "Aplicar crea una copia de seguridad y escribe solo si TODO cabe: todo o nada."
+    "applyNote": "Aplicar crea una copia de seguridad y escribe solo si TODO cabe: todo o nada.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Traducción parcial: {n} cadenas escritas, {missing} archivos declarados ausentes",

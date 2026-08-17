@@ -7966,7 +7966,11 @@
     "texture": "Tekstura",
     "marginOk": "mieści się, zapas {b} B",
     "marginKo": "przekracza o {b} B",
-    "applyNote": "Zastosowanie tworzy kopię zapasową i zapisuje tylko, gdy WSZYSTKO się mieści: wszystko albo nic."
+    "applyNote": "Zastosowanie tworzy kopię zapasową i zapisuje tylko, gdy WSZYSTKO się mieści: wszystko albo nic.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Tłumaczenie częściowe: zapisano {n} ciągów, brakuje {missing} zadeklarowanych plików",

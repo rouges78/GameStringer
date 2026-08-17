@@ -7964,7 +7964,11 @@
     "texture": "텍스처",
     "marginOk": "맞음, 여유 {b}B",
     "marginKo": "{b}B 초과",
-    "applyNote": "적용 시 백업을 만들고 모든 것이 맞을 때만 기록합니다: 전부 아니면 전무."
+    "applyNote": "적용 시 백업을 만들고 모든 것이 맞을 때만 기록합니다: 전부 아니면 전무.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "부분 번역: {n}개의 문자열을 기록했고, 선언된 파일 {missing}개가 없습니다",

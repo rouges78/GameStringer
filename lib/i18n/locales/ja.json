@@ -7966,7 +7966,11 @@
     "texture": "テクスチャ",
     "marginOk": "収まる、余裕{b}B",
     "marginKo": "{b}B超過",
-    "applyNote": "適用時はバックアップを作成し、すべて収まる場合のみ書き込みます：オール・オア・ナッシング。"
+    "applyNote": "適用時はバックアップを作成し、すべて収まる場合のみ書き込みます：オール・オア・ナッシング。",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "部分的な翻訳：{n} 件の文字列を書き込み、宣言された {missing} 件のファイルが見つかりません",

@@ -61,8 +61,20 @@ const CORPO_MINIMO: f32 = 5.0;
 /// pianificazione poi ordina per capienza della cella, ma in un font bitmap
 /// le celle latine sono quasi tutte uguali e il sort stabile conserva questa
 /// preferenza a parita' di area.
+///
+/// 16/08: la sonda su Deltarune ha misurato **9 ammissibili dove ne servono
+/// 12**. I sei aggiunti stanno IN CODA di proposito: i primi quindici sono
+/// gia' stati misurati sul gioco vero, e cambiarne l'ordine avrebbe spostato
+/// quali celle si sacrificano senza che nessuno l'avesse chiesto. In coda,
+/// entrano solo quando i precedenti non bastano.
+///
+/// Nessuno di questi e' ammesso per decreto: il corpus del gioco li veta uno
+/// per uno se li disegna (vedi [`donatori_latini_con_corpus`]). Allungare la
+/// lista allarga le possibilita', non le certezze.
 const CANDIDATI_LATINI: &[char] = &[
     '|', '{', '}', '@', '~', '\\', '`', '^', '_', '=', '<', '>', '#', '$', ';',
+    // Aggiunti il 16/08 per il gap 9→12, in coda all'ordine storico.
+    '+', '*', '[', ']', '(', ')',
 ];
 
 /// Il corpus dei testi che il gioco DISEGNA, costruito dai `lang/*.json`
@@ -240,9 +252,23 @@ fn carica_corpus(dir_gioco: &Path) -> Corpus {
 /// e gli avvisi per l'utente. Se gli ammissibili sono meno di `servono` la
 /// lista si restituisce comunque: decidere se bastano spetta al chiamante,
 /// che sa quante lettere ha davvero da iniettare.
-pub fn donatori_latini(game_dir: &Path, font: &Font, servono: usize) -> (Vec<u16>, Vec<String>) {
+///
+/// `forzati` sono i simboli che l'UTENTE ha deciso di sacrificare ANCHE SE il
+/// corpus li disegna. Esistono perche' su Deltarune i tre veti piu' costosi
+/// (`|`, `\`, `_`) vengono da stringhe TECNICHE — «||», una barra isolata,
+/// «vista_xvista:» — che non sono dialoghi e che il giocatore non vede mai.
+/// Ma quel giudizio vale PER QUEL GIOCO: un altro titolo GameMaker potrebbe
+/// disegnare `_` in una schermata di immissione del nome. Per questo la scelta
+/// e' un parametro, non una costante: chi la fa se la prende, e la vede scritta
+/// negli avvisi con l'esempio della stringa che perdera' il disegno.
+pub fn donatori_latini(
+    game_dir: &Path,
+    font: &Font,
+    servono: usize,
+    forzati: &[char],
+) -> (Vec<u16>, Vec<String>) {
     let corpus = carica_corpus(game_dir);
-    donatori_latini_con_corpus(font, servono, &corpus)
+    donatori_latini_con_corpus(font, servono, &corpus, forzati)
 }
 
 /// Variante con corpus gia' caricato: il comando legge i lang JSON una volta
@@ -251,17 +277,34 @@ fn donatori_latini_con_corpus(
     font: &Font,
     servono: usize,
     corpus: &Corpus,
+    forzati: &[char],
 ) -> (Vec<u16>, Vec<String>) {
     let mut ammissibili: Vec<u16> = Vec::new();
     let mut nomi: Vec<String> = Vec::new();
     let mut esclusi: Vec<String> = Vec::new();
+    // I forzati si raccolgono a parte e si accodano DOPO gli ammissibili
+    // puliti: si sacrifica prima cio' che non costa niente. Se restassero
+    // mescolati, una cella che il gioco disegna verrebbe consumata mentre una
+    // gratuita resta libera — un prezzo pagato senza motivo.
+    let mut forzati_usati: Vec<u16> = Vec::new();
+    let mut forzati_nomi: Vec<String> = Vec::new();
 
     for &c in CANDIDATI_LATINI {
         if font.glifo(c as u16).is_none() {
             continue; // il font non ha la cella: niente da sacrificare
         }
         match corpus.disegnati.get(&c) {
-            Some(esempio) => esclusi.push(format!("'{c}' (disegnato, es. «{esempio}»)")),
+            Some(esempio) => {
+                if forzati.contains(&c) {
+                    // Vetato dal corpus ma sdoganato dall'utente: si prende, e
+                    // l'esempio della stringa che lo perde va DETTO. Un prezzo
+                    // pagato in silenzio e' la stessa cosa di un difetto.
+                    forzati_usati.push(c as u16);
+                    forzati_nomi.push(format!("'{c}' (compare in «{esempio}»)"));
+                } else {
+                    esclusi.push(format!("'{c}' (disegnato, es. «{esempio}»)"));
+                }
+            }
             None => {
                 ammissibili.push(c as u16);
                 nomi.push(c.to_string());
@@ -277,6 +320,37 @@ fn donatori_latini_con_corpus(
             font.name
         ));
     }
+
+    // Chiesti ma inutili: o il font non li ha, o erano gia' ammissibili da
+    // soli. Dirlo evita che l'utente creda di aver pagato un prezzo che non
+    // ha pagato — e che ne sdogani altri pensando che il primo non sia bastato.
+    let inutili: Vec<String> = forzati
+        .iter()
+        .filter(|c| !forzati_usati.contains(&(**c as u16)))
+        .map(|c| {
+            // L'ordine dei tre casi conta: il ciclo dei forzati vive DENTRO
+            // `for c in CANDIDATI_LATINI`, quindi un simbolo fuori da quella
+            // lista non entra mai in `forzati_usati` e senza questo primo
+            // ramo verrebbe descritto come «era gia' ammissibile», che e'
+            // falso due volte — non e' un candidato, e il gioco potrebbe
+            // disegnarlo eccome.
+            if !CANDIDATI_LATINI.contains(c) {
+                format!("'{c}' (non e' fra i candidati donatori: sdoganarlo non ha effetto)")
+            } else if font.glifo(*c as u16).is_none() {
+                format!("'{c}' (il font non ha questa cella)")
+            } else {
+                format!("'{c}' (era gia' ammissibile: il gioco non lo disegna)")
+            }
+        })
+        .collect();
+    if !inutili.is_empty() {
+        avvisi.push(format!(
+            "'{}': sdoganati senza effetto — {}",
+            font.name,
+            inutili.join("; ")
+        ));
+    }
+
     if !ammissibili.is_empty() {
         avvisi.push(format!(
             "'{}': celle latine sacrificate — il gioco non sapra' piu' disegnare: {}",
@@ -284,6 +358,18 @@ fn donatori_latini_con_corpus(
             nomi.join(" ")
         ));
     }
+    if !forzati_usati.is_empty() {
+        avvisi.push(format!(
+            "'{}': celle sacrificate SU TUA RICHIESTA anche se il gioco le disegna — {}. \
+             Dove compaiono, a schermo resteranno vuote.",
+            font.name,
+            forzati_nomi.join("; ")
+        ));
+    }
+
+    // I forzati in coda: prima si spende cio' che e' gratuito.
+    ammissibili.extend(forzati_usati);
+
     if ammissibili.len() < servono {
         avvisi.push(format!(
             "'{}': donatori latini insufficienti — servono {servono}, ammissibili {}. \
@@ -307,6 +393,16 @@ enum StrategiaDonatori {
     Kanji,
     /// Lista esplicita di codepoint, misurata da [`donatori_latini`].
     Lista(Vec<u16>),
+    /// Come [`Self::Lista`], ma le lettere si disegnano nello SPAZIO VUOTO
+    /// della regione invece che nella cella del donatore.
+    ///
+    /// Nata il 16/08 dalla misura su Deltarune: la cella garantita dai simboli
+    /// latini di `fnt_main` e' 3x5 px, una maiuscola accentata ne vuole 12x16,
+    /// e aggiungere donatori PEGGIORA (la garantita e' la piu' piccola delle
+    /// scelte). Nella stessa regione ci sono pero' 9.430 pixel liberi e undici
+    /// celle 12x16: i record servono ancora, per gli slot nella tabella, ma il
+    /// loro rettangolo si sposta dove c'e' posto.
+    SpazioLibero(Vec<u16>),
 }
 
 impl StrategiaDonatori {
@@ -320,11 +416,21 @@ impl StrategiaDonatori {
         match self {
             Self::Kanji => gm_glyph_inject::pianifica(f, richieste, KANJI, svuota_resto),
             Self::Lista(c) => gm_glyph_inject::pianifica_da_lista(f, richieste, c, svuota_resto),
+            Self::SpazioLibero(c) => {
+                // `svuota_resto` NON si propaga: i donatori avanzati sono
+                // simboli che il gioco potrebbe ancora disegnare, e qui non
+                // c'e' il vantaggio compressivo dei 1.300 kanji svuotati.
+                gm_glyph_inject::pianifica_su_spazio_libero(f, richieste, c, false)
+            }
         }
     }
 
-    /// Le dimensioni delle celle donatrici disponibili nel font.
-    fn celle(&self, f: &Font) -> Vec<(u16, u16)> {
+    /// Le dimensioni delle celle disponibili per `n` lettere.
+    ///
+    /// `n` serve solo alla via dello spazio libero, dove le celle non esistono
+    /// gia' ma si RITAGLIANO: la domanda li' non e' «quali celle ci sono» ma
+    /// «di che dimensione posso averne n». Per le altre due vie e' ignorato.
+    fn celle(&self, f: &Font, n: usize) -> Vec<(u16, u16)> {
         match self {
             Self::Kanji => f
                 .donatori(KANJI.0, KANJI.1, 0, 0)
@@ -337,8 +443,79 @@ impl StrategiaDonatori {
                 .filter(|g| c.contains(&g.character))
                 .map(|g| (g.source_w, g.source_h))
                 .collect(),
+            // Qui la cella che conta NON e' quella del donatore: e' lo spazio
+            // vuoto in cui la lettera verra' disegnata. Misurarla sui record
+            // darebbe 3x5 e farebbe rimpicciolire le lettere fino a renderle
+            // illeggibili — cioe' il difetto che questa strategia esiste per
+            // togliere. ⚠️ Il numero di RECORD resta comunque un vincolo, ed
+            // e' controllato da `pianifica_su_spazio_libero`: qui si risponde
+            // solo sullo spazio.
+            Self::SpazioLibero(_) => celle_libere_nella_regione(f, n),
         }
     }
+}
+
+/// Le `n` celle libere piu' grandi che la regione TPAG del font puo' offrire.
+///
+/// Misura greedy, la stessa della sonda `misura_spazio_libero_nelle_regioni_latine`:
+/// dà un limite INFERIORE, cioe' sbaglia in difetto. E' la direzione giusta —
+/// promettere una cella che non c'e' produrrebbe una patch che fallisce dopo
+/// aver gia' scritto.
+///
+/// Le celle si cercano quadrate-ish a passi decrescenti finche' non se ne
+/// trovano almeno `n`: serve a rispondere «di che dimensione posso averne n?»,
+/// che e' la domanda di [`cella_garantita`].
+fn celle_libere_nella_regione(f: &Font, n: usize) -> Vec<(u16, u16)> {
+    let Some(t) = f.tpag.as_ref() else { return Vec::new() };
+    let (w, h) = (t.source_w as usize, t.source_h as usize);
+    if w == 0 || h == 0 || n == 0 {
+        return Vec::new();
+    }
+    let mut occ = vec![false; w * h];
+    for g in &f.glyphs {
+        for y in g.source_y..g.source_y.saturating_add(g.source_h) {
+            for x in g.source_x..g.source_x.saturating_add(g.source_w) {
+                let (x, y) = (x as usize, y as usize);
+                if x < w && y < h {
+                    occ[y * w + x] = true;
+                }
+            }
+        }
+    }
+
+    let conta = |cw: usize, ch: usize| -> usize {
+        if cw == 0 || ch == 0 || cw > w || ch > h {
+            return 0;
+        }
+        let mut libere = 0usize;
+        let mut y = 0usize;
+        while y + ch <= h {
+            let mut x = 0usize;
+            let mut trovata = false;
+            while x + cw <= w {
+                if (y..y + ch).any(|yy| (x..x + cw).any(|xx| occ[yy * w + xx])) {
+                    x += 1;
+                } else {
+                    libere += 1;
+                    trovata = true;
+                    x += cw;
+                }
+            }
+            y += if trovata { ch } else { 1 };
+        }
+        libere
+    };
+
+    // Dalla piu' grande in giu': la prima misura che ne trova almeno n e' la
+    // risposta. Il rapporto 3/4 e' quello di una lettera latina con accento.
+    for lato_h in (4..=h.min(64)).rev() {
+        let lato_w = ((lato_h * 3) / 4).max(1);
+        let quante = conta(lato_w, lato_h);
+        if quante >= n {
+            return vec![(lato_w as u16, lato_h as u16); quante];
+        }
+    }
+    Vec::new()
 }
 
 /// Rasterizza i caratteri richiesti al corpo dato, saltando quelli che il TTF
@@ -432,7 +609,7 @@ fn corpo_per_cella(
 /// capiente si sa che ne esistono almeno `n` grandi almeno cosi', quindi
 /// dimensionare tutte le lettere su questa rende l'assegnazione realizzabile.
 fn cella_garantita(f: &Font, n: usize, strategia: &StrategiaDonatori) -> Option<(u16, u16)> {
-    let mut celle: Vec<(u16, u16)> = strategia.celle(f);
+    let mut celle: Vec<(u16, u16)> = strategia.celle(f, n);
     if celle.len() < n || n == 0 {
         return None;
     }
@@ -571,6 +748,11 @@ pub struct EsitoIniezione {
 /// - `characters`: le lettere da aggiungere, come stringa (es. `"àèéìòù"`).
 /// - `ttf_path`: il TTF da cui prendere i disegni.
 /// - `apply`: `false` per la sola anteprima.
+/// - `donatori_forzati`: simboli da sacrificare ANCHE SE il gioco li disegna,
+///   come stringa (es. `"|\\_"`). Assente o vuota = nessuno, che e' il
+///   comportamento di sempre. Serve quando i veti del corpus vengono da
+///   stringhe tecniche che il giocatore non vede mai: la decisione e' per
+///   gioco, la prende l'utente e la ritrova scritta negli avvisi.
 #[tauri::command(rename_all = "camelCase")]
 pub async fn gm_inject_glyphs(
     game_path: String,
@@ -578,6 +760,7 @@ pub async fn gm_inject_glyphs(
     characters: String,
     ttf_path: String,
     apply: bool,
+    donatori_forzati: Option<String>,
 ) -> Result<EsitoIniezione, String> {
     let percorso = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato nella cartella del gioco".to_string())?;
@@ -593,6 +776,15 @@ pub async fn gm_inject_glyphs(
     if voluti.is_empty() {
         return Err("nessun carattere richiesto".into());
     }
+
+    // I simboli sdoganati dall'utente. Nessun default: se non li chiede
+    // nessuno, la lista e' vuota e il comportamento e' quello di sempre.
+    let forzati: Vec<char> = donatori_forzati
+        .as_deref()
+        .unwrap_or("")
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
 
     let mut avvisi = Vec::new();
 
@@ -615,7 +807,9 @@ pub async fn gm_inject_glyphs(
     // traduzione italiana vive nello slot inglese, disegnato dai font latini.
     let usabile = |f: &Font| -> bool {
         f.quanti_in(KANJI.0, KANJI.1) > 0
-            || !donatori_latini_con_corpus(f, voluti.len(), &corpus).0.is_empty()
+            || !donatori_latini_con_corpus(f, voluti.len(), &corpus, &forzati)
+                .0
+                .is_empty()
     };
 
     // Font su cui lavorare.
@@ -687,7 +881,8 @@ pub async fn gm_inject_glyphs(
             let strategia = if f.quanti_in(KANJI.0, KANJI.1) > 0 {
                 StrategiaDonatori::Kanji
             } else {
-                let (candidati, avv) = donatori_latini_con_corpus(f, voluti.len(), &corpus);
+                let (candidati, avv) =
+                    donatori_latini_con_corpus(f, voluti.len(), &corpus, &forzati);
                 avvisi.extend(avv);
                 if candidati.is_empty() {
                     // Onesta': senza donatori il font si scarta DICHIARANDOLO
@@ -699,7 +894,33 @@ pub async fn gm_inject_glyphs(
                     ));
                     continue;
                 }
-                StrategiaDonatori::Lista(candidati)
+
+                // Le celle dei simboli bastano, o serve lo spazio libero?
+                // La domanda si fa QUI e con un confronto, non a intuito: si
+                // guarda la cella garantita dalle due vie e si prende quella
+                // che offre piu' area. Su fnt_main la Lista da' 3x5 e lo
+                // spazio libero 12x16 — ma su un font con celle generose la
+                // via classica resta migliore, e non va scavalcata per abitudine.
+                let via_lista = StrategiaDonatori::Lista(candidati.clone());
+                let via_spazio = StrategiaDonatori::SpazioLibero(candidati);
+                let area = |s: &StrategiaDonatori| -> u32 {
+                    cella_garantita(f, voluti.len(), s)
+                        .map(|(w, h)| w as u32 * h as u32)
+                        .unwrap_or(0)
+                };
+                let (a_lista, a_spazio) = (area(&via_lista), area(&via_spazio));
+                if a_spazio > a_lista {
+                    avvisi.push(format!(
+                        "'{}': le celle dei simboli sacrificati sono troppo strette \
+                         ({} px di area garantita), si disegna nello spazio libero della \
+                         regione del font ({} px). I record sacrificati restano quelli, \
+                         cambia solo dove finisce il disegno.",
+                        f.name, a_lista, a_spazio
+                    ));
+                    via_spazio
+                } else {
+                    via_lista
+                }
             };
 
             let altezza = gm_glyph_raster::altezza_maiuscole(f)
@@ -819,7 +1040,7 @@ pub async fn gm_inject_glyphs(
                 // Le dimensioni massime delle celle donatrici, qualunque sia
                 // la strategia: servono solo a spiegare all'utente il perche'.
                 let (cella_w, cella_h) = strategia
-                    .celle(f)
+                    .celle(f, voluti.len())
                     .iter()
                     .fold((0u16, 0u16), |(mw, mh), &(w, h)| (mw.max(w), mh.max(h)));
                 avvisi.push(format!(
@@ -988,7 +1209,7 @@ mod tests {
         .unwrap();
 
         let f = font_latino("fnt_main", "|@#_");
-        let (ammessi, avvisi) = donatori_latini(&dir, &f, 4);
+        let (ammessi, avvisi) = donatori_latini(&dir, &f, 4, &[]);
         fs::remove_dir_all(&dir).ok();
 
         // `|` e `_` ammessi (mai disegnati); `@` e `#` esclusi; gli altri
@@ -1034,7 +1255,7 @@ mod tests {
         .unwrap();
 
         let f = font_latino("fnt_main", ";#|");
-        let (ammessi, avvisi) = donatori_latini(&dir, &f, 3);
+        let (ammessi, avvisi) = donatori_latini(&dir, &f, 3, &[]);
         fs::remove_dir_all(&dir).ok();
 
         assert_eq!(
@@ -1167,7 +1388,15 @@ mod tests {
             };
             let alt = gm_glyph_raster::altezza_maiuscole(f).unwrap_or(0);
             let serve_h = (alt + 3).max(1) as usize;
-            let serve_w = ((alt * 3) / 4).max(1) as usize;
+            // ⛔ 16/08 sera: `(alt*3)/4` e' una STIMA della larghezza, e sul
+            // referto dell'anteprima si e' visto che sbaglia in difetto — per
+            // fnt_main da' 9 px mentre il glifo piu' largo ne vuole 12. Una
+            // sonda che misura celle piu' strette di quelle che serviranno da
+            // un numero ottimista, ed e' la terza volta che un verificatore
+            // guarda una cosa leggermente diversa da quella che decide.
+            // Quindi non un numero solo: la CURVA su piu' larghezze, cosi' si
+            // legge dove sta il ginocchio invece di fidarsi di una stima.
+            let stima_w = ((alt * 3) / 4).max(1) as usize;
             let (w, h) = (reg.source_w as usize, reg.source_h as usize);
 
             // Occupazione della regione secondo i glifi del font stesso.
@@ -1186,39 +1415,60 @@ mod tests {
 
             // Celle libere serve_w x serve_h, greedy: dentro una banda si
             // avanza di cella in cella, fra le bande di riga in riga.
-            let mut libere = 0usize;
-            let mut y = 0usize;
-            while y + serve_h <= h {
-                let mut x = 0usize;
-                let mut trovata_in_banda = false;
-                while x + serve_w <= w {
-                    let occupata = (y..y + serve_h)
-                        .any(|yy| (x..x + serve_w).any(|xx| occ[yy * w + xx]));
-                    if occupata {
-                        x += 1;
-                    } else {
-                        libere += 1;
-                        trovata_in_banda = true;
-                        x += serve_w;
-                    }
+            // Limite INFERIORE: se dice 12, sono almeno 12.
+            let conta_celle = |serve_w: usize| -> usize {
+                if serve_w == 0 || serve_h == 0 || serve_w > w || serve_h > h {
+                    return 0;
                 }
-                y += if trovata_in_banda { serve_h } else { 1 };
+                let mut libere = 0usize;
+                let mut y = 0usize;
+                while y + serve_h <= h {
+                    let mut x = 0usize;
+                    let mut trovata_in_banda = false;
+                    while x + serve_w <= w {
+                        let occupata = (y..y + serve_h)
+                            .any(|yy| (x..x + serve_w).any(|xx| occ[yy * w + xx]));
+                        if occupata {
+                            x += 1;
+                        } else {
+                            libere += 1;
+                            trovata_in_banda = true;
+                            x += serve_w;
+                        }
+                    }
+                    y += if trovata_in_banda { serve_h } else { 1 };
+                }
+                libere
+            };
+
+            // Senza forzati: la sonda misura la situazione DI PARTENZA, quella
+            // che ha dato 9 su 12. Sdoganare qui falserebbe la misura.
+            let (ammessi, _) = donatori_latini(radice, f, 12, &[]);
+            // ...e CON i tre sdoganati, che e' la situazione reale da stasera:
+            // SpazioLibero ha bisogno di 12 RECORD per avere gli slot, e senza
+            // la leva restano 9.
+            let (con_leva, _) = donatori_latini(radice, f, 12, &['|', '\\', '_']);
+
+            // La curva: la stima storica, poi larghezze crescenti fino oltre
+            // quella che l'anteprima ha dichiarato necessaria (12 px per
+            // fnt_main). Serve a vedere DOVE si rompe, non se si rompe.
+            let mut curva = String::new();
+            for lw in [stima_w, 10, 12, 14, 16] {
+                curva.push_str(&format!(" {lw}x{serve_h}:{}", conta_celle(lw)));
             }
 
-            let (ammessi, _) = donatori_latini(radice, f, 12);
             eprintln!(
-                "{:<14} regione {}x{}  maiuscole {:>2}px  cella {}x{}  \
-                 celle libere >= {:>4}  (pixel liberi {:>5}/{})  record sacrificabili {:>2}",
+                "{:<14} regione {:>3}x{:<3} maiuscole {:>2}px  \
+                 pixel liberi {:>5}/{:<6} record {:>2} (con leva {:>2})  celle libere →{}",
                 f.name,
                 w,
                 h,
                 alt,
-                serve_w,
-                serve_h,
-                libere,
                 pixel_liberi,
                 w * h,
-                ammessi.len()
+                ammessi.len(),
+                con_leva.len(),
+                curva
             );
         }
     }
@@ -1232,7 +1482,7 @@ mod tests {
         // l'avviso che la misura non c'e' stata.
         let dir = std::env::temp_dir()
             .join(format!("gs_donatori_ordine_{}", std::process::id()));
-        let (ammessi, avvisi) = donatori_latini(&dir, &f, 1);
+        let (ammessi, avvisi) = donatori_latini(&dir, &f, 1, &[]);
 
         assert_eq!(
             ammessi,
@@ -1242,6 +1492,176 @@ mod tests {
         assert!(
             avvisi.iter().any(|a| a.contains("non e' stata verificata")),
             "corpus assente non dichiarato: {avvisi:?}"
+        );
+    }
+
+    /// La scelta fra le due vie si fa CONFRONTANDO, non per abitudine.
+    ///
+    /// Con celle donatrici strette (il caso `fnt_main`: 3x5) lo spazio libero
+    /// deve vincere; con celle generose deve vincere la via classica, che non
+    /// muove niente ed e' quella provata in-game. Il secondo verso e' la meta'
+    /// che si salta: senza, «spazio libero sempre» passerebbe questo test.
+    #[test]
+    fn si_sceglie_la_via_che_offre_la_cella_piu_grande() {
+        let candidati: Vec<u16> = "|{}@".chars().map(|c| c as u16).collect();
+        // Regione 128x128 come quella vera di fnt_main. Senza TPAG lo spazio
+        // libero non e' misurabile e la via nuova risulterebbe sempre perdente:
+        // il test direbbe "va bene" senza aver provato niente.
+        let regione = || {
+            Some(gm_font::Tpag {
+                offset: 0,
+                source_x: 0,
+                source_y: 0,
+                source_w: 128,
+                source_h: 128,
+                target_x: 0,
+                target_y: 0,
+                target_w: 128,
+                target_h: 128,
+                bounding_w: 128,
+                bounding_h: 128,
+                texture_index: 24,
+            })
+        };
+
+        // Celle strette in una regione con molto vuoto sotto.
+        let mut stretto = font_latino("fnt_main", "|{}@");
+        stretto.tpag = regione();
+        for (i, g) in stretto.glyphs.iter_mut().enumerate() {
+            g.source_x = i as u16 * 3;
+            g.source_y = 0;
+            g.source_w = 3;
+            g.source_h = 5;
+        }
+        let area = |f: &Font, s: &StrategiaDonatori| {
+            cella_garantita(f, 4, s).map(|(w, h)| w as u32 * h as u32).unwrap_or(0)
+        };
+        assert!(
+            area(&stretto, &StrategiaDonatori::SpazioLibero(candidati.clone()))
+                > area(&stretto, &StrategiaDonatori::Lista(candidati.clone())),
+            "con celle 3x5 lo spazio libero deve offrire piu' area"
+        );
+
+        // Celle generose: la via classica non va scavalcata.
+        let mut generoso = font_latino("fnt_main", "|{}@");
+        generoso.tpag = regione();
+        for (i, g) in generoso.glyphs.iter_mut().enumerate() {
+            g.source_x = i as u16 * 32;
+            g.source_y = 0;
+            g.source_w = 32;
+            g.source_h = 64;
+        }
+        assert!(
+            area(&generoso, &StrategiaDonatori::Lista(candidati.clone()))
+                >= area(&generoso, &StrategiaDonatori::SpazioLibero(candidati)),
+            "con celle 32x64 la via classica, che non sposta niente, deve restare la scelta"
+        );
+    }
+
+    /// I sei candidati aggiunti il 16/08 stanno IN CODA: allargano le
+    /// possibilita' senza spostare quali celle si sacrificano per prime.
+    /// Se qualcuno li mettesse in testa, questo test diventa rosso — ed e'
+    /// il punto: l'ordine storico e' gia' stato misurato sul gioco vero.
+    #[test]
+    fn i_candidati_nuovi_stanno_in_coda() {
+        let storici = ['|', '{', '}', '@', '~', '\\', '`', '^', '_', '=', '<', '>', '#', '$', ';'];
+        assert_eq!(
+            &CANDIDATI_LATINI[..storici.len()],
+            &storici[..],
+            "i primi quindici candidati sono gia' stati misurati: non si riordinano"
+        );
+        for c in ['+', '*', '[', ']', '(', ')'] {
+            assert!(
+                CANDIDATI_LATINI.contains(&c),
+                "'{c}' doveva entrare fra i candidati (gap donatori 9→12)"
+            );
+        }
+    }
+
+    /// Il cuore della leva: un simbolo che il gioco DISEGNA resta escluso, e
+    /// diventa donatore SOLO se l'utente lo chiede — con l'esempio della
+    /// stringa che perdera' il disegno scritto nell'avviso.
+    ///
+    /// Controllo in entrambe le direzioni nello stesso test: senza forzati
+    /// deve restare fuori. Un test che prova solo il caso «acceso» non
+    /// distingue una leva che funziona da una costante cablata.
+    #[test]
+    fn i_forzati_entrano_solo_se_richiesti_e_vengono_dichiarati() {
+        let dir = std::env::temp_dir()
+            .join(format!("gs_donatori_forzati_{}", std::process::id()));
+        let lang = dir.join("lang");
+        fs::create_dir_all(&lang).unwrap();
+        // `_` compare in una stringa TECNICA (il caso Deltarune), `@` in un
+        // testo che il giocatore legge davvero.
+        fs::write(
+            lang.join("lang_en.json"),
+            r#"{"a":"vista_xvista: 3","b":"Write to mail@example.com"}"#,
+        )
+        .unwrap();
+
+        let f = font_latino("fnt_main", "|_@");
+
+        // SENZA forzati: `_` e `@` restano fuori, resta solo `|`.
+        let (soli, _) = donatori_latini(&dir, &f, 3, &[]);
+        assert_eq!(
+            soli,
+            vec![u16::from(b'|')],
+            "senza sdoganamento, un simbolo disegnato NON deve entrare"
+        );
+
+        // CON `_` sdoganato: entra, ma DOPO gli ammissibili gratuiti.
+        let (con, avvisi) = donatori_latini(&dir, &f, 3, &['_']);
+        fs::remove_dir_all(&dir).ok();
+        assert_eq!(
+            con,
+            vec![u16::from(b'|'), u16::from(b'_')],
+            "il forzato va in coda: prima si spende cio' che non costa niente"
+        );
+        // `@` non era fra i forzati: resta escluso anche ora.
+        assert!(
+            !con.contains(&u16::from(b'@')),
+            "sdoganare `_` non deve sdoganare anche gli altri: {con:?}"
+        );
+        // Il prezzo va DETTO, con la stringa che lo paga.
+        assert!(
+            avvisi.iter().any(|a| a.contains("SU TUA RICHIESTA")
+                && a.contains('_')
+                && a.contains("vista_xvista")),
+            "il sacrificio forzato non e' dichiarato con l'esempio: {avvisi:?}"
+        );
+    }
+
+    /// Sdoganare un simbolo che non serviva non deve passare in silenzio:
+    /// l'utente crederebbe di aver pagato un prezzo che non ha pagato, e
+    /// potrebbe sdoganarne altri pensando che il primo non sia bastato.
+    #[test]
+    fn i_forzati_inutili_vengono_detti() {
+        let dir = std::env::temp_dir()
+            .join(format!("gs_forzati_inutili_{}", std::process::id()));
+        let lang = dir.join("lang");
+        fs::create_dir_all(&lang).unwrap();
+        fs::write(lang.join("lang_en.json"), r#"{"a":"HELLO WORLD"}"#).unwrap();
+
+        // Il font ha `|` (candidato, non disegnato) e `!` (NON candidato).
+        let f = font_latino("fnt_main", "|!");
+        // Tre casi diversi in una chiamata: `|` era gia' ammissibile, `{` il
+        // font non ce l'ha, `!` non e' nemmeno un candidato. Se i tre motivi
+        // non fossero distinti, uno di questi verrebbe descritto male — ed e'
+        // il caso `!` che si prende la spiegazione sbagliata, perche' il font
+        // LO POSSIEDE e senza il primo ramo passerebbe per «gia' ammissibile».
+        let (ammessi, avvisi) = donatori_latini(&dir, &f, 1, &['|', '{', '!']);
+        fs::remove_dir_all(&dir).ok();
+
+        assert_eq!(ammessi, vec![u16::from(b'|')], "nessun doppione in lista");
+        let inutili = avvisi
+            .iter()
+            .find(|a| a.contains("senza effetto"))
+            .unwrap_or_else(|| panic!("gli sdoganamenti inutili non sono dichiarati: {avvisi:?}"));
+        assert!(inutili.contains("gia' ammissibile"), "manca il motivo di `|`: {inutili}");
+        assert!(inutili.contains("non ha questa cella"), "manca il motivo di `{{`: {inutili}");
+        assert!(
+            inutili.contains("non e' fra i candidati"),
+            "`!` non e' un candidato e il motivo dev'essere QUELLO, non un altro: {inutili}"
         );
     }
 
@@ -1255,6 +1675,7 @@ mod tests {
             "à".into(),
             "Z:/nessun.ttf".into(),
             false,
+            None,
         )
         .await;
         assert!(esito.is_err());
@@ -1292,13 +1713,25 @@ mod tests {
 
         // Le lettere che abbiamo iniettato: si riconoscono dal codepoint.
         let iniettate: Vec<u16> = "àèéìòùÀÈÉÌÒÙ".chars().map(|c| c as u16).collect();
+        let mut totale_trovate = 0usize;
 
-        for nome in ["fnt_ja_main", "fnt_ja_small"] {
-            let f = match font.iter().find(|f| f.name == nome) {
-                Some(f) => f,
-                None => continue,
+        // ⛔ 17/08: qui c'erano SOLO fnt_ja_main e fnt_ja_small, cablati.
+        // Erano il bersaglio di luglio; da quando la traduzione vive nello
+        // slot inglese il bersaglio sono i font LATINI, e questo export —
+        // chiamato apposta per diagnosticare le «R» rovinate su fnt_main —
+        // ha risposto parlando d'altro senza dirlo. Quarta volta in questa
+        // vicenda che un verificatore guarda accanto al problema.
+        // Ora si esportano TUTTI i font che hanno una regione, e il nome del
+        // file dice quale.
+        for f in font.iter() {
+            let nome = f.name.as_str();
+            // Tollerante: prima qui c'erano due font scelti a mano e il TPAG
+            // c'era per forza. Ora si passa su tutti, e un font senza regione
+            // si salta dicendolo invece di abbattere l'export.
+            let Some(t) = f.tpag.as_ref() else {
+                eprintln!("  {nome}: senza TPAG, non esportabile");
+                continue;
             };
-            let t = f.tpag.as_ref().expect("font senza TPAG");
             let tex = match texture.get(t.texture_index.max(0) as usize) {
                 Some(x) => *x,
                 None => continue,
@@ -1360,9 +1793,17 @@ mod tests {
                 .save(&file)
                 .expect("salvataggio fallito");
             eprintln!("{nome}: {trovate} lettere iniettate trovate -> {}", file.display());
-            assert!(trovate > 0, "{nome}: nessuna lettera iniettata nella tabella");
+            // Non si pretende piu' che OGNI font ne abbia: ora si passa su
+            // tutti, e un font senza lettere e' un'informazione — proprio
+            // quella che serve a capire dove la patch non e' arrivata. Il
+            // controllo che il lavoro sia stato fatto sta in fondo.
+            totale_trovate += trovate;
         }
         eprintln!("PNG in: {:?}", out.canonicalize().unwrap_or(out.clone()));
+        assert!(
+            totale_trovate > 0,
+            "nessuna lettera iniettata in nessun font: il data.win non e' patchato"
+        );
     }
 
     /// **SCRIVE DAVVERO.** Applica l'iniezione a una copia della cartella del
@@ -1392,7 +1833,14 @@ mod tests {
         );
 
         // Vuoto = tutti i font usabili: la stessa via della card in-app.
-        let esito = gm_inject_glyphs(dir, vec![], "àèéìòùÀÈÉÌÒÙ".into(), ttf, true)
+        // GS_GM_DONATORI sdogana simboli che il gioco disegna (su Deltarune
+        // `|\_`, che vengono da stringhe tecniche): assente = comportamento
+        // di sempre, cosi' la prova senza la leva resta possibile.
+        let forzati = std::env::var("GS_GM_DONATORI").ok();
+        if let Some(f) = &forzati {
+            eprintln!("donatori sdoganati dall'utente: {f}");
+        }
+        let esito = gm_inject_glyphs(dir, vec![], "àèéìòùÀÈÉÌÒÙ".into(), ttf, true, forzati)
             .await
             .expect("applicazione fallita");
 
@@ -1426,7 +1874,14 @@ mod tests {
         // anteprima trattava solo fnt_ja_main/fnt_ja_small: meccanicamente
         // verde, ma lo slot INGLESE disegna coi font latini — il bersaglio
         // vero e' fnt_main e famiglia.
-        let esito = gm_inject_glyphs(dir, vec![], "àèéìòùÀÈÉÌÒÙ".into(), ttf, false)
+        // GS_GM_DONATORI = i simboli sdoganati (es. `|\_` su Deltarune, che
+        // vengono da stringhe tecniche). Assente = la misura di partenza,
+        // quella che il 16/08 ha dato 9 donatori dove ne servivano 12.
+        let forzati = std::env::var("GS_GM_DONATORI").ok();
+        if let Some(f) = &forzati {
+            eprintln!("donatori sdoganati dall'utente: {f}");
+        }
+        let esito = gm_inject_glyphs(dir, vec![], "àèéìòùÀÈÉÌÒÙ".into(), ttf, false, forzati)
             .await
             .expect("anteprima fallita");
 

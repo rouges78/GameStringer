@@ -7964,7 +7964,11 @@
     "texture": "Texture",
     "marginOk": "tient, marge de {b} o",
     "marginKo": "dépasse de {b} o",
-    "applyNote": "L'application crée une sauvegarde et n'écrit que si TOUT tient : tout ou rien."
+    "applyNote": "L'application crée une sauvegarde et n'écrit que si TOUT tient : tout ou rien.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Traduction partielle : {n} chaînes écrites, {missing} fichiers déclarés absents",

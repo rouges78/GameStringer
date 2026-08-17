@@ -7964,7 +7964,11 @@
     "texture": "纹理",
     "marginOk": "可容纳，余量 {b} B",
     "marginKo": "超出 {b} B",
-    "applyNote": "应用时会创建备份，且只有全部容纳时才写入：要么全部，要么没有。"
+    "applyNote": "应用时会创建备份，且只有全部容纳时才写入：要么全部，要么没有。",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "部分翻译：已写入 {n} 条字符串，声明的 {missing} 个文件缺失",

@@ -91,7 +91,7 @@ pub struct Richiesta {
 ///
 /// Il piano si calcola e si ispeziona **senza toccare niente**: e' l'unico
 /// modo di sapere in anticipo se l'operazione e' realizzabile.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Piano {
     /// `(indice del glifo donatore, indice della richiesta)`.
     pub assegnazioni: Vec<(usize, usize)>,
@@ -100,6 +100,24 @@ pub struct Piano {
     /// E' la "strategia B" di ADR-005: togliere transizioni al disegno riduce
     /// il blob molto piu' di quanto lo riduca togliere pixel accesi.
     pub da_svuotare: Vec<usize>,
+    /// `(indice del glifo, nuova origine relativa alla regione TPAG)`.
+    ///
+    /// **Vuoto in tutti i piani storici**, e deve restarlo: il percorso kanji
+    /// e' provato in-game e li' vale il vincolo n. 1 di questo modulo — il
+    /// glifo nuovo sta nella cella del donatore, che non si muove.
+    ///
+    /// Si popola SOLO con [`pianifica_su_spazio_libero`], scritta il 16/08 per
+    /// i font latini: li' le celle dei simboli sacrificabili sono minuscole
+    /// (misurato su `fnt_main` di Deltarune: 3x5 px contro le 12x16 che
+    /// servono), mentre dentro la stessa regione TPAG c'e' spazio VUOTO in
+    /// abbondanza. Si sacrifica il record per avere lo slot nella tabella, ma
+    /// il suo rettangolo si riscrive su una cella libera abbastanza capiente.
+    ///
+    /// Resta dentro la regione del font: le coordinate dei glifi sono relative
+    /// all'origine TPAG e senza segno, quindi una cella interna e' sempre
+    /// raggiungibile e nessun renderer taglia ai bordi di qualcosa che non
+    /// abbiamo attraversato.
+    pub ricollocati: Vec<(usize, u16, u16)>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -122,6 +140,23 @@ pub enum Errore {
     /// Una lettera richiesta esiste gia' nel font: sovrascriverla sarebbe un
     /// errore silenzioso.
     CarattereGiaPresente { carattere: u16 },
+    /// Nella regione TPAG non c'e' abbastanza spazio VUOTO per le lettere.
+    ///
+    /// Distinta da [`Errore::DonatoriInsufficienti`] di proposito: li' mancano
+    /// i record da sacrificare, qui manca il posto dove disegnare. Sono due
+    /// rimedi diversi — allargare i candidati contro cambiare font — e un
+    /// errore solo per due cause manda a lavorare dalla parte sbagliata.
+    SpazioLiberoInsufficiente {
+        servono: usize,
+        collocate: usize,
+        /// Dimensione della lettera che non ha trovato posto.
+        serviva: (u16, u16),
+        /// La regione del font, per capire se il problema e' lo spazio o la
+        /// frammentazione (su `fnt_dotumche`: 7.505 pixel liberi su 16.384 e
+        /// UNA sola cella 12x17 — spazio c'e', contiguo no).
+        regione: (u16, u16),
+        pixel_liberi: usize,
+    },
     /// La bitmap non entra nella cella assegnata.
     BitmapTroppoGrande { carattere: u16, bitmap: (u16, u16), cella: (u16, u16) },
     /// La cella cade fuori dall'atlante.
@@ -146,6 +181,16 @@ impl std::fmt::Display for Errore {
             Self::CarattereGiaPresente { carattere } => write!(
                 f,
                 "il font contiene gia' il carattere U+{carattere:04X}: non lo si sovrascrive"
+            ),
+            Self::SpazioLiberoInsufficiente {
+                servono, collocate, serviva, regione, pixel_liberi,
+            } => write!(
+                f,
+                "servivano {servono} celle libere nella regione del font, collocate {collocate}: \
+                 un glifo di {}x{} px non trova spazio vuoto contiguo. La regione e' {}x{} px con \
+                 {pixel_liberi} pixel liberi — se sono molti, il problema e' la frammentazione, \
+                 non lo spazio",
+                serviva.0, serviva.1, regione.0, regione.1
             ),
             Self::BitmapTroppoGrande { carattere, bitmap, cella } => write!(
                 f,
@@ -212,6 +257,193 @@ pub fn pianifica_da_lista(
 ) -> Result<Piano, Errore> {
     let insieme: std::collections::HashSet<u16> = candidati.iter().copied().collect();
     pianifica_con_predicato(font, richieste, &|c| insieme.contains(&c), svuota_resto)
+}
+
+/// Mappa dei pixel della regione TPAG occupati dai glifi del font.
+///
+/// «Occupato» qui significa *rivendicato da un glifo di questo font*, non
+/// *acceso*: un glifo con dei pixel spenti dentro il suo rettangolo occupa lo
+/// stesso tutta la cella, perche' il gioco continuera' a disegnarla. Guardare
+/// i pixel accesi invece dei rettangoli sembrerebbe piu' generoso e sarebbe
+/// sbagliato — si finirebbe a scrivere dentro la cella di una lettera viva.
+fn occupazione(font: &Font) -> Option<(Vec<bool>, u16, u16)> {
+    let t = font.tpag.as_ref()?;
+    let (w, h) = (t.source_w as usize, t.source_h as usize);
+    if w == 0 || h == 0 {
+        return None;
+    }
+    let mut occ = vec![false; w * h];
+    for g in &font.glyphs {
+        for y in g.source_y..g.source_y.saturating_add(g.source_h) {
+            for x in g.source_x..g.source_x.saturating_add(g.source_w) {
+                let (x, y) = (x as usize, y as usize);
+                if x < w && y < h {
+                    occ[y * w + x] = true;
+                }
+            }
+        }
+    }
+    Some((occ, t.source_w, t.source_h))
+}
+
+/// Cerca nella regione la prima cella libera `serve_w x serve_h` e la marca
+/// come occupata, cosi' la chiamata successiva non la riassegna.
+///
+/// Scansione dall'alto a sinistra: deterministica, quindi due esecuzioni
+/// identiche producono lo stesso file — invariante di tutto ADR-005.
+fn prendi_cella_libera(
+    occ: &mut [bool],
+    w: u16,
+    h: u16,
+    serve_w: u16,
+    serve_h: u16,
+) -> Option<(u16, u16)> {
+    if serve_w == 0 || serve_h == 0 || serve_w > w || serve_h > h {
+        return None;
+    }
+    let (wu, hu) = (w as usize, h as usize);
+    for y in 0..=(hu - serve_h as usize) {
+        'x: for x in 0..=(wu - serve_w as usize) {
+            for yy in y..y + serve_h as usize {
+                for xx in x..x + serve_w as usize {
+                    if occ[yy * wu + xx] {
+                        continue 'x;
+                    }
+                }
+            }
+            for yy in y..y + serve_h as usize {
+                for xx in x..x + serve_w as usize {
+                    occ[yy * wu + xx] = true;
+                }
+            }
+            return Some((x as u16, y as u16));
+        }
+    }
+    None
+}
+
+/// Come [`pianifica_da_lista`], ma le lettere si disegnano nello **spazio
+/// vuoto** della regione invece che nella cella del donatore.
+///
+/// # Perche' esiste (16/08/2026)
+///
+/// Sui font latini di Deltarune la via classica e' morta con un numero: i
+/// simboli sacrificabili di `fnt_main` danno una cella garantita di **3x5 px**
+/// mentre una maiuscola accentata ne vuole **12x16**. Aggiungere donatori
+/// peggiora: la cella garantita e' la piu' PICCOLA di quelle scelte, e i
+/// simboli piu' sdoganabili (`|`, `\`, `_`) sono i piu' stretti che esistano.
+///
+/// Nella stessa regione, pero', c'e' spazio vuoto: 9.430 pixel liberi su
+/// 16.384, e undici celle 12x16. Quindi si tengono i record — servono per
+/// avere gli slot nella tabella glifi, ed e' per questo che la leva dei
+/// donatori sdoganati resta necessaria — ma si **riscrive il loro
+/// rettangolo** su una cella libera capiente.
+///
+/// # Cosa NON cambia
+///
+/// Il numero di record, la lunghezza della tabella, la dimensione del file.
+/// Si muove un rettangolo dentro una regione che il font gia' possiede.
+pub fn pianifica_su_spazio_libero(
+    font: &Font,
+    richieste: &[Richiesta],
+    candidati: &[u16],
+    svuota_resto: bool,
+) -> Result<Piano, Errore> {
+    let Some((mut occ, w, h)) = occupazione(font) else {
+        return Err(Errore::TpagAssente);
+    };
+    let pixel_liberi = occ.iter().filter(|&&o| !o).count();
+
+    for r in richieste {
+        if font.glifo(r.carattere).is_some() {
+            return Err(Errore::CarattereGiaPresente { carattere: r.carattere });
+        }
+    }
+
+    // I record da sacrificare. L'ordine per capienza qui non ha piu' un
+    // effetto: la cella del donatore viene abbandonata e `occupazione` la
+    // marca comunque occupata, quindi sacrificare un record largo o stretto
+    // non cambia di un pixel lo spazio disponibile. Si conserva solo perche'
+    // e' DETERMINISTICO — due esecuzioni identiche devono dare lo stesso file,
+    // invariante di tutto ADR-005.
+    // ⏸️ Miglioria possibile e non fatta: liberare nella mappa anche le celle
+    // dei record sacrificati, che nessuno disegnera' piu'. Vale qualche cella
+    // in piu' su font stretti, ma va misurata prima di scriverla.
+    let insieme: std::collections::HashSet<u16> = candidati.iter().copied().collect();
+    let mut disponibili: Vec<usize> = font
+        .glyphs
+        .iter()
+        .enumerate()
+        .filter(|(_, g)| insieme.contains(&g.character))
+        .map(|(i, _)| i)
+        .collect();
+    disponibili.sort_by_key(|&i| {
+        let g = &font.glyphs[i];
+        std::cmp::Reverse((g.source_w as u32) * (g.source_h as u32))
+    });
+
+    if disponibili.len() < richieste.len() {
+        let piu_grande = disponibili
+            .iter()
+            .map(|&i| (font.glyphs[i].source_w, font.glyphs[i].source_h))
+            .max_by_key(|(w, h)| (*w as u32) * (*h as u32))
+            .unwrap_or((0, 0));
+        let serviva = richieste
+            .iter()
+            .map(|r| (r.bitmap.w, r.bitmap.h))
+            .max_by_key(|(w, h)| (*w as u32) * (*h as u32))
+            .unwrap_or((0, 0));
+        return Err(Errore::DonatoriInsufficienti {
+            servono: richieste.len(),
+            trovati: disponibili.len(),
+            serviva,
+            cella_piu_grande: piu_grande,
+        });
+    }
+
+    // Le lettere si collocano dalla piu' ingombrante: con celle di dimensioni
+    // diverse e' l'ordine che fallisce piu' tardi possibile. Servirle in
+    // ordine alfabetico esaurirebbe lo spazio buono sulle minuscole e
+    // lascerebbe fuori le maiuscole accentate, che sono le piu' grandi.
+    let mut ordine: Vec<usize> = (0..richieste.len()).collect();
+    ordine.sort_by_key(|&i| {
+        std::cmp::Reverse((richieste[i].bitmap.w as u32) * (richieste[i].bitmap.h as u32))
+    });
+
+    let mut assegnazioni = Vec::with_capacity(richieste.len());
+    let mut ricollocati = Vec::with_capacity(richieste.len());
+    let mut usati = vec![false; font.glyphs.len()];
+
+    for (n, &ir) in ordine.iter().enumerate() {
+        let b = &richieste[ir].bitmap;
+        match prendi_cella_libera(&mut occ, w, h, b.w, b.h) {
+            Some((x, y)) => {
+                let ic = disponibili[n];
+                usati[ic] = true;
+                assegnazioni.push((ic, ir));
+                ricollocati.push((ic, x, y));
+            }
+            None => {
+                return Err(Errore::SpazioLiberoInsufficiente {
+                    servono: richieste.len(),
+                    collocate: assegnazioni.len(),
+                    serviva: (b.w, b.h),
+                    regione: (w, h),
+                    pixel_liberi,
+                });
+            }
+        }
+    }
+
+    let da_svuotare = if svuota_resto {
+        disponibili.iter().copied().filter(|&i| !usati[i]).collect()
+    } else {
+        Vec::new()
+    };
+
+    assegnazioni.sort_unstable();
+    ricollocati.sort_unstable();
+    Ok(Piano { assegnazioni, da_svuotare, ricollocati })
 }
 
 /// L'implementazione vera: chi e' donatore lo decide il predicato.
@@ -293,7 +525,10 @@ fn pianifica_con_predicato(
 
     // Ordine stabile, cosi' due esecuzioni identiche producono lo stesso file.
     assegnazioni.sort_unstable();
-    Ok(Piano { assegnazioni, da_svuotare })
+    // Nessuna ricollocazione: qui il rettangolo del donatore non si muove, ed
+    // e' il vincolo n. 1 del modulo. Solo `pianifica_su_spazio_libero` lo
+    // supera, e lo fa restando dentro la regione del font.
+    Ok(Piano { assegnazioni, da_svuotare, ricollocati: Vec::new() })
 }
 
 // ── Applicazione ──
@@ -332,21 +567,63 @@ pub fn applica(
         return Err(Errore::TpagAssente);
     }
 
+    // Dove finisce ciascun glifo: la sua cella di sempre, oppure la cella
+    // libera che il piano gli ha assegnato.
+    let nuova_origine = |ic: usize| -> Option<(u16, u16)> {
+        piano.ricollocati.iter().find(|(i, _, _)| *i == ic).map(|&(_, x, y)| (x, y))
+    };
+
     // Prima si controlla tutto, poi si scrive: un fallimento a meta' lascerebbe
     // un atlante mezzo riscritto e nessun modo di sapere dove ci si e' fermati.
+    let t = font.tpag.as_ref().ok_or(Errore::TpagAssente)?;
     for &(ic, ir) in &piano.assegnazioni {
         let g = &font.glyphs[ic];
         let r = &richieste[ir];
-        if r.bitmap.w > g.source_w || r.bitmap.h > g.source_h {
-            return Err(Errore::BitmapTroppoGrande {
-                carattere: r.carattere,
-                bitmap: (r.bitmap.w, r.bitmap.h),
-                cella: (g.source_w, g.source_h),
-            });
-        }
-        let (ax, ay) = font.posizione_assoluta(g).ok_or(Errore::TpagAssente)?;
-        if ax as u32 + g.source_w as u32 > atlante.width as u32
-            || ay as u32 + g.source_h as u32 > atlante.height as u32
+        // `ingombro` e' cio' che verra' scritto a partire da (ax, ay): per un
+        // ricollocato e' la sola bitmap, perche' la cella del donatore resta
+        // indietro; per gli altri e' la cella intera, che viene svuotata.
+        let (ax, ay, ingombro) = match nuova_origine(ic) {
+            // Ricollocato: il vincolo da rispettare non e' piu' la cella del
+            // donatore (che si abbandona) ma la REGIONE, dentro cui la cella
+            // libera e' stata scelta.
+            Some((rx, ry)) => {
+                if rx as u32 + r.bitmap.w as u32 > t.source_w as u32
+                    || ry as u32 + r.bitmap.h as u32 > t.source_h as u32
+                {
+                    return Err(Errore::BitmapTroppoGrande {
+                        carattere: r.carattere,
+                        bitmap: (r.bitmap.w, r.bitmap.h),
+                        cella: (t.source_w, t.source_h),
+                    });
+                }
+                // Se l'origine della regione piu' l'offset sfora u16 il
+                // problema e' la cella, non il TPAG: dirlo come «manca la
+                // regione» manderebbe a diagnosticare la cosa sbagliata.
+                let (Some(ax), Some(ay)) =
+                    (t.source_x.checked_add(rx), t.source_y.checked_add(ry))
+                else {
+                    return Err(Errore::CellaFuoriDallAtlante {
+                        carattere: r.carattere,
+                        x: rx,
+                        y: ry,
+                    });
+                };
+                (ax, ay, (r.bitmap.w, r.bitmap.h))
+            }
+            None => {
+                if r.bitmap.w > g.source_w || r.bitmap.h > g.source_h {
+                    return Err(Errore::BitmapTroppoGrande {
+                        carattere: r.carattere,
+                        bitmap: (r.bitmap.w, r.bitmap.h),
+                        cella: (g.source_w, g.source_h),
+                    });
+                }
+                let (ax, ay) = font.posizione_assoluta(g).ok_or(Errore::TpagAssente)?;
+                (ax, ay, (g.source_w, g.source_h))
+            }
+        };
+        if ax as u32 + ingombro.0 as u32 > atlante.width as u32
+            || ay as u32 + ingombro.1 as u32 > atlante.height as u32
         {
             return Err(Errore::CellaFuoriDallAtlante { carattere: r.carattere, x: ax, y: ay });
         }
@@ -354,26 +631,45 @@ pub fn applica(
 
     let mut aggiornati = Vec::with_capacity(piano.assegnazioni.len());
 
+    // FASE 1 — si svuotano tutte le celle di partenza PRIMA di disegnare
+    // qualunque lettera. Con le ricollocazioni le due operazioni non possono
+    // piu' stare nello stesso giro: svuotare dopo aver disegnato cancellerebbe
+    // una lettera appena scritta se la sua cella nuova toccasse la cella
+    // vecchia di un altro donatore. Le celle libere non si sovrappongono a
+    // nessun glifo per costruzione, ma quest'ordine non lo dà per scontato.
+    for &(ic, _) in &piano.assegnazioni {
+        svuota_cella(atlante, font, &font.glyphs[ic]);
+    }
+
+    // FASE 2 — si disegna e si riscrive la tabella.
     for &(ic, ir) in &piano.assegnazioni {
         let g = &font.glyphs[ic];
         let r = &richieste[ir];
-        let (ax, ay) = font.posizione_assoluta(g).ok_or(Errore::TpagAssente)?;
+        let ricollocato = nuova_origine(ic);
+        let (ax, ay) = match ricollocato {
+            Some((rx, ry)) => (t.source_x + rx, t.source_y + ry),
+            None => font.posizione_assoluta(g).ok_or(Errore::TpagAssente)?,
+        };
 
-        // Si svuota TUTTA la cella prima di disegnare: lasciare i pixel del
-        // kanji dove la lettera nuova non arriva produrrebbe un ibrido.
-        svuota_cella(atlante, font, g);
+        // Si scrivono TUTTI i pixel della bitmap, accesi e spenti. Scrivere
+        // solo gli accesi bastava finche' la cella veniva svuotata prima; per
+        // un ricollocato la cella nuova e' spazio della regione che nessuno ha
+        // ripulito — «non rivendicato da un glifo» non vuol dire «trasparente»
+        // — e i pixel gia' accesi si fonderebbero con la lettera.
         for dy in 0..r.bitmap.h {
             for dx in 0..r.bitmap.w {
-                if r.bitmap.get(dx, dy) {
-                    atlante.set_pixel(ax + dx, ay + dy, ACCESO);
-                }
+                let colore = if r.bitmap.get(dx, dy) { ACCESO } else { SPENTO };
+                atlante.set_pixel(ax + dx, ay + dy, colore);
             }
         }
 
-        // La cella resta dov'e' ed e' grande com'era; cambiano il codepoint e
-        // le dimensioni utili, che ora sono quelle della lettera.
+        // Cambiano il codepoint e le dimensioni utili, che ora sono quelle
+        // della lettera; e per i ricollocati anche l'origine del rettangolo.
+        let (sx, sy) = ricollocato.unwrap_or((g.source_x, g.source_y));
         let nuovo = Glyph {
             character: r.carattere,
+            source_x: sx,
+            source_y: sy,
             source_w: r.bitmap.w,
             source_h: r.bitmap.h,
             shift: r.shift.unwrap_or(r.bitmap.w as i16 + 1),
@@ -489,6 +785,192 @@ mod tests {
             }
         }
         a
+    }
+
+    /// Font coi glifi in una striscia in alto e celle STRETTE: e' la forma
+    /// reale di `fnt_main` (simboli sacrificabili 3x5, regione 128x128 con
+    /// spazio vuoto sotto).
+    fn font_celle_strette(n: u16, cw: u16, ch: u16) -> Font {
+        let mut f = font_finto(n, 16, (0, 0));
+        // Regione 128x128 come quella VERA di fnt_main. Il TPAG ereditato da
+        // `font_finto` e' 512x512: con quello le lettere entrerebbero tutte su
+        // una riga sola e il percorso multi-banda — l'unico interessante sul
+        // font vero — non verrebbe mai attraversato. Peggio, finirebbero fuori
+        // dall'atlante 128x128 usato nel test di `applica`.
+        if let Some(t) = f.tpag.as_mut() {
+            t.source_w = 128;
+            t.source_h = 128;
+        }
+        for (i, g) in f.glyphs.iter_mut().enumerate() {
+            g.source_x = i as u16 * cw;
+            g.source_y = 0;
+            g.source_w = cw;
+            g.source_h = ch;
+        }
+        f
+    }
+
+    /// L'INVARIANTE STORICO, sotto tutela: il percorso kanji non ricolloca
+    /// niente. Se un giorno qualcuno facesse ricollocare anche quello, la
+    /// patch russa provata in-game cambierebbe comportamento in silenzio.
+    #[test]
+    fn il_percorso_classico_non_ricolloca_niente() {
+        let f = font_finto(10, 16, (0, 0));
+        let richieste: Vec<_> = (0..3).map(|i| lettera(0x0410 + i, 8, 8)).collect();
+
+        let kanji = pianifica(&f, &richieste, KANJI, true).unwrap();
+        assert!(kanji.ricollocati.is_empty(), "il percorso kanji non muove i rettangoli");
+
+        let lista: Vec<u16> = (0..10).map(|i| 0x4E00 + i).collect();
+        let da_lista = pianifica_da_lista(&f, &richieste, &lista, true).unwrap();
+        assert!(da_lista.ricollocati.is_empty(), "nemmeno la lista esplicita li muove");
+    }
+
+    /// Il caso che ha motivato tutto: celle donatrici 3x5, lettere 12x16.
+    /// La via classica fallisce dicendo perche', quella su spazio libero
+    /// riesce — e i due esiti insieme sono la misura di Deltarune.
+    #[test]
+    fn spazio_libero_riesce_dove_le_celle_donatrici_sono_troppo_strette() {
+        let f = font_celle_strette(12, 3, 5);
+        let richieste: Vec<_> = (0..12).map(|i| lettera(0x00E0 + i, 12, 16)).collect();
+        let candidati: Vec<u16> = (0..12).map(|i| 0x4E00 + i).collect();
+
+        // Via classica: nessuna cella da 12x16 fra celle da 3x5.
+        assert!(
+            matches!(
+                pianifica_da_lista(&f, &richieste, &candidati, false),
+                Err(Errore::DonatoriInsufficienti { cella_piu_grande: (3, 5), .. })
+            ),
+            "la via classica doveva fallire proprio sulla dimensione della cella"
+        );
+
+        // Via nuova: i record servono per gli slot, i rettangoli si spostano.
+        let piano = pianifica_su_spazio_libero(&f, &richieste, &candidati, false).unwrap();
+        assert_eq!(piano.assegnazioni.len(), 12);
+        assert_eq!(piano.ricollocati.len(), 12, "ogni lettera deve avere una cella nuova");
+
+        // Nessuna cella nuova si sovrappone a un glifo ancora vivo, e nessuna
+        // esce dalla regione: sono le due cose che romperebbero il font.
+        let t = f.tpag.as_ref().unwrap();
+        for &(_, x, y) in &piano.ricollocati {
+            assert!(
+                x as u32 + 12 <= t.source_w as u32 && y as u32 + 16 <= t.source_h as u32,
+                "cella ({x},{y}) fuori dalla regione {}x{}",
+                t.source_w,
+                t.source_h
+            );
+            for g in &f.glyphs {
+                let sovrappone = x < g.source_x + g.source_w
+                    && g.source_x < x + 12
+                    && y < g.source_y + g.source_h
+                    && g.source_y < y + 16;
+                assert!(!sovrappone, "cella ({x},{y}) sopra il glifo U+{:04X}", g.character);
+            }
+        }
+
+        // E nemmeno fra loro: due lettere nello stesso posto ne cancellano una.
+        for (i, &(_, x1, y1)) in piano.ricollocati.iter().enumerate() {
+            for &(_, x2, y2) in piano.ricollocati.iter().skip(i + 1) {
+                let sovrappone = x1 < x2 + 12 && x2 < x1 + 12 && y1 < y2 + 16 && y2 < y1 + 16;
+                assert!(!sovrappone, "due lettere collocate a ({x1},{y1}) e ({x2},{y2})");
+            }
+        }
+    }
+
+    /// Spazio esaurito: l'errore deve distinguersi da «mancano i record» e
+    /// portarsi dietro i numeri che dicono se il problema e' lo spazio o la
+    /// frammentazione.
+    #[test]
+    fn spazio_libero_esaurito_lo_dice_con_i_numeri() {
+        // Regione piccola, tutta rivendicata dai glifi esistenti.
+        let mut f = font_celle_strette(4, 16, 16);
+        let t = f.tpag.as_mut().unwrap();
+        t.source_w = 64;
+        t.source_h = 16;
+
+        let richieste: Vec<_> = (0..4).map(|i| lettera(0x00E0 + i, 12, 16)).collect();
+        let candidati: Vec<u16> = (0..4).map(|i| 0x4E00 + i).collect();
+
+        match pianifica_su_spazio_libero(&f, &richieste, &candidati, false) {
+            Err(Errore::SpazioLiberoInsufficiente {
+                servono, collocate, serviva, regione, pixel_liberi,
+            }) => {
+                assert_eq!(servono, 4);
+                assert_eq!(collocate, 0, "non c'e' un solo pixel libero");
+                assert_eq!(serviva, (12, 16));
+                assert_eq!(regione, (64, 16));
+                assert_eq!(pixel_liberi, 0);
+            }
+            altro => panic!("atteso SpazioLiberoInsufficiente, ottenuto {altro:?}"),
+        }
+    }
+
+    /// Prova d'EFFETTO, non di piano: dopo `applica` i pixel della lettera
+    /// stanno nella cella nuova, la cella vecchia e' spenta, e il record nella
+    /// tabella punta al rettangolo nuovo. Senza questo test il piano potrebbe
+    /// essere perfetto e il disegno finire nel posto di prima.
+    #[test]
+    fn applica_disegna_nella_cella_ricollocata_e_spegne_quella_vecchia() {
+        let f = font_celle_strette(3, 6, 6);
+        let richieste = vec![lettera(0x00E0, 6, 6)];
+        let candidati: Vec<u16> = (0..3).map(|i| 0x4E00 + i).collect();
+
+        let piano = pianifica_su_spazio_libero(&f, &richieste, &candidati, false).unwrap();
+        let (ic, _) = piano.assegnazioni[0];
+        let (_, nx, ny) = piano.ricollocati[0];
+        let vecchia = (f.glyphs[ic].source_x, f.glyphs[ic].source_y);
+        assert_ne!((nx, ny), vecchia, "la prova non vale se la cella non si e' mossa");
+
+        // DUE atlanti, e servono entrambi. Su quello PIENO ogni pixel e' gia'
+        // acceso: li' «la diagonale c'e'» sarebbe vero anche se `applica` non
+        // disegnasse niente — quell'atlante prova solo la PULIZIA. Su quello
+        // VUOTO nessun pixel e' acceso: li' la diagonale prova il DISEGNO.
+        let mut dati = prepara_dati(&f);
+        let mut vuoto = GmImage::new(128, 128);
+        applica(&mut vuoto, &mut dati, &f, &piano, &richieste).unwrap();
+        for i in 0..6u16 {
+            assert_eq!(
+                vuoto.get_pixel(nx + i, ny + i),
+                Some(ACCESO),
+                "la diagonale doveva essere DISEGNATA in ({}, {})",
+                nx + i,
+                ny + i
+            );
+        }
+
+        let mut atlante = atlante_pieno(128, 128);
+        let mut dati = prepara_dati(&f);
+        let aggiornati = applica(&mut atlante, &mut dati, &f, &piano, &richieste).unwrap();
+
+        for i in 0..6u16 {
+            assert_eq!(atlante.get_pixel(nx + i, ny + i), Some(ACCESO));
+        }
+        // Fuori dalla diagonale, DENTRO la cella nuova, deve essere spento:
+        // la cella nuova e' spazio della regione che nessuno ha ripulito, e
+        // senza scrivere anche i pixel spenti la lettera si fonderebbe con
+        // quello che c'era. E' l'asserzione che ha stanato il difetto vero.
+        assert_eq!(
+            atlante.get_pixel(nx + 5, ny),
+            Some(SPENTO),
+            "la cella nuova non e' stata ripulita: la lettera si fonde col fondo"
+        );
+
+        // La cella VECCHIA e' tutta spenta: il simbolo sacrificato sparisce
+        // davvero dall'atlante, non resta come fantasma.
+        for dy in 0..6u16 {
+            for dx in 0..6u16 {
+                assert_eq!(
+                    atlante.get_pixel(vecchia.0 + dx, vecchia.1 + dy),
+                    Some(SPENTO),
+                    "la cella abbandonata deve restare vuota"
+                );
+            }
+        }
+
+        // E il record punta al rettangolo nuovo.
+        assert_eq!(aggiornati.len(), 1);
+        assert_eq!((aggiornati[0].source_x, aggiornati[0].source_y), (nx, ny));
+        assert_eq!(aggiornati[0].character, 0x00E0);
     }
 
     #[test]

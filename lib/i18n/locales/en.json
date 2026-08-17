@@ -7964,7 +7964,11 @@
     "texture": "Texture",
     "marginOk": "fits, {b} B margin",
     "marginKo": "over by {b} B",
-    "applyNote": "Applying creates a backup and writes only if EVERYTHING fits: all or nothing."
+    "applyNote": "Applying creates a backup and writes only if EVERYTHING fits: all or nothing.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Partial translation: {n} strings written, {missing} declared files missing",

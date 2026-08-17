@@ -7964,7 +7964,11 @@
     "texture": "Texture",
     "marginOk": "ci sta, margine {b} B",
     "marginKo": "sfora di {b} B",
-    "applyNote": "L'applicazione crea un backup e scrive solo se TUTTO rientra: o tutto o niente."
+    "applyNote": "L'applicazione crea un backup e scrive solo se TUTTO rientra: o tutto o niente.",
+    "donorsTitle": "Simboli da sacrificare",
+    "donorsHelp": "Per disegnare le lettere accentate servono celle libere: si prendono da simboli che il gioco non usa mai. Se non bastano, qui puoi cederne altri — ma dove compaiono resteranno vuoti a schermo.",
+    "donorsPlaceholder": "es. |\\_",
+    "donorsRetry": "Rifai l'anteprima"
   },
   "postTranslation": {
     "partialTitle": "Traduzione parziale: {n} stringhe scritte, {missing} file dichiarati ma assenti",

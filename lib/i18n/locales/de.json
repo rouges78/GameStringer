@@ -7964,7 +7964,11 @@
     "texture": "Textur",
     "marginOk": "passt, {b} B Spielraum",
     "marginKo": "überschreitet um {b} B",
-    "applyNote": "Das Anwenden erstellt ein Backup und schreibt nur, wenn ALLES passt: alles oder nichts."
+    "applyNote": "Das Anwenden erstellt ein Backup und schreibt nur, wenn ALLES passt: alles oder nichts.",
+    "donorsTitle": "Symbols to sacrifice",
+    "donorsHelp": "Drawing accented letters needs free cells, taken from symbols the game never uses. If there aren't enough, you can give up more here — but wherever they appear they will show as blank on screen.",
+    "donorsPlaceholder": "e.g. |\\_",
+    "donorsRetry": "Run preview again"
   },
   "postTranslation": {
     "partialTitle": "Teilweise übersetzt: {n} Zeichenketten geschrieben, {missing} angegebene Dateien fehlen",

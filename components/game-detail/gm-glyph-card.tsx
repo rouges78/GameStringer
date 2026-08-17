@@ -36,6 +36,9 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
   const [esito, setEsito] = useState<GmEsitoIniezione | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ttfPath, setTtfPath] = useState<string | null>(null);
+  // Simboli che l'utente accetta di perdere anche se il gioco li disegna.
+  // Vuoto di default: è una scelta per gioco, non un'impostazione globale.
+  const [forzati, setForzati] = useState('');
 
   if (!installPath || !isGameMakerEngine(engine) || !isInjectableLang(targetLang)) return null;
 
@@ -45,7 +48,10 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
     try {
       const ttf = ttfPath ?? await prepareGlyphFont(targetLang);
       setTtfPath(ttf);
-      const r = await injectGlyphs({ gamePath: installPath, targetLang, ttfPath: ttf, apply });
+      const r = await injectGlyphs({
+        gamePath: installPath, targetLang, ttfPath: ttf, apply,
+        donatoriForzati: forzati,
+      });
       setEsito(r);
     } catch (e) {
       setError(String(e));
@@ -53,6 +59,11 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
       setBusy(null);
     }
   };
+
+  // Il campo compare solo quando serve davvero: quando l'anteprima ha detto
+  // che i donatori non bastano. Offrirlo prima significherebbe invitare a
+  // pagare un prezzo che magari non serve pagare.
+  const donatoriScarsi = (esito?.avvisi ?? []).some(a => a.includes('insufficienti'));
 
   const chars = glyphsToInject(targetLang);
 
@@ -143,6 +154,31 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
                 <ul className="text-[11px] text-amber-300/90 space-y-0.5">
                   {esito.avvisi.map((a, i) => <li key={i}>⚠ {a}</li>)}
                 </ul>
+              )}
+
+              {/* Celle donatrici insufficienti: qui l'utente può cederne altre.
+                  Compare solo dopo un'anteprima che lo ha detto. */}
+              {donatoriScarsi && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] p-2 space-y-1.5">
+                  <p className="text-[11px] font-semibold text-amber-200">{t('gmGlyph.donorsTitle')}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('gmGlyph.donorsHelp')}</p>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={forzati}
+                      onChange={e => setForzati(e.target.value)}
+                      placeholder={t('gmGlyph.donorsPlaceholder')}
+                      aria-label={t('gmGlyph.donorsTitle')}
+                      className="flex-1 min-w-0 rounded-md border border-amber-500/30 bg-black/20 px-2 py-1 text-[12px] font-mono text-amber-100 placeholder:text-amber-200/30 focus:outline-none focus:ring-1 focus:ring-amber-400/50"
+                    />
+                    <Button size="xs" variant="outline" disabled={busy !== null || !forzati}
+                      className="border-amber-500/40 text-amber-200 hover:bg-amber-500/10 shrink-0"
+                      onClick={() => void run(false)}>
+                      {busy === 'preview' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Brush className="h-3 w-3" />}
+                      <span className="ml-1">{t('gmGlyph.donorsRetry')}</span>
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {/* Applica: solo se l'anteprima dice che ci sta */}
