@@ -29,7 +29,39 @@ const ROOT = path.resolve(__dirname, '..');
  * non è raggiungibile da input di terzi, e cosa sblocca la rimozione.
  */
 const ALLOWLIST = [
-  // Vuota dal 04/08/2026 — e che resti vuota il più possibile.
+  {
+    id: 'GHSA-ggr8-5vv4-36mx',
+    package: 'deepmerge-ts',
+    until: '2026-09-30',
+    reason: [
+      'CVE-2026-40345, pubblicata il 16/08/2026: deepmerge() va in stack',
+      'exhaustion su grafi di oggetti RICORSIVI. Impatto solo Availability',
+      '(crash), niente confidenzialità né integrità.',
+      '',
+      'Perché non è raggiungibile da input di terzi:',
+      '  - deepmerge-ts@7.1.5 arriva solo da @prisma/config, tirato dalla CLI',
+      '    `prisma` (devDependencies). Serve a fondere il file di',
+      '    configurazione Prisma: input LOCALE dello sviluppatore, non dati',
+      '    che arrivano da rete o da un gioco tradotto.',
+      '  - nessun sorgente dell\'app importa @prisma/config o deepmerge',
+      '    (verificato con grep su app/ components/ lib/ hooks/ scripts/',
+      '    src-tauri/src il 17/08/2026).',
+      '  - il gate lo marca PROD perché @prisma/client dichiara `prisma` come',
+      '    peer opzionale, ma la CLI non finisce nel bundle Tauri spedito.',
+      '',
+      'Perché non si aggiorna e basta: @prisma/config pinna ESATTAMENTE',
+      '"deepmerge-ts": "7.1.5" — anche nella sua ultima versione (7.9.1,',
+      'verificata sul registry il 17/08). Nessun `npm audit fix` possibile;',
+      'forzare 8.0.0 con overrides è un salto major su una libreria che',
+      'Prisma usa internamente, e `prisma generate` gira in postinstall: si',
+      'rischia di rompere la build di tutti per un DoS non raggiungibile.',
+      '',
+      'Cosa sblocca la rimozione: @prisma/config che passa a deepmerge-ts 8.x.',
+      'Riverificare a ogni giro (lezione di brace-expansion: i backport che',
+      'oggi non esistono domani ci sono).',
+    ].join('\n'),
+  },
+  // Vuota dal 04/08/2026 al 17/08/2026 — e che torni vuota il prima possibile.
   //
   // Storia dell'unica eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
   // datata 30/09): al 27/07 il fix esisteva solo in 5.x, senza backport, e

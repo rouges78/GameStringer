@@ -136,6 +136,7 @@ scripts/_*.js
 
 # Agent / skill tooling (non parte dell'app)
 .agents/
+AGENTS.md
 skills-lock.json
 
 # Local credential cache (never track)
