@@ -1,6 +1,6 @@
 # Stato del Progetto GameStringer
 
-> **Versione corrente: v1.16.0** · Ultimo rilascio: 06/08/2026
+> **Versione corrente: v1.17.0** · Ultimo rilascio: 17/08/2026
 >
 > Questa intestazione è aggiornata **automaticamente** da `npm run ship`
 > (`scripts/release-all.js` → `bumpProjectStatus`). Non modificarla a mano.
