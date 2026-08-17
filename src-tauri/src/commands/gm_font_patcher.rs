@@ -473,8 +473,15 @@ fn celle_libere_nella_regione(f: &Font, n: usize) -> Vec<(u16, u16)> {
     }
     let mut occ = vec![false; w * h];
     for g in &f.glyphs {
-        for y in g.source_y..g.source_y.saturating_add(g.source_h) {
-            for x in g.source_x..g.source_x.saturating_add(g.source_w) {
+        // Stessa dilatazione di 1 px di `gm_glyph_inject::occupazione` (17/08,
+        // anti-bleeding): questa misura PROMETTE celle al chooser del corpo, e
+        // deve promettere con la stessa matematica con cui il piano consegna.
+        let x0 = g.source_x.saturating_sub(1);
+        let y0 = g.source_y.saturating_sub(1);
+        let x1 = g.source_x.saturating_add(g.source_w).saturating_add(1);
+        let y1 = g.source_y.saturating_add(g.source_h).saturating_add(1);
+        for y in y0..y1 {
+            for x in x0..x1 {
                 let (x, y) = (x as usize, y as usize);
                 if x < w && y < h {
                     occ[y * w + x] = true;
@@ -498,10 +505,12 @@ fn celle_libere_nella_regione(f: &Font, n: usize) -> Vec<(u16, u16)> {
                 } else {
                     libere += 1;
                     trovata = true;
-                    x += cw;
+                    // +1: fra due celle contate resta il margine anti-bleeding,
+                    // come fra le celle che `prendi_cella_libera` prenota.
+                    x += cw + 1;
                 }
             }
-            y += if trovata { ch } else { 1 };
+            y += if trovata { ch + 1 } else { 1 };
         }
         libere
     };
@@ -1471,6 +1480,330 @@ mod tests {
                 curva
             );
         }
+    }
+
+    /// SONDA ADR-006, quarto tentativo — la regressione delle R (17/08).
+    ///
+    /// La patch che porta gli accenti a schermo disegna anche un trattino in
+    /// alto a destra su ogni R e ogni ?. `occupazione()` costruisce la mappa
+    /// dei pixel occupati dai SOLI glifi del font che sta trattando, e
+    /// `applica()` dichiara il presupposto per iscritto: «le celle libere non
+    /// si sovrappongono a nessun glifo per costruzione». Il presupposto vale
+    /// solo se la regione TPAG di quel font non ospita glifi di NESSUN altro
+    /// font — e la texture #24 di Deltarune ne ospita nove, senza che nessuno
+    /// abbia mai misurato se i loro riquadri si toccano.
+    ///
+    /// Due misure, entrambe in coordinate ASSOLUTE della texture:
+    /// (1) le intersezioni fra i rettangoli TPAG, a coppie, per texture;
+    /// (2) per ogni font, i glifi DEGLI ALTRI font che cadono dentro la sua
+    ///     regione — perche' due regioni possono toccarsi in una striscia
+    ///     vuota (innocuo) o proprio dove vivono le lettere (il trattino).
+    /// La seconda misura e' quella che decide: se dentro la regione di
+    /// fnt_main vivono glifi altrui, `occupazione()` deve nascere dai glifi
+    /// di TUTTI i font della texture, non da quelli di uno solo.
+    ///
+    /// Sola lettura, niente gioco acceso, nessuna scrittura.
+    ///
+    /// ```text
+    /// GS_GM_GAME_DIR="C:/.../DELTARUNEdemo" \
+    ///   cargo test misura_sovrapposizioni_tpag -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "richiede GS_GM_GAME_DIR con la cartella di un gioco reale"]
+    fn misura_sovrapposizioni_tpag_fra_font_della_stessa_texture() {
+        let dir = match std::env::var("GS_GM_GAME_DIR") {
+            Ok(d) => d,
+            _ => return,
+        };
+        let percorso = find_data_win(&dir).expect("data.win non trovato");
+        let dati = fs::read(&percorso).expect("lettura data.win");
+        let font = gm_font::leggi_font(&dati).expect("chunk FONT");
+
+        // Rettangolo assoluto della regione: (x0, y0, x1, y1), estremi esclusi.
+        let rett = |t: &gm_font::Tpag| -> (u32, u32, u32, u32) {
+            (
+                t.source_x as u32,
+                t.source_y as u32,
+                t.source_x as u32 + t.source_w as u32,
+                t.source_y as u32 + t.source_h as u32,
+            )
+        };
+        let interseca = |a: (u32, u32, u32, u32), b: (u32, u32, u32, u32)| -> Option<(u32, u32)> {
+            let w = a.2.min(b.2).saturating_sub(a.0.max(b.0));
+            let h = a.3.min(b.3).saturating_sub(a.1.max(b.1));
+            (w > 0 && h > 0).then_some((w, h))
+        };
+
+        let mut textures: Vec<i16> = font
+            .iter()
+            .filter_map(|f| f.tpag.as_ref().map(|t| t.texture_index))
+            .collect();
+        textures.sort_unstable();
+        textures.dedup();
+
+        let mut coppie_sovrapposte = 0usize;
+        for tx in &textures {
+            let su_questa: Vec<&Font> = font
+                .iter()
+                .filter(|f| f.tpag.as_ref().map(|t| t.texture_index) == Some(*tx))
+                .collect();
+            eprintln!("── texture #{tx}: {} font ──", su_questa.len());
+
+            // (1) Intersezioni fra i riquadri, a coppie.
+            for (i, a) in su_questa.iter().enumerate() {
+                for b in su_questa.iter().skip(i + 1) {
+                    let (ta, tb) = (a.tpag.as_ref().unwrap(), b.tpag.as_ref().unwrap());
+                    if let Some((w, h)) = interseca(rett(ta), rett(tb)) {
+                        coppie_sovrapposte += 1;
+                        eprintln!(
+                            "  ⛔ SOVRAPPOSTE {:<14} {:<14} area comune {}x{} px \
+                             ({} a ({},{}) {}x{} · {} a ({},{}) {}x{})",
+                            a.name, b.name, w, h,
+                            a.name, ta.source_x, ta.source_y, ta.source_w, ta.source_h,
+                            b.name, tb.source_x, tb.source_y, tb.source_w, tb.source_h,
+                        );
+                    }
+                }
+            }
+
+            // (2) Glifi ALTRUI dentro la regione di ciascun font: la misura
+            // che decide, perche' e' l'occupazione vera che manca alla mappa.
+            for f in &su_questa {
+                let t = f.tpag.as_ref().unwrap();
+                let rf = rett(t);
+                let mut intrusi = 0usize;
+                let mut esempi: Vec<String> = Vec::new();
+                for altro in su_questa.iter().filter(|o| o.offset != f.offset) {
+                    for g in &altro.glyphs {
+                        let Some((ax, ay)) = altro.posizione_assoluta(g) else { continue };
+                        let rg = (
+                            ax as u32,
+                            ay as u32,
+                            ax as u32 + g.source_w as u32,
+                            ay as u32 + g.source_h as u32,
+                        );
+                        if interseca(rf, rg).is_some() {
+                            intrusi += 1;
+                            if esempi.len() < 4 {
+                                esempi.push(format!(
+                                    "{}:U+{:04X}@({},{})",
+                                    altro.name, g.character, ax, ay
+                                ));
+                            }
+                        }
+                    }
+                }
+                if intrusi > 0 {
+                    eprintln!(
+                        "  ⛔ {:<14} ospita {:>4} glifi ALTRUI nella sua regione — es. {}",
+                        f.name, intrusi, esempi.join(" · ")
+                    );
+                } else {
+                    eprintln!("  ✅ {:<14} regione senza glifi altrui", f.name);
+                }
+            }
+        }
+        eprintln!(
+            "TOTALE: {} coppie di regioni sovrapposte su {} texture — \
+             se > 0, occupazione() deve nascere dai glifi di TUTTI i font della texture",
+            coppie_sovrapposte,
+            textures.len()
+        );
+    }
+
+    /// SONDA ADR-006, quinto tentativo — chi ha scritto dentro la cella della R?
+    ///
+    /// La sonda delle sovrapposizioni ha dato ZERO su tutta la linea: nessuna
+    /// regione si tocca, nessun glifo altrui dentro le regioni. Le due ipotesi
+    /// di ieri sera sono morte entrambe, quindi la collisione e' DENTRO il
+    /// font, e resta un sospettato solo con due facce: (a) la patch attuale
+    /// scrive davvero dentro celle che crede libere, oppure (b) la copia
+    /// provata in-game era gia' passata sotto la versione VECCHIA di
+    /// `applica` — quella che scriveva solo i pixel accesi — e il trattino e'
+    /// un RESIDUO («le copie di prova non sono piu' affidabili», 17/08 notte).
+    ///
+    /// Questa sonda distingue le due facce senza accendere il gioco.
+    /// Confronta un data.win ORIGINALE di storia nota con la copia PATCHATA:
+    /// (1) dentro ogni font patchato, i rettangoli dei glifi si sovrappongono
+    ///     fra loro? (in coordinate assolute — se si', e' la faccia (a) ed
+    ///     ecco le coppie);
+    /// (2) per ogni glifo che NON e' stato toccato dal piano (stesso
+    ///     carattere, stesso rettangolo che nell'originale), i pixel della
+    ///     sua cella sono IDENTICI all'originale? Se la cella della R
+    ///     differisce, la faccia (a) ha le coordinate esatte dell'intruso;
+    ///     se e' identica ma in-game il trattino c'e', la copia provata non
+    ///     era figlia di questo file — faccia (b).
+    ///
+    /// Sola lettura su entrambi i file.
+    ///
+    /// ```text
+    /// GS_GM_GAME_DIR="C:/.../DELTARUNEdemo" \
+    /// GS_GM_APPLY_DIR="G:/prove/DELTARUNEcopia" \
+    ///   cargo test verifica_pixel_dopo_patch -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "richiede GS_GM_GAME_DIR (originale) e GS_GM_APPLY_DIR (copia patchata)"]
+    fn verifica_pixel_dopo_patch_cella_per_cella() {
+        let (Ok(dir_orig), Ok(dir_patch)) =
+            (std::env::var("GS_GM_GAME_DIR"), std::env::var("GS_GM_APPLY_DIR"))
+        else {
+            return;
+        };
+        let leggi_tutto = |dir: &str| {
+            let percorso = find_data_win(dir).expect("data.win non trovato");
+            let dati = fs::read(&percorso).expect("lettura data.win");
+            let font = gm_font::leggi_font(&dati).expect("chunk FONT");
+            let texture = gm_texture::elenca_texture(&dati);
+            (dati, font, texture)
+        };
+        let (dati_o, font_o, tex_o) = leggi_tutto(&dir_orig);
+        let (dati_p, font_p, tex_p) = leggi_tutto(&dir_patch);
+
+        // Le texture si decodificano una volta sola per indice, per file.
+        let mut cache: HashMap<(bool, usize), gm_texture::GmTexture> = HashMap::new();
+        let mut decodifica = |patchata: bool, idx: usize| -> Option<gm_texture::GmTexture> {
+            if let Some(t) = cache.get(&(patchata, idx)) {
+                return Some(t.clone());
+            }
+            let (dati, elenco) = if patchata { (&dati_p, &tex_p) } else { (&dati_o, &tex_o) };
+            let tx = elenco.get(idx)?;
+            let letta = gm_texture::leggi(&dati[tx.offset..tx.offset + tx.spazio]).ok()?;
+            cache.insert((patchata, idx), letta.clone());
+            cache.get(&(patchata, idx)).cloned()
+        };
+
+        let mut celle_cambiate = 0usize;
+        let mut sovrapposizioni = 0usize;
+
+        for fp in &font_p {
+            let Some(fo) = font_o.iter().find(|f| f.name == fp.name) else {
+                eprintln!("{}: non esiste nell'originale, salto", fp.name);
+                continue;
+            };
+            let Some(tp) = fp.tpag.as_ref() else { continue };
+
+            // Il rettangolo assoluto di ogni glifo del font patchato.
+            let assoluto = |f: &Font, g: &gm_font::Glyph| -> Option<(u32, u32, u32, u32)> {
+                let (ax, ay) = f.posizione_assoluta(g)?;
+                Some((
+                    ax as u32,
+                    ay as u32,
+                    ax as u32 + g.source_w as u32,
+                    ay as u32 + g.source_h as u32,
+                ))
+            };
+
+            // (1) Sovrapposizioni FRA glifi dello stesso font patchato.
+            // Larghezza zero non interseca niente per costruzione (lo spazio).
+            for (i, a) in fp.glyphs.iter().enumerate() {
+                for b in fp.glyphs.iter().skip(i + 1) {
+                    let (Some(ra), Some(rb)) = (assoluto(fp, a), assoluto(fp, b)) else {
+                        continue;
+                    };
+                    let w = ra.2.min(rb.2).saturating_sub(ra.0.max(rb.0));
+                    let h = ra.3.min(rb.3).saturating_sub(ra.1.max(rb.1));
+                    if w > 0 && h > 0 {
+                        sovrapposizioni += 1;
+                        eprintln!(
+                            "  ⛔ {}: U+{:04X} '{}' e U+{:04X} '{}' si SOVRAPPONGONO \
+                             per {}x{} px (celle a ({},{}) e ({},{}))",
+                            fp.name,
+                            a.character,
+                            char::from_u32(a.character as u32).unwrap_or('?'),
+                            b.character,
+                            char::from_u32(b.character as u32).unwrap_or('?'),
+                            w, h, ra.0, ra.1, rb.0, rb.1,
+                        );
+                    }
+                }
+            }
+
+            // (2) Pixel identici nelle celle NON toccate dal piano.
+            let orig_per_char: HashMap<u16, &gm_font::Glyph> =
+                fo.glyphs.iter().map(|g| (g.character, g)).collect();
+            let (Some(io), Some(ip)) = (
+                fo.tpag.as_ref().map(|t| t.texture_index.max(0) as usize),
+                Some(tp.texture_index.max(0) as usize),
+            ) else {
+                continue;
+            };
+            let (Some(txo), Some(txp)) = (decodifica(false, io), decodifica(true, ip)) else {
+                eprintln!("  {}: texture non decodificabile, pixel non confrontati", fp.name);
+                continue;
+            };
+
+            let (mut invariati, mut toccati) = (0usize, 0usize);
+            for g in &fp.glyphs {
+                let identico_rect = orig_per_char.get(&g.character).is_some_and(|o| {
+                    (o.source_x, o.source_y, o.source_w, o.source_h)
+                        == (g.source_x, g.source_y, g.source_w, g.source_h)
+                });
+                if !identico_rect {
+                    // Iniettato, ricollocato o sacrificato: il piano DOVEVA
+                    // toccarlo, il confronto non lo giudica — ma DICE chi e':
+                    // i codepoint toccati sono la firma di QUALE patch ha
+                    // generato questo file (accenti latini = SpazioLibero,
+                    // cirillico = la via russa di luglio, kanji = donatori).
+                    toccati += 1;
+                    let orig = orig_per_char.get(&g.character);
+                    eprintln!(
+                        "  ◐ {}: U+{:04X} '{}' TOCCATO dal piano — rect ora ({},{}) {}x{}{}",
+                        fp.name,
+                        g.character,
+                        char::from_u32(g.character as u32).unwrap_or('?'),
+                        g.source_x, g.source_y, g.source_w, g.source_h,
+                        match orig {
+                            Some(o) => format!(
+                                ", nell'originale era ({},{}) {}x{}",
+                                o.source_x, o.source_y, o.source_w, o.source_h
+                            ),
+                            None => ", ASSENTE nell'originale (iniettato)".into(),
+                        },
+                    );
+                    continue;
+                }
+                invariati += 1;
+                let Some((ax, ay)) = fp.posizione_assoluta(g) else { continue };
+                let mut diversi = 0usize;
+                let mut primo: Option<(u16, u16)> = None;
+                for dy in 0..g.source_h {
+                    for dx in 0..g.source_w {
+                        let (x, y) = (ax + dx, ay + dy);
+                        if txo.image.get_pixel(x, y) != txp.image.get_pixel(x, y) {
+                            diversi += 1;
+                            primo.get_or_insert((x, y));
+                        }
+                    }
+                }
+                if diversi > 0 {
+                    celle_cambiate += 1;
+                    eprintln!(
+                        "  ⛔ {}: U+{:04X} '{}' NON era nel piano ma la sua cella e' \
+                         CAMBIATA — {} px diversi, il primo a ({},{}) (cella a ({},{}) {}x{})",
+                        fp.name,
+                        g.character,
+                        char::from_u32(g.character as u32).unwrap_or('?'),
+                        diversi,
+                        primo.unwrap().0,
+                        primo.unwrap().1,
+                        ax, ay, g.source_w, g.source_h,
+                    );
+                }
+            }
+            eprintln!(
+                "  {} — glifi invariati {} (celle confrontate pixel per pixel), \
+                 toccati dal piano {}",
+                fp.name, invariati, toccati
+            );
+        }
+
+        eprintln!(
+            "VERDETTO: {} sovrapposizioni intra-font, {} celle fuori piano cambiate. \
+             Entrambi zero + trattino in-game = la copia provata era sporca (faccia b): \
+             si riparte da un data.win di storia nota. Uno dei due > 0 = il bug e' \
+             VIVO nella patch attuale (faccia a), e le righe qui sopra dicono dove.",
+            sovrapposizioni, celle_cambiate
+        );
     }
 
     /// L'ordine del risultato e' quello di preferenza dei CANDIDATI, non

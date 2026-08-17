@@ -165,6 +165,13 @@ pub enum Errore {
     /// post-iniezione (obbligatorio: il runtime fa ricerca binaria) non è
     /// applicabile in sicurezza.
     TabellaGlifiIncoerente { font: String },
+    /// L'entry del font non sta nel buffer: il `RangeEnd` non si puo' allargare.
+    ///
+    /// Senza l'allargamento il runtime scarta i codepoint oltre il range
+    /// dichiarato senza consultare la tabella: la patch risulterebbe riuscita
+    /// e le lettere non comparirebbero mai (misurato il 17/08 sui font latini
+    /// di Deltarune, `0x20..0x7F` con gli accenti a `0xC0..0xF9`).
+    RangeNonScrivibile { font: String },
 }
 
 impl std::fmt::Display for Errore {
@@ -203,6 +210,11 @@ impl std::fmt::Display for Errore {
             Self::TabellaGlifiIncoerente { font } => write!(
                 f,
                 "'{font}': la lista puntatori dei glifi non combacia col file, riordino non applicabile"
+            ),
+            Self::RangeNonScrivibile { font } => write!(
+                f,
+                "'{font}': l'entry non sta nel buffer e il RangeEnd non si puo' allargare — \
+                 il runtime scarterebbe i codepoint nuovi senza consultare la tabella dei glifi"
             ),
         }
     }
@@ -274,8 +286,19 @@ fn occupazione(font: &Font) -> Option<(Vec<bool>, u16, u16)> {
     }
     let mut occ = vec![false; w * h];
     for g in &font.glyphs {
-        for y in g.source_y..g.source_y.saturating_add(g.source_h) {
-            for x in g.source_x..g.source_x.saturating_add(g.source_w) {
+        // Dilatazione di 1 px per lato (17/08): il renderer campiona col
+        // filtro lineare anche l'orlo FUORI dal rettangolo, e le bitmap
+        // iniettate sono ritagliate all'inchiostro. Una cella nuova attaccata
+        // a un glifo vivo gli disegna addosso un orlo — il «trattino» su R e ?
+        // di Deltarune, misurato da `misura_adiacenze_accenti`: la è stava a
+        // (1926,1307), la R finiva ESATTAMENTE a x=1926. Un pixel di margine
+        // attorno a ogni glifo rende il bleeding geometricamente impossibile.
+        let x0 = g.source_x.saturating_sub(1);
+        let y0 = g.source_y.saturating_sub(1);
+        let x1 = g.source_x.saturating_add(g.source_w).saturating_add(1);
+        let y1 = g.source_y.saturating_add(g.source_h).saturating_add(1);
+        for y in y0..y1 {
+            for x in x0..x1 {
                 let (x, y) = (x as usize, y as usize);
                 if x < w && y < h {
                     occ[y * w + x] = true;
@@ -311,8 +334,15 @@ fn prendi_cella_libera(
                     }
                 }
             }
-            for yy in y..y + serve_h as usize {
-                for xx in x..x + serve_w as usize {
+            // La cella si prenota con 1 px di alone per lato: due lettere
+            // nuove attaccate si disegnerebbero l'orlo a vicenda (filtro
+            // lineare) esattamente come farebbero con un glifo originale —
+            // in fnt_main la É era incollata alla Ò prima del margine.
+            let (mx0, my0) = (x.saturating_sub(1), y.saturating_sub(1));
+            let mx1 = (x + serve_w as usize + 1).min(wu);
+            let my1 = (y + serve_h as usize + 1).min(hu);
+            for yy in my0..my1 {
+                for xx in mx0..mx1 {
                     occ[yy * wu + xx] = true;
                 }
             }
@@ -697,6 +727,20 @@ pub fn applica(
         return Err(Errore::TabellaGlifiIncoerente { font: font.name.clone() });
     }
 
+    // ⚠️ 17/08/2026: il runtime scarta i codepoint fuori da RangeStart..
+    // RangeEnd dichiarati nell'entry, SENZA consultare la tabella dei glifi.
+    // I font latini di Deltarune dichiarano 0x20..0x7F: senza questo
+    // allargamento gli accenti (0xC0..0xF9) erano in tabella, sulla texture,
+    // certificati dalla sonda pixel — e in-game restavano spazi vuoti. Un
+    // successo che non si vede, il piu' subdolo dei fallimenti muti.
+    if let Some(max_cp) =
+        piano.assegnazioni.iter().map(|&(_, ir)| richieste[ir].carattere).max()
+    {
+        if !gm_font::allarga_range_end(dati, font, max_cp) {
+            return Err(Errore::RangeNonScrivibile { font: font.name.clone() });
+        }
+    }
+
     Ok(aggiornati)
 }
 
@@ -785,6 +829,60 @@ mod tests {
             }
         }
         a
+    }
+
+    /// ANTI-BLEEDING (17/08): nessuna cella nuova tocca un glifo esistente
+    /// ne' un'altra cella nuova — sempre almeno 1 px di aria. Le bitmap
+    /// iniettate sono ritagliate all'inchiostro e il renderer campiona col
+    /// filtro lineare anche l'orlo fuori dal rettangolo: una cella attaccata
+    /// disegna il proprio bordo dentro il quad del vicino (il «trattino»
+    /// sulle R e i ? di Deltarune, misurato da `misura_adiacenze_accenti`).
+    #[test]
+    fn le_celle_nuove_tengono_un_pixel_di_margine() {
+        let f = font_celle_strette(4, 3, 5);
+        let richieste: Vec<Richiesta> =
+            [(0x00C0, 12, 16), (0x00C8, 10, 16), (0x00E0, 8, 13), (0x00E8, 8, 13)]
+                .map(|(c, w, h)| lettera(c, w, h))
+                .into();
+        let candidati: Vec<u16> = f.glyphs.iter().take(4).map(|g| g.character).collect();
+        let piano = pianifica_su_spazio_libero(&f, &richieste, &candidati, false).unwrap();
+        assert_eq!(piano.ricollocati.len(), 4, "tutte e quattro le lettere collocate");
+
+        // Rettangoli (x, y, w, h) delle celle nuove, in coordinate di regione
+        // come i glifi: la ricollocazione conserva questo sistema.
+        let nuovi: Vec<(u16, u16, u16, u16)> = piano
+            .ricollocati
+            .iter()
+            .map(|&(ic, x, y)| {
+                let ir = piano.assegnazioni.iter().find(|&&(i, _)| i == ic).unwrap().1;
+                (x, y, richieste[ir].bitmap.w, richieste[ir].bitmap.h)
+            })
+            .collect();
+
+        // `tocca` = i rettangoli si intersecano O condividono un bordo:
+        // l'intersezione col vicino dilatato di 1 px copre entrambi i casi.
+        let tocca = |a: (u16, u16, u16, u16), b: (u16, u16, u16, u16)| {
+            a.0 < b.0.saturating_add(b.2).saturating_add(1)
+                && b.0.saturating_sub(1) < a.0 + a.2
+                && a.1 < b.1.saturating_add(b.3).saturating_add(1)
+                && b.1.saturating_sub(1) < a.1 + a.3
+        };
+        for &n in &nuovi {
+            for g in &f.glyphs {
+                assert!(
+                    !tocca(n, (g.source_x, g.source_y, g.source_w, g.source_h)),
+                    "la cella nuova a ({},{}) tocca il glifo U+{:04X}",
+                    n.0,
+                    n.1,
+                    g.character
+                );
+            }
+        }
+        for (i, &a) in nuovi.iter().enumerate() {
+            for &b in nuovi.iter().skip(i + 1) {
+                assert!(!tocca(a, b), "due celle nuove si toccano: {a:?} e {b:?}");
+            }
+        }
     }
 
     /// Font coi glifi in una striscia in alto e celle STRETTE: e' la forma

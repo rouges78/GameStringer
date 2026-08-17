@@ -470,6 +470,30 @@ pub fn scrivi_glifo(dati: &mut [u8], g: &Glyph) -> bool {
     true
 }
 
+/// Allarga il `RangeEnd` dichiarato dall'entry, se il codepoint lo supera.
+///
+/// Il runtime GameMaker scarta i codepoint fuori da `RangeStart..RangeEnd`
+/// SENZA consultare la tabella dei glifi. Misurato il 17/08 su Deltarune:
+/// i sei font latini dichiarano `0x20..0x7F`, e gli accenti iniettati
+/// (0xC0..0xF9) restavano invisibili in-game pur avendo il record in tabella
+/// e i pixel sulla texture — a schermo, spazi vuoti al posto delle lettere.
+///
+/// Scrittura in-place di 4 byte (u32 LE a `offset + 24`): nessun offset del
+/// file si muove. `RangeStart` non si tocca mai — stringere l'intervallo non
+/// serve a una patch e potrebbe nascondere glifi originali.
+pub fn allarga_range_end(dati: &mut [u8], font: &Font, codepoint: u16) -> bool {
+    let p = font.offset + 24;
+    if p + 4 > dati.len() {
+        return false;
+    }
+    let nuovo = codepoint as u32;
+    if nuovo <= font.range_end {
+        return true; // gia' abbastanza largo: nessun byte da muovere
+    }
+    dati[p..p + 4].copy_from_slice(&nuovo.to_le_bytes());
+    true
+}
+
 // ── Test ──
 
 #[cfg(test)]
@@ -581,6 +605,95 @@ mod tests {
         let g = &font[0].glyphs[0];
         assert_eq!(g.character, 0x0410);
         assert_eq!((g.source_w, g.source_h), (16, 20));
+    }
+
+    /// `allarga_range_end` scrive solo quando serve, e solo i 4 byte suoi.
+    ///
+    /// Bidirezionale come da convenzione: il caso «gia' largo» prova che i
+    /// byte NON si muovono — senza, una scrittura incondizionata passerebbe
+    /// lo stesso e sporcherebbe file che non andavano toccati.
+    #[test]
+    fn allarga_range_end_scrive_solo_quando_serve() {
+        let mut d = data_win_finto(1, &[(0x0410, 16, 20)]);
+        let font = leggi_font(&d).unwrap().remove(0);
+        assert_eq!(font.range_end, 0xFF9F);
+
+        // Codepoint gia' dentro il range: nessun byte deve muoversi.
+        let prima = d.clone();
+        assert!(allarga_range_end(&mut d, &font, 0x00F9));
+        assert_eq!(d, prima, "range gia' largo: il buffer non deve cambiare");
+
+        // Codepoint oltre: RangeEnd diventa esattamente quel valore, e il
+        // resto del file resta com'era (stesso start, stessi glifi).
+        assert!(allarga_range_end(&mut d, &font, 0xFFFF));
+        let riletto = leggi_font(&d).unwrap().remove(0);
+        assert_eq!(riletto.range_end, 0xFFFF);
+        assert_eq!(riletto.range_start, font.range_start);
+        assert_eq!(riletto.glyphs.len(), font.glyphs.len());
+
+        // Entry fuori dal buffer: rifiuto esplicito, non scrittura cieca.
+        let mut corto = Font { offset: d.len(), ..font };
+        corto.glyphs.clear();
+        assert!(!allarga_range_end(&mut d, &corto, 0xFFFF));
+    }
+
+    /// SONDA 17/08: R e `?` col trattino in-game ma celle PIXEL-IDENTICHE
+    /// all'originale spostano il sospetto sul DISEGNO. Se una cella iniettata
+    /// CONFINA (≤1 px) con una cella originale, il campionamento lineare del
+    /// renderer puo' trascinare l'orlo del vicino dentro il quad (texture
+    /// bleeding): i font vanilla hanno margine fra le celle, lo spazio libero
+    /// impacchettato dalla patch potrebbe non averlo. Sola lettura.
+    ///
+    /// ```text
+    /// GS_GM_DATA_WIN=... cargo test -- --ignored misura_adiacenze_accenti --nocapture
+    /// ```
+    #[test]
+    #[ignore = "richiede GS_GM_DATA_WIN con un data.win patchato"]
+    fn misura_adiacenze_accenti() {
+        let percorso = match std::env::var("GS_GM_DATA_WIN") {
+            Ok(p) => p,
+            Err(_) => return,
+        };
+        let dati = std::fs::read(&percorso).expect("lettura data.win");
+        let font = leggi_font(&dati).expect("chunk FONT");
+        let iniettato = |c: u16| (0x00C0..=0x00F9).contains(&c);
+
+        let mut adiacenze = 0usize;
+        for f in &font {
+            if f.tpag.is_none() {
+                continue;
+            }
+            for a in f.glyphs.iter().filter(|g| iniettato(g.character)) {
+                let Some((ax, ay)) = f.posizione_assoluta(a) else { continue };
+                // Il rettangolo dell'accento allargato di 1 px per lato.
+                let (ax0, ay0) = (ax.saturating_sub(1), ay.saturating_sub(1));
+                let (ax1, ay1) = (ax + a.source_w + 1, ay + a.source_h + 1);
+                for b in f.glyphs.iter().filter(|g| !iniettato(g.character)) {
+                    let Some((bx, by)) = f.posizione_assoluta(b) else { continue };
+                    let vicino = ax0 < bx + b.source_w
+                        && bx < ax1
+                        && ay0 < by + b.source_h
+                        && by < ay1;
+                    if vicino {
+                        adiacenze += 1;
+                        eprintln!(
+                            "  {}: '{}' U+{:04X} a ({ax},{ay}) {}x{} CONFINA con \
+                             '{}' U+{:04X} a ({bx},{by}) {}x{}",
+                            f.name,
+                            char::from_u32(a.character as u32).unwrap_or('?'),
+                            a.character,
+                            a.source_w,
+                            a.source_h,
+                            char::from_u32(b.character as u32).unwrap_or('?'),
+                            b.character,
+                            b.source_w,
+                            b.source_h,
+                        );
+                    }
+                }
+            }
+        }
+        eprintln!("adiacenze totali (≤1 px) fra celle iniettate e originali: {adiacenze}");
     }
 
     /// LIMITE DICHIARATO: un font con zero glifi non e' riconoscibile.
