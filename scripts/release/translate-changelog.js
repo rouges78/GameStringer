@@ -202,9 +202,24 @@ async function writeChangelogKeys(version, italianChanges, opts = {}) {
   if (langs.includes('it')) setVersionKeys(path.join(LOCALES_DIR, 'it.json'), vKey, italianChanges);
 
   if (!provider) {
-    console.warn('   ⚠️  Nessuna API key di traduzione (ANTHROPIC/OPENAI/GEMINI/DEEPL).');
-    console.warn('       Scritto solo italiano; le altre lingue useranno il fallback grezzo da version.json.');
-    return { translated: false, provider: null, langs: ['it'] };
+    // 18/08/2026: prima questo ramo scriveva SOLO it.json e usciva. Le altre
+    // lingue restavano senza la chiave `changelog.vX_Y_Z.*`, e il gate
+    // __tests__/lib/i18n-locale-integrity.test.ts (missing = 0) mandava la CI
+    // in rosso subito dopo la release — è successo con la v1.17.0: 60 chiavi
+    // mancanti × 10 lingue. Il fallback c'era già per la singola lingua che
+    // fallisce (riga sotto): mancava per «nessun provider».
+    // Ora scriviamo comunque la sorgente in OGNI lingua — chiavi presenti,
+    // testo non tradotto e DICHIARATO — e la verifica a valle lo conferma.
+    console.warn('   ⚠️  Nessuna API key di traduzione (ANTHROPIC/OPENAI/GEMINI/DEEPL/OLLAMA_MODEL).');
+    const fallback = [];
+    for (const lang of langs) {
+      if (lang === 'it') continue;
+      setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, italianChanges);
+      fallback.push(lang);
+    }
+    console.warn(`       Scritta la SORGENTE (non tradotta) in: ${fallback.join(', ')}.`);
+    console.warn(`       Debito da saldare: tradurre changelog.${vKey} in queste lingue.`);
+    return { translated: false, provider: null, langs: ['it'], fallback };
   }
 
   const done = ['it'];
@@ -221,10 +236,48 @@ async function writeChangelogKeys(version, italianChanges, opts = {}) {
   // andata in fallback (done = solo 'it') e la ship stampava «tradotto con
   // anthropic» su un fallimento totale — contatore bugiardo. Tradotto è vero
   // solo se almeno una lingua oltre alla sorgente è stata tradotta davvero.
-  return { translated: done.length > 1, provider, langs: done };
+  const fallback = langs.filter((l) => l !== 'it' && !done.includes(l));
+  return { translated: done.length > 1, provider, langs: done, fallback };
 }
 
-module.exports = { writeChangelogKeys, versionKey, detectProvider, listLocaleLangs, translateArray, setVersionKeys };
+/**
+ * PROVA D'EFFETTO: rilegge i file su disco e verifica che `changelog.vKey`
+ * esista, sia non vuoto e abbia lo stesso numero di voci dell'italiano in
+ * OGNI locale. Non si fida di quello che writeChangelogKeys dice di aver
+ * fatto: guarda il risultato.
+ *
+ * Ritorna { ok, expected, bad: [{ lang, reason }] }.
+ */
+function verifyChangelogKeys(version, expectedCount) {
+  const vKey = versionKey(version);
+  const bad = [];
+  let expected = expectedCount;
+
+  if (expected === undefined) {
+    try {
+      const it = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'it.json'), 'utf8'));
+      expected = Object.keys(it?.changelog?.[vKey] || {}).length;
+    } catch { expected = 0; }
+  }
+
+  for (const lang of listLocaleLangs()) {
+    let entry;
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, `${lang}.json`), 'utf8'));
+      entry = data?.changelog?.[vKey];
+    } catch (err) {
+      bad.push({ lang, reason: `file illeggibile: ${err.message}` });
+      continue;
+    }
+    const n = entry ? Object.keys(entry).length : 0;
+    if (!entry) bad.push({ lang, reason: `changelog.${vKey} assente` });
+    else if (n !== expected) bad.push({ lang, reason: `${n} voci invece di ${expected}` });
+  }
+
+  return { ok: bad.length === 0 && expected > 0, expected, bad, vKey };
+}
+
+module.exports = { writeChangelogKeys, verifyChangelogKeys, versionKey, detectProvider, listLocaleLangs, translateArray, setVersionKeys };
 
 if (require.main === module) {
   // Test manuale: node translate-changelog.js 9.9.9 "✨ Test feature" "🐛 Test fix"

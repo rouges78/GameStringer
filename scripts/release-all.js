@@ -47,7 +47,7 @@ const STATE_FILE = path.join(ROOT, '.release-state.json');
 const VM = path.join(__dirname, 'version-manager.js');
 const AGENT = path.join(__dirname, 'senior-versioning-agent.js');
 const { getLastTag, getCommits, buildChanges } = require('./release/changelog-from-git');
-const { writeChangelogKeys } = require('./release/translate-changelog');
+const { writeChangelogKeys, verifyChangelogKeys } = require('./release/translate-changelog');
 
 const C = { r: '\x1b[0m', b: '\x1b[1m', red: '\x1b[31m', grn: '\x1b[32m', yel: '\x1b[33m', cya: '\x1b[36m', dim: '\x1b[2m' };
 const log = {
@@ -249,7 +249,22 @@ async function main() {
     log.step(5, 'Scrivo changelog in-app in tutte le lingue');
     const tr = await writeChangelogKeys(version, changes, {});
     if (tr.translated) log.ok(`tradotto con ${tr.provider} → ${tr.langs.join(', ')}`);
-    else log.warn('changelog i18n: solo italiano (fallback grezzo per le altre lingue).');
+    else log.warn('changelog i18n: nessuna traduzione, scritta la sorgente in tutte le lingue.');
+    if (tr.fallback && tr.fallback.length) log.warn(`da tradurre a mano: ${tr.fallback.join(', ')}`);
+
+    // PROVA D'EFFETTO (18/08/2026): il gate i18n pretende che ogni chiave di
+    // it.json esista in TUTTI i locale. Con la v1.17.0 la traduzione non è
+    // partita, le altre lingue sono rimaste senza `changelog.v1_17_0` e la CI
+    // è diventata rossa DOPO il push del tag. Qui rileggiamo il disco e
+    // fermiamo la release finché le chiavi non ci sono davvero.
+    const ver = verifyChangelogKeys(version, changes.length);
+    if (!ver.ok) {
+      log.err(`changelog.${ver.vKey}: ${ver.bad.length} locale non a posto (attese ${ver.expected} voci)`);
+      for (const b of ver.bad) console.error(`      • ${b.lang}: ${b.reason}`);
+      console.error('   Rimedio: node scripts/release/translate-changelog.js ' + version + ' "<voce>" ... (oppure completa i file locale a mano), poi rilancia la ship.');
+      process.exit(1);
+    }
+    log.ok(`chiavi changelog.${ver.vKey} verificate su disco in tutti i locale (${ver.expected} voci)`);
     markStep(st, 5);
   }
 
