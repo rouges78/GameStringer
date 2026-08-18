@@ -36,6 +36,22 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
+      # @tauri-apps/cli e @tauri-apps/api devono stare allo STESSO minor del
+      # crate `tauri` in src-tauri/Cargo.lock, altrimenti `tauri build` rifiuta
+      # su tutti gli OS (difetto 6 della ship v1.16.0; il gate che lo misura è
+      # scripts/check-tauri-parity.js, npm run tauri:parity).
+      # Dependabot non sa niente di Cargo.lock: la PR #76 del 17/08/2026 ha
+      # alzato npm a 2.11.4/2.11.1 lasciando il crate a 2.10.3, e la CI si è
+      # fermata giustamente (run #647, frontend-checks exit 1) — nessun difetto,
+      # il gate ha fatto il suo mestiere.
+      # I PATCH dentro il minor corrente restano liberi apposta: un fix di
+      # sicurezza 2.10.x deve poter passare da solo. Minor e major si alzano A
+      # MANO insieme al crate (cd src-tauri && cargo update -p tauri), con
+      # cargo check a freddo prima di qualunque release.
+      - dependency-name: "@tauri-apps/cli"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "@tauri-apps/api"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   # ── Cargo (backend Tauri/Rust) ─────────────────────────────────────────────
   - package-ecosystem: "cargo"
