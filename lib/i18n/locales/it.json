@@ -7031,17 +7031,17 @@
       "14": "♻️ API: migrazione pilota dalle fetch web alle chiamate native Tauri"
     },
     "v1_11_1": {
-      "0": "✨ site: Add engine-coverage, safety and product-facts infographics (11 languages)",
-      "1": "✨ onboarding: Add 'How to translate' step to first-run wizard (12 languages), bump onboarding version to 5",
-      "2": "✨ site: Recolor brand to violet palette, add Patch Hub flow + AI spectrum infographics",
-      "3": "✨ site: Add 'Under the hood' section (11 langs), fix language dropdown contrast, correct 'open source' to 'source-available'",
-      "4": "✨ site: Add 'Under the hood' technical section (11 languages) + fix language dropdown contrast",
-      "5": "🐛 supabase: Idempotent forum policies + allow community users to create threads/posts",
-      "6": "🐛 supabase: Make forum schema policies idempotent so Supabase Preview re-runs cleanly",
-      "7": "🐛 chat: Route community-chat translation via fetch_url_content to bypass Tauri CORS",
-      "8": "🐛 site: Show real logo in footer instead of empty placeholder",
-      "9": "🐛 supabase: Make forum schema policies idempotent (DROP POLICY IF EXISTS) so Supabase Preview re-runs cleanly",
-      "10": "• site: Translate Patch Hub flow + AI spectrum to all 11 languages"
+      "0": "✨ sito: Aggiunte infografiche su copertura motori, sicurezza e dati di prodotto (11 lingue)",
+      "1": "✨ onboarding: Aggiunto il passo «Come tradurre» alla procedura guidata iniziale (12 lingue), versione onboarding portata a 5",
+      "2": "✨ sito: Marchio ricolorato con la palette viola, aggiunte le infografiche del flusso Patch Hub e dello spettro IA",
+      "3": "✨ sito: Aggiunta la sezione «Sotto il cofano» (11 lingue), corretto il contrasto del menu delle lingue, «open source» corretto in «source-available»",
+      "4": "✨ sito: Aggiunta la sezione tecnica «Sotto il cofano» (11 lingue) + corretto il contrasto del menu delle lingue",
+      "5": "🐛 supabase: Policy del forum idempotenti + gli utenti della community possono creare discussioni e messaggi",
+      "6": "🐛 supabase: Policy dello schema forum rese idempotenti, così Supabase Preview si rigenera senza errori",
+      "7": "🐛 chat: La traduzione della chat community passa da fetch_url_content per aggirare il CORS di Tauri",
+      "8": "🐛 sito: Nel piè di pagina compare il logo vero al posto del segnaposto vuoto",
+      "9": "🐛 supabase: Policy dello schema forum rese idempotenti (DROP POLICY IF EXISTS), così Supabase Preview si rigenera senza errori",
+      "10": "• sito: Flusso Patch Hub e spettro IA tradotti in tutte e 11 le lingue"
     },
     "v1_11_2": {
       "0": "✨ Store: rilevamento installazioni locali di Humble App, Game Jolt e Big Fish Games",
@@ -7076,27 +7076,27 @@
       "13": "• ue-translator: Errori del backend localizzati in inglese + chiavi errore aggiunte"
     },
     "v1_14_0": {
-      "0": "✨ compat: Compatibility badge on game cards + abuse-guard migration",
-      "1": "✨ packs: Verifiable pack integrity via aggregated SHA-256",
-      "2": "✨ crash: Opt-in crash reporting to Supabase",
-      "3": "✨ fonts: Missing-glyph detection + automatic Noto font install for file-based engines",
-      "4": "✨ compat: Opt-in compatibility telemetry - the ProtonDB of translations",
-      "5": "✨ library: Robust language scan + manual 'Detect languages' button",
-      "6": "✨ news-feed: Clean MediaWiki diff descriptions and hide deal posts",
-      "7": "🐛 release: Use readline for ship confirm (hung on Windows waiting for stdin EOF)",
-      "8": "• Translate v1.13.0 changelog keys across all 12 locales"
+      "0": "✨ compat: Badge di compatibilità sulle schede dei giochi + migrazione anti-abuso",
+      "1": "✨ packs: Integrità dei pack verificabile tramite SHA-256 aggregato",
+      "2": "✨ crash: Segnalazione dei crash su Supabase, ad adesione volontaria",
+      "3": "✨ fonts: Rilevamento dei glifi mancanti + installazione automatica del font Noto per i motori basati su file",
+      "4": "✨ compat: Telemetria di compatibilità ad adesione volontaria - il ProtonDB delle traduzioni",
+      "5": "✨ library: Scansione delle lingue più affidabile + pulsante manuale «Rileva lingue»",
+      "6": "✨ news-feed: Ripulite le descrizioni dei diff MediaWiki e nascosti i post sulle offerte",
+      "7": "🐛 release: Conferma della ship tramite readline (su Windows restava appesa in attesa dell'EOF su stdin)",
+      "8": "• Tradotte le chiavi del changelog v1.13.0 in tutti e 12 i locale"
     },
     "v1_15_0": {
-      "0": "✨ ollama: Inference parameters panel (Faithful/Balanced/Creative presets + expert mode: temperature, top_p, top_k, repeat_penalty, num_ctx, seed) for local Ollama, reflection included",
-      "1": "✨ ollama: The 'Advanced Functions' button no longer 404s — it opens the new /ollama-manager/advanced panel",
-      "2": "✨ projects: Patch Hub integration — importing a .gspack registers a completed project and saves the translated file",
-      "3": "✨ patch-hub: Publish pre-filled from a project with the real translated file attached + Explore / My patches toggle",
-      "4": "✨ patch-hub: New 'Apply to game' action (folder picker + automatic .bak backup)",
-      "5": "✨ feedback: In-app feedback widget (Settings → Community) with automatic context (version, platform, screen, game); fail-open send + copy/email fallback",
-      "6": "✨ patch-hub: Faster Hub via client-side caching (60s TTL) + write throttling; server-side rate-limiting migration prepared",
-      "7": "🐛 news-feed: RSS feeds no longer trigger CORS errors in the desktop webview",
-      "8": "• a11y: Documented WCAG 2.1 AA accessibility audit + translate v1.14.0 changelog across all 12 locales",
-      "9": "🔧 deps: Upgrade rand 0.8 → 0.9 (adapt to the new API: thread_rng→rng, gen→random, OsRng now TryRngCore, SliceRandom→IndexedRandom); full Rust test suite green"
+      "0": "✨ ollama: Pannello dei parametri di inferenza (preset Fedele/Bilanciato/Creativo + modalità esperto: temperature, top_p, top_k, repeat_penalty, num_ctx, seed) per Ollama locale, riflessione inclusa",
+      "1": "✨ ollama: Il pulsante «Funzioni avanzate» non dà più 404 — apre il nuovo pannello /ollama-manager/advanced",
+      "2": "✨ progetti: Integrazione con il Patch Hub — importando un .gspack viene registrato un progetto completato e salvato il file tradotto",
+      "3": "✨ patch-hub: Pubblicazione precompilata a partire da un progetto, con allegato il file tradotto vero + selettore Esplora / Le mie patch",
+      "4": "✨ patch-hub: Nuova azione «Applica al gioco» (scelta della cartella + backup .bak automatico)",
+      "5": "✨ feedback: Widget di feedback dentro l'app (Impostazioni → Community) con contesto automatico (versione, piattaforma, schermata, gioco); invio fail-open + ripiego su copia/email",
+      "6": "✨ patch-hub: Hub più veloce grazie alla cache lato client (TTL 60s) + throttling delle scritture; pronta la migrazione per il rate-limiting lato server",
+      "7": "🐛 news-feed: I feed RSS non provocano più errori CORS nella webview desktop",
+      "8": "• a11y: Documentato l'audit di accessibilità WCAG 2.1 AA + changelog v1.14.0 tradotto in tutti e 12 i locale",
+      "9": "🔧 deps: Aggiornata rand 0.8 → 0.9 (adattamento alla nuova API: thread_rng→rng, gen→random, OsRng ora TryRngCore, SliceRandom→IndexedRandom); suite di test Rust tutta verde"
     },
     "v1_16_0": {
       "0": "✨ feedback: Feedback superficiale oltre le Impostazioni - voce nella barra laterale, pagina /feedback, invito post-traduzione una tantum tramite il bus di feedback",

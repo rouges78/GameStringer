@@ -3,22 +3,35 @@
  * translate-changelog.js
  *
  * Scrive le voci del changelog della nuova versione come chiavi i18n
- * `changelog.vX_Y_Z.N` in TUTTI i file lib/i18n/locales/<lang>.json,
- * traducendo dall'italiano in ogni lingua.
+ * `changelog.vX_Y_Z.N` in TUTTI i file lib/i18n/locales/<lang>.json.
  *
- * Sorgente: italiano (le bullet generate da changelog-from-git).
+ * ⭐ SORGENTE: L'INGLESE — decisione di Davide, 18/08/2026.
+ * Le voci arrivano da changelog-from-git, cioè dai messaggi di commit, che per
+ * convenzione di progetto sono in INGLESE. Fino a oggi questo script le
+ * dichiarava «italiane» e le scriveva pari pari in it.json, poi traduceva
+ * DALL'ITALIANO: ma quell'italiano era inglese, quindi la sorgente mentiva e
+ * l'utente italiano leggeva un changelog inglese. Misurato il 18/08 su 551
+ * voci storiche: 38 identiche all'inglese anche in it.json, e tre versioni
+ * intere (v1_11_1, v1_14_0, v1_15_0) di fatto non tradotte in nessuna lingua,
+ * perché tradurre una sorgente inglese «italiana» propaga l'inglese.
+ * ⇒ Adesso l'inglese è dichiarato per quello che è: en.json riceve le voci
+ * così come sono, e TUTTE le altre lingue — ITALIANO COMPRESO — si traducono
+ * da lì. L'italiano non è più un caso speciale: è una lingua di arrivo.
+ *
  * Provider traduzione (auto-detect via env, in quest'ordine):
+ *   OLLAMA_MODEL       -> Ollama locale (gratis)
  *   ANTHROPIC_API_KEY  -> Claude
  *   OPENAI_API_KEY     -> OpenAI
  *   GEMINI_API_KEY / GOOGLE_API_KEY -> Gemini
  *   DEEPL_API_KEY      -> DeepL
- * Se nessuna chiave è presente o la chiamata fallisce: scrive comunque
- * le chiavi in italiano per OGNI lingua mancante NON è ciò che vogliamo;
- * invece NON scrive le altre lingue (l'app userà il fallback grezzo dal
- * version.json) e ritorna { translated:false }. La release NON si blocca mai.
+ * Senza provider, o se una lingua fallisce, si scrive comunque la SORGENTE in
+ * quella lingua: le chiavi devono esistere ovunque (lo pretende il gate
+ * __tests__/lib/i18n-locale-integrity.test.ts) e il testo non tradotto viene
+ * DICHIARATO, non nascosto. La release non si blocca mai qui; a bloccarla, se
+ * le chiavi mancano davvero, è verifyChangelogKeys() dal passo 5 di release-all.
  *
- * Export: async writeChangelogKeys(versionString, italianChanges, opts)
- *   -> { translated:boolean, provider:string|null, langs:string[] }
+ * Export: async writeChangelogKeys(versionString, englishChanges, opts)
+ *   -> { translated:boolean, provider:string|null, langs:string[], fallback:string[] }
  */
 
 const fs = require('fs');
@@ -55,14 +68,14 @@ function listLocaleLangs() {
 }
 
 /** Traduce UN blocco di voci -> targetLang. Ritorna array o null se fallisce. */
-async function translateChunk(provider, targetLang, italianChanges) {
+async function translateChunk(provider, targetLang, sourceChanges) {
   const langName = LANG_NAMES[targetLang] || targetLang;
   const sys = `You are a professional software localizer for a video-game translation desktop app called GameStringer. ` +
-    `Translate the given Italian changelog bullet points into ${langName}. ` +
+    `Translate the given English changelog bullet points into ${langName}. ` +
     `Keep the leading emoji and any technical/proper terms (XUnity, BepInEx, Tauri, IL2CPP, LLM, OCR, Steam, GOG, API names, file paths) unchanged. ` +
     `Keep it concise, same number of items, same order. ` +
     `Return ONLY a JSON array of strings, no prose, no markdown fences.`;
-  const user = JSON.stringify(italianChanges, null, 2);
+  const user = JSON.stringify(sourceChanges, null, 2);
 
   try {
     let content;
@@ -135,11 +148,11 @@ async function translateChunk(provider, targetLang, italianChanges) {
     } else if (provider === 'deepl') {
       // DeepL non capisce JSON array: traduce voce per voce.
       const out = [];
-      for (const line of italianChanges) {
+      for (const line of sourceChanges) {
         const res = await fetch('https://api-free.deepl.com/v2/translate', {
           method: 'POST',
           headers: { 'content-type': 'application/x-www-form-urlencoded', authorization: `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}` },
-          body: new URLSearchParams({ text: line, source_lang: 'IT', target_lang: targetLang.toUpperCase() }),
+          body: new URLSearchParams({ text: line, source_lang: 'EN', target_lang: targetLang.toUpperCase() }),
         });
         const j = await res.json();
         out.push(j?.translations?.[0]?.text || line);
@@ -151,7 +164,7 @@ async function translateChunk(provider, targetLang, italianChanges) {
     // Estrai il primo array JSON dal testo.
     const match = content.match(/\[[\s\S]*\]/);
     const arr = JSON.parse(match ? match[0] : content);
-    if (Array.isArray(arr) && arr.length === italianChanges.length) return arr.map(String);
+    if (Array.isArray(arr) && arr.length === sourceChanges.length) return arr.map(String);
     return null;
   } catch (err) {
     console.warn(`   ⚠️  Traduzione ${targetLang} fallita: ${err.message}`);
@@ -165,12 +178,12 @@ async function translateChunk(provider, targetLang, italianChanges) {
  * falliva in silenzio. Ritorna l'array completo o null se UN blocco fallisce
  * (mai risultati parziali: o tutto tradotto o fallback dichiarato).
  */
-async function translateArray(provider, targetLang, italianChanges) {
-  if (provider === 'deepl') return translateChunk(provider, targetLang, italianChanges); // già voce-per-voce
+async function translateArray(provider, targetLang, sourceChanges) {
+  if (provider === 'deepl') return translateChunk(provider, targetLang, sourceChanges); // già voce-per-voce
   const CHUNK = 12;
   const out = [];
-  for (let i = 0; i < italianChanges.length; i += CHUNK) {
-    const part = await translateChunk(provider, targetLang, italianChanges.slice(i, i + CHUNK));
+  for (let i = 0; i < sourceChanges.length; i += CHUNK) {
+    const part = await translateChunk(provider, targetLang, sourceChanges.slice(i, i + CHUNK));
     if (!part) return null;
     out.push(...part);
   }
@@ -186,20 +199,20 @@ function setVersionKeys(localePath, vKey, items) {
   fs.writeFileSync(localePath, JSON.stringify(data, null, 2) + '\n');
 }
 
-async function writeChangelogKeys(version, italianChanges, opts = {}) {
+async function writeChangelogKeys(version, sourceChanges, opts = {}) {
   const { dryRun = false } = opts;
   const vKey = versionKey(version);
   const langs = listLocaleLangs();
   const provider = detectProvider();
 
-  // L'italiano è sempre scrivibile (è la sorgente).
+  // L'inglese è sempre scrivibile: è la sorgente.
   if (dryRun) {
     console.log(`   [dry-run] avrei scritto changelog.${vKey} in: ${langs.join(', ')}`);
     return { translated: Boolean(provider), provider, langs };
   }
 
-  // Scrivi subito l'italiano.
-  if (langs.includes('it')) setVersionKeys(path.join(LOCALES_DIR, 'it.json'), vKey, italianChanges);
+  // Scrivi subito l'INGLESE: è la sorgente, arriva dai messaggi di commit.
+  if (langs.includes('en')) setVersionKeys(path.join(LOCALES_DIR, 'en.json'), vKey, sourceChanges);
 
   if (!provider) {
     // 18/08/2026: prima questo ramo scriveva SOLO it.json e usciva. Le altre
@@ -213,36 +226,37 @@ async function writeChangelogKeys(version, italianChanges, opts = {}) {
     console.warn('   ⚠️  Nessuna API key di traduzione (ANTHROPIC/OPENAI/GEMINI/DEEPL/OLLAMA_MODEL).');
     const fallback = [];
     for (const lang of langs) {
-      if (lang === 'it') continue;
-      setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, italianChanges);
+      if (lang === 'en') continue;
+      setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, sourceChanges);
       fallback.push(lang);
     }
     console.warn(`       Scritta la SORGENTE (non tradotta) in: ${fallback.join(', ')}.`);
     console.warn(`       Debito da saldare: tradurre changelog.${vKey} in queste lingue.`);
-    return { translated: false, provider: null, langs: ['it'], fallback };
+    return { translated: false, provider: null, langs: ['en'], fallback };
   }
 
-  const done = ['it'];
+  // L'italiano NON è più un caso speciale: è una lingua di arrivo come le altre.
+  const done = ['en'];
   for (const lang of langs) {
-    if (lang === 'it') continue;
-    const translated = await translateArray(provider, lang, italianChanges);
-    const items = translated || italianChanges; // fallback: italiano se la singola lingua fallisce
+    if (lang === 'en') continue;
+    const translated = await translateArray(provider, lang, sourceChanges);
+    const items = translated || sourceChanges; // fallback DICHIARATO: la sorgente inglese se la lingua fallisce
     setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, items);
     if (translated) done.push(lang);
     process.stdout.write(`   ${translated ? '✅' : '↩️ '} ${lang}`);
   }
   process.stdout.write('\n');
   // 06/08/2026: prima ritornava translated:true anche quando OGNI lingua era
-  // andata in fallback (done = solo 'it') e la ship stampava «tradotto con
+  // andata in fallback (done = solo la sorgente) e la ship stampava «tradotto con
   // anthropic» su un fallimento totale — contatore bugiardo. Tradotto è vero
   // solo se almeno una lingua oltre alla sorgente è stata tradotta davvero.
-  const fallback = langs.filter((l) => l !== 'it' && !done.includes(l));
+  const fallback = langs.filter((l) => l !== 'en' && !done.includes(l));
   return { translated: done.length > 1, provider, langs: done, fallback };
 }
 
 /**
  * PROVA D'EFFETTO: rilegge i file su disco e verifica che `changelog.vKey`
- * esista, sia non vuoto e abbia lo stesso numero di voci dell'italiano in
+ * esista, sia non vuoto e abbia lo stesso numero di voci della SORGENTE INGLESE in
  * OGNI locale. Non si fida di quello che writeChangelogKeys dice di aver
  * fatto: guarda il risultato.
  *
@@ -255,8 +269,8 @@ function verifyChangelogKeys(version, expectedCount) {
 
   if (expected === undefined) {
     try {
-      const it = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'it.json'), 'utf8'));
-      expected = Object.keys(it?.changelog?.[vKey] || {}).length;
+      const src = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf8'));
+      expected = Object.keys(src?.changelog?.[vKey] || {}).length;
     } catch { expected = 0; }
   }
 
