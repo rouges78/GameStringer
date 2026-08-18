@@ -9,7 +9,8 @@ Questa cartella contiene i file pronti per il deploy sul dominio **gamestringer.
 - `styles-v2.css`: CSS moderno con glassmorphism e animazioni
 - `logo.svg`: Logo ufficiale (vettoriale)
 - `logo.png`: Logo ufficiale (immagine)
-- `favicon.svg`: Icona sito
+- `favicon.png`: Icona del sito (è questa che caricano le pagine: `<link rel="icon" href="favicon.png">`)
+- `favicon.svg`: variante SVG dello stesso marchio, non referenziata dalle pagine
 - `images/`: Screenshot e asset grafici
 
 ## 🚀 Come Pubblicare

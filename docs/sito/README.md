@@ -39,7 +39,8 @@ sito/
 ├── site-i18n.js        # Sistema traduzioni (9 lingue)
 ├── styles-v2.css       # Stili v2 (dark theme)
 ├── styles.css          # Stili legacy
-├── favicon.svg         # Icona del sito (SVG)
+├── favicon.png         # Icona del sito — è questa che caricano le pagine
+├── favicon.svg         # Stesso marchio in SVG, non referenziato dalle pagine
 ├── logo.png            # Logo GameStringer
 ├── logo.svg            # Logo (SVG)
 ├── images/
