@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Costo/Qualità",
-    "disclaimer": "Stima su {n} stringhe, input e output inclusi, ai prezzi di listino correnti. «Fino a» è il tetto: si paga solo se i provider gratuiti in testa alla catena non bastano. La memoria di traduzione riduce ancora la spesa."
+    "disclaimer": "Stima su {n} stringhe, input e output inclusi, ai prezzi di listino correnti. «Fino a» è il tetto: si paga solo se i provider gratuiti in testa alla catena non bastano. La memoria di traduzione riduce ancora la spesa.",
+    "presets": {
+      "free": {
+        "name": "🆓 Gratis",
+        "desc": "Solo provider gratuiti — HY-MT e TranslateGemma locali, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Privacy",
+        "desc": "LibreTranslate self-hosted, Ollama locale, NLLB — nessun dato lascia il tuo PC"
+      },
+      "economy": {
+        "name": "💰 Economica",
+        "desc": "HY-MT e TranslateGemma locali + Gemini 3.1 Flash-Lite + DeepSeek, con ripiego sui gratuiti"
+      },
+      "balanced": {
+        "name": "⚖️ Bilanciata",
+        "desc": "Miglior rapporto qualità/prezzo — HY-MT locale più tutti i provider cloud"
+      },
+      "quality": {
+        "name": "✨ Qualità",
+        "desc": "Modelli premium in testa: Claude, OpenAI e Mistral prima di ogni ripiego"
+      },
+      "max_quality": {
+        "name": "👑 Massima",
+        "desc": "Tutti i provider, Claude Opus e Voice API inclusi — non resta mai una riga senza traduzione"
+      },
+      "creative": {
+        "name": "🎭 Creativa",
+        "desc": "Claude Opus e Sonnet più Gemini Flash per dialoghi, narrativa e sfumature emotive"
+      },
+      "long_context": {
+        "name": "📚 Testi lunghi",
+        "desc": "Gemini Flash-Lite e Flash per copioni interi, documenti lunghi e più file insieme"
+      },
+      "voice": {
+        "name": "🎤 Voce",
+        "desc": "DeepL Voice API per la traduzione vocale in tempo reale con sintesi vocale"
+      },
+      "auto": {
+        "name": "🧠 Automatica",
+        "desc": "Sceglie da sé i provider migliori per la lingua di arrivo e il genere del gioco"
+      }
+    }
   }
 }

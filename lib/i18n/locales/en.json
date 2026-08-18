@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Cost/Quality",
-    "disclaimer": "Estimate for {n} strings, input and output included, at current list prices. \"Up to\" is the ceiling: you only pay if the free providers at the head of the chain fall short. Translation memory lowers it further."
+    "disclaimer": "Estimate for {n} strings, input and output included, at current list prices. \"Up to\" is the ceiling: you only pay if the free providers at the head of the chain fall short. Translation memory lowers it further.",
+    "presets": {
+      "free": {
+        "name": "🆓 Free",
+        "desc": "Free providers only — local HY-MT and TranslateGemma, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Privacy",
+        "desc": "Self-hosted LibreTranslate, local Ollama, NLLB — no data leaves your PC"
+      },
+      "economy": {
+        "name": "💰 Economy",
+        "desc": "Local HY-MT and TranslateGemma + Gemini 3.1 Flash-Lite + DeepSeek, falling back to free ones"
+      },
+      "balanced": {
+        "name": "⚖️ Balanced",
+        "desc": "Best quality for the price — local HY-MT plus every cloud provider"
+      },
+      "quality": {
+        "name": "✨ Quality",
+        "desc": "Premium models first: Claude, OpenAI and Mistral before any fallback"
+      },
+      "max_quality": {
+        "name": "👑 Maximum",
+        "desc": "Every provider, Claude Opus and Voice API included — no line is ever left untranslated"
+      },
+      "creative": {
+        "name": "🎭 Creative",
+        "desc": "Claude Opus and Sonnet plus Gemini Flash for dialogue, narration and emotional nuance"
+      },
+      "long_context": {
+        "name": "📚 Long texts",
+        "desc": "Gemini Flash-Lite and Flash for whole scripts, long documents and multiple files at once"
+      },
+      "voice": {
+        "name": "🎤 Voice",
+        "desc": "DeepL Voice API for real-time speech translation with text-to-speech"
+      },
+      "auto": {
+        "name": "🧠 Automatic",
+        "desc": "Picks the best providers by target language and game genre on its own"
+      }
+    }
   }
 }

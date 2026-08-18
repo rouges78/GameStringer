@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Coste/Calidad",
-    "disclaimer": "Estimación para {n} cadenas, entrada y salida incluidas, a los precios de lista actuales. «Hasta» es el techo: solo pagas si los proveedores gratuitos del principio de la cadena no bastan. La memoria de traducción lo reduce aún más."
+    "disclaimer": "Estimación para {n} cadenas, entrada y salida incluidas, a los precios de lista actuales. «Hasta» es el techo: solo pagas si los proveedores gratuitos del principio de la cadena no bastan. La memoria de traducción lo reduce aún más.",
+    "presets": {
+      "free": {
+        "name": "🆓 Gratuito",
+        "desc": "Solo proveedores gratuitos — HY-MT y TranslateGemma locales, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Privacidad",
+        "desc": "LibreTranslate autoalojado, Ollama local, NLLB — ningún dato sale de tu PC"
+      },
+      "economy": {
+        "name": "💰 Económica",
+        "desc": "HY-MT y TranslateGemma locales + Gemini 3.1 Flash-Lite + DeepSeek, con reserva a los gratuitos"
+      },
+      "balanced": {
+        "name": "⚖️ Equilibrada",
+        "desc": "Mejor calidad por el precio — HY-MT local más todos los proveedores en la nube"
+      },
+      "quality": {
+        "name": "✨ Calidad",
+        "desc": "Modelos premium primero: Claude, OpenAI y Mistral antes de cualquier alternativa"
+      },
+      "max_quality": {
+        "name": "👑 Máxima",
+        "desc": "Todos los proveedores, Claude Opus y Voice API incluidos — ninguna línea se queda sin traducir"
+      },
+      "creative": {
+        "name": "🎭 Creatividad",
+        "desc": "Claude Opus y Sonnet más Gemini Flash para diálogos, narración y matices emocionales"
+      },
+      "long_context": {
+        "name": "📚 Texto largo",
+        "desc": "Gemini Flash-Lite y Flash para guiones enteros, documentos largos y varios archivos a la vez"
+      },
+      "voice": {
+        "name": "🎤 Voz",
+        "desc": "DeepL Voice API para la traducción de voz en tiempo real con síntesis de voz"
+      },
+      "auto": {
+        "name": "🧠 Automática",
+        "desc": "Elige por sí solo los mejores proveedores según el idioma de destino y el género del juego"
+      }
+    }
   }
 }

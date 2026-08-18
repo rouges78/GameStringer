@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Coût/Qualité",
-    "disclaimer": "Estimation pour {n} chaînes, entrée et sortie comprises, aux tarifs publics actuels. « Jusqu'à » est le plafond : vous ne payez que si les fournisseurs gratuits en tête de chaîne ne suffisent pas. La mémoire de traduction réduit encore la dépense."
+    "disclaimer": "Estimation pour {n} chaînes, entrée et sortie comprises, aux tarifs publics actuels. « Jusqu'à » est le plafond : vous ne payez que si les fournisseurs gratuits en tête de chaîne ne suffisent pas. La mémoire de traduction réduit encore la dépense.",
+    "presets": {
+      "free": {
+        "name": "🆓 Gratuit",
+        "desc": "Fournisseurs gratuits uniquement — HY-MT et TranslateGemma en local, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Vie privée",
+        "desc": "LibreTranslate auto-hébergé, Ollama en local, NLLB — aucune donnée ne quitte votre PC"
+      },
+      "economy": {
+        "name": "💰 Économique",
+        "desc": "HY-MT et TranslateGemma en local + Gemini 3.1 Flash-Lite + DeepSeek, avec repli sur les gratuits"
+      },
+      "balanced": {
+        "name": "⚖️ Équilibré",
+        "desc": "Le meilleur rapport qualité-prix — HY-MT en local plus tous les fournisseurs cloud"
+      },
+      "quality": {
+        "name": "✨ Qualité",
+        "desc": "Modèles premium en tête : Claude, OpenAI et Mistral avant tout repli"
+      },
+      "max_quality": {
+        "name": "👑 Maximum",
+        "desc": "Tous les fournisseurs, Claude Opus et Voice API compris — aucune ligne ne reste sans traduction"
+      },
+      "creative": {
+        "name": "🎭 Créatif",
+        "desc": "Claude Opus et Sonnet plus Gemini Flash pour les dialogues, la narration et les nuances émotionnelles"
+      },
+      "long_context": {
+        "name": "📚 Textes longs",
+        "desc": "Gemini Flash-Lite et Flash pour des scripts entiers, de longs documents et plusieurs fichiers à la fois"
+      },
+      "voice": {
+        "name": "🎤 Voix",
+        "desc": "DeepL Voice API pour la traduction vocale en temps réel avec synthèse vocale"
+      },
+      "auto": {
+        "name": "🧠 Automatique",
+        "desc": "Choisit tout seul les meilleurs fournisseurs selon la langue cible et le genre du jeu"
+      }
+    }
   }
 }

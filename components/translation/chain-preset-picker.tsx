@@ -53,6 +53,25 @@ export function ChainPresetPicker({
   const attivo = CHAIN_PRESETS.find((p) => p.id === value) ?? CHAIN_PRESETS[0];
   const stimaAttiva = stime.get(attivo.id);
 
+  /**
+   * Nome e descrizione localizzati, con FALLBACK al valore cablato nel preset.
+   * ⚠️ t() ritorna la CHIAVE quando non trova nulla (lib/i18n/index.tsx:124) e
+   * durante l'hydration SSR: senza questo controllo un utente leggerebbe
+   * «chainPreset.presets.balanced.name» al posto del nome. I testi cablati in
+   * chain-presets.ts restano quindi la rete di sicurezza, non un doppione da
+   * cancellare.
+   */
+  const nome = (p: (typeof CHAIN_PRESETS)[number]) => {
+    const k = `chainPreset.presets.${p.id}.name`;
+    const v = t(k);
+    return v === k ? p.name : v;
+  };
+  const descrizione = (p: (typeof CHAIN_PRESETS)[number]) => {
+    const k = `chainPreset.presets.${p.id}.desc`;
+    const v = t(k);
+    return v === k ? p.description : v;
+  };
+
   return (
     <div className="mt-1.5">
       <div className="flex items-center gap-1.5">
@@ -66,7 +85,7 @@ export function ChainPresetPicker({
           onClick={() => setAperto((v) => !v)}
           className="flex flex-1 items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-micro font-bold uppercase tracking-wider text-slate-300 transition-all hover:bg-white/10 disabled:opacity-50"
         >
-          <span className="truncate">{attivo.name}</span>
+          <span className="truncate">{nome(attivo)}</span>
           <span className="flex items-center gap-1 shrink-0 text-indigo-300">
             <Coins className="h-3 w-3" />
             {stimaAttiva ? formattaStima(stimaAttiva) : '—'}
@@ -96,8 +115,8 @@ export function ChainPresetPicker({
                 }`}
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-xs font-semibold">{p.name}</span>
-                  <span className="block truncate text-micro text-slate-400">{p.description}</span>
+                  <span className="block truncate text-xs font-semibold">{nome(p)}</span>
+                  <span className="block truncate text-micro text-slate-400">{descrizione(p)}</span>
                 </span>
                 <span className="shrink-0 text-right">
                   <span className="block text-micro font-bold text-indigo-300">{formattaStima(s)}</span>

@@ -8190,6 +8190,48 @@
   },
   "chainPreset": {
     "label": "Koszt/Jakość",
-    "disclaimer": "Szacunek dla {n} ciągów, z wejściem i wyjściem, według aktualnych cen katalogowych. „Do\" to górna granica: płacisz tylko wtedy, gdy darmowi dostawcy na początku łańcucha nie wystarczą. Pamięć tłumaczeń dodatkowo obniża koszt."
+    "disclaimer": "Szacunek dla {n} ciągów, z wejściem i wyjściem, według aktualnych cen katalogowych. „Do\" to górna granica: płacisz tylko wtedy, gdy darmowi dostawcy na początku łańcucha nie wystarczą. Pamięć tłumaczeń dodatkowo obniża koszt.",
+    "presets": {
+      "free": {
+        "name": "🆓 Za darmo",
+        "desc": "Tylko darmowi dostawcy — lokalne HY-MT i TranslateGemma, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Prywatność",
+        "desc": "LibreTranslate na własnym serwerze, lokalna Ollama, NLLB — żadne dane nie opuszczają twojego komputera"
+      },
+      "economy": {
+        "name": "💰 Oszczędny",
+        "desc": "Lokalne HY-MT i TranslateGemma + Gemini 3.1 Flash-Lite + DeepSeek, z awaryjnym powrotem do darmowych"
+      },
+      "balanced": {
+        "name": "⚖️ Równowaga",
+        "desc": "Najlepsza jakość w tej cenie — lokalny HY-MT oraz wszyscy dostawcy w chmurze"
+      },
+      "quality": {
+        "name": "✨ Jakość",
+        "desc": "Najpierw modele premium: Claude, OpenAI i Mistral przed jakimkolwiek zamiennikiem"
+      },
+      "max_quality": {
+        "name": "👑 Maksimum",
+        "desc": "Wszyscy dostawcy, w tym Claude Opus i Voice API — żaden wiersz nie zostaje bez tłumaczenia"
+      },
+      "creative": {
+        "name": "🎭 Kreatywny",
+        "desc": "Claude Opus i Sonnet oraz Gemini Flash do dialogów, narracji i emocjonalnych niuansów"
+      },
+      "long_context": {
+        "name": "📚 Długi tekst",
+        "desc": "Gemini Flash-Lite i Flash do całych scenariuszy, długich dokumentów i wielu plików naraz"
+      },
+      "voice": {
+        "name": "🎤 Głos",
+        "desc": "DeepL Voice API do tłumaczenia mowy w czasie rzeczywistym z syntezą mowy"
+      },
+      "auto": {
+        "name": "🧠 Auto",
+        "desc": "Sam dobiera najlepszych dostawców według języka docelowego i gatunku gry"
+      }
+    }
   }
 }

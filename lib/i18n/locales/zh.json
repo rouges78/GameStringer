@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "成本/质量",
-    "disclaimer": "按当前标价估算 {n} 条字符串（含输入与输出）。“最多”是上限：只有当链条前端的免费服务商不够用时才会产生费用。翻译记忆库还能进一步降低开销。"
+    "disclaimer": "按当前标价估算 {n} 条字符串（含输入与输出）。“最多”是上限：只有当链条前端的免费服务商不够用时才会产生费用。翻译记忆库还能进一步降低开销。",
+    "presets": {
+      "free": {
+        "name": "🆓 免费",
+        "desc": "仅使用免费服务商 — 本地 HY-MT 和 TranslateGemma、Groq、Cerebras、OpenRouter 免费额度"
+      },
+      "privacy": {
+        "name": "🔒 隐私",
+        "desc": "自建 LibreTranslate、本地 Ollama 和 NLLB — 数据不会离开你的电脑"
+      },
+      "economy": {
+        "name": "💰 经济",
+        "desc": "本地 HY-MT 和 TranslateGemma + Gemini 3.1 Flash-Lite + DeepSeek，不足时回退到免费服务"
+      },
+      "balanced": {
+        "name": "⚖️ 均衡",
+        "desc": "性价比最高 — 本地 HY-MT 加上全部云端服务商"
+      },
+      "quality": {
+        "name": "✨ 高质量",
+        "desc": "优先使用高端模型：Claude、OpenAI 和 Mistral，之后才考虑备用方案"
+      },
+      "max_quality": {
+        "name": "👑 最高质量",
+        "desc": "启用全部服务商，包含 Claude Opus 和 Voice API — 不会漏掉任何一行"
+      },
+      "creative": {
+        "name": "🎭 创意",
+        "desc": "Claude Opus、Sonnet 加 Gemini Flash，适合对白、叙述和情感细节"
+      },
+      "long_context": {
+        "name": "📚 长文本",
+        "desc": "Gemini Flash-Lite 和 Flash，适合整份剧本、长文档和多文件一次处理"
+      },
+      "voice": {
+        "name": "🎤 语音",
+        "desc": "DeepL Voice API 实时翻译语音，并支持语音合成"
+      },
+      "auto": {
+        "name": "🧠 自动",
+        "desc": "根据目标语言和游戏类型自动挑选最合适的服务商"
+      }
+    }
   }
 }

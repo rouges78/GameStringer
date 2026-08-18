@@ -2629,8 +2629,13 @@ export default function GameDetailPage() {
             // onesto, ma NON si rimanda l'utente a cercare strumenti: si offre
             // UNA azione cliccabile (principio UN PULSANTE, 04/08/2026 sera).
             // Il toast duplicava parola per parola il pannello: tolto.
+            // 18/08: il toast era stato accorciato, ma la ripetizione era
+            // rimasta QUI — stesso identico testo nel dettaglio dello step E
+            // nel banner d'errore, uno sopra l'altro nella stessa schermata
+            // (visto in uno screenshot di Davide su The Skin Stapler). Ora il
+            // pannello spiega e il banner sintetizza: due posti, due funzioni.
             setAutoTranslateSteps([{ ...ueSteps[0], status: 'error', detail: t('heroJob.unrealNoLocres') }]);
-            setAutoTranslateError(t('heroJob.unrealNoLocres'));
+            setAutoTranslateError(t('heroJob.unrealNoLocresShort'));
             toast.error(t('heroJob.unrealNoLocresShort'), {
               action: {
                 label: t('heroJob.tryLiveOcr'),

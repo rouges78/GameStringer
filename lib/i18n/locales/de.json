@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Kosten/Qualität",
-    "disclaimer": "Schätzung für {n} Zeichenketten, Eingabe und Ausgabe inbegriffen, zu den aktuellen Listenpreisen. „Bis zu\" ist die Obergrenze: Sie zahlen nur, wenn die kostenlosen Anbieter am Anfang der Kette nicht ausreichen. Das Übersetzungsspeicher senkt die Kosten weiter."
+    "disclaimer": "Schätzung für {n} Zeichenketten, Eingabe und Ausgabe inbegriffen, zu den aktuellen Listenpreisen. „Bis zu\" ist die Obergrenze: Sie zahlen nur, wenn die kostenlosen Anbieter am Anfang der Kette nicht ausreichen. Das Übersetzungsspeicher senkt die Kosten weiter.",
+    "presets": {
+      "free": {
+        "name": "🆓 Kostenlos",
+        "desc": "Nur kostenlose Anbieter — HY-MT und TranslateGemma lokal, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Privat",
+        "desc": "LibreTranslate selbst gehostet, Ollama lokal, NLLB — keine Daten verlassen deinen PC"
+      },
+      "economy": {
+        "name": "💰 Sparsam",
+        "desc": "HY-MT und TranslateGemma lokal + Gemini 3.1 Flash-Lite + DeepSeek, mit Rückgriff auf die kostenlosen"
+      },
+      "balanced": {
+        "name": "⚖️ Ausgewogen",
+        "desc": "Bestes Preis-Leistungs-Verhältnis — HY-MT lokal plus alle Cloud-Anbieter"
+      },
+      "quality": {
+        "name": "✨ Qualität",
+        "desc": "Premium-Modelle zuerst: Claude, OpenAI und Mistral vor jedem Ausweichmodell"
+      },
+      "max_quality": {
+        "name": "👑 Maximum",
+        "desc": "Alle Anbieter, Claude Opus und Voice API inklusive — keine Zeile bleibt unübersetzt"
+      },
+      "creative": {
+        "name": "🎭 Kreativ",
+        "desc": "Claude Opus und Sonnet plus Gemini Flash für Dialoge, Erzählung und emotionale Nuancen"
+      },
+      "long_context": {
+        "name": "📚 Lange Texte",
+        "desc": "Gemini Flash-Lite und Flash für ganze Skripte, lange Dokumente und mehrere Dateien auf einmal"
+      },
+      "voice": {
+        "name": "🎤 Stimme",
+        "desc": "DeepL Voice API für Sprachübersetzung in Echtzeit mit Sprachausgabe"
+      },
+      "auto": {
+        "name": "🧠 Automatisch",
+        "desc": "Wählt von selbst die besten Anbieter nach Zielsprache und Spielgenre"
+      }
+    }
   }
 }

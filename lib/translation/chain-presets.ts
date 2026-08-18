@@ -130,27 +130,38 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
  * Ora è persistita, con lo stesso schema per-chiave di lib/translation-backend.ts:
  * localStorage, letture difensive, valore ignoto = default.
  */
-const PRESET_KEY = 'gs_chain_preset';
+/**
+ * ⭐ 18/08 (secondo giro): la scelta NON vive in una chiave localStorage sua,
+ * ma dentro `gameStringerSettings.translation.chainPreset`. La differenza non è
+ * estetica: quel blob è l'unico stato che SettingsBootGate idrata da
+ * settings.json su disco e riscrive al flush, quindi il preset eredita
+ * gratis la persistenza vera e sopravvive al cambio di porta in dev — che è
+ * esattamente il difetto di [storage-per-origine]. Una chiave a sé sarebbe
+ * rimasta legata all'origine del webview: salvata, e invisibile al riavvio
+ * successivo su un'altra porta.
+ */
+const SETTINGS_KEY = 'gameStringerSettings';
 
 /** Solo un id noto è valido: qualunque altra cosa torna al default. */
-function parsePreset(raw: string | null): ChainPreset | null {
-  if (!raw) return null;
+function parsePreset(raw: unknown): ChainPreset | null {
+  if (typeof raw !== 'string' || !raw) return null;
   return CHAIN_PRESETS.some((p) => p.id === raw) ? (raw as ChainPreset) : null;
 }
 
 let activeChainPreset: ChainPreset = 'balanced';
 let hydrated = false;
 
-/** Legge da localStorage la prima volta che serve (il modulo gira anche server-side). */
+/** Legge dalle impostazioni la prima volta che serve (il modulo gira anche server-side). */
 function hydrate(): void {
   if (hydrated) return;
   hydrated = true;
   try {
     if (typeof localStorage === 'undefined') return;
-    const saved = parsePreset(localStorage.getItem(PRESET_KEY));
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const saved = parsePreset(s?.translation?.chainPreset);
     if (saved) activeChainPreset = saved;
   } catch {
-    /* storage non disponibile: si resta sul default */
+    /* impostazioni illeggibili: si resta sul default */
   }
 }
 
@@ -158,7 +169,11 @@ export function setChainPreset(preset: ChainPreset) {
   hydrate();
   activeChainPreset = preset;
   try {
-    if (typeof localStorage !== 'undefined') localStorage.setItem(PRESET_KEY, preset);
+    if (typeof localStorage !== 'undefined') {
+      const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      s.translation = { ...(s.translation || {}), chainPreset: preset };
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    }
   } catch {
     /* la scelta vale almeno per questa sessione */
   }

@@ -8188,6 +8188,48 @@
   },
   "chainPreset": {
     "label": "Custo/Qualidade",
-    "disclaimer": "Estimativa para {n} strings, entrada e saída incluídas, pelos preços de tabela atuais. \"Até\" é o teto: você só paga se os provedores gratuitos no início da cadeia não derem conta. A memória de tradução reduz ainda mais o gasto."
+    "disclaimer": "Estimativa para {n} strings, entrada e saída incluídas, pelos preços de tabela atuais. \"Até\" é o teto: você só paga se os provedores gratuitos no início da cadeia não derem conta. A memória de tradução reduz ainda mais o gasto.",
+    "presets": {
+      "free": {
+        "name": "🆓 Grátis",
+        "desc": "Somente provedores gratuitos — HY-MT e TranslateGemma locais, Groq, Cerebras, OpenRouter free"
+      },
+      "privacy": {
+        "name": "🔒 Privacidade",
+        "desc": "LibreTranslate auto-hospedado, Ollama local, NLLB — nenhum dado sai do seu PC"
+      },
+      "economy": {
+        "name": "💰 Econômica",
+        "desc": "HY-MT e TranslateGemma locais + Gemini 3.1 Flash-Lite + DeepSeek, recorrendo aos gratuitos"
+      },
+      "balanced": {
+        "name": "⚖️ Equilibrada",
+        "desc": "Melhor qualidade pelo preço — HY-MT local mais todos os provedores em nuvem"
+      },
+      "quality": {
+        "name": "✨ Qualidade",
+        "desc": "Modelos premium na frente: Claude, OpenAI e Mistral antes de qualquer alternativa"
+      },
+      "max_quality": {
+        "name": "👑 Máxima",
+        "desc": "Todos os provedores, incluindo Claude Opus e Voice API — nenhuma linha fica sem tradução"
+      },
+      "creative": {
+        "name": "🎭 Criativa",
+        "desc": "Claude Opus e Sonnet mais Gemini Flash para diálogos, narração e nuances emocionais"
+      },
+      "long_context": {
+        "name": "📚 Texto longo",
+        "desc": "Gemini Flash-Lite e Flash para roteiros inteiros, documentos longos e vários arquivos de uma vez"
+      },
+      "voice": {
+        "name": "🎤 Voz",
+        "desc": "DeepL Voice API para a tradução de voz em tempo real com síntese de voz"
+      },
+      "auto": {
+        "name": "🧠 Automática",
+        "desc": "Escolhe sozinho os melhores provedores conforme o idioma de destino e o gênero do jogo"
+      }
+    }
   }
 }

@@ -8190,6 +8190,48 @@
   },
   "chainPreset": {
     "label": "コスト/品質",
-    "disclaimer": "{n} 件の文字列に対する概算です（入力と出力を含む、現在の定価基準）。「最大」は上限で、チェーン先頭の無料プロバイダーで足りない場合にのみ課金されます。翻訳メモリを使えばさらに安くなります。"
+    "disclaimer": "{n} 件の文字列に対する概算です（入力と出力を含む、現在の定価基準）。「最大」は上限で、チェーン先頭の無料プロバイダーで足りない場合にのみ課金されます。翻訳メモリを使えばさらに安くなります。",
+    "presets": {
+      "free": {
+        "name": "🆓 無料",
+        "desc": "無料プロバイダーのみ — ローカルのHY-MTとTranslateGemma、Groq、Cerebras、OpenRouterの無料枠"
+      },
+      "privacy": {
+        "name": "🔒 プライバシー",
+        "desc": "セルフホストのLibreTranslate、ローカルのOllama、NLLB — データはPCの外に出ません"
+      },
+      "economy": {
+        "name": "💰 節約",
+        "desc": "ローカルのHY-MTとTranslateGemma＋Gemini 3.1 Flash-Lite＋DeepSeek、足りなければ無料に切り替え"
+      },
+      "balanced": {
+        "name": "⚖️ バランス",
+        "desc": "価格に対して最高の品質 — ローカルのHY-MTとすべてのクラウドプロバイダー"
+      },
+      "quality": {
+        "name": "✨ 高品質",
+        "desc": "プレミアムモデルを優先：Claude、OpenAI、Mistralを予備より先に使用"
+      },
+      "max_quality": {
+        "name": "👑 最高品質",
+        "desc": "Claude OpusとVoice APIを含む全プロバイダー — 未翻訳の行を残しません"
+      },
+      "creative": {
+        "name": "🎭 クリエイティブ",
+        "desc": "Claude OpusとSonnet、Gemini Flashでセリフ・地の文・感情のニュアンスに対応"
+      },
+      "long_context": {
+        "name": "📚 長文",
+        "desc": "Gemini Flash-LiteとFlashで台本全体や長い文書、複数ファイルをまとめて処理"
+      },
+      "voice": {
+        "name": "🎤 音声",
+        "desc": "DeepL Voice APIで音声をリアルタイム翻訳し、読み上げまで対応"
+      },
+      "auto": {
+        "name": "🧠 自動",
+        "desc": "対象言語とゲームのジャンルに合わせて最適なプロバイダーを自動で選択"
+      }
+    }
   }
 }
