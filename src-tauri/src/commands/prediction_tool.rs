@@ -7327,43 +7327,28 @@ async fn execute_workflow_from_prediction(
         };
         let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
         let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
-        let use_ollama = ollama_model.is_some();
         let mut translations_map: HashMap<String, String> = HashMap::new();
         let mut translated_count = 0u64;
         let mut ollama_failed = false;
         let max_strings = rpg_strings.len().min(500);
 
-        for batch_indices in (0..max_strings).collect::<Vec<_>>().chunks(10) {
+        // Batch da 40 come Visionaire (era 10) e fallback Google in parallelo:
+        // il ciclo vive in traduci_lotto, non più copiaincollato qui.
+        for batch_indices in (0..max_strings).collect::<Vec<_>>().chunks(40) {
             let rpg_pct = if max_strings == 0 { 0 } else { translated_count as u32 * 100 / max_strings as u32 };
             emit_progress!("rpg_translate_batch", 6, format!("🤖 RPG Maker: {}/{} stringhe ({}%)...", translated_count, max_strings, rpg_pct), 50 + rpg_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| rpg_strings[i].original.as_str()).collect();
-            let mut results: Vec<Option<String>> = vec![None; originals.len()];
+            let results = traduci_lotto(
+                &client,
+                &originals,
+                target_lang,
+                &lang_name,
+                &ollama_base,
+                ollama_model.as_deref(),
+                &mut ollama_failed,
+            )
+            .await;
 
-            if use_ollama && !ollama_failed {
-                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
-                let body = serde_json::json!({
-                    "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
-                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
-                });
-                match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
-                    Ok(resp) if resp.status().is_success() => {
-                        if let Ok(json) = resp.json::<serde_json::Value>().await {
-                            if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
-                                parse_numbered_translations(text, &mut results, originals.len());
-                            }
-                        }
-                    }
-                    _ => { ollama_failed = true; }
-                }
-            }
-            for (j, result) in results.iter_mut().enumerate() {
-                if result.is_none() {
-                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
-                        *result = Some(t);
-                    }
-                }
-            }
             for (j, &idx) in batch_indices.iter().enumerate() {
                 if let Some(ref t) = results[j] {
                     translations_map.insert(rpg_strings[idx].original.clone(), t.clone());
@@ -7497,58 +7482,29 @@ async fn execute_workflow_from_prediction(
         };
         let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
         let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
-        let use_ollama = ollama_model.is_some();
         let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
         let mut translated_count = 0u64;
         let mut ollama_failed = false;
 
         // Batch da 40 (era 10): con 500 stringhe sono 13 round-trip a Ollama
-        // invece di 50. num_predict alzato di conseguenza (40 righe tradotte
-        // non stanno in 2048 token).
+        // invece di 50. Dal 18/08 il ciclo — Ollama numerato + Google parallelo —
+        // vive in traduci_lotto ed è lo stesso per tutti i fast path: qui era
+        // nato, e restando qui era diventato la copia che gli altri non avevano.
         for batch_indices in (0..vis_strings.len().min(VIS_FAST_CAP)).collect::<Vec<_>>().chunks(40) {
             let vis_pct = if vis_strings.is_empty() { 0 } else { translated_count as u32 * 100 / vis_strings.len().min(VIS_FAST_CAP) as u32 };
             emit_progress!("vis_translate_batch", 6, format!("🤖 Visionaire: {}/{} stringhe ({}%)...", translated_count, vis_strings.len().min(VIS_FAST_CAP), vis_pct), 50 + vis_pct * 35 / 100);
             let originals: Vec<&str> = batch_indices.iter().map(|&i| vis_strings[i].text.as_str()).collect();
-            let mut results: Vec<Option<String>> = vec![None; originals.len()];
+            let results = traduci_lotto(
+                &client,
+                &originals,
+                target_lang,
+                &lang_name,
+                &ollama_base,
+                ollama_model.as_deref(),
+                &mut ollama_failed,
+            )
+            .await;
 
-            if use_ollama && !ollama_failed {
-                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
-                let body = serde_json::json!({
-                    "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
-                    "stream": false, "options": { "temperature": 0.2, "num_predict": 6144 }
-                });
-                match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
-                    Ok(resp) if resp.status().is_success() => {
-                        if let Ok(json) = resp.json::<serde_json::Value>().await {
-                            if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
-                                parse_numbered_translations(text, &mut results, originals.len());
-                            }
-                        }
-                    }
-                    _ => { ollama_failed = true; }
-                }
-            }
-            // Fallback Google per le stringhe rimaste: IN PARALLELO (8 alla
-            // volta). Il vecchio loop era un round-trip HTTP per stringa, in
-            // fila: senza Ollama, fino a 500 richieste sequenziali — era
-            // questo il "troppo lento", non la traduzione in sé.
-            let missing: Vec<usize> = results.iter().enumerate()
-                .filter(|(_, r)| r.is_none()).map(|(j, _)| j).collect();
-            if !missing.is_empty() {
-                use futures::stream::{self, StreamExt};
-                let fetched: Vec<(usize, Option<String>)> = stream::iter(missing.into_iter().map(|j| {
-                    let client = client.clone();
-                    let text = originals[j].to_string();
-                    async move { (j, google_translate_single(&client, &text, target_lang).await) }
-                }))
-                .buffer_unordered(8)
-                .collect()
-                .await;
-                for (j, t) in fetched {
-                    if let Some(t) = t { results[j] = Some(t); }
-                }
-            }
             for (j, &idx) in batch_indices.iter().enumerate() {
                 if let Some(ref t) = results[j] {
                     translations.insert(vis_strings[idx].index, t.clone());
@@ -7667,43 +7623,28 @@ async fn execute_workflow_from_prediction(
             };
             let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
             let ollama_model: Option<String> = detect_ollama_model(&client, &ollama_base).await;
-            let use_ollama = ollama_model.is_some();
             let mut translated_entries: Vec<super::unreal_localization::TranslatedEntry> = Vec::new();
             let mut translated_count = 0u64;
             let mut ollama_failed = false;
 
             let max_entries = entries.len().min(500);
-            for batch_indices in (0..max_entries).collect::<Vec<_>>().chunks(10) {
+            // Batch da 40 e fallback Google parallelo: stesso ciclo condiviso
+            // degli altri fast path (traduci_lotto).
+            for batch_indices in (0..max_entries).collect::<Vec<_>>().chunks(40) {
                 let ue_pct = if max_entries == 0 { 0 } else { translated_count as u32 * 100 / max_entries as u32 };
                 emit_progress!("ue_translate_batch", 6, format!("🤖 Unreal: {}/{} stringhe ({}%)...", translated_count, max_entries, ue_pct), 50 + ue_pct * 35 / 100);
                 let originals: Vec<&str> = batch_indices.iter().map(|&i| entries[i].value.as_str()).collect();
-                let mut results: Vec<Option<String>> = vec![None; originals.len()];
+                let results = traduci_lotto(
+                    &client,
+                    &originals,
+                    target_lang,
+                    &lang_name,
+                    &ollama_base,
+                    ollama_model.as_deref(),
+                    &mut ollama_failed,
+                )
+                .await;
 
-                if use_ollama && !ollama_failed {
-                    let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
-                    let body = serde_json::json!({
-                        "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                        "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
-                        "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
-                    });
-                    match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
-                        Ok(resp) if resp.status().is_success() => {
-                            if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
-                                    parse_numbered_translations(text, &mut results, originals.len());
-                                }
-                            }
-                        }
-                        _ => { ollama_failed = true; }
-                    }
-                }
-                for (j, result) in results.iter_mut().enumerate() {
-                    if result.is_none() {
-                        if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
-                            *result = Some(t);
-                        }
-                    }
-                }
                 for (j, &idx) in batch_indices.iter().enumerate() {
                     let translated_text = results[j].clone().unwrap_or_else(|| entries[idx].value.clone());
                     if results[j].is_some() { translated_count += 1; }
@@ -9485,6 +9426,94 @@ async fn google_translate_single(client: &reqwest::Client, text: &str, target_la
     let result = json.get(0)?.get(0)?.get(0)?.as_str()?.to_string();
     tokio::time::sleep(std::time::Duration::from_millis(60)).await;
     Some(result)
+}
+
+/// Traduce UN lotto di stringhe: Ollama in un colpo solo (righe numerate),
+/// poi Google IN PARALLELO per i buchi rimasti.
+///
+/// ⛔ PERCHÉ ESISTE (18/08/2026): questo ciclo era copiaincollato in SEI fast
+/// path. Il 03/08 se ne curò uno solo — Visionaire, dove il difetto era stato
+/// misurato su Foolish Mortals: batch da 10 e, senza Ollama, una richiesta HTTP
+/// per stringa IN FILA, cioè fino a 500 round-trip sequenziali. Le altre cinque
+/// copie (Tyrano, GameMaker, RPG Maker, Unreal, Unity) sono rimaste lente per
+/// due settimane, e la roadmap ne contava tre: il copiaincollo non si limita a
+/// duplicare il codice, duplica anche i difetti e poi li fa perdere di vista.
+/// Correggerle una per una avrebbe prodotto la sesta copia dello stesso ciclo.
+///
+/// `ollama_ko` è deliberatamente `&mut`: se Ollama non risponde al primo lotto,
+/// non ha senso riprovarlo per tutti gli altri: il chiamante tiene il flag e
+/// scivola su Google per il resto della corsa.
+async fn traduci_lotto(
+    client: &reqwest::Client,
+    originali: &[&str],
+    target_lang: &str,
+    lang_name: &str,
+    ollama_base: &str,
+    ollama_model: Option<&str>,
+    ollama_ko: &mut bool,
+) -> Vec<Option<String>> {
+    let mut results: Vec<Option<String>> = vec![None; originali.len()];
+    if originali.is_empty() {
+        return results;
+    }
+
+    if ollama_model.is_some() && !*ollama_ko {
+        let numbered: String = originali
+            .iter()
+            .enumerate()
+            .map(|(i, s)| format!("{}. {}", i + 1, s))
+            .collect::<Vec<_>>()
+            .join("\n");
+        // num_predict proporzionale al lotto: 40 righe tradotte non stanno in
+        // 2048 token, e una risposta troncata riempie solo i primi elementi —
+        // difetto invisibile, perché i buchi cadono su Google e sembrano
+        // normali (è una delle tre cause delle 891 stringhe rotte su Deltarune).
+        let num_predict = (originali.len() * 150).max(2048);
+        let body = serde_json::json!({
+            "model": ollama_model.unwrap_or("qwen3:4b"),
+            "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+            "stream": false, "options": { "temperature": 0.2, "num_predict": num_predict }
+        });
+        match client.post(format!("{}/api/generate", ollama_base)).json(&body).send().await {
+            Ok(resp) if resp.status().is_success() => {
+                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                    if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                        parse_numbered_translations(text, &mut results, originali.len());
+                    }
+                }
+            }
+            _ => {
+                *ollama_ko = true;
+            }
+        }
+    }
+
+    // Fallback Google per ciò che manca: otto richieste alla volta invece che
+    // una in fila. È qui che stavano le ore di attesa.
+    let mancanti: Vec<usize> = results
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.is_none())
+        .map(|(j, _)| j)
+        .collect();
+    if !mancanti.is_empty() {
+        use futures::stream::{self, StreamExt};
+        let fetched: Vec<(usize, Option<String>)> = stream::iter(mancanti.into_iter().map(|j| {
+            let client = client.clone();
+            let text = originali[j].to_string();
+            async move { (j, google_translate_single(&client, &text, target_lang).await) }
+        }))
+        .buffer_unordered(8)
+        .collect()
+        .await;
+        for (j, t) in fetched {
+            if let Some(t) = t {
+                results[j] = Some(t);
+            }
+        }
+    }
+
+    results
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
