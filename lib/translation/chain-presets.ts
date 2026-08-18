@@ -119,22 +119,62 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
   },
 ];
 
-// Chain preset attivo (default: balanced)
+/**
+ * Preset attivo — default `balanced`, che si descrive da sé come «miglior
+ * rapporto qualità/prezzo».
+ *
+ * ⛔ 18/08/2026: fino a oggi questa era SOLO una variabile di modulo. Chi
+ * riusciva a cambiarla (unico punto vivo: /binary-patcher, pagina che non sta
+ * in nessun menu) la ritrovava a `balanced` al primo reload — la scelta più
+ * costosa che l'app permette di fare era anche l'unica che non si ricordava.
+ * Ora è persistita, con lo stesso schema per-chiave di lib/translation-backend.ts:
+ * localStorage, letture difensive, valore ignoto = default.
+ */
+const PRESET_KEY = 'gs_chain_preset';
+
+/** Solo un id noto è valido: qualunque altra cosa torna al default. */
+function parsePreset(raw: string | null): ChainPreset | null {
+  if (!raw) return null;
+  return CHAIN_PRESETS.some((p) => p.id === raw) ? (raw as ChainPreset) : null;
+}
+
 let activeChainPreset: ChainPreset = 'balanced';
+let hydrated = false;
+
+/** Legge da localStorage la prima volta che serve (il modulo gira anche server-side). */
+function hydrate(): void {
+  if (hydrated) return;
+  hydrated = true;
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const saved = parsePreset(localStorage.getItem(PRESET_KEY));
+    if (saved) activeChainPreset = saved;
+  } catch {
+    /* storage non disponibile: si resta sul default */
+  }
+}
 
 export function setChainPreset(preset: ChainPreset) {
+  hydrate();
   activeChainPreset = preset;
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(PRESET_KEY, preset);
+  } catch {
+    /* la scelta vale almeno per questa sessione */
+  }
   // Reset blocks quando si cambia chain
   resetProviderBlocks();
   clientLogger.debug(`[Chain] Preset impostato: ${preset}`);
 }
 
 export function getChainPreset(): ChainPreset {
+  hydrate();
   return activeChainPreset;
 }
 
 /** Internal getter for the active preset - used by the main module */
 export function getActiveChainPreset(): ChainPreset {
+  hydrate();
   return activeChainPreset;
 }
 

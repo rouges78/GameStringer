@@ -36,6 +36,8 @@ import { runHendrixTranslation } from '@/lib/hendrix-translate';
 import { runRenpyTranslation } from '@/lib/renpy-translate';
 import { runDanganronpaTranslation, requestDanganronpaStop } from '@/lib/danganronpa-translate';
 import { BackendPicker } from '@/components/translation/backend-picker';
+import { ChainPresetPicker } from '@/components/translation/chain-preset-picker';
+import { getChainPreset, setChainPreset, type ChainPreset } from '@/lib/translation/chain-presets';
 import { getTranslationBackend, setTranslationBackend, migrateLegacyBackendChoice, type TranslationBackend } from '@/lib/translation-backend';
 import { runRpgmakerTranslation } from '@/lib/rpgmaker-translate';
 import { startHeroTracking } from '@/lib/hero-job-tracking';
@@ -445,6 +447,19 @@ export default function GameDetailPage() {
   const changeDr1Backend = (v: TranslationBackend) => {
     setDr1Backend(v);
     setTranslationBackend('danganronpa', v);
+  };
+
+  // Preset costo/qualità: la scelta gemella di BackendPicker, e con lo stesso
+  // difetto risolto lo stesso modo. I dieci preset esistono dal 2026 e la
+  // pipeline li usa davvero, ma l'unico selettore vivo stava in /binary-patcher
+  // — pagina fuori da ogni menu, raggiungibile solo dopo una scansione fallita.
+  // Il default resta `balanced`, che si descrive da sé come «miglior rapporto
+  // qualità/prezzo»: chi non tocca niente ottiene quello che otteneva prima.
+  const [chainPreset, setChainPresetChoice] = useState<ChainPreset>('balanced');
+  useEffect(() => { setChainPresetChoice(getChainPreset()); }, []);
+  const changeChainPreset = (v: ChainPreset) => {
+    setChainPresetChoice(v);
+    setChainPreset(v); // persiste su localStorage e azzera i blocchi provider
   };
 
   // Visionaire e Tyrano: il ramo cloud c'era dal 07/08, ma il backend veniva
@@ -3658,6 +3673,18 @@ export default function GameDetailPage() {
                   già stato bugiardo due volte (diceva «restano Hendrix e RPG
                   Maker» a lavoro fatto) e la roadmap l'ha copiato: se cambi i
                   rami qui sotto, cambia ANCHE queste righe. */}
+              {/* Costo/qualità: vale per OGNI motore, perché la catena di
+                  provider è la stessa per tutti — quindi sta fuori dai rami
+                  per-motore qui sotto, non dentro. Compare solo quando la via
+                  scelta passa dal cloud: su Ollama locale non si spende, e un
+                  selettore di prezzo davanti a una traduzione gratuita
+                  confonderebbe invece di informare. */}
+              <ChainPresetPicker
+                value={chainPreset}
+                onChange={changeChainPreset}
+                disabled={autoTranslateBusy}
+                stringhe={translationStrategy?.stringCount}
+              />
               {isDanganronpa && (
                 <BackendPicker
                   value={dr1Backend}

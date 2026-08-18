@@ -8187,5 +8187,9 @@
   "godotTranslator": {
     "unsupportedTitle": "Format not supported yet",
     "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
+  },
+  "chainPreset": {
+    "label": "Κόστος/Ποιότητα",
+    "disclaimer": "Εκτίμηση για {n} συμβολοσειρές, με είσοδο και έξοδο, στις τρέχουσες τιμές καταλόγου. Το «έως» είναι το ανώτατο όριο: πληρώνετε μόνο αν δεν επαρκούν οι δωρεάν πάροχοι στην αρχή της αλυσίδας. Η μεταφραστική μνήμη το μειώνει κι άλλο."
   }
 }

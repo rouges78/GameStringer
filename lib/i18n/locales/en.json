@@ -8185,5 +8185,9 @@
   "godotTranslator": {
     "unsupportedTitle": "Format not supported yet",
     "unsupportedHint": "Support for binary .translation files (RSRC) is on the roadmap. This is not a problem with the game, nor with you."
+  },
+  "chainPreset": {
+    "label": "Cost/Quality",
+    "disclaimer": "Estimate for {n} strings, input and output included, at current list prices. \"Up to\" is the ceiling: you only pay if the free providers at the head of the chain fall short. Translation memory lowers it further."
   }
 }

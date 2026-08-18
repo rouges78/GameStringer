@@ -1,6 +1,5 @@
 {
   "known": {
-    "components/translation-recommendation.tsx": "2047 righe · IN FRIGO dal 10/08/2026, NON ricablare cosi' com'e': il suo «Traduci Tutto» dichiarava FALSI SUCCESSI (rami wolfrpg/kirikiri/gamemaker solo toast, ramo default con barra SIMULATA 0->100 e poi «Traduzione completata! GIOCA ORA» senza aver tradotto nulla). Scollegato dalla pagina gioco anche perche' era una seconda pipeline in concorrenza con «String it!». Prima di riusarlo va sostituita la barra finta con un esito reale; le parti buone sono i tips e il selettore di chain LLM.",
     "lib/steam-utils.ts": "1031 righe",
     "components/audio-translation.tsx": "775 righe",
     "components/community-translations.tsx": "738 righe",
@@ -93,6 +92,8 @@
     "components/theme-toggle.tsx": "32 righe",
     "hooks/use-debounce.ts": "25 righe",
     "lib/db.ts": "11 righe",
-    "lib/notifications/notification-interference.ts": "1 righe"
+    "lib/notifications/notification-interference.ts": "1 righe",
+    "lib/translation-session.ts": "979 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA: il suo unico importatore era components/translation-recommendation.tsx, amputato quel giorno. NON e' scarto e non va cancellato di slancio: gestisce checkpoint, resume, backup incrementale e validazione — cioe' proprio la materia del difetto piu' grave del progetto (l'auto-traduttore che si mangio' il proprio checkpoint e distrusse 200 traduzioni pagate, fix 73ab6637 del 14/08). Da decidere: o e' l'implementazione buona mai collegata, e allora si ricabla, o e' il predecessore di quella viva in Rust, e allora si cancella. La domanda da farsi prima: chi tiene i checkpoint OGGI?",
+    "lib/patchers/danganronpa-filter.ts": "454 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA, stessa causa (unico importatore: translation-recommendation.tsx). Filtra le ~18K stringhe estratte da DR1 tenendo i ~3K dialoghi veri, per tagliare costi API e tempo. Vale una valutazione prima del cestino: DR1 ha 47.999 stringhe e il costo di tradurle tutte e' esattamente il problema che il selettore costo/qualita' del 18/08 mette davanti all'utente. Se il filtro funziona, e' un risparmio che nessun preset puo' dare."
   }
 }
