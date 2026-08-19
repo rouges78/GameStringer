@@ -1233,53 +1233,42 @@ fn extract_file_from_ucas(
 
 /// Trova file .utoc nella directory del gioco
 fn find_utoc_files(game_path: &Path) -> Vec<PathBuf> {
-    let mut utocs = Vec::new();
-    
-    if let Ok(entries) = fs::read_dir(game_path) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                // Cerca in sottodirectory/Content/Paks
-                let paks = path.join("Content").join("Paks");
-                if paks.exists() {
-                    if let Ok(paks_entries) = fs::read_dir(&paks) {
-                        for pe in paks_entries.flatten() {
-                            if pe.path().extension().map(|e| e == "utoc").unwrap_or(false) {
-                                utocs.push(pe.path());
-                            }
-                        }
-                    }
+    files_in_paks_dirs(game_path, "utoc")
+}
+
+/// File con una data estensione dentro OGNI directory `Paks` del gioco.
+///
+/// ⚠️ Non assumere una profondità fissa. Fino al 19/08/2026 qui si guardava
+/// esattamente `<gioco>/<sub>/Content/Paks`: su The Skin Stapler il percorso
+/// vero è `<gioco>/TheSkinStapler/TheSkinStapler/Content/Paks` (due livelli) e
+/// la ricerca tornava vuota, quindi `extract_iostore_localization` usciva
+/// subito con «Nessun file .utoc trovato» e il fallback sui .pak — che
+/// funziona — non veniva mai raggiunto. Il gioco ha 1007 stringhe.
+fn files_in_paks_dirs(game_path: &Path, ext: &str) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    for dir in super::unreal_localization::find_all_paks_dirs(game_path) {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.extension().map(|x| x == ext).unwrap_or(false) {
+                    out.push(p);
                 }
             }
         }
     }
-    
-    utocs
+    out
 }
 
 /// Trova i .pak "originali" del gioco (esclude i nostri override _P.pak).
 fn find_pak_files(game_path: &Path) -> Vec<PathBuf> {
-    let mut paks = Vec::new();
-    if let Ok(entries) = fs::read_dir(game_path) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let dir = path.join("Content").join("Paks");
-                if let Ok(pe) = fs::read_dir(&dir) {
-                    for e in pe.flatten() {
-                        let p = e.path();
-                        if p.extension().map(|x| x == "pak").unwrap_or(false) {
-                            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
-                            // salta i nostri override e le patch _P
-                            if name.contains("gamestringer") || name.ends_with("_p.pak") { continue; }
-                            paks.push(p);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    paks
+    files_in_paks_dirs(game_path, "pak")
+        .into_iter()
+        .filter(|p| {
+            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+            // salta i nostri override e le patch _P
+            !name.contains("gamestringer") && !name.ends_with("_p.pak")
+        })
+        .collect()
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3142,6 +3131,72 @@ mod tests {
         let found = find_utoc_files(tmp.path());
         assert_eq!(found.len(), 1);
         assert!(found[0].to_string_lossy().ends_with(".utoc"));
+    }
+
+    /// REGRESSIONE 19/08/2026 — The Skin Stapler (Steam).
+    /// Il gioco annida due livelli prima di Content/Paks:
+    /// `<install>/TheSkinStapler/TheSkinStapler/Content/Paks`.
+    /// I finder guardavano un livello solo, tornavano vuoti, e
+    /// `extract_iostore_localization` usciva con «Nessun file .utoc trovato»
+    /// senza mai arrivare al fallback sui .pak. Il gioco ha 1007 stringhe.
+    #[test]
+    fn find_utoc_files_trova_paks_annidata_due_livelli() {
+        let tmp = TempDir::new().unwrap();
+        let paks = tmp.path().join("TheSkinStapler/TheSkinStapler/Content/Paks");
+        fs::create_dir_all(&paks).unwrap();
+        fs::write(paks.join("TheSkinStapler-Windows.utoc"), b"x").unwrap();
+        fs::write(paks.join("TheSkinStapler-Windows.ucas"), b"x").unwrap();
+        let found = find_utoc_files(tmp.path());
+        assert_eq!(found.len(), 1, "la Paks a due livelli deve essere trovata");
+    }
+
+    /// Estrazione vera contro un gioco installato. Ignorato di default: serve
+    /// un gioco reale su disco, non un fixture. Si lancia a mano quando si
+    /// tocca la catena di rilevamento, ed è il solo modo di verificarla senza
+    /// far partire una traduzione (che costerebbe chiamate API sul serio):
+    ///
+    /// ```text
+    /// GS_UE_GAME_PATH="C:/…/steamapps/common/TheSkinStapler"     ///   cargo test --lib -- --ignored estrazione_su_gioco_reale --nocapture
+    /// ```
+    #[tokio::test]
+    #[ignore]
+    async fn estrazione_su_gioco_reale() {
+        let Ok(game) = std::env::var("GS_UE_GAME_PATH") else {
+            eprintln!("GS_UE_GAME_PATH non impostata: niente da fare");
+            return;
+        };
+        let utocs = find_utoc_files(Path::new(&game));
+        let paks = find_pak_files(Path::new(&game));
+        eprintln!("utoc trovati: {} · pak trovati: {}", utocs.len(), paks.len());
+        assert!(!utocs.is_empty() || !paks.is_empty(), "nessun container né pak: i finder non arrivano alla cartella Paks");
+
+        let res = extract_iostore_localization(game.clone()).await;
+        match res {
+            Ok(r) => {
+                eprintln!("stringhe estratte: {} · da: {}", r.entries.len(), r.locres_path);
+                if let Some(e) = r.entries.iter().find(|e| e.value.len() > 20) {
+                    eprintln!("esempio: {:?}", e.value);
+                }
+                assert!(!r.entries.is_empty(), "estrazione vuota su un gioco che ha testo");
+            }
+            Err(e) => panic!("estrazione fallita: {}", e),
+        }
+    }
+
+    /// Stessa profondità, lato .pak: è lì che stanno i .locres nei giochi
+    /// UE5 IoStore, quindi se il finder non ci arriva il testo resta invisibile.
+    /// I nostri override (_P.pak, GameStringer*) restano esclusi.
+    #[test]
+    fn find_pak_files_trova_annidati_ed_esclude_i_nostri() {
+        let tmp = TempDir::new().unwrap();
+        let paks = tmp.path().join("Gioco/Sub/Content/Paks");
+        fs::create_dir_all(&paks).unwrap();
+        fs::write(paks.join("Gioco-Windows.pak"), b"x").unwrap();
+        fs::write(paks.join("GameStringer_it_P.pak"), b"x").unwrap();
+        fs::write(paks.join("Altro_P.pak"), b"x").unwrap();
+        let found = find_pak_files(tmp.path());
+        assert_eq!(found.len(), 1, "solo il pak originale del gioco");
+        assert!(found[0].to_string_lossy().ends_with("Gioco-Windows.pak"));
     }
 
     // ── WRITE PATH ──────────────────────────────────────────────────────

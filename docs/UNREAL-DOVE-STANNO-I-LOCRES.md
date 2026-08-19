@@ -1,23 +1,61 @@
-# Unreal: dove stanno davvero i `.locres`
+# Unreal: perché un gioco con 1679 stringhe risultava «senza testo»
 
 Misurato il 19/08/2026 su **The Skin Stapler** (Steam, UE5 IoStore), partendo da
 un caso in cui l'app dichiarava «questo gioco non espone testi estraibili».
-**Era falso: il gioco ha 1007 stringhe traducibili.**
+**Era falso.** Dopo la correzione l'estrazione ne restituisce **1679**.
 
-Questo documento esiste perché la diagnosi è costata mezz'ora di misure e la
-conclusione non è intuitiva. Serve a chi (persona o agente) deve capire da solo
-perché un gioco Unreal "senza localizzazione" in realtà ce l'ha.
+## La causa: profondità di annidamento assunta, non cercata
 
-## Il fatto centrale
+`find_utoc_files` e `find_pak_files` in `unreal_iostore.rs` guardavano
+esattamente **un** livello di sottocartella:
 
-> Nei giochi UE5 IoStore i `.locres` **non stanno nel container `.utoc`/`.ucas`**.
-> Stanno nel `.pak` legacy affiancato, che il gioco spedisce insieme al container.
+```
+<gioco>/<sottocartella>/Content/Paks
+```
 
-I `.locres` non sono asset: non passano dalla cosversione in Zen. Restano file
-normali dentro il pak. Il container contiene asset, shader e bulk data.
+The Skin Stapler ne ha **due**:
 
-Corollario operativo: **una catena di rilevamento che guarda solo i file sciolti
-e il container IoStore trova zero, sempre, su ogni gioco UE5 moderno.**
+```
+<install>/TheSkinStapler/TheSkinStapler/Content/Paks/
+```
+
+Quindi i finder tornavano vuoti, `extract_iostore_localization` usciva subito con
+«Nessun file .utoc trovato», il frontend faceva `.catch(() => null)` e l'utente
+leggeva «non espone testi estraibili». Il testo non è mai stato nascosto: non
+siamo mai arrivati alla cartella.
+
+**La contraddizione a schermo aveva la stessa radice.** `find_paks_dir` in
+`unreal_localization.rs` cercava invece **ricorsivamente fino a 5 livelli** e la
+cartella la trovava. Da lì `has_locres` risultava vero e il pulsante STRING IT!
+annunciava «.locres trovati — traduzione AI disponibile», mentre l'esecutore,
+che passava dagli altri due finder, negava. Tre funzioni per la stessa domanda,
+due profondità diverse, in due file diversi.
+
+## La correzione
+
+`find_all_paks_dirs()` (in `unreal_localization.rs`) è ora l'unico modo di
+trovare le cartelle `Paks`, ricorsivo fino a 5 livelli e con verifica che la
+cartella contenga davvero `.pak`/`.utoc`. `find_paks_dir` ci si appoggia,
+`find_utoc_files` e `find_pak_files` pure, tramite `files_in_paks_dirs()`.
+
+Regola generale: **la profondità di annidamento va cercata, mai assunta.** Gli
+autori impacchettano come vogliono, e un livello in più non è un caso limite.
+
+## Cosa NON era il problema
+
+Tre ipotesi verificate e scartate, per non farle rifare a nessuno:
+
+1. **«Manca il codice che legge i `.pak`.»** Falso: `extract_iostore_localization`
+   ha già un fallback che scandaglia i pak classici, filtra Engine e plugin,
+   preferisce la cartella `/en/` e aggrega. Funziona. Semplicemente non veniva
+   mai raggiunto, per via del return anticipato sui .utoc.
+2. **«La DLL Oodle non viene cercata nella cartella del gioco.»** Vero come
+   difetto (vedi la nota aperta nel registro), ma irrilevante qui: il gioco non
+   spedisce Oodle, e la DLL era già nella cache tool di GameStringer.
+3. **«I `.locres` non stanno mai nel container IoStore.»** Falso. Su The Skin
+   Stapler stanno nel `.pak`, ma sul gioco di collaudo del 02/08/2026 stavano nel
+   container (752 voci). Vanno provati entrambi — ed è esattamente ciò che il
+   codice fa.
 
 ## Le misure
 
@@ -25,104 +63,60 @@ Cartella: `…/steamapps/common/TheSkinStapler/TheSkinStapler/TheSkinStapler/Con
 
 | Cosa | Esito |
 |---|---|
-| `.locres` sciolti su disco | **0** |
-| `TheSkinStapler-Windows.utoc` / `.ucas` (674 MB) | 12601 chunk, **0 `.locres`** |
+| `.locres` sciolti su disco | 0 |
+| `TheSkinStapler-Windows.utoc` / `.ucas` (674 MB) | 12601 chunk |
 | `TheSkinStapler-Windows.pak` (638 MB) | 1662 file, **4 `.locres`** |
-| DLL Oodle spedita dal gioco | **nessuna** |
-| `oo2core_9_win64.dll` in `%APPDATA%/GameStringer/tools/` | **presente** |
+| `…/Content/Localization/Game/en/Game.locres` | 149.767 byte, LocRes v3 |
+| Stringhe uniche nella tabella | **1007** |
+| Voci namespace/key estratte dall'app | **1679** |
 
-I quattro `.locres` nel pak:
+I due numeri non sono in contrasto: la tabella stringhe è deduplicata, più chiavi
+possono puntare allo stesso testo.
 
-```
-Engine/Content/Localization/Engine/en/Engine.locres
-Engine/Plugins/Online/OnlineSubsystem/Content/Localization/OnlineSubsystem/en/OnlineSubsystem.locres
-Engine/Plugins/Online/OnlineSubsystemUtils/Content/Localization/OnlineSubsystemUtils/en/OnlineSubsystemUtils.locres
-TheSkinStapler/Content/Localization/Game/en/Game.locres   ← quello del gioco
-```
-
-`Game.locres`: 149.767 byte, versione 3, **1007 stringhe, 51.938 caratteri**.
 Campioni reali: `"Breaks pretty much over. I'd better head inside and talk to Lucas."`,
 `"View Objective"`, `"A bedroom, sir."` — dialoghi e UI, non stringhe di sistema.
 
-## Come riprodurre la misura
+## Come riprodurre
 
-Con i tool che l'app già scarica in `%APPDATA%/GameStringer/tools/`:
+Verifica end-to-end senza far partire nessuna traduzione (quindi senza spendere
+chiamate API), con il test di integrazione a env var:
 
 ```bash
-# 1. Il container NON serve a rilevare i locres: `list` stampa chunk ID, non nomi.
-retoc.exe list "<gioco>/Content/Paks/<Nome>-Windows.utoc"
+GS_UE_GAME_PATH="C:/…/steamapps/common/TheSkinStapler" \
+  cargo test --manifest-path src-tauri/Cargo.toml --lib -- \
+  --ignored estrazione_su_gioco_reale --nocapture
+```
 
-# 2. Il pak SÌ: stampa i path veri.
+Ispezione manuale del pak, con i tool che l'app già scarica in
+`%APPDATA%/GameStringer/tools/`:
+
+```bash
 repak.exe list "<gioco>/Content/Paks/<Nome>-Windows.pak" | grep locres
-
-# 3. Estrazione mirata del solo file che serve.
-repak.exe unpack "<pak>" -o <dest> -f -i "<Gioco>/Content/Localization/Game/en/Game.locres"
+repak.exe unpack "<pak>" -o <dest> -f -i "<percorso del Game.locres>"
 ```
 
-**Trappola da non ripetere:** `retoc list` su questo container stampa
-`ExportBundleData` / `BulkData` / `ShaderCode` e nessun nome di file, perché
-l'indice directory non porta i nomi. Concludere «nessun `.locres`» da quell'output
-è un errore: non è una prova d'assenza, è assenza di prova.
+**Trappola.** `retoc list` su questi container stampa chunk ID
+(`ExportBundleData`, `BulkData`, `ShaderCode`) e nessun nome di file, perché
+l'indice directory non porta i nomi. Concludere «nessun `.locres`» da lì è un
+errore: non è prova d'assenza, è assenza di prova. Per i nomi serve `repak list`
+sul pak.
 
-## Perché l'app falliva
+## Il pulsante che prometteva senza sapere
 
-La catena di rilevamento in `game-detail-client.tsx` (percorso Unreal di
-`startAutoTranslate`) fa due tentativi e nessuno dei due guarda il pak sorgente:
+`get_unreal_localization_status` calcola `has_locres` come
+«esiste una cartella `Paks/`», contenuto ignoto. Il sottotitolo del pulsante ci
+si basava e annunciava traduzione disponibile. Ora si basa su `locres_count`,
+cioè su qualcosa che è stato **contato**; con la sola cartella `Paks/` dichiara
+il motore e non promette nulla.
 
-1. `get_unreal_localization_status` → `find_loose_locres()` → solo file sciolti → **0**
-2. `extract_iostore_localization` → solo `.utoc`/`.ucas` → **0**
-3. → messaggio «non espone testi estraibili»
+Principio: **annunciare solo ciò che è stato misurato.** Un pulsante che promette
+e un pannello che nega, nella stessa schermata, costano più fiducia di un
+pulsante che dice meno.
 
-**Manca il terzo anello: leggere il `.pak` affiancato.**
+## Regressioni coperte
 
-La cosa importante: **il lettore esiste già.**
-`unreal_iostore.rs::extract_locres_from_pak()` (e il più generale
-`extract_files_by_ext_from_pak`) apre il pak, decomprime i blocchi con Oodle e
-restituisce i `.locres`. Oggi è chiamato solo da `count_pak_translated_entries()`,
-cioè per contare le stringhe della patch **GameStringer già applicata** — mai per
-leggere il pak **originale del gioco**. È lo stesso codice, puntato sul file
-sbagliato.
+`unreal_iostore.rs`, modulo test:
 
-## Il bug secondario: il pulsante promette e l'esecutore nega
-
-`get_unreal_localization_status` calcola:
-
-```rust
-let has_locres = !loose_locres.is_empty() || paks_dir.is_some();
-let locres_count = loose_locres.len();
-```
-
-`has_locres` è **vero appena esiste una cartella `Paks/`**, indipendentemente dal
-contenuto. Il sottotitolo del pulsante STRING IT! si basa su `has_locres` e
-annuncia «.locres trovati — traduzione AI disponibile»
-(`game-detail-client.tsx:763`), mentre l'esecutore richiede
-`has_locres && locres_count > 0`. Da qui la contraddizione a schermo: il pulsante
-promette, due righe sotto il pannello nega.
-
-Due flag distinti servono: «c'è una cartella Paks» non è «ci sono testi».
-
-## Cosa serve per «un pulsante che traduce tutto»
-
-Il lato **scrittura** è già completo e collaudato: `auto_translate_unreal()` crea
-il `_P.pak` e `retoc_wrapper` genera la coppia `_P.utoc`/`_P.ucas` che lo fa
-montare (la tripletta — vedi l'intestazione di `retoc_wrapper.rs`).
-
-Manca solo il lato **lettura**:
-
-1. Inserire uno step `extract_locres_from_pak()` sui pak del gioco tra il
-   tentativo «file sciolti» e quello «IoStore».
-2. Scartare i `.locres` di Engine e dei plugin Online: tradurre `Engine.locres`
-   sposta stringhe di sistema, non il gioco. Tenere il `Content/Localization/Game/`.
-3. Separare `has_locres` (esiste `Paks/`) da `has_text` (stringhe > 0) e far
-   parlare il pulsante del secondo.
-
-Con questi tre punti The Skin Stapler passa da «non traducibile» a 1007 stringhe
-tradotte dallo stesso pulsante di tutti gli altri giochi.
-
-## Generalizzazione
-
-Il pattern non è specifico di questo gioco: vale per **ogni** titolo UE5 che usa
-IoStore e non spedisce `.locres` sciolti, cioè la maggioranza dei giochi UE5
-recenti su Steam. Ogni volta che l'app dice «non espone testi estraibili» su un
-Unreal con un `.pak` accanto al `.utoc`, la prima cosa da verificare è
-`repak list <pak> | grep locres`.
+- `find_utoc_files_trova_paks_annidata_due_livelli`
+- `find_pak_files_trova_annidati_ed_esclude_i_nostri`
+- `estrazione_su_gioco_reale` (`#[ignore]`, a env var)

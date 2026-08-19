@@ -1001,7 +1001,17 @@ fn find_loose_locres(game_path: &Path) -> Vec<PathBuf> {
 }
 
 /// Trova tutte le directory Content/Paks del gioco — ricerca ricorsiva
-pub fn find_paks_dir(game_path: &Path) -> Option<PathBuf> {
+/// TUTTE le directory `Paks` del gioco, non solo la prima.
+///
+/// Esiste perché `unreal_iostore` cercava i .utoc/.pak assumendo esattamente
+/// UN livello di sottocartella (`<gioco>/<sub>/Content/Paks`). Misurato il
+/// 19/08/2026 su The Skin Stapler (Steam): il percorso reale è
+/// `<gioco>/TheSkinStapler/TheSkinStapler/Content/Paks`, due livelli, e quei
+/// finder tornavano vuoti. `find_paks_dir` invece scendeva ricorsivamente e la
+/// trovava: da qui la contraddizione a schermo, il pulsante prometteva
+/// («.locres trovati») e l'esecutore negava («non espone testi estraibili»).
+/// Un solo modo di cercare, condiviso, così non può succedere di nuovo.
+pub fn find_all_paks_dirs(game_path: &Path) -> Vec<PathBuf> {
     // Cerca ricorsivamente directory chiamate "Paks" fino a 5 livelli
     fn find_paks_recursive(dir: &Path, depth: usize, results: &mut Vec<PathBuf>) {
         if depth > 5 { return; }
@@ -1029,17 +1039,21 @@ pub fn find_paks_dir(game_path: &Path) -> Option<PathBuf> {
     
     let mut paks_dirs = Vec::new();
     find_paks_recursive(game_path, 0, &mut paks_dirs);
-    
-    if !paks_dirs.is_empty() {
+
+    if paks_dirs.is_empty() {
+        log::info!("📦 Nessuna directory Paks trovata in {}", game_path.display());
+    } else {
         log::info!("📦 Trovate {} directory Paks", paks_dirs.len());
         for d in &paks_dirs {
             log::info!("  📁 {}", d.display());
         }
-        return Some(paks_dirs[0].clone());
     }
-    
-    log::info!("📦 Nessuna directory Paks trovata in {}", game_path.display());
-    None
+    paks_dirs
+}
+
+/// La prima directory `Paks` utile. Comodità storica sopra `find_all_paks_dirs`.
+pub fn find_paks_dir(game_path: &Path) -> Option<PathBuf> {
+    find_all_paks_dirs(game_path).into_iter().next()
 }
 
 // ═══════════════════════════════════════════════════════════════════

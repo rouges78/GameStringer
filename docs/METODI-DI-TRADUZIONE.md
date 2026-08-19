@@ -30,31 +30,54 @@ link (come per Unreal IoStore).
 
 ## Unreal Engine
 
-### UE5 IoStore: i `.locres` stanno nel `.pak`, non nel container
+### La profondità della cartella `Paks` va cercata, mai assunta
 
-**Il fatto.** Nei giochi UE5 che usano IoStore, i `.locres` non sono dentro
-`.utoc`/`.ucas`: stanno nel `.pak` legacy affiancato. I `.locres` non sono asset,
-quindi non passano dalla conversione in Zen e restano file normali nel pak.
+**Il fatto.** I finder di container e pak assumevano esattamente un livello di
+sottocartella (`<gioco>/<sub>/Content/Paks`). Un gioco che ne annida due sparisce:
+niente `.utoc`, niente `.pak`, e l'app dichiara «non espone testi estraibili» su
+un gioco pieno di testo.
 
-**Misura.** The Skin Stapler, 19/08/2026: container da 674 MB con 12601 chunk e
-zero `.locres`; pak affiancato da 638 MB con 1662 file e 4 `.locres`, di cui
-`TheSkinStapler/Content/Localization/Game/en/Game.locres` con **1007 stringhe,
-51.938 caratteri**. L'app dichiarava «non espone testi estraibili».
+**Misura.** The Skin Stapler, 19/08/2026: percorso reale
+`<install>/TheSkinStapler/TheSkinStapler/Content/Paks/`. Dopo la correzione
+l'estrazione restituisce **1679 voci** dal `Game.locres` del gioco (1007 stringhe
+uniche nella tabella: più chiavi possono puntare allo stesso testo).
 
-```bash
-repak.exe list "<gioco>/Content/Paks/<Nome>-Windows.pak" | grep locres
-```
+**Nel codice.** `unreal_localization.rs::find_all_paks_dirs()` è l'unico modo di
+cercare le cartelle `Paks` — ricorsivo fino a 5 livelli, con verifica che la
+cartella contenga davvero `.pak`/`.utoc`. `find_paks_dir`, `find_utoc_files` e
+`find_pak_files` ci si appoggiano tutti.
 
-**Nel codice.** `unreal_iostore.rs::extract_locres_from_pak()` sa già leggerli, ma
-è chiamato solo da `count_pak_translated_entries()` — cioè sul pak della patch GS
-già applicata, mai sul pak originale del gioco.
+**Trappola.** Il sintomo era una contraddizione a schermo: il pulsante prometteva
+«.locres trovati», il pannello sotto negava. Erano **tre finder con due
+profondità diverse in due file diversi** — `find_paks_dir` cercava già in modo
+ricorsivo e trovava la cartella, gli altri due no. Quando due parti della UI si
+contraddicono, sospetta due implementazioni della stessa domanda prima di
+sospettare i dati.
 
-**Trappola.** `retoc list` su questi container stampa chunk ID
-(`ExportBundleData`, `BulkData`, `ShaderCode`) e nessun nome di file, perché
-l'indice directory non porta i nomi. Concludere «nessun `.locres`» da lì è un
-errore: non è prova d'assenza, è assenza di prova. Serve `repak list` sul pak.
+**Ipotesi scartate** (verificate, non intuite): non mancava il codice che legge i
+pak — `extract_iostore_localization` aveva già un fallback funzionante sui pak
+classici, semplicemente irraggiungibile per via del return anticipato; e non era
+Oodle, già presente nella cache tool.
 
 Dettaglio completo: [UNREAL-DOVE-STANNO-I-LOCRES.md](UNREAL-DOVE-STANNO-I-LOCRES.md).
+
+### I `.locres` possono stare nel container O nel `.pak` affiancato
+
+**Il fatto.** Non c'è una regola sola. Vanno provati entrambi, e il codice lo fa.
+
+**Misura.** Gioco di collaudo del 02/08/2026: `Game.locres` **dentro** il
+container IoStore, 752 voci. The Skin Stapler, 19/08/2026: nessun `.locres` nel
+container, quattro nel `.pak` affiancato, di cui uno del gioco con 1679 voci.
+I `.locres` non sono asset, quindi non sono obbligati a passare dalla conversione
+in Zen — ma niente vieta che ci finiscano.
+
+**Nel codice.** `extract_iostore_localization()` prova prima il container, poi i
+`.pak` classici (filtrando Engine e plugin, preferendo la cartella `/en/`), poi
+come ultima risorsa i `.uasset` di localizzazione.
+
+**Trappola.** Non scrivere «i locres stanno sempre in X». Ogni volta che sembra
+esserci una regola secca sul packaging Unreal, probabilmente si è visto un gioco
+solo.
 
 ### UE5 IoStore: un `_P.pak` da solo non si monta, serve la tripletta
 

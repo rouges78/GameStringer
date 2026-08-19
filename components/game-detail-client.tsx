@@ -760,7 +760,12 @@ export default function GameDetailPage() {
           setTranslationStrategy({
             engine: detectedEngine,
             method: 'unreal',
-            detail: locStatus?.has_gs_pak ? `Patch attiva — ${locStatus.translated_entries} stringhe` : locStatus?.has_locres ? `.locres trovati — traduzione AI disponibile` : 'Unreal Engine rilevato',
+            // `has_locres` è vero appena esiste una cartella Paks/, contenuto
+            // ignoto: prometteva «traduzione AI disponibile» mentre due righe
+            // sotto il pannello diceva «non espone testi estraibili» (visto su
+            // The Skin Stapler, 19/08/2026). Si annuncia solo ciò che è stato
+            // contato davvero; con la sola Paks/ si dichiara il motore e basta.
+            detail: locStatus?.has_gs_pak ? `Patch attiva — ${locStatus.translated_entries} stringhe` : (locStatus?.locres_count ?? 0) > 0 ? `.locres trovati — traduzione AI disponibile` : 'Unreal Engine rilevato',
             fileCount: locStatus?.locres_count || 0,
             stringCount: locStatus?.total_entries || 0,
             ready: true,
