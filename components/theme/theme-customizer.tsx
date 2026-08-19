@@ -272,11 +272,37 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
 
+    // Il testo sopra un colore scelto dall'utente non puo' essere fissato:
+    // con l'accento ciano il bianco sta a 2.43:1, col giallo a 1.20:1.
+    // Scegliamo inchiostro chiaro o scuro in base a quale dei due contrasta
+    // di piu' col colore scelto (WCAG relative luminance).
+    const INK_LIGHT = '0 0% 100%';
+    const INK_DARK = '220 30% 5%';
+
+    const readableOn = (hex: string): string => {
+      const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+      const r = channel(parseInt(hex.slice(1, 3), 16) / 255);
+      const g = channel(parseInt(hex.slice(3, 5), 16) / 255);
+      const b = channel(parseInt(hex.slice(5, 7), 16) / 255);
+      const bg = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+      // Luminanza relativa di INK_DARK (hsl(220 30% 5%)), precalcolata.
+      const inkDark = 0.0035;
+      const contrastLight = 1.05 / (bg + 0.05);
+      const contrastDark = (bg + 0.05) / (inkDark + 0.05);
+
+      return contrastDark > contrastLight ? INK_DARK : INK_LIGHT;
+    };
+
     // Applica le variabili CSS
     root.style.setProperty('--primary', hexToHsl(colors.primary));
+    root.style.setProperty('--primary-foreground', readableOn(colors.primary));
     root.style.setProperty('--accent', hexToHsl(colors.accent));
+    root.style.setProperty('--accent-foreground', readableOn(colors.accent));
     root.style.setProperty('--success', hexToHsl(colors.success));
+    root.style.setProperty('--success-foreground', readableOn(colors.success));
     root.style.setProperty('--destructive', hexToHsl(colors.destructive));
+    root.style.setProperty('--destructive-foreground', readableOn(colors.destructive));
     
     // Salva il gradient per l'header
     root.style.setProperty('--header-gradient', colors.headerGradient);
@@ -289,9 +315,13 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
     // Rimuovi variabili custom
     const root = document.documentElement;
     root.style.removeProperty('--primary');
+    root.style.removeProperty('--primary-foreground');
     root.style.removeProperty('--accent');
+    root.style.removeProperty('--accent-foreground');
     root.style.removeProperty('--success');
+    root.style.removeProperty('--success-foreground');
     root.style.removeProperty('--destructive');
+    root.style.removeProperty('--destructive-foreground');
     root.style.removeProperty('--header-gradient');
     
     localStorage.removeItem('gamestringer-custom-theme');
