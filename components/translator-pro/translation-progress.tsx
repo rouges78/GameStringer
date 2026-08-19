@@ -76,13 +76,13 @@ export function TranslationProgress({
                 "absolute inset-0 rounded-full animate-pulse transition-colors duration-500",
                 progress?.isRateLimited
                   ? "bg-amber-500"
-                  : "bg-gradient-to-r from-sky-500 to-blue-500"
+                  : "bg-primary"
               )} />
               <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
                 {progress?.isRateLimited ? (
-                  <Clock className="h-8 w-8 text-amber-500 animate-pulse" />
+                  <Clock className="h-8 w-8 text-amber-600 dark:text-amber-500" />
                 ) : (
-                  <Brain className="h-8 w-8 text-purple-500 animate-pulse" />
+                  <Brain className="h-8 w-8 text-primary" />
                 )}
               </div>
             </div>
@@ -90,7 +90,7 @@ export function TranslationProgress({
             {/* Game name */}
             {selectedGame && (
               <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
+                <div className="relative w-8 h-8 rounded overflow-hidden bg-muted flex-shrink-0">
                   {selectedGame.coverUrl && (
                     <img
                       src={selectedGame.coverUrl}
@@ -102,10 +102,10 @@ export function TranslationProgress({
                     />
                   )}
                   <div className="absolute inset-0 flex items-center justify-center -z-10">
-                    <span className="text-xs font-bold text-white/50">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
                   </div>
                 </div>
-                <span className="text-lg font-medium text-purple-400">
+                <span className="text-lg font-medium">
                   {selectedGame.name}
                 </span>
               </div>
@@ -119,7 +119,7 @@ export function TranslationProgress({
               <div className={cn(
                 "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-4",
                 progress.isRateLimited
-                  ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                  ? "bg-amber-600/5 text-amber-900 dark:text-amber-500 border border-amber-600/40"
                   : "bg-muted text-muted-foreground"
               )}>
                 {progress.isRateLimited && <AlertTriangle className="h-3 w-3" />}
@@ -158,7 +158,7 @@ export function TranslationProgress({
 
                 {/* Live Quality Preview */}
                 {translatedItems.length > 0 && (
-                  <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+                  <div className="mt-3 p-3 rounded-lg bg-muted/50 border space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-2xs font-semibold text-muted-foreground uppercase">{t('translatorProPage.ultimeTraduzioni')}</span>
                       <span className="text-2xs text-muted-foreground">{translatedItems.length} completate</span>
@@ -170,7 +170,7 @@ export function TranslationProgress({
                           <div key={idx} className="flex items-center gap-2 py-1.5 text-[11px]">
                             <span className="truncate flex-1 text-muted-foreground">{item.sourceText}</span>
                             <span className="text-xs">&rarr;</span>
-                            <span className={cn("truncate flex-1", item.fromMemory ? "text-blue-400" : "")}>{item.translatedText}</span>
+                            <span className={cn("truncate flex-1", item.fromMemory ? "text-primary" : "")}>{item.translatedText}</span>
                             <QualityScoreBadge score={qs.overall} size="sm" />
                           </div>
                         );
@@ -186,7 +186,6 @@ export function TranslationProgress({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-green-500/50 text-green-500 hover:bg-green-500/10"
                       onClick={onSavePartialResults}
                     >
                       <Save className="mr-2 h-3 w-3" />
@@ -220,7 +219,7 @@ export function TranslationProgress({
           </>
         ) : (
           <>
-            <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
+            <CheckCircle className="h-16 w-16 mx-auto text-green-800 dark:text-green-400 mb-4" />
             <h2 className="text-xl font-semibold mb-2">{t('translatorProPage.completed')}</h2>
             <Button onClick={onViewResults}>
               Vedi results

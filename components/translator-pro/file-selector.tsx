@@ -130,12 +130,12 @@ export function FileSelector({
     <div className="space-y-3">
       {/* Wizard Banner */}
       {wizardGameId && wizardMethod && (
-        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-3">
-          <Sparkles className="h-5 w-5 text-blue-400" />
+        <div className="p-3 rounded-lg bg-muted/50 border flex items-center gap-3">
+          <Sparkles className="h-5 w-5 text-muted-foreground" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-blue-300">
+            <p className="text-sm font-medium">
               {t('fileSelector.fromWizard')}</p>
-            <p className="text-xs text-blue-400/70">
+            <p className="text-xs text-muted-foreground">
               {t('fileSelector.recommendedMethod')} {wizardMethod === 'file' ? '📁 Modifica File' : wizardMethod === 'bridge' ? '🔌 Translation Bridge' : '🔧 Manuale'}
               {wizardTargetLang && ` • Lingua: ${wizardTargetLang.toUpperCase()}`}
             </p>
@@ -150,7 +150,7 @@ export function FileSelector({
       {/* Selected Game - Compact */}
       {selectedGame && (
         <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 border">
-          <div className="relative w-10 h-10 rounded overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex-shrink-0">
+          <div className="relative w-10 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
             {selectedGame.coverUrl ? (
               <Image
                 src={selectedGame.coverUrl}
@@ -192,10 +192,10 @@ export function FileSelector({
                   <div className="flex items-center gap-1.5">
                     <Cpu className="h-3 w-3 text-muted-foreground" />
                     <span className="font-medium">{engineInfo.engine_name}</span>
-                    {engineInfo.has_bepinex && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-green-500/20">BepInEx</Badge>}
-                    {engineInfo.has_xunity && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-blue-500/20">XUnity</Badge>}
+                    {engineInfo.has_bepinex && <Badge variant="outline" className="text-2xs h-3.5 px-1">BepInEx</Badge>}
+                    {engineInfo.has_xunity && <Badge variant="outline" className="text-2xs h-3.5 px-1">XUnity</Badge>}
                   </div>
-                  <span className={cn("text-2xs", engineInfo.can_patch ? "text-green-500" : "text-amber-500")}>
+                  <span className={cn("text-2xs", engineInfo.can_patch ? "text-green-800 dark:text-green-400" : "text-amber-900 dark:text-amber-500")}>
                     {engineInfo.can_patch ? "✓ Compatibile" : "⚠ Tool esterni"}
                   </span>
                 </div>
@@ -210,7 +210,7 @@ export function FileSelector({
                       <span>{localizationInfo.available_languages.length}  {t('fileSelector.languagesUnit')}</span>
                       <Badge variant="outline" className="text-2xs h-3.5 px-1">{localizationInfo.format.toUpperCase()}</Badge>
                     </div>
-                    <span className={cn("text-2xs", localizationInfo.missing_italian ? "text-amber-500" : "text-green-500")}>
+                    <span className={cn("text-2xs", localizationInfo.missing_italian ? "text-amber-900 dark:text-amber-500" : "text-green-800 dark:text-green-400")}>
                       {localizationInfo.missing_italian ? "⚠ IT mancante" : "✓ IT presente"}
                     </span>
                   </div>
@@ -219,7 +219,7 @@ export function FileSelector({
                   {localizationInfo.source_file && localizationInfo.missing_italian && (
                     <Button
                       size="sm"
-                      className="w-full h-7 gap-1.5 text-xs bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                      className="w-full h-7 gap-1.5 text-xs"
                       onClick={onLoadSourceFile}
                       disabled={isLoadingFiles}
                     >
@@ -237,7 +237,7 @@ export function FileSelector({
       <Button
         variant="default"
         size="default"
-        className="w-full h-10 gap-2 text-sm bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+        className="w-full h-10 gap-2 text-sm"
         onClick={onSearchGameFiles}
         disabled={isLoadingFiles}
       >
@@ -281,11 +281,9 @@ export function FileSelector({
       {filesWarning && (
         <div className={cn(
           "p-4 rounded-lg border",
-          filesWarning.type === 'xunity_suggested'
-            ? "bg-purple-500/10 border-purple-500/30"
-            : filesWarning.type === 'config'
-              ? "bg-yellow-500/10 border-yellow-500/30"
-              : "bg-blue-500/10 border-blue-500/30"
+          filesWarning.type === 'config'
+            ? "bg-yellow-600/5 border-yellow-600/40"
+            : "bg-muted/50"
         )}>
           <p className="text-sm font-medium mb-2">{filesWarning.message}</p>
           {filesWarning.type === 'xunity_suggested' && engineInfo?.is_unity && (
@@ -294,7 +292,6 @@ export function FileSelector({
                 {t('fileSelector.xunityDesc')}</p>
               <Button
                 size="sm"
-                className="bg-purple-600 hover:bg-purple-700"
                 onClick={onGoToUnityPatcher}
               >
                 <Zap className="h-3 w-3 mr-1" />
@@ -358,7 +355,7 @@ export function FileSelector({
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-pointer transition-all",
                     file.checked === false ? "opacity-50 border-dashed" : "",
-                    previewFile?.name === file.name ? "border-purple-500 bg-purple-500/5" : "hover:border-purple-500/50"
+                    previewFile?.name === file.name ? "border-primary bg-primary/5" : "hover:border-primary/50"
                   )}
                   onClick={() => onPreviewFile(file)}
                 >
@@ -369,9 +366,9 @@ export function FileSelector({
                       e.stopPropagation();
                       onToggleFileChecked(file.name, e.target.checked);
                     }}
-                    className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
                   />
-                  <FileCode className="h-5 w-5 text-purple-500" />
+                  <FileCode className="h-5 w-5 text-muted-foreground" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">
