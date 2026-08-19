@@ -4,7 +4,7 @@
  * Secure Key Store — centralized API key management.
  *
  * In Tauri: uses Rust-side AES-256-GCM encrypted storage via invoke().
- * Fallback: uses server-side secretsManager via /api/secrets endpoint.
+ * Fallback: uses the /api/secrets endpoint (web build only).
  *
  * NEVER stores API keys in localStorage directly.
  */
@@ -31,7 +31,7 @@ async function ensureTauri(): Promise<boolean> {
 /**
  * Store an API key securely.
  * In Tauri: encrypted on disk via AES-256-GCM.
- * Fallback: stored in server-side secretsManager via /api/secrets.
+ * Fallback: stored via /api/secrets (web build only).
  */
 export async function setSecureKey(name: string, value: string): Promise<void> {
   if (await ensureTauri()) {
@@ -62,7 +62,7 @@ export async function getSecureKey(name: string): Promise<string | null> {
     const res = await fetch(`/api/secrets?check=${encodeURIComponent(name)}`);
     const data = await res.json();
     const keyStatus = data.keys?.find((k: { key: string; configured: boolean }) => k.key === name);
-    // Server-side secretsManager doesn't expose values via GET for security;
+    // /api/secrets doesn't expose values via GET for security;
     // return a truthy placeholder if configured, null otherwise
     return keyStatus?.configured ? '__configured__' : null;
   } catch {
