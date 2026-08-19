@@ -79,6 +79,36 @@ come ultima risorsa i `.uasset` di localizzazione.
 esserci una regola secca sul packaging Unreal, probabilmente si è visto un gioco
 solo.
 
+### Pak con indice cifrato: la chiave la mette l'utente, non la ricaviamo noi
+
+**Il fatto.** Alcuni giochi UE cifrano l'indice del `.pak` (AES-256, modalità
+**ECB**, blocchi indipendenti da 16 byte) per scoraggiare il datamining. Con la
+chiave l'indice si apre normalmente; la dimensione cifrata è quella dell'indice
+arrotondata a multipli di 16.
+
+**Scelta deliberata, non limite tecnico.** La chiave si potrebbe ricostruire
+scandendo l'eseguibile del gioco — è ciò che fa il concorrente RuneTranslate —
+ma sarebbe aggirare una misura tecnica di protezione, e `ANTI_PIRACY.md`
+dichiara pubblicamente che non lo facciamo. La chiave la fornisce l'utente,
+come in `repak --aes-key` e `retoc --aes-key`. Chi non ce l'ha resta fuori: è il
+prezzo accettato della coerenza con quel documento.
+
+**Nel codice.** `unreal_iostore.rs`: `parse_aes_key()` (accetta base64 a 44
+caratteri o esadecimale a 64), `key_opens_pak_index()`, `decrypt_pak_index()`.
+La chiave vive nello store cifrato insieme alle API key, sotto `PAK_AES::<gioco>`.
+Comandi `set_pak_aes_key` / `has_pak_aes_key` / `clear_pak_aes_key`.
+
+**Validare prima di parsare.** L'indice comincia con la FString del mount point,
+un percorso tipo `../../../Gioco/Content/`. Bastano i primi 32 byte decifrati:
+se la lunghezza è plausibile e i byte sono testo stampabile, la chiave è quella.
+Senza questo controllo una chiave sbagliata produce byte casuali e l'errore
+compare 200 righe più in là, dove nessuno lo collega alla chiave.
+
+**Trappola.** «Indice cifrato» non va trattato come «gioco senza testo». Sono
+due esiti diversi per l'utente: da una porta chiusa a chiave si può entrare
+procurandosi la chiave, da una stanza vuota no. Nel codice il marcatore
+`PAK_NEEDS_AES` risale fino alla UI proprio per tenerli separati.
+
 ### UE5 IoStore: un `_P.pak` da solo non si monta, serve la tripletta
 
 **Il fatto.** Nei giochi UE5 IoStore (5.6+) un `_P.pak` da solo viene ignorato dal

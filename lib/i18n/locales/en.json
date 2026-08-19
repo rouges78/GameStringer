@@ -7630,7 +7630,11 @@
     "stoppedByUser": "stopped by user",
     "stoppedToast": "Translation stopped: {n} of {total} safe in the checkpoint — resume anytime.",
     "unrealNoLocresShort": "This game exposes no extractable text",
-    "tryLiveOcr": "Try on-screen translation"
+    "tryLiveOcr": "Try on-screen translation",
+    "pakEncryptedDetail": "This game encrypts its own .pak archives: without the AES key the index cannot be read.",
+    "pakEncryptedExplain": "Encrypted pak. GameStringer does not recover the key from the game: paste it here if you have it.",
+    "pakAesPlaceholder": "AES-256 key (base64 or hex)",
+    "pakAesSaved": "Key saved. Run String it! again to retry."
   },
   "patchHubPage": {
     "title": "Patch Hub",
