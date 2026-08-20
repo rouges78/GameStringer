@@ -112,7 +112,9 @@ fn create_software_bitmap(image: &ImageData) -> Result<SoftwareBitmap, String> {
     
     // Usa IMemoryBufferByteAccess per accesso diretto
     use windows::Win32::System::WinRT::IMemoryBufferByteAccess;
-    use windows::core::ComInterface;
+    // `ComInterface` è stato rinominato `Interface` in windows 0.58: è il
+    // tratto che porta `cast()`.
+    use windows::core::Interface;
     
     let byte_access: IMemoryBufferByteAccess = reference.cast()
         .map_err(|e| format!("Failed to cast: {:?}", e))?;

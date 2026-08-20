@@ -104,7 +104,7 @@ fontdue = "0.9"
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
 winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi", "synchapi", "winnt"] }
-windows = { version = "0.51", features = [
+windows = { version = "0.61", features = [
     "Win32_Foundation", 
     "Win32_System_Diagnostics_Debug", 
     "Win32_System_Memory", 
@@ -117,6 +117,12 @@ windows = { version = "0.51", features = [
     "Foundation",
     "Foundation_Collections"
 ] }
+# Le `impl IntoFuture` per IAsyncOperation vivono in windows-future dietro la
+# feature `std`, ma `windows` la tira con default-features = false e il suo
+# `std` inoltra solo a windows-core. Senza questa riga `.await` sulle API WinRT
+# non compila ("IAsyncOperation is not a future"). Dipendenza diretta solo per
+# accendere la feature: il codice continua a usarla via `windows::Foundation`.
+windows-future = { version = "0.2", features = ["std"] }
 shared_memory = "0.12.4"
 
 [dev-dependencies]
