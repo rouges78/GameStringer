@@ -269,6 +269,44 @@ Usa i filtri per ridurre i risultati:
 - Filtra per stato
 - Usa ricerca mirata
 
+### 11. Gioco Unreal: «questo gioco non espone testi estraibili»
+
+#### Sintomi
+
+- String it! su un gioco Unreal si ferma dicendo che non c'è testo da tradurre
+- Il gioco però ha chiaramente dialoghi e interfaccia in inglese
+
+#### Causa
+
+Tre cause diverse, che l'app ora distingue:
+
+1. **Il testo c'è ma è in un altro posto.** Nei giochi UE5 i `.locres` possono
+   stare sciolti su disco, dentro il container IoStore (`.utoc`/`.ucas`), oppure
+   nel `.pak` classico affiancato. GameStringer li prova tutti e tre.
+2. **Gli archivi sono cifrati.** In questo caso il pannello non dice «non c'è
+   testo»: chiede la chiave AES (vedi sotto).
+3. **Il gioco non ha localizzazione.** Pubblicato in una lingua sola, con le
+   stringhe scritte nel codice: non esiste un `.locres` da tradurre.
+
+#### Soluzione
+
+Per il caso cifrato, incolla la chiave AES-256 nel campo che compare nel
+pannello: base64 o esadecimale, entrambe accettate. GameStringer **non ricava la
+chiave dal gioco** — se non ce l'hai, quel titolo resta fuori portata.
+
+Per verificare a mano cosa c'è dentro un pak, con i tool che l'app scarica in
+`%APPDATA%/GameStringer/tools/`:
+
+```bash
+repak.exe list "<gioco>/Content/Paks/<Nome>-Windows.pak" | grep locres
+```text
+
+⚠️ `retoc list` sul container **non** serve a questo: stampa ID di chunk, non
+nomi di file, quindi non vedere `.locres` lì non è una prova d'assenza.
+
+Dettaglio completo in [`METODI-DI-TRADUZIONE.md`](METODI-DI-TRADUZIONE.md) e
+[`UNREAL-DOVE-STANNO-I-LOCRES.md`](UNREAL-DOVE-STANNO-I-LOCRES.md).
+
 ## 🛠️ Comandi Utili per Debug
 
 ### Verifica Stato Database
