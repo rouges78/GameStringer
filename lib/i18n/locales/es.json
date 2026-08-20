@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "Este juego cifra sus archivos .pak: sin la clave AES el índice no se puede leer.",
     "pakEncryptedExplain": "Pak cifrado. GameStringer no obtiene la clave del juego: pégala aquí si la tienes.",
     "pakAesPlaceholder": "Clave AES-256 (base64 o hexadecimal)",
-    "pakAesSaved": "Clave guardada. Vuelve a pulsar String it! para reintentar."
+    "pakAesSaved": "Clave guardada. Vuelve a pulsar String it! para reintentar.",
+    "pakAesWrong": "La clave guardada no abre este pak. Pega otra o elimina la guardada.",
+    "pakAesClear": "Eliminar la clave guardada",
+    "pakAesCleared": "Clave eliminada."
   },
   "autoTranslatePage": {
     "identical": "idénticas",

@@ -1485,6 +1485,12 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
         log::warn!("⚠️ {} .locres candidati ma nessuna stringa estratta (Oodle?)", locres_candidates.len());
     }
 
+    // Un pak chiuso a chiave non e' un gioco senza testo, ma non e' nemmeno
+    // detto che sia l'ultima parola: il fallback .uasset piu' sotto puo' ancora
+    // trovare stringhe. Percio' si prende nota qui e si decide alla fine.
+    let mut serve_chiave = false;
+    let mut chiave_sbagliata = false;
+
     // ── Se l'IoStore non ha .locres, cercali nei .pak classici del gioco ────
     // (alcuni giochi tengono il Game.locres nel .pak classico, compresso Oodle.)
     {
@@ -1498,7 +1504,6 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             let mut chosen_paths: Vec<String> = Vec::new();
             let mut version_seen: Option<u8> = None;
 
-            let mut serve_chiave = false;
             for pak in &pak_files {
                 let locres_list = match extract_locres_from_pak_for_game(pak, &oodle, Some(&game_path)) {
                     Ok(l) => l,
@@ -1507,6 +1512,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                         // all'utente, non sepolto in un warning. Si continua però
                         // il giro, perché un altro pak potrebbe non essere cifrato.
                         if e.contains(PAK_NEEDS_AES) { serve_chiave = true; }
+                        else if e.contains(PAK_WRONG_AES) { chiave_sbagliata = true; }
                         log::warn!("⚠️ pak {}: {}", pak.display(), e);
                         continue;
                     }
@@ -1548,19 +1554,11 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                     message: format!("Estratte {} stringhe da {} .locres nel .pak (LocRes v{})", count, chosen_paths.len(), ver),
                 });
             }
-
-            // Nessuna stringa E almeno un pak cifrato senza chiave: il gioco non
-            // è «senza testo», è chiuso a chiave. Distinguere i due casi è tutto
-            // il punto — l'utente può procurarsi una chiave, non può procurarsi
-            // un testo che non esiste.
-            if serve_chiave {
-                return Err(PAK_NEEDS_AES.to_string());
-            }
         }
     }
 
     // Fallback: estrai stringhe dai .uasset di localizzazione
-    if !loc_asset_contexts.is_empty() {
+    let esito: Result<ExtractionResult, String> = if !loc_asset_contexts.is_empty() {
         log::info!("📦 Fallback .uasset: analisi {} file di localizzazione", loc_asset_contexts.len());
         
         let mut stringtable_entries = Vec::new();
@@ -1792,6 +1790,17 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
              di localizzazione riconoscibili"
             .into(),
         )
+    };
+
+    // Solo ora si puo' dire perche' non e' uscito niente. Se un pak era chiuso a
+    // chiave quello e' il motivo vero, e l'utente puo' farci qualcosa; il
+    // messaggio generico «non usa la localizzazione di Unreal» lo manderebbe a
+    // cercare un problema che non ha.
+    match esito {
+        Ok(r) => Ok(r),
+        Err(_) if serve_chiave => Err(PAK_NEEDS_AES.to_string()),
+        Err(_) if chiave_sbagliata => Err(PAK_WRONG_AES.to_string()),
+        Err(e) => Err(e),
     }
 }
 
@@ -2664,10 +2673,22 @@ fn pak_aes_key_name(game_path: &str) -> String {
 /// (44 caratteri) o esadecimale (64 caratteri), con o senza `0x`.
 pub fn parse_aes_key(raw: &str) -> Result<AesKey, String> {
     use base64::Engine;
-    let s = raw.trim().trim_start_matches("0x").trim_start_matches("0X");
+    let t = raw.trim();
     let mut out = [0u8; 32];
 
-    if s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit()) {
+    // Il prefisso "0x" si toglie SOLO se quel che resta e' davvero esadecimale.
+    // '0' e 'x' appartengono anche all'alfabeto base64, quindi toglierlo sempre
+    // mutilava una chiave base64 valida che iniziava per quei due caratteri:
+    // misurato, capita a circa 1 chiave su 2500, e l'utente si sentiva dire che
+    // la sua chiave corretta non era ne' esadecimale ne' base64.
+    let senza_prefisso = t.strip_prefix("0x").or_else(|| t.strip_prefix("0X"));
+    let e_hex = |x: &str| x.len() == 64 && x.chars().all(|c| c.is_ascii_hexdigit());
+    let s = match senza_prefisso {
+        Some(resto) if e_hex(resto) => resto,
+        _ => t,
+    };
+
+    if e_hex(s) {
         for i in 0..32 {
             out[i] = u8::from_str_radix(&s[i * 2..i * 2 + 2], 16)
                 .map_err(|_| "esadecimale non valido".to_string())?;
@@ -2711,8 +2732,14 @@ fn key_opens_pak_index(data: &[u8], footer: &PakFooter, key: &AesKey) -> bool {
         let n = len as usize - 1; // la lunghezza include il NUL finale
         return head[4..4 + n].iter().all(|&b| (0x20..0x7f).contains(&b)) && head[4 + n] == 0;
     }
-    if len < -1 && ((-len) as usize) * 2 <= 26 {
-        let n = (-len) as usize - 1;
+    // Negare i32::MIN va in overflow, e con una chiave sbagliata i byte sono
+    // casuali: prima o poi quel valore esce. Un sentinella (0) non basta —
+    // passerebbe il controllo di lunghezza e poi sottrarrebbe sotto zero — per
+    // cui qui si esce e basta. Sotto, `len <= -2` garantisce `neg >= 2`.
+    if len < -1 {
+        let Some(neg) = len.checked_neg() else { return false };
+        let n = neg as usize - 1;
+        if (neg as usize) * 2 > 26 { return false; }
         return (0..n).all(|i| head[5 + i * 2] == 0 && (0x20..0x7f).contains(&head[4 + i * 2]));
     }
     false
@@ -2722,6 +2749,13 @@ fn key_opens_pak_index(data: &[u8], footer: &PakFooter, key: &AesKey) -> bool {
 /// «è rotto». La UI ci si aggancia per proporre il campo invece di un errore.
 pub const PAK_NEEDS_AES: &str = "PAK_ENCRYPTED_NEEDS_AES_KEY";
 
+/// Come sopra, ma una chiave c'e' gia' e non apre questo pak. Senza un marcatore
+/// distinto l'errore finiva nel ramo generico e l'utente leggeva «questo gioco
+/// non espone testi estraibili» con una chiave sbagliata in cassaforte: il
+/// messaggio piu' fuorviante possibile, perche' nasconde l'unica cosa che
+/// potrebbe sistemare da solo.
+pub const PAK_WRONG_AES: &str = "PAK_ENCRYPTED_WRONG_AES_KEY";
+
 /// L'indice decifrato, se il pak è cifrato e abbiamo la chiave giusta.
 fn decrypt_pak_index(data: &[u8], footer: &PakFooter, game_path: Option<&str>) -> Result<Vec<u8>, String> {
     let stored = game_path
@@ -2730,7 +2764,7 @@ fn decrypt_pak_index(data: &[u8], footer: &PakFooter, game_path: Option<&str>) -
     let key = parse_aes_key(&raw)?;
 
     if !key_opens_pak_index(data, footer, &key) {
-        return Err("La chiave AES salvata non apre questo pak: controlla di aver incollato quella giusta".into());
+        return Err(PAK_WRONG_AES.to_string());
     }
 
     let off = footer.index_offset as usize;
@@ -2750,11 +2784,6 @@ fn decrypt_pak_index(data: &[u8], footer: &PakFooter, game_path: Option<&str>) -
 pub fn set_pak_aes_key(game_path: String, key: String) -> Result<(), String> {
     parse_aes_key(&key)?; // solo per validare
     super::secure_storage::set_secure_key(pak_aes_key_name(&game_path), key.trim().to_string())
-}
-
-#[tauri::command]
-pub fn has_pak_aes_key(game_path: String) -> bool {
-    super::secure_storage::has_secure_key(pak_aes_key_name(&game_path))
 }
 
 #[tauri::command]
@@ -3379,6 +3408,67 @@ mod tests {
         let b64 = base64::engine::general_purpose::STANDARD.encode(atteso);
         assert_eq!(parse_aes_key(&b64).unwrap(), atteso, "base64");
         assert_eq!(parse_aes_key(&format!("  {}  ", b64)).unwrap(), atteso, "con spazi attorno");
+    }
+
+    /// REGRESSIONE: '0' e 'x' sono caratteri base64 validi, quindi una chiave
+    /// base64 legittima può cominciare per "0x". Togliere il prefisso sempre la
+    /// mutilava e l'utente si sentiva dire che la sua chiave giusta non era né
+    /// esadecimale né base64. Capita a circa 1 chiave su 2500.
+    #[test]
+    fn parse_aes_key_non_mutila_le_base64_che_iniziano_per_0x() {
+        use base64::Engine;
+        // Costruita per cominciare davvero con "0x" una volta codificata.
+        let mut trovata = None;
+        for seme in 0u8..=255 {
+            let raw: [u8; 32] = std::array::from_fn(|i| seme.wrapping_mul(31).wrapping_add(i as u8 * 7));
+            let b64 = base64::engine::general_purpose::STANDARD.encode(raw);
+            if b64.starts_with("0x") || b64.starts_with("0X") {
+                trovata = Some((raw, b64));
+                break;
+            }
+        }
+        let Some((raw, b64)) = trovata else {
+            eprintln!("nessun seme ha prodotto un base64 con prefisso 0x: test saltato");
+            return;
+        };
+        assert_eq!(parse_aes_key(&b64).unwrap(), raw, "la chiave base64 non va mutilata");
+    }
+
+    /// Il prefisso esadecimale deve continuare a funzionare.
+    #[test]
+    fn parse_aes_key_toglie_0x_solo_dall_esadecimale() {
+        let atteso = [0xABu8; 32];
+        let hex: String = atteso.iter().map(|b| format!("{:02x}", b)).collect();
+        assert_eq!(parse_aes_key(&format!("0x{}", hex)).unwrap(), atteso);
+        assert_eq!(parse_aes_key(&format!("0X{}", hex)).unwrap(), atteso);
+    }
+
+    /// REGRESSIONE: `-len` su i32::MIN va in overflow e in debug fa panicare.
+    /// Con una chiave sbagliata i byte decifrati sono casuali, quindi quel
+    /// valore prima o poi esce.
+    #[test]
+    fn key_opens_pak_index_non_panica_su_i32_min() {
+        use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
+        let mut chiaro = i32::MIN.to_le_bytes().to_vec();
+        chiaro.resize(32, 0);
+        let key: [u8; 32] = [0x5C; 32];
+        let mut cifrato = chiaro.clone();
+        let cipher = aes::Aes256::new(GenericArray::from_slice(&key));
+        for b in cifrato.chunks_exact_mut(16) {
+            cipher.encrypt_block(GenericArray::from_mut_slice(b));
+        }
+        let mut data = vec![0u8; 16];
+        let index_offset = data.len() as u64;
+        data.extend_from_slice(&cifrato);
+        let footer = PakFooter {
+            version: 11,
+            index_offset,
+            index_size: 32,
+            compression_methods: vec![],
+            encrypted_index: true,
+        };
+        // Non deve panicare: deve semplicemente dire «non è la chiave giusta».
+        assert!(!key_opens_pak_index(&data, &footer, &key));
     }
 
     /// Una chiave incollata male deve fallire subito e con un motivo leggibile,

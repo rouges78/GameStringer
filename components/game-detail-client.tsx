@@ -2609,6 +2609,10 @@ export default function GameDetailPage() {
           // chiave» è una porta chiusa a chiave, non un gioco senza testo. Va
           // distinto, perché una chiave l'utente può procurarsela.
           let serveChiaveAes = false;
+          // Chiave già salvata ma che non apre il pak: caso distinto, perché
+          // finiva nel ramo generico e l'utente leggeva «non espone testi
+          // estraibili» avendo in cassaforte l'unica cosa che poteva sistemare.
+          let chiaveAesSbagliata = false;
 
           // Su disco niente: i giochi UE5 moderni tengono i .locres DENTRO i
           // container (IoStore .utoc/.ucas) o dentro il .pak, compressi Oodle.
@@ -2618,7 +2622,9 @@ export default function GameDetailPage() {
             const daContainer = await invoke<{ entries?: unknown[] }>(
               'extract_iostore_localization', { gamePath: game.installPath }
             ).catch((err: unknown) => {
-              if (String(err).includes('PAK_ENCRYPTED_NEEDS_AES_KEY')) serveChiaveAes = true;
+              const msg = String(err);
+              if (msg.includes('PAK_ENCRYPTED_NEEDS_AES_KEY')) serveChiaveAes = true;
+              else if (msg.includes('PAK_ENCRYPTED_WRONG_AES_KEY')) chiaveAesSbagliata = true;
               return null;
             });
             const n = daContainer?.entries?.length ?? 0;
@@ -2635,14 +2641,14 @@ export default function GameDetailPage() {
               { ...ueSteps[0], status: 'done', detail: dove === '.locres' ? `${quanti} .locres` : dove },
               { ...ueSteps[1], status: 'done' },
             ]);
-          } else if (serveChiaveAes) {
+          } else if (serveChiaveAes || chiaveAesSbagliata) {
             // Porta chiusa a chiave, non stanza vuota. Il pannello mostra il
             // campo per la chiave AES invece dell'errore generico: GameStringer
             // non ricostruisce la chiave (sarebbe aggirare una protezione, e la
             // nostra ANTI_PIRACY.md dice che non lo facciamo), ma se l'utente ce
             // l'ha la usa — come `repak --aes-key`.
             setAutoTranslateSteps([{ ...ueSteps[0], status: 'error', detail: t('heroJob.pakEncryptedDetail') }]);
-            setAutoTranslateError('PAK_ENCRYPTED_NEEDS_AES_KEY');
+            setAutoTranslateError(chiaveAesSbagliata ? 'PAK_ENCRYPTED_WRONG_AES_KEY' : 'PAK_ENCRYPTED_NEEDS_AES_KEY');
           } else {
             // Il gioco non espone testi estraibili (misurato: succede sui giochi
             // UE che tengono tutto in .uasset compressi). Il messaggio resta

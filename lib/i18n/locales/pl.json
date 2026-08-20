@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "Ta gra szyfruje swoje archiwa .pak: bez klucza AES indeks jest nieczytelny.",
     "pakEncryptedExplain": "Zaszyfrowany pak. GameStringer nie odzyskuje klucza z gry: wklej go tutaj, jeśli go masz.",
     "pakAesPlaceholder": "Klucz AES-256 (base64 lub szesnastkowy)",
-    "pakAesSaved": "Klucz zapisany. Uruchom String it! ponownie, aby spróbować jeszcze raz."
+    "pakAesSaved": "Klucz zapisany. Uruchom String it! ponownie, aby spróbować jeszcze raz.",
+    "pakAesWrong": "Zapisany klucz nie otwiera tego paka. Wklej inny albo usuń zapisany.",
+    "pakAesClear": "Usuń zapisany klucz",
+    "pakAesCleared": "Klucz usunięty."
   },
   "autoTranslatePage": {
     "identical": "identyczne",

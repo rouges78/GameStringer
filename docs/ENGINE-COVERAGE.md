@@ -82,7 +82,7 @@ criptato (RGSS, GameMaker, Kirikiri, NScripter, Wolf, Godot, Unreal).
 | Unity .assets manager | `unity_assets` | 6 | 8 | ✅ Testato |
 | Unity asset injector (Python) | `unity_asset_injector` | 3 | 10 | ✅ Logica Rust testata; script Python no |
 | Unity injector (runtime) | `unity_injector` | 3 | 6 | 🟡 Logica IPC/guardia testata; injection WinAPI no |
-| Unreal IoStore | `unreal_iostore` | 5 | 31 | ✅ Testato |
+| Unreal IoStore | `unreal_iostore` | 4 | 34 | ✅ Testato |
 | Unity CSV | `unity_csv` | 1 | 11 | ✅ Testato |
 
 `unreal_localization` è coperto da 35 test deterministici (no file di gioco
@@ -149,7 +149,7 @@ vera (resize asset) è delegata allo script Python, non coperto dalla CI Rust.
 "popups" invece di "spelltexts" (riordinati i prefissi specifici prima di
 `ll_`/`vl_`).
 
-`unreal_iostore` è coperto da 31 test: helper binari (`read_u8/u32/i32/u64` con EOF,
+`unreal_iostore` è coperto da 34 test: helper binari (`read_u8/u32/i32/u64` con EOF,
 `read_fstring`/`try_read_fstring_at` UTF-8 + casi limite), euristiche di pulizia
 (`is_translatable_text`, `split_on_id_boundaries`, `clean_datatable_string`),
 scanner `scan_ftext_entries` (FText Base ns/key/source) e `scan_uasset_strings`
