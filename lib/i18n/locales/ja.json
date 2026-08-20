@@ -1136,7 +1136,11 @@
     "stoppedByUser": "ユーザーにより停止",
     "stoppedToast": "翻訳を停止しました：{n}/{total} はチェックポイントに保存済み。いつでも再開できます。",
     "unrealNoLocresShort": "このゲームは抽出可能なテキストを公開していません",
-    "tryLiveOcr": "画面翻訳を試す"
+    "tryLiveOcr": "画面翻訳を試す",
+    "pakEncryptedDetail": "このゲームは .pak アーカイブを暗号化しています。AES 鍵がないと索引を読めません。",
+    "pakEncryptedExplain": "暗号化された pak です。GameStringer はゲームから鍵を割り出しません。お持ちならここに貼り付けてください。",
+    "pakAesPlaceholder": "AES-256 鍵（base64 または十六進）",
+    "pakAesSaved": "鍵を保存しました。String it! をもう一度実行してください。"
   },
   "autoTranslatePage": {
     "identical": "同一",

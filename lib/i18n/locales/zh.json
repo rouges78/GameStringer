@@ -1136,7 +1136,11 @@
     "stoppedByUser": "已由用户停止",
     "stoppedToast": "翻译已停止：{n}/{total} 已保存到检查点，可随时继续。",
     "unrealNoLocresShort": "该游戏未提供可提取的文本",
-    "tryLiveOcr": "试试屏幕翻译"
+    "tryLiveOcr": "试试屏幕翻译",
+    "pakEncryptedDetail": "这款游戏加密了自己的 .pak 档案：没有 AES 密钥就无法读取索引。",
+    "pakEncryptedExplain": "已加密的 pak。GameStringer 不会从游戏中还原密钥：如果你有，请粘贴到这里。",
+    "pakAesPlaceholder": "AES-256 密钥（base64 或十六进制）",
+    "pakAesSaved": "密钥已保存。请再次运行 String it! 重试。"
   },
   "autoTranslatePage": {
     "identical": "相同",

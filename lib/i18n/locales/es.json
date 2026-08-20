@@ -1136,7 +1136,11 @@
     "stoppedByUser": "detenida por el usuario",
     "stoppedToast": "Traducción detenida: {n} de {total} guardadas en el checkpoint; reanuda cuando quieras.",
     "unrealNoLocresShort": "Este juego no expone textos extraíbles",
-    "tryLiveOcr": "Prueba la traducción en pantalla"
+    "tryLiveOcr": "Prueba la traducción en pantalla",
+    "pakEncryptedDetail": "Este juego cifra sus archivos .pak: sin la clave AES el índice no se puede leer.",
+    "pakEncryptedExplain": "Pak cifrado. GameStringer no obtiene la clave del juego: pégala aquí si la tienes.",
+    "pakAesPlaceholder": "Clave AES-256 (base64 o hexadecimal)",
+    "pakAesSaved": "Clave guardada. Vuelve a pulsar String it! para reintentar."
   },
   "autoTranslatePage": {
     "identical": "idénticas",
