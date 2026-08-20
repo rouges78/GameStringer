@@ -1634,7 +1634,7 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "argon2",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bincode",
  "byteorder",
  "bzip2 0.4.4",
