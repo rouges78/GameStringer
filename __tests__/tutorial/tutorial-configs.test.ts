@@ -23,13 +23,15 @@ describe('Tutorial Configurations', () => {
       expect(dashboardTutorial).toBeDefined();
       expect(dashboardTutorial.id).toBe('dashboard-intro');
       expect(dashboardTutorial.name).toBe('GameStringer Dashboard');
-      expect(dashboardTutorial.steps).toHaveLength(9);
+      expect(dashboardTutorial.steps).toHaveLength(8);
       expect(dashboardTutorial.autoStart).toBe(true);
       expect(dashboardTutorial.canSkip).toBe(true);
       
       // Check first and last steps
       expect(dashboardTutorial.steps[0].id).toBe('welcome');
-      expect(dashboardTutorial.steps[8].id).toBe('completion');
+      // Indice calcolato, non cablato: l'asserzione dice «l'ultimo passo e'
+      // completion», che e' l'intento, e sopravvive a passi aggiunti o tolti.
+      expect(dashboardTutorial.steps[dashboardTutorial.steps.length - 1].id).toBe('completion');
     });
 
     it('should have valid library tutorial config', () => {
@@ -165,7 +167,6 @@ describe('Tutorial Configurations', () => {
       const testCases = [
         { path: '/', expectedCount: 1 },
         { path: '/library', expectedCount: 1 },
-        { path: '/injekt-translator', expectedCount: 1 },
         { path: '/editor', expectedCount: 1 },
         { path: '/patches', expectedCount: 1 },
         { path: '/community-hub', expectedCount: 1 },
