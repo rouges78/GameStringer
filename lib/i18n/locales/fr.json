@@ -1136,7 +1136,11 @@
     "stoppedByUser": "interrompue par l'utilisateur",
     "stoppedToast": "Traduction interrompue : {n} sur {total} sauvegardées dans le point de reprise — reprenez quand vous voulez.",
     "unrealNoLocresShort": "Ce jeu n'expose aucun texte extractible",
-    "tryLiveOcr": "Essayer la traduction à l'écran"
+    "tryLiveOcr": "Essayer la traduction à l'écran",
+    "pakEncryptedDetail": "Ce jeu chiffre ses archives .pak : sans la clé AES, l'index est illisible.",
+    "pakEncryptedExplain": "Pak chiffré. GameStringer ne récupère pas la clé depuis le jeu : collez-la ici si vous l'avez.",
+    "pakAesPlaceholder": "Clé AES-256 (base64 ou hexadécimal)",
+    "pakAesSaved": "Clé enregistrée. Relancez String it! pour réessayer."
   },
   "autoTranslatePage": {
     "identical": "identiques",

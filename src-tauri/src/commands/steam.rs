@@ -29,7 +29,7 @@ use keyvalues_serde as kv;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use base64::{Engine as _, engine::general_purpose};
-use rand::RngCore;
+use rand::Rng;
 use log::{debug, info, warn, error};
 
 // ============================================================================

@@ -26,7 +26,7 @@ use std::fs;
 use log::{debug, info, error};
 use base64::{Engine as _, engine::general_purpose};
 use aes_gcm::{Aes256Gcm, Nonce, aead::{Aead, KeyInit}};
-use rand::RngCore;
+use rand::Rng;
 use chrono;
 
 // ============================================================================

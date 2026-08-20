@@ -1136,7 +1136,11 @@
     "stoppedByUser": "zatrzymane przez użytkownika",
     "stoppedToast": "Tłumaczenie zatrzymane: {n} z {total} zapisane w punkcie kontrolnym — wznów w dowolnym momencie.",
     "unrealNoLocresShort": "Ta gra nie udostępnia tekstów do wyodrębnienia",
-    "tryLiveOcr": "Wypróbuj tłumaczenie na ekranie"
+    "tryLiveOcr": "Wypróbuj tłumaczenie na ekranie",
+    "pakEncryptedDetail": "Ta gra szyfruje swoje archiwa .pak: bez klucza AES indeks jest nieczytelny.",
+    "pakEncryptedExplain": "Zaszyfrowany pak. GameStringer nie odzyskuje klucza z gry: wklej go tutaj, jeśli go masz.",
+    "pakAesPlaceholder": "Klucz AES-256 (base64 lub szesnastkowy)",
+    "pakAesSaved": "Klucz zapisany. Uruchom String it! ponownie, aby spróbować jeszcze raz."
   },
   "autoTranslatePage": {
     "identical": "identyczne",

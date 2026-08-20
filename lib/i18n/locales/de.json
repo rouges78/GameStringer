@@ -1136,7 +1136,11 @@
     "stoppedByUser": "vom Benutzer gestoppt",
     "stoppedToast": "Übersetzung gestoppt: {n} von {total} im Checkpoint gesichert — jederzeit fortsetzbar.",
     "unrealNoLocresShort": "Dieses Spiel legt keine extrahierbaren Texte offen",
-    "tryLiveOcr": "Bildschirmübersetzung versuchen"
+    "tryLiveOcr": "Bildschirmübersetzung versuchen",
+    "pakEncryptedDetail": "Dieses Spiel verschlüsselt seine .pak-Archive: ohne den AES-Schlüssel ist der Index nicht lesbar.",
+    "pakEncryptedExplain": "Verschlüsseltes Pak. GameStringer ermittelt den Schlüssel nicht aus dem Spiel: füge ihn hier ein, wenn du ihn hast.",
+    "pakAesPlaceholder": "AES-256-Schlüssel (Base64 oder Hex)",
+    "pakAesSaved": "Schlüssel gespeichert. Starte String it! erneut, um es noch einmal zu versuchen."
   },
   "autoTranslatePage": {
     "identical": "identisch",

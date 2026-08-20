@@ -7,7 +7,7 @@ use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom, Write, BufReader, BufRead};
 use std::path::{Path, PathBuf};
 use tauri::command;
-use zip::write::FileOptions;
+use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
 // ============================================================================
@@ -3447,7 +3447,7 @@ pause
     let zip_file = File::create(&output_path)
         .map_err(|e| format!("Errore creazione ZIP: {}", e))?;
     let mut zip = ZipWriter::new(zip_file);
-    let options = FileOptions::default()
+    let options = SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Stored);
 
     let mut files_included = Vec::new();
