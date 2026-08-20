@@ -14,10 +14,10 @@ jobs:
   frontend-checks:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
@@ -126,7 +126,7 @@ jobs:
   check-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -160,7 +160,7 @@ jobs:
   build-gs-hook:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           submodules: true   # MinHook è un submodule: senza, add_subdirectory fallisce
 
@@ -194,7 +194,7 @@ jobs:
   check-linux:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install Linux dependencies
         run: |
