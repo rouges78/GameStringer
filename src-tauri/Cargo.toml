@@ -65,7 +65,7 @@ sha1 = "0.10"
 hmac = "0.12"
 log = "0.4"
 urlencoding = "2.1"
-base64 = "0.21"
+base64 = "0.22"
 rusqlite = { version = "0.29", features = ["bundled", "chrono"] }
 flate2 = "1.0"
 crc32fast = "1.3"
