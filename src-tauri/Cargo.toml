@@ -104,7 +104,7 @@ fontdue = "0.9"
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"
 winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi", "synchapi", "winnt"] }
-windows = { version = "0.51", features = [
+windows = { version = "0.61", features = [
     "Win32_Foundation", 
     "Win32_System_Diagnostics_Debug", 
     "Win32_System_Memory", 
