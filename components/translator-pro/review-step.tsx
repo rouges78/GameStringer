@@ -82,7 +82,7 @@ export function ReviewStep({
       {/* Game Info Header */}
       {selectedGame && (
         <div className="flex items-center justify-center gap-3 py-2">
-          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 shadow-lg flex-shrink-0">
+          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
             {selectedGame.coverUrl && (
               <img
                 src={selectedGame.coverUrl}
@@ -94,32 +94,32 @@ export function ReviewStep({
               />
             )}
             <div className="absolute inset-0 flex items-center justify-center -z-10">
-              <span className="text-sm font-bold text-white/50">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
+              <span className="text-sm font-semibold text-muted-foreground">{selectedGame.name?.charAt(0)?.toUpperCase() || '?'}</span>
             </div>
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-purple-400">{selectedGame.name}</h3>
+            <h3 className="text-lg font-semibold">{selectedGame.name}</h3>
             <p className="text-xs text-muted-foreground">{t('translatorProPage.translationCompleted')}</p>
           </div>
         </div>
       )}
 
-      {/* Stats with glow effects */}
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="group p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center transition-all duration-300 hover:bg-green-500/15 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-[1.02]">
-          <p className="text-2xl font-bold text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">{currentJob.results.translatedItems}</p>
+        <div className="p-4 rounded-xl bg-muted/50 border text-center">
+          <p className="text-2xl font-semibold">{currentJob.results.translatedItems}</p>
           <p className="text-xs text-muted-foreground">{t('translatorProPage.translated')}</p>
         </div>
-        <div className="group p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center transition-all duration-300 hover:bg-blue-500/15 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-[1.02]">
-          <p className="text-2xl font-bold text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">{currentJob.results.fromMemoryItems}</p>
+        <div className="p-4 rounded-xl bg-muted/50 border text-center">
+          <p className="text-2xl font-semibold">{currentJob.results.fromMemoryItems}</p>
           <p className="text-xs text-muted-foreground">{t('translatorProPage.fromMemory')}</p>
         </div>
-        <div className="group p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center transition-all duration-300 hover:bg-purple-500/15 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:scale-[1.02]">
-          <p className="text-2xl font-bold text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">{currentJob.results.averageQualityScore}%</p>
+        <div className="p-4 rounded-xl bg-muted/50 border text-center">
+          <p className="text-2xl font-semibold">{currentJob.results.averageQualityScore}%</p>
           <p className="text-xs text-muted-foreground">{t('translatorProPage.quality')}</p>
         </div>
-        <div className="group p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center transition-all duration-300 hover:bg-amber-500/15 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02]">
-          <p className="text-2xl font-bold text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">${currentJob.results.estimatedCost.toFixed(4)}</p>
+        <div className="p-4 rounded-xl bg-muted/50 border text-center">
+          <p className="text-2xl font-semibold">${currentJob.results.estimatedCost.toFixed(4)}</p>
           <p className="text-xs text-muted-foreground">{t('translatorProPage.cost')}</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ export function ReviewStep({
               <Download className="mr-2 h-4 w-4" />
               {t('translatorProPage.downloadAll')}
             </Button>
-            <Button variant="default" size="sm" onClick={onExportPatch} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+            <Button variant="default" size="sm" onClick={onExportPatch}>
               <Package className="mr-2 h-4 w-4" />
               {t('translatorProPage.exportPatch')}
             </Button>
@@ -145,24 +145,24 @@ export function ReviewStep({
         </div>
 
         {Array.from(translatedFiles.entries()).map(([filename, content]) => (
-          <div key={filename} className="group flex items-center gap-3 p-3 rounded-lg border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:bg-card hover:border-green-500/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-            <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-              <FileCode className="h-5 w-5 text-green-500" />
+          <div key={filename} className="group flex items-center gap-3 p-3 rounded-lg border bg-card/50 transition-colors hover:bg-card">
+            <div className="p-2 rounded-lg bg-muted">
+              <FileCode className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm group-hover:text-green-400 transition-colors">{targetLanguage}_{filename}</p>
+              <p className="font-medium text-sm">{targetLanguage}_{filename}</p>
               <p className="text-xs text-muted-foreground">
                 {(content.length / 1024).toFixed(1)} KB
               </p>
             </div>
             <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-              <Button variant="ghost" size="sm" onClick={() => onOpenInEditor(filename)} title={t('translatorProPage.openInEditor')} className="hover:bg-blue-500/20 hover:text-blue-400">
+              <Button variant="ghost" size="sm" onClick={() => onOpenInEditor(filename)} title={t('translatorProPage.openInEditor')}>
                 <FileText className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onSaveFile(filename)} title={t('common.salvaConBackup')} className="hover:bg-green-500/20 hover:text-green-400">
+              <Button variant="ghost" size="sm" onClick={() => onSaveFile(filename)} title={t('common.salvaConBackup')}>
                 <CheckCircle className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onDownloadFile(filename)} title={t('common.scarica')} className="hover:bg-purple-500/20 hover:text-purple-400">
+              <Button variant="ghost" size="sm" onClick={() => onDownloadFile(filename)} title={t('common.scarica')}>
                 <Download className="h-4 w-4" />
               </Button>
             </div>
@@ -175,7 +175,7 @@ export function ReviewStep({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-medium flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-purple-400" />
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
               {t('translatorProPage.translationDetails')} ({translatedItems.length})
             </h3>
             <Badge variant="outline" className="text-2xs">
@@ -199,7 +199,7 @@ export function ReviewStep({
                       <span className="truncate text-muted-foreground" title={item.sourceText}>
                         {item.sourceText}
                       </span>
-                      <span className={cn("truncate", item.fromMemory ? "text-blue-400" : "")} title={item.translatedText}>
+                      <span className={cn("truncate", item.fromMemory ? "text-primary" : "")} title={item.translatedText}>
                         {item.fromMemory && <Database className="inline h-3 w-3 mr-1 opacity-60" />}
                         {item.translatedText}
                       </span>
@@ -232,7 +232,7 @@ export function ReviewStep({
             {currentJob.results.qualityIssues.slice(0, 10).map((issue, i) => (
               <div key={i} className="text-sm mb-2">
                 <p className="font-mono text-xs truncate">{`"${issue.sourceText}"`}</p>
-                <p className="text-amber-600 text-xs">{issue.issues.join(', ')}</p>
+                <p className="text-amber-900 dark:text-amber-500 text-xs">{issue.issues.join(', ')}</p>
               </div>
             ))}
           </ScrollArea>
@@ -249,7 +249,7 @@ export function ReviewStep({
         {/* ONE-CLICK APPLY - The Magic Button */}
         <Button
           size="lg"
-          className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-green-500/25 transition-all"
+          className="gap-2"
           onClick={onApplyToGame}
           disabled={isApplying || translatedFiles.size === 0}
         >
@@ -278,7 +278,7 @@ export function ReviewStep({
         {selectedGame?.id?.startsWith('steam_') && (
           <a
             href={`steam://rungameid/${selectedGame.id.replace('steam_', '')}`}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-md bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg hover:shadow-blue-500/25 transition-all text-white"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-md border bg-background transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             <Play className="h-5 w-5" />
             {t('gameDetails.playGame')}

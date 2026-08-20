@@ -36,7 +36,6 @@
     "lib/project-export-import.ts": "392 righe",
     "components/dashboard/global-progress-widget.tsx": "387 righe",
     "lib/batch/batch-operations.ts": "374 righe",
-    "lib/secrets-manager.ts": "373 righe",
     "lib/translation-batch-operations-with-progress.ts": "342 righe",
     "components/tools/github-discussions.tsx": "339 righe",
     "lib/social/community-hub.ts": "336 righe",

@@ -114,15 +114,16 @@ This guide explains how to securely configure API keys and secrets for GameStrin
 - Use read-only keys when write access isn't needed
 - Monitor API usage for anomalies
 
-### 4. Secret Validation
+### 4. Secret Storage
 
-Use the built-in validator:
+API keys are never read from `.env` at runtime: they are stored encrypted
+(AES-256-GCM, key derived per machine and user) via the Rust side.
 
 ```javascript
-import { secretsManager } from '@/lib/secrets-manager';
+import { setSecureKey, getSecureKey } from '@/lib/secure-key-store';
 
-// Validate a secret format
-const isValid = secretsManager.validateSecret('STEAM_API_KEY', 'your-key');
+await setSecureKey('STEAM_API_KEY', 'your-key');
+const key = await getSecureKey('STEAM_API_KEY');
 ```text
 
 ## 🧪 Testing Your Setup
@@ -137,12 +138,10 @@ http://localhost:3000/admin/secrets
 ### 2. Validate Secrets
 
 ```javascript
-// Use the secrets validator in the admin dashboard
-// Or programmatically:
-import { getSecretsStatus } from '@/lib/secrets-manager';
+import { listSecureKeys, hasSecureKey } from '@/lib/secure-key-store';
 
-const status = getSecretsStatus();
-console.log('Missing required secrets:', status.missing);
+console.log('Stored keys:', await listSecureKeys());
+console.log('Steam configured:', await hasSecureKey('STEAM_API_KEY'));
 ```text
 
 ### 3. Test API Connections

@@ -61,6 +61,11 @@ export function AutoTranslateStepper({
 }: AutoTranslateStepperProps) {
   const { t } = useTranslation();
 
+  // Chiave AES per i pak cifrati: si tiene qui e non nel padre perché serve
+  // solo dentro questo pannello, e sparisce con lui.
+  const [aesKey, setAesKey] = useState('');
+  const [salvandoChiave, setSalvandoChiave] = useState(false);
+
   /* ── RINGRAZIAMENTO DOPO UN SUCCESSO VERO (10/08/2026) ────────────────────
    * Il contatore delle stringhe e la richiesta di supporto vivevano in
    * `translation-recommendation.tsx`, la pipeline che SIMULAVA la traduzione:
@@ -165,7 +170,49 @@ export function AutoTranslateStepper({
             </div>
           ))}
         </div>
-        {error && (
+        {/* Pak cifrato: non è un guasto, è una porta chiusa a chiave. Si chiede
+            la chiave invece di mostrare un errore che l'utente non può usare.
+            GameStringer non la ricava dal gioco — sarebbe aggirare una
+            protezione — ma se l'utente ce l'ha, la usa. */}
+        {error === 'PAK_ENCRYPTED_NEEDS_AES_KEY' ? (
+          <div className="mt-3 p-3 rounded-lg bg-amber-600/5 border border-amber-600/40 space-y-2">
+            <div className="flex items-center gap-2 text-2xs text-amber-900 dark:text-amber-500">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span>{t('heroJob.pakEncryptedExplain')}</span>
+              <button className="ml-auto text-micro font-bold uppercase tracking-wider hover:underline" onClick={onClose}>{t('common.chiudi')}</button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={aesKey}
+                onChange={(e) => setAesKey(e.target.value)}
+                placeholder={t('heroJob.pakAesPlaceholder')}
+                spellCheck={false}
+                className="flex-1 h-8 px-2 rounded-md border bg-background text-xs font-mono"
+              />
+              <button
+                disabled={!aesKey.trim() || salvandoChiave}
+                onClick={async () => {
+                  setSalvandoChiave(true);
+                  try {
+                    const { invoke } = await import('@tauri-apps/api/core');
+                    await invoke('set_pak_aes_key', { gamePath: game.installPath, key: aesKey.trim() });
+                    setAesKey('');
+                    toast.success(t('heroJob.pakAesSaved'));
+                    onClose();
+                  } catch (e) {
+                    toast.error(String(e));
+                  } finally {
+                    setSalvandoChiave(false);
+                  }
+                }}
+                className="h-8 px-3 rounded-md bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50"
+              >
+                {salvandoChiave ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('common.salva')}
+              </button>
+            </div>
+          </div>
+        ) : error && (
           <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-2xs text-red-300">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>

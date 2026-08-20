@@ -269,7 +269,10 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    /* Inchiostro scuro: il quasi-bianco su questo blu sta a 3.47:1, sotto la
+       soglia 4.5:1 per le etichette dei bottoni. Con l'ink scuro sale a 5.41:1.
+       Nel tema chiaro il bianco va gia' bene (5.05:1) e resta invariato. */
+    --primary-foreground: 220 30% 5%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;

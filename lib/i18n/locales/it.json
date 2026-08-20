@@ -7630,7 +7630,11 @@
     "stoppedByUser": "interrotta dall'utente",
     "stoppedToast": "Traduzione interrotta: {n} su {total} al sicuro nel checkpoint — riprendi quando vuoi.",
     "unrealNoLocresShort": "Questo gioco non espone testi estraibili",
-    "tryLiveOcr": "Prova la traduzione a schermo"
+    "tryLiveOcr": "Prova la traduzione a schermo",
+    "pakEncryptedDetail": "Questo gioco cifra i propri archivi .pak: senza la chiave AES l'indice non è leggibile.",
+    "pakEncryptedExplain": "Pak cifrato. GameStringer non ricava la chiave dal gioco: incollala qui se ce l'hai.",
+    "pakAesPlaceholder": "Chiave AES-256 (base64 o esadecimale)",
+    "pakAesSaved": "Chiave salvata. Rilancia String it! per riprovare."
   },
   "patchHubPage": {
     "title": "Patch Hub",

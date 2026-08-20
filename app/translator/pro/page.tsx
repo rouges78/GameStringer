@@ -385,7 +385,7 @@ export default function TranslatorProPage() {
     init();
   }, [sourceLanguage, targetLanguage]);
   
-  // Save API key to secretsManager when it changes
+  // Save API key to the secure store when it changes
   useEffect(() => {
     if (!apiKey) return;
     
@@ -1410,7 +1410,7 @@ export default function TranslatorProPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50 mb-4">
+      <div className="relative overflow-hidden rounded-xl border bg-card p-3 mb-4">
         {/* Immagine game fusa nello sfondo */}
         {selectedGame?.coverUrl && (
           <>
@@ -1418,37 +1418,35 @@ export default function TranslatorProPage() {
               <img
                 src={selectedGame.coverUrl}
                 alt={selectedGame.name || 'Game'}
-                className="w-full h-full object-cover opacity-25"
+                className="w-full h-full object-cover opacity-15"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-600/85 via-blue-600/80 to-cyan-600/85" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-600/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-card via-card/90 to-card/60" />
           </>
         )}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
-            <Brain className="h-5 w-5 text-white" />
+          <div className="p-2 rounded-lg bg-primary text-primary-foreground">
+            <Brain className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">
+            <h1 className="text-lg font-semibold">
               {selectedGame ? `Neural Translator Pro • ${selectedGame.name}` : 'Neural Translator Pro'}
             </h1>
-            <p className="text-xs text-white/70">
+            <p className="text-xs text-muted-foreground">
               {t('translatorProPage.subtitle')}</p>
           </div>
           
           {/* Actions */}
           <div className="ml-auto flex items-center gap-2">
             <a href="/translator/mtpe">
-              <Badge variant="secondary" className="gap-1.5 bg-purple-500/30 text-white border-purple-400/50 hover:bg-purple-500/50 cursor-pointer transition-colors">
+              <Badge variant="outline" className="gap-1.5 cursor-pointer transition-colors hover:bg-accent">
                 <Sparkles className="h-3 w-3" />
                 MTPE
               </Badge>
             </a>
             {tmStats && (
-              <Badge variant="secondary" className="gap-1.5 bg-white/20 text-white border-white/30">
+              <Badge variant="outline" className="gap-1.5">
                 <Database className="h-3 w-3" />
                 {tmStats.totalUnits} TM
               </Badge>
@@ -1470,16 +1468,16 @@ export default function TranslatorProPage() {
                 <div className="flex flex-col items-center">
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center transition-all",
-                    isActive && "bg-gradient-to-br from-sky-500 to-blue-500 text-white shadow-md",
-                    isCompleted && "bg-green-500 text-white",
+                    isActive && "bg-primary text-primary-foreground",
+                    isCompleted && "bg-green-700 text-white",
                     !isActive && !isCompleted && "bg-muted text-muted-foreground"
                   )}>
                     {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
                   <span className={cn(
                     "text-2xs mt-1 font-medium",
-                    isActive && "text-blue-500",
-                    isCompleted && "text-green-500",
+                    isActive && "text-primary",
+                    isCompleted && "text-green-800 dark:text-green-400",
                     !isActive && !isCompleted && "text-muted-foreground"
                   )}>
                     {step.label}
@@ -1488,7 +1486,7 @@ export default function TranslatorProPage() {
                 {index < steps.length - 1 && (
                   <div className={cn(
                     "w-8 h-0.5 mx-1 transition-colors",
-                    index < currentStepIndex ? "bg-green-500" : "bg-muted"
+                    index < currentStepIndex ? "bg-green-700" : "bg-muted"
                   )} />
                 )}
               </div>
@@ -1580,17 +1578,17 @@ export default function TranslatorProPage() {
             {/* Summary */}
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
-                <FileText className="h-6 w-6 mx-auto text-purple-500 mb-2" />
+                <FileText className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
                 <p className="text-2xl font-bold">{checkedFiles.length}</p>
                 <p className="text-xs text-muted-foreground">{t('translatorProPage.file')}</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
-                <Languages className="h-6 w-6 mx-auto text-blue-500 mb-2" />
+                <Languages className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
                 <p className="text-2xl font-bold">{totalStrings}</p>
                 <p className="text-xs text-muted-foreground">{t('translatorProPage.stringhe')}</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
-                <Database className="h-6 w-6 mx-auto text-green-500 mb-2" />
+                <Database className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
                 <p className="text-2xl font-bold">{tmStats?.totalUnits || 0}</p>
                 <p className="text-xs text-muted-foreground">{t('translatorProPage.fromMemory')}</p>
               </div>
@@ -1599,18 +1597,18 @@ export default function TranslatorProPage() {
             {/* AI Recommendation */}
             {recommendedProvider && (
               <div className={cn(
-                "p-4 rounded-xl border-2 transition-all",
+                "p-4 rounded-xl border transition-colors",
                 provider === recommendedProvider.provider 
-                  ? "border-green-500 bg-green-500/10" 
-                  : "border-yellow-500 bg-yellow-500/10"
+                  ? "border-green-600/40 bg-green-600/5" 
+                  : "border-yellow-600/40 bg-yellow-600/5"
               )}>
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500">
-                    <Sparkles className="h-5 w-5 text-white" />
+                  <div className="p-2 rounded-lg bg-primary text-primary-foreground">
+                    <Sparkles className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold">🤖 {t('translatorProPage.aiRecommendation')}</h4>
+                      <h4 className="font-semibold">{t('translatorProPage.aiRecommendation')}</h4>
                       <Badge variant="secondary" className="text-xs">
                         {Math.round(recommendedProvider.confidence * 100)}% {t('translatorProPage.confidence')}</Badge>
                     </div>
@@ -1633,7 +1631,7 @@ export default function TranslatorProPage() {
                       </Button>
                     )}
                     {provider === recommendedProvider.provider && (
-                      <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                      <p className="text-sm text-green-800 dark:text-green-400 font-medium flex items-center gap-1">
                         <CheckCircle className="h-4 w-4" />
                         {t('translatorProPage.recommendedSelected')}</p>
                     )}
@@ -1656,66 +1654,66 @@ export default function TranslatorProPage() {
                       {/* 🏆 BEST VALUE - Economici e veloci */}
                       <SelectItem value="deepseek">
                         <div className="flex items-center gap-2">
-                          <Cpu className="h-4 w-4 text-cyan-500" />
+                          <Cpu className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.deepseekV3')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-green-400 border-green-500/30">CHEAPEST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-green-800 dark:text-green-400 border-green-600/30">CHEAPEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gemini">
                         <div className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-blue-500" />
+                          <Sparkles className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.gemini20Flash')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-blue-400 border-blue-500/30">FAST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">FAST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="openai">
                         <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-green-500" />
+                          <Zap className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.gpt4oMini')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-gray-400 border-gray-500/30">$0.15/1M</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">$0.15/1M</Badge>
                         </div>
                       </SelectItem>
                       
                       {/* 🎯 BEST QUALITY - Alta qualità per games */}
                       <SelectItem value="claude">
                         <div className="flex items-center gap-2">
-                          <Brain className="h-4 w-4 text-orange-500" />
+                          <Brain className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.claude35Sonnet')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-orange-400 border-orange-500/30">BEST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">BEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gpt5">
                         <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-emerald-500" />
+                          <Zap className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.gpt4o')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-emerald-400 border-emerald-500/30">RELIABLE</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">RELIABLE</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="mistral">
                         <div className="flex items-center gap-2">
-                          <Wind className="h-4 w-4 text-indigo-500" />
+                          <Wind className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.mistralLarge2')}</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-indigo-400 border-indigo-500/30">EU</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">EU</Badge>
                         </div>
                       </SelectItem>
                       
                       {/* Altri */}
                       <SelectItem value="openrouter">
                         <div className="flex items-center gap-2">
-                          <Languages className="h-4 w-4 text-purple-500" />
+                          <Languages className="h-4 w-4 text-muted-foreground" />
                           <span>OpenRouter</span>
-                          <Badge variant="outline" className="text-micro ml-1 text-purple-400 border-purple-500/30">MULTI</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">MULTI</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="deepl">
                         <div className="flex items-center gap-2">
-                          <Languages className="h-4 w-4 text-sky-500" />
+                          <Languages className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.deeplPro')}</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="google">
                         <div className="flex items-center gap-2">
-                          <Languages className="h-4 w-4 text-red-500" />
+                          <Languages className="h-4 w-4 text-muted-foreground" />
                           <span>{t('translatorProPage.googleTranslate')}</span>
                         </div>
                       </SelectItem>
@@ -1788,7 +1786,7 @@ export default function TranslatorProPage() {
                   
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-green-500" />
+                      <Database className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{t('translatorProPage.usaTranslationMemory')}</span>
                     </div>
                     <input
@@ -1801,7 +1799,7 @@ export default function TranslatorProPage() {
                   
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-blue-500" />
+                      <Shield className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{t('translatorProPage.qualityChecks')}</span>
                     </div>
                     <input
@@ -1814,7 +1812,7 @@ export default function TranslatorProPage() {
                   
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4 text-yellow-500" />
+                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{t('translatorProPage.showAllFiles')}</span>
                     </div>
                     <input
@@ -1825,14 +1823,14 @@ export default function TranslatorProPage() {
                     />
                   </label>
                   {showAllFiles && (
-                    <p className="text-xs text-yellow-400/70">
+                    <p className="text-xs text-yellow-900 dark:text-yellow-500">
                       ⚠️ {t('translatorProPage.bypassWarning')}</p>
                   )}
                 </div>
                 
                 {/* Cost Estimate */}
                 {costEstimate && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 border border-purple-500/20">
+                  <div className="p-4 rounded-xl bg-muted/50 border">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
                       <Info className="h-4 w-4" />
                       {t('translatorProPage.estimate')}</h3>
@@ -1867,7 +1865,6 @@ export default function TranslatorProPage() {
               <Button
                 onClick={() => { setCurrentStep('translate'); handleStartTranslation(); }}
                 disabled={!apiKey}
-                className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {t('translatorProPage.startTranslation')}</Button>
@@ -2030,16 +2027,16 @@ export default function TranslatorProPage() {
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-green-400 flex items-center gap-2">
+            <AlertDialogTitle className="text-green-800 dark:text-green-400 flex items-center gap-2">
               <CheckCircle className="h-6 w-6" />
               {t('translatorProPage.patchExported')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="text-slate-300 space-y-3">
+              <div className="text-muted-foreground space-y-3">
                 <p>{t('translatorProPage.ilPacchettoDiTraduzioneÈStatoS')}</p>
                 <code className="block bg-muted p-3 rounded text-primary text-sm break-all">
                   {exportedFilePath}
                 </code>
-                <div className="mt-4 text-sm text-slate-400">
+                <div className="mt-4 text-sm text-muted-foreground">
                   <p className="font-semibold mb-2">{t('translatorProPage.ilPacchettoContiene')}</p>
                   <ul className="list-disc list-inside space-y-1">
                     <li>{t('translatorProPage.translatedFiles')}</li>
@@ -2052,7 +2049,7 @@ export default function TranslatorProPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="bg-green-600 hover:bg-green-700">
+            <AlertDialogAction>
               {t('translatorProPage.close')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

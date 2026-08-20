@@ -1136,7 +1136,11 @@
     "stoppedByUser": "interrompida pelo usuário",
     "stoppedToast": "Tradução interrompida: {n} de {total} salvas no checkpoint — retome quando quiser.",
     "unrealNoLocresShort": "Este jogo não expõe textos extraíveis",
-    "tryLiveOcr": "Experimentar a tradução no ecrã"
+    "tryLiveOcr": "Experimentar a tradução no ecrã",
+    "pakEncryptedDetail": "Este jogo cifra os seus arquivos .pak: sem a chave AES o índice não pode ser lido.",
+    "pakEncryptedExplain": "Pak cifrado. O GameStringer não obtém a chave do jogo: cole-a aqui se a tiver.",
+    "pakAesPlaceholder": "Chave AES-256 (base64 ou hexadecimal)",
+    "pakAesSaved": "Chave guardada. Execute String it! novamente para tentar de novo."
   },
   "autoTranslatePage": {
     "identical": "idênticas",

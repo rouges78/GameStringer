@@ -60,11 +60,11 @@ export function GameSelector({
             onClick={() => onGameSelect(game)}
             className={cn(
               "group flex items-center gap-2 p-2 rounded-lg border transition-all",
-              "hover:border-blue-500/40 hover:bg-blue-500/10",
+              "hover:border-primary/40 hover:bg-accent",
               "text-left w-full"
             )}
           >
-            <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
+            <div className="relative w-8 h-8 rounded overflow-hidden bg-muted flex-shrink-0">
               {game.coverUrl ? (
                 <Image
                   src={game.coverUrl}
@@ -77,11 +77,11 @@ export function GameSelector({
                 />
               ) : null}
               <div className="absolute inset-0 flex items-center justify-center -z-10">
-                <span className="text-xs font-bold text-white/50">{game.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{game.name?.charAt(0)?.toUpperCase() || '?'}</span>
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-xs truncate group-hover:text-blue-400">
+              <h3 className="font-medium text-xs truncate">
                 {game.name}
               </h3>
             </div>

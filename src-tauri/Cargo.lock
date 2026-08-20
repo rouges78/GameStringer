@@ -1631,6 +1631,7 @@ dependencies = [
 name = "gamestringer"
 version = "1.17.0"
 dependencies = [
+ "aes 0.8.4",
  "aes-gcm",
  "anyhow",
  "argon2",

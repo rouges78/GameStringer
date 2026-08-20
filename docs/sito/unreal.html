@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unreal Engine — GameStringer</title>
+<meta name="description" content="Come GameStringer trova e traduce il testo dei giochi Unreal Engine 4 e 5: .locres sciolti, container IoStore, pak classici, e la tripletta che fa montare davvero la patch.">
+<link rel="icon" href="favicon.png">
+<style>
+  :root{
+    --bg:#080a12; --bg2:#0c1020; --surface:rgba(255,255,255,.04);
+    --border:rgba(255,255,255,.10); --text:#e8ebf2; --muted:#9aa6bd; --faint:#6b7689;
+    --trad:#3b82f6; --trad2:#38bdf8; --radius:18px; --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  nav{position:sticky;top:0;z-index:50;background:rgba(8,10,18,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;gap:16px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+  .dot{width:28px;height:28px;border-radius:8px}
+  .brandname{font-weight:700;letter-spacing:-.01em}
+  .navback{margin-left:8px;color:var(--muted);text-decoration:none;font-size:14px}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .lang{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:7px 10px;font-size:13px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:12px;text-decoration:none;font-weight:600;font-size:14px}
+  .btn-primary{background:var(--trad);color:#fff}
+  header.hero{padding:72px 0 40px;border-bottom:1px solid var(--border)}
+  .pill{display:inline-block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--trad2);border:1px solid var(--border);border-radius:999px;padding:5px 12px;margin-bottom:18px}
+  h1{font-size:clamp(30px,4.6vw,50px);line-height:1.1;letter-spacing:-.02em;margin-bottom:16px}
+  .lead{font-size:18px;color:var(--muted);max-width:70ch}
+  section{padding:52px 0;border-bottom:1px solid var(--border)}
+  h2{font-size:26px;letter-spacing:-.01em;margin-bottom:14px}
+  h3{font-size:17px;margin:22px 0 8px}
+  p{max-width:72ch;color:var(--muted);margin-bottom:12px}
+  p strong,li strong{color:var(--text)}
+  ul{max-width:72ch;color:var(--muted);padding-left:20px;margin-bottom:12px}
+  li{margin-bottom:7px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:18px}
+  .steps{counter-reset:s;list-style:none;padding:0;max-width:72ch}
+  .steps li{counter-increment:s;position:relative;padding-left:44px;margin-bottom:16px}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:9px;background:var(--trad);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+  a{color:var(--trad2)}
+  footer{padding:44px 0;text-align:center}
+  .flinks{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+  .flinks a{color:var(--muted);text-decoration:none;font-size:14px}
+  footer p{color:var(--faint);max-width:none;font-size:14px}
+  .copy{font-size:12.5px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav">
+    <a class="brand" href="index.html"><img class="dot" src="logo.png" alt="GameStringer"> <span class="brandname">GameStringer</span></a>
+    <a class="navback" href="index.html" data-i18n="u.nav.back">← Torna al sito</a>
+    <div class="nav-right">
+      <select class="lang" id="langSel" aria-label="Language">
+        <option value="it">Italiano</option><option value="en">English</option>
+        <option value="es">Español</option><option value="fr">Français</option>
+        <option value="de">Deutsch</option><option value="pt">Português</option>
+        <option value="pl">Polski</option><option value="ru">Русский</option>
+        <option value="ja">日本語</option><option value="zh">中文</option>
+        <option value="ko">한국어</option><option value="el">Ελληνικά</option>
+      </select>
+      <a class="btn btn-primary" href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="u.nav.download">Scarica</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <div class="pill" data-i18n="u.pill">Unreal Engine 4 · 5</div>
+    <h1 data-i18n="u.h1">Il testo di un gioco Unreal non sta mai dove ti aspetti</h1>
+    <p class="lead" data-i18n-html="u.lead">Sciolto sul disco, dentro il container IoStore, o nel <em>pak</em> affiancato. GameStringer li prova tutti e tre, poi scrive una patch che il motore monta davvero.</p>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.where.h">Tre posti, non uno</h2>
+    <p data-i18n-html="u.where.p1">Unreal tiene le stringhe traducibili in file <strong>.locres</strong>. Dove finiscano dipende da come lo studio ha impacchettato il gioco, e non c'è una regola sola: cambiano da titolo a titolo, a volte fra due giochi dello stesso studio.</p>
+    <ul>
+      <li data-i18n-html="u.where.l1"><strong>Sciolti sul disco</strong> — i giochi UE4 più semplici li lasciano in chiaro dentro <code>Content/Localization/</code>.</li>
+      <li data-i18n-html="u.where.l2"><strong>Nel container IoStore</strong> (<code>.utoc</code> / <code>.ucas</code>) — compressi con Oodle, tipico dei giochi UE5.</li>
+      <li data-i18n-html="u.where.l3"><strong>Nel pak classico affiancato al container</strong> — i <code>.locres</code> non sono asset, quindi non sono obbligati a passare dalla conversione in Zen e spesso restano lì.</li>
+    </ul>
+    <div class="card">
+      <p data-i18n-html="u.where.misura"><strong>Una misura reale.</strong> Su un gioco UE5 di collaudo il container da 674 MB conteneva 12.601 elementi e <strong>zero</strong> <code>.locres</code>; il pak da 638 MB accanto ne conteneva quattro, di cui quello del gioco con <strong>1.679 voci</strong> di dialoghi e interfaccia. Un programma che guardi solo nel container dichiara quel gioco «senza testo». Non lo è.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.mount.h">Una patch che non si monta è una patch che non esiste</h2>
+    <p data-i18n="u.mount.p1">Su Unreal la traduzione si applica con un file di override che il motore carica per ultimo, sostituendo il testo originale senza toccare i file del gioco. Fin qui è noto.</p>
+    <p data-i18n-html="u.mount.p2">Il punto che costa caro è un altro: sui giochi <strong>UE5 con IoStore</strong> un <code>_P.pak</code> da solo <strong>viene ignorato in silenzio</strong>. Nessun errore, nessun avviso: il file c'è, il programma dice «patch installata», e il gioco resta in lingua originale. Serve la <strong>tripletta</strong> — <code>_P.pak</code> più la coppia <code>_P.utoc</code> e <code>_P.ucas</code> — anche quando quella coppia è vuota.</p>
+    <p data-i18n="u.mount.p3">GameStringer la genera da sé a ogni applicazione. È il tipo di dettaglio che non si scopre leggendo la documentazione, ma provando il gioco e vedendo che l'italiano non arriva.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.aes.h">Archivi cifrati: la chiave la metti tu</h2>
+    <p data-i18n-html="u.aes.p1">Alcuni studi cifrano l'indice dei propri <code>.pak</code> per scoraggiare il datamining. GameStringer <strong>non ricava la chiave</strong> dal gioco né dai suoi eseguibili: sarebbe aggirare una misura di protezione, e la nostra <a href="dmca.html">politica</a> dice che non lo facciamo.</p>
+    <p data-i18n="u.aes.p2">Se la chiave ce l'hai, incollala e il programma la usa per leggere i file di localizzazione del gioco che hai installato — come fanno gli strumenti di modding standard. Accetta le due forme in circolazione, base64 o esadecimale, ed è conservata cifrata sul tuo computer. Nessuna chiave viene distribuita o condivisa da GameStringer.</p>
+    <p data-i18n="u.aes.p3">Se non ce l'hai, quel gioco resta fuori portata. Preferiamo dirtelo che fingere un guasto.</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.how.h">Come si fa</h2>
+    <ol class="steps">
+      <li data-i18n-html="u.how.s1"><strong>Apri il gioco nella libreria.</strong> GameStringer riconosce il motore e la versione da solo.</li>
+      <li data-i18n-html="u.how.s2"><strong>Premi String it!</strong> Estrazione, traduzione e applicazione sono un solo gesto: non devi sapere dove sta il testo né quale formato abbia.</li>
+      <li data-i18n-html="u.how.s3"><strong>Scegli il compromesso.</strong> Preset costo/qualità con il prezzo stimato prima di partire, e la memoria di traduzione riusa quello che hai già tradotto.</li>
+      <li data-i18n-html="u.how.s4"><strong>Gioca.</strong> La patch si disinstalla con un clic e non modifica i file originali.</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.supp.h">Cosa gestisce</h2>
+    <ul>
+      <li data-i18n-html="u.supp.l1"><code>.locres</code> in tutte le versioni del formato, sciolti o dentro gli archivi</li>
+      <li data-i18n="u.supp.l2">Pak legacy (v3–v9) e moderni con indice path-hash (v10+), decompressione Oodle inclusa</li>
+      <li data-i18n-html="u.supp.l3">Container IoStore <code>.utoc</code> / <code>.ucas</code> dei giochi UE5</li>
+      <li data-i18n="u.supp.l4">Indici cifrati AES-256, con chiave fornita da te</li>
+      <li data-i18n="u.supp.l5">Generazione della tripletta di montaggio e rimozione pulita della patch</li>
+    </ul>
+    <h3 data-i18n="u.lim.h">E cosa no</h3>
+    <ul>
+      <li data-i18n-html="u.lim.l1">I dialoghi compilati dentro <strong>Blueprint</strong> o <code>.uasset</code> cotti restano in parte fuori portata: sono testo che non passa dal sistema di localizzazione del motore.</li>
+      <li data-i18n-html="u.lim.l2">I giochi <strong>senza alcuna localizzazione</strong> — pubblicati in una lingua sola, con le stringhe scritte direttamente nel codice — non hanno un <code>.locres</code> da tradurre.</li>
+      <li data-i18n="u.lim.l3">Gli archivi cifrati richiedono la chiave, che non forniamo noi.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 data-i18n="u.data.h">Non fidarti di questa pagina</h2>
+    <p data-i18n-html="u.data.p1">Ogni motore ha titoli che funzionano e titoli che resistono, e nessuna pagina di presentazione lo racconta onestamente. Per questo la compatibilità la pubblichiamo <strong>misurata</strong>: gioco per gioco, quante volte è stato provato, fino a che punto è arrivato e com'è finita — dati veri dalle esecuzioni reali, non promesse.</p>
+    <p><a href="compatibilita.html" data-i18n="u.data.link">Guarda la tabella di compatibilità →</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <a class="brand" href="index.html" style="justify-content:center"><img class="dot" src="logo.png" alt="GameStringer"> <span class="brandname">GameStringer</span></a>
+    <div class="flinks">
+      <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" data-i18n="u.foot.dl">Download</a>
+      <a href="https://github.com/rouges78/GameStringer/discussions" target="_blank" rel="noopener" data-i18n="u.foot.comm">Community</a>
+      <a href="https://ko-fi.com/gamestringer" target="_blank" rel="noopener">Ko-fi</a>
+    </div>
+    <p data-i18n="u.foot.tagline">Abbatti le barriere linguistiche dei videogiochi. Analizza, traduci, gioca.</p>
+    <p class="copy">© 2025–2026 GameStringer by rouges78 · Source-Available License</p>
+  </div>
+</footer>
+
+<script src="unreal-i18n.js"></script>
+<script>
+  // Stessa meccanica delle altre pagine del sito: le stringhe senza markup
+  // passano da textContent, quelle con markup da innerHTML. Se una chiave manca
+  // nella lingua scelta si ricade sull'italiano, mai su una stringa vuota.
+  const I18N = window.GS_UNREAL_I18N || {};
+  let CURLANG = 'it';
+  function T(k){
+    const d = I18N[CURLANG] || I18N.en || {};
+    if (d[k] != null) return d[k];
+    const it = I18N.it || {};
+    return it[k] != null ? it[k] : k;
+  }
+  function applyLang(lang){
+    CURLANG = I18N[lang] ? lang : 'en';
+    const dict = I18N[CURLANG] || {};
+    document.documentElement.lang = CURLANG;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n');
+      if (dict[k] != null) el.textContent = dict[k];
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const k = el.getAttribute('data-i18n-html');
+      if (dict[k] != null) el.innerHTML = dict[k];
+    });
+    document.title = T('u.doc.title');
+    try { localStorage.setItem('gs_site_lang', CURLANG); } catch(e) {}
+    const sel = document.getElementById('langSel');
+    if (sel) sel.value = CURLANG;
+  }
+  (function initLang(){
+    const supported = ['it','en','es','fr','de','pt','pl','ru','ja','zh','ko','el'];
+    let lang = 'it';
+    try {
+      const s = localStorage.getItem('gs_site_lang');
+      if (s && supported.includes(s)) lang = s;
+      else {
+        const b = (navigator.language || 'it').slice(0,2).toLowerCase();
+        if (supported.includes(b)) lang = b;
+      }
+    } catch(e) {}
+    const sel = document.getElementById('langSel');
+    if (sel) sel.addEventListener('change', e => applyLang(e.target.value));
+    applyLang(lang);
+  })();
+</script>
+
+</body>
+</html>

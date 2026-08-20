@@ -21,6 +21,16 @@ GameStringer — Next.js + Tauri (Rust) desktop app. Prisma + Supabase for data,
 - Managed via `npm run version:*` (version-manager.js) — don't bump versions by hand
 - Release: `npm run ship` (dry run: `npm run ship:dry`)
 
+## Translation methods — read before touching an engine
+
+`docs/METODI-DI-TRADUZIONE.md` is the running log of how text is actually
+extracted from and injected back into each engine: measured facts, reproducible
+commands, and the wrong turns not to repeat. **Read it before working on
+extraction, injection or engine detection** — the answer is often already there.
+
+When you discover a new method, or why a game resists, add an entry. A discovery
+that stays in a chat log is a discovery lost.
+
 ## Notes
 
 - Port management is scripted (`scripts/port-manager.js`, dev on 3002) — don't hardcode ports.

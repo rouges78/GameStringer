@@ -1233,53 +1233,42 @@ fn extract_file_from_ucas(
 
 /// Trova file .utoc nella directory del gioco
 fn find_utoc_files(game_path: &Path) -> Vec<PathBuf> {
-    let mut utocs = Vec::new();
-    
-    if let Ok(entries) = fs::read_dir(game_path) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                // Cerca in sottodirectory/Content/Paks
-                let paks = path.join("Content").join("Paks");
-                if paks.exists() {
-                    if let Ok(paks_entries) = fs::read_dir(&paks) {
-                        for pe in paks_entries.flatten() {
-                            if pe.path().extension().map(|e| e == "utoc").unwrap_or(false) {
-                                utocs.push(pe.path());
-                            }
-                        }
-                    }
+    files_in_paks_dirs(game_path, "utoc")
+}
+
+/// File con una data estensione dentro OGNI directory `Paks` del gioco.
+///
+/// ⚠️ Non assumere una profondità fissa. Fino al 19/08/2026 qui si guardava
+/// esattamente `<gioco>/<sub>/Content/Paks`: su The Skin Stapler il percorso
+/// vero è `<gioco>/TheSkinStapler/TheSkinStapler/Content/Paks` (due livelli) e
+/// la ricerca tornava vuota, quindi `extract_iostore_localization` usciva
+/// subito con «Nessun file .utoc trovato» e il fallback sui .pak — che
+/// funziona — non veniva mai raggiunto. Il gioco ha 1007 stringhe.
+fn files_in_paks_dirs(game_path: &Path, ext: &str) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    for dir in super::unreal_localization::find_all_paks_dirs(game_path) {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.extension().map(|x| x == ext).unwrap_or(false) {
+                    out.push(p);
                 }
             }
         }
     }
-    
-    utocs
+    out
 }
 
 /// Trova i .pak "originali" del gioco (esclude i nostri override _P.pak).
 fn find_pak_files(game_path: &Path) -> Vec<PathBuf> {
-    let mut paks = Vec::new();
-    if let Ok(entries) = fs::read_dir(game_path) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                let dir = path.join("Content").join("Paks");
-                if let Ok(pe) = fs::read_dir(&dir) {
-                    for e in pe.flatten() {
-                        let p = e.path();
-                        if p.extension().map(|x| x == "pak").unwrap_or(false) {
-                            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
-                            // salta i nostri override e le patch _P
-                            if name.contains("gamestringer") || name.ends_with("_p.pak") { continue; }
-                            paks.push(p);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    paks
+    files_in_paks_dirs(game_path, "pak")
+        .into_iter()
+        .filter(|p| {
+            let name = p.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+            // salta i nostri override e le patch _P
+            !name.contains("gamestringer") && !name.ends_with("_p.pak")
+        })
+        .collect()
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1509,10 +1498,18 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             let mut chosen_paths: Vec<String> = Vec::new();
             let mut version_seen: Option<u8> = None;
 
+            let mut serve_chiave = false;
             for pak in &pak_files {
-                let locres_list = match extract_locres_from_pak(pak, &oodle) {
+                let locres_list = match extract_locres_from_pak_for_game(pak, &oodle, Some(&game_path)) {
                     Ok(l) => l,
-                    Err(e) => { log::warn!("⚠️ pak {}: {}", pak.display(), e); continue; }
+                    Err(e) => {
+                        // «Serve la chiave» non è un pak illeggibile: va riportato
+                        // all'utente, non sepolto in un warning. Si continua però
+                        // il giro, perché un altro pak potrebbe non essere cifrato.
+                        if e.contains(PAK_NEEDS_AES) { serve_chiave = true; }
+                        log::warn!("⚠️ pak {}: {}", pak.display(), e);
+                        continue;
+                    }
                 };
                 let non_engine: Vec<_> = locres_list.iter().filter(|l| !is_engine(&l.path)).collect();
                 let pool = if non_engine.is_empty() { locres_list.iter().collect::<Vec<_>>() } else { non_engine };
@@ -1550,6 +1547,14 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                     locres_path: chosen_paths.join(", "),
                     message: format!("Estratte {} stringhe da {} .locres nel .pak (LocRes v{})", count, chosen_paths.len(), ver),
                 });
+            }
+
+            // Nessuna stringa E almeno un pak cifrato senza chiave: il gioco non
+            // è «senza testo», è chiuso a chiave. Distinguere i due casi è tutto
+            // il punto — l'utente può procurarsi una chiave, non può procurarsi
+            // un testo che non esiste.
+            if serve_chiave {
+                return Err(PAK_NEEDS_AES.to_string());
             }
         }
     }
@@ -2627,27 +2632,188 @@ fn pak_read_footer(data: &[u8]) -> Result<PakFooter, String> {
     Ok(PakFooter { version, index_offset, index_size, compression_methods: methods, encrypted_index })
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// PAK CIFRATI — decifratura dell'indice con chiave fornita dall'utente
+// ═══════════════════════════════════════════════════════════════════
+//
+// Alcuni giochi UE cifrano l'indice del .pak (AES-256, ECB) per scoraggiare il
+// datamining. Fino al 19/08/2026 il lettore si fermava con «non supportato» e
+// quei giochi risultavano non traducibili, anche col testo tutto lì dentro.
+//
+// GameStringer NON ricostruisce la chiave: sarebbe aggirare una misura tecnica
+// di protezione, e la nostra ANTI_PIRACY.md dichiara che non lo facciamo. La
+// chiave la fornisce l'utente, esattamente come fanno `repak --aes-key` e
+// `retoc --aes-key`. Se non ce l'ha, il gioco resta fuori portata e il
+// messaggio lo dice chiaro invece di fingere un guasto.
+//
+// La chiave vive nello store cifrato (AES-256-GCM, derivata per macchina e
+// utente) insieme alle API key: stesso posto, stesse garanzie.
+
+type AesKey = [u8; 32];
+
+/// Nome sotto cui la chiave di un gioco vive nello store sicuro.
+fn pak_aes_key_name(game_path: &str) -> String {
+    let leaf = Path::new(game_path)
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| game_path.to_string());
+    format!("PAK_AES::{}", leaf)
+}
+
+/// Accetta la chiave nelle due forme che usano i tool del settore: base64
+/// (44 caratteri) o esadecimale (64 caratteri), con o senza `0x`.
+pub fn parse_aes_key(raw: &str) -> Result<AesKey, String> {
+    use base64::Engine;
+    let s = raw.trim().trim_start_matches("0x").trim_start_matches("0X");
+    let mut out = [0u8; 32];
+
+    if s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit()) {
+        for i in 0..32 {
+            out[i] = u8::from_str_radix(&s[i * 2..i * 2 + 2], 16)
+                .map_err(|_| "esadecimale non valido".to_string())?;
+        }
+        return Ok(out);
+    }
+
+    let decoded = base64::engine::general_purpose::STANDARD
+        .decode(s)
+        .map_err(|_| "la chiave non è né esadecimale (64 caratteri) né base64".to_string())?;
+    if decoded.len() != 32 {
+        return Err(format!("una chiave AES-256 è di 32 byte, questa ne ha {}", decoded.len()));
+    }
+    out.copy_from_slice(&decoded);
+    Ok(out)
+}
+
+/// Decifra in place in ECB: UE cifra l'indice a blocchi indipendenti da 16 byte.
+fn aes256_ecb_decrypt(key: &AesKey, buf: &mut [u8]) {
+    use aes::cipher::{BlockDecrypt, KeyInit, generic_array::GenericArray};
+    let cipher = aes::Aes256::new(GenericArray::from_slice(key));
+    for chunk in buf.chunks_exact_mut(16) {
+        cipher.decrypt_block(GenericArray::from_mut_slice(chunk));
+    }
+}
+
+/// Vero se la chiave apre davvero l'indice.
+///
+/// L'indice comincia con la FString del mount point, che nei pak veri è un
+/// percorso relativo tipo `../../../Gioco/Content/`. Con la chiave sbagliata
+/// escono byte casuali e la lunghezza non sta in piedi: così l'utente riceve
+/// «chiave sbagliata» subito, invece di un parse fallito 200 righe più in là.
+fn key_opens_pak_index(data: &[u8], footer: &PakFooter, key: &AesKey) -> bool {
+    let off = footer.index_offset as usize;
+    if off + 32 > data.len() { return false; }
+    let mut head = data[off..off + 32].to_vec();
+    aes256_ecb_decrypt(key, &mut head);
+
+    let len = i32::from_le_bytes([head[0], head[1], head[2], head[3]]);
+    if len > 1 && (len as usize) <= 28 {
+        let n = len as usize - 1; // la lunghezza include il NUL finale
+        return head[4..4 + n].iter().all(|&b| (0x20..0x7f).contains(&b)) && head[4 + n] == 0;
+    }
+    if len < -1 && ((-len) as usize) * 2 <= 26 {
+        let n = (-len) as usize - 1;
+        return (0..n).all(|i| head[5 + i * 2] == 0 && (0x20..0x7f).contains(&head[4 + i * 2]));
+    }
+    false
+}
+
+/// Marcatore riconoscibile dal frontend: significa «serve la chiave», non
+/// «è rotto». La UI ci si aggancia per proporre il campo invece di un errore.
+pub const PAK_NEEDS_AES: &str = "PAK_ENCRYPTED_NEEDS_AES_KEY";
+
+/// L'indice decifrato, se il pak è cifrato e abbiamo la chiave giusta.
+fn decrypt_pak_index(data: &[u8], footer: &PakFooter, game_path: Option<&str>) -> Result<Vec<u8>, String> {
+    let stored = game_path
+        .and_then(|g| super::secure_storage::get_secure_key(pak_aes_key_name(g)).ok().flatten());
+    let raw = stored.ok_or_else(|| PAK_NEEDS_AES.to_string())?;
+    let key = parse_aes_key(&raw)?;
+
+    if !key_opens_pak_index(data, footer, &key) {
+        return Err("La chiave AES salvata non apre questo pak: controlla di aver incollato quella giusta".into());
+    }
+
+    let off = footer.index_offset as usize;
+    let span = ((footer.index_size as usize) + 15) & !15; // UE cifra a multipli di 16
+    if off + span > data.len() { return Err("indice cifrato oltre EOF".into()); }
+    let mut buf = data[off..off + span].to_vec();
+    aes256_ecb_decrypt(&key, &mut buf);
+    buf.truncate(footer.index_size as usize);
+    log::info!("🔓 Indice pak decifrato ({} byte)", buf.len());
+    Ok(buf)
+}
+
+/// Salva la chiave AES di un gioco. Valida il formato subito: una chiave
+/// incollata male deve fallire qui, con un messaggio leggibile, non più tardi
+/// dentro il parser dell'indice.
+#[tauri::command]
+pub fn set_pak_aes_key(game_path: String, key: String) -> Result<(), String> {
+    parse_aes_key(&key)?; // solo per validare
+    super::secure_storage::set_secure_key(pak_aes_key_name(&game_path), key.trim().to_string())
+}
+
+#[tauri::command]
+pub fn has_pak_aes_key(game_path: String) -> bool {
+    super::secure_storage::has_secure_key(pak_aes_key_name(&game_path))
+}
+
+#[tauri::command]
+pub fn clear_pak_aes_key(game_path: String) -> Result<(), String> {
+    super::secure_storage::remove_secure_key(pak_aes_key_name(&game_path))
+}
+
 struct PakLocres { path: String, data: Vec<u8> }
 
 /// Estrae e decomprime tutti i `.locres` da un file .pak. Ritorna (path, bytes).
+///
+/// Resta per i test, che non hanno un gioco a cui riferirsi: la produzione usa
+/// `extract_locres_from_pak_for_game`, che sa dove cercare la chiave AES.
+#[cfg(test)]
 fn extract_locres_from_pak(pak_path: &Path, oodle: &Option<OodleLib>) -> Result<Vec<PakLocres>, String> {
     extract_files_by_ext_from_pak(pak_path, oodle, ".locres")
+}
+
+/// Variante che sa a quale gioco appartiene il pak: serve solo per ritrovare la
+/// chiave AES salvata, se l'indice è cifrato. Gli altri chiamanti (e i test)
+/// restano sulla firma senza game_path.
+fn extract_locres_from_pak_for_game(
+    pak_path: &Path,
+    oodle: &Option<OodleLib>,
+    game_path: Option<&str>,
+) -> Result<Vec<PakLocres>, String> {
+    extract_files_by_ext_from_pak_for_game(pak_path, oodle, ".locres", game_path)
 }
 
 /// Come sopra ma con estensione parametrica (".locres", ".locmeta", …).
 /// Il filtro è un ends_with case-insensitive sul path dentro il pak.
 fn extract_files_by_ext_from_pak(pak_path: &Path, oodle: &Option<OodleLib>, ext: &str) -> Result<Vec<PakLocres>, String> {
+    extract_files_by_ext_from_pak_for_game(pak_path, oodle, ext, None)
+}
+
+fn extract_files_by_ext_from_pak_for_game(
+    pak_path: &Path,
+    oodle: &Option<OodleLib>,
+    ext: &str,
+    game_path: Option<&str>,
+) -> Result<Vec<PakLocres>, String> {
     let data = fs::read(pak_path).map_err(|e| format!("lettura pak {}: {}", pak_path.display(), e))?;
     let footer = pak_read_footer(&data)?;
     log::info!("📦 PAK v{} · index@{} ({} byte) · metodi: {:?}",
         footer.version, footer.index_offset, footer.index_size, footer.compression_methods);
-    if footer.encrypted_index {
-        return Err("Indice del pak cifrato (AES): non supportato".into());
-    }
-    let io = footer.index_offset as usize;
-    let ie = io + footer.index_size as usize;
-    if ie > data.len() { return Err("index oltre EOF".into()); }
-    let idx = &data[io..ie];
+
+    // L'indice cifrato non è più un vicolo cieco: con la chiave dell'utente si
+    // apre, senza si esce con un marcatore che la UI sa tradurre in «incolla la
+    // chiave qui» invece che in un errore muto.
+    let decrypted;
+    let idx: &[u8] = if footer.encrypted_index {
+        decrypted = decrypt_pak_index(&data, &footer, game_path)?;
+        &decrypted
+    } else {
+        let io = footer.index_offset as usize;
+        let ie = io + footer.index_size as usize;
+        if ie > data.len() { return Err("index oltre EOF".into()); }
+        &data[io..ie]
+    };
 
     // ── Indice LEGACY (pak v3–v9): mount + N × (FString path, FPakEntry) ───
     // Serve per leggere i pak che scriviamo NOI: `create_pak_v4` dichiara footer
@@ -3142,6 +3308,144 @@ mod tests {
         let found = find_utoc_files(tmp.path());
         assert_eq!(found.len(), 1);
         assert!(found[0].to_string_lossy().ends_with(".utoc"));
+    }
+
+    /// REGRESSIONE 19/08/2026 — The Skin Stapler (Steam).
+    /// Il gioco annida due livelli prima di Content/Paks:
+    /// `<install>/TheSkinStapler/TheSkinStapler/Content/Paks`.
+    /// I finder guardavano un livello solo, tornavano vuoti, e
+    /// `extract_iostore_localization` usciva con «Nessun file .utoc trovato»
+    /// senza mai arrivare al fallback sui .pak. Il gioco ha 1007 stringhe.
+    #[test]
+    fn find_utoc_files_trova_paks_annidata_due_livelli() {
+        let tmp = TempDir::new().unwrap();
+        let paks = tmp.path().join("TheSkinStapler/TheSkinStapler/Content/Paks");
+        fs::create_dir_all(&paks).unwrap();
+        fs::write(paks.join("TheSkinStapler-Windows.utoc"), b"x").unwrap();
+        fs::write(paks.join("TheSkinStapler-Windows.ucas"), b"x").unwrap();
+        let found = find_utoc_files(tmp.path());
+        assert_eq!(found.len(), 1, "la Paks a due livelli deve essere trovata");
+    }
+
+    /// Estrazione vera contro un gioco installato. Ignorato di default: serve
+    /// un gioco reale su disco, non un fixture. Si lancia a mano quando si
+    /// tocca la catena di rilevamento, ed è il solo modo di verificarla senza
+    /// far partire una traduzione (che costerebbe chiamate API sul serio):
+    ///
+    /// ```text
+    /// GS_UE_GAME_PATH="C:/…/steamapps/common/TheSkinStapler"     ///   cargo test --lib -- --ignored estrazione_su_gioco_reale --nocapture
+    /// ```
+    #[tokio::test]
+    #[ignore]
+    async fn estrazione_su_gioco_reale() {
+        let Ok(game) = std::env::var("GS_UE_GAME_PATH") else {
+            eprintln!("GS_UE_GAME_PATH non impostata: niente da fare");
+            return;
+        };
+        let utocs = find_utoc_files(Path::new(&game));
+        let paks = find_pak_files(Path::new(&game));
+        eprintln!("utoc trovati: {} · pak trovati: {}", utocs.len(), paks.len());
+        assert!(!utocs.is_empty() || !paks.is_empty(), "nessun container né pak: i finder non arrivano alla cartella Paks");
+
+        let res = extract_iostore_localization(game.clone()).await;
+        match res {
+            Ok(r) => {
+                eprintln!("stringhe estratte: {} · da: {}", r.entries.len(), r.locres_path);
+                if let Some(e) = r.entries.iter().find(|e| e.value.len() > 20) {
+                    eprintln!("esempio: {:?}", e.value);
+                }
+                assert!(!r.entries.is_empty(), "estrazione vuota su un gioco che ha testo");
+            }
+            Err(e) => panic!("estrazione fallita: {}", e),
+        }
+    }
+
+    // ── PAK CIFRATI ─────────────────────────────────────────────────────
+
+    /// Le due forme che usano i tool del settore (`repak --aes-key` accetta
+    /// entrambe) devono dare la stessa chiave.
+    #[test]
+    fn parse_aes_key_accetta_hex_e_base64() {
+        let atteso: [u8; 32] = [
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd,
+            0xee, 0xff, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98,
+            0x76, 0x54, 0x32, 0x10,
+        ];
+        let hex: String = atteso.iter().map(|b| format!("{:02x}", b)).collect();
+        assert_eq!(parse_aes_key(&hex).unwrap(), atteso, "esadecimale");
+        assert_eq!(parse_aes_key(&format!("0x{}", hex)).unwrap(), atteso, "prefisso 0x");
+
+        use base64::Engine;
+        let b64 = base64::engine::general_purpose::STANDARD.encode(atteso);
+        assert_eq!(parse_aes_key(&b64).unwrap(), atteso, "base64");
+        assert_eq!(parse_aes_key(&format!("  {}  ", b64)).unwrap(), atteso, "con spazi attorno");
+    }
+
+    /// Una chiave incollata male deve fallire subito e con un motivo leggibile,
+    /// non più tardi dentro il parser dell'indice.
+    #[test]
+    fn parse_aes_key_rifiuta_input_sbagliati() {
+        assert!(parse_aes_key("").is_err());
+        assert!(parse_aes_key("non-una-chiave").is_err());
+        // 16 byte: AES-128, non basta per un pak UE.
+        use base64::Engine;
+        let corta = base64::engine::general_purpose::STANDARD.encode([7u8; 16]);
+        let err = parse_aes_key(&corta).unwrap_err();
+        assert!(err.contains("32 byte"), "il messaggio deve dire quanti byte servono: {err}");
+    }
+
+    /// Il validatore deve distinguere la chiave giusta da una sbagliata usando
+    /// il mount point che apre l'indice. Senza questo, una chiave errata
+    /// produrrebbe byte casuali e un parse fallito 200 righe più in là.
+    #[test]
+    fn key_opens_pak_index_riconosce_la_chiave_giusta() {
+        use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
+
+        // Indice in chiaro: FString del mount point "../../../" + NUL.
+        let mount = b"../../../\0";
+        let mut chiaro = Vec::new();
+        chiaro.extend_from_slice(&(mount.len() as i32).to_le_bytes());
+        chiaro.extend_from_slice(mount);
+        chiaro.resize(32, 0);
+
+        let giusta: [u8; 32] = [0xA5; 32];
+        let mut cifrato = chiaro.clone();
+        let cipher = aes::Aes256::new(GenericArray::from_slice(&giusta));
+        for blocco in cifrato.chunks_exact_mut(16) {
+            cipher.encrypt_block(GenericArray::from_mut_slice(blocco));
+        }
+
+        // Il pak finto: 64 byte di riempimento, poi l'indice cifrato.
+        let mut data = vec![0u8; 64];
+        let index_offset = data.len() as u64;
+        data.extend_from_slice(&cifrato);
+
+        let footer = PakFooter {
+            version: 11,
+            index_offset,
+            index_size: chiaro.len() as u64,
+            compression_methods: vec![],
+            encrypted_index: true,
+        };
+
+        assert!(key_opens_pak_index(&data, &footer, &giusta), "la chiave giusta deve aprire");
+        assert!(!key_opens_pak_index(&data, &footer, &[0x11; 32]), "una chiave sbagliata non deve passare");
+    }
+
+    /// Stessa profondità, lato .pak: è lì che stanno i .locres nei giochi
+    /// UE5 IoStore, quindi se il finder non ci arriva il testo resta invisibile.
+    /// I nostri override (_P.pak, GameStringer*) restano esclusi.
+    #[test]
+    fn find_pak_files_trova_annidati_ed_esclude_i_nostri() {
+        let tmp = TempDir::new().unwrap();
+        let paks = tmp.path().join("Gioco/Sub/Content/Paks");
+        fs::create_dir_all(&paks).unwrap();
+        fs::write(paks.join("Gioco-Windows.pak"), b"x").unwrap();
+        fs::write(paks.join("GameStringer_it_P.pak"), b"x").unwrap();
+        fs::write(paks.join("Altro_P.pak"), b"x").unwrap();
+        let found = find_pak_files(tmp.path());
+        assert_eq!(found.len(), 1, "solo il pak originale del gioco");
+        assert!(found[0].to_string_lossy().ends_with("Gioco-Windows.pak"));
     }
 
     // ── WRITE PATH ──────────────────────────────────────────────────────
