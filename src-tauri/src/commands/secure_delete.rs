@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{Write, Seek, SeekFrom};
 use std::path::PathBuf;
 use log::info;
-use rand::Rng;
+use rand::RngExt;
 
 // ============================================================================
 // SECURE DELETE SYSTEM - Cancellazione sicura dati sensibili

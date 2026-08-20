@@ -758,7 +758,7 @@ use aes_gcm::{
 };
 use sha2::{Sha256, Digest};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use rand::Rng;
+use rand::RngExt;
 
 /// Backup criptato con password
 #[derive(Debug, Clone, Serialize, Deserialize)]

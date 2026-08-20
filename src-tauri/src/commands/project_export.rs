@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use zip::write::FileOptions;
+use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 use chrono::Utc;
 
@@ -121,7 +121,7 @@ pub async fn export_translation_project(
     let file = fs::File::create(output)
         .map_err(|e| format!("Errore creazione file ZIP: {}", e))?;
     let mut zip = ZipWriter::new(file);
-    let options = FileOptions::default()
+    let options = SimpleFileOptions::default()
         .compression_method(zip::CompressionMethod::Deflated);
 
     let mut stats = ProjectStats {

@@ -9,7 +9,7 @@ use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
-use rand::RngCore;
+use rand::Rng;
 use base64::{Engine as _, engine::general_purpose};
 use chrono;
 
