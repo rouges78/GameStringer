@@ -76,16 +76,16 @@ criptato (RGSS, GameMaker, Kirikiri, NScripter, Wolf, Godot, Unreal).
 
 | Engine/Funzione | Modulo | Comandi | Test | Stato |
 |-----------------|--------|:------:|:----:|-------|
-| Unreal localization | `unreal_localization` | 12 | 20 | ✅ Testato |
+| Unreal localization | `unreal_localization` | 12 | 35 | ✅ Testato |
 | Unity bundle | `unity_bundle` | 8 | 19 | ✅ Testato |
 | Unity localization | `unity_localization` | 6 | 24 | ✅ Testato |
 | Unity .assets manager | `unity_assets` | 6 | 8 | ✅ Testato |
 | Unity asset injector (Python) | `unity_asset_injector` | 3 | 10 | ✅ Logica Rust testata; script Python no |
 | Unity injector (runtime) | `unity_injector` | 3 | 6 | 🟡 Logica IPC/guardia testata; injection WinAPI no |
-| Unreal IoStore | `unreal_iostore` | 2 | 13 | ✅ Testato |
+| Unreal IoStore | `unreal_iostore` | 5 | 31 | ✅ Testato |
 | Unity CSV | `unity_csv` | 1 | 11 | ✅ Testato |
 
-`unreal_localization` è coperto da 20 test deterministici (no file di gioco
+`unreal_localization` è coperto da 35 test deterministici (no file di gioco
 reali): round-trip dei writer/parser `.locres` v0 e v2 (con dedup string array),
 selezione versione, rifiuto versioni future, helper binari (`FString` UTF-8/vuota,
 i32, EOF), e un **round-trip PAK completo** `create_pak_v4` → `find_pak_footer` →
@@ -149,7 +149,7 @@ vera (resize asset) è delegata allo script Python, non coperto dalla CI Rust.
 "popups" invece di "spelltexts" (riordinati i prefissi specifici prima di
 `ll_`/`vl_`).
 
-`unreal_iostore` è coperto da 13 test: helper binari (`read_u8/u32/i32/u64` con EOF,
+`unreal_iostore` è coperto da 31 test: helper binari (`read_u8/u32/i32/u64` con EOF,
 `read_fstring`/`try_read_fstring_at` UTF-8 + casi limite), euristiche di pulizia
 (`is_translatable_text`, `split_on_id_boundaries`, `clean_datatable_string`),
 scanner `scan_ftext_entries` (FText Base ns/key/source) e `scan_uasset_strings`

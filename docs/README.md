@@ -35,7 +35,7 @@ Documentazione completa di GameStringer v1.15.0 - Suite professionale di localiz
 ### Architettura e Sistemi
 
 - **[Architettura](ARCHITETTURA.md)** - Design tecnico del progetto
-- **[API Reference](API_REFERENCE.md)** - Endpoint REST e SDK TypeScript
+- **[API Reference](API_REFERENCE.md)** - Comandi Tauri `invoke()`, l'interfaccia col backend Rust
 - **[Plugin System](PLUGIN_SYSTEM.md)** - Architettura plugin (design doc)
 - **[Patch System](PATCH_SYSTEM.md)** - Sistema patch traduzioni
 - **[Translation Editor](TRANSLATION_EDITOR.md)** - Editor traduzioni
@@ -65,7 +65,7 @@ Documentazione completa di GameStringer v1.15.0 - Suite professionale di localiz
 
 ### Riferimenti
 
-- **[API Reference](API_REFERENCE.md)** - Endpoint REST completi
+- **[API Reference](API_REFERENCE.md)** - Comandi Tauri `invoke()` e come scoprirli
 - **[Plugin System](PLUGIN_SYSTEM.md)** - Come sviluppare plugin
 - **[Editor Implementation](EDITOR_IMPLEMENTATION_SUMMARY.md)** - Dettagli implementazione editor
 

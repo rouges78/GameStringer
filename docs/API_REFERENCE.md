@@ -1,530 +1,132 @@
-# API Reference - GameStringer
+# API Reference — GameStringer
 
-> ℹ️ **Due modalità runtime — leggere prima.** Le route `/api/*` qui sotto sono reali route Next.js e funzionano in **modalità web/dev** (`npm run dev`). La **app desktop però viene buildata con `output: 'export'`** (export statico, vedi `next.config.js`), che **elimina tutte le route `/api/*`**: nel pacchetto desktop (Tauri) quegli endpoint **non esistono** e il frontend parla col backend Rust via comandi Tauri **`invoke()`**. Ogni `fetch('/api/...')` rimasto nella UI funziona solo in web/dev e **fallisce nel build desktop** — vedi la regola di progetto "0 `fetch('/api/')` attive". La **Public API v1** (`app/api/v1`) è l'API HTTP esterna/di integrazione, valida quando l'app gira come server, non nel desktop a export statico.
+> **Cosa trovi qui.** L'interfaccia fra il frontend e il backend di GameStringer,
+> che è una sola: i **comandi Tauri** invocati con `invoke()`. Le route HTTP
+> `/api/*` non esistono più come endpoint funzionanti — perché, è spiegato qui
+> sotto.
 
-## 🌐 Panoramica
+## Perché questo documento parlava di endpoint REST
 
-GameStringer espone due interfacce: **(1)** Next.js API Routes (`/api/*`) usate in modalità web/dev, documentate qui sotto; e **(2)** comandi Tauri `invoke()`, la vera interfaccia backend della app desktop pacchettizzata. Le API qui sotto sono organizzate per dominio funzionale e seguono i principi RESTful (modalità web/dev).
+GameStringer è nato come applicazione Next.js con vere route API. Da lì venivano
+`GET /api/games`, `POST /api/translate` e le altre trenta, ed è quello che questo
+documento descriveva.
 
-## 🔐 Autenticazione
+Poi il pacchetto desktop è passato a `output: 'export'` (17/05/2026, vedi
+`next.config.js`): l'export statico **non produce route server**, quindi nel
+pacchetto Tauri quegli endpoint semplicemente non esistevano più. Per un periodo
+il documento ha descritto due modalità — «reali in web/dev, assenti nel
+desktop» — e per un periodo è stata la verità.
 
-### Base URL
+Non lo è più. **Tutte e 33 le route sotto `app/api/` sono state svuotate a stub**
+e rispondono `501 { "error": "not_available_in_desktop" }` in qualunque
+modalità, `npm run dev` compreso. Il codice originale vive nella cronologia git,
+i file restano solo perché il build statico non inciampi.
 
-```text
-http://localhost:3000/api
-```text
+Quindi non ci sono due interfacce. Ce n'è una.
 
-### Headers Richiesti
+## L'interfaccia vera: `invoke()`
 
-```typescript
-{
-  'Content-Type': 'application/json',
-  'Authorization': 'Bearer <session-token>' // Per endpoint protetti
-}
-```text
-
-## 📚 Endpoints
-
-### 🎮 Games API
-
-#### `GET /api/games`
-
-Recupera la lista dei giochi.
-
-**Response:**
-
-```json
-[
-  {
-    "id": "game-id",
-    "title": "Game Title",
-    "path": "/path/to/game",
-    "isInstalled": true
-  }
-]
-```text
-
-#### `POST /api/games`
-
-Crea un nuovo gioco.
-
-**Request Body:**
-
-```json
-{
-  "title": "Game Title",
-  "installPath": "/path/to/game",
-  "platform": "steam",
-  "isInstalled": true
-}
-```text
-
-### 🔧 Patches API
-
-#### `GET /api/patches`
-
-Lista tutte le patch o una specifica.
-
-**Query Parameters:**
-
-- `id` (optional): ID patch specifica
-- `gameId` (optional): Filtra per gioco
-
-**Response:**
-
-```json
-[
-  {
-    "id": "patch-id",
-    "gameId": "game-id",
-    "name": "Patch Name",
-    "description": "Description",
-    "version": "1.0.0",
-    "author": "Author Name",
-    "language": "it",
-    "files": [],
-    "isActive": true,
-    "createdAt": "2025-07-01T12:00:00Z",
-    "updatedAt": "2025-07-01T12:00:00Z"
-  }
-]
-```text
-
-#### `POST /api/patches`
-
-Crea una nuova patch.
-
-**Request Body:**
-
-```json
-{
-  "gameId": "game-id",
-  "name": "Patch Name",
-  "description": "Description",
-  "version": "1.0.0",
-  "author": "Author Name",
-  "language": "it"
-}
-```text
-
-#### `PUT /api/patches`
-
-Aggiorna una patch esistente.
-
-**Request Body:**
-
-```json
-{
-  "id": "patch-id",
-  "name": "Updated Name",
-  "description": "Updated Description",
-  "version": "1.0.1"
-}
-```text
-
-#### `DELETE /api/patches`
-
-Elimina una patch.
-
-**Query Parameters:**
-
-- `id` (required): ID della patch da eliminare
-
-#### `POST /api/patches/export`
-
-Esporta una patch come ZIP.
-
-**Request Body:**
-
-```json
-{
-  "patchId": "patch-id",
-  "options": {
-    "includeOriginals": true,
-    "compress": true
-  }
-}
-```text
-
-**Response:** Binary ZIP file
-
-### 🌍 Translations API
-
-#### `GET /api/translations`
-
-Recupera traduzioni con filtri.
-
-**Query Parameters:**
-
-- `gameId` (optional): Filtra per gioco
-- `status` (optional): pending | completed | reviewed | edited
-- `search` (optional): Ricerca testuale
-
-**Response:**
-
-```json
-[
-  {
-    "id": "translation-id",
-    "gameId": "game-id",
-    "filePath": "/path/to/file",
-    "originalText": "Original text",
-    "translatedText": "Translated text",
-    "targetLanguage": "it",
-    "sourceLanguage": "en",
-    "status": "completed",
-    "confidence": 0.95,
-    "isManualEdit": false,
-    "context": "UI Button",
-    "createdAt": "2025-07-01T12:00:00Z",
-    "updatedAt": "2025-07-01T12:00:00Z",
-    "game": {
-      "id": "game-id",
-      "title": "Game Title"
-    },
-    "suggestions": []
-  }
-]
-```text
-
-#### `POST /api/translations`
-
-Crea una nuova traduzione.
-
-**Request Body:**
-
-```json
-{
-  "gameId": "game-id",
-  "filePath": "/path/to/file",
-  "originalText": "Text to translate",
-  "targetLanguage": "it",
-  "sourceLanguage": "en"
-}
-```text
-
-#### `PUT /api/translations`
-
-Aggiorna una traduzione.
-
-**Request Body:**
-
-```json
-{
-  "id": "translation-id",
-  "translatedText": "Updated translation",
-  "status": "edited",
-  "isManualEdit": true
-}
-```text
-
-#### `DELETE /api/translations`
-
-Elimina una traduzione.
-
-**Query Parameters:**
-
-- `id` (required): ID traduzione
-
-#### `POST /api/translations/suggestions`
-
-Genera suggerimenti AI per una traduzione.
-
-**Request Body:**
-
-```json
-{
-  "translationId": "translation-id",
-  "originalText": "Text to translate",
-  "targetLanguage": "it"
-}
-```text
-
-**Response:**
-
-```json
-[
-  {
-    "id": "suggestion-id",
-    "suggestion": "Suggested translation",
-    "confidence": 0.92,
-    "provider": "openai"
-  }
-]
-```text
-
-#### `POST /api/translations/import`
-
-Importa traduzioni da file.
-
-**Request Body (multipart/form-data):**
-
-- `file`: File da importare (JSON, CSV, PO)
-- `gameId`: ID del gioco
-- `language`: Lingua target
-
-#### `GET /api/translations/export`
-
-Esporta traduzioni.
-
-**Query Parameters:**
-
-- `gameId` (required): ID del gioco
-- `format` (required): json | csv | po
-- `status` (optional): Filtra per stato
-
-### 🏪 Stores API
-
-#### `POST /api/stores/test-connection`
-
-Testa la connessione a uno store.
-
-**Request Body:**
-
-```json
-{
-  "provider": "steam-credentials"
-}
-```text
-
-**Response:**
-
-```json
-{
-  "connected": true,
-  "error": null
-}
-```text
-
-### 🖥️ Comandi desktop (Tauri invoke) — v1.11.2
-
-Nella build desktop questi comandi sono esposti via `invoke()` (non REST). Nuovi in v1.11.2:
-
-**Extra store (rilevamento locale):**
-
-- `is_humble_installed` · `get_humble_installed_games` · `test_humble_connection`
-- `is_gamejolt_installed` · `get_gamejolt_installed_games` · `test_gamejolt_connection`
-- `is_bigfish_installed` · `get_bigfish_installed_games` · `test_bigfish_connection`
-
-**Ricerca traduzioni:**
-
-- `pcgw_check_language(game, language)` — verifica la disponibilità della lingua su PCGamingWiki
-- `test_pcgw_connection`
-- `get_ita_patch_search_links(game_name)` — link di ricerca per patch ITA fan-made
-- `test_ita_patch_search`
+Il frontend parla col backend Rust attraverso il wrapper in
+[`lib/tauri-api.ts`](../lib/tauri-api.ts), **non** importando `@tauri-apps/api`
+direttamente:
 
 ```ts
-import { invoke } from '@tauri-apps/api/core';
-const games = await invoke('get_humble_installed_games');
+import { invoke } from '@/lib/tauri-api';
+
+const giochi = await invoke<Game[]>('get_games_fast');
+const stato  = await invoke<UnrealLocStatus>('get_unreal_localization_status', {
+  gamePath: game.installPath,
+});
 ```
 
-### 🔑 Auth API
+Tre cose che il wrapper fa e che conviene sapere:
 
-#### `POST /api/auth/signin`
+- **Fuori da Tauri lancia subito**, invece di fallire in modo oscuro più avanti.
+  `isTauri()` è esportata dallo stesso modulo per chi deve ramificare.
+- **I nomi degli argomenti si convertono da soli**: `gamePath` in JS arriva come
+  `game_path` in Rust. Non normalizzarli a mano.
+- **I log mascherano i segreti** (`password`, `api_key`, `token`…) e riassumono i
+  risultati grandi, così un array di 2000 giochi non finisce in console per
+  intero.
 
-Accedi con un provider.
+### Errori
 
-**Providers Supportati:**
+Un comando Rust che ritorna `Result<T, String>` diventa una promise: `Ok` la
+risolve, `Err` la rifiuta con quella stringa come messaggio. Non ci sono codici
+di stato HTTP, e non c'è rate limiting: è una chiamata in-process.
 
-- `steam-credentials`
-- `epicgames`
-- `ubisoft-credentials`
-- `itchio-credentials`
-- `gog-credentials`
-- `origin-credentials`
-- `battlenet-credentials`
-
-#### `POST /api/auth/signout`
-
-Disconnetti l'utente corrente.
-
-#### `GET /api/auth/session`
-
-Recupera la sessione corrente.
-
-**Response:**
-
-```json
-{
-  "user": {
-    "id": "user-id",
-    "email": "user@example.com",
-    "name": "User Name",
-    "accounts": [
-      {
-        "provider": "steam-credentials",
-        "providerAccountId": "76561198000000000"
-      }
-    ]
-  }
+```ts
+try {
+  await invoke('set_pak_aes_key', { gamePath, key });
+} catch (e) {
+  // e è la stringa che il comando Rust ha messo dentro Err(...)
+  toast.error(String(e));
 }
-```text
+```
 
-### 🛠️ Utilities API
+## Quali comandi esistono
 
-#### `POST /api/utilities/howlongtobeat`
-
-Cerca informazioni sui tempi di completamento.
-
-**Request Body:**
-
-```json
-{
-  "search": "The Witcher 3"
-}
-```text
-
-**Response:**
-
-```json
-{
-  "gameId": 10270,
-  "name": "The Witcher 3: Wild Hunt",
-  "imageUrl": "...",
-  "timeLabels": [
-    ["Main Story", "51½ Hours"],
-    ["Main + Extras", "103 Hours"],
-    ["Completionist", "173 Hours"]
-  ]
-}
-```text
-
-#### `GET /api/utilities/steamgriddb`
-
-Cerca artwork per giochi.
-
-**Query Parameters:**
-
-- `search` (required): Nome del gioco
-
-**Headers:**
-
-- `X-API-Key` (required): SteamGridDB API key
-
-**Response:**
-
-```json
-[
-  {
-    "id": 1234,
-    "url": "https://...",
-    "thumb": "https://...",
-    "width": 920,
-    "height": 430
-  }
-]
-```text
-
-#### `POST /api/utilities/preferences`
-
-Salva preferenze utility.
-
-**Request Body:**
-
-```json
-{
-  "service": "steamgriddb",
-  "enabled": true,
-  "apiKey": "your-api-key"
-}
-```text
-
-#### `DELETE /api/utilities/preferences`
-
-Rimuove preferenze utility.
-
-**Query Parameters:**
-
-- `service` (required): Nome del servizio
-
-### 🚂 Steam API
-
-#### `POST /api/steam/auto-detect-config`
-
-Rileva automaticamente la configurazione Steam.
-
-**Response:**
-
-```json
-{
-  "sharedAccounts": ["76561198000000001", "76561198000000002"],
-  "steamPath": "C:\\Program Files (x86)\\Steam"
-}
-```text
-
-## 🔒 Gestione Errori
-
-Tutte le API seguono uno schema di errore standard:
-
-```json
-{
-  "error": "Error message",
-  "code": "ERROR_CODE",
-  "details": {}
-}
-```text
-
-### Codici di Errore Comuni
-
-- `400` - Bad Request: Parametri mancanti o non validi
-- `401` - Unauthorized: Autenticazione richiesta
-- `403` - Forbidden: Permessi insufficienti
-- `404` - Not Found: Risorsa non trovata
-- `500` - Internal Server Error: Errore del server
-
-## 📝 Rate Limiting
-
-- **Richieste per minuto**: 60 (autenticato), 30 (non autenticato)
-- **Header di risposta**: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
-
-## 🧪 Testing
-
-### Ambiente di Test
+**864 comandi registrati**, di cui 405 effettivamente invocati dal frontend. Un
+elenco a mano in questo documento sarebbe sbagliato entro una settimana, quindi
+qui non c'è: la fonte autorevole è il codice.
 
 ```bash
-# Imposta variabili d'ambiente
-cp .env.example .env.test
+# La lista completa e sempre vera
+grep -A 900 "invoke_handler" src-tauri/src/main.rs
 
-# Esegui test API
-npm run test:api
-```text
+# Verifica che ogni invoke() del frontend abbia un comando dietro
+npm run tauri:check-cmds
+```
 
-### Esempio con cURL
+`tauri:check-cmds` gira anche in CI ed è un gate bloccante: se qualcuno invoca un
+comando che non esiste, la build lo dice.
 
-```bash
-# Get games
-curl http://localhost:3000/api/games
+### Le famiglie principali
 
-# Create patch (autenticato)
-curl -X POST http://localhost:3000/api/patches \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{"gameId":"1","name":"Test Patch"}'
-```text
+Ogni modulo sotto `src-tauri/src/commands/` espone un gruppo coerente. I più
+grandi, per numero di comandi registrati:
 
-## 🔗 SDK TypeScript
+| Modulo | Comandi | Di cosa si occupa |
+|---|---:|---|
+| `notifications` | 86 | Sistema di notifiche e code di eventi |
+| `steam_enhanced` | 38 | Libreria Steam, metadati, arricchimento |
+| `steam` | 29 | Rilevamento installazioni e percorsi Steam |
+| `danganronpa_patcher` | 27 | Patcher dedicato (WAD, STX) |
+| `profiles` | 24 | Profili utente, autenticazione, cifratura |
+| `utilities` | 16 | Impostazioni, percorsi, servizi di supporto |
+| `glossary` | 16 | Glossari e memoria terminologica |
+| `epic` | 16 | Integrazione Epic Games |
+| `backup` | 16 | Backup e ripristino |
 
-```typescript
-// Esempio di client TypeScript
-class GameStringerAPI {
-  private baseURL = "http://localhost:3000/api";
+Per la copertura per engine — quali patcher esistono, quanti comandi e quanti
+test ciascuno — vedi [`ENGINE-COVERAGE.md`](ENGINE-COVERAGE.md).
 
-  async getGames(): Promise<Game[]> {
-    const res = await fetch(`${this.baseURL}/games`);
-    return res.json();
-  }
+## E le route `/api/`?
 
-  async createPatch(data: PatchData): Promise<Patch> {
-    const res = await fetch(`${this.baseURL}/patches`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return res.json();
-  }
-}
-```text
+Restano come stub e vanno lasciate stare. La regola di progetto è **zero
+`fetch('/api/')` in codice nuovo**: ogni chiamata rimasta va migrata a `invoke()`.
 
----
+La mappa endpoint-per-endpoint, con la classificazione di cosa sostituisce cosa,
+è in [`API_MIGRATION_MAP.md`](API_MIGRATION_MAP.md); il piano di rientro è in
+[`fetch-api-migration-plan.md`](fetch-api-migration-plan.md).
 
-**Ultimo aggiornamento**: 1 Luglio 2025
+Vale anche per `app/api/v1/` — quella che il documento chiamava «Public API v1»,
+pensata per quando l'app girasse come server. Anche le sue quattro route
+(`health`, `languages`, `translate`, `batch`) sono stub. Se un giorno servirà
+un'API HTTP esterna, sarà da progettare, non da riesumare.
+
+## Testare un comando
+
+Non serve cURL: serve l'app. Il modo più rapido è la console per sviluppatori
+della finestra Tauri, dove `invoke` è raggiungibile perché `withGlobalTauri` è
+attivo:
+
+```js
+await window.__TAURI__.core.invoke('get_unreal_localization_status', {
+  gamePath: 'C:/…/steamapps/common/NomeGioco'
+});
+```
+
+Per i comandi con logica vera, però, i test Rust valgono di più: `cargo test
+--manifest-path src-tauri/Cargo.toml --lib` copre 1542 casi e non richiede un
+gioco installato.

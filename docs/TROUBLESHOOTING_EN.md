@@ -269,6 +269,45 @@ Use filters to reduce the results:
 - Filter by status
 - Use targeted search
 
+### 11. Unreal game: "this game exposes no extractable text"
+
+#### Symptoms
+
+- String it! stops on an Unreal game saying there is nothing to translate
+- The game clearly has English dialogue and interface text
+
+#### Cause
+
+Three different causes, which the app now tells apart:
+
+1. **The text exists but lives somewhere else.** In UE5 games the `.locres` can
+   sit loose on disk, inside the IoStore container (`.utoc`/`.ucas`), or in the
+   legacy `.pak` beside it. GameStringer tries all three.
+2. **The archives are encrypted.** In that case the panel does not claim there
+   is no text: it asks for the AES key (see below).
+3. **The game has no localization at all.** Shipped in a single language, with
+   the strings written straight into the code: there is no `.locres` to
+   translate.
+
+#### Solution
+
+For the encrypted case, paste the AES-256 key into the field that appears in the
+panel — base64 or hex, both accepted. GameStringer **does not recover the key
+from the game**; without it, that title stays out of reach.
+
+To check by hand what a pak contains, using the tools the app downloads into
+`%APPDATA%/GameStringer/tools/`:
+
+```bash
+repak.exe list "<game>/Content/Paks/<Name>-Windows.pak" | grep locres
+```text
+
+⚠️ `retoc list` on the container is not the right check: it prints chunk IDs, not
+file names, so not seeing `.locres` there is not evidence of absence.
+
+Full detail in [`METODI-DI-TRADUZIONE.md`](METODI-DI-TRADUZIONE.md) and
+[`UNREAL-DOVE-STANNO-I-LOCRES.md`](UNREAL-DOVE-STANNO-I-LOCRES.md).
+
 ## 🛠️ Useful Debug Commands
 
 ### Check Database Status
