@@ -47,7 +47,7 @@ chrono = { version = "0.4", features = ["serde"] }
 # `query` non serve: nel codice non compare (misurato, 0 occorrenze).
 reqwest = { version = "0.13", features = ["json", "stream", "form"] }
 moka = { version = "0.12", features = ["future"] }
-rand = "0.9"
+rand = "0.10"
 once_cell = "1.19"
 regex = "1.10"
 walkdir = "2.4"

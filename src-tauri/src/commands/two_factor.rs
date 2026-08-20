@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use chrono::Utc;
 use log::info;
-use rand::Rng;
+use rand::RngExt;
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
 

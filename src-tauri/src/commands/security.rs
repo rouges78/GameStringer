@@ -171,7 +171,7 @@ pub async fn generate_session_token(
     profile_id: String,
     device_fingerprint: Option<String>,
 ) -> Result<String, String> {
-    use rand::Rng;
+    use rand::RngExt;
     use sha2::{Sha256, Digest};
     
     let mut rng = rand::rng();
