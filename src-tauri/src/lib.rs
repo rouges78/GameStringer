@@ -2,9 +2,7 @@ pub mod models;
 pub mod commands;
 
 #[cfg(windows)]
-pub mod injekt;
 #[cfg(windows)]
-pub mod multi_process_injekt;
 #[cfg(windows)]
 pub mod anti_cheat;
 pub mod engine_detector;

@@ -36,13 +36,6 @@ export const dashboardTutorial: TutorialConfig = {
       validation: () => elementExists('a[href="/library"]')
     },
     {
-      id: 'neural-translator',
-      title: 'Neural Translator',
-      description: 'Our AI-powered translation engine. This is where the magic happens - translate games using advanced neural networks.',
-      target: 'a[href="/injekt-translator"]',
-      position: 'right'
-    },
-    {
       id: 'editor-section',
       title: 'Translation Editor',
       description: 'Fine-tune your translations manually. Edit, review, and perfect your game translations here.',
@@ -485,7 +478,6 @@ export function getTutorialsForPage(pathname: string): TutorialConfig[] {
   const pageMap: Record<string, string[]> = {
     '/': ['dashboard-intro'],
     '/library': ['library-guide'],
-    '/injekt-translator': ['neural-translator-guide'],
     '/editor': ['editor-guide'],
     '/patches': ['patches-guide'],
     '/community-hub': ['community-forum-guide'],
