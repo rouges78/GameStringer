@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "Ce jeu chiffre ses archives .pak : sans la clé AES, l'index est illisible.",
     "pakEncryptedExplain": "Pak chiffré. GameStringer ne récupère pas la clé depuis le jeu : collez-la ici si vous l'avez.",
     "pakAesPlaceholder": "Clé AES-256 (base64 ou hexadécimal)",
-    "pakAesSaved": "Clé enregistrée. Relancez String it! pour réessayer."
+    "pakAesSaved": "Clé enregistrée. Relancez String it! pour réessayer.",
+    "pakAesWrong": "La clé enregistrée n'ouvre pas ce pak. Collez-en une autre, ou supprimez celle enregistrée.",
+    "pakAesClear": "Supprimer la clé enregistrée",
+    "pakAesCleared": "Clé supprimée."
   },
   "autoTranslatePage": {
     "identical": "identiques",

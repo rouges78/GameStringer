@@ -7634,7 +7634,10 @@
     "pakEncryptedDetail": "Questo gioco cifra i propri archivi .pak: senza la chiave AES l'indice non è leggibile.",
     "pakEncryptedExplain": "Pak cifrato. GameStringer non ricava la chiave dal gioco: incollala qui se ce l'hai.",
     "pakAesPlaceholder": "Chiave AES-256 (base64 o esadecimale)",
-    "pakAesSaved": "Chiave salvata. Rilancia String it! per riprovare."
+    "pakAesSaved": "Chiave salvata. Rilancia String it! per riprovare.",
+    "pakAesWrong": "La chiave salvata non apre questo pak. Incollane un'altra, oppure rimuovi quella salvata.",
+    "pakAesClear": "Rimuovi la chiave salvata",
+    "pakAesCleared": "Chiave rimossa."
   },
   "patchHubPage": {
     "title": "Patch Hub",

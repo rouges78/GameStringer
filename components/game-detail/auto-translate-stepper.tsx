@@ -65,6 +65,11 @@ export function AutoTranslateStepper({
   // solo dentro questo pannello, e sparisce con lui.
   const [aesKey, setAesKey] = useState('');
   const [salvandoChiave, setSalvandoChiave] = useState(false);
+  // Due situazioni diverse: nessuna chiave, oppure una chiave salvata che non
+  // apre il pak. Nella seconda serve poterla buttare via, altrimenti resta lì
+  // a far fallire ogni tentativo senza che l'utente possa toccarla.
+  const chiaveSbagliata = error === 'PAK_ENCRYPTED_WRONG_AES_KEY';
+  const serveChiaveAes = error === 'PAK_ENCRYPTED_NEEDS_AES_KEY' || chiaveSbagliata;
 
   /* ── RINGRAZIAMENTO DOPO UN SUCCESSO VERO (10/08/2026) ────────────────────
    * Il contatore delle stringhe e la richiesta di supporto vivevano in
@@ -174,11 +179,11 @@ export function AutoTranslateStepper({
             la chiave invece di mostrare un errore che l'utente non può usare.
             GameStringer non la ricava dal gioco — sarebbe aggirare una
             protezione — ma se l'utente ce l'ha, la usa. */}
-        {error === 'PAK_ENCRYPTED_NEEDS_AES_KEY' ? (
+        {serveChiaveAes ? (
           <div className="mt-3 p-3 rounded-lg bg-amber-600/5 border border-amber-600/40 space-y-2">
             <div className="flex items-center gap-2 text-2xs text-amber-900 dark:text-amber-500">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-              <span>{t('heroJob.pakEncryptedExplain')}</span>
+              <span>{chiaveSbagliata ? t('heroJob.pakAesWrong') : t('heroJob.pakEncryptedExplain')}</span>
               <button className="ml-auto text-micro font-bold uppercase tracking-wider hover:underline" onClick={onClose}>{t('common.chiudi')}</button>
             </div>
             <div className="flex gap-2">
@@ -211,6 +216,22 @@ export function AutoTranslateStepper({
                 {salvandoChiave ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('common.salva')}
               </button>
             </div>
+            {chiaveSbagliata && (
+              <button
+                className="text-micro underline text-muted-foreground hover:text-foreground"
+                onClick={async () => {
+                  try {
+                    const { invoke } = await import('@tauri-apps/api/core');
+                    await invoke('clear_pak_aes_key', { gamePath: game.installPath });
+                    toast.success(t('heroJob.pakAesCleared'));
+                  } catch (e) {
+                    toast.error(String(e));
+                  }
+                }}
+              >
+                {t('heroJob.pakAesClear')}
+              </button>
+            )}
           </div>
         ) : error && (
           <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-2xs text-red-300">

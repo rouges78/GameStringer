@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "このゲームは .pak アーカイブを暗号化しています。AES 鍵がないと索引を読めません。",
     "pakEncryptedExplain": "暗号化された pak です。GameStringer はゲームから鍵を割り出しません。お持ちならここに貼り付けてください。",
     "pakAesPlaceholder": "AES-256 鍵（base64 または十六進）",
-    "pakAesSaved": "鍵を保存しました。String it! をもう一度実行してください。"
+    "pakAesSaved": "鍵を保存しました。String it! をもう一度実行してください。",
+    "pakAesWrong": "保存された鍵ではこの pak を開けません。別の鍵を貼り付けるか、保存された鍵を削除してください。",
+    "pakAesClear": "保存された鍵を削除",
+    "pakAesCleared": "鍵を削除しました。"
   },
   "autoTranslatePage": {
     "identical": "同一",

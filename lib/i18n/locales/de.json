@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "Dieses Spiel verschlüsselt seine .pak-Archive: ohne den AES-Schlüssel ist der Index nicht lesbar.",
     "pakEncryptedExplain": "Verschlüsseltes Pak. GameStringer ermittelt den Schlüssel nicht aus dem Spiel: füge ihn hier ein, wenn du ihn hast.",
     "pakAesPlaceholder": "AES-256-Schlüssel (Base64 oder Hex)",
-    "pakAesSaved": "Schlüssel gespeichert. Starte String it! erneut, um es noch einmal zu versuchen."
+    "pakAesSaved": "Schlüssel gespeichert. Starte String it! erneut, um es noch einmal zu versuchen.",
+    "pakAesWrong": "Der gespeicherte Schlüssel öffnet dieses Pak nicht. Füge einen anderen ein oder entferne den gespeicherten.",
+    "pakAesClear": "Gespeicherten Schlüssel entfernen",
+    "pakAesCleared": "Schlüssel entfernt."
   },
   "autoTranslatePage": {
     "identical": "identisch",

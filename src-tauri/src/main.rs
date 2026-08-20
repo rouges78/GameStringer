@@ -476,7 +476,6 @@ fn main() {
             commands::unreal_iostore::extract_iostore_localization,
             commands::unreal_iostore::apply_datatable_translation,
             commands::unreal_iostore::set_pak_aes_key,
-            commands::unreal_iostore::has_pak_aes_key,
             commands::unreal_iostore::clear_pak_aes_key,
             // Ollama Manager
             commands::ollama_manager::check_ollama_status,

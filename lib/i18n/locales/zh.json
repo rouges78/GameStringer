@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "这款游戏加密了自己的 .pak 档案：没有 AES 密钥就无法读取索引。",
     "pakEncryptedExplain": "已加密的 pak。GameStringer 不会从游戏中还原密钥：如果你有，请粘贴到这里。",
     "pakAesPlaceholder": "AES-256 密钥（base64 或十六进制）",
-    "pakAesSaved": "密钥已保存。请再次运行 String it! 重试。"
+    "pakAesSaved": "密钥已保存。请再次运行 String it! 重试。",
+    "pakAesWrong": "已保存的密钥无法打开这个 pak。请粘贴另一个，或删除已保存的密钥。",
+    "pakAesClear": "删除已保存的密钥",
+    "pakAesCleared": "密钥已删除。"
   },
   "autoTranslatePage": {
     "identical": "相同",

@@ -7634,7 +7634,10 @@
     "pakEncryptedDetail": "This game encrypts its own .pak archives: without the AES key the index cannot be read.",
     "pakEncryptedExplain": "Encrypted pak. GameStringer does not recover the key from the game: paste it here if you have it.",
     "pakAesPlaceholder": "AES-256 key (base64 or hex)",
-    "pakAesSaved": "Key saved. Run String it! again to retry."
+    "pakAesSaved": "Key saved. Run String it! again to retry.",
+    "pakAesWrong": "The saved key does not open this pak. Paste a different one, or remove the saved one.",
+    "pakAesClear": "Remove the saved key",
+    "pakAesCleared": "Key removed."
   },
   "patchHubPage": {
     "title": "Patch Hub",

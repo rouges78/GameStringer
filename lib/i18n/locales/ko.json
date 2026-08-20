@@ -1140,7 +1140,10 @@
     "pakEncryptedDetail": "이 게임은 .pak 아카이브를 암호화합니다. AES 키가 없으면 인덱스를 읽을 수 없습니다.",
     "pakEncryptedExplain": "암호화된 pak입니다. GameStringer는 게임에서 키를 복원하지 않습니다. 가지고 있다면 여기에 붙여 넣으세요.",
     "pakAesPlaceholder": "AES-256 키 (base64 또는 16진수)",
-    "pakAesSaved": "키가 저장되었습니다. String it!을 다시 실행해 보세요."
+    "pakAesSaved": "키가 저장되었습니다. String it!을 다시 실행해 보세요.",
+    "pakAesWrong": "저장된 키로는 이 pak을 열 수 없습니다. 다른 키를 붙여 넣거나 저장된 키를 삭제하세요.",
+    "pakAesClear": "저장된 키 삭제",
+    "pakAesCleared": "키가 삭제되었습니다."
   },
   "autoTranslatePage": {
     "identical": "동일",
