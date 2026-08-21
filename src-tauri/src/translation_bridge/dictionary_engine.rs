@@ -467,6 +467,58 @@ impl DictionaryEngine {
     }
     
     /// Esporta traduzioni in JSON
+    /// Esporta la coppia di lingue attiva nel formato GSTC che la cache locale
+    /// di gs-hook sa leggere (`unreal-translator/hook-dll/src/cache.cpp`).
+    ///
+    /// PERCHÉ ESISTE. Su Unreal la stessa stringa passa da `FText::ToString`
+    /// una volta sola — la display string resta in cache dentro l'`FTextData` —
+    /// quindi il percorso fire-and-forget della DLL, che chiede la traduzione al
+    /// primo avvistamento e la usa dal secondo, non scatta mai. Se il testo non
+    /// è già tradotto quando viene convertito, a schermo non cambia niente.
+    /// Questo file va scritto PRIMA dell'iniezione.
+    ///
+    /// Formato: magic u32 LE `0x47535443` (sul disco sono i byte `CTSG`, non
+    /// `GSTC`: sbagliare l'ordine fa rifiutare il file in silenzio), version
+    /// u32 = 1, count u32, e per ogni voce `len u32` + testo UTF-16LE senza NUL,
+    /// prima l'originale e poi la traduzione. `len` conta unità UTF-16, non
+    /// caratteri Unicode: il C++ legge `len * sizeof(wchar_t)` byte.
+    pub fn export_gstc(&self, path: &str) -> Result<usize, String> {
+        let key = Self::get_key(&self.active_source, &self.active_target);
+        let dict = self
+            .dictionaries
+            .get(&key)
+            .ok_or_else(|| format!("Nessun dizionario per {}", key))?;
+
+        let entries: Vec<&TranslationEntry> = dict.iter().collect();
+        let mut buf: Vec<u8> = Vec::with_capacity(entries.len() * 64 + 12);
+        buf.extend_from_slice(&0x4753_5443u32.to_le_bytes());
+        buf.extend_from_slice(&1u32.to_le_bytes());
+        buf.extend_from_slice(&(entries.len() as u32).to_le_bytes());
+
+        for entry in &entries {
+            for text in [&entry.original, &entry.translated] {
+                let units: Vec<u16> = text.encode_utf16().collect();
+                buf.extend_from_slice(&(units.len() as u32).to_le_bytes());
+                for u in units {
+                    buf.extend_from_slice(&u.to_le_bytes());
+                }
+            }
+        }
+
+        if let Some(parent) = Path::new(path).parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("Impossibile creare {}: {}", parent.display(), e))?;
+        }
+        fs::write(path, &buf).map_err(|e| format!("Errore scrittura {}: {}", path, e))?;
+
+        info!(
+            "[DictionaryEngine] Esportate {} traduzioni in GSTC: {}",
+            entries.len(),
+            path
+        );
+        Ok(entries.len())
+    }
+
     pub fn export_to_json(&self, path: &str) -> Result<(), String> {
         let key = Self::get_key(&self.active_source, &self.active_target);
         
@@ -539,6 +591,51 @@ mod tests {
         assert_eq!(stats.total_entries, 2);
     }
     
+    #[test]
+    fn test_export_gstc_formato_leggibile_dal_cpp() {
+        // Il magic va scritto come u32 little-endian 0x47535443, che sul disco
+        // da' i byte "CTSG". Scriverlo come "GSTC" fa rifiutare il file in
+        // silenzio da cache.cpp: nessun errore, cache vuota, e il gioco resta
+        // in inglese senza che niente lo segnali.
+        let dir = std::env::temp_dir().join("gs_gstc_test");
+        let _ = fs::remove_dir_all(&dir);
+        let path = dir.join("c.gstc");
+
+        let mut engine = DictionaryEngine::new();
+        engine.set_active_languages("en", "it");
+        engine.load_translations(
+            "en",
+            "it",
+            vec![("Exit game".to_string(), "Esci dal gioco".to_string())],
+        );
+
+        let n = engine.export_gstc(path.to_str().unwrap()).unwrap();
+        assert_eq!(n, 1);
+
+        let raw = fs::read(&path).unwrap();
+        assert_eq!(&raw[0..4], b"CTSG", "il magic sul disco deve essere CTSG");
+        assert_eq!(u32::from_le_bytes(raw[4..8].try_into().unwrap()), 1, "version");
+        assert_eq!(u32::from_le_bytes(raw[8..12].try_into().unwrap()), 1, "count");
+
+        // len e' in unita' UTF-16, e il C++ legge len * sizeof(wchar_t) byte.
+        let orig_len = u32::from_le_bytes(raw[12..16].try_into().unwrap()) as usize;
+        assert_eq!(orig_len, "Exit game".encode_utf16().count());
+        let orig: Vec<u16> = raw[16..16 + orig_len * 2]
+            .chunks_exact(2)
+            .map(|c| u16::from_le_bytes([c[0], c[1]]))
+            .collect();
+        assert_eq!(String::from_utf16(&orig).unwrap(), "Exit game");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_export_gstc_senza_dizionario_attivo() {
+        let engine = DictionaryEngine::new();
+        let path = std::env::temp_dir().join("gs_gstc_vuoto.gstc");
+        assert!(engine.export_gstc(path.to_str().unwrap()).is_err());
+    }
+
     #[test]
     fn test_duplicate_key_no_count_drift() {
         let mut engine = DictionaryEngine::new();

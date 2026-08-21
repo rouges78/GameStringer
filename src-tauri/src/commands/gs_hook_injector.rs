@@ -76,6 +76,24 @@ pub async fn inject_gs_hook(
         // al processo target (incluso lo spawn dell'helper). Blocco rigido.
         crate::anti_cheat::assert_injection_allowed(pid)?;
 
+        // Dizionario pre-caricato, PRIMA dell'iniezione. Non è un'ottimizzazione:
+        // su Unreal la stessa stringa passa da FText::ToString una volta sola
+        // (la display string resta in cache dentro l'FTextData), quindi il
+        // percorso fire-and-forget della DLL — chiedi al primo avvistamento,
+        // usa dal secondo — non scatta mai. Senza questo file la traduzione non
+        // compare, per quanto bene funzionino pipe e dizionario.
+        //
+        // Il percorso è convenuto invece che passato come variabile d'ambiente
+        // perché una env var non si può impostare in un processo già avviato:
+        // la DLL cerca %APPDATA%\GameStringer\gs-hook-cache.gstc.
+        match preload_dictionary(&app) {
+            Ok(0) => log::info!("📖 Dizionario vuoto: gs-hook partirà senza traduzioni note"),
+            Ok(n) => log::info!("📖 Pre-caricate {} traduzioni per gs-hook", n),
+            // Un dizionario mancante non deve impedire l'iniezione: senza, la
+            // DLL cattura comunque il testo e lo manda all'app via pipe.
+            Err(e) => log::warn!("📖 Dizionario non pre-caricato ({}), si procede", e),
+        }
+
         // Bitness del target → arch della DLL/injector da usare.
         let arch = match target_is_wow64(pid) {
             Some(true) => "x86",  // processo a 32-bit (WoW64 su Windows x64)
@@ -153,6 +171,26 @@ pub async fn inject_gs_hook(
 /// accanto all'eseguibile (`<exe_dir>/resources/gs-hook/<arch>/...`), come fa
 /// `unity_injector` per le proprie risorse.
 #[cfg(target_os = "windows")]
+/// Percorso del dizionario che gs-hook legge all'avvio. Deve combaciare con
+/// quello in `gs-hook/src/dllmain.cpp`.
+fn gs_hook_cache_path() -> Result<std::path::PathBuf, String> {
+    let appdata = std::env::var("APPDATA").map_err(|_| "APPDATA non impostata".to_string())?;
+    Ok(std::path::Path::new(&appdata)
+        .join("GameStringer")
+        .join("gs-hook-cache.gstc"))
+}
+
+/// Scrive la coppia di lingue attiva del Translation Bridge nel file che la DLL
+/// caricherà. Ritorna quante traduzioni sono state scritte.
+fn preload_dictionary(app: &tauri::AppHandle) -> Result<usize, String> {
+    use tauri::Manager;
+
+    let path = gs_hook_cache_path()?;
+    let state = app.state::<crate::commands::translation_bridge::TranslationBridgeState>();
+    let dict = state.dictionary.read();
+    dict.export_gstc(&path.to_string_lossy())
+}
+
 fn gs_hook_paths(arch: &str) -> Result<(std::path::PathBuf, std::path::PathBuf), String> {
     let exe_dir = std::env::current_exe()
         .map_err(|e| e.to_string())?
