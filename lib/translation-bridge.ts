@@ -44,6 +44,40 @@ export interface TranslationPair {
  */
 export class TranslationBridgeClient {
   private isConnected: boolean = false;
+  private maxRetries: number = 3;
+  private retryDelayMs: number = 500;
+
+  /**
+   * Retry wrapper: retries a Tauri invoke call only on transient failures.
+   * Non-transient errors (validation, not found, etc.) are thrown immediately.
+   */
+  private async withRetry<T>(fn: () => Promise<T>, retries = this.maxRetries): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        // Only retry on transient errors (timeouts, IPC failures, network issues).
+        // Check structured error properties first, fall back to string matching.
+        const err = error as Record<string, unknown>;
+        const isTransient =
+          err?.code === 'ETIMEDOUT' || err?.code === 'ECONNRESET'
+          || err?.code === 'ECONNREFUSED' || err?.code === 'ERR_IPC_CHANNEL_CLOSED'
+          || (() => {
+            const msg = String(error).toLowerCase();
+            return msg.includes('timeout') || msg.includes('ipc')
+              || msg.includes('connection') || msg.includes('unavailable')
+              || msg.includes('channel closed');
+          })();
+        if (!isTransient || attempt >= retries) {
+          throw error;
+        }
+        await new Promise(r => setTimeout(r, this.retryDelayMs * (attempt + 1)));
+      }
+    }
+    throw lastError;
+  }
 
   /**
    * Start the Translation Bridge server
@@ -92,7 +126,9 @@ export class TranslationBridgeClient {
    */
   async getStats(): Promise<BridgeStats | null> {
     try {
-      const response = await invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats');
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<BridgeStats>>('translation_bridge_stats')
+      );
       return response.data;
     } catch (error: unknown) {
       clientLogger.error(`[TranslationBridge] Failed to get stats: ${String(error)}`);
@@ -105,7 +141,9 @@ export class TranslationBridgeClient {
    */
   async getDictionaryStats(): Promise<DictionaryStats | null> {
     try {
-      const response = await invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats');
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<DictionaryStats>>('translation_bridge_dictionary_stats')
+      );
       return response.data;
     } catch (error: unknown) {
       clientLogger.error(`[TranslationBridge] Failed to get dictionary stats: ${String(error)}`);
@@ -188,9 +226,11 @@ export class TranslationBridgeClient {
    */
   async getTranslation(text: string): Promise<string | null> {
     try {
-      const response = await invoke<BridgeResponse<string | null>>('translation_bridge_get_translation', {
-        text,
-      });
+      const response = await this.withRetry(() =>
+        invoke<BridgeResponse<string | null>>('translation_bridge_get_translation', {
+          text,
+        })
+      );
       return response.data;
     } catch (error: unknown) {
       clientLogger.error(`[TranslationBridge] Failed to get translation: ${String(error)}`);
@@ -210,6 +250,22 @@ export class TranslationBridgeClient {
     } catch (error: unknown) {
       clientLogger.error(`[TranslationBridge] Failed to export JSON: ${String(error)}`);
       return false;
+    }
+  }
+
+  /**
+   * Drain cache misses (untranslated texts) for AI fallback.
+   * Returns up to `max` unique texts that were not found in the dictionary.
+   */
+  async drainMisses(max: number = 100): Promise<string[]> {
+    try {
+      const response = await invoke<BridgeResponse<string[]>>('translation_bridge_drain_misses', {
+        max,
+      });
+      return response.data ?? [];
+    } catch (error: unknown) {
+      clientLogger.error(`[TranslationBridge] Failed to drain misses: ${String(error)}`);
+      return [];
     }
   }
 
