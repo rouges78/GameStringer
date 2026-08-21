@@ -375,6 +375,44 @@ vivo, non che qualcuno gli stia parlando. Il numero che conta è quante
 richieste arrivano al server — se è zero, il problema sta a monte dell'IPC, e
 guardare la pipe non lo troverà mai.
 
+**La risoluzione per simbolo non salva i build monolitici (21/08/2026).**
+Un simbolo esportato sarebbe deterministico — o c'è ed è quello giusto, o non
+c'è — ma richiede l'engine in DLL. Father's Day è un Shipping monolitico:
+
+| | |
+|---|---|
+| export nell'exe | 312, **tutti** hint per driver (`NvOptimusEnablement`, `ags*`) |
+| simboli UE | nessuno |
+| PDB | dichiarato nell'header (`Fathers_Day-Win64-Shipping.pdb`), non spedito |
+| DLL accanto all'exe | solo `turbojpeg.dll` |
+| moduli interrogati a runtime | **142**, zero hit |
+
+`ResolveFTextToStringBySymbol()` in `source_unreal_ftext.cpp` prova comunque
+per primo (`?ToString@FText@@QEBAAEBVFString@@XZ`, cercato in tutti i moduli via
+Toolhelp) e cade sul pattern quando non trova. Serve ai build non monolitici e
+all'editor; sui giochi commerciali no. Il numero di moduli finisce nel log
+apposta: senza, uno zero non distingue «guardato ovunque, non c'è» da «lo
+snapshot è fallito e non ho guardato niente». Il controllo che lo conferma è
+confrontarlo con `(Get-Process ...).Modules.Count` — qui 142 contro 142.
+
+**I quattro candidati, misurati.** Non sono un pattern che sfarfalla: sono
+quattro funzioni diverse con lo stesso prologo, che divergono al **byte 13**,
+cioè dentro i 17 che la firma copre.
+
+| # | RVA | dopo il prologo |
+|---|---|---|
+| 1 | `0x1CADD20` | `call [rax+0x28]`, ritorna `rax+0x68` |
+| 2 | `0x1D04720` | `call [rax+0x48]`, ritorna `[rbx+0x60]` (int32) |
+| 3 | `0x1D047B0` | identica a #2 ma `[rbx+0x64]` — accessori gemelli |
+| 4 | `0x3074940` | `mov rcx,[rax+0x90]`, chiama via `r8` |
+
+Allungare la firma per isolarne una significa ritararla sui quattro giochi dove
+oggi è già unica, senza avere una verità di riferimento con cui dire *quale*
+sia quella giusta: qui non ci sono simboli da confrontare. La strada promettente
+non è una firma più lunga, è un **ancoraggio a un riferimento di stringa**
+(trovare un dato noto in `.rdata` e risalire al codice che lo usa), che non
+dipende da come il compilatore ha disposto i byte del prologo.
+
 **Corollario sul fallback a runtime.** Agganciare il fallback al vicolo cieco
 «Unreal senza `.locres`» (PR #87) è giusto in linea di principio, ma finché
 il pattern di `FText::ToString` resta ambiguo **su UE il runtime non ha testo
