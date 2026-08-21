@@ -165,6 +165,64 @@ nulla — quel gioco non la spedisce — ma non è il caso generale.
 
 ---
 
+## Traduzione in tempo reale (IPC)
+
+### La Named Pipe costa ~19us a stringa, e non è sul percorso caldo
+
+Il round trip su Named Pipe è ~20x più lento della shared memory, e non
+importa: la DLL chiama l'IPC solo quando **non** ha già la stringa in cache,
+cioè la prima volta che la vede. In regime la traduzione in-game non fa IPC.
+
+**Come è stato misurato.** Stesso carico sui due trasporti — lookup in
+dizionario di 16 stringhe di gioco realistiche (da `New Game` a una riga di
+dialogo da 120 caratteri), una richiesta alla volta, 3000 iterazioni dopo 300 di
+warmup, latenza end-to-end lato chiamante:
+
+```text
+cargo test --release --lib ipc_bench -- --nocapture --test-threads=1
+```
+
+| trasporto | p50 | p95 | p99 | max |
+|---|---|---|---|---|
+| Named Pipe | 9.2us | 18.9us | 30.4us | 68.2us |
+| shared memory | 0.4us | 0.5us | 0.8us | 22.2us |
+
+Due esecuzioni indipendenti sono rientrate entro il 5% su ogni percentile.
+
+Spendendo il 10% di un frame a 60fps (1667us): ~88 stringhe/frame sulla pipe,
+~3333 sulla shared memory. In debug il divario è ancora più netto (37us contro
+1.0us di p50) perché la shmem beneficia dell'ottimizzazione, la pipe è
+dominata dalle syscall.
+
+**Perché non conta.** `GSTranslator::Translate()` in
+`unreal-translator/hook-dll/src/translator.cpp:46` cerca prima nella cache locale
+del processo, e solo su miss chiama `IPC::SendTranslateRequest`. La cache è
+persistita su disco tra le sessioni (`LoadCache`/`SaveCache`), e `source_gdi.cpp`
+fa dedup per riga. Quindi 88 stringhe/frame non è il budget di rendering: è il
+budget di stringhe **mai viste prima**, che dopo i primi secondi di gioco tende a
+zero.
+
+**La trappola.** Sembra una scelta di architettura da fare col cronometro — pipe
+o shared memory. Non lo è: con una cache davanti, il trasporto è irrilevante
+per la frequenza di frame, e vince quello che è finito, non quello che è
+veloce. Vedi lo stato dei due sotto.
+
+**Stato reale dei trasporti** (misurato il 21 agosto 2026):
+
+| pipe / regione | lato Rust | lato client |
+|---|---|---|
+| pipe `GameStringerOverlay` | reale, `src-tauri/src/overlay_ipc.rs` | reale, `gs-hook/src/gs_overlay_ipc.cpp` — **sola scrittura**, fire-and-forget |
+| pipe `GameStringerTranslator` | **nessun server** | reale, `unreal-translator/hook-dll/src/ipc.cpp` |
+| pipe `GameStringerUETranslator` | **stub**: `start_windows_pipe_server` dorme in un loop (`ue_translator/ipc_bridge.rs:130`) | — |
+| shmem `GameStringer_TranslationBridge_v1` | reale, `translation_bridge/shared_memory_ipc.rs` | **TODO**: `QueryBackend` ritorna `null` (`plugins/GameStringer.Satellite/Plugin.cs`) |
+
+Nessun percorso richiesta/risposta è completo su entrambi i lati. L'unica cosa
+che funziona end-to-end è l'overlay, che è unidirezionale e non ha bisogno di
+round trip. Il nome che la DLL cerca (`GameStringerTranslator`) non combacia
+nemmeno con quello che il Rust dichiara (`GameStringerUETranslator`).
+
+---
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un

@@ -7,6 +7,7 @@ pub mod commands;
 pub mod anti_cheat;
 pub mod engine_detector;
 pub mod translation_bridge;
+mod ipc_bench;
 pub mod activity_history;
 #[cfg(windows)]
 pub mod ue_translator;
