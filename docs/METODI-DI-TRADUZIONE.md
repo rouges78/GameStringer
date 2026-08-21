@@ -213,13 +213,35 @@ veloce. Vedi lo stato dei due sotto.
 |---|---|---|
 | pipe `GameStringerOverlay` | reale, `src-tauri/src/overlay_ipc.rs` | reale, `gs-hook/src/gs_overlay_ipc.cpp` — **sola scrittura**, fire-and-forget |
 | pipe `GameStringerTranslator` | **nessun server** | reale, `unreal-translator/hook-dll/src/ipc.cpp` |
-| pipe `GameStringerUETranslator` | **stub**: `start_windows_pipe_server` dorme in un loop (`ue_translator/ipc_bridge.rs:130`) | — |
+| pipe `GameStringerUETranslator` | **stub**: `start_windows_pipe_server` dorme in un loop (`ue_translator/ipc_bridge.rs:130`) | reale, `unity-translator-dll/src/ipc_client.h` |
 | shmem `GameStringer_TranslationBridge_v1` | reale, `translation_bridge/shared_memory_ipc.rs` | **TODO**: `QueryBackend` ritorna `null` (`plugins/GameStringer.Satellite/Plugin.cs`) |
 
 Nessun percorso richiesta/risposta è completo su entrambi i lati. L'unica cosa
 che funziona end-to-end è l'overlay, che è unidirezionale e non ha bisogno di
-round trip. Il nome che la DLL cerca (`GameStringerTranslator`) non combacia
-nemmeno con quello che il Rust dichiara (`GameStringerUETranslator`).
+round trip.
+
+**I due nomi di pipe non sono un disallineamento**, per quanto si somiglino: sono
+due canali distinti, ciascuno col suo client. Verificato leggendo le stringhe
+UTF-16 dentro le DLL precompilate che il repo spedisce:
+
+| DLL | nome incorporato | iniettata da |
+|---|---|---|
+| `resources/gs-hook/{x64,x86}/gs-hook.dll` | `GameStringerOverlay` + `GameStringerTranslator` | `gs_hook_injector.rs` |
+| `resources/unity-translator/unity_auto_translator.dll` | `GameStringerUETranslator` | `unity_injector.rs` |
+
+```bash
+python -c "import io;b=io.open('src-tauri/resources/gs-hook/x64/gs-hook.dll','rb').read();print([n for n in ['GameStringerTranslator','GameStringerUETranslator'] if n.encode('utf-16-le') in b])"
+```
+
+Quindi `unity_injector.rs` e la DLL Unity si accordano correttamente su
+`GameStringerUETranslator`; a gs-hook manca un server e in Rust non esiste
+nemmeno una costante per `GameStringerTranslator`. **Rinominare l'una nell'altra
+scollegherebbe la DLL Unity**, che è un binario precompilato nel repo: il nome
+va cambiato nell'header C++ e la DLL ricompilata, non solo in Rust.
+
+**La trappola.** Due nomi che differiscono di due lettere sembrano un refuso da
+sistemare. Prima di allinearli, leggi cosa c'è dentro i binari: qui erano due
+canali sani, e l'unico difetto vero era il server che manca a entrambi.
 
 ---
 
