@@ -86,15 +86,38 @@ export function planRuntimeFallback(ctx: RuntimeContext): RuntimePlan {
     : { action: 'await-launch', processName: ctx.processName };
 }
 
-/** Chiave i18n del messaggio da mostrare per un piano. */
-export function runtimePlanMessageKey(plan: RuntimePlan): string {
+/**
+ * Perché la strada statica non ha inciso. Cambia cosa possiamo onestamente
+ * promettere, non cosa facciamo.
+ */
+export type FallbackCause =
+  /** Il motore non espone testo nei file: la strada statica non c'è, punto. */
+  | 'engine-unsupported'
+  /** Questa run è fallita — magari per configurazione, magari no. */
+  | 'run-failed';
+
+/**
+ * Chiave i18n del messaggio da mostrare per un piano.
+ *
+ * A gioco chiuso il messaggio dipende dalla causa: «questo gioco non si lascia
+ * tradurre nei file» è vero quando il motore non espone testo, ed è una bugia
+ * quando è appena caduto Ollama. In quel caso si offre il runtime come
+ * alternativa, senza dichiarare impossibile una strada che potrebbe funzionare
+ * benissimo alla prossima prova.
+ */
+export function runtimePlanMessageKey(
+  plan: RuntimePlan,
+  cause: FallbackCause = 'engine-unsupported',
+): string {
   switch (plan.action) {
     case 'none':
       return '';
     case 'inject':
       return 'gameDetail.runtimeFallbackInjecting';
     case 'await-launch':
-      return 'gameDetail.runtimeFallbackAwaitLaunch';
+      return cause === 'engine-unsupported'
+        ? 'gameDetail.runtimeFallbackAwaitLaunch'
+        : 'gameDetail.runtimeFallbackAfterFailure';
     case 'unavailable':
       return `gameDetail.runtimeFallbackBlocked.${plan.blocker}`;
   }
@@ -117,6 +140,8 @@ export interface RunReport {
   staticOutcome: PatchOutcome;
   /** Piano scelto dopo la strada statica. */
   plan: RuntimePlan;
+  /** Perché la strada statica non ha inciso. */
+  cause: FallbackCause;
   /** Chiave i18n del passo successivo suggerito. */
   nextStepKey: string;
 }
@@ -128,11 +153,14 @@ export function buildRunReport(args: {
   stringsInjected?: number | null;
   stringsTotal?: number | null;
   plan: RuntimePlan;
+  cause?: FallbackCause;
 }): RunReport {
   const attempted: AttemptedPath[] = ['static'];
   if (args.plan.action === 'inject') {
     attempted.push('runtime');
   }
+
+  const cause = args.cause ?? 'engine-unsupported';
 
   return {
     gameTitle: args.gameTitle,
@@ -142,7 +170,8 @@ export function buildRunReport(args: {
     stringsTotal: args.stringsTotal ?? null,
     staticOutcome: args.staticOutcome,
     plan: args.plan,
-    nextStepKey: runtimePlanMessageKey(args.plan),
+    cause,
+    nextStepKey: runtimePlanMessageKey(args.plan, cause),
   };
 }
 

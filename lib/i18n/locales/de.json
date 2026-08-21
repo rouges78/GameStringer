@@ -962,7 +962,8 @@
       "unknown-process": "Spiel-Programmdatei nicht erkannt: Es gibt keinen Prozess, auf den zugegriffen werden kann."
     },
     "runtimeFallbackReady": "Laufzeitübersetzung aktiv: Die Zeilen erscheinen während des Spielens übersetzt.",
-    "runtimeFallbackFailed": "Laufzeitübersetzung konnte nicht gestartet werden."
+    "runtimeFallbackFailed": "Laufzeitübersetzung konnte nicht gestartet werden.",
+    "runtimeFallbackAfterFailure": "Die dateibasierte Übersetzung ist nicht gelungen. Wenn du möchtest, starte das Spiel und versuche die Übersetzung auf dem Bildschirm."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Fehler beim Laden der DRAT-Informationen:",

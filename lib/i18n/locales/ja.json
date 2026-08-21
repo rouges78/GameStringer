@@ -962,7 +962,8 @@
       "unknown-process": "ゲームの実行ファイルを特定できません。操作対象のプロセスがありません。"
     },
     "runtimeFallbackReady": "実行時翻訳が有効です。プレイ中に各行が翻訳されて表示されます。",
-    "runtimeFallbackFailed": "実行時翻訳を開始できませんでした。"
+    "runtimeFallbackFailed": "実行時翻訳を開始できませんでした。",
+    "runtimeFallbackAfterFailure": "ファイルによる翻訳は成功しませんでした。よければゲームを起動して、画面上の翻訳を試してください。"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",

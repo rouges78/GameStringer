@@ -962,7 +962,8 @@
       "unknown-process": "Eseguibile del gioco non identificato: non so in quale processo agire."
     },
     "runtimeFallbackReady": "Traduzione a runtime attiva: le righe appariranno tradotte mentre giochi.",
-    "runtimeFallbackFailed": "Attivazione della traduzione a runtime fallita."
+    "runtimeFallbackFailed": "Attivazione della traduzione a runtime fallita.",
+    "runtimeFallbackAfterFailure": "La traduzione sui file non è riuscita. Se vuoi, avvia il gioco e prova la traduzione a schermo."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Errore caricamento info DRAT:",

@@ -962,7 +962,8 @@
       "unknown-process": "Game executable not identified: no process to act on."
     },
     "runtimeFallbackReady": "Runtime translation active: lines will appear translated as you play.",
-    "runtimeFallbackFailed": "Could not start runtime translation."
+    "runtimeFallbackFailed": "Could not start runtime translation.",
+    "runtimeFallbackAfterFailure": "File-based translation did not succeed. If you like, launch the game and try translating on screen."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Error loading DRAT info:",

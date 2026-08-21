@@ -962,7 +962,8 @@
       "unknown-process": "Nie rozpoznano pliku wykonywalnego gry: brak procesu, na którym można działać."
     },
     "runtimeFallbackReady": "Tłumaczenie w czasie działania aktywne: wiersze pojawią się przetłumaczone podczas gry.",
-    "runtimeFallbackFailed": "Nie udało się uruchomić tłumaczenia w czasie działania."
+    "runtimeFallbackFailed": "Nie udało się uruchomić tłumaczenia w czasie działania.",
+    "runtimeFallbackAfterFailure": "Tłumaczenie przez pliki się nie powiodło. Jeśli chcesz, uruchom grę i wypróbuj tłumaczenie na ekranie."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Błąd wczytywania informacji DRAT:",
