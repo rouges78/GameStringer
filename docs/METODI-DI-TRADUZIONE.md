@@ -212,7 +212,7 @@ veloce. Vedi lo stato dei due sotto.
 | pipe / regione | lato Rust | lato client |
 |---|---|---|
 | pipe `GameStringerOverlay` | reale, `src-tauri/src/overlay_ipc.rs` | reale, `gs-hook/src/gs_overlay_ipc.cpp` — **sola scrittura**, fire-and-forget |
-| pipe `GameStringerTranslator` | **nessun server** | reale, `unreal-translator/hook-dll/src/ipc.cpp` |
+| pipe `GameStringerTranslator` | reale, `src-tauri/src/translator_pipe.rs` | compilato in gs-hook (`hook-dll/src/ipc.cpp`) ma **mai acceso**: solo il dllmain di unreal-translator chiama `IPC::Initialize()`, quello di gs-hook no |
 | pipe `GameStringerUETranslator` | **stub**: `start_windows_pipe_server` dorme in un loop (`ue_translator/ipc_bridge.rs:130`) | reale, `unity-translator-dll/src/ipc_client.h` |
 | shmem `GameStringer_TranslationBridge_v1` | reale, `translation_bridge/shared_memory_ipc.rs` | **TODO**: `QueryBackend` ritorna `null` (`plugins/GameStringer.Satellite/Plugin.cs`) |
 
@@ -234,10 +234,24 @@ python -c "import io;b=io.open('src-tauri/resources/gs-hook/x64/gs-hook.dll','rb
 ```
 
 Quindi `unity_injector.rs` e la DLL Unity si accordano correttamente su
-`GameStringerUETranslator`; a gs-hook manca un server e in Rust non esiste
-nemmeno una costante per `GameStringerTranslator`. **Rinominare l'una nell'altra
-scollegherebbe la DLL Unity**, che è un binario precompilato nel repo: il nome
-va cambiato nell'header C++ e la DLL ricompilata, non solo in Rust.
+`GameStringerUETranslator`. **Rinominare l'una nell'altra scollegherebbe la DLL
+Unity**, che è un binario precompilato nel repo: il nome va cambiato nell'header
+C++ e la DLL ricompilata, non solo in Rust.
+
+Il server Rust per `GameStringerTranslator` esiste da agosto 2026
+(`src-tauri/src/translator_pipe.rs`): message mode, header di 12 byte
+`{type, requestId, dataLength}` + payload UTF-16LE, hit → risposta immediata dal
+dizionario del Translation Bridge, miss → nessuna risposta (la DLL ha il suo
+timeout) e il testo entra nella coda drenata da `translation_bridge_drain_misses`.
+Un solo dizionario per shared memory e pipe. Il wire format è dettato dal
+binario C++ già spedito e verificato con un finto client nei test
+(`cargo test --lib translator_pipe`). L'anello ancora mancante è lato C++:
+il dllmain di gs-hook non chiama `IPC::Initialize()`/`StartReceiveThread()`,
+quindi serve un ritocco a `gs-hook/src/dllmain.cpp` e la ricompilazione delle
+DLL in `src-tauri/resources/gs-hook/` (il job CI `build-gs-hook` esiste già).
+Attenzione al punto caldo: `Translate()` su miss blocca fino a 2s
+(`ReceiveTranslateResponse(..., 2000)`) sul thread che disegna — prima di
+accendere l'IPC in gs-hook, quel percorso va reso non bloccante.
 
 **La trappola.** Due nomi che differiscono di due lettere sembrano un refuso da
 sistemare. Prima di allinearli, leggi cosa c'è dentro i binari: qui erano due

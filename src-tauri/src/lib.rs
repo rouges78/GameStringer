@@ -13,6 +13,7 @@ pub mod activity_history;
 pub mod ue_translator;
 pub mod ocr_translator;
 pub mod overlay_ipc;
+pub mod translator_pipe;
 #[cfg(windows)]
 pub mod process_utils;
 

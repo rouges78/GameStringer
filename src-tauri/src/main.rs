@@ -17,6 +17,7 @@ mod activity_history;
 mod ue_translator;
 mod ocr_translator;
 mod overlay_ipc;
+mod translator_pipe;
 
 pub mod profiles;
 pub mod notifications;
@@ -1262,6 +1263,20 @@ fn main() {
             // Server IPC overlay (modalità "in tempo reale"): riceve dalla DLL
             // gs-hook le righe estratte e le inoltra al frontend via evento.
             overlay_ipc::start(app.handle().clone());
+
+            // Server IPC translator (pipe GameStringerTranslator): risponde
+            // alle richieste di traduzione delle DLL dal dizionario del
+            // Translation Bridge; i miss vanno nella coda dell'AI fallback.
+            #[cfg(windows)]
+            {
+                use tauri::Manager;
+                let bridge_state =
+                    app.state::<commands::translation_bridge::TranslationBridgeState>();
+                translator_pipe::start(
+                    std::sync::Arc::clone(&bridge_state.dictionary),
+                    bridge_state.miss_sender.clone(),
+                );
+            }
 
             // ═══════════════════════════════════════════════════
             // SYSTEM TRAY — Pacchetto Completo

@@ -20,6 +20,7 @@ pub struct TranslationBridgeState {
     pub bridge: Arc<Mutex<TranslationBridge>>,
     pub dictionary: Arc<RwLock<DictionaryEngine>>,
     pub miss_receiver: Arc<parking_lot::Mutex<std::sync::mpsc::Receiver<String>>>,
+    pub miss_sender: std::sync::mpsc::Sender<String>,
 }
 
 impl TranslationBridgeState {
@@ -27,10 +28,12 @@ impl TranslationBridgeState {
         let bridge = TranslationBridge::new();
         let dictionary = Arc::clone(bridge.dictionary());
         let miss_receiver = Arc::clone(bridge.miss_receiver());
+        let miss_sender = bridge.miss_sender();
         Self {
             bridge: Arc::new(Mutex::new(bridge)),
             dictionary,
             miss_receiver,
+            miss_sender,
         }
     }
 }
