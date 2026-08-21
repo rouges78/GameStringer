@@ -74,6 +74,38 @@ typedef void (__fastcall* STextBlock_SetText_t)(void* This, const FText& InText)
 // sbagliata → crash, o corruzione heap silenziosa.
 // Prima di aggiungere o cambiare un pattern qui, rimisurare con quello script.
 namespace Patterns {
+    // UE5 FText::ToString — USABILE. Ricavata da una VERITÀ DI RIFERIMENTO il
+    // 21/08/2026, non indovinata: UE 5.8 spedisce
+    // `Engine/Binaries/Win64/UnrealGame-Win64-Shipping.exe` **col suo PDB**.
+    // È Shipping e monolitico come i giochi commerciali — a differenza della
+    // `UnrealEditor-Core.dll`, che è Development e genera codice diverso.
+    // DbgHelp risolve lì `FText::ToString` a RVA 0x1302480, e i byte sono:
+    //
+    //   40 53              push rbx
+    //   48 83 EC 20        sub  rsp, 0x20
+    //   48 8B D9           mov  rbx, rcx
+    //   E8 A2 D0 00 00     call <rebuild>            ← rel32, wildcard
+    //   48 8B 0B           mov  rcx, [rbx]           ← TextData
+    //   48 8B 01           mov  rax, [rcx]           ← vtable
+    //   48 83 C4 20        add  rsp, 0x20
+    //   5B                 pop  rbx
+    //   48 FF 60 28        jmp  [rax+0x28]           ← tail-call GetDisplayString
+    //
+    // 29 byte, con una tail-call finale che è ciò che la rende specifica.
+    // Wildcard su: l'immediato di sub/add, il rel32 della call, e lo slot della
+    // vtable (0x28 sul riferimento, 0x10 su Father's Day: cambia per gioco).
+    //
+    // MISURATA su 15 Shipping installati (UE 5.5, 5.6 e 5.8): **1 match esatto
+    // su 14**, incluso The Skin Stapler (UE 5.6, RVA 0x1269100) e Father's Day
+    // (RVA 0xDD3FC0), entrambi verificati all'inizio di una funzione (preceduti
+    // da padding CC). Unica e all'indirizzo giusto anche sul riferimento.
+    // L'unico a zero è ProjectAIDA, che quindi cadrà su GDI: il caso benigno.
+    //
+    // Prima di toccarla, rimisurare con scripts/ue-validate-ftext-pattern.js.
+    constexpr const char* FText_ToString_UE5 =
+        "40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 "
+        "48 83 C4 ?? 5B 48 FF 60 ??";
+
     // ⛔ UE5 FText::ToString — CONFUTATO il 21/08/2026, NON REINSERIRE.
     //
     // Era qui dal commit iniziale con la nota «(esempio)»: un'ipotesi mai
