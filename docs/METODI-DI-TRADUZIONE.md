@@ -325,8 +325,10 @@ il metodo per ricavarne una sta nelle voci qui sotto.
 - Il file di dizionario è **uno solo per coppia di lingue**: due giochi diversi
   si sovrascrivono a vicenda all'uscita. Innocuo finché le traduzioni sono
   testo→testo.
-- La cattura GDI non è mai stata provata su un gioco commerciale — i giochi UE
-  disegnano via Slate/Direct3D e non la esercitano.
+- La cattura GDI non è ancora stata provata su un gioco commerciale. I giochi UE
+  disegnano via Slate/Direct3D e non la esercitano; il tentativo su RPG_RT
+  (Yume Nikki, il bersaglio giusto) è stato **bloccato da Defender**, che mette
+  in quarantena l'injector a 32 bit — vedi la voce dedicata.
 
 
 ### La Named Pipe costa ~19us a stringa, e non è sul percorso caldo
@@ -901,6 +903,64 @@ l'effetto a runtime guardando **una sola** firma, e su ProjectAIDA stampava
 misurato — lo stesso difetto che quello script esiste per smascherare. Ora
 considera tutte le firme provate, nell'ordine in cui la DLL le prova, e dice
 quale ha agganciato.
+
+### Windows Defender mette in quarantena l'injector a 32 bit
+
+**Il fatto.** `gs-injector.exe` **x86** viene rilevato da Microsoft Defender come
+`Program:Win32/Contebrew.A!ml` e messo in quarantena. La versione **x64 non è mai
+stata segnalata**. L'injector a 32 bit serve solo a iniettare in giochi a 32 bit,
+cioè RPG Maker classico, RPG_RT e le vecchie VN: esattamente il caso di punta
+della traduzione a runtime.
+
+**Misura (21/08/2026, macchina con Defender di serie, protezione realtime
+attiva).** Tre rilevamenti, tutti x86, nessuno x64:
+
+```text
+20:50:38  x86  Program:Win32/Contebrew.A!ml  …\GameStringer\resources\gs-hook\x86\gs-injector.exe
+21:29:34  x86  Program:Win32/Contebrew.A!ml  …\gs-hook\build-x86\bin\Release\gs-injector.exe
+21:31:57  x86  Program:Win32/Contebrew.A!ml  (copia in %TEMP%)
+```
+
+Rilevabile con `Get-MpThreatDetection`. Al terzo tentativo il blocco è esplicito:
+«Impossibile eseguire il programma: il file contiene un virus o software
+potenzialmente indesiderato».
+
+**Il modo in cui fallisce è la parte peggiore.** La **prima** iniezione riesce —
+alle 20:50:38 il test end-to-end su Yume Nikki ha funzionato davvero: log
+scritto, sorgenti GDI attive, overlay aperto — e Defender rimuove il file
+**subito dopo**. La seconda volta l'utente trova il componente sparito, senza
+niente che colleghi le due cose. Nel mezzo, `Test-Path` sull'injector risponde
+`True` e un istante dopo l'esecuzione dice «non riconosciuto come programma
+eseguibile»: due misure contraddittorie sullo stesso file a secondi di distanza,
+ed è la quarantena che agisce fra l'una e l'altra.
+
+**Perché succede.** L'injector fa `OpenProcess` + `VirtualAllocEx` +
+`WriteProcessMemory` + `CreateRemoteThread`: è la firma comportamentale del
+malware da manuale, in un eseguibile non firmato di 11 KB. `!ml` indica
+un'euristica di machine learning, e la categoria `Program:` significa
+«indesiderato», non malware conclamato — ma l'effetto pratico è identico.
+
+**Nel codice.** `gs-hook/injector/` (sorgente), `src-tauri/resources/gs-hook/x86/`
+(spedito), usato da `commands/gs_hook_injector.rs`. L'helper esterno esiste
+perché il backend Tauri è x64 e non può iniettare in un processo a 32 bit da
+solo (vedi l'intestazione di quel file).
+
+**Le strade, in ordine di quanto risolvono.**
+
+1. **Firmare `gs-injector.exe`** con un certificato di code signing: risolve per
+   tutti gli utenti, non solo per chi sa aggiungere un'esclusione.
+2. **Ridurre la firma comportamentale**: meno API di injection in sequenza
+   ravvicinata, nessuna stringa sospetta, metadati di versione presenti. Abbassa
+   il punteggio euristico senza cambiare cosa fa il programma.
+3. **Esclusione in Defender**: sblocca subito, ma è una scelta di sicurezza che
+   deve fare l'utente consapevolmente — non un ripiego da suggerire in un
+   messaggio d'errore.
+
+**La trappola.** «L'iniezione ha funzionato» non vuol dire «l'iniezione
+funzionerà». Qui ha funzionato **una volta sola**, e il fallimento successivo non
+somiglia a un problema di antivirus: somiglia a un file mancante. Chiunque
+diagnostichi un'iniezione che smette di funzionare dovrebbe guardare
+`Get-MpThreatDetection` prima del proprio codice.
 
 ---
 
