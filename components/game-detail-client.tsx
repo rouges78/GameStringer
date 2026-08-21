@@ -52,6 +52,7 @@ import {
   buildRunReport,
   summarizeRunReport,
   type RunReport,
+  type FallbackCause,
 } from '@/lib/translation/runtime-fallback';
 import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { LANG_TO_CODE } from '@/lib/translation/language-mappings';
@@ -2061,6 +2062,7 @@ export default function GameDetailPage() {
   const tryRuntimeFallback = async (
     staticOutcome: PatchOutcome,
     counts: { injected?: number | null; total?: number | null },
+    cause: FallbackCause = 'engine-unsupported',
   ): Promise<RunReport | null> => {
     if (!game?.installPath) return null;
 
@@ -2105,6 +2107,7 @@ export default function GameDetailPage() {
       stringsInjected: counts.injected ?? null,
       stringsTotal: counts.total ?? null,
       plan,
+      cause,
     });
 
     // Il report per gioco finisce nella cronologia: dice cosa è entrato nel
@@ -2216,6 +2219,7 @@ export default function GameDetailPage() {
         } catch (e) {
           await dTracker.fail(e);
           toast.error(t('gameDetail.dr1Error'), { id: toastId, description: String(e).slice(0, 180) });
+          void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
@@ -2265,6 +2269,7 @@ export default function GameDetailPage() {
         } catch (e) {
           await hTracker.fail(e);
           toast.error(t('gameDetail.errHendrix'), { id: toastId, description: String(e) });
+          void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
@@ -2397,6 +2402,7 @@ export default function GameDetailPage() {
           );
           await rpTracker.fail(e);
           toast.error(t('gameDetail.errRenpy'), { description: String(e) });
+          void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
@@ -2540,6 +2546,7 @@ export default function GameDetailPage() {
             await tray.notifyTranslationFailed(game.name || game.title || 'Gioco', String(e));
           } catch { /* tray non disponibile */ }
           toast.error(t('heroJob.visError').replace('{hint}', hint), { description: String(e) });
+          void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           VIS_RUNNING.delete(game.installPath);
           setAutoTranslateBusy(false);
@@ -2640,6 +2647,7 @@ export default function GameDetailPage() {
           setAutoTranslateError(friendly);
           await tyTracker.fail(new Error(friendly));
           toast.error(friendly, { description: msg.startsWith('TYRANO_') ? undefined : msg });
+          void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
@@ -2767,6 +2775,7 @@ export default function GameDetailPage() {
               },
               duration: 10000,
             });
+            void tryRuntimeFallback('failure', { injected: 0 });
           }
         } finally {
           setAutoTranslateBusy(false);
@@ -2833,6 +2842,7 @@ export default function GameDetailPage() {
             description: 'Niente stringhe estraibili dai file per questo motore.',
             action: { label: 'Apri OCR', onClick: () => router.push(`/ocr-translator?${params.toString()}`) },
           });
+          void tryRuntimeFallback('failure', { injected: 0 });
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
           autoTranslateRunningRef.current = false;

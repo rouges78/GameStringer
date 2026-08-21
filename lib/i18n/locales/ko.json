@@ -962,7 +962,8 @@
       "unknown-process": "게임 실행 파일을 식별하지 못했습니다. 작업할 프로세스가 없습니다."
     },
     "runtimeFallbackReady": "런타임 번역이 활성화되었습니다. 플레이 중 각 줄이 번역되어 표시됩니다.",
-    "runtimeFallbackFailed": "런타임 번역을 시작하지 못했습니다."
+    "runtimeFallbackFailed": "런타임 번역을 시작하지 못했습니다.",
+    "runtimeFallbackAfterFailure": "파일 기반 번역에 실패했습니다. 원하시면 게임을 실행하고 화면 번역을 사용해 보세요."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT 정보 로드 오류:",

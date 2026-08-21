@@ -92,6 +92,27 @@ describe('runtimePlanMessageKey', () => {
     expect(runtimePlanMessageKey({ action: 'none' })).toBe('');
   });
 
+  it('a gioco chiuso non dichiara impossibile ciò che è solo fallito', () => {
+    // "Questo gioco non si lascia tradurre nei file" è vero se il motore non
+    // espone testo, ed è una bugia se è appena caduto Ollama.
+    const plan = { action: 'await-launch', processName: 'Game.exe' } as const;
+    expect(runtimePlanMessageKey(plan, 'engine-unsupported')).toBe(
+      'gameDetail.runtimeFallbackAwaitLaunch',
+    );
+    expect(runtimePlanMessageKey(plan, 'run-failed')).toBe(
+      'gameDetail.runtimeFallbackAfterFailure',
+    );
+  });
+
+  it('la causa non cambia il messaggio quando si inietta subito', () => {
+    // Il gioco è aperto: quello che succede è identico, e il messaggio descrive
+    // l'azione, non la diagnosi.
+    const plan = { action: 'inject', processName: 'Game.exe' } as const;
+    expect(runtimePlanMessageKey(plan, 'engine-unsupported')).toBe(
+      runtimePlanMessageKey(plan, 'run-failed'),
+    );
+  });
+
   it('distingue il blocco per motivo', () => {
     expect(runtimePlanMessageKey({ action: 'unavailable', blocker: 'anti-cheat' })).toBe(
       'gameDetail.runtimeFallbackBlocked.anti-cheat',
@@ -145,6 +166,26 @@ describe('buildRunReport', () => {
       plan: { action: 'await-launch', processName: 'Game.exe' },
     });
     expect(r.nextStepKey).toBe('gameDetail.runtimeFallbackAwaitLaunch');
+  });
+
+  it('propaga la causa fino alla chiave del messaggio', () => {
+    const r = buildRunReport({
+      gameTitle: 'Gioco',
+      staticOutcome: 'failure',
+      plan: { action: 'await-launch', processName: 'Game.exe' },
+      cause: 'run-failed',
+    });
+    expect(r.cause).toBe('run-failed');
+    expect(r.nextStepKey).toBe('gameDetail.runtimeFallbackAfterFailure');
+  });
+
+  it('senza causa esplicita assume motore non supportato', () => {
+    const r = buildRunReport({
+      gameTitle: 'Gioco',
+      staticOutcome: 'failure',
+      plan: { action: 'await-launch', processName: 'Game.exe' },
+    });
+    expect(r.cause).toBe('engine-unsupported');
   });
 });
 
