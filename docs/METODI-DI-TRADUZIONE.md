@@ -626,6 +626,60 @@ sessione precedente). È il motivo per cui in queste prove è stata usata una
 cache seminata, e va risolto prima di poter promettere traduzione "al primo
 avvio".
 
+### Su Unreal il dizionario va consegnato PRIMA dell'iniezione, non durante
+
+**Il fatto.** Su UE la stessa stringa passa da `FText::ToString` **una volta
+sola**: la display string resta in cache dentro l'`FTextData`. Il percorso
+fire-and-forget della DLL — chiedi la traduzione al primo avvistamento, usala
+dal secondo — quindi non scatta mai, e il testo resta in lingua originale per
+quanto bene funzionino pipe, dizionario e sostituzione. La traduzione deve
+essere già nella cache locale **quando il testo viene convertito**.
+
+**La cura.** GameStringer scrive la coppia di lingue attiva in
+`%APPDATA%\GameStringer\gs-hook-cache.gstc` prima di lanciare l'injector
+(`preload_dictionary()` in `commands/gs_hook_injector.rs`), e la DLL cerca quel
+percorso all'avvio quando `GS_HOOK_CACHE` non è impostata
+(`gs-hook/src/dllmain.cpp`).
+
+**Perché un percorso convenuto e non una env var.** Una variabile d'ambiente
+non si può impostare in un processo **già avviato**, e l'iniezione avviene per
+definizione su un gioco in esecuzione. `GS_HOOK_CACHE` resta come override
+esplicito per i test senza backend.
+
+**Prova sul campo (Father's Day, 21/08/2026).** Senza `GS_HOOK_CACHE`, con il
+solo file nel percorso convenuto:
+
+```text
+[gs-hook] dizionario pre-caricato: 7 voci da …\GameStringer\gs-hook-cache.gstc
+[gs-hook/UE] hook FText::ToString installato (pattern)
+[gs-hook/UE] SUBST:       LANGUAGE SELECTION -> SELEZIONE LINGUA  [len=16 ArrayNum=19 ArrayMax=24]
+[gs-hook/UE] SUBST:       English            -> Inglese
+[gs-hook/UE] SUBST:       Russian            -> Russo
+[gs-hook/UE] SUBST(grow): Exit game          -> Esci dal gioco e torna al desktop
+```
+
+Quattro sostituzioni al **primo** avvistamento, una delle quali ha fatto
+crescere il buffer. È la catena completa: dizionario → file → DLL → schermo.
+
+**Il formato ha una trappola già costata tempo.** Il magic GSTC va scritto come
+u32 little-endian `0x47535443`, che sul disco dà i byte **`CTSG`**. Scriverlo
+come `GSTC` fa rifiutare il file **in silenzio** da `cache.cpp`: nessun errore,
+cache vuota, gioco in inglese e niente che lo segnali. `export_gstc()` ha un
+test che asserisce proprio i byte `CTSG` sul disco. E `len` conta **unità
+UTF-16**, non caratteri Unicode: il C++ legge `len * sizeof(wchar_t)` byte.
+
+**Il log ora dice il numero, non solo il percorso.** Prima stampava «cache
+pre-seedata» per il solo fatto che un percorso fosse impostato — anche con file
+assente o malformato. Diceva che era andata bene mentre la cache era vuota, ed è
+esattamente come quella trappola è riuscita a nascondersi. Ora stampa quante
+voci ha davvero caricato.
+
+**Da sapere.** All'uscita del gioco `ShutdownTranslator()` **riscrive** quel
+file con la cache locale (pre-caricato + imparato durante la partita). È
+persistenza gratuita fra sessioni, ma il file è uno solo per coppia di lingue:
+due giochi diversi si sovrascrivono a vicenda. Innocuo finché le traduzioni sono
+testo→testo, da rivedere se serviranno dizionari per-gioco.
+
 ---
 
 ## Come si aggiunge una voce

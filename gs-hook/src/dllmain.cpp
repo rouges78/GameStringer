@@ -20,6 +20,7 @@
 #include "gs_overlay_ipc.h"
 #include "translator.h"   // core generico riusato: namespace GSTranslator
 #include "ipc.h"          // client pipe GameStringerTranslator (stesso core)
+#include "cache.h"        // GSTranslator::GetGlobalCache().Size()
 #include <Windows.h>
 #include <MinHook.h>
 #include <vector>
@@ -59,18 +60,37 @@ DWORD WINAPI MainThread(LPVOID) {
     GSTranslator::TranslatorConfig cfg;
     cfg.targetLanguage = L"it";
     cfg.sourceLanguage = L"en";
-    // Override da env per test SENZA backend: GS_HOOK_CACHE = path di un file
-    // cache GSTC pre-seedato (formato di cache.cpp). In produzione il path
-    // arriva da GameStringer via IPC/config; speculare a GS_HOOK_LOG.
+    // Dizionario pre-caricato. Serve DAVVERO, non è una comodità: su UE la
+    // stessa stringa passa da FText::ToString una volta sola (la display string
+    // resta in cache dentro l'FTextData), quindi il percorso fire-and-forget —
+    // chiedi al primo avvistamento, usa dal secondo — non scatta mai. Se la
+    // traduzione non è già in cache quando il testo viene convertito, non
+    // comparirà a schermo.
+    //
+    // Due sorgenti, in ordine:
+    //   1. GS_HOOK_CACHE — override esplicito, per i test senza backend.
+    //   2. %APPDATA%\GameStringer\gs-hook-cache.gstc — scritto da GameStringer
+    //      PRIMA dell'iniezione. Serve un percorso convenuto perché una env var
+    //      non si può impostare in un processo già avviato.
     wchar_t cacheEnv[MAX_PATH] = {};
     if (GetEnvironmentVariableW(L"GS_HOOK_CACHE", cacheEnv, MAX_PATH) > 0) {
         cfg.cachePath = cacheEnv;
+    } else {
+        wchar_t appdata[MAX_PATH] = {};
+        if (GetEnvironmentVariableW(L"APPDATA", appdata, MAX_PATH) > 0) {
+            cfg.cachePath = std::wstring(appdata) + L"\\GameStringer\\gs-hook-cache.gstc";
+        }
     }
     GSTranslator::InitializeTranslator(cfg);
     if (!cfg.cachePath.empty()) {
-        char buf[320];
-        sprintf_s(buf, "[gs-hook] cache pre-seedata da GS_HOOK_CACHE: %ls\n",
-                  cfg.cachePath.c_str());
+        // Il conteggio, non solo il percorso: prima qui si stampava «cache
+        // pre-seedata» per il solo fatto che un percorso fosse impostato, anche
+        // quando il file era assente o malformato — e il log diceva che era
+        // andata bene mentre la cache era vuota.
+        const size_t entries = GSTranslator::GetGlobalCache().Size();
+        char buf[400];
+        sprintf_s(buf, "[gs-hook] dizionario pre-caricato: %zu voci da %ls\n",
+                  entries, cfg.cachePath.c_str());
         LogA(buf);
     }
 
