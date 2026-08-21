@@ -559,6 +559,73 @@ bug in entrambe.
 per attribuirlo all'hook. Avviato **senza** iniettare, esce da solo lo stesso:
 vuole Steam. Prima di dare la colpa al proprio codice, si prova il caso base.
 
+### La traduzione rientra nel gioco: sostituzione in-place e crescita del buffer
+
+**Il fatto.** `FText::ToString` restituisce un riferimento alla `FString` interna
+di UE: sovrascriverla traduce il testo davvero, a schermo. Se la traduzione non
+entra in `ArrayMax` si fa crescere il buffer con **`FMemory::Realloc`** — non con
+`malloc` o `new`, perché a liberare quel puntatore sarà UE col proprio
+allocatore, e un allocatore diverso corrompe l'heap alla prima free.
+
+**Il margine di UE non è affidabile.** Misurato su Father's Day:
+
+| stringa | ArrayNum | ArrayMax | margine |
+|---|---|---|---|
+| `English` | 8 | 8 | **nessuno** |
+| `Russian` | 8 | 8 | **nessuno** |
+| `Exit game` | 10 | 16 | 6 slot |
+
+Due casi su tre hanno `ArrayMax == ArrayNum`. Contare sullo slack di UE non
+funziona: l'italiano è mediamente più lungo dell'inglese, e senza `Realloc` una
+buona parte delle traduzioni verrebbe scartata in silenzio.
+
+**La firma di `FMemory::Realloc`.** Ricavata col metodo della voce precedente —
+`UnrealGame-Win64-Shipping.exe` di UE 5.8, simbolo a RVA 0x12D29F0:
+
+```text
+48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1 41 8B D8 48 8B 0D ?? ?? ?? ?? 48 8B FA 48 85 C9 75 ??
+```
+
+Il prologo iniziale da solo sarebbe generico — è quello che rese inutilizzabile
+la firma UE4.27 — ma `mov rsi,rcx / mov ebx,r8d / mov rcx,[rip+GMalloc]`
+discrimina. **1 match esatto su tutti e 15** gli Shipping installati, unica e
+all'indirizzo giusto sul riferimento, verificata a inizio funzione su The Skin
+Stapler (0x123A3A0) e Father's Day (0xD94DD0).
+
+**Prova sul campo.** Cache pre-seedata con traduzioni deliberatamente più lunghe
+del buffer, iniezione reale in Father's Day:
+
+```text
+SUBST(grow): English   -> Inglese (lingua lunga)             [len=22 ArrayNum=8  ArrayMax=8]
+SUBST:       Russian   -> Russo                              [len=5  ArrayNum=8  ArrayMax=8]
+SUBST(grow): Exit game -> Esci dal gioco e torna al desktop   [len=33 ArrayNum=10 ArrayMax=16]
+```
+
+22 caratteri in un buffer da 8 e 33 in uno da 16: entrambi cresciuti. Soak di
+90 s campionato ogni 15: UI sempre responsiva, RAM stabile a ~350 MB, handle
+fermi a ~1535. Nessun segno di heap corrotto.
+
+**La trappola, e perché il primo tentativo sembrava un crash.** Con la cache
+pre-seedata il gioco moriva e non compariva nessuna riga `SUBST`: sembrava che
+la sostituzione lo uccidesse. Erano due cose diverse, entrambe da verificare
+prima di concludere. (1) Il gioco esce da solo anche **senza** iniezione, a
+volte: il caso base va sempre provato. (2) La cache non veniva letta affatto —
+il messaggio «cache pre-seedata» lo stampa il dllmain perché la env var è
+impostata, **non** perché il caricamento sia riuscito. Il magic del formato GSTC
+va scritto come u32 little-endian `0x47535443`, che su disco dà i byte `CTSG`;
+scrivendo `GSTC` il file viene rifiutato in silenzio. L'indizio era nel dump di
+`gs-hook/testapp/test-cache.gstc`, che comincia proprio con `CTSG`.
+
+**Il vero limite rimasto è un altro.** Su UE la stessa stringa raramente passa
+due volte da `ToString`: la display string resta in cache dentro l'`FTextData`.
+Il percorso fire-and-forget — che chiede la traduzione al primo avvistamento e
+la usa dal secondo — quindi **non scatta**. Perché la traduzione compaia serve
+che sia già nella cache locale della DLL quando il testo viene convertito: cioè
+il dizionario va pre-caricato (`GS_HOOK_CACHE`, o la cache persistita da una
+sessione precedente). È il motivo per cui in queste prove è stata usata una
+cache seminata, e va risolto prima di poter promettere traduzione "al primo
+avvio".
+
 ---
 
 ## Come si aggiunge una voce

@@ -106,6 +106,38 @@ namespace Patterns {
         "40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 "
         "48 83 C4 ?? 5B 48 FF 60 ??";
 
+    // FMemory::Realloc — USABILE. Serve a far CRESCERE il buffer di una FString
+    // quando la traduzione non entra in ArrayMax. Scrivere oltre corromperebbe
+    // l'heap; allocare con `new`/malloc pure, perché UE libererà quel puntatore
+    // con il PROPRIO allocatore. L'unica via sicura è chiedere a UE.
+    //
+    // Ricavata come quella di ToString, dal binario Shipping con PDB:
+    // `FMemory::Realloc` sta a RVA 0x12D29F0 su UE 5.8. Firma C++:
+    //   void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
+    // (rcx = Original, rdx = Count, r8d = Alignment; 0 = DEFAULT_ALIGNMENT)
+    //
+    //   48 89 5C 24 08     mov  [rsp+8], rbx
+    //   48 89 74 24 10     mov  [rsp+0x10], rsi
+    //   57                 push rdi
+    //   48 83 EC 20        sub  rsp, 0x20
+    //   48 8B F1           mov  rsi, rcx          ← Original
+    //   41 8B D8           mov  ebx, r8d          ← Alignment
+    //   48 8B 0D ?? ?? ?? ?? mov rcx, [rip+…]     ← GMalloc, wildcard
+    //   48 8B FA           mov  rdi, rdx          ← Count
+    //   48 85 C9           test rcx, rcx          ← GMalloc già creato?
+    //   75 ??              jne  …
+    //
+    // Il prologo iniziale da solo sarebbe generico (è quello che rese
+    // inutilizzabile la firma UE4.27): a discriminare è la sequenza
+    // `mov rsi,rcx / mov ebx,r8d / mov rcx,[rip+GMalloc]`.
+    //
+    // MISURATA: 1 match esatto su **tutti e 15** gli Shipping installati, e
+    // unica all'indirizzo giusto sul riferimento. Verificata all'inizio di
+    // funzione su The Skin Stapler (0x123A3A0) e Father's Day (0xD94DD0).
+    constexpr const char* FMemory_Realloc =
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1 41 8B D8 "
+        "48 8B 0D ?? ?? ?? ?? 48 8B FA 48 85 C9 75 ??";
+
     // ⛔ UE5 FText::ToString — CONFUTATO il 21/08/2026, NON REINSERIRE.
     //
     // Era qui dal commit iniziale con la nota «(esempio)»: un'ipotesi mai

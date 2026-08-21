@@ -41,6 +41,14 @@ TranslateFn g_translate = nullptr;
 using FText_ToString_t = UE::FString* (__fastcall*)(const UE::FText*, UE::FString*);
 FText_ToString_t Original_FText_ToString = nullptr;
 
+// Allocatore di UE. Serve SOLO per far crescere il buffer di una FString quando
+// la traduzione non ci sta: il puntatore risultante verra' liberato da UE con il
+// proprio allocatore, quindi deve essere UE stessa ad allocarlo. Con malloc o
+// new si corromperebbe l'heap alla prima free.
+//   void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
+using FMemory_Realloc_t = void* (__fastcall*)(void*, size_t, uint32_t);
+FMemory_Realloc_t g_ueRealloc = nullptr;
+
 // Hook su FText::ToString. `out` è la FString che UE riempie col testo: dopo aver
 // lasciato lavorare l'originale, leggiamo il testo, lo traduciamo e lo
 // riscriviamo in-place nel buffer di UE (se ci sta).
@@ -61,13 +69,43 @@ UE::FString* __fastcall Hook_FText_ToString(const UE::FText* self, UE::FString* 
                 // In-place SOLO se la traduzione (incluso il NUL) entra nel buffer
                 // già allocato da UE. Altrimenti la lasciamo invariata: scrivere
                 // oltre ArrayMax corromperebbe l'heap di UE.
-                if (static_cast<int32_t>(t.size() + 1) <= result->ArrayMax) {
+                // I numeri del buffer finiscono nel log in ENTRAMBI i rami:
+                // servono a sapere quanto margine lascia UE, cioe' quanto spesso
+                // il vincolo morde davvero. Senza, "non sostituita" non dice se
+                // mancava un carattere o cinquanta.
+                const std::wstring dims =
+                    L" [len=" + std::to_wstring(t.size()) +
+                    L" ArrayNum=" + std::to_wstring(result->ArrayNum) +
+                    L" ArrayMax=" + std::to_wstring(result->ArrayMax) + L"]";
+
+                const int32_t needed = static_cast<int32_t>(t.size() + 1); // col NUL
+
+                if (needed <= result->ArrayMax) {
                     wcscpy_s(result->Data, static_cast<size_t>(result->ArrayMax), t.c_str());
-                    result->ArrayNum = static_cast<int32_t>(t.size() + 1); // include il NUL
-                    LogLineW(L"[gs-hook/UE] SUBST: " + original + L" -> " + t + L"\n");
+                    result->ArrayNum = needed;
+                    LogLineW(L"[gs-hook/UE] SUBST: " + original + L" -> " + t + dims + L"\n");
+                } else if (g_ueRealloc) {
+                    // Non ci sta: chiedi a UE un buffer piu' grande. Deve essere
+                    // il suo allocatore, perche' sara' lui a liberarlo.
+                    void* grown = g_ueRealloc(result->Data,
+                                              static_cast<size_t>(needed) * sizeof(wchar_t),
+                                              0 /* DEFAULT_ALIGNMENT */);
+                    if (grown) {
+                        result->Data = static_cast<wchar_t*>(grown);
+                        result->ArrayMax = needed;
+                        wcscpy_s(result->Data, static_cast<size_t>(needed), t.c_str());
+                        result->ArrayNum = needed;
+                        LogLineW(L"[gs-hook/UE] SUBST(grow): " + original + L" -> " + t
+                                 + dims + L"\n");
+                    } else {
+                        // Realloc fallita: la FString resta quella di prima e
+                        // valida — Realloc non libera l'originale se non riesce.
+                        LogLineW(L"[gs-hook/UE] (non sostituita: Realloc fallita) "
+                                 + original + dims + L"\n");
+                    }
                 } else {
-                    LogLineW(L"[gs-hook/UE] (non sostituita: buffer UE troppo piccolo) "
-                             + original + L"\n");
+                    LogLineW(L"[gs-hook/UE] (non sostituita: buffer piccolo e allocatore "
+                             L"UE non risolto) " + original + dims + L"\n");
                 }
             }
         }
@@ -232,6 +270,22 @@ public:
 
         hookedAddr_ = addr;
         LogLineW(L"[gs-hook/UE] hook FText::ToString installato (pattern)\n");
+
+        // Allocatore UE: se non si trova, la sostituzione resta possibile solo
+        // per le traduzioni che entrano nel buffer esistente. Non e' un motivo
+        // per rinunciare all'hook, quindi qui non si fallisce.
+        size_t reallocMatches = 0;
+        if (uintptr_t ra = GSTranslator::Utils::PatternScanUnique(
+                game, UE::Patterns::FMemory_Realloc, &reallocMatches)) {
+            g_ueRealloc = reinterpret_cast<FMemory_Realloc_t>(ra);
+            LogLineA("[gs-hook/UE] FMemory::Realloc risolto: le traduzioni piu' lunghe "
+                     "dell'originale possono crescere il buffer\n");
+        } else {
+            LogLineA(("[gs-hook/UE] FMemory::Realloc non risolto (" +
+                      std::to_string(reallocMatches) +
+                      " match): solo traduzioni che entrano nel buffer\n").c_str());
+        }
+
         return Activation::Activated;
     }
 
