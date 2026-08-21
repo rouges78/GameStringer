@@ -27,6 +27,7 @@
 #include "utils.h"      // GSTranslator::Utils::PatternScanUnique
 #include "gs_log.h"     // log unificato gs-hook (%TEMP%\gs-hook.log)
 #include <Windows.h>
+#include <TlHelp32.h>
 #include <MinHook.h>
 #include <string>
 #include <cwctype>
@@ -74,6 +75,65 @@ UE::FString* __fastcall Hook_FText_ToString(const UE::FText* self, UE::FString* 
     return result;
 }
 
+// ─── Risoluzione per SIMBOLO ─────────────────────────────────────────────────
+// Un simbolo esportato e' deterministico: o c'e', ed e' quello giusto, o non
+// c'e'. Nessuna ambiguita' possibile, a differenza di una firma di byte.
+//
+// QUANDO FUNZIONA E QUANDO NO — misurato, non supposto (21/08/2026):
+// serve un build **non monolitico**, con l'engine in DLL (editor, o giochi
+// compilati modulari). I build Shipping monolitici — la norma commerciale — non
+// esportano nulla di UE: Father's Day ha 312 export e sono tutti hint per i
+// driver AMD/NVIDIA (`NvOptimusEnablement`, `ags*`), il PDB e' dichiarato
+// nell'header ma non spedito. Li' questa strada non puo' funzionare, e si
+// scende al pattern.
+//
+// Nome mangled MSVC di `const FString& FText::ToString() const`:
+//   ?ToString@FText@@QEBAAEBVFString@@XZ
+// (`Q`=metodo pubblico, `EBA`=const __cdecl x64, `AEBVFString@@`=ritorna
+//  const FString&, `XZ`=nessun parametro)
+//
+// La firma dell'hook resta a due argomenti anche qui: usa il VALORE DI RITORNO,
+// non `out`, quindi funziona sia con il ritorno per riferimento sia con quello
+// per valore (dove rdx e' il buffer di ritorno e rax lo ripete).
+const char* const kFTextToStringSymbols[] = {
+    "?ToString@FText@@QEBAAEBVFString@@XZ",
+};
+
+/// Cerca il simbolo in tutti i moduli caricati. `moduleOut` riceve il nome del
+/// modulo che l'ha fornito; `scanned` quanti moduli sono stati interrogati.
+///
+/// `scanned` non e' decorativo: senza, un ritorno a zero non distingue «ho
+/// guardato ovunque e non c'e'» da «lo snapshot e' fallito e non ho guardato
+/// niente». Sono due diagnosi diverse e portano a due indagini diverse.
+uintptr_t ResolveFTextToStringBySymbol(std::string& moduleOut, size_t& scanned) {
+    scanned = 0;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap == INVALID_HANDLE_VALUE) return 0;
+
+    MODULEENTRY32W me{};
+    me.dwSize = sizeof(me);
+    uintptr_t found = 0;
+
+    if (Module32FirstW(snap, &me)) {
+        do {
+            ++scanned;
+            for (const char* name : kFTextToStringSymbols) {
+                FARPROC p = GetProcAddress(reinterpret_cast<HMODULE>(me.hModule), name);
+                if (!p) continue;
+                found = reinterpret_cast<uintptr_t>(p);
+                char buf[MAX_MODULE_NAME32 + 1] = {};
+                WideCharToMultiByte(CP_UTF8, 0, me.szModule, -1, buf, sizeof(buf) - 1,
+                                    nullptr, nullptr);
+                moduleOut = buf;
+                break;
+            }
+        } while (!found && Module32NextW(snap, &me));
+    }
+
+    CloseHandle(snap);
+    return found;
+}
+
 class UnrealFTextSource : public ITextSource {
 public:
     const char* Name() const override { return "Unreal/FText"; }
@@ -106,6 +166,31 @@ public:
         HMODULE game = GetModuleHandleA(nullptr);
         if (!game) return Activation::Failed;
 
+        // 1) SIMBOLO. Se l'engine è in DLL, l'indirizzo è certo: nessun pattern
+        //    da validare, nessun rischio di agganciare la funzione sbagliata.
+        std::string symModule;
+        size_t symScanned = 0;
+        const uintptr_t sym = ResolveFTextToStringBySymbol(symModule, symScanned);
+        if (!sym) {
+            LogLineA(("[gs-hook/UE] nessun simbolo FText::ToString in "
+                      + std::to_string(symScanned)
+                      + " moduli (build monolitico?), provo il pattern\n").c_str());
+        }
+        if (sym) {
+            if (MH_CreateHook(reinterpret_cast<LPVOID>(sym),
+                              reinterpret_cast<LPVOID>(&Hook_FText_ToString),
+                              reinterpret_cast<LPVOID*>(&Original_FText_ToString)) == MH_OK &&
+                MH_EnableHook(reinterpret_cast<LPVOID>(sym)) == MH_OK) {
+                hookedAddr_ = sym;
+                LogLineA(("[gs-hook/UE] FText::ToString risolto per simbolo in "
+                          + symModule + " — hook installato\n").c_str());
+                return Activation::Activated;
+            }
+            LogLineA("[gs-hook/UE] simbolo trovato ma hook fallito (MinHook), provo il pattern\n");
+        }
+
+        // 2) PATTERN. Nei build Shipping monolitici non c'è nessun simbolo da
+        //    risolvere, quindi si ricade qui — ed è il caso normale.
         // Pattern-scan di FText::ToString. UNICITÀ OBBLIGATORIA: PatternScanUnique
         // ritorna un indirizzo solo se il pattern compare ESATTAMENTE una volta.
         //
