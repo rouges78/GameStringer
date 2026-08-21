@@ -31,7 +31,7 @@ use serde::{Deserialize, Serialize};
 pub const MAGIC_NUMBER: u32 = 0x47535452;
 
 /// Versione del protocollo
-pub const PROTOCOL_VERSION: u8 = 1;
+pub const PROTOCOL_VERSION: u8 = 2;
 
 /// Dimensione massima di una singola stringa (64KB)
 pub const MAX_STRING_SIZE: usize = 65536;
