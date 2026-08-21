@@ -180,6 +180,59 @@ nulla — quel gioco non la spedisce — ma non è il caso generale.
 
 ## Traduzione in tempo reale (IPC)
 
+### Stato della catena — aggiornato al 21/08/2026
+
+Questa sezione raccoglie otto voci scritte in un giorno solo, e lette in fila
+raccontano anche i vicoli ciechi. Qui c'è la mappa di **dov'è arrivata la
+catena**, per non doverla ricostruire leggendo tutto.
+
+```text
+tasto  →  strada statica
+           ├─ incide?  → fatto
+           └─ non incide (o motore non supportato)
+                  ↓
+              gs-hook iniettato nel processo
+                  ├─ dizionario già caricato dal file convenuto
+                  ├─ hook su FText::ToString (2 firme provate in ordine)
+                  ├─ testo riscritto dentro la FString di UE
+                  │     buffer che cresce via FMemory::Realloc se serve
+                  └─ miss → pipe → coda → AI → dizionario
+                              └→ hit alla sessione successiva
+```
+
+**Cosa è verificato, e su cosa.** La distinzione conta: «compila» e «gira sulla
+testapp» non sono «funziona su un gioco».
+
+| anello | dove vive | verificato su |
+|---|---|---|
+| iniezione DLL | `commands/gs_hook_injector.rs` + `gs-injector.exe` | Father's Day, AILA — **giochi veri** |
+| dizionario pre-caricato | `preload_dictionary()` + `gs-hook/src/dllmain.cpp` | Father's Day |
+| hook `FText::ToString` | `sources/source_unreal_ftext.cpp` | Father's Day (firma primaria), AILA (variante) |
+| sostituzione + crescita buffer | idem | Father's Day, soak 90 s |
+| pipe richiesta/risposta | `translator_pipe.rs` + `hook-dll/src/ipc.cpp` | Father's Day + testapp |
+| cattura GDI | `sources/source_gdi.cpp` | **solo** `gs-hook/testapp` |
+| drain loop (impara dai miss) | `lib/translation-bridge-drain.ts` | **solo** testapp |
+| decisione statica→runtime | `lib/translation/runtime-fallback.ts` | **mai scattata end-to-end** |
+| overlay unidirezionale | `overlay_ipc.rs` | non riverificato in questa tornata |
+
+**Copertura delle firme UE.** Due firme, complementari: 14 giochi su 15 la
+principale, ProjectAIDA la variante con `Rebuild` inlinata. **15 su 15** dei
+binari Shipping installati su questa macchina — che non è l'universo UE. Quando
+una build nuova non aggancia, il log dice **con quale firma** ci ha provato, e
+il metodo per ricavarne una sta nelle voci qui sotto.
+
+**Cosa NON è ancora vero**, per non lasciarlo dedurre a chi legge:
+
+- Il percorso completo **dal bottone** non è mai stato visto scattare: serve un
+  gioco installato che fallisca la strada statica, e in questa libreria non ce
+  n'è (nessun RPG Maker classico; 15 UE su 16 hanno i `.locres`).
+- Il file di dizionario è **uno solo per coppia di lingue**: due giochi diversi
+  si sovrascrivono a vicenda all'uscita. Innocuo finché le traduzioni sono
+  testo→testo.
+- La cattura GDI non è mai stata provata su un gioco commerciale — i giochi UE
+  disegnano via Slate/Direct3D e non la esercitano.
+
+
 ### La Named Pipe costa ~19us a stringa, e non è sul percorso caldo
 
 Il round trip su Named Pipe è ~20x più lento della shared memory, e non
@@ -333,9 +386,16 @@ che prima o poi viene riempita, il dedup no: se la condizione che lo svuota può
 non verificarsi mai, serve una scadenza. Qui la condizione era "il server
 risponde", e sul miss il server tace per progetto.
 
-### Su Unreal la catena runtime si ferma al pattern di `FText::ToString`
+### ~~Su Unreal la catena runtime si ferma al pattern di `FText::ToString`~~ (SUPERATA)
 
-**Il fatto.** Il trasporto funziona su un gioco vero — la DLL si connette al
+> **Superata il 21/08/2026, stesso giorno.** Il pattern non era solo ambiguo:
+> era **sbagliato** (vedi «unicità non è correttezza»), ed è stato sostituito da
+> due firme ricavate da binari con i simboli. Su Unreal la catena oggi aggancia.
+> La voce resta perché il *metodo* con cui il blocco è stato diagnosticato vale
+> ancora, e perché la trappola in fondo — «connesso via IPC» sembra successo ed
+> è metà catena — non è invecchiata di un giorno.
+
+**Il fatto (allora).** Il trasporto funziona su un gioco vero — la DLL si connette al
 server Rust e il gioco non ne risente — ma **non arriva testo**, perché la
 sorgente L1 per Unreal si rifiuta di agganciare `FText::ToString` quando il
 pattern di byte è ambiguo. Le sorgenti L2 (GDI) restano attive ma non vedono
