@@ -7,24 +7,24 @@
 // per UE — molto meglio del GDI/OCR — perché vediamo la frase intera, già
 // decodificata, prima che venga renderizzata.
 //
-// Porting completato riusando il core di unreal-translator (incluso da gs-hook
-// via CMake): `UE::Patterns::*` (firme byte di FText::ToString) e
-// `GSTranslator::Utils::PatternScanUnique` vivono in ../unreal-translator/hook-dll
-// e NON sono duplicati qui.
+// I tipi UE (`UE::FString`, `UE::FText`) vengono dal core di unreal-translator,
+// incluso da gs-hook via CMake. Il pattern-scan non serve più: vedi LIMITI.
 //
-// LIMITI NOTI:
-//   • Si aggancia SOLO con il pattern UE5: quello UE4.2x è stato rimosso il
-//     30/07/2026 perché faceva 89-127 match sui giochi veri (vedi ue_types.h).
-//     Sui giochi UE4.2x questa sorgente quindi non aggancia → fallback L2.
-//   • Il pattern UE5 è **x64** (prefissi REX.W "48 ..."): per i (rari) giochi
-//     UE a 32-bit non aggancia → Activate ritorna Failed → fallback L2.
+// LIMITI NOTI (aggiornati 21/08/2026):
+//   • Si aggancia SOLO per SIMBOLO, quindi in pratica solo su build non
+//     monolitici (editor, giochi modulari). Sui build Shipping — la norma
+//     commerciale — non c'è nessun simbolo UE e questa sorgente non aggancia:
+//     Activate ritorna Failed e si scende a L2 (GDI).
+//   • Non esiste più un pattern di ripiego. Quello UE4.2x era stato rimosso il
+//     30/07/2026 (89-127 match); quello UE5 è stato CONFUTATO il 21/08/2026
+//     contro UE 5.8 con i simboli — descriveva una dispatch virtuale su
+//     `this`, e FText non ha vtable. Dettagli e numeri in ue_types.h.
 //   • Sostituzione in-place SOLO se la traduzione entra nel buffer già allocato
 //     da UE (FString::ArrayMax). Espanderlo richiede l'allocatore UE
 //     (FMemory::Realloc) → TODO.
 //
 #include "text_source.h"
-#include "ue_types.h"   // UE::FString, UE::FText, UE::Patterns::FText_ToString_*
-#include "utils.h"      // GSTranslator::Utils::PatternScanUnique
+#include "ue_types.h"   // UE::FString, UE::FText
 #include "gs_log.h"     // log unificato gs-hook (%TEMP%\gs-hook.log)
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -76,14 +76,14 @@ UE::FString* __fastcall Hook_FText_ToString(const UE::FText* self, UE::FString* 
 }
 
 // ─── Risoluzione per SIMBOLO ─────────────────────────────────────────────────
-// Un simbolo esportato e' deterministico: o c'e', ed e' quello giusto, o non
-// c'e'. Nessuna ambiguita' possibile, a differenza di una firma di byte.
+// Un simbolo esportato è deterministico: o c'è, ed è quello giusto, o non
+// c'è. Nessuna ambiguità possibile, a differenza di una firma di byte.
 //
 // QUANDO FUNZIONA E QUANDO NO — misurato, non supposto (21/08/2026):
 // serve un build **non monolitico**, con l'engine in DLL (editor, o giochi
 // compilati modulari). I build Shipping monolitici — la norma commerciale — non
 // esportano nulla di UE: Father's Day ha 312 export e sono tutti hint per i
-// driver AMD/NVIDIA (`NvOptimusEnablement`, `ags*`), il PDB e' dichiarato
+// driver AMD/NVIDIA (`NvOptimusEnablement`, `ags*`), il PDB è dichiarato
 // nell'header ma non spedito. Li' questa strada non puo' funzionare, e si
 // scende al pattern.
 //
@@ -94,7 +94,7 @@ UE::FString* __fastcall Hook_FText_ToString(const UE::FText* self, UE::FString* 
 //
 // La firma dell'hook resta a due argomenti anche qui: usa il VALORE DI RITORNO,
 // non `out`, quindi funziona sia con il ritorno per riferimento sia con quello
-// per valore (dove rdx e' il buffer di ritorno e rax lo ripete).
+// per valore (dove rdx è il buffer di ritorno e rax lo ripete).
 const char* const kFTextToStringSymbols[] = {
     "?ToString@FText@@QEBAAEBVFString@@XZ",
 };
@@ -102,8 +102,8 @@ const char* const kFTextToStringSymbols[] = {
 /// Cerca il simbolo in tutti i moduli caricati. `moduleOut` riceve il nome del
 /// modulo che l'ha fornito; `scanned` quanti moduli sono stati interrogati.
 ///
-/// `scanned` non e' decorativo: senza, un ritorno a zero non distingue «ho
-/// guardato ovunque e non c'e'» da «lo snapshot e' fallito e non ho guardato
+/// `scanned` non è decorativo: senza, un ritorno a zero non distingue «ho
+/// guardato ovunque e non c'è» da «lo snapshot è fallito e non ho guardato
 /// niente». Sono due diagnosi diverse e portano a due indagini diverse.
 uintptr_t ResolveFTextToStringBySymbol(std::string& moduleOut, size_t& scanned) {
     scanned = 0;
@@ -174,7 +174,7 @@ public:
         if (!sym) {
             LogLineA(("[gs-hook/UE] nessun simbolo FText::ToString in "
                       + std::to_string(symScanned)
-                      + " moduli (build monolitico?), provo il pattern\n").c_str());
+                      + " moduli (build monolitico?)\n").c_str());
         }
         if (sym) {
             if (MH_CreateHook(reinterpret_cast<LPVOID>(sym),
@@ -186,58 +186,24 @@ public:
                           + symModule + " — hook installato\n").c_str());
                 return Activation::Activated;
             }
-            LogLineA("[gs-hook/UE] simbolo trovato ma hook fallito (MinHook), provo il pattern\n");
+            LogLineA("[gs-hook/UE] simbolo trovato ma hook fallito (MinHook)\n");
         }
 
-        // 2) PATTERN. Nei build Shipping monolitici non c'è nessun simbolo da
-        //    risolvere, quindi si ricade qui — ed è il caso normale.
-        // Pattern-scan di FText::ToString. UNICITÀ OBBLIGATORIA: PatternScanUnique
-        // ritorna un indirizzo solo se il pattern compare ESATTAMENTE una volta.
+        // 2) PATTERN — non c'è più. La firma UE5 che stava qui è stata
+        //    CONFUTATA il 21/08/2026 contro una verità di riferimento (UE 5.8
+        //    con i simboli): descriveva una dispatch virtuale su `this`, e FText
+        //    non è polimorfico. Dove faceva «1 match unico» l'hook sarebbe
+        //    finito su una funzione qualsiasi. I dettagli e i numeri stanno in
+        //    ue_types.h accanto alla costante, e nel registro.
         //
-        // Perché non basta il primo match (misurato il 30/07/2026 su 5 giochi UE
-        // reali, 71-140 MB, con scripts/ue-validate-ftext-pattern.js): il pattern
-        // UE5 è specifico — 1 solo match su 4 binari su 5 — ma il vecchio pattern
-        // UE4.27 ne faceva 89, 103, 104, 117 e 127, perché è il prologo MSVC
-        // standard di qualunque funzione a due argomenti che salva due registri.
-        // Prendere "il primo di 100" significa agganciare una funzione a caso con
-        // una firma sbagliata: crash, o peggio corruzione heap silenziosa.
-        // Per questo il pattern UE4.27 NON è più in questa lista (vedi ue_types.h)
-        // e il multi-match è un rifiuto, non un ripiego.
-        //
-        // Fallire qui è il caso BENIGNO: il dllmain scende al livello 2 (GDI).
-        size_t matches = 0;
-        uintptr_t addr = GSTranslator::Utils::PatternScanUnique(
-            game, UE::Patterns::FText_ToString_UE5, &matches);
-
-        if (!addr) {
-            if (matches > 1) {
-                // Il conteggio è saturato al cap: oltre quella soglia diciamo
-                // "almeno N", non un numero che non abbiamo misurato.
-                const std::string quanti =
-                    (matches >= GSTranslator::Utils::PATTERN_SCAN_COUNT_CAP)
-                        ? "almeno " + std::to_string(matches)
-                        : std::to_string(matches);
-                const std::string msg =
-                    "[gs-hook/UE] pattern FText::ToString ambiguo: " + quanti +
-                    " match, hook RIFIUTATO (aggancerebbe la funzione sbagliata)\n";
-                LogLineA(msg.c_str());
-            } else {
-                LogLineA("[gs-hook/UE] FText::ToString non trovato (pattern x64 UE5)\n");
-            }
-            return Activation::Failed; // → il dllmain scende a L2 (GDI)
-        }
-
-        if (MH_CreateHook(reinterpret_cast<LPVOID>(addr),
-                          reinterpret_cast<LPVOID>(&Hook_FText_ToString),
-                          reinterpret_cast<LPVOID*>(&Original_FText_ToString)) != MH_OK ||
-            MH_EnableHook(reinterpret_cast<LPVOID>(addr)) != MH_OK) {
-            LogLineA("[gs-hook/UE] hook FText::ToString fallito (MinHook)\n");
-            return Activation::Failed;
-        }
-
-        hookedAddr_ = addr;
-        LogLineW(L"[gs-hook/UE] hook FText::ToString installato\n");
-        return Activation::Activated;
+        //    Finché non esiste una firma ricavata da un binario con i simboli
+        //    E validata sulla versione UE di quel gioco, qui si fallisce: il
+        //    dllmain scende a L2 (GDI). Non tradurre a livello engine è un
+        //    difetto; agganciare la funzione sbagliata in un gioco commerciale
+        //    è un crash.
+        LogLineA("[gs-hook/UE] nessuna firma validata per questa build: "
+                 "hook engine non installato (fallback GDI)\n");
+        return Activation::Failed;
     }
 
     void Deactivate() override {

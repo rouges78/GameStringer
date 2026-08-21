@@ -421,6 +421,72 @@ Per RPG_RT e i giochi GDI la sorgente funziona ed è stata vista funzionare;
 per UE no. Prima di considerare chiusa quella strada, va reso non ambiguo il
 pattern (o sostituito con una risoluzione per simbolo).
 
+### Il pattern UE5 di `FText::ToString` era sbagliato: unicità non è correttezza
+
+**Il fatto.** La firma usata per agganciare `FText::ToString` sui giochi Unreal
+non descriveva quella funzione. Dove faceva «1 match unico» — e quindi dove il
+codice si fidava e installava l'hook — avrebbe agganciato **una funzione
+qualsiasi**. Il caso «ambiguo» di Father's Day, che veniva rifiutato, era il
+meno pericoloso dei due.
+
+**Come è stato smascherato.** Serviva una verità di riferimento, e c'era senza
+saperlo: un'installazione **UE 5.8** in `C:\Program Files\Epic Games`, con 566
+DLL dell'engine. Lì i simboli esistono, quindi si può chiedere *quale* funzione
+sia quella giusta invece di indovinarlo:
+
+```bash
+# in UnrealEditor-Core.dll: 7632 export, fra cui
+#   ?ToString@FText@@QEBAAEBVFString@@XZ  →  RVA 0x3EFA60
+```
+
+I byte a quell'indirizzo:
+
+```text
+40 53              push rbx
+48 83 EC 30        sub  rsp, 0x30
+48 8B D9           mov  rbx, rcx
+E8 F2 EE FE FF     call <rebuild>        ← una CALL
+48 8B 0B           mov  rcx, [rbx]       ← carica TextData
+48 85 C9           test rcx, rcx
+```
+
+Il pattern in uso era
+`40 53 48 83 EC ?? 48 8B D9 48 85 C9 74 ?? 48 8B 01`, cioè si aspettava
+`test rcx,rcx` **subito** dopo `mov rbx,rcx`, poi `mov rax,[rcx]` seguito da una
+chiamata attraverso `rax`: una **dispatch virtuale su `this`**. `FText` non è
+polimorfico — non ha vtable — quindi quella forma non può essere il suo
+`ToString` in nessuna versione UE5. La conferma numerica chiude il discorso:
+il pattern compare **0 volte** in tutta `UnrealEditor-Core.dll`, che quella
+funzione la contiene di sicuro.
+
+**Numeri sui 18 Shipping installati.** Il vecchio pattern fa 1-4 match ovunque
+(1 su The Skin Stapler, Greed Stays Home, Beyond Hanwell, Cooking Simulator VR,
+Oneirophobia; 4 su Father's Day, Maestro, Subside). Una firma ricavata *dal
+simbolo* di UE 5.8 fa 6 match sulla DLL stessa e **0** su tutti i 18 giochi:
+il prologo cambia fra versioni UE, quindi una firma va ricavata **e** validata
+sulla versione di quel gioco, non trasportata.
+
+**Nel codice.** La costante è ora
+`UE::Patterns::FText_ToString_UE5_CONFUTATO` (rinominata apposta: chi prova a
+usarla non compila e legge il perché), e `source_unreal_ftext.cpp` non fa più
+pattern-scan — resta la sola risoluzione per simbolo, che serve ai build non
+monolitici. Sui giochi commerciali la sorgente ora fallisce con un messaggio
+esplicito e si scende a GDI.
+
+**La trappola.** «Un solo match» sembra la prova che il pattern è quello giusto,
+e non lo è: misura l'**ambiguità**, non la **correttezza**. Le due cose si
+separano solo con una verità di riferimento, e una verità di riferimento serve
+averla — un binario con i simboli della stessa famiglia. Senza, si può
+verificare che una firma non peschi troppo, mai che peschi la cosa giusta.
+Questo pattern era nel repo dal commit iniziale con la nota «(esempio)», ed è
+sopravvissuto a una revisione che ne misurò l'unicità sui giochi reali senza
+poterne misurare la correttezza.
+
+**Il metodo, per la prossima volta.** Installare l'engine UE della versione del
+gioco, risolvere il simbolo nella sua `UnrealEditor-Core.dll`, leggere i byte
+lì, ricavare la firma da quelli, e solo allora contarla sul gioco. Lo strumento
+per contare esiste già: `scripts/ue-validate-ftext-pattern.js --exe <path> --dump`.
+
 ---
 
 ## Come si aggiunge una voce
