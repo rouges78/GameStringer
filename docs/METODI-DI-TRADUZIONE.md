@@ -47,6 +47,19 @@ cercare le cartelle `Paks` — ricorsivo fino a 5 livelli, con verifica che la
 cartella contenga davvero `.pak`/`.utoc`. `find_paks_dir`, `find_utoc_files` e
 `find_pak_files` ci si appoggiano tutti.
 
+**Seconda trappola, stessa cartella (21/08/2026).** Non è solo una questione di
+profondità: ogni gioco UE ha **almeno due** cartelle `Paks`, e quella che si
+incontra per prima è quasi sempre il richiamo sbagliato —
+`Engine/Programs/CrashReportClient/Content/Paks`, decine di MB di crash
+reporter. Misurando quella si conclude che il gioco non ha localizzazione:
+REANIMAL dava 45 MB e «nessun locres» contro i 15,6 GB della cartella vera, e
+TerraTech Legion 46 MB contro 5,5 GB. Chi scrive uno script di analisi deve
+scartare i percorsi sotto `Engine/Programs`, non fermarsi al primo `Paks`
+trovato — che è esattamente quello che fa `find_all_paks_dirs()`, e il motivo
+per cui va usata quella invece di una `find` improvvisata. Il controllo che
+smaschera l'errore: The Skin Stapler DEVE risultare positivo (1679 voci), e
+finché un metodo dice il contrario è il metodo a essere rotto.
+
 **Trappola.** Il sintomo era una contraddizione a schermo: il pulsante prometteva
 «.locres trovati», il pannello sotto negava. Erano **tre finder con due
 profondità diverse in due file diversi** — `find_paks_dir` cercava già in modo
@@ -319,6 +332,56 @@ Senza TTL la terza riga non compare mai, ed è l'unica che dimostra qualcosa.
 che prima o poi viene riempita, il dedup no: se la condizione che lo svuota può
 non verificarsi mai, serve una scadenza. Qui la condizione era "il server
 risponde", e sul miss il server tace per progetto.
+
+### Su Unreal la catena runtime si ferma al pattern di `FText::ToString`
+
+**Il fatto.** Il trasporto funziona su un gioco vero — la DLL si connette al
+server Rust e il gioco non ne risente — ma **non arriva testo**, perché la
+sorgente L1 per Unreal si rifiuta di agganciare `FText::ToString` quando il
+pattern di byte è ambiguo. Le sorgenti L2 (GDI) restano attive ma non vedono
+nulla: UE disegna il testo via Slate/Direct3D, non con `ExtTextOutW`. L'anello
+mancante non è l'IPC, è la risoluzione del simbolo.
+
+**Misura.** Father's Day (UE, Steam), 21 agosto 2026, iniezione reale nel
+processo `Fathers_Day-Win64-Shipping.exe` con il server di prova in ascolto:
+
+```text
+cargo run --example translator_pipe_server
+gs-hook\build-x64\bin\Release\gs-injector.exe <pid> <path a gs-hook.dll>
+```
+
+Lato DLL (`%TEMP%\gs-hook.log`), quattro righe in tutto:
+
+```text
+[gs-hook] connesso a GameStringer via IPC
+[gs-hook/UE] pattern FText::ToString ambiguo: 4 match, hook RIFIUTATO
+             (aggancerebbe la funzione sbagliata)
+[gs-hook] sorgente attiva: GDI (ExtTextOutW/DrawTextW) (livello 2)
+[gs-hook] sorgente attiva: GDI/GetGlyphOutline (estrazione) (livello 2)
+```
+
+Lato server: `DLL connessa`, e **zero richieste**. Il gioco resta sano —
+`SendMessageTimeout(WM_NULL, 3000ms)` risponde, 103 s di CPU, 608 MB — il che
+conferma su un titolo vero la correzione dell'I/O overlapped (vedi la voce
+sopra): quel bug congelava il processo all'istante.
+
+**Nel codice.** `gs-hook/src/sources/source_unreal_ftext.cpp` (livello Engine,
+il rifiuto è deliberato), `gs-hook/src/sources/source_gdi.cpp` (livello
+Rasterization, il ripiego universale).
+
+**La trappola.** «connesso a GameStringer via IPC» nel log sembra il segnale
+che tutto funziona, ed è solo metà della catena: dice che il *trasporto* è
+vivo, non che qualcuno gli stia parlando. Il numero che conta è quante
+richieste arrivano al server — se è zero, il problema sta a monte dell'IPC, e
+guardare la pipe non lo troverà mai.
+
+**Corollario sul fallback a runtime.** Agganciare il fallback al vicolo cieco
+«Unreal senza `.locres`» (PR #87) è giusto in linea di principio, ma finché
+il pattern di `FText::ToString` resta ambiguo **su UE il runtime non ha testo
+da tradurre**: proporrebbe una strada che non porta ancora da nessuna parte.
+Per RPG_RT e i giochi GDI la sorgente funziona ed è stata vista funzionare;
+per UE no. Prima di considerare chiusa quella strada, va reso non ambiguo il
+pattern (o sostituito con una risoluzione per simbolo).
 
 ---
 
