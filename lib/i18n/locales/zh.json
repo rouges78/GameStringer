@@ -564,7 +564,9 @@
     "searchPh": "搜索通知……",
     "searchAria": "按标题、消息或分类搜索通知",
     "loadingAria": "正在加载通知",
-    "markReadTitle": "标记为已读"
+    "markReadTitle": "标记为已读",
+    "selectionMode": "选择模式",
+    "exitSelectionMode": "退出选择模式"
   },
   "wadExtractor": {
     "totalUnit": "总计",
@@ -3991,7 +3993,17 @@
     "dryRunPipelineScan": "Dry Run — 流程扫描",
     "dryRunPipelineScanDesc": "对所有已安装游戏自动执行检测与提取检查（不进行翻译）",
     "stringIt": "String it!",
-    "failed": "失败"
+    "failed": "失败",
+    "moreOptions": "更多选项",
+    "preview": "预览",
+    "clear": "清除",
+    "clearChat": "清除对话",
+    "statistics": "统计",
+    "collapse": "折叠",
+    "openFolder": "打开文件夹",
+    "pause": "暂停",
+    "resume": "继续",
+    "play": "播放"
   },
   "languages": {
     "cs": "Čeština",
@@ -4801,7 +4813,9 @@
     "modelsAvailable": "个模型可用",
     "online": "在线",
     "offline": "离线",
-    "subtitle": "自动化 AI 翻译流程"
+    "subtitle": "自动化 AI 翻译流程",
+    "addTerm": "添加术语到术语表",
+    "removeTerm": "从术语表移除"
   },
   "dictionary": {
     "title": "词典",

@@ -280,6 +280,7 @@ export function VoiceCloneStudio() {
                       variant="ghost"
                       onClick={handlePlay}
                       className="h-10 w-10"
+                      aria-label={isPlaying ? t('common.pause') : t('common.play')}
                     >
                       {isPlaying ? (
                         <Pause className="h-5 w-5" />
@@ -294,7 +295,7 @@ export function VoiceCloneStudio() {
                         </div>
                       </div>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={handleDownload}>
+                    <Button size="icon" variant="ghost" onClick={handleDownload} aria-label={t('common.download')}>
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
@@ -506,6 +507,7 @@ export function VoiceCloneStudio() {
                             size="icon"
                             variant="ghost"
                             onClick={() => setSelectedProfile(profile)}
+                            aria-label={t('common.play')}
                           >
                             <Play className="h-4 w-4" />
                           </Button>
@@ -517,6 +519,7 @@ export function VoiceCloneStudio() {
                               voiceCloneService.deleteProfile(profile.id);
                               setProfiles(profiles.filter(p => p.id !== profile.id));
                             }}
+                            aria-label={t('common.delete')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

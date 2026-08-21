@@ -564,7 +564,9 @@
     "searchPh": "通知を検索...",
     "searchAria": "タイトル、メッセージ、カテゴリで通知を検索",
     "loadingAria": "通知を読み込み中",
-    "markReadTitle": "既読にする"
+    "markReadTitle": "既読にする",
+    "selectionMode": "選択モード",
+    "exitSelectionMode": "選択モードを終了"
   },
   "wadExtractor": {
     "totalUnit": "合計",
@@ -3991,7 +3993,17 @@
     "dryRunPipelineScan": "Dry Run — パイプラインのスキャン",
     "dryRunPipelineScanDesc": "インストール済みのすべてのゲームで検出と抽出を自動チェックします（翻訳は行いません）",
     "stringIt": "String it!",
-    "failed": "失敗"
+    "failed": "失敗",
+    "moreOptions": "その他のオプション",
+    "preview": "プレビュー",
+    "clear": "クリア",
+    "clearChat": "チャットをクリア",
+    "statistics": "統計",
+    "collapse": "折りたたむ",
+    "openFolder": "フォルダーを開く",
+    "pause": "一時停止",
+    "resume": "再開",
+    "play": "再生"
   },
   "languages": {
     "cs": "Čeština",
@@ -4801,7 +4813,9 @@
     "modelsAvailable": "モデル利用可能",
     "online": "オンライン",
     "offline": "オフライン",
-    "subtitle": "自動 AI 翻訳パイプライン"
+    "subtitle": "自動 AI 翻訳パイプライン",
+    "addTerm": "用語集に追加",
+    "removeTerm": "用語集から削除"
   },
   "dictionary": {
     "title": "辞書",

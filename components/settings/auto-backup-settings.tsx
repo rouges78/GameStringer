@@ -250,7 +250,7 @@ export function AutoBackupSettings() {
             <HardDrive className="h-3.5 w-3.5" />
             {t('settings.backupHistory')} ({backups.length})
           </p>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={loadBackups}>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={loadBackups} aria-label={t('common.aggiorna')}>
             <RefreshCw className="h-3 w-3" />
           </Button>
         </div>

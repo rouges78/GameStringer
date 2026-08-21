@@ -564,7 +564,9 @@
     "searchPh": "Cerca notifiche...",
     "searchAria": "Cerca notifiche per titolo, messaggio o categoria",
     "loadingAria": "Caricamento notifiche",
-    "markReadTitle": "Segna come letta"
+    "markReadTitle": "Segna come letta",
+    "selectionMode": "Modalità selezione",
+    "exitSelectionMode": "Esci dalla modalità selezione"
   },
   "wadExtractor": {
     "totalUnit": "totali",
@@ -4097,7 +4099,17 @@
     "dryRunPipelineScan": "Dry Run — Scansione pipeline",
     "dryRunPipelineScanDesc": "Verifica automatica di rilevamento ed estrazione su tutti i giochi installati (senza tradurre)",
     "stringIt": "String it!",
-    "failed": "non riuscite"
+    "failed": "non riuscite",
+    "moreOptions": "Altre opzioni",
+    "preview": "Anteprima",
+    "clear": "Pulisci",
+    "clearChat": "Pulisci chat",
+    "statistics": "Statistiche",
+    "collapse": "Riduci",
+    "openFolder": "Apri cartella",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "play": "Riproduci"
   },
   "languages": {
     "cs": "Čeština",
@@ -5530,7 +5542,9 @@
     "modelsAvailable": "modelli disponibili",
     "online": "Online",
     "offline": "Offline",
-    "subtitle": "Pipeline di traduzione AI automatizzata"
+    "subtitle": "Pipeline di traduzione AI automatizzata",
+    "addTerm": "Aggiungi termine al glossario",
+    "removeTerm": "Rimuovi termine dal glossario"
   },
   "subtitleOverlay": {
     "title": "Overlay sottotitoli",

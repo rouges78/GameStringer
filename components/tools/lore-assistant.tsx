@@ -120,13 +120,13 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
             </Badge>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowStats(!showStats)} title="Statistiche">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowStats(!showStats)} title="Statistiche" aria-label={t('common.statistics')}>
               <Info className="h-3 w-3 text-amber-400/50" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setMessages([]); }} title="Pulisci chat">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setMessages([]); }} title="Pulisci chat" aria-label={t('common.clearChat')}>
               <Trash2 className="h-3 w-3 text-amber-400/50" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)} aria-label={t('common.collapse')}>
               <ChevronDown className="h-3 w-3 text-amber-400/50" />
             </Button>
           </div>

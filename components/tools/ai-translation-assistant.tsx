@@ -387,6 +387,7 @@ export function AITranslationAssistant() {
                     size="icon"
                     className="absolute top-2 right-2"
                     onClick={() => copyToClipboard(translatedText)}
+                    aria-label={t('common.copia')}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -404,6 +405,7 @@ export function AITranslationAssistant() {
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => copyToClipboard(alt)}
+                            aria-label={t('common.copia')}
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
@@ -510,7 +512,7 @@ export function AITranslationAssistant() {
                   placeholder={t('aiTranslation.translationPlaceholder')}
                   className="w-28 min-w-0"
                 />
-                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500 shrink-0">
+                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500 shrink-0" aria-label={t('aiTranslation.addTerm')}>
                   <Check className="h-4 w-4" />
                 </Button>
               </div>
@@ -525,6 +527,7 @@ export function AITranslationAssistant() {
                         size="icon"
                         className="h-6 w-6"
                         onClick={() => removeGlossaryTerm(term)}
+                        aria-label={t('aiTranslation.removeTerm')}
                       >
                         ×
                       </Button>

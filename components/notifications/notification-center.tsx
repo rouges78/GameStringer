@@ -501,6 +501,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   setSelectedNotifications(new Set());
                 }}
                 title={isSelectMode ? "Exit selection mode" : "Selection mode"}
+                aria-label={isSelectMode ? t('notificationCenter.exitSelectionMode') : t('notificationCenter.selectionMode')}
               >
                 {isSelectMode ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
               </Button>
@@ -509,7 +510,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {/* Ordinamento */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t('notificationCenter.sortBy')}>
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -541,6 +542,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     "h-8 w-8",
                     hasActiveFilters && "text-primary"
                   )}
+                  aria-label={t('common.filter')}
                 >
                   <Filter className="h-4 w-4" />
                 </Button>
@@ -610,7 +612,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             {processedNotifications.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t('common.moreOptions')}>
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -969,6 +971,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                       onMarkAsRead(notification.id);
                     }}
                     title={t('notificationCenter.markReadTitle')}
+                    aria-label={t('notificationCenter.markReadTitle')}
                   >
                     <Check className="h-3 w-3" />
                   </Button>
@@ -983,6 +986,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                     onDelete(notification.id);
                   }}
                   title={t('common.deleteNotification')}
+                  aria-label={t('common.deleteNotification')}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>

@@ -564,7 +564,9 @@
     "searchPh": "Szukaj powiadomień...",
     "searchAria": "Szukaj powiadomień po tytule, wiadomości lub kategorii",
     "loadingAria": "Wczytywanie powiadomień",
-    "markReadTitle": "Oznacz jako przeczytane"
+    "markReadTitle": "Oznacz jako przeczytane",
+    "selectionMode": "Tryb zaznaczania",
+    "exitSelectionMode": "Wyjdź z trybu zaznaczania"
   },
   "wadExtractor": {
     "totalUnit": "łącznie",
@@ -3991,7 +3993,17 @@
     "dryRunPipelineScan": "Dry Run — Skanowanie pipeline'u",
     "dryRunPipelineScanDesc": "Automatyczne sprawdzenie wykrywania i wyodrębniania we wszystkich zainstalowanych grach (bez tłumaczenia)",
     "stringIt": "String it!",
-    "failed": "nieudanych"
+    "failed": "nieudanych",
+    "moreOptions": "Więcej opcji",
+    "preview": "Podgląd",
+    "clear": "Wyczyść",
+    "clearChat": "Wyczyść czat",
+    "statistics": "Statystyki",
+    "collapse": "Zwiń",
+    "openFolder": "Otwórz folder",
+    "pause": "Wstrzymaj",
+    "resume": "Wznów",
+    "play": "Odtwórz"
   },
   "languages": {
     "cs": "Čeština",
@@ -5022,7 +5034,9 @@
     "modelsAvailable": "dostępne modele",
     "online": "Online",
     "offline": "Offline",
-    "subtitle": "Zautomatyzowany potok tłumaczenia AI"
+    "subtitle": "Zautomatyzowany potok tłumaczenia AI",
+    "addTerm": "Dodaj termin do glosariusza",
+    "removeTerm": "Usuń termin z glosariusza"
   },
   "dictionary": {
     "title": "Słownik",

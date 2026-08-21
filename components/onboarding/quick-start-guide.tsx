@@ -96,7 +96,7 @@ export function QuickStartGuide() {
               {completedSteps.length}/{steps.length}
             </Badge>
           </div>
-          <Button variant="ghost" size="icon" onClick={dismiss}>
+          <Button variant="ghost" size="icon" onClick={dismiss} aria-label={t('common.close')}>
             <X className="h-4 w-4" />
           </Button>
         </div>

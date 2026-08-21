@@ -464,7 +464,7 @@ export function UnrealTranslator() {
                   placeholder="C:\Games\MyUnrealGame"
                   className="flex-1"
                 />
-                <Button variant="outline" size="icon" onClick={handleBrowseFolder}>
+                <Button variant="outline" size="icon" onClick={handleBrowseFolder} aria-label={t('common.openFolder')}>
                   <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>

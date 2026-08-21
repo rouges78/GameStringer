@@ -208,16 +208,16 @@ export function DebugConsole({ defaultExpanded = false }: { defaultExpanded?: bo
               </button>
             ))}
             <div className="w-px h-4 bg-slate-700/50 mx-1" />
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPaused(!paused)} title={paused ? 'Riprendi' : 'Pausa'}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPaused(!paused)} title={paused ? 'Riprendi' : 'Pausa'} aria-label={paused ? t('common.resume') : t('common.pause')}>
               {paused ? <Play className="h-3 w-3 text-emerald-400" /> : <Pause className="h-3 w-3" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={exportLogs} title={t('common.esportaLog')}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={exportLogs} title={t('common.esportaLog')} aria-label={t('common.esportaLog')}>
               <Download className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => debugLog.clear()} title="Pulisci">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => debugLog.clear()} title="Pulisci" aria-label={t('common.clear')}>
               <Trash2 className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)} title={t('common.chiudi')}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpanded(false)} title={t('common.chiudi')} aria-label={t('common.chiudi')}>
               <X className="h-3 w-3" />
             </Button>
           </div>
