@@ -74,12 +74,43 @@ typedef void (__fastcall* STextBlock_SetText_t)(void* This, const FText& InText)
 // sbagliata → crash, o corruzione heap silenziosa.
 // Prima di aggiungere o cambiare un pattern qui, rimisurare con quello script.
 namespace Patterns {
-    // UE 5.0+ FText::ToString — USABILE.
-    // 1 solo match su 4 binari su 5 (eccezione: Father's Day, 4 match → lì
-    // PatternScanUnique rifiuta e si scende a GDI, che è il comportamento
-    // voluto). La sequenza `test rcx,rcx / je / mov rax,[rcx]` subito dopo
-    // `mov rbx,rcx` discrimina davvero, nonostante il prologo generico.
-    constexpr const char* FText_ToString_UE5 =
+    // ⛔ UE5 FText::ToString — CONFUTATO il 21/08/2026, NON REINSERIRE.
+    //
+    // Era qui dal commit iniziale con la nota «(esempio)»: un'ipotesi mai
+    // verificata. Sembrava buona perché faceva 1 solo match su 4 binari su 5,
+    // ma **unicità non è correttezza**, ed era il match sbagliato.
+    //
+    // La prova, con una verità di riferimento vera: UE 5.8 installato
+    // (`Engine/Binaries/Win64/UnrealEditor-Core.dll`) esporta
+    // `?ToString@FText@@QEBAAEBVFString@@XZ` a RVA 0x3EFA60. I byte lì sono:
+    //
+    //   40 53              push rbx
+    //   48 83 EC 30        sub  rsp, 0x30
+    //   48 8B D9           mov  rbx, rcx
+    //   E8 F2 EE FE FF     call <rebuild>        ← una CALL
+    //   48 8B 0B           mov  rcx, [rbx]       ← carica TextData
+    //   48 85 C9           test rcx, rcx
+    //
+    // Questo pattern si aspetta invece `48 85 C9` (test) SUBITO dopo
+    // `48 8B D9`, e poi `48 8B 01` (mov rax,[rcx]) seguito da una chiamata
+    // attraverso rax: cioè **una dispatch virtuale su `this`**. FText non è
+    // polimorfico — non ha vtable — quindi quella forma non può essere
+    // FText::ToString in nessuna versione UE5. Conferma numerica: il pattern
+    // compare **0 volte** in tutta UnrealEditor-Core.dll, che quella funzione
+    // la contiene di sicuro.
+    //
+    // Dove faceva «1 match unico» (The Skin Stapler, Greed Stays Home, Beyond
+    // Hanwell, Cooking Simulator VR, Oneirophobia…) l'hook si sarebbe
+    // installato su una funzione qualsiasi con firma diversa: esattamente il
+    // crash o la corruzione heap che PatternScanUnique doveva prevenire. Il
+    // caso «ambiguo» di Father's Day era il meno pericoloso, non il più.
+    //
+    // Non è stato sostituito con una firma nuova perché quella ricavata da
+    // UE 5.8 (`40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 85 C9 75 ??`)
+    // fa 6 match sulla stessa DLL e **0** su tutti i 18 Shipping installati:
+    // il prologo cambia fra versioni UE, quindi una firma va ricavata E
+    // validata sulla versione di quel gioco. Vedi il registro.
+    constexpr const char* FText_ToString_UE5_CONFUTATO =
         "40 53 48 83 EC ?? 48 8B D9 48 85 C9 74 ?? 48 8B 01";
 
     // ⛔ UE 4.27 FText::ToString — INUTILIZZABILE, NON REINSERIRE fra i pattern
