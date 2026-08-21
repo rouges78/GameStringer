@@ -1,8 +1,8 @@
 {
   "_nota": "Conteggi noti per file e regola. Aggiornare SOLO dopo aver corretto o valutato: vedi i LIMITI in scripts/check-a11y.js — i backdrop non vanno resi focusabili.",
-  "aggiornato": "2026-08-02",
+  "aggiornato": "2026-08-20",
   "totali": {
-    "div-onclick": 76,
+    "div-onclick": 75,
     "div-onclick-overlay": 3
   },
   "known": {
@@ -67,9 +67,6 @@
       "div-onclick": 1
     },
     "components/gamemaker-translator.tsx": {
-      "div-onclick": 1
-    },
-    "components/injekt-ui-enhanced.tsx": {
       "div-onclick": 1
     },
     "components/notifications/keyboard-shortcuts-help.tsx": {

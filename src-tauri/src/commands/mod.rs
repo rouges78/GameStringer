@@ -103,7 +103,6 @@ pub mod tyranoscript_patcher;
 
 // === Windows-only modules (memory injection, WinAPI OCR, screen capture) ===
 #[cfg(windows)]
-pub mod injekt;
 #[cfg(windows)]
 pub mod anti_cheat;
 #[cfg(windows)]
@@ -168,7 +167,6 @@ pub mod video_extractor;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]
-pub mod injekt { pub use super::platform_stubs::*; }
 #[cfg(not(windows))]
 pub mod anti_cheat { pub use super::platform_stubs::*; }
 #[cfg(not(windows))]

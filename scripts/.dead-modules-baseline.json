@@ -3,7 +3,6 @@
     "lib/steam-utils.ts": "1031 righe",
     "components/audio-translation.tsx": "775 righe",
     "components/community-translations.tsx": "738 righe",
-    "components/injekt-ui-enhanced.tsx": "646 righe",
     "components/ocr-image-processor.tsx": "638 righe",
     "components/context-aware-translation.tsx": "578 righe",
     "components/notifications/notification-provider.tsx": "562 righe",

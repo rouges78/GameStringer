@@ -7,9 +7,7 @@ mod models;
 mod commands;
 
 #[cfg(windows)]
-mod injekt;
 #[cfg(windows)]
-mod multi_process_injekt;
 #[cfg(windows)]
 mod anti_cheat;
 mod engine_detector;
@@ -444,21 +442,7 @@ fn main() {
             commands::patches::get_translation_suggestions,
             commands::patches::export_translations,
             commands::patches::import_translations,
-            commands::injekt::start_injection,
-            commands::injekt::stop_injection,
-            commands::injekt::get_injection_stats,
-            commands::injekt::test_injection,
-            commands::injekt::get_processes,
-            commands::injekt::get_process_info,
-            commands::injekt::inject_translation,
-            commands::injekt::scan_process_memory,
             // Multi-Process Injection
-            commands::injekt::start_multi_process_injection,
-            commands::injekt::stop_multi_process_injection,
-            commands::injekt::get_multi_process_stats,
-            commands::injekt::get_multi_process_active_processes,
-            commands::injekt::force_inject_process,
-            commands::injekt::list_multi_process_games,
             // Anti-Cheat System
             commands::anti_cheat::check_injection_gate,
             commands::anti_cheat::detect_anti_cheat_systems,
