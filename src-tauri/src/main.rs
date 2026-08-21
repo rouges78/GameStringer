@@ -713,6 +713,7 @@ fn main() {
 
             // gs-hook Direct Injection (dual-arch: GDI/Unity/Unreal universale)
             commands::gs_hook_injector::inject_gs_hook,
+            commands::gs_hook_injector::gs_hook_status,
 
             // Universal Injector (auto-detect engine + setup traduzione file-based)
             commands::universal_injector::detect_game_engine,

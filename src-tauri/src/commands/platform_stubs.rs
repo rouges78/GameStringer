@@ -80,6 +80,19 @@ pub async fn inject_gs_hook(_process_name: String) -> Result<InjectionResult, St
     Err(PLATFORM_ERR.into())
 }
 
+#[derive(Serialize)]
+pub struct GsHookStatus {
+    pub available: bool,
+    pub process_running: bool,
+}
+
+#[tauri::command]
+pub async fn gs_hook_status(_process_name: Option<String>) -> Result<GsHookStatus, String> {
+    // Fuori da Windows la strada a runtime non esiste: non e' un errore da
+    // mostrare, e' un fatto che il pianificatore usa per non proporla.
+    Ok(GsHookStatus { available: false, process_running: false })
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // commands::ue_translator stubs
 // ═══════════════════════════════════════════════════════════════════

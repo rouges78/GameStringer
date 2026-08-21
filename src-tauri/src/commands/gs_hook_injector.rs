@@ -27,6 +27,37 @@ pub struct InjectionResult {
     pub message: String,
 }
 
+/// Se la traduzione a runtime è percorribile, e se il gioco è già avviato.
+///
+/// Serve a decidere PRIMA di provare: senza questa sonda l'unica risposta
+/// possibile a «il gioco è chiuso» sarebbe un'injection fallita, mentre è
+/// un invito ad agire («avvia il gioco»). La regola che ci ragiona sopra sta
+/// in `lib/translation/runtime-fallback.ts` con i suoi test.
+#[derive(Debug, serde::Serialize)]
+pub struct GsHookStatus {
+    /// DLL e injector presenti per almeno un'architettura.
+    pub available: bool,
+    /// `process_name` è vivo adesso.
+    pub process_running: bool,
+}
+
+#[command]
+pub async fn gs_hook_status(process_name: Option<String>) -> Result<GsHookStatus, String> {
+    // Basta una delle due arch: quale serve davvero si sa solo col PID in mano.
+    let available = ["x64", "x86"].iter().any(|arch| {
+        gs_hook_paths(arch)
+            .map(|(dll, injector)| dll.exists() && injector.exists())
+            .unwrap_or(false)
+    });
+
+    let process_running = process_name
+        .as_deref()
+        .and_then(find_process_by_name)
+        .is_some();
+
+    Ok(GsHookStatus { available, process_running })
+}
+
 /// Inietta `gs-hook.dll` (arch corretta) nel processo `process_name`.
 #[command]
 pub async fn inject_gs_hook(
