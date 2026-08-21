@@ -250,6 +250,16 @@ pub mod translation_bridge_stubs {
     pub async fn translation_bridge_drain_misses(_max: Option<usize>) -> Result<BridgeResponse<Vec<String>>, String> {
         Ok(BridgeResponse::err(PLATFORM_ERR))
     }
+
+    #[tauri::command]
+    pub async fn translation_bridge_save_dir(_dir: String) -> Result<BridgeResponse<usize>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
+
+    #[tauri::command]
+    pub async fn translation_bridge_load_dir(_dir: String) -> Result<BridgeResponse<usize>, String> {
+        Ok(BridgeResponse::err(PLATFORM_ERR))
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════

@@ -392,7 +392,6 @@ impl DictionaryEngine {
     }
     
     /// Salva tutti i dizionari su disco in formato JSON
-    #[allow(dead_code)]
     pub fn save_to_dir(&self, dir: &str) -> Result<usize, String> {
         let dir_path = Path::new(dir);
         fs::create_dir_all(dir_path)
@@ -416,7 +415,6 @@ impl DictionaryEngine {
     }
 
     /// Carica tutti i dizionari da una directory
-    #[allow(dead_code)]
     pub fn load_from_dir(&mut self, dir: &str) -> Result<usize, String> {
         let dir_path = Path::new(dir);
         if !dir_path.exists() { return Ok(0); }

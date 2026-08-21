@@ -45,9 +45,17 @@ fn main() {
     let dictionary = Arc::new(RwLock::new(engine));
     let (miss_tx, miss_rx) = mpsc::channel::<String>();
 
+    // Drain loop finto: sta al posto di `lib/translation-bridge-drain.ts`, con
+    // un "provider" che prefissa [IT]. Serve a mostrare che la catena IMPARA:
+    // primo avvistamento di una stringa = miss, dal secondo = hit.
+    let learner = Arc::clone(&dictionary);
     std::thread::spawn(move || {
         for text in miss_rx {
-            println!("MISS  → \"{}\" (in coda per l'AI fallback)", text);
+            let translated = format!("[IT] {}", text);
+            learner
+                .write()
+                .add_translation(text.clone(), translated.clone());
+            println!("IMPARATA → \"{}\" = \"{}\"", text, translated);
         }
     });
 

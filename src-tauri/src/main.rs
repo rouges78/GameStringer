@@ -778,6 +778,8 @@ fn main() {
             commands::translation_bridge::translation_bridge_export_json,
             commands::translation_bridge::translation_bridge_clear,
             commands::translation_bridge::translation_bridge_drain_misses,
+            commands::translation_bridge::translation_bridge_save_dir,
+            commands::translation_bridge::translation_bridge_load_dir,
 
             // Translation API (DeepL, Google, LibreTranslate)
             commands::translation_api::translate_deepl,

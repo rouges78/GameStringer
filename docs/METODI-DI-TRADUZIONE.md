@@ -289,6 +289,37 @@ isola il colpevole al ramo "IPC connessa" in tre minuti.
 sistemare. Prima di allinearli, leggi cosa c'è dentro i binari: qui erano due
 canali sani, e l'unico difetto vero era il server che manca a entrambi.
 
+### Un dedup senza scadenza impedisce alla catena di accorgersi di aver imparato
+
+Il drain loop imparava le stringhe e il gioco continuava a mostrarle in inglese.
+Non era il loop: era il **dedup lato DLL**. `Translate()` tiene un insieme di
+richieste in volo per non rispedire la stessa stringa a ogni draw call, e quel
+set veniva svuotato solo dal callback di risposta. Ma sul miss il server tace di
+proposito — la traduzione ancora non esiste — quindi la voce non usciva mai:
+la stringa restava "in attesa" per sempre e la DLL non la richiedeva **mai più**,
+nemmeno dopo che il drain loop l'aveva imparata.
+
+La cura è un TTL (`kPendingTtlMs`, 10s in
+`unreal-translator/hook-dll/src/translator.cpp`): sopra il giro del drain loop
+lato app (~3s), sotto la pazienza umana. Scaduto, la stringa si può richiedere.
+
+**Come è stato misurato.** Server di prova con un "provider" che prefissa `[IT]`
+(`cargo run --example translator_pipe_server`), iniezione reale nella testapp
+GDI, e si guarda la stessa stringa attraversare i tre stati:
+
+```text
+[DEBUG] translator IPC miss: "The dragon roars from the mountain."
+IMPARATA → "The dragon roars from the mountain." = "[IT] The dragon roars..."
+[DEBUG] translator IPC hit:  "The dragon roars from the mountain." -> "[IT] The dragon roars..."
+```
+
+Senza TTL la terza riga non compare mai, ed è l'unica che dimostra qualcosa.
+
+**La trappola.** Un dedup e una cache si somigliano, ma la cache ha una chiave
+che prima o poi viene riempita, il dedup no: se la condizione che lo svuota può
+non verificarsi mai, serve una scadenza. Qui la condizione era "il server
+risponde", e sul miss il server tace per progetto.
+
 ---
 
 ## Come si aggiunge una voce

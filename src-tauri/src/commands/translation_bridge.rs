@@ -247,3 +247,32 @@ pub async fn translation_bridge_drain_misses(
     }
     Ok(BridgeResponse::ok(texts))
 }
+
+/// Salva tutti i dizionari in una directory (un file `<src>_<dst>.json` per
+/// coppia di lingue). È la memoria durevole di quello che il drain loop
+/// impara: senza questa, ogni sessione ripaga l'AI per le stesse stringhe.
+#[tauri::command]
+pub async fn translation_bridge_save_dir(
+    state: State<'_, TranslationBridgeState>,
+    dir: String,
+) -> Result<BridgeResponse<usize>, String> {
+    let dict = state.dictionary.read();
+    match dict.save_to_dir(&dir) {
+        Ok(count) => Ok(BridgeResponse::ok(count)),
+        Err(e) => Ok(BridgeResponse::err(e)),
+    }
+}
+
+/// Ricarica i dizionari salvati da `translation_bridge_save_dir`.
+/// Directory inesistente = 0, non un errore (prima sessione).
+#[tauri::command]
+pub async fn translation_bridge_load_dir(
+    state: State<'_, TranslationBridgeState>,
+    dir: String,
+) -> Result<BridgeResponse<usize>, String> {
+    let mut dict = state.dictionary.write();
+    match dict.load_from_dir(&dir) {
+        Ok(count) => Ok(BridgeResponse::ok(count)),
+        Err(e) => Ok(BridgeResponse::err(e)),
+    }
+}
