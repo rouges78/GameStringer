@@ -245,13 +245,45 @@ dizionario del Translation Bridge, miss → nessuna risposta (la DLL ha il suo
 timeout) e il testo entra nella coda drenata da `translation_bridge_drain_misses`.
 Un solo dizionario per shared memory e pipe. Il wire format è dettato dal
 binario C++ già spedito e verificato con un finto client nei test
-(`cargo test --lib translator_pipe`). L'anello ancora mancante è lato C++:
-il dllmain di gs-hook non chiama `IPC::Initialize()`/`StartReceiveThread()`,
-quindi serve un ritocco a `gs-hook/src/dllmain.cpp` e la ricompilazione delle
-DLL in `src-tauri/resources/gs-hook/` (il job CI `build-gs-hook` esiste già).
-Attenzione al punto caldo: `Translate()` su miss blocca fino a 2s
-(`ReceiveTranslateResponse(..., 2000)`) sul thread che disegna — prima di
-accendere l'IPC in gs-hook, quel percorso va reso non bloccante.
+(`cargo test --lib translator_pipe`). Il lato C++ è stato acceso lo stesso
+giorno: `gs-hook/src/dllmain.cpp` ora chiama `IPC::Initialize()` +
+`StartReceiveThread()`, e il percorso di miss in `Translate()` è
+fire-and-forget (la risposta rientra in cache dal receive thread via
+`SetTranslationArrivedCallback`), perché prima bloccava fino a 2s sul thread
+che disegna.
+
+### Una pipe letta e scritta insieme richiede `FILE_FLAG_OVERLAPPED`
+
+Accendere l'IPC in gs-hook freezava il gioco al primo miss. Non era il
+timeout di 2s: era che `ipc.cpp` apriva la pipe **senza**
+`FILE_FLAG_OVERLAPPED`. Su un handle sincrono il kernel serializza le
+operazioni sullo stesso file object, quindi col receive thread fermo dentro
+`ReadFile` la `WriteFile` del render thread si accodava dietro la lettura —
+e quella lettura poteva completarsi solo quando fosse arrivata la richiesta
+che stava bloccando. Attesa circolare.
+
+**Come è stato misurato.** Iniezione reale nella testapp GDI
+(`gs-hook/testapp`), sonda `SendMessageTimeout(WM_NULL, 2000ms)` sulla
+finestra per distinguere "lento" da "bloccato", e log su entrambi i lati:
+
+| | UI responsiva | log DLL | lato server |
+|---|---|---|---|
+| handle sincrono | **False** | 3 righe (solo attivazione) | connessione, **0 richieste** |
+| handle overlapped | True | cattura intatta | 3 hit tradotti + 2 miss in coda |
+
+La cura: handle overlapped e un **thread di invio dedicato** con coda: il
+thread di rendering tocca solo un mutex e una condvar, mai l'I/O. Lo
+spegnimento va in ordine `StopReceiveThread()` (cancella le overlapped in
+corso e fa join) **poi** `Shutdown()` (chiude l'handle): chiudere l'handle
+mentre un thread attende su un `OVERLAPPED` è use-after-free.
+
+**La trappola.** Il freeze sembrava ovviamente colpa del timeout di 2s nel
+percorso di miss, ed era la pista sbagliata: quel timeout non scattava
+nemmeno, perché la richiesta non partiva. Il metodo che ha risolto è stato
+bisecare per esperimento invece che per lettura — DLL di giugno (cattura
+OK), HEAD ricompilato (cattura OK), mie modifiche con server **spento**
+(cattura OK), mie modifiche con server **acceso** (freeze). L'ultimo passo
+isola il colpevole al ramo "IPC connessa" in tre minuti.
 
 **La trappola.** Due nomi che differiscono di due lettere sembrano un refuso da
 sistemare. Prima di allinearli, leggi cosa c'è dentro i binari: qui erano due
