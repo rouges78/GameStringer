@@ -62,5 +62,9 @@ set_target_properties(gs_hook PROPERTIES OUTPUT_NAME "gs-hook")
 # Va compilato nella stessa arch del target: il build dual-arch (build-all.ps1)
 # configura due build dir, -A Win32 e -A x64, e produce gs-injector.exe per
 # entrambe. NON dipende da MinHook né dal core: solo Win32 API.
-add_executable(gs-injector injector/injector_main.cpp)
+# injector.rc porta i metadati di versione: un eseguibile anonimo che fa
+# injection viene classificato come dropper dalle euristiche ML (misurato:
+# Program:Win32/Contebrew.A!ml sulla build x86). Dichiarare prodotto, descrizione
+# e versione abbassa il punteggio senza cambiare comportamento.
+add_executable(gs-injector injector/injector_main.cpp injector/injector.rc)
 set_target_properties(gs-injector PROPERTIES OUTPUT_NAME "gs-injector")

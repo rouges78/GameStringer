@@ -1,0 +1,53 @@
+// Metadati di versione per gs-injector.exe.
+//
+// PERCHÉ ESISTE (21/08/2026)
+// Microsoft Defender metteva in quarantena la build x86 come
+// `Program:Win32/Contebrew.A!ml` — un'euristica di machine learning. Il profilo
+// che la fa scattare è: eseguibile piccolo, NON firmato, SENZA metadati, che
+// chiama OpenProcess + VirtualAllocEx + WriteProcessMemory + CreateRemoteThread.
+// Un binario anonimo è indistinguibile da un dropper; uno che dichiara chi è,
+// cosa fa e a quale prodotto appartiene abbassa il punteggio euristico senza
+// cambiare una riga di comportamento.
+//
+// Questo NON sostituisce la firma digitale, che resta la cura vera (vedi
+// docs/METODI-DI-TRADUZIONE.md e il supporto in build-all.ps1): è il pezzo che
+// si può fare senza certificato.
+
+#include <winver.h>
+
+#define GS_VERSION      1,17,0,0
+#define GS_VERSION_STR  "1.17.0.0"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    GS_VERSION
+ PRODUCTVERSION GS_VERSION
+ FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS      VS_FF_DEBUG
+#else
+ FILEFLAGS      0x0L
+#endif
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE       VFT_APP
+ FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"   // inglese (US), Unicode
+        BEGIN
+            VALUE "CompanyName",      "GameStringer"
+            VALUE "FileDescription",  "GameStringer translation hook loader"
+            VALUE "FileVersion",      GS_VERSION_STR
+            VALUE "InternalName",     "gs-injector"
+            VALUE "LegalCopyright",   "GameStringer"
+            VALUE "OriginalFilename", "gs-injector.exe"
+            VALUE "ProductName",      "GameStringer"
+            VALUE "ProductVersion",   GS_VERSION_STR
+            VALUE "Comments",         "Loads the GameStringer translation DLL into a game the user has chosen to translate. Ships with GameStringer; not intended for standalone use."
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
