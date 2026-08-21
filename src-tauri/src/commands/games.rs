@@ -1845,7 +1845,44 @@ pub async fn find_executables_in_folder(folder_path: String) -> Result<Vec<Strin
                     .then(a.2.to_lowercase().cmp(&b.2.to_lowercase()))
             });
 
-            let executables: Vec<String> = candidates.into_iter().map(|(_, _, n)| n).collect();
+            let mut executables: Vec<String> = candidates.into_iter().map(|(_, _, n)| n).collect();
+
+            // Se la radice non ha eseguibili, guarda UN livello più sotto: molte
+            // installazioni Steam mettono il gioco in una sottocartella (Yume
+            // Nikki sta in `common/Yume Nikki/yumenikki/RPG_RT.exe`). Senza
+            // questo, l'esito è peggiore di «non trovato»: chi chiama ripiega
+            // sul nome del gioco (`YumeNikki.exe`), che non esiste, e cerca poi
+            // un processo che non esisterà mai.
+            //
+            // Un livello solo, e solo quando la radice è vuota: non è una
+            // scansione del disco, è il caso concreto che si incontra.
+            if executables.is_empty() {
+                if let Ok(mut dirs) = tokio::fs::read_dir(&folder_path).await {
+                    while let Ok(Some(dir)) = dirs.next_entry().await {
+                        let sub = dir.path();
+                        if !sub.is_dir() {
+                            continue;
+                        }
+                        if let Ok(mut inner) = tokio::fs::read_dir(&sub).await {
+                            while let Ok(Some(e)) = inner.next_entry().await {
+                                let p = e.path();
+                                if p.extension().map(|x| x.to_string_lossy().to_lowercase())
+                                    == Some("exe".to_string())
+                                {
+                                    if let Some(n) = p.file_name() {
+                                        executables.push(n.to_string_lossy().to_string());
+                                    }
+                                }
+                            }
+                        }
+                        if !executables.is_empty() {
+                            log::info!("📁 Eseguibili trovati in sottocartella: {:?}", sub);
+                            break;
+                        }
+                    }
+                }
+            }
+
             log::info!("✅ Trovati {} eseguibili (migliore: {:?})", executables.len(), executables.first());
             Ok(executables)
         }

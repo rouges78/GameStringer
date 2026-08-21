@@ -240,6 +240,34 @@ data_files: []          estrazione: 0 stringhe
 Che sono esattamente le condizioni del ramo classico (`isMvMz` falso, stringhe
 `<= 0`), quindi ora scatta — e con esso il fallback a runtime della PR #87.
 
+**Anche l'eseguibile va cercato in profondità.** `find_executables_in_folder`
+leggeva solo la radice: su `common/Yume Nikki` non trovava nulla, perché
+`RPG_RT.exe` sta in `yumenikki/`. L'esito era peggiore di «non trovato»: chi
+chiama ripiega sul nome del gioco (`YumeNikki.exe`), che non esiste, e poi cerca
+un processo che non esisterà mai — il fallback direbbe «avvia il gioco» a gioco
+già avviato. Ora, **se e solo se** la radice è vuota, guarda un livello sotto.
+Con questa, la stessa lezione è comparsa in quattro punti indipendenti del
+codice: i `Paks` di Unreal, il rilevatore RPG Maker, l'engine detector e la
+ricerca dell'eseguibile.
+
+**Prova del flusso completo (21/08/2026).** Con Yume Nikki in esecuzione, premuto
+«STRING IT!» nella scheda del gioco. L'app mostrava già la strategia corretta —
+«RPG Maker · RT — 0 file, 0 stringhe» — e il flusso è arrivato in fondo:
+
+```text
+[gs-hook] connesso a GameStringer via IPC
+[gs-hook] dizionario pre-caricato: 0 voci da …\GameStringer\gs-hook-cache.gstc
+[gs-hook] sorgente attiva: GDI (ExtTextOutW/DrawTextW) (livello 2)
+[gs-hook] sorgente attiva: GDI/GetGlyphOutline (estrazione) (livello 2)
+```
+
+Tre conferme indipendenti: il log scritto nell'istante del clic; `RPG_RT.exe` è
+a **32 bit**, quindi è stata iniettata la x86 e la selezione dual-arch ha
+funzionato; ed esiste una finestra «GameStringer Overlay», che
+`ensure_overlay_window()` crea **solo** dentro il ramo di successo
+dell'iniezione. È la prima volta che il percorso dal pulsante al gioco viene
+percorso per intero.
+
 **La trappola.** Un ramo con un messaggio scritto bene, un commento circostanziato
 e persino dei test a valle sembra codice vivo. Questo era morto da sempre, e non
 per un difetto suo: per una condizione a monte che non poteva essere vera.
