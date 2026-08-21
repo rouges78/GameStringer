@@ -952,11 +952,11 @@
     "unityIl2cppDetail": "Unity IL2CPP — i testi sono compilati nei binari: si traducono mentre giochi, con BepInEx + XUnity.",
     "unityUnknownRuntime": "Unity — runtime non determinato (BepInEx + XUnity).",
     "runtimeFallbackInjecting": "Nessuna stringa scritta nei file: passo alla traduzione a runtime...",
-    "runtimeFallbackAwaitLaunch": "Questo gioco non si lascia tradurre nei file. Avvialo e la traduzione partira' a schermo mentre giochi.",
+    "runtimeFallbackAwaitLaunch": "Questo gioco non si lascia tradurre nei file. Avvialo e la traduzione partirà a schermo mentre giochi.",
     "runtimeFallbackBlocked": {
-      "not-windows": "La traduzione a runtime e' disponibile solo su Windows.",
+      "not-windows": "La traduzione a runtime è disponibile solo su Windows.",
       "hook-missing": "Componenti della traduzione a runtime non trovati: reinstalla GameStringer.",
-      "anti-cheat": "Il gioco usa un anti-cheat: non lo tocchiamo, ne' nei file ne' in memoria.",
+      "anti-cheat": "Il gioco usa un anti-cheat: non lo tocchiamo, né nei file né in memoria.",
       "unknown-process": "Eseguibile del gioco non identificato: non so in quale processo agire."
     },
     "runtimeFallbackReady": "Traduzione a runtime attiva: le righe appariranno tradotte mentre giochi.",
