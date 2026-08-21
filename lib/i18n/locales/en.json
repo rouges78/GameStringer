@@ -564,7 +564,9 @@
     "searchPh": "Search notifications...",
     "searchAria": "Search notifications by title, message or category",
     "loadingAria": "Loading notifications",
-    "markReadTitle": "Mark as read"
+    "markReadTitle": "Mark as read",
+    "selectionMode": "Selection mode",
+    "exitSelectionMode": "Exit selection mode"
   },
   "wadExtractor": {
     "totalUnit": "total",
@@ -4097,7 +4099,17 @@
     "dryRunPipelineScan": "Dry Run — Pipeline scan",
     "dryRunPipelineScanDesc": "Automatic detect + extract check on every installed game (without translating)",
     "stringIt": "String it!",
-    "failed": "failed"
+    "failed": "failed",
+    "moreOptions": "More options",
+    "preview": "Preview",
+    "clear": "Clear",
+    "clearChat": "Clear chat",
+    "statistics": "Statistics",
+    "collapse": "Collapse",
+    "openFolder": "Open folder",
+    "pause": "Pause",
+    "resume": "Resume",
+    "play": "Play"
   },
   "languages": {
     "cs": "Čeština",
@@ -5374,7 +5386,9 @@
     "modelsAvailable": "models available",
     "online": "Online",
     "offline": "Offline",
-    "subtitle": "Automated AI translation pipeline"
+    "subtitle": "Automated AI translation pipeline",
+    "addTerm": "Add term to glossary",
+    "removeTerm": "Remove term from glossary"
   },
   "gamePatcher": {
     "title": "Game Patcher",

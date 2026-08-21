@@ -564,7 +564,9 @@
     "searchPh": "Rechercher des notifications...",
     "searchAria": "Rechercher des notifications par titre, message ou catégorie",
     "loadingAria": "Chargement des notifications",
-    "markReadTitle": "Marquer comme lu"
+    "markReadTitle": "Marquer comme lu",
+    "selectionMode": "Mode sélection",
+    "exitSelectionMode": "Quitter le mode sélection"
   },
   "wadExtractor": {
     "totalUnit": "total",
@@ -3991,7 +3993,17 @@
     "dryRunPipelineScan": "Dry Run — Analyse du pipeline",
     "dryRunPipelineScanDesc": "Vérification automatique de la détection et de l'extraction sur tous les jeux installés (sans traduire)",
     "stringIt": "String it!",
-    "failed": "échouées"
+    "failed": "échouées",
+    "moreOptions": "Plus d'options",
+    "preview": "Aperçu",
+    "clear": "Effacer",
+    "clearChat": "Effacer la conversation",
+    "statistics": "Statistiques",
+    "collapse": "Réduire",
+    "openFolder": "Ouvrir le dossier",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "play": "Lire"
   },
   "languages": {
     "cs": "Čeština",
@@ -4978,7 +4990,9 @@
     "modelsAvailable": "modèles disponibles",
     "online": "En ligne",
     "offline": "Hors ligne",
-    "subtitle": "Pipeline de traduction AI automatisé"
+    "subtitle": "Pipeline de traduction AI automatisé",
+    "addTerm": "Ajouter le terme au glossaire",
+    "removeTerm": "Retirer le terme du glossaire"
   },
   "dictionary": {
     "title": "Dictionnaire",
