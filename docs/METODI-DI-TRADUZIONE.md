@@ -178,6 +178,74 @@ nulla — quel gioco non la spedisce — ma non è il caso generale.
 
 ---
 
+## RPG Maker
+
+### RPG Maker 2000/2003 non veniva riconosciuto affatto
+
+**Il fatto.** GameStringer aveva un ramo dedicato che si presentava come
+«RPG Maker classico (RPG_RT 2000/2003)» — con tanto di messaggio all'utente e,
+da agosto 2026, l'aggancio al fallback a runtime. Quel ramo era
+**irraggiungibile proprio per i giochi RPG_RT**: nessuno dei tre strati di
+rilevamento sapeva riconoscerli.
+
+**Come è emerso.** Installando Yume Nikki (RPG Maker 2003, gratuito su Steam,
+app 650700) per provare il flusso completo. Interrogando i comandi direttamente
+con `cargo run --example probe_rpgmaker -- "<percorso>"`:
+
+```text
+detect_rpgmaker_game -> ERRORE: Non sembra essere un gioco RPG Maker
+```
+
+…su una cartella che contiene `RPG_RT.exe`, `RPG_RT.ldb`, `RPG_RT.lmt`,
+`RPG_RT.ini` e 60+ `Map####.lmu`.
+
+**Perché.** Tre strati, tutti ciechi allo stesso modo:
+
+1. `engine_detector::is_rpg_maker()` cercava `www/data/System.json` (MV/MZ),
+   `Game.rpgproject` e `rgss*.dll` (XP/VX/VXAce). Nessun controllo su `RPG_RT.*`.
+2. `RpgMakerVersion` non aveva una variante per 2000/2003: si ricadeva in
+   `Unknown`, e `detect_rpgmaker_game` restituiva errore.
+3. Nel frontend quell'errore finiva in
+   `} catch { /* detect fallito → prosegui col workflow file-based normale */ }`,
+   quindi il ramo «classico» veniva saltato **in silenzio**.
+
+**La cura.** Variante `RpgMakerVersion::RT`, rilevamento sui file **dati** e
+ricerca in profondità. Per RT `find_data_files` ritorna `Ok(vec![])`: zero file
+dati **non è un errore**, è il fatto che manda questi giochi al runtime — se
+tornasse `Err`, il rilevamento fallirebbe e il ramo resterebbe irraggiungibile
+come prima.
+
+**Due accortezze, entrambe già costate altrove.**
+
+- **Mai cercare l'eseguibile.** Moltissimi giochi RPG_RT rinominano `RPG_RT.exe`
+  col titolo. `RPG_RT.ldb` e `RPG_RT.lmt` non si toccano mai: sono quelli il
+  marcatore. Una scansione della libreria che cerca `RPG_RT.exe` conclude «non
+  ne hai» anche quando ne hai.
+- **La profondità va cercata.** Steam installa Yume Nikki in
+  `common/Yume Nikki/**yumenikki**/`: cercare solo nella radice non lo trova. È
+  identica alla trappola dei `Paks` di Unreal, in un altro punto del codice.
+  `find_rpg_rt_dir` cerca fino a 3 livelli e `detect_rpgmaker_game` **riporta la
+  cartella trovata**, non la radice, così chi legge il risultato non deve
+  rifare la ricerca.
+
+**Dopo.** Dalla radice d'installazione, cioè il percorso che passa l'app:
+
+```text
+version: RT
+path:    …\Yume Nikki\yumenikki      (risolto, non la radice)
+title:   Yume Nikki
+data_files: []          estrazione: 0 stringhe
+```
+
+Che sono esattamente le condizioni del ramo classico (`isMvMz` falso, stringhe
+`<= 0`), quindi ora scatta — e con esso il fallback a runtime della PR #87.
+
+**La trappola.** Un ramo con un messaggio scritto bene, un commento circostanziato
+e persino dei test a valle sembra codice vivo. Questo era morto da sempre, e non
+per un difetto suo: per una condizione a monte che non poteva essere vera.
+Prima di credere che un percorso funzioni, va provato con un input che lo
+imbocchi davvero — qui è bastato installare un gioco.
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026

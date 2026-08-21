@@ -545,7 +545,33 @@ fn is_hendrix(path: &Path) -> bool {
     false
 }
 
+/// True se `root` (o una sottocartella entro `max_depth`) contiene i file dati
+/// di RPG Maker 2000/2003. Steam installa spesso il gioco in una sottocartella,
+/// quindi la profondita' va cercata. Vedi `find_rpg_rt_dir` nel patcher.
+fn rpg_rt_dir_exists(root: &Path, max_depth: usize) -> bool {
+    if root.join("RPG_RT.ldb").exists() || root.join("RPG_RT.lmt").exists() {
+        return true;
+    }
+    if max_depth == 0 {
+        return false;
+    }
+    match std::fs::read_dir(root) {
+        Ok(entries) => entries.flatten().any(|e| {
+            let p = e.path();
+            p.is_dir() && rpg_rt_dir_exists(&p, max_depth - 1)
+        }),
+        Err(_) => false,
+    }
+}
+
 fn is_rpg_maker(path: &Path) -> bool {
+    // RPG Maker 2000/2003 (RPG_RT). Si guardano i file DATI, non l'eseguibile:
+    // moltissimi giochi rinominano RPG_RT.exe col titolo (Yume Nikki lo chiama
+    // RPG_RT.exe, Ib no), ma RPG_RT.ldb e RPG_RT.lmt non si toccano mai.
+    if rpg_rt_dir_exists(path, 3) {
+        return true;
+    }
+
     // RPG Maker MV/MZ
     if path.join("www").exists() && path.join("www/data/System.json").exists() {
         return true;
