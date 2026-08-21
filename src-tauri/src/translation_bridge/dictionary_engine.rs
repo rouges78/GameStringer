@@ -8,9 +8,10 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{info, warn};
 
 use super::protocol::TranslationRequest;
 
@@ -27,15 +28,16 @@ pub struct TranslationEntry {
     pub verified: bool,
 }
 
-/// Dizionario per una coppia di lingue
+/// Limite massimo di entry per dizionario (previene OOM con file enormi)
+const MAX_DICTIONARY_ENTRIES: usize = 500_000;
+
+/// Dizionario per una coppia di lingue.
+/// Storage singolo indicizzato per hash FNV-1a; il testo originale è dentro l'entry
+/// per risolvere collisioni hash senza duplicare l'intera mappa.
 #[derive(Debug, Default)]
 pub struct LanguageDictionary {
-    /// Traduzioni indicizzate per hash
-    translations_by_hash: HashMap<u64, TranslationEntry>,
-    /// Traduzioni indicizzate per testo originale (fallback)
-    translations_by_text: HashMap<String, TranslationEntry>,
-    /// Numero di traduzioni
-    count: usize,
+    /// Traduzioni indicizzate per hash — unico storage
+    entries: HashMap<u64, TranslationEntry>,
 }
 
 impl LanguageDictionary {
@@ -43,48 +45,63 @@ impl LanguageDictionary {
     pub fn new() -> Self {
         Self::default()
     }
-    
-    /// Aggiunge una traduzione
-    pub fn add(&mut self, original: String, translated: String) {
+
+    /// Aggiunge una traduzione. Sovrascrive se la chiave esiste già (nessun count drift).
+    /// Ritorna false se il dizionario ha raggiunto il limite massimo.
+    pub fn add(&mut self, original: String, translated: String) -> bool {
+        use std::collections::hash_map::Entry;
         let hash = TranslationRequest::compute_hash(&original);
-        let entry = TranslationEntry {
-            original: original.clone(),
-            translated,
-            context: None,
-            verified: false,
-        };
-        
-        self.translations_by_hash.insert(hash, entry.clone());
-        self.translations_by_text.insert(original, entry);
-        self.count += 1;
+        let at_capacity = self.entries.len() >= MAX_DICTIONARY_ENTRIES;
+
+        match self.entries.entry(hash) {
+            Entry::Occupied(mut e) => {
+                let entry = e.get_mut();
+                entry.original = original;
+                entry.translated = translated;
+                true
+            }
+            Entry::Vacant(e) => {
+                if at_capacity { return false; }
+                e.insert(TranslationEntry {
+                    original,
+                    translated,
+                    context: None,
+                    verified: false,
+                });
+                true
+            }
+        }
     }
-    
-    /// Cerca traduzione per hash (veloce)
-    pub fn get_by_hash(&self, hash: u64) -> Option<&TranslationEntry> {
-        self.translations_by_hash.get(&hash)
+
+    /// Cerca traduzione per hash (O(1), verifica collisioni)
+    pub fn get_by_hash(&self, hash: u64, original_text: &str) -> Option<&TranslationEntry> {
+        self.entries.get(&hash).filter(|e| e.original == original_text)
     }
-    
-    /// Cerca traduzione per testo (fallback)
-    pub fn get_by_text(&self, text: &str) -> Option<&TranslationEntry> {
-        self.translations_by_text.get(text)
+
+    /// Controlla se un hash esiste (per diagnostica collisioni)
+    pub fn has_hash(&self, hash: u64) -> bool {
+        self.entries.contains_key(&hash)
     }
-    
+
     /// Numero di traduzioni
     pub fn len(&self) -> usize {
-        self.count
+        self.entries.len()
     }
-    
+
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
-        self.count == 0
+        self.entries.is_empty()
     }
-    
+
     /// Pulisce il dizionario
     #[allow(dead_code)]
     pub fn clear(&mut self) {
-        self.translations_by_hash.clear();
-        self.translations_by_text.clear();
-        self.count = 0;
+        self.entries.clear();
+    }
+
+    /// Iteratore sulle entry (per export)
+    pub fn iter(&self) -> impl Iterator<Item = &TranslationEntry> {
+        self.entries.values()
     }
 }
 
@@ -97,9 +114,9 @@ pub struct DictionaryEngine {
     active_source: String,
     /// Lingua target attiva
     active_target: String,
-    /// Path per hot-reload
     #[allow(dead_code)]
-    watch_paths: Vec<String>,
+    /// Path per hot-reload con ultimo modification time noto
+    watch_paths: HashMap<String, Option<SystemTime>>,
 }
 
 impl DictionaryEngine {
@@ -108,7 +125,7 @@ impl DictionaryEngine {
             dictionaries: HashMap::new(),
             active_source: "en".to_string(),
             active_target: "it".to_string(),
-            watch_paths: Vec::new(),
+            watch_paths: HashMap::new(),
         }
     }
     
@@ -185,81 +202,103 @@ impl DictionaryEngine {
         Err("Formato JSON non riconosciuto".to_string())
     }
     
-    /// Carica traduzioni da file CSV
+    /// Carica traduzioni da file CSV.
+    /// Supporta campi quotati con virgole interne e escape `""` → `"`.
     #[allow(dead_code)]
     pub fn load_from_csv(&mut self, path: &str, source_col: usize, target_col: usize) -> Result<usize, String> {
         let path = Path::new(path);
-        
+
         if !path.exists() {
             return Err(format!("File non trovato: {}", path.display()));
         }
-        
+
         let content = fs::read_to_string(path)
             .map_err(|e| format!("Errore lettura file: {}", e))?;
-        
+
         let mut translations = Vec::new();
-        
+
         for (line_num, line) in content.lines().enumerate() {
-            // Salta header
-            if line_num == 0 {
-                continue;
-            }
-            
-            let cols: Vec<&str> = line.split(',').collect();
-            
-            if cols.len() > source_col && cols.len() > target_col {
-                let original = cols[source_col].trim().trim_matches('"').to_string();
-                let translated = cols[target_col].trim().trim_matches('"').to_string();
-                
+            if line_num == 0 { continue; } // skip header
+
+            let cols = Self::parse_csv_line(line);
+            let max_col = source_col.max(target_col);
+
+            if cols.len() > max_col {
+                let original = cols[source_col].trim().to_string();
+                let translated = cols[target_col].trim().to_string();
+
                 if !original.is_empty() && !translated.is_empty() {
                     translations.push((original, translated));
                 }
             }
         }
-        
+
         Ok(self.load_translations(&self.active_source.clone(), &self.active_target.clone(), translations))
+    }
+
+    /// Parse di una riga CSV con supporto campi quotati e escape `""`.
+    fn parse_csv_line(line: &str) -> Vec<String> {
+        let mut fields = Vec::new();
+        let mut current = String::new();
+        let mut in_quotes = false;
+        let mut chars = line.chars().peekable();
+
+        while let Some(ch) = chars.next() {
+            match ch {
+                '"' if !in_quotes && current.is_empty() => {
+                    in_quotes = true;
+                }
+                '"' if in_quotes => {
+                    // "" escape → literal "
+                    if chars.peek() == Some(&'"') {
+                        current.push('"');
+                        chars.next();
+                    } else {
+                        in_quotes = false;
+                    }
+                }
+                ',' if !in_quotes => {
+                    fields.push(current.clone());
+                    current.clear();
+                }
+                _ => {
+                    current.push(ch);
+                }
+            }
+        }
+        fields.push(current);
+        fields
     }
     
     /// Cerca una traduzione (usa la coppia di lingue attiva)
     pub fn get_translation(&self, hash: u64, original_text: &str) -> Option<String> {
         let key = Self::get_key(&self.active_source, &self.active_target);
-        
+
         if let Some(dict) = self.dictionaries.get(&key) {
-            // Prima prova con hash (più veloce)
-            if let Some(entry) = dict.get_by_hash(hash) {
-                // Verifica che l'hash non sia una collisione
-                if entry.original == original_text {
-                    return Some(entry.translated.clone());
-                }
-            }
-            
-            // Fallback su ricerca testuale
-            if let Some(entry) = dict.get_by_text(original_text) {
+            if let Some(entry) = dict.get_by_hash(hash, original_text) {
                 return Some(entry.translated.clone());
             }
+            // Hash presente ma original diverso = collisione FNV-1a (estremamente rara)
+            if dict.has_hash(hash) {
+                info!("[DictionaryEngine] Collisione hash FNV-1a per '{}' (hash={})", original_text, hash);
+            }
         }
-        
+
         None
     }
-    
+
     /// Cerca traduzione con coppia di lingue specifica
     #[allow(dead_code)]
     pub fn get_translation_for(&self, source: &str, target: &str, original_text: &str) -> Option<String> {
         let key = Self::get_key(source, target);
         let hash = TranslationRequest::compute_hash(original_text);
-        
+
         if let Some(dict) = self.dictionaries.get(&key) {
-            if let Some(entry) = dict.get_by_hash(hash) {
-                if entry.original == original_text {
-                    return Some(entry.translated.clone());
-                }
-            }
-            
-            if let Some(entry) = dict.get_by_text(original_text) {
+            if let Some(entry) = dict.get_by_hash(hash, original_text) {
                 return Some(entry.translated.clone());
             }
         }
-        
+
         None
     }
     
@@ -270,6 +309,70 @@ impl DictionaryEngine {
         dict.add(original, translated);
     }
     
+    /// Batch translation lookup — traduce più testi in una sola chiamata
+    #[allow(dead_code)]
+    pub fn batch_translate(&self, texts: &[String]) -> Vec<Option<String>> {
+        let key = Self::get_key(&self.active_source, &self.active_target);
+
+        if let Some(dict) = self.dictionaries.get(&key) {
+            texts.iter().map(|text| {
+                let hash = TranslationRequest::compute_hash(text);
+                dict.get_by_hash(hash, text).map(|e| e.translated.clone())
+            }).collect()
+        } else {
+            vec![None; texts.len()]
+        }
+    }
+
+    /// Registra un file JSON per hot-reload. Carica immediatamente e memorizza il mtime.
+    #[allow(dead_code)]
+    pub fn watch_file(&mut self, path: &str) -> Result<usize, String> {
+        let count = self.load_from_json(path)?;
+        let mtime = fs::metadata(path).ok().and_then(|m| m.modified().ok());
+        self.watch_paths.insert(path.to_string(), mtime);
+        info!("[DictionaryEngine] Watching file: {} ({} traduzioni)", path, count);
+        Ok(count)
+    }
+
+    /// Controlla tutti i file watched per modifiche e ricarica quelli cambiati.
+    /// Ritorna il numero totale di traduzioni ricaricate.
+    #[allow(dead_code)]
+    pub fn check_and_reload(&mut self) -> usize {
+        // Fase 1: raccogli i path da ricaricare (borrow immutabile)
+        let mut to_reload: Vec<(String, SystemTime)> = Vec::new();
+
+        for (path, last_mtime) in &self.watch_paths {
+            if let Ok(meta) = fs::metadata(path) {
+                if let Ok(current_mtime) = meta.modified() {
+                    let changed = match last_mtime {
+                        Some(prev) => current_mtime > *prev,
+                        None => true,
+                    };
+                    if changed {
+                        to_reload.push((path.clone(), current_mtime));
+                    }
+                }
+            }
+        }
+
+        // Fase 2: ricarica i file modificati (borrow mutabile)
+        let mut reloaded = 0;
+        for (path, mtime) in to_reload {
+            match self.load_from_json(&path) {
+                Ok(count) => {
+                    info!("[DictionaryEngine] Hot-reload: {} ({} traduzioni)", path, count);
+                    reloaded += count;
+                    self.watch_paths.insert(path, Some(mtime));
+                }
+                Err(e) => {
+                    warn!("[DictionaryEngine] Hot-reload errore {}: {}", path, e);
+                }
+            }
+        }
+
+        reloaded
+    }
+
     /// Ottieni statistiche
     pub fn get_stats(&self) -> DictionaryStats {
         let mut total_entries = 0;
@@ -288,6 +391,67 @@ impl DictionaryEngine {
         }
     }
     
+    /// Salva tutti i dizionari su disco in formato JSON
+    #[allow(dead_code)]
+    pub fn save_to_dir(&self, dir: &str) -> Result<usize, String> {
+        let dir_path = Path::new(dir);
+        fs::create_dir_all(dir_path)
+            .map_err(|e| format!("Impossibile creare directory: {}", e))?;
+
+        let mut saved = 0;
+        for (key, dict) in &self.dictionaries {
+            if dict.is_empty() { continue; }
+            let file_path = dir_path.join(format!("{}.json", key));
+            let translations: HashMap<String, String> = dict.iter()
+                .map(|entry| (entry.original.clone(), entry.translated.clone()))
+                .collect();
+            let json = serde_json::to_string_pretty(&translations)
+                .map_err(|e| format!("Errore serializzazione {}: {}", key, e))?;
+            fs::write(&file_path, json)
+                .map_err(|e| format!("Errore scrittura {}: {}", file_path.display(), e))?;
+            saved += translations.len();
+        }
+        info!("[DictionaryEngine] Salvate {} traduzioni in {}", saved, dir);
+        Ok(saved)
+    }
+
+    /// Carica tutti i dizionari da una directory
+    #[allow(dead_code)]
+    pub fn load_from_dir(&mut self, dir: &str) -> Result<usize, String> {
+        let dir_path = Path::new(dir);
+        if !dir_path.exists() { return Ok(0); }
+
+        let mut loaded = 0;
+        let entries = fs::read_dir(dir_path)
+            .map_err(|e| format!("Errore lettura directory: {}", e))?;
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("json") { continue; }
+
+            let stem = path.file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
+            // Il nome file è "source_target.json" (es. "en_it.json")
+            let parts: Vec<&str> = stem.splitn(2, '_').collect();
+            if parts.len() != 2 { continue; }
+
+            let content = fs::read_to_string(&path)
+                .map_err(|e| format!("Errore lettura {}: {}", path.display(), e))?;
+            let map: HashMap<String, String> = serde_json::from_str(&content)
+                .map_err(|e| format!("Errore parsing {}: {}", path.display(), e))?;
+
+            let translations: Vec<(String, String)> = map.into_iter().collect();
+            let count = translations.len();
+            self.load_translations(parts[0], parts[1], translations);
+            loaded += count;
+        }
+
+        info!("[DictionaryEngine] Caricate {} traduzioni da {}", loaded, dir);
+        Ok(loaded)
+    }
+
     /// Pulisce tutti i dizionari
     pub fn clear_all(&mut self) {
         self.dictionaries.clear();
@@ -311,9 +475,8 @@ impl DictionaryEngine {
         let dict = self.dictionaries.get(&key)
             .ok_or_else(|| "Dizionario non trovato".to_string())?;
         
-        let translations: HashMap<String, String> = dict.translations_by_text
-            .iter()
-            .map(|(k, v)| (k.clone(), v.translated.clone()))
+        let translations: HashMap<String, String> = dict.iter()
+            .map(|entry| (entry.original.clone(), entry.translated.clone()))
             .collect();
         
         let json = serde_json::to_string_pretty(&translations)
@@ -378,6 +541,21 @@ mod tests {
         assert_eq!(stats.total_entries, 2);
     }
     
+    #[test]
+    fn test_duplicate_key_no_count_drift() {
+        let mut engine = DictionaryEngine::new();
+        engine.set_active_languages("en", "it");
+
+        engine.add_translation("Hello".to_string(), "Ciao".to_string());
+        engine.add_translation("Hello".to_string(), "Salve".to_string()); // update, not new
+
+        let stats = engine.get_stats();
+        assert_eq!(stats.total_entries, 1, "duplicate key should not increment count");
+
+        let hash = TranslationRequest::compute_hash("Hello");
+        assert_eq!(engine.get_translation(hash, "Hello"), Some("Salve".to_string()));
+    }
+
     #[test]
     fn test_multiple_language_pairs() {
         let mut engine = DictionaryEngine::new();
