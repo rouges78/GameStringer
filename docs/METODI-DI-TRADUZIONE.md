@@ -956,6 +956,40 @@ solo (vedi l'intestazione di quel file).
    deve fare l'utente consapevolmente — non un ripiego da suggerire in un
    messaggio d'errore.
 
+**Cosa è stato fatto, e cosa ha risolto davvero (21/08/2026).**
+
+La strada 2 — la meno promettente sulla carta — **è bastata**. Aggiungendo
+`gs-hook/injector/injector.rc` (CompanyName, FileDescription, ProductName,
+OriginalFilename, versione, e un Comments che dice a cosa serve il programma) e
+ricompilando, la stessa macchina con lo stesso Defender **non mette più in
+quarantena l'injector x86**:
+
+```text
+Start-MpScan -ScanType CustomScan -ScanPath ...\x86\gs-injector.exe
+  file ancora presente: True
+  esecuzione: «uso: gs-injector.exe <pid> <percorso-dll>»   -> parte
+  Get-MpThreatDetection negli ultimi 10 minuti: nessuno
+```
+
+Prima erano tre rilevamenti su tre tentativi. **Non una riga di comportamento è
+cambiata**: stesse API, stessa sequenza, stessa dimensione. È cambiato solo il
+fatto che il binario dichiara chi è. Questo dice quanto peso ha, nel punteggio
+euristico, l'anonimato di un eseguibile.
+
+La strada 1 resta la cura definitiva ed è **pronta ma non applicata**:
+`build-all.ps1` accetta `-SignThumbprint` (o `$env:GS_SIGN_THUMBPRINT`), firma con
+`signtool` marca temporale inclusa, e **riverifica la firma dopo averla apposta**
+— perché `signtool sign` può uscire 0 e lasciare una firma che non convalida.
+Senza thumbprint la firma viene saltata con un avviso e il build prosegue.
+
+**Un certificato auto-generato qui non serve a niente.** Non porta attendibilità
+né reputazione: si otterrebbe un binario firmato messo in quarantena esattamente
+come prima. Serve un certificato vero — EV se si vuole reputazione immediata, OV
+se si accetta di costruirsela nel tempo. Su questa macchina non ce n'è nessuno
+(`Get-ChildItem Cert:\CurrentUser\My, Cert:\LocalMachine\My -CodeSigningCert`
+non restituisce nulla), quindi il percorso di firma è scritto e non è provato:
+va esercitato la prima volta che un certificato esiste davvero.
+
 **La trappola.** «L'iniezione ha funzionato» non vuol dire «l'iniezione
 funzionerà». Qui ha funzionato **una volta sola**, e il fallimento successivo non
 somiglia a un problema di antivirus: somiglia a un file mancante. Chiunque
