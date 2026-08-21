@@ -680,6 +680,72 @@ persistenza gratuita fra sessioni, ma il file è uno solo per coppia di lingue:
 due giochi diversi si sovrascrivono a vicenda. Innocuo finché le traduzioni sono
 testo→testo, da rivedere se serviranno dizionari per-gioco.
 
+### Quando manca la verità di riferimento, il conteggio dei chiamanti la sostituisce
+
+**Il fatto.** `FText::ToString` esiste anche nei build dove la firma validata fa
+0 match: cambia il **codegen**, non la funzione. Su ProjectAIDA (il gioco AILA)
+il compilatore ha **inlinato `Rebuild`** come chiamata virtuale invece di
+emettere un `call rel32`, e il prologo non combacia più.
+
+**Il problema del metodo.** Qui non c'è un binario con simboli da cui leggere i
+byte: ProjectAIDA si dichiara `UE5-CL-0`, build custom, e nessuna installazione
+UE corrisponde. Ricavare una firma «perché la forma sembra giusta» è esattamente
+l'errore che ha prodotto la firma confutata.
+
+**Cosa la sostituisce: i chiamanti.** Il nucleo semantico non cambia mai —
+carica TextData da `[this]`, carica la vtable, **tail-call** a
+`GetDisplayString`. Cercando quel nucleo (`48 8B 0B 48 8B 01`) seguito
+dall'epilogo con tail-jmp (`48 83 C4 ?? 5B 48 FF 60 ??`) restano quattro
+candidati; a separarli è quanto vengono chiamati:
+
+| RVA | lunghezza | chiamanti diretti |
+|---|---|---|
+| **0x12847F0** | 41 byte | **429** |
+| 0x12848F0 | 65 byte | 1 |
+| 0x1284A80 | 65 byte | 1 |
+| 0x36095A0 | 73 byte | 1 |
+
+429 contro 1. E il numero è coerente con i ~397 della `ToString` **validata sui
+simboli** su The Skin Stapler: una funzione chiamata centinaia di volte che
+carica TextData e fa tail-call a uno slot di vtable non può essere altro.
+Il solo nucleo, senza la coda, compare **602 volte**: non discrimina niente.
+
+**La firma.** Identica alla principale salvo il prologo:
+
+```text
+40 53 48 83 EC ?? 48 8B D9 48 8B 09 48 8B 01 FF 50 ?? 48 8B C8 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??
+```
+
+`mov rcx,[rcx]` invece di `call <rebuild>`, poi la chiamata virtuale che è la
+`Rebuild` espansa. **1 match su ProjectAIDA e 0 sugli altri 14**: è
+complementare alla firma principale, che fa 0 proprio lì. Insieme coprono
+**15 giochi su 15**.
+
+**Nel codice.** `source_unreal_ftext.cpp` ora prova le firme **in ordine** e si
+ferma alla prima univoca; un'ambiguità su una non ferma la ricerca, perché
+sull'altra quel binario può essere univoco. Il log dice **con quale firma** ha
+agganciato — serve a sapere, quando un gioco nuovo non funziona, se il problema
+è una firma da estendere o una da aggiungere.
+
+**Prova sul campo (AILA, 21/08/2026).** Iniezione reale:
+
+```text
+[gs-hook/UE] FText::ToString trovato con la firma "UE5 rebuild inline"
+[gs-hook/UE] hook FText::ToString installato
+[gs-hook/UE] FMemory::Realloc risolto
+[gs-hook] sorgente attiva: Unreal/FText (livello 1)
+```
+
+Gioco vivo, nessuna regressione su The Skin Stapler e Father's Day, che
+continuano ad agganciare con la firma principale.
+
+**Una correzione allo strumento.** `ue-validate-ftext-pattern.js` giudicava
+l'effetto a runtime guardando **una sola** firma, e su ProjectAIDA stampava
+«fallback GDI» mentre la DLL aggancia. Affermava un esito che non aveva
+misurato — lo stesso difetto che quello script esiste per smascherare. Ora
+considera tutte le firme provate, nell'ordine in cui la DLL le prova, e dice
+quale ha agganciato.
+
 ---
 
 ## Come si aggiunge una voce

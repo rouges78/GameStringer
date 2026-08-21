@@ -106,6 +106,39 @@ namespace Patterns {
         "40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 "
         "48 83 C4 ?? 5B 48 FF 60 ??";
 
+    // UE5 FText::ToString, variante con `Rebuild` INLINATA — USABILE.
+    // Stessa funzione, altro codegen: invece di `call rel32` verso Rebuild, il
+    // compilatore l'ha espansa in una chiamata virtuale su TextData. Il resto
+    // è identico, tail-call finale compresa:
+    //
+    //   40 53              push rbx
+    //   48 83 EC 20        sub  rsp, 0x20
+    //   48 8B D9           mov  rbx, rcx
+    //   48 8B 09           mov  rcx, [rcx]        ← TextData (niente call prima)
+    //   48 8B 01           mov  rax, [rcx]        ← vtable
+    //   FF 50 50           call [rax+0x50]        ← Rebuild, inlinata
+    //   48 8B C8           mov  rcx, rax
+    //   E8 66 5C 01 00     call <…>               ← rel32, wildcard
+    //   48 8B 0B           mov  rcx, [rbx]        ← TextData
+    //   48 8B 01           mov  rax, [rcx]        ← vtable
+    //   48 83 C4 20        add  rsp, 0x20
+    //   5B                 pop  rbx
+    //   48 FF 60 28        jmp  [rax+0x28]        ← tail-call GetDisplayString
+    //
+    // Qui NON c'è un binario con simboli da cui leggerla: ProjectAIDA (il gioco
+    // AILA) si dichiara `UE5-CL-0`, build custom. La corroborazione è il
+    // **conteggio dei chiamanti**: 429 diretti, contro 1 degli altri tre
+    // candidati con la stessa coda nello stesso binario — e i ~397 della
+    // ToString validata su The Skin Stapler. Una funzione chiamata 429 volte
+    // che carica TextData e fa tail-call a uno slot di vtable è quella.
+    //
+    // MISURATA: 1 match su ProjectAIDA (RVA 0x12847F0) e **0 su tutti gli altri
+    // 14** Shipping installati. È complementare alla firma sopra, che fa 0
+    // proprio su ProjectAIDA: insieme coprono 15 giochi su 15.
+    constexpr const char* FText_ToString_UE5_RebuildInline =
+        "40 53 48 83 EC ?? 48 8B D9 48 8B 09 48 8B 01 FF 50 ?? 48 8B C8 "
+        "E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??";
+
     // FMemory::Realloc — USABILE. Serve a far CRESCERE il buffer di una FString
     // quando la traduzione non entra in ArrayMax. Scrivere oltre corromperebbe
     // l'heap; allocare con `new`/malloc pure, perché UE libererà quel puntatore

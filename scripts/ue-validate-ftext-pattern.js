@@ -67,6 +67,11 @@ const PATTERNS = {
   // UnrealGame-Win64-Shipping.exe (UE 5.8, Shipping monolitico come i giochi).
   FText_ToString_UE5:
     '40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??',
+  // Stessa funzione, `Rebuild` inlinata come chiamata virtuale invece che
+  // `call rel32`. Complementare alla precedente: 1 match su ProjectAIDA (dove
+  // l'altra fa 0) e 0 sugli altri 14.
+  FText_ToString_UE5_RebuildInline:
+    '40 53 48 83 EC ?? 48 8B D9 48 8B 09 48 8B 01 FF 50 ?? 48 8B C8 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??',
 };
 
 const MAX_DEPTH = 6;
@@ -596,8 +601,16 @@ function main() {
   // `PatternScanUnique` accetta solo i match unici. Quindi oggi un pattern
   // ambiguo non è più "innocuo finché l'altro aggancia": è rifiutato e basta,
   // e si scende al livello 2 (GDI).
-  const primo = 'FText_ToString_UE5';
-  if (Object.keys(PATTERNS).includes(primo)) {
+  // La DLL prova le firme IN ORDINE e si ferma alla prima univoca (vedi
+  // source_unreal_ftext.cpp). Guardarne una sola faceva dire "fallback GDI" su
+  // binari dove l'altra aggancia — lo strumento affermava un esito che non
+  // aveva misurato, che e' il difetto che questo script esiste per smascherare.
+  const provate = ['FText_ToString_UE5', 'FText_ToString_UE5_RebuildInline']
+    .filter((k) => Object.keys(PATTERNS).includes(k));
+  /** La prima firma univoca per questo binario, o null. */
+  const firmaCheAggancia = (r) =>
+    provate.find((k) => r.risultati[k] && r.risultati[k].match === 1) || null;
+  if (provate.length) {
     // ⚠️ I binari NON ANALIZZABILI vanno contati a parte, mai dedotti per
     // differenza. Nella prima stesura di questo blocco il totale era
     // `referti.length - zero - ambigui`, quindi un file che non si era
@@ -607,11 +620,15 @@ function main() {
     // dovrebbe smascherarlo.
     const illeggibili = referti.filter((r) => r.errore);
     const letti = referti.filter((r) => !r.errore);
-    const zero = letti.filter((r) => r.risultati[primo].match === 0);
-    const ambiguiUE5 = letti.filter((r) => r.risultati[primo].match > 1);
-    const agganciano = letti.filter((r) => r.risultati[primo].match === 1);
+    const agganciano = letti.filter((r) => firmaCheAggancia(r));
+    const restanti = letti.filter((r) => !firmaCheAggancia(r));
+    // Fra chi non aggancia, distinguere "nessuna firma trova nulla" da
+    // "qualcuna trova troppo": sono due diagnosi diverse.
+    const ambiguiUE5 = restanti.filter((r) =>
+      provate.some((k) => r.risultati[k] && r.risultati[k].match > 1));
+    const zero = restanti.filter((r) => !ambiguiUE5.includes(r));
 
-    console.log('\nEFFETTO A RUNTIME (solo pattern UE5, match unico obbligatorio)');
+    console.log(`\nEFFETTO A RUNTIME (${provate.length} firme provate in ordine, match unico obbligatorio)`);
     if (!letti.length) {
       console.log('  NIENTE DA DIRE: nessun binario è stato letto davvero.');
     } else {
@@ -620,7 +637,7 @@ function main() {
         `${zero.length} nessun match, ${ambiguiUE5.length} ambigui → rifiutati.`
       );
       for (const r of agganciano) {
-        console.log(`     ✔ ${path.basename(r.file)} → hook engine`);
+        console.log(`     ✔ ${path.basename(r.file)} → hook engine (${firmaCheAggancia(r)})`);
       }
       for (const r of [...zero, ...ambiguiUE5]) {
         console.log(`     · ${path.basename(r.file)} → fallback GDI`);
