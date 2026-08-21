@@ -46,7 +46,13 @@ import {
   classifyCompatError, maybeOfferCompatOptIn, type CompatGameRef,
 } from '@/lib/compat-telemetry';
 import { reportCrash } from '@/lib/crash-reporter';
-import { decidePatchOutcome } from '@/lib/translation/patch-outcome';
+import { decidePatchOutcome, type PatchOutcome } from '@/lib/translation/patch-outcome';
+import {
+  planRuntimeFallback,
+  buildRunReport,
+  summarizeRunReport,
+  type RunReport,
+} from '@/lib/translation/runtime-fallback';
 import { TARGET_LANGUAGES as CANONICAL_TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 import { LANG_TO_CODE } from '@/lib/translation/language-mappings';
 import { useWarmIndex } from '@/hooks/use-warm-index';
@@ -2047,6 +2053,98 @@ export default function GameDetailPage() {
     }
   };
 
+  // ═══ FALLBACK A RUNTIME ═══
+  // Quando la strada statica non scrive nulla nel gioco, il gioco non è
+  // intraducibile: c'è gs-hook + la pipe GameStringerTranslator. La REGOLA su
+  // cosa fare sta in lib/translation/runtime-fallback.ts (con i suoi test);
+  // qui si raccolgono i fatti, si chiama la regola e si esegue il piano.
+  const tryRuntimeFallback = async (
+    staticOutcome: PatchOutcome,
+    counts: { injected?: number | null; total?: number | null },
+  ): Promise<RunReport | null> => {
+    if (!game?.installPath) return null;
+
+    // Nome dell'eseguibile: stessa scala di ripieghi del percorso di patch.
+    let exeName: string | undefined = game.detectedFiles?.find((f: string) => f.endsWith('.exe'));
+    if (!exeName) {
+      try {
+        const exeList = await invoke<string[]>('find_executables_in_folder', {
+          folderPath: game.installPath,
+        });
+        if (exeList?.length) exeName = exeList[0];
+      } catch { /* resta undefined → blocker 'unknown-process' */ }
+    }
+
+    let hookAvailable = false;
+    let processRunning = false;
+    try {
+      const status = await invoke<{ available: boolean; process_running: boolean }>(
+        'gs_hook_status',
+        { processName: exeName ?? null },
+      );
+      hookAvailable = status.available;
+      processRunning = status.process_running;
+    } catch (e: unknown) {
+      clientLogger.warn('[RuntimeFallback] gs_hook_status fallito:', String(e));
+    }
+
+    const plan = planRuntimeFallback({
+      staticOutcome,
+      // `available` è già false fuori da Windows (vedi lo stub): un solo fatto
+      // da guardare invece di due che possono contraddirsi.
+      isWindows: hookAvailable || processRunning,
+      hookAvailable,
+      processName: exeName ?? null,
+      processRunning,
+    });
+
+    const report = buildRunReport({
+      gameTitle: game.title || game.name || '',
+      engine: game.engine || engineInfo?.engine || null,
+      staticOutcome,
+      stringsInjected: counts.injected ?? null,
+      stringsTotal: counts.total ?? null,
+      plan,
+    });
+
+    // Il report per gioco finisce nella cronologia: dice cosa è entrato nel
+    // gioco e quale strada ci ha provato, non quanti stadi hanno detto verde.
+    void activityHistory.trackPatch(
+      game.name || game.title || '',
+      game.appid?.toString(),
+      summarizeRunReport(report),
+    );
+
+    if (plan.action === 'none') return report;
+
+    if (plan.action === 'unavailable' || plan.action === 'await-launch') {
+      toast.info(t(report.nextStepKey));
+      return report;
+    }
+
+    // plan.action === 'inject'
+    toast.loading(t(report.nextStepKey), { id: 'gs-runtime-fallback' });
+    try {
+      const res = await invoke<{ success: boolean; message: string }>('inject_gs_hook', {
+        processName: plan.processName,
+      });
+      if (res.success) {
+        toast.success(t('gameDetail.runtimeFallbackReady'), { id: 'gs-runtime-fallback' });
+      } else {
+        toast.error(t('gameDetail.runtimeFallbackFailed'), {
+          id: 'gs-runtime-fallback',
+          description: res.message.slice(0, 180),
+        });
+      }
+    } catch (e: unknown) {
+      toast.error(t('gameDetail.runtimeFallbackFailed'), {
+        id: 'gs-runtime-fallback',
+        description: String(e).slice(0, 180),
+      });
+    }
+    return report;
+  };
+
   // ═══ AUTO-TRANSLATE ONE-CLICK FLOW ═══
   const autoTranslateRunningRef = useRef(false);
   const startAutoTranslate = async () => {
@@ -3009,6 +3107,16 @@ export default function GameDetailPage() {
       });
       const patchResult = verdict.outcome;
 
+      // Strada statica senza effetto sul gioco → prova il runtime. Il report
+      // per gioco lo registra `tryRuntimeFallback` stesso, così vale anche per
+      // il ramo «nessuna stringa estraibile» che esce prima di qui.
+      if (patchResult === 'failure') {
+        await tryRuntimeFallback(patchResult, {
+          injected: verdict.stringsTranslated,
+          total: verdict.stringsTotal,
+        });
+      }
+
       // Messaggio onesto: nessun deliverable e nessuna stringa estraibile = motore non
       // supportato (file-based) o niente da tradurre. Niente falso "successo".
       if (deliverables.length === 0 && totalStr === 0) {
@@ -3024,6 +3132,9 @@ export default function GameDetailPage() {
           `Il motore "${predictionResult?.engine || game.engine || 'sconosciuto'}" non è ancora supportato per la traduzione automatica sui file, oppure non sono state trovate stringhe estraibili. Opzioni: prova l'OCR overlay (per giochi che mostrano testo a runtime) o la traduzione manuale dal patcher dedicato.`
         );
         toast.error(t('gameDetail.errUnsupported'));
+        // Niente da estrarre dai file non vuol dire niente da tradurre: è
+        // esattamente il caso per cui esiste la strada a runtime.
+        void tryRuntimeFallback('failure', { injected: 0, total: totalStr });
         return; // → finally resetta lo stato; nessun result di "successo"
       }
 

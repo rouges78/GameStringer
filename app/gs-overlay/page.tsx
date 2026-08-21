@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { translateWithFallback } from '@/lib/ai/ai-translate-direct';
+import { translationBridge } from '@/lib/translation-bridge';
+import { useTranslationBridgeDrain } from '@/hooks/use-translation-bridge-drain';
 
 // Riga estratta inoltrata dalla DLL via overlay_ipc (evento "gs-overlay-text").
 interface OverlayText {
@@ -22,6 +24,11 @@ export default function GsOverlayPage() {
   const [visible, setVisible] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqId = useRef(0); // guardia contro risposte di traduzione stantie
+
+  // Drena i cache miss che la DLL chiede via pipe e non trova nel dizionario:
+  // li traduce e li reinserisce, così dal secondo avvistamento sono hit. Gira
+  // finché l'overlay è aperto, cioè finché la traduzione in tempo reale è attiva.
+  useTranslationBridgeDrain({ enabled: true, targetLanguage: 'it' });
 
   useEffect(() => {
     const unlisten = listen<OverlayText>('gs-overlay-text', async (event) => {
@@ -55,6 +62,13 @@ export default function GsOverlayPage() {
         if (myReq !== reqId.current) return; // arrivata una riga più recente
         const t = res.success && res.translations[0] ? res.translations[0] : msg.original;
         setLine({ original: msg.original, translated: t, pending: false });
+
+        // Restituisci la traduzione al dizionario del bridge: senza questo
+        // ritradurremmo la stessa riga a ogni sua comparsa, e la DLL non
+        // imparerebbe mai. Dal prossimo avvistamento è un hit via IPC.
+        if (t !== msg.original) {
+          void translationBridge.addTranslation(msg.original, t);
+        }
       } catch {
         if (myReq !== reqId.current) return;
         setLine({ original: msg.original, translated: msg.original, pending: false });

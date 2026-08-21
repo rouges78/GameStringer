@@ -950,7 +950,17 @@
     "dr1Error": "Danganronpa: перевод не удался",
     "unityMonoDetail": "Unity Mono — тексты можно переводить прямо в файлах игры.",
     "unityIl2cppDetail": "Unity IL2CPP — тексты вкомпилированы в бинарники: они переводятся во время игры через BepInEx + XUnity.",
-    "unityUnknownRuntime": "Unity — среда выполнения не определена (BepInEx + XUnity)."
+    "unityUnknownRuntime": "Unity — среда выполнения не определена (BepInEx + XUnity).",
+    "runtimeFallbackInjecting": "В файлы не записано ни одной строки: перехожу к переводу во время игры...",
+    "runtimeFallbackAwaitLaunch": "Эта игра не поддаётся переводу через файлы. Запустите её, и перевод появится на экране во время игры.",
+    "runtimeFallbackBlocked": {
+      "not-windows": "Перевод во время игры доступен только в Windows.",
+      "hook-missing": "Компоненты перевода во время игры не найдены: переустановите GameStringer.",
+      "anti-cheat": "В игре используется защита от читов: мы её не трогаем — ни на диске, ни в памяти.",
+      "unknown-process": "Исполняемый файл игры не определён: нет процесса, с которым можно работать."
+    },
+    "runtimeFallbackReady": "Перевод во время игры включён: строки будут появляться переведёнными по ходу игры.",
+    "runtimeFallbackFailed": "Не удалось запустить перевод во время игры."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Ошибка загрузки информации DRAT:",

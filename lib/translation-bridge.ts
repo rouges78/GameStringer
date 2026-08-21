@@ -270,6 +270,39 @@ export class TranslationBridgeClient {
   }
 
   /**
+   * Persist every dictionary to `dir` (one `<src>_<dst>.json` per language
+   * pair). This is the durable memory of what the drain loop learns: without
+   * it, each session pays the provider again for the same strings.
+   */
+  async saveToDir(dir: string): Promise<number> {
+    try {
+      const response = await invoke<BridgeResponse<number>>('translation_bridge_save_dir', {
+        dir,
+      });
+      return response.data ?? 0;
+    } catch (error: unknown) {
+      clientLogger.error(`[TranslationBridge] Failed to save dictionaries: ${String(error)}`);
+      return 0;
+    }
+  }
+
+  /**
+   * Reload dictionaries written by `saveToDir`. A missing directory yields 0,
+   * not an error — that is simply the first session.
+   */
+  async loadFromDir(dir: string): Promise<number> {
+    try {
+      const response = await invoke<BridgeResponse<number>>('translation_bridge_load_dir', {
+        dir,
+      });
+      return response.data ?? 0;
+    } catch (error: unknown) {
+      clientLogger.error(`[TranslationBridge] Failed to load dictionaries: ${String(error)}`);
+      return 0;
+    }
+  }
+
+  /**
    * Clear all dictionaries
    */
   async clear(): Promise<boolean> {

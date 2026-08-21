@@ -950,7 +950,17 @@
     "dr1Error": "Danganronpa: 翻訳に失敗しました",
     "unityMonoDetail": "Unity Mono — テキストはゲームのファイル内で翻訳できます。",
     "unityIl2cppDetail": "Unity IL2CPP — テキストはバイナリに埋め込まれているため、BepInEx + XUnity でプレイ中に翻訳します。",
-    "unityUnknownRuntime": "Unity — ランタイム不明（BepInEx + XUnity）。"
+    "unityUnknownRuntime": "Unity — ランタイム不明（BepInEx + XUnity）。",
+    "runtimeFallbackInjecting": "ファイルに書き込まれた文字列はありません。実行時翻訳に切り替えます...",
+    "runtimeFallbackAwaitLaunch": "このゲームはファイル書き換えでの翻訳ができません。起動すると、プレイ中に画面上で翻訳が表示されます。",
+    "runtimeFallbackBlocked": {
+      "not-windows": "実行時翻訳は Windows でのみ利用できます。",
+      "hook-missing": "実行時翻訳のコンポーネントが見つかりません。GameStringer を再インストールしてください。",
+      "anti-cheat": "このゲームはアンチチートを使用しています。ディスク上もメモリ上も変更しません。",
+      "unknown-process": "ゲームの実行ファイルを特定できません。操作対象のプロセスがありません。"
+    },
+    "runtimeFallbackReady": "実行時翻訳が有効です。プレイ中に各行が翻訳されて表示されます。",
+    "runtimeFallbackFailed": "実行時翻訳を開始できませんでした。"
   },
   "danganronpaPatcher": {
     "errLoadDrat": "DRAT情報の読み込みエラー:",

@@ -20,6 +20,7 @@ pub struct TranslationBridgeState {
     pub bridge: Arc<Mutex<TranslationBridge>>,
     pub dictionary: Arc<RwLock<DictionaryEngine>>,
     pub miss_receiver: Arc<parking_lot::Mutex<std::sync::mpsc::Receiver<String>>>,
+    pub miss_sender: std::sync::mpsc::Sender<String>,
 }
 
 impl TranslationBridgeState {
@@ -27,10 +28,12 @@ impl TranslationBridgeState {
         let bridge = TranslationBridge::new();
         let dictionary = Arc::clone(bridge.dictionary());
         let miss_receiver = Arc::clone(bridge.miss_receiver());
+        let miss_sender = bridge.miss_sender();
         Self {
             bridge: Arc::new(Mutex::new(bridge)),
             dictionary,
             miss_receiver,
+            miss_sender,
         }
     }
 }
@@ -243,4 +246,33 @@ pub async fn translation_bridge_drain_misses(
         }
     }
     Ok(BridgeResponse::ok(texts))
+}
+
+/// Salva tutti i dizionari in una directory (un file `<src>_<dst>.json` per
+/// coppia di lingue). È la memoria durevole di quello che il drain loop
+/// impara: senza questa, ogni sessione ripaga l'AI per le stesse stringhe.
+#[tauri::command]
+pub async fn translation_bridge_save_dir(
+    state: State<'_, TranslationBridgeState>,
+    dir: String,
+) -> Result<BridgeResponse<usize>, String> {
+    let dict = state.dictionary.read();
+    match dict.save_to_dir(&dir) {
+        Ok(count) => Ok(BridgeResponse::ok(count)),
+        Err(e) => Ok(BridgeResponse::err(e)),
+    }
+}
+
+/// Ricarica i dizionari salvati da `translation_bridge_save_dir`.
+/// Directory inesistente = 0, non un errore (prima sessione).
+#[tauri::command]
+pub async fn translation_bridge_load_dir(
+    state: State<'_, TranslationBridgeState>,
+    dir: String,
+) -> Result<BridgeResponse<usize>, String> {
+    let mut dict = state.dictionary.write();
+    match dict.load_from_dir(&dir) {
+        Ok(count) => Ok(BridgeResponse::ok(count)),
+        Err(e) => Ok(BridgeResponse::err(e)),
+    }
 }

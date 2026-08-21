@@ -314,6 +314,12 @@ impl TranslationBridge {
         &self.miss_receiver
     }
 
+    /// Clona il sender dei cache miss (per il server translator_pipe: i miss
+    /// della pipe confluiscono nella stessa coda drenata dall'AI fallback)
+    pub fn miss_sender(&self) -> mpsc::Sender<String> {
+        self.miss_sender.clone()
+    }
+
     // ─── Internals ────────────────────────────────────────────────
 
     /// Crea la shared memory nominata via OS

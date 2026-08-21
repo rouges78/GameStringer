@@ -950,7 +950,17 @@
     "dr1Error": "Danganronpa: tłumaczenie nie powiodło się",
     "unityMonoDetail": "Unity Mono — teksty można tłumaczyć w plikach gry.",
     "unityIl2cppDetail": "Unity IL2CPP — teksty są wkompilowane w pliki binarne: tłumaczą się w trakcie gry, przez BepInEx + XUnity.",
-    "unityUnknownRuntime": "Unity — nie ustalono środowiska (BepInEx + XUnity)."
+    "unityUnknownRuntime": "Unity — nie ustalono środowiska (BepInEx + XUnity).",
+    "runtimeFallbackInjecting": "Nie zapisano żadnych ciągów w plikach: przechodzę na tłumaczenie w czasie działania...",
+    "runtimeFallbackAwaitLaunch": "Ta gra nie poddaje się tłumaczeniu przez pliki. Uruchom ją, a tłumaczenie pojawi się na ekranie podczas gry.",
+    "runtimeFallbackBlocked": {
+      "not-windows": "Tłumaczenie w czasie działania jest dostępne tylko w systemie Windows.",
+      "hook-missing": "Nie znaleziono składników tłumaczenia w czasie działania: zainstaluj ponownie GameStringer.",
+      "anti-cheat": "Ta gra używa zabezpieczenia anti-cheat: nie ruszamy jej ani na dysku, ani w pamięci.",
+      "unknown-process": "Nie rozpoznano pliku wykonywalnego gry: brak procesu, na którym można działać."
+    },
+    "runtimeFallbackReady": "Tłumaczenie w czasie działania aktywne: wiersze pojawią się przetłumaczone podczas gry.",
+    "runtimeFallbackFailed": "Nie udało się uruchomić tłumaczenia w czasie działania."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Błąd wczytywania informacji DRAT:",

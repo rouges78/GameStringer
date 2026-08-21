@@ -950,7 +950,17 @@
     "dr1Error": "Danganronpa: Übersetzung fehlgeschlagen",
     "unityMonoDetail": "Unity Mono – die Texte lassen sich in den Spieldateien übersetzen.",
     "unityIl2cppDetail": "Unity IL2CPP – die Texte stecken kompiliert in den Binärdateien: Sie werden beim Spielen übersetzt, über BepInEx + XUnity.",
-    "unityUnknownRuntime": "Unity – Runtime nicht bestimmt (BepInEx + XUnity)."
+    "unityUnknownRuntime": "Unity – Runtime nicht bestimmt (BepInEx + XUnity).",
+    "runtimeFallbackInjecting": "Keine Zeichenketten in die Dateien geschrieben: Wechsel zur Laufzeitübersetzung...",
+    "runtimeFallbackAwaitLaunch": "Dieses Spiel lässt sich nicht über die Dateien übersetzen. Starte es, und die Übersetzung erscheint während des Spielens auf dem Bildschirm.",
+    "runtimeFallbackBlocked": {
+      "not-windows": "Die Laufzeitübersetzung ist nur unter Windows verfügbar.",
+      "hook-missing": "Komponenten der Laufzeitübersetzung nicht gefunden: Installiere GameStringer neu.",
+      "anti-cheat": "Dieses Spiel nutzt Anti-Cheat: Wir fassen es nicht an, weder auf der Festplatte noch im Speicher.",
+      "unknown-process": "Spiel-Programmdatei nicht erkannt: Es gibt keinen Prozess, auf den zugegriffen werden kann."
+    },
+    "runtimeFallbackReady": "Laufzeitübersetzung aktiv: Die Zeilen erscheinen während des Spielens übersetzt.",
+    "runtimeFallbackFailed": "Laufzeitübersetzung konnte nicht gestartet werden."
   },
   "danganronpaPatcher": {
     "errLoadDrat": "Fehler beim Laden der DRAT-Informationen:",
