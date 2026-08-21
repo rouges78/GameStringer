@@ -15,6 +15,9 @@ use crate::commands::encoding_utils;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RpgMakerVersion {
+    /// 2000/2003 — RPG_RT.ldb/.lmt, formato binario proprietario.
+    /// Nessuna stringa estraibile dai file: la traduzione passa dal runtime.
+    RT,
     XP,      // .rxdata (Ruby Marshal)
     VX,      // .rvdata (Ruby Marshal)
     VXAce,   // .rvdata2 (Ruby Marshal)
@@ -103,6 +106,17 @@ pub fn detect_rpgmaker_game(game_path: String) -> Result<RpgMakerGame, String> {
     
     log::info!("🎮 Rilevato RPG Maker {:?}: {} ({} file dati)", version, title, data_files.len());
     
+    // Per RT il percorso utile è la cartella che contiene davvero i dati, non
+    // la radice d'installazione: chi legge questo risultato deve poterci
+    // lavorare senza rifare la ricerca.
+    let game_path = if matches!(version, RpgMakerVersion::RT) {
+        find_rpg_rt_dir(path, RPG_RT_MAX_DEPTH)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or(game_path)
+    } else {
+        game_path
+    };
+
     Ok(RpgMakerGame {
         path: game_path,
         version,
@@ -110,6 +124,39 @@ pub fn detect_rpgmaker_game(game_path: String) -> Result<RpgMakerGame, String> {
         data_files,
     })
 }
+
+/// Cartella che contiene davvero i file dati di RPG Maker 2000/2003.
+///
+/// La profondità va cercata, mai assunta — è la stessa lezione dei `Paks` di
+/// Unreal (vedi `find_all_paks_dirs`). Un'installazione Steam mette spesso il
+/// gioco in una sottocartella: Yume Nikki sta in
+/// `common/Yume Nikki/yumenikki/`, e cercare `RPG_RT.ldb` solo nella radice
+/// non lo trova.
+///
+/// Si guardano i file DATI e non l'eseguibile: moltissimi giochi rinominano
+/// `RPG_RT.exe` col titolo, ma `.ldb` e `.lmt` restano quelli.
+fn find_rpg_rt_dir(root: &Path, max_depth: usize) -> Option<PathBuf> {
+    if root.join("RPG_RT.ldb").exists() || root.join("RPG_RT.lmt").exists() {
+        return Some(root.to_path_buf());
+    }
+    if max_depth == 0 {
+        return None;
+    }
+    let entries = fs::read_dir(root).ok()?;
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if p.is_dir() {
+            if let Some(found) = find_rpg_rt_dir(&p, max_depth - 1) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// Profondità massima di ricerca. Tre livelli coprono le installazioni Steam e
+/// GOG viste finora senza trasformare il rilevamento in una scansione del disco.
+const RPG_RT_MAX_DEPTH: usize = 3;
 
 /// Rileva la versione di RPG Maker
 fn detect_rpgmaker_version(game_path: &str) -> RpgMakerVersion {
@@ -150,6 +197,11 @@ fn detect_rpgmaker_version(game_path: &str) -> RpgMakerVersion {
         }
     }
     
+    // 2000/2003: cercati in profondità, vedi find_rpg_rt_dir.
+    if find_rpg_rt_dir(path, RPG_RT_MAX_DEPTH).is_some() {
+        return RpgMakerVersion::RT;
+    }
+
     RpgMakerVersion::Unknown
 }
 
@@ -171,6 +223,12 @@ fn find_data_files(game_path: &str, version: &RpgMakerVersion) -> Result<Vec<Rpg
         RpgMakerVersion::VXAce => (path.join("Data"), "rvdata2"),
         RpgMakerVersion::VX => (path.join("Data"), "rvdata"),
         RpgMakerVersion::XP => (path.join("Data"), "rxdata"),
+        // 2000/2003: i dati stanno in .ldb/.lmt, formato binario proprietario
+        // che non sappiamo (ancora) leggere. Zero file dati NON è un errore: è
+        // esattamente il fatto che manda questi giochi alla traduzione a
+        // runtime, e va riportato come zero, non come fallimento — altrimenti
+        // il rilevamento fallisce e il ramo che li gestisce non viene raggiunto.
+        RpgMakerVersion::RT => return Ok(Vec::new()),
         RpgMakerVersion::Unknown => return Err("Versione non supportata".to_string()),
     };
     
@@ -1470,5 +1528,67 @@ mod tests {
         assert_eq!(stats.translated, 2);
         assert_eq!(stats.untranslated, 1);
         assert_eq!(stats.percentage, 66);
+    }
+
+    /// Crea una finta installazione RPG_RT sotto `sub` livelli di sottocartelle.
+    fn fixture_rt(nome: &str, sub: &[&str]) -> std::path::PathBuf {
+        let root = std::env::temp_dir().join(nome);
+        let _ = fs::remove_dir_all(&root);
+        let mut dir = root.clone();
+        for s in sub {
+            dir = dir.join(s);
+        }
+        fs::create_dir_all(&dir).unwrap();
+        // Solo i file DATI: l'eseguibile e' volutamente assente, perche' i
+        // giochi veri lo rinominano e cercarlo non funziona.
+        fs::write(dir.join("RPG_RT.ldb"), b"finto").unwrap();
+        fs::write(dir.join("RPG_RT.lmt"), b"finto").unwrap();
+        root
+    }
+
+    #[test]
+    fn rt_riconosciuto_nella_radice() {
+        let root = fixture_rt("gs_rt_root", &[]);
+        let g = detect_rpgmaker_game(root.to_string_lossy().into_owned()).unwrap();
+        assert!(matches!(g.version, RpgMakerVersion::RT));
+        assert!(g.data_files.is_empty(), "RPG_RT non espone file dati leggibili");
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn rt_riconosciuto_in_sottocartella() {
+        // Steam installa spesso il gioco un livello piu' in basso: Yume Nikki
+        // sta in `common/Yume Nikki/yumenikki/`. Cercare solo nella radice non
+        // lo trova, ed e' la stessa trappola dei `Paks` di Unreal.
+        let root = fixture_rt("gs_rt_sub", &["yumenikki"]);
+        let g = detect_rpgmaker_game(root.to_string_lossy().into_owned()).unwrap();
+        assert!(matches!(g.version, RpgMakerVersion::RT));
+        assert!(
+            g.path.ends_with("yumenikki"),
+            "il percorso deve puntare alla cartella dei dati, non alla radice: {}",
+            g.path
+        );
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn rt_estrazione_ritorna_zero_non_errore() {
+        // Zero stringhe NON e' un fallimento: e' il fatto che manda questi
+        // giochi alla traduzione a runtime. Se qui si tornasse un errore, il
+        // ramo che li gestisce non verrebbe mai raggiunto.
+        let root = fixture_rt("gs_rt_zero", &["game"]);
+        let res = extract_all_rpgmaker_strings(root.to_string_lossy().into_owned()).unwrap();
+        assert_eq!(res.total_count, 0);
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn cartella_qualsiasi_non_e_rpg_maker() {
+        let root = std::env::temp_dir().join("gs_rt_none");
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("a").join("b")).unwrap();
+        fs::write(root.join("gioco.exe"), b"x").unwrap();
+        assert!(detect_rpgmaker_game(root.to_string_lossy().into_owned()).is_err());
+        let _ = fs::remove_dir_all(&root);
     }
 }
