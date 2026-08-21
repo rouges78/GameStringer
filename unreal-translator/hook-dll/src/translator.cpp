@@ -3,11 +3,17 @@
 #include "ipc.h"
 #include "utils.h"
 #include <atomic>
+#include <mutex>
+#include <unordered_set>
 
 namespace GSTranslator {
 
 static TranslatorConfig g_config;
 static std::atomic<bool> g_initialized(false);
+// Testi già richiesti via IPC e in attesa di risposta: evita di reinviare la
+// stessa richiesta a ogni draw call mentre l'AI fallback lavora.
+static std::mutex g_pendingMutex;
+static std::unordered_set<std::wstring> g_pendingRequests;
 static TranslatorStats g_stats;
 static LogCallback g_logCallback = nullptr;
 
@@ -21,6 +27,17 @@ bool InitializeTranslator(const TranslatorConfig& config) {
         }
     }
     
+    // Le risposte IPC arrivano dal receive thread: dritte in cache, mai un
+    // blocco sul thread che disegna. La cache ha il suo mutex interno.
+    IPC::SetTranslationArrivedCallback([](const std::wstring& original,
+                                          const std::wstring& translated) {
+        if (!translated.empty()) {
+            GetGlobalCache().Put(original, translated);
+        }
+        std::lock_guard<std::mutex> lock(g_pendingMutex);
+        g_pendingRequests.erase(original);
+    });
+
     g_initialized = true;
     return true;
 }
@@ -52,28 +69,22 @@ std::wstring Translate(const std::wstring& originalText) {
     
     g_stats.cacheMisses++;
     
-    // Se connesso a GameStringer, chiedi traduzione
+    // Se connesso a GameStringer, chiedi la traduzione SENZA bloccare:
+    // fire-and-forget, la risposta arriva dal receive thread e finisce in
+    // cache (vedi il callback in InitializeTranslator). Questo gira dentro
+    // gli hook di rendering: un'attesa qui congelerebbe il gioco.
     if (IPC::IsConnected()) {
-        uint64_t startTime = Utils::GetTimestampMs();
-        
-        uint32_t requestId = IPC::SendTranslateRequest(originalText);
-        if (requestId > 0) {
-            if (IPC::ReceiveTranslateResponse(requestId, translated, 2000)) {
-                // Aggiorna latenza media
-                uint64_t latency = Utils::GetTimestampMs() - startTime;
-                g_stats.averageLatencyMs = (g_stats.averageLatencyMs + latency) / 2;
-                
-                // Salva in cache
-                GetGlobalCache().Put(originalText, translated);
-                
-                return translated;
+        std::lock_guard<std::mutex> lock(g_pendingMutex);
+        if (g_pendingRequests.insert(originalText).second) {
+            if (IPC::SendTranslateRequest(originalText) == 0) {
+                g_pendingRequests.erase(originalText);
+                g_stats.translationErrors++;
             }
         }
-        
-        g_stats.translationErrors++;
     }
     
-    // Fallback: ritorna originale
+    // Il primo draw mostra l'originale; dal prossimo, se la risposta è
+    // arrivata, la cache fa hit.
     return originalText;
 }
 

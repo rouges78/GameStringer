@@ -19,6 +19,7 @@
 #include "gs_log.h"
 #include "gs_overlay_ipc.h"
 #include "translator.h"   // core generico riusato: namespace GSTranslator
+#include "ipc.h"          // client pipe GameStringerTranslator (stesso core)
 #include <Windows.h>
 #include <MinHook.h>
 #include <vector>
@@ -44,6 +45,15 @@ DWORD WINAPI MainThread(LPVOID) {
     Sleep(3000); // attendi il caricamento del gioco
 
     if (MH_Initialize() != MH_OK) { LogA("[gs-hook] MinHook init FAILED\n"); return 1; }
+
+    // Connetti a GameStringer (pipe GameStringerTranslator, server Rust in
+    // translator_pipe.rs). Senza backend si prosegue in sola cache locale.
+    if (GSTranslator::IPC::Initialize()) {
+        GSTranslator::IPC::StartReceiveThread();
+        LogA("[gs-hook] connesso a GameStringer via IPC\n");
+    } else {
+        LogA("[gs-hook] GameStringer non raggiungibile, solo cache locale\n");
+    }
 
     // Lingue: in produzione arrivano da GameStringer via IPC/config. Default qui.
     GSTranslator::TranslatorConfig cfg;
@@ -101,6 +111,11 @@ DWORD WINAPI CleanupThread(LPVOID) {
     g_active.clear();
     MH_DisableHook(MH_ALL_HOOKS);
     MH_Uninitialize();
+    // Ordine obbligato: StopReceiveThread cancella le I/O overlapped in corso
+    // e joina i thread; solo dopo Shutdown può chiudere l'handle (chiuderlo
+    // mentre un thread attende su un OVERLAPPED è use-after-free).
+    GSTranslator::IPC::StopReceiveThread();
+    GSTranslator::IPC::Shutdown();
     GSTranslator::ShutdownTranslator();
     gs::overlay::Shutdown();
     return 0;

@@ -63,7 +63,9 @@ fn start_on(
     });
 }
 
-async fn serve(
+/// Loop del server. Pubblico per gli host di prova (examples/) e i test:
+/// la produzione passa da `start`.
+pub async fn serve(
     pipe_name: &str,
     dictionary: Arc<RwLock<DictionaryEngine>>,
     miss_sender: mpsc::Sender<String>,
@@ -142,6 +144,14 @@ async fn handle_connection(
             dict.get_translation(hash, &original)
         };
 
+        match translation {
+            Some(ref translated) => {
+                log::debug!("translator IPC hit: \"{}\" -> \"{}\"", original, translated);
+            }
+            None => {
+                log::debug!("translator IPC miss: \"{}\"", original);
+            }
+        }
         match translation {
             Some(translated) => {
                 let payload: Vec<u8> = translated

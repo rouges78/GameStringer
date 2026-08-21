@@ -47,6 +47,13 @@ uint32_t SendTranslateRequest(const std::wstring& text);
 // Riceve risposta traduzione (blocking con timeout)
 bool ReceiveTranslateResponse(uint32_t requestId, std::wstring& translatedText, uint32_t timeoutMs = 5000);
 
+// Callback invocata dal receive thread quando arriva una TRANSLATE_RESPONSE.
+// Se impostata, sostituisce il percorso blocking di ReceiveTranslateResponse:
+// la risposta viene consegnata con il testo ORIGINALE corrispondente (mappato
+// via requestId), così il chiamante può metterla in cache senza bloccare mai.
+using TranslationArrivedCallback = std::function<void(const std::wstring& original, const std::wstring& translated)>;
+void SetTranslationArrivedCallback(TranslationArrivedCallback callback);
+
 // Invia log a GameStringer
 void SendLog(const char* level, const std::string& message);
 
