@@ -74,6 +74,70 @@ typedef void (__fastcall* STextBlock_SetText_t)(void* This, const FText& InText)
 // sbagliata → crash, o corruzione heap silenziosa.
 // Prima di aggiungere o cambiare un pattern qui, rimisurare con quello script.
 namespace Patterns {
+    // UE5 FText::ToString — USABILE. Ricavata da una VERITÀ DI RIFERIMENTO il
+    // 21/08/2026, non indovinata: UE 5.8 spedisce
+    // `Engine/Binaries/Win64/UnrealGame-Win64-Shipping.exe` **col suo PDB**.
+    // È Shipping e monolitico come i giochi commerciali — a differenza della
+    // `UnrealEditor-Core.dll`, che è Development e genera codice diverso.
+    // DbgHelp risolve lì `FText::ToString` a RVA 0x1302480, e i byte sono:
+    //
+    //   40 53              push rbx
+    //   48 83 EC 20        sub  rsp, 0x20
+    //   48 8B D9           mov  rbx, rcx
+    //   E8 A2 D0 00 00     call <rebuild>            ← rel32, wildcard
+    //   48 8B 0B           mov  rcx, [rbx]           ← TextData
+    //   48 8B 01           mov  rax, [rcx]           ← vtable
+    //   48 83 C4 20        add  rsp, 0x20
+    //   5B                 pop  rbx
+    //   48 FF 60 28        jmp  [rax+0x28]           ← tail-call GetDisplayString
+    //
+    // 29 byte, con una tail-call finale che è ciò che la rende specifica.
+    // Wildcard su: l'immediato di sub/add, il rel32 della call, e lo slot della
+    // vtable (0x28 sul riferimento, 0x10 su Father's Day: cambia per gioco).
+    //
+    // MISURATA su 15 Shipping installati (UE 5.5, 5.6 e 5.8): **1 match esatto
+    // su 14**, incluso The Skin Stapler (UE 5.6, RVA 0x1269100) e Father's Day
+    // (RVA 0xDD3FC0), entrambi verificati all'inizio di una funzione (preceduti
+    // da padding CC). Unica e all'indirizzo giusto anche sul riferimento.
+    // L'unico a zero è ProjectAIDA, che quindi cadrà su GDI: il caso benigno.
+    //
+    // Prima di toccarla, rimisurare con scripts/ue-validate-ftext-pattern.js.
+    constexpr const char* FText_ToString_UE5 =
+        "40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 "
+        "48 83 C4 ?? 5B 48 FF 60 ??";
+
+    // FMemory::Realloc — USABILE. Serve a far CRESCERE il buffer di una FString
+    // quando la traduzione non entra in ArrayMax. Scrivere oltre corromperebbe
+    // l'heap; allocare con `new`/malloc pure, perché UE libererà quel puntatore
+    // con il PROPRIO allocatore. L'unica via sicura è chiedere a UE.
+    //
+    // Ricavata come quella di ToString, dal binario Shipping con PDB:
+    // `FMemory::Realloc` sta a RVA 0x12D29F0 su UE 5.8. Firma C++:
+    //   void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
+    // (rcx = Original, rdx = Count, r8d = Alignment; 0 = DEFAULT_ALIGNMENT)
+    //
+    //   48 89 5C 24 08     mov  [rsp+8], rbx
+    //   48 89 74 24 10     mov  [rsp+0x10], rsi
+    //   57                 push rdi
+    //   48 83 EC 20        sub  rsp, 0x20
+    //   48 8B F1           mov  rsi, rcx          ← Original
+    //   41 8B D8           mov  ebx, r8d          ← Alignment
+    //   48 8B 0D ?? ?? ?? ?? mov rcx, [rip+…]     ← GMalloc, wildcard
+    //   48 8B FA           mov  rdi, rdx          ← Count
+    //   48 85 C9           test rcx, rcx          ← GMalloc già creato?
+    //   75 ??              jne  …
+    //
+    // Il prologo iniziale da solo sarebbe generico (è quello che rese
+    // inutilizzabile la firma UE4.27): a discriminare è la sequenza
+    // `mov rsi,rcx / mov ebx,r8d / mov rcx,[rip+GMalloc]`.
+    //
+    // MISURATA: 1 match esatto su **tutti e 15** gli Shipping installati, e
+    // unica all'indirizzo giusto sul riferimento. Verificata all'inizio di
+    // funzione su The Skin Stapler (0x123A3A0) e Father's Day (0xD94DD0).
+    constexpr const char* FMemory_Realloc =
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1 41 8B D8 "
+        "48 8B 0D ?? ?? ?? ?? 48 8B FA 48 85 C9 75 ??";
+
     // ⛔ UE5 FText::ToString — CONFUTATO il 21/08/2026, NON REINSERIRE.
     //
     // Era qui dal commit iniziale con la nota «(esempio)»: un'ipotesi mai

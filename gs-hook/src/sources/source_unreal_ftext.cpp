@@ -11,20 +11,21 @@
 // incluso da gs-hook via CMake. Il pattern-scan non serve più: vedi LIMITI.
 //
 // LIMITI NOTI (aggiornati 21/08/2026):
-//   • Si aggancia SOLO per SIMBOLO, quindi in pratica solo su build non
-//     monolitici (editor, giochi modulari). Sui build Shipping — la norma
-//     commerciale — non c'è nessun simbolo UE e questa sorgente non aggancia:
+//   • Due strade, in ordine: SIMBOLO (deterministico, ma esiste solo sui
+//     build non monolitici) e poi la firma di byte UE5, ricavata da un
+//     binario Shipping con PDB e misurata su 15 giochi. Se nessuna aggancia,
 //     Activate ritorna Failed e si scende a L2 (GDI).
-//   • Non esiste più un pattern di ripiego. Quello UE4.2x era stato rimosso il
-//     30/07/2026 (89-127 match); quello UE5 è stato CONFUTATO il 21/08/2026
-//     contro UE 5.8 con i simboli — descriveva una dispatch virtuale su
-//     `this`, e FText non ha vtable. Dettagli e numeri in ue_types.h.
+//   • Non c'è una firma UE4.2x: quella provata faceva 89-127 match (rimossa il
+//     30/07/2026), e la vecchia firma UE5 è stata CONFUTATA il 21/08/2026 —
+//     descriveva una dispatch virtuale su `this`, e FText non ha vtable.
+//     Entrambe restano documentate in ue_types.h come cosa NON funziona.
 //   • Sostituzione in-place SOLO se la traduzione entra nel buffer già allocato
 //     da UE (FString::ArrayMax). Espanderlo richiede l'allocatore UE
 //     (FMemory::Realloc) → TODO.
 //
 #include "text_source.h"
-#include "ue_types.h"   // UE::FString, UE::FText
+#include "ue_types.h"   // UE::FString, UE::FText, UE::Patterns::FText_ToString_UE5
+#include "utils.h"      // GSTranslator::Utils::PatternScanUnique
 #include "gs_log.h"     // log unificato gs-hook (%TEMP%\gs-hook.log)
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -39,6 +40,14 @@ TranslateFn g_translate = nullptr;
 
 using FText_ToString_t = UE::FString* (__fastcall*)(const UE::FText*, UE::FString*);
 FText_ToString_t Original_FText_ToString = nullptr;
+
+// Allocatore di UE. Serve SOLO per far crescere il buffer di una FString quando
+// la traduzione non ci sta: il puntatore risultante verra' liberato da UE con il
+// proprio allocatore, quindi deve essere UE stessa ad allocarlo. Con malloc o
+// new si corromperebbe l'heap alla prima free.
+//   void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
+using FMemory_Realloc_t = void* (__fastcall*)(void*, size_t, uint32_t);
+FMemory_Realloc_t g_ueRealloc = nullptr;
 
 // Hook su FText::ToString. `out` è la FString che UE riempie col testo: dopo aver
 // lasciato lavorare l'originale, leggiamo il testo, lo traduciamo e lo
@@ -60,13 +69,43 @@ UE::FString* __fastcall Hook_FText_ToString(const UE::FText* self, UE::FString* 
                 // In-place SOLO se la traduzione (incluso il NUL) entra nel buffer
                 // già allocato da UE. Altrimenti la lasciamo invariata: scrivere
                 // oltre ArrayMax corromperebbe l'heap di UE.
-                if (static_cast<int32_t>(t.size() + 1) <= result->ArrayMax) {
+                // I numeri del buffer finiscono nel log in ENTRAMBI i rami:
+                // servono a sapere quanto margine lascia UE, cioe' quanto spesso
+                // il vincolo morde davvero. Senza, "non sostituita" non dice se
+                // mancava un carattere o cinquanta.
+                const std::wstring dims =
+                    L" [len=" + std::to_wstring(t.size()) +
+                    L" ArrayNum=" + std::to_wstring(result->ArrayNum) +
+                    L" ArrayMax=" + std::to_wstring(result->ArrayMax) + L"]";
+
+                const int32_t needed = static_cast<int32_t>(t.size() + 1); // col NUL
+
+                if (needed <= result->ArrayMax) {
                     wcscpy_s(result->Data, static_cast<size_t>(result->ArrayMax), t.c_str());
-                    result->ArrayNum = static_cast<int32_t>(t.size() + 1); // include il NUL
-                    LogLineW(L"[gs-hook/UE] SUBST: " + original + L" -> " + t + L"\n");
+                    result->ArrayNum = needed;
+                    LogLineW(L"[gs-hook/UE] SUBST: " + original + L" -> " + t + dims + L"\n");
+                } else if (g_ueRealloc) {
+                    // Non ci sta: chiedi a UE un buffer piu' grande. Deve essere
+                    // il suo allocatore, perche' sara' lui a liberarlo.
+                    void* grown = g_ueRealloc(result->Data,
+                                              static_cast<size_t>(needed) * sizeof(wchar_t),
+                                              0 /* DEFAULT_ALIGNMENT */);
+                    if (grown) {
+                        result->Data = static_cast<wchar_t*>(grown);
+                        result->ArrayMax = needed;
+                        wcscpy_s(result->Data, static_cast<size_t>(needed), t.c_str());
+                        result->ArrayNum = needed;
+                        LogLineW(L"[gs-hook/UE] SUBST(grow): " + original + L" -> " + t
+                                 + dims + L"\n");
+                    } else {
+                        // Realloc fallita: la FString resta quella di prima e
+                        // valida — Realloc non libera l'originale se non riesce.
+                        LogLineW(L"[gs-hook/UE] (non sostituita: Realloc fallita) "
+                                 + original + dims + L"\n");
+                    }
                 } else {
-                    LogLineW(L"[gs-hook/UE] (non sostituita: buffer UE troppo piccolo) "
-                             + original + L"\n");
+                    LogLineW(L"[gs-hook/UE] (non sostituita: buffer piccolo e allocatore "
+                             L"UE non risolto) " + original + dims + L"\n");
                 }
             }
         }
@@ -189,21 +228,65 @@ public:
             LogLineA("[gs-hook/UE] simbolo trovato ma hook fallito (MinHook)\n");
         }
 
-        // 2) PATTERN — non c'è più. La firma UE5 che stava qui è stata
-        //    CONFUTATA il 21/08/2026 contro una verità di riferimento (UE 5.8
-        //    con i simboli): descriveva una dispatch virtuale su `this`, e FText
-        //    non è polimorfico. Dove faceva «1 match unico» l'hook sarebbe
-        //    finito su una funzione qualsiasi. I dettagli e i numeri stanno in
-        //    ue_types.h accanto alla costante, e nel registro.
+        // 2) PATTERN. Nei build Shipping monolitici non c'è nessun simbolo da
+        //    risolvere, quindi si ricade qui — ed è il caso normale.
         //
-        //    Finché non esiste una firma ricavata da un binario con i simboli
-        //    E validata sulla versione UE di quel gioco, qui si fallisce: il
-        //    dllmain scende a L2 (GDI). Non tradurre a livello engine è un
-        //    difetto; agganciare la funzione sbagliata in un gioco commerciale
-        //    è un crash.
-        LogLineA("[gs-hook/UE] nessuna firma validata per questa build: "
-                 "hook engine non installato (fallback GDI)\n");
-        return Activation::Failed;
+        //    La firma NON è indovinata: è letta dai byte di FText::ToString
+        //    risolto col PDB su UnrealGame-Win64-Shipping.exe di UE 5.8, che è
+        //    Shipping e monolitico come i giochi. Misurata su 15 giochi (UE 5.5,
+        //    5.6, 5.8): 1 match esatto su 14. Dettagli in ue_types.h.
+        //
+        //    UNICITÀ COMUNQUE OBBLIGATORIA: PatternScanUnique ritorna un
+        //    indirizzo solo se il pattern compare esattamente una volta. Una
+        //    firma validata oggi può diventare ambigua su una build futura, e
+        //    in quel caso si rifiuta e si scende a GDI. Fallire qui è il caso
+        //    BENIGNO; agganciare la funzione sbagliata no.
+        size_t matches = 0;
+        uintptr_t addr = GSTranslator::Utils::PatternScanUnique(
+            game, UE::Patterns::FText_ToString_UE5, &matches);
+
+        if (!addr) {
+            if (matches > 1) {
+                const std::string quanti =
+                    (matches >= GSTranslator::Utils::PATTERN_SCAN_COUNT_CAP)
+                        ? "almeno " + std::to_string(matches)
+                        : std::to_string(matches);
+                LogLineA(("[gs-hook/UE] pattern FText::ToString ambiguo: " + quanti +
+                          " match, hook RIFIUTATO (aggancerebbe la funzione sbagliata)\n").c_str());
+            } else {
+                LogLineA("[gs-hook/UE] FText::ToString non trovato su questa build "
+                         "(firma UE5 Shipping)\n");
+            }
+            return Activation::Failed; // → il dllmain scende a L2 (GDI)
+        }
+
+        if (MH_CreateHook(reinterpret_cast<LPVOID>(addr),
+                          reinterpret_cast<LPVOID>(&Hook_FText_ToString),
+                          reinterpret_cast<LPVOID*>(&Original_FText_ToString)) != MH_OK ||
+            MH_EnableHook(reinterpret_cast<LPVOID>(addr)) != MH_OK) {
+            LogLineA("[gs-hook/UE] hook FText::ToString fallito (MinHook)\n");
+            return Activation::Failed;
+        }
+
+        hookedAddr_ = addr;
+        LogLineW(L"[gs-hook/UE] hook FText::ToString installato (pattern)\n");
+
+        // Allocatore UE: se non si trova, la sostituzione resta possibile solo
+        // per le traduzioni che entrano nel buffer esistente. Non e' un motivo
+        // per rinunciare all'hook, quindi qui non si fallisce.
+        size_t reallocMatches = 0;
+        if (uintptr_t ra = GSTranslator::Utils::PatternScanUnique(
+                game, UE::Patterns::FMemory_Realloc, &reallocMatches)) {
+            g_ueRealloc = reinterpret_cast<FMemory_Realloc_t>(ra);
+            LogLineA("[gs-hook/UE] FMemory::Realloc risolto: le traduzioni piu' lunghe "
+                     "dell'originale possono crescere il buffer\n");
+        } else {
+            LogLineA(("[gs-hook/UE] FMemory::Realloc non risolto (" +
+                      std::to_string(reallocMatches) +
+                      " match): solo traduzioni che entrano nel buffer\n").c_str());
+        }
+
+        return Activation::Activated;
     }
 
     void Deactivate() override {

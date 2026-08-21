@@ -59,8 +59,14 @@ const path = require('path');
 const PATTERNS = {
   FText_ToString_UE427_INUTILIZZABILE:
     '48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC ?? 48 8B FA 48 8B F1',
-  FText_ToString_UE5:
+  // CONFUTATA il 21/08/2026: descriveva una dispatch virtuale su `this`, e
+  // FText non ha vtable. Resta qui per poter rimisurare cosa NON funziona.
+  FText_ToString_UE5_CONFUTATA:
     '40 53 48 83 EC ?? 48 8B D9 48 85 C9 74 ?? 48 8B 01',
+  // In uso. Ricavata dai byte di FText::ToString risolto col PDB su
+  // UnrealGame-Win64-Shipping.exe (UE 5.8, Shipping monolitico come i giochi).
+  FText_ToString_UE5:
+    '40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??',
 };
 
 const MAX_DEPTH = 6;

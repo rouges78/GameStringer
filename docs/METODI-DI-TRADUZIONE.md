@@ -487,6 +487,145 @@ gioco, risolvere il simbolo nella sua `UnrealEditor-Core.dll`, leggere i byte
 lì, ricavare la firma da quelli, e solo allora contarla sul gioco. Lo strumento
 per contare esiste già: `scripts/ue-validate-ftext-pattern.js --exe <path> --dump`.
 
+### La firma giusta di `FText::ToString` si ricava da un binario Shipping col PDB
+
+**Il fatto.** UE spedisce, dentro l'installazione dell'engine,
+`Engine/Binaries/Win64/UnrealGame-Win64-Shipping.exe` **con il suo PDB**
+(150 MB). È Shipping e monolitico come i giochi commerciali, quindi il codice
+generato è della stessa famiglia — a differenza di `UnrealEditor-Core.dll`, che
+è Development. È lì che si va a leggere com'è fatta davvero la funzione.
+
+**Come.** DbgHelp (`SymLoadModuleEx` + `SymEnumSymbols` con maschera
+`FText::ToString`) la risolve a **RVA 0x1302480** su UE 5.8. I byte:
+
+```text
+40 53              push rbx
+48 83 EC 20        sub  rsp, 0x20
+48 8B D9           mov  rbx, rcx
+E8 A2 D0 00 00     call <rebuild>            ← rel32, wildcard
+48 8B 0B           mov  rcx, [rbx]           ← TextData
+48 8B 01           mov  rax, [rcx]           ← vtable
+48 83 C4 20        add  rsp, 0x20
+5B                 pop  rbx
+48 FF 60 28        jmp  [rax+0x28]           ← tail-call GetDisplayString
+```
+
+Ventinove byte, e la **tail-call finale** è ciò che li rende specifici. Firma:
+
+```text
+40 53 48 83 EC ?? 48 8B D9 E8 ?? ?? ?? ?? 48 8B 0B 48 8B 01 48 83 C4 ?? 5B 48 FF 60 ??
+```
+
+Wildcard sull'immediato di `sub`/`add`, sul `rel32` della `call` e sullo slot
+della vtable — che cambia per gioco: 0x28 sul riferimento, 0x10 su Father's Day,
+0x20 su The Skin Stapler.
+
+**Misura.** 1 match esatto su **14 giochi su 15** (UE 5.5, 5.6, 5.8), unica e
+all'indirizzo giusto anche sul riferimento. Verificata all'inizio di funzione
+(preceduta da padding `CC`) su The Skin Stapler (UE 5.6, RVA 0x1269100) e
+Father's Day (RVA 0xDD3FC0). Il conteggio che convince più di tutti lo dà
+`scripts/ue-validate-ftext-pattern.js`: **397 chiamanti** su The Skin Stapler,
+contro gli 1-4 dei candidati della vecchia firma, che lo script stesso bollava
+«pochi per FText::ToString».
+
+**Prova sul campo (Father's Day, 21/08/2026).** Iniezione reale con il server di
+prova in ascolto:
+
+```text
+[gs-hook/UE] hook FText::ToString installato (pattern)
+[gs-hook] sorgente attiva: Unreal/FText (livello 1)
+```
+
+e lato server il testo vero del menu del gioco:
+`LANGUAGE SELECTION`, `English`, `Russian`, `Exit game`, `Yes`, `True`, `False`.
+Gioco responsivo, 119 s di CPU, nessun crash.
+
+**La trappola.** Non era la versione UE la variabile che contava, era la
+**configurazione di build**. Una firma ricavata dalla `UnrealEditor-Core.dll`
+(Development) fa 0 match su tutti i 18 Shipping installati; quella ricavata dal
+binario Shipping ne fa 1 quasi ovunque, attraversando tre versioni UE. Cercare
+«la stessa versione dell'engine» era la pista sbagliata: serviva la stessa
+*configurazione*.
+
+**Un controllo che ha smascherato un errore mio.** Due script indipendenti
+davano risultati opposti sullo stesso file — 1 match contro 0. Avevo scompattato
+l'header di sezione PE nell'ordine sbagliato (`SizeOfRawData` e
+`PointerToRawData` sono in quell'ordine, non l'inverso) e leggevo dall'offset
+sbagliato: sembrava «la firma non c'è», era lo script rotto. Quando due misure
+della stessa cosa non concordano, prima di scegliere quale credere si cerca il
+bug in entrambe.
+
+**Un altro controllo, sul gioco.** The Skin Stapler moriva all'iniezione e stavo
+per attribuirlo all'hook. Avviato **senza** iniettare, esce da solo lo stesso:
+vuole Steam. Prima di dare la colpa al proprio codice, si prova il caso base.
+
+### La traduzione rientra nel gioco: sostituzione in-place e crescita del buffer
+
+**Il fatto.** `FText::ToString` restituisce un riferimento alla `FString` interna
+di UE: sovrascriverla traduce il testo davvero, a schermo. Se la traduzione non
+entra in `ArrayMax` si fa crescere il buffer con **`FMemory::Realloc`** — non con
+`malloc` o `new`, perché a liberare quel puntatore sarà UE col proprio
+allocatore, e un allocatore diverso corrompe l'heap alla prima free.
+
+**Il margine di UE non è affidabile.** Misurato su Father's Day:
+
+| stringa | ArrayNum | ArrayMax | margine |
+|---|---|---|---|
+| `English` | 8 | 8 | **nessuno** |
+| `Russian` | 8 | 8 | **nessuno** |
+| `Exit game` | 10 | 16 | 6 slot |
+
+Due casi su tre hanno `ArrayMax == ArrayNum`. Contare sullo slack di UE non
+funziona: l'italiano è mediamente più lungo dell'inglese, e senza `Realloc` una
+buona parte delle traduzioni verrebbe scartata in silenzio.
+
+**La firma di `FMemory::Realloc`.** Ricavata col metodo della voce precedente —
+`UnrealGame-Win64-Shipping.exe` di UE 5.8, simbolo a RVA 0x12D29F0:
+
+```text
+48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8B F1 41 8B D8 48 8B 0D ?? ?? ?? ?? 48 8B FA 48 85 C9 75 ??
+```
+
+Il prologo iniziale da solo sarebbe generico — è quello che rese inutilizzabile
+la firma UE4.27 — ma `mov rsi,rcx / mov ebx,r8d / mov rcx,[rip+GMalloc]`
+discrimina. **1 match esatto su tutti e 15** gli Shipping installati, unica e
+all'indirizzo giusto sul riferimento, verificata a inizio funzione su The Skin
+Stapler (0x123A3A0) e Father's Day (0xD94DD0).
+
+**Prova sul campo.** Cache pre-seedata con traduzioni deliberatamente più lunghe
+del buffer, iniezione reale in Father's Day:
+
+```text
+SUBST(grow): English   -> Inglese (lingua lunga)             [len=22 ArrayNum=8  ArrayMax=8]
+SUBST:       Russian   -> Russo                              [len=5  ArrayNum=8  ArrayMax=8]
+SUBST(grow): Exit game -> Esci dal gioco e torna al desktop   [len=33 ArrayNum=10 ArrayMax=16]
+```
+
+22 caratteri in un buffer da 8 e 33 in uno da 16: entrambi cresciuti. Soak di
+90 s campionato ogni 15: UI sempre responsiva, RAM stabile a ~350 MB, handle
+fermi a ~1535. Nessun segno di heap corrotto.
+
+**La trappola, e perché il primo tentativo sembrava un crash.** Con la cache
+pre-seedata il gioco moriva e non compariva nessuna riga `SUBST`: sembrava che
+la sostituzione lo uccidesse. Erano due cose diverse, entrambe da verificare
+prima di concludere. (1) Il gioco esce da solo anche **senza** iniezione, a
+volte: il caso base va sempre provato. (2) La cache non veniva letta affatto —
+il messaggio «cache pre-seedata» lo stampa il dllmain perché la env var è
+impostata, **non** perché il caricamento sia riuscito. Il magic del formato GSTC
+va scritto come u32 little-endian `0x47535443`, che su disco dà i byte `CTSG`;
+scrivendo `GSTC` il file viene rifiutato in silenzio. L'indizio era nel dump di
+`gs-hook/testapp/test-cache.gstc`, che comincia proprio con `CTSG`.
+
+**Il vero limite rimasto è un altro.** Su UE la stessa stringa raramente passa
+due volte da `ToString`: la display string resta in cache dentro l'`FTextData`.
+Il percorso fire-and-forget — che chiede la traduzione al primo avvistamento e
+la usa dal secondo — quindi **non scatta**. Perché la traduzione compaia serve
+che sia già nella cache locale della DLL quando il testo viene convertito: cioè
+il dizionario va pre-caricato (`GS_HOOK_CACHE`, o la cache persistita da una
+sessione precedente). È il motivo per cui in queste prove è stata usata una
+cache seminata, e va risolto prima di poter promettere traduzione "al primo
+avvio".
+
 ---
 
 ## Come si aggiunge una voce
