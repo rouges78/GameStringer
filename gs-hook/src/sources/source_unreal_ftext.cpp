@@ -241,22 +241,40 @@ public:
         //    firma validata oggi può diventare ambigua su una build futura, e
         //    in quel caso si rifiuta e si scende a GDI. Fallire qui è il caso
         //    BENIGNO; agganciare la funzione sbagliata no.
-        size_t matches = 0;
-        uintptr_t addr = GSTranslator::Utils::PatternScanUnique(
-            game, UE::Patterns::FText_ToString_UE5, &matches);
+        // Le firme si provano IN ORDINE: la stessa funzione ha codegen diversi
+        // fra build (la seconda ha `Rebuild` inlinata come chiamata virtuale).
+        // Sono complementari — misurate su 15 giochi, 14 + 1 — e insieme li
+        // coprono tutti. Un'ambiguita' su una NON ferma la ricerca: si passa
+        // alla successiva, che su quel binario puo' essere univoca.
+        struct Firma { const char* nome; const char* sig; };
+        static const Firma kFirme[] = {
+            { "UE5 Shipping",        UE::Patterns::FText_ToString_UE5 },
+            { "UE5 rebuild inline",  UE::Patterns::FText_ToString_UE5_RebuildInline },
+        };
 
-        if (!addr) {
+        uintptr_t addr = 0;
+        for (const auto& firma : kFirme) {
+            size_t matches = 0;
+            addr = GSTranslator::Utils::PatternScanUnique(game, firma.sig, &matches);
+            if (addr) {
+                LogLineA((std::string("[gs-hook/UE] FText::ToString trovato con la firma \"") +
+                          firma.nome + "\"\n").c_str());
+                break;
+            }
             if (matches > 1) {
                 const std::string quanti =
                     (matches >= GSTranslator::Utils::PATTERN_SCAN_COUNT_CAP)
                         ? "almeno " + std::to_string(matches)
                         : std::to_string(matches);
-                LogLineA(("[gs-hook/UE] pattern FText::ToString ambiguo: " + quanti +
-                          " match, hook RIFIUTATO (aggancerebbe la funzione sbagliata)\n").c_str());
-            } else {
-                LogLineA("[gs-hook/UE] FText::ToString non trovato su questa build "
-                         "(firma UE5 Shipping)\n");
+                LogLineA((std::string("[gs-hook/UE] firma \"") + firma.nome +
+                          "\" ambigua: " + quanti +
+                          " match, scartata (aggancerebbe la funzione sbagliata)\n").c_str());
             }
+        }
+
+        if (!addr) {
+            LogLineA("[gs-hook/UE] FText::ToString non trovato su questa build "
+                     "(nessuna firma nota aggancia)\n");
             return Activation::Failed; // → il dllmain scende a L2 (GDI)
         }
 
@@ -269,7 +287,7 @@ public:
         }
 
         hookedAddr_ = addr;
-        LogLineW(L"[gs-hook/UE] hook FText::ToString installato (pattern)\n");
+        LogLineW(L"[gs-hook/UE] hook FText::ToString installato\n");
 
         // Allocatore UE: se non si trova, la sostituzione resta possibile solo
         // per le traduzioni che entrano nel buffer esistente. Non e' un motivo
