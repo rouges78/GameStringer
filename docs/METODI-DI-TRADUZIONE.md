@@ -1253,6 +1253,63 @@ non funziona», e le due cose sono indistinguibili dall'interno. Costa poco
 separarle — un'applicazione di cui conosci gia' la risposta — e senza quel passo
 avrei scritto «RPG Maker non usa GDI» avendo in mano soltanto un hook rotto.
 
+### RPG Maker compone il fotogramma in memoria e lo presenta con una sola StretchBlt
+
+**La domanda.** Appurato che RPG Maker 2000/2003 non chiama nessuna funzione di
+testo GDI, restava da capire **come** disegni. L'ipotesi era un font bitmap
+blittato glifo per glifo: in quel caso il rettangolo sorgente identificherebbe
+il carattere, e da li' si risalirebbe al testo.
+
+**La misura (22/08/2026, Yume Nikki in partita, `GS_HOOK_DIAG_BLIT=1`).**
+Quattrocento blit registrati. **Tutti uguali:**
+
+```text
+[gs-hook/BLIT] #0 StretchBlt src=E3011337 (0,0) 320x240 -> (0,0)
+[gs-hook/BLIT] #1 StretchBlt src=BB0113C8 (0,0) 320x240 -> (0,0)
+[gs-hook/BLIT] #2 StretchBlt src=ED011337 (0,0) 320x240 -> (0,0)
+...
+[gs-hook/BLIT] ... 1000 blit finora
+```
+
+Distribuzione: **400 su 400 sono `StretchBlt` di 320x240 dall'origine
+all'origine**. Zero `BitBlt`. Zero blit piccoli. Le DC sorgente si alternano fra
+due famiglie (`…1337` e `…13C8`): doppio buffer.
+
+**Cosa vuol dire.** Il motore disegna **tutto** — tile, sprite, finestre di
+dialogo, testo — dentro una propria bitmap in memoria, scrivendo i pixel
+direttamente, **senza una sola chiamata di disegno GDI**. Poi presenta il
+fotogramma finito con una StretchBlt per frame.
+
+**Prima conseguenza: l'intercettazione del testo a runtime e' impossibile per
+questa famiglia di motori.** Non «difficile»: impossibile per questa via. Il
+testo non esiste mai come testo in nessuna chiamata di sistema — ne' come
+stringa, ne' come glifo. Per RPG Maker 2000/2003 la traduzione va fatta **sui
+file** (`.ldb`/`.lmu`), ed e' la strada che il progetto ha gia'.
+
+**Seconda conseguenza, e qui c'e' un guadagno.** Quella StretchBlt e' un punto
+di aggancio **ideale per la cattura**: una volta per fotogramma passa il
+fotogramma COMPLETO, gia' composto, 320x240, dentro il processo. Confrontata con
+la cattura dallo schermo:
+
+| | dallo schermo | alla StretchBlt |
+|---|---|---|
+| finestra coperta | prende i pixel di chi copre | indifferente |
+| overlay/notifiche | finiscono nel fotogramma | non esistono |
+| ridimensionamento | scala della finestra | risoluzione nativa 320x240 |
+| sincronia | asincrona, prende quel che c'e' | esattamente un fotogramma |
+
+Per i giochi che presentano cosi', questo aggira **tutto** il problema della
+cattura per coordinate — non lo mitiga, lo elimina. Vale la pena tenerlo a mente
+per il percorso OCR/VLM.
+
+**La trappola.** Il primo filtro guardava solo i blit con sorgente piccola
+(<= 32 px), perche' «i glifi sono piccoli». Ha prodotto **zero righe**, e zero
+righe li' non distingue «nessun glifo» da «nessuna chiamata»: sono due risposte
+opposte e il filtro le rendeva identiche. Tolto il filtro, lo stesso identico
+esperimento ha prodotto 400 dati. **Un filtro che non produce risultati risponde
+a una domanda diversa da quella che hai fatto** — prima si guarda se la funzione
+viene chiamata, solo dopo si sceglie cosa tenere.
+
 ---
 
 ## Come si aggiunge una voce

@@ -67,6 +67,90 @@ void DiagChiamata(const wchar_t* porta, const std::wstring& s) {
     }
 }
 
+// ─── Diagnostica dei blit (opt-in: GS_HOOK_DIAG_BLIT=1) ──────────────────────
+//
+// A COSA SERVE. RPG Maker 2000/2003 non chiama nessuna funzione di testo GDI —
+// misurato, con controllo positivo. Resta da capire COME disegni il testo.
+// L'ipotesi è un font bitmap blittato glifo per glifo: se è vera, mentre una
+// frase è a schermo si vede una raffica di `BitBlt` con rettangoli sorgente
+// PICCOLI, dalla STESSA DC sorgente, a X crescente e Y costante — la stessa
+// firma che il coalescer cerca sul testo GDI. E il rettangolo sorgente
+// *identifica il carattere*, perché la sua posizione nel bitmap del font è
+// l'indice del glifo: da lì si potrebbe risalire al testo.
+//
+// PERCHÉ È OPT-IN. `BitBlt` è la chiamata più calda di un gioco 2D: passa per
+// ogni tile, ogni sprite, ogni fotogramma. Agganciarla sempre significherebbe
+// pagare un hook milioni di volte per una domanda che ci si pone una volta.
+// Con `GS_HOOK_DIAG_BLIT=1` il hook non viene nemmeno installato quando non
+// serve.
+//
+// COSA FILTRA. Solo i blit con sorgente piccola (≤ kBlitMaxLatoPx per lato):
+// i glifi lo sono, gli sfondi e le mappe no. Non è una certezza — i tile di
+// RPG Maker sono 16×16 e passano anche loro — ma riduce il rumore abbastanza da
+// far emergere una riga di testo, che si riconosce dalla progressione in X.
+// (soglia conservata per un eventuale filtro futuro; oggi non si filtra)
+constexpr int kBlitMaxLatoPx  = 32;
+constexpr int kDiagPrimiBlit  = 400;
+std::atomic<int> g_blitVisti{0};
+
+bool DiagBlitAttiva() {
+    static const bool attiva = [] {
+        char buf[8] = {};
+        return GetEnvironmentVariableA("GS_HOOK_DIAG_BLIT", buf, sizeof(buf)) > 0 &&
+               buf[0] == '1';
+    }();
+    return attiva;
+}
+
+void DiagBlit(const wchar_t* porta, HDC src, int sx, int sy, int w, int h,
+              int dx, int dy) {
+    const int n = g_blitVisti.fetch_add(1, std::memory_order_relaxed);
+
+    // Le PRIME chiamate si registrano tutte, qualunque dimensione. Filtrare per
+    // «sorgente piccola» sembrava ragionevole — i glifi sono piccoli — ma un
+    // filtro che non produce righe non distingue «nessun glifo» da «nessuna
+    // chiamata», e sono due risposte opposte. Prima si guarda se la funzione
+    // viene invocata; solo dopo ha senso selezionare cosa.
+    if (n < kDiagPrimiBlit) {
+        wchar_t riga[220];
+        // La DC sorgente in esadecimale: glifi dello stesso font arrivano tutti
+        // dalla stessa, ed è il modo più rapido per separarli dai tile.
+        swprintf_s(riga, L"[gs-hook/BLIT] #%d %ls src=%p (%d,%d) %dx%d -> (%d,%d)\n",
+                   n, porta, (void*)src, sx, sy, w, h, dx, dy);
+        LogLineW(riga);
+        return;
+    }
+
+    // Oltre il tetto si smette di scrivere una riga per chiamata — sarebbero
+    // milioni — ma si segna il passaggio alle potenze di dieci, così il log
+    // dice comunque l'ordine di grandezza invece di tacere.
+    for (int soglia = 1000; soglia <= 1000000; soglia *= 10) {
+        if (n == soglia) {
+            wchar_t riga[120];
+            swprintf_s(riga, L"[gs-hook/BLIT] ... %d blit finora\n", n);
+            LogLineW(riga);
+        }
+    }
+}
+
+using BitBlt_t = BOOL (WINAPI*)(HDC, int, int, int, int, HDC, int, int, DWORD);
+BitBlt_t Original_BitBlt = nullptr;
+
+BOOL WINAPI Hook_BitBlt(HDC dst, int x, int y, int w, int h,
+                        HDC src, int sx, int sy, DWORD rop) {
+    DiagBlit(L"BitBlt", src, sx, sy, w, h, x, y);
+    return Original_BitBlt(dst, x, y, w, h, src, sx, sy, rop);
+}
+
+using StretchBlt_t = BOOL (WINAPI*)(HDC, int, int, int, int, HDC, int, int, int, int, DWORD);
+StretchBlt_t Original_StretchBlt = nullptr;
+
+BOOL WINAPI Hook_StretchBlt(HDC dst, int x, int y, int w, int h,
+                            HDC src, int sx, int sy, int sw, int sh, DWORD rop) {
+    DiagBlit(L"StretchBlt", src, sx, sy, sw, sh, x, y);
+    return Original_StretchBlt(dst, x, y, w, h, src, sx, sy, sw, sh, rop);
+}
+
 // Guardia di rientranza: DrawTextW (user32) rende il testo chiamando ExtTextOutW
 // UNA VOLTA PER RIGA VISIVA del word-wrap. Senza questa guardia, il contenuto di
 // DrawText verrebbe catturato due volte: intero dal hook DrawTextW e a pezzi
@@ -682,12 +766,31 @@ public:
                           (LPVOID*)&Original_EndPaint) == MH_OK) {
             MH_EnableHook((LPVOID)pEnd);
         }
+        // Diagnostica dei blit: installata SOLO su richiesta esplicita, e non
+        // conta per l'attivazione — è uno strumento d'indagine, non una
+        // sorgente di testo.
+        if (DiagBlitAttiva()) {
+            struct { const char* nome; LPVOID hook; LPVOID* orig; } blit[] = {
+                { "BitBlt",     (LPVOID)&Hook_BitBlt,     (LPVOID*)&Original_BitBlt     },
+                { "StretchBlt", (LPVOID)&Hook_StretchBlt, (LPVOID*)&Original_StretchBlt },
+            };
+            for (const auto& b : blit) {
+                auto p = GetProcAddress(gdi, b.nome);
+                if (p && MH_CreateHook((LPVOID)p, b.hook, b.orig) == MH_OK) {
+                    MH_EnableHook((LPVOID)p);
+                }
+            }
+            LogLineW(L"[gs-hook/BLIT] diagnostica blit attiva (GS_HOOK_DIAG_BLIT=1)\n");
+        }
+
         return any ? Activation::Activated : Activation::Failed;
     }
 
     void Deactivate() override {
         if (Original_ExtTextOutW) MH_DisableHook((LPVOID)Original_ExtTextOutW);
         if (Original_DrawTextW)   MH_DisableHook((LPVOID)Original_DrawTextW);
+        if (Original_BitBlt)      MH_DisableHook((LPVOID)Original_BitBlt);
+        if (Original_StretchBlt)  MH_DisableHook((LPVOID)Original_StretchBlt);
         if (Original_ExtTextOutA) MH_DisableHook((LPVOID)Original_ExtTextOutA);
         if (Original_TextOutA)    MH_DisableHook((LPVOID)Original_TextOutA);
         if (Original_DrawTextA)   MH_DisableHook((LPVOID)Original_DrawTextA);
