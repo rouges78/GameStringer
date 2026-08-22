@@ -298,6 +298,9 @@ class LiveTranslationEngine {
       // gioco: la regione dello schermo non gli si applica ed e' captureScreen
       // a ignorarla in quel caso.
       if (this.config.gameProcess) captureOpts.gameProcess = this.config.gameProcess;
+      if (this.config.captureRegion.mode === 'window' && this.config.captureRegion.windowTitle) {
+        captureOpts.windowTitle = this.config.captureRegion.windowTitle;
+      }
       if (this.config.captureRegion.mode === 'region') {
         captureOpts.x = this.config.captureRegion.x;
         captureOpts.y = this.config.captureRegion.y;

@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { getCaptureWindows } from '@/lib/ocr/screen-capture';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-  Play, Pause, Square, Monitor, ScanSearch, Zap, Clock, Eye,
+  Play, Pause, Square, Monitor, ScanSearch, AppWindow, Zap, Clock, Eye,
   Languages, Cpu, BarChart3, AlertCircle, CheckCircle, SkipForward
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
@@ -60,6 +61,12 @@ export default function LiveTranslatePage() {
   const [provider, setProvider] = useState('groq');
   const [intervalMs, setIntervalMs] = useState(2000);
   const [mode, setMode] = useState<TranslationMode>('fast');
+  // Modalita' di cattura. Il selettore esisteva ma non era collegato a niente:
+  // usava `defaultValue` senza `onValueChange`, quindi sceglierne una non
+  // cambiava nulla. Ora la scelta arriva davvero al motore.
+  const [captureMode, setCaptureMode] = useState<'fullscreen' | 'region' | 'window'>('fullscreen');
+  const [windowTitle, setWindowTitle] = useState<string>('');
+  const [windows, setWindows] = useState<{ hwnd: number; title: string }[]>([]);
   const [vlmProvider, setVlmProvider] = useState<VlmProvider>('ollama');
 
   // Engine state
@@ -123,6 +130,21 @@ export default function LiveTranslatePage() {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
 
+  // L'elenco si aggiorna quando serve, non di continuo: enumerare le finestre
+  // a ogni render sarebbe lavoro sprecato per un dato che cambia di rado.
+  const aggiornaFinestre = useCallback(async () => {
+    const trovate = await getCaptureWindows();
+    setWindows(trovate);
+    if (trovate.length > 0 && !trovate.some((w) => w.title === windowTitle)) {
+      setWindowTitle(trovate[0].title);
+    }
+  }, [windowTitle]);
+
+  useEffect(() => {
+    if (captureMode === 'window') void aggiornaFinestre();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [captureMode]);
+
   const handleStart = useCallback(() => {
     const config: Partial<LiveTranslationConfig> = {
       targetLanguage: targetLang,
@@ -132,9 +154,13 @@ export default function LiveTranslatePage() {
       captureIntervalMs: intervalMs,
       mode,
       vlmProvider,
+      captureRegion:
+        captureMode === 'window' && windowTitle
+          ? { mode: 'window', windowTitle }
+          : { mode: captureMode === 'window' ? 'fullscreen' : captureMode },
     };
     liveTranslationEngine.start(config);
-  }, [targetLang, sourceLang, ocrLang, provider, intervalMs, mode, vlmProvider]);
+  }, [targetLang, sourceLang, ocrLang, provider, intervalMs, mode, vlmProvider, captureMode, windowTitle]);
 
   const handleStop = useCallback(() => {
     liveTranslationEngine.stop();
@@ -311,11 +337,18 @@ export default function LiveTranslatePage() {
               {/* Capture mode */}
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">{t('common.modalitaCattura')}</label>
-                <Select defaultValue="fullscreen" disabled={isRunning}>
+                <Select
+                  value={captureMode}
+                  onValueChange={(v) => setCaptureMode(v as 'fullscreen' | 'region' | 'window')}
+                  disabled={isRunning}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fullscreen">
                       <span className="flex items-center gap-2"><Monitor className="h-3 w-3" /> {t('common.ltFullscreen')}</span>
+                    </SelectItem>
+                    <SelectItem value="window">
+                      <span className="flex items-center gap-2"><AppWindow className="h-3 w-3" /> {t('common.ltWindow')}</span>
                     </SelectItem>
                     <SelectItem value="region">
                       <span className="flex items-center gap-2"><ScanSearch className="h-3 w-3" /> {t('common.ltRegion')}</span>
@@ -323,6 +356,28 @@ export default function LiveTranslatePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Quale finestra, quando la modalita' e' 'window'. L'elenco viene
+                  dal backend: le finestre senza contenuto sono gia' escluse. */}
+              {captureMode === 'window' && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('common.ltPickWindow')}</label>
+                  <Select
+                    value={windowTitle}
+                    onValueChange={setWindowTitle}
+                    disabled={isRunning || windows.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={windows.length === 0 ? t('common.ltNoWindow') : undefined} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {windows.map((w) => (
+                        <SelectItem key={w.hwnd} value={w.title}>{w.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

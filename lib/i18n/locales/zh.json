@@ -1876,7 +1876,7 @@
     "modelwizDownload1": "从此处下载 ModelWiz: ",
     "modelwizDownload2": " — 启动本地服务器，GameStringer 将在翻译链中自动使用它。",
     "groqApiKeyLabel": "🔑 Groq API 密钥（Llama 3.3 70B — 免费）",
-    "deepseekHint": "~$0.14/100万 tokens，无激进速率限制 — ",
+    "deepseekHint": "高峰 $0.44/100万 tokens，非高峰 $0.22 — 无激进速率限制 — ",
     "otherLlmProviders": "🔧 其他 LLM 提供商（Mistral、Cohere、Together、Fireworks、OpenRouter、Cerebras）",
     "together25Credit": "$25 免费额度 — ",
     "deepl500k": "每月 50万 字符免费 — ",
@@ -4005,7 +4005,10 @@
     "openFolder": "打开文件夹",
     "pause": "暂停",
     "resume": "继续",
-    "play": "播放"
+    "play": "播放",
+    "ltWindow": "窗口",
+    "ltPickWindow": "选择窗口",
+    "ltNoWindow": "未找到窗口"
   },
   "languages": {
     "cs": "Čeština",

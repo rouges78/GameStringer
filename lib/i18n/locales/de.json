@@ -1876,7 +1876,7 @@
     "modelwizDownload1": "Lade ModelWiz herunter von ",
     "modelwizDownload2": " — Starte den lokalen Server, und GameStringer verwendet ihn automatisch in der Übersetzungskette.",
     "groqApiKeyLabel": "🔑 Groq-API-Schlüssel (Llama 3.3 70B — kostenlos)",
-    "deepseekHint": "~$0.14/1M Tokens, kein aggressives Rate-Limit — ",
+    "deepseekHint": "$0,44/1M Tokens in Spitzenzeiten, $0,22 außerhalb — kein aggressives Rate-Limit — ",
     "otherLlmProviders": "🔧 Weitere LLM-Anbieter (Mistral, Cohere, Together, Fireworks, OpenRouter, Cerebras)",
     "together25Credit": "25 $ Gratisguthaben — ",
     "deepl500k": "500K Zeichen/Monat kostenlos — ",
@@ -4005,7 +4005,10 @@
     "openFolder": "Ordner öffnen",
     "pause": "Pause",
     "resume": "Fortsetzen",
-    "play": "Abspielen"
+    "play": "Abspielen",
+    "ltWindow": "Fenster",
+    "ltPickWindow": "Fenster wählen",
+    "ltNoWindow": "Kein Fenster gefunden"
   },
   "languages": {
     "cs": "Čeština",

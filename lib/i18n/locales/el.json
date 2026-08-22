@@ -1978,7 +1978,7 @@
     "modelwizDownload1": "Κατεβάστε το ModelWiz από ",
     "modelwizDownload2": " — Εκκινήστε τον τοπικό διακομιστή και το GameStringer θα το χρησιμοποιήσει αυτόματα στην αλυσίδα μετάφρασης.",
     "groqApiKeyLabel": "🔑 Κλειδί API Groq (Llama 3.3 70B — Δωρεάν)",
-    "deepseekHint": "~$0.14/1M tokens, χωρίς επιθετικό όριο ρυθμού — ",
+    "deepseekHint": "$0,44/1M tokens σε ώρες αιχμής, $0,22 εκτός — χωρίς επιθετικό όριο ρυθμού — ",
     "otherLlmProviders": "🔧 Άλλοι πάροχοι LLM (Mistral, Cohere, Together, Fireworks, OpenRouter, Cerebras)",
     "together25Credit": "$25 δωρεάν πίστωση — ",
     "deepl500k": "500K χαρακτήρες/μήνα δωρεάν — ",
@@ -4141,7 +4141,10 @@
     "dryRunPipelineScan": "Dry Run — Σάρωση pipeline",
     "dryRunPipelineScanDesc": "Αυτόματος έλεγχος εντοπισμού και εξαγωγής σε όλα τα εγκατεστημένα παιχνίδια (χωρίς μετάφραση)",
     "stringIt": "String it!",
-    "failed": "απέτυχαν"
+    "failed": "απέτυχαν",
+    "ltWindow": "Παράθυρο",
+    "ltPickWindow": "Επιλογή παραθύρου",
+    "ltNoWindow": "Δεν βρέθηκε παράθυρο"
   },
   "languages": {
     "cs": "Čeština",
