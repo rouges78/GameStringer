@@ -1310,6 +1310,61 @@ esperimento ha prodotto 400 dati. **Un filtro che non produce risultati risponde
 a una domanda diversa da quella che hai fatto** — prima si guarda se la funzione
 viene chiamata, solo dopo si sceglie cosa tenere.
 
+### La cattura al present: il fotogramma preso dove il gioco lo consegna
+
+**Cos'e'.** `GS_HOOK_FRAME_DUMP=<prefisso>` fa salvare al hook i primi
+fotogrammi come `.bmp`, presi **dentro l'hook sul blit di present** — quello con
+cui il gioco consegna il frame finito alla finestra. Si riconosce da
+`WindowFromDC(destinazione)`, non dalle dimensioni: 320x240 e' di questo gioco,
+mentre «la destinazione e' una finestra» vale per qualunque motore che presenti
+con un blit.
+
+**La prova che i pixel non vengono dallo schermo.** Non basta catturare e vedere
+il gioco: se la finestra e' in primo piano, anche la cattura dallo schermo
+darebbe la stessa immagine, e le due ipotesi restano indistinguibili. Serve una
+condizione in cui lo schermo NON puo' avere quei pixel.
+
+Primo tentativo: coprire la finestra con un'altra. Fallito due volte — il gioco
+si riprende il primo piano, e lo script l'ha detto («il gioco NON e coperto, il
+test non prova niente») invece di spacciare per riuscito un test che non lo era.
+
+Secondo tentativo, decisivo: **spostare la finestra fuori dallo schermo**.
+
+```text
+schermo virtuale: 2293x960 da (0,0)
+finestra a (2343,100)-(3003,620)  interseca lo schermo: False
+[gs-hook/FRAME] #0 320x240 -> ...fuori-0.bmp (ok)
+[gs-hook/FRAME] #1 320x240 -> ...fuori-1.bmp (ok)
+[gs-hook/FRAME] #2 320x240 -> ...fuori-2.bmp (ok)
+```
+
+I tre BMP contengono la schermata del titolo **completa e corretta**, mentre di
+quella finestra non c'era **un solo pixel** sul monitor. Nessuna cattura dallo
+schermo puo' produrre quel risultato.
+
+**Cosa vale.** Confrontata con la cattura dallo schermo, su cui questo progetto
+ha perso una serata:
+
+| | dallo schermo | al present |
+|---|---|---|
+| finestra coperta | prende i pixel di chi copre | indifferente |
+| finestra fuori schermo | impossibile | **misurato: funziona** |
+| overlay, notifiche, cursore | finiscono nel fotogramma | non esistono ancora |
+| risoluzione | quella della finestra, scalata | nativa, 320x240 |
+| sincronia | «quello che c'era» | esattamente un fotogramma |
+
+**Cosa NON fa, di proposito.** Non consegna i fotogrammi all'applicazione: salva
+un numero limitato di file e si ferma. Quel ponte va costruito con **entrambi i
+lati insieme** — questo progetto ha gia' collezionato IPC a meta', ed e' il
+motivo per cui la catena in-game e' rimasta ferma tanto tempo. Qui si dimostra
+il punto d'aggancio; il trasporto e' un passo successivo e deliberato.
+
+**La trappola.** Un test che non riproduce la condizione da provare non prova
+niente, per quanto il risultato sembri buono. Catturare un gioco in primo piano
+e vedere il gioco e' compatibile con entrambe le spiegazioni. Il test vale solo
+quando la spiegazione sbagliata e' **impossibile**: fuori dallo schermo, i pixel
+dello schermo non ci sono, e resta una sola lettura.
+
 ---
 
 ## Come si aggiunge una voce
