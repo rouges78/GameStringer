@@ -729,6 +729,7 @@ fn main() {
             ocr_translator::toggle_ocr_overlay,
             ocr_translator::position_overlay_on_window,
             ocr_translator::capture_screen_region,
+            ocr_translator::ocr_recognize_png,
             ocr_translator::ocr_recognize,
             ocr_translator::open_ocr_overlay,
             ocr_translator::select_screen_region,

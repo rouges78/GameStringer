@@ -77,9 +77,6 @@ pub fn get_windows() -> Vec<WindowInfo> {
 #[command]
 pub fn capture_window(window_title: String) -> Result<CaptureResult, String> {
     use crate::ocr_translator::screen_capture;
-    use base64::{engine::general_purpose::STANDARD, Engine as _};
-    use image::ImageOutputFormat;
-    use std::io::Cursor;
 
     let ago = window_title.to_lowercase();
     let candidate: Vec<_> = screen_capture::list_windows()
@@ -103,30 +100,13 @@ pub fn capture_window(window_title: String) -> Result<CaptureResult, String> {
 
     let img = screen_capture::capture_window(finestra.hwnd)?;
 
-    // `image_data` è un PNG in base64: è il contratto che `lib/ocr/screen-capture.ts`
-    // già rispetta col suo ripiego su canvas (`toDataURL('image/png')` senza
-    // prefisso). La cattura però produce BGRA grezzo, quindi va convertito —
-    // restituire i pixel grezzi qui darebbe una stringa valida che a valle
-    // diventa un'immagine illeggibile, senza nessun errore.
-    // Il quarto byte NON è alpha: le DIB a 32 bit di GDI sono BGRX, e quel byte
-    // resta a zero. Copiarlo come alpha dà un PNG interamente trasparente —
-    // corretto nei colori e invisibile. Misurato sul percorso dei fotogrammi
-    // condivisi: 5180 pixel col colore giusto, zero pixel opachi.
-    let mut rgba = img.data.clone();
-    for p in rgba.chunks_exact_mut(4) {
-        p.swap(0, 2); // BGRX → RGBX
-        p[3] = 255;   // X → alpha opaco
-    }
-    let buf = image::RgbaImage::from_raw(img.width, img.height, rgba)
-        .ok_or_else(|| "dimensioni incoerenti col buffer catturato".to_string())?;
-
-    let mut png = Vec::new();
-    image::DynamicImage::ImageRgba8(buf)
-        .write_to(&mut Cursor::new(&mut png), ImageOutputFormat::Png)
-        .map_err(|e| format!("png encode: {e}"))?;
+    // Stessa conversione di `capture_screen_region` e `read_game_frame`: una
+    // sola implementazione, in Rust, che sa che il quarto byte di GDI non e'
+    // alpha. Prima questa era una copia a se' stante.
+    let image_data = screen_capture::to_png_base64(&img)?;
 
     Ok(CaptureResult {
-        image_data: STANDARD.encode(&png),
+        image_data,
         width: img.width,
         height: img.height,
     })

@@ -630,7 +630,7 @@ pub async fn capture_screen_region(region: Option<CaptureRegion>) -> Result<Capt
         Ok(CaptureResult {
             width: image.width,
             height: image.height,
-            data: image.data,
+            image_data: screen_capture::to_png_base64(&image)?,
         })
     }
     
@@ -642,7 +642,41 @@ pub async fn capture_screen_region(region: Option<CaptureRegion>) -> Result<Capt
 pub struct CaptureResult {
     pub width: u32,
     pub height: u32,
-    pub data: Vec<u8>,
+    /// PNG in base64, senza prefisso `data:` — lo stesso contratto di
+    /// `capture_window` e `read_game_frame`. Prima erano pixel grezzi, e il
+    /// frontend li ricomponeva a mano: otto milioni di numeri per fotogramma
+    /// attraverso l'IPC, con la conversione duplicata in TypeScript.
+    pub image_data: String,
+}
+
+/// Esegue OCR su un PNG codificato in base64.
+///
+/// PERCHE' ESISTE. `ocr_recognize` vuole pixel grezzi, e `live-ocr-overlay` li
+/// portava in JavaScript solo per rimandarli indietro al passo successivo: non
+/// li guardava mai. Erano milioni di numeri attraverso l'IPC, due volte per
+/// fotogramma, per un dato che non usciva mai davvero da Rust. Con questa
+/// variante la cattura e l'OCR parlano lo stesso linguaggio del resto —
+/// `capture_window`, `capture_screen_region` e `read_game_frame` restituiscono
+/// tutti un PNG in base64.
+#[command]
+pub async fn ocr_recognize_png(
+    image_data: String,
+    language: String,
+) -> Result<Vec<OcrTextResult>, String> {
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
+
+    let png = STANDARD.decode(&image_data).map_err(|e| format!("base64: {e}"))?;
+    let rgba = image::load_from_memory(&png)
+        .map_err(|e| format!("png decode: {e}"))?
+        .to_rgba8();
+    let (width, height) = rgba.dimensions();
+
+    // L'OCR vuole BGRA, l'immagine decodificata e' RGBA.
+    let mut bgra = rgba.into_raw();
+    for p in bgra.chunks_exact_mut(4) {
+        p.swap(0, 2);
+    }
+    ocr_recognize(bgra, width, height, language).await
 }
 
 /// Esegue OCR su dati immagine

@@ -14,7 +14,6 @@ import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { translateSingleSmart } from '@/lib/ai/ai-translate-direct';
-import { rawPixelsToBase64 } from '@/lib/image-utils';
 import Link from 'next/link';
 import { RETRO_PLATFORMS, type RetroPlatform } from '@/lib/social/community-hub-service';
 import { clientLogger } from '@/lib/client-logger';
@@ -150,15 +149,16 @@ export default function EmulatorTranslatorPage() {
     if (isPaused) return;
     try {
       // Capture screen from the emulator window
-      const capture = await invoke<{ width: number; height: number; data: number[] }>('capture_screen_region', {
+      const capture = await invoke<{ width: number; height: number; image_data: string }>('capture_screen_region', {
         region: selectedWindow ? { x: 0, y: 0, width: 0, height: 0 } : null,
       });
-      if (!capture || capture.data.length === 0) return;
+      if (!capture || !capture.image_data) return;
 
       setCaptureCount(c => c + 1);
 
       // Convert to base64 for OCR
-      const base64 = rawPixelsToBase64(capture.data, capture.width, capture.height);
+      // Il PNG arriva gia' codificato dal backend.
+      const base64 = capture.image_data;
 
       // Use Tesseract OCR
       const { recognizeText } = await import('@/lib/ocr/ocr-service');

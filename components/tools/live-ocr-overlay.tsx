@@ -82,7 +82,7 @@ export function LiveOcrOverlay() {
       const captureResult = await invoke<{
         width: number;
         height: number;
-        data: number[];
+        image_data: string;
       }>('capture_screen_region', {
         region: captureMode === 'region' && captureRegion ? captureRegion : null
       });
@@ -95,10 +95,8 @@ export function LiveOcrOverlay() {
         width: number;
         height: number;
         confidence: number;
-      }>>('ocr_recognize', {
-        imageData: captureResult.data,
-        width: captureResult.width,
-        height: captureResult.height,
+      }>>('ocr_recognize_png', {
+        imageData: captureResult.image_data,
         language: sourceLanguage === 'auto' ? 'en' : sourceLanguage
       });
 

@@ -141,6 +141,38 @@ pub(crate) fn client_vuoto(buf: &[u8], larghezza: i32, ox: i32, oy: i32, cw: i32
     true
 }
 
+/// Converte un fotogramma catturato in un PNG codificato in base64.
+///
+/// UNA SOLA CONVERSIONE, USATA DA TUTTI. Prima ce n'erano due: `capture_window`
+/// codificava in Rust, mentre `capture_screen_region` restituiva i pixel grezzi
+/// e li faceva ricomporre al frontend a mano, in un canvas. Quel secondo
+/// percorso passava **otto milioni e ottocentomila numeri** attraverso l'IPC per
+/// ogni fotogramma, ed e' esattamente dove si era annidato il difetto
+/// dell'alpha: la conversione a mano copiava il quarto byte come trasparenza.
+///
+/// IL QUARTO BYTE NON E' ALPHA. Le DIB a 32 bit di GDI sono BGR**X**: quel byte
+/// resta a zero. Copiarlo come alpha da un'immagine corretta nei colori e
+/// completamente invisibile — misurato tre volte oggi, in tre punti diversi del
+/// codice. Qui l'opacita' si impone una volta per tutte.
+pub fn to_png_base64(img: &ImageData) -> Result<String, String> {
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use image::ImageOutputFormat;
+    use std::io::Cursor;
+
+    let mut rgba = img.data.clone();
+    for p in rgba.chunks_exact_mut(4) {
+        p.swap(0, 2); // BGRX -> RGBX
+        p[3] = 255;   // X -> alpha opaco
+    }
+    let buf = image::RgbaImage::from_raw(img.width, img.height, rgba)
+        .ok_or_else(|| "dimensioni incoerenti col buffer catturato".to_string())?;
+    let mut png = Vec::new();
+    image::DynamicImage::ImageRgba8(buf)
+        .write_to(&mut Cursor::new(&mut png), ImageOutputFormat::Png)
+        .map_err(|e| format!("png encode: {e}"))?;
+    Ok(STANDARD.encode(&png))
+}
+
 /// Cattura una finestra specifica.
 ///
 /// PERCHÉ NON BASTA COPIARE DALLO SCHERMO (misurato il 22/08/2026).
