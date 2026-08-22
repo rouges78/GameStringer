@@ -325,10 +325,10 @@ il metodo per ricavarne una sta nelle voci qui sotto.
 - Il file di dizionario è **uno solo per coppia di lingue**: due giochi diversi
   si sovrascrivono a vicenda all'uscita. Innocuo finché le traduzioni sono
   testo→testo.
-- La cattura GDI non è ancora stata provata su un gioco commerciale. I giochi UE
-  disegnano via Slate/Direct3D e non la esercitano; il tentativo su RPG_RT
-  (Yume Nikki, il bersaglio giusto) è stato **bloccato da Defender**, che mette
-  in quarantena l'injector a 32 bit — vedi la voce dedicata.
+- La cattura GDI **si attiva** su RPG_RT (Yume Nikki): entrambe le sorgenti di
+  livello 2 si installano. Non ha però ancora **catturato** una riga: serve
+  portare il gioco fino a un dialogo. I giochi UE non la esercitano affatto,
+  perché disegnano via Slate/Direct3D — vedi la voce dedicata.
 
 
 ### La Named Pipe costa ~19us a stringa, e non è sul percorso caldo
@@ -995,6 +995,69 @@ funzionerà». Qui ha funzionato **una volta sola**, e il fallimento successivo 
 somiglia a un problema di antivirus: somiglia a un file mancante. Chiunque
 diagnostichi un'iniezione che smette di funzionare dovrebbe guardare
 `Get-MpThreatDetection` prima del proprio codice.
+
+### La cattura GDI si attiva su Yume Nikki (ma non ha ancora catturato niente)
+
+**Il fatto (21/08/2026, sera).** Con l'injector che Defender non tocca più, il
+hook entra in **Yume Nikki** (RPG_RT, RPG Maker 2003, 32 bit) e **le sorgenti GDI
+si attivano davvero** — è la prima volta su un gioco commerciale, dopo che su
+Unreal non erano mai state esercitate perché UE disegna via Slate/Direct3D:
+
+```text
+[gs-hook] sorgente attiva: GDI (ExtTextOutW/DrawTextW) (livello 2)
+[gs-hook] sorgente attiva: GDI/GetGlyphOutline (estrazione) (livello 2)
+```
+
+**Quello che ancora manca: nessuna riga catturata.** Zero `OVERLAY:`, zero
+`SUBST:`. Il hook si installa ~3 s dopo l'iniezione, quando la schermata del
+titolo è **già disegnata**, e RPG_RT ridisegna solo quando qualcosa cambia:
+finché non succede niente a schermo, non c'è nessuna `ExtTextOutW` da
+intercettare. Serve far avanzare il gioco fino a un dialogo. Il tentativo di
+farlo alla cieca ha chiuso il gioco: nel menu del titolo giapponese la sequenza
+di tasti è finita su «しゅうりょう» (Esci).
+
+**Perché alla cieca.** Due ostacoli sommati, entrambi da mettere in conto domani:
+
+- RPG_RT **parte minimizzato e fuori schermo** (rect a Y=1290 su un monitor alto
+  960). Va ripristinato a mano: `ShowWindow(SW_RESTORE)` + `MoveWindow` +
+  `SetForegroundWindow`.
+- Gli screenshot di computer-use **escludono la finestra del gioco**: il permesso
+  concesso è la voce Steam `steam://rungameid/650700`, ma il processo che gira è
+  `RPG_RT.exe` e non combacia. Il desktop si vede attraverso la finestra come se
+  non ci fosse. I tasti vanno mandati con `keybd_event` (livello input, lo vede
+  anche DirectInput), ma senza vedere lo schermo si naviga a memoria.
+
+**Quattro strumenti che hanno mentito, in una sera sola.** Vale più questo
+elenco della scoperta:
+
+1. **«Nessun log» letto troppo presto.** `MainThread` fa `Sleep(3000)` e poi
+   tenta la pipe, che scade con calma: le prime righe compaiono ~8 s dopo
+   l'iniezione. Guardare a 3 s dice «la DLL non è partita» ed è falso. Due volte.
+2. **Due log, due destinazioni.** Il core scrive `gs_translator.log` accanto alla
+   DLL; `gs-hook` scrive in **`%TEMP%\gs-hook.log`** (`gs_log.h`, override con
+   `GS_HOOK_LOG`). Il primo conteneva solo un `[WARN]` della pipe, e sembrava che
+   il hook fosse morto lì: tutto il resto era nell'altro file.
+3. **Rinominare la DLL non prova che non sia caricata.** Su Windows una DLL in
+   uso **si rinomina benissimo** — è *cancellarla* che fallisce. Il mio «test
+   decisivo» ha concluso l'esatto contrario del vero.
+4. **I moduli di un processo a 32 bit non si enumerano da 64 bit.**
+   `Process.Modules`, `tasklist /m`, e perfino `SysWOW64\tasklist.exe` mostrano
+   solo lo strato `wow64*.dll`: 7 moduli per un'app GUI viva. Non è una prova di
+   assenza, è uno strumento che non guarda lì.
+
+**Da fare, in ordine.** (a) Ripristinare la finestra e **vederla** — o dando il
+permesso al processo giusto, o leggendo lo schermo altrimenti. (b) Arrivare a un
+dialogo (nuova partita → la stanza iniziale → interagire). (c) Verificare che
+compaiano righe `OVERLAY:` con testo giapponese coalescito. (d) Solo dopo, il
+dizionario: la cache è a **0 voci**, quindi anche catturando, `translated`
+sarebbe uguale all'originale.
+
+**Un buco latente nell'injector, trovato guardando altro.** Il successo si
+deduce da `WaitForSingleObject(thread, 15000)` + `GetExitCodeThread`: se il
+thread remoto non finisse entro 15 s, l'exit code sarebbe `STILL_ACTIVE` (259) —
+non zero, quindi **scambiato per un HMODULE valido** e riportato come «DLL
+caricata». Non è successo (l'iniezione è istantanea), ma il caso c'è: `259` va
+trattato come fallimento.
 
 ---
 
