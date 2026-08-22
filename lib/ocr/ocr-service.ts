@@ -92,6 +92,17 @@ async function ottieniWorker(
     workerPath: '/tesseract/worker.min.js',
     corePath: '/tesseract',
     langPath: '/tesseract',
+    // NIENTE BLOB URL. Di default tesseract.js scarica lo script del worker e
+    // ne fa un `blob:`, poi ci crea sopra il Worker. La CSP dell'applicazione ha
+    // `default-src 'self'` e non elenca `blob:`, quindi quel Worker non nasce e
+    // `createWorker` rigetta con **undefined** — nessun messaggio, nessun
+    // indizio. Era questo il guasto, non il formato dell'immagine.
+    //
+    // Caricandolo direttamente dal percorso, l'origine e' la stessa
+    // dell'applicazione e `script-src 'self'` lo consente gia': nessuna
+    // modifica alla CSP, che e' una scelta di sicurezza da non fare per far
+    // funzionare una libreria.
+    workerBlobURL: false,
     // I file di `tessdata_fast` non sono compressi: chiedendo gzip, Tesseract
     // cercherebbe `eng.traineddata.gz` e fallirebbe.
     gzip: false,
@@ -105,18 +116,73 @@ async function ottieniWorker(
   return worker;
 }
 
+/** Estrae qualcosa di leggibile da un errore che potrebbe non essere un `Error`. */
+function dettaglioErrore(e: unknown): string {
+  if (e instanceof Error) return e.message || e.name || 'Error senza messaggio';
+  if (typeof e === 'string') return e;
+  if (e === undefined) return 'rigettato con undefined (nessun motivo fornito)';
+  if (e === null) return 'rigettato con null';
+  try { return JSON.stringify(e); } catch { return String(e); }
+}
+
+/**
+ * Rende utilizzabile un'immagine passata come base64 NUDO.
+ *
+ * PERCHE' SERVE (22/08/2026). Tesseract accetta una stringa, ma la interpreta
+ * come URL da SCARICARE a meno che non cominci con `data:`. La cattura schermo
+ * restituisce base64 senza prefisso — sia il percorso Tauri sia il ripiego su
+ * canvas lo tolgono — quindi il motore riceveva quattro megabyte di base64 e
+ * provava a farne una richiesta di rete. Falliva rigettando `undefined`, che il
+ * codice a valle mostrava come «Unknown error»: nessun indizio, per minuti.
+ *
+ * Non e' un difetto introdotto oggi: il codice precedente passava la stessa
+ * stringa nuda. Non se n'era accorto nessuno perche' la pagina di traduzione
+ * live non era raggiungibile dal menu, quindi non l'aveva mai eseguita nessuno.
+ *
+ * Il riconoscimento e' sulle FIRME dei formati, non sulla lunghezza: `iVBORw0KGgo`
+ * per PNG, `/9j/` per JPEG. Un percorso di file o un URL non cominciano cosi',
+ * quindi non c'e' modo di scambiarli per immagini incorporate.
+ */
+function normalizzaImmagine(image: string | File | Blob): string | File | Blob {
+  if (typeof image !== 'string') return image;
+  const s = image.trim();
+  if (s.startsWith('iVBORw0KGgo')) return `data:image/png;base64,${s}`;
+  if (s.startsWith('/9j/')) return `data:image/jpeg;base64,${s}`;
+  return image;
+}
+
 export async function recognizeText(
   image: string | File | Blob,
   language: OCRLanguage = 'eng',
   onProgress?: (progress: OCRProgress) => void
 ): Promise<OCRResult> {
   const startTime = Date.now();
-  
+
   try {
-    const worker = await ottieniWorker(language, onProgress);
+    image = normalizzaImmagine(image);
+
+    // I due passi sono separati di proposito: un solo messaggio per entrambi
+    // non distingue «il motore non si carica» da «il motore non legge questa
+    // immagine», che si curano in modi opposti. Restringere il guasto prima di
+    // ripararlo costa due righe.
+    let worker: Tesseract.Worker;
+    try {
+      worker = await ottieniWorker(language, onProgress);
+    } catch (e) {
+      throw new Error(`OCR: creazione worker fallita — ${dettaglioErrore(e)}`);
+    }
+
     // Il quarto argomento esiste solo sull'API del worker: senza, `blocks`
     // resta nullo e le righe non arrivano.
-    const result = await worker.recognize(image, {}, { text: true, blocks: true });
+    let result: Tesseract.RecognizeResult;
+    try {
+      result = await worker.recognize(image, {}, { text: true, blocks: true });
+    } catch (e) {
+      const tipo = typeof image === 'string'
+        ? (image.startsWith('data:') ? `data url, ${image.length} car.` : `stringa, ${image.length} car.`)
+        : 'blob/file';
+      throw new Error(`OCR: riconoscimento fallito su ${tipo} — ${dettaglioErrore(e)}`);
+    }
 
     interface TesseractWord { text: string; confidence: number; bbox: BoundingBox }
     interface TesseractLine { text: string; confidence: number; bbox: BoundingBox; words: TesseractWord[] }
@@ -178,8 +244,14 @@ export async function recognizeText(
       processingTime: Date.now() - startTime
     };
   } catch (error: unknown) {
-    clientLogger.error(`OCR Error: ${String(error)}`);
-    throw new Error(`OCR failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // «Unknown error» non è un messaggio, è una rinuncia: buttava via l'unica
+    // informazione utile ogni volta che il motivo NON era un `Error`. E
+    // tesseract.js rigetta spesso con una stringa o un oggetto, quindi era il
+    // caso normale, non l'eccezione. Un fotogramma al secondo per minuti
+    // interi, tutti con la stessa riga che non diceva niente.
+    const dettaglio = dettaglioErrore(error);
+    clientLogger.error(`OCR Error: ${dettaglio}`, 'OCR', { error });
+    throw new Error(dettaglio.startsWith('OCR') ? dettaglio : `OCR failed: ${dettaglio}`);
   }
 }
 
