@@ -971,6 +971,11 @@ public:
         // Gli hook sui blit servono a due cose — la diagnostica e la cattura del
         // fotogramma — ma la funzione si aggancia UNA volta sola: due
         // MH_CreateHook sullo stesso indirizzo sono un guaio, non una comodità.
+        // Stato della condivisione, anche quando NON si installa niente: il
+        // silenzio non deve poter significare due cose diverse.
+        if (!DiagBlitAttiva() && !DumpFotogrammiAttivo() && !CondivisioneAttiva()) {
+            LogLineW(L"[gs-hook/BLIT] hook blit non installati: nessun interruttore acceso\n");
+        }
         if (DiagBlitAttiva() || DumpFotogrammiAttivo() || CondivisioneAttiva()) {
             struct { const char* nome; LPVOID hook; LPVOID* orig; } blit[] = {
                 { "BitBlt",     (LPVOID)&Hook_BitBlt,     (LPVOID*)&Original_BitBlt     },
@@ -982,8 +987,15 @@ public:
                     MH_EnableHook((LPVOID)p);
                 }
             }
-            if (DiagBlitAttiva())       LogLineW(L"[gs-hook/BLIT] diagnostica blit attiva (GS_HOOK_DIAG_BLIT=1)\n");
-            if (DumpFotogrammiAttivo()) LogLineW(L"[gs-hook/FRAME] cattura al present attiva -> " + PrefissoDump() + L"-N.bmp\n");
+            // Quali interruttori sono stati visti, sempre. Senza questa riga,
+            // «non pubblica» ha tre cause indistinguibili — sentinella assente,
+            // env var assente, hook non installati — e si finisce a indovinare.
+            {
+                wchar_t r[160];
+                swprintf_s(r, L"[gs-hook/BLIT] hook blit installati (diag=%d dump=%d condivisione=%d)\n",
+                           (int)DiagBlitAttiva(), (int)DumpFotogrammiAttivo(), (int)CondivisioneAttiva());
+                LogLineW(r);
+            }
         }
 
         return any ? Activation::Activated : Activation::Failed;

@@ -9,6 +9,7 @@
  */
 
 import { captureScreen, detectGameProcess, type CaptureOptions } from '@/lib/ocr/screen-capture';
+import { upscaleFactorFor, upscaleBase64, scaleBoxBack } from '@/lib/ocr/upscale-for-ocr';
 import { recognizeText, type OCRLanguage, type OCRLine } from '@/lib/ocr/ocr-service';
 import { translateWithFallback, type TranslateOptions } from '@/lib/ai/ai-translate-direct';
 import {
@@ -322,11 +323,28 @@ class LiveTranslationEngine {
       }
 
       // 2. OCR (path 'fast' e 'vlm-hybrid')
+      //
+      // Ingrandimento prima dell'OCR. Misurato su Yume Nikki: a risoluzione
+      // nativa (320x240) Tesseract legge ZERO righe; lo stesso fotogramma
+      // ingrandito ne legge otto. Non e' una rifinitura, e' la differenza fra
+      // nessun testo e del testo. Sui fotogrammi gia' grandi il fattore e' 1 e
+      // non si copia niente.
+      const fattore = upscaleFactorFor(capture.width ?? 0, capture.height ?? 0);
+      const perOcr = await upscaleBase64(capture.imageData, fattore);
+
       const ocrResult = await recognizeText(
-        capture.imageData,
+        perOcr.imageData,
         this.config.ocrLanguage
       );
       this.stats.ocrRuns++;
+
+      // I riquadri tornano nello spazio ingrandito: riportarli in scala PRIMA
+      // di usarli. Senza, l'overlay compare — a distanza multipla dal testo.
+      if (perOcr.factor > 1) {
+        for (const l of ocrResult.lines) {
+          l.bbox = scaleBoxBack(l.bbox, perOcr.factor);
+        }
+      }
 
       // Filter low-confidence lines
       const lines = ocrResult.lines.filter(

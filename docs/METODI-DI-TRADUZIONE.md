@@ -1479,6 +1479,118 @@ variabile impostata. Provare una funzione nel modo in cui NON verra' usata non
 la prova: prima di dire «funziona» conviene chiedersi chi, nel flusso vero,
 mette quell'interruttore su acceso.
 
+### A risoluzione nativa l'OCR non legge niente, e il preprocessore retro e' codice morto
+
+**La domanda.** La catena consegna il fotogramma giusto. Ma consegnare
+un'immagine non e' tradurre: l'OCR riesce a leggere il font bitmap di RPG Maker?
+
+**Prima misura, sbagliata di percorso.** Ho scritto una sonda in Rust e ho
+ottenuto una risposta incoraggiante — l'OCR di Windows legge 3-4 righe dal
+fotogramma nativo, con errori sistematici (`NUME` per YUME, `PROOUCEO` per
+PRODUCED). Poi mi sono accorto che **il loop live non usa quel motore**:
+`lib/ocr/ocr-service.ts` chiama **Tesseract.js**. Avevo misurato una strada che
+non e' quella percorsa.
+
+**Seconda misura, con controllo positivo.** La prima versione della sonda
+Tesseract dava zero righe sul fotogramma di gioco. Prima di concludere, l'ho
+puntata su uno screenshot dell'applicazione, pieno di testo: **zero righe anche
+li'**. Era la sonda a essere rotta — `tesseract.js` non popola righe e parole
+senza `{ blocks: true }`. Corretta: 26 righe sullo screenshot. Solo allora la
+misura sul gioco vale qualcosa.
+
+**Il risultato, su Tesseract.js, cioe' sul motore vero:**
+
+| ingrandimento | righe lette | testo |
+|---|---|---|
+| nessuno (320x240) | **0** | niente |
+| x3 (960x720) | 8 | `Mew Game 3` (79), `PRODUCED EY KIKIMAMA` (49) |
+| x6 (1920x1440) | 8 | **`New Game 3`** (65), `VUME ~~ MIKKI` (55) |
+
+**A risoluzione nativa Tesseract non aggancia il font: zero righe.** Non e' una
+questione di qualita', e' la differenza fra nessun testo e del testo. Il loop
+live non ingrandiva: `captureAndTranslate` passava la cattura direttamente
+all'OCR. Ora ingrandisce con un fattore INTERO e nearest-neighbour —
+sull'interpolazione un font bitmap peggiora, non migliora — e **riporta in scala
+i riquadri**, che tornano nello spazio ingrandito e altrimenti posizionerebbero
+l'overlay a distanza multipla dal testo.
+
+**E c'era gia' in casa la cura migliore, mai collegata.**
+`src-tauri/src/ocr_translator/retro_preprocessor.rs` e' un preprocessore
+completo per font pixelati — preset 8-bit/16-bit/DOS/PC-98, upscale, contrasto,
+soglia, sharpen, rimozione del dithering, rilevamento automatico del tipo di
+gioco. Ha `#![allow(dead_code)]` in cima e **zero chiamanti in tutto il
+progetto**: un `grep` su Rust, TS e TSX trova solo la riga che lo dichiara
+modulo. Sul fotogramma di Yume Nikki, con l'OCR di Windows, trova **4 righe
+contro 3** e recupera `New Game` che le altre strade perdevano del tutto.
+
+Stesso schema gia' visto stasera: `commands/screen_capture.rs` era uno stub, gli
+IPC erano a meta', e qui un preprocessore finito aspetta un chiamante. Il
+progetto ha piu' pezzi giusti scollegati che pezzi mancanti.
+
+**La trappola, due volte nella stessa indagine.** La prima: misurare il motore
+sbagliato e concludere sul percorso vero. La seconda: leggere «zero righe» come
+un risultato invece che come un possibile difetto della sonda. Sono la stessa
+trappola con due facce, e la separa una cosa sola — un controllo di cui conosci
+gia' la risposta, fatto PRIMA di interpretare il numero.
+
+### Il preprocessore retro NON va collegato: misurato sul motore giusto, peggiora
+
+**La proposta sembrava ovvia.** `retro_preprocessor.rs` e' un preprocessore
+completo per font pixelati, senza un solo chiamante. Sul fotogramma di Yume
+Nikki, con l'OCR di Windows, trovava **4 righe contro 3** e recuperava
+`New Game`: collegarlo pareva il passo successivo naturale.
+
+**Sul motore vero l'esito si rovescia.** Il loop live usa Tesseract.js e scarta
+le righe sotto confidenza **40** (`LiveTranslationConfig.minConfidence`).
+Contando cio' che passa quel filtro, non le righe grezze:
+
+| variante | righe totali | **passano il filtro** |
+|---|---|---|
+| grezzo 320x240 | 1 | **0** |
+| x6 nearest | 8 | **6** |
+| preprocessore retro (preset 8-bit) | 9 | **2** |
+
+Il preprocessore ne trova **di piu'** e ne fa passare **un terzo**: le sue righe
+escono con confidenze 19-34, sotto la soglia. Contare le righe grezze diceva
+«meglio»; contare quelle utilizzabili dice «tre volte peggio».
+
+**Non e' colpa del preset.** Provate otto preparazioni sullo stesso fotogramma,
+misurando sempre le righe sopra soglia:
+
+```text
+ 6 passano /  8 tot  x6 nearest
+ 6 passano /  8 tot  x6 + negato
+ 4 passano /  6 tot  x6 + grigi
+ 4 passano /  6 tot  x6 + grigi + normalizza
+ 4 passano /  6 tot  x6 + grigi + negato
+ 4 passano /  9 tot  x6 + grigi + soglia 64
+ 4 passano /  9 tot  x6 + grigi + soglia 64 + neg
+ 1 passano /  5 tot  x6 + grigi + soglia 128
+```
+
+**Il semplice ingrandimento vince su tutto.** Grigi, normalizzazione,
+negazione e soglia sono tutte pari o peggio, e la soglia a 128 — quella che il
+preset 8-bit sceglie, dopo aver correttamente rilevato `Bit8` — e' la peggiore
+in assoluto. Su un font gia' ad alto contrasto, binarizzare toglie informazione
+invece di pulirla.
+
+**Decisione: non si collega.** Il modulo resta dov'e', con questa misura scritta
+in testa cosi' che nessuno debba rifarla per scoprire la stessa cosa. Non e'
+codice sbagliato — e' codice pensato per DOS/PC-98 a bassissima palette, dato a
+un motore diverso su un gioco diverso.
+
+**Limite dichiarato.** La misura e' su UNA schermata (il titolo di Yume Nikki:
+fondo nero, testo chiaro) e UN motore. Una finestra di dialogo, o un gioco con
+testo scuro su fondo chiaro, potrebbe rovesciare di nuovo l'esito. Quello che
+NON cambia e' il metodo: contare le righe che superano il filtro vero, non
+quelle che l'OCR emette.
+
+**La trappola.** Un preprocessore che «trova piu' testo» puo' peggiorare il
+risultato, se il testo in piu' arriva sotto la soglia che qualcun altro
+applica a valle. La metrica giusta non e' quella della funzione che stai
+guardando: e' quella dell'ultimo anello che decide. E l'avevo gia' quasi
+sbagliata una volta, misurando il motore OCR che il loop non usa.
+
 ---
 
 ## Come si aggiunge una voce
