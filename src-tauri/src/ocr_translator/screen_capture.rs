@@ -34,8 +34,17 @@ pub fn list_windows() -> Vec<WindowInfo> {
         fn GetWindowTextW(hwnd: *mut c_void, text: *mut u16, max: i32) -> i32;
         fn GetClassNameW(hwnd: *mut c_void, text: *mut u16, max: i32) -> i32;
         fn GetWindowTextLengthW(hwnd: *mut c_void) -> i32;
+        fn GetClientRect(hwnd: *mut c_void, rect: *mut ClientRect) -> i32;
     }
-    
+
+    #[repr(C)]
+    struct ClientRect {
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    }
+
     static WINDOWS: Lazy<Mutex<Vec<WindowInfo>>> = Lazy::new(|| Mutex::new(Vec::new()));
     
     extern "system" fn enum_callback(hwnd: *mut c_void, _: isize) -> i32 {
@@ -60,7 +69,26 @@ pub fn list_windows() -> Vec<WindowInfo> {
             if title.is_empty() || title == "Program Manager" || class_name == "Progman" {
                 return 1;
             }
-            
+
+            // Scarta le finestre senza area client: non hanno niente da
+            // catturare e — peggio — rubano il nome a quella vera.
+            //
+            // Misurato su Yume Nikki (RPG_RT, 22/08/2026). Il processo espone
+            // DUE finestre di primo livello con lo STESSO titolo:
+            //
+            //   TApplication      client 0×0     ← fantasma di Delphi/VCL
+            //   TFormLcfGameMain  client 644×484 ← il gioco
+            //
+            // Senza questo filtro il selettore ne mostra due identiche e la
+            // ricerca per titolo può risolvere sul fantasma: la cattura non
+            // fallisce, restituisce un riquadro vuoto. Ogni app Delphi ha
+            // questa finestra, quindi non è un caso particolare di un gioco.
+            let mut client: ClientRect = std::mem::zeroed();
+            GetClientRect(hwnd, &mut client);
+            if client.right - client.left <= 0 || client.bottom - client.top <= 0 {
+                return 1;
+            }
+
             if let Ok(mut wins) = WINDOWS.lock() {
                 wins.push(WindowInfo {
                     hwnd: hwnd as isize,
@@ -89,9 +117,10 @@ pub fn list_windows() -> Vec<WindowInfo> {
 ///
 /// Deve guardare solo il client, non tutta la finestra: `PrintWindow` rende
 /// SEMPRE la cornice — barra del titolo, bordi — anche quando il contenuto
-/// manca del tutto. Misurato su Yume Nikki: client completamente nero e
-/// barra del titolo bianca, cioè 6,6% di pixel accesi. Un controllo sul
-/// fotogramma intero lo dichiarava «reso» e non ripiegava mai.
+/// manca del tutto. Misurato sulla finestra fantasma `TApplication` di Yume
+/// Nikki: client nero e barra del titolo bianca, cioè 6,6% di pixel accesi. Un
+/// controllo sul fotogramma intero la dichiarava «resa» e non ripiegava mai.
+/// Sulla finestra VERA del gioco il contenuto c'è invece davvero: 12,1%.
 pub(crate) fn client_vuoto(buf: &[u8], larghezza: i32, ox: i32, oy: i32, cw: i32, ch: i32) -> bool {
     if cw <= 0 || ch <= 0 {
         return true;
@@ -135,8 +164,14 @@ pub(crate) fn client_vuoto(buf: &[u8], larghezza: i32, ox: i32, oy: i32, cw: i32
 ///     un errore che lo nomina, invece di pixel plausibili e sbagliati.
 ///
 /// Il caso «PrintWindow riesce ma l'immagine è tutta nera» è reale, non
-/// difensivo: RPG_RT (RPG Maker 2000/2003) disegna con DirectDraw e non
-/// risponde a WM_PRINT, e quei giochi sono un engine supportato.
+/// difensivo: capita sulle finestre senza contenuto proprio, come la finestra
+/// TApplication che ogni app Delphi espone accanto a quella vera.
+///
+/// CORREZIONE (22/08/2026). Una versione precedente di questo commento diceva
+/// che RPG_RT non risponde a WM_PRINT perché disegna con DirectDraw. È falso, ed
+/// è misurato: `PrintWindow` su `TFormLcfGameMain` rende per intero la schermata
+/// del titolo di Yume Nikki. Il nero veniva dal puntare alla finestra sbagliata
+/// — il fantasma `TApplication` con client 0×0 — che ora `list_windows` scarta.
 #[cfg(target_os = "windows")]
 pub fn capture_window(hwnd: isize) -> Result<ImageData, String> {
     use std::mem::zeroed;
