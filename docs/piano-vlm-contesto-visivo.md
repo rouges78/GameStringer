@@ -52,7 +52,13 @@ Nessuna dipendenza nuova obbligatoria — l'infrastruttura c'è già:
 
 Aggiunte opzionali (fase 3+):
 - **Gemini** (`@google/generative-ai`) — il branch `provider: 'gemini'` in `vision-translate.ts` esiste ma va completato; valuta di aggiungere l'SDK invece della fetch grezza.
-- Nessuna libreria di "screen capture" nuova: il comando Rust `screen_capture.rs` (xcap) copre già Windows/Linux/macOS.
+- ⚠️ **Correzione (22/08/2026): `xcap` non è una dipendenza del progetto** — compare
+  zero volte in `Cargo.toml` e in `Cargo.lock`. Di cattura schermo ce ne sono due:
+  `commands/screen_capture.rs` è uno **stub** (tutto `Err`) ed è proprio quello che
+  `lib/ocr/screen-capture.ts:87` invoca, quindi quel percorso ripiega sempre su
+  `getDisplayMedia`; `ocr_translator/screen_capture.rs` è reale ma fa `BitBlt` dalle
+  **coordinate dello schermo**, quindi cattura qualunque finestra stia sopra al gioco.
+  Vedi la voce dedicata in `METODI-DI-TRADUZIONE.md`: va risolto **prima** del VLM.
 
 ---
 

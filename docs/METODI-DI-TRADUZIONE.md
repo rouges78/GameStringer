@@ -1057,7 +1057,103 @@ deduce da `WaitForSingleObject(thread, 15000)` + `GetExitCodeThread`: se il
 thread remoto non finisse entro 15 s, l'exit code sarebbe `STILL_ACTIVE` (259) —
 non zero, quindi **scambiato per un HMODULE valido** e riportato come «DLL
 caricata». Non è successo (l'iniezione è istantanea), ma il caso c'è: `259` va
-trattato come fallimento.
+trattato come fallimento. **Fatto** (PR #99): ora si controlla l'esito di
+`WaitForSingleObject` e un thread non terminato ritorna il codice 8, senza
+liberare la memoria remota — che il `LoadLibraryW` appeso sta ancora leggendo.
+### La cattura schermo non usa xcap, e prende le coordinate invece della finestra
+
+**Come e' nata la domanda (22/08/2026).** Serviva una schermata vera di Yume
+Nikki per misurare i backend VLM. Ne ho catturate diverse e sembravano nere, da
+cui la conclusione: «la superficie DirectDraw di RPG_RT non si cattura coi
+metodi GDI». **Era sbagliata due volte**, e il modo in cui lo era vale piu'
+della domanda di partenza. La risposta vera e' in fondo, sotto «Come e' finita»:
+`PrintWindow` cattura RPG_RT benissimo.
+
+**Primo fatto: xcap non esiste in questo progetto.**
+`docs/piano-vlm-contesto-visivo.md` dice che «il comando Rust screen_capture.rs
+(xcap) copre gia' Windows/Linux/macOS». Falso: `xcap` compare **zero volte** sia
+in `src-tauri/Cargo.toml` sia in `Cargo.lock`.
+
+**Secondo fatto: ci sono due moduli con lo stesso nome, e quello collegato al
+frontend e' uno stub.**
+
+| Modulo | Stato |
+|---|---|
+| `src-tauri/src/commands/screen_capture.rs` | **stub integrale**: `capture_screen` → `Err`, `capture_window` → `Err`, `get_windows` → `[]`, `get_monitors` → un 1920×1080 inventato, `check_screen_capture_available` → `false` |
+| `src-tauri/src/ocr_translator/screen_capture.rs` | reale: `BitBlt` + `SRCCOPY` dal DC **dello schermo**, alle coordinate della finestra |
+
+`lib/ocr/screen-capture.ts:87` invoca `capture_screen`, cioe' **lo stub**: quel
+percorso fallisce sempre e ripiega su `getDisplayMedia` del browser. Il percorso
+Rust vivo e' l'altro, usato da `capture_screen_region`.
+
+**Terzo fatto, quello che conta: la cattura e' delle COORDINATE, non della
+finestra.** `BitBlt` dal DC dello schermo copia quello che e' composito in quel
+rettangolo — compreso qualunque finestra ci stia sopra. Misurato: mentre cercavo
+di catturare Yume Nikki ho catturato **un video di YouTube dentro Brave**. La
+prova non e' l'immagine, e' `WindowFromPoint`:
+
+```text
+il pixel (630,460) appartiene a PID 13760 (brave)   — gioco: PID 15224
+finestra del gioco secondo GetWindowRect: (300,200)-(960,720)
+```
+
+Il gioco *diceva* di essere li'. I pixel erano di un altro processo.
+
+**E la finestra non si porta sopra a comando.** `SetForegroundWindow` fallisce
+(Windows non lascia rubare il primo piano), e `SetWindowPos(HWND_TOPMOST)` non
+basta contro un browser a schermo intero. Il primitivo giusto sarebbe
+`capture_window`, che mira alla finestra invece che all'area — ed e' quello che
+ritorna `Err("Window capture not available")`.
+
+**Perche' e' grave per il prodotto.** Una cattura dipendente dall'occlusione fa
+tradurre il testo dell'applicazione sbagliata **senza nessun segnale**: una
+notifica, un overlay, un browser davanti, e l'OCR legge quelli. Non c'e' errore,
+non c'e' log: ci sono pixel plausibili e una traduzione di qualcos'altro. Prima
+di investire sul contesto visivo (VLM) conviene sistemare questo, che sta a
+monte: un VLM alimentato dai pixel sbagliati risponde benissimo alla domanda
+sbagliata.
+
+**La trappola, a due strati.** Una cattura che restituisce pixel non e' una
+cattura di cio' che hai chiesto. Ho concluso dai contenuti dell'immagine («e'
+nera, quindi DirectDraw non si cattura») quando la domanda vera era *di chi sono
+questi pixel*. Il controllo che chiude la questione costa una riga —
+`WindowFromPoint` sul punto che stai per copiare — e va fatto **prima** di
+interpretare l'immagine.
+
+Ma il secondo strato e' peggiore: anche dopo aver scoperto che i pixel erano di
+Brave, ho continuato a credere alla spiegazione DirectDraw, e l'ho **scritta nel
+codice** come commento. Una spiegazione sbagliata committata e' peggio di
+nessuna spiegazione: sembra conoscenza acquisita e qualcuno ci costruisce sopra.
+A smontarla e' bastato enumerare l'albero delle finestre del processo — una cosa
+che avrei potuto fare all'inizio, e che nessuna delle immagini catturate avrebbe
+mai potuto dirmi.
+
+**Come e' finita (stessa sera, PR #102).** Enumerando le finestre del processo
+con titoli e classi corretti, RPG_RT ne espone **due di primo livello con lo
+STESSO titolo**:
+
+```text
+TApplication      client 0x0     <- fantasma di Delphi/VCL
+TFormLcfGameMain  client 644x484 <- il gioco
+```
+
+`list_windows` le restituiva entrambe, e la ricerca per titolo poteva risolvere
+sul fantasma. Quella cattura non fallisce: restituisce un riquadro vuoto — il
+«nero» da cui era partita tutta la storia.
+
+Puntando alla finestra vera, **`PrintWindow` con `PW_RENDERFULLCONTENT` rende la
+schermata del titolo per intero**: logo, `ver. 0.10a`, il menu New Game / Dream
+Diary / Quit, la firma di KIKIYAMA. Leggibile, pronta per l'OCR. In numeri:
+12,1% di pixel accesi sulla finestra vera contro 6,6% sul fantasma, e quel 6,6%
+era **tutta barra del titolo**, cioe' la cornice che `PrintWindow` disegna
+sempre anche quando il contenuto manca.
+
+Quindi **DirectDraw non c'entrava niente**, e le superfici accelerate non erano
+il problema. La cura e' in due punti: `list_windows` scarta le finestre senza
+area client (ogni app Delphi ne ha una, non e' una stranezza di un gioco), e
+`capture_window` chiede alla finestra di disegnarsi invece di copiare
+dallo schermo.
+
 
 ---
 
