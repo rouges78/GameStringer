@@ -1479,6 +1479,60 @@ variabile impostata. Provare una funzione nel modo in cui NON verra' usata non
 la prova: prima di dire «funziona» conviene chiedersi chi, nel flusso vero,
 mette quell'interruttore su acceso.
 
+### A risoluzione nativa l'OCR non legge niente, e il preprocessore retro e' codice morto
+
+**La domanda.** La catena consegna il fotogramma giusto. Ma consegnare
+un'immagine non e' tradurre: l'OCR riesce a leggere il font bitmap di RPG Maker?
+
+**Prima misura, sbagliata di percorso.** Ho scritto una sonda in Rust e ho
+ottenuto una risposta incoraggiante — l'OCR di Windows legge 3-4 righe dal
+fotogramma nativo, con errori sistematici (`NUME` per YUME, `PROOUCEO` per
+PRODUCED). Poi mi sono accorto che **il loop live non usa quel motore**:
+`lib/ocr/ocr-service.ts` chiama **Tesseract.js**. Avevo misurato una strada che
+non e' quella percorsa.
+
+**Seconda misura, con controllo positivo.** La prima versione della sonda
+Tesseract dava zero righe sul fotogramma di gioco. Prima di concludere, l'ho
+puntata su uno screenshot dell'applicazione, pieno di testo: **zero righe anche
+li'**. Era la sonda a essere rotta — `tesseract.js` non popola righe e parole
+senza `{ blocks: true }`. Corretta: 26 righe sullo screenshot. Solo allora la
+misura sul gioco vale qualcosa.
+
+**Il risultato, su Tesseract.js, cioe' sul motore vero:**
+
+| ingrandimento | righe lette | testo |
+|---|---|---|
+| nessuno (320x240) | **0** | niente |
+| x3 (960x720) | 8 | `Mew Game 3` (79), `PRODUCED EY KIKIMAMA` (49) |
+| x6 (1920x1440) | 8 | **`New Game 3`** (65), `VUME ~~ MIKKI` (55) |
+
+**A risoluzione nativa Tesseract non aggancia il font: zero righe.** Non e' una
+questione di qualita', e' la differenza fra nessun testo e del testo. Il loop
+live non ingrandiva: `captureAndTranslate` passava la cattura direttamente
+all'OCR. Ora ingrandisce con un fattore INTERO e nearest-neighbour —
+sull'interpolazione un font bitmap peggiora, non migliora — e **riporta in scala
+i riquadri**, che tornano nello spazio ingrandito e altrimenti posizionerebbero
+l'overlay a distanza multipla dal testo.
+
+**E c'era gia' in casa la cura migliore, mai collegata.**
+`src-tauri/src/ocr_translator/retro_preprocessor.rs` e' un preprocessore
+completo per font pixelati — preset 8-bit/16-bit/DOS/PC-98, upscale, contrasto,
+soglia, sharpen, rimozione del dithering, rilevamento automatico del tipo di
+gioco. Ha `#![allow(dead_code)]` in cima e **zero chiamanti in tutto il
+progetto**: un `grep` su Rust, TS e TSX trova solo la riga che lo dichiara
+modulo. Sul fotogramma di Yume Nikki, con l'OCR di Windows, trova **4 righe
+contro 3** e recupera `New Game` che le altre strade perdevano del tutto.
+
+Stesso schema gia' visto stasera: `commands/screen_capture.rs` era uno stub, gli
+IPC erano a meta', e qui un preprocessore finito aspetta un chiamante. Il
+progetto ha piu' pezzi giusti scollegati che pezzi mancanti.
+
+**La trappola, due volte nella stessa indagine.** La prima: misurare il motore
+sbagliato e concludere sul percorso vero. La seconda: leggere «zero righe» come
+un risultato invece che come un possibile difetto della sonda. Sono la stessa
+trappola con due facce, e la separa una cosa sola — un controllo di cui conosci
+gia' la risposta, fatto PRIMA di interpretare il numero.
+
 ---
 
 ## Come si aggiunge una voce

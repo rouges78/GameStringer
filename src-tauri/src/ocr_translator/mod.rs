@@ -4,7 +4,7 @@
 use tauri::Emitter;
 
 pub mod screen_capture;
-mod ocr_engine;
+pub mod ocr_engine;
 mod overlay;
 pub mod retro_preprocessor;
 pub mod tesseract_engine;
