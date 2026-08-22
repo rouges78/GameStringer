@@ -133,12 +133,113 @@ void DiagBlit(const wchar_t* porta, HDC src, int sx, int sy, int w, int h,
     }
 }
 
+// ─── Cattura del fotogramma al present (opt-in: GS_HOOK_FRAME_DUMP=<prefisso>) ─
+//
+// PERCHÉ QUI. Misurato il 22/08/2026: RPG Maker 2000/2003 compone l'INTERO
+// fotogramma in una bitmap in memoria — tile, sprite, testo — senza una sola
+// chiamata di disegno GDI, e lo presenta con una `StretchBlt` per frame. Quel
+// blit finale è quindi il posto migliore per prendere l'immagine:
+//
+//   - la finestra può essere coperta, minimizzata, dietro un browser a schermo
+//     intero: qui non cambia niente, perché i pixel non vengono dallo schermo;
+//   - overlay, notifiche e cursori NON possono finirci dentro, perché non
+//     esistono ancora: il fotogramma è quello del gioco, prima della
+//     composizione del desktop;
+//   - si prende ESATTAMENTE un fotogramma, non «quello che c'era sullo schermo».
+//
+// È l'opposto della cattura per coordinate, che ha restituito i pixel di un
+// browser mentre puntava a un gioco (vedi METODI-DI-TRADUZIONE.md).
+//
+// COSA FA E COSA NON FA. Salva un numero LIMITATO di fotogrammi come .bmp, e si
+// ferma. Non espone i frame all'applicazione: quel ponte va costruito con
+// entrambi i lati insieme, e questo progetto ha già collezionato IPC a metà.
+// Qui si dimostra il punto d'aggancio; il trasporto è un passo successivo e
+// deliberato.
+constexpr int kMaxFotogrammiDump = 3;
+std::atomic<int> g_fotogrammiSalvati{0};
+
+const std::wstring& PrefissoDump() {
+    static const std::wstring p = [] {
+        wchar_t buf[MAX_PATH] = {};
+        const DWORD n = GetEnvironmentVariableW(L"GS_HOOK_FRAME_DUMP", buf, MAX_PATH);
+        return (n > 0 && n < MAX_PATH) ? std::wstring(buf, n) : std::wstring();
+    }();
+    return p;
+}
+
+bool DumpFotogrammiAttivo() { return !PrefissoDump().empty(); }
+
+// Scrive un BMP a 32 bit. `bits` è bottom-up, come lo restituisce GetDIBits con
+// altezza positiva: è già il verso naturale del formato, quindi non si gira
+// niente e non c'è un'immagine capovolta da sbagliare.
+bool SalvaBmp(const std::wstring& path, const void* bits, int w, int h) {
+    const DWORD dati = (DWORD)w * (DWORD)h * 4;
+    BITMAPFILEHEADER fh{};
+    fh.bfType    = 0x4D42; // "BM"
+    fh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    fh.bfSize    = fh.bfOffBits + dati;
+
+    BITMAPINFOHEADER ih{};
+    ih.biSize      = sizeof(BITMAPINFOHEADER);
+    ih.biWidth     = w;
+    ih.biHeight    = h;
+    ih.biPlanes    = 1;
+    ih.biBitCount  = 32;
+    ih.biSizeImage = dati;
+
+    HANDLE f = CreateFileW(path.c_str(), GENERIC_WRITE, 0, nullptr,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (f == INVALID_HANDLE_VALUE) return false;
+    DWORD scritti = 0;
+    bool ok = WriteFile(f, &fh, sizeof(fh), &scritti, nullptr) &&
+              WriteFile(f, &ih, sizeof(ih), &scritti, nullptr) &&
+              WriteFile(f, bits, dati, &scritti, nullptr);
+    CloseHandle(f);
+    return ok;
+}
+
+// Il "present" è un blit la cui destinazione è la DC di una FINESTRA. Si
+// riconosce così e non dalle dimensioni: 320×240 è di questo gioco, mentre
+// `WindowFromDC` vale per qualunque motore che presenti con un blit.
+void CatturaSePresent(HDC dst, HDC src, int sw, int sh) {
+    if (!DumpFotogrammiAttivo()) return;
+    if (g_fotogrammiSalvati.load(std::memory_order_relaxed) >= kMaxFotogrammiDump) return;
+    if (sw <= 0 || sh <= 0 || !WindowFromDC(dst)) return;
+
+    HBITMAP bmp = (HBITMAP)GetCurrentObject(src, OBJ_BITMAP);
+    if (!bmp) return;
+
+    BITMAPINFO bi{};
+    bi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth       = sw;
+    bi.bmiHeader.biHeight      = sh;   // positivo = bottom-up, il verso del BMP
+    bi.bmiHeader.biPlanes      = 1;
+    bi.bmiHeader.biBitCount    = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    std::vector<unsigned char> pixel((size_t)sw * sh * 4);
+    if (!GetDIBits(src, bmp, 0, (UINT)sh, pixel.data(), &bi, DIB_RGB_COLORS)) return;
+
+    const int n = g_fotogrammiSalvati.fetch_add(1, std::memory_order_relaxed);
+    if (n >= kMaxFotogrammiDump) return;
+
+    wchar_t path[MAX_PATH];
+    swprintf_s(path, L"%ls-%d.bmp", PrefissoDump().c_str(), n);
+    const bool ok = SalvaBmp(path, pixel.data(), sw, sh);
+
+    wchar_t riga[MAX_PATH + 80];
+    swprintf_s(riga, L"[gs-hook/FRAME] #%d %dx%d -> %ls (%ls)\n",
+               n, sw, sh, path, ok ? L"ok" : L"scrittura fallita");
+    LogLineW(riga);
+}
+
 using BitBlt_t = BOOL (WINAPI*)(HDC, int, int, int, int, HDC, int, int, DWORD);
 BitBlt_t Original_BitBlt = nullptr;
 
 BOOL WINAPI Hook_BitBlt(HDC dst, int x, int y, int w, int h,
                         HDC src, int sx, int sy, DWORD rop) {
     DiagBlit(L"BitBlt", src, sx, sy, w, h, x, y);
+    CatturaSePresent(dst, src, w, h);
     return Original_BitBlt(dst, x, y, w, h, src, sx, sy, rop);
 }
 
@@ -148,6 +249,7 @@ StretchBlt_t Original_StretchBlt = nullptr;
 BOOL WINAPI Hook_StretchBlt(HDC dst, int x, int y, int w, int h,
                             HDC src, int sx, int sy, int sw, int sh, DWORD rop) {
     DiagBlit(L"StretchBlt", src, sx, sy, sw, sh, x, y);
+    CatturaSePresent(dst, src, sw, sh);
     return Original_StretchBlt(dst, x, y, w, h, src, sx, sy, sw, sh, rop);
 }
 
@@ -769,7 +871,10 @@ public:
         // Diagnostica dei blit: installata SOLO su richiesta esplicita, e non
         // conta per l'attivazione — è uno strumento d'indagine, non una
         // sorgente di testo.
-        if (DiagBlitAttiva()) {
+        // Gli hook sui blit servono a due cose — la diagnostica e la cattura del
+        // fotogramma — ma la funzione si aggancia UNA volta sola: due
+        // MH_CreateHook sullo stesso indirizzo sono un guaio, non una comodità.
+        if (DiagBlitAttiva() || DumpFotogrammiAttivo()) {
             struct { const char* nome; LPVOID hook; LPVOID* orig; } blit[] = {
                 { "BitBlt",     (LPVOID)&Hook_BitBlt,     (LPVOID*)&Original_BitBlt     },
                 { "StretchBlt", (LPVOID)&Hook_StretchBlt, (LPVOID*)&Original_StretchBlt },
@@ -780,7 +885,8 @@ public:
                     MH_EnableHook((LPVOID)p);
                 }
             }
-            LogLineW(L"[gs-hook/BLIT] diagnostica blit attiva (GS_HOOK_DIAG_BLIT=1)\n");
+            if (DiagBlitAttiva())       LogLineW(L"[gs-hook/BLIT] diagnostica blit attiva (GS_HOOK_DIAG_BLIT=1)\n");
+            if (DumpFotogrammiAttivo()) LogLineW(L"[gs-hook/FRAME] cattura al present attiva -> " + PrefissoDump() + L"-N.bmp\n");
         }
 
         return any ? Activation::Activated : Activation::Failed;
