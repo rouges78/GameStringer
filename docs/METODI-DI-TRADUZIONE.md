@@ -1591,6 +1591,46 @@ applica a valle. La metrica giusta non e' quella della funzione che stai
 guardando: e' quella dell'ultimo anello che decide. E l'avevo gia' quasi
 sbagliata una volta, misurando il motore OCR che il loop non usa.
 
+### La prova dentro l'app: dove arriva, e dove si ferma
+
+**Cosa e' stato verificato sul sistema vero**, con l'applicazione in esecuzione
+(dev build) e Yume Nikki agganciato:
+
+- il gioco pubblica: `[gs-hook/BLIT] hook blit installati (diag=0 dump=0
+  condivisione=1)` e `pubblicazione attiva: Local\gs-hook-frame-26552`;
+- il backend lo trova da solo: `list_publishing_games` restituisce **un solo**
+  candidato, `RPG_RT.exe`, che e' esattamente cio' che `detectGameProcess`
+  userebbe;
+- l'applicazione si avvia, serve le sue pagine e apre la finestra.
+
+**Dove si e' fermata: il profilo chiede una password.** Per arrivare alla pagina
+di traduzione live bisogna autenticarsi su un profilo, e una password non si
+inserisce per conto dell'utente. Il giro completo — avvia traduzione →
+fotogramma dal gioco → OCR → traduzione → overlay — resta **non percorso**, e va
+detto invece di darlo per riuscito perche' tutti i pezzi funzionano
+singolarmente.
+
+Chiunque provi ad automatizzare un test end-to-end dell'app trovera' lo stesso
+cancello: e' la prima cosa da risolvere (un profilo di prova senza password, o
+un percorso di avvio che lo salti in modalita' test).
+
+**Una tecnica che e' servita e conviene ricordare.** Gli screenshot di
+computer-use **escludono le finestre non concesse**, e il permesso si aggancia
+al percorso dell'eseguibile: la build di sviluppo (`target/debug`) non combacia
+con quella installata, quindi l'app risultava invisibile — desktop attraverso la
+finestra, esattamente come era successo col gioco.
+
+La soluzione e' arrivata dal lavoro di oggi: `capture-window-probe`, che usa il
+nostro `capture_window`, **non passa dallo schermo** e quindi non e' soggetto a
+quel filtro. Ha catturato l'applicazione senza problemi. Uno strumento nato per
+i giochi si e' rivelato il modo per vedere la nostra stessa applicazione quando
+il livello screenshot la nasconde.
+
+**La trappola.** «Tutti i pezzi funzionano» non e' «la catena funziona». Qui
+ogni anello e' verificato singolarmente e il giro completo non l'ha ancora fatto
+nessuno: l'unico modo di sapere se regge e' percorrerlo, e finche' non e' stato
+percorso va scritto cosi'.
+
 ---
 
 ## Come si aggiunge una voce
