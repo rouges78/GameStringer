@@ -3090,7 +3090,8 @@
     "activity": "Activité",
     "statistics": "Statistiques",
     "tutorialAndGuide": "Tutoriel et Guide",
-    "feedback": "Retour"
+    "feedback": "Retour",
+    "liveTranslate": "Traduction en direct"
   },
   "settings": {
     "title": "Paramètres",

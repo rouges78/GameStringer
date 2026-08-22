@@ -3196,7 +3196,8 @@
     "activity": "Activity",
     "statistics": "Statistics",
     "tutorialAndGuide": "Tutorial & Guide",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "liveTranslate": "Live Translation"
   },
   "settings": {
     "title": "Settings",
