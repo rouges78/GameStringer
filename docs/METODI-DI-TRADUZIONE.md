@@ -325,10 +325,11 @@ il metodo per ricavarne una sta nelle voci qui sotto.
 - Il file di dizionario è **uno solo per coppia di lingue**: due giochi diversi
   si sovrascrivono a vicenda all'uscita. Innocuo finché le traduzioni sono
   testo→testo.
-- La cattura GDI **si attiva** su RPG_RT (Yume Nikki): entrambe le sorgenti di
-  livello 2 si installano. Non ha però ancora **catturato** una riga: serve
-  portare il gioco fino a un dialogo. I giochi UE non la esercitano affatto,
-  perché disegnano via Slate/Direct3D — vedi la voce dedicata.
+- La cattura GDI **si attiva ma non cattura nulla** su RPG_RT: il gioco è stato
+  portato fino a un testo a schermo e il log è rimasto vuoto. Il motivo è
+  misurato — il hook aggancia le funzioni Unicode e RPG_RT importa solo le ANSI
+  — e vale per tutto RPG Maker 2000/2003. I giochi UE non la esercitano affatto,
+  perché disegnano via Slate/Direct3D. Vedi le voci dedicate.
 
 
 ### La Named Pipe costa ~19us a stringa, e non è sul percorso caldo
@@ -1155,6 +1156,59 @@ area client (ogni app Delphi ne ha una, non e' una stranezza di un gioco), e
 dallo schermo.
 
 
+### Il hook GDI aggancia le funzioni Unicode, e RPG_RT chiama solo quelle ANSI
+
+**Il fatto (22/08/2026).** Con il gioco portato fino a un testo vero — Yume
+Nikki, stanza di Madotsuki, «Adjusting Sound Levels / Please Wait...» a schermo —
+il hook GDI ha catturato **zero righe**. Non un problema di tempi, di cache o di
+schermata sbagliata: le due sorgenti risultano attive nel log e non vengono
+chiamate mai.
+
+**Perche', misurato sulla tabella degli import di `RPG_RT.exe`:**
+
+```text
+ExtTextOutA          PRESENTE      ExtTextOutW          assente
+TextOutA             PRESENTE      TextOutW             assente
+DrawTextA            PRESENTE      DrawTextW            assente
+CreateFontIndirectA  PRESENTE      CreateFontIndirectW  assente
+GetGlyphOutlineA/W   assenti entrambe
+```
+
+`gs-hook/src/sources/source_gdi.cpp` aggancia **`ExtTextOutW`** e **`DrawTextW`**;
+`source_gdi_glyph.cpp` aggancia `GetGlyphOutline`. Il gioco non chiama nessuna
+delle tre. Il hook e' installato su funzioni che questo processo non usa.
+
+**E le A non passano dalle W.** E' l'assunzione che rende l'errore invisibile:
+in `gdi32.dll` `ExtTextOutA` e `ExtTextOutW` sono implementazioni **separate**,
+che scendono entrambe al kernel senza passare l'una per l'altra. Agganciare solo
+la W non intercetta un'applicazione ANSI, mai, in nessun caso.
+
+**Non e' un caso particolare di un gioco.** RPG_RT e' un binario Delphi
+pre-Unicode: vale per **tutta** la famiglia RPG Maker 2000/2003 — cioe'
+esattamente i giochi per cui la sorgente GDI di livello 2 esiste, visto che i
+titoli Unreal e Unity non passano da GDI.
+
+**Un dubbio sul commento nel codice.** `source_gdi.cpp` dice: «Scoperta sul
+campo (Ib, RPG Maker 2000): RPG_RT disegna i dialoghi via ExtTextOutW in modo
+INCREMENTALE». Ma **Ib gira sullo stesso RPG_RT**, quindi anche li' dovrebbero
+essere chiamate ANSI. O la misura su Ib riguardava un motore diverso, o la W
+c'e' finita per analogia invece che per misura. Prima di costruirci sopra, va
+riverificata con la tabella degli import di quel gioco.
+
+**La cura.** Agganciare anche `ExtTextOutA` / `TextOutA` / `DrawTextA` e
+convertire la stringa in ingresso con la codepage giusta — che per i giochi
+giapponesi non e' quella di sistema ma quella implicata dal charset del font nel
+DC (Shift-JIS). La conversione e' la parte delicata: interpretare byte Shift-JIS
+come ANSI occidentale produce testo plausibile e sbagliato, cioe' il tipo di
+errore che questo documento esiste per evitare.
+
+**La trappola.** «La sorgente e' attiva» non vuol dire «la sorgente vede
+qualcosa». Il log stampa `sorgente attiva: GDI (ExtTextOutW/DrawTextW)` perche'
+`MH_CreateHook` e' riuscito — cioe' perche' le funzioni **esistono in gdi32**,
+non perche' il gioco le chiami. Un hook installato su una funzione mai invocata
+e' indistinguibile, nel log, da un hook che funziona e non ha ancora visto
+testo. La domanda che scioglie il dubbio non si fa a runtime: si fa sul file,
+guardando cosa il binario importa davvero.
 ### Il testo di RPG Maker 2000/2003 non passa da GDI — dimostrato, non dedotto
 
 **Cosa e' stato aggiunto.** Il hook GDI ora aggancia anche le varianti **ANSI**
