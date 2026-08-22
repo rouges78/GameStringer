@@ -21,6 +21,7 @@
 //   5  GetProcAddress(LoadLibraryW) fallita
 //   6  CreateRemoteThread fallita
 //   7  thread remoto ok ma LoadLibraryW ha ritornato modulo nullo
+//   8  thread remoto non terminato entro il timeout (esito ignoto)
 
 #include <Windows.h>
 #include <cstdio>
@@ -82,7 +83,33 @@ int wmain(int argc, wchar_t* argv[]) {
         return 6;
     }
 
-    WaitForSingleObject(thread, 15000);
+    constexpr DWORD kRemoteThreadTimeoutMs = 15000;
+    DWORD waited = WaitForSingleObject(thread, kRemoteThreadTimeoutMs);
+
+    // Se il thread NON è terminato, non abbiamo un esito: leggere qui l'exit
+    // code darebbe STILL_ACTIVE (259), che essendo diverso da zero passerebbe
+    // per un HMODULE valido e stamperebbe «DLL caricata» su un'iniezione che
+    // non è mai finita. È il caso che questo ramo esiste per intercettare.
+    //
+    // E soprattutto NON si libera la memoria remota: il thread è ancora dentro
+    // LoadLibraryW e sta leggendo proprio quella stringa. Liberarla sarebbe una
+    // use-after-free NEL PROCESSO DEL GIOCO, cioè un crash causato da noi
+    // mentre segnaliamo un errore. Meglio perdere pathBytes byte (poche
+    // centinaia) in un processo che sta comunque per essere diagnosticato.
+    if (waited != WAIT_OBJECT_0) {
+        if (waited == WAIT_TIMEOUT) {
+            std::fwprintf(stderr,
+                          L"thread remoto ancora in esecuzione dopo %lu ms: "
+                          L"esito ignoto, la DLL potrebbe non essere caricata\n",
+                          kRemoteThreadTimeoutMs);
+        } else {
+            std::fwprintf(stderr, L"attesa del thread remoto fallita (err=%lu)\n",
+                          GetLastError());
+        }
+        CloseHandle(thread);
+        CloseHandle(proc);
+        return 8;
+    }
 
     // Exit code del thread = valore di ritorno di LoadLibraryW troncato a 32 bit.
     // 0 ⇒ LoadLibraryW ha fallito (DLL non caricata). Su x64 l'HMODULE è a 64

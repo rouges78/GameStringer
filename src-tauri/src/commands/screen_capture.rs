@@ -62,7 +62,67 @@ pub fn get_windows() -> Vec<WindowInfo> {
     vec![]
 }
 
+/// Cattura la finestra il cui titolo contiene `window_title`.
+///
+/// Era un `Err` fisso, quindi `lib/ocr/screen-capture.ts` non ha mai potuto
+/// catturare una finestra: restava solo la cattura per area, che copia i pixel
+/// di chiunque stia davanti. Qui si delega all'implementazione vera in
+/// `ocr_translator::screen_capture`, che chiede alla finestra di disegnarsi e
+/// si rifiuta di restituire i pixel di un'altra.
+///
+/// Il confronto sul titolo è per sottostringa senza distinzione di maiuscole,
+/// come già fa il resto del selettore finestre. Se combaciano più finestre si
+/// elencano invece di sceglierne una a caso: prendere la prima farebbe
+/// catturare in silenzio quella sbagliata, cioè di nuovo il difetto di partenza.
 #[command]
-pub fn capture_window(_window_title: String) -> Result<CaptureResult, String> {
-    Err("Window capture not available".to_string())
+pub fn capture_window(window_title: String) -> Result<CaptureResult, String> {
+    use crate::ocr_translator::screen_capture;
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use image::ImageOutputFormat;
+    use std::io::Cursor;
+
+    let ago = window_title.to_lowercase();
+    let candidate: Vec<_> = screen_capture::list_windows()
+        .into_iter()
+        .filter(|w| w.title.to_lowercase().contains(&ago))
+        .collect();
+
+    let finestra = match candidate.len() {
+        0 => return Err(format!("nessuna finestra con «{}» nel titolo", window_title)),
+        1 => &candidate[0],
+        _ => {
+            let titoli: Vec<_> = candidate.iter().map(|w| w.title.as_str()).collect();
+            return Err(format!(
+                "«{}» corrisponde a {} finestre ({}): serve un titolo più preciso",
+                window_title,
+                candidate.len(),
+                titoli.join(" · ")
+            ));
+        }
+    };
+
+    let img = screen_capture::capture_window(finestra.hwnd)?;
+
+    // `image_data` è un PNG in base64: è il contratto che `lib/ocr/screen-capture.ts`
+    // già rispetta col suo ripiego su canvas (`toDataURL('image/png')` senza
+    // prefisso). La cattura però produce BGRA grezzo, quindi va convertito —
+    // restituire i pixel grezzi qui darebbe una stringa valida che a valle
+    // diventa un'immagine illeggibile, senza nessun errore.
+    let mut rgba = img.data.clone();
+    for p in rgba.chunks_exact_mut(4) {
+        p.swap(0, 2); // BGRA → RGBA
+    }
+    let buf = image::RgbaImage::from_raw(img.width, img.height, rgba)
+        .ok_or_else(|| "dimensioni incoerenti col buffer catturato".to_string())?;
+
+    let mut png = Vec::new();
+    image::DynamicImage::ImageRgba8(buf)
+        .write_to(&mut Cursor::new(&mut png), ImageOutputFormat::Png)
+        .map_err(|e| format!("png encode: {e}"))?;
+
+    Ok(CaptureResult {
+        image_data: STANDARD.encode(&png),
+        width: img.width,
+        height: img.height,
+    })
 }

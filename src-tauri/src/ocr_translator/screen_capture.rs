@@ -34,8 +34,17 @@ pub fn list_windows() -> Vec<WindowInfo> {
         fn GetWindowTextW(hwnd: *mut c_void, text: *mut u16, max: i32) -> i32;
         fn GetClassNameW(hwnd: *mut c_void, text: *mut u16, max: i32) -> i32;
         fn GetWindowTextLengthW(hwnd: *mut c_void) -> i32;
+        fn GetClientRect(hwnd: *mut c_void, rect: *mut ClientRect) -> i32;
     }
-    
+
+    #[repr(C)]
+    struct ClientRect {
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    }
+
     static WINDOWS: Lazy<Mutex<Vec<WindowInfo>>> = Lazy::new(|| Mutex::new(Vec::new()));
     
     extern "system" fn enum_callback(hwnd: *mut c_void, _: isize) -> i32 {
@@ -60,7 +69,26 @@ pub fn list_windows() -> Vec<WindowInfo> {
             if title.is_empty() || title == "Program Manager" || class_name == "Progman" {
                 return 1;
             }
-            
+
+            // Scarta le finestre senza area client: non hanno niente da
+            // catturare e — peggio — rubano il nome a quella vera.
+            //
+            // Misurato su Yume Nikki (RPG_RT, 22/08/2026). Il processo espone
+            // DUE finestre di primo livello con lo STESSO titolo:
+            //
+            //   TApplication      client 0×0     ← fantasma di Delphi/VCL
+            //   TFormLcfGameMain  client 644×484 ← il gioco
+            //
+            // Senza questo filtro il selettore ne mostra due identiche e la
+            // ricerca per titolo può risolvere sul fantasma: la cattura non
+            // fallisce, restituisce un riquadro vuoto. Ogni app Delphi ha
+            // questa finestra, quindi non è un caso particolare di un gioco.
+            let mut client: ClientRect = std::mem::zeroed();
+            GetClientRect(hwnd, &mut client);
+            if client.right - client.left <= 0 || client.bottom - client.top <= 0 {
+                return 1;
+            }
+
             if let Ok(mut wins) = WINDOWS.lock() {
                 wins.push(WindowInfo {
                     hwnd: hwnd as isize,
@@ -84,19 +112,97 @@ pub fn list_windows() -> Vec<WindowInfo> {
     WINDOWS.lock().map(|w| w.clone()).unwrap_or_default()
 }
 
-/// Cattura una finestra specifica (usando posizione schermo per giochi DirectX)
+/// Vero se l'AREA CLIENT è interamente nera, cioè la finestra non ha reso
+/// il proprio contenuto.
+///
+/// Deve guardare solo il client, non tutta la finestra: `PrintWindow` rende
+/// SEMPRE la cornice — barra del titolo, bordi — anche quando il contenuto
+/// manca del tutto. Misurato sulla finestra fantasma `TApplication` di Yume
+/// Nikki: client nero e barra del titolo bianca, cioè 6,6% di pixel accesi. Un
+/// controllo sul fotogramma intero la dichiarava «resa» e non ripiegava mai.
+/// Sulla finestra VERA del gioco il contenuto c'è invece davvero: 12,1%.
+pub(crate) fn client_vuoto(buf: &[u8], larghezza: i32, ox: i32, oy: i32, cw: i32, ch: i32) -> bool {
+    if cw <= 0 || ch <= 0 {
+        return true;
+    }
+    for riga in oy.max(0)..(oy + ch) {
+        let inizio = ((riga * larghezza + ox.max(0)) * 4) as usize;
+        let fine = inizio + (cw * 4) as usize;
+        if fine > buf.len() {
+            break;
+        }
+        if buf[inizio..fine]
+            .chunks_exact(4)
+            .any(|p| p[0] != 0 || p[1] != 0 || p[2] != 0)
+        {
+            return false;
+        }
+    }
+    true
+}
+
+/// Cattura una finestra specifica.
+///
+/// PERCHÉ NON BASTA COPIARE DALLO SCHERMO (misurato il 22/08/2026).
+/// Questa funzione faceva `BitBlt` dal DC dello schermo alle coordinate della
+/// finestra. Ma quel rettangolo di schermo contiene ciò che è *composito* lì
+/// sopra, non la finestra: puntando a un gioco, la cattura ha restituito un
+/// video di YouTube aperto in Brave davanti. `GetWindowRect` diceva che il
+/// gioco era esattamente lì, e i pixel erano di un altro processo. Per un
+/// overlay di traduzione è il peggior modo di sbagliare: nessun errore, nessun
+/// log, solo la traduzione della finestra sbagliata.
+///
+/// L'ordine giusto è quindi:
+///
+///  1. **`PrintWindow`** — si chiede alla finestra di disegnarsi nel NOSTRO DC.
+///     Non dipende dall'ordine Z: funziona anche con la finestra coperta o
+///     dietro un browser a schermo intero.
+///  2. Se `PrintWindow` non produce niente di utile, si ricade sulla copia dallo
+///     schermo — che per certe superfici accelerate è l'unica che vede qualcosa
+///     — ma **solo dopo aver verificato con `WindowFromPoint` che i pixel siano
+///     davvero della finestra richiesta**. Se sono di qualcun altro si ritorna
+///     un errore che lo nomina, invece di pixel plausibili e sbagliati.
+///
+/// Il caso «PrintWindow riesce ma l'immagine è tutta nera» è reale, non
+/// difensivo: capita sulle finestre senza contenuto proprio, come la finestra
+/// TApplication che ogni app Delphi espone accanto a quella vera.
+///
+/// CORREZIONE (22/08/2026). Una versione precedente di questo commento diceva
+/// che RPG_RT non risponde a WM_PRINT perché disegna con DirectDraw. È falso, ed
+/// è misurato: `PrintWindow` su `TFormLcfGameMain` rende per intero la schermata
+/// del titolo di Yume Nikki. Il nero veniva dal puntare alla finestra sbagliata
+/// — il fantasma `TApplication` con client 0×0 — che ora `list_windows` scarta.
 #[cfg(target_os = "windows")]
 pub fn capture_window(hwnd: isize) -> Result<ImageData, String> {
     use std::mem::zeroed;
     use std::ffi::c_void;
-    
+
     #[link(name = "user32")]
     extern "system" {
         fn GetDC(hwnd: *mut c_void) -> *mut c_void;
         fn ReleaseDC(hwnd: *mut c_void, hdc: *mut c_void) -> i32;
         fn GetWindowRect(hwnd: *mut c_void, rect: *mut Rect) -> i32;
+        fn PrintWindow(hwnd: *mut c_void, hdc: *mut c_void, flags: u32) -> i32;
+        fn WindowFromPoint(point: Point) -> *mut c_void;
+        fn GetAncestor(hwnd: *mut c_void, flags: u32) -> *mut c_void;
+        fn GetWindowTextW(hwnd: *mut c_void, text: *mut u16, max: i32) -> i32;
+        fn GetClientRect(hwnd: *mut c_void, rect: *mut Rect) -> i32;
+        fn ClientToScreen(hwnd: *mut c_void, point: *mut Point) -> i32;
     }
-    
+
+    // POINT passato per valore: due i32 contigui, come da Win32.
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+
+    // PW_RENDERFULLCONTENT: necessario per le finestre composte da DWM, che
+    // senza questo flag rispondono con un riquadro vuoto.
+    const PW_RENDERFULLCONTENT: u32 = 0x00000002;
+    const GA_ROOT: u32 = 2;
+
     #[link(name = "gdi32")]
     extern "system" {
         fn CreateCompatibleDC(hdc: *mut c_void) -> *mut c_void;
@@ -181,10 +287,7 @@ pub fn capture_window(hwnd: isize) -> Result<ImageData, String> {
         }
         
         let old_bitmap = SelectObject(mem_dc, bitmap);
-        
-        // BitBlt dalla posizione della finestra sullo schermo
-        BitBlt(mem_dc, 0, 0, width, height, screen_dc, x, y, SRCCOPY);
-        
+
         let mut info: BitmapInfo = zeroed();
         info.header.size = std::mem::size_of::<BitmapInfoHeader>() as u32;
         info.header.width = width;
@@ -192,29 +295,66 @@ pub fn capture_window(hwnd: isize) -> Result<ImageData, String> {
         info.header.planes = 1;
         info.header.bit_count = 32;
         info.header.compression = BI_RGB;
-        
+
         let buffer_size = (width * height * 4) as usize;
         let mut buffer: Vec<u8> = vec![0; buffer_size];
-        
-        let result = GetDIBits(
-            mem_dc,
-            bitmap,
-            0,
-            height as u32,
-            buffer.as_mut_ptr(),
-            &mut info,
-            DIB_RGB_COLORS,
-        );
-        
-        SelectObject(mem_dc, old_bitmap);
-        DeleteObject(bitmap);
-        DeleteDC(mem_dc);
-        ReleaseDC(null_mut(), screen_dc);
-        
-        if result == 0 {
+
+        // Chiude i handle GDI in ogni uscita, compresi i return anticipati.
+        let chiudi = |mem_dc, old_bitmap, bitmap, screen_dc| {
+            SelectObject(mem_dc, old_bitmap);
+            DeleteObject(bitmap);
+            DeleteDC(mem_dc);
+            ReleaseDC(null_mut(), screen_dc);
+        };
+
+        // ── 1. La finestra disegna sé stessa: non dipende dall'ordine Z ──────
+        // Dov'e' l'area client dentro il fotogramma della finestra: serve per
+        // giudicare se il CONTENUTO e' stato reso, ignorando la cornice.
+        let mut crect: Rect = zeroed();
+        GetClientRect(hwnd_ptr, &mut crect);
+        let mut origine = Point { x: 0, y: 0 };
+        ClientToScreen(hwnd_ptr, &mut origine);
+        let (ox, oy) = (origine.x - x, origine.y - y);
+        let (cw, ch) = (crect.right - crect.left, crect.bottom - crect.top);
+
+        let mut riuscita = PrintWindow(hwnd_ptr, mem_dc, PW_RENDERFULLCONTENT) != 0
+            && GetDIBits(mem_dc, bitmap, 0, height as u32,
+                         buffer.as_mut_ptr(), &mut info, DIB_RGB_COLORS) != 0
+            && !client_vuoto(&buffer, width, ox, oy, cw, ch);
+
+        // ── 2. Ripiego sulla copia dallo schermo, ma solo se i pixel di quel
+        //       rettangolo appartengono davvero a questa finestra ────────────
+        if !riuscita {
+            let centro = Point { x: x + width / 2, y: y + height / 2 };
+            let sopra = GetAncestor(WindowFromPoint(centro), GA_ROOT);
+            if !sopra.is_null() && sopra != hwnd_ptr {
+                let mut titolo = [0u16; 256];
+                let n = GetWindowTextW(sopra, titolo.as_mut_ptr(), 256);
+                let nome = if n > 0 {
+                    String::from_utf16_lossy(&titolo[..n as usize])
+                } else {
+                    "(senza titolo)".to_string()
+                };
+                chiudi(mem_dc, old_bitmap, bitmap, screen_dc);
+                return Err(format!(
+                    "la finestra è coperta da «{}»: PrintWindow non ha reso nulla e \
+                     copiare dallo schermo catturerebbe quella finestra invece di questa. \
+                     Portala in primo piano e riprova.",
+                    nome
+                ));
+            }
+
+            BitBlt(mem_dc, 0, 0, width, height, screen_dc, x, y, SRCCOPY);
+            riuscita = GetDIBits(mem_dc, bitmap, 0, height as u32,
+                                 buffer.as_mut_ptr(), &mut info, DIB_RGB_COLORS) != 0;
+        }
+
+        chiudi(mem_dc, old_bitmap, bitmap, screen_dc);
+
+        if !riuscita {
             return Err("Failed to get bitmap bits".to_string());
         }
-        
+
         Ok(ImageData {
             width: width as u32,
             height: height as u32,
@@ -378,4 +518,54 @@ pub fn capture_fullscreen() -> Result<ImageData, String> {
 /// Cattura una regione specifica dello schermo
 pub fn capture_region(x: i32, y: i32, width: i32, height: i32) -> Result<ImageData, String> {
     capture_screen(&Some(CaptureRegion { x, y, width, height }))
+}
+
+#[cfg(test)]
+mod test_client_vuoto {
+    use super::client_vuoto;
+
+    /// Un fotogramma BGRA `w`x`h` nero, con un pixel acceso in (px,py).
+    fn frame(w: i32, h: i32, acceso: Option<(i32, i32)>) -> Vec<u8> {
+        let mut b = vec![0u8; (w * h * 4) as usize];
+        if let Some((px, py)) = acceso {
+            b[((py * w + px) * 4) as usize + 1] = 255; // verde
+        }
+        b
+    }
+
+    #[test]
+    fn client_tutto_nero_e_vuoto() {
+        let b = frame(10, 10, None);
+        assert!(client_vuoto(&b, 10, 1, 1, 8, 8));
+    }
+
+    #[test]
+    fn un_pixel_acceso_nel_client_basta() {
+        let b = frame(10, 10, Some((5, 5)));
+        assert!(!client_vuoto(&b, 10, 1, 1, 8, 8));
+    }
+
+    /// Il caso che la versione precedente sbagliava: la cornice e' resa (barra
+    /// del titolo) ma il contenuto no. Guardando tutto il fotogramma sembrava
+    /// «reso»; guardando il client e' vuoto, ed e' la risposta giusta.
+    #[test]
+    fn cornice_accesa_ma_client_vuoto() {
+        let b = frame(10, 10, Some((5, 0))); // riga 0 = barra del titolo
+        assert!(client_vuoto(&b, 10, 1, 2, 8, 7));
+    }
+
+    /// RPG_RT espone una finestra TApplication con client 0x0: senza contenuto
+    /// da giudicare, l'unica risposta onesta e' «vuoto», cosi' si ripiega e si
+    /// passa dal controllo su chi possiede i pixel.
+    #[test]
+    fn client_degenere_e_vuoto() {
+        let b = frame(10, 10, Some((5, 5)));
+        assert!(client_vuoto(&b, 10, 0, 0, 0, 0));
+    }
+
+    #[test]
+    fn non_esce_dal_buffer_se_il_client_sborda() {
+        let b = frame(10, 10, None);
+        assert!(client_vuoto(&b, 10, 8, 8, 8, 8)); // niente panico
+    }
 }
