@@ -168,3 +168,6 @@ _gs_split/
 # motivo di /estratti*/ — vedi il commento sopra)
 /gm-strg-translatable.txt
 .release-state.json
+
+# Asset OCR generati da scripts/prepare-tesseract-assets.js (~47 MB)
+/public/tesseract/
