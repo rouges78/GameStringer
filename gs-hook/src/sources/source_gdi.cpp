@@ -1,9 +1,17 @@
 //
 // source_gdi.cpp — Livello 2 (UNIVERSALE), sorgente GDI. ⭐ Il pezzo innovativo.
 //
-// Aggancia ExtTextOutW / DrawTextW / TextOutW in gdi32.dll. Moltissimi engine
-// diversi (vecchi, custom, middleware, alcuni RPG Maker, tool, emulatori) e gran
-// parte della UI Win32 passano da qui SENZA saperlo: un solo hook → tanti giochi.
+// Aggancia ExtTextOut / TextOut / DrawText in gdi32+user32, nelle varianti
+// Unicode E ANSI. Moltissimi engine diversi (vecchi, custom, middleware, tool,
+// emulatori) e gran parte della UI Win32 passano da qui SENZA saperlo: un solo
+// hook → tanti giochi.
+//
+// DOVE **NON** ARRIVA (misurato il 22/08/2026, Yume Nikki portato in partita):
+// RPG Maker 2000/2003 non chiama NESSUNA di queste funzioni, né W né A — zero
+// righe di diagnostica in una sessione intera. Disegna il testo per conto suo,
+// e per quei giochi la strada giusta è quella sui file (.ldb/.lmu), non questa.
+// Il controllo positivo che rende attendibile quello zero: la stessa DLL in
+// charmap.exe produce catture e righe OVERLAY regolarmente.
 //
 // IL PROBLEMA DURO (e il senso dello spike): il testo spesso NON arriva come
 // frase intera. Arriva a pezzi — parola per parola, a volte glifo per glifo —
@@ -29,11 +37,35 @@
 #include <chrono>
 #include <climits>
 #include <cwctype>
+#include <atomic>
 
 namespace gs {
 namespace {
 
 TranslateFn g_translate = nullptr;
+
+// ─── Diagnostica di esercizio ────────────────────────────────────────────────
+//
+// Il log diceva «sorgente attiva» perché MH_CreateHook era riuscito — cioè
+// perché la funzione esiste in gdi32, non perché il gioco la chiami. Un hook su
+// una funzione mai invocata è indistinguibile, nel log, da un hook che funziona
+// e non ha ancora visto testo, e su Yume Nikki quella differenza è costata una
+// diagnosi sbagliata.
+//
+// Queste righe la rendono visibile: le PRIME chiamate viste, con la porta
+// d'ingresso e il testo grezzo, PRIMA di ogni filtro. Zero righe `#n` nel log
+// dopo una sessione di gioco significa che il testo non passa da GDI, e lo dice
+// senza doverlo dedurre. Il tetto tiene il costo fisso: non è tracciamento
+// continuo, è una risposta a una domanda.
+constexpr int kDiagPrimeChiamate = 24;
+std::atomic<int> g_chiamateViste{0};
+
+void DiagChiamata(const wchar_t* porta, const std::wstring& s) {
+    const int n = g_chiamateViste.fetch_add(1, std::memory_order_relaxed);
+    if (n < kDiagPrimeChiamate) {
+        LogLineW(L"[gs-hook/GDI] #" + std::to_wstring(n) + L" " + porta + L" \"" + s + L"\"\n");
+    }
+}
 
 // Guardia di rientranza: DrawTextW (user32) rende il testo chiamando ExtTextOutW
 // UNA VOLTA PER RIGA VISIVA del word-wrap. Senza questa guardia, il contenuto di
@@ -358,6 +390,7 @@ BOOL WINAPI Hook_ExtTextOutW(HDC hdc, int x, int y, UINT options, const RECT* re
     // ETO_GLYPH_INDEX: `str` contiene indici di glifo, NON caratteri → non toccare.
     if (str && count > 0 && g_inDrawText == 0 && !(options & ETO_GLYPH_INDEX)) {
         std::wstring s(str, count);
+        DiagChiamata(L"ExtTextOutW", s);
 
         // MODALITÀ PASSIVA (default, real-time/overlay): osserva + coalesce +
         // inoltra all'overlay SENZA mai sopprimere/ridisegnare. Il gioco disegna
@@ -404,6 +437,7 @@ int WINAPI Hook_DrawTextW(HDC hdc, LPCWSTR str, int count, LPRECT rect, UINT for
         if (len > 0) {
             // DrawText passa di solito una frase/paragrafo intero → caso ideale.
             std::wstring whole(str, len);
+            DiagChiamata(L"DrawTextW", whole);
             if (kPassiveOverlayMode) {
                 // Passivo: inoltra l'intera stringa all'overlay, poi disegna
                 // normalmente (la guardia sotto evita la doppia cattura delle
@@ -435,6 +469,130 @@ int WINAPI Hook_DrawTextW(HDC hdc, LPCWSTR str, int count, LPRECT rect, UINT for
     return result;
 }
 
+// ═══ Varianti ANSI ═══════════════════════════════════════════════════════════
+//
+// PERCHÉ ESISTONO (22/08/2026, misurato su Yume Nikki).
+// Il hook agganciava solo le funzioni Unicode. La tabella degli import di
+// RPG_RT.exe dice che il gioco non le chiama MAI:
+//
+//     ExtTextOutA  PRESENTE      ExtTextOutW  assente
+//     TextOutA     PRESENTE      TextOutW     assente
+//     DrawTextA    PRESENTE      DrawTextW    assente
+//
+// E le A non passano dalle W: in gdi32 sono implementazioni separate che
+// scendono entrambe al kernel. Agganciare solo la W non intercetta
+// un'applicazione ANSI in nessun caso. RPG_RT è un binario Delphi pre-Unicode,
+// quindi questo vale per TUTTO RPG Maker 2000/2003 — cioè proprio i giochi per
+// cui questa sorgente di livello 2 esiste.
+
+// La codepage NON è quella di sistema: è quella implicata dal charset del font
+// selezionato nel DC. Un gioco giapponese su Windows italiano disegna byte
+// Shift-JIS con un font SHIFTJIS_CHARSET, e interpretarli con la CP1252 di
+// sistema produce testo plausibile e sbagliato — l'errore peggiore possibile
+// qui, perché non somiglia a un errore.
+UINT CodepageForDC(HDC hdc) {
+    CHARSETINFO csi{};
+    const UINT charset = GetTextCharset(hdc);
+    if (charset != DEFAULT_CHARSET &&
+        TranslateCharsetInfo(reinterpret_cast<DWORD*>(static_cast<UINT_PTR>(charset)),
+                             &csi, TCI_SRCCHARSET)) {
+        return csi.ciACP;
+    }
+    return CP_ACP;
+}
+
+std::wstring AnsiToWide(HDC hdc, const char* str, int count) {
+    if (!str || count <= 0) return std::wstring();
+    const UINT cp = CodepageForDC(hdc);
+    const int need = MultiByteToWideChar(cp, 0, str, count, nullptr, 0);
+    if (need <= 0) return std::wstring();
+    std::wstring out(static_cast<size_t>(need), L'\0');
+    MultiByteToWideChar(cp, 0, str, count, &out[0], need);
+    return out;
+}
+
+// Guardia di rientranza per la famiglia ANSI. Non si sa, senza misurarlo, se
+// TextOutA passi internamente da ExtTextOutA e DrawTextA da entrambe: dipende
+// dalla versione di gdi32. Con questo contatore la cattura la fa solo la
+// chiamata più esterna, quindi agganciarle tutte e tre è sicuro comunque vada,
+// e il tag nel log dice quale porta d'ingresso ha visto il testo.
+thread_local int g_inAnsiText = 0;
+
+struct AnsiGuard {
+    AnsiGuard()  { ++g_inAnsiText; }
+    ~AnsiGuard() { --g_inAnsiText; }
+};
+
+// In modalità passiva si osserva e si inoltra all'overlay, senza toccare il
+// disegno. La SOSTITUZIONE in-place qui NON è implementata di proposito:
+// richiederebbe riconvertire la traduzione nella codepage del gioco, e una
+// codepage giapponese non rappresenta le lettere accentate italiane. La
+// conversione non fallisce: sostituisce i caratteri mancanti, e a schermo
+// comparirebbe «perch?» invece di «perché». Meglio lasciare l'originale che
+// disegnare una traduzione storpiata.
+void OsservaAnsi(HDC hdc, const char* str, int count, const wchar_t* porta,
+                 int x, int y, UINT options) {
+    const std::wstring s = AnsiToWide(hdc, str, count);
+    if (s.empty()) return;
+    DiagChiamata(porta, s);
+
+    if (kPassiveOverlayMode) {
+        DrawCtx ctx = CaptureCtx(hdc, x, y, options);
+        std::wstring closedText;
+        DrawCtx      closedCtx;
+        if (g_coalescer.Add(ctx, s, closedText, closedCtx) && !closedText.empty()) {
+            ForwardToOverlay(closedText);
+        }
+    } else if (kSpikeLogOnly) {
+        LogLineW(std::wstring(L"[gs-hook/GDI] ") + porta + L": " + s + L"\n");
+    }
+}
+
+using ExtTextOutA_t = BOOL (WINAPI*)(HDC, int, int, UINT, const RECT*,
+                                     LPCSTR, UINT, const INT*);
+ExtTextOutA_t Original_ExtTextOutA = nullptr;
+
+BOOL WINAPI Hook_ExtTextOutA(HDC hdc, int x, int y, UINT options, const RECT* rect,
+                             LPCSTR str, UINT count, const INT* dx) {
+    if (str && count > 0 && g_inAnsiText == 0 && !(options & ETO_GLYPH_INDEX)) {
+        OsservaAnsi(hdc, str, (int)count, L"ExtTextOutA", x, y, options);
+    }
+    AnsiGuard g;
+    return Original_ExtTextOutA(hdc, x, y, options, rect, str, count, dx);
+}
+
+using TextOutA_t = BOOL (WINAPI*)(HDC, int, int, LPCSTR, int);
+TextOutA_t Original_TextOutA = nullptr;
+
+BOOL WINAPI Hook_TextOutA(HDC hdc, int x, int y, LPCSTR str, int count) {
+    if (str && count > 0 && g_inAnsiText == 0) {
+        OsservaAnsi(hdc, str, count, L"TextOutA", x, y, 0);
+    }
+    AnsiGuard g;
+    return Original_TextOutA(hdc, x, y, str, count);
+}
+
+using DrawTextA_t = int (WINAPI*)(HDC, LPCSTR, int, LPRECT, UINT);
+DrawTextA_t Original_DrawTextA = nullptr;
+
+int WINAPI Hook_DrawTextA(HDC hdc, LPCSTR str, int count, LPRECT rect, UINT format) {
+    if (str && g_inAnsiText == 0) {
+        const int len = (count < 0) ? (int)strlen(str) : count;
+        if (len > 0) {
+            // DrawText passa di norma una frase intera: va all'overlay così
+            // com'è, senza passare dal coalescer che serve ai frammenti.
+            const std::wstring whole = AnsiToWide(hdc, str, len);
+            if (!whole.empty()) {
+                DiagChiamata(L"DrawTextA", whole);
+                if (kPassiveOverlayMode)      ForwardToOverlay(whole);
+                else if (kSpikeLogOnly)       LogLineW(L"[gs-hook/GDI] DrawTextA: " + whole + L"\n");
+            }
+        }
+    }
+    AnsiGuard g;
+    return Original_DrawTextA(hdc, str, count, rect, format);
+}
+
 // ─── Hook su EndPaint (user32) ───────────────────────────────────────────────
 // A fine frame chiude l'ULTIMA riga ancora bufferizzata e la ridisegna tradotta:
 // i suoi glifi sono stati soppressi e non sono ancora a schermo. Il DC di
@@ -464,7 +622,7 @@ BOOL WINAPI Hook_EndPaint(HWND hwnd, const PAINTSTRUCT* ps) {
 
 class GdiSource : public ITextSource {
 public:
-    const char* Name() const override { return "GDI (ExtTextOutW/DrawTextW)"; }
+    const char* Name() const override { return "GDI (ExtTextOut/TextOut/DrawText, W+A)"; }
     Level GetLevel() const override { return Level::Rasterization; }
 
     bool IsApplicable() const override {
@@ -494,6 +652,29 @@ public:
             MH_EnableHook((LPVOID)pDraw) == MH_OK) {
             any = true;
         }
+        // Varianti ANSI: sono quelle che usano davvero i binari pre-Unicode
+        // (tutto RPG Maker 2000/2003). Si agganciano tutte e tre perché non è
+        // misurato quale passi internamente per quale, e la guardia di
+        // rientranza rende innocua la sovrapposizione.
+        struct { const char* nome; LPVOID hook; LPVOID* orig; } ansi[] = {
+            { "ExtTextOutA", (LPVOID)&Hook_ExtTextOutA, (LPVOID*)&Original_ExtTextOutA },
+            { "TextOutA",    (LPVOID)&Hook_TextOutA,    (LPVOID*)&Original_TextOutA    },
+        };
+        for (const auto& a : ansi) {
+            auto p = GetProcAddress(gdi, a.nome);
+            if (p && MH_CreateHook((LPVOID)p, a.hook, a.orig) == MH_OK &&
+                MH_EnableHook((LPVOID)p) == MH_OK) {
+                any = true;
+            }
+        }
+        auto pDrawA = GetProcAddress(user32, "DrawTextA");
+        if (pDrawA &&
+            MH_CreateHook((LPVOID)pDrawA, (LPVOID)&Hook_DrawTextA,
+                          (LPVOID*)&Original_DrawTextA) == MH_OK &&
+            MH_EnableHook((LPVOID)pDrawA) == MH_OK) {
+            any = true;
+        }
+
         // EndPaint: serve a chiudere/ridisegnare l'ultima riga soppressa del frame
         // (suppress-and-redraw glifo-per-glifo). Non incide sull'attivazione.
         if (pEnd &&
@@ -507,6 +688,9 @@ public:
     void Deactivate() override {
         if (Original_ExtTextOutW) MH_DisableHook((LPVOID)Original_ExtTextOutW);
         if (Original_DrawTextW)   MH_DisableHook((LPVOID)Original_DrawTextW);
+        if (Original_ExtTextOutA) MH_DisableHook((LPVOID)Original_ExtTextOutA);
+        if (Original_TextOutA)    MH_DisableHook((LPVOID)Original_TextOutA);
+        if (Original_DrawTextA)   MH_DisableHook((LPVOID)Original_DrawTextA);
         if (Original_EndPaint)    MH_DisableHook((LPVOID)Original_EndPaint);
     }
 };

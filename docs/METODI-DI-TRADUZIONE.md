@@ -1155,6 +1155,50 @@ area client (ogni app Delphi ne ha una, non e' una stranezza di un gioco), e
 dallo schermo.
 
 
+### Il testo di RPG Maker 2000/2003 non passa da GDI — dimostrato, non dedotto
+
+**Cosa e' stato aggiunto.** Il hook GDI ora aggancia anche le varianti **ANSI**
+(`ExtTextOutA`, `TextOutA`, `DrawTextA`), convertendo i byte con la codepage
+implicata dal **charset del font nel DC** e non con quella di sistema: un gioco
+giapponese disegna Shift-JIS, e leggerlo come CP1252 darebbe testo plausibile e
+sbagliato. E' stata aggiunta anche una **diagnostica di esercizio**: le prime 24
+chiamate viste, con porta d'ingresso e testo grezzo, **prima di ogni filtro**.
+
+**Cosa dice la misura.** Yume Nikki portato in partita (menu del titolo, New
+Game, stanza di Madotsuki, interazioni): **zero chiamate**, né W né A, né
+ExtTextOut né TextOut né DrawText.
+
+**Il controllo positivo, che e' la parte che rende quello zero una prova.** La
+stessa DLL iniettata in `charmap.exe`:
+
+```text
+[gs-hook/GDI] #0 DrawTextW "Carattere selezionato:"
+[gs-hook/GDI] OVERLAY: Carattere selezionato:
+[gs-hook/GDI] #1 DrawTextW "U+0021: Exclamation Mark"
+[gs-hook/GDI] OVERLAY: U+0021: Exclamation Mark
+```
+
+Hook, diagnostica, coalescer e inoltro all'overlay **funzionano tutti**. E' la
+prima volta che la catena GDI si dimostra completa da capo a fondo. Quindi il
+silenzio su RPG_RT non e' uno strumento rotto: e' il gioco che non chiama.
+
+**Conseguenza pratica.** Per RPG Maker 2000/2003 la traduzione a runtime via GDI
+e' una **strada chiusa**. La strada giusta per quei giochi e' quella sui file —
+`.ldb`/`.lmu`, gia' supportata (il rilevamento e' arrivato con la PR #95). Le
+varianti ANSI restano comunque utili: valgono per qualunque altro binario
+pre-Unicode che il testo lo disegni davvero con GDI.
+
+**Cosa NON e' stato misurato.** *Come* RPG_RT disegni il testo. Gli import
+mostrano `BitBlt` e `StretchBlt`, il che e' compatibile con un font bitmap
+blittato dalla grafica System — ma e' un'inferenza, non una misura, e va
+verificata prima di costruirci sopra.
+
+**La trappola.** Il silenzio non e' una prova finche' non hai un controllo
+positivo. Un log vuoto vuol dire «il gioco non chiama» oppure «il mio strumento
+non funziona», e le due cose sono indistinguibili dall'interno. Costa poco
+separarle — un'applicazione di cui conosci gia' la risposta — e senza quel passo
+avrei scritto «RPG Maker non usa GDI» avendo in mano soltanto un hook rotto.
+
 ---
 
 ## Come si aggiunge una voce
