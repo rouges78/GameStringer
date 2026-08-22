@@ -23,6 +23,24 @@ use gamestringer::ocr_translator::ocr_engine;
 use gamestringer::ocr_translator::retro_preprocessor as retro;
 use gamestringer::ocr_translator::screen_capture::ImageData;
 
+/// Salva l'immagine cosi' com'e' finita, per poterla dare ad ALTRI motori.
+/// Serve perche' questa sonda misura l'OCR di Windows, mentre il loop live usa
+/// Tesseract.js: senza il file, il confronto fra i due resterebbe impossibile —
+/// ed e' proprio misurando il motore sbagliato che si sbaglia conclusione.
+fn salva(nome: &str, dati: &ImageData) {
+    let mut rgba = dati.data.clone();
+    for p in rgba.chunks_exact_mut(4) {
+        p.swap(0, 2);
+        p[3] = 255;
+    }
+    if let Some(buf) = image::RgbaImage::from_raw(dati.width, dati.height, rgba) {
+        let file = format!("{nome}.png");
+        if buf.save(&file).is_ok() {
+            println!("    salvato -> {file}");
+        }
+    }
+}
+
 fn prova(nome: &str, dati: &ImageData) {
     print!("{nome} ({}x{}): ", dati.width, dati.height);
     match ocr_engine::recognize_text(dati, "en") {
@@ -82,7 +100,10 @@ fn main() {
     let grezzo = ImageData { width: w, height: h, data: bgra };
 
     prova("grezzo", &grezzo);
-    prova("ingrandito x4", &ingrandisci(&grezzo, 4));
+    salva("frame-grezzo", &grezzo);
+    let x6 = ingrandisci(&grezzo, 6);
+    prova("ingrandito x6", &x6);
+    salva("frame-x6", &x6);
 
     // Il preprocessore che il progetto ha già: upscale + contrasto + soglia +
     // sharpen. Se aiuta, la conclusione non è «serve scrivere qualcosa», è
@@ -90,7 +111,10 @@ fn main() {
     let cfg = retro::RetroPreprocessConfig::preset_8bit();
     match retro::preprocess_retro_image(&grezzo, &cfg) {
         Err(e) => println!("preprocessore retro fallito: {e}"),
-        Ok(pronto) => prova("preprocessore retro (preset 8-bit)", &pronto),
+        Ok(pronto) => {
+            prova("preprocessore retro (preset 8-bit)", &pronto);
+            salva("frame-retro", &pronto);
+        }
     }
 
     let tipo = retro::detect_retro_game_type(&grezzo);

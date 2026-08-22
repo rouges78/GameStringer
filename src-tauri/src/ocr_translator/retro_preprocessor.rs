@@ -1,6 +1,32 @@
 #![allow(dead_code)]
 // Retro Game OCR Preprocessor
 // Pre-processing ottimizzato per font pixelati di giochi retro (DOS, SNES, PC-98, etc.)
+//
+// PERCHE' NON E' COLLEGATO A NIENTE (misurato il 22/08/2026).
+// Sembrava il pezzo mancante del percorso OCR sui giochi retro, ed e' stato
+// provato sul campo: fotogramma nativo di Yume Nikki (RPG Maker 2000/2003,
+// 320x240), preset scelto dal rilevamento automatico (Bit8).
+//
+// Contando le righe che superano il filtro di confidenza del loop live
+// (>= 40, LiveTranslationConfig.minConfidence) con Tesseract.js, che e' il
+// motore che quel loop usa davvero:
+//
+//     grezzo 320x240                        0 righe utili
+//     x6 nearest (lib/ocr/upscale-for-ocr)  6 righe utili
+//     questo preprocessore, preset 8-bit    2 righe utili
+//
+// Trova PIU' righe grezze (9 contro 8) e ne fa passare un terzo: escono con
+// confidenza 19-34, sotto soglia. Provate altre sette preparazioni (grigi,
+// normalizzazione, negazione, soglie 64 e 128): il semplice ingrandimento le
+// batte tutte, e la soglia 128 — quella che il preset Bit8 sceglie — e' la
+// peggiore in assoluto. Su un font gia' ad alto contrasto, binarizzare toglie
+// informazione invece di pulirla.
+//
+// Non e' codice sbagliato: e' pensato per DOS/PC-98 a bassissima palette, e la
+// misura vale per UN gioco, UNA schermata e UN motore. Resta qui perche' possa
+// servire altrove; questo commento esiste perche' nessuno debba rifare la
+// stessa misura per scoprire la stessa cosa. Dettagli in
+// docs/METODI-DI-TRADUZIONE.md.
 
 use super::screen_capture::ImageData;
 

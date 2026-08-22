@@ -1533,6 +1533,64 @@ un risultato invece che come un possibile difetto della sonda. Sono la stessa
 trappola con due facce, e la separa una cosa sola — un controllo di cui conosci
 gia' la risposta, fatto PRIMA di interpretare il numero.
 
+### Il preprocessore retro NON va collegato: misurato sul motore giusto, peggiora
+
+**La proposta sembrava ovvia.** `retro_preprocessor.rs` e' un preprocessore
+completo per font pixelati, senza un solo chiamante. Sul fotogramma di Yume
+Nikki, con l'OCR di Windows, trovava **4 righe contro 3** e recuperava
+`New Game`: collegarlo pareva il passo successivo naturale.
+
+**Sul motore vero l'esito si rovescia.** Il loop live usa Tesseract.js e scarta
+le righe sotto confidenza **40** (`LiveTranslationConfig.minConfidence`).
+Contando cio' che passa quel filtro, non le righe grezze:
+
+| variante | righe totali | **passano il filtro** |
+|---|---|---|
+| grezzo 320x240 | 1 | **0** |
+| x6 nearest | 8 | **6** |
+| preprocessore retro (preset 8-bit) | 9 | **2** |
+
+Il preprocessore ne trova **di piu'** e ne fa passare **un terzo**: le sue righe
+escono con confidenze 19-34, sotto la soglia. Contare le righe grezze diceva
+«meglio»; contare quelle utilizzabili dice «tre volte peggio».
+
+**Non e' colpa del preset.** Provate otto preparazioni sullo stesso fotogramma,
+misurando sempre le righe sopra soglia:
+
+```text
+ 6 passano /  8 tot  x6 nearest
+ 6 passano /  8 tot  x6 + negato
+ 4 passano /  6 tot  x6 + grigi
+ 4 passano /  6 tot  x6 + grigi + normalizza
+ 4 passano /  6 tot  x6 + grigi + negato
+ 4 passano /  9 tot  x6 + grigi + soglia 64
+ 4 passano /  9 tot  x6 + grigi + soglia 64 + neg
+ 1 passano /  5 tot  x6 + grigi + soglia 128
+```
+
+**Il semplice ingrandimento vince su tutto.** Grigi, normalizzazione,
+negazione e soglia sono tutte pari o peggio, e la soglia a 128 — quella che il
+preset 8-bit sceglie, dopo aver correttamente rilevato `Bit8` — e' la peggiore
+in assoluto. Su un font gia' ad alto contrasto, binarizzare toglie informazione
+invece di pulirla.
+
+**Decisione: non si collega.** Il modulo resta dov'e', con questa misura scritta
+in testa cosi' che nessuno debba rifarla per scoprire la stessa cosa. Non e'
+codice sbagliato — e' codice pensato per DOS/PC-98 a bassissima palette, dato a
+un motore diverso su un gioco diverso.
+
+**Limite dichiarato.** La misura e' su UNA schermata (il titolo di Yume Nikki:
+fondo nero, testo chiaro) e UN motore. Una finestra di dialogo, o un gioco con
+testo scuro su fondo chiaro, potrebbe rovesciare di nuovo l'esito. Quello che
+NON cambia e' il metodo: contare le righe che superano il filtro vero, non
+quelle che l'OCR emette.
+
+**La trappola.** Un preprocessore che «trova piu' testo» puo' peggiorare il
+risultato, se il testo in piu' arriva sotto la soglia che qualcun altro
+applica a valle. La metrica giusta non e' quella della funzione che stai
+guardando: e' quella dell'ultimo anello che decide. E l'avevo gia' quasi
+sbagliata una volta, misurando il motore OCR che il loop non usa.
+
 ---
 
 ## Come si aggiunge una voce
