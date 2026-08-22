@@ -33,6 +33,13 @@ export interface CaptureOptions {
    * non è ancora stato composto.
    */
   gameProcess?: string;
+  /**
+   * Titolo (o parte del titolo) della finestra da catturare. Usato quando il
+   * gioco non e' agganciato: `capture_window` chiede alla finestra di
+   * disegnarsi, quindi funziona anche se e' coperta — a differenza della
+   * cattura per area, che restituisce i pixel di chi le sta davanti.
+   */
+  windowTitle?: string;
 }
 
 export interface MonitorInfo {
@@ -90,6 +97,18 @@ export async function captureScreen(options: CaptureOptions = {}): Promise<Captu
       // genere di silenzio che rende indiagnosticabile una traduzione sbagliata.
       console.info(
         `[capture] fotogramma dal gioco non disponibile (${dalGioco.error}), si ripiega sullo schermo`
+      );
+    }
+
+    // Seconda scelta: la finestra. Non e' buona come il fotogramma dal gioco
+    // (che e' nativo e sincronizzato col rendering) ma e' molto meglio dello
+    // schermo, perche' chiede alla finestra di disegnarsi invece di copiare
+    // un'area: coperta o meno, i pixel sono i suoi.
+    if (options.windowTitle) {
+      const daFinestra = await captureWindow(options.windowTitle);
+      if (daFinestra.success) return daFinestra;
+      console.info(
+        `[capture] cattura finestra non riuscita (${daFinestra.error}), si ripiega sullo schermo`
       );
     }
 
@@ -283,6 +302,23 @@ export async function captureWindow(windowTitle: string): Promise<CaptureResult>
       success: false,
       error: error instanceof Error ? error.message : 'Window capture not available'
     };
+  }
+}
+
+/**
+ * Elenco delle finestre catturabili.
+ *
+ * Usa `list_capture_windows`, che e' il comando VERO: `get_windows` (sotto)
+ * appartiene al modulo stub e ritorna sempre una lista vuota. Le finestre
+ * senza area client — come la finestra fantasma che ogni app Delphi espone —
+ * sono gia' escluse a monte, in `ocr_translator::screen_capture::list_windows`.
+ */
+export async function getCaptureWindows(): Promise<{ hwnd: number; title: string }[]> {
+  try {
+    const w = (await invoke('list_capture_windows')) as { hwnd: number; title: string }[] | null;
+    return w ?? [];
+  } catch {
+    return [];
   }
 }
 

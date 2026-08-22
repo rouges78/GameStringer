@@ -1938,7 +1938,7 @@
     "modelwizDownload1": "Scarica ModelWiz da ",
     "modelwizDownload2": " — Avvia il server locale e GameStringer lo userà automaticamente nella catena di traduzione.",
     "groqApiKeyLabel": "🔑 Groq API Key (Llama 3.3 70B — Gratuito)",
-    "deepseekHint": "~$0.14/1M token, nessun rate limit aggressivo — ",
+    "deepseekHint": "$0,44/1M token in fascia di picco, $0,22 fuori picco — nessun rate limit aggressivo — ",
     "otherLlmProviders": "🔧 Altri Provider LLM (Mistral, Cohere, Together, Fireworks, OpenRouter, Cerebras)",
     "together25Credit": "25$ di credito gratis — ",
     "deepl500k": "500K caratteri/mese gratis — ",
@@ -4111,7 +4111,10 @@
     "openFolder": "Apri cartella",
     "pause": "Pausa",
     "resume": "Riprendi",
-    "play": "Riproduci"
+    "play": "Riproduci",
+    "ltWindow": "Finestra",
+    "ltPickWindow": "Scegli una finestra",
+    "ltNoWindow": "Nessuna finestra trovata"
   },
   "languages": {
     "cs": "Čeština",

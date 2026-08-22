@@ -1876,7 +1876,7 @@
     "modelwizDownload1": "ModelWiz を以下からダウンロード: ",
     "modelwizDownload2": " — ローカルサーバーを起動すると、GameStringer が翻訳チェーンで自動的に使用します。",
     "groqApiKeyLabel": "🔑 Groq API キー（Llama 3.3 70B — 無料）",
-    "deepseekHint": "~$0.14/100万トークン、厳しいレート制限なし — ",
+    "deepseekHint": "ピーク時 $0.44/100万トークン、オフピーク $0.22 — 厳しいレート制限なし — ",
     "otherLlmProviders": "🔧 その他の LLM プロバイダー（Mistral, Cohere, Together, Fireworks, OpenRouter, Cerebras）",
     "together25Credit": "$25 の無料クレジット — ",
     "deepl500k": "月50万文字まで無料 — ",
@@ -4005,7 +4005,10 @@
     "openFolder": "フォルダーを開く",
     "pause": "一時停止",
     "resume": "再開",
-    "play": "再生"
+    "play": "再生",
+    "ltWindow": "ウィンドウ",
+    "ltPickWindow": "ウィンドウを選択",
+    "ltNoWindow": "ウィンドウが見つかりません"
   },
   "languages": {
     "cs": "Čeština",
