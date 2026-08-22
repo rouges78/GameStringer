@@ -61,6 +61,50 @@ export function getAvailableLanguages(): { code: OCRLanguage; name: string }[] {
   }));
 }
 
+/**
+ * Worker Tesseract riusato fra le chiamate.
+ *
+ * PERCHE' NON LA SCORCIATOIA. `Tesseract.recognize` crea un worker, carica il
+ * core wasm e i dati lingua, riconosce, e poi distrugge tutto — a ogni
+ * chiamata. Nel loop live succederebbe ogni due secondi. Tenerne uno vivo
+ * elimina quel lavoro ripetuto, ed e' anche l'unico modo di chiedere `blocks`,
+ * che sulla scorciatoia non si puo' passare.
+ *
+ * ASSET IN LOCALE, NON DA UN CDN. Tesseract.js scarica worker, core e dati
+ * lingua a runtime. In una finestra Tauri quella richiesta NON passa: la CSP
+ * elenca gli host delle API di traduzione e nessun CDN, e in `public/` non
+ * c'era niente. Il risultato era `OCR failed: Unknown error` a ogni fotogramma
+ * — misurato nell'app: 44 catture, zero traduzioni. Serviti da `self` non serve
+ * toccare la CSP, non si aggiunge nessun host, e l'OCR funziona offline.
+ */
+let workerCorrente: { lingua: OCRLanguage; worker: Tesseract.Worker } | null = null;
+
+async function ottieniWorker(
+  language: OCRLanguage,
+  onProgress?: (progress: OCRProgress) => void
+): Promise<Tesseract.Worker> {
+  if (workerCorrente?.lingua === language) return workerCorrente.worker;
+  if (workerCorrente) {
+    await workerCorrente.worker.terminate().catch(() => {});
+    workerCorrente = null;
+  }
+  const worker = await Tesseract.createWorker(language, undefined, {
+    workerPath: '/tesseract/worker.min.js',
+    corePath: '/tesseract',
+    langPath: '/tesseract',
+    // I file di `tessdata_fast` non sono compressi: chiedendo gzip, Tesseract
+    // cercherebbe `eng.traineddata.gz` e fallirebbe.
+    gzip: false,
+    logger: (m: { status?: string; progress?: number }) => {
+      if (onProgress && m.status) {
+        onProgress({ status: translateStatus(m.status), progress: Math.round((m.progress || 0) * 100) });
+      }
+    },
+  });
+  workerCorrente = { lingua: language, worker };
+  return worker;
+}
+
 export async function recognizeText(
   image: string | File | Blob,
   language: OCRLanguage = 'eng',
@@ -69,21 +113,30 @@ export async function recognizeText(
   const startTime = Date.now();
   
   try {
-    const result = await Tesseract.recognize(image, language, {
-      logger: (m) => {
-        if (onProgress && m.status) {
-          onProgress({
-            status: translateStatus(m.status),
-            progress: Math.round((m.progress || 0) * 100)
-          });
-        }
-      }
-    });
+    const worker = await ottieniWorker(language, onProgress);
+    // Il quarto argomento esiste solo sull'API del worker: senza, `blocks`
+    // resta nullo e le righe non arrivano.
+    const result = await worker.recognize(image, {}, { text: true, blocks: true });
 
     interface TesseractWord { text: string; confidence: number; bbox: BoundingBox }
     interface TesseractLine { text: string; confidence: number; bbox: BoundingBox; words: TesseractWord[] }
-    interface TesseractData { words: TesseractWord[]; lines: TesseractLine[] }
-    const data = result.data as unknown as TesseractData;
+    interface TesseractParagraph { lines?: TesseractLine[] }
+    interface TesseractBlock { paragraphs?: TesseractParagraph[] }
+    interface TesseractData { words?: TesseractWord[]; lines?: TesseractLine[]; blocks?: TesseractBlock[] }
+    const raw = result.data as unknown as TesseractData;
+
+    // Le righe stanno DENTRO i blocchi: blocchi → paragrafi → righe. `data.lines`
+    // esiste come campo ma resta vuoto, e leggere solo quello fa concludere
+    // «nessun testo» su immagini perfettamente leggibili. Il ripiego su
+    // `data.lines` resta per non dipendere da un dettaglio di versione.
+    const righeDaiBlocchi: TesseractLine[] = (raw.blocks ?? [])
+      .flatMap((b) => b.paragraphs ?? [])
+      .flatMap((p) => p.lines ?? []);
+
+    const data = {
+      words: raw.words ?? [],
+      lines: righeDaiBlocchi.length > 0 ? righeDaiBlocchi : (raw.lines ?? []),
+    };
 
     const words: OCRWord[] = (data.words || []).map((w: TesseractWord) => ({
       text: w.text,

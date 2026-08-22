@@ -49,7 +49,7 @@
     "tauri:check-cmds": "node scripts/check-tauri-commands.js",
     "tauri:check-cmds:report": "node scripts/check-tauri-commands.js --report",
     "tauri:check-cmds:update": "node scripts/check-tauri-commands.js --update",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/prepare-tesseract-assets.js",
     "tauri": "tauri",
     "tauri:dev": "node scripts/unified-dev.js tauri",
     "tauri:build": "npm run version:build && tauri build",
@@ -84,7 +84,8 @@
     "deploy:sito": "node scripts/deploy-sito.js",
     "deploy:sito:watch": "node scripts/deploy-sito-watch.js",
     "icons:generate": "node scripts/generate-icons.js",
-    "icons:preview": "start src-tauri/icons/preview.html"
+    "icons:preview": "start src-tauri/icons/preview.html",
+    "tesseract:assets": "node scripts/prepare-tesseract-assets.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
