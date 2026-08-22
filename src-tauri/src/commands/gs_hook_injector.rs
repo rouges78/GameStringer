@@ -63,8 +63,18 @@ pub async fn gs_hook_status(process_name: Option<String>) -> Result<GsHookStatus
 pub async fn inject_gs_hook(
     app: tauri::AppHandle,
     process_name: String,
+    // `share_frames`: se `true`, la DLL pubblicherà i fotogrammi in memoria
+    // condivisa perché il percorso OCR li legga (`read_game_frame`). Costa gli
+    // hook sui blit, quindi resta spento se nessuno li chiede.
+    share_frames: Option<bool>,
 ) -> Result<InjectionResult, String> {
     log::info!("🎯 Injection gs-hook in: {}", process_name);
+
+    // Prima dell'iniezione, non dopo: la DLL legge la sentinella quando
+    // installa gli hook, e dopo non la guarda più.
+    if let Err(e) = imposta_condivisione_fotogrammi(share_frames.unwrap_or(false)) {
+        log::warn!("🖼️ Sentinella fotogrammi non aggiornata ({}), si procede", e);
+    }
 
     #[cfg(target_os = "windows")]
     {
@@ -180,6 +190,42 @@ fn gs_hook_cache_path() -> Result<std::path::PathBuf, String> {
         .join("gs-hook-cache.gstc"))
 }
 
+/// Percorso della sentinella che accende la pubblicazione dei fotogrammi.
+///
+/// È un file e non una variabile d'ambiente per lo stesso motivo del
+/// dizionario: l'iniezione avviene in un processo GIÀ AVVIATO, e in un processo
+/// avviato una variabile d'ambiente non si può più impostare. La DLL controlla
+/// questo percorso all'attivazione (vedi `CondivisioneAttiva` in
+/// `source_gdi.cpp`); il contenuto non conta, conta l'esistenza.
+fn gs_hook_frame_share_path() -> Result<std::path::PathBuf, String> {
+    let appdata = std::env::var("APPDATA").map_err(|_| "APPDATA non impostata".to_string())?;
+    Ok(std::path::Path::new(&appdata)
+        .join("GameStringer")
+        .join("gs-hook-frame-share"))
+}
+
+/// Accende o spegne la pubblicazione dei fotogrammi per le iniezioni SUCCESSIVE.
+///
+/// Non ha effetto su un gioco già agganciato: la DLL legge la sentinella una
+/// volta sola, quando installa gli hook. Dirlo qui evita l'aspettativa
+/// sbagliata che l'interruttore agisca a caldo.
+fn imposta_condivisione_fotogrammi(attiva: bool) -> Result<(), String> {
+    let path = gs_hook_frame_share_path()?;
+    if attiva {
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        }
+        std::fs::write(&path, b"1").map_err(|e| e.to_string())
+    } else {
+        match std::fs::remove_file(&path) {
+            Ok(()) => Ok(()),
+            // Assente = già spenta: non è un errore.
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+}
+
 /// Scrive la coppia di lingue attiva del Translation Bridge nel file che la DLL
 /// caricherà. Ritorna quante traduzioni sono state scritte.
 fn preload_dictionary(app: &tauri::AppHandle) -> Result<usize, String> {
@@ -236,7 +282,7 @@ fn target_is_wow64(pid: u32) -> Option<bool> {
 /// Trova il PID del primo processo il cui nome contiene `name` (case-insensitive).
 /// Stessa logica di `unity_injector::find_process_by_name`.
 #[cfg(target_os = "windows")]
-fn find_process_by_name(name: &str) -> Option<u32> {
+pub(crate) fn find_process_by_name(name: &str) -> Option<u32> {
     use std::mem::zeroed;
 
     #[repr(C)]

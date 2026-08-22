@@ -7,7 +7,7 @@
 //! rispettato da entrambi i lati.
 //!
 //! Uso:
-//!   cargo run --example read-game-frame -- <pid> [uscita.png]
+//!   cargo run --example read-game-frame -- <nome-processo> [uscita.png]
 //!
 //! Il gioco deve girare con gs-hook iniettato e `GS_HOOK_FRAME_SHARE=1`.
 
@@ -15,8 +15,8 @@ use gamestringer::commands::game_frame::read_game_frame;
 
 fn main() {
     let argomenti: Vec<String> = std::env::args().skip(1).collect();
-    let Some(pid) = argomenti.first().and_then(|s| s.parse::<u32>().ok()) else {
-        eprintln!("uso: cargo run --example read-game-frame -- <pid> [uscita.png]");
+    let Some(processo) = argomenti.first().cloned() else {
+        eprintln!("uso: cargo run --example read-game-frame -- <nome-processo> [uscita.png]");
         std::process::exit(1);
     };
     let uscita = argomenti.get(1).cloned().unwrap_or_else(|| "fotogramma.png".to_string());
@@ -24,7 +24,7 @@ fn main() {
     // Due letture di seguito: la seconda serve a vedere se il contatore avanza,
     // cioè se il gioco sta davvero pubblicando e non ci stiamo rileggendo lo
     // stesso fotogramma fermo.
-    let primo = match read_game_frame(pid) {
+    let primo = match read_game_frame(processo.clone()) {
         Ok(f) => f,
         Err(e) => {
             eprintln!("lettura fallita: {e}");
@@ -32,7 +32,7 @@ fn main() {
         }
     };
     std::thread::sleep(std::time::Duration::from_millis(400));
-    let secondo = read_game_frame(pid).ok();
+    let secondo = read_game_frame(processo.clone()).ok();
 
     use base64::{engine::general_purpose::STANDARD, Engine as _};
     let png = STANDARD.decode(&primo.image_data).expect("base64");

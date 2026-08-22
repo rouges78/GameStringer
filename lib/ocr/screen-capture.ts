@@ -19,6 +19,20 @@ export interface CaptureOptions {
   width?: number;
   height?: number;
   monitor?: number;
+  /**
+   * Nome del processo del gioco (es. 'RPG_RT.exe'). Se valorizzato e gs-hook
+   * sta pubblicando, il fotogramma arriva da DENTRO il gioco invece che dallo
+   * schermo.
+   *
+   * Perché conviene: la cattura dallo schermo prende ciò che è composito alle
+   * coordinate della finestra. Puntando a un gioco ha restituito i pixel di un
+   * browser che gli stava davanti — misurato, vedi
+   * `docs/METODI-DI-TRADUZIONE.md`. Dal gioco invece il fotogramma è quello
+   * vero: finestra coperta, minimizzata o fuori schermo non fa differenza, e
+   * overlay, notifiche e cursore non possono finirci dentro perché il desktop
+   * non è ancora stato composto.
+   */
+  gameProcess?: string;
 }
 
 export interface MonitorInfo {
@@ -64,8 +78,23 @@ export async function getMonitors(): Promise<MonitorInfo[]> {
  */
 export async function captureScreen(options: CaptureOptions = {}): Promise<CaptureResult> {
   try {
+    // Il fotogramma del gioco viene PRIMA di tutto il resto, quando c'è: è
+    // l'unica sorgente che garantisce di riprendere il gioco e non ciò che gli
+    // sta davanti. Se non c'è si prosegue con le altre, che restano l'unica
+    // strada per i giochi non agganciati.
+    if (options.gameProcess) {
+      const dalGioco = await captureGameFrame(options.gameProcess);
+      if (dalGioco.success) return dalGioco;
+      // Il motivo non si perde: senza, «cattura riuscita» dallo schermo
+      // nasconderebbe che il percorso migliore non era disponibile, ed è il
+      // genere di silenzio che rende indiagnosticabile una traduzione sbagliata.
+      console.info(
+        `[capture] fotogramma dal gioco non disponibile (${dalGioco.error}), si ripiega sullo schermo`
+      );
+    }
+
     const isNative = await isNativeCaptureAvailable();
-    
+
     if (isNative) {
       return await captureScreenNative(options);
     } else {
@@ -75,6 +104,67 @@ export async function captureScreen(options: CaptureOptions = {}): Promise<Captu
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Capture failed'
+    };
+  }
+}
+
+export interface PublishingGame {
+  pid: number;
+  process_name: string;
+}
+
+/**
+ * Individua il gioco da cui prendere i fotogrammi, se ce n'è esattamente uno.
+ *
+ * Ritorna `null` sia quando non pubblica nessuno — caso normale, si cattura
+ * dallo schermo — sia quando ne pubblicano **più d'uno**. Con due candidati la
+ * scelta giusta è non sceglierne nessuno: prendere il primo tradurrebbe in
+ * silenzio il gioco sbagliato, che è esattamente il difetto da cui è nata
+ * questa parte del codice.
+ */
+export async function detectGameProcess(): Promise<string | null> {
+  try {
+    const giochi = (await invoke('list_publishing_games')) as PublishingGame[] | null;
+    if (!giochi || giochi.length === 0) return null;
+    if (giochi.length > 1) {
+      console.info(
+        `[capture] ${giochi.length} giochi stanno pubblicando ` +
+          `(${giochi.map((g) => g.process_name).join(', ')}): non ne scelgo uno, ` +
+          `si cattura dallo schermo`
+      );
+      return null;
+    }
+    return giochi[0].process_name;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Legge l'ultimo fotogramma che gs-hook pubblica in memoria condivisa.
+ *
+ * Il contratto sta in `gs-hook/include/gs_frame_share.h`; il lettore è il
+ * comando Tauri `read_game_frame` (`src-tauri/src/commands/game_frame.rs`).
+ * Richiede che il gioco giri con gs-hook iniettato e `GS_HOOK_FRAME_SHARE=1`.
+ */
+export async function captureGameFrame(processName: string): Promise<CaptureResult> {
+  try {
+    const result = await invoke('read_game_frame', { processName }) as {
+      image_data: string;
+      width: number;
+      height: number;
+      sequence: number;
+    };
+    return {
+      success: true,
+      imageData: result.image_data,
+      width: result.width,
+      height: result.height
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }

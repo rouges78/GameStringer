@@ -166,6 +166,76 @@ mod win {
         format!("Local\\gs-hook-frame-{pid}\0").encode_utf16().collect()
     }
 
+    /// Scorre i processi vivi e tiene quelli che hanno la mappatura aperta.
+    ///
+    /// `OpenFileMapping` è il test: o il nome esiste o no, senza mappare niente
+    /// e senza toccare il processo. Costa una manciata di chiamate di sistema
+    /// per processo, una volta all'avvio della traduzione — non è un ciclo
+    /// caldo.
+    pub fn elenca_pubblicanti() -> Vec<PublishingGame> {
+        use std::ffi::c_void;
+
+        #[repr(C)]
+        struct ProcessEntry32W {
+            dw_size: u32,
+            cnt_usage: u32,
+            th32_process_id: u32,
+            th32_default_heap_id: usize,
+            th32_module_id: u32,
+            cnt_threads: u32,
+            th32_parent_process_id: u32,
+            pc_pri_class_base: i32,
+            dw_flags: u32,
+            sz_exe_file: [u16; 260],
+        }
+
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn CreateToolhelp32Snapshot(flags: u32, pid: u32) -> *mut c_void;
+            fn Process32FirstW(snap: *mut c_void, entry: *mut ProcessEntry32W) -> i32;
+            fn Process32NextW(snap: *mut c_void, entry: *mut ProcessEntry32W) -> i32;
+        }
+        const TH32CS_SNAPPROCESS: u32 = 0x0000_0002;
+        const INVALID: isize = -1;
+
+        let mut trovati = Vec::new();
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if snap.is_null() || snap as isize == INVALID {
+                return trovati;
+            }
+            let mut entry: ProcessEntry32W = std::mem::zeroed();
+            entry.dw_size = std::mem::size_of::<ProcessEntry32W>() as u32;
+
+            if Process32FirstW(snap, &mut entry) != 0 {
+                loop {
+                    let pid = entry.th32_process_id;
+                    if pid != 0 {
+                        let nome = nome_mappatura(pid);
+                        let h = OpenFileMappingW(FILE_MAP_READ, 0, nome.as_ptr());
+                        if !h.is_null() {
+                            CloseHandle(h);
+                            let fine = entry
+                                .sz_exe_file
+                                .iter()
+                                .position(|&c| c == 0)
+                                .unwrap_or(entry.sz_exe_file.len());
+                            trovati.push(PublishingGame {
+                                pid,
+                                process_name: String::from_utf16_lossy(&entry.sz_exe_file[..fine]),
+                            });
+                        }
+                    }
+                    if Process32NextW(snap, &mut entry) == 0 {
+                        break;
+                    }
+                }
+            }
+            CloseHandle(snap);
+        }
+        trovati
+    }
+
     pub fn leggi(pid: u32) -> Result<GameFrame, String> {
         let nome = nome_mappatura(pid);
         let vista = unsafe {
@@ -225,16 +295,58 @@ mod win {
     }
 }
 
-/// Legge l'ultimo fotogramma pubblicato dal gioco con questo PID.
+/// Un gioco che sta pubblicando fotogrammi in questo momento.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PublishingGame {
+    pub pid: u32,
+    pub process_name: String,
+}
+
+/// Elenca i processi che hanno una mappatura di fotogrammi aperta.
+///
+/// PERCHÉ ESISTE. Il percorso OCR ha bisogno di sapere DA QUALE gioco prendere
+/// i fotogrammi, e la pagina di traduzione live non ha alcun contesto di gioco:
+/// l'utente sceglie le lingue e preme avvia. Le alternative erano chiedere il
+/// nome del processo all'utente — un campo in dodici lingue per un'informazione
+/// che il sistema può ricavare — oppure indovinare. Qui si guarda: si prova ad
+/// aprire `Local\gs-hook-frame-<pid>` per ogni processo vivo, e chi risponde
+/// sta pubblicando davvero.
+///
+/// Ritorna l'ELENCO, non «il gioco». La scelta fra più candidati la fa il
+/// chiamante, e la scelta giusta con due candidati è non sceglierne nessuno:
+/// prendere il primo significherebbe tradurre in silenzio il gioco sbagliato,
+/// che è il difetto da cui è nata tutta questa parte del codice.
 #[tauri::command]
-pub fn read_game_frame(pid: u32) -> Result<GameFrame, String> {
+pub fn list_publishing_games() -> Vec<PublishingGame> {
     #[cfg(windows)]
     {
+        win::elenca_pubblicanti()
+    }
+    #[cfg(not(windows))]
+    {
+        Vec::new()
+    }
+}
+
+/// Legge l'ultimo fotogramma pubblicato dal gioco con questo nome di processo.
+///
+/// Prende il NOME e non il PID perché è così che il resto del flusso identifica
+/// un gioco: `inject_gs_hook` e `gs_hook_status` ricevono entrambi
+/// `process_name`, e il PID non esce mai da Rust. Farlo passare per la UI
+/// significherebbe tenerci uno stato che si può disallineare — il gioco si
+/// riavvia, il PID cambia, e l'interfaccia continuerebbe a chiedere fotogrammi
+/// a un processo che non c'è più.
+#[tauri::command]
+pub fn read_game_frame(process_name: String) -> Result<GameFrame, String> {
+    #[cfg(windows)]
+    {
+        let pid = crate::commands::gs_hook_injector::find_process_by_name(&process_name)
+            .ok_or_else(|| format!("processo «{process_name}» non in esecuzione"))?;
         win::leggi(pid)
     }
     #[cfg(not(windows))]
     {
-        let _ = pid;
+        let _ = process_name;
         Err("i fotogrammi condivisi esistono solo su Windows".into())
     }
 }

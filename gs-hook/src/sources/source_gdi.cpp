@@ -105,6 +105,11 @@ bool DiagBlitAttiva() {
 
 void DiagBlit(const wchar_t* porta, HDC src, int sx, int sy, int w, int h,
               int dx, int dy) {
+    // Prima cosa: se la diagnostica e' spenta non si paga NIENTE, nemmeno
+    // l'incremento atomico. Gli hook sui blit possono essere installati per la
+    // sola pubblicazione dei fotogrammi, e questo e' il percorso piu' caldo di
+    // un gioco 2D: ogni tile, ogni sprite, ogni fotogramma.
+    if (!DiagBlitAttiva()) return;
     const int n = g_blitVisti.fetch_add(1, std::memory_order_relaxed);
 
     // Le PRIME chiamate si registrano tutte, qualunque dimensione. Filtrare per
@@ -214,11 +219,30 @@ bool SalvaBmp(const std::wstring& path, const void* bits, int w, int h) {
 // GS_HOOK_FRAME_MS.
 constexpr DWORD kIntervalloPubblicazioneMsDefault = 100;
 
+// DUE MODI PER ACCENDERLA, e il secondo è quello che conta.
+//
+// La variabile d'ambiente serve solo alle prove da riga di comando, dove il
+// gioco lo si lancia apposta. Nel flusso vero NON funziona: l'iniezione avviene
+// in un processo GIÀ AVVIATO, e in un processo avviato una variabile
+// d'ambiente non si può più impostare. Gated solo così, questa funzione
+// sarebbe irraggiungibile dall'applicazione — difetto trovato dopo averla
+// scritta, ed è lo stesso motivo per cui il dizionario usa un percorso
+// convenuto invece di una env var.
+//
+// Il secondo modo è quindi un file sentinella che GameStringer crea PRIMA di
+// iniettare:  %APPDATA%\GameStringer\gs-hook-frame-share
+// Il contenuto non conta, conta l'esistenza.
 bool CondivisioneAttiva() {
     static const bool attiva = [] {
         char buf[8] = {};
-        return GetEnvironmentVariableA("GS_HOOK_FRAME_SHARE", buf, sizeof(buf)) > 0 &&
-               buf[0] == '1';
+        if (GetEnvironmentVariableA("GS_HOOK_FRAME_SHARE", buf, sizeof(buf)) > 0 && buf[0] == '1') {
+            return true;
+        }
+        wchar_t appdata[MAX_PATH] = {};
+        if (GetEnvironmentVariableW(L"APPDATA", appdata, MAX_PATH) == 0) return false;
+        const std::wstring sentinella =
+            std::wstring(appdata) + L"\\GameStringer\\gs-hook-frame-share";
+        return GetFileAttributesW(sentinella.c_str()) != INVALID_FILE_ATTRIBUTES;
     }();
     return attiva;
 }
@@ -243,11 +267,13 @@ void CatturaSePresent(HDC dst, HDC src, int sw, int sh) {
                            g_fotogrammiSalvati.load(std::memory_order_relaxed) < kMaxFotogrammiDump;
     const bool condividi = CondivisioneAttiva();
     if (!dump && !condividi) return;
-    if (sw <= 0 || sh <= 0 || !WindowFromDC(dst)) return;
+    if (sw <= 0 || sh <= 0) return;
 
-    // Freno sul ritmo: si applica solo alla pubblicazione. Il dump è già
-    // limitato nel numero e serve a guardare i primi fotogrammi, quindi non
-    // deve aspettare.
+    // Freno sul ritmo PRIMA di ogni chiamata di sistema. `WindowFromDC` costa
+    // poco ma non zero, e qui si passa a ogni blit: nella stragrande
+    // maggioranza dei fotogrammi la risposta e' «non ora», e va data con un
+    // confronto fra interi. Il dump non aspetta: e' limitato nel numero e serve
+    // a guardare i PRIMI fotogrammi.
     static DWORD ultimaPubblicazione = 0;
     bool pubblicaOra = false;
     if (condividi) {
@@ -258,6 +284,9 @@ void CatturaSePresent(HDC dst, HDC src, int sw, int sh) {
         }
     }
     if (!dump && !pubblicaOra) return;   // niente da fare in questo fotogramma
+
+    // Solo adesso si chiede al sistema se questo blit e' il present.
+    if (!WindowFromDC(dst)) return;
 
     HBITMAP bmp = (HBITMAP)GetCurrentObject(src, OBJ_BITMAP);
     if (!bmp) return;

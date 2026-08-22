@@ -8,7 +8,7 @@
  * unchanged frames, and translation caching.
  */
 
-import { captureScreen, type CaptureOptions } from '@/lib/ocr/screen-capture';
+import { captureScreen, detectGameProcess, type CaptureOptions } from '@/lib/ocr/screen-capture';
 import { recognizeText, type OCRLanguage, type OCRLine } from '@/lib/ocr/ocr-service';
 import { translateWithFallback, type TranslateOptions } from '@/lib/ai/ai-translate-direct';
 import {
@@ -50,6 +50,14 @@ export interface LiveTranslationConfig {
   vlmDownscaleMaxPx?: number;
   /** Numero di righe di dialogo precedenti passate come contesto narrativo al VLM. */
   vlmSendContextLines?: number;
+  /**
+   * Nome del processo del gioco (es. 'RPG_RT.exe'). Se valorizzato e gs-hook
+   * sta pubblicando, i fotogrammi arrivano da dentro il gioco invece che dallo
+   * schermo: e' l'unica sorgente che garantisce di riprendere il gioco e non
+   * la finestra che gli sta davanti. Senza, si cattura dallo schermo come
+   * prima.
+   */
+  gameProcess?: string;
 }
 
 export interface CaptureRegion {
@@ -153,6 +161,8 @@ class LiveTranslationEngine {
       vlmModel: '',
       vlmDownscaleMaxPx: 1280,
       vlmSendContextLines: 5,
+      // Vuoto = nessun gioco agganciato, si cattura dallo schermo come prima.
+      gameProcess: '',
     };
   }
 
@@ -186,11 +196,25 @@ class LiveTranslationEngine {
     this.translationCache.clear();
     this.recentDialogue = [];
 
+    // Se nessuno ha indicato un gioco, si guarda chi sta pubblicando fotogrammi.
+    // Non blocca l'avvio: la risoluzione arriva quando arriva, e fino ad allora
+    // si cattura dallo schermo. Un avvio che aspetta un'enumerazione di processi
+    // e' un avvio che sembra rotto.
+    if (!this.config.gameProcess) {
+      void detectGameProcess().then((nome) => {
+        if (nome && this.isRunning) {
+          this.config.gameProcess = nome;
+          clientLogger.info('Fotogrammi presi dal gioco', 'LIVE_TRANSLATE', { gameProcess: nome });
+        }
+      });
+    }
+
     clientLogger.info('Live Translation started', 'LIVE_TRANSLATE', {
       target: this.config.targetLanguage,
       provider: this.config.provider,
       mode: this.config.mode,
       interval: this.config.captureIntervalMs,
+      gameProcess: this.config.gameProcess || '(dallo schermo)',
     });
 
     this.emit({ type: 'started' });
@@ -269,6 +293,10 @@ class LiveTranslationEngine {
     try {
       // 1. CAPTURE
       const captureOpts: CaptureOptions = {};
+      // Il fotogramma dal gioco, quando disponibile, arriva gia' ritagliato sul
+      // gioco: la regione dello schermo non gli si applica ed e' captureScreen
+      // a ignorarla in quel caso.
+      if (this.config.gameProcess) captureOpts.gameProcess = this.config.gameProcess;
       if (this.config.captureRegion.mode === 'region') {
         captureOpts.x = this.config.captureRegion.x;
         captureOpts.y = this.config.captureRegion.y;

@@ -1424,6 +1424,61 @@ l'immagine consegnata era un rettangolo vuoto. Un canale si verifica guardando
 **cosa e' arrivato**, non se e' arrivato qualcosa — e conviene guardarlo con
 occhi, non con un conteggio di byte.
 
+### Il percorso OCR prende i fotogrammi dal gioco, e una env var che non poteva funzionare
+
+**Cosa e' collegato.** `captureScreen` accetta ora `gameProcess`: se valorizzato,
+il fotogramma arriva da dentro il gioco (`read_game_frame`) invece che dallo
+schermo, e si ripiega sullo schermo — dicendolo — quando il gioco non pubblica.
+Il motore live risolve il gioco da solo all'avvio con `list_publishing_games`,
+che prova ad aprire `Local\gs-hook-frame-<pid>` per ogni processo vivo.
+
+**Con due giochi non si sceglie.** `detectGameProcess` ritorna `null` sia con
+zero candidati sia con due o piu': prendere il primo tradurrebbe in silenzio il
+gioco sbagliato, che e' il difetto da cui e' nata tutta questa parte del codice.
+Stessa regola gia' applicata ai titoli ambigui in `capture_window`.
+
+**Il difetto trovato dopo aver scritto la funzione: una variabile d'ambiente
+che l'applicazione non puo' impostare.** La pubblicazione era accesa da
+`GS_HOOK_FRAME_SHARE=1`, letta dentro il processo del gioco. Ma l'iniezione
+avviene in un processo **gia' avviato**, e in un processo avviato una variabile
+d'ambiente non si puo' piu' impostare. Funzionava solo nelle prove da riga di
+comando, dove il gioco lo lanciavo io con la variabile gia' pronta: la
+funzione era irraggiungibile dal flusso vero, e ogni prova fatta fin li' lo
+confermava senza mostrarlo.
+
+Il progetto **aveva gia' incontrato e risolto lo stesso problema**: il
+dizionario usa un percorso convenuto proprio per questo, e il commento che lo
+spiega e' in `gs_hook_injector.rs` da settimane. Non l'ho letto prima di
+ripetere l'errore. La cura e' la stessa: una sentinella,
+`%APPDATA%\GameStringer\gs-hook-frame-share`, che il backend crea PRIMA di
+iniettare (`inject_gs_hook(share_frames)`). La env var resta, ma solo per le
+prove.
+
+**Verificato senza env var**, che e' l'unico modo che conta:
+
+```text
+sentinella creata: ...\GameStringer\gs-hook-frame-share
+[gs-hook/FRAME] pubblicazione attiva: Local\gs-hook-frame-18368 (320x240, 307264 byte)
+letto 320x240 seq=148 -> sentinella.png (16162 byte PNG)
+seq avanzata 148 -> 156: il gioco sta pubblicando
+```
+
+E il PNG e' la schermata del titolo, guardata — non dedotta dai contatori.
+
+**Il percorso caldo, gia' che c'era.** Gli hook sui blit passano a ogni tile di
+ogni fotogramma. Due sprechi tolti: il contatore della diagnostica non si
+incrementa piu' quando la diagnostica e' spenta, e il freno temporale viene
+PRIMA di `WindowFromDC` — nella stragrande maggioranza dei blit la risposta e'
+«non ora», e va data con un confronto fra interi invece che con una chiamata di
+sistema.
+
+**La trappola.** Una funzione puo' essere corretta, compilata, provata e
+irraggiungibile. Tutte le mie prove passavano perche' riproducevano una
+condizione che l'applicazione non puo' creare — il gioco lanciato da me con la
+variabile impostata. Provare una funzione nel modo in cui NON verra' usata non
+la prova: prima di dire «funziona» conviene chiedersi chi, nel flusso vero,
+mette quell'interruttore su acceso.
+
 ---
 
 ## Come si aggiunge una voce
