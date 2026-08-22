@@ -112,13 +112,17 @@ export async function captureScreen(options: CaptureOptions = {}): Promise<Captu
       );
     }
 
-    const isNative = await isNativeCaptureAvailable();
+    // Terza scelta: lo schermo. Si prova PRIMA il percorso nativo — non passa
+    // da `check_screen_capture_available`, che risponde `false` fisso perche'
+    // appartiene al modulo stub e terrebbe tutti sul ripiego del browser.
+    const nativo = await captureScreenNative(options);
+    if (nativo.success) return nativo;
 
-    if (isNative) {
-      return await captureScreenNative(options);
-    } else {
-      return await captureScreenBrowser(options);
-    }
+    // Ultimo ripiego: `getDisplayMedia`. Funziona, ma chiede all'utente il
+    // permesso di condividere lo schermo ogni volta, quindi ci si arriva solo
+    // quando non c'e' altro — e dicendo perche'.
+    console.info(`[capture] cattura nativa non riuscita (${nativo.error}), chiedo la condivisione schermo`);
+    return await captureScreenBrowser(options);
   } catch (error: unknown) {
     return {
       success: false,
@@ -193,14 +197,27 @@ export async function captureGameFrame(processName: string): Promise<CaptureResu
  */
 async function captureScreenNative(options: CaptureOptions): Promise<CaptureResult> {
   try {
-    const result = await invoke('capture_screen', {
-      x: options.x || 0,
-      y: options.y || 0,
-      width: options.width || 0,
-      height: options.height || 0,
-      monitor: options.monitor || 0
-    }) as { image_data: string; width: number; height: number };
-    
+    // `capture_screen_region`, NON `capture_screen`.
+    //
+    // `capture_screen` appartiene al modulo stub: ritorna sempre `Err`, e
+    // `check_screen_capture_available` ritorna `false` fisso. Per questo la
+    // cattura a schermo intero finiva SEMPRE sul ripiego del browser, che
+    // chiede all'utente il permesso di condivisione schermo a ogni avvio.
+    // Il comando vero c'era gia' accanto, inutilizzato da questa pagina.
+    const regione =
+      options.width && options.height
+        ? { x: options.x || 0, y: options.y || 0, width: options.width, height: options.height }
+        : null;
+
+    // Il comando restituisce gia' un PNG in base64, come `capture_window` e
+    // `read_game_frame`: nessuna conversione a mano, nessun array di milioni
+    // di numeri attraverso l'IPC.
+    const result = (await invoke('capture_screen_region', { region: regione })) as {
+      width: number;
+      height: number;
+      image_data: string;
+    };
+
     return {
       success: true,
       imageData: result.image_data,

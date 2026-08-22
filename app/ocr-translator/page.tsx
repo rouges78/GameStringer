@@ -11,7 +11,6 @@ import { useOcrHotkey } from '@/hooks/use-global-hotkeys';
 import { useTranslation } from '@/lib/i18n';
 import { VlmTranslator } from '@/lib/ocr/vlm-translator';
 import { translateSingleSmart, translateWithFallback } from '@/lib/ai/ai-translate-direct';
-import { rawPixelsToBase64 } from '@/lib/image-utils';
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
@@ -273,10 +272,12 @@ export default function OcrTranslatorPage() {
       isProcessing = true;
       try {
         // 1. Cattura l'immagine da Rust
-        const capture = await invoke<{width: number, height: number, data: number[]}>('capture_screen_region', { region: config.region });
-        if (capture && capture.data.length > 0) {
-          // 2. Converti i pixel in Base64
-          const base64 = rawPixelsToBase64(capture.data, capture.width, capture.height);
+        const capture = await invoke<{width: number, height: number, image_data: string}>('capture_screen_region', { region: config.region });
+        if (capture && capture.image_data) {
+          // Il PNG arriva gia' codificato dal backend: la conversione a mano
+          // in canvas copiava l'alpha di GDI (che vale zero) e produceva
+          // immagini invisibili.
+          const base64 = capture.image_data;
           
           setIsTranslating(true);
           // 3. Passa al VLM
