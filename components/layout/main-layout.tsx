@@ -20,6 +20,7 @@ import {
   Power,
   Cpu,
   Scan,
+  Radio,
   Puzzle,
   Sparkles,
   Package,
@@ -159,6 +160,10 @@ const getNavGroups = (t: (key: string) => string) => [
     items: [
       { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
       { name: t('nav.ocrTranslator'), href: '/ocr-translator', icon: Scan },
+      // La pagina esisteva da tempo e non era raggiungibile: nessun link in
+      // tutta l'applicazione, nessuna voce di menu. Ci si arrivava solo
+      // scrivendo l'URL a mano, cosa che in una finestra Tauri non si puo' fare.
+      { name: t('nav.liveTranslate'), href: '/live-translate', icon: Radio },
       { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
       { name: t('nav.batch'), href: '/batch', icon: FolderTree },
       { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
