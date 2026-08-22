@@ -1001,8 +1001,9 @@ diagnostichi un'iniezione che smette di funzionare dovrebbe guardare
 **Come e' nata la domanda (22/08/2026).** Serviva una schermata vera di Yume
 Nikki per misurare i backend VLM. Ne ho catturate diverse e sembravano nere, da
 cui la conclusione: «la superficie DirectDraw di RPG_RT non si cattura coi
-metodi GDI». **Era sbagliata**, e il modo in cui lo era vale piu' della domanda
-di partenza.
+metodi GDI». **Era sbagliata due volte**, e il modo in cui lo era vale piu'
+della domanda di partenza. La risposta vera e' in fondo, sotto «Come e' finita»:
+`PrintWindow` cattura RPG_RT benissimo.
 
 **Primo fatto: xcap non esiste in questo progetto.**
 `docs/piano-vlm-contesto-visivo.md` dice che «il comando Rust screen_capture.rs
@@ -1048,12 +1049,47 @@ di investire sul contesto visivo (VLM) conviene sistemare questo, che sta a
 monte: un VLM alimentato dai pixel sbagliati risponde benissimo alla domanda
 sbagliata.
 
-**La trappola.** Una cattura che restituisce pixel non e' una cattura di cio' che
-hai chiesto. Ho concluso due volte dai contenuti dell'immagine («e' nera, quindi
-DirectDraw non si cattura») quando la domanda vera era *di chi sono questi
-pixel*. Il controllo che chiude la questione costa una riga —
+**La trappola, a due strati.** Una cattura che restituisce pixel non e' una
+cattura di cio' che hai chiesto. Ho concluso dai contenuti dell'immagine («e'
+nera, quindi DirectDraw non si cattura») quando la domanda vera era *di chi sono
+questi pixel*. Il controllo che chiude la questione costa una riga —
 `WindowFromPoint` sul punto che stai per copiare — e va fatto **prima** di
 interpretare l'immagine.
+
+Ma il secondo strato e' peggiore: anche dopo aver scoperto che i pixel erano di
+Brave, ho continuato a credere alla spiegazione DirectDraw, e l'ho **scritta nel
+codice** come commento. Una spiegazione sbagliata committata e' peggio di
+nessuna spiegazione: sembra conoscenza acquisita e qualcuno ci costruisce sopra.
+A smontarla e' bastato enumerare l'albero delle finestre del processo — una cosa
+che avrei potuto fare all'inizio, e che nessuna delle immagini catturate avrebbe
+mai potuto dirmi.
+
+**Come e' finita (stessa sera, PR #102).** Enumerando le finestre del processo
+con titoli e classi corretti, RPG_RT ne espone **due di primo livello con lo
+STESSO titolo**:
+
+```text
+TApplication      client 0x0     <- fantasma di Delphi/VCL
+TFormLcfGameMain  client 644x484 <- il gioco
+```
+
+`list_windows` le restituiva entrambe, e la ricerca per titolo poteva risolvere
+sul fantasma. Quella cattura non fallisce: restituisce un riquadro vuoto — il
+«nero» da cui era partita tutta la storia.
+
+Puntando alla finestra vera, **`PrintWindow` con `PW_RENDERFULLCONTENT` rende la
+schermata del titolo per intero**: logo, `ver. 0.10a`, il menu New Game / Dream
+Diary / Quit, la firma di KIKIYAMA. Leggibile, pronta per l'OCR. In numeri:
+12,1% di pixel accesi sulla finestra vera contro 6,6% sul fantasma, e quel 6,6%
+era **tutta barra del titolo**, cioe' la cornice che `PrintWindow` disegna
+sempre anche quando il contenuto manca.
+
+Quindi **DirectDraw non c'entrava niente**, e le superfici accelerate non erano
+il problema. La cura e' in due punti: `list_windows` scarta le finestre senza
+area client (ogni app Delphi ne ha una, non e' una stranezza di un gioco), e
+`capture_window` chiede alla finestra di disegnarsi invece di copiare
+dallo schermo.
+
 
 ---
 
