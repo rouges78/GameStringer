@@ -3,7 +3,7 @@
 
 use tauri::Emitter;
 
-mod screen_capture;
+pub mod screen_capture;
 mod ocr_engine;
 mod overlay;
 pub mod retro_preprocessor;
