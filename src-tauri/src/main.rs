@@ -1130,6 +1130,7 @@ fn main() {
             commands::screen_capture::get_windows,
             commands::screen_capture::capture_window,
             commands::game_frame::read_game_frame,
+            commands::game_frame::list_publishing_games,
             commands::image_process::downscale_capture,
             // Batch Processor System
             commands::batch_processor::scan_folder_for_translation,

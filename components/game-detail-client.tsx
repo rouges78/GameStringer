@@ -2130,6 +2130,12 @@ export default function GameDetailPage() {
     try {
       const res = await invoke<{ success: boolean; message: string }>('inject_gs_hook', {
         processName: plan.processName,
+        // Fa pubblicare al hook i fotogrammi in memoria condivisa, così la
+        // traduzione live può prenderli da dentro il gioco invece che dallo
+        // schermo — dove finirebbero i pixel di qualunque finestra stia davanti.
+        // Va deciso QUI perché la DLL legge l'interruttore quando installa gli
+        // hook: accenderlo dopo non avrebbe effetto sul gioco già agganciato.
+        shareFrames: true,
       });
       if (res.success) {
         toast.success(t('gameDetail.runtimeFallbackReady'), { id: 'gs-runtime-fallback' });
