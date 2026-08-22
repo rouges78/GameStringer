@@ -1365,6 +1365,65 @@ e vedere il gioco e' compatibile con entrambe le spiegazioni. Il test vale solo
 quando la spiegazione sbagliata e' **impossibile**: fuori dallo schermo, i pixel
 dello schermo non ci sono, e resta una sola lettura.
 
+### Il trasporto dei fotogrammi, con i due lati costruiti insieme
+
+**Cos'e'.** `GS_HOOK_FRAME_SHARE=1` fa pubblicare a gs-hook l'ultimo fotogramma
+in memoria condivisa (`Local\gs-hook-frame-<pid>`); il backend lo legge col
+comando Tauri `read_game_frame(pid)`. Il contratto sta in
+`gs-hook/include/gs_frame_share.h`, il lettore in
+`src-tauri/src/commands/game_frame.rs`.
+
+**Perche' memoria condivisa e non una pipe.** Un fotogramma va sempre
+SOSTITUITO, mai accodato: al consumatore interessa l'ultimo, non la storia. Una
+pipe accumulerebbe fotogrammi che nessuno vuole, e un lettore lento
+riempirebbe il buffer bloccando il gioco. Un buffer che si sovrascrive non puo'
+ingolfarsi: se il lettore e' lento salta dei fotogrammi, che e' il
+comportamento giusto. Per lo stesso motivo **non c'e' un canale di richiesta**:
+il thread di rendering del gioco non deve mai aspettare nessuno.
+
+**Il ritmo.** Copiare 300 KB a 60 fotogrammi al secondo sono 18 MB/s di memcpy
+dentro il rendering, per un OCR che ne usera' dieci. Si pubblica al massimo ogni
+100 ms (`GS_HOOK_FRAME_MS`). Misurato: il contatore avanza di 8 in 400 ms, e
+avanza di **2 per fotogramma** (vedi sotto), quindi 4 fotogrammi in 400 ms —
+esattamente il ritmo dichiarato.
+
+**Il contatore in stile seqlock.** Il produttore lo porta a dispari prima di
+scrivere e a pari dopo; il lettore accetta la copia solo se il valore era pari
+ed e' rimasto identico. Senza, si prende meta' fotogramma vecchio e meta' nuovo:
+il risultato **sembra un'immagine**, quindi non si nota. Nessun lock, cosi' un
+consumatore che muore non puo' bloccare il gioco — cosa che un mutex condiviso
+farebbe.
+
+**I due lati nascono insieme, ed e' il punto.** Questo repository ha gia'
+collezionato IPC monchi — memoria condivisa senza lettore, pipe di richiesta
+senza risposta — ed e' il motivo per cui la catena in-game e' rimasta ferma a
+lungo. Qui il produttore C++, il lettore Rust, nove test e una prova a due
+processi arrivano nello stesso cambiamento.
+
+**Due difetti trovati SOLO dalla prova a due processi**, entrambi della stessa
+famiglia: risultato plausibile, contenuto sbagliato. I nove test unitari
+passavano in entrambi i casi.
+
+1. **Il quarto byte non e' alpha.** Le DIB a 32 bit di GDI sono BGR**X**: quel
+   byte resta a zero. Copiarlo come alpha dava un PNG **interamente
+   trasparente**. La misura che l'ha inchiodato: `5180 pixel con RGB non nero,
+   0 pixel con alpha non zero` — l'immagine era corretta e invisibile. E il
+   test che avrebbe dovuto vederlo passava un alpha di 255 in ingresso, quindi
+   **concordava col codice invece di verificarlo**. Ora passa zero, come fa GDI.
+   Lo stesso difetto era in `capture_window` (PR #102), scritto poche ore prima:
+   corretto anche li'.
+2. **Le righe erano capovolte.** `GetDIBits` con altezza positiva le
+   restituisce dal basso — il verso del BMP, sbagliato per tutto il resto. Il
+   fotogramma arrivava specchiato in verticale. Ora il contratto dichiara
+   **top-down**, il produttore chiede altezza negativa, e il BMP di diagnostica
+   si adegua (il formato ammette altezze negative).
+
+**La trappola.** «Il trasporto funziona» sembrava provato da tre segnali
+concordi: sequenza che avanza, uscita 0, PNG di 16 KB. Erano tutti veri, e
+l'immagine consegnata era un rettangolo vuoto. Un canale si verifica guardando
+**cosa e' arrivato**, non se e' arrivato qualcosa — e conviene guardarlo con
+occhi, non con un conteggio di byte.
+
 ---
 
 ## Come si aggiunge una voce

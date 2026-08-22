@@ -24,6 +24,7 @@ set(GS_HOOK_SOURCES
     src/dllmain.cpp
     src/registry.cpp
     src/gs_overlay_ipc.cpp
+    src/gs_frame_share.cpp
     src/sources/source_unity_mono.cpp
     src/sources/source_unreal_ftext.cpp
     src/sources/source_gdi.cpp

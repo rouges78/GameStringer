@@ -29,6 +29,7 @@
 #include "text_source.h"
 #include "gs_log.h"
 #include "gs_overlay_ipc.h"
+#include "gs_frame_share.h"
 #include <Windows.h>
 #include <MinHook.h>
 #include <string>
@@ -169,9 +170,9 @@ const std::wstring& PrefissoDump() {
 
 bool DumpFotogrammiAttivo() { return !PrefissoDump().empty(); }
 
-// Scrive un BMP a 32 bit. `bits` è bottom-up, come lo restituisce GetDIBits con
-// altezza positiva: è già il verso naturale del formato, quindi non si gira
-// niente e non c'è un'immagine capovolta da sbagliare.
+// Scrive un BMP a 32 bit. `bits` arriva TOP-DOWN (vedi il contratto in
+// gs_frame_share.h), quindi l'intestazione dichiara un'altezza negativa: il
+// formato BMP lo prevede, e cosi' non si gira niente in memoria.
 bool SalvaBmp(const std::wstring& path, const void* bits, int w, int h) {
     const DWORD dati = (DWORD)w * (DWORD)h * 4;
     BITMAPFILEHEADER fh{};
@@ -182,7 +183,7 @@ bool SalvaBmp(const std::wstring& path, const void* bits, int w, int h) {
     BITMAPINFOHEADER ih{};
     ih.biSize      = sizeof(BITMAPINFOHEADER);
     ih.biWidth     = w;
-    ih.biHeight    = h;
+    ih.biHeight    = -h;   // top-down: i pixel arrivano gia' in quel verso
     ih.biPlanes    = 1;
     ih.biBitCount  = 32;
     ih.biSizeImage = dati;
@@ -198,13 +199,65 @@ bool SalvaBmp(const std::wstring& path, const void* bits, int w, int h) {
     return ok;
 }
 
+// ─── Pubblicazione dei fotogrammi (opt-in: GS_HOOK_FRAME_SHARE=1) ────────────
+//
+// Il dump su file dimostra il punto d'aggancio ma non serve all'applicazione.
+// Questa è la consegna vera: l'ultimo fotogramma finisce in memoria condivisa,
+// dove il backend lo legge quando gli serve (vedi gs_frame_share.h e
+// src-tauri/src/commands/game_frame.rs).
+//
+// IL RITMO. Copiare 300 KB a 60 fotogrammi al secondo sono 18 MB/s di memcpy
+// dentro il thread di rendering del gioco, per un consumatore che ne userà
+// forse dieci al secondo. Si pubblica quindi al massimo ogni
+// kIntervalloPubblicazioneMs: l'OCR non ha bisogno di più, e il gioco non paga
+// lavoro che nessuno guarda. Chi ne vuole di più cambia l'intervallo con
+// GS_HOOK_FRAME_MS.
+constexpr DWORD kIntervalloPubblicazioneMsDefault = 100;
+
+bool CondivisioneAttiva() {
+    static const bool attiva = [] {
+        char buf[8] = {};
+        return GetEnvironmentVariableA("GS_HOOK_FRAME_SHARE", buf, sizeof(buf)) > 0 &&
+               buf[0] == '1';
+    }();
+    return attiva;
+}
+
+DWORD IntervalloPubblicazioneMs() {
+    static const DWORD ms = [] {
+        char buf[16] = {};
+        if (GetEnvironmentVariableA("GS_HOOK_FRAME_MS", buf, sizeof(buf)) > 0) {
+            const int v = atoi(buf);
+            if (v >= 0) return (DWORD)v;
+        }
+        return kIntervalloPubblicazioneMsDefault;
+    }();
+    return ms;
+}
+
 // Il "present" è un blit la cui destinazione è la DC di una FINESTRA. Si
 // riconosce così e non dalle dimensioni: 320×240 è di questo gioco, mentre
 // `WindowFromDC` vale per qualunque motore che presenti con un blit.
 void CatturaSePresent(HDC dst, HDC src, int sw, int sh) {
-    if (!DumpFotogrammiAttivo()) return;
-    if (g_fotogrammiSalvati.load(std::memory_order_relaxed) >= kMaxFotogrammiDump) return;
+    const bool dump      = DumpFotogrammiAttivo() &&
+                           g_fotogrammiSalvati.load(std::memory_order_relaxed) < kMaxFotogrammiDump;
+    const bool condividi = CondivisioneAttiva();
+    if (!dump && !condividi) return;
     if (sw <= 0 || sh <= 0 || !WindowFromDC(dst)) return;
+
+    // Freno sul ritmo: si applica solo alla pubblicazione. Il dump è già
+    // limitato nel numero e serve a guardare i primi fotogrammi, quindi non
+    // deve aspettare.
+    static DWORD ultimaPubblicazione = 0;
+    bool pubblicaOra = false;
+    if (condividi) {
+        const DWORD ora = GetTickCount();
+        if (ora - ultimaPubblicazione >= IntervalloPubblicazioneMs()) {
+            ultimaPubblicazione = ora;
+            pubblicaOra = true;
+        }
+    }
+    if (!dump && !pubblicaOra) return;   // niente da fare in questo fotogramma
 
     HBITMAP bmp = (HBITMAP)GetCurrentObject(src, OBJ_BITMAP);
     if (!bmp) return;
@@ -212,13 +265,28 @@ void CatturaSePresent(HDC dst, HDC src, int sw, int sh) {
     BITMAPINFO bi{};
     bi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
     bi.bmiHeader.biWidth       = sw;
-    bi.bmiHeader.biHeight      = sh;   // positivo = bottom-up, il verso del BMP
+    // Altezza NEGATIVA = righe dall'alto in basso. E' il verso che vuole
+    // chiunque tranne il formato BMP, ed e' quello dichiarato nel contratto in
+    // gs_frame_share.h; il BMP di diagnostica si adegua scrivendo a sua volta
+    // un'altezza negativa, che il formato ammette.
+    bi.bmiHeader.biHeight      = -sh;
     bi.bmiHeader.biPlanes      = 1;
     bi.bmiHeader.biBitCount    = 32;
     bi.bmiHeader.biCompression = BI_RGB;
 
     std::vector<unsigned char> pixel((size_t)sw * sh * 4);
     if (!GetDIBits(src, bmp, 0, (UINT)sh, pixel.data(), &bi, DIB_RGB_COLORS)) return;
+
+    if (pubblicaOra) {
+        // La mappatura si crea al primo fotogramma, quando la dimensione vera è
+        // nota: dimensionarla su un massimo prudenziale sarebbe memoria
+        // committata e mai usata.
+        if (frame::Inizializza((uint32_t)sw, (uint32_t)sh)) {
+            frame::Pubblica(pixel.data(), (uint32_t)pixel.size());
+        }
+    }
+
+    if (!dump) return;
 
     const int n = g_fotogrammiSalvati.fetch_add(1, std::memory_order_relaxed);
     if (n >= kMaxFotogrammiDump) return;
@@ -874,7 +942,7 @@ public:
         // Gli hook sui blit servono a due cose — la diagnostica e la cattura del
         // fotogramma — ma la funzione si aggancia UNA volta sola: due
         // MH_CreateHook sullo stesso indirizzo sono un guaio, non una comodità.
-        if (DiagBlitAttiva() || DumpFotogrammiAttivo()) {
+        if (DiagBlitAttiva() || DumpFotogrammiAttivo() || CondivisioneAttiva()) {
             struct { const char* nome; LPVOID hook; LPVOID* orig; } blit[] = {
                 { "BitBlt",     (LPVOID)&Hook_BitBlt,     (LPVOID*)&Original_BitBlt     },
                 { "StretchBlt", (LPVOID)&Hook_StretchBlt, (LPVOID*)&Original_StretchBlt },
@@ -895,6 +963,7 @@ public:
     void Deactivate() override {
         if (Original_ExtTextOutW) MH_DisableHook((LPVOID)Original_ExtTextOutW);
         if (Original_DrawTextW)   MH_DisableHook((LPVOID)Original_DrawTextW);
+        frame::Chiudi();
         if (Original_BitBlt)      MH_DisableHook((LPVOID)Original_BitBlt);
         if (Original_StretchBlt)  MH_DisableHook((LPVOID)Original_StretchBlt);
         if (Original_ExtTextOutA) MH_DisableHook((LPVOID)Original_ExtTextOutA);

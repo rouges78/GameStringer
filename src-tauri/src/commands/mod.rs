@@ -113,6 +113,8 @@ pub mod gs_hook_injector;
 pub mod ue_translator;
 #[cfg(windows)]
 pub mod screen_capture;
+// Lettore dei fotogrammi pubblicati da gs-hook (contratto: gs_frame_share.h)
+pub mod game_frame;
 // Universal Injector: rilevazione engine + setup traduzione file-based (puro filesystem, cross-platform)
 pub mod universal_injector;
 // Auto-Hook Scanner (cross-platform, con stubs per non-Windows)

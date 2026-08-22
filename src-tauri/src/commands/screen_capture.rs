@@ -108,9 +108,14 @@ pub fn capture_window(window_title: String) -> Result<CaptureResult, String> {
     // prefisso). La cattura però produce BGRA grezzo, quindi va convertito —
     // restituire i pixel grezzi qui darebbe una stringa valida che a valle
     // diventa un'immagine illeggibile, senza nessun errore.
+    // Il quarto byte NON è alpha: le DIB a 32 bit di GDI sono BGRX, e quel byte
+    // resta a zero. Copiarlo come alpha dà un PNG interamente trasparente —
+    // corretto nei colori e invisibile. Misurato sul percorso dei fotogrammi
+    // condivisi: 5180 pixel col colore giusto, zero pixel opachi.
     let mut rgba = img.data.clone();
     for p in rgba.chunks_exact_mut(4) {
-        p.swap(0, 2); // BGRA → RGBA
+        p.swap(0, 2); // BGRX → RGBX
+        p[3] = 255;   // X → alpha opaco
     }
     let buf = image::RgbaImage::from_raw(img.width, img.height, rgba)
         .ok_or_else(|| "dimensioni incoerenti col buffer catturato".to_string())?;
