@@ -53,18 +53,19 @@ describe('captureScreen: scelta della sorgente', () => {
     expect(invoke).toHaveBeenCalledWith('read_game_frame', { processName: 'RPG_RT.exe' });
   });
 
-  it('se il gioco non pubblica, ripiega sullo schermo', async () => {
+  it('se il gioco non pubblica, ripiega sullo schermo NATIVO', async () => {
     invoke
       .mockRejectedValueOnce(new Error('nessun fotogramma condiviso'))  // read_game_frame
-      .mockResolvedValueOnce(true)                                      // check_screen_capture_available
       .mockResolvedValueOnce({ image_data: 'DALLO-SCHERMO', width: 800, height: 600 });
 
     const r = await captureScreen({ gameProcess: 'RPG_RT.exe' });
     expect(r).toMatchObject({ success: true, imageData: 'DALLO-SCHERMO' });
+    // Niente `check_screen_capture_available`: risponde `false` a prescindere
+    // perche' appartiene al modulo stub, e teneva ogni cattura sul ripiego del
+    // browser — con la sua richiesta di permesso a ogni avvio.
     expect(invoke.mock.calls.map((c) => c[0])).toEqual([
       'read_game_frame',
-      'check_screen_capture_available',
-      'capture_screen',
+      'capture_screen_region',
     ]);
   });
 
@@ -79,16 +80,28 @@ describe('captureScreen: scelta della sorgente', () => {
     expect(info).toHaveBeenCalledWith(expect.stringContaining('gs-hook non è iniettato'));
   });
 
-  it('senza gameProcess il comportamento resta quello di prima', async () => {
-    invoke
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce({ image_data: 'DALLO-SCHERMO', width: 800, height: 600 });
+  it('senza gameProcess va dritto allo schermo nativo', async () => {
+    invoke.mockResolvedValueOnce({ image_data: 'DALLO-SCHERMO', width: 800, height: 600 });
 
     const r = await captureScreen({});
     expect(r).toMatchObject({ success: true, imageData: 'DALLO-SCHERMO' });
     // `read_game_frame` non deve essere nemmeno tentato: chi non ha un gioco
     // agganciato non deve pagare una chiamata che fallirà sempre.
-    expect(invoke.mock.calls.map((c) => c[0])).not.toContain('read_game_frame');
+    expect(invoke.mock.calls.map((c) => c[0])).toEqual(['capture_screen_region']);
+  });
+
+  /**
+   * Il ripiego sul browser e' l'ULTIMO, e si paga caro: `getDisplayMedia` chiede
+   * all'utente il permesso di condividere lo schermo. Ci si arriva solo se anche
+   * la cattura nativa fallisce.
+   */
+  it('chiede la condivisione schermo solo se anche il nativo fallisce', async () => {
+    invoke.mockRejectedValueOnce(new Error('cattura nativa non disponibile'));
+    const r = await captureScreen({});
+    // In ambiente di test non c'e' getDisplayMedia: quel che conta e' che il
+    // nativo sia stato tentato per primo e che il fallimento non sia silenzioso.
+    expect(invoke.mock.calls.map((c) => c[0])).toEqual(['capture_screen_region']);
+    expect(r.success).toBe(false);
   });
 });
 
