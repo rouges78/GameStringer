@@ -304,6 +304,28 @@ Da lì in poi **`main` è rimasto rosso, e ci sono state fuse sopra altre tredic
 
 > **Regola per il prossimo giro: sul Rust `cargo check` non basta mai. Serve `cargo test --lib`, e serve guardare la CI prima di fondere — anche quando le modifiche sembrano solo testo.**
 
+### 🔒 La regola non dipende più dalla disciplina di nessuno
+
+La riga qui sopra era un buon proposito, e i buoni propositi hanno il difetto di reggere finché uno se ne ricorda. La sera stessa è emerso perché non bastava: **`check-windows` non era fra i check obbligatori del ramo `main`.** Nessuno era costretto ad aspettarlo — né io, né `gh pr merge --auto`, che infatti fondeva subito perché non c'era niente da attendere.
+
+Sistemato nelle impostazioni del repository, non nel codice:
+
+| Regola su `main` | Effetto |
+|---|---|
+| `required_status_checks: check-windows` | una PR non si fonde finché la suite Rust non è verde |
+| `strict_required_status_checks_policy: true` | e non si fonde se il branch non è **aggiornato** con `main` |
+| `bypass_actors: []` · `current_user_can_bypass: never` | nessuna scappatoia, per nessuno |
+
+La seconda chiude il difetto gemello emerso lo stesso giorno: la PR #148 aveva la CI verde su un branch che **non conteneva il fix di `main`**, e il suo rosso non era suo — se lo portava dietro. Un `main` rotto non è un problema locale: si moltiplica per il numero di branch aperti in quel momento.
+
+**Cosa costa:** quando `main` si muove mentre una PR è aperta, va aggiornata e la CI riparte. E le PR non si fondono più all'istante: `check-windows` impiega circa 12 minuti.
+
+**Verificabile senza fidarsi della UI**, che è il modo in cui il problema è stato trovato — la pagina delle impostazioni sembrava a posto due volte, mentre l'API diceva che il ruleset non veniva modificato dal 5 agosto:
+
+```bash
+gh api repos/rouges78/GameStringer/rules/branches/main --jq '.[].type'
+```
+
 ## 📡 Fonti RSS — tutte e 32 riverificate
 
 Testate con **gli stessi header del fetcher Rust** (`rss_proxy.rs`: User-Agent Chrome, `Accept` per rss/atom/xml), perché in Tauri i feed non li scarica il webview ma Rust — quindi **il CORS non c'entra**, e una delle motivazioni storiche di disattivazione era sbagliata in premessa.
@@ -429,8 +451,11 @@ Tre difetti su sette non si ripeteranno in silenzio:
 | `__tests__/lib/route-integrity.test.ts` | una rotta interna che punta a una pagina inesistente |
 | `__tests__/lib/i18n-orphan-keys.test.ts` | una chiave i18n che nessuna riga di codice legge |
 | bisezione dentro `translateArray` | perdere 88 voci di changelog perché una sola non si traduce |
+| `check-windows` obbligatorio su `main`, `strict: true` | fondere su un `main` rosso, o fondere un branch non aggiornato |
 
-Tutti e tre **verificati mordendo**: reintrodotto il difetto originale, controllato che il test diventi rosso e indichi dove, poi ripristinato. Un gate verde su un repo già sistemato non prova niente.
+I primi tre **verificati mordendo**: reintrodotto il difetto originale, controllato che il test diventi rosso e indichi dove, poi ripristinato. Un gate verde su un repo già sistemato non prova niente.
+
+Il quarto non è un test ma una **regola del repository** (vedi sopra), ed è l'unico che non dipende da qualcuno che si ricordi di eseguirlo.
 
 Restano **senza gate** tre cose, e ognuna per un motivo diverso:
 
