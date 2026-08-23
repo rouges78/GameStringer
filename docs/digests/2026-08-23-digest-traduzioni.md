@@ -5,9 +5,12 @@
 > 1. il sito rimetteva in circolo i prezzi vecchi su **tutte** le installazioni
 > 2. quattro lingue del changelog v1.16.0 non erano **mai** state tradotte
 > 3. il download di IPA dava **404 per un trattino**, e con esso tutto il percorso Unity 5.0-5.5
-> 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola — uno verso una rotta **inesistente**
+> 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola
+> 5. **nove rotte interne portavano a pagine che non esistono** — la prima trovata per caso, le altre otto cercandole
 >
-> I difetti 1, 3 e 4 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro. Nessuno dei tre sarebbe emerso controllando i numeri di versione.
+> I difetti 1, 3, 4 e 5 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
+>
+> E si somigliano anche nel modo in cui sono venuti fuori: **controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome. Un controllo sulle versioni li avrebbe dichiarati tutti a posto.
 >
 > ⚠️ Le sezioni **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** sono assenti di proposito: oggi non è stato fatto uno scan web di quelle fonti, e riempirle a memoria le renderebbe indistinguibili da dati veri.
 
@@ -134,11 +137,32 @@ Tenuto invece il commento in `rpa_extractor.rs` che cita UnRPA: dice «senza dip
 
 **Il filo comune con il resto della giornata:** il codice impara a fare una cosa da solo, e le indicazioni che mandano l'utente altrove restano indietro. Il patcher Danganronpa e l'estrattore `.rpa` erano nella 1.17.0 da una settimana, ma tre punti del codice rimandavano ancora fuori.
 
+### 🧭 La passata sulle rotte: `/danganronpa-tools` non era sola
+
+Quel 404 era saltato fuori **per caso**. Cercando di proposito, ne sono uscite **altre otto**:
+
+| Rotta morta | Dove | Corretta in |
+|---|---|---|
+| `/godot-patcher` | `unity_patcher.rs` | `/godot-translator` |
+| `/gamemaker-patcher` | `unity_patcher.rs` | `/translation-wizard` |
+| `/kirikiri-patcher` · `/nscripter-patcher` · `/construct-patcher` | `unity_patcher.rs` | `/injector` |
+| `/crawler` (×3) | command palette, ricerca globale, guida | `/context-harvester` |
+
+Le cinque pagine per-motore **non sono mai state costruite**. Le tre `/crawler` sono rimaste dopo la rinomina della pagina in `/context-harvester` — e l'etichetta diceva già `nav.contextHarvester`: la pagina era stata rinominata, i puntatori no.
+
+Destinazioni verificate, non indovinate: `/injector` monta `UniversalInjector` che elenca Kirikiri e NScripter per nome; `/godot-translator` tratta i `.pck`; `/translation-wizard` copre `gamemaker-data`, che è `canDoInline` — la pagina GameMaker dedicata non esiste e non doveva esistere.
+
+**Due falsi positivi lasciati stare:** `/auth` è un prefisso in `route-config.ts`, `/tesseract` è la cartella di asset in `public/` passata a tesseract.js. Esclusi per nome nel gate, con il motivo accanto, così nessuno li "sistema" al prossimo giro.
+
+**Perché nessuno se n'era accorto:** una rotta sbagliata non rompe la build, non rompe i tipi e non rompe i test. Rompe solo il clic dell'utente. Per questo ora c'è `__tests__/lib/route-integrity.test.ts`, che confronta ogni `route:` del Rust e ogni `href`/`path` interno del TS con le pagine reali sotto `app/`. Verificato che morda: reintrodurre `/danganronpa-tools` lo fa diventare rosso indicando file e riga.
+
+Vale come metodo, non solo come fix: **oggi tre difetti su quattro sono stati trovati controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
-- **Altre rotte in `route:` non sono state verificate.** `/danganronpa-tools` era un 404 trovato per caso, mentre toglievo un link nello stesso blocco. Nessuno ha controllato le altre: vale una passata che confronti ogni `route:` del Rust con `routes.d.ts`, come è stato fatto oggi per gli URL di download.
+- **Le rotte sono state passate al setaccio** (vedi sopra): restano fuori dal gate solo gli URL esterni. Nessuno ha verificato che i link `https://` sparsi nelle pagine per-motore puntino ancora a qualcosa — quelli di `unity_patcher.rs` sì, gli altri no.
 - **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
@@ -168,3 +192,16 @@ Tenuto invece il commento in `rpa_extractor.rs` che cita UnRPA: dice «senza dip
 | [#122](https://github.com/rouges78/GameStringer/pull/122) | Questo digest |
 | [#123](https://github.com/rouges78/GameStringer/pull/123) | URL IPA a 404 per un trattino |
 | [#124](https://github.com/rouges78/GameStringer/pull/124) | Tolti DRV3-Sharp e unrpa, corretta una rotta a 404 |
+| [#125](https://github.com/rouges78/GameStringer/pull/125) | Digest aggiornato con i difetti sui tool |
+| [#126](https://github.com/rouges78/GameStringer/pull/126) | Otto rotte morte corrette, più il gate che le tiene vive |
+
+## 🚦 Gate aggiunti oggi
+
+Due difetti su cinque non si ripeteranno in silenzio:
+
+| Gate | Cosa impedisce |
+|---|---|
+| `__tests__/lib/route-integrity.test.ts` | una rotta interna che punta a una pagina inesistente |
+| bisezione dentro `translateArray` | perdere 88 voci di changelog perché una sola non si traduce |
+
+Restano **senza gate**: i prezzi del catalogo (nessun test può sapere quanto costa un modello domani) e gli URL di download hardcoded (una `HEAD` in CI sarebbe fattibile, ma dipenderebbe dalla rete).
