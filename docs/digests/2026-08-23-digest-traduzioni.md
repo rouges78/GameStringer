@@ -16,7 +16,7 @@
 >
 > **Il settimo è di un'altra specie, e va guardato a parte.** Gli altri sei erano cose vere che hanno smesso di esserlo. Le voci fantasma dei cataloghi **non sono mai state vere**: nessun rename le ha rese sbagliate, sono nate così. E non lasciano traccia quando falliscono — un link morto almeno dà 404; un nome senza URL manda l'utente a cercare qualcosa che non esiste, e un requisito inventato come «Python 3.x» gli fa installare software per niente. In entrambi i casi, in silenzio.
 >
-> ⚠️ **RSS** e **traduzioni amatoriali** sono state scansionate a fine giornata e stanno più sotto. Le **localizzazioni ufficiali** restano assenti: nessuno le ha cercate, e riempirle a memoria le renderebbe indistinguibili da dati veri.
+> ✅ Tutte e tre le sezioni di scan — **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** — sono state fatte a fine giornata e stanno più sotto. Dove non è stato trovato niente è scritto «cercato, non trovato», che è diverso da «non cercato».
 
 ## ✅ Le azioni consigliate, verificate una per una
 
@@ -371,9 +371,25 @@ Da [traduzionegiochi.it](https://traduzionegiochi.it/), lette il 23/08/2026:
 
 **Nota per GameStringer:** *Foolish Mortals* è un gioco **Visionaire**, motore che l'app tratta — ed è lo stesso titolo comparso oggi nei tombstone dei progetti dell'utente. Che ne esista una patch community v1.1 è utile a sapersi: è materiale di confronto per il percorso Visionaire.
 
+## 🏢 Localizzazioni ufficiali annunciate
+
+**Nessun annuncio nuovo negli ultimi 7 giorni.** Cercato, non trovato — che è diverso da non aver cercato.
+
+Una sola localizzazione ufficiale verificata nel periodo più largo:
+
+| Gioco | Italiano | Fonte |
+|---|---|---|
+| **Fire Emblem: Fortune's Weave** (Switch 2, uscita 17/09/2026) | **sì**, fra 9 lingue — giapponese, francese, tedesco, **italiano**, spagnolo, coreano, cinese semplificato e tradizionale, inglese | pagina prodotto ufficiale su nintendo.com |
+
+Presentato al Nintendo Direct dedicato del **04/08/2026**. La pagina **non distingue fra testo e audio**: dire «doppiato in italiano» sarebbe un'aggiunta mia, non un dato.
+
+**Come è stato verificato, perché conta:** una ricerca web attribuiva la lista di lingue a una wiki di fan, e una seconda ricerca mirata **non l'ha confermata** — ha deviato su «la presentazione era visibile in Europa», che non è la stessa affermazione. Il dato è entrato qui solo dopo aver letto la pagina prodotto Nintendo. Due ricerche concordi non fanno una fonte.
+
+**Riferimento di contesto, non una novità:** [everyeye.it](https://www.everyeye.it/notizie/giochi-uscita-2026-doppiaggio-italiano-875513.html) mantiene una lista dei giochi 2026 con doppiaggio italiano, aggiornata al **18/05/2026** — quindi vecchia di tre mesi. Divide onestamente fra confermati (Forza Horizon 6, LEGO Batman, AC Black Flag Resynced, Marvel Tokon, The Blood of Dawnwalker) e attesi ma non confermati (Control Resonant, Halo Campaign Evolved, Gears of War E-Day, Onimusha). Utile come punto di partenza; **da non copiare come se fosse di questa settimana.**
+
 ## 📝 Cose non verificate / da controllare manualmente
 
-- **Localizzazioni ufficiali: non cercate.** RSS e traduzioni amatoriali sono state fatte (vedi sopra), questa no. Il prossimo digest la rifaccia da zero, non la erediti da qui.
+- **Le sezioni di scan invecchiano in fretta.** RSS, traduzioni amatoriali e localizzazioni ufficiali riflettono il 23/08: il prossimo digest le rifaccia da zero invece di ereditarle. La lista everyeye citata sotto è già vecchia di tre mesi.
 - **Le nove fonti riattivabili sono una decisione, non un fatto.** Funzionano, ma erano state disattivate anche per motivi editoriali (rumore, lingua, pertinenza): riaccenderle è una scelta di prodotto.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
