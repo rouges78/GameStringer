@@ -55,7 +55,7 @@ const navigationItems: SearchItem[] = [
   { id: 'voice', title: 'Voice', description: 'Voice translation', icon: Mic, path: '/voice-translator', category: 'navigation' },
   { id: 'patcher', title: 'Patcher', description: 'Unity/Unreal patcher', icon: Wrench, path: '/unity-patcher', category: 'navigation' },
   { id: 'injector', title: 'Injector', description: 'Universal mod injection', icon: Puzzle, path: '/injector', category: 'navigation' },
-  { id: 'crawler', title: 'Crawler', description: 'Extract context from games', icon: Scan, path: '/crawler', category: 'navigation' },
+  { id: 'crawler', title: 'Crawler', description: 'Extract context from games', icon: Scan, path: '/context-harvester', category: 'navigation' },
   { id: 'fixer', title: 'Fixer', description: 'Fix translation tags', icon: Wand2, path: '/fixer', category: 'navigation' },
   { id: 'overlay', title: 'Overlay', description: 'In-game subtitles', icon: Subtitles, path: '/overlay', category: 'navigation' },
   { id: 'community', title: 'Community', description: 'Community translations hub', icon: Users, path: '/community-hub', category: 'navigation' },

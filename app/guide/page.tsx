@@ -1108,7 +1108,7 @@ export default function GuidePage() {
                   { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'teal' },
                   { engine: 'Wolf RPG', tool: 'Wolf RPG Patcher', href: '/wolfrpg-patcher', desc: g.engineWolfRpg, color: 'orange' },
                   { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: g.engineTelltale, color: 'violet' },
-                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/crawler', desc: g.engineGodot, color: 'cyan' },
+                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/context-harvester', desc: g.engineGodot, color: 'cyan' },
                   { engine: 'GameMaker', tool: 'Auto-Translate', href: '/auto-translate', desc: g.engineGameMaker, color: 'yellow' },
                 ].map((e, i) => (
                   <Link key={i} href={e.href}>

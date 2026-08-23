@@ -928,7 +928,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                         { id: 'voice', title: t('nav.voice'), description: t('commandPalette.voiceDesc'), icon: Mic, path: '/voice-translator' },
                         { id: 'patcher', title: t('nav.patcher'), description: t('commandPalette.patcherDesc'), icon: Wrench, path: '/unity-patcher' },
                         { id: 'injector', title: t('nav.injector'), description: t('commandPalette.patcherDesc'), icon: Puzzle, path: '/injector' },
-                        { id: 'crawler', title: t('nav.contextHarvester'), description: t('commandPalette.scanGamesDesc'), icon: Scan, path: '/crawler' },
+                        { id: 'crawler', title: t('nav.contextHarvester'), description: t('commandPalette.scanGamesDesc'), icon: Scan, path: '/context-harvester' },
                         { id: 'fixer', title: t('nav.fixer'), description: t('commandPalette.patcherDesc'), icon: Wand2, path: '/fixer' },
                         { id: 'overlay', title: t('nav.overlay'), description: t('commandPalette.patcherDesc'), icon: Subtitles, path: '/overlay' },
                         { id: 'rom-patcher', title: 'ROM Patcher', description: 'Applica e crea patch IPS/BPS per traduzioni retro', icon: Disc, path: '/rom-patcher' },
