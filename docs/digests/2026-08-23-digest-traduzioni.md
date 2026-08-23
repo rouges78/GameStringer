@@ -183,12 +183,28 @@ Due dettagli che rendono questi due peggiori di quanto sembrino:
 - URL che finiscono in `$`, `?id=`, `key=`, `domain=` → prefissi catturati a metà dal regex, si compongono a runtime
 - `libretranslate.com` dà **405** perché accetta solo POST; `translate.googleapis.com` dà **429** perché è rate-limited. Funzionano entrambi.
 
+### 🔧 I tre tool che aspettavano una decisione, decisi
+
+| Tool | Stato | Deciso |
+|---|---|---|
+| `github.com/rgss-decryptor` | malformato, manca l'owner | **`usagirei/RGSS-Decryptor`** — 38★, non archiviato, con release e asset, descrizione che combacia |
+| `rpgmakertrans.bitbucket.io` | sparito | **Translator++** dove serviva davvero un tool esterno |
+| MTool (`amanatsu.booth.pm`) | 404 | **fuso** nella voce Translator++ |
+
+**Perché MTool è stato fuso invece che ripuntato:** metterci Translator++ avrebbe prodotto due voci con lo stesso nome e lo stesso URL, distinte solo da un flag `compatible` che era la negazione esatta dell'altro. Una sola sarebbe mai risultata compatibile. Verificato prima che la fusione fosse onesta: Translator++ copre XP, VX, VX Ace, MV **e** MZ, cioè l'intero arco che le due voci coprivano insieme.
+
+**E di nuovo, togliere il link non bastava.** Altri **nove** punti nominavano ancora RPG Maker Trans: entrambe le voci `InjectionTool` (una nel ramo MV/MZ, dove era l'unico tool elencato), la stringa del metodo, una nota, uno step, una mappatura motore→tool, il messaggio dell'engine-check, i `requirements` del wizard che promettevano «link fornito», e il catalogo di `prediction_tool` che gli dava **90 di compatibilità**. Lasciarli avrebbe nominato un tool senza più nessun posto da cui prenderlo.
+
+Dove l'app fa il lavoro da sola la prosa ora lo dice: RPG Maker VX/Ace è `canDoInline`, quindi decriptato l'archivio si traduce dentro l'app.
+
+**Un errore commesso per strada, che vale come avvertimento:** il primo tentativo di rimozione ha tolto 5 righe di un blocco da 6, lasciando un `},` orfano — Rust non compilabile. Il controllo verificava la riga di apertura ma non quella di chiusura. È così che è emersa anche la *seconda* voce RPG Maker Trans, che il primo passaggio aveva colpito al posto di quella giusta. `cargo check` va eseguito, non dato per scontato.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
-- **Due link esterni aspettano una decisione, non una riparazione:** `github.com/rgss-decryptor` è malformato (manca l'owner; `usagirei/RGSS-Decryptor` sembra l'intento) e `rpgmakertrans.bitbucket.io` è sparito. Sostituirli significa *scegliere* quale tool di terze parti consigliare — la stessa situazione di DRV3-Sharp.
-- **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più.
+- **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
+- **Il catalogo tool di `prediction_tool.rs` non è stato verificato voce per voce.** Ne è stata corretta una (RPG Maker Trans → Translator++) perché emersa dalla passata, ma quel file elenca decine di tool con punteggi di compatibilità, e nessuno ha controllato se esistano ancora. Non hanno URL, quindi la passata sui link non li tocca.
 - **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
@@ -222,6 +238,9 @@ Due dettagli che rendono questi due peggiori di quanto sembrino:
 | [#126](https://github.com/rouges78/GameStringer/pull/126) | Otto rotte morte corrette, più il gate che le tiene vive |
 | [#127](https://github.com/rouges78/GameStringer/pull/127) | Digest aggiornato con la passata sulle rotte |
 | [#128](https://github.com/rouges78/GameStringer/pull/128) | Quattro link esterni rotti, su 318 controllati |
+| [#129](https://github.com/rouges78/GameStringer/pull/129) | Digest aggiornato con la passata sui link esterni |
+| [#130](https://github.com/rouges78/GameStringer/pull/130) | RGSS Decryptor con il suo owner, RPG Maker Trans sostituito |
+| [#131](https://github.com/rouges78/GameStringer/pull/131) | MTool fuso in Translator++: un tool copre entrambe |
 
 ## 🚦 Gate aggiunti oggi
 
