@@ -269,8 +269,8 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
-- **Nessun gate copre link esterni, requisiti in prosa e chiavi i18n orfane.** Si trovano solo rilanciando le passate a mano, come oggi. Le tre sono fattibili in CI ma nessuna gratis: gli URL legherebbero la suite alla rete e ai 403 da bot protection, la prosa non è verificabile meccanicamente, e le chiavi orfane richiederebbero di risolvere anche gli accessi dinamici a `t()`.
-- **Il conteggio delle chiavi i18n non è mai stato controllato nel suo insieme.** Oggi ne sono state trovate 62 orfane per caso, cercando altro. Nessuno sa quante altre ce ne siano: il gate verifica che le chiavi *esistano in tutte le lingue*, non che *qualcuno le usi*.
+- **Nessun gate copre link esterni e requisiti in prosa.** Si trovano solo rilanciando le passate a mano, come oggi: gli URL legherebbero la suite alla rete e ai 403 da bot protection, e la prosa non è verificabile meccanicamente.
+- **1601 chiavi i18n orfane restano da ripulire.** Ora sono contate e sotto gate — non possono aumentare — ma toglierle è un lavoro a parte, e va fatto guardandole una per una: alcune saranno da **ricollegare** invece che da cancellare, e distinguere le due cose non è meccanico.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
@@ -312,15 +312,20 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 | [#135](https://github.com/rouges78/GameStringer/pull/135) | Python e gdsdecomp non erano mai serviti |
 | [#136](https://github.com/rouges78/GameStringer/pull/136) | Digest: chiusa l'ultima incognita, nominata la firma |
 | [#137](https://github.com/rouges78/GameStringer/pull/137) | 744 stringhe i18n che nessuno poteva leggere |
+| [#138](https://github.com/rouges78/GameStringer/pull/138) | Digest: dove si nascondeva la prosa stantia |
+| [#139](https://github.com/rouges78/GameStringer/pull/139) | Gate sulle chiavi i18n orfane |
 
 ## 🚦 Gate aggiunti oggi
 
-Due difetti su cinque non si ripeteranno in silenzio:
+Tre difetti su sette non si ripeteranno in silenzio:
 
 | Gate | Cosa impedisce |
 |---|---|
 | `__tests__/lib/route-integrity.test.ts` | una rotta interna che punta a una pagina inesistente |
+| `__tests__/lib/i18n-orphan-keys.test.ts` | una chiave i18n che nessuna riga di codice legge |
 | bisezione dentro `translateArray` | perdere 88 voci di changelog perché una sola non si traduce |
+
+Tutti e tre **verificati mordendo**: reintrodotto il difetto originale, controllato che il test diventi rosso e indichi dove, poi ripristinato. Un gate verde su un repo già sistemato non prova niente.
 
 Restano **senza gate** tre cose, e ognuna per un motivo diverso:
 
@@ -330,6 +335,15 @@ Restano **senza gate** tre cose, e ognuna per un motivo diverso:
 | URL esterni | una `HEAD` in CI è fattibile (oggi ha trovato 4 difetti su 318) ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti |
 | prosa e requisiti | «questa frase descrive ancora la realtà?» non è una domanda meccanica |
 
-Le **chiavi i18n orfane** sarebbero invece gatabili: basterebbe cercare ogni chiave nel codice. Oggi ne sono uscite 62 trovate per caso; il gate esistente non poteva vederle perché verifica che una chiave *esista in tutte le lingue*, non che *qualcuno la usi*.
+Le **chiavi i18n orfane** erano l'unica delle quattro davvero gatabile, e ora lo sono: `__tests__/lib/i18n-orphan-keys.test.ts`, baseline **1601**, il numero può solo scendere.
 
-Per tutto il resto la risposta realistica è rilanciare le passate a mano ogni tanto, come oggi.
+Il rilevatore conta una chiave come usata in due modi, perché uno solo non basta:
+
+1. **compare letterale** da qualche parte nel sorgente — non solo dentro `t()`. Le chiavi ci arrivano anche via variabile: `tools-registry` mette `nav.contextHarvester` in un campo `nameKey`, e il layout lo passa a `t()` più tardi.
+2. **inizia per un prefisso costruito a runtime.** `main-layout` compone la chiave del changelog interpolando versione e indice: da sola, quella riga copre **551 chiavi** che nessuna ricerca letterale troverebbe mai. I prefissi devono contenere un punto, o singole lettere prese da template qualsiasi marcherebbero come usata mezza tabella.
+
+La baseline non è zero di proposito: **un gate che fallisce il primo giorno viene cancellato, non rispettato.** E un primo test sorveglia il rilevatore stesso — se smettesse di riconoscere le chiavi vive, la baseline misurerebbe un bug invece del codice.
+
+Per il resto la risposta realistica è rilanciare le passate a mano ogni tanto, come oggi.
+
+**Cosa è cambiato oggi nella copertura, in una riga:** stamattina i gate verificavano che le cose *esistessero*; ora tre verificano che **servano a qualcosa** — le rotte puntano a pagine vere, le chiavi i18n hanno un lettore, e una traduzione che fallisce costa una voce invece di ottantotto.
