@@ -66,8 +66,19 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
   version: 1,
   updatedAt: '2026-08-23',
   pricing: {
-    openai: { per1kUsd: 0.00015, note: 'GPT-4o mini ($0.15/1M input) · prezzo non riverificato dal 15/07/2026' },
-    gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input) · prezzo non riverificato dal 15/07/2026' },
+    // ⏰ OpenAI — VERIFICATO IL 23/08/2026 su developers.openai.com/api/docs/pricing.
+    // gpt-4o-mini è ancora listato a $0.15/1M input e resta il modello che il codice
+    // chiama davvero (ai-translate-direct.ts, reflection-translator.ts). La cifra era
+    // giusta: qui cambia solo il fatto che ora qualcuno l'ha guardata.
+    openai: { per1kUsd: 0.00015, note: 'GPT-4o mini ($0.15/1M input) · verificato 23/08/2026' },
+    // ⏰ gpt5 — VERIFICATO IL 23/08/2026. Il nome della chiave è storico e mente: non è
+    // GPT-5, è GPT-4o. Lo dicono sia il costo-calcolatore (modelLabelById('openai',
+    // 'gpt-4o')) sia la tendina del Translator Pro, che mostra 'GPT-4o'. gpt-4o è
+    // ancora listato a $2.50/1M input, quindi la cifra era giusta.
+    // OpenAI ha ora modelli più recenti (gpt-5.6-sol $4/1M, gpt-5.6-luna $0.20/1M,
+    // gpt-5-nano $0.05/1M) ma nessuno di essi è chiamato da questo codice: aggiungerli
+    // al catalogo è una decisione di prodotto, non una correzione di prezzo.
+    gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input) · verificato 23/08/2026 · la chiave si chiama gpt5 per ragioni storiche' },
     // ⏰ Gemini — VERIFICATO IL 23/08/2026 su ai.google.dev/gemini-api/docs/pricing.
     // Il default del codice è gemini-3.5-flash: $1.50/1M input. Il valore precedente
     // (0.000125) era il prezzo di Gemini 2.0 Flash, rimasto qui dopo il passaggio a 3.5:
@@ -93,7 +104,15 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     // questo numero. Nota per chi lo legge: la fascia di picco 06:00-10:00 UTC è
     // 08:00-12:00 in Italia, cioè la mattina — tradurre il pomeriggio costa metà.
     deepseek: { per1kUsd: 0.00044, note: 'DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss, dal 16/08/2026 16:00 UTC) · fuori picco costa la metà' },
-    mistral: { per1kUsd: 0.002, note: 'Mistral Large ($2/1M input) · prezzo non riverificato dal 15/07/2026' },
+    // ⏰ Mistral — VERIFICATO IL 23/08/2026 su mistral.ai/pricing/api. Il vecchio 0.002
+    // ($2/1M) non corrisponde più a nulla: Mistral Large 3 (mistral-large-latest) costa
+    // $0.5/1M input, cioè un quarto. Era il peggior sovrapprezzo del catalogo.
+    // C'è però un secondo problema, che il prezzo da solo non risolve: il codice chiama
+    // mistral-small-latest (Mistral Small 4, $0.15/1M), mentre il catalogo offre solo
+    // mistral-large-latest e la tendina lo etichetta 'Mistral Large 2'. Tre verità.
+    // Qui sta il prezzo di Large, il più caro dei due modelli in gioco, per la stessa
+    // ragione della fascia di picco DeepSeek: la stima deve sbagliare per eccesso.
+    mistral: { per1kUsd: 0.0005, note: 'Mistral Large 3 ($0.5/1M input) · verificato 23/08/2026 · il codice chiama Mistral Small 4, che costa $0.15/1M' },
     openrouter: { per1kUsd: 0.001, note: 'Varia per modello' },
     deepl: { per1kUsd: 0.02, note: 'DeepL Pro' },
     google: { per1kUsd: 0.00002, note: 'Google Translate' },
@@ -115,7 +134,7 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
       { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
-    mistral: [{ id: 'mistral-large-latest', label: 'Mistral Large' }],
+    mistral: [{ id: 'mistral-large-latest', label: 'Mistral Large 3' }],
   },
   recommendations: {
     creative: 'claude',
