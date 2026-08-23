@@ -5,7 +5,7 @@
   "pricing": {
     "openai": { "per1kUsd": 0.00015, "note": "GPT-4o mini ($0.15/1M input) · VERIFICATO 23/08/2026 su developers.openai.com" },
     "gpt5": { "per1kUsd": 0.0025, "note": "GPT-4o ($2.50/1M input) · VERIFICATO 23/08/2026. La chiave si chiama gpt5 per ragioni storiche, il modello e GPT-4o." },
-    "gemini": { "per1kUsd": 0.0015, "note": "Gemini 3.5 Flash ($1.50/1M input) · VERIFICATO 23/08/2026 su ai.google.dev. Il precedente 0.000125 era il prezzo di Gemini 2.0 Flash: 12x troppo basso. Gemini 3.7 Flash costa meta' ($0.75/1M fino al 31/12/2026), quindi questa stima sbaglia per eccesso su entrambi." },
+    "gemini": { "per1kUsd": 0.0015, "note": "Gemini 3.7 Flash, il default del codice · VERIFICATO 23/08/2026 su ai.google.dev. Costa $0.75/1M fino al 31/12/2026 e $1.50/1M dal 01/01/2027: qui sta il prezzo pieno, cosi' la stima sbaglia per eccesso invece di dover rincorrere il rialzo a Capodanno." },
     "claude": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input), il default del codice · VERIFICATO 23/08/2026. Claude Opus 5 costa $5/1M: chi sceglie il premium spende ~1.7x questa stima." },
     "deepseek": { "per1kUsd": 0.00044, "note": "DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss) · RIVERIFICATO 23/08/2026 su api-docs.deepseek.com · fuori picco costa la meta'" },
     "mistral": { "per1kUsd": 0.0005, "note": "Mistral Large 3 ($0.5/1M input) · VERIFICATO 23/08/2026 su mistral.ai/pricing/api. Il precedente $2/1M era 4x troppo alto. Il codice chiama Mistral Small 4 ($0.15/1M): qui sta il prezzo del piu caro dei due, perche la stima deve sbagliare per eccesso." },
@@ -25,8 +25,8 @@
       { "id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5" }
     ],
     "gemini": [
-      { "id": "gemini-3.5-flash", "label": "Gemini 3.5 Flash", "recommended": true },
-      { "id": "gemini-3.7-flash", "label": "Gemini 3.7 Flash" },
+      { "id": "gemini-3.7-flash", "label": "Gemini 3.7 Flash", "recommended": true },
+      { "id": "gemini-3.5-flash", "label": "Gemini 3.5 Flash" },
       { "id": "gemini-3.1-flash-lite", "label": "Gemini 3.1 Flash Lite" }
     ],
     "deepseek": [

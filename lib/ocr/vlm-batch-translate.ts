@@ -105,7 +105,7 @@ export const vlmBatchResultSchema = z.object({
 
 const DEFAULT_OLLAMA_MODEL = 'llava:13b';
 const DEFAULT_OPENAI_MODEL = 'gpt-4o';
-const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash';
+const DEFAULT_GEMINI_MODEL = 'gemini-3.7-flash';
 const DEFAULT_DOWNSCALE_MAX_PX = 1280;
 
 const VLM_BATCH_SYSTEM_PROMPT = `You are an expert video game localizer with visual context. You can SEE the game screen.

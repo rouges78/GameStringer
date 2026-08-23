@@ -340,7 +340,7 @@ export async function translateWithGeminiLongContext(
     gameGenre?: string;
     gameName?: string;
     glossaryHint?: string;
-    model?: string;  // default: gemini-3.5-flash (override globale via NEXT_PUBLIC_GEMINI_MODEL)
+    model?: string;  // default: gemini-3.7-flash (override globale via NEXT_PUBLIC_GEMINI_MODEL)
   }
 ): Promise<TranslateResult> {
   const keys = getApiKeys();
@@ -353,11 +353,11 @@ export async function translateWithGeminiLongContext(
   clientLogger.debug(`[GeminiLongContext] 📜 Traduzione documento intero: ${texts.length} stringhe, ${totalChars} caratteri`);
 
   const srcLang = options?.sourceLanguage || 'en';
-  // Default gemini-3.5-flash (I/O 2026, output 65k token = 8× vs 2.0). Override via opts.model
+  // Default gemini-3.7-flash (multimodale, 1M di contesto, 64k di output). Override via opts.model
   // o tramite env NEXT_PUBLIC_GEMINI_MODEL. Mantenere gemini-3.1-flash-lite per preset low-cost.
   const envGeminiModel =
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GEMINI_MODEL) || undefined;
-  const model = options?.model || envGeminiModel || 'gemini-3.5-flash';
+  const model = options?.model || envGeminiModel || 'gemini-3.7-flash';
 
   // Costruisci prompt con contesto completo
   let systemPrompt = `You are an expert game translator. Translate the following ${texts.length} numbered lines from ${srcLang} to ${targetLanguage}.

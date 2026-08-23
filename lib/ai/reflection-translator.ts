@@ -213,7 +213,7 @@ export function selectReflectionCandidates(
 
 const GEMINI_MODEL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GEMINI_MODEL) ||
-  'gemini-3.5-flash';
+  'gemini-3.7-flash';
 const ANTHROPIC_MODEL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ANTHROPIC_MODEL) ||
   'claude-sonnet-4-6';

@@ -320,14 +320,14 @@ Answer based ONLY on the dialogues above. If you can identify character names, r
       }
     } catch {}
 
-    // 2. Gemini (free) — default gemini-3.5-flash, override via NEXT_PUBLIC_GEMINI_MODEL
+    // 2. Gemini (free) — default gemini-3.7-flash, override via NEXT_PUBLIC_GEMINI_MODEL
     const { getSecureKey } = await import('@/lib/secure-key-store');
     const geminiKey = await getSecureKey('GEMINI_API_KEY');
     if (geminiKey) {
       try {
         const loreGeminiModel =
           (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GEMINI_MODEL) ||
-          'gemini-3.5-flash';
+          'gemini-3.7-flash';
         const resp = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${loreGeminiModel}:generateContent?key=${geminiKey}`,
           {

@@ -42,6 +42,22 @@ alla revisione del 16/08, che aveva corretto l'*etichetta* lasciando il *numero*
 Lezione: correggere la nota senza correggere la cifra lascia il bug e toglie
 l'unico indizio che c'era.
 
+### Seguito: il default è passato a Gemini 3.7 Flash
+
+Lo stesso giorno il default del codice è passato da `gemini-3.5-flash` a
+`gemini-3.7-flash` in sette file (`ai-translate-direct`, `ai-post-edit`,
+`reflection-translator`, `smart-content-router`, `lore-assistant`,
+`vision-translate`, `vlm-batch-translate`). 3.7 è stabile, nativamente
+multimodale — verificato prima di toccare i percorsi vision — con 1M di
+contesto e 64k di output, e Google elenca ormai 3.5 come *legacy*.
+
+**Il prezzo però resta `0.0015` ($1.50/1M), non `0.00075`.** 3.7 costa metà
+solo fino al 31/12/2026: dal 1° gennaio torna a $1.50/1M. Abbassare la stima
+adesso significherebbe doverla rialzare a Capodanno, con il rischio concreto
+di non accorgersene — ed è esattamente così che è nato l'errore da 12×
+descritto qui sopra. Fino ad allora la stima sbaglia per eccesso, che è la
+direzione innocua.
+
 ## Prezzi verificati il 23/08/2026
 
 Fonti ufficiali, non stime:
