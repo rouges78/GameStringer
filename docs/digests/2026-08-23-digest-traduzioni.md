@@ -1,6 +1,13 @@
 # Digest Traduzioni Videogiochi — 23 agosto 2026
 
-> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi due difetti che nessun digest aveva visto: il sito rimetteva in circolo i prezzi vecchi su tutte le installazioni, e quattro lingue del changelog v1.16.0 non erano mai state tradotte.
+> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi quattro difetti che nessun digest aveva visto:
+>
+> 1. il sito rimetteva in circolo i prezzi vecchi su **tutte** le installazioni
+> 2. quattro lingue del changelog v1.16.0 non erano **mai** state tradotte
+> 3. il download di IPA dava **404 per un trattino**, e con esso tutto il percorso Unity 5.0-5.5
+> 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola — uno verso una rotta **inesistente**
+>
+> I difetti 1, 3 e 4 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro. Nessuno dei tre sarebbe emerso controllando i numeri di versione.
 >
 > ⚠️ Le sezioni **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** sono assenti di proposito: oggi non è stato fatto uno scan web di quelle fonti, e riempirle a memoria le renderebbe indistinguibili da dati veri.
 
@@ -110,15 +117,29 @@ Non sono scaricati dall'app, sono link per l'utente. Tre si sono mossi da quando
 | UndertaleModTool | **0.9.1.2 (13/07/2026)** | rilevante, il lavoro GameMaker è attivo |
 | UAssetGUI | v1.1.0 (01/05/2026) | |
 | UnrealLocres | 1.1.1 (2021) | fermo da anni, ma stabile |
-| unrpa | 2.3.0 (2019) | fermo, e il Ren'Py `.rpa` ora è nativo: forse non serve più linkarlo |
-| DRV3-Sharp | **nessuna release** | solo sorgente. Il lavoro Danganronpa è attivo (DR1 end-to-end nella v1.17.0): l'utente che segue il link non trova nulla da scaricare |
+| unrpa | 2.3.0 (2019) | **link rimosso oggi** — il Ren'Py `.rpa` è nativo dalla v1.17.0 |
+| DRV3-Sharp | **nessuna release** | **link rimosso oggi** — solo sorgente, niente da scaricare |
+
+### 🔗 I due link tolti, e i tre puntatori rotti che c'erano dietro
+
+DRV3-Sharp non ha **nessuna release**: chi seguiva quel link non trovava niente. unrpa è fermo al 2019 e l'app legge i `.rpa` da sola dalla v1.17.0. Tolti entrambi.
+
+Ma cercare quei due nomi nel codice ne ha trovati **cinque punti, non due**, e due erano peggio di un link morto:
+
+- **Il ramo Danganronpa di `check_game_engine` elencava DRV3-Sharp come unico tool** e diceva «usa tool specifici per Danganronpa». Togliere solo il link avrebbe lasciato una lista vuota sotto un messaggio che si arrende — per un gioco che l'app traduce end-to-end dalla v1.17.0. Ora rimanda al patcher interno.
+- **Una voce instradava a `/danganronpa-tools`, rotta che non esiste.** La pagina è `/danganronpa-patcher`, come dicono da sempre menu, `tools-registry` e `wizard-strategies`. Chi cliccava finiva su un **404**.
+- `universal_injector` elencava UnRPA fra i `tools_required` e una nota diceva «usa unrpa per estrarre».
+
+Tenuto invece il commento in `rpa_extractor.rs` che cita UnRPA: dice «senza dipendere da UnRPA/Python», cioè spiega *perché* l'estrattore nativo esiste. È un'affermazione, non un puntatore.
+
+**Il filo comune con il resto della giornata:** il codice impara a fare una cosa da solo, e le indicazioni che mandano l'utente altrove restano indietro. Il patcher Danganronpa e l'estrattore `.rpa` erano nella 1.17.0 da una settimana, ma tre punti del codice rimandavano ancora fuori.
 
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
-- **DRV3-Sharp non ha release**: l'app linka il repo, l'utente non trova nulla da scaricare. Da decidere se linkare il sorgente diverso, o togliere il link.
-- **unrpa forse non serve più**: il Ren'Py `.rpa` è estratto nativamente dalla v1.17.0. Il link resta utile solo per chi vuole farlo a mano.
+- **Altre rotte in `route:` non sono state verificate.** `/danganronpa-tools` era un 404 trovato per caso, mentre toglievo un link nello stesso blocco. Nessuno ha controllato le altre: vale una passata che confronti ogni `route:` del Rust con `routes.d.ts`, come è stato fatto oggi per gli URL di download.
+- **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
@@ -135,4 +156,15 @@ Non sono scaricati dall'app, sono link per l'utente. Tre si sono mossi da quando
 - `docs/maintenance/2026-08-23-il-sito-sovrascrive-i-prezzi.md` — la trappola del merge remoto, i prezzi verificati, il limite della chiave unica per provider
 - `docs/maintenance/2026-08-23-changelog-v1-16-0-disallineato.md` — il disallineamento degli indici, il gate che lo certificava, i difetti misurati della traduzione automatica
 
-PR di giornata: [#115](https://github.com/rouges78/GameStringer/pull/115) · [#116](https://github.com/rouges78/GameStringer/pull/116) · [#117](https://github.com/rouges78/GameStringer/pull/117) · [#118](https://github.com/rouges78/GameStringer/pull/118) · [#119](https://github.com/rouges78/GameStringer/pull/119) · [#120](https://github.com/rouges78/GameStringer/pull/120) · [#121](https://github.com/rouges78/GameStringer/pull/121)
+| PR | Cosa |
+|---|---|
+| [#115](https://github.com/rouges78/GameStringer/pull/115) | Il sito smette di rimettere i prezzi vecchi |
+| [#116](https://github.com/rouges78/GameStringer/pull/116) | La sezione "Novità" racconta la 1.17.0, 12 lingue |
+| [#117](https://github.com/rouges78/GameStringer/pull/117) | Ultimi tre prezzi verificati, Mistral era 4× alto |
+| [#118](https://github.com/rouges78/GameStringer/pull/118) | Default Gemini a 3.7 Flash |
+| [#119](https://github.com/rouges78/GameStringer/pull/119) | Changelog v1.16.0 riallineato e tradotto |
+| [#120](https://github.com/rouges78/GameStringer/pull/120) | `translateArray` bisezione, invece di perdere la lingua |
+| [#121](https://github.com/rouges78/GameStringer/pull/121) | Mistral: una verità sola in tre punti |
+| [#122](https://github.com/rouges78/GameStringer/pull/122) | Questo digest |
+| [#123](https://github.com/rouges78/GameStringer/pull/123) | URL IPA a 404 per un trattino |
+| [#124](https://github.com/rouges78/GameStringer/pull/124) | Tolti DRV3-Sharp e unrpa, corretta una rotta a 404 |
