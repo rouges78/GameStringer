@@ -31,7 +31,11 @@
  * le chiavi mancano davvero, è verifyChangelogKeys() dal passo 5 di release-all.
  *
  * Export: async writeChangelogKeys(versionString, englishChanges, opts)
- *   -> { translated:boolean, provider:string|null, langs:string[], fallback:string[] }
+ *   -> { translated:boolean, provider:string|null, langs:string[],
+ *        fallback:string[], partial:[{lang,missed:number[]}] }
+ *   `partial` elenca le lingue tradotte con qualche voce rimasta in inglese:
+ *   la bisezione le isola invece di perdere l'intera lingua, ma restano un
+ *   debito e vanno dichiarate, non contate come successo.
  */
 
 const fs = require('fs');
@@ -173,18 +177,61 @@ async function translateChunk(provider, targetLang, sourceChanges) {
 }
 
 /**
+ * Traduce UN blocco, e se fallisce lo DIVIDE A METÀ e ritenta, fino alla
+ * singola voce. Ritorna sempre un array lungo quanto `items`: le voci che
+ * falliscono anche da sole restano in inglese e vengono dichiarate via
+ * `onFallback`, mai sostituite in silenzio.
+ *
+ * 23/08/2026: senza bisezione, un blocco che non faceva il parse portava via
+ * tutte e 88 le voci della lingua. Misurato su ru ed el del changelog v1.16.0:
+ * il modello emetteva una virgoletta non escapata a metà del PRIMO blocco, e
+ * translateArray restituiva null per l'intera lingua. Peggio: temperature 0
+ * rende il guasto DETERMINISTICO — tre passate di riprova sono fallite allo
+ * stesso byte (position 511, poi 865). Riprovare uguale non poteva funzionare;
+ * dividere sì, e infatti ha recuperato 88/88 su entrambe le lingue.
+ */
+async function translateBisect(provider, targetLang, items, baseIdx, onFallback) {
+  const got = await translateChunk(provider, targetLang, items);
+  if (got) return got;
+  if (items.length === 1) {
+    if (onFallback) onFallback(baseIdx, items[0]);
+    return items.slice(); // la SORGENTE inglese, dichiarata
+  }
+  const mid = Math.ceil(items.length / 2);
+  const a = await translateBisect(provider, targetLang, items.slice(0, mid), baseIdx, onFallback);
+  const b = await translateBisect(provider, targetLang, items.slice(mid), baseIdx + mid, onFallback);
+  return a.concat(b);
+}
+
+/**
  * Traduce un array di voci -> targetLang, A BLOCCHI (12 voci per chiamata).
  * Il changelog v1.16.0 aveva 90 voci: una chiamata sola sforava max_tokens e
- * falliva in silenzio. Ritorna l'array completo o null se UN blocco fallisce
- * (mai risultati parziali: o tutto tradotto o fallback dichiarato).
+ * falliva in silenzio.
+ *
+ * Ritorna l'array completo, oppure null se il provider è morto (vedi sotto).
+ * Le singole voci che falliscono restano in inglese e sono DICHIARATE via
+ * `onFallback(indice, testo)`: il chiamante deve poterle contare, altrimenti
+ * una lingua quasi-tradotta si spaccia per tradotta — che è esattamente la
+ * bugia che questo file esiste per non raccontare.
  */
-async function translateArray(provider, targetLang, sourceChanges) {
+async function translateArray(provider, targetLang, sourceChanges, onFallback) {
   if (provider === 'deepl') return translateChunk(provider, targetLang, sourceChanges); // già voce-per-voce
   const CHUNK = 12;
   const out = [];
   for (let i = 0; i < sourceChanges.length; i += CHUNK) {
-    const part = await translateChunk(provider, targetLang, sourceChanges.slice(i, i + CHUNK));
-    if (!part) return null;
+    const slice = sourceChanges.slice(i, i + CHUNK);
+    let fellBack = 0;
+    const part = await translateBisect(provider, targetLang, slice, i, (idx, txt) => {
+      fellBack++;
+      if (onFallback) onFallback(idx, txt);
+    });
+    // Provider morto (chiave scaduta, servizio giù): fallisce TUTTO, non una
+    // voce. Distinguerlo dalla voce tossica evita di bisezionare 88 volte a
+    // vuoto — e restituisce il fallback totale, che è la verità in quel caso.
+    if (fellBack === slice.length) {
+      console.warn(`   ⚠️  ${targetLang}: l'intero blocco è fallito voce per voce — provider non utilizzabile`);
+      return null;
+    }
     out.push(...part);
   }
   return out;
@@ -236,22 +283,33 @@ async function writeChangelogKeys(version, sourceChanges, opts = {}) {
   }
 
   // L'italiano NON è più un caso speciale: è una lingua di arrivo come le altre.
-  const done = ['en'];
+  const done = [];
+  const partial = [];
   for (const lang of langs) {
     if (lang === 'en') continue;
-    const translated = await translateArray(provider, lang, sourceChanges);
+    const missed = [];
+    const translated = await translateArray(provider, lang, sourceChanges, (idx) => missed.push(idx));
     const items = translated || sourceChanges; // fallback DICHIARATO: la sorgente inglese se la lingua fallisce
     setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, items);
     if (translated) done.push(lang);
-    process.stdout.write(`   ${translated ? '✅' : '↩️ '} ${lang}`);
+    // 23/08/2026: con la bisezione una lingua può tornare quasi tutta tradotta
+    // con qualche voce ancora in inglese. Contarla come ✅ nasconderebbe il
+    // buco: si dichiara, con gli indici, così chi legge sa cosa ripassare.
+    if (translated && missed.length) {
+      partial.push({ lang, missed });
+      process.stdout.write(`   ⚠️  ${lang} (${missed.length} voci in inglese: ${missed.join(', ')})`);
+    } else {
+      process.stdout.write(`   ${translated ? '✅' : '↩️ '} ${lang}`);
+    }
   }
+  done.unshift('en');
   process.stdout.write('\n');
   // 06/08/2026: prima ritornava translated:true anche quando OGNI lingua era
   // andata in fallback (done = solo la sorgente) e la ship stampava «tradotto con
   // anthropic» su un fallimento totale — contatore bugiardo. Tradotto è vero
   // solo se almeno una lingua oltre alla sorgente è stata tradotta davvero.
   const fallback = langs.filter((l) => l !== 'en' && !done.includes(l));
-  return { translated: done.length > 1, provider, langs: done, fallback };
+  return { translated: done.length > 1, provider, langs: done, fallback, partial };
 }
 
 /**
