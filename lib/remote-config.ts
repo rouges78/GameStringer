@@ -64,12 +64,24 @@ export interface RemoteModelConfig {
 // quando passano da un benchmark, non perché sono nuovi.
 export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
   version: 1,
-  updatedAt: '2026-08-16',
+  updatedAt: '2026-08-23',
   pricing: {
     openai: { per1kUsd: 0.00015, note: 'GPT-4o mini ($0.15/1M input) · prezzo non riverificato dal 15/07/2026' },
     gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input) · prezzo non riverificato dal 15/07/2026' },
-    gemini: { per1kUsd: 0.000125, note: 'etichetta corretta il 16/08: il default del codice è gemini-3.5-flash, non 2.0 · ⚠️ PREZZO NON RIVERIFICATO (era quello di Gemini 2.0 Flash)' },
-    claude: { per1kUsd: 0.003, note: 'etichetta corretta il 16/08: il default del codice è claude-sonnet-4-6 · ⚠️ PREZZO NON RIVERIFICATO (era quello di Claude 3.5 Sonnet)' },
+    // ⏰ Gemini — VERIFICATO IL 23/08/2026 su ai.google.dev/gemini-api/docs/pricing.
+    // Il default del codice è gemini-3.5-flash: $1.50/1M input. Il valore precedente
+    // (0.000125) era il prezzo di Gemini 2.0 Flash, rimasto qui dopo il passaggio a 3.5:
+    // 12× troppo basso. Gemini 3.7 Flash, uscito dopo, costa $0.75/1M fino al 31/12/2026
+    // e $1.50/1M dal 01/01/2027 — questa stima quindi sbaglia per eccesso su 3.7 e
+    // esatta su 3.5, che è il comportamento voluto: mai preventivare meno del vero.
+    gemini: { per1kUsd: 0.0015, note: 'Gemini 3.5 Flash ($1.50/1M input) · verificato 23/08/2026 · 3.7 Flash costa metà fino al 31/12/2026' },
+    // ⏰ Claude — VERIFICATO IL 23/08/2026. Il default del codice è claude-sonnet-4-6,
+    // che costa $3/1M input: la cifra storica di Claude 3.5 Sonnet coincide, quindi il
+    // numero era giusto per il motivo sbagliato. Ora è giusto e verificato.
+    // Nota: la variante premium (claude-opus-5) costa $5/1M, ~1.7× questa stima; il
+    // catalogo prezzi ha una sola chiave per provider, quindi chi sceglie Opus paga più
+    // del preventivo. È l'unico caso in cui questa tabella sbaglia per difetto.
+    claude: { per1kUsd: 0.003, note: 'Claude Sonnet 4.6 ($3/1M input), default del codice · verificato 23/08/2026 · Opus 5 costa $5/1M' },
     // ⏰ DeepSeek — VERIFICATO IL 16/08/2026 con ricerca (api-docs.deepseek.com non
     // rispondeva; cifre confermate da due ricerche indipendenti). Dalle 16:00 UTC
     // del 16/08/2026 la famiglia V4 ha tariffe a fasce:
@@ -99,6 +111,7 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     ],
     gemini: [
       { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', recommended: true },
+      { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash' },
       { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
