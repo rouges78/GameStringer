@@ -3312,7 +3312,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "Godot PCK Extractor".to_string(),
         description: "Estrae e modifica file .pck di Godot per traduzione".to_string(),
         reliability: if is_godot { 85 } else { 0 },
-        route: "/godot-patcher".to_string(),
+        route: "/godot-translator".to_string(),
         available: is_godot,
         reason: if is_godot { "Gioco Godot rilevato - estrazione PCK disponibile".to_string() } 
                 else { "Solo per giochi Godot".to_string() },
@@ -3395,7 +3395,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "Kirikiri/KAG Translator".to_string(),
         description: "Estrae script .ks e file .xp3 per visual novel Kirikiri".to_string(),
         reliability: if is_kirikiri { 80 } else { 0 },
-        route: "/kirikiri-patcher".to_string(),
+        route: "/injector".to_string(),
         available: is_kirikiri,
         reason: if is_kirikiri { "Kirikiri/KAG rilevato - estrazione XP3 disponibile".to_string() }
                 else { "Solo per Kirikiri/KAG".to_string() },
@@ -3409,7 +3409,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "NScripter Translator".to_string(),
         description: "Decompila e traduce script NScripter/ONScripter".to_string(),
         reliability: if is_nscripter { 78 } else { 0 },
-        route: "/nscripter-patcher".to_string(),
+        route: "/injector".to_string(),
         available: is_nscripter,
         reason: if is_nscripter { "NScripter rilevato".to_string() }
                 else { "Solo per NScripter/ONScripter".to_string() },
@@ -3423,7 +3423,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "GameMaker Translator".to_string(),
         description: "Estrae stringhe da data.win di GameMaker Studio".to_string(),
         reliability: if is_gamemaker { 75 } else { 0 },
-        route: "/gamemaker-patcher".to_string(),
+        route: "/translation-wizard".to_string(),
         available: is_gamemaker,
         reason: if is_gamemaker { "GameMaker Studio rilevato".to_string() }
                 else { "Solo per GameMaker Studio".to_string() },
@@ -3436,7 +3436,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         name: "Construct Translator".to_string(),
         description: "Estrae stringhe da progetti Construct 2/3".to_string(),
         reliability: if is_construct { 70 } else { 0 },
-        route: "/construct-patcher".to_string(),
+        route: "/injector".to_string(),
         available: is_construct,
         reason: if is_construct { "Construct rilevato".to_string() }
                 else { "Solo per Construct 2/3".to_string() },
