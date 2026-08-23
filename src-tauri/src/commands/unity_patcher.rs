@@ -1402,14 +1402,11 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         alternative_tools.push(AlternativeTool {
             name: "Translator++".to_string(),
             url: "https://dreamsavior.net/translator-plusplus/".to_string(),
-            description: "Traduzione per RPG Maker XP/VX/Ace".to_string(),
-            compatible: !rpg_info.can_translate_directly,
-        });
-        alternative_tools.push(AlternativeTool {
-            name: "MTool".to_string(),
-            url: "https://amanatsu.booth.pm/items/1526696".to_string(),
-            description: "Traduzione per RPG Maker MV/MZ (JSON)".to_string(),
-            compatible: rpg_info.can_translate_directly,
+            description: "Traduzione per RPG Maker XP/VX/Ace e MV/MZ".to_string(),
+            // Translator++ copre XP, VX, VX Ace, MV e MZ: sempre compatibile.
+            // 23/08/2026: erano due voci, la seconda era MTool su amanatsu.booth.pm
+            // che dava 404. Fuse in una, perche' un solo tool le copre entrambe.
+            compatible: true,
         });
         
         return Ok(GameEngineCheck {
