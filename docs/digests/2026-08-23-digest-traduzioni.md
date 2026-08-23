@@ -1,14 +1,15 @@
 # Digest Traduzioni Videogiochi — 23 agosto 2026
 
-> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi quattro difetti che nessun digest aveva visto:
+> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi **sei** difetti che nessun digest aveva visto:
 >
 > 1. il sito rimetteva in circolo i prezzi vecchi su **tutte** le installazioni
 > 2. quattro lingue del changelog v1.16.0 non erano **mai** state tradotte
 > 3. il download di IPA dava **404 per un trattino**, e con esso tutto il percorso Unity 5.0-5.5
 > 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola
-> 5. **nove rotte interne portavano a pagine che non esistono** — la prima trovata per caso, le altre otto cercandole
+> 5. **nove rotte interne** portavano a pagine che non esistono — la prima trovata per caso, le altre otto cercandole
+> 6. **quattro link esterni su 318** erano rotti, fra cui il download di UABEA (primario *e* fallback) e il nostro stesso dominio, scritto `.app` invece di `.ai`
 >
-> I difetti 1, 3, 4 e 5 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
+> Tutti tranne il secondo hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
 >
 > E si somigliano anche nel modo in cui sono venuti fuori: **controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome. Un controllo sulle versioni li avrebbe dichiarati tutti a posto.
 >
@@ -158,11 +159,36 @@ Destinazioni verificate, non indovinate: `/injector` monta `UniversalInjector` c
 
 Vale come metodo, non solo come fix: **oggi tre difetti su quattro sono stati trovati controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome.
 
+### 🌐 I link esterni: 318 URL, quattro rotti
+
+Estesa la stessa `HEAD` a tutti i link esterni del frontend e del Rust, non solo a quelli di `unity_patcher.rs`.
+
+| Link | Problema | Corretto in |
+|---|---|---|
+| `UABEAvalonia-windows-x64.zip` | UABEA ha rinominato gli asset — **404** | `uabea-windows.zip` |
+| `UABEAvalonia.zip` (fallback) | stesso — **404** | pinnato su `v8/uabea-windows.zip` |
+| `github.com/GameStringer` | manca l'owner — **404** | `github.com/rouges78/GameStringer` |
+| `gamestringer.app` (×3) | il dominio non risolve | `gamestringer.ai` |
+
+**UABEA è il bug IPA una cartella più in là:** primario *e* fallback entrambi a 404, quindi il download del tool falliva sempre. Il primario ora segue `/latest/`, il fallback è pinnato su `v8` — un prossimo rename lascia una via viva invece di due morte.
+
+Due dettagli che rendono questi due peggiori di quanto sembrino:
+
+- `github.com/GameStringer` **finisce nell'intestazione di ogni `.po` generato**, quindi il link rotto viaggia dentro il file consegnato all'utente.
+- Due delle tre occorrenze di `gamestringer.app` sono l'`HTTP-Referer` mandato a **OpenRouter**, che lo usa per l'attribuzione: il traffico dell'app veniva accreditato a un dominio inesistente.
+
+**La maggior parte dei "fallimenti" non lo era**, e vale la pena scriverlo o la prossima passata li reinvestiga tutti:
+
+- **403** da NexusMods, itch.io, Epic, IGN, ko-fi, howlongtobeat → bot protection, non link morti
+- URL che finiscono in `$`, `?id=`, `key=`, `domain=` → prefissi catturati a metà dal regex, si compongono a runtime
+- `libretranslate.com` dà **405** perché accetta solo POST; `translate.googleapis.com` dà **429** perché è rate-limited. Funzionano entrambi.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
-- **Le rotte sono state passate al setaccio** (vedi sopra): restano fuori dal gate solo gli URL esterni. Nessuno ha verificato che i link `https://` sparsi nelle pagine per-motore puntino ancora a qualcosa — quelli di `unity_patcher.rs` sì, gli altri no.
+- **Due link esterni aspettano una decisione, non una riparazione:** `github.com/rgss-decryptor` è malformato (manca l'owner; `usagirei/RGSS-Decryptor` sembra l'intento) e `rpgmakertrans.bitbucket.io` è sparito. Sostituirli significa *scegliere* quale tool di terze parti consigliare — la stessa situazione di DRV3-Sharp.
+- **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più.
 - **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
@@ -194,6 +220,8 @@ Vale come metodo, non solo come fix: **oggi tre difetti su quattro sono stati tr
 | [#124](https://github.com/rouges78/GameStringer/pull/124) | Tolti DRV3-Sharp e unrpa, corretta una rotta a 404 |
 | [#125](https://github.com/rouges78/GameStringer/pull/125) | Digest aggiornato con i difetti sui tool |
 | [#126](https://github.com/rouges78/GameStringer/pull/126) | Otto rotte morte corrette, più il gate che le tiene vive |
+| [#127](https://github.com/rouges78/GameStringer/pull/127) | Digest aggiornato con la passata sulle rotte |
+| [#128](https://github.com/rouges78/GameStringer/pull/128) | Quattro link esterni rotti, su 318 controllati |
 
 ## 🚦 Gate aggiunti oggi
 
@@ -204,4 +232,4 @@ Due difetti su cinque non si ripeteranno in silenzio:
 | `__tests__/lib/route-integrity.test.ts` | una rotta interna che punta a una pagina inesistente |
 | bisezione dentro `translateArray` | perdere 88 voci di changelog perché una sola non si traduce |
 
-Restano **senza gate**: i prezzi del catalogo (nessun test può sapere quanto costa un modello domani) e gli URL di download hardcoded (una `HEAD` in CI sarebbe fattibile, ma dipenderebbe dalla rete).
+Restano **senza gate**: i prezzi del catalogo (nessun test può sapere quanto costa un modello domani) e gli URL esterni. Per questi ultimi una `HEAD` in CI sarebbe fattibile — oggi ne ha trovati quattro su 318 — ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti. Più realistico: rilanciare la passata a mano ogni tanto, come oggi.
