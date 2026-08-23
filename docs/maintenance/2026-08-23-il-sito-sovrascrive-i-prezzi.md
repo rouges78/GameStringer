@@ -89,11 +89,24 @@ Sotto ci sta però un disaccordo che il prezzo da solo non risolve:
 | il catalogo (`models.mistral`) | offre solo `mistral-large-latest` |
 | la tendina del Translator Pro (`translatorProPage.mistralLarge2`) | scrive «Mistral Large **2**» |
 
-Tre versioni diverse dello stesso provider in tre punti dell'app. Il prezzo ora
-è quello di Large 3, il più caro dei due modelli realmente in gioco, per la
-stessa ragione della fascia di picco DeepSeek. Restano da riconciliare il
-modello che il codice chiama e l'etichetta della tendina, che è i18n su 12
-lingue e non è una correzione di prezzo.
+Tre versioni diverse dello stesso provider in tre punti dell'app.
+
+**Risolto lo stesso giorno.** La verità scelta è ciò che il codice chiama
+davvero: `mistral-small-latest`, Mistral Small 4. Catalogo e tendina sono stati
+allineati a quello, e il prezzo è sceso da `0.0005` (Large 3) a **`0.00015`**,
+che è quello vero di Small 4.
+
+Notare il cambio di regola: finché il catalogo offriva Large e il codice
+chiamava Small, il prezzo teneva il margine prudenziale della fascia di picco
+DeepSeek, perché non si sapeva quale dei due sarebbe girato. Allineati i tre
+punti, l'ambiguità sparisce e con essa il margine: **la stima ora è esatta, non
+prudente.** Il margine serve quando non sai cosa gira, non come abitudine.
+
+La chiave i18n si chiamava `translatorProPage.mistralLarge2`. Lasciarla con
+dentro «Mistral Small 4» avrebbe ricreato la stessa deriva nome/contenuto che
+questo documento descrive, quindi è stata rinominata in `mistralSmall4` in tutte
+e 12 le lingue — dove il valore era identico ovunque, perché è un nome di
+prodotto e non prosa da tradurre.
 
 ### La chiave `gpt5` non è GPT-5
 

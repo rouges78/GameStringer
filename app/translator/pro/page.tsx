@@ -1692,7 +1692,7 @@ export default function TranslatorProPage() {
                       <SelectItem value="mistral">
                         <div className="flex items-center gap-2">
                           <Wind className="h-4 w-4 text-muted-foreground" />
-                          <span>{t('translatorProPage.mistralLarge2')}</span>
+                          <span>{t('translatorProPage.mistralSmall4')}</span>
                           <Badge variant="outline" className="text-micro ml-1 text-muted-foreground">EU</Badge>
                         </div>
                       </SelectItem>
