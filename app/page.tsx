@@ -485,7 +485,13 @@ export default function Dashboard() {
               <Globe className="h-3.5 w-3.5 text-[#8f98a0] group-hover:text-[#67c1f5]" />
               <span className="text-[11px] font-medium text-[#8f98a0] group-hover:text-[#c6d4df]">Community</span>
             </Link>
-            <Link href="/editor" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/40 border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all hover:-translate-y-0.5">
+            {/* 23/08/2026: puntava a /editor pur essendo etichettato «Progetti».
+                Nella sidebar sono due voci distinte (Progetti → /projects,
+                Editor → /editor), quindi da qui si finiva sull'Editor cliccando
+                Progetti. Le altre quattro Link verso /editor nel repo sono
+                etichettate «editor» e restano come sono: questa era l'unica
+                che diceva una cosa e ne faceva un'altra. */}
+            <Link href="/projects" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/40 border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all hover:-translate-y-0.5">
               <Layers className="h-3.5 w-3.5 text-[#8f98a0] group-hover:text-[#67c1f5]" />
               <span className="text-[11px] font-medium text-[#8f98a0] group-hover:text-[#c6d4df]">{t('common.projects')}</span>
             </Link>
