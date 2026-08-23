@@ -270,7 +270,7 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
 - **Nessun gate copre link esterni e requisiti in prosa.** Si trovano solo rilanciando le passate a mano, come oggi: gli URL legherebbero la suite alla rete e ai 403 da bot protection, e la prosa non è verificabile meccanicamente.
-- **1601 chiavi i18n orfane restano da ripulire.** Ora sono contate e sotto gate — non possono aumentare — ma toglierle è un lavoro a parte, e va fatto guardandole una per una: alcune saranno da **ricollegare** invece che da cancellare, e distinguere le due cose non è meccanico.
+- **Il rilevatore di chiavi orfane potrebbe avere un quarto buco.** Ne aveva tre noti e il terzo è emerso solo rompendo il build (vedi sotto). Ora sbaglia per eccesso di proposito, quindi qualche chiave morta sopravvive: è il prezzo scelto perché l'errore opposto si vede a schermo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
@@ -314,6 +314,8 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 | [#137](https://github.com/rouges78/GameStringer/pull/137) | 744 stringhe i18n che nessuno poteva leggere |
 | [#138](https://github.com/rouges78/GameStringer/pull/138) | Digest: dove si nascondeva la prosa stantia |
 | [#139](https://github.com/rouges78/GameStringer/pull/139) | Gate sulle chiavi i18n orfane |
+| [#140](https://github.com/rouges78/GameStringer/pull/140) | Digest: il gate orfane e cosa hanno in comune i tre |
+| [#141](https://github.com/rouges78/GameStringer/pull/141) | 905 chiavi rimosse, dopo che il primo tentativo aveva tolto quelle sbagliate |
 
 ## 🚦 Gate aggiunti oggi
 
@@ -335,15 +337,34 @@ Restano **senza gate** tre cose, e ognuna per un motivo diverso:
 | URL esterni | una `HEAD` in CI è fattibile (oggi ha trovato 4 difetti su 318) ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti |
 | prosa e requisiti | «questa frase descrive ancora la realtà?» non è una domanda meccanica |
 
-Le **chiavi i18n orfane** erano l'unica delle quattro davvero gatabile, e ora lo sono: `__tests__/lib/i18n-orphan-keys.test.ts`, baseline **1601**, il numero può solo scendere.
+Le **chiavi i18n orfane** erano l'unica delle quattro davvero gatabile, e ora lo sono: `__tests__/lib/i18n-orphan-keys.test.ts`, baseline **zero**. Non una soglia decrescente: una regola. Una chiave che nessuno legge non entra.
 
-Il rilevatore conta una chiave come usata in due modi, perché uno solo non basta:
+Il rilevatore conta una chiave come usata in **tre** modi, e il terzo è costato caro:
 
 1. **compare letterale** da qualche parte nel sorgente — non solo dentro `t()`. Le chiavi ci arrivano anche via variabile: `tools-registry` mette `nav.contextHarvester` in un campo `nameKey`, e il layout lo passa a `t()` più tardi.
-2. **inizia per un prefisso costruito a runtime.** `main-layout` compone la chiave del changelog interpolando versione e indice: da sola, quella riga copre **551 chiavi** che nessuna ricerca letterale troverebbe mai. I prefissi devono contenere un punto, o singole lettere prese da template qualsiasi marcherebbero come usata mezza tabella.
-
-La baseline non è zero di proposito: **un gate che fallisce il primo giorno viene cancellato, non rispettato.** E un primo test sorveglia il rilevatore stesso — se smettesse di riconoscere le chiavi vive, la baseline misurerebbe un bug invece del codice.
+2. **inizia per un prefisso costruito a runtime.** `main-layout` compone la chiave del changelog interpolando versione e indice: da sola, quella riga copre **551 chiavi** che nessuna ricerca letterale troverebbe mai.
+3. **il suo namespace è raggiunto come oggetto.** Vedi sotto: è la regola che mancava.
 
 Per il resto la risposta realistica è rilanciare le passate a mano ogni tanto, come oggi.
+
+### 💥 Il gate che ho scritto misurava male, e l'ho scoperto rompendo il build
+
+La prima versione del rilevatore contava **1601** orfane. Cancellandole tutte, il **typecheck si è rotto in 31 punti** su tre pagine. Il motivo:
+
+```ts
+const dash = translations[language]?.dashboard;
+...
+<span>{dash.noRecentActivity}</span>
+```
+
+La chiave **non compare mai come stringa**. Nessuna ricerca letterale la trova, e **nemmeno il controllo inverso del progetto** (`i18n-chiavi-risolvono.js`, che verifica che ogni `t()` risolva) può vederla: non c'è nessun `t()` da controllare. L'unico a saperlo era `tsc`.
+
+Annullato, aggiunta la regola 3, e il conteggio vero è risultato **905** — non 1601. Il gate stava misurando male dal momento in cui l'ho scritto.
+
+**La regola 3 marca vivo l'intero namespace**, quindi qualche chiave davvero morta sopravvive. È il verso giusto in cui sbagliare: una falsa «usata» costa una riga inutile in un JSON, una falsa «orfana» fa vedere all'utente il **nome grezzo della chiave** al posto di una frase.
+
+Rimosse **905 chiavi × 12 lingue = 10.860 stringhe**. E il test di sanità ora asserisce che le tre chiavi che avevano rotto il build restino riconosciute: se la regola 3 si perdesse di nuovo, **il test fallisce prima che qualcosa venga cancellato, non dopo**.
+
+**La lezione, che vale oltre l'i18n:** avevo scritto in questo stesso digest che la pulizia «non può essere meccanica». Avevo ragione per il motivo sbagliato — non per le chiavi da ricollegare, ma perché **lo strumento di misura era incompleto e nessuno dei controlli esistenti poteva dirlo**. È la terza volta oggi che un controllo certifica ciò che non riesce a vedere: il gate i18n sugli indici disallineati, quello sulle chiavi orfane, e ora il mio.
 
 **Cosa è cambiato oggi nella copertura, in una riga:** stamattina i gate verificavano che le cose *esistessero*; ora tre verificano che **servano a qualcosa** — le rotte puntano a pagine vere, le chiavi i18n hanno un lettore, e una traduzione che fallisce costa una voce invece di ottantotto.
