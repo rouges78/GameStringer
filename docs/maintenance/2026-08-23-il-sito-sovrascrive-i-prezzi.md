@@ -51,8 +51,41 @@ Fonti ufficiali, non stime:
 - `api-docs.deepseek.com` — `deepseek-v4-flash` $0.22 fuori picco / $0.44 picco
   per 1M input cache-miss. Picco: 01:00–04:00 e 06:00–10:00 UTC, lun–ven
 - Anthropic — `claude-sonnet-4-6` $3/1M, `claude-opus-5` $5/1M
+- `developers.openai.com/api/docs/pricing` — `gpt-4o-mini` $0.15/1M, `gpt-4o` $2.50/1M,
+  entrambi ancora listati. Esistono modelli più recenti (gpt-5.6-sol $4/1M,
+  gpt-5.6-luna $0.20/1M, gpt-5-nano $0.05/1M) che questo codice non chiama
+- `mistral.ai/pricing/api` — Mistral Large 3 $0.5/1M, Mistral Medium 3.5 $1.5/1M,
+  Mistral Small 4 $0.15/1M
 
-Restano **non riverificati dal 15/07/2026**: `openai`, `gpt5`, `mistral`.
+Nessun prezzo del catalogo resta ora non verificato.
+
+### Mistral: il terzo errore, e tre verità in disaccordo
+
+Il prezzo `mistral` era `0.002` ($2/1M) e non corrispondeva più a niente:
+Mistral Large 3 costa **$0.5/1M**, un quarto. Era il sovrapprezzo più grosso
+del catalogo — ma nella direzione innocua, perché preventivava troppo.
+
+Sotto ci sta però un disaccordo che il prezzo da solo non risolve:
+
+| Dove | Cosa dice |
+|---|---|
+| il codice (`ai-translate-direct.ts:513`, `reflection-translator.ts:388`) | chiama `mistral-small-latest` — Mistral Small 4, $0.15/1M |
+| il catalogo (`models.mistral`) | offre solo `mistral-large-latest` |
+| la tendina del Translator Pro (`translatorProPage.mistralLarge2`) | scrive «Mistral Large **2**» |
+
+Tre versioni diverse dello stesso provider in tre punti dell'app. Il prezzo ora
+è quello di Large 3, il più caro dei due modelli realmente in gioco, per la
+stessa ragione della fascia di picco DeepSeek. Restano da riconciliare il
+modello che il codice chiama e l'etichetta della tendina, che è i18n su 12
+lingue e non è una correzione di prezzo.
+
+### La chiave `gpt5` non è GPT-5
+
+Si chiama così per ragioni storiche ma il modello è **GPT-4o**: lo dicono il
+costo-calcolatore (`modelLabelById('openai', 'gpt-4o')`) e la tendina del
+Translator Pro. Il prezzo `0.0025` era ed è giusto. Rinominare la chiave
+significherebbe toccare sette file di tipi e la config remota già distribuita:
+non vale il rischio, ma chi legge quel nome va avvertito.
 
 ## Il limite che resta
 
@@ -62,7 +95,15 @@ premium paga ~1,7× il preventivo. È l'unico punto in cui questa tabella sbagli
 per difetto — ovunque altro la regola è sbagliare per eccesso, perché una
 fattura più alta del preventivo è il difetto peggiore che possa fare.
 
-## Da fare
+## Stato
 
-`docs/sito/config/models.json` è corretto **nel repo** ma il sito va
-ridistribuito: finché non lo è, il file di luglio continua a essere servito.
+Sito ridistribuito il 23/08/2026 (PR #115, poi #117 per gli ultimi tre prezzi):
+`gamestringer.ai/config/models.json` serve il catalogo corretto, e i nove prezzi
+coincidono con `BUNDLED_MODEL_CONFIG`. Verificabile in qualsiasi momento con:
+
+```bash
+curl -s https://gamestringer.ai/config/models.json
+```
+
+Se un giorno quel file e `lib/remote-config.ts` divergono di nuovo, è il file
+del sito a vincere — e nessun test se ne accorgerà.
