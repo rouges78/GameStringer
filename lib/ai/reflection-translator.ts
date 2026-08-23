@@ -390,7 +390,7 @@ const REFLECTION_PROVIDERS: Record<string, ChatFn> = {
   together: chatOpenAICompatible('https://api.together.xyz/v1/chat/completions', 'meta-llama/Llama-3.3-70B-Instruct-Turbo'),
   fireworks: chatOpenAICompatible('https://api.fireworks.ai/inference/v1/chat/completions', 'accounts/fireworks/models/llama-v3p3-70b-instruct'),
   openrouter: chatOpenAICompatible('https://openrouter.ai/api/v1/chat/completions', 'meta-llama/llama-3.3-70b-instruct:free', {
-    'HTTP-Referer': 'https://gamestringer.app',
+    'HTTP-Referer': 'https://gamestringer.ai',
     'X-Title': 'GameStringer',
   }),
   cerebras: chatOpenAICompatible('https://api.cerebras.ai/v1/chat/completions', 'llama-3.3-70b'),
