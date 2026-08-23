@@ -106,15 +106,17 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     // questo numero. Nota per chi lo legge: la fascia di picco 06:00-10:00 UTC è
     // 08:00-12:00 in Italia, cioè la mattina — tradurre il pomeriggio costa metà.
     deepseek: { per1kUsd: 0.00044, note: 'DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss, dal 16/08/2026 16:00 UTC) · fuori picco costa la metà' },
-    // ⏰ Mistral — VERIFICATO IL 23/08/2026 su mistral.ai/pricing/api. Il vecchio 0.002
-    // ($2/1M) non corrisponde più a nulla: Mistral Large 3 (mistral-large-latest) costa
-    // $0.5/1M input, cioè un quarto. Era il peggior sovrapprezzo del catalogo.
-    // C'è però un secondo problema, che il prezzo da solo non risolve: il codice chiama
-    // mistral-small-latest (Mistral Small 4, $0.15/1M), mentre il catalogo offre solo
-    // mistral-large-latest e la tendina lo etichetta 'Mistral Large 2'. Tre verità.
-    // Qui sta il prezzo di Large, il più caro dei due modelli in gioco, per la stessa
-    // ragione della fascia di picco DeepSeek: la stima deve sbagliare per eccesso.
-    mistral: { per1kUsd: 0.0005, note: 'Mistral Large 3 ($0.5/1M input) · verificato 23/08/2026 · il codice chiama Mistral Small 4, che costa $0.15/1M' },
+    // ⏰ Mistral — VERIFICATO IL 23/08/2026 su mistral.ai/pricing/api.
+    // Il 23/08 questo provider diceva tre cose diverse in tre punti: il codice
+    // chiamava mistral-small-latest, il catalogo offriva solo mistral-large-latest
+    // e la tendina del Translator Pro scriveva 'Mistral Large 2' (una versione che
+    // nel frattempo non esisteva più). Il prezzo, 0.002, era il vecchio $2/1M e non
+    // corrispondeva a nessuno dei tre.
+    // Deciso: la verità è ciò che il codice chiama davvero, cioè Mistral Small 4.
+    // Catalogo e tendina sono stati allineati a quello, e il prezzo è il suo:
+    // $0.15/1M input. Non c'è più un modello più caro in gioco, quindi qui non
+    // serve il margine prudenziale che porta la voce deepseek — la stima è esatta.
+    mistral: { per1kUsd: 0.00015, note: 'Mistral Small 4 ($0.15/1M input), il modello che il codice chiama · verificato 23/08/2026' },
     openrouter: { per1kUsd: 0.001, note: 'Varia per modello' },
     deepl: { per1kUsd: 0.02, note: 'DeepL Pro' },
     google: { per1kUsd: 0.00002, note: 'Google Translate' },
@@ -136,7 +138,7 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
       { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
-    mistral: [{ id: 'mistral-large-latest', label: 'Mistral Large 3' }],
+    mistral: [{ id: 'mistral-small-latest', label: 'Mistral Small 4' }],
   },
   recommendations: {
     creative: 'claude',

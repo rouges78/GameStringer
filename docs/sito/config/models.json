@@ -8,7 +8,7 @@
     "gemini": { "per1kUsd": 0.0015, "note": "Gemini 3.7 Flash, il default del codice · VERIFICATO 23/08/2026 su ai.google.dev. Costa $0.75/1M fino al 31/12/2026 e $1.50/1M dal 01/01/2027: qui sta il prezzo pieno, cosi' la stima sbaglia per eccesso invece di dover rincorrere il rialzo a Capodanno." },
     "claude": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input), il default del codice · VERIFICATO 23/08/2026. Claude Opus 5 costa $5/1M: chi sceglie il premium spende ~1.7x questa stima." },
     "deepseek": { "per1kUsd": 0.00044, "note": "DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss) · RIVERIFICATO 23/08/2026 su api-docs.deepseek.com · fuori picco costa la meta'" },
-    "mistral": { "per1kUsd": 0.0005, "note": "Mistral Large 3 ($0.5/1M input) · VERIFICATO 23/08/2026 su mistral.ai/pricing/api. Il precedente $2/1M era 4x troppo alto. Il codice chiama Mistral Small 4 ($0.15/1M): qui sta il prezzo del piu caro dei due, perche la stima deve sbagliare per eccesso." },
+    "mistral": { "per1kUsd": 0.00015, "note": "Mistral Small 4 ($0.15/1M input), il modello che il codice chiama davvero · VERIFICATO 23/08/2026 su mistral.ai/pricing/api. Catalogo e tendina allineati al codice il 23/08: prima dicevano Large 3 e 'Large 2'." },
     "openrouter": { "per1kUsd": 0.001, "note": "Varia per modello" },
     "deepl": { "per1kUsd": 0.02, "note": "DeepL Pro" },
     "google": { "per1kUsd": 0.00002, "note": "Google Translate" }
@@ -33,7 +33,7 @@
       { "id": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "recommended": true }
     ],
     "mistral": [
-      { "id": "mistral-large-latest", "label": "Mistral Large 3" }
+      { "id": "mistral-small-latest", "label": "Mistral Small 4" }
     ]
   },
   "recommendations": {

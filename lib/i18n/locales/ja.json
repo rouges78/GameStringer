@@ -1991,7 +1991,7 @@
     "gpt4oMini": "GPT-4o Mini",
     "claude35Sonnet": "Claude 3.5 Sonnet",
     "gpt4o": "GPT-4o",
-    "mistralLarge2": "Mistral Large 2",
+    "mistralSmall4": "Mistral Small 4",
     "deeplPro": "DeepL Pro",
     "googleTranslate": "Google Translate",
     "apiKey": "APIキー",
