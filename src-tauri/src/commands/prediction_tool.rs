@@ -3699,7 +3699,7 @@ fn get_tool_database() -> Vec<Tool> {
             description: "Tool suite per traduzione giochi Ren'Py".to_string(),
         },
         Tool {
-            name: "RPG Maker Trans".to_string(),
+            name: "Translator++".to_string(),
             category: ToolCategory::TextExtraction,
             supported_engines: vec!["RPG Maker".to_string()],
             supported_formats: vec!["rvdata2".to_string(), "json".to_string(), "ini".to_string()],

@@ -405,12 +405,6 @@ fn detect_rpgmaker_mv_mz(game_dir: &Path) -> Option<EngineDetectionResult> {
         can_inject: true,
         injection_method: "Modifica diretta JSON".to_string(),
         tools_required: vec![
-            InjectionTool {
-                name: "RPG Maker Trans".to_string(),
-                url: "https://rpgmakertrans.bitbucket.io/".to_string(),
-                description: "Tool ufficiale per traduzione RPG Maker".to_string(),
-                auto_install: false,
-            },
         ],
         translatable_files: translatable,
         notes: vec![
@@ -451,17 +445,11 @@ fn detect_rpgmaker_vx(game_dir: &Path) -> Option<EngineDetectionResult> {
         engine_name: format!("RPG Maker {}", version),
         version: Some(version.to_string()),
         can_inject: true,
-        injection_method: "RPGMaker Trans / RGSS Decryptor".to_string(),
+        injection_method: "RGSS Decryptor per l'archivio, poi traduzione in-app".to_string(),
         tools_required: vec![
             InjectionTool {
-                name: "RPG Maker Trans".to_string(),
-                url: "https://rpgmakertrans.bitbucket.io/".to_string(),
-                description: "Estrae e inietta traduzioni".to_string(),
-                auto_install: false,
-            },
-            InjectionTool {
                 name: "RGSS Decryptor".to_string(),
-                url: "https://github.com/rgss-decryptor".to_string(),
+                url: "https://github.com/usagirei/RGSS-Decryptor".to_string(),
                 description: "Decripta archivi RGSS".to_string(),
                 auto_install: false,
             },
@@ -475,7 +463,7 @@ fn detect_rpgmaker_vx(game_dir: &Path) -> Option<EngineDetectionResult> {
         ],
         notes: vec![
             "Gli archivi RGSS sono criptati".to_string(),
-            "Usa RPG Maker Trans per estrazione automatica".to_string(),
+            "Decriptato l'archivio, la traduzione avviene dentro l'app".to_string(),
         ],
     })
 }
@@ -797,7 +785,7 @@ define config.language = "italian"
         }
         "RPGMakerVXAce" | "RPGMakerXP" => {
             steps.push("Gli archivi RGSS (.rgss3a/.rgss2a/.rxdata) sono criptati".to_string());
-            steps.push("Usa RPG Maker Trans per estrarre e reiniettare le traduzioni".to_string());
+            steps.push("Decripta l'archivio RGSS, poi traduci dentro l'app".to_string());
         }
         "GameMaker" => {
             steps.push("I testi sono dentro data.win (formato GameMaker)".to_string());
@@ -1127,7 +1115,7 @@ mod tests {
         for (engine, needle) in [
             ("Kirikiri", "GARbro"),
             ("Wolf", "Wolf Trans"),
-            ("RPGMakerVXAce", "RPG Maker Trans"),
+            ("RPGMakerVXAce", "RGSS Decryptor"),
             ("NScripter", "nscript.dat"),
         ] {
             let dir = setup(&[("placeholder", b"x")]);
