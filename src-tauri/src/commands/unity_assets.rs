@@ -6,11 +6,17 @@ use reqwest::Client;
 use std::io::Cursor;
 use zip::ZipArchive;
 
-// GitHub reindirizza automaticamente /latest/download/ all'ultima release disponibile
+// GitHub reindirizza /latest/download/ all'ultima release, ma il NOME DEL FILE
+// deve esistere lo stesso. 23/08/2026: erano UABEAvalonia-windows-x64.zip e
+// UABEAvalonia.zip, e UABEA li ha rinominati in uabea-windows.zip. Entrambi
+// davano 404: il download del tool falliva sempre. Trovato con una HEAD su
+// tutti i link esterni, non guardando i numeri di versione.
+// Il primario segue /latest/; il fallback e pinnato su v8, cosi se latest
+// rinomina di nuovo resta una via che funziona invece di due rotte.
 const UABEA_DOWNLOAD_URL: &str =
-    "https://github.com/nesrak1/UABEA/releases/latest/download/UABEAvalonia-windows-x64.zip";
+    "https://github.com/nesrak1/UABEA/releases/latest/download/uabea-windows.zip";
 const UABEA_FALLBACK_URL: &str =
-    "https://github.com/nesrak1/UABEA/releases/latest/download/UABEAvalonia.zip";
+    "https://github.com/nesrak1/UABEA/releases/download/v8/uabea-windows.zip";
 
 fn get_uabea_dir() -> PathBuf {
     dirs::data_dir()

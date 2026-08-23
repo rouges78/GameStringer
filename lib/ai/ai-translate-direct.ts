@@ -583,7 +583,7 @@ async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): 
     {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://gamestringer.app',
+      'HTTP-Referer': 'https://gamestringer.ai',
       'X-Title': 'GameStringer',
     },
     JSON.stringify({

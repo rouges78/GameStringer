@@ -36,7 +36,7 @@ import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 
 // Helper: ritorna un'immagine di fallback (favicon ad alta risoluzione) dato un URL
 function getFaviconFallback(url: string): string {
-  let host = 'gamestringer.app';
+  let host = 'gamestringer.ai';
   try {
     host = new URL(url).hostname;
   } catch {
