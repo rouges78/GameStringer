@@ -234,7 +234,7 @@ Verificati vivi e lasciati stare: UnrealPak, Translator++, WW2Ogg (`hcs64/ww2ogg
 
 I link a gdsdecomp restano: quel tool **decompila** progetti Godot, cosa che l'app non fa. È un extra vero, non il percorso — toglierlo sarebbe stato l'errore al contrario.
 
-### 🔁 La firma che si è ripetuta cinque volte
+### 🔁 La firma che si è ripetuta cinque volte, e dove si era nascosta
 
 Vale come cosa da cercare di proposito la prossima volta:
 
@@ -250,13 +250,27 @@ Trovata in cinque posti diversi, tutti nati dopo la v1.17.0 e nessuno segnalato 
 
 Il codice avanza a ogni release; le frasi che lo descrivono no, e niente le controlla.
 
+### 🕳️ Dove si nascondeva la prosa stantia: 744 stringhe che nessuno poteva leggere
+
+Cercata la firma anche nella prosa viva delle pagine per-motore. **È pulita** — e il motivo è più interessante del risultato.
+
+Le uniche quattro stringhe rimaste in tutto il progetto che rimandavano ancora a **gdsdecomp**, al **link UnRPA** e a **RPG Maker Trans** stavano tutte dentro `translationRecommendationComp`: **61 chiavi i18n che nessuna riga di codice referenzia**, più una orfana in `common`. Escluso anche l'accesso dinamico: gli unici template literal vicino a `t()` compongono messaggi di stato, non percorsi di chiave.
+
+**62 chiavi × 12 lingue = 744 stringhe morte.** Rimosse.
+
+Quindi la prosa viva non risultava pulita perché qualcuno avesse aggiornato la copia sbagliata, ma perché **la copia sbagliata era irraggiungibile**. Lasciata lì era una trappola travestita da lavoro finito: chi avesse ricollegato quel namespace avrebbe spedito un link morto e un tool scomparso, con l'aria di essere curati *perché tradotti in dodici lingue*.
+
+Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Translator++ per il `Game.dat` cifrato di Wolf RPG serve davvero, UABEA lo scarica l'app, e l'avviso Godot sui `.translation` binari (RSRC) corrisponde al codice — `godot_patcher.rs` non sa ancora leggerli e lo dichiara.
+
+**Il gate i18n non poteva vederle:** verifica che una chiave *esista in tutte le lingue*, non che *qualcuno la usi*. Una chiave orfana è perfettamente in regola per quel controllo.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
-- **Le pagine per-motore non sono state lette una per una.** I loro link esterni sono passati nella scansione dei 318 URL, ma il testo che li accompagna no: se una pagina spiega ancora come fare a mano un lavoro che l'app ha imparato a fare, non se ne accorge nessuno. È la stessa firma trovata cinque volte oggi.
-- **Il gate delle rotte non copre i link esterni né i requisiti in prosa.** Quelli si trovano solo rilanciando le passate a mano.
+- **Nessun gate copre link esterni, requisiti in prosa e chiavi i18n orfane.** Si trovano solo rilanciando le passate a mano, come oggi. Le tre sono fattibili in CI ma nessuna gratis: gli URL legherebbero la suite alla rete e ai 403 da bot protection, la prosa non è verificabile meccanicamente, e le chiavi orfane richiederebbero di risolvere anche gli accessi dinamici a `t()`.
+- **Il conteggio delle chiavi i18n non è mai stato controllato nel suo insieme.** Oggi ne sono state trovate 62 orfane per caso, cercando altro. Nessuno sa quante altre ce ne siano: il gate verifica che le chiavi *esistano in tutte le lingue*, non che *qualcuno le usi*.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
@@ -296,6 +310,8 @@ Il codice avanza a ogni release; le frasi che lo descrivono no, e niente le cont
 | [#133](https://github.com/rouges78/GameStringer/pull/133) | Due tool inesistenti tolti dal catalogo |
 | [#134](https://github.com/rouges78/GameStringer/pull/134) | Digest aggiornato con le voci fantasma |
 | [#135](https://github.com/rouges78/GameStringer/pull/135) | Python e gdsdecomp non erano mai serviti |
+| [#136](https://github.com/rouges78/GameStringer/pull/136) | Digest: chiusa l'ultima incognita, nominata la firma |
+| [#137](https://github.com/rouges78/GameStringer/pull/137) | 744 stringhe i18n che nessuno poteva leggere |
 
 ## 🚦 Gate aggiunti oggi
 
@@ -306,4 +322,14 @@ Due difetti su cinque non si ripeteranno in silenzio:
 | `__tests__/lib/route-integrity.test.ts` | una rotta interna che punta a una pagina inesistente |
 | bisezione dentro `translateArray` | perdere 88 voci di changelog perché una sola non si traduce |
 
-Restano **senza gate**: i prezzi del catalogo (nessun test può sapere quanto costa un modello domani) e gli URL esterni. Per questi ultimi una `HEAD` in CI sarebbe fattibile — oggi ne ha trovati quattro su 318 — ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti. Più realistico: rilanciare la passata a mano ogni tanto, come oggi.
+Restano **senza gate** tre cose, e ognuna per un motivo diverso:
+
+| Cosa | Perché non è gatabile |
+|---|---|
+| prezzi del catalogo | nessun test può sapere quanto costerà un modello domani |
+| URL esterni | una `HEAD` in CI è fattibile (oggi ha trovato 4 difetti su 318) ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti |
+| prosa e requisiti | «questa frase descrive ancora la realtà?» non è una domanda meccanica |
+
+Le **chiavi i18n orfane** sarebbero invece gatabili: basterebbe cercare ogni chiave nel codice. Oggi ne sono uscite 62 trovate per caso; il gate esistente non poteva vederle perché verifica che una chiave *esista in tutte le lingue*, non che *qualcuno la usi*.
+
+Per tutto il resto la risposta realistica è rilanciare le passate a mano ogni tanto, come oggi.
