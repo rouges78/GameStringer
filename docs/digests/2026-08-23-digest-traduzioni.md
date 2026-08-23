@@ -318,7 +318,16 @@ Testate con **gli stessi header del fetcher Rust** (`rss_proxy.rs`: User-Agent C
 
 **Perché «200» non è un test valido**, e vale per chiunque rifaccia questa passata: NexusMods e GamesTranslator **rispondono 200 con una pagina HTML**, non con un feed. E cercare `<item>` non basta: gli **Atom** usano `<entry>`. Il criterio giusto è *XML valido **e** almeno una voce* — con quello, `tomshw_it` passa da «vuoto» a 20 voci.
 
-**Fonte nuova trovata e non aggiungibile:** [traduzionegiochi.it](https://traduzionegiochi.it/) — catalogo di patch amatoriali ITA gratuite, ~25 progetti con versione e data. **Non ha RSS** (`/feed`, `/feed/`, `/rss` danno 404), quindi resta una fonte da consultare a mano.
+### Fonti senza feed — verificate il 23/08, non agganciabili
+
+Scritte qui perché **nessuno le riverifichi**: sono state provate, non dimenticate.
+
+| Sito | Provati | Cosa manca |
+|---|---|---|
+| [traduzionegiochi.it](https://traduzionegiochi.it/) | `/feed` `/feed/` `/rss` → 404 | catalogo di patch amatoriali ITA gratuite, ~25 progetti con versione e data. Ottima fonte, ma solo a mano |
+| [gamestringer.ai](https://gamestringer.ai/) | `/feed` `/feed.xml` `/rss.xml` `/atom.xml` `/blog` → 404 | **il nostro sito.** Otto pagine HTML statiche, nessun blog: non c'è niente da cui generare un feed senza costruirlo |
+
+Sul nostro, in particolare: aggiungerlo come fonte richiederebbe **prima** generare un `feed.xml` (dal CHANGELOG o dalle release) e agganciarlo al deploy del sito. È lavoro, non configurazione — e finché non esiste, l'app non può mostrare le proprie novità nel pannello notizie.
 
 ## 🇮🇹 Traduzioni amatoriali ITA della settimana
 
