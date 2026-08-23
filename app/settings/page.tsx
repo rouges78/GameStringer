@@ -1498,7 +1498,7 @@ export default function SettingsPage() {
                       <Input id="fireworks-api-key" type={showApiKeys.fireworks ? "text" : "password"} value={settings.translation.fireworksApiKey} onChange={(e) => updateSetting('translation', 'fireworksApiKey', e.target.value)} placeholder="..." className="font-mono text-xs h-8" />
                       <Button variant="outline" size="icon" aria-label={t('common.mostraNascondi')} className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, fireworks: !prev.fireworks }))}>{showApiKeys.fireworks ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
-                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://fireworks.ai/account/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
+                    <p className="text-2xs text-muted-foreground">{t('settingsPage.freeTier')}<a href="https://app.fireworks.ai/settings/users/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.key')}</a></p>
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="openrouter-api-key" className="text-xs">OpenRouter</Label>

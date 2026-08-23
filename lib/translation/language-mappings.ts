@@ -169,7 +169,7 @@ export const API_KEY_URLS: Record<string, string> = {
   mistral: 'https://console.mistral.ai/api-keys',
   cohere: 'https://dashboard.cohere.com/api-keys',
   together: 'https://api.together.xyz/settings/api-keys',
-  fireworks: 'https://fireworks.ai/account/api-keys',
+  fireworks: 'https://app.fireworks.ai/settings/users/api-keys',
   openrouter: 'https://openrouter.ai/keys',
   cerebras: 'https://cloud.cerebras.ai/platform',
   deepl: 'https://www.deepl.com/pro-api',
