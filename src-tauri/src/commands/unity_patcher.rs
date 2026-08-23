@@ -1278,13 +1278,13 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         || game_path.to_lowercase().contains("danganronpa");
     
     if is_danganronpa {
-        alternative_tools.push(AlternativeTool {
-            name: "Danganronpa Tools".to_string(),
-            url: "https://github.com/jpmac26/DRV3-Sharp".to_string(),
-            description: "Estrae e modifica file Danganronpa".to_string(),
-            compatible: true,
-        });
-        
+        // 23/08/2026: qui si linkava jpmac26/DRV3-Sharp, che non ha NESSUNA
+        // release: chi ci cliccava non trovava niente da scaricare. Tolto.
+        // Il messaggio diceva «usa tool specifici», ed era diventato falso: dalla
+        // v1.17.0 Danganronpa ha un patcher dentro l'app (pagina dedicata, DR1
+        // tradotto end-to-end, WAD ricostruito in Rust). Ora ci manda lì.
+        // `can_patch` resta false di proposito: instrada il percorso Unity, che
+        // non è quello giusto per questo motore.
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
@@ -1292,7 +1292,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
             engine_name: "Spike Chunsoft Engine".to_string(),
             engine_version: None,
             can_patch: false,
-            message: "⚠ Spike Chunsoft Engine - usa tool specifici per Danganronpa".to_string(),
+            message: "✓ Spike Chunsoft Engine - usa il Danganronpa Patcher nel menu dell'app".to_string(),
             alternative_tools,
             has_bepinex: false,
             has_xunity: false,
@@ -1455,12 +1455,9 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
     
     // ========== REN'PY ==========
     if let Some(renpy_version) = detect_renpy_version(game_dir) {
-        alternative_tools.push(AlternativeTool {
-            name: "UnRPA".to_string(),
-            url: "https://github.com/Lattyware/unrpa".to_string(),
-            description: "Estrae file .rpa di Ren'Py".to_string(),
-            compatible: true,
-        });
+        // 23/08/2026: tolto il link a Lattyware/unrpa. Serviva a estrarre i .rpa
+        // a mano, ma dalla v1.17.0 l'app li legge da sola — Scarlet Hollow,
+        // 83.489 stringhe. Resta rpatool per chi vuole manipolare l'archivio.
         alternative_tools.push(AlternativeTool {
             name: "rpatool".to_string(),
             url: "https://github.com/shizmob/rpatool".to_string(),
@@ -3450,12 +3447,17 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
                          || engine_check.engine_name.to_lowercase().contains("danganronpa");
     all_tools.push(TranslationTool {
         id: "spike_chunsoft_patcher".to_string(),
-        name: "Danganronpa Tools".to_string(),
-        description: "Estrai file .pak con DRV3-Sharp, poi traduci i testi estratti".to_string(),
+        name: "Danganronpa Patcher".to_string(),
+        // 23/08/2026: diceva «estrai con DRV3-Sharp», un tool esterno senza
+        // nessuna release. Dalla v1.17.0 l'estrazione .pak/.wad e la ricostruzione
+        // vivono nell'app. E la rotta puntava a /danganronpa-tools, che NON
+        // esiste: la pagina è /danganronpa-patcher, come già dicono il menu,
+        // tools-registry e wizard-strategies. Chi ci cliccava finiva su un 404.
+        description: "Estrae .pak e .wad, traduce e ricostruisce l'archivio dentro l'app".to_string(),
         reliability: if is_spike_chunsoft { 75 } else { 0 },
-        route: "/danganronpa-tools".to_string(),
+        route: "/danganronpa-patcher".to_string(),
         available: is_spike_chunsoft,
-        reason: if is_spike_chunsoft { "🎮 Danganronpa/Spike Chunsoft rilevato - serve DRV3-Sharp".to_string() }
+        reason: if is_spike_chunsoft { "🎮 Danganronpa/Spike Chunsoft rilevato".to_string() }
                 else { "Solo per giochi Spike Chunsoft".to_string() },
     });
     

@@ -564,13 +564,10 @@ fn detect_renpy(game_dir: &Path) -> Option<EngineDetectionResult> {
         version: None,
         can_inject: true,
         injection_method: "Modifica diretta .rpy o estrazione .rpa".to_string(),
+        // 23/08/2026: tolto UnRPA (Lattyware/unrpa, fermo al 2019). Estraeva i
+        // .rpa a mano, ma dalla v1.17.0 li legge l'app — Scarlet Hollow, 83.489
+        // stringhe. Resta il Ren'Py SDK, che serve per ricompilare gli script.
         tools_required: vec![
-            InjectionTool {
-                name: "UnRPA".to_string(),
-                url: "https://github.com/Lattyware/unrpa".to_string(),
-                description: "Estrae archivi .rpa".to_string(),
-                auto_install: false,
-            },
             InjectionTool {
                 name: "Ren'Py SDK".to_string(),
                 url: "https://www.renpy.org/".to_string(),
@@ -581,7 +578,7 @@ fn detect_renpy(game_dir: &Path) -> Option<EngineDetectionResult> {
         translatable_files: translatable,
         notes: vec![
             "I file .rpy sono script Python modificabili".to_string(),
-            "I file .rpa sono archivi (usa unrpa per estrarre)".to_string(),
+            "I file .rpa sono archivi, estratti direttamente dall'app".to_string(),
             "I dialoghi sono nelle stringhe tra virgolette".to_string(),
         ],
     })
