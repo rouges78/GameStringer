@@ -174,10 +174,10 @@ async function translateWithGeminiVision(
     });
   }
 
-  // Vision OCR: default gemini-3.5-flash (multimodale), override via NEXT_PUBLIC_GEMINI_MODEL
+  // Vision OCR: default gemini-3.7-flash (multimodale), override via NEXT_PUBLIC_GEMINI_MODEL
   const visionModel =
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GEMINI_MODEL) ||
-    'gemini-3.5-flash';
+    'gemini-3.7-flash';
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${visionModel}:generateContent?key=${apiKey}`,
     {

@@ -80,12 +80,14 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     // al catalogo è una decisione di prodotto, non una correzione di prezzo.
     gpt5: { per1kUsd: 0.0025, note: 'GPT-4o ($2.50/1M input) · verificato 23/08/2026 · la chiave si chiama gpt5 per ragioni storiche' },
     // ⏰ Gemini — VERIFICATO IL 23/08/2026 su ai.google.dev/gemini-api/docs/pricing.
-    // Il default del codice è gemini-3.5-flash: $1.50/1M input. Il valore precedente
-    // (0.000125) era il prezzo di Gemini 2.0 Flash, rimasto qui dopo il passaggio a 3.5:
-    // 12× troppo basso. Gemini 3.7 Flash, uscito dopo, costa $0.75/1M fino al 31/12/2026
-    // e $1.50/1M dal 01/01/2027 — questa stima quindi sbaglia per eccesso su 3.7 e
-    // esatta su 3.5, che è il comportamento voluto: mai preventivare meno del vero.
-    gemini: { per1kUsd: 0.0015, note: 'Gemini 3.5 Flash ($1.50/1M input) · verificato 23/08/2026 · 3.7 Flash costa metà fino al 31/12/2026' },
+    // Il default del codice è gemini-3.7-flash, che costa $0.75/1M input fino al
+    // 31/12/2026 e $1.50/1M dal 01/01/2027. Qui resta $1.50/1M di proposito: è il
+    // prezzo che il modello avrà comunque fra pochi mesi, e fino ad allora la stima
+    // sbaglia per eccesso anziché per difetto. Abbassarla adesso significherebbe
+    // dover rincorrere il rialzo a Capodanno, con il rischio di non accorgersene.
+    // Il valore precedente (0.000125) era il prezzo di Gemini 2.0 Flash, rimasto qui
+    // dopo il passaggio del codice a 3.5: 12× troppo basso.
+    gemini: { per1kUsd: 0.0015, note: 'Gemini 3.7 Flash · verificato 23/08/2026 · $0.75/1M fino al 31/12/2026, poi $1.50/1M — qui sta il prezzo pieno' },
     // ⏰ Claude — VERIFICATO IL 23/08/2026. Il default del codice è claude-sonnet-4-6,
     // che costa $3/1M input: la cifra storica di Claude 3.5 Sonnet coincide, quindi il
     // numero era giusto per il motivo sbagliato. Ora è giusto e verificato.
@@ -129,8 +131,8 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
       { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
     ],
     gemini: [
-      { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', recommended: true },
-      { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash' },
+      { id: 'gemini-3.7-flash', label: 'Gemini 3.7 Flash', recommended: true },
+      { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
       { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],

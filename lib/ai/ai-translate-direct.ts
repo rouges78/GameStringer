@@ -138,12 +138,14 @@ export function getApiKeys() {
 }
 
 
-/** Traduzione con Gemini API - Default gemini-3.5-flash (frontier, I/O 2026).
+/** Traduzione con Gemini API - Default gemini-3.7-flash: stabile, nativamente
+ *  multimodale, 1M di contesto e 64k di output. Fino al 31/12/2026 costa $0.75/1M
+ *  input, metà di 3.5 Flash, che Google elenca ormai come modello legacy.
  *  Modello parametrizzabile via NEXT_PUBLIC_GEMINI_MODEL (es. `gemini-3.5-flash`,
- *  `gemini-2.0-flash`, `gemini-3.1-flash-lite`). Stesso pattern di ANTHROPIC_MODEL. */
+ *  `gemini-3.1-flash-lite`). Stesso pattern di ANTHROPIC_MODEL. */
 const GEMINI_MODEL =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GEMINI_MODEL) ||
-  'gemini-3.5-flash';
+  'gemini-3.7-flash';
 
 async function translateWithGemini(
   apiKey: string,
