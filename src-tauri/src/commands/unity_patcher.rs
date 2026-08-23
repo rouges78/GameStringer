@@ -1390,7 +1390,11 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
             engine_name: format!("Godot {}", ver_str),
             engine_version: godot_version,
             can_patch: false,
-            message: format!("⚠ Godot {} - usa gdsdecomp per estrarre .pck", ver_str),
+            // 23/08/2026: diceva «usa gdsdecomp per estrarre .pck», ma dalla v1.17.0
+            // l'estrazione e nativa (godot_patcher.rs: scan_godot_pck,
+            // extract_godot_pck). I link a gdsdecomp restano sopra perche quel
+            // tool DECOMPILA, cosa che l'app non fa: e un extra, non il percorso.
+            message: format!("✓ Godot {} - usa il Godot Translator nel menu dell'app", ver_str),
             alternative_tools,
             has_bepinex: false,
             has_xunity: false,

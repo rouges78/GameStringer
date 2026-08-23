@@ -144,7 +144,7 @@ const STRATEGIES: Record<StrategyId, TranslationStrategy> = {
       'Inietta le traduzioni con Resize Injection (nessun troncamento)',
       'Crea backup automatici (.backup)',
     ],
-    requirements: ['Python 3.x', 'Ollama (per traduzione AI locale)'],
+    requirements: ['Ollama (per traduzione AI locale)'],
     estimatedMinutes: 10,
     filePatterns: ['resources.assets', 'sharedassets*.assets', 'level*', 'globalgamemanagers'],
     dedicatedTool: { route: '/unity-csv-translator', name: 'Unity CSV Translator' },
@@ -277,14 +277,15 @@ const STRATEGIES: Record<StrategyId, TranslationStrategy> = {
     difficulty: 'medium',
     canDoInline: true,
     steps: [
-      'Estrae il .pck con gdsdecomp',
+      'Estrae il .pck (lettore nativo, nessun tool esterno)',
       'Trova i file di traduzione (CSV, .translation)',
       'Traduce con AI',
       'Ricrea il .pck con i file tradotti',
     ],
-    requirements: ['gdsdecomp (link fornito)'],
+    requirements: [],
     estimatedMinutes: 15,
     filePatterns: ['*.pck', '*.import', 'project.godot'],
+    dedicatedTool: { route: '/godot-translator', name: 'Godot Translator' },
   },
 
   'binary-patch': {
