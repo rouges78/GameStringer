@@ -51,23 +51,32 @@ async function main() {
   console.log(`changelog.${vKey}: ${raw.length} voci (${voci.length} dopo dedup) · sorgente=${source} · provider=${provider}`);
 
   const failed = [];
+  const partial = [];
   for (const lang of listLocaleLangs()) {
     if (lang === source) {
       setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, voci);
       console.log(`  = ${lang} (sorgente, riscritta dedupata)`);
       continue;
     }
-    const translated = await translateArray(provider, lang, voci);
+    const missed = [];
+    const translated = await translateArray(provider, lang, voci, (i) => missed.push(i));
     if (!translated) { failed.push(lang); console.log(`  ⛔ ${lang} FALLITA — locale NON toccato`); continue; }
     setVersionKeys(path.join(LOCALES_DIR, `${lang}.json`), vKey, translated);
-    console.log(`  ✅ ${lang}`);
+    // 23/08/2026: con la bisezione una lingua può tornare quasi tutta tradotta,
+    // con qualche voce ancora in inglese. Stamparla ✅ nasconderebbe il buco.
+    if (missed.length) {
+      partial.push(lang);
+      console.log(`  ⚠️  ${lang} — ${missed.length} voci rimaste in inglese: ${missed.join(', ')}`);
+    } else console.log(`  ✅ ${lang}`);
   }
 
   if (failed.length) {
     console.error(`\nESITO: ${failed.length} lingue fallite (${failed.join(', ')}). Rilancia il runner: le lingue già tradotte verranno ritradotte, è idempotente.`);
     process.exit(1);
   }
-  console.log('\nESITO: tutte le lingue tradotte. Verifica a campione (it e ru) prima di committare.');
+  if (partial.length) {
+    console.log(`\nESITO: tutte le lingue tradotte, ma ${partial.length} con voci rimaste in inglese (${partial.join(', ')}). Rilanciare il runner può recuperarle solo se il provider non è deterministico; altrimenti vanno scritte a mano.`);
+  } else console.log('\nESITO: tutte le lingue tradotte. Verifica a campione (it e ru) prima di committare.');
 }
 
 main().catch((e) => { console.error('ERRORE: ' + e.message); process.exit(1); });

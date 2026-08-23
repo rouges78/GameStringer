@@ -251,6 +251,12 @@ async function main() {
     if (tr.translated) log.ok(`tradotto con ${tr.provider} → ${tr.langs.join(', ')}`);
     else log.warn('changelog i18n: nessuna traduzione, scritta la sorgente in tutte le lingue.');
     if (tr.fallback && tr.fallback.length) log.warn(`da tradurre a mano: ${tr.fallback.join(', ')}`);
+    // 23/08/2026: la bisezione salva la lingua quando una singola voce non si
+    // traduce, invece di perderla tutta. Il prezzo è che una lingua può essere
+    // ✅ con dei buchi dentro: qui è l'unico punto dove un umano li vede.
+    if (tr.partial && tr.partial.length) {
+      log.warn(`voci rimaste in inglese: ${tr.partial.map((p) => `${p.lang} (${p.missed.length})`).join(', ')}`);
+    }
 
     // PROVA D'EFFETTO (18/08/2026): il gate i18n pretende che ogni chiave di
     // it.json esista in TUTTI i locale. Con la v1.17.0 la traduzione non è
