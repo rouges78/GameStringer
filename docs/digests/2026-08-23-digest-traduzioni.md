@@ -309,7 +309,7 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 - `docs/maintenance/2026-08-23-il-sito-sovrascrive-i-prezzi.md` — la trappola del merge remoto, i prezzi verificati, il limite della chiave unica per provider
 - `docs/maintenance/2026-08-23-changelog-v1-16-0-disallineato.md` — il disallineamento degli indici, il gate che lo certificava, i difetti misurati della traduzione automatica
 
-**30 PR fuse in giornata**, dalla #115 alla #144. Il conteggio non va tenuto a mente: si ricava.
+**31 PR fuse in giornata** dalla #115 alla #145, contate dopo la #145. Il numero sale ancora se il digest viene ritoccato: è per questo che accanto c'è il comando, e non va tenuto a mente.
 
 ```bash
 gh pr list --state merged --limit 60 --json number,mergedAt --jq '[.[] | select(.mergedAt | startswith("2026-08-23"))] | length'
@@ -349,6 +349,7 @@ Nella tabella qui sotto ne mancano le ultime: **una riga che elenca le PR non pu
 | [#142](https://github.com/rouges78/GameStringer/pull/142) | Digest: il gate che avevo scritto misurava male |
 | [#143](https://github.com/rouges78/GameStringer/pull/143) | Passata di conferma: 3 difetti nuovi, e HEAD non basta |
 | [#144](https://github.com/rouges78/GameStringer/pull/144) | Digest: la passata di conferma e il difetto nel metodo |
+| [#145](https://github.com/rouges78/GameStringer/pull/145) | Conteggio PR che non invecchia |
 
 ## 🚦 Gate aggiunti oggi
 
