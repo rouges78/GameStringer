@@ -44,6 +44,7 @@ import { useTranslation } from '@/lib/i18n';
 import { langFlagSrc } from '@/lib/translation/target-languages';
 import { qualityScoringService, type TranslationProject } from '@/lib/quality/quality-scoring';
 import { projectService } from '@/lib/services/translation-projects';
+import { isProjectTombstoned, isProjectsHydrationSettled } from '@/lib/projects-persistence';
 import { loadTranslatedFiles, deleteTranslatedFiles } from '@/lib/services/translated-files-store';
 import { importGspack, createGspack, saveGspackToFile } from '@/lib/gspack-manager';
 import { installGspackAsProject } from '@/lib/services/gspack-install';
@@ -134,7 +135,24 @@ interface GameApiItem {
 
 // ─── Data loader ─────────────────────────────────────────────
 
+/**
+ * I tombstone vivono in una cache idratata dal disco al boot. SettingsBootGate
+ * però sblocca l'app dopo 1500ms ANCHE se l'hydration non ha finito: su un
+ * avvio lento questa pagina leggerebbe un set vuoto e ridisegnerebbe le card
+ * appena eliminate, che sparirebbero al reload dopo. È lo stesso tipo di corsa
+ * chiusa il 04/08 sui settings (vedi persistProjectsToDisk).
+ * Qui aspettiamo che l'hydration si sia posata, con un tetto: oltre quello si
+ * procede comunque, che è il comportamento di prima — mai peggio.
+ */
+async function waitForTombstones(maxMs = 2000): Promise<void> {
+  const step = 50;
+  for (let waited = 0; waited < maxMs && !isProjectsHydrationSettled(); waited += step) {
+    await new Promise((r) => setTimeout(r, step));
+  }
+}
+
 async function loadAllProjects(): Promise<UnifiedProject[]> {
+  await waitForTombstones();
   const projectsMap = new Map<string, UnifiedProject>();
 
   // 0. Active Translation Projects (IndexedDB) - PRIORITÀ MASSIMA
@@ -268,6 +286,10 @@ async function loadAllProjects(): Promise<UnifiedProject[]> {
 
       for (const [key, g] of grouped) {
         const [gameId] = key.split(':');
+        // Eliminata dall'utente: queste card sono DERIVATE e si ricalcolano a
+        // ogni apertura, quindi senza tombstone «Elimina» non poteva funzionare
+        // — e infatti non eliminava, mostrava solo un avviso.
+        if (isProjectTombstoned(gameId, g.tgt)) continue;
         const mapKey = `tm:${key}`;
         projectsMap.set(mapKey, {
           id: mapKey,
@@ -296,6 +318,11 @@ async function loadAllProjects(): Promise<UnifiedProject[]> {
       const data = (await resp.json()) as GameApiItem[];
       for (const game of ensureArray(data) as GameApiItem[]) {
         if (!game.translationStats || game.translationStats.total === 0) continue;
+        // Stesso motivo della card TM sopra: derivata dalla libreria, si
+        // ricostruisce a ogni load. La lingua qui è 'it' come sotto, non un
+        // dato del gioco: se un giorno diventa variabile, va cambiata in
+        // entrambi i punti o il tombstone smette di agganciare.
+        if (isProjectTombstoned(game.id, 'it')) continue;
         const key = `game:${game.id}`;
         if (projectsMap.has(key)) continue;
 
@@ -656,9 +683,21 @@ export default function ProjectsPage() {
       return;
     }
     // translation_memory / game: card DERIVATE (TM condivisa, statistiche di
-    // libreria) — da qui non si possono eliminare, e fino a oggi il click
-    // faceva FINTA di niente dopo la conferma. Meglio dire il perché.
-    toast.info(t('projectsPage.deleteDerivedCard'));
+    // libreria). Non esiste un record da cancellare — si ricalcolano a ogni
+    // apertura della pagina — quindi «Elimina» qui non poteva che dire di no,
+    // e lo diceva con un avviso che è facile scambiare per una conferma.
+    // Ora lascia un tombstone: il dato di origine resta (la TM e le statistiche
+    // di libreria servono altrove), sparisce la card. Una traduzione NUOVA
+    // ripassa dall'apply e registra un progetto vero, che ricompare.
+    try {
+      const { addProjectTombstone } = await import('@/lib/projects-persistence');
+      await addProjectTombstone(p.gameId, p.targetLanguage);
+      toast.success(t('projectsPage.projectDeleted'));
+      reload();
+    } catch (e: unknown) {
+      clientLogger.error(`[Projects] delete derived failed: ${String(e)}`);
+      toast.error(t('projectsPage.deleteError'));
+    }
   };
 
   /**

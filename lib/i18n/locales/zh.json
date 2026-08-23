@@ -441,8 +441,7 @@
     "projectImported": "项目已导入",
     "publishLive": "补丁已发布：可在 Patch Hub 中查看。",
     "publishViewPack": "查看补丁包",
-    "openPackTitle": "已发布 — 在 Patch Hub 中打开补丁包",
-    "deleteDerivedCard": "此卡片来自其他数据（Translation Memory 或游戏库），无法在此处删除"
+    "openPackTitle": "已发布 — 在 Patch Hub 中打开补丁包"
   },
   "emulatorTranslator": {
     "clipboardError": "无法读取剪贴板",

@@ -441,8 +441,7 @@
     "projectImported": "το έργο εισήχθη",
     "publishLive": "Το patch είναι online: ορατό στο Patch Hub.",
     "publishViewPack": "Άνοιγμα pack",
-    "openPackTitle": "Δημοσιεύτηκε — άνοιγμα του pack στο Patch Hub",
-    "deleteDerivedCard": "Αυτή η κάρτα προέρχεται από άλλα δεδομένα (Translation Memory ή βιβλιοθήκη) και δεν διαγράφεται από εδώ"
+    "openPackTitle": "Δημοσιεύτηκε — άνοιγμα του pack στο Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Δεν είναι δυνατή η ανάγνωση του προχείρου",

@@ -441,8 +441,7 @@
     "projectImported": "プロジェクトをインポートしました",
     "publishLive": "パッチは公開されました。Patch Hub で表示されます。",
     "publishViewPack": "パックを表示",
-    "openPackTitle": "公開済み — Patch Hub でパックを開く",
-    "deleteDerivedCard": "このカードは他のデータ（Translation Memory やライブラリ）から生成されているため、ここからは削除できません"
+    "openPackTitle": "公開済み — Patch Hub でパックを開く"
   },
   "emulatorTranslator": {
     "clipboardError": "クリップボードを読み取れません",

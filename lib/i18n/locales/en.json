@@ -441,8 +441,7 @@
     "projectImported": "project imported",
     "publishLive": "The patch is live: visible in the Patch Hub.",
     "publishViewPack": "View pack",
-    "openPackTitle": "Published — open the pack on the Patch Hub",
-    "deleteDerivedCard": "This card is derived from other data (Translation Memory or library) and can't be deleted from here"
+    "openPackTitle": "Published — open the pack on the Patch Hub"
   },
   "emulatorTranslator": {
     "clipboardError": "Unable to read clipboard",
