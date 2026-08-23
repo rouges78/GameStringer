@@ -15,7 +15,10 @@ const BEPINEX_LEGACY_X64_URL: &str = "https://github.com/BepInEx/BepInEx/release
 const BEPINEX_LEGACY_X86_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.11/BepInEx_x86_5.4.11.0.zip";
 
 // URL per IPA (Illusion Plugin Architecture) - Per Unity 5.0-5.5 molto vecchie
-const IPA_URL: &str = "https://github.com/Eusth/IPA/releases/download/3.4.1/IPA-3.4.1.zip";
+// Nome file con UNDERSCORE: `IPA_3.4.1.zip`. Fino al 23/08/2026 qui c'era un
+// trattino e l'URL dava 404 — verificato con una HEAD su tutti i download
+// hardcoded di questo file (era l'unico rotto su tredici).
+const IPA_URL: &str = "https://github.com/Eusth/IPA/releases/download/3.4.1/IPA_3.4.1.zip";
 
 // XUnity per IPA (versione IPA-compatible) — aggiornato a v5.6.1 (rilascio 2026-04-19)
 const XUNITY_IPA_URL: &str = "https://github.com/bbepis/XUnity.AutoTranslator/releases/download/v5.6.1/XUnity.AutoTranslator-IPA-5.6.1.zip";
@@ -1981,8 +1984,17 @@ async fn install_with_ipa(game_dir: &Path, exe_path: &Path, target_lang: &str, m
     steps.push("⚠ Unity vecchia rilevata (5.0-5.5) - usando IPA".to_string());
     
     // 1. Scarica e estrai IPA
+    // 23/08/2026: qui c'era IPA_URL fisso, e puntava a `IPA-3.4.1.zip` mentre
+    // l'asset si chiama `IPA_3.4.1.zip` — trattino invece di underscore. 404 a
+    // ogni tentativo, su tutto il percorso Unity 5.0-5.5. Il tag esisteva, il
+    // numero di versione era giusto: solo il nome del file era sbagliato, ed è
+    // per questo che i controlli sulle VERSIONI non l'avevano mai visto.
+    // Ora si risolve dall'API come già si fa per XUnity poche righe sotto, con
+    // l'URL corretto come fallback: se l'asset viene rinominato di nuovo, si
+    // aggiusta da solo invece di rompersi in silenzio.
     steps.push("Download IPA (Illusion Plugin Architecture)...".to_string());
-    match download_and_extract(IPA_URL, game_dir).await {
+    let ipa_dl = resolve_gh_asset("Eusth/IPA", &["ipa", ".zip"], &[], IPA_URL).await;
+    match download_and_extract(&ipa_dl, game_dir).await {
         Ok(_) => steps.push("✓ IPA estratto".to_string()),
         Err(e) => return Err(format!("Errore download IPA: {}", e)),
     }
