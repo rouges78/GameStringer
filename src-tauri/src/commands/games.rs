@@ -515,8 +515,8 @@ pub async fn detect_engine_for_game(
         ),
         "RPG Maker" | "RPG Maker MV" | "RPG Maker MZ" | "RPG Maker VX" | "RPG Maker VX Ace" => (
             true,
-            Some("RPG Maker Trans / Translator++".to_string()),
-            Some("Usa RPG Maker Trans o Translator++ per estrarre e tradurre i testi.".to_string()),
+            Some("Translator++".to_string()),
+            Some("Usa Translator++ per estrarre e tradurre i testi.".to_string()),
             vec![
                 "✅ RPG Maker supportato!".to_string(),
                 "📁 Testi in www/data/ (MV/MZ) o Data/ (VX)".to_string(),

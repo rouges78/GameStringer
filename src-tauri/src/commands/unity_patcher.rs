@@ -1400,8 +1400,8 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
     // ========== RPG MAKER (tutte le versioni) ==========
     if let Some(rpg_info) = detect_rpgmaker_version(game_dir) {
         alternative_tools.push(AlternativeTool {
-            name: "RPG Maker Trans".to_string(),
-            url: "https://rpgmakertrans.bitbucket.io/".to_string(),
+            name: "Translator++".to_string(),
+            url: "https://dreamsavior.net/translator-plusplus/".to_string(),
             description: "Traduzione per RPG Maker XP/VX/Ace".to_string(),
             compatible: !rpg_info.can_translate_directly,
         });
@@ -1422,7 +1422,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
             message: if rpg_info.can_translate_directly {
                 format!("✓ RPG Maker {} - file JSON traducibili direttamente", rpg_info.version)
             } else {
-                format!("⚠ RPG Maker {} - usa RPG Maker Trans", rpg_info.version)
+                format!("⚠ RPG Maker {} - usa Translator++", rpg_info.version)
             },
             alternative_tools,
             has_bepinex: false,
