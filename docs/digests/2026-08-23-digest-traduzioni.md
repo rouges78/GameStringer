@@ -7,7 +7,7 @@
 > 3. il download di IPA dava **404 per un trattino**, e con esso tutto il percorso Unity 5.0-5.5
 > 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola
 > 5. **nove rotte interne** portavano a pagine che non esistono — la prima trovata per caso, le altre otto cercandole
-> 6. **quattro link esterni su 318** erano rotti, fra cui il download di UABEA (primario *e* fallback) e il nostro stesso dominio, scritto `.app` invece di `.ai`
+> 6. **sette link esterni** erano rotti — quattro al primo giro (fra cui il download di UABEA, primario *e* fallback, e il nostro stesso dominio scritto `.app` invece di `.ai`), altri tre trovati solo dalla passata di conferma
 > 7. **i cataloghi raccomandavano software che non esiste e requisiti che non servono** — due tool fantasma, uno col punteggio più alto della sua categoria, e un «Python 3.x» che nessun percorso ha mai invocato
 >
 > I difetti 1, 3, 4, 5 e 6 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
@@ -186,6 +186,28 @@ Due dettagli che rendono questi due peggiori di quanto sembrino:
 - URL che finiscono in `$`, `?id=`, `key=`, `domain=` → prefissi catturati a metà dal regex, si compongono a runtime
 - `libretranslate.com` dà **405** perché accetta solo POST; `translate.googleapis.com` dà **429** perché è rate-limited. Funzionano entrambi.
 
+### 🔁 La passata di conferma ha trovato altro — e un difetto nel metodo
+
+Rilanciate a fine giornata entrambe le passate, per verificare che il lavoro tenesse. **Le rotte sono pulite**: gate 24/24 e passata indipendente su 161 riferimenti, con soli i due falsi positivi noti.
+
+Ma rileggendo l'output dei link è saltato fuori un difetto **nel modo di cercare**, non nel codice:
+
+> **Steam risponde `404` a `HEAD` e `200` a `GET`.**
+> Quattordici link a guide Workshop erano stati dichiarati morti, ed erano sani.
+
+Rifatti tutti i sospetti con `GET`, che ha assolto anche Rockstar Social Club (302) e le pagine password di Amazon ed EA (protette dai bot). **Chi rilancia questa passata usi `GET`, non `HEAD`.**
+
+Quello che è sopravvissuto al filtro era invece reale:
+
+| Difetto | Dettaglio |
+|---|---|
+| `fireworks.ai/account/api-keys` **spostato** | ora è `app.fireworks.ai/settings/users/api-keys`. Due punti puntavano al vecchio, incluso il pannello Impostazioni dove l'utente va a prendersi la chiave |
+| **due feed RSS attivi con il feed a 404** | `romhackplaza` (nessun feed su `/feed`, `/rss`, `/feed.rss`) e `ctrltrad` (è un *profilo* itch.io: `devlog.rss` esiste per le pagine **gioco**, non per i profili). Entrambi i siti rispondono 200, quindi da fuori non sembrava rotto niente |
+
+Disattivati con il motivo scritto dentro, come le altre voci morte di quel file. E controllati i **14 feed rimasti attivi: rispondono tutti 200.**
+
+**È la seconda volta oggi che rifare un controllo con un metodo migliore cambia il risultato** — la prima è stato il rilevatore di chiavi orfane, che contava 1601 invece di 905. Una passata non vale più del metodo che usa, e il metodo va scritto accanto al risultato.
+
 ### 🔧 I tre tool che aspettavano una decisione, decisi
 
 | Tool | Stato | Deciso |
@@ -316,6 +338,8 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 | [#139](https://github.com/rouges78/GameStringer/pull/139) | Gate sulle chiavi i18n orfane |
 | [#140](https://github.com/rouges78/GameStringer/pull/140) | Digest: il gate orfane e cosa hanno in comune i tre |
 | [#141](https://github.com/rouges78/GameStringer/pull/141) | 905 chiavi rimosse, dopo che il primo tentativo aveva tolto quelle sbagliate |
+| [#142](https://github.com/rouges78/GameStringer/pull/142) | Digest: il gate che avevo scritto misurava male |
+| [#143](https://github.com/rouges78/GameStringer/pull/143) | Passata di conferma: 3 difetti nuovi, e HEAD non basta |
 
 ## 🚦 Gate aggiunti oggi
 
@@ -334,7 +358,7 @@ Restano **senza gate** tre cose, e ognuna per un motivo diverso:
 | Cosa | Perché non è gatabile |
 |---|---|
 | prezzi del catalogo | nessun test può sapere quanto costerà un modello domani |
-| URL esterni | una `HEAD` in CI è fattibile (oggi ha trovato 4 difetti su 318) ma legherebbe la suite alla rete e ai 403 da bot protection, che sono un terzo dei fallimenti e non sono difetti |
+| URL esterni | una passata in CI è fattibile (oggi ha trovato 7 difetti in due giri) ma legherebbe la suite alla rete, ai 403 da bot protection — un terzo dei fallimenti, e non sono difetti — e ai siti che rispondono diversamente a `HEAD` e a `GET`, come Steam |
 | prosa e requisiti | «questa frase descrive ancora la realtà?» non è una domanda meccanica |
 
 Le **chiavi i18n orfane** erano l'unica delle quattro davvero gatabile, e ora lo sono: `__tests__/lib/i18n-orphan-keys.test.ts`, baseline **zero**. Non una soglia decrescente: una regola. Una chiave che nessuno legge non entra.
