@@ -1,6 +1,6 @@
 # Digest Traduzioni Videogiochi — 23 agosto 2026
 
-> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi **sei** difetti che nessun digest aveva visto:
+> **Questo non è uno scan di novità: è una verifica delle azioni consigliate dal digest precedente.** Su quattro voci, **tre avevano la premessa sbagliata** e sono state chiuse senza scrivere codice. La quarta era giusta, e tirando quel filo sono emersi **sette** difetti che nessun digest aveva visto:
 >
 > 1. il sito rimetteva in circolo i prezzi vecchi su **tutte** le installazioni
 > 2. quattro lingue del changelog v1.16.0 non erano **mai** state tradotte
@@ -8,10 +8,13 @@
 > 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola
 > 5. **nove rotte interne** portavano a pagine che non esistono — la prima trovata per caso, le altre otto cercandole
 > 6. **quattro link esterni su 318** erano rotti, fra cui il download di UABEA (primario *e* fallback) e il nostro stesso dominio, scritto `.app` invece di `.ai`
+> 7. **il catalogo tool raccomandava due software che non esistono**, uno col punteggio più alto della sua categoria
 >
-> Tutti tranne il secondo hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
+> I difetti 1, 3, 4, 5 e 6 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
 >
 > E si somigliano anche nel modo in cui sono venuti fuori: **controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome. Un controllo sulle versioni li avrebbe dichiarati tutti a posto.
+>
+> **Il settimo è di un'altra specie, e va guardato a parte.** Gli altri sei erano cose vere che hanno smesso di esserlo. Le due voci fantasma del catalogo **non sono mai state vere**: nessun rename le ha rese sbagliate, sono nate così. E non lasciano traccia quando falliscono — un link morto almeno dà 404, un nome senza URL manda l'utente a cercare qualcosa che non esiste, in silenzio.
 >
 > ⚠️ Le sezioni **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** sono assenti di proposito: oggi non è stato fatto uno scan web di quelle fonti, e riempirle a memoria le renderebbe indistinguibili da dati veri.
 
@@ -26,7 +29,7 @@
 
 **Da correggere in chi genera il digest:** tre voci su quattro derivavano da uno stato non riletto. Vale la pena verificare tag, Release e issue aperte *prima* di proporli come azione, altrimenti il digest genera lavoro che non esiste.
 
-## 🔥 I due difetti che il digest non aveva visto
+## 🔥 I due difetti più gravi
 
 ### Il file di config del sito sovrascriveva i prezzi corretti dell'app
 
@@ -199,12 +202,29 @@ Dove l'app fa il lavoro da sola la prosa ora lo dice: RPG Maker VX/Ace è `canDo
 
 **Un errore commesso per strada, che vale come avvertimento:** il primo tentativo di rimozione ha tolto 5 righe di un blocco da 6, lasciando un `},` orfano — Rust non compilabile. Il controllo verificava la riga di apertura ma non quella di chiusura. È così che è emersa anche la *seconda* voce RPG Maker Trans, che il primo passaggio aveva colpito al posto di quella giusta. `cargo check` va eseguito, non dato per scontato.
 
+### 👻 Il catalogo raccomandava due tool che non esistono
+
+Il catalogo di `prediction_tool.rs` non ha URL: porta nomi e **punteggi di compatibilità**, quindi la passata sui link non lo vedeva. Verificato voce per voce, tutte e tredici.
+
+| Voce | Punteggio | Cosa dice la ricerca |
+|---|---|---|
+| **«Atlas»** | 88, *Freemium* | **zero** risultati su GitHub (`atlas+unreal+localization`, `atlas+locres`) e zero sul web. I tool locres per Unreal che esistono sono ue-localization-tools, LocRes-Builder, Easy Localization Tool |
+| **«Ren'Py Translator Tools»** | 92, **il punteggio Ren'Py più alto della tabella** | nessun prodotto con quel nome. Esiste un «Ren'Py Translator **ToolKit**» (renpy-ttk), che è un'altra cosa |
+
+**Questo difetto è di una specie diversa da tutti gli altri di oggi.** Gli altri erano puntatori invecchiati: qualcosa che era vero e ha smesso di esserlo. Questi due non sono mai stati veri. E sono peggio di un link morto, perché **un link morto fallisce visibilmente quando ci clicchi**, mentre un nome senza URL manda l'utente a cercare qualcosa che non troverà mai, senza che niente segnali l'errore.
+
+**Toglierli era sicuro solo perché la voce dell'app era a sua volta sbagliata:** `GameStringer` dichiarava Unity, Ren'Py e RPG Maker, mentre l'app ha pagine e strategie per Unreal, GameMaker, Godot, Wolf RPG e Danganronpa, e dalla 1.17.0 ha tradotto un UE5 commerciale end-to-end. Corretta, così Unreal mantiene una raccomandazione — vera — dopo la sparizione di Atlas. Senza quella correzione, rimuovere il fantasma avrebbe rifatto l'errore DRV3-Sharp in un posto nuovo.
+
+**Terza correzione:** la voce UABE è diventata UABEA. `SeriousCache/UABE` è archiviato dal 2023; `nesrak1/UABEA` è il successore ed è **quello che `unity_assets.rs` scarica davvero**. Stessa forma della correzione Mistral: il catalogo nomina una cosa, il codice ne esegue un'altra.
+
+Verificati vivi e lasciati stare: UnrealPak, Translator++, WW2Ogg (`hcs64/ww2ogg`, 2024), Audacity, GIMP, Paint.NET, NSIS, Inno Setup, Photoshop.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
-- **Il catalogo tool di `prediction_tool.rs` non è stato verificato voce per voce.** Ne è stata corretta una (RPG Maker Trans → Translator++) perché emersa dalla passata, ma quel file elenca decine di tool con punteggi di compatibilità, e nessuno ha controllato se esistano ancora. Non hanno URL, quindi la passata sui link non li tocca.
+- **Gli altri cataloghi non sono stati verificati.** Quello di `prediction_tool.rs` sì (vedi sopra), ma `tools-registry.ts` e `wizard-strategies.ts` elencano a loro volta tool e requisiti, e nessuno ha controllato se esistano. Se il difetto trovato oggi — voci che non sono mai state vere — si è annidato in un catalogo, può essersi annidato negli altri.
 - **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
@@ -241,6 +261,8 @@ Dove l'app fa il lavoro da sola la prosa ora lo dice: RPG Maker VX/Ace è `canDo
 | [#129](https://github.com/rouges78/GameStringer/pull/129) | Digest aggiornato con la passata sui link esterni |
 | [#130](https://github.com/rouges78/GameStringer/pull/130) | RGSS Decryptor con il suo owner, RPG Maker Trans sostituito |
 | [#131](https://github.com/rouges78/GameStringer/pull/131) | MTool fuso in Translator++: un tool copre entrambe |
+| [#132](https://github.com/rouges78/GameStringer/pull/132) | Digest aggiornato con le tre decisioni sui tool |
+| [#133](https://github.com/rouges78/GameStringer/pull/133) | Due tool inesistenti tolti dal catalogo |
 
 ## 🚦 Gate aggiunti oggi
 
