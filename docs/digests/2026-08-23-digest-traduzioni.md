@@ -16,7 +16,7 @@
 >
 > **Il settimo è di un'altra specie, e va guardato a parte.** Gli altri sei erano cose vere che hanno smesso di esserlo. Le voci fantasma dei cataloghi **non sono mai state vere**: nessun rename le ha rese sbagliate, sono nate così. E non lasciano traccia quando falliscono — un link morto almeno dà 404; un nome senza URL manda l'utente a cercare qualcosa che non esiste, e un requisito inventato come «Python 3.x» gli fa installare software per niente. In entrambi i casi, in silenzio.
 >
-> ⚠️ Le sezioni **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** sono assenti di proposito: oggi non è stato fatto uno scan web di quelle fonti, e riempirle a memoria le renderebbe indistinguibili da dati veri.
+> ⚠️ **RSS** e **traduzioni amatoriali** sono state scansionate a fine giornata e stanno più sotto. Le **localizzazioni ufficiali** restano assenti: nessuno le ha cercate, e riempirle a memoria le renderebbe indistinguibili da dati veri.
 
 ## ✅ Le azioni consigliate, verificate una per una
 
@@ -304,9 +304,46 @@ Da lì in poi **`main` è rimasto rosso, e ci sono state fuse sopra altre tredic
 
 > **Regola per il prossimo giro: sul Rust `cargo check` non basta mai. Serve `cargo test --lib`, e serve guardare la CI prima di fondere — anche quando le modifiche sembrano solo testo.**
 
+## 📡 Fonti RSS — tutte e 32 riverificate
+
+Testate con **gli stessi header del fetcher Rust** (`rss_proxy.rs`: User-Agent Chrome, `Accept` per rss/atom/xml), perché in Tauri i feed non li scarica il webview ma Rust — quindi **il CORS non c'entra**, e una delle motivazioni storiche di disattivazione era sbagliata in premessa.
+
+**Un feed era attivo e non poteva funzionare:** `oldgamesitalia` puntava all'RSS del *forum* Invision, che ora restituisce **HTML**. Corretto sul feed del sito (`/feed`), che risponde con 10 voci. Gli altri 13 attivi erano già a posto.
+
+| Stato | Quanti | |
+|---|---|---|
+| attivi e funzionanti | **14 / 14** | dopo la correzione di `oldgamesitalia` |
+| disattivati ma **funzionanti** | 9 | gamespot, eurogamer, pcgamesn, nintendolife, pushsquare, arstechnica, tomshw_it, retrorgb, dotesports |
+| disattivati e ancora rotti | 9 | everyeye · multiplayer · theverge (404) · romhacking ×2 (403) · romhackplaza · ctrltrad (404) · **nexusmods** e **gamestranslator** (200 ma HTML) |
+
+**Perché «200» non è un test valido**, e vale per chiunque rifaccia questa passata: NexusMods e GamesTranslator **rispondono 200 con una pagina HTML**, non con un feed. E cercare `<item>` non basta: gli **Atom** usano `<entry>`. Il criterio giusto è *XML valido **e** almeno una voce* — con quello, `tomshw_it` passa da «vuoto» a 20 voci.
+
+**Fonte nuova trovata e non aggiungibile:** [traduzionegiochi.it](https://traduzionegiochi.it/) — catalogo di patch amatoriali ITA gratuite, ~25 progetti con versione e data. **Non ha RSS** (`/feed`, `/feed/`, `/rss` danno 404), quindi resta una fonte da consultare a mano.
+
+## 🇮🇹 Traduzioni amatoriali ITA della settimana
+
+Da [traduzionegiochi.it](https://traduzionegiochi.it/), lette il 23/08/2026:
+
+| Data | Gioco | Versione |
+|---|---|---|
+| 22/08/2026 | **Phoenix Wright: Ace Attorney Trilogy** | v1.0 |
+| 22/08/2026 | **Undertale** (Switch) | v1.0 |
+| 22/08/2026 | Corpse Party: Book of Shadows | v1.2 |
+| 22/08/2026 | Twisted Tower | v1.3.3 |
+| 22/08/2026 | **Foolish Mortals** | v1.1 |
+| 22/08/2026 | Shadows of the Afterland | v1.0 |
+| 22/08/2026 | Wicked Seed | v1.0.1 |
+| 22/08/2026 | Kemono Teatime | v1.1 |
+| 22/08/2026 | Hariti | v1.1 |
+
+**Da confermare, di provenienza più debole:** una ricerca web cita anche *STEINS;GATE RE:BOOT* v1.0 (20/08), *Breath of Fire IV* v1.2.0 e *Marvel's Guardians of the Galaxy: The Telltale Series* v2.0. Vengono da un riassunto di ricerca e **non da una pagina letta**: verificare prima di riportarli come fatti.
+
+**Nota per GameStringer:** *Foolish Mortals* è un gioco **Visionaire**, motore che l'app tratta — ed è lo stesso titolo comparso oggi nei tombstone dei progetti dell'utente. Che ne esista una patch community v1.1 è utile a sapersi: è materiale di confronto per il percorso Visionaire.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
-- **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
+- **Localizzazioni ufficiali: non cercate.** RSS e traduzioni amatoriali sono state fatte (vedi sopra), questa no. Il prossimo digest la rifaccia da zero, non la erediti da qui.
+- **Le nove fonti riattivabili sono una decisione, non un fatto.** Funzionano, ma erano state disattivate anche per motivi editoriali (rumore, lingua, pertinenza): riaccenderle è una scelta di prodotto.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
 - **Nessun gate copre link esterni e requisiti in prosa.** Si trovano solo rilanciando le passate a mano, come oggi: gli URL legherebbero la suite alla rete e ai 403 da bot protection, e la prosa non è verificabile meccanicamente.
