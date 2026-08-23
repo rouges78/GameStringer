@@ -8,13 +8,13 @@
 > 4. tre punti del codice mandavano l'utente a tool esterni per lavori che l'app ora fa da sola
 > 5. **nove rotte interne** portavano a pagine che non esistono — la prima trovata per caso, le altre otto cercandole
 > 6. **quattro link esterni su 318** erano rotti, fra cui il download di UABEA (primario *e* fallback) e il nostro stesso dominio, scritto `.app` invece di `.ai`
-> 7. **il catalogo tool raccomandava due software che non esistono**, uno col punteggio più alto della sua categoria
+> 7. **i cataloghi raccomandavano software che non esiste e requisiti che non servono** — due tool fantasma, uno col punteggio più alto della sua categoria, e un «Python 3.x» che nessun percorso ha mai invocato
 >
 > I difetti 1, 3, 4, 5 e 6 hanno la stessa forma: **una cosa cambia, e ciò che la descrive resta indietro.** Il prezzo dopo il cambio di modello, il nome del file dopo il rename, il consiglio dopo che l'app ha imparato a fare quel lavoro, il puntatore dopo che la pagina è stata rinominata.
 >
 > E si somigliano anche nel modo in cui sono venuti fuori: **controllando che una cosa *funzioni*, non che il suo numero sia giusto.** Il prezzo verificato sul listino invece che sull'etichetta, l'URL con una `HEAD` invece che con il tag, la rotta contro le pagine reali invece che contro il nome. Un controllo sulle versioni li avrebbe dichiarati tutti a posto.
 >
-> **Il settimo è di un'altra specie, e va guardato a parte.** Gli altri sei erano cose vere che hanno smesso di esserlo. Le due voci fantasma del catalogo **non sono mai state vere**: nessun rename le ha rese sbagliate, sono nate così. E non lasciano traccia quando falliscono — un link morto almeno dà 404, un nome senza URL manda l'utente a cercare qualcosa che non esiste, in silenzio.
+> **Il settimo è di un'altra specie, e va guardato a parte.** Gli altri sei erano cose vere che hanno smesso di esserlo. Le voci fantasma dei cataloghi **non sono mai state vere**: nessun rename le ha rese sbagliate, sono nate così. E non lasciano traccia quando falliscono — un link morto almeno dà 404; un nome senza URL manda l'utente a cercare qualcosa che non esiste, e un requisito inventato come «Python 3.x» gli fa installare software per niente. In entrambi i casi, in silenzio.
 >
 > ⚠️ Le sezioni **RSS**, **traduzioni amatoriali** e **localizzazioni ufficiali** sono assenti di proposito: oggi non è stato fatto uno scan web di quelle fonti, e riempirle a memoria le renderebbe indistinguibili da dati veri.
 
@@ -219,13 +219,44 @@ Il catalogo di `prediction_tool.rs` non ha URL: porta nomi e **punteggi di compa
 
 Verificati vivi e lasciati stare: UnrealPak, Translator++, WW2Ogg (`hcs64/ww2ogg`, 2024), Audacity, GIMP, Paint.NET, NSIS, Inno Setup, Photoshop.
 
+### 📋 Gli ultimi due cataloghi, e un requisito che non è mai servito
+
+`tools-registry.ts` è **pulito**: venti chiavi i18n tutte presenti in `en.json`, e gli `href` puntano a pagine interne già coperte dal gate delle rotte.
+
+`wizard-strategies.ts` chiedeva due cose che non servono:
+
+| Requisito | Realtà |
+|---|---|
+| **«Python 3.x»**, sulla strategia Unity CSV | `Command::new("python")` **non compare da nessuna parte** nel Rust, e l'unico `python` nel TypeScript è un filtro di esclusione percorsi. Quel percorso è Rust puro (`unity_csv.rs`) |
+| **«gdsdecomp (link fornito)»** per Godot, con lo step «Estrae il .pck con gdsdecomp» | dalla v1.17.0 l'estrazione è **nativa**: `godot_patcher.rs` espone `scan_godot_pck` e `extract_godot_pck` come comandi Tauri |
+
+**Chi leggeva la prima è andato a installare Python per niente.** È un difetto più insidioso di un link morto: non fallisce, costa solo tempo a qualcuno che non saprà mai di averlo sprecato.
+
+I link a gdsdecomp restano: quel tool **decompila** progetti Godot, cosa che l'app non fa. È un extra vero, non il percorso — toglierlo sarebbe stato l'errore al contrario.
+
+### 🔁 La firma che si è ripetuta cinque volte
+
+Vale come cosa da cercare di proposito la prossima volta:
+
+> **Una voce che descrive come si faceva un lavoro prima che l'app imparasse a farlo.**
+
+Trovata in cinque posti diversi, tutti nati dopo la v1.17.0 e nessuno segnalato da build, tipi o test:
+
+1. il ramo Danganronpa diceva «usa tool specifici» per un gioco tradotto end-to-end
+2. `universal_injector` elencava UnRPA per i `.rpa`, letti nativamente
+3. il wizard chiedeva gdsdecomp per i `.pck`, estratti nativamente
+4. l'engine-check diceva «usa gdsdecomp per estrarre .pck»
+5. il catalogo di `prediction_tool` dichiarava tre motori su nove per l'app stessa
+
+Il codice avanza a ogni release; le frasi che lo descrivono no, e niente le controlla.
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
 - **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
 - **`dnSpy` e `rpatool` sono archiviati upstream** (ultimo push 2020 e 2022). Funzionano ancora, ma nessuno li aggiorna più: se un giorno smettono, non arriverà una correzione.
-- **Gli altri cataloghi non sono stati verificati.** Quello di `prediction_tool.rs` sì (vedi sopra), ma `tools-registry.ts` e `wizard-strategies.ts` elencano a loro volta tool e requisiti, e nessuno ha controllato se esistano. Se il difetto trovato oggi — voci che non sono mai state vere — si è annidato in un catalogo, può essersi annidato negli altri.
-- **Altri tool esterni consigliati non sono stati passati al setaccio.** Oggi sono stati guardati quelli citati in `unity_patcher.rs`; `tools-registry.ts`, `wizard-strategies.ts` e le pagine per-motore ne elencano altri, e nessuno sa se puntano ancora a qualcosa di vivo.
+- **Le pagine per-motore non sono state lette una per una.** I loro link esterni sono passati nella scansione dei 318 URL, ma il testo che li accompagna no: se una pagina spiega ancora come fare a mano un lavoro che l'app ha imparato a fare, non se ne accorge nessuno. È la stessa firma trovata cinque volte oggi.
+- **Il gate delle rotte non copre i link esterni né i requisiti in prosa.** Quelli si trovano solo rilanciando le passate a mano.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
@@ -263,6 +294,8 @@ Verificati vivi e lasciati stare: UnrealPak, Translator++, WW2Ogg (`hcs64/ww2ogg
 | [#131](https://github.com/rouges78/GameStringer/pull/131) | MTool fuso in Translator++: un tool copre entrambe |
 | [#132](https://github.com/rouges78/GameStringer/pull/132) | Digest aggiornato con le tre decisioni sui tool |
 | [#133](https://github.com/rouges78/GameStringer/pull/133) | Due tool inesistenti tolti dal catalogo |
+| [#134](https://github.com/rouges78/GameStringer/pull/134) | Digest aggiornato con le voci fantasma |
+| [#135](https://github.com/rouges78/GameStringer/pull/135) | Python e gdsdecomp non erano mai serviti |
 
 ## 🚦 Gate aggiunti oggi
 
