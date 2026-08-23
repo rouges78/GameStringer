@@ -71,10 +71,54 @@ Bundled e sito ora **coincidono su tutte e nove le voci**. Verificabile in quals
 curl -s https://gamestringer.ai/config/models.json
 ```
 
+## 🛠 Stato tool — ricontrollato oggi dopo sette settimane
+
+Tutte le versioni pinnate sono **ancora le ultime upstream** (verificate via API GitHub):
+
+| Tool | Upstream | Nel progetto | Stato |
+|---|---|---|---|
+| XUnity.AutoTranslator | v5.6.1 (19/04/2026) | v5.6.1 | ✅ |
+| BepInEx 5.x | v5.4.23.5 (08/02/2026) | v5.4.23.5 | ✅ |
+| BepInEx 6.x | v6.0.0-pre.2 (27/08/2024) | v6.0.0-pre.2 | ✅ pre.3 mai uscita, la pre.2 ha **due anni** |
+| BepInEx Legacy | v5.4.11 | v5.4.11 | ✅ pin voluto per Unity 5.6 |
+| IPA | 3.4.1 (2018, ultima in assoluto) | 3.4.1 | ⚠️ vedi sotto |
+| TMP_Font_AssetBundles | resta su v5.5.0 (128MB) | v5.5.0 | ✅ la v5.6.1 non lo spedisce, l'assunto regge |
+| MelonLoader | v0.7.3 (14/05/2026) | non hardcoded | n/a |
+
+### ⚠️ Un URL rotto, trovato solo perché non mi sono fermato ai numeri di versione
+
+Le versioni erano tutte giuste, quindi un controllo sui numeri avrebbe detto «tutto a posto». Ho fatto una `HEAD` su **tutti e tredici** i download hardcoded di `unity_patcher.rs`, e uno rispondeva **404**:
+
+```
+const IPA_URL = ".../3.4.1/IPA-3.4.1.zip"   ← trattino
+l'asset si chiama       IPA_3.4.1.zip       ← underscore
+```
+
+Un carattere. Il tag `3.4.1` esiste, il numero di versione è corretto, e la release ha 291.628 download: solo il nome del file era sbagliato. Risultato: **l'intero percorso IPA — Unity 5.0-5.5 — falliva il download a ogni tentativo.** È un ramo raro, ed è per questo che nessuno se n'era accorto.
+
+Corretto, e reso resistente: ora l'asset si risolve dall'API GitHub con `resolve_gh_asset`, come già si faceva per XUnity poche righe sotto, con l'URL giusto come fallback. Se viene rinominato di nuovo, si aggiusta da solo.
+
+**Lezione per i prossimi digest:** «versione allineata» non vuol dire «download funzionante». Sono due controlli diversi, e solo il secondo prova qualcosa.
+
+### Tool linkati senza pin di versione
+
+Non sono scaricati dall'app, sono link per l'utente. Tre si sono mossi da quando erano stati guardati:
+
+| Tool | Ultima release | Nota |
+|---|---|---|
+| gdsdecomp | **v2.6.4 (12/08/2026)** | mossa 11 giorni fa — rilevante, il Godot `.pck` è appena entrato in produzione |
+| UndertaleModTool | **0.9.1.2 (13/07/2026)** | rilevante, il lavoro GameMaker è attivo |
+| UAssetGUI | v1.1.0 (01/05/2026) | |
+| UnrealLocres | 1.1.1 (2021) | fermo da anni, ma stabile |
+| unrpa | 2.3.0 (2019) | fermo, e il Ren'Py `.rpa` ora è nativo: forse non serve più linkarlo |
+| DRV3-Sharp | **nessuna release** | solo sorgente. Il lavoro Danganronpa è attivo (DR1 end-to-end nella v1.17.0): l'utente che segue il link non trova nulla da scaricare |
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
-- **Stato tool upstream** (XUnity, BepInEx, MelonLoader): non ricontrollato dal 05/07. Sono passate sette settimane.
+- **BepInEx 6.0.0-pre.2 ha due anni** (27/08/2024) e resta l'ultima pre-release. Non è un problema oggi, ma è il pin più vecchio che l'app scarica: se il progetto upstream fosse fermo, i giochi IL2CPP recenti avranno bisogno di un'altra strada.
+- **DRV3-Sharp non ha release**: l'app linka il repo, l'utente non trova nulla da scaricare. Da decidere se linkare il sorgente diverso, o togliere il link.
+- **unrpa forse non serve più**: il Ren'Py `.rpa` è estratto nativamente dalla v1.17.0. Il link resta utile solo per chi vuole farlo a mano.
 - **Il changelog `en.json` è la sorgente dichiarata ma non sempre inglese:** nove voci della v1.16.0 erano scritte in italiano perché i commit da cui nascono violavano la convenzione «committa in inglese». Vale la pena un controllo periodico: tradurre da una sorgente sbagliata propaga l'errore in dodici lingue.
 - **Qualità della traduzione automatica del changelog:** le 410 voci tradotte oggi con `translategemma:12b` in locale hanno richiesto 50 ripristini di prefisso e 7 correzioni a mano. La voce 36 perdeva i riferimenti a file in **nove lingue su undici**. Le voci con percorsi di file in mezzo alla prosa vanno scritte a mano.
 - **`de` capitalizza lo scope dei commit** (`✨ Feedback:` invece di `✨ feedback:`) in 12 voci preesistenti. Non toccato: potrebbe essere una scelta di quel file. Da decidere.
