@@ -1,14 +1,14 @@
 {
-  "version": 1,
-  "updatedAt": "2026-07-15",
-  "_comment": "Catalogo modelli/prezzi remoto di GameStringer. Modifica questo file e ridistribuisci il sito per aggiornare modelli, prezzi e raccomandazioni SENZA rilasciare l'app. L'app fa fail-open sui default bundled se il file non e' raggiungibile. Prezzi in USD per 1K token (stima input).",
+  "version": 2,
+  "updatedAt": "2026-08-23",
+  "_comment": "Catalogo modelli/prezzi remoto di GameStringer. Modifica questo file e ridistribuisci il sito per aggiornare modelli, prezzi e raccomandazioni SENZA rilasciare l'app. L'app fa fail-open sui default bundled se il file non e' raggiungibile. Prezzi in USD per 1K token (stima input). ATTENZIONE: nel merge il remoto VINCE sul bundled, per chiave di provider e per intero array modelli. Un file stantio qui non e' inerte: sovrascrive i valori corretti di lib/remote-config.ts su TUTTE le installazioni. Tenere questo file allineato a BUNDLED_MODEL_CONFIG.",
   "pricing": {
-    "openai": { "per1kUsd": 0.00015, "note": "GPT-4o-mini ($0.15/1M input)" },
-    "gpt5": { "per1kUsd": 0.0025, "note": "GPT-4o ($2.50/1M input)" },
-    "gemini": { "per1kUsd": 0.000125, "note": "Gemini 2.0 Flash ($0.10/1M input)" },
-    "claude": { "per1kUsd": 0.003, "note": "Claude 3.5 Sonnet ($3/1M input)" },
-    "deepseek": { "per1kUsd": 0.00014, "note": "DeepSeek V3 ($0.14/1M input)" },
-    "mistral": { "per1kUsd": 0.002, "note": "Mistral Large ($2/1M input)" },
+    "openai": { "per1kUsd": 0.00015, "note": "GPT-4o mini ($0.15/1M input) · prezzo non riverificato dal 15/07/2026" },
+    "gpt5": { "per1kUsd": 0.0025, "note": "GPT-4o ($2.50/1M input) · prezzo non riverificato dal 15/07/2026" },
+    "gemini": { "per1kUsd": 0.0015, "note": "Gemini 3.5 Flash ($1.50/1M input) · VERIFICATO 23/08/2026 su ai.google.dev. Il precedente 0.000125 era il prezzo di Gemini 2.0 Flash: 12x troppo basso. Gemini 3.7 Flash costa meta' ($0.75/1M fino al 31/12/2026), quindi questa stima sbaglia per eccesso su entrambi." },
+    "claude": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input), il default del codice · VERIFICATO 23/08/2026. Claude Opus 5 costa $5/1M: chi sceglie il premium spende ~1.7x questa stima." },
+    "deepseek": { "per1kUsd": 0.00044, "note": "DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss) · RIVERIFICATO 23/08/2026 su api-docs.deepseek.com · fuori picco costa la meta'" },
+    "mistral": { "per1kUsd": 0.002, "note": "Mistral Large ($2/1M input) · prezzo non riverificato dal 15/07/2026" },
     "openrouter": { "per1kUsd": 0.001, "note": "Varia per modello" },
     "deepl": { "per1kUsd": 0.02, "note": "DeepL Pro" },
     "google": { "per1kUsd": 0.00002, "note": "Google Translate" }
@@ -20,12 +20,14 @@
       { "id": "gpt-4-turbo", "label": "GPT-4 Turbo" }
     ],
     "claude": [
-      { "id": "claude-3-5-sonnet", "label": "Claude 3.5 Sonnet", "recommended": true },
-      { "id": "claude-3-5-haiku", "label": "Claude 3.5 Haiku" }
+      { "id": "claude-sonnet-4-6", "label": "Claude Sonnet 4.6", "recommended": true },
+      { "id": "claude-opus-5", "label": "Claude Opus 5" },
+      { "id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5" }
     ],
     "gemini": [
-      { "id": "gemini-2.0-flash", "label": "Gemini 2.0 Flash", "recommended": true },
-      { "id": "gemini-1.5-pro", "label": "Gemini 1.5 Pro" }
+      { "id": "gemini-3.5-flash", "label": "Gemini 3.5 Flash", "recommended": true },
+      { "id": "gemini-3.7-flash", "label": "Gemini 3.7 Flash" },
+      { "id": "gemini-3.1-flash-lite", "label": "Gemini 3.1 Flash Lite" }
     ],
     "deepseek": [
       { "id": "deepseek-v4-flash", "label": "DeepSeek V4 Flash", "recommended": true }
