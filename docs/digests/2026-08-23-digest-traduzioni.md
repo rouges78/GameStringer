@@ -286,6 +286,24 @@ Verificato invece che la prosa viva che nomina tool esterni sia **vera**: Transl
 
 **Il gate i18n non poteva vederle:** verifica che una chiave *esista in tutte le lingue*, non che *qualcuno la usi*. Una chiave orfana è perfettamente in regola per quel controllo.
 
+### 🔴 `main` è rimasto rosso per tredici PR, e il motivo è il tema di questa giornata
+
+Il difetto peggiore commesso oggi non è nei dati: è nel modo di verificarli.
+
+Nella PR #130 ho riscritto lo step di RPG Maker VX/Ace in «Decripta l'archivio RGSS, poi traduci dentro l'app» e, nello stesso commit, ho aggiornato l'attesa del test Rust a `"RGSS Decryptor"` — che il nuovo testo **non conteneva più**. Il test `inject_tool_based_engines_return_guidance` verifica che i motori bisognosi di un tool esterno lo **nominino** negli step (Kirikiri→GARbro, Wolf→Wolf Trans, RPGMakerVXAce→RGSS Decryptor, NScripter→nscript.dat).
+
+Da lì in poi **`main` è rimasto rosso, e ci sono state fuse sopra altre tredici PR.**
+
+**Perché nessuno se n'è accorto:** ogni modifica Rust della giornata è stata verificata con `cargo check`, che **compila ma non esegue niente**. `check-linux` e `frontend-checks` continuavano a passare perché nessuno dei due lancia la suite Rust. `check-windows` è il job che lo fa, e falliva da ore.
+
+**È esattamente la firma che questo digest documenta dal primo paragrafo:** ho controllato che una cosa *compilasse*, non che *funzionasse*. La stessa distinzione fra leggere un numero di versione e fare una `HEAD` sull'URL, fra fidarsi di un'etichetta e guardare il listino. Applicata a me, e per tredici volte di fila.
+
+**Correzione, non aggiramento:** ho rimesso il nome del tool nello step invece di allentare l'asserzione. Il test aveva ragione — gli archivi RGSS un decryptor esterno lo richiedono davvero, e quello step è l'unico posto in cui l'utente scopre quale. Toglierlo aveva peggiorato la guida, non solo fatto arrossare la CI.
+
+**Chi l'ha preso:** non io e nessuno dei gate scritti oggi, ma la CI del progetto, che lo diceva da ore a chiunque guardasse. Nessuna passata sostituisce il guardare se il build è verde prima di fondere.
+
+> **Regola per il prossimo giro: sul Rust `cargo check` non basta mai. Serve `cargo test --lib`, e serve guardare la CI prima di fondere — anche quando le modifiche sembrano solo testo.**
+
 ## 📝 Cose non verificate / da controllare manualmente
 
 - **Sezioni RSS, traduzioni amatoriali ITA, localizzazioni ufficiali:** non scansionate oggi. Il prossimo digest deve rifarle da zero, non ereditarle da qui.
@@ -350,6 +368,11 @@ Nella tabella qui sotto ne mancano le ultime: **una riga che elenca le PR non pu
 | [#143](https://github.com/rouges78/GameStringer/pull/143) | Passata di conferma: 3 difetti nuovi, e HEAD non basta |
 | [#144](https://github.com/rouges78/GameStringer/pull/144) | Digest: la passata di conferma e il difetto nel metodo |
 | [#145](https://github.com/rouges78/GameStringer/pull/145) | Conteggio PR che non invecchia |
+| [#146](https://github.com/rouges78/GameStringer/pull/146) | Digest: conteggio portato a 31 e datato |
+| [#148](https://github.com/rouges78/GameStringer/pull/148) | Il pulsante «Progetti» della home andava all'Editor |
+| [#149](https://github.com/rouges78/GameStringer/pull/149) | `main` rosso da 13 PR: `cargo check` non esegue i test |
+
+La **#147** (tombstone sulle card derivate) è aperta e non fusa: nata da una diagnosi che i dati dell'utente hanno poi smentito — le sue card erano `active`, non derivate, e il difetto era già chiuso nella v1.17.0. Resta un difetto reale ma diverso, da valutare a parte.
 
 ## 🚦 Gate aggiunti oggi
 
@@ -400,5 +423,7 @@ Annullato, aggiunta la regola 3, e il conteggio vero è risultato **905** — no
 Rimosse **905 chiavi × 12 lingue = 10.860 stringhe**. E il test di sanità ora asserisce che le tre chiavi che avevano rotto il build restino riconosciute: se la regola 3 si perdesse di nuovo, **il test fallisce prima che qualcosa venga cancellato, non dopo**.
 
 **La lezione, che vale oltre l'i18n:** avevo scritto in questo stesso digest che la pulizia «non può essere meccanica». Avevo ragione per il motivo sbagliato — non per le chiavi da ricollegare, ma perché **lo strumento di misura era incompleto e nessuno dei controlli esistenti poteva dirlo**. È la terza volta oggi che un controllo certifica ciò che non riesce a vedere: il gate i18n sugli indici disallineati, quello sulle chiavi orfane, e ora il mio.
+
+E c'è un quarto caso, di segno opposto e peggiore: **la CI vedeva benissimo** che `main` era rosso, e lo diceva da ore. Nessuno guardava (vedi la sezione sul `cargo check`). Un controllo che nessuno legge non è diverso da un controllo che non c'è.
 
 **Cosa è cambiato oggi nella copertura, in una riga:** stamattina i gate verificavano che le cose *esistessero*; ora tre verificano che **servano a qualcosa** — le rotte puntano a pagine vere, le chiavi i18n hanno un lettore, e una traduzione che fallisce costa una voce invece di ottantotto.

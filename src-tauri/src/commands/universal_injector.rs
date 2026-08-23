@@ -785,7 +785,10 @@ define config.language = "italian"
         }
         "RPGMakerVXAce" | "RPGMakerXP" => {
             steps.push("Gli archivi RGSS (.rgss3a/.rgss2a/.rxdata) sono criptati".to_string());
-            steps.push("Decripta l'archivio RGSS, poi traduci dentro l'app".to_string());
+            // Lo step DEVE nominare il tool: e l'unica indicazione che l'utente
+            // riceve, e gli archivi RGSS un decryptor esterno lo richiedono davvero.
+            // Il test inject_tool_based_engines_return_guidance lo verifica.
+            steps.push("Decripta l'archivio con RGSS Decryptor, poi traduci dentro l'app".to_string());
         }
         "GameMaker" => {
             steps.push("I testi sono dentro data.win (formato GameMaker)".to_string());
