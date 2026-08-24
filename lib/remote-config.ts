@@ -120,6 +120,66 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     openrouter: { per1kUsd: 0.001, note: 'Varia per modello' },
     deepl: { per1kUsd: 0.02, note: 'DeepL Pro' },
     google: { per1kUsd: 0.00002, note: 'Google Translate' },
+
+    // ── Le chiavi che le CATENE usano davvero — 24/08/2026 ──────────────────
+    //
+    // ⛔ PERCHÉ ESISTONO: fino a oggi questa tabella era indicizzata con i nomi
+    // dei vendor (`claude`, `gemini`), mentre le catene di chain-presets.ts e il
+    // dispatch di PROVIDER_MAP (ai-translate-direct.ts:1680) usano le chiavi dei
+    // provider (`anthropic-premium`, `hymt`, `gemini-3.1`…). Nomi diversi per la
+    // stessa cosa = nessuna corrispondenza, e getProviderPrice1k rispondeva a
+    // TUTTI con il fallback 0.002. Misurato prima della correzione, su 10.000
+    // stringhe: il preset «🆓 Gratis», che parte da HY-MT locale, era
+    // preventivato $0,60 — un modello che gira sul PC dell'utente, fatturato
+    // come il secondo prezzo più alto del listino.
+    // Le chiavi qui sotto si AGGIUNGONO, non rinominano niente: rinominarle
+    // dall'altra parte romperebbe il dispatch delle traduzioni.
+
+    // Locali o senza API key: costo ZERO per costruzione, che è un fatto, non
+    // una stima — non c'è nessuna fattura da sbagliare. Verificato il
+    // 24/08/2026 leggendo PROVIDER_MAP (`needsKey: false`) e gli endpoint:
+    // Ollama in locale (hymt, translategemma, ollama), localhost:1234
+    // (lmstudio), localhost:8080 (modelwiz), API pubbliche interrogate senza
+    // chiave (mymemory, lingva, nllb via HuggingFace, libretranslate).
+    // Sono anche la ragione per cui `gratuitiPrima` esiste in chain-cost.ts:
+    // senza queste voci quel contatore restava a zero per sempre.
+    hymt: { per1kUsd: 0, note: 'HY-MT su Ollama locale · nessuna API key · verificato in PROVIDER_MAP 24/08/2026' },
+    translategemma: { per1kUsd: 0, note: 'TranslateGemma su Ollama locale · nessuna API key · verificato in PROVIDER_MAP 24/08/2026' },
+    ollama: { per1kUsd: 0, note: 'Ollama locale · nessuna API key · verificato in PROVIDER_MAP 24/08/2026' },
+    lmstudio: { per1kUsd: 0, note: 'LM Studio su localhost:1234 · nessuna API key · verificato in PROVIDER_MAP 24/08/2026' },
+    modelwiz: { per1kUsd: 0, note: 'Alocai ModelWiz su localhost:8080 · nessuna API key · verificato in PROVIDER_MAP 24/08/2026' },
+    nllb: { per1kUsd: 0, note: 'NLLB-200 via HuggingFace Inference, chiamata anonima · verificato in PROVIDER_MAP 24/08/2026' },
+    mymemory: { per1kUsd: 0, note: 'MyMemory API pubblica, nessuna chiave · verificato in PROVIDER_MAP 24/08/2026' },
+    lingva: { per1kUsd: 0, note: 'Lingva istanza pubblica, nessuna chiave · verificato in PROVIDER_MAP 24/08/2026' },
+    libretranslate: { per1kUsd: 0, note: 'LibreTranslate self-hosted o istanza pubblica · nessuna chiave · verificato in PROVIDER_MAP 24/08/2026' },
+
+    // Claude, con le tre chiavi che le catene usano davvero. Le cifre e la data
+    // sono quelle della voce `claude` qui sopra (verificata il 23/08/2026):
+    // `anthropic` e `anthropic-claude4` chiamano entrambe translateWithAnthropic
+    // → claude-sonnet-4-6, $3/1M; `anthropic-premium` chiama
+    // translateWithAnthropicPremium → claude-opus-5, $5/1M
+    // (ai-translate-direct.ts:400 e :408). Prima di oggi pagavano tutte e tre il
+    // fallback 0.002: il preset «👑 Massima Qualità», che parte proprio da
+    // Opus 5, era preventivato a 2,5 volte meno del vero. Questo è il verso
+    // sbagliato dell'errore — una fattura più alta del preventivo.
+    anthropic: { per1kUsd: 0.003, note: 'Claude Sonnet 4.6 ($3/1M input) · stessa cifra e stessa verifica della voce `claude` (23/08/2026)' },
+    'anthropic-claude4': { per1kUsd: 0.003, note: 'Claude Sonnet 4.6 ($3/1M input) · stessa fn di `anthropic` · verificato 23/08/2026' },
+    'anthropic-premium': { per1kUsd: 0.005, note: 'Claude Opus 5 ($5/1M input) · variante premium di ai-translate-direct.ts:408 · verificato 23/08/2026' },
+
+    // Varianti dello stesso vendor, stessa API key, nessun listino separato in
+    // questa tabella: prendono il prezzo della voce base come TETTO. Gemini 3.1
+    // Flash-Lite costa meno di 3.7 Flash, quindi qui la stima sbaglia per
+    // eccesso — il verso giusto, lo stesso della nota `deepseek`.
+    'gemini-3.1': { per1kUsd: 0.0015, note: 'Gemini 3.1 Flash-Lite · tetto: prezzo della voce `gemini` (23/08/2026), il Lite costa meno' },
+    'deepl-voice': { per1kUsd: 0.02, note: 'DeepL Voice · tetto: prezzo della voce `deepl`, nessun listino separato verificato' },
+
+    // ⚠️ RESTANO SENZA PREZZO, di proposito: groq, groq-gptoss, cerebras, qwen,
+    // cohere, together, fireworks, azure. Hanno tutti bisogno di una API key
+    // dell'utente e di un listino che nessuno ha ancora verificato: inventarne
+    // uno qui sarebbe esattamente il difetto che questo blocco corregge.
+    // Finché mancano, chain-cost.ts li stima con il fallback e lo DICHIARA
+    // (StimaCosto.prezzoIgnoto, '?' accanto alla cifra). Chi verifica un
+    // listino, aggiunga la voce qui con data e fonte e il '?' sparisce da solo.
   },
   models: {
     openai: [
@@ -231,9 +291,36 @@ export function mergeModelConfig(
   };
 }
 
+/**
+ * Prezzo di ripiego per un provider che il catalogo non conosce. È una CIFRA
+ * INVENTATA, ereditata dallo storico: sta qui, con un nome, perché chi la usa
+ * possa dire di starla usando (vedi getProviderPrice1kOrNull).
+ */
+export const FALLBACK_PRICE_1K = 0.002;
+
+/**
+ * Prezzo per 1K token del provider, `null` se il provider NON è in catalogo.
+ *
+ * ⛔ PERCHÉ ESISTE (24/08/2026): `getProviderPrice1k` risponde comunque, con
+ * FALLBACK_PRICE_1K, e va benissimo per estimateBatchCost — lì il provider è
+ * uno solo, scelto dall'utente, e una stima prudente è meglio di nessuna. Ma
+ * chi ragiona su una CATENA deve distinguere tre casi, non due: gratis (0),
+ * a pagamento (>0) e ignoto (null). chain-cost.ts li confondeva, e trattava
+ * «assente dal catalogo» come «gratuito»: siccome nessuna voce valeva 0, quel
+ * ramo non scattava mai e i provider locali finivano fatturati a 0.002.
+ *
+ * Nota: 0 è un prezzo LEGITTIMO, non un'assenza — validateModelConfig accetta
+ * `per1kUsd >= 0` apposta, così una config remota può dichiarare gratuito un
+ * provider. Per questo il controllo è sul tipo e non sulla verità del valore.
+ */
+export function getProviderPrice1kOrNull(config: RemoteModelConfig, provider: string): number | null {
+  const p = config.pricing[provider]?.per1kUsd;
+  return typeof p === 'number' ? p : null;
+}
+
 /** Prezzo per 1K token del provider (fallback: 0.002, come lo storico). */
 export function getProviderPrice1k(config: RemoteModelConfig, provider: string): number {
-  return config.pricing[provider]?.per1kUsd ?? 0.002;
+  return getProviderPrice1kOrNull(config, provider) ?? FALLBACK_PRICE_1K;
 }
 
 /** Catalogo modelli del provider (vuoto se assente). */

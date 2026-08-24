@@ -11,6 +11,7 @@ import {
   validateModelConfig,
   mergeModelConfig,
   getProviderPrice1k,
+  getProviderPrice1kOrNull,
   getProviderModels,
   getRecommendation,
 } from '@/lib/remote-config';
@@ -77,6 +78,22 @@ describe('getter', () => {
   it('prezzo con fallback 0.002 per provider sconosciuto', () => {
     expect(getProviderPrice1k(BUNDLED_MODEL_CONFIG, 'claude')).toBe(0.003);
     expect(getProviderPrice1k(BUNDLED_MODEL_CONFIG, 'sconosciuto')).toBe(0.002);
+  });
+
+  it('la variante OrNull distingue «gratis» da «non lo so»', () => {
+    // È la distinzione che a chain-cost.ts serviva e non aveva: con il solo
+    // fallback, un provider locale e uno sconosciuto rispondevano lo stesso.
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'claude')).toBe(0.003);
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'hymt')).toBe(0);
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'sconosciuto')).toBeNull();
+  });
+
+  it('le chiavi delle catene sono nel listino, non solo quelle dei vendor', () => {
+    // Il difetto del 24/08: le catene chiedono 'anthropic-premium', il listino
+    // conosceva solo 'claude', e Opus 5 veniva preventivato col ripiego 0.002.
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'anthropic')).toBe(0.003);
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'anthropic-claude4')).toBe(0.003);
+    expect(getProviderPrice1kOrNull(BUNDLED_MODEL_CONFIG, 'anthropic-premium')).toBe(0.005);
   });
 
   it('modelli del provider (vuoto se assente)', () => {

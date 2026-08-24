@@ -37,6 +37,7 @@ import {
   hasAvailableProviders,
   type ChainPreset,
 } from '@/lib/ai/ai-translate-direct';
+import { stimaCostoPreset, formattaStima, STRINGHE_RIFERIMENTO } from '@/lib/translation/chain-cost';
 import { addCorrection } from '@/lib/ai/adaptive-mt';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
@@ -665,6 +666,21 @@ export default function BinaryPatcherPage() {
 
   const stats = useMemo(() => project ? getProjectStats(project) : null, [project]);
 
+  /**
+   * ⛔ 24/08/2026: qui accanto a ogni preset si mostrava `preset.cost`, la
+   * stringa scritta a mano mesi fa («~$0.10», «~$1.00+»). Il picker nuovo
+   * (components/translation/chain-preset-picker.tsx) era stato costruito il
+   * 18/08 apposta per non mostrarla più — ma questa pagina, che è l'altro
+   * punto vivo da cui si sceglie un preset, ha continuato a mostrarla per una
+   * settimana. Stessa fonte per tutti e due, adesso: chain-cost.ts sui prezzi
+   * veri di remote-config. Il campo `cost` non lo legge più nessuno ed è stato
+   * tolto da ChainPresetInfo.
+   */
+  const stimePreset = useMemo(
+    () => new Map(CHAIN_PRESETS.map((p) => [p.id, formattaStima(stimaCostoPreset(p))])),
+    []
+  );
+
   // ============================================================
   // Render
   // ============================================================
@@ -983,7 +999,7 @@ export default function BinaryPatcherPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-white">{preset.name}</span>
-                            <span className="text-2xs text-white/30">{preset.cost}</span>
+                            <span className="text-2xs text-white/30">{stimePreset.get(preset.id)}</span>
                             <span className="text-2xs text-white/30">{preset.quality}</span>
                           </div>
                           <p className="text-2xs text-white/40">{preset.description}</p>
@@ -992,6 +1008,9 @@ export default function BinaryPatcherPage() {
                       </div>
                     ))}
                   </div>
+                  <p className="text-2xs leading-snug text-white/30">
+                    {t('chainPreset.disclaimer').replace('{n}', STRINGHE_RIFERIMENTO.toLocaleString())}
+                  </p>
                 </div>
               )}
             </div>
