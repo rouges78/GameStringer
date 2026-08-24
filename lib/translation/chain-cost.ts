@@ -19,14 +19,34 @@
  * ⚠️ COSA RESTA STIMA, e va detto a chi legge:
  *   - la lunghezza media di una riga di gioco (vedi CARATTERI_PER_STRINGA);
  *   - il fatto che una catena non costa «il suo primo provider»: i gratuiti in
- *     testa (HY-MT, Ollama, Groq…) coprono quello che riescono, e si paga solo
- *     quando si arriva al primo a pagamento. Quello è il CASO PEGGIORE, ed è
- *     quello che si riporta, nominando il provider;
+ *     testa (HY-MT, TranslateGemma, Ollama…) coprono quello che riescono, e si
+ *     paga solo quando si arriva al primo a pagamento. Quello è il CASO
+ *     PEGGIORE, ed è quello che si riporta, nominando il provider;
  *   - la Translation Memory abbatte le chiamate reali, e qui non è contata:
  *     il preventivo vero di un gioco lo fa estimateBatchCost sulle sue stringhe.
+ *
+ * ⛔ IL DIFETTO DEL 24/08/2026, perché la riga sopra era una promessa e non un
+ * fatto: «i gratuiti in testa» non venivano contati NEMMENO UNA VOLTA. Il ciclo
+ * chiedeva il prezzo con getProviderPrice1k, che per un provider fuori catalogo
+ * non risponde «non lo so» ma 0.002 — quindi `!(per1k > 0)` era sempre falso,
+ * `gratuitiPrima` sempre 0, e ogni preset veniva preventivato come il suo PRIMO
+ * provider, qualunque cosa fosse. Misurato su 10.000 stringhe, prima e dopo:
+ * OTTO preset su dieci mostravano la stessa identica cifra, ~$0,60 — il picker
+ * sembrava un listino ed era una costante. «🆓 Gratis», che parte da HY-MT sul
+ * PC dell'utente, diceva ~$0,60 (ora: fino a $0,45 dal primo cloud della
+ * catena); «👑 Massima Qualità», che parte da Claude Opus 5, diceva ~$0,60 pure
+ * lei (ora: ~$1,5) — 2,5 volte MENO del vero, l'errore nel verso che manda una
+ * fattura più alta del preventivo.
+ * Corretto in tre pezzi, tutti dalla parte dei dati e nessuno dalla formula:
+ *   1. il catalogo prezzi ha ora le chiavi che le catene usano davvero, con i
+ *      locali/senza-chiave a per1kUsd 0 (lib/remote-config.ts, 24/08/2026);
+ *   2. getProviderPrice1kOrNull distingue «gratis» (0) da «ignoto» (null), che
+ *      è la distinzione che qui serviva e non c'era;
+ *   3. quando il provider resta fuori catalogo la cifra si mostra col '?':
+ *      si stima lo stesso, ma senza spacciare il ripiego per un listino.
  */
 
-import { getModelConfig, getProviderPrice1k } from '@/lib/remote-config';
+import { getModelConfig, getProviderPrice1kOrNull, FALLBACK_PRICE_1K } from '@/lib/remote-config';
 import type { ChainPresetInfo } from './chain-presets';
 
 /**
@@ -57,6 +77,13 @@ export interface StimaCosto {
    * il tetto farebbe sembrare caro un preset che quasi sempre costa meno.
    */
   gratuitiPrima: number;
+  /**
+   * true quando usdMax NON nasce da un prezzo di catalogo ma dal ripiego
+   * FALLBACK_PRICE_1K, perché il provider non è nel listino. Il numero resta —
+   * un ordine di grandezza serve comunque a confrontare i preset — ma va
+   * mostrato come stima e non come misura: formattaStima ci mette un '?'.
+   */
+  prezzoIgnoto: boolean;
 }
 
 export function stimaCostoPreset(
@@ -69,25 +96,32 @@ export function stimaCostoPreset(
   // lingua, genere e provider configurati: qui non c'è niente da preventivare,
   // e fingere un numero sarebbe la bugia peggiore delle tre.
   if (preset.providers.length === 0) {
-    return { gratis: false, variabile: true, provider: null, usdMax: null, gratuitiPrima: 0 };
+    return { gratis: false, variabile: true, provider: null, usdMax: null, gratuitiPrima: 0, prezzoIgnoto: false };
   }
 
   let gratuitiPrima = 0;
   for (const provider of preset.providers) {
-    const per1k = getProviderPrice1k(config, provider);
-    // Nessun prezzo in catalogo = provider gratuito o sconosciuto: non si
-    // inventa una cifra, si conta e si passa al successivo della catena.
-    if (!(per1k > 0)) {
+    const per1k = getProviderPrice1kOrNull(config, provider);
+
+    // Prezzo 0 DICHIARATO in catalogo = provider gratuito (locale o senza API
+    // key): si conta e si passa al successivo della catena. Questo ramo, fino
+    // al 24/08/2026, non scattava mai — nessuna voce del listino valeva 0,
+    // perché i provider locali non erano nel listino affatto.
+    if (per1k === 0) {
       gratuitiPrima += 1;
       continue;
     }
 
     // Stessa aritmetica di estimateBatchCost: caratteri/4 token, ×2 per l'output.
     const token = Math.ceil((stringhe * CARATTERI_PER_STRINGA) / 4) * 2;
-    return { gratis: false, variabile: false, provider, usdMax: (token / 1000) * per1k, gratuitiPrima };
+    // per1k === null = provider fuori catalogo. NON è gratuito: ha una API key
+    // e un listino che qui non conosciamo. Si stima col ripiego e si dichiara.
+    const prezzoIgnoto = per1k === null;
+    const prezzo = per1k ?? FALLBACK_PRICE_1K;
+    return { gratis: false, variabile: false, provider, usdMax: (token / 1000) * prezzo, gratuitiPrima, prezzoIgnoto };
   }
 
-  return { gratis: true, variabile: false, provider: null, usdMax: null, gratuitiPrima };
+  return { gratis: true, variabile: false, provider: null, usdMax: null, gratuitiPrima, prezzoIgnoto: false };
 }
 
 /**
@@ -101,5 +135,9 @@ export function formattaStima(s: StimaCosto): string {
   if (s.gratis || s.usdMax === null) return '$0';
   const cifra =
     s.usdMax < 0.01 ? '< $0,01' : s.usdMax < 1 ? `$${s.usdMax.toFixed(2).replace('.', ',')}` : `$${s.usdMax.toFixed(1).replace('.', ',')}`;
-  return s.gratuitiPrima > 0 ? `fino a ${cifra}` : `~${cifra}`;
+  const base = s.gratuitiPrima > 0 ? `fino a ${cifra}` : `~${cifra}`;
+  // Il '?' non è decorazione: separa le cifre che vengono dal listino da quelle
+  // che vengono dal ripiego. Senza, un preventivo inventato e uno verificato si
+  // presentano all'utente esattamente uguali.
+  return s.prezzoIgnoto ? `${base}?` : base;
 }

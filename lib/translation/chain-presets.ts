@@ -16,11 +16,19 @@ import type { GameGenre } from '../ai/genre-prompts';
 /** Preset di chain selezionabili per costo/qualita */
 export type ChainPreset = 'free' | 'privacy' | 'economy' | 'balanced' | 'quality' | 'max_quality' | 'creative' | 'long_context' | 'voice' | 'auto';
 
+/**
+ * ⛔ QUI NON C'È UN CAMPO `cost`, e non è una dimenticanza (tolto il
+ * 24/08/2026). C'era, ed era una stringa scritta a mano («~$0.10», «~$1.00+»):
+ * invecchiava in silenzio a ogni variazione di listino — il rincaro DeepSeek
+ * del 16/08 le rese false tutte insieme senza che nessuno le toccasse. Il
+ * costo di un preset ora si CALCOLA dai prezzi veri di remote-config:
+ * lib/translation/chain-cost.ts, unica fonte per entrambi i punti che lo
+ * mostrano all'utente (il picker e /binary-patcher).
+ */
 export interface ChainPresetInfo {
   id: ChainPreset;
   name: string;
   description: string;
-  cost: string;
   quality: string;
   speed: string;
   providers: string[];
@@ -31,7 +39,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'free',
     name: '🆓 Gratis',
     description: 'Solo provider gratuiti — HY-MT + TranslateGemma locali, Groq, Cerebras, OpenRouter free',
-    cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
     providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'nllb', 'mymemory', 'lingva', 'libretranslate'],
@@ -40,7 +47,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'privacy',
     name: '🔒 Privacy',
     description: 'LibreTranslate self-hosted, Ollama locale, NLLB — nessun dato lascia il tuo PC',
-    cost: '$0',
     quality: '⭐⭐⭐',
     speed: '⚡ Locale',
     providers: ['libretranslate', 'ollama', 'lmstudio', 'hymt', 'translategemma', 'nllb'],
@@ -49,7 +55,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'economy',
     name: '💰 Economica',
     description: 'HY-MT/TranslateGemma locali + Gemini 3.1 Flash-Lite (low-cost long-context) + DeepSeek + fallback',
-    cost: '~$0.10',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
     providers: ['hymt', 'translategemma', 'gemini-3.1', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'nllb', 'mymemory', 'lingva'],
@@ -58,7 +63,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'balanced',
     name: '⚖️ Bilanciata',
     description: 'Miglior rapporto qualità/prezzo — HY-MT locale + tutti i provider cloud',
-    cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
     providers: ['hymt', 'translategemma', 'gemini-3.1', 'gemini', 'deepseek', 'deepl', 'modelwiz', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'nllb', 'mymemory', 'lingva'],
@@ -67,7 +71,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'quality',
     name: '✨ Qualità',
     description: 'AI premium — Claude 3.5/4 (creative), OpenAI, Mistral come priorità',
-    cost: '~$0.50',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
     providers: ['deepl', 'modelwiz', 'anthropic-claude4', 'anthropic', 'openai', 'qwen', 'mistral', 'gemini-3.1', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
@@ -76,7 +79,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'max_quality',
     name: '👑 Massima Qualità',
     description: 'Tutti i provider inclusi Claude Opus 4.8 (premium) e Voice API — mai senza traduzione',
-    cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
     providers: ['anthropic-premium', 'deepl', 'deepl-voice', 'modelwiz', 'anthropic-claude4', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini-3.1', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'nllb', 'mymemory', 'lingva'],
@@ -85,7 +87,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'creative',
     name: '🎭 Creative/Narrative',
     description: 'Claude Opus 4.8 (premium) + Sonnet 4.6 + Gemini 3.5 Flash per traduzioni creative, narrative, sfumature emotive',
-    cost: '~$0.60',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Adattiva',
     providers: ['anthropic-premium', 'anthropic-claude4', 'anthropic', 'openai', 'gemini-3.1', 'gemini', 'deepl', 'modelwiz'],
@@ -94,7 +95,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'long_context',
     name: '📚 Long Context',
     description: 'Gemini 3.1 Flash-Lite (low-cost) + Gemini 3.5 Flash (65k output) per documenti lunghi, script interi, multi-file',
-    cost: '~$0.30',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
     providers: ['gemini-3.1', 'gemini', 'anthropic-claude4', 'openai', 'deepseek', 'qwen'],
@@ -103,7 +103,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'voice',
     name: '🎤 Voice Translation',
     description: 'DeepL Voice API per traduzione vocale real-time con TTS',
-    cost: '~$0.40',
     quality: '⭐⭐⭐⭐⭐',
     speed: '⚡ Real-time',
     providers: ['deepl-voice', 'deepl', 'gemini-3.1', 'anthropic-claude4', 'openai'],
@@ -112,7 +111,6 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     id: 'auto',
     name: '🧠 Auto-Select',
     description: 'Seleziona automaticamente i migliori provider per lingua target e genere gioco',
-    cost: 'Variabile',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Adattiva',
     providers: [], // Calcolato dinamicamente da getAutoProviderChain()
