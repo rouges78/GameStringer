@@ -166,20 +166,56 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     'anthropic-claude4': { per1kUsd: 0.003, note: 'Claude Sonnet 4.6 ($3/1M input) · stessa fn di `anthropic` · verificato 23/08/2026' },
     'anthropic-premium': { per1kUsd: 0.005, note: 'Claude Opus 5 ($5/1M input) · variante premium di ai-translate-direct.ts:408 · verificato 23/08/2026' },
 
-    // Varianti dello stesso vendor, stessa API key, nessun listino separato in
-    // questa tabella: prendono il prezzo della voce base come TETTO. Gemini 3.1
-    // Flash-Lite costa meno di 3.7 Flash, quindi qui la stima sbaglia per
-    // eccesso — il verso giusto, lo stesso della nota `deepseek`.
-    'gemini-3.1': { per1kUsd: 0.0015, note: 'Gemini 3.1 Flash-Lite · tetto: prezzo della voce `gemini` (23/08/2026), il Lite costa meno' },
+    // ⏰ Gemini 3.1 Flash-Lite — VERIFICATO IL 24/08/2026 su ai.google.dev.
+    // Aveva un TETTO prudenziale, il prezzo della voce `gemini`, con scritto
+    // accanto «il Lite costa meno». Costa meno di 6×: $0.25/1M contro $1.50.
+    // Il tetto era onesto e faceva il suo lavoro; il listino è meglio, perché
+    // `gemini-3.1` apre le catene `economy`, `balanced` e `long_context` — è il
+    // primo provider a pagamento di tre preset su nove, quindi è la sua cifra a
+    // diventare il loro preventivo. Nessuna fascia per lunghezza di contesto,
+    // a differenza del 3.1 Pro.
+    'gemini-3.1': { per1kUsd: 0.00025, note: 'Gemini 3.1 Flash-Lite ($0.25/1M input, nessuna fascia) · ai.google.dev · verificato 24/08/2026' },
+
+    // Variante dello stesso vendor, stessa API key, nessun listino separato:
+    // prende il prezzo della voce base come TETTO. DeepL non pubblica una
+    // tariffa per la traduzione vocale real-time — né a minuto né a carattere
+    // (ricontrollato il 24/08/2026 su deepl.com/pro-api e sulla pagina
+    // prodotto), e da luglio 2026 API Free/Pro non sono più acquistabili.
+    // Finché è così, il tetto dichiarato nella nota resta la scelta migliore
+    // disponibile: il preset `voice` comincia proprio da qui.
     'deepl-voice': { per1kUsd: 0.02, note: 'DeepL Voice · tetto: prezzo della voce `deepl`, nessun listino separato verificato' },
 
-    // ⚠️ RESTANO SENZA PREZZO, di proposito: groq, groq-gptoss, cerebras, qwen,
-    // cohere, together, fireworks, azure. Hanno tutti bisogno di una API key
-    // dell'utente e di un listino che nessuno ha ancora verificato: inventarne
-    // uno qui sarebbe esattamente il difetto che questo blocco corregge.
-    // Finché mancano, chain-cost.ts li stima con il fallback e lo DICHIARA
-    // (StimaCosto.prezzoIgnoto, '?' accanto alla cifra). Chi verifica un
-    // listino, aggiunga la voce qui con data e fonte e il '?' sparisce da solo.
+    // ⏰ I SETTE CHE RESTAVANO — VERIFICATI IL 24/08/2026, uno per uno, sul
+    // listino del vendor. Erano l'ultimo gruppo a prendere il fallback: tutti
+    // dietro una API key dell'utente, tutti con un free tier vero — ed è proprio
+    // il free tier ad averli tenuti fuori dal listino così a lungo, perché chi
+    // non paga non guarda il prezzo. Qui sotto sta quello che si paga quando il
+    // free tier finisce: il caso peggiore, che è ciò che questa tabella stima.
+    // Il modello di ogni voce è quello che PROVIDER_MAP chiama davvero
+    // (ai-translate-direct.ts), non il modello di punta del venditore.
+    groq: { per1kUsd: 0.00059, note: 'Llama 3.3 70B Versatile ($0.59/1M input), il modello che il codice chiama · verificato 24/08/2026' },
+    'groq-gptoss': { per1kUsd: 0.00015, note: 'GPT-OSS 120B su Groq ($0.15/1M input) · console.groq.com/docs/models · verificato 24/08/2026' },
+    cerebras: { per1kUsd: 0.00085, note: 'Llama 3.3 70B su Cerebras ($0.85/1M input) · verificato 24/08/2026 · free tier 1M token/giorno' },
+    // Qwen — attenzione all'endpoint: il codice chiama dashscope.aliyuncs.com,
+    // cioè la regione Cina, dove qwen-plus costa $0.115/1M fino a 128K. Qui sta
+    // il listino della regione internazionale (Singapore), $0.40/1M fino a 256K:
+    // è più caro, e una stima deve sbagliare per eccesso. La fascia oltre i 256K
+    // ($1.20/1M) non è raggiungibile dai batch con max_tokens 8192 di questo codice.
+    qwen: { per1kUsd: 0.0004, note: 'Qwen-Plus, listino Singapore ($0.40/1M input fino a 256K) · verificato 24/08/2026 · Pechino $0.115/1M' },
+    // Cohere — il più caro dei sette, e di parecchio: $2.50/1M, ~4× cerebras.
+    // Nelle catene sta dopo provider molto più economici, ma se quelli cadono
+    // è lui a fare il conto.
+    cohere: { per1kUsd: 0.0025, note: 'Command R+ 08-2024 ($2.50/1M input) · cohere.com/pricing · verificato 24/08/2026' },
+    // Together — la sua pagina modello dice $1.04/1M, gli aggregatori $0.88.
+    // Vince la più cara, che qui è anche quella ufficiale.
+    together: { per1kUsd: 0.00104, note: 'Llama 3.3 70B Instruct Turbo ($1.04/1M input, pagina ufficiale) · verificato 24/08/2026' },
+    // Fireworks non ha una riga per llama-v3p3-70b-instruct: prezza per taglia,
+    // e sopra i 16B di parametri sono $0.90/1M, uguali in input e output.
+    fireworks: { per1kUsd: 0.0009, note: 'Llama 3.3 70B su Fireworks, fascia >16B param ($0.90/1M) · docs.fireworks.ai · verificato 24/08/2026' },
+
+    // ⚠️ Resta senza prezzo `azure`, che però nessuna catena usa oggi: non entra
+    // in nessun preventivo e non produce nessun '?'. Chi ne verifica il listino
+    // aggiunga la voce qui con data e fonte, nella stessa forma di queste.
   },
   models: {
     openai: [

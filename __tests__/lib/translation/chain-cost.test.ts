@@ -114,7 +114,12 @@ describe('stimaCostoPreset — prezzi presi dal catalogo, non inventati', () => 
   });
 
   it('un provider fuori catalogo si stima col ripiego e lo dichiara', () => {
-    const s = stimaCostoPreset(preset(['groq']));
+    // ⚠️ L'id è finto di proposito. Qui prima c'era 'groq', che il 24/08/2026 è
+    // entrato in listino: il test misurava il meccanismo usando come campione un
+    // buco destinato a chiudersi, e infatti si è chiuso. Un id inventato lega
+    // questo test a ciò che verifica — il ripiego dichiarato — e non allo stato
+    // del catalogo, che è esattamente la cosa che deve poter cambiare.
+    const s = stimaCostoPreset(preset(['provider-che-non-esiste']));
     expect(s.prezzoIgnoto).toBe(true);
     expect(s.usdMax).toBeCloseTo(usdA(FALLBACK_PRICE_1K), 6);
     expect(formattaStima(s)).toBe('~$0,60?');
@@ -156,10 +161,17 @@ describe('catalogo prezzi — nessun provider entra in silenzio', () => {
    * test non chiede che siano prezzati — chiede che l'elenco sia una DECISIONE:
    * se domani una catena usa un provider nuovo, questo test fallisce e obbliga
    * a scegliere fra «verifico il listino» e «resta una stima dichiarata».
+   *
+   * ⭐ 24/08/2026: È VUOTO, e vuoto è il punto d'arrivo, non un test disattivato.
+   * Ci stavano groq, groq-gptoss, cerebras, qwen, cohere, together e fireworks;
+   * sono stati verificati sul listino dei rispettivi vendor e sono entrati in
+   * BUNDLED_MODEL_CONFIG.pricing, quindi nessuna catena passa più dal fallback
+   * e nessun preset mostra il '?'. Con l'insieme vuoto il test diventa la
+   * regola più stretta che possa esprimere: OGNI provider di OGNI preset ha un
+   * prezzo. Il primo che ne aggiunge uno senza listino lo fa fallire, e deve
+   * scrivere qui il nome per dichiararlo — che è esattamente ciò che serve.
    */
-  const SENZA_PREZZO = new Set([
-    'groq', 'groq-gptoss', 'cerebras', 'qwen', 'cohere', 'together', 'fireworks',
-  ]);
+  const SENZA_PREZZO = new Set<string>([]);
 
   it('ogni provider dei preset è prezzato, o è nell’elenco dei noti-senza-prezzo', () => {
     const usati = new Set(CHAIN_PRESETS.flatMap((p) => p.providers));
@@ -167,6 +179,22 @@ describe('catalogo prezzi — nessun provider entra in silenzio', () => {
       (p) => BUNDLED_MODEL_CONFIG.pricing[p] === undefined && !SENZA_PREZZO.has(p)
     );
     expect(ignoti).toEqual([]);
+  });
+
+  it('i sette dietro API key hanno un listino, non il ripiego', () => {
+    // Erano l'ultimo gruppo a passare dal fallback, ed erano il motivo per cui
+    // SENZA_PREZZO esisteva. Zero non andrebbe bene come non andrebbe bene 0.002:
+    // hanno un free tier, ma questa tabella stima il caso peggiore, cioè il
+    // listino che si paga quando il free tier finisce.
+    for (const p of ['groq', 'groq-gptoss', 'cerebras', 'qwen', 'cohere', 'together', 'fireworks']) {
+      const voce = BUNDLED_MODEL_CONFIG.pricing[p];
+      expect(voce, `${p} deve stare in catalogo`).toBeDefined();
+      expect(voce.per1kUsd).toBeGreaterThan(0);
+      expect(voce.per1kUsd).not.toBe(FALLBACK_PRICE_1K);
+      // La nota vale quanto la cifra: dice a quale modello si riferisce e quando
+      // è stata guardata. Una voce senza data è un listino vecchio travestito.
+      expect(voce.note).toMatch(/verificato \d{2}\/\d{2}\/\d{4}/);
+    }
   });
 
   it('i provider locali o senza API key valgono zero, non «assente»', () => {
