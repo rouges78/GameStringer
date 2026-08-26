@@ -224,9 +224,22 @@
 
 ## Se dovessi scegliere solo tre cose
 
-1. **Database di compatibilità automatico** (P0)
-2. **Discord** (P1 community)
-3. **Font auto-patching** (P1 qualità)
-
 Le prime due creano il volano community-dati che nessun tool amatoriale può
 replicare; la terza elimina il fallimento più visibile per l'utente finale.
+
+1. ~~**Database di compatibilità automatico** (P0)~~ — FATTO 13/07/2026 (vedi P0
+   sopra). Completato il 24/08/2026 anche l'ultimo motore che non segnalava:
+   il ramo Visionaire Studio apriva la sua operazione di progresso a mano e
+   saltava `startHeroTracking`, quindi ogni sua run restava fuori dai dati.
+   Ora passa dal tracker come gli altri cinque, e
+   `__tests__/lib/compat-telemetry-coverage.test.ts` impedisce che un motore
+   nuovo torni a essere muto.
+2. **Discord** (P1 community) — l'unica delle tre ancora aperta (riga 167).
+3. ~~**Font auto-patching** (P1 qualità)~~ — v1 FATTA 13/07/2026 (riga 109).
+
+⚠️ Questo blocco è rimasto invariato dal 13/07 al 24/08/2026 mentre due delle
+tre voci venivano completate e spuntate PIÙ SOPRA, nello stesso file. Chi lo
+leggeva vedeva tre P0/P1 aperti che aperti non erano — ed è stato letto, e ha
+mandato qualcuno a rifare una cosa fatta. Un riassunto che non si aggiorna
+insieme a ciò che riassume è peggio di nessun riassunto: va spuntato QUI ogni
+volta che si spunta una voce sopra.

@@ -54,6 +54,23 @@ export interface HeroTracker {
   done: (translated: number, total: number) => Promise<void>;
   fail: (err: unknown) => Promise<void>;
   /**
+   * Run fermata DALL'UTENTE col pulsante Annulla del widget globale.
+   *
+   * ⛔ Non è né `done` né `fail`, e schiacciarla su uno dei due mente in un
+   * modo che si vede: `done` la manderebbe nel database di compatibilità come
+   * 'success' (o 'partial'), abbassando la percentuale di un motore per un
+   * motivo che col motore non c'entra — chi annulla ha cambiato idea, non ha
+   * trovato un gioco incompatibile. `fail` direbbe che qualcosa si è rotto,
+   * quando invece il checkpoint è salvo e la patch parziale è applicata.
+   *
+   * Quindi qui NON si segnala nessuno step: si chiude l'operazione dichiarando
+   * `stopped`, si rilasciano guardia e badge, e si aggiorna il progetto con il
+   * lavoro davvero fatto (che è recuperabile). Niente boot check e niente
+   * proposta di opt-in: la run non è arrivata in fondo, non c'è esito da
+   * chiedere. Il silenzio, qui, è il dato più onesto che possiamo produrre.
+   */
+  stopped: (translated: number, total: number) => Promise<void>;
+  /**
    * Facoltativo: comunica lo step di pipeline corrente al tracker (per la
    * telemetria di compatibilità). Se mai chiamato, la stima è: 'extract'
    * all'avvio → 'translate' al primo progress → 'patch' su done().
@@ -246,6 +263,11 @@ export function startHeroTracking(progress: ProgressState, meta: HeroTrackMeta):
         const tray = await import('@/lib/notifications/tray-notifications');
         await tray.notifyTranslationCompleted(meta.gameName || 'Gioco', translated);
       } catch { /* ignore */ }
+    },
+    stopped: async (translated: number, total: number) => {
+      progress.completeOperation(opId, { translated, total, stopped: true });
+      if (projectId) await projectService.updateProgress(projectId, translated).catch(() => {});
+      await releaseGuardAndBadge();
     },
     fail: async (err: unknown) => {
       progress.failOperation(opId, err instanceof Error ? err : new Error(String(err)));
