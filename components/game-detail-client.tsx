@@ -2426,19 +2426,8 @@ export default function GameDetailPage() {
       if (engV.includes('visionaire')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
-        // Guardia anti-duplicato GLOBALE (sopravvive a navigazione/smontaggio): se la
-        // traduzione di questo gioco è già in corso in background, non rilanciarla.
-        const _vg = globalThis as unknown as { __gsVisRunning?: Set<string> };
-        if (!_vg.__gsVisRunning) _vg.__gsVisRunning = new Set<string>();
-        const VIS_RUNNING = _vg.__gsVisRunning;
-        if (VIS_RUNNING.has(game.installPath)) {
-          toast.info(t('heroJob.alreadyRunning'));
-          setAutoTranslateBusy(false);
-          autoTranslateRunningRef.current = false;
-          return;
-        }
-        VIS_RUNNING.add(game.installPath);
-        const visOpId = `visionaire-${game.installPath}`;
+        // catturata come const: il narrowing del guard non entra nelle closure
+        const vPath: string = game.installPath;
         // ⛔ PRIMA: «cloud se esiste una API key, altrimenti Ollama» — dedotto,
         //    mai chiesto. Avere una chiave configurata NON vuol dire volerla
         //    spendere su questo gioco, e l'utente non poteva forzare il locale
@@ -2453,33 +2442,41 @@ export default function GameDetailPage() {
         ];
         const vStep = (idx: number, status: 'running' | 'done' | 'error', detail?: string) =>
           setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx ? { ...s, status: 'done' } : s));
-        setAutoTranslateError(null);
-        setAutoTranslateResult(null);
-        setAutoTranslateSteps([...vSteps]);
-        setAutoTranslateActive(true);
-        // Operazione GLOBALE: gli aggiornamenti vanno al ProgressProvider montato nel
-        // layout, quindi restano visibili e continuano anche cambiando pagina.
-        progress.startOperation(visOpId, {
-          title: t('heroJob.jobTitle').replace('{name}', game.name || game.title || 'Visionaire'),
-          description: t('heroJob.jobDescBg').replace('{engine}', `Visionaire Studio · ${visBackend === 'cloud' ? 'Cloud' : 'Ollama'}`),
-          isBackground: true,
-          canMinimize: true,
+        // ⭐ Tracking trasversale, come ogni altro motore hero. Fino al
+        // 24/08/2026 questo ramo si apriva l'operazione di progresso a mano,
+        // con guardia e badge tray propri — era l'unico `progress.startOperation`
+        // diretto del file. Funzionava, ma saltava l'unica cosa che il tracker
+        // fa e che a mano nessuno rifaceva: il report al database di
+        // compatibilità. Ogni traduzione Visionaire finiva fuori dai dati, e il
+        // «funziona nel N% delle run» di questo motore restava fermo a zero run.
+        // Il tracker era già stato scritto per accoglierlo: `canCancel`/`onCancel`
+        // esistono in HeroTrackMeta proprio per assorbire lo stop di Visionaire
+        // (vedi il commento lì), ma il ramo non era mai stato spostato.
+        const visTracker = startHeroTracking(progress, {
+          engineId: 'visionaire', engineLabel: 'Visionaire Studio', gamePath: vPath,
+          gameId: game.id || game.appid?.toString() || gameId, gameName: game.name || game.title,
+          gameImage: game.headerImage || game.coverUrl, targetLang: tgt,
+          opTitle: t('heroJob.jobTitle').replace('{name}', game.name || game.title || 'Visionaire'),
+          opDesc: t('heroJob.jobDescBg').replace('{engine}', `Visionaire Studio · ${visBackend === 'cloud' ? 'Cloud' : 'Ollama'}`),
           // Il pulsante Annulla del widget ferma il job TRA un blocco e
           // l'altro: checkpoint salvato (disco+idb) e patch parziale
           // applicata. Fino al 03/08/2026 l'unico stop era chiudere la app.
           canCancel: true,
           onCancel: () => {
-            // installPath è string|undefined e il narrowing non entra nelle
-            // closure: si rilegge e si controlla QUI, al momento del click.
-            const p = game.installPath;
-            if (!p) return;
             import('@/lib/visionaire-translate')
-              .then(m => m.requestVisionaireStop(p))
+              .then(m => m.requestVisionaireStop(vPath))
               .catch(() => {});
           },
         });
-        // Badge tray: +1 traduzione in corso
-        import('@/lib/notifications/tray-notifications').then(m => m.incrementActiveTranslations()).catch(() => {});
+        if (!visTracker) {
+          toast.info(t('heroJob.alreadyRunning'));
+          setAutoTranslateBusy(false); autoTranslateRunningRef.current = false;
+          return;
+        }
+        setAutoTranslateError(null);
+        setAutoTranslateResult(null);
+        setAutoTranslateSteps([...vSteps]);
+        setAutoTranslateActive(true);
         try {
           const { runVisionaireTranslation } = await import('@/lib/visionaire-translate');
           const r = await runVisionaireTranslation({
@@ -2490,14 +2487,18 @@ export default function GameDetailPage() {
             gameName: game.name || game.title,
             gameImage: game.headerImage || game.coverUrl,
             onProgress: (p) => {
-              if (p.phase === 'scan') vStep(0, 'running');
-              else if (p.phase === 'extract') { vStep(0, 'done'); vStep(1, 'running'); }
+              // setStage dice al tracker a che punto della pipeline siamo: se la
+              // run fallisce, il database riceve lo step VERO invece della stima
+              // ('extract' → 'translate' al primo progresso). Qui le fasi sono
+              // note, quindi non c'è ragione di farlo indovinare.
+              if (p.phase === 'scan') { visTracker.setStage('scan'); vStep(0, 'running'); }
+              else if (p.phase === 'extract') { visTracker.setStage('extract'); vStep(0, 'done'); vStep(1, 'running'); }
               else if (p.phase === 'translate') {
                 vStep(1, 'done');
                 vStep(2, 'running', `${p.done}/${p.total}`);
                 setAutoTranslateProgress(p.total ? `${p.done}/${p.total}` : '');
-                progress.updateProgress(visOpId, p.total ? (p.done / p.total) * 100 : 0, `${p.done}/${p.total}`);
-              } else if (p.phase === 'apply') { vStep(2, 'done'); vStep(3, 'running'); progress.updateProgress(visOpId, 99, 'Applicazione patch...'); }
+                visTracker.onProgress(p.done, p.total);
+              } else if (p.phase === 'apply') { visTracker.setStage('patch'); vStep(2, 'done'); vStep(3, 'running'); }
               else if (p.phase === 'done') vStep(3, 'done');
             },
           });
@@ -2506,11 +2507,7 @@ export default function GameDetailPage() {
             // successo da wizard né un errore — il lavoro è nel checkpoint
             // e la patch parziale è applicata. Si chiude sobri.
             vStep(2, 'done', `${r.translated}/${r.total} — ${t('heroJob.stoppedByUser')}`);
-            progress.completeOperation(visOpId, { translated: r.translated, total: r.total, stopped: true });
-            try {
-              const tray = await import('@/lib/notifications/tray-notifications');
-              await tray.decrementActiveTranslations();
-            } catch { /* tray non disponibile */ }
+            await visTracker.stopped(r.translated, r.total);
             toast.info(t('heroJob.stoppedToast').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
             return;
           }
@@ -2530,13 +2527,7 @@ export default function GameDetailPage() {
               stringsWritten: r.translated, runtimeOnly: false,
             },
           });
-          progress.completeOperation(visOpId, { translated: r.translated, total: r.total });
-          // Notifica tray (anche con finestra ridotta a icona) + aggiorna badge attivi
-          try {
-            const tray = await import('@/lib/notifications/tray-notifications');
-            await tray.decrementActiveTranslations();
-            await tray.notifyTranslationCompleted(game.name || game.title || 'Gioco', r.translated);
-          } catch { /* tray non disponibile */ }
+          await visTracker.done(r.translated, r.total);
           toast.success(t('heroJob.visDone').replace('{n}', String(r.translated)).replace('{total}', String(r.total)));
         } catch (e) {
           vStep(2, 'error', String(e));
@@ -2545,16 +2536,10 @@ export default function GameDetailPage() {
           const _full = `${t('heroJob.visError').replace('{hint}', hint)}${_detail ? ' — ' + _detail : ''}`;
           clientLogger.error('[Visionaire] traduzione fallita:', e);
           setAutoTranslateError(_full);
-          progress.failOperation(visOpId, new Error(_full));
-          try {
-            const tray = await import('@/lib/notifications/tray-notifications');
-            await tray.decrementActiveTranslations();
-            await tray.notifyTranslationFailed(game.name || game.title || 'Gioco', String(e));
-          } catch { /* tray non disponibile */ }
+          await visTracker.fail(new Error(_full));
           toast.error(t('heroJob.visError').replace('{hint}', hint), { description: String(e) });
           void tryRuntimeFallback('failure', {}, 'run-failed');
         } finally {
-          VIS_RUNNING.delete(game.installPath);
           setAutoTranslateBusy(false);
           setAutoTranslateProgress('');
           autoTranslateRunningRef.current = false;
