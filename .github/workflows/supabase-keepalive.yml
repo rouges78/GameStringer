@@ -1,27 +1,56 @@
 name: Supabase Keep-Alive
 
-# Ping leggero ogni 3 giorni per tenere il progetto "attivo".
+# Ping giornaliero al progetto Supabase della community, che è anche il suo
+# unico controllo di salute automatico.
 #
-# ⚠️ CORREZIONE 09/08/2026: questo file nasceva per la pausa da inattività del
-# piano FREE, ma l'organizzazione è su piano PRO (verificato via API), dove
-# quella sospensione non si applica e ci sono backup giornalieri automatici
-# (retention 7 giorni). Il workflow resta come rete di sicurezza a costo zero
-# — e utile se un giorno si scendesse di piano — ma NON è la difesa dei dati:
-# quella è in docs/runbooks/supabase-disaster-recovery.md (i backup Supabase
-# NON includono lo Storage, dove stanno i file dei pack).
+# ⛔ CORREZIONE 26/08/2026 — LA PREMESSA DI QUESTO FILE ERA SBAGLIATA.
+# La nota del 09/08/2026 diceva: «l'organizzazione è su piano PRO (verificato
+# via API), dove quella sospensione non si applica […] il workflow resta come
+# rete di sicurezza». Il 26/08/2026 il progetto si è messo in pausa PER
+# INATTIVITÀ e ha smesso di rispondere: gateway HTTP vivo (401 in 0,15 s) e
+# Postgres muto (ogni query autenticata in timeout a 25 s, su compat_reports,
+# compat_game_summary e patch_hub_entries, e `select 1` giù anche via SQL).
+# Quindi questo workflow non è una rete di sicurezza: è LA difesa, e il piano
+# non è ciò che si credeva.
+#
+# ⚠️ E non è bastato: il ping girava ogni 3 giorni e il 25/08 alle 07:41 aveva
+# risposto 200 in 1,6 s — il giorno dopo il progetto era in pausa. Non sappiamo
+# quale attività Supabase conti davvero, ma sappiamo che una richiesta ogni tre
+# giorni non l'ha impedito. Da qui il passaggio a GIORNALIERO: costa una manciata
+# di secondi di runner e toglie di mezzo la variabile «era troppo rado».
+#
+# ⛔ IL DIFETTO PEGGIORE ERA LA CONDIZIONE DI USCITA:
+#     if [ "${HTTP_CODE}" -ge 500 ]; then exit 1; fi
+# Quando l'origin non risponde, curl non riceve nessuno status e `%{http_code}`
+# vale `000`. E `[ "000" -ge 500 ]` è FALSO: il job usciva VERDE proprio nello
+# scenario che doveva sorvegliare. Un controllo che passa quando la cosa
+# controllata è morta è peggio di nessun controllo, perché occupa il posto di
+# quello vero. Ora l'unico esito accettato è 200 con un corpo JSON.
+#
+# Perché il corpo e non solo lo status: un 401/403 lo può produrre PostgREST dal
+# suo strato di autorizzazione senza mai interrogare Postgres. La nota vecchia
+# li dava per buoni («il DB ha comunque ricevuto traffico») ma non è verificato,
+# e un keep-alive che tiene sveglio solo il gateway non tiene sveglio niente.
+# Un array JSON, invece, può arrivare solo da una lettura andata a buon fine.
 #
 # NOTE:
+#   - Si interroga `community_rooms` perché è l'unico endpoint di cui abbiamo la
+#     prova che risponda 200 all'anon key (log del run 32822838595, 25/08/2026).
+#     La vista che conta per gli utenti è `compat_game_summary` (badge e pagina
+#     pubblica): sarebbe la sonda più significativa, ma va prima verificato che
+#     l'anon possa leggerla, altrimenti si ottiene un check rosso per sempre.
 #   - L'anon key qui sotto è la stessa già pubblica nel codice
 #     (lib/social/community-hub-backend.ts), quindi non espone nulla di nuovo.
-#   - Se preferisci, spostala in un Secret del repo (Settings → Secrets → Actions,
-#     nome SUPABASE_ANON_KEY) e sostituisci il valore inline con ${{ secrets.SUPABASE_ANON_KEY }}.
-#   - GitHub disabilita i cron dopo 60 giorni di inattività del repo: dato che
-#     committi spesso, non è un problema.
+#   - GitHub disabilita i cron dopo 60 giorni di inattività del repo.
+#   - Un fallimento qui arriva solo via notifica GitHub a chi ha committato per
+#     ultimo. È debole, ed è il limite noto di questa sorveglianza: se il
+#     progetto torna a cadere senza che nessuno guardi le Actions, il primo a
+#     saperlo sarà comunque un utente.
 
 on:
   schedule:
-    - cron: '0 7 */3 * *'   # ogni 3 giorni, 07:00 UTC
-  workflow_dispatch:          # avvio manuale dalla tab Actions
+    - cron: '0 7 * * *'   # ogni giorno, 07:00 UTC
+  workflow_dispatch:      # avvio manuale dalla tab Actions
 
 jobs:
   ping:
@@ -31,16 +60,40 @@ jobs:
         env:
           SUPABASE_URL: 'https://relbkjoxdnbqizgomzhs.supabase.co'
           SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlbGJram94ZG5icWl6Z29temhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDcxMDUsImV4cCI6MjA4OTkyMzEwNX0.TY4pVsZVJ3vS_8AArXXr4RghxUn1ATju4kiVwjzpdyM'
+          # Un progetto che si sveglia da una pausa può metterci un po': tre
+          # tentativi distinguono «lento» da «morto» senza far scattare un
+          # allarme falso. Se falliscono tutti e tre, è morto.
+          TENTATIVI: '3'
         run: |
-          echo "Ping a Supabase per tenere il progetto attivo..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${SUPABASE_URL}/rest/v1/community_rooms?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
-          echo "HTTP status: ${HTTP_CODE}"
-          # 200 = ok, 401/403 = key/policy ma il DB ha comunque ricevuto traffico (basta per il keep-alive)
-          if [ "${HTTP_CODE}" -ge 500 ]; then
-            echo "::error::Supabase ha risposto ${HTTP_CODE} (errore server)"
-            exit 1
+          set -uo pipefail
+          URL="${SUPABASE_URL}/rest/v1/community_rooms?select=id&limit=1"
+
+          for n in $(seq 1 "${TENTATIVI}"); do
+            # --max-time: senza, su un origin che non risponde curl resta appeso
+            # finché non interviene Cloudflare, e il job si trascina per minuti.
+            RISPOSTA=$(curl -s --max-time 25 -w $'\n%{http_code}' "${URL}" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" 2>/dev/null || true)
+            CODICE=$(printf '%s' "${RISPOSTA}" | tail -n 1)
+            CORPO=$(printf '%s' "${RISPOSTA}" | sed '$d')
+
+            echo "Tentativo ${n}/${TENTATIVI}: HTTP ${CODICE:-000}"
+
+            # 200 con un array JSON = PostgREST ha letto da Postgres. È l'unica
+            # risposta che dimostra che il database è vivo.
+            if [ "${CODICE}" = "200" ] && printf '%s' "${CORPO}" | grep -q '^\s*\['; then
+              echo "Keep-alive completato: il database ha risposto."
+              exit 0
+            fi
+
+            [ "$n" -lt "${TENTATIVI}" ] && sleep 20
+          done
+
+          # `000` = nessuna risposta (timeout/connessione): è il sintomo del
+          # progetto in pausa, ed è il caso che prima passava per verde.
+          if [ "${CODICE:-000}" = "000" ]; then
+            echo "::error::Supabase non risponde: nessuno status dopo ${TENTATIVI} tentativi da 25 s. Il progetto è probabilmente in pausa — riattivalo dalla dashboard."
+          else
+            echo "::error::Supabase ha risposto ${CODICE}, atteso 200 con corpo JSON. Corpo: $(printf '%s' "${CORPO}" | head -c 200)"
           fi
-          echo "Keep-alive completato."
+          exit 1
