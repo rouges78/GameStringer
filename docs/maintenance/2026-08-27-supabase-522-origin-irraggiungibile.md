@@ -1,8 +1,9 @@
-# Il progetto Supabase risponde 522 a quasi tutto, da 24 ore
+# Il backend community è irraggiungibile: prima 522, poi il database che non risponde
 
-**Data:** 27/08/2026 · **Stato:** **aperto a monte** — causa identificata, e' un
-incidente Supabase in corso, non il nostro progetto · **Progetto:**
-`gamestringer-community` (`relbkjoxdnbqizgomzhs`, `eu-west-1`, Postgres 17.6.1)
+**Data:** 27/08/2026, ultimo aggiornamento 13:49 UTC · **Stato:** **ANCORA
+APERTO** dopo ~30 ore — causa identificata, è un incidente Supabase in corso,
+non il nostro progetto · **Progetto:** `gamestringer-community`
+(`relbkjoxdnbqizgomzhs`, `eu-west-1`, Postgres 17.6.1)
 
 ## Il fatto
 
@@ -118,6 +119,60 @@ caso invece di aprirne altri.
    mosse che puo' peggiorare le cose.
 4. Quando torna su, rifare le misure con le query in fondo e verificare lo
    schema di `user_profiles` (vedi sotto).
+
+## Aggiornamento 13:49 UTC — il sintomo cambia, il guasto no
+
+Alle **13:00:31 UTC** i log mostrano ancora `522`. Dalle **13:02** in poi il
+progetto risponde `401` in due decimi di secondo. Sembra tornato. Non lo è.
+
+La misura che lo dimostra sono due sonde sullo stesso host, nello stesso istante:
+
+| Sonda | Esito |
+|---|---|
+| `GET /rest/v1/` **senza chiave** | **401 in 0,19 s** |
+| `GET /rest/v1/user_profiles?select=id&limit=1` **con chiave** | **appesa, timeout a 30 s** |
+
+La prima la rifiuta il gateway senza mai arrivare a Postgres. La seconda deve
+passare per PostgREST → pooler → Postgres, e resta appesa finché qualcosa non
+scade. Il guasto non è finito: si è spostato di un passo. Prima Cloudflare non
+riusciva ad aprire la connessione verso l'origin (522); ora l'origin accetta ma
+non ottiene una connessione al database. Da fuori sembra un miglioramento, per
+l'app non cambia niente.
+
+**Regola che ne esce:** un `401` per chiave mancante prova che il gateway
+risponde, nient'altro. Qualunque sonda di salute su questo progetto deve usare
+il percorso autenticato, che è l'unico che tocca il database. La sonda comoda —
+niente chiave, nessun segreto da gestire — è anche quella che mente.
+
+Alle 13:49, otto tentativi dopo, il percorso col database non ha ancora
+risposto una volta.
+
+### La sonda che ha dichiarato vittoria a database morto
+
+La prima versione dello script di attesa ha annunciato il ritorno con il
+database ancora giù. Vale la pena scriverlo, perché l'errore è riproducibile
+altrove:
+
+```bash
+code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 ... || echo 000)
+case "$code" in
+  000|5*) ancora_giu ;;
+  *)      e_tornato ;;     # ← ci finisce tutto il resto
+esac
+```
+
+`curl` stampa già `000` quando fallisce, ed esce con 28: scattava anche
+l'`|| echo 000`, e i due si concatenavano in **`000000`**. Quel codice non
+corrispondeva a nessun ramo dell'elenco, quindi cadeva in `*)`, cioè nel
+successo.
+
+Il bug della concatenazione è banale. Quello che conta è l'errore di progetto
+sotto: **elencare i casi di fallimento e trattare il resto come successo**. Una
+sonda fatta così dichiara vittoria su ogni sorpresa che non aveva previsto.
+Invertita — elenco esplicito dei codici che valgono vivo (`200 400 401 403 404
+406`, le risposte definitive di PostgREST), tutto il resto è giù — fallisce
+verso l'attesa invece che verso il falso allarme. Al massimo avvisa in ritardo,
+mai a vuoto.
 
 ## Due cose nostre, emerse per strada
 
