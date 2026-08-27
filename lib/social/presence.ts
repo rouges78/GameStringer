@@ -332,17 +332,21 @@ async function fetchProfilesMap(userIds: string[]): Promise<Map<string, { userna
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return map;
 
-    // Try user_profiles with user_id column
+    // La PK di `user_profiles` e' `id` (docs/supabase-schema.sql:9). Fino al
+    // 27/08/2026 qui si interrogava `user_id`, colonna che non esiste: ogni
+    // chiamata finiva in 42703 e il ripiego per `id` che stava sotto non veniva
+    // mai raggiunto, perche' il ramo d'errore ritorna prima. Risultato: questa
+    // funzione non ha mai risolto un username o un avatar da Supabase.
     const query = supabase
       .from('user_profiles')
-      .select('user_id, username, avatar_url');
-    
+      .select('id, username, avatar_url');
+
     if (userIds.length === 1) {
-      query.eq('user_id', userIds[0]);
+      query.eq('id', userIds[0]);
     } else {
-      query.in('user_id', userIds);
+      query.in('id', userIds);
     }
-    
+
     const { data, error } = await query;
 
     if (error) {
@@ -357,28 +361,7 @@ async function fetchProfilesMap(userIds: string[]): Promise<Map<string, { userna
 
     if (data) {
       for (const p of data) {
-        if (p.user_id) map.set(p.user_id as string, { username: p.username as string || 'Utente', avatar_url: p.avatar_url as string | null });
-      }
-    }
-
-    // Also try by id column (some tables use id instead of user_id)
-    if (map.size === 0) {
-      const query2 = supabase
-        .from('user_profiles')
-        .select('id, username, avatar_url');
-      
-      if (userIds.length === 1) {
-        query2.eq('id', userIds[0]);
-      } else {
-        query2.in('id', userIds);
-      }
-      
-      const { data: data2 } = await query2;
-
-      if (data2) {
-        for (const p of data2) {
-          if (p.id) map.set(p.id as string, { username: p.username as string || 'Utente', avatar_url: p.avatar_url as string | null });
-        }
+        if (p.id) map.set(p.id as string, { username: p.username as string || 'Utente', avatar_url: p.avatar_url as string | null });
       }
     }
   } catch { /* silent */ }
