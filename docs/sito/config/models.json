@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "updatedAt": "2026-08-27",
   "_comment": "Catalogo modelli/prezzi remoto di GameStringer. Modifica questo file e ridistribuisci il sito per aggiornare modelli, prezzi e raccomandazioni SENZA rilasciare l'app. L'app fa fail-open sui default bundled se il file non e' raggiungibile. Prezzi in USD per 1K token (stima input). ATTENZIONE: nel merge il remoto VINCE sul bundled, per chiave di provider e per intero array modelli. Un file stantio qui non e' inerte: sovrascrive i valori corretti di lib/remote-config.ts su TUTTE le installazioni. Tenere questo file allineato a BUNDLED_MODEL_CONFIG.",
   "pricing": {
@@ -7,6 +7,9 @@
     "gpt5": { "per1kUsd": 0.0025, "note": "GPT-4o ($2.50/1M input) · VERIFICATO 23/08/2026. La chiave si chiama gpt5 per ragioni storiche, il modello e GPT-4o." },
     "gemini": { "per1kUsd": 0.0015, "note": "Gemini 3.7 Flash, il default del codice · VERIFICATO 23/08/2026 su ai.google.dev. Costa $0.75/1M fino al 31/12/2026 e $1.50/1M dal 01/01/2027: qui sta il prezzo pieno, cosi' la stima sbaglia per eccesso invece di dover rincorrere il rialzo a Capodanno." },
     "claude": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input), il default del codice · VERIFICATO 23/08/2026. Claude Opus 5 costa $5/1M: chi sceglie il premium spende ~1.7x questa stima." },
+    "anthropic": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input) · ALIAS DI CATENA: stessa fn e stesso prezzo di 'claude' qui sopra. Se cambi 'claude', cambia anche queste tre righe: sono lo stesso vendor, e lasciarle indietro lo prezza in due modi diversi nella stessa esecuzione." },
+    "anthropic-claude4": { "per1kUsd": 0.003, "note": "Claude Sonnet 4.6 ($3/1M input) · ALIAS DI CATENA: stessa fn di 'anthropic'. Muovere insieme a 'claude'." },
+    "anthropic-premium": { "per1kUsd": 0.005, "note": "Claude Opus 5 ($5/1M input) · ALIAS DI CATENA: la variante premium, il preset 'Massima Qualita'' parte da qui. NON e' il prezzo di 'claude': Opus costa ~1.7x Sonnet, quindi questa riga si muove con 'claude' ma non copia la sua cifra." },
     "deepseek": { "per1kUsd": 0.00044, "note": "DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss) · RIVERIFICATO 23/08/2026 su api-docs.deepseek.com · fuori picco costa la meta'" },
     "mistral": { "per1kUsd": 0.00015, "note": "Mistral Small 4 ($0.15/1M input), il modello che il codice chiama davvero · VERIFICATO 23/08/2026 su mistral.ai/pricing/api. Catalogo e tendina allineati al codice il 23/08: prima dicevano Large 3 e 'Large 2'." },
     "qwen": { "per1kUsd": 0.000115, "note": "Qwen Plus (= qwen-plus-2025-12-01) via endpoint Pechino, scaglione 0-128K ($0.115/1M input) · VERIFICATO 24/08/2026 su alibabacloud.com/help/en/model-studio/billing-for-model-studio. Prima del 24/08 qwen non aveva una voce qui e cadeva sul fallback 0.002: 17x il prezzo vero. Il prezzo vale finche' i batch restano da 20 stringhe (~1-3K token): oltre i 128K per richiesta lo scaglione triplica." },
@@ -18,6 +21,7 @@
     "fireworks": { "per1kUsd": 0.0009, "note": "Llama 3.3 70B su Fireworks, fascia >16B parametri ($0.90/1M) · VERIFICATO 24/08/2026 su docs.fireworks.ai" },
     "openrouter": { "per1kUsd": 0.001, "note": "Varia per modello" },
     "deepl": { "per1kUsd": 0.02, "note": "DeepL Pro" },
+    "deepl-voice": { "per1kUsd": 0.02, "note": "DeepL Voice · ALIAS DI CATENA: tetto prudenziale, cioe' il prezzo della voce 'deepl', perche' un listino separato non e' mai stato verificato. Muovere insieme a 'deepl'." },
     "google": { "per1kUsd": 0.00002, "note": "Google Translate" }
   },
   "models": {
