@@ -622,7 +622,25 @@ async function translateWithCerebras(apiKey: string, opts: TranslateOptions): Pr
   );
 }
 
-/** Qwen3 (Alibaba) — via DashScope API, OpenAI-compatible, top multilingue, 1M token gratis/mese */
+/**
+ * Qwen (Alibaba) — via DashScope, OpenAI-compatible, top multilingue.
+ *
+ * `qwen-plus` è un alias vivo e oggi equivale a `qwen-plus-2025-12-01`
+ * (verificato 24/08/2026 sul listino Model Studio).
+ *
+ * ⚠️ L'endpoint qui sotto è quello CINA/PECHINO. Le chiavi DashScope sono
+ * legate alla regione e NON sono portabili: una chiave creata sulla console
+ * internazionale (Singapore) riceve 401 da questo URL, e viceversa. I due link
+ * che diamo all'utente per prendere la chiave — lib/translation/language-mappings.ts:177
+ * e app/settings/page.tsx:1533 — puntano entrambi alla console di Pechino,
+ * quindi endpoint e console sono coerenti. Restano coerenti solo finché si
+ * cambiano insieme: sono tre punti, non due.
+ *
+ * Non c'è "1M token gratis al mese", come diceva questa riga fino al
+ * 24/08/2026: la quota gratuita è di 1M token una tantum, valida 90 giorni
+ * dall'attivazione, ed esiste SOLO sulla regione Singapore. Su Pechino,
+ * che è quella che questo codice chiama, non c'è nessuna quota gratuita.
+ */
 async function translateWithQwen(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
     'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
