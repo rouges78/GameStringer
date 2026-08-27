@@ -1,8 +1,8 @@
 # Il progetto Supabase risponde 522 a quasi tutto, da 24 ore
 
-**Data:** 27/08/2026 · **Stato:** **aperto** — non risolvibile dal codice, serve
-azione sulla dashboard · **Progetto:** `gamestringer-community`
-(`relbkjoxdnbqizgomzhs`, `eu-west-1`, Postgres 17.6.1)
+**Data:** 27/08/2026 · **Stato:** **aperto a monte** — causa identificata, e' un
+incidente Supabase in corso, non il nostro progetto · **Progetto:**
+`gamestringer-community` (`relbkjoxdnbqizgomzhs`, `eu-west-1`, Postgres 17.6.1)
 
 ## Il fatto
 
@@ -65,13 +65,59 @@ per ragioni di rete indipendenti (è IPv6-only, il pooler è un'altra cosa). La
 prova che conta sono i 522 sull'edge, che è il percorso che usano davvero gli
 utenti.
 
-## Cosa fare (dashboard, non codice)
+*Nota del senno di poi:* con l'incidente pgBouncer alla mano quei timeout
+tornano coerenti col resto, ma restavano comunque non-prove nel momento in cui
+li ho osservati. Una coincidenza spiegata a posteriori non retrodata la propria
+forza probatoria.
 
-1. Settings → General → **Restart project**.
-2. Guardare i grafici **CPU / RAM / Disk IO** nella finestra 26/08 08:00 in poi:
-   se l'istanza è satura o ha esaurito i crediti di burst IO, il 522 si spiega.
-3. Se dopo il riavvio torna 522: ticket al supporto con ref
-   `relbkjoxdnbqizgomzhs`, regione `eu-west-1`, e i numeri di questa pagina.
+## La causa: un incidente Supabase, non il nostro progetto
+
+Letta su `status.supabase.com` il 27/08/2026 verso le 08:20 UTC:
+
+> **pgBouncer issues on some older projects** — 26-27 agosto 2026, **non
+> risolto**. Corretto in `eu-central-2` e `ap-south-1`, in rollout sulle altre
+> regioni.
+
+`eu-west-1` non e' ancora coperta. La finestra dell'incidente combacia con i
+nostri log: i 522 iniziano il 26/08 alle 08:00 UTC. Un connection pooler rotto
+produce esattamente questo — Cloudflare non riesce ad aprire la connessione
+verso l'origin — e spiega anche perche' lo stato del progetto resta
+`ACTIVE_HEALTHY`: **il database sta su, e' il davanti che non risponde.**
+
+Sulla stessa pagina, gli altri due pezzi del quadro:
+
+- **Storage: Partial Outage** → sono gli `ABORTED REQ` sulle sonde `/health`.
+- **API Gateway: Degraded Performance**.
+
+Cioe' tutti e tre i sintomi che si vedono in dashboard hanno la stessa origine,
+e nessuno dei tre e' nostro.
+
+### L'ipotesi sbagliata, registrata apposta
+
+La prima stesura di questa pagina diceva di riavviare il progetto e di guardare
+i grafici CPU/RAM/Disk IO per cercare un'istanza satura. **Era la pista
+sbagliata**, ed e' quella che viene istintiva quando un progetto e' giu: cercare
+la colpa nella propria infrastruttura. Riavviare non sistema un pgBouncer rotto
+a monte, e i grafici di saturazione non avrebbero mostrato niente, facendo
+perdere tempo e lasciando il sospetto che il problema fosse nascosto altrove.
+
+Lezione: **prima di misurare la propria macchina, leggere la status page del
+fornitore.** Costa trenta secondi ed e' l'unico controllo che puo' chiudere il
+caso invece di aprirne altri.
+
+## Cosa fare
+
+1. Aspettare il rollout del fix su `eu-west-1`, seguendo l'incidente su
+   `status.supabase.com`.
+2. Se resta giu': ticket al supporto citando **quell'incidente**, il ref
+   `relbkjoxdnbqizgomzhs` e la regione, per chiedere che `eu-west-1` venga
+   prioritizzata. Non aprire un ticket generico "il mio progetto e' giu'": si
+   finisce nella coda sbagliata.
+3. **Non** riavviare il progetto e **non** metterlo in pausa sperando che si
+   sblocchi: non tocca il componente guasto e la pausa e' l'unica di queste
+   mosse che puo' peggiorare le cose.
+4. Quando torna su, rifare le misure con le query in fondo e verificare lo
+   schema di `user_profiles` (vedi sotto).
 
 ## Due cose nostre, emerse per strada
 
