@@ -196,12 +196,46 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     groq: { per1kUsd: 0.00059, note: 'Llama 3.3 70B Versatile ($0.59/1M input), il modello che il codice chiama · verificato 24/08/2026' },
     'groq-gptoss': { per1kUsd: 0.00015, note: 'GPT-OSS 120B su Groq ($0.15/1M input) · console.groq.com/docs/models · verificato 24/08/2026' },
     cerebras: { per1kUsd: 0.00085, note: 'Llama 3.3 70B su Cerebras ($0.85/1M input) · verificato 24/08/2026 · free tier 1M token/giorno' },
-    // Qwen — attenzione all'endpoint: il codice chiama dashscope.aliyuncs.com,
-    // cioè la regione Cina, dove qwen-plus costa $0.115/1M fino a 128K. Qui sta
-    // il listino della regione internazionale (Singapore), $0.40/1M fino a 256K:
-    // è più caro, e una stima deve sbagliare per eccesso. La fascia oltre i 256K
-    // ($1.20/1M) non è raggiungibile dai batch con max_tokens 8192 di questo codice.
-    qwen: { per1kUsd: 0.0004, note: 'Qwen-Plus, listino Singapore ($0.40/1M input fino a 256K) · verificato 24/08/2026 · Pechino $0.115/1M' },
+    // ⏰ Qwen — verificato il 24/08/2026 su
+    // alibabacloud.com/help/en/model-studio/billing-for-model-studio, e
+    // RICONCILIATO IL 27/08/2026: questa voce era stata scritta due volte, con
+    // due prezzi diversi, in due punti dello stesso oggetto. In un object
+    // literal vince l'ultima, in silenzio. Ora è una sola.
+    //
+    // Il codice chiama `dashscope.aliyuncs.com` (ai-translate-direct.ts:645),
+    // cioè l'endpoint CINA/PECHINO, e manda l'utente a prendere la chiave sulla
+    // console di Pechino in due punti: lib/translation/language-mappings.ts:177
+    // e app/settings/page.tsx:1533. Le chiavi DashScope sono legate alla regione
+    // e non sono portabili: una chiave creata sulla console internazionale
+    // (Singapore) riceve 401 da questo URL. Quindi il listino di Singapore
+    // ($0.40/1M fino a 256K) non è per noi il caso peggiore: è un caso
+    // IRRAGGIUNGIBILE. Stimare su un prezzo che nessuno può pagare non è
+    // prudenza — è un numero sbagliato di 3,5×, nella direzione che fa sembrare
+    // il provider più economico del lotto uno di fascia media, mentre lo
+    // raccomandiamo per IT, ZH e JA (lib/translation/language-mappings.ts:55,75,76).
+    // Vale la regola dichiarata in cima a questo blocco: il prezzo è quello di
+    // ciò che il codice chiama davvero, esattamente come il modello.
+    //
+    // Scaglioni Pechino, PER DIMENSIONE DELLA RICHIESTA:
+    //   0-128K token input : $0.115/1M   ← l'unico che questo codice tocca
+    //   128K-256K          : $0.345/1M
+    //   256K-1M            : $0.689/1M
+    // (per riferimento, Singapore: $0.40/1M fino a 256K, $1.20/1M oltre.)
+    //
+    // ⚠️ QUESTO PREZZO DIPENDE DA UN INVARIANTE DEL CODICE, non solo dal listino:
+    // l'app manda batch da 20 stringhe (ai-translate-direct.ts:2236) con
+    // max_tokens 8192, cioè ~1-3K token per chiamata. Sta nel primo scaglione con
+    // tre ordini di grandezza di margine. Se qualcuno alza `maxBatch` fino a
+    // superare i 128K token per richiesta, questo numero diventa falso di 3×.
+    // Qui non serve il margine prudenziale della voce deepseek: là lo scaglione
+    // dipende dall'ora del giorno, che non controlliamo; qui dipende da una
+    // costante che scriviamo noi.
+    //
+    // ❓ NON RIVERIFICATO: che una chiave Singapore prenda davvero 401 su
+    // dashscope.aliyuncs.com. È il perno di tutto il ragionamento qui sopra,
+    // misurato il 24/08 e mai più da allora. Se Alibaba passasse a fatturare per
+    // regione dell'account invece che per host, il numero giusto tornerebbe 0.0004.
+    qwen: { per1kUsd: 0.000115, note: 'Qwen Plus (= qwen-plus-2025-12-01) via endpoint Pechino, scaglione 0-128K ($0.115/1M input) · verificato 24/08/2026 · valido finché i batch restano da 20 stringhe' },
     // Cohere — il più caro dei sette, e di parecchio: $2.50/1M, ~4× cerebras.
     // Nelle catene sta dopo provider molto più economici, ma se quelli cadono
     // è lui a fare il conto.
@@ -235,6 +269,11 @@ export const BUNDLED_MODEL_CONFIG: RemoteModelConfig = {
     ],
     deepseek: [{ id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', recommended: true }],
     mistral: [{ id: 'mistral-small-latest', label: 'Mistral Small 4' }],
+    // Un solo modello, perché è l'unico che il codice chiama davvero
+    // (ai-translate-direct.ts:629). Qwen3.7-Plus e Qwen3.8-Max esistono e costano
+    // meno a scaglione pieno, ma cambiarli è una scelta di comportamento, non una
+    // correzione: vale la regola scritta sopra, entrano quando passano un benchmark.
+    qwen: [{ id: 'qwen-plus', label: 'Qwen Plus (2025-12-01)', recommended: true }],
   },
   recommendations: {
     creative: 'claude',
