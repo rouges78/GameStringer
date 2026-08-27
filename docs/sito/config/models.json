@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "updatedAt": "2026-08-24",
+  "version": 4,
+  "updatedAt": "2026-08-27",
   "_comment": "Catalogo modelli/prezzi remoto di GameStringer. Modifica questo file e ridistribuisci il sito per aggiornare modelli, prezzi e raccomandazioni SENZA rilasciare l'app. L'app fa fail-open sui default bundled se il file non e' raggiungibile. Prezzi in USD per 1K token (stima input). ATTENZIONE: nel merge il remoto VINCE sul bundled, per chiave di provider e per intero array modelli. Un file stantio qui non e' inerte: sovrascrive i valori corretti di lib/remote-config.ts su TUTTE le installazioni. Tenere questo file allineato a BUNDLED_MODEL_CONFIG.",
   "pricing": {
     "openai": { "per1kUsd": 0.00015, "note": "GPT-4o mini ($0.15/1M input) · VERIFICATO 23/08/2026 su developers.openai.com" },
@@ -10,6 +10,12 @@
     "deepseek": { "per1kUsd": 0.00044, "note": "DeepSeek V4 Flash, tariffa di PICCO ($0.44/1M input cache-miss) · RIVERIFICATO 23/08/2026 su api-docs.deepseek.com · fuori picco costa la meta'" },
     "mistral": { "per1kUsd": 0.00015, "note": "Mistral Small 4 ($0.15/1M input), il modello che il codice chiama davvero · VERIFICATO 23/08/2026 su mistral.ai/pricing/api. Catalogo e tendina allineati al codice il 23/08: prima dicevano Large 3 e 'Large 2'." },
     "qwen": { "per1kUsd": 0.000115, "note": "Qwen Plus (= qwen-plus-2025-12-01) via endpoint Pechino, scaglione 0-128K ($0.115/1M input) · VERIFICATO 24/08/2026 su alibabacloud.com/help/en/model-studio/billing-for-model-studio. Prima del 24/08 qwen non aveva una voce qui e cadeva sul fallback 0.002: 17x il prezzo vero. Il prezzo vale finche' i batch restano da 20 stringhe (~1-3K token): oltre i 128K per richiesta lo scaglione triplica." },
+    "groq": { "per1kUsd": 0.00059, "note": "Llama 3.3 70B Versatile ($0.59/1M input), il modello che il codice chiama · VERIFICATO 24/08/2026. Ha un free tier: qui sta il listino che si paga quando finisce." },
+    "groq-gptoss": { "per1kUsd": 0.00015, "note": "GPT-OSS 120B su Groq ($0.15/1M input) · VERIFICATO 24/08/2026 su console.groq.com/docs/models" },
+    "cerebras": { "per1kUsd": 0.00085, "note": "Llama 3.3 70B su Cerebras ($0.85/1M input) · VERIFICATO 24/08/2026 · free tier 1M token/giorno" },
+    "cohere": { "per1kUsd": 0.0025, "note": "Command R+ 08-2024 ($2.50/1M input) · VERIFICATO 24/08/2026 su cohere.com/pricing. Il piu' caro dei sette dietro API key, ~4x cerebras." },
+    "together": { "per1kUsd": 0.00104, "note": "Llama 3.3 70B Instruct Turbo ($1.04/1M input, pagina ufficiale) · VERIFICATO 24/08/2026. Gli aggregatori dicono $0.88: vince la piu' cara, che qui e' anche quella ufficiale." },
+    "fireworks": { "per1kUsd": 0.0009, "note": "Llama 3.3 70B su Fireworks, fascia >16B parametri ($0.90/1M) · VERIFICATO 24/08/2026 su docs.fireworks.ai" },
     "openrouter": { "per1kUsd": 0.001, "note": "Varia per modello" },
     "deepl": { "per1kUsd": 0.02, "note": "DeepL Pro" },
     "google": { "per1kUsd": 0.00002, "note": "Google Translate" }
