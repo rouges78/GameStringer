@@ -25,6 +25,14 @@ export default defineConfig({
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      // I worktree degli agenti sotto .claude/ sono checkout completi del repo:
+      // senza questa riga la suite raccoglie ANCHE i loro __tests__, gira ogni
+      // file due volte e valuta una copia potenzialmente vecchia del codice
+      // come se fosse questa. Nota: dichiarare `exclude` sostituisce l'elenco
+      // di default di vitest, non lo estende — per questo node_modules e dist
+      // sono riscritti a mano qui sopra, e per questo un percorso che manca qui
+      // non e' escluso da nessun'altra parte.
+      '**/.claude/**',
       '**/e2e/**',
       '**/tests/e2e/**',
       '**/.next/**',
