@@ -108,7 +108,7 @@
     "eslint-config-next": "15.5.23",
     "eslint-plugin-prettier": "5.5.6",
     "eslint-plugin-react-hooks": "4.6.0",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.1",
     "png-to-ico": "^3.0.2",
     "postcss": "^8.5.26",
     "postcss-nesting": "^14.0.1",
