@@ -1,9 +1,10 @@
 # Il backend community è irraggiungibile: prima 522, poi il database che non risponde
 
-**Data:** 27/08/2026, ultimo aggiornamento 13:49 UTC · **Stato:** **ANCORA
-APERTO** dopo ~30 ore — causa identificata, è un incidente Supabase in corso,
-non il nostro progetto · **Progetto:** `gamestringer-community`
-(`relbkjoxdnbqizgomzhs`, `eu-west-1`, Postgres 17.6.1)
+**Data:** 27/08/2026, ultimo aggiornamento 09/09/2026 17:30 UTC · **Stato:**
+**ANCORA APERTO** dopo 14 giorni — l'incidente Supabase a cui era stato
+attribuito risulta chiuso, il progetto no: la causa torna da cercare ·
+**Progetto:** `gamestringer-community` (`relbkjoxdnbqizgomzhs`, `eu-west-1`,
+Postgres 17.6.1)
 
 ## Il fatto
 
@@ -107,6 +108,10 @@ fornitore.** Costa trenta secondi ed e' l'unico controllo che puo' chiudere il
 caso invece di aprirne altri.
 
 ## Cosa fare
+
+> **Superato dall'aggiornamento del 09/09/2026, in fondo alla pagina:** il
+> punto 1 (aspettare) non ha piu' oggetto, perche' l'incidente citato
+> risulta chiuso. Il punto 2 (ticket) e' diventato la prima mossa.
 
 1. Aspettare il rollout del fix su `eu-west-1`, seguendo l'incidente su
    `status.supabase.com`.
@@ -240,3 +245,84 @@ from logs where source='postgres_logs'
   and log_attributes['parsed.sql_state_code']='57014'
 order by timestamp desc;
 ```
+
+## Aggiornamento 09/09/2026 — quattordici giorni, e l'incidente a cui l'avevo attribuito è chiuso
+
+Il progetto risponde ancora **522**. Stesse query di fondo pagina, due finestre:
+
+| Finestra (UTC) | 522 | 2xx |
+|---|---|---|
+| 08/09 17:00 → 09/09 17:20 | **880** | 23 |
+| 02/09 00:00 → 23:59 | **1.949** | 6 |
+
+Ultimo 522 registrato: **09/09 17:20:24 UTC**. Le rotte colpite sono le stesse:
+`/auth/v1/token` 336, `/rest/v1/forum_threads` 155, `compat_game_summary` 107,
+`notifications` 80, `forum_categories` 61, `translation_packs` 53, `forum_posts`
+43, `forum_downloads` 40, `/auth/v1/signup` 17.
+
+**Non è un guasto fisso: è un'istanza che si alza per minuti e ricade.** Nelle 24
+ore ci sono due finestre vive, e la prima conta perché tocca il database:
+
+- **08/09 22:17–22:26 UTC** — `200` su `/auth/v1/signup`, `/auth/v1/token`,
+  `forum_threads`, `forum_posts`, `forum_categories`, `forum_downloads`,
+  `notifications`, `friendships`. Percorso autenticato, quindi PostgREST →
+  pooler → Postgres ha funzionato per circa nove minuti.
+- **09/09 09:50 UTC** — due `200` (`compat_game_summary`,
+  `benchmark_provider_summary`), poi di nuovo 522.
+
+Lo stesso lampeggio si vede nel keep-alive, che dal 30/08 fallisce da **undici
+esecuzioni consecutive** con un solo verde in mezzo, il **29/08 13:06**. Quel
+verde vale: dalla PR #167 il job accetta solo `200` con un array JSON in corpo,
+quindi il 29/08 il database ha risposto davvero.
+
+**I log di Postgres sono spariti.** `select source, count(*) from logs group by
+source` sulle 24 ore restituisce **solo `edge_logs`** (919 righe): zero
+`postgres_logs`, mentre il 27/08 c'erano 93 `57014` in un giorno. È coerente con
+un origin che non si alza — ma da solo non dice quale componente sia rotto, e non
+va usato come se lo dicesse.
+
+### L'incidente non c'è più, il guasto sì
+
+Letta su `https://status.supabase.com/api/v2/summary.json` il 09/09 verso le
+17:30 UTC: **"pgBouncer issues on some older projects" non compare più tra gli
+incidenti aperti.** Restano aperti "401 errors due to JWT rejections" (dal 14/08,
+API Gateway) e un problema di rete in Myanmar; c'è una manutenzione programmata
+il 15/09 21:15–21:45 UTC su Management API e creazione progetti. Nessuno dei due
+incidenti aperti produce 522.
+
+C'è anche un dettaglio che andava pesato il 27/08 e non lo è stato: l'incidente
+diceva **"on some older projects"**, e questo progetto è su **Postgres 17.6.1**,
+creato il 24/03/2026. La coincidenza delle date era forte; l'appartenenza alla
+categoria colpita non è mai stata verificata.
+
+**Regola che ne esce:** attribuire il proprio guasto a un incidente del fornitore
+ha una data di scadenza, e va scritta accanto all'attribuzione il giorno stesso.
+Quando l'incidente si chiude e il sintomo resta, l'attribuzione si ritira, non si
+estende: altrimenti da spiegazione diventa alibi, e la ricerca si ferma lì per due
+settimane.
+
+### Cosa resta non verificato
+
+- **Lo schema di `user_profiles`** (il sospetto su `display_name` in
+  `lib/social/social.ts:495` e `:523`): `execute_sql` via management API è andato
+  di nuovo in `Connection terminated due to connection timeout`. Come il 27/08,
+  quel timeout da solo non prova niente sull'outage — e infatti non ha provato
+  niente, ha solo impedito la verifica.
+- **Il backoff sul refresh dei token**: 336 richieste a `/auth/v1/token` in 24
+  ore, tutte 522. Il ritmo è calato (erano 2.444), ma il ritentare a vuoto contro
+  un origin morto continua.
+
+### Cosa fare adesso
+
+1. **Ticket al supporto**, che era il punto 2 del piano e ora è il primo: ref
+   `relbkjoxdnbqizgomzhs`, regione `eu-west-1`, quattordici giorni di 522
+   continui, l'incidente pgBouncer chiuso, e **gli orari delle due finestre in cui
+   il progetto ha risposto** (08/09 22:17–22:26 e 09/09 09:50 UTC, più il verde
+   del keep-alive il 29/08 13:06). Sono la parte utile: dicono che l'istanza si
+   alza e ricade, non che è spenta.
+2. **Verificare in dashboard la pausa per inattività.** Il 26/08 il progetto è
+   stato messo in pausa per inattività — è scritto nel messaggio del commit
+   `6ff3ffc8`, che nasce da lì. La ripresa non è mai stata confermata da una
+   misura, e questo lampeggiare è compatibile con un progetto ripreso male.
+3. **Non silenziare il keep-alive rosso.** Sta segnalando un guasto vero, che è
+   esattamente il lavoro per cui è stato corretto.
