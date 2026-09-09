@@ -253,6 +253,9 @@ export function VoiceTranslator() {
       // Crea FormData per Whisper API (richiede file, non base64)
       const formData = new FormData();
       formData.append('file', state.audioBlob, 'audio.webm');
+      // ⏰ whisper-1 esce dall'API OpenAI il 26/02/2027 (annuncio 26/08/2026).
+      // Sostituti: gpt-transcribe / gpt-live-transcribe. NON gpt-4o-transcribe:
+      // e' deprecato nello stesso annuncio. Vedi ROADMAP.md, P2.
       formData.append('model', 'whisper-1');
       formData.append('response_format', 'verbose_json');
       if (state.sourceLanguage !== 'auto') {
