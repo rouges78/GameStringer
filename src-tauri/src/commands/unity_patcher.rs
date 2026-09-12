@@ -1370,14 +1370,14 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         
         alternative_tools.push(AlternativeTool {
             name: "Godot RE Tools (gdsdecomp)".to_string(),
-            url: "https://github.com/bruvzg/gdsdecomp".to_string(),
+            url: "https://github.com/GDRETools/gdsdecomp".to_string(),
             description: "Decompila e modifica progetti Godot 3.x/4.x".to_string(),
             compatible: true,
         });
         if is_godot4 {
             alternative_tools.push(AlternativeTool {
                 name: "gdre_tools".to_string(),
-                url: "https://github.com/bruvzg/gdsdecomp/releases".to_string(),
+                url: "https://github.com/GDRETools/gdsdecomp/releases".to_string(),
                 description: "Supporto specifico Godot 4.x".to_string(),
                 compatible: true,
             });

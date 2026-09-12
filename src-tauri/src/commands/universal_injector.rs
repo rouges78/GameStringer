@@ -332,7 +332,7 @@ fn detect_godot(game_dir: &Path) -> Option<EngineDetectionResult> {
         tools_required: vec![
             InjectionTool {
                 name: "Godot RE Tools".to_string(),
-                url: "https://github.com/bruvzg/gdsdecomp".to_string(),
+                url: "https://github.com/GDRETools/gdsdecomp".to_string(),
                 description: "Decompila progetti Godot".to_string(),
                 auto_install: false,
             },
