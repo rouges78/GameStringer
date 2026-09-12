@@ -644,7 +644,7 @@ export function UnityPatcher() {
                           ) : isUnreal ? (
                             <a href="https://github.com/akintos/UnrealLocres/releases" target="_blank" rel="noopener" className="text-amber-400 hover:text-amber-300 underline">⚠ UnrealLocres</a>
                           ) : selectedGame.engine?.toLowerCase() === 'godot' ? (
-                            <a href="https://github.com/bruvzg/gdsdecomp/releases" target="_blank" rel="noopener" className="text-amber-400 hover:text-amber-300 underline">⚠ gdsdecomp</a>
+                            <a href="https://github.com/GDRETools/gdsdecomp/releases" target="_blank" rel="noopener" className="text-amber-400 hover:text-amber-300 underline">⚠ gdsdecomp</a>
                           ) : (
                             <span className="text-amber-400">⚠ {t('gamePatcher.externalTools')}</span>
                           )}
