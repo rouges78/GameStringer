@@ -408,7 +408,7 @@ NOTES
 ${metadata.notes || 'No additional notes.'}
 
 This translation was created using GameStringer.
-Report issues or contribute at: https://github.com/your-repo/gamestringer
+Report issues or contribute at: https://github.com/rouges78/GameStringer
 
 ================================================================================
 `.trim();
@@ -483,6 +483,7 @@ NOTE
 ${metadata.notes || 'Nessuna nota aggiuntiva.'}
 
 Questa traduzione è stata creata usando GameStringer.
+Segnala problemi o contribuisci su: https://github.com/rouges78/GameStringer
 
 ================================================================================
 `.trim();
