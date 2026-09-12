@@ -274,6 +274,103 @@ per un difetto suo: per una condizione a monte che non poteva essere vera.
 Prima di credere che un percorso funzioni, va provato con un input che lo
 imbocchi davvero — qui è bastato installare un gioco.
 
+## Unity
+
+### Fran Bow: sei lingue fisse per frase in `resources.assets`, e i font sono già pronti per l'italiano
+
+**Il fatto.** In Fran Bow (Unity 2021.3.16f1, Mono) ogni frase del gioco è un
+array di 6 stringhe, una per lingua, dentro `resources.assets`: è l'unico file
+con testo non inglese, i 145 file di scena `levelN` contengono solo inglese. Le
+colonne sono fisse, nell'ordine **pt · fr · de · ru · es · en**. L'italiano non
+c'è, e aggiungerlo come settima lingua vuol dire toccare il codice del gioco. Le
+tabelle font TextMeshPro invece hanno già tutte le accentate italiane: per
+l'italiano non serve nessun override di font.
+
+**Misura.** Fran Bow, Steam app 362680, build 11189293, 12/09/2026:
+
+```bash
+node scripts/unity-loc-probe.js "C:/Program Files (x86)/Steam/steamapps/common/Fran Bow/Fran Bow_Data"
+```
+
+| Cosa | Risultato |
+|---|---|
+| Tabelle font TMP | 3 (due in `resources.assets` da 250 caratteri, una in `sharedassets0.assets` da 235): a nessuna manca `à è é ì ò ù À È É Ì Ò Ù ’` |
+| File con testo non inglese | 1 su 146: `resources.assets` |
+| Righe di localizzazione | 8.325, su 8.340 array di 6 stringhe (i 15 scartati sono keyword shader come `UNITY_UI_ALPHACLIP`) |
+| Inglese | 300.563 caratteri, 58.186 parole · lunghezza mediana 35, 95° percentile 73, massimo 98 |
+| Formattazione | 0 tag rich text, 0 segnaposto `{…}` o `%s` · 11 «a capo» e 8 azioni tra asterischi (`*hic*`) da preservare |
+| Spazio a schermo | francese/inglese: mediana 1,16, 95° percentile 1,50 — l'italiano sta in questa fascia, e il gioco la mostra già |
+
+Le stringhe sono nel formato Unity standard (int32 lunghezza + UTF-8, allineate a
+4 byte), non Odin, anche se `Sirenix.Serialization.dll` è tra le assembly del
+gioco. Le lingue ufficiali, dall'API di Steam:
+
+```bash
+curl -s "https://store.steampowered.com/api/appdetails?appids=362680&l=english" \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s)['362680'].data.supported_languages.replace(/<[^>]+>/g,'')))"
+```
+
+→ `English, German, Spanish - Spain, Russian, French, Portuguese - Brazil`. E
+nei dati del gioco la parola `Italiano` compare zero volte.
+
+**Cosa ne segue per il metodo.** Due strade, **nessuna ancora provata in gioco**:
+
+- **XUnity via BepInEx (la più sicura).** GameStringer riconosce il gioco come
+  Mono (`MonoBleedingEdge` presente, `GameAssembly.dll` assente), e fra i
+  pacchetti di `unity_patcher.rs` c'è BepInEx 5.4.23.5 x64 per Mono, adatto a
+  Unity 2021.3. `needs_font_override("it")` è falso, ed è giusto così: i glifi
+  ci sono. Non si tocca `resources.assets`.
+- **File-based, sovrascrivendo una colonna.** Due ostacoli misurati. Il testo
+  italiano è più lungo, quindi `resources.assets` va riserializzato, non
+  patchato in-place: in GameStringer lo fa `tools/unity_inject.py` tramite
+  `unity_asset_injector.rs`, parte non coperta dalla CI. E lo scan euristico di
+  `unity_assets.rs` **scarterebbe 1.057 righe inglesi su 8.324** («Eww!»,
+  «No... Um.», «A door!», «Jump...»), perché `looks_like_game_text` vuole almeno
+  uno spazio e più di 5 lettere. Prima dell'euristica, `scan_assets_for_text`
+  prova a estrarre i TextAsset, mentre queste frasi stanno in campi di script:
+  quale dei due rami parta su questo file **non è stato verificato**.
+
+*Sospetto, non misurato:* nei file di scena compaiono chiavi come
+`Mr. Midnight.: Use`, e tra le righe ci sono pezzi di frase. Se il gioco compone
+le battute a runtime, un italiano tradotto a pezzi rischia accordi sbagliati con
+le preposizioni articolate (a + la → «alla»), mentre XUnity vede la frase già
+composta.
+
+**Nel codice.**
+
+- `scripts/unity-loc-probe.js` — la sonda di questa voce, sola lettura.
+- `src-tauri/src/commands/unity_patcher.rs` — `BEPINEX5_X64_URL`, rilevamento
+  Mono/IL2CPP (`is_il2cpp`), `needs_font_override`.
+- `src-tauri/src/commands/unity_assets.rs` — `scan_assets_for_text`,
+  `looks_like_game_text`.
+- `src-tauri/src/commands/unity_asset_injector.rs` → `tools/unity_inject.py`.
+- `src-tauri/src/commands/gamemaker_patcher.rs` — `find_data_win` (vedi trappola 5).
+
+**Trappole.**
+
+1. **La ricerca web ha detto che l'italiano c'è.** Era un riassunto automatico
+   sbagliato. La pagina Steam sta dietro la verifica dell'età e un fetch non la
+   legge; l'API `appdetails` sì. Le lingue ufficiali si leggono lì, e si
+   confermano nei file.
+2. **«Mr. Midnight» nei `levelN` sembrava dialogo.** Lì ci sono solo inglese e
+   chiavi. Si contano parole-spia per lingua e per file, invece di fidarsi della
+   prima occorrenza.
+3. **La prima firma di record prendeva il menu, non i dialoghi.** Ancorata ai
+   campi che precedono l'array (`-1`, `0`, ID, …, `9`, `6`) trovava 48 righe con
+   ID 8726–8773: i nomi delle lingue. Le frasi hanno un'intestazione diversa;
+   l'unica cosa comune a tutte è l'array di 6 stringhe.
+4. **Un array di 6 stringhe non è per forza una frase.** Anche 15 liste di
+   keyword shader hanno quella forma, e gonfiavano ogni conteggio. Il filtro che
+   le separa si ricava dai dati: colonna russa in cirillico, oppure uguale
+   all'inglese.
+5. **La cartella `Fran Bow GameMaker` non confonde nessuno.** Contiene il
+   `data.win` della versione originale del 2015. `detect_gamemaker` guarda solo
+   la radice, e `find_data_win` pure: il suo ramo commentato «Subdirectories»
+   itera la radice e tiene solo i file, quindi nelle sottocartelle non scende.
+6. **Ambiente.** In Git Bash non c'è `strings`, e Python sulla console Windows
+   (cp1252) si ferma stampando caratteri come `ő`. Per questo la sonda è in
+   Node, come le altre in `scripts/`.
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026
