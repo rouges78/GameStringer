@@ -816,4 +816,175 @@ mod tests {
         let create_result = manager.create_profile(invalid_request).await;
         assert!(create_result.is_err());
     }
+
+    // ── Credenziali degli store: il profilo resta cifrato ─────────────────────
+    // save/remove_credential_for_active_profile salvavano con password vuota: la
+    // cifratura falliva, save_profile ripiegava sul chiaro e load_profile, a sua volta,
+    // leggeva il chiaro con qualsiasi password. Questi test fissano il comportamento.
+
+    const STEAM_SECRET: &str = "STEAM_API_KEY_DA_NON_LEGGERE_SU_DISCO";
+
+    fn steam_credential() -> crate::profiles::credential_manager::PlainCredential {
+        use crate::profiles::credential_manager::{PlainCredential, StoreType};
+        PlainCredential::new(StoreType::Steam, "76561198000000000".to_string(), STEAM_SECRET.to_string())
+    }
+
+    fn profile_file(temp_dir: &TempDir, profile_id: &str) -> std::path::PathBuf {
+        temp_dir.path().join("profiles").join(format!("profile_{}.json.enc", profile_id))
+    }
+
+    /// Il file su disco non è il JSON del profilo e non contiene il segreto in chiaro
+    fn assert_encrypted_on_disk(temp_dir: &TempDir, profile_id: &str) {
+        let bytes = std::fs::read(profile_file(temp_dir, profile_id)).unwrap();
+        assert!(serde_json::from_slice::<serde_json::Value>(&bytes).is_err(), "profilo in chiaro su disco");
+        assert!(!String::from_utf8_lossy(&bytes).contains(STEAM_SECRET), "segreto leggibile su disco");
+    }
+
+    async fn create_active_profile(manager: &mut ProfileManager, name: &str, password: &str) -> String {
+        let request = CreateProfileRequest {
+            name: name.to_string(),
+            password: password.to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        manager.create_profile(request).await.unwrap().id
+    }
+
+    #[tokio::test]
+    async fn test_save_credential_then_wrong_password_fails() {
+        use crate::profiles::credential_manager::StoreType;
+
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+        let id = create_active_profile(&mut manager, "Cred Save", "RealKey123!").await;
+
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+        assert_encrypted_on_disk(&temp_dir, &id);
+
+        // Lo storage rifiuta la password errata (prima: fallback in chiaro → Ok)
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        assert!(storage.load_profile(&id, "WrongKey456$").await.is_err());
+        assert!(storage.load_profile(&id, "").await.is_err());
+
+        // E così il login
+        manager.logout().unwrap();
+        let result = manager.authenticate_profile("Cred Save", "WrongKey456$").await;
+        assert!(matches!(result, Err(ProfileError::InvalidCredentials)));
+        assert!(!manager.is_profile_active());
+
+        // Con la password giusta la credenziale c'è
+        manager.authenticate_profile("Cred Save", "RealKey123!").await.unwrap();
+        let loaded = manager.load_credential_for_active_profile(StoreType::Steam).await.unwrap().unwrap();
+        assert_eq!(loaded.password, STEAM_SECRET);
+    }
+
+    #[tokio::test]
+    async fn test_remove_credential_then_wrong_password_fails() {
+        use crate::profiles::credential_manager::StoreType;
+
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+        let id = create_active_profile(&mut manager, "Cred Remove", "RealKey123!").await;
+
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+        manager.remove_credential_for_active_profile(StoreType::Steam).await.unwrap();
+        assert_encrypted_on_disk(&temp_dir, &id);
+
+        manager.logout().unwrap();
+        assert!(manager.authenticate_profile("Cred Remove", "WrongKey456$").await.is_err());
+
+        manager.authenticate_profile("Cred Remove", "RealKey123!").await.unwrap();
+        assert!(manager.load_credential_for_active_profile(StoreType::Steam).await.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn test_credential_save_without_session_is_unauthorized() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        let result = manager.save_credential_for_active_profile(steam_credential()).await;
+        assert!(matches!(result, Err(ProfileError::Unauthorized)));
+    }
+
+    #[tokio::test]
+    async fn test_change_password_after_credential_save() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+        let id = create_active_profile(&mut manager, "Cred Change", "OldKey123!").await;
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+
+        // La vecchia password va verificata davvero (prima: qualsiasi "vecchia" passava)
+        assert!(manager.change_profile_password(&id, "NotTheOld1!", "NewKey456$").await.is_err());
+        manager.change_profile_password(&id, "OldKey123!", "NewKey456$").await.unwrap();
+
+        // Un salvataggio successivo nella stessa sessione usa la nuova password, non la vecchia
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+        assert_encrypted_on_disk(&temp_dir, &id);
+
+        manager.logout().unwrap();
+        assert!(manager.authenticate_profile("Cred Change", "OldKey123!").await.is_err());
+        manager.authenticate_profile("Cred Change", "NewKey456$").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_explicit_save_rejects_password_other_than_session() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+        create_active_profile(&mut manager, "Session Pass", "RealKey123!").await;
+
+        // Salvare con un'altra password ricifrerebbe il profilo con quella
+        let result = manager.update_settings(ProfileSettings::default(), "OtherKey456$").await;
+        assert!(matches!(result, Err(ProfileError::InvalidPassword)));
+        manager.update_settings(ProfileSettings::default(), "RealKey123!").await.unwrap();
+
+        manager.logout().unwrap();
+        assert!(manager.authenticate_profile("Session Pass", "OtherKey456$").await.is_err());
+        manager.authenticate_profile("Session Pass", "RealKey123!").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_legacy_cleartext_profile_is_encrypted_on_next_save() {
+        use crate::profiles::errors::StorageError;
+        use crate::profiles::storage::ProfileIndex;
+        use sha2::{Digest, Sha256};
+
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+        let id = create_active_profile(&mut manager, "Legacy", "LostKey123!").await;
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+        let profile = manager.current_profile().unwrap().clone();
+        manager.logout().unwrap();
+
+        // Riproduce un file scritto dalla build vecchia: JSON in chiaro + hash aggiornato nell'indice
+        let cleartext = serde_json::to_string_pretty(&profile).unwrap();
+        std::fs::write(profile_file(&temp_dir, &id), &cleartext).unwrap();
+        let index_path = temp_dir.path().join("profiles").join("profiles.index");
+        let mut index: ProfileIndex = serde_json::from_str(&std::fs::read_to_string(&index_path).unwrap()).unwrap();
+        index.profiles.get_mut(&id).unwrap().file_hash = format!("{:x}", Sha256::digest(cleartext.as_bytes()));
+        std::fs::write(&index_path, serde_json::to_string_pretty(&index).unwrap()).unwrap();
+
+        // load_profile non legge il chiaro con una password qualsiasi: lo segnala
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        assert!(matches!(storage.load_profile(&id, "Anything1!").await, Err(StorageError::LegacyCleartext(_))));
+
+        // Il login accetta la password inserita, che diventa quella del profilo (password vuota no)
+        assert!(manager.authenticate_profile("Legacy", "").await.is_err());
+        manager.authenticate_profile("Legacy", "Chosen123!").await.unwrap();
+        // Nessuna scrittura durante l'autenticazione: il file è ancora quello in chiaro
+        assert_eq!(std::fs::read_to_string(profile_file(&temp_dir, &id)).unwrap(), cleartext);
+
+        // Il primo salvataggio esplicito lo cifra con la password della sessione
+        manager.save_credential_for_active_profile(steam_credential()).await.unwrap();
+        assert_encrypted_on_disk(&temp_dir, &id);
+
+        manager.logout().unwrap();
+        assert!(manager.authenticate_profile("Legacy", "Anything1!").await.is_err());
+        manager.authenticate_profile("Legacy", "Chosen123!").await.unwrap();
+    }
 }

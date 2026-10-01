@@ -69,6 +69,15 @@ pub enum StorageError {
     
     #[error("Errore serializzazione: {0}")]
     SerializationError(#[from] serde_json::Error),
+
+    /// Cifratura o decifratura fallita (password errata/vuota, file manomesso).
+    /// Non c'è fallback in chiaro: i dati restano dove sono e l'operazione fallisce.
+    #[error("Errore di crittografia: {0}")]
+    EncryptionError(String),
+
+    /// File profilo scritto in chiaro da una build precedente (vedi load_legacy_cleartext_profile)
+    #[error("Profilo nel vecchio formato non cifrato: {0}")]
+    LegacyCleartext(String),
 }
 
 /// Risultato per operazioni di storage
