@@ -328,6 +328,22 @@ jobs:
           includeDebug: false
           args: --bundles deb,appimage,rpm
 
+      - name: Verify AppImage icon (.DirIcon)
+        run: |
+          # Il catalogo AppImage (appimage.github.io) rifiuta un AppImage senza .DirIcon.
+          # Il bundler di @tauri-apps/cli < 2.12 lo creava come symlink ASSOLUTO alla
+          # cartella di build: dentro l'AppImage montato puntava al vuoto
+          # (tauri-apps/tauri#15110). Qui si controlla che risolva davvero.
+          appimage="$PWD/$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -1)"
+          chmod +x "$appimage"
+          cd "$(mktemp -d)"
+          "$appimage" --appimage-extract >/dev/null
+          ls -la squashfs-root/.DirIcon || true
+          if [ ! -e squashfs-root/.DirIcon ]; then
+            echo "::error::.DirIcon mancante o symlink rotto in $(basename "$appimage")"
+            exit 1
+          fi
+
 
   build-macos:
     runs-on: macos-latest
