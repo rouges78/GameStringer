@@ -118,7 +118,8 @@ windows = { version = "0.61", features = [
     "Graphics_Imaging",
     "Storage_Streams",
     "Foundation",
-    "Foundation_Collections"
+    "Foundation_Collections",
+    "Globalization"
 ] }
 # Le `impl IntoFuture` per IAsyncOperation vivono in windows-future dietro la
 # feature `std`, ma `windows` la tira con default-features = false e il suo

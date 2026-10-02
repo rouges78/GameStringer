@@ -10,74 +10,36 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Key, 
-  Copy, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Download,
+import {
+  Key,
+  CheckCircle2,
+  AlertTriangle,
   Shield
 } from 'lucide-react';
-import { formatRecoveryKeyForDisplay, recoveryKeyToString } from '@/lib/recovery-key';
-import { clientLogger } from '@/lib/client-logger';
 import { useTranslation } from '@/lib/i18n';
 
 interface RecoveryKeyDisplayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recoveryKey: string[];
   profileName: string;
   onConfirm: () => void;
 }
 
+// Questo dialog mostrava una "recovery key" a 12 parole presentata come
+// "l'unico modo per recuperare la password". Non lo era: la chiave non può
+// decifrare il profilo (cifrato con la sola password, vedi
+// password-recovery-dialog.tsx), quindi niente parole da salvare. Al loro posto
+// un avviso onesto: la password non si può recuperare né resettare.
+// Chiuderlo in qualunque modo (X, Esc) vale come conferma: il profilo è già
+// creato e create-profile-dialog deve completare il flusso (onProfileCreated).
 export function RecoveryKeyDisplay({
   open,
   onOpenChange,
-  recoveryKey,
   profileName,
   onConfirm,
 }: RecoveryKeyDisplayProps) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
   const [, setConfirmed] = useState(false);
-
-  const formattedGroups = formatRecoveryKeyForDisplay(recoveryKey);
-  const keyString = recoveryKeyToString(recoveryKey);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(keyString);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err: unknown) {
-      clientLogger.error('Failed to copy:', err);
-    }
-  };
-
-  const handleDownload = () => {
-    const content = `GameStringer Recovery Key
-========================
-Profile: ${profileName}
-Date: ${new Date().toLocaleDateString()}
-
-Your 12-word recovery key:
-${keyString}
-
-IMPORTANT: Keep this file safe and secure!
-You will need these words to recover your password.
-Do not share this with anyone.
-`;
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gamestringer-recovery-${profileName.toLowerCase().replace(/\s+/g, '-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const handleConfirm = () => {
     setConfirmed(true);
@@ -86,15 +48,15 @@ Do not share this with anyone.
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => (isOpen ? onOpenChange(true) : handleConfirm())}>
       <DialogContent className="sm:max-w-lg bg-slate-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Key className="h-5 w-5 text-emerald-400" />
-            {t('profile.recoveryKey')}
+            {t('profile.passwordNoticeTitle')}
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            {t('profile.saveKeyDesc')} <span className="text-white font-medium">{profileName}</span>
+            <span className="text-white font-medium">{profileName}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -103,67 +65,15 @@ Do not share this with anyone.
           <Alert className="border-amber-500/30 bg-amber-500/10">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
             <AlertDescription className="text-amber-200 text-sm ml-2">
-              <strong>Important:</strong> Write down or save these 12 words. You won&apos;t be able to see them again!
+              {t('profile.passwordNoticeDesc')}
             </AlertDescription>
           </Alert>
-
-          {/* Recovery Key Grid */}
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="grid grid-cols-3 gap-3">
-              {formattedGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-2">
-                  {group.map((word, wordIndex) => {
-                    const number = groupIndex * 3 + wordIndex + 1;
-                    return (
-                      <div 
-                        key={wordIndex}
-                        className="flex items-center gap-2 bg-slate-900/50 rounded px-3 py-2"
-                      >
-                        <span className="text-xs text-slate-500 w-4">{number}.</span>
-                        <span className="text-emerald-300 font-mono text-sm">{word}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleCopy}
-              className="flex-1 border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-white"
-            >
-              {copied ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-400" />
-                  {t('profile.copy')}
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 mr-2" />
-                  {t('profile.copy')}
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleDownload}
-              className="flex-1 border-slate-700 bg-slate-800/50 hover:bg-slate-700 text-white"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {t('profile.download')}
-            </Button>
-          </div>
 
           {/* Security Note */}
           <div className="flex items-start gap-2 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
             <Shield className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-slate-400">
-              This key is the only way to recover your password if you forget it. 
-              Store it in a safe place, like a password manager or a secure note.
+              {t('profile.passwordNoticeHint')}
             </p>
           </div>
         </div>
@@ -174,7 +84,7 @@ Do not share this with anyone.
           className="w-full bg-emerald-600 hover:bg-emerald-700"
         >
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          {t('profile.savedKeyConfirm')}
+          {t('profile.passwordNoticeConfirm')}
         </Button>
       </DialogContent>
     </Dialog>

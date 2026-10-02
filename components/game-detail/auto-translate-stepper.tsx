@@ -42,7 +42,11 @@ interface AutoTranslateStepperProps {
   currentFlagLabel: string;
   onClose: () => void;
   onClearResult: () => void;
+  /** Apre l'export GsPack del gioco (lo stesso dialog del pannello strumenti). */
+  onCreatePatch: () => void;
   game: {
+    /** Id del gioco in libreria: l'Editor apre il progetto per `gameId`, il titolo resta il ripiego. */
+    id?: string;
     title?: string;
     name?: string;
     installPath?: string;
@@ -57,9 +61,15 @@ export function AutoTranslateStepper({
   currentFlagLabel,
   onClose,
   onClearResult,
+  onCreatePatch,
   game,
 }: AutoTranslateStepperProps) {
   const { t } = useTranslation();
+
+  // Il run è finito quando nessun passo è ancora in attesa o in corso. Un passo
+  // fallito resta rosso: wizard e «Chiudi» dipendono da «finito», non da «tutto
+  // verde» — altrimenti per arrivarci un passo rosso andava ridipinto di verde.
+  const finished = steps.every(s => s.status === 'done' || s.status === 'error');
 
   // Chiave AES per i pak cifrati: si tiene qui e non nel padre perché serve
   // solo dentro questo pannello, e sparisce con lui.
@@ -130,7 +140,8 @@ export function AutoTranslateStepper({
             <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
             <span className="text-2xs text-indigo-400/70">{`String it! → ${currentFlagLabel}`}</span>
           </div>
-          {steps.every(s => s.status === 'done') && (
+          {/* Con un errore il «Chiudi» sta già nel banner sotto: uno solo. */}
+          {finished && !error && (
             <button className="ml-auto text-micro font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
               onClick={onClose}
             >
@@ -251,7 +262,7 @@ export function AutoTranslateStepper({
             `runtimeOnly` (BepInEx/XUnity), dove non c'è nulla da riscrivere
             perché la traduzione avviene mentre si gioca.
             Niente prova → ambra, e si dice cosa non si è potuto verificare. */}
-        {result && steps.every(s => s.status === 'done') && (() => {
+        {result && finished && !error && (() => {
           // La regola sta in lib/translation/effect-verdict.ts, con i suoi test:
           // qui dentro non era verificabile, ed è logica che si è già rotta due
           // volte in due giorni. Il verdetto restituisce anche la verifica
@@ -286,13 +297,13 @@ export function AutoTranslateStepper({
                         traduzione a runtime quel numero non esiste, e fingere
                         che esista sarebbe la stessa bugia di prima. */}
                     {verifiedOk && runtimeOnly && t('postTranslation.runtimeTitle')}
-                    {/* successRate arriva in PERCENTO (0-100) dai percorsi TS,
-                        ma in FRAZIONE (0-1) dal success_rate Rust: il 03/08 il
-                        62% è diventato "6200%". Normalizziamo qui, un punto
-                        solo: ≤1 è una frazione, sopra è già percento. */}
+                    {/* successRate è in PERCENTO (0-100) da tutti i percorsi:
+                        il generico converte il success_rate Rust alla
+                        frontiera. La vecchia normalizzazione «≤1 è una
+                        frazione» trasformava un 1% vero in «100%». */}
                     {verifiedOk && !runtimeOnly && t('postTranslation.writtenTitle')
                       .replace('{n}', String(stringsWritten))
-                      .replace('{pct}', (result.successRate <= 1 ? result.successRate * 100 : result.successRate).toFixed(0))}
+                      .replace('{pct}', result.successRate.toFixed(0))}
                     {partial && t('postTranslation.partialTitle')
                       .replace('{n}', String(stringsWritten))
                       .replace('{missing}', String(missing.length))}
@@ -352,7 +363,9 @@ export function AutoTranslateStepper({
               {/* Fallback → Traduzione live OCR (palette blue/sky = Traduzione):
                   per RPG Maker con copertura parziale, e per QUALSIASI motore
                   quando la verifica su disco non conferma nessun file. */}
-              {(((/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 0.9) || unverified) && (
+              {/* successRate qui è in PERCENTO (0-100) da tutti i percorsi:
+                  il confronto con 0.9 scattava solo allo 0%. */}
+              {(((/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 90) || unverified) && (
                 <button
                   onClick={() => {
                     onClose();
@@ -376,7 +389,7 @@ export function AutoTranslateStepper({
                     <span className="text-2xs text-slate-400 leading-tight block">
                       {unverified
                         ? t('postTranslation.ocrDescUnverified')
-                        : t('postTranslation.ocrDescPartial').replace('{pct}', (result.successRate * 100).toFixed(0))}
+                        : t('postTranslation.ocrDescPartial').replace('{pct}', result.successRate.toFixed(0))}
                     </span>
                   </div>
                 </button>
@@ -392,7 +405,7 @@ export function AutoTranslateStepper({
                     if (translationSection) {
                       translationSection.scrollIntoView({ behavior: 'smooth' });
                     } else {
-                      window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}`;
+                      window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}${game.id ? `&gameId=${encodeURIComponent(game.id)}` : ''}`;
                     }
                   }}
                   className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 hover:border-indigo-500/40 transition-all text-center"
@@ -452,23 +465,13 @@ export function AutoTranslateStepper({
                   <span className="text-2xs text-slate-500 leading-tight">Avvia il gioco per verificare le traduzioni in-game</span>
                 </button>
 
-                {/* Option 3: Create Patch */}
+                {/* Option 3: Create Patch → export GsPack. Chiamava
+                    `export_translation_patch`, un comando che in src-tauri non
+                    è mai esistito: finiva sempre in errore. Il dialog GsPack
+                    esporta le stringhe salvate dall'apply, e se non ce ne sono
+                    lo dice invece di creare un pacchetto vuoto. */}
                 <button
-                  onClick={async () => {
-                    try {
-                      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                      toast.info(t('common.creazionePatchInCorso'));
-                      const patchPath = await tauriInvoke<string>('export_translation_patch', {
-                        installPath: game.installPath,
-                        gameTitle: game.title || game.name || 'Game',
-                        targetLang: result?.targetLang || 'it',
-                      });
-                      toast.success(t('common.patchCreata'));
-                      await tauriInvoke('open_path', { path: patchPath }).catch(() => {});
-                    } catch (e: unknown) {
-                      toast.error(`Errore creazione patch: ${e}`);
-                    }
-                  }}
+                  onClick={onCreatePatch}
                   className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 transition-all text-center"
                 >
                   <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">

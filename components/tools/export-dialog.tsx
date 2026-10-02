@@ -19,9 +19,10 @@ import {
 } from '@/components/ui/dialog';
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { exportToGridlyCsv, translationEntriesToGridly, getGridlyFileName } from '@/lib/gridly-format';
+import { buildTmx } from '@/lib/export/tmx';
 import { clientLogger } from '@/lib/client-logger';
 
 interface TranslationEntry {
@@ -85,7 +86,6 @@ export function ExportDialog({
   const [includeEmpty, setIncludeEmpty] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [result, setResult] = useState<ExportResult | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     const loadFormats = async () => {
@@ -150,17 +150,9 @@ export function ExportDialog({
             includeEmpty,
           });
           const gridlyPath = `${desktopPath}/${getGridlyFileName(defaultFileName, sourceLang, [targetLang])}`;
-          // Write via Tauri
-          try {
-            await invoke('write_text_file', { path: gridlyPath, content: '\uFEFF' + csvContent });
-          } catch {
-            // Fallback: try generic file write
-            await invoke('export_to_csv', {
-              entries,
-              outputPath: gridlyPath,
-              options: { ...options, format: 'csv' }
-            });
-          }
+          // Write via Tauri. Nessun fallback: un CSV generico scritto qui verrebbe
+          // spacciato per Gridly; se la scrittura fallisce l'errore va al catch.
+          await invoke('write_text_file', { path: gridlyPath, content: '\uFEFF' + csvContent });
           exportResult = {
             success: true,
             format: 'Gridly CSV',
@@ -200,21 +192,31 @@ export function ExportDialog({
             options
           });
           break;
+        case 'tmx': {
+          // Client-side TMX 1.4b export: stessi filtri e coppia di lingue del chiamante
+          const tmx = buildTmx(entries, { sourceLang, targetLang, includeContext, includeNotes, includeEmpty });
+          await invoke('write_text_file', { path: outputPath, content: tmx.content });
+          exportResult = {
+            success: true,
+            format: 'TMX 1.4b',
+            path: outputPath,
+            entriesCount: tmx.count,
+            fileSize: new Blob([tmx.content]).size,
+          };
+          break;
+        }
         default:
           throw new Error(`${t('exportDialogComp.formatoNonSupportato')}: ${selectedFormat}`);
       }
 
       setResult(exportResult);
-      toast({
-        title: `✅ ${t('exportDialogComp.exportCompletato')}`,
+      toast.success(t('exportDialogComp.exportCompletato'), {
         description: `${exportResult.entriesCount} ${t('exportDialogComp.traduzioniEsportateIn')} ${exportResult.format}`
       });
     } catch (e: unknown) {
       clientLogger.error('[Export] Error:', e);
-      toast({
-        title: t('exportDialogComp.erroreExport'),
-        description: String(e),
-        variant: 'destructive'
+      toast.error(t('exportDialogComp.erroreExport'), {
+        description: String(e)
       });
     } finally {
       setIsExporting(false);

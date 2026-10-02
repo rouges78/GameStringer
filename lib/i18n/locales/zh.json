@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "自定义提示词设置已保存",
     "settingsReset": "设置已重置",
-    "title": "自定义提示词与语音",
     "newBadge": "2026 新增",
     "subtitle": "通过角色、语气和自定义提示词自定义 LLM 提供商的行为",
     "enableCustomPrompt": "启用自定义提示词",
-    "enableDesc": "为所有翻译添加自定义指令",
     "personaRole": "角色/身份",
     "personaDesc": "翻译时仿佛你就是这个角色",
     "toneStyle": "语气/风格",
     "customPrompt": "自定义提示词",
     "customPromptDesc": "将添加到系统提示词中的附加指令",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "实时语音翻译（40 种以上语言）",
-    "ttsVoice": "TTS 语音",
-    "preserveVoice": "保留原声特征",
-    "preserveVoiceDesc": "保留原声的语气、重音和风格（测试版）",
     "preview": "预览：",
     "reset": "重置",
     "personaPh": "选择一个角色……",
     "tonePh": "选择一种语气……",
-    "customPromptPh": "例如：使用古风词汇，语气正式，使用奇幻专用术语……"
+    "customPromptPh": "例如：使用古风词汇，语气正式，使用奇幻专用术语……",
+    "enableDescCloud": "将你的指令添加到云端 AI 提供商的翻译中（Gemini、OpenAI、Claude、DeepSeek、Groq、Mistral…）。本地模型（Ollama、LM Studio）和 DeepL 等引擎不使用这些指令。"
   },
   "lipSyncPanel": {
     "title": "口型同步 (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "语音与提供商",
     "defaultVoice": "默认语音",
     "sttEngine": "STT 引擎",
-    "groqWhisper": "Groq Whisper（快速）",
     "durationMatching": "时长匹配",
     "lipSync": "口型同步 (Rhubarb)",
     "generateSubtitles": "生成字幕",
@@ -161,7 +154,17 @@
     "errors": "错误",
     "confidence": "置信度",
     "audioSegments": "音频片段",
-    "selectFolderPrompt": "选择一个游戏文件夹以启动自动配音。流程将执行：音频扫描 → Whisper 转录 → AI 翻译 → 语音合成 → 音频文件打补丁。"
+    "selectFolderPrompt": "选择一个游戏文件夹以启动自动配音。流程将执行：音频扫描 → Whisper 转录 → AI 翻译 → 语音合成 → 音频文件打补丁。",
+    "doneToast": "配音完成：已替换 {n} 个音频文件",
+    "partialToast": "配音部分完成：已替换 {n} 个音频文件，{errors} 个错误",
+    "failedToast": "没有替换任何音频文件",
+    "paidConfirmTitle": "确认付费转录",
+    "paidConfirmDesc": "在游戏文件夹中找到 {count} 个音频文件（{size} MB），包括音乐和音效。转录会将每个文件发送到语音转文字服务：每个文件一次付费调用，费用计入你的 API 密钥。含语音的文件随后还会使用付费的翻译和语音合成。",
+    "paidConfirmProceed": "转录 {count} 个文件",
+    "patchFormatMismatch": "格式不匹配：合成音频（{actual}）与游戏文件（.{expected}）不一致。音频转换不可用，因此文件未被修改。",
+    "unknownAudioFormat": "未知格式",
+    "noCompatibleAudio": "{count} 个音频文件中没有 MP3。语音合成输出 MP3，且音频转换不可用，因此无法替换任何游戏文件。没有向付费服务发送任何内容。",
+    "groqWhisperUnavailable": "Groq Whisper（暂不可用）"
   },
   "fileSelector": {
     "fromWizard": "来自 Translation Wizard",
@@ -615,41 +618,11 @@
     "enterCurrentPassword": "输入当前密码",
     "passwordMinLength": "新密码必须至少包含 4 个字符",
     "passwordChanged": "密码修改成功！",
-    "invalidCode": "验证码无效",
-    "twoFaDisabledMsg": "双重身份验证已禁用",
-    "enter6DigitCode": "输入 6 位数字验证码",
-    "twoFaEnabledMsg": "双重身份验证已启用！",
     "passwordsDontMatch": "密码不匹配",
-    "passwordTab": "密码",
-    "sessionsTab": "会话",
-    "activityTab": "活动",
     "changePassword": "修改密码",
     "changePasswordDesc": "修改你的账户密码",
     "passwordsMatch": "密码匹配",
-    "sessionManagement": "会话管理",
-    "sessionMgmtDesc": "配置超时和自动锁定",
-    "disconnectAfterInactivity": "闲置后断开连接",
-    "min15": "15 分钟",
-    "min30": "30 分钟",
-    "hour1": "1 小时",
-    "hours2": "2 小时",
-    "requirePassword": "闲置后要求输入密码",
-    "min5": "5 分钟",
-    "min10": "10 分钟",
-    "notifyNewLogins": "新登录时通知",
-    "disconnectAll": "断开所有会话",
-    "twoFactorAuth": "双重身份验证",
-    "addExtraSecurity": "增加一层额外的安全保护",
-    "protectAccount": "使用第二重身份验证要素保护你的账户",
-    "configure2fa": "配置 2FA",
-    "saveInAuthApp": "将其保存在身份验证器应用中（Google Authenticator、Authy 等）",
-    "cancel": "取消",
-    "verify": "验证",
-    "twoFaActive": "双重验证已启用",
-    "accountProtected": "你的账户已受保护",
-    "disable2fa": "停用双重验证",
-    "activityHistory": "活动历史",
-    "recentActivity": "最近的登录与变更"
+    "passwordChangeFailed": "密码未更改。请检查当前密码是否正确。"
   },
   "coverPicker": {
     "chooseCoverFor": "为其选择封面",
@@ -791,7 +764,9 @@
     "toClipboard": "复制到剪贴板",
     "backToEditorAria": "返回编辑器",
     "backToEditor": "返回编辑器",
-    "translationPh": "译文..."
+    "translationPh": "译文...",
+    "cpkBuildUnavailable": "不适用于这些文件",
+    "cpkBuildUnavailableReason": "暂时无法为 {formats} 文件生成补丁 CPK：GameStringer 没有能按原始结构重建这些文件的写入器，而以纯文本写回译文会导致游戏损坏。请改为导出 CSV 或 PO。"
   },
   "translationWizard": {
     "renderError": "渲染错误",
@@ -1054,7 +1029,6 @@
     "more": "更多",
     "moreTooltip": "其他工具（P.T. Rank、Dry Run、数据库名称）",
     "alreadyRunning": "翻译已在后台进行中。",
-    "advancedParams": "高级参数（温度、令牌、批量）",
     "stepScan": "正在扫描 game.veb",
     "stepExtract": "正在提取字符串",
     "stepTranslateCloud": "AI 翻译（云端）",
@@ -1094,7 +1068,13 @@
     "pakAesSaved": "密钥已保存。请再次运行 String it! 重试。",
     "pakAesWrong": "已保存的密钥无法打开这个 pak。请粘贴另一个，或删除已保存的密钥。",
     "pakAesClear": "删除已保存的密钥",
-    "pakAesCleared": "密钥已删除。"
+    "pakAesCleared": "密钥已删除。",
+    "pageRouteDetected": "检测到 {engine} 游戏",
+    "pageRouteMsg": "{engine} 在 String it! 中没有自动流程：请使用专用的 {tool} 翻译此游戏。",
+    "pageRouteToast": "{engine}：打开 {tool}",
+    "pageRouteOpen": "打开 {tool}",
+    "gmRestored": "GameMaker 补丁失败：已从备份恢复游戏原始文件。",
+    "gmRestoreFailed": "GameMaker 补丁失败，且无法恢复备份：启动前请检查游戏文件（或通过 Steam 验证完整性）。"
   },
   "autoTranslatePage": {
     "identical": "相同",
@@ -1290,7 +1270,16 @@
     "wait25MinutesAndClick": "等待 25 分钟后点击",
     "configureAnAiProviderGeminiDee": "在此配置 AI 服务商（Gemini、DeepSeek 等）",
     "tpLogProjectSaved": "项目已更新：{count} 条字符串已保存到“项目”（可在那里继续、导出或发布）",
-    "tpLogProjectSaveFailed": "补丁已应用，但项目注册失败：{err}"
+    "tpLogProjectSaveFailed": "补丁已应用，但项目注册失败：{err}",
+    "bgJobNotFound": "此后台翻译的结果已不可用。",
+    "gamePathUnknown": "找不到此游戏的安装文件夹。请手动加载文件，或从库中打开该游戏。",
+    "libraryLoadFailed": "无法加载游戏库。",
+    "pickInstalledGame": "或选择一个已安装的游戏：",
+    "pickGamePlaceholder": "选择游戏…",
+    "noInstalledGames": "库中未找到已安装的游戏。",
+    "noStringsTranslated": "没有翻译任何字符串",
+    "noStringsTranslatedDesc": "翻译已结束，但没有翻译任何字符串。已加载的文件仍在，您可以重试。",
+    "nothingToTranslate": "已加载的文件中没有可翻译的文本。"
   },
   "aiPipelinePage": {
     "title": "AI翻译管线",
@@ -1390,7 +1379,10 @@
     "japanese": "日语",
     "chinese": "中文",
     "korean": "韩语",
-    "impostazioniPerLestrazioneAuto": "自动提取和注入到提示的设置"
+    "impostazioniPerLestrazioneAuto": "自动提取和注入到提示的设置",
+    "noGameTexts": "未找到此游戏和目标语言的已保存字符串。请先翻译游戏，然后再从其真实文本中提取术语。",
+    "gameTextsAvailable": "来源：此游戏已保存的 {count} 条字符串（将向 AI 发送具有代表性的样本）。",
+    "noGlossaryForGame": "此游戏还没有术语表：创建一个来管理其术语。"
   },
   "visualNovelPage": {
     "title": "视觉小说补丁工具",
@@ -1708,7 +1700,18 @@
     "translationMemory": "翻译记忆",
     "selectString": "从列表选择字符串",
     "noSelection": "未选择",
-    "traduciUnGiocoConNeuralTransla": "使用Neural Translator翻译一个游戏后即可在此处显示。"
+    "traduciUnGiocoConNeuralTransla": "使用Neural Translator翻译一个游戏后即可在此处显示。",
+    "deepLinkNoData": "编辑器中还没有“{game}”的翻译",
+    "fileLoadedDesc": "{file} - 找到 {n} 个字符串",
+    "fileLoadedDescMulti": "{file} - {n} 个字符串（检测到多语言文件）",
+    "partialLoadedTitle": "已加载部分结果",
+    "partialLoadedDesc": "已翻译 {game} 的 {done}/{total} 个字符串",
+    "savedStringsFile": "已保存的字符串",
+    "savedDictionaryFailed": "已保存到编辑器，但未保存到游戏词典",
+    "aiNoProvider": "没有翻译服务商响应：该字符串未被翻译。请在设置中检查 API 密钥和已启用的服务商。",
+    "aiTranslated": "已使用 {provider} 翻译",
+    "aiTranslateFailed": "AI 翻译失败",
+    "savedLinesDesc": "已保存 {n} 条翻译"
   },
   "binaryPatcherPage": {
     "selectExeDll": "选择游戏的 .exe 或 .dll 以提取可翻译的字符串",
@@ -1740,7 +1743,14 @@
     "offlineDict": "离线词典 — 快速但基本质量",
     "aiPreset": "AI预设：",
     "allCategories": "所有类别",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepL等 — 更高质量"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepL等 — 更高质量",
+    "readBinaryFailed": "无法逐字节读取二进制文件（{error}）。超过 50 MB 的文件无法从游戏文件夹加载。",
+    "patchNothingApplied": "没有任何翻译能写入二进制文件，因此未保存任何文件。",
+    "patchSaved": "已保存补丁文件：写入了 {patched} 条字符串",
+    "patchSkippedErrors": "{n} 条翻译未写入（字节长度或原文不匹配）",
+    "backupKept": "被替换文件的备份：{path}",
+    "backupFailed": "无法备份将被替换的文件，因此未写入任何内容：{error}",
+    "patchSaveFailed": "无法保存补丁文件：{error}"
   },
   "advancedToolsPage": {
     "title": "高级工具",
@@ -1772,14 +1782,10 @@
     "communityHubSupabase": "社区中心 — Supabase 后端",
     "communityHubShort": "社区中心",
     "temperatureLabel": "温度：",
-    "maxTokensLabel": "最大 Token 数：",
-    "batchSizeLabel": "批大小：",
     "copyToSeeAll": "\\n\\n...（复制以查看全部）",
     "gbTotal": "GB 总计",
     "diskUsed": "已使用",
     "gbAvailable": "GB 可用",
-    "rssFeedAdded": "已添加 RSS 源",
-    "feedRemoved": "已移除源",
     "lmStudioDesc": "LM Studio 是一款桌面应用，可通过兼容 OpenAI 的 API 运行本地 LLM。免费，无需 API 密钥。",
     "autoDetectFromServer": "从服务器自动检测",
     "lmStudioDownload1": "从此处下载 LM Studio: ",
@@ -1798,9 +1804,6 @@
     "deepl500k": "每月 50万 字符免费 — ",
     "qwen1m": "每月 100万 tokens 免费，多语言一流 — ",
     "rssFeedDashboard": "RSS 源仪表板",
-    "rssDesc": "配置要在仪表板滚动条中显示的 RSS 源",
-    "feedNamePlaceholder": "源名称（例如 Steam News）",
-    "feedUrlPlaceholder": "RSS 源 URL",
     "noFeeds": "尚未配置任何源。添加一个 RSS 源即可开始。",
     "restoreDefaults": "恢复默认值",
     "fontSmall": "小（14px）",
@@ -1848,7 +1851,10 @@
     "git": "Git：",
     "branch": "分支：",
     "ollamaUrlLabel": "Ollama 服务器地址",
-    "ollamaUrlHint": "留空则自动检测。如果 Ollama 运行在其他端口、WSL/Docker 或另一台电脑上，请填写（例如 http://192.168.1.5:11434）。"
+    "ollamaUrlHint": "留空则自动检测。如果 Ollama 运行在其他端口、WSL/Docker 或另一台电脑上，请填写（例如 http://192.168.1.5:11434）。",
+    "temperatureSection": "高级参数（温度）",
+    "temperatureScope": "由云端 AI 提供商使用（Gemini、OpenAI、DeepSeek、Groq、Mistral、Cohere、OpenRouter、Together、Fireworks、Cerebras、Qwen）。Claude 使用其自身的默认值。Ollama 有自己的温度设置：Ollama / AI → 高级功能。",
+    "rssNewsDesc": "选择仪表板新闻的来源。这与“管理新闻源”页面是同一个列表。"
   },
   "translatorProPage": {
     "subtitle": "采用多步骤管线的高级神经翻译",
@@ -1911,7 +1917,22 @@
     "applyInstalling": "正在安装补丁工具...",
     "applyApplying": "正在应用...",
     "applied": "已应用！",
-    "applyToGame": "应用到游戏"
+    "applyToGame": "应用到游戏",
+    "applyResult": {
+      "allTitle": "翻译已应用到游戏",
+      "partialTitle": "翻译仅部分应用",
+      "noneTitle": "没有向游戏写入任何内容",
+      "written": "已写入",
+      "failed": "未写入：{error}",
+      "unknownLocation": "未写入：不知道该文件在游戏中的原始位置",
+      "notLanguageFile": "未写入：这不是游戏的语言文件",
+      "noEntries": "未写入：没有可写入词典的已翻译字符串",
+      "languageHint": "请在游戏选项中选择新语言。",
+      "xunityHint": "XUnity 词典中有 {n} 条翻译。启动游戏吧！",
+      "patcherFailed": "无法安装 XUnity AutoTranslator：{error}",
+      "manualHint": "对于未写入的文件，请使用“全部下载”并手动复制。"
+    },
+    "patchSavedTo": "翻译包已保存到："
   },
   "loggingDashboardComp": {
     "loggingDashboard": "日志面板",
@@ -2103,40 +2124,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "翻译",
-    "stringhe": "字符串",
-    "parole": "字数",
-    "progress": "进度",
     "oggi": "今天",
     "settimana": "周",
     "mese": "月",
-    "completati": "已完成",
-    "inCorso": "进行中",
     "totali": "总计",
     "title": "翻译统计",
-    "tradotte": "已翻译",
-    "elaborate": "已处理",
-    "medio": "平均",
     "weeklyActivity": "每周活动",
-    "estimatedTimeRemaining": "预计剩余时间",
     "targetLanguages": "目标语言",
-    "noTranslationsYet": "暂无翻译"
+    "noTranslationsYet": "暂无翻译",
+    "noLanguageData": "这些翻译没有记录目标语言",
+    "activityOverview": "你的翻译活动概览"
   },
   "securityDialogComp": {
     "currentPassword": "当前密码",
     "newPassword": "新密码",
-    "confirmPassword": "确认密码",
-    "timeoutSessione": "会话超时",
-    "never": "永不",
-    "autoLock": "自动锁定",
-    "timeoutBlocco": "锁定超时",
-    "notificheLogin": "登录通知",
-    "active": "已启用",
-    "inactive": "未启用",
-    "yourSecretCode": "你的密钥：",
-    "enterVerificationCode": "输入验证码",
-    "enterCodeToDisable": "输入验证码以禁用",
-    "demoUsa123456": "演示：使用 123456",
-    "noActivityRecorded": "未记录任何活动"
+    "confirmPassword": "确认密码"
   },
   "visualTranslationEditorComp": {
     "originale": "原文",
@@ -2287,7 +2289,8 @@
     "reviewNotesPlaceholder": "添加审校备注……",
     "approve": "通过",
     "saveChanges": "保存修改",
-    "exportResults": "导出结果"
+    "exportResults": "导出结果",
+    "emptyTranslationCannotApprove": "AI 没有返回这一行的译文，因此无法通过。请自行填写（编辑）或拒绝该行。"
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "像素字体预览",
@@ -2470,7 +2473,8 @@
     "personalizzaTema": "自定义主题",
     "scegliOCreaIlTuoTemaPersonaliz": "选择或创建你的自定义主题",
     "iTuoiTemiSalvati": "你保存的主题",
-    "anteprima": "预览"
+    "anteprima": "预览",
+    "altriTemi": "更多主题"
   },
   "errorBoundaryComp": {
     "errorId": "错误 ID：",
@@ -2493,7 +2497,9 @@
     "importTranslations": "导入翻译",
     "game": "游戏",
     "translationFile": "翻译文件",
-    "detectedFileFormat": "检测到的文件格式："
+    "detectedFileFormat": "检测到的文件格式：",
+    "importResult": "已导入 {n}/{total} 条翻译",
+    "noValidRows": "没有同时包含原文和译文的行"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "全局进度",
@@ -2588,7 +2594,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "当前配置文件",
-    "chiudi": "关闭"
+    "chiudi": "关闭",
+    "avatarUpdated": "头像已更新"
   },
   "nav": {
     "dashboard": "仪表板",
@@ -2752,7 +2759,15 @@
     "buildDate": "构建日期",
     "gitHash": "Git哈希",
     "branch": "分支",
-    "unsavedChanges": "有未保存的更改"
+    "unsavedChanges": "有未保存的更改",
+    "temperatureTooltipHighCapped": "0.8-1.0: 更有创意，可能与原文不同",
+    "autoBackupConfigSaved": "自动备份配置已保存",
+    "backupDone": "备份完成",
+    "backupDoneDesc": "已保存 {n} 个文件 ({size})",
+    "backupFailed": "备份失败",
+    "restoreDone": "恢复完成",
+    "restoreDoneDesc": "已恢复 {n} 项",
+    "restoreFailed": "恢复失败"
   },
   "common": {
     "loading": "加载中...",
@@ -3551,7 +3566,10 @@
     "play": "播放",
     "ltWindow": "窗口",
     "ltPickWindow": "选择窗口",
-    "ltNoWindow": "未找到窗口"
+    "ltNoWindow": "未找到窗口",
+    "suggestionsGeneratedFor": "已为 {n} 条翻译生成建议",
+    "originalsCopiedCount": "已复制 {n} 条原文",
+    "translationsPastedCount": "已粘贴 {n} 条翻译"
   },
   "languages": {
     "cs": "Čeština",
@@ -3675,7 +3693,15 @@
     "passwordResetSuccess": "你的密码已成功重置",
     "historyCleared": "活动历史已清除",
     "disconnectedAll": "已从所有其他会话断开连接",
-    "thisProfile": "此配置文件"
+    "thisProfile": "此配置文件",
+    "recoveryUnavailableTitle": "此密码无法重置",
+    "recoveryUnavailableDesc": "您的配置文件使用其密码加密，GameStringer 不保存任何其他可以解锁它的密钥。忘记的密码无法找回或重置，即使使用创建配置文件时显示的 12 词恢复密钥也不行。",
+    "recoveryUnavailableHint": "如果您想不起来，请创建一个新的配置文件。在输入正确密码之前，此配置文件中的数据将保持锁定。",
+    "passwordNoticeTitle": "请妥善保管您的密码",
+    "passwordNoticeDesc": "此配置文件使用其密码加密。如果忘记密码，将无法找回或重置，配置文件中的数据也将保持锁定。",
+    "passwordNoticeHint": "请把它记下来，或保存在密码管理器中。",
+    "passwordNoticeConfirm": "我明白了",
+    "passwordUnrecoverableDesc": "您的配置文件使用其密码加密，GameStringer 不保存任何其他可以解锁它的密钥。忘记的密码无法找回或重置。即使旧版本曾为您提供 12 词恢复密钥，它也无法解锁该配置文件。"
   },
   "onboarding": {
     "step": "步骤 {current}/{total}",
@@ -3938,16 +3964,14 @@
     "translated": "已翻译",
     "waitingForText": "等待文本...",
     "footerInfo": "OCR适用于任何游戏 • 使用Gemini AI翻译",
-    "aiProvider": "AI 服务商"
+    "aiProvider": "AI 服务商",
+    "languagePackMissing": "Windows 无法读取该语言 ({lang}) 的文本：未安装包含光学字符识别 (OCR) 的语言包。请在 设置 > 时间和语言 > 语言和区域 中添加，然后重新开始。"
   },
   "subtitleOverlay": {
     "title": "字幕叠加层",
     "subtitle": "用于流媒体和录制的实时字幕",
     "startCapture": "开始捕获",
     "stop": "停止",
-    "paused": "已暂停",
-    "captureActive": "捕获中",
-    "subtitlesCaptured": "字幕已捕获",
     "livePreview": "实时预览",
     "settings": "设置",
     "style": "样式",
@@ -3967,15 +3991,13 @@
     "fadeIn": "淡入",
     "fadeOut": "淡出",
     "animation": "动画",
-    "history": "历史",
-    "noSubtitlesCaptured": "未捕获字幕",
-    "startCaptureToBegin": "开始捕获以开始",
     "positionTop": "顶部",
     "positionCenter": "居中",
     "positionBottom": "底部",
     "positionAbove": "上方",
     "positionBelow": "下方",
-    "positionInline": "内联"
+    "positionInline": "内联",
+    "notConnected": "实时捕获尚未接入：此处不会捕获或翻译任何字幕。你只能预览字幕样式。"
   },
   "translationFixer": {
     "title": "翻译修复器",
@@ -4046,19 +4068,14 @@
     "exportAll": "导出全部",
     "dropImages": "拖放图像或点击上传",
     "processing": "处理中...",
-    "detecting": "检测气泡中...",
-    "translating": "翻译中...",
-    "inpainting": "图像修复中...",
-    "completed": "完成！",
     "noPage": "无页面",
     "original": "原文",
     "translated": "已翻译",
     "loadPages": "加载漫画页面",
     "supportedFormats": "支持 JPG、PNG、WebP",
     "pageOf": "第 {current} 页，共 {total} 页",
-    "analyzingText": "分析文本中...",
-    "batchTranslation": "批量翻译中...",
-    "fontStyleLabel": "字体样式"
+    "fontStyleLabel": "字体样式",
+    "notConnected": "尚未接入：此工具不会执行 OCR 或翻译。你可以加载和查看页面，但检测、图像修复和导出均已禁用。"
   },
   "textureTranslator": {
     "title": "贴图翻译器",
@@ -4078,7 +4095,8 @@
     "noTexture": "未选择贴图",
     "processAll": "处理全部",
     "original": "原文",
-    "translated": "已翻译"
+    "translated": "已翻译",
+    "notConnected": "尚未接入：此工具不会执行 OCR 或翻译。你可以加载和查看纹理，但文本检测、应用翻译和导出均已禁用。"
   },
   "dictionaryManager": {
     "addTranslation": "添加翻译"
@@ -4167,7 +4185,8 @@
     "reset": "重置",
     "save": "保存",
     "selectToEdit": "选择一条字幕进行编辑",
-    "issuesDetected": "检测到问题"
+    "issuesDetected": "检测到问题",
+    "linesNotTranslated": "{n} 行字幕未能翻译，保留原文"
   },
   "multiLlmCompare": {
     "title": "多 LLM 对比",
@@ -4238,7 +4257,8 @@
     "cancel": "取消",
     "delete": "删除",
     "translationUpdated": "翻译已更新",
-    "translationDeleted": "翻译已删除"
+    "translationDeleted": "翻译已删除",
+    "languagePair": "语言对"
   },
   "support": {
     "title": "支持",
@@ -4276,7 +4296,8 @@
     "micError": "无法访问麦克风。请检查权限。",
     "transcriptionError": "转录错误。请检查您的OpenAI API密钥。",
     "translationError": "翻译错误。",
-    "ttsError": "语音合成错误。"
+    "ttsError": "语音合成错误。",
+    "noSpeechDetected": "未在音频中识别到语音。"
   },
   "aiTranslator": {
     "title": "AI翻译助手",
@@ -4492,7 +4513,8 @@
     "bgOpacity": "背景不透明度",
     "shadow": "阴影",
     "positionApplied": "位置「{name}」已应用",
-    "styleApplied": "样式「{name}」已应用"
+    "styleApplied": "样式「{name}」已应用",
+    "notConnected": "头显输出尚未接入：此页面仅预览覆盖层，不会向 VR 头显发送任何内容。"
   },
   "playerFeedback": {
     "title": "玩家反馈",
@@ -5607,15 +5629,6 @@
     "recommendedModel": "推荐模型",
     "local": "本地",
     "cloud": "云端",
-    "autoSwitch": "自动切换模型",
-    "autoSwitchDesc": "根据可用VRAM自动切换AI模型",
-    "preferLocal": "优先本地模型",
-    "preferLocalDesc": "尽可能使用Ollama/LM Studio而非云端",
-    "alertHighUsage": "VRAM高使用量警报",
-    "alertHighUsageDesc": "当VRAM超过阈值时通知",
-    "alertThreshold": "警报阈值",
-    "cloudFallback": "云端回退提供商",
-    "cloudAuto": "自动",
     "tierAndModels": "级别和模型",
     "statsUpdated": "系统统计已更新",
     "tierUltra": "超级 (≥12GB)",
@@ -5662,7 +5675,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google 翻译",
     "libretranslateFree": "LibreTranslate（免费）",
-    "workflowCompletato": "工作流已完成！"
+    "workflowCompletato": "工作流已完成！",
+    "linesNotTranslated": "{n} 行未能由 AI 翻译：译文为空。请自行填写或拒绝这些行。"
   },
   "translationWizardPage": {
     "noGameTrovato": "未找到游戏",
@@ -5673,7 +5687,6 @@
     "traduzioneCompletata": "翻译完成！"
   },
   "libraryPage": {
-    "scanDone": "🎮 Family Sharing 扫描完成！",
     "scanError": "扫描时出错",
     "installStarted": "已开始安装",
     "installStartedDesc": "Steam 将打开以安装 {{game}}",
@@ -5709,12 +5722,16 @@
     "langScanDone": "已检测 {n} 个游戏的语言",
     "langScanNone": "未找到新语言",
     "langScanError": "检测语言时出错",
-    "addGameFromDiskHint": "如果没有找到你的游戏，可以选择磁盘上的文件夹手动添加——商店之外的游戏同样适用。"
+    "addGameFromDiskHint": "如果没有找到你的游戏，可以选择磁盘上的文件夹手动添加——商店之外的游戏同样适用。",
+    "libraryScanDone": "已在所有商店中重新扫描游戏库",
+    "scanPartial": "扫描已完成但有错误：部分来源无法读取，列表可能不完整。",
+    "steamCredsHint": "在“商店”中关联你的 Steam 账户，即可同时看到已拥有但未安装的游戏。"
   },
   "unityBundlePage": {
     "auto": "自动",
     "fileOpenCtrlv": "文件 → 打开 → Ctrl+V",
-    "importDumpCtrlv": "导入转储 → Ctrl+V"
+    "importDumpCtrlv": "导入转储 → Ctrl+V",
+    "failedStrings": "{n} 条字符串未能翻译，仍保留原语言"
   },
   "activityPage": {
     "filterBy": "筛选：",

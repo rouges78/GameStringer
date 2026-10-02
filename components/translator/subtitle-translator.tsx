@@ -40,6 +40,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
@@ -152,12 +153,20 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
       const translatedFile = applyTranslations(subtitleFile, translations);
       setSubtitleFile(translatedFile);
       setProgress(100);
+
+      // Righe rimaste senza traduzione dopo QUESTO giro (onTranslate le restituisce '')
+      const notTranslated = translatedFile.entries.filter(e => e.text.trim() && !e.translatedText).length;
+      if (notTranslated > 0) {
+        toast.warning(t('subtitleTranslator.linesNotTranslated').replace('{n}', String(notTranslated)), {
+          id: 'subtitles-not-translated',
+        });
+      }
     } catch (error: unknown) {
       clientLogger.error("Translation error:", error);
     } finally {
       setIsTranslating(false);
     }
-  }, [subtitleFile, onTranslate, targetLang]);
+  }, [subtitleFile, onTranslate, targetLang, t]);
 
   const handleExport = useCallback(() => {
     if (!subtitleFile) return;

@@ -25,7 +25,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/lib/i18n';
-import { translateSingleWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
 
 interface TranscriptionSegment {
@@ -239,8 +239,11 @@ export function VoiceTranslator() {
     }));
   };
 
-  const transcribeAudio = async () => {
-    if (!state.audioBlob) return;
+  // Ogni passo ritorna il suo risultato (null = fallito, errore già in state.error)
+  // così runFullPipeline può passarlo al successivo senza leggere uno `state`
+  // ancora vecchio nella closure, e fermarsi al primo errore.
+  const transcribeAudio = async (): Promise<string | null> => {
+    if (!state.audioBlob) return null;
 
     setState(prev => ({ ...prev, isTranscribing: true, step: 'transcribing', error: null }));
 
@@ -274,10 +277,11 @@ export function VoiceTranslator() {
       }
 
       const data = await response.json();
-      
+      const text: string = data.text || '';
+
       setState(prev => ({
         ...prev,
-        transcription: data.text || '',
+        transcription: text,
         transcriptionSegments: (data.segments || []).map((s: Record<string, unknown>) => ({
           start: s.start as number, end: s.end as number, text: s.text as string
         })),
@@ -285,6 +289,7 @@ export function VoiceTranslator() {
         isTranscribing: false,
         step: 'idle'
       }));
+      return text;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -293,28 +298,36 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Transcription error. Check your OpenAI API key.'
       }));
+      return null;
     }
   };
 
-  const translateText = async () => {
-    if (!state.transcription) return;
+  const translateText = async (text: string = state.transcription): Promise<string | null> => {
+    if (!text) return null;
 
     setState(prev => ({ ...prev, isTranslating: true, step: 'translating', error: null }));
 
     try {
-      const { translated } = await translateSingleWithFallback(
-        state.transcription,
-        state.targetLanguage,
-        state.sourceLanguage === 'auto' ? undefined : state.sourceLanguage,
-        'voice translation'
-      );
-      
+      // translateSingleWithFallback ripiega sul testo originale quando nessun
+      // provider risponde: qui serve sapere se la traduzione c'è davvero.
+      const result = await translateWithFallback({
+        texts: [text],
+        targetLanguage: state.targetLanguage,
+        sourceLanguage: state.sourceLanguage === 'auto' ? undefined : state.sourceLanguage,
+        context: 'voice translation',
+      });
+      const translated = result.translations[0];
+      if (!result.success || !translated) {
+        throw new Error(t('voiceTranslator.translationError'));
+      }
+
       setState(prev => ({
         ...prev,
         translation: translated,
         isTranslating: false,
         step: 'idle'
       }));
+      return translated;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -323,11 +336,12 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Translation error.'
       }));
+      return null;
     }
   };
 
-  const synthesizeSpeech = async () => {
-    if (!state.translation) return;
+  const synthesizeSpeech = async (text: string = state.translation): Promise<boolean> => {
+    if (!text) return false;
 
     setState(prev => ({ ...prev, isSynthesizing: true, step: 'synthesizing', error: null }));
 
@@ -340,7 +354,7 @@ export function VoiceTranslator() {
 
       let requestBody: Record<string, unknown> = {
         model: 'tts-1',
-        input: state.translation,
+        input: text,
         voice: state.selectedVoice,
         speed: effectiveSpeed,
         response_format: 'mp3',
@@ -368,7 +382,7 @@ export function VoiceTranslator() {
         
         requestBody = {
           model: 'xtts',
-          input: state.translation,
+          input: text,
           voice: 'clone',
           language: state.targetLanguage,
           speed: state.speechSpeed,
@@ -426,6 +440,10 @@ export function VoiceTranslator() {
           if (response2.ok) {
             audioBlob = await response2.blob();
             synthDuration = await measureDuration(audioBlob);
+          } else {
+            // Si tiene il primo audio: il badge non deve mostrare una velocità mai applicata.
+            effectiveSpeed = state.speechSpeed;
+            clientLogger.warn(`[DurationMatch] Re-synthesis failed: ${response2.status}`);
           }
         }
       }
@@ -440,6 +458,7 @@ export function VoiceTranslator() {
         isSynthesizing: false,
         step: 'done'
       }));
+      return true;
 
     } catch (error: unknown) {
       setState(prev => ({
@@ -448,12 +467,21 @@ export function VoiceTranslator() {
         step: 'idle',
         error: error instanceof Error ? error.message : 'Speech synthesis error.'
       }));
+      return false;
     }
   };
 
+  // Trascrivi → Traduci → Genera audio, fermandosi al primo passo che fallisce.
   const runFullPipeline = async () => {
-    await transcribeAudio();
-    // The subsequent steps will be triggered by useEffect or manually
+    const transcription = await transcribeAudio();
+    if (transcription === null) return;
+    if (!transcription.trim()) {
+      setState(prev => ({ ...prev, error: t('voiceTranslator.noSpeechDetected') }));
+      return;
+    }
+    const translation = await translateText(transcription);
+    if (translation === null) return;
+    await synthesizeSpeech(translation);
   };
 
   const formatDuration = (seconds: number) => {
@@ -604,7 +632,7 @@ export function VoiceTranslator() {
 
               {/* Transcribe Button */}
               <Button
-                onClick={transcribeAudio}
+                onClick={() => void transcribeAudio()}
                 disabled={!state.audioBlob || state.isTranscribing}
                 className="w-full bg-blue-600 hover:bg-blue-500"
               >
@@ -671,7 +699,7 @@ export function VoiceTranslator() {
                 </Select>
 
                 <Button
-                  onClick={translateText}
+                  onClick={() => void translateText()}
                   disabled={!state.transcription || state.isTranslating}
                   size="sm"
                   className="bg-blue-500 hover:bg-blue-600"
@@ -769,7 +797,7 @@ export function VoiceTranslator() {
 
               {/* Synthesize Button */}
               <Button
-                onClick={synthesizeSpeech}
+                onClick={() => void synthesizeSpeech()}
                 disabled={!state.translation || state.isSynthesizing}
                 className="w-full bg-blue-600 hover:bg-blue-500"
               >

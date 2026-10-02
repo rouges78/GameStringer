@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/collapsible';
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -87,7 +87,6 @@ export function QAChecker() {
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
   const [newTermSource, setNewTermSource] = useState('');
   const [newTermTarget, setNewTermTarget] = useState('');
-  const { toast } = useToast();
 
   // Load glossary from localStorage
   useEffect(() => {
@@ -110,15 +109,15 @@ export function QAChecker() {
   // Add glossary term
   const addGlossaryTerm = useCallback(() => {
     if (!newTermSource.trim() || !newTermTarget.trim()) {
-      toast({ title: t('qaCheck.enterBothTerms'), variant: 'destructive' });
+      toast.error(t('qaCheck.enterBothTerms'));
       return;
     }
     const newTerms = [...glossary, { source: newTermSource.trim(), target: newTermTarget.trim() }];
     saveGlossary(newTerms);
     setNewTermSource('');
     setNewTermTarget('');
-    toast({ title: `✅ ${t('qaCheck.termAdded')}` });
-  }, [glossary, newTermSource, newTermTarget, saveGlossary, toast, t]);
+    toast.success(`✅ ${t('qaCheck.termAdded')}`);
+  }, [glossary, newTermSource, newTermTarget, saveGlossary, t]);
 
   // Remove glossary term
   const removeGlossaryTerm = useCallback((index: number) => {
@@ -160,7 +159,7 @@ export function QAChecker() {
 
   const runCheck = useCallback(async () => {
     if (!source.trim() || !target.trim()) {
-      toast({ title: t('qaCheck.enterBothTexts'), variant: 'destructive' });
+      toast.error(t('qaCheck.enterBothTexts'));
       return;
     }
 
@@ -180,22 +179,21 @@ export function QAChecker() {
       setIssues(allIssues);
       
       if (allIssues.length === 0) {
-        toast({ title: `✅ ${t('qaCheck.noIssues')}` });
+        toast.success(`✅ ${t('qaCheck.noIssues')}`);
       } else {
         const errors = allIssues.filter(i => i.severity === 'error').length;
         const warnings = allIssues.filter(i => i.severity === 'warning').length;
-        toast({ 
-          title: `${allIssues.length} ${t('qaCheck.issuesFound')}`,
+        toast(`${allIssues.length} ${t('qaCheck.issuesFound')}`, {
           description: `${errors} ${t('qaCheck.errors')}, ${warnings} ${t('qaCheck.warnings')}`
         });
       }
     } catch (e: unknown) {
       clientLogger.error('[QA] Check error:', e);
-      toast({ title: 'Errore', description: String(e), variant: 'destructive' });
+      toast.error(t('qaCheck.error'), { description: String(e) });
     } finally {
       setIsChecking(false);
     }
-  }, [source, target, config, toast, checkGlossaryTerms]);
+  }, [source, target, config, checkGlossaryTerms, t]);
 
   const autoFix = useCallback(async (issueTypes: string[]) => {
     try {
@@ -204,13 +202,13 @@ export function QAChecker() {
         issueTypes
       });
       setTarget(fixed);
-      toast({ title: `✨ ${t('qaCheck.fixApplied')}` });
+      toast.success(`✨ ${t('qaCheck.fixApplied')}`);
       // Re-run check
       setTimeout(runCheck, 100);
     } catch (e: unknown) {
-      toast({ title: 'Errore', description: String(e), variant: 'destructive' });
+      toast.error(t('qaCheck.error'), { description: String(e) });
     }
-  }, [target, toast, runCheck]);
+  }, [target, runCheck, t]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {

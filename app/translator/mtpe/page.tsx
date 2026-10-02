@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { translateSingleSmart } from '@/lib/ai/ai-translate-direct';
+import { translateSmart } from '@/lib/ai/ai-translate-direct';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,6 +45,7 @@ export default function MTPEPage() {
   const [results, setResults] = useState<MtpeResult[]>([]);
   const [_isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
 
   const handleStartTranslation = async () => {
     const lines = sourceTexts.split('\n').filter(l => l.trim());
@@ -55,28 +56,29 @@ export default function MTPEPage() {
     setProgress(0);
 
     const translated: Array<{ source: string; translation: string }> = [];
+    let failed = 0;
 
-    // Traduci riga per riga con translateSingleSmart
+    // Traduci riga per riga con translateSmart: translateSingleSmart butta via
+    // `success` e su errore restituisce il sorgente come traduzione. Una riga
+    // fallita arriva alla revisione con traduzione vuota, e si conta.
     try {
       for (let i = 0; i < lines.length; i++) {
+        let translation = '';
         try {
-          const result = await translateSingleSmart(lines[i], targetLang, sourceLang);
-          translated.push({
-            source: lines[i],
-            translation: result?.translated || lines[i]
-          });
-        } catch {
-          translated.push({
-            source: lines[i],
-            translation: lines[i]
-          });
+          const result = await translateSmart({ texts: [lines[i]], targetLanguage: targetLang, sourceLanguage: sourceLang });
+          if (result.success) translation = result.translations[0] ?? '';
+        } catch (error: unknown) {
+          clientLogger.warn(`Translation error: ${error}`);
         }
+        if (!translation) failed++;
+        translated.push({ source: lines[i], translation });
         setProgress(Math.round(((i + 1) / lines.length) * 100));
       }
     } catch (error: unknown) {
       clientLogger.error(`Translation error: ${error}`);
     }
 
+    setFailedCount(failed);
     setTranslations(translated);
     setIsTranslating(false);
     setPhase('review');
@@ -256,6 +258,11 @@ export default function MTPEPage() {
               <Button variant="ghost" size="sm" onClick={handleReset}>
                 {t('mtpePage.restart')}</Button>
             </div>
+            {failedCount > 0 && (
+              <p className="text-xs text-yellow-400 mb-4">
+                {t('mtpePage.linesNotTranslated').replace('{n}', String(failedCount))}
+              </p>
+            )}
             <MTPEWorkflow
               translations={translations}
               sourceLang={sourceLang}

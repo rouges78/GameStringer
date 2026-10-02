@@ -8,7 +8,8 @@
  * unchanged frames, and translation caching.
  */
 
-import { captureScreen, detectGameProcess, type CaptureOptions } from '@/lib/ocr/screen-capture';
+import { captureScreen, detectGameProcess, getCaptureWindows, type CaptureOptions } from '@/lib/ocr/screen-capture';
+import { OCR_OVERLAY_TEXTS_EVENT, type OcrOverlayText } from '@/lib/ocr-overlay-payload';
 import { upscaleFactorFor, upscaleBase64, scaleBoxBack } from '@/lib/ocr/upscale-for-ocr';
 import { recognizeText, type OCRLanguage, type OCRLine } from '@/lib/ocr/ocr-service';
 import { translateWithFallback, type TranslateOptions } from '@/lib/ai/ai-translate-direct';
@@ -85,14 +86,8 @@ export interface LiveTranslationStats {
   lastConfidence: number;
 }
 
-export interface TranslatedOverlayText {
-  original: string;
-  translated: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+/** Lo stesso payload che legge la finestra overlay (lib/ocr-overlay-payload). */
+export type TranslatedOverlayText = OcrOverlayText;
 
 export type LiveTranslationEvent =
   | { type: 'started' }
@@ -219,6 +214,7 @@ class LiveTranslationEngine {
     });
 
     this.emit({ type: 'started' });
+    void this.showOverlay();
     this.scheduleNext();
   }
 
@@ -235,6 +231,7 @@ class LiveTranslationEngine {
 
     // Clear overlay
     this.emitToOverlay([]);
+    void this.hideOverlay();
 
     clientLogger.info('Live Translation stopped', 'LIVE_TRANSLATE');
     this.emit({ type: 'stopped' });
@@ -591,9 +588,55 @@ class LiveTranslationEngine {
   private async emitToOverlay(texts: TranslatedOverlayText[]) {
     try {
       const { emit } = await import('@tauri-apps/api/event');
-      await emit('ocr-translations', texts);
+      await emit(OCR_OVERLAY_TEXTS_EVENT, texts);
     } catch {
       // Not in Tauri environment — skip overlay emit
+    }
+  }
+
+  /**
+   * Mostra la finestra overlay sopra l'area catturata. Prima /live-translate
+   * mandava le traduzioni a una finestra che nessuno apriva. Le coordinate dei
+   * testi sono relative alla cattura: regione, finestra o monitor principale.
+   */
+  private async showOverlay() {
+    const r = this.config.captureRegion;
+    const region =
+      r.mode === 'region' && r.width && r.height
+        ? { x: r.x ?? 0, y: r.y ?? 0, width: r.width, height: r.height }
+        : null;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('toggle_ocr_overlay', { show: true, region });
+      // Uno stop arrivato mentre la finestra si apriva (Ctrl+Alt+O premuto due
+      // volte di fila) poteva essere eseguito prima dell'apertura: l'overlay
+      // restava visibile a motore fermo.
+      if (!this.isRunning) {
+        await invoke('toggle_ocr_overlay', { show: false });
+        return;
+      }
+      if (r.mode === 'window' && r.windowTitle) {
+        // Stesso criterio di `capture_window`: sottostringa del titolo, e solo
+        // se combacia una finestra sola.
+        const needle = r.windowTitle.toLowerCase();
+        const matches = (await getCaptureWindows()).filter(w => w.title.toLowerCase().includes(needle));
+        if (matches.length === 1) {
+          await invoke('position_overlay_on_window', { hwnd: matches[0].hwnd });
+        }
+      }
+    } catch (err: unknown) {
+      clientLogger.warn('Overlay window not shown', 'LIVE_TRANSLATE', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  private async hideOverlay() {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('toggle_ocr_overlay', { show: false });
+    } catch {
+      // Not in Tauri environment — nothing to hide
     }
   }
 

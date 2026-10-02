@@ -32,12 +32,10 @@ import {
   Mic,
   Users,
   Wrench,
-  Subtitles,
   BookOpen,
   Check,
   Film,
   Smile,
-  FolderTree,
   FolderOpen,
   Heart,
   Rocket,
@@ -91,13 +89,13 @@ import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
 import { isCommunityEnabled, autoSyncGSToSupabase } from '@/lib/social/auth-bridge';
 import { clientLogger } from '@/lib/client-logger';
+import { getGameDetailUrl } from '@/lib/game-detail-url';
 
 // Lazy-loaded components for code splitting
 const InteractiveTutorial = lazy(() => import('@/components/onboarding/interactive-tutorial').then(m => ({ default: m.InteractiveTutorial })));
 const FirstGameFlow = lazy(() => import('@/components/onboarding/first-game-flow').then(m => ({ default: m.FirstGameFlow })));
 const TermsOfUse = lazy(() => import('@/components/onboarding/terms-of-use').then(m => ({ default: m.TermsOfUse })));
 const CommandPalette = lazy(() => import('@/components/ui/command-palette').then(m => ({ default: m.CommandPalette })));
-const GlobalSearch = lazy(() => import('@/components/layout/global-search').then(m => ({ default: m.GlobalSearch })));
 const SystemOverlay = lazy(() => import('@/components/system-overlay').then(m => ({ default: m.SystemOverlay })));
 const BackgroundJobsIndicator = lazy(() => import('@/components/translator/background-jobs-widget').then(m => ({ default: m.BackgroundJobsIndicator })));
 const BackgroundJobsWidget = lazy(() => import('@/components/translator/background-jobs-widget').then(m => ({ default: m.BackgroundJobsWidget })));
@@ -133,7 +131,7 @@ interface NavItem {
 
 // ═══════════════════════════════════════════════════════════════════
 // SIDEBAR NAVIGATION — Pulita e minimale
-// Solo voci essenziali. Tutto il resto via Ctrl+K (Global Search).
+// Solo voci essenziali. Tutto il resto via Ctrl+K (Command Palette).
 // ═══════════════════════════════════════════════════════════════════
 const getNavGroups = (t: (key: string) => string) => [
   // ── CORE ────────────────────────────────────────────────────────
@@ -165,7 +163,8 @@ const getNavGroups = (t: (key: string) => string) => [
       // scrivendo l'URL a mano, cosa che in una finestra Tauri non si puo' fare.
       { name: t('nav.liveTranslate'), href: '/live-translate', icon: Radio },
       { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
-      { name: t('nav.batch'), href: '/batch', icon: FolderTree },
+      // '/batch' tolta finché la traduzione batch non esiste: la pagina dichiara
+      // "non implementato" e tiene disabilitato Avvia. Era un vicolo cieco.
       { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
       { name: t('nav.editor'), href: '/editor', icon: Edit3 },
     ],
@@ -206,7 +205,8 @@ const getNavGroups = (t: (key: string) => string) => [
       { name: 'Universal Injector', href: '/injector', icon: Wand2 },
       { name: 'Video Extractor', href: '/video-extractor', icon: Film },
       { name: 'Lip Sync', href: '/lip-sync', icon: Smile },
-      { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
+      // '/overlay' tolta: "Avvia Cattura" genera sottotitoli casuali di esempio
+      // (subtitle-overlay.tsx), non cattura niente. Torna quando è collegata.
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',
     activeClass: 'bg-emerald-500/20 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20',
@@ -255,7 +255,6 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [libraryGames, setLibraryGames] = useState<Array<{ id: string; title: string; header_image?: string; platform?: string }>>([]);
@@ -615,6 +614,15 @@ export function MainLayout({ children }: MainLayoutProps) {
               const isExpanded = expandedGroups.includes(group.label);
               const toggleGroup = () => {
                 const wasOpen = expandedGroups.includes(group.label);
+                // Sidebar compressa: la lista del gruppo resta a max-h-0, quindi
+                // aprire il gruppo e basta era un click a vuoto. Prima si allarga
+                // la sidebar, poi il gruppo resta aperto.
+                if (!sidebarOpen) {
+                  toggleSidebar();
+                  setExpandedGroups([group.label]);
+                  if (!wasOpen) setExpandedSubMenus([]);
+                  return;
+                }
                 setExpandedGroups(wasOpen ? [] : [group.label]);
                 // Reset sottomenu quando cambi gruppo
                 if (!wasOpen) setExpandedSubMenus([]);
@@ -930,7 +938,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                         { id: 'injector', title: t('nav.injector'), description: t('commandPalette.patcherDesc'), icon: Puzzle, path: '/injector' },
                         { id: 'crawler', title: t('nav.contextHarvester'), description: t('commandPalette.scanGamesDesc'), icon: Scan, path: '/context-harvester' },
                         { id: 'fixer', title: t('nav.fixer'), description: t('commandPalette.patcherDesc'), icon: Wand2, path: '/fixer' },
-                        { id: 'overlay', title: t('nav.overlay'), description: t('commandPalette.patcherDesc'), icon: Subtitles, path: '/overlay' },
                         { id: 'rom-patcher', title: 'ROM Patcher', description: 'Applica e crea patch IPS/BPS per traduzioni retro', icon: Disc, path: '/rom-patcher' },
                         { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: Users, path: '/community-hub' },
                         { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: Settings, path: '/settings' },
@@ -992,7 +999,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                               {filteredGames.map((game) => (
                                 <Link
                                   key={game.id}
-                                  href={`/library/${game.id}`}
+                                  href={getGameDetailUrl(game)}
                                   onClick={() => { setSearchQuery(''); setSearchFocused(false); }}
                                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-emerald-500/10 transition-colors group"
                                 >
@@ -1396,12 +1403,10 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Tutorial per-pagina (provider context) */}
         <TutorialOverlay />
         
-        {/* Command Palette (Ctrl+K) */}
+        {/* Command Palette (Ctrl+K) — l'unica: GlobalSearch rispondeva allo stesso
+            Ctrl+K e i due dialog si aprivano insieme */}
         <Suspense fallback={<LazyFallback />}><CommandPalette /></Suspense>
-        
-        {/* Global Search */}
-        <Suspense fallback={<LazyFallback />}><GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} /></Suspense>
-        
+
         {/* Exit Confirmation Dialog */}
         <AlertDialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
           <AlertDialogContent>

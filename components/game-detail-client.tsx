@@ -184,6 +184,23 @@ async function traduciConSplit(testi: string[], lang: string): Promise<(string |
   }
 }
 
+/**
+ * Motori che String it! non traduce da solo ma che hanno una pagina dedicata.
+ * Come per Godot, String it! li instrada lì con un messaggio onesto: prima
+ * passavano dal workflow generico, che su questi motori finiva quasi sempre
+ * con «nessuna stringa è entrata nel gioco».
+ * `engine` e `tool` sono nomi propri: entrano nei testi tradotti come {engine}/{tool}.
+ */
+const ENGINE_PAGE_ROUTES: { match: (eng: string) => boolean; href: string; engine: string; tool: string }[] = [
+  // 'wolf' da solo prenderebbe anche Wolfenstein (id Tech).
+  { match: e => e.includes('wolf') && e.includes('rpg'), href: '/wolfrpg-patcher', engine: 'Wolf RPG', tool: 'Wolf RPG Patcher' },
+  { match: e => e.includes('creation engine') || e.includes('bethesda'), href: '/bethesda-patcher', engine: 'Bethesda', tool: 'Bethesda Patcher' },
+  // CRI è middleware (archivi .cpk), non un motore: parola intera, per non
+  // agganciare nomi di motore che contengono «cri».
+  { match: e => /\bcri\b|criware/.test(e), href: '/cri-patcher', engine: 'CRI', tool: 'CRI Patcher' },
+  { match: e => e.includes('telltale'), href: '/telltale-patcher', engine: 'Telltale', tool: 'Telltale Patcher' },
+];
+
 export default function GameDetailPage() {
   const { t, language } = useTranslation();
   const progress = useProgress();
@@ -1170,8 +1187,12 @@ export default function GameDetailPage() {
   };
 
   // Migliora con AI per giochi Unreal: extract → Ollama batch → _P.pak
-  const upgradeUEWithAI = async () => {
-    if (!game?.installPath || isUeAiUpgrading) return;
+  // Restituisce l'esito: String it! lo usa per non dipingere di verde un
+  // fallimento (i pulsanti dei pannelli lo ignorano, a loro bastano i toast).
+  type UeUpgradeOutcome = { ok: boolean; changed: number; total: number; pakPath?: string; error?: string };
+  const upgradeUEWithAI = async (): Promise<UeUpgradeOutcome> => {
+    if (!game?.installPath) return { ok: false, changed: 0, total: 0, error: t('common.percorsoDiInstallazioneNonDisponibile') };
+    if (isUeAiUpgrading) return { ok: false, changed: 0, total: 0, error: t('heroJob.alreadyRunning') };
     setIsUeAiUpgrading(true);
     setUeAiProgress(null);
 
@@ -1200,7 +1221,7 @@ export default function GameDetailPage() {
 
       if (!extracted?.entries?.length) {
         toast.error(t('gameDetail.errNoLocStrings'));
-        return;
+        return { ok: false, changed: 0, total: 0, error: t('gameDetail.errNoLocStrings') };
       }
 
       const entries = extracted.entries;
@@ -1266,14 +1287,14 @@ export default function GameDetailPage() {
         const msg = t('gameDetail.errNoTranslationEffect');
         clientLogger.error(`[UE AI] 0 stringhe cambiate su ${translated.length} (${falliti} fallite): pak NON creato`);
         toast.error(msg, { description: `0/${translated.length} — ${falliti} ${t('common.failed')}` });
-        return;
+        return { ok: false, changed: 0, total: translated.length, error: msg };
       }
       if (falliti > 0) {
         toast.warning(`${cambiate}/${translated.length} ${t('gameDetail.stringsTranslated')} — ${falliti} ${t('common.failed')}`);
       }
 
       // 3. Crea _P.pak con traduzioni
-      const result = await invoke<{message?: string}>('auto_translate_unreal', {
+      const result = await invoke<{message?: string; pak_path?: string}>('auto_translate_unreal', {
         gamePath: game.installPath,
         translations: translated,
         targetLanguage: lang,
@@ -1348,10 +1369,13 @@ export default function GameDetailPage() {
 
       await loadUeLocStatus();
       toast.success(`✅ ${result?.message || `PAK creato con ${translated.filter(e => e.translated !== e.original).length} stringhe`}`);
+      return { ok: true, changed: cambiate, total: translated.length, pakPath: result?.pak_path };
 
     } catch (e: unknown) {
       clientLogger.error('[UE AI]', String(e));
-      toast.error(`Errore traduzione UE: ${String(e) || 'sconosciuto'}`);
+      const msg = `Errore traduzione UE: ${String(e) || 'sconosciuto'}`;
+      toast.error(msg);
+      return { ok: false, changed: 0, total: 0, error: msg };
     } finally {
       setIsUeAiUpgrading(false);
       setUeAiProgress(null);
@@ -2021,7 +2045,7 @@ export default function GameDetailPage() {
     {
       const engDirect = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
       const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot', 'spike', 'danganronpa'];
-      if (DIRECT_ENGINES.some(k => engDirect.includes(k))) {
+      if (DIRECT_ENGINES.some(k => engDirect.includes(k)) || ENGINE_PAGE_ROUTES.some(r => r.match(engDirect))) {
         startAutoTranslate();
         return;
       }
@@ -2685,6 +2709,7 @@ export default function GameDetailPage() {
     {
       const engUe = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
       if (engUe.includes('unreal')) {
+        const t0 = Date.now();
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
         setAutoTranslateActive(true);
@@ -2729,15 +2754,48 @@ export default function GameDetailPage() {
           }
 
           if (quanti > 0) {
+            const rilevato = dove === '.locres' ? `${quanti} .locres` : dove;
             setAutoTranslateSteps([
-              { ...ueSteps[0], status: 'done', detail: dove === '.locres' ? `${quanti} .locres` : dove },
+              { ...ueSteps[0], status: 'done', detail: rilevato },
               { ...ueSteps[1], status: 'running' },
             ]);
-            await upgradeUEWithAI(); // gestisce da sé toast/progress/errori
-            setAutoTranslateSteps([
-              { ...ueSteps[0], status: 'done', detail: dove === '.locres' ? `${quanti} .locres` : dove },
-              { ...ueSteps[1], status: 'done' },
-            ]);
+            // Toast e progress li gestisce upgradeUEWithAI; l'ESITO decide lo
+            // stepper. Prima il passo diventava verde comunque: anche con 0
+            // stringhe cambiate, un errore, o una traduzione già in corso dal
+            // pannello Unreal (in quel caso la funzione usciva subito).
+            const esito = await upgradeUEWithAI();
+            if (esito.ok) {
+              setAutoTranslateSteps([
+                { ...ueSteps[0], status: 'done', detail: rilevato },
+                { ...ueSteps[1], status: 'done', detail: `${esito.changed}/${esito.total}` },
+              ]);
+              const pakName = esito.pakPath?.split(/[\\/]/).pop() || '_P.pak';
+              setAutoTranslateResult({
+                successRate: esito.total ? Math.round((100 * esito.changed) / esito.total) : 0,
+                duration: Math.round((Date.now() - t0) / 60000), // MINUTI, come negli altri percorsi hero
+                deliverables: 1,
+                errors: Math.max(0, esito.total - esito.changed),
+                engine: 'Unreal Engine',
+                targetLang: targetLang || language || 'it',
+                stringsTranslated: esito.changed,
+                stringsTotal: esito.total,
+                // auto_translate_unreal risponde Ok solo dopo aver scritto il
+                // pak (e, sui giochi IoStore, verificato la tripletta su disco).
+                verification: {
+                  checked: 1, verified: 1, missing: [],
+                  verifiedNames: [pakName],
+                  stringsWritten: esito.changed, runtimeOnly: false,
+                },
+              });
+            } else {
+              // Il motivo va solo nel banner: lo stesso testo anche nel
+              // dettaglio del passo sarebbe la ripetizione tolta il 18/08.
+              setAutoTranslateSteps([
+                { ...ueSteps[0], status: 'done', detail: rilevato },
+                { ...ueSteps[1], status: 'error' },
+              ]);
+              setAutoTranslateError(esito.error || t('gameDetail.errNoTranslationEffect'));
+            }
           } else if (serveChiaveAes || chiaveAesSbagliata) {
             // Porta chiusa a chiave, non stanza vuota. Il pannello mostra il
             // campo per la chiave AES invece dell'errore generico: GameStringer
@@ -2790,6 +2848,30 @@ export default function GameDetailPage() {
         toast(t('heroJob.godotRouteToast'), {
           description: t('gameDetail.godotBridgeDesc'),
           action: { label: t('gameDetail.openGodotTranslator'), onClick: () => router.push(godotUrl) },
+        });
+        setAutoTranslateBusy(false);
+        setAutoTranslateProgress('');
+        autoTranslateRunningRef.current = false;
+        return;
+      }
+    }
+
+    // ── Wolf RPG, Bethesda, CRI, Telltale → pagina dedicata (come Godot) ──
+    // Nessuna pipeline String it! per questi motori: il workflow generico ci
+    // mostrava passi finti e poi «nessuna stringa è entrata nel gioco».
+    // Messaggio onesto + azione esplicita verso lo strumento che li tratta.
+    {
+      const engP = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const route = ENGINE_PAGE_ROUTES.find(r => r.match(engP));
+      if (route) {
+        const routeUrl = `${route.href}?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
+        const nomi = (s: string) => s.replace('{engine}', route.engine).replace('{tool}', route.tool);
+        setAutoTranslateActive(true);
+        setAutoTranslateResult(null);
+        setAutoTranslateError(nomi(t('heroJob.pageRouteMsg')));
+        setAutoTranslateSteps([{ label: nomi(t('heroJob.pageRouteDetected')), status: 'error' }]);
+        toast(nomi(t('heroJob.pageRouteToast')), {
+          action: { label: nomi(t('heroJob.pageRouteOpen')), onClick: () => router.push(routeUrl) },
         });
         setAutoTranslateBusy(false);
         setAutoTranslateProgress('');
@@ -2925,16 +3007,17 @@ export default function GameDetailPage() {
 
     setAutoTranslateActive(true);
     setAutoTranslateError(null);
+    // Un risultato di una run precedente non deve comparire nel wizard di questa.
+    setAutoTranslateResult(null);
     setAutoTranslateStep(0);
 
     // Use the new complete workflow system
+    // Solo passi che fanno davvero qualcosa. Fino all'01/10/2026 fra l'analisi e
+    // l'esecuzione c'erano cinque passi finti (setTimeout + numeri della stima,
+    // tra cui un «backup» che non copiava niente): il backup vero lo fa
+    // execute_complete_workflow, dentro il passo di esecuzione.
     const workflowSteps = [
       { label: '🔍 Analisi completa del gioco', status: 'pending' as const },
-      { label: '🛠️ Selezione tool ottimali', status: 'pending' as const },
-      { label: '🤖 Configurazione LLM chains', status: 'pending' as const },
-      { label: '🎵 Analisi file multimediali', status: 'pending' as const },
-      { label: '💾 Creazione backup intelligente', status: 'pending' as const },
-      { label: '⚡ Orchestrazione workflow', status: 'pending' as const },
       { label: '🚀 Esecuzione traduzione completa', status: 'pending' as const },
       { label: '✅ Test e validazione finale', status: 'pending' as const },
     ];
@@ -2950,7 +3033,9 @@ export default function GameDetailPage() {
 
     const updateStep = (idx: number, status: 'running' | 'done' | 'error', detail?: string) => {
       setAutoTranslateStep(idx);
-      setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx ? { ...s, status: 'done' } : s));
+      // Un passo fallito resta rosso: prima l'avvio del passo successivo lo
+      // ridipingeva di verde («nessuna stringa è entrata nel gioco» → ✓).
+      setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx && s.status !== 'error' ? { ...s, status: 'done' } : s));
     };
 
     let unlistenWorkflow: (() => void) | null = null;
@@ -2961,11 +3046,6 @@ export default function GameDetailPage() {
       
       interface PredictionResult {
         engine?: string;
-        selectedTools?: {primary_text_tool?: {name?: string}};
-        llmChains?: unknown[];
-        multimediaAnalysis?: {audioStats?: {totalAudioFiles?: number}; graphicsStats?: {totalGraphicsFiles?: number}};
-        backupStrategy?: {estimatedBackupSizeMb?: number; recommendedBackupType?: string};
-        workflowPlan?: {recommendedApproach?: string; workflowStages?: unknown[]};
       }
       const predictionResult = await invoke<PredictionResult>('analyze_game_translation', {
         installPath: game.installPath,
@@ -2977,48 +3057,11 @@ export default function GameDetailPage() {
       
       updateStep(0, 'done', `Analisi completata: ${predictionResult?.engine || 'Engine rilevato'}`);
       compatStage = 'extract';
-      await new Promise(r => setTimeout(r, 800));
 
-      // ── STEP 2: Tool Selection ──
-      updateStep(1, 'running', 'Selezione tool ottimali...');
-      await new Promise(r => setTimeout(r, 600));
-      updateStep(1, 'done', `${predictionResult?.selectedTools?.primary_text_tool?.name || 'Tool automatici'} selezionati`);
-      await new Promise(r => setTimeout(r, 400));
-
-      // ── STEP 3: LLM Chains ──
-      updateStep(2, 'running', 'Configurazione LLM chains...');
-      await new Promise(r => setTimeout(r, 600));
-      updateStep(2, 'done', `${predictionResult?.llmChains?.length || 0} LLM chains configurate`);
-      await new Promise(r => setTimeout(r, 400));
-
-      // ── STEP 4: Multimedia Analysis ──
-      updateStep(3, 'running', 'Analisi file multimediali...');
-      await new Promise(r => setTimeout(r, 600));
-      const multimediaData = predictionResult?.multimediaAnalysis;
-      const audioFiles = multimediaData?.audioStats?.totalAudioFiles || 0;
-      const graphicsFiles = multimediaData?.graphicsStats?.totalGraphicsFiles || 0;
-      updateStep(3, 'done', `${audioFiles} audio, ${graphicsFiles} grafiche analizzate`);
-      await new Promise(r => setTimeout(r, 400));
-
-      // ── STEP 5: Backup Strategy ──
-      updateStep(4, 'running', 'Creazione backup intelligente...');
-      await new Promise(r => setTimeout(r, 600));
-      const backupData = predictionResult?.backupStrategy;
-      const backupSize = backupData?.estimatedBackupSizeMb || 0;
-      updateStep(4, 'done', `Backup ${backupData?.recommendedBackupType || 'Smart'}: ${backupSize.toFixed(1)}MB`);
-      await new Promise(r => setTimeout(r, 400));
-
-      // ── STEP 6: Workflow Planning ──
-      updateStep(5, 'running', 'Orchestrazione workflow...');
-      await new Promise(r => setTimeout(r, 600));
-      const workflowData = predictionResult?.workflowPlan;
-      const approach = workflowData?.recommendedApproach || 'SemiAutomated';
-      const stages = workflowData?.workflowStages?.length || 0;
-      updateStep(5, 'done', `Workflow ${approach}: ${stages} stadi`);
-      await new Promise(r => setTimeout(r, 400));
-
-      // ── STEP 7: Complete Execution with real-time progress ──
-      updateStep(6, 'running', 'Esecuzione traduzione completa...');
+      // ── STEP 2: Complete Execution with real-time progress ──
+      // (estrazione, backup vero, traduzione e scrittura: tutto nel backend,
+      // che racconta l'avanzamento con gli eventi workflow-progress)
+      updateStep(1, 'running', 'Esecuzione traduzione completa...');
       compatStage = 'translate';
       
       // Listen for real-time progress events from backend
@@ -3026,7 +3069,7 @@ export default function GameDetailPage() {
         const { listen } = await import('@tauri-apps/api/event');
         unlistenWorkflow = await listen<{stage: string, step: number, message: string, progress: number}>('workflow-progress', (event) => {
           const { message, progress } = event.payload;
-          updateStep(6, 'running', `${message} (${progress}%)`);
+          updateStep(1, 'running', `${message} (${progress}%)`);
         });
       } catch { /* non-Tauri env */ }
 
@@ -3073,22 +3116,44 @@ export default function GameDetailPage() {
       if (!workflowFailed && !runtimeNow && injectedNow === 0) {
         // Tutti gli stadi verdi e nessuna riga nel gioco: questo caso prima
         // finiva nel ramo «completata». Non è un successo parziale, è un buco.
-        updateStep(6, 'error', `Nessuna stringa è entrata nel gioco — ${executionResult?.nextSteps?.[0] || 'prova il patcher engine-specific dalla pagina del gioco'}`);
+        updateStep(1, 'error', `Nessuna stringa è entrata nel gioco — ${executionResult?.nextSteps?.[0] || 'prova il patcher engine-specific dalla pagina del gioco'}`);
       } else if (!workflowFailed && success >= 0.8) {
-        updateStep(6, 'done', `Traduzione completata: ${esitoReale}, in ${duration.toFixed(1)}min`);
+        updateStep(1, 'done', `Traduzione completata: ${esitoReale}, in ${duration.toFixed(1)}min`);
       } else if (workflowFailed) {
         // Fix issue #46: niente verde se il gioco non è stato modificato davvero
         const hint = executionResult?.nextSteps?.[0] || 'Prova il patcher engine-specific dalla pagina del gioco';
-        updateStep(6, 'error', `Il gioco NON è stato tradotto — ${hint}`);
+        updateStep(1, 'error', `Il gioco NON è stato tradotto — ${hint}`);
       } else {
-        updateStep(6, 'error', `Parzialmente completata: ${esitoReale}`);
+        updateStep(1, 'error', `Parzialmente completata: ${esitoReale}`);
       }
-      await new Promise(r => setTimeout(r, 800));
 
-      // ── STEP 8: Final Validation ──
-      updateStep(7, 'running', 'Test e validazione finale...');
-      await new Promise(r => setTimeout(r, 600));
-      
+      // GameMaker (il percorso rapido gm_* gira dentro execute_complete_workflow):
+      // se la scrittura della patch è fallita, i file del gioco possono essere
+      // rimasti a metà (data.win/EXE scritti in parte, o solo alcuni file di
+      // lingua tradotti). gm_patch_strings copia gli originali prima della prima
+      // scrittura: si ripristinano, e lo si dice.
+      const gmPatchFailed = ((executionResult?.errors || []) as { errorType?: string }[])
+        .some(e => e?.errorType === 'GmPatchFailed');
+      if (gmPatchFailed) {
+        try {
+          const restored = await invoke<string>('gm_restore_backup', { gamePath: game.installPath });
+          clientLogger.info(`[AutoTranslate] GameMaker: patch fallita, ${restored}`);
+          toast.info(t('heroJob.gmRestored'), { description: restored });
+        } catch (restoreErr: unknown) {
+          const msg = String(restoreErr);
+          if (msg.includes('Nessun backup trovato')) {
+            // Nessun backup = nessun file originale è mai stato sovrascritto.
+            clientLogger.info('[AutoTranslate] GameMaker: patch fallita prima di scrivere, niente da ripristinare');
+          } else {
+            clientLogger.error(`[AutoTranslate] GameMaker: ripristino backup fallito: ${msg}`);
+            toast.error(t('heroJob.gmRestoreFailed'), { description: msg.slice(0, 180) });
+          }
+        }
+      }
+
+      // ── STEP 3: Final Validation ──
+      updateStep(2, 'running', 'Test e validazione finale...');
+
       const deliverables = executionResult?.deliverables || [];
       const errors = executionResult?.errors || [];
       const totalStr = executionResult?.totalStrings || 0;
@@ -3128,7 +3193,7 @@ export default function GameDetailPage() {
           targetLang: compatLang,
           errorCategory: workflowFailed ? 'patch_write' : 'no_strings',
         });
-        updateStep(7, 'error', 'Nessuna stringa estraibile da questo gioco');
+        updateStep(2, 'error', 'Nessuna stringa estraibile da questo gioco');
         setAutoTranslateError(
           `Il motore "${predictionResult?.engine || game.engine || 'sconosciuto'}" non è ancora supportato per la traduzione automatica sui file, oppure non sono state trovate stringhe estraibili. Opzioni: prova l'OCR overlay (per giochi che mostrano testo a runtime) o la traduzione manuale dal patcher dedicato.`
         );
@@ -3140,9 +3205,9 @@ export default function GameDetailPage() {
       }
 
       if (errors.length === 0) {
-        updateStep(7, 'done', `✅ ${deliverables.length} deliverables creati, 0 errori`);
+        updateStep(2, 'done', `✅ ${deliverables.length} deliverables creati, 0 errori`);
       } else {
-        updateStep(7, 'done', `⚠️ ${deliverables.length} deliverables creati, ${errors.length} errori`);
+        updateStep(2, 'done', `⚠️ ${deliverables.length} deliverables creati, ${errors.length} errori`);
       }
 
       // Telemetria: esito finale della run (patch riuscita/parziale/fallita).
@@ -3984,7 +4049,8 @@ export default function GameDetailPage() {
               currentFlagLabel={currentFlag.label}
               onClose={() => setAutoTranslateActive(false)}
               onClearResult={() => setAutoTranslateResult(null)}
-              game={{ title: game.title, name: game.name, installPath: game.installPath, appid: game.appid }}
+              onCreatePatch={() => setShowGspackExport(true)}
+              game={{ id: game.id || game.appid?.toString() || gameId, title: game.title, name: game.name, installPath: game.installPath, appid: game.appid }}
             />
           )}
 

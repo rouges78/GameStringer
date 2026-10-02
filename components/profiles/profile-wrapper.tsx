@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import { ProfileAuthProvider } from '@/lib/auth/profile-auth';
 import { ProfilesProvider } from '@/hooks/use-profiles';
@@ -9,6 +9,10 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { sessionPersistence } from '@/lib/auth/session-persistence';
 import { isProtectedRoute, isChromelessRoute } from '@/lib/route-config';
 import { clientLogger } from '@/lib/client-logger';
+
+// Primo avvio: chiede la lingua di destinazione dopo i Termini d'uso. Il
+// componente esisteva ma non era montato da nessuna parte.
+const OnboardingWizard = lazy(() => import('@/components/onboarding/onboarding-wizard').then(m => ({ default: m.OnboardingWizard })));
 
 interface ProfileWrapperProps {
   children: React.ReactNode;
@@ -103,6 +107,7 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
           <MainLayout>
             {children}
           </MainLayout>
+          <Suspense fallback={null}><OnboardingWizard /></Suspense>
         </ProtectedRoute>
       </ProfileAuthProvider>
     </ProfilesProvider>

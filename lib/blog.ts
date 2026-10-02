@@ -1,7 +1,13 @@
 // Mini Blog / Devlog System per GameStringer
 // Persistenza: Tauri filesystem (appdata/blog.json) con fallback localStorage
+//
+// In Tauri blog.json è la fonte autorevole e localStorage ne tiene una copia
+// per le letture sincrone (dashboard). Prima localStorage veniva scritto solo
+// se la scrittura del file falliva — cioè mai in Tauri — e la lettura
+// sincrona guardava solo localStorage: al riavvio i post sparivano e il primo
+// post nuovo sovrascriveva blog.json, cancellandoli davvero.
 
-import { invoke } from '@/lib/tauri-api';
+import { invoke, isTauri } from '@/lib/tauri-api';
 
 export interface BlogPost {
   id: string;
@@ -18,7 +24,14 @@ export interface BlogPost {
 const BLOG_STORAGE_KEY = 'gamestringer_blog_posts';
 const BLOG_FILENAME = 'blog.json';
 
+// Valorizzata SOLO dalla fonte autorevole (loadPosts) o da un salvataggio
+// riuscito: mai dalla lettura sincrona di localStorage, altrimenti un []
+// letto lì nasconderebbe blog.json.
 let _cachedPosts: BlogPost[] | null = null;
+let _loading: Promise<BlogPost[]> | null = null;
+// Le modifiche girano una alla volta: due click ravvicinati (es. pin) non
+// devono partire dalla stessa lista né scrivere blog.json fuori ordine.
+let _pending: Promise<unknown> = Promise.resolve();
 
 async function readFromTauri(): Promise<BlogPost[] | null> {
   try {
@@ -45,91 +58,117 @@ function readFromLocalStorage(): BlogPost[] {
   return [];
 }
 
-function writeToLocalStorage(posts: BlogPost[]): void {
-  if (typeof window === 'undefined') return;
+function writeToLocalStorage(posts: BlogPost[]): boolean {
+  if (typeof window === 'undefined') return false;
   try {
     localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    return true;
   } catch {}
+  return false;
 }
 
 async function loadPosts(): Promise<BlogPost[]> {
   if (_cachedPosts) return _cachedPosts;
+  if (_loading) return _loading;
 
-  // Try Tauri first
-  const tauriPosts = await readFromTauri();
-  if (tauriPosts) {
-    _cachedPosts = tauriPosts;
-    return tauriPosts;
+  _loading = (async () => {
+    // Try Tauri first
+    const tauriPosts = await readFromTauri();
+    if (tauriPosts) {
+      _cachedPosts = tauriPosts;
+      // Copia per le letture sincrone
+      writeToLocalStorage(tauriPosts);
+      return tauriPosts;
+    }
+
+    // Fallback to localStorage
+    const localPosts = readFromLocalStorage();
+    _cachedPosts = localPosts;
+
+    // Migrate localStorage to Tauri if posts exist
+    if (localPosts.length > 0) {
+      writeToTauri(localPosts).catch(() => {});
+    }
+
+    return localPosts;
+  })();
+
+  try {
+    return await _loading;
+  } finally {
+    _loading = null;
   }
-
-  // Fallback to localStorage
-  const localPosts = readFromLocalStorage();
-  _cachedPosts = localPosts;
-
-  // Migrate localStorage to Tauri if posts exist
-  if (localPosts.length > 0) {
-    writeToTauri(localPosts).catch(() => {});
-  }
-
-  return localPosts;
 }
 
-async function savePosts(posts: BlogPost[]): Promise<void> {
-  _cachedPosts = posts;
-  const saved = await writeToTauri(posts);
-  if (!saved) {
+/** Ritorna true solo se i post sono stati salvati dove verranno riletti. */
+async function savePosts(posts: BlogPost[]): Promise<boolean> {
+  if (isTauri()) {
+    if (!(await writeToTauri(posts))) return false;
+    // Copia per le letture sincrone
     writeToLocalStorage(posts);
+  } else if (!writeToLocalStorage(posts)) {
+    return false;
   }
+  _cachedPosts = posts;
+  return true;
+}
+
+function enqueue<T>(task: () => Promise<T>): Promise<T> {
+  const run = _pending.then(task);
+  _pending = run.catch(() => {});
+  return run;
 }
 
 export const blogService = {
   getPosts(): BlogPost[] {
-    // Sincrono — usa cache o localStorage
+    // Sincrono — usa cache o la copia in localStorage, e avvia il caricamento
+    // vero così la copia si riallinea a blog.json.
     if (_cachedPosts) return _cachedPosts;
-    const local = readFromLocalStorage();
-    _cachedPosts = local;
-    return local;
+    void loadPosts();
+    return readFromLocalStorage();
   },
 
   async getPostsAsync(): Promise<BlogPost[]> {
     return loadPosts();
   },
 
-  addPost(post: Omit<BlogPost, 'id' | 'createdAt'>): BlogPost {
-    const posts = this.getPosts();
-    const newPost: BlogPost = {
-      ...post,
-      id: crypto.randomUUID(),
-      createdAt: Date.now(),
-    };
-    posts.unshift(newPost);
-    savePosts(posts);
-    return newPost;
+  /** Ritorna null se il salvataggio è fallito. */
+  addPost(post: Omit<BlogPost, 'id' | 'createdAt'>): Promise<BlogPost | null> {
+    return enqueue(async () => {
+      const posts = await loadPosts();
+      const newPost: BlogPost = {
+        ...post,
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+      };
+      return (await savePosts([newPost, ...posts])) ? newPost : null;
+    });
   },
 
-  updatePost(id: string, updates: Partial<BlogPost>): boolean {
-    const posts = this.getPosts();
-    const index = posts.findIndex(p => p.id === id);
-    if (index === -1) return false;
-    
-    posts[index] = { ...posts[index], ...updates };
-    savePosts(posts);
-    return true;
+  /** Ritorna false se il post non esiste o il salvataggio è fallito. */
+  updatePost(id: string, updates: Partial<BlogPost>): Promise<boolean> {
+    return enqueue(async () => {
+      const posts = await loadPosts();
+      if (!posts.some(p => p.id === id)) return false;
+      // Array nuovo, non mutato: React deve vedere il cambiamento (pin)
+      return savePosts(posts.map(p => (p.id === id ? { ...p, ...updates } : p)));
+    });
   },
 
-  deletePost(id: string): boolean {
-    const posts = this.getPosts();
-    const filtered = posts.filter(p => p.id !== id);
-    if (filtered.length === posts.length) return false;
-    
-    savePosts(filtered);
-    return true;
+  /** Ritorna false se il post non esiste o il salvataggio è fallito. */
+  deletePost(id: string): Promise<boolean> {
+    return enqueue(async () => {
+      const posts = await loadPosts();
+      const filtered = posts.filter(p => p.id !== id);
+      if (filtered.length === posts.length) return false;
+      return savePosts(filtered);
+    });
   },
 
   getRecentPosts(limit: number = 5): BlogPost[] {
     const posts = this.getPosts();
-    // Pinned first, then by date
-    return posts
+    // Pinned first, then by date (su una copia: non riordinare la cache)
+    return [...posts]
       .sort((a, b) => {
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;

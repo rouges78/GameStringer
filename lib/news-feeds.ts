@@ -175,6 +175,9 @@ class NewsFeedService {
     this.loadConfig();
   }
 
+  // Le fonti sono sempre COPIE dei default: toggleSource le modifica sul posto, e
+  // se fossero gli oggetti di DEFAULT_FEED_SOURCES cambierebbe anche il default
+  // («Ripristina predefiniti» delle Impostazioni rimetterebbe lo stato modificato).
   private loadConfig(): void {
     if (typeof window === 'undefined') return;
     try {
@@ -185,10 +188,10 @@ class NewsFeedService {
         const savedMap = new Map(savedSources.map(s => [s.id, s]));
         this.sources = DEFAULT_FEED_SOURCES.map(def => {
           const saved = savedMap.get(def.id);
-          return saved ? { ...def, enabled: saved.enabled } : def;
+          return saved ? { ...def, enabled: saved.enabled } : { ...def };
         });
       } else {
-        this.sources = [...DEFAULT_FEED_SOURCES];
+        this.sources = DEFAULT_FEED_SOURCES.map(def => ({ ...def }));
       }
 
       const cached = localStorage.getItem(FEEDS_CACHE_KEY);
@@ -196,7 +199,7 @@ class NewsFeedService {
         this.cache = JSON.parse(cached);
       }
     } catch {
-      this.sources = [...DEFAULT_FEED_SOURCES];
+      this.sources = DEFAULT_FEED_SOURCES.map(def => ({ ...def }));
     }
   }
 
@@ -222,11 +225,15 @@ class NewsFeedService {
     return this.sources.filter(s => s.enabled);
   }
 
+  // Cambiare le fonti svuota la cache: altrimenti la dashboard continua a
+  // mostrare per 15 minuti le notizie delle fonti appena spente (e niente di
+  // quelle appena accese), e il cambio sembra non aver fatto nulla.
   toggleSource(id: string, enabled: boolean): void {
     const source = this.sources.find(s => s.id === id);
     if (source) {
       source.enabled = enabled;
       this.saveConfig();
+      this.clearCache();
     }
   }
 
@@ -235,6 +242,7 @@ class NewsFeedService {
       if (s.category === category) s.enabled = enabled;
     });
     this.saveConfig();
+    this.clearCache();
   }
 
   private async fetchWithProxy(url: string): Promise<string> {
@@ -624,7 +632,9 @@ class NewsFeedService {
   clearCache(): void {
     this.cache = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(FEEDS_CACHE_KEY);
+      // Ora la chiamano anche toggleSource/toggleCategory: con lo storage negato
+      // non deve far fallire il cambio di fonte (saveConfig già non lancia).
+      try { localStorage.removeItem(FEEDS_CACHE_KEY); } catch {}
     }
   }
 }

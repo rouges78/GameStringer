@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { cn } from '@/lib/utils';
@@ -222,7 +222,6 @@ export default function TranslationWizardPage() {
   const [translateProgress, setTranslateProgress] = useState(0);
   const [translateStatus, setTranslateStatus] = useState('');
   const [translateLog, setTranslateLog] = useState<string[]>([]);
-  const { toast } = useToast();
 
   // --- Effects ---
   useEffect(() => {
@@ -328,7 +327,7 @@ export default function TranslationWizardPage() {
       }
     } catch (error) {
       clientLogger.error('Error loading games:', String(error));
-      toast({ title: 'error', description: 'Impossibile caricare i games', variant: 'destructive' });
+      toast.error(t('common.impossibileCaricareIGames'));
     } finally {
       setIsLoading(false);
     }
@@ -516,10 +515,8 @@ export default function TranslationWizardPage() {
 
     } catch (error) {
       clientLogger.error('Analysis error:', String(error));
-      toast({
-        title: 'Errore analisi',
-        description: error instanceof Error ? error.message : 'Errore durante l\'analisi',
-        variant: 'destructive' 
+      toast.error(t('common.erroreAnalisi'), {
+        description: error instanceof Error ? error.message : String(error)
       });
       setStep('select-game');
       setIsAnalyzing(false);
@@ -1896,11 +1893,7 @@ export default function TranslationWizardPage() {
       window.location.href = '/editor';
     } catch (error) {
       clientLogger.error('Error reading file:', String(error));
-      toast({
-        title: 'error',
-        description: 'Impossibile leggere il file',
-        variant: 'destructive'
-      });
+      toast.error(t('common.impossibileLeggereIlFile'));
     }
   };
 

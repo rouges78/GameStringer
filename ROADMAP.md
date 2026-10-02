@@ -208,16 +208,19 @@
 - [ ] **Bundle e avvio**: continuare lo slimming delle route pesanti (~700 kB),
   misurare il cold-start.
 - [ ] **`whisper-1` esce dall'API OpenAI il 26/02/2027** — scadenza dura, non
-  un consiglio: dal 26/02/2027 il modello non risponde piu' e i due punti che lo
-  chiamano smettono di trascrivere. Sono `components/audio-translation.tsx` e
-  `components/voice/voice-translator.tsx`, entrambi verso
+  un consiglio: dal 26/02/2027 il modello non risponde piu' e i tre punti che lo
+  chiamano smettono di trascrivere. Sono `components/audio-translation.tsx`,
+  `components/voice/voice-translator.tsx` e `lib/voice/dubbing-pipeline.ts`
+  (`transcribeSegment`), tutti e tre verso
   `POST /v1/audio/transcriptions` con `model: 'whisper-1'`; la tendina STT di
   `app/dubbing/page.tsx` offre lo stesso percorso come "OpenAI Whisper".
   Sostituti indicati da OpenAI: **`gpt-transcribe`** e **`gpt-live-transcribe`**.
   Attenzione a dove si migra: nello stesso annuncio (26/08/2026) sono deprecati
   anche `gpt-4o-transcribe`, `gpt-4o-mini-transcribe` e `gpt-4o-transcribe-diarize`,
   quindi puntare li' significherebbe rifare il lavoro. Il ramo Groq
-  (`groq_whisper`) non e' toccato: e' un altro fornitore.
+  (`groq_whisper`) non e' toccato: e' un altro fornitore. Ma non e' una via
+  d'uscita per il doppiaggio: la tendina lo offre, `transcribeAll` in
+  `dubbing-pipeline.ts` lo rifiuta ("non ancora disponibile").
 - [x] **Fix alla radice del bug `ship` su Windows** — fatto 13/07/2026:
   `confirm()` ora usa readline (una riga alla volta, funziona su Windows)
   invece di `fs.readFileSync(0)` che attendeva EOF. `--yes` resta per CI.

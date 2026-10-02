@@ -38,8 +38,6 @@ import {
   BookOpen,
   Settings,
   Rss,
-  Plus,
-  X,
   Play,
   Compass,
   Maximize2,
@@ -48,7 +46,9 @@ import {
   SlidersHorizontal,
   Server
 } from 'lucide-react';
-import { getRssFeeds, saveRssFeeds, defaultRssFeeds, type RssFeed } from '@/components/ui/rss-ticker';
+import { newsFeedService, DEFAULT_FEED_SOURCES, type NewsFeedSource } from '@/lib/news-feeds';
+import Link from 'next/link';
+import { mergePageSettings } from './merge-settings';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 import { useVersion } from '@/lib/version';
@@ -723,8 +723,6 @@ interface Settings {
     qwenApiKey: string;
     defaultTargetLang: string;
     temperature: number;
-    maxTokens: number;
-    batchSize: number;
     ollamaUrl: string;
     lmStudioUrl: string;
     lmStudioModel: string;
@@ -738,14 +736,6 @@ interface Settings {
 
   // System
   system: Record<string, never>;
-  
-  // Performance
-  performance: {
-    maxConcurrentTasks: number;
-    apiTimeout: number;
-    retryAttempts: number;
-  };
-  
 
   // Display
   display: {
@@ -764,57 +754,55 @@ interface Settings {
   };
 }
 
+// Stato iniziale della pagina. È anche l'elenco dei campi che la pagina possiede
+// nel blob condiviso gameStringerSettings: il Salva scrive solo questi, sopra il
+// blob corrente (vedi mergePageSettings).
+const DEFAULT_SETTINGS: Settings = {
+  translation: {
+    apiKey: '',
+    groqApiKey: '',
+    deepseekApiKey: '',
+    openaiApiKey: '',
+    anthropicApiKey: '',
+    mistralApiKey: '',
+    cohereApiKey: '',
+    togetherApiKey: '',
+    fireworksApiKey: '',
+    openrouterApiKey: '',
+    cerebrasApiKey: '',
+    deeplApiKey: '',
+    qwenApiKey: '',
+    defaultTargetLang: 'en',
+    temperature: 0.3,
+    ollamaUrl: '',
+    lmStudioUrl: 'http://localhost:1234',
+    lmStudioModel: '',
+    modelwizApiKey: '',
+    modelwizUrl: 'http://localhost:8080',
+    reflectionMode: 'auto',
+    semanticTM: 'auto',
+    embeddingModel: ''
+  },
+  system: {},
+  display: {
+    uiScale: 100,
+    fontSize: 'medium',
+    compactMode: false,
+    sidebarWidth: 256,
+    animationsEnabled: true,
+  },
+  privacy: {
+    compatTelemetry: false,
+    crashReports: false,
+    benchmarkTelemetry: false,
+  }
+};
+
 export default function SettingsPage() {
   const _router = useRouter();
   const { version, buildInfo } = useVersion();
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<Settings>({
-    translation: {
-      apiKey: '',
-      groqApiKey: '',
-      deepseekApiKey: '',
-      openaiApiKey: '',
-      anthropicApiKey: '',
-      mistralApiKey: '',
-      cohereApiKey: '',
-      togetherApiKey: '',
-      fireworksApiKey: '',
-      openrouterApiKey: '',
-      cerebrasApiKey: '',
-      deeplApiKey: '',
-      qwenApiKey: '',
-      defaultTargetLang: 'en',
-      temperature: 0.3,
-      maxTokens: 2000,
-      batchSize: 50,
-      ollamaUrl: '',
-      lmStudioUrl: 'http://localhost:1234',
-      lmStudioModel: '',
-      modelwizApiKey: '',
-      modelwizUrl: 'http://localhost:8080',
-      reflectionMode: 'auto',
-      semanticTM: 'auto',
-      embeddingModel: ''
-    },
-    system: {},
-    performance: {
-      maxConcurrentTasks: 5,
-      apiTimeout: 30000,
-      retryAttempts: 3
-    },
-    display: {
-      uiScale: 100,
-      fontSize: 'medium',
-      compactMode: false,
-      sidebarWidth: 256,
-      animationsEnabled: true,
-    },
-    privacy: {
-      compatTelemetry: false,
-      crashReports: false,
-      benchmarkTelemetry: false,
-    }
-  });
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   const [isSaving, setIsSaving] = useState(false);
   // "Modifiche non salvate": il Salva sta in alto a destra e appena scorri
@@ -859,7 +847,6 @@ export default function SettingsPage() {
             ...parsed,
             translation: { ...prev.translation, ...(parsed.translation || {}) },
             system: { ...prev.system, ...(parsed.system || {}) },
-            performance: { ...prev.performance, ...(parsed.performance || {}) },
             display: { ...prev.display, ...(parsed.display || {}) },
             privacy: { ...prev.privacy, ...(parsed.privacy || {}) },
           };
@@ -883,10 +870,23 @@ export default function SettingsPage() {
     // (save_app_settings) in modo indipendente da localStorage: nel webview Tauri
     // localStorage.setItem può fallire (storage partizionato) e in passato faceva
     // fallire l'intero salvataggio → le API key non venivano mai persistite.
+    // Si scrive sopra il blob CORRENTE, non sopra quello letto al mount: le card
+    // che scrivono da sole (endpoint personalizzati, confronto multi-LLM…) non
+    // devono perdere quello che l'utente ha fatto in questa visita.
+    let current = settings as unknown as Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(localStorage.getItem('gameStringerSettings') || 'null');
+      if (parsed && typeof parsed === 'object') current = parsed;
+    } catch { /* storage illeggibile: si parte dallo stato della pagina, come prima */ }
+    const toSave = mergePageSettings(
+      current,
+      settings as unknown as Record<string, unknown>,
+      DEFAULT_SETTINGS as unknown as Record<string, unknown>,
+    );
     let diskOk = false;
     try {
       const { invoke } = await import('@/lib/tauri-api');
-      await invoke('save_app_settings', { settings });
+      await invoke('save_app_settings', { settings: toSave });
       diskOk = true;
     } catch (e: unknown) {
       clientLogger.error(`save_app_settings fallito:`, String(e));
@@ -894,7 +894,7 @@ export default function SettingsPage() {
     // Cache sincrona in localStorage (best-effort): se lancia, non è fatale
     // perché la fonte di verità (disco) è già stata scritta sopra.
     try {
-      localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
+      localStorage.setItem('gameStringerSettings', JSON.stringify(toSave));
       window.dispatchEvent(new Event('gs-display-changed'));
     } catch (e: unknown) {
       clientLogger.warn('localStorage.setItem settings fallito (non fatale):', String(e));
@@ -937,47 +937,24 @@ export default function SettingsPage() {
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
 
-  // RSS Feeds
-  const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
-  const [newFeedUrl, setNewFeedUrl] = useState('');
-  const [newFeedName, setNewFeedName] = useState('');
+  // Feed RSS: la STESSA lista che legge la dashboard (lib/news-feeds.ts) e che
+  // gestisce /news-feeds. Fino al 01/10/2026 questa scheda scriveva una lista
+  // sua ('gamestringer-rss-feeds') che nessuno leggeva: aggiungere o spegnere un
+  // feed qui non cambiava nulla da nessuna parte.
+  const [newsSources, setNewsSources] = useState<NewsFeedSource[]>([]);
 
   useEffect(() => {
-    setRssFeeds(getRssFeeds());
+    setNewsSources(newsFeedService.getSources());
   }, []);
 
-  const handleAddRssFeed = () => {
-    if (!newFeedUrl.trim() || !newFeedName.trim()) {
-      toast.error(t('common.inserisciUrlENomeDelFeed'));
-      return;
-    }
-    const newFeed: RssFeed = { url: newFeedUrl.trim(), name: newFeedName.trim(), enabled: true };
-    const updated = [...rssFeeds, newFeed];
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-    setNewFeedUrl('');
-    setNewFeedName('');
-    toast.success(t('settingsPage.rssFeedAdded'));
+  const handleToggleNewsSource = (id: string, enabled: boolean) => {
+    newsFeedService.toggleSource(id, enabled);
+    setNewsSources(newsFeedService.getSources());
   };
 
-  const handleRemoveRssFeed = (index: number) => {
-    const updated = rssFeeds.filter((_, i) => i !== index);
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-    toast.success(t('settingsPage.feedRemoved'));
-  };
-
-  const handleToggleRssFeed = (index: number) => {
-    const updated = rssFeeds.map((feed, i) => 
-      i === index ? { ...feed, enabled: !feed.enabled } : feed
-    );
-    setRssFeeds(updated);
-    saveRssFeeds(updated);
-  };
-
-  const handleResetRssFeeds = () => {
-    setRssFeeds(defaultRssFeeds);
-    saveRssFeeds(defaultRssFeeds);
+  const handleResetNewsSources = () => {
+    for (const def of DEFAULT_FEED_SOURCES) newsFeedService.toggleSource(def.id, def.enabled);
+    setNewsSources(newsFeedService.getSources());
     toast.success(t('common.feedRssRipristinati'));
   };
 
@@ -1548,12 +1525,13 @@ export default function SettingsPage() {
               <details className="group">
                 <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 select-none mb-2">
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  {t('heroJob.advancedParams')}
+                  {t('settingsPage.temperatureSection')}
                 </summary>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-3">
-                <div className="space-y-2">
+                {/* Solo la temperatura: token massimi e dimensione batch erano qui ma
+                    nessun provider li leggeva (ogni chiamante ha i suoi valori fissi). */}
+                <div className="space-y-2 mt-3 max-w-xl">
                   <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.temperatureLabel')} {settings.translation.temperature}</Label>
+                    <Label>{t('settingsPage.temperatureLabel')} {Math.min(1, settings.translation.temperature)}</Label>
                     <InfoTooltip 
                       variant="info"
                       content={
@@ -1561,76 +1539,22 @@ export default function SettingsPage() {
                           <p className="font-semibold">{t('settings.temperatureTooltipTitle')}</p>
                           <p className="text-xs">• <strong>{t('settings.temperatureTooltipLow')}</strong></p>
                           <p className="text-xs">• <strong>{t('settings.temperatureTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipHigh')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipHighCapped')}</strong></p>
                           <p className="text-xs text-muted-foreground mt-1">{t('settings.temperatureTooltipRecommended')}</p>
                         </div>
                       }
                     />
                   </div>
                   <Slider
-                    value={[settings.translation.temperature]}
+                    value={[Math.min(1, settings.translation.temperature)]}
                     onValueChange={(value) => updateSetting('translation', 'temperature', value[0])}
-                    max={2}
+                    max={1}
                     min={0}
                     step={0.1}
                     className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
+                  <p className="text-2xs text-muted-foreground">{t('settingsPage.temperatureScope')}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.maxTokensLabel')} {settings.translation.maxTokens}</Label>
-                    <InfoTooltip 
-                      variant="info"
-                      content={
-                        <div className="space-y-1">
-                          <p className="font-semibold">{t('settings.maxTokensTooltipTitle')}</p>
-                          <p className="text-xs">{t('settings.maxTokensTooltipDesc')}</p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipLow')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipHigh')}</strong></p>
-                          <p className="text-xs text-muted-foreground mt-1">{t('settings.maxTokensTooltipCost')}</p>
-                        </div>
-                      }
-                    />
-                  </div>
-                  <Slider
-                    value={[settings.translation.maxTokens]}
-                    onValueChange={(value) => updateSetting('translation', 'maxTokens', value[0])}
-                    max={4000}
-                    min={100}
-                    step={100}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label>{t('settingsPage.batchSizeLabel')} {settings.translation.batchSize}</Label>
-                    <InfoTooltip 
-                      variant="info"
-                      content={
-                        <div className="space-y-1">
-                          <p className="font-semibold">{t('settings.batchSizeTooltipTitle')}</p>
-                          <p className="text-xs">{t('settings.batchSizeTooltipDesc')}</p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipLow')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipMid')}</strong></p>
-                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipHigh')}</strong></p>
-                          <p className="text-xs text-muted-foreground mt-1">{t('settings.batchSizeTooltipCost')}</p>
-                        </div>
-                      }
-                    />
-                  </div>
-                  <Slider
-                    value={[settings.translation.batchSize]}
-                    onValueChange={(value) => updateSetting('translation', 'batchSize', value[0])}
-                    max={200}
-                    min={10}
-                    step={10}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-              </div>
               </details>
             </CardContent>
           </Card>
@@ -1661,60 +1585,9 @@ export default function SettingsPage() {
           <CacheStatsCard />
         </TabsContent>
 
-        {/* Performance Tab */}
+        {/* Performance Tab — task concorrenti, timeout API e tentativi non sono più
+            qui: si salvavano e nessuno li leggeva (audit 01/10/2026). */}
         <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle as="h2" className="flex items-center space-x-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
-                <span>{t('settings.perfConfig')}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label>{t('settings.concurrentTasks')}: {settings.performance.maxConcurrentTasks}</Label>
-                  <Slider
-                    value={[settings.performance.maxConcurrentTasks]}
-                    onValueChange={(value) => updateSetting('performance', 'maxConcurrentTasks', value[0])}
-                    max={20}
-                    min={1}
-                    step={1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.concurrentTasksDesc')}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.apiTimeout')}: {settings.performance.apiTimeout}</Label>
-                  <Slider
-                    value={[settings.performance.apiTimeout]}
-                    onValueChange={(value) => updateSetting('performance', 'apiTimeout', value[0])}
-                    max={120000}
-                    min={5000}
-                    step={5000}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.retryAttempts')}: {settings.performance.retryAttempts}</Label>
-                  <Slider
-                    value={[settings.performance.retryAttempts]}
-                    onValueChange={(value) => updateSetting('performance', 'retryAttempts', value[0])}
-                    max={10}
-                    min={1}
-                    step={1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-              </div>
-
-            </CardContent>
-          </Card>
-
           {/* VRAM Manager */}
           <VramSettingsCard />
         </TabsContent>
@@ -1735,60 +1608,41 @@ export default function SettingsPage() {
                 {t('settingsPage.rssFeedDashboard')}
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('settingsPage.rssDesc')}
+                {t('settingsPage.rssNewsDesc')}
               </p>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
-              {/* Add new feed */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder={t('settingsPage.feedNamePlaceholder')}
-                  value={newFeedName}
-                  onChange={(e) => setNewFeedName(e.target.value)}
-                  className="flex-1 h-9 text-sm"
-                />
-                <Input
-                  placeholder={t('settingsPage.feedUrlPlaceholder')}
-                  value={newFeedUrl}
-                  onChange={(e) => setNewFeedUrl(e.target.value)}
-                  className="flex-[2] h-9 text-sm"
-                />
-                <Button onClick={handleAddRssFeed} size="sm" className="h-9 gap-1">
-                  <Plus className="h-4 w-4" />{t('glossaryManager.add')}</Button>
-              </div>
-
-              {/* Feed list */}
+              {/* Feed list — le fonti della dashboard; niente URL liberi: la
+                  dashboard sa leggere solo le fonti di lib/news-feeds.ts. */}
               <div className="space-y-2">
-                {rssFeeds.map((feed, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                {newsSources.map((source) => (
+                  <div key={source.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
                     <Switch
-                      checked={feed.enabled}
-                      onCheckedChange={() => handleToggleRssFeed(index)}
+                      checked={source.enabled}
+                      onCheckedChange={(checked) => handleToggleNewsSource(source.id, checked)}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{feed.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{feed.url}</p>
+                      <p className="text-sm font-medium truncate">{source.icon} {source.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{source.url}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveRssFeed(index)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
-                {rssFeeds.length === 0 && (
+                {newsSources.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {t('settingsPage.noFeeds')}
                   </p>
                 )}
               </div>
 
-              {/* Reset button */}
-              <div className="flex justify-end pt-2">
-                <Button variant="outline" size="sm" onClick={handleResetRssFeeds} className="gap-1.5">
+              {/* Reset + gestione completa (categorie, tutti on/off) */}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" asChild className="gap-1.5">
+                  <Link href="/news-feeds">
+                    <Rss className="h-3.5 w-3.5" />
+                    {t('common.manageNewsFeeds')}
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleResetNewsSources} className="gap-1.5">
                   <RotateCcw className="h-3.5 w-3.5" />
                   {t('settingsPage.restoreDefaults')}
                 </Button>

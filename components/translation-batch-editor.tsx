@@ -15,7 +15,7 @@ import {
   Copy,
   ClipboardPaste
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
@@ -43,7 +43,6 @@ export function TranslationBatchEditor({
   const [editedTranslations, setEditedTranslations] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
 
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);
@@ -79,10 +78,8 @@ export function TranslationBatchEditor({
       }));
 
     if (updates.length === 0) {
-      toast({
-        title: 'Nessuna modifica',
-        description: 'Seleziona e modifica almeno una traduzione',
-        variant: 'destructive'
+      toast.error(t('common.nessunaModifica'), {
+        description: t('common.selezionaEModificaAlmenoUnaTraduzione')
       });
       return;
     }
@@ -95,16 +92,11 @@ export function TranslationBatchEditor({
       setEditedTranslations({});
       setSelectedIds(new Set());
       
-      toast({
-        title: 'Salvataggio completato',
-        description: `${updates.length} traduzioni aggiornate con successo`
+      toast.success(t('common.salvataggioCompletato'), {
+        description: t('editorPage.savedLinesDesc').replace('{n}', String(updates.length))
       });
     } catch {
-      toast({
-        title: 'error',
-        description: 'Impossibile salvare le traduzioni',
-        variant: 'destructive'
-      });
+      toast.error(t('common.impossibileSalvareLeTraduzioni'));
     } finally {
       setIsSaving(false);
     }
@@ -112,10 +104,8 @@ export function TranslationBatchEditor({
 
   const handleGenerateSuggestions = async () => {
     if (selectedIds.size === 0) {
-      toast({
-        title: 'Nessuna selezione',
-        description: 'Seleziona almeno una traduzione',
-        variant: 'destructive'
+      toast.error(t('common.nessunaSelezione'), {
+        description: t('common.selezionaAlmenoUnaTraduzione')
       });
       return;
     }
@@ -123,16 +113,9 @@ export function TranslationBatchEditor({
     setIsGenerating(true);
     try {
       await onGenerateSuggestions(Array.from(selectedIds));
-      toast({
-        title: 'Suggerimenti generati',
-        description: `Generati suggerimenti per ${selectedIds.size} traduzioni`
-      });
+      toast.success(t('common.suggestionsGeneratedFor').replace('{n}', String(selectedIds.size)));
     } catch {
-      toast({
-        title: 'error',
-        description: 'Impossibile generare suggerimenti',
-        variant: 'destructive'
-      });
+      toast.error(t('editorPage.cannotGenerateSuggestions'));
     } finally {
       setIsGenerating(false);
     }
@@ -144,11 +127,12 @@ export function TranslationBatchEditor({
       .filter(Boolean)
       .join('\n\n');
     
-    navigator.clipboard.writeText(texts);
-    toast({
-      title: 'Copia completata',
-      description: `${selectedIds.size} testi originali copiati negli appunti`
-    });
+    navigator.clipboard.writeText(texts).then(
+      () => toast.success(t('common.copiatoNegliAppunti'), {
+        description: t('common.originalsCopiedCount').replace('{n}', String(selectedIds.size))
+      }),
+      () => toast.error(t('feedback.copyFailed'))
+    );
   };
 
   const pasteTranslations = async () => {
@@ -166,16 +150,11 @@ export function TranslationBatchEditor({
         }
       });
       
-      toast({
-        title: 'Incollato',
-        description: `Incollate ${Math.min(lines.length, selectedTranslations.length)} traduzioni`
+      toast.success(t('common.incollato'), {
+        description: t('common.translationsPastedCount').replace('{n}', String(Math.min(lines.length, selectedTranslations.length)))
       });
     } catch {
-      toast({
-        title: 'error',
-        description: 'Impossibile incollare da appunti',
-        variant: 'destructive'
-      });
+      toast.error(t('common.impossibileIncollareDaAppunti'));
     }
   };
 

@@ -5,11 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Monitor, Cpu, Cloud, Zap, RefreshCw, AlertTriangle, HardDrive, Thermometer } from 'lucide-react';
-import { vramManager, type VramConfig, type VramTier, type SystemStats } from '@/lib/vram-manager';
+import { vramManager, type VramTier, type SystemStats } from '@/lib/vram-manager';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 
@@ -35,14 +32,12 @@ function getTierLabels(t: (key: string) => string): Record<VramTier, string> {
 
 export function VramSettingsCard() {
   const { t } = useTranslation();
-  const [config, setConfig] = useState<VramConfig>(vramManager.getConfig());
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [tier, setTier] = useState<VramTier>('cloud');
   const [polling, setPolling] = useState(false);
 
   useEffect(() => {
     vramManager.init();
-    setConfig(vramManager.getConfig());
     setStats(vramManager.getCurrentStats());
     setTier(vramManager.getCurrentTier());
 
@@ -56,19 +51,16 @@ export function VramSettingsCard() {
     return unsub;
   }, []);
 
-  const updateConfig = (partial: Partial<VramConfig>) => {
-    const newConfig = { ...config, ...partial };
-    setConfig(newConfig);
-    vramManager.updateConfig(partial);
-  };
-
   const handleRefresh = async () => {
     setPolling(true);
-    await vramManager.poll();
+    // poll() inghiotte l'errore e torna null (anche fuori da Tauri): niente
+    // «statistiche aggiornate» se non è arrivato nulla.
+    const fresh = await vramManager.poll();
     setStats(vramManager.getCurrentStats());
     setTier(vramManager.getCurrentTier());
     setPolling(false);
-    toast.success(t('vramManager.statsUpdated'));
+    if (fresh) toast.success(t('vramManager.statsUpdated'));
+    else toast.error(t('common.error'));
   };
 
   const recommendation = vramManager.getRecommendation();
@@ -159,59 +151,11 @@ export function VramSettingsCard() {
           </div>
         )}
 
-        {/* Configurazione */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-sm font-semibold">{t('vramManager.autoSwitch')}</Label>
-              <p className="text-2xs text-slate-500">{t('vramManager.autoSwitchDesc')}</p>
-            </div>
-            <Switch checked={config.autoSwitch} onCheckedChange={(v) => updateConfig({ autoSwitch: v })} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-sm font-semibold">{t('vramManager.preferLocal')}</Label>
-              <p className="text-2xs text-slate-500">{t('vramManager.preferLocalDesc')}</p>
-            </div>
-            <Switch checked={config.preferLocalModels} onCheckedChange={(v) => updateConfig({ preferLocalModels: v })} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label className="text-sm font-semibold">{t('vramManager.alertHighUsage')}</Label>
-              <p className="text-2xs text-slate-500">{t('vramManager.alertHighUsageDesc')}</p>
-            </div>
-            <Switch checked={config.alertOnHighUsage} onCheckedChange={(v) => updateConfig({ alertOnHighUsage: v })} />
-          </div>
-
-          {config.alertOnHighUsage && (
-            <div className="space-y-2">
-              <Label className="text-xs">{t('vramManager.alertThreshold')}: {config.alertThresholdPercent}%</Label>
-              <Slider
-                value={[config.alertThresholdPercent]}
-                onValueChange={(v) => updateConfig({ alertThresholdPercent: v[0] })}
-                min={50}
-                max={95}
-                step={5}
-                className="w-full [&_[data-slot=range]]:bg-amber-500 [&_[data-slot=thumb]]:bg-amber-500 [&_[data-slot=thumb]]:border-amber-500"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label className="text-xs">{t('vramManager.cloudFallback')}</Label>
-            <Select value={config.cloudProvider} onValueChange={(v) => updateConfig({ cloudProvider: v as "openai" | "auto" | "claude" | "deepseek" })}>
-              <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">{t('vramManager.cloudAuto')}</SelectItem>
-                <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
-                <SelectItem value="claude">Anthropic (Claude)</SelectItem>
-                <SelectItem value="deepseek">DeepSeek</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {/* Qui c'erano cinque controlli (cambio automatico del modello, preferisci
+            locali, avviso VRAM alta + soglia, provider cloud di riserva). Nessuno
+            cambiava il motore che traduce: emettevano eventi senza ascoltatori, non
+            erano letti, o spostavano solo l'etichetta «modello raccomandato» qui
+            sopra (audit 01/10/2026). La card resta informativa. */}
 
         {/* Tier table */}
         <div className="space-y-2">

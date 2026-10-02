@@ -51,6 +51,19 @@ const STEPS = [
   { num: 4, label: 'Esporta' },
 ] as const;
 
+/**
+ * Serializer che ricostruiscono un file di testo CRI nel suo formato originale
+ * (header, tabelle di puntatori, terminatori, codici di controllo, encoding).
+ * Il «CPK patchato» si costruisce solo se OGNI file estratto ne ha uno.
+ *
+ * Oggi non ce n'è nessuno. Fino a ottobre 2026 il CPK patchato riscriveva ogni
+ * file come testo UTF-8 unito da '\n': MSG/BMD/FTD perdevano header e puntatori,
+ * JSON/XML la struttura, il testo generico righe corte ed encoding Shift-JIS, e
+ * il gioco si rompeva. Finché un formato non ha qui il suo serializer restano
+ * l'export CSV/PO.
+ */
+const CPK_SERIALIZERS: Partial<Record<string, (file: CriTextFile, entries: CriStringEntry[]) => number[]>> = {};
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -89,6 +102,8 @@ export default function CriPatcherPage() {
   // Extracted text files reference for patching
   const { t } = useTranslation();
   const extractedFilesRef = useRef<CriTextFile[]>([]);
+  // entry.index → internal_path del file da cui viene (match esatto, non per prefisso)
+  const entryFileRef = useRef<Map<number, string>>(new Map());
   const entriesRef = useRef<CriStringEntry[]>([]);
   entriesRef.current = entries;
 
@@ -133,13 +148,15 @@ export default function CriPatcherPage() {
     }
   };
 
-  const handleAnalyze = async () => {
-    if (!gamePath) return;
+  const handleAnalyze = () => analyzeGame(gamePath);
+
+  const analyzeGame = async (path: string) => {
+    if (!path) return;
     setAnalyzing(true);
     setError('');
 
     try {
-      const info = await detectCriGame(gamePath);
+      const info = await detectCriGame(path);
       setGameInfo(info);
 
       // Auto-detect source language from game profile
@@ -159,6 +176,19 @@ export default function CriPatcherPage() {
       setAnalyzing(false);
     }
   };
+
+  // Ponte da String it! nel game-detail: ?gamePath=… analizza subito la cartella,
+  // senza ripassare dal folder picker (route con query params, convenzione del progetto).
+  useEffect(() => {
+    try {
+      const gp = new URLSearchParams(window.location.search).get('gamePath');
+      if (gp) {
+        setGamePath(gp);
+        analyzeGame(gp);
+      }
+    } catch { /* niente query params */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // -----------------------------------------------------------------------
   // Step 2: CPK contents browsing
@@ -200,11 +230,13 @@ export default function CriPatcherPage() {
 
       // Parse all text files into entries
       const allEntries: CriStringEntry[] = [];
+      const entryFile = new Map<number, string>();
       let globalIdx = 0;
       for (const tf of textFiles) {
         try {
           const parsed = await parseCriTextFile(tf.data, tf.format_hint);
           for (const entry of parsed) {
+            entryFile.set(globalIdx, tf.internal_path);
             allEntries.push({
               ...entry,
               index: globalIdx++,
@@ -217,6 +249,7 @@ export default function CriPatcherPage() {
       }
 
       if (allEntries.length > 0) {
+        entryFileRef.current = entryFile;
         setEntries(allEntries);
         setStep(3);
       } else {
@@ -334,6 +367,13 @@ export default function CriPatcherPage() {
     return filtered;
   }, [entries, activeTab, speakerFilter, searchFilter]);
 
+  // Formati estratti senza serializer: con anche uno solo il CPK patchato non si costruisce
+  const cpkBlockedFormats = Array.from(new Set(
+    extractedFilesRef.current
+      .filter((tf) => !CPK_SERIALIZERS[tf.format_hint])
+      .map((tf) => tf.format_hint.toUpperCase()),
+  ));
+
   // -----------------------------------------------------------------------
   // Step 4: Export & patch
   // -----------------------------------------------------------------------
@@ -348,17 +388,17 @@ export default function CriPatcherPage() {
       // Group entries back by source file and rebuild
       const patches: CriFilePatch[] = [];
       for (const tf of extractedFilesRef.current) {
-        // For simplicity, use the translated text to patch
-        // In production, would need to rebuild format-specific binary
-        const relevantEntries = entries.filter((e) => e.context.startsWith(tf.internal_path));
+        const serialize = CPK_SERIALIZERS[tf.format_hint];
+        if (!serialize) {
+          // Nessun file viene riscritto se non si sa ricostruirlo: si ferma tutto.
+          setError(t('criPatcher.cpkBuildUnavailableReason').replace('{formats}', tf.format_hint.toUpperCase()));
+          return;
+        }
+        const relevantEntries = entries.filter((e) => entryFileRef.current.get(e.index) === tf.internal_path);
         const hasTranslations = relevantEntries.some((e) => e.translated);
         if (!hasTranslations) continue;
 
-        // Rebuild as newline-separated text
-        const textContent = relevantEntries.map((e) => e.translated || e.value).join('\n');
-        const encoder = new TextEncoder();
-        const bytes = Array.from(encoder.encode(textContent));
-        patches.push({ internal_path: tf.internal_path, data: bytes });
+        patches.push({ internal_path: tf.internal_path, data: serialize(tf, relevantEntries) });
       }
 
       if (patches.length === 0) {
@@ -980,13 +1020,15 @@ export default function CriPatcherPage() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                 <Button
                   onClick={handleBuildPatchedCpk}
-                  disabled={exporting || !selectedCpk}
+                  disabled={exporting || !selectedCpk || cpkBlockedFormats.length > 0}
                   className="h-auto py-3 flex flex-col items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-xs"
                   aria-label={t('common.creaCpkPatchato')}
                 >
                   {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
                   <span className="font-medium">{t('common.cpkPatchato')}</span>
-                  <span className="text-2xs text-violet-200/70">{t('common.prontoPerIlGioco')}</span>
+                  <span className="text-2xs text-violet-200/70">
+                    {cpkBlockedFormats.length > 0 ? t('criPatcher.cpkBuildUnavailable') : t('common.prontoPerIlGioco')}
+                  </span>
                 </Button>
 
                 <Button
@@ -1033,6 +1075,12 @@ export default function CriPatcherPage() {
                   <span className="text-2xs text-slate-400">{t('criPatcher.toClipboard')}</span>
                 </Button>
               </div>
+              {cpkBlockedFormats.length > 0 && (
+                <p className="mt-3 text-xs text-yellow-400 flex items-start gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>{t('criPatcher.cpkBuildUnavailableReason').replace('{formats}', cpkBlockedFormats.join(', '))}</span>
+                </p>
+              )}
             </CardContent>
           </Card>
 

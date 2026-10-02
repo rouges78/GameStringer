@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Progress } from '@/components/ui/progress';
 import { 
   Upload,
   BookOpen,
@@ -22,16 +21,15 @@ import {
   ZoomIn,
   ZoomOut,
   CheckCircle2,
-  Loader2,
   ImageIcon,
   MessageSquare,
   Eraser,
   PaintBucket,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedBalloon {
@@ -79,9 +77,6 @@ export function MangaTranslator() {
   const [fontSize, setFontSize] = useState([16]);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState('');
-  const [progress, setProgress] = useState(0);
   const [selectedBalloon, setSelectedBalloon] = useState<string | null>(null);
 
   const currentPage = pages[currentPageIndex];
@@ -132,133 +127,10 @@ export function MangaTranslator() {
     setPages(prev => [...prev, ...newPages]);
   }, []);
 
-  const detectBalloons = async () => {
-    if (!currentPage) return;
-    
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.detecting'));
-    setProgress(0);
-
-    // Simula rilevamento balloon con OCR
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(20);
-    setProcessingStep(t('mangaTranslator.analyzingText'));
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(40);
-
-    // Genera balloon mock per demo
-    const mockBalloons: DetectedBalloon[] = [
-      {
-        id: 'balloon-1',
-        x: 50,
-        y: 30,
-        width: 150,
-        height: 80,
-        text: 'これは何ですか？',
-        translatedText: '',
-        confidence: 0.95,
-        isVertical: true,
-        fontStyle: 'manga',
-      },
-      {
-        id: 'balloon-2',
-        x: 250,
-        y: 150,
-        width: 120,
-        height: 60,
-        text: 'わからない...',
-        translatedText: '',
-        confidence: 0.88,
-        isVertical: false,
-        fontStyle: 'manga',
-      },
-      {
-        id: 'balloon-3',
-        x: 100,
-        y: 300,
-        width: 180,
-        height: 100,
-        text: '行こう！みんな待ってるよ！',
-        translatedText: '',
-        confidence: 0.92,
-        isVertical: true,
-        fontStyle: 'bold',
-      },
-    ];
-
-    setProgress(60);
-    setProcessingStep(t('mangaTranslator.translating'));
-
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Simula traduzione
-    const translatedBalloons = mockBalloons.map(balloon => ({
-      ...balloon,
-      translatedText: balloon.text === 'これは何ですか？' 
-        ? "Cos'è questo?" 
-        : balloon.text === 'わからない...'
-        ? 'Non lo so...'
-        : 'Andiamo! Tutti ci stanno aspettando!',
-    }));
-
-    setProgress(100);
-    setProcessingStep(t('mangaTranslator.completed'));
-
-    setPages(prev => prev.map((page, idx) => 
-      idx === currentPageIndex 
-        ? { ...page, balloons: translatedBalloons, processed: true }
-        : page
-    ));
-
-    setIsProcessing(false);
-  };
-
-  const applyInpainting = async () => {
-    if (!currentPage) return;
-    
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.inpainting'));
-    setProgress(0);
-
-    // Simula inpainting
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setProgress(i);
-    }
-
-    setPages(prev => prev.map((page, idx) => 
-      idx === currentPageIndex 
-        ? { ...page, inpainted: true }
-        : page
-    ));
-
-    setIsProcessing(false);
-    setProcessingStep('');
-  };
-
-  const _translateAll = async () => {
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.batchTranslation'));
-    
-    for (let i = 0; i < pages.length; i++) {
-      setProgress(Math.round((i / pages.length) * 100));
-      setCurrentPageIndex(i);
-      await detectBalloons();
-    }
-    
-    setIsProcessing(false);
-  };
-
-  const exportPage = () => {
-    // Export logica
-    clientLogger.debug('Exporting page:', currentPage);
-  };
-
-  const exportAll = () => {
-    // Export all pages
-    clientLogger.debug('Exporting all pages:', pages);
-  };
+  // OCR, traduzione, inpainting ed export NON sono collegati a questo strumento.
+  // Prima "Rileva & Traduci" restituiva sempre gli stessi 3 balloon giapponesi
+  // con traduzioni italiane fisse, per qualunque immagine. Finché non c'è una
+  // pipeline vera, le azioni restano disabilitate e la pagina lo dice.
 
   return (
     <div className="space-y-4">
@@ -286,22 +158,16 @@ export function MangaTranslator() {
             {pages.length > 0 && (
               <>
                 <Button 
-                  onClick={detectBalloons}
-                  disabled={isProcessing}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
-                  {isProcessing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4 mr-2" />
-                  )}
+                  <Wand2 className="h-4 w-4 mr-2" />
                   {t('mangaTranslator.detect') || 'Rileva & Traduci'}
                 </Button>
                 <Button 
-                  onClick={applyInpainting}
-                  disabled={isProcessing || !currentPage?.processed}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
@@ -315,21 +181,11 @@ export function MangaTranslator() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {isProcessing && (
-        <Card className="border-teal-500/30 bg-teal-500/10">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-              <span className="text-sm text-teal-300">{processingStep}</span>
-              <div className="flex-1">
-                <Progress value={progress} className="h-2" />
-              </div>
-              <span className="text-sm text-teal-400">{progress}%</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Strumento non ancora collegato a OCR/traduzione */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <p className="text-sm text-amber-500">{t('mangaTranslator.notConnected')}</p>
+      </div>
 
       <div className="grid grid-cols-12 gap-4">
         {/* Left Sidebar - Pages */}
@@ -680,8 +536,7 @@ export function MangaTranslator() {
                 size="sm" 
                 variant="outline"
                 className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportPage}
-                disabled={!currentPage?.processed}
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('mangaTranslator.exportPage')}
@@ -690,8 +545,7 @@ export function MangaTranslator() {
                 size="sm" 
                 variant="outline"
                 className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportAll}
-                disabled={pages.length === 0}
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('mangaTranslator.exportAll')}

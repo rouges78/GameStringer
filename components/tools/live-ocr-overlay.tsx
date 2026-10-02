@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -19,17 +18,24 @@ import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
+import { isOcrLanguageMissing, OCR_OVERLAY_TEXTS_EVENT, type OcrOverlayText } from '@/lib/ocr-overlay-payload';
 
-interface DetectedText {
+// Niente `confidence`: Windows OCR non la fornisce, e il badge mostrava un 90% fisso.
+interface DetectedText extends OcrOverlayText {
   id: string;
-  original: string;
-  translated: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  confidence: number;
   timestamp: number;
+}
+
+// Nasconde davvero la finestra overlay (il backend emette anche
+// `overlay-visibility` false). Prima Stop emetteva solo l'evento, e alla
+// ripartenza nessuno lo rimetteva a true: l'overlay restava vuoto.
+async function hideOverlayWindow() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('toggle_ocr_overlay', { show: false });
+  } catch (e: unknown) {
+    clientLogger.warn('Could not hide overlay window:', e);
+  }
 }
 
 interface CaptureRegion {
@@ -94,10 +100,12 @@ export function LiveOcrOverlay() {
         y: number;
         width: number;
         height: number;
-        confidence: number;
       }>>('ocr_recognize_png', {
         imageData: captureResult.image_data,
-        language: sourceLanguage === 'auto' ? 'en' : sourceLanguage
+        // "auto" arriva così al backend, che usa le lingue del profilo Windows.
+        // "zh" ha scrittura indeterminata per Windows OCR: serve zh-Hans. Solo
+        // qui: i traduttori (DeepL, MyMemory) si aspettano ancora "zh".
+        language: sourceLanguage === 'zh' ? 'zh-Hans' : sourceLanguage
       });
 
       if (ocrResult.length === 0) return;
@@ -127,7 +135,6 @@ export function LiveOcrOverlay() {
                   original: t.text,
                   translated,
                   x: t.x, y: t.y, width: t.width, height: t.height,
-                  confidence: t.confidence,
                   timestamp: Date.now()
                 };
               });
@@ -139,14 +146,14 @@ export function LiveOcrOverlay() {
             translatedTexts = ocrResult.map((t, i) => ({
               id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
               x: t.x, y: t.y, width: t.width, height: t.height,
-              confidence: t.confidence, timestamp: Date.now()
+              timestamp: Date.now()
             }));
           }
         } catch {
           translatedTexts = ocrResult.map((t, i) => ({
             id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
             x: t.x, y: t.y, width: t.width, height: t.height,
-            confidence: t.confidence, timestamp: Date.now()
+            timestamp: Date.now()
           }));
         }
       } else {
@@ -158,7 +165,6 @@ export function LiveOcrOverlay() {
           y: t.y,
           width: t.width,
           height: t.height,
-          confidence: t.confidence,
           timestamp: Date.now()
         }));
       }
@@ -170,13 +176,20 @@ export function LiveOcrOverlay() {
       // Invia all'overlay se attivo
       if (showOverlay) {
         const { emit } = await import('@tauri-apps/api/event');
-        await emit('ocr-translations', translatedTexts);
+        await emit<OcrOverlayText[]>(OCR_OVERLAY_TEXTS_EVENT, translatedTexts);
       }
 
     } catch (error: unknown) {
       clientLogger.error('OCR capture error:', error);
+      // Lingua senza riconoscimento del testo in Windows: riprovare a ogni
+      // intervallo non cambia niente, quindi ci si ferma e si dice come rimediare.
+      if (isOcrLanguageMissing(error)) {
+        setIsRunning(false);
+        void hideOverlayWindow();
+        toast.error(t('ocrTranslator.languagePackMissing').replace('{lang}', sourceLanguage), { id: 'ocr-language-missing' });
+      }
     }
-  }, [isPaused, captureMode, captureRegion, sourceLanguage, targetLanguage, autoTranslate, showOverlay]);
+  }, [isPaused, captureMode, captureRegion, sourceLanguage, targetLanguage, autoTranslate, showOverlay, t]);
 
   // Start/Stop capture loop
   useEffect(() => {
@@ -201,11 +214,14 @@ export function LiveOcrOverlay() {
     setIsPaused(false);
     toast.success(t('common.liveOcrAvviato'));
     
-    // Apri finestra overlay
+    // Apri finestra overlay sull'area catturata (regione o monitor principale):
+    // le coordinate dei testi sono relative a quella.
     if (showOverlay) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('open_ocr_overlay');
+        await invoke('open_ocr_overlay', {
+          region: captureMode === 'region' && captureRegion ? captureRegion : null,
+        });
       } catch (e: unknown) {
         clientLogger.warn('Could not open overlay window:', e);
       }
@@ -219,10 +235,7 @@ export function LiveOcrOverlay() {
     toast.info(t('common.liveOcrFermato'));
     
     // Chiudi overlay
-    try {
-      const { emit } = await import('@tauri-apps/api/event');
-      await emit('overlay-visibility', false);
-    } catch {}
+    await hideOverlayWindow();
   };
 
   const handlePause = () => {
@@ -256,8 +269,7 @@ export function LiveOcrOverlay() {
     const data = detectedTexts.map(t => ({
       original: t.original,
       translated: t.translated,
-      position: { x: t.x, y: t.y },
-      confidence: t.confidence
+      position: { x: t.x, y: t.y }
     }));
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -475,9 +487,6 @@ export function LiveOcrOverlay() {
                           <p className="text-xs text-gray-400 truncate">{text.original}</p>
                           <p className="text-sm text-white font-medium mt-1">{text.translated}</p>
                         </div>
-                        <Badge variant="outline" className="text-2xs shrink-0">
-                          {Math.round(text.confidence * 100)}%
-                        </Badge>
                       </div>
                       <div className="flex items-center gap-2 mt-2 text-2xs text-gray-500">
                         <span>📍 {text.x}, {text.y}</span>

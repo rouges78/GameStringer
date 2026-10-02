@@ -23,6 +23,8 @@ import { PacksTab } from '@/components/community/packs-tab';
 import { NotificationsPanel, OnlineIndicator, Showcase, UserProfileView } from '@/components/social';
 import { useProfiles } from '@/hooks/use-profiles';
 import { updatePresence } from '@/lib/social/social';
+import { autoSyncGSToSupabase } from '@/lib/social/auth-bridge';
+import { clientLogger } from '@/lib/client-logger';
 import { getForumStats, type ForumStats } from '@/lib/social/forum';
 import { Button } from '@/components/ui/button';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -98,6 +100,30 @@ export default function CommunityHubPage() {
   const userName = currentProfile?.name || '';
   const userAvatar = currentProfile?.avatar_path || undefined;
 
+  // uid di Supabase Auth, risolto UNA volta qui e passato a chi confronta con
+  // le righe del server (reazioni, autore del thread, profilo, notifiche): lì
+  // user_id/author_id è l'uid Supabase, NON l'id del profilo locale `userId`,
+  // e il confronto con quello era sempre falso. È lo stesso uid con cui il
+  // forum scrive (resolveAuthorId → autoSyncGSToSupabase).
+  // authChecked distingue "ancora in risoluzione" da "nessuna sessione community".
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAuthUserId(null);
+    setAuthChecked(false);
+    if (!userId) {
+      setAuthChecked(true);
+      return;
+    }
+    autoSyncGSToSupabase()
+      .then((uid) => { if (!cancelled) setAuthUserId(uid); })
+      .catch((err) => { clientLogger.warn('[CommunityHub] Risoluzione uid Supabase fallita:', err); })
+      .finally(() => { if (!cancelled) setAuthChecked(true); });
+    return () => { cancelled = true; };
+  }, [userId]);
+
   // Update presence
   useEffect(() => {
     if (userId) {
@@ -160,6 +186,15 @@ export default function CommunityHubPage() {
   const kpiVisible =
     !!stats && (stats.total_threads + stats.total_packs + stats.total_downloads + stats.active_users) > 0;
 
+  // Profilo e thread confrontano con le righe del server: si montano solo a uid
+  // risolto, altrimenti partirebbero da "nessun utente" (cuore spento, niente
+  // "Modifica") e ricaricherebbero contando una seconda visita al thread.
+  const authPending = (
+    <div className="flex items-center justify-center py-20">
+      <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+    </div>
+  );
+
   return (
     <TooltipProvider>
       <div className="h-full flex relative overflow-hidden">
@@ -188,7 +223,7 @@ export default function CommunityHubPage() {
 
                 <div className="flex items-center gap-1.5">
                   <OnlineIndicator />
-                  {userId && <NotificationsPanel userId={userId} />}
+                  {authUserId && <NotificationsPanel userId={authUserId} />}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -272,21 +307,26 @@ export default function CommunityHubPage() {
             )}
 
             {view === 'profile' && profileUsername && (
-              <UserProfileView
-                username={profileUsername}
-                currentUserId={userId || undefined}
-                onClose={handleBack}
-              />
+              authChecked ? (
+                <UserProfileView
+                  username={profileUsername}
+                  currentUserId={authUserId || undefined}
+                  onClose={handleBack}
+                />
+              ) : authPending
             )}
 
             {view === 'thread' && selectedThread && (
-              <ThreadView
-                threadId={selectedThread.id}
-                userId={userId}
-                userName={userName}
-                userAvatar={userAvatar}
-                onBack={handleBack}
-              />
+              authChecked ? (
+                <ThreadView
+                  threadId={selectedThread.id}
+                  userId={userId}
+                  authUserId={authUserId}
+                  userName={userName}
+                  userAvatar={userAvatar}
+                  onBack={handleBack}
+                />
+              ) : authPending
             )}
 
             {view === 'new' && (

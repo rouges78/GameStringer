@@ -166,7 +166,8 @@ async function loadAllProjects(): Promise<UnifiedProject[]> {
           const isRealPath = /^[a-zA-Z]:[\\/]|^[\\/]/.test(fp);
           const isVisionaire = (p.engine || '').toLowerCase().includes('visionaire');
           if (isRealPath && !isVisionaire) {
-            return `/auto-translate?gameId=${encodeURIComponent(p.gameId)}&gameName=${encodeURIComponent(p.gameName)}&installPath=${encodeURIComponent(fp)}${p.gameImage ? `&gameImage=${encodeURIComponent(p.gameImage)}` : ''}`;
+            // targetLang: il checkpoint è per lingua, senza il banner cercava quella di default
+            return `/auto-translate?gameId=${encodeURIComponent(p.gameId)}&gameName=${encodeURIComponent(p.gameName)}&installPath=${encodeURIComponent(fp)}${p.gameImage ? `&gameImage=${encodeURIComponent(p.gameImage)}` : ''}${p.targetLanguage ? `&targetLang=${encodeURIComponent(p.targetLanguage)}` : ''}`;
           }
           return `/library?id=${encodeURIComponent(p.gameId)}&name=${encodeURIComponent(p.gameName)}`;
         })(),
@@ -351,6 +352,7 @@ function ProjectCard({
   packId?: string;
 }) {
   const { t } = useTranslation();
+  const router = useRouter();
   const pct = percent(project.completedStrings, project.totalStrings);
   const sourceInfo = SOURCE_LABELS[project.source];
   const SourceIcon = sourceInfo.icon;
@@ -444,12 +446,17 @@ function ProjectCard({
 
         {/* Actions */}
         <div className="flex items-center gap-1 pt-1">
+          {/* Bottone, non <Link><Button>: niente bottone dentro un'ancora. L'href
+              porta già gameId, che Editor e wizard leggono per preselezionare il gioco. */}
           {project.openHref && (
-            <Link href={project.openHref} className="flex-1">
-              <Button size="sm" variant="default" className="w-full h-7 text-2xs bg-violet-600 hover:bg-violet-500">
-                <FileText className="w-3 h-3 mr-1" />
-                {t('projectsPage.open')}</Button>
-            </Link>
+            <Button
+              size="sm"
+              variant="default"
+              className="flex-1 h-7 text-2xs bg-violet-600 hover:bg-violet-500"
+              onClick={() => { if (project.openHref) router.push(project.openHref); }}
+            >
+              <FileText className="w-3 h-3 mr-1" />
+              {t('projectsPage.open')}</Button>
           )}
           {project.status === 'completed' && (
             <Button
@@ -994,11 +1001,10 @@ export default function ProjectsPage() {
           <Button variant="outline" size="sm" onClick={handleImport}>
             <Upload className="w-4 h-4 mr-2" />
             {t('projectsPage.importBtn')}</Button>
-          <Link href="/auto-translate">
-            <Button size="sm" className="bg-violet-600 hover:bg-violet-500">
-              <Plus className="w-4 h-4 mr-2" />
-              {t('projectsPage.newProject')}</Button>
-          </Link>
+          {/* Senza gioco: il wizard mostra il selettore dei giochi installati */}
+          <Button size="sm" className="bg-violet-600 hover:bg-violet-500" onClick={() => router.push('/auto-translate')}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('projectsPage.newProject')}</Button>
         </div>
       </div>
 
@@ -1093,11 +1099,9 @@ export default function ProjectsPage() {
               : 'Prova a modificare i filtri di ricerca.'}
           </p>
           {projects.length === 0 && (
-            <Link href="/auto-translate">
-              <Button className="bg-violet-600 hover:bg-violet-500">
-                <Plus className="w-4 h-4 mr-2" />
-                {t('projectsPage.startTranslating')}</Button>
-            </Link>
+            <Button className="bg-violet-600 hover:bg-violet-500" onClick={() => router.push('/auto-translate')}>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('projectsPage.startTranslating')}</Button>
           )}
         </div>
       ) : (

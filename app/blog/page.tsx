@@ -28,18 +28,20 @@ export default function BlogPage() {
   const [form, setForm] = useState({ date: '', title: '', description: '', tag: 'Update', image: '', gameName: '' });
 
   useEffect(() => {
+    // Copia sincrona subito, poi la lista vera (blog.json in Tauri)
     setPosts(blogService.getPosts());
+    blogService.getPostsAsync().then(setPosts);
   }, []);
 
   const resetForm = () => setForm({ date: '', title: '', description: '', tag: 'Update', image: '', gameName: '' });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.title || !form.date) {
       toast.error(t('common.fillInTitleAndDate'));
       return;
     }
     
-    blogService.addPost({
+    const created = await blogService.addPost({
       date: form.date,
       title: form.title,
       description: form.description,
@@ -47,15 +49,20 @@ export default function BlogPage() {
       ...(form.image && { image: form.image }),
       ...(form.gameName && { gameName: form.gameName }),
     });
+    if (!created) {
+      // Il form resta aperto: l'utente non perde quello che ha scritto
+      toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
+    }
     
-    setPosts(blogService.getPosts());
+    setPosts(await blogService.getPostsAsync());
     resetForm();
     setIsAdding(false);
     toast.success(t('common.newsPublished'));
   };
 
-  const handleUpdate = (id: string) => {
-    blogService.updatePost(id, {
+  const handleUpdate = async (id: string) => {
+    const updated = await blogService.updatePost(id, {
       date: form.date,
       title: form.title,
       description: form.description,
@@ -63,8 +70,12 @@ export default function BlogPage() {
       image: form.image || undefined,
       gameName: form.gameName || undefined,
     });
+    if (!updated) {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
+    }
     
-    setPosts(blogService.getPosts());
+    setPosts(await blogService.getPostsAsync());
     setEditingId(null);
     resetForm();
     toast.success(t('common.newsUpdated'));
@@ -73,15 +84,21 @@ export default function BlogPage() {
   const handleDelete = async (id: string) => {
     const { confirmDialog } = await import('@/lib/confirm-dialog');
     if (await confirmDialog(t('common.deleteThisNews'))) {
-      blogService.deletePost(id);
-      setPosts(blogService.getPosts());
+      if (!(await blogService.deletePost(id))) {
+        toast.error(t('common.impossibileSalvareLeModifiche'));
+        return;
+      }
+      setPosts(await blogService.getPostsAsync());
       toast.success(t('common.newsDeleted'));
     }
   };
 
-  const handleTogglePin = (id: string, currentPinned: boolean) => {
-    blogService.updatePost(id, { pinned: !currentPinned });
-    setPosts(blogService.getPosts());
+  const handleTogglePin = async (id: string, currentPinned: boolean) => {
+    if (!(await blogService.updatePost(id, { pinned: !currentPinned }))) {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
+    }
+    setPosts(await blogService.getPostsAsync());
     toast.success(currentPinned 
       ? (t('common.unpinned')) 
       : (t('common.pinned')));

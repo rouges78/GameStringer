@@ -15,7 +15,7 @@ import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { ensureArray, validateArray } from '@/lib/array-utils';
 import { toast } from 'sonner';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
-import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
+import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue, matchesEngineFilter, buildEngineChips, mergeGameLists, applySteamTitles } from '@/lib/library-filters';
 import { getManualGames, addManualGame, type ManualGame } from '@/lib/manual-games';
 import { enrichGameTitle } from '@/lib/game-names-db';
 import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download, Languages, Sparkles, FolderOpen, Monitor, Wrench, Brain, MoreHorizontal } from 'lucide-react';
@@ -24,6 +24,7 @@ import { CoverPicker } from '@/components/cover-picker';
 import { StoreGate } from '@/components/auth/store-gate';
 import { clientLogger } from '@/lib/client-logger';
 import { scanGameLanguages } from '@/lib/steam-languages';
+import { getGameDetailUrl } from '@/lib/game-detail-url';
 
 // Guard globale: sopravvive a HMR/Fast Refresh e doppio mount React 18
 interface LibCacheEntry<T> { loaded: boolean; data: T }
@@ -69,21 +70,11 @@ interface Game {
   added_date?: number; // Data di aggiunta alla library (timestamp)
 }
 
-// Helper per generare URL pagina dettaglio game
-// Uses /library/?id=XXX query param format for Tauri static export compatibility
-const getGameDetailUrl = (game: Game): string => {
-  const params = new URLSearchParams();
-  params.set('id', game.id || game.app_id || '');
-  params.set('name', game.title || '');
-  if (game.install_dir) params.set('installDir', game.install_dir);
-  params.set('installed', String(game.is_installed || false));
-  params.set('platform', game.platform || 'Steam');
-  if (game.header_image) params.set('headerImage', game.header_image);
-  // Passa sempre l'appId numerico se disponibile
-  const numericAppId = game.app_id || (game.id?.match(/\d+/)?.[0]);
-  if (numericAppId) params.set('appId', String(numericAppId));
-  
-  return `/library/?${params.toString()}`;
+// Esito di un caricamento libreria: serve al pulsante Scan per non dire "fatto" se qualcosa è fallito
+interface LibraryFetchOutcome {
+  failedSources: string[]; // comandi di scansione che non hanno risposto
+  steamConfigured: boolean; // credenziali Steam presenti → API Steam attesa
+  steamEnrichment: Promise<boolean>; // false se l'API Steam era attesa ma è fallita o vuota
 }
 
 // Dedup globale per fetch SteamGridDB (globalThis sopravvive a HMR)
@@ -626,132 +617,427 @@ function LibraryListView() {
     loadCaches();
   }, []);
 
-  // 🚀 SCAN COMPLETO - Combina API Steam + File Locali
-  const testFamilySharing = async () => {
-    clientLogger.debug('[LIBRARY DEBUG] 🚀 SCAN COMPLETO Steam...');
-    setIsLoading(true);
-    
+  // 🚀 Caricamento libreria multi-store: Steam locale + altri store subito, API Steam in background.
+  // Usato sia all'avvio (useEffect sotto) sia dal pulsante Scan.
+  const fetchGames = useCallback(async (background = false): Promise<LibraryFetchOutcome | null> => {
     try {
-      // 1️⃣ Prima ottieni i games dall'API (hanno i nomi corretti)
-      const credentials = await invoke('load_steam_credentials') as { steam_id: string; api_key_encrypted: string } | null;
-      const apiGames: Map<string, Game> = new Map();
-      
-      if (!credentials) {
-        clientLogger.warn('[LIBRARY] ⚠️ Credenziali Steam non configurate - mostro solo giochi installati');
-        toast.warning(t('common.credenzialiSteamNonConfigurate'), {
-          description: 'Vai in Impostazioni → Stores per vedere tutti i tuoi giochi',
-          duration: 8000,
-        });
+      // Non mostrare loading spinner se background revalidate
+      if (!background) {
+        setIsLoading(true);
+        setError(null); // una nuova scansione riuscita non deve restare dietro un errore vecchio
       }
-      
-      if (credentials) {
+      const t0 = performance.now();
+      clientLogger.debug('🚀 FAST LIBRARY LOADING (parallel)...');
+
+      // Blacklist software (condivisa)
+      const softwareBlacklist = [
+        'twinmotion', 'steamvr', 'unreal editor', 'unity',
+        'blender', 'godot', 'sdk', 'dedicated server', 'tool',
+        'ea desktop', 'ea app', 'origin', 'launcher', 'social club',
+        'rockstar games launcher', 'ubisoft connect', 'uplay',
+        'epic games launcher', 'gog galaxy', 'battle.net',
+        'unity hub', 'unity editor'
+      ];
+      const isSoftware = (name: string) => {
+        const lower = (name || '').toLowerCase();
+        return softwareBlacklist.some(sw => lower.includes(sw));
+      };
+
+      // ═══════════════════════════════════════════════════════════
+      // FASE 1: Lancia TUTTE le chiamate in parallelo
+      // ═══════════════════════════════════════════════════════════
+      // Fonti che non hanno risposto: con una fonte mancante la lista va unita, mai sostituita
+      const failedSources: string[] = [];
+      const localScanPromise = invoke('scan_all_steam_games_fast').catch(e => {
+        clientLogger.warn('⚠️ Local scan failed:', e);
+        failedSources.push('scan_all_steam_games_fast');
+        return [] as unknown[];
+      }) as Promise<Array<{
+        id: string; title: string; platform: string; install_path: string | null;
+        header_image: string | null; is_installed: boolean; steam_app_id: number | null;
+        is_shared: boolean; engine?: string | null; supported_languages?: string | null;
+        last_played?: number | null; added_date?: number | null;
+      }>>;
+
+      const credsPromise = invoke('load_steam_credentials').catch(() => null) as Promise<{ api_key_encrypted?: string; steam_id?: string } | null>;
+
+      // Altri store (Epic, GOG, Origin, Ubisoft, etc.) — con timeout 15s
+      const otherStoresPromise = Promise.race([
+        invoke('scan_games'),
+        new Promise<unknown[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
+      ]).catch(e => {
+        clientLogger.warn('⚠️ Other stores scan failed:', e);
+        failedSources.push('scan_games');
+        return [] as unknown[];
+      }) as Promise<Array<{
+        id: string; title: string; platform: string; path: string;
+        app_id?: string; header_image?: string; is_installed: boolean;
+        is_vr?: boolean; engine?: string; supported_languages?: string[];
+        genres?: string[]; last_played?: number;
+      }>>;
+
+      // Lancia anche API Steam (lenta, ~30-40s) in parallelo — NON attendiamo
+      const steamApiPromise = credsPromise.then(async (credentials) => {
+        const creds = credentials as { api_key_encrypted?: string; steam_id?: string } | null;
+        if (!creds?.api_key_encrypted || !creds?.steam_id) return null;
         try {
-          const apiResult = await invoke('get_steam_games', {
-            apiKey: credentials.api_key_encrypted,
-            steamId: credentials.steam_id,
+          clientLogger.debug('🔑 Calling Steam API (background)...');
+          return await invoke('get_steam_games', {
+            apiKey: creds.api_key_encrypted,
+            steamId: creds.steam_id,
             forceRefresh: false
           }) as unknown[];
-          
-          clientLogger.debug(`[LIBRARY DEBUG] 📊 Steam API: ${apiResult.length} games with names`);
-          
-          apiResult.forEach((g) => {
-            const game = g as { appid: number; name: string };
-            apiGames.set(String(game.appid), {
-              id: `steam_${game.appid}`,
-              app_id: String(game.appid),
-              title: game.name,
-              platform: 'Steam',
-              header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`,
-              isShared: false,
-              is_vr: false,
-              is_installed: false
-            });
-          });
-        } catch {
-          clientLogger.warn('[LIBRARY DEBUG] ⚠️ Steam API failed, using local files only');
+        } catch (e: unknown) {
+          clientLogger.warn(`⚠️ Steam API failed: ${String(e)}`);
+          return null;
         }
-      }
-      
-      // 2️⃣ Poi scan locale per trovare TUTTI i games (inclusi Family Sharing)
-      const localGames = await invoke('scan_all_steam_games_fast') as Array<{
-        id: string;
-        title: string;
-        platform: string;
-        install_path: string | null;
-        header_image: string | null;
-        is_installed: boolean;
-        steam_app_id: number | null;
-        is_shared: boolean;
-        last_played: number | null;
-        engine: string | null;
-        added_date: number | null;
-      }>;
-      
-      clientLogger.debug(`[LIBRARY DEBUG] 📂 Local files: ${localGames.length} games found`);
-      
-      // 3️⃣ Combina: usa nomi API dove disponibili, altrimenti usa dati locali
-      const finalGames: Game[] = [];
-      const seenIds = new Set<string>();
-      
-      for (const local of localGames) {
-        const appId = local.steam_app_id ? String(local.steam_app_id) : local.id.replace('steam_', '').replace('steam_shared_', '');
-        
-        if (seenIds.has(appId)) continue;
-        seenIds.add(appId);
-        
-        // Usa dati API se disponibili (hanno nomi corretti)
-        const apiGame = apiGames.get(appId);
-        
-        finalGames.push({
-          id: local.id,
-          app_id: appId,
-          title: apiGame?.title || local.title,
-          platform: 'Steam',
-          header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
-          isShared: local.is_shared,
-          is_vr: false,
-          is_installed: local.is_installed,
-          last_played: local.last_played || undefined,
-          engine: local.engine || undefined,
-          install_dir: local.install_path || undefined,
-          added_date: local.added_date || undefined,
+      });
+
+      // ═══════════════════════════════════════════════════════════
+      // FASE 2: Attendi SOLO scan locale + altri store (veloci, <2s)
+      //         NON aspettiamo Steam API (lenta, 30-40s)
+      // ═══════════════════════════════════════════════════════════
+      const [scanResult, otherStoreGames, steamCreds] = await Promise.all([localScanPromise, otherStoresPromise, credsPromise]);
+      // Con credenziali Steam i giochi posseduti non installati arrivano dopo dall'API (che può fallire)
+      const steamConfigured = !!(steamCreds?.api_key_encrypted && steamCreds?.steam_id);
+
+      // Sostituisce la lista solo con un quadro completo; altrimenti unisce, così una
+      // fonte lenta o fallita non fa sparire i giochi già mostrati
+      const applyGames = (list: Game[], complete: boolean) => {
+        if (complete) {
+          setGamesWithValidation(list);
+          return;
+        }
+        setGames(prev => {
+          const merged = mergeManual(mergeGameLists(prev, list));
+          if (merged.length > 0) {
+            _libCache.games.data = merged;
+            _libCache.games.loaded = true;
+          }
+          return merged;
+        });
+      };
+
+      const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null; install_path?: string | null }> = new Map();
+      const relevantGames = (scanResult || []).filter(g => g.is_installed || g.is_shared);
+      clientLogger.debug(`📂 Local scan: ${relevantGames.length} relevant games (of ${(scanResult || []).length} total)`);
+
+      for (const g of relevantGames) {
+        const appId = g.steam_app_id ? String(g.steam_app_id) : g.id.replace('steam_', '').replace('steam_shared_', '');
+        localScanData.set(appId, {
+          is_installed: g.is_installed,
+          is_shared: g.is_shared,
+          title: g.title,
+          engine: g.engine || null,
+          last_played: g.last_played || null,
+          added_date: g.added_date || null,
+          install_path: g.install_path || null,
         });
       }
-      
-      // 3️⃣ Aggiungi anche i giochi dall'API che NON sono installati localmente
-      // (giochi posseduti ma non scaricati)
-      for (const [appId, apiGame] of apiGames.entries()) {
-        if (!seenIds.has(appId)) {
-          seenIds.add(appId);
-          finalGames.push({
-            ...apiGame,
-            is_installed: false,
-            isShared: false,
-          });
+
+      // Costruisci lista iniziale: giochi locali Steam + altri store
+      const finalGamesMap: Map<string, Game> = new Map();
+
+      // Aggiungi giochi locali Steam (installati/shared)
+      for (const [appId, localData] of localScanData) {
+        if (isSoftware(localData.title)) continue;
+        finalGamesMap.set(appId, {
+          id: localData.is_shared ? `steam_shared_${appId}` : `steam_${appId}`,
+          app_id: appId,
+          title: localData.title,
+          platform: 'Steam',
+          header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+          is_installed: localData.is_installed,
+          isShared: localData.is_shared,
+          is_vr: false,
+          engine: localData.engine || null,
+          supported_languages: [],
+          last_played: localData.last_played || undefined,
+          added_date: localData.added_date || undefined,
+          install_dir: localData.install_path || undefined,
+        });
+      }
+
+      // Aggiungi altri store (Epic, GOG, Xbox, etc.)
+      const nonSteamGames = (otherStoreGames || []).filter(g => {
+        if (g.platform === 'Steam' || g.id?.startsWith('steam_')) return false;
+        return !isSoftware(g.title);
+      });
+      if (nonSteamGames.length > 0) {
+        clientLogger.debug(`🎮 Other stores: ${nonSteamGames.length} games found`);
+        for (const g of nonSteamGames) {
+          const gameId = g.id || `${g.platform}_${g.app_id || g.title}`;
+          if (!finalGamesMap.has(gameId)) {
+            finalGamesMap.set(gameId, {
+              id: gameId,
+              app_id: g.app_id || gameId,
+              title: g.title,
+              platform: g.platform,
+              header_image: g.header_image || null,
+              is_installed: g.is_installed,
+              isShared: false,
+              is_vr: g.is_vr || false,
+              engine: g.engine || null,
+              supported_languages: g.supported_languages || [],
+              genres: g.genres || [],
+              last_played: g.last_played,
+              install_dir: (g as { install_path?: string; path?: string }).install_path || g.path || undefined,
+            });
+          }
         }
       }
-      
-      // Sort per titolo
-      finalGames.sort((a, b) => a.title.localeCompare(b.title));
 
-      setGames(mergeManual(finalGames));
-      
-      // Mostra notifica con results
-      const gamesWithName = finalGames.filter(g => !g.title.startsWith('Game ') && !g.title.startsWith('Shared Game ')).length;
-      toast.success(t('libraryPage.scanDone'), {
-        description: `Found ${finalGames.length} total games (${gamesWithName} with name)`,
-        duration: 5000,
+      // ═══════════════════════════════════════════════════════════
+      // FASE 3: UI SBLOCCATA! Mostra giochi locali + altri store
+      // ═══════════════════════════════════════════════════════════
+      const quickGames = Array.from(finalGamesMap.values());
+      clientLogger.debug(`⚡ Quick render in ${Math.round(performance.now() - t0)}ms: ${quickGames.length} giochi (locali + altri store)`);
+      // Completa solo senza API Steam in arrivo e senza fonti fallite: altrimenti i giochi
+      // posseduti non installati sparirebbero finché l'API non risponde (o per sempre se fallisce)
+      applyGames(quickGames, !steamConfigured && failedSources.length === 0);
+      setIsLoading(false); // UI sbloccata!
+
+      // ═══════════════════════════════════════════════════════════
+      // FASE 4: Steam API arricchisce in background (30-40s)
+      //         Aggiunge giochi owned non installati + nomi corretti
+      // ═══════════════════════════════════════════════════════════
+      // Risolve a false se l'API Steam era attesa ma è fallita o vuota (la lista unita in FASE 3 resta)
+      const steamEnrichment: Promise<boolean> = steamApiPromise.then(apiResult => {
+        if (!apiResult || apiResult.length === 0) {
+          if (steamConfigured) clientLogger.warn('⚠️ Steam API returned no games, keeping the current library');
+          return !steamConfigured;
+        }
+
+        clientLogger.debug(`📊 Steam API arrived: ${apiResult.length} owned games`);
+        let added = 0;
+        let enriched = 0;
+
+        type SteamApiGame = { appid: number; name: string; is_vr?: boolean; rtime_last_played?: number; last_played?: number; supported_languages?: string | string[]; engine?: string | null };
+        for (const g of apiResult as SteamApiGame[]) {
+          const appId = String(g.appid);
+          if (isSoftware(g.name)) continue;
+          const localData = localScanData.get(appId);
+          const existing = finalGamesMap.get(appId);
+
+          if (existing) {
+            // Arricchisci: aggiorna nome (API ha nomi migliori) e dati
+            existing.title = g.name || existing.title;
+            existing.isShared = false; // Se è nell'API owned, non è shared
+            existing.id = `steam_${appId}`;
+            existing.is_vr = g.is_vr || existing.is_vr || false;
+            existing.last_played = g.rtime_last_played || g.last_played || existing.last_played;
+            if (typeof g.supported_languages === 'string') {
+              existing.supported_languages = g.supported_languages.split(',').map((l: string) => l.trim());
+            } else if (g.supported_languages?.length) {
+              existing.supported_languages = g.supported_languages;
+            }
+            enriched++;
+          } else {
+            // Nuovo gioco owned ma non installato
+            finalGamesMap.set(appId, {
+              id: `steam_${appId}`,
+              app_id: appId,
+              title: g.name,
+              platform: 'Steam',
+              header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+              is_installed: false,
+              isShared: false,
+              is_vr: g.is_vr || false,
+              engine: localData?.engine || g.engine || null,
+              supported_languages: typeof g.supported_languages === 'string'
+                ? g.supported_languages.split(',').map((l: string) => l.trim())
+                : (g.supported_languages || []),
+              last_played: g.rtime_last_played || g.last_played || undefined,
+              added_date: localData?.added_date || undefined,
+            });
+            added++;
+          }
+        }
+
+        // Aggiorna UI con la lista completa
+        const fullGames = Array.from(finalGamesMap.values());
+        clientLogger.debug(`✅ Steam API enrichment: +${added} new, ${enriched} enriched → ${fullGames.length} total (${Math.round(performance.now() - t0)}ms)`);
+        const complete = failedSources.length === 0;
+        applyGames(fullGames, complete);
+
+        // Salva la lista completa in IndexedDB (non una lista a cui manca uno store fallito)
+        if (complete) {
+          set('gs_library_games', fullGames).catch(() => {});
+          set('lastSteamScan', new Date().toISOString()).catch(() => {});
+        }
+        return true;
+      }).catch(e => {
+        clientLogger.warn('⚠️ Steam API enrichment failed:', e);
+        return false;
       });
-      
-      clientLogger.debug(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
-      
+
+      // ═══════════════════════════════════════════════════════════
+      // FASE 5: Operazioni deferred (non bloccano il rendering)
+      // ═══════════════════════════════════════════════════════════
+      const initialGames = Array.from(finalGamesMap.values());
+      const steamCount = initialGames.filter(g => g.platform === 'Steam').length;
+      const epicCount = initialGames.filter(g => g.platform === 'Epic Games').length;
+      const otherCount = initialGames.filter(g => g.platform !== 'Steam' && g.platform !== 'Epic Games').length;
+      const installedCount = initialGames.filter(g => g.is_installed).length;
+      clientLogger.debug(`📋 Initial: ${initialGames.length} games (Steam: ${steamCount}, Epic: ${epicCount}, Other: ${otherCount}, Installed: ${installedCount})`);
+
+      // Deferred: salva cache e date in background
+      const deferWork = async () => {
+        // Salva in IndexedDB solo se non esiste già una cache più grande (evita sovrascrivere 786 con 147)
+        // e mai se una fonte è fallita: alla lista mancherebbe uno store
+        const existing = await get<Game[]>('gs_library_games').catch(() => null);
+        if (failedSources.length === 0 && (!existing || existing.length <= initialGames.length)) {
+          set('gs_library_games', initialGames).catch(() => {});
+          set('lastSteamScan', new Date().toISOString()).catch(() => {});
+        }
+
+        // Salva date di aggiunta
+        const gameIds = initialGames.map(g => g.app_id || g.id);
+        invoke<Record<string, number>>('save_batch_added_dates', { gameIds }).then(updatedDates => {
+          if (updatedDates) {
+            setAddedDatesCache(updatedDates);
+            clientLogger.debug(`[Library] 📅 Date aggiunta aggiornate: ${Object.keys(updatedDates).length} giochi`);
+          }
+        }).catch(() => {});
+
+        // Track activity
+        activityHistory.trackSteamSync(initialGames.length).catch(() => {});
+
+        // ── Check aggiornamenti giochi tracciati ──
+        try {
+          const tracked = await invoke<Record<string, unknown>>('get_all_tracked_games');
+          if (tracked && Object.keys(tracked).length > 0) {
+            const updatedGames: string[] = [];
+            const brokenPatches: string[] = [];
+
+            const installedSteam = initialGames.filter(
+              g => g.platform === 'Steam' && g.is_installed && g.install_dir && g.app_id
+            );
+
+            // Controlla solo i giochi che hanno tracking attivo
+            const toCheck = installedSteam.filter(g => {
+              const key = `steam_${g.app_id}`;
+              return tracked[key];
+            });
+
+            // Check in parallelo (max 10 alla volta per non sovraccaricare)
+            const BATCH = 10;
+            for (let i = 0; i < toCheck.length; i += BATCH) {
+              const batch = toCheck.slice(i, i + BATCH);
+              const results = await Promise.all(
+                batch.map(g =>
+                  invoke<unknown>('check_game_update', {
+                    appId: g.app_id,
+                    gamePath: g.install_dir,
+                  }).catch(() => null)
+                )
+              );
+              results.forEach((r, idx) => {
+                if (!r) return;
+                const result = r as { update_detected?: boolean; patch_intact?: boolean; patch_type?: string };
+                const game = batch[idx];
+                if (result.update_detected) updatedGames.push(game.title);
+                if (!result.patch_intact && result.patch_type !== 'none') brokenPatches.push(game.title);
+              });
+            }
+
+            if (updatedGames.length > 0 || brokenPatches.length > 0) {
+              const parts: string[] = [];
+              if (updatedGames.length > 0) {
+                parts.push(`🔄 ${updatedGames.length} ${updatedGames.length === 1 ? 'gioco aggiornato' : 'giochi aggiornati'}: ${updatedGames.slice(0, 3).join(', ')}${updatedGames.length > 3 ? ` (+${updatedGames.length - 3})` : ''}`);
+              }
+              if (brokenPatches.length > 0) {
+                parts.push(`⚠️ ${brokenPatches.length} patch ${brokenPatches.length === 1 ? 'danneggiata' : 'danneggiate'}: ${brokenPatches.slice(0, 3).join(', ')}${brokenPatches.length > 3 ? ` (+${brokenPatches.length - 3})` : ''}`);
+              }
+
+              toast.warning(t('common.aggiornamentiRilevati'), {
+                description: parts.join('\n'),
+                duration: 12000,
+              });
+              clientLogger.debug(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
+            }
+          }
+        } catch (e: unknown) {
+          clientLogger.warn(`[Library] Update check failed: ${String(e)}`);
+        }
+      };
+
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(deferWork, { timeout: 3000 });
+      } else {
+        setTimeout(deferWork, 500);
+      }
+
+      // Lingue in background (molto bassa priorità, dopo che Steam API è arrivata)
+      setTimeout(() => {
+        const loadLanguagesInBackground = async () => {
+          try {
+            const existingCache = _libCache.lang.loaded
+              ? _libCache.lang.data
+              : await invoke<Record<string, string[]>>('get_languages_cache');
+            const allCurrentGames = Array.from(finalGamesMap.values());
+            const steamOnly = allCurrentGames.filter(g => g.platform === 'Steam' && g.app_id);
+            const gamesToFetch = steamOnly.filter(g => !existingCache[g.app_id!]);
+
+            if (gamesToFetch.length === 0) return;
+
+            clientLogger.debug(`[Library] 🌍 Caricamento lingue per ${gamesToFetch.length} giochi in background...`);
+            const before = Object.keys(existingCache).length;
+            const newCache = await scanGameLanguages(gamesToFetch, existingCache, {
+              onItem: (appId, langs) => {
+                _libCache.lang.data = { ..._libCache.lang.data, [appId]: langs };
+                setLanguagesCache((prev) => ({ ...prev, [appId]: langs }));
+              },
+            });
+            if (Object.keys(newCache).length > before) {
+              _libCache.lang.data = newCache;
+              _libCache.lang.loaded = true;
+              await invoke('save_languages_cache', { languages: newCache });
+              setLanguagesCache(newCache);
+              clientLogger.debug(`[Library] 🌍 Salvate ${Object.keys(newCache).length - before} nuove lingue in cache`);
+            }
+          } catch (e: unknown) {
+            clientLogger.warn(`[Library] Errore caricamento lingue: ${String(e)}`);
+          }
+        };
+        loadLanguagesInBackground();
+      }, 8000); // Aspetta 8s — dà tempo a Steam API di arrivare prima
+
+      return { failedSources, steamConfigured, steamEnrichment };
     } catch (error: unknown) {
-      clientLogger.error(`[LIBRARY] ❌ error scan: ${String(error)}`);
-      toast.error(t('libraryPage.scanError'), {
-        description: String(error),
-      });
-    } finally {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      clientLogger.error('❌ Library loading error:', errorMsg);
       setIsLoading(false);
+      // In background resta la lista già mostrata: una rivalidazione fallita non deve svuotarla
+      if (!background) {
+        setGamesWithValidation([]);
+        setError(`Unable to load games: ${errorMsg}`);
+      }
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
+  // Pulsante Scan: riscansiona l'intera libreria multi-store (Steam, Epic, GOG, Xbox...)
+  // con la stessa pipeline dell'avvio, invece di sostituirla con i soli giochi Steam
+  const handleScan = async () => {
+    const outcome = await fetchGames(false);
+    if (!outcome) {
+      toast.error(t('libraryPage.scanError'));
+      return;
+    }
+    if (!outcome.steamConfigured) {
+      toast.warning(t('common.credenzialiSteamNonConfigurate'), {
+        description: t('libraryPage.steamCredsHint'),
+        duration: 8000,
+      });
+    }
+    const steamOk = await outcome.steamEnrichment;
+    if (outcome.failedSources.length > 0 || !steamOk) {
+      clientLogger.warn(`[Library] Scan incompleto: fonti fallite [${outcome.failedSources.join(', ')}], API Steam ${steamOk ? 'ok' : 'fallita'}`);
+      toast.warning(t('libraryPage.scanPartial'), { duration: 8000 });
+    } else {
+      toast.success(t('libraryPage.libraryScanDone'));
     }
   };
 
@@ -801,362 +1087,8 @@ function LibraryListView() {
       fetchGames();
     };
 
-    const fetchGames = async (background = false) => {
-      try {
-        // Non mostrare loading spinner se background revalidate
-        if (!background) {
-          setIsLoading(true);
-        }
-        const t0 = performance.now();
-        clientLogger.debug('🚀 FAST LIBRARY LOADING (parallel)...');
-
-        // Blacklist software (condivisa)
-        const softwareBlacklist = [
-          'twinmotion', 'steamvr', 'unreal editor', 'unity',
-          'blender', 'godot', 'sdk', 'dedicated server', 'tool',
-          'ea desktop', 'ea app', 'origin', 'launcher', 'social club',
-          'rockstar games launcher', 'ubisoft connect', 'uplay',
-          'epic games launcher', 'gog galaxy', 'battle.net',
-          'unity hub', 'unity editor'
-        ];
-        const isSoftware = (name: string) => {
-          const lower = (name || '').toLowerCase();
-          return softwareBlacklist.some(sw => lower.includes(sw));
-        };
-
-        // ═══════════════════════════════════════════════════════════
-        // FASE 1: Lancia TUTTE le chiamate in parallelo
-        // ═══════════════════════════════════════════════════════════
-        const localScanPromise = invoke('scan_all_steam_games_fast').catch(e => {
-          clientLogger.warn('⚠️ Local scan failed:', e);
-          return [] as unknown[];
-        }) as Promise<Array<{
-          id: string; title: string; platform: string; install_path: string | null;
-          header_image: string | null; is_installed: boolean; steam_app_id: number | null;
-          is_shared: boolean; engine?: string | null; supported_languages?: string | null;
-          last_played?: number | null; added_date?: number | null;
-        }>>;
-
-        const credsPromise = invoke('load_steam_credentials').catch(() => null) as Promise<{ api_key_encrypted?: string; steam_id?: string } | null>;
-
-        // Altri store (Epic, GOG, Origin, Ubisoft, etc.) — con timeout 15s
-        const otherStoresPromise = Promise.race([
-          invoke('scan_games'),
-          new Promise<unknown[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
-        ]).catch(e => {
-          clientLogger.warn('⚠️ Other stores scan failed:', e);
-          return [] as unknown[];
-        }) as Promise<Array<{
-          id: string; title: string; platform: string; path: string;
-          app_id?: string; header_image?: string; is_installed: boolean;
-          is_vr?: boolean; engine?: string; supported_languages?: string[];
-          genres?: string[]; last_played?: number;
-        }>>;
-
-        // Lancia anche API Steam (lenta, ~30-40s) in parallelo — NON attendiamo
-        const steamApiPromise = credsPromise.then(async (credentials) => {
-          const creds = credentials as { api_key_encrypted?: string; steam_id?: string } | null;
-          if (!creds?.api_key_encrypted || !creds?.steam_id) return null;
-          try {
-            clientLogger.debug('🔑 Calling Steam API (background)...');
-            return await invoke('get_steam_games', {
-              apiKey: creds.api_key_encrypted,
-              steamId: creds.steam_id,
-              forceRefresh: false
-            }) as unknown[];
-          } catch (e: unknown) {
-            clientLogger.warn(`⚠️ Steam API failed: ${String(e)}`);
-            return null;
-          }
-        });
-
-        // ═══════════════════════════════════════════════════════════
-        // FASE 2: Attendi SOLO scan locale + altri store (veloci, <2s)
-        //         NON aspettiamo Steam API (lenta, 30-40s)
-        // ═══════════════════════════════════════════════════════════
-        const [scanResult, otherStoreGames] = await Promise.all([localScanPromise, otherStoresPromise]);
-
-        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null; install_path?: string | null }> = new Map();
-        const relevantGames = (scanResult || []).filter(g => g.is_installed || g.is_shared);
-        clientLogger.debug(`📂 Local scan: ${relevantGames.length} relevant games (of ${(scanResult || []).length} total)`);
-
-        for (const g of relevantGames) {
-          const appId = g.steam_app_id ? String(g.steam_app_id) : g.id.replace('steam_', '').replace('steam_shared_', '');
-          localScanData.set(appId, {
-            is_installed: g.is_installed,
-            is_shared: g.is_shared,
-            title: g.title,
-            engine: g.engine || null,
-            last_played: g.last_played || null,
-            added_date: g.added_date || null,
-            install_path: g.install_path || null,
-          });
-        }
-
-        // Costruisci lista iniziale: giochi locali Steam + altri store
-        const finalGamesMap: Map<string, Game> = new Map();
-
-        // Aggiungi giochi locali Steam (installati/shared)
-        for (const [appId, localData] of localScanData) {
-          if (isSoftware(localData.title)) continue;
-          finalGamesMap.set(appId, {
-            id: localData.is_shared ? `steam_shared_${appId}` : `steam_${appId}`,
-            app_id: appId,
-            title: localData.title,
-            platform: 'Steam',
-            header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
-            is_installed: localData.is_installed,
-            isShared: localData.is_shared,
-            is_vr: false,
-            engine: localData.engine || null,
-            supported_languages: [],
-            last_played: localData.last_played || undefined,
-            added_date: localData.added_date || undefined,
-            install_dir: localData.install_path || undefined,
-          });
-        }
-
-        // Aggiungi altri store (Epic, GOG, Xbox, etc.)
-        const nonSteamGames = (otherStoreGames || []).filter(g => {
-          if (g.platform === 'Steam' || g.id?.startsWith('steam_')) return false;
-          return !isSoftware(g.title);
-        });
-        if (nonSteamGames.length > 0) {
-          clientLogger.debug(`🎮 Other stores: ${nonSteamGames.length} games found`);
-          for (const g of nonSteamGames) {
-            const gameId = g.id || `${g.platform}_${g.app_id || g.title}`;
-            if (!finalGamesMap.has(gameId)) {
-              finalGamesMap.set(gameId, {
-                id: gameId,
-                app_id: g.app_id || gameId,
-                title: g.title,
-                platform: g.platform,
-                header_image: g.header_image || null,
-                is_installed: g.is_installed,
-                isShared: false,
-                is_vr: g.is_vr || false,
-                engine: g.engine || null,
-                supported_languages: g.supported_languages || [],
-                genres: g.genres || [],
-                last_played: g.last_played,
-                install_dir: (g as { install_path?: string; path?: string }).install_path || g.path || undefined,
-              });
-            }
-          }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // FASE 3: UI SBLOCCATA! Mostra giochi locali + altri store
-        // ═══════════════════════════════════════════════════════════
-        const quickGames = Array.from(finalGamesMap.values());
-        clientLogger.debug(`⚡ Quick render in ${Math.round(performance.now() - t0)}ms: ${quickGames.length} giochi (locali + altri store)`);
-        setGamesWithValidation(quickGames);
-        setIsLoading(false); // UI sbloccata!
-
-        // ═══════════════════════════════════════════════════════════
-        // FASE 4: Steam API arricchisce in background (30-40s)
-        //         Aggiunge giochi owned non installati + nomi corretti
-        // ═══════════════════════════════════════════════════════════
-        steamApiPromise.then(apiResult => {
-          if (!apiResult || apiResult.length === 0) return;
-
-          clientLogger.debug(`📊 Steam API arrived: ${apiResult.length} owned games`);
-          let added = 0;
-          let enriched = 0;
-
-          type SteamApiGame = { appid: number; name: string; is_vr?: boolean; rtime_last_played?: number; last_played?: number; supported_languages?: string | string[]; engine?: string | null };
-          for (const g of apiResult as SteamApiGame[]) {
-            const appId = String(g.appid);
-            if (isSoftware(g.name)) continue;
-            const localData = localScanData.get(appId);
-            const existing = finalGamesMap.get(appId);
-
-            if (existing) {
-              // Arricchisci: aggiorna nome (API ha nomi migliori) e dati
-              existing.title = g.name || existing.title;
-              existing.isShared = false; // Se è nell'API owned, non è shared
-              existing.id = `steam_${appId}`;
-              existing.is_vr = g.is_vr || existing.is_vr || false;
-              existing.last_played = g.rtime_last_played || g.last_played || existing.last_played;
-              if (typeof g.supported_languages === 'string') {
-                existing.supported_languages = g.supported_languages.split(',').map((l: string) => l.trim());
-              } else if (g.supported_languages?.length) {
-                existing.supported_languages = g.supported_languages;
-              }
-              enriched++;
-            } else {
-              // Nuovo gioco owned ma non installato
-              finalGamesMap.set(appId, {
-                id: `steam_${appId}`,
-                app_id: appId,
-                title: g.name,
-                platform: 'Steam',
-                header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
-                is_installed: false,
-                isShared: false,
-                is_vr: g.is_vr || false,
-                engine: localData?.engine || g.engine || null,
-                supported_languages: typeof g.supported_languages === 'string'
-                  ? g.supported_languages.split(',').map((l: string) => l.trim())
-                  : (g.supported_languages || []),
-                last_played: g.rtime_last_played || g.last_played || undefined,
-                added_date: localData?.added_date || undefined,
-              });
-              added++;
-            }
-          }
-
-          // Aggiorna UI con la lista completa
-          const fullGames = Array.from(finalGamesMap.values());
-          clientLogger.debug(`✅ Steam API enrichment: +${added} new, ${enriched} enriched → ${fullGames.length} total (${Math.round(performance.now() - t0)}ms)`);
-          setGamesWithValidation(fullGames);
-
-          // Salva la lista completa in IndexedDB
-          set('gs_library_games', fullGames).catch(() => {});
-          set('lastSteamScan', new Date().toISOString()).catch(() => {});
-        }).catch(e => clientLogger.warn('⚠️ Steam API enrichment failed:', e));
-
-        // ═══════════════════════════════════════════════════════════
-        // FASE 5: Operazioni deferred (non bloccano il rendering)
-        // ═══════════════════════════════════════════════════════════
-        const initialGames = Array.from(finalGamesMap.values());
-        const steamCount = initialGames.filter(g => g.platform === 'Steam').length;
-        const epicCount = initialGames.filter(g => g.platform === 'Epic Games').length;
-        const otherCount = initialGames.filter(g => g.platform !== 'Steam' && g.platform !== 'Epic Games').length;
-        const installedCount = initialGames.filter(g => g.is_installed).length;
-        clientLogger.debug(`📋 Initial: ${initialGames.length} games (Steam: ${steamCount}, Epic: ${epicCount}, Other: ${otherCount}, Installed: ${installedCount})`);
-
-        // Deferred: salva cache e date in background
-        const deferWork = async () => {
-          // Salva in IndexedDB solo se non esiste già una cache più grande (evita sovrascrivere 786 con 147)
-          const existing = await get<Game[]>('gs_library_games').catch(() => null);
-          if (!existing || existing.length <= initialGames.length) {
-            set('gs_library_games', initialGames).catch(() => {});
-            set('lastSteamScan', new Date().toISOString()).catch(() => {});
-          }
-
-          // Salva date di aggiunta
-          const gameIds = initialGames.map(g => g.app_id || g.id);
-          invoke<Record<string, number>>('save_batch_added_dates', { gameIds }).then(updatedDates => {
-            if (updatedDates) {
-              setAddedDatesCache(updatedDates);
-              clientLogger.debug(`[Library] 📅 Date aggiunta aggiornate: ${Object.keys(updatedDates).length} giochi`);
-            }
-          }).catch(() => {});
-
-          // Track activity
-          activityHistory.trackSteamSync(initialGames.length).catch(() => {});
-
-          // ── Check aggiornamenti giochi tracciati ──
-          try {
-            const tracked = await invoke<Record<string, unknown>>('get_all_tracked_games');
-            if (tracked && Object.keys(tracked).length > 0) {
-              const updatedGames: string[] = [];
-              const brokenPatches: string[] = [];
-
-              const installedSteam = initialGames.filter(
-                g => g.platform === 'Steam' && g.is_installed && g.install_dir && g.app_id
-              );
-
-              // Controlla solo i giochi che hanno tracking attivo
-              const toCheck = installedSteam.filter(g => {
-                const key = `steam_${g.app_id}`;
-                return tracked[key];
-              });
-
-              // Check in parallelo (max 10 alla volta per non sovraccaricare)
-              const BATCH = 10;
-              for (let i = 0; i < toCheck.length; i += BATCH) {
-                const batch = toCheck.slice(i, i + BATCH);
-                const results = await Promise.all(
-                  batch.map(g =>
-                    invoke<unknown>('check_game_update', {
-                      appId: g.app_id,
-                      gamePath: g.install_dir,
-                    }).catch(() => null)
-                  )
-                );
-                results.forEach((r, idx) => {
-                  if (!r) return;
-                  const result = r as { update_detected?: boolean; patch_intact?: boolean; patch_type?: string };
-                  const game = batch[idx];
-                  if (result.update_detected) updatedGames.push(game.title);
-                  if (!result.patch_intact && result.patch_type !== 'none') brokenPatches.push(game.title);
-                });
-              }
-
-              if (updatedGames.length > 0 || brokenPatches.length > 0) {
-                const parts: string[] = [];
-                if (updatedGames.length > 0) {
-                  parts.push(`🔄 ${updatedGames.length} ${updatedGames.length === 1 ? 'gioco aggiornato' : 'giochi aggiornati'}: ${updatedGames.slice(0, 3).join(', ')}${updatedGames.length > 3 ? ` (+${updatedGames.length - 3})` : ''}`);
-                }
-                if (brokenPatches.length > 0) {
-                  parts.push(`⚠️ ${brokenPatches.length} patch ${brokenPatches.length === 1 ? 'danneggiata' : 'danneggiate'}: ${brokenPatches.slice(0, 3).join(', ')}${brokenPatches.length > 3 ? ` (+${brokenPatches.length - 3})` : ''}`);
-                }
-
-                toast.warning(t('common.aggiornamentiRilevati'), {
-                  description: parts.join('\n'),
-                  duration: 12000,
-                });
-                clientLogger.debug(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
-              }
-            }
-          } catch (e: unknown) {
-            clientLogger.warn(`[Library] Update check failed: ${String(e)}`);
-          }
-        };
-
-        if (typeof requestIdleCallback !== 'undefined') {
-          requestIdleCallback(deferWork, { timeout: 3000 });
-        } else {
-          setTimeout(deferWork, 500);
-        }
-
-        // Lingue in background (molto bassa priorità, dopo che Steam API è arrivata)
-        setTimeout(() => {
-          const loadLanguagesInBackground = async () => {
-            try {
-              const existingCache = _libCache.lang.loaded
-                ? _libCache.lang.data
-                : await invoke<Record<string, string[]>>('get_languages_cache');
-              const allCurrentGames = Array.from(finalGamesMap.values());
-              const steamOnly = allCurrentGames.filter(g => g.platform === 'Steam' && g.app_id);
-              const gamesToFetch = steamOnly.filter(g => !existingCache[g.app_id!]);
-
-              if (gamesToFetch.length === 0) return;
-
-              clientLogger.debug(`[Library] 🌍 Caricamento lingue per ${gamesToFetch.length} giochi in background...`);
-              const before = Object.keys(existingCache).length;
-              const newCache = await scanGameLanguages(gamesToFetch, existingCache, {
-                onItem: (appId, langs) => {
-                  _libCache.lang.data = { ..._libCache.lang.data, [appId]: langs };
-                  setLanguagesCache((prev) => ({ ...prev, [appId]: langs }));
-                },
-              });
-              if (Object.keys(newCache).length > before) {
-                _libCache.lang.data = newCache;
-                _libCache.lang.loaded = true;
-                await invoke('save_languages_cache', { languages: newCache });
-                setLanguagesCache(newCache);
-                clientLogger.debug(`[Library] 🌍 Salvate ${Object.keys(newCache).length - before} nuove lingue in cache`);
-              }
-            } catch (e: unknown) {
-              clientLogger.warn(`[Library] Errore caricamento lingue: ${String(e)}`);
-            }
-          };
-          loadLanguagesInBackground();
-        }, 8000); // Aspetta 8s — dà tempo a Steam API di arrivare prima
-
-      } catch (error: unknown) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        clientLogger.error('❌ Library loading error:', errorMsg);
-        setGamesWithValidation([]);
-        setError(`Unable to load games: ${errorMsg}`);
-        setIsLoading(false);
-      }
-    };
-
     checkCacheAndFetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Carica solo una volta all'avvio
 
   const handleForceRefresh = (freshGames: Game[]) => {
@@ -1182,7 +1114,8 @@ function LibraryListView() {
   // Estrai le piattaforme, engine, lingue e generi unici dai games caricati
   const safeGames = useMemo(() => ensureArray<Game>(games), [games]);
   const platforms = useMemo(() => ['All', ...new Set(safeGames.map(game => game.platform))], [safeGames]);
-  const _engines = useMemo(() => ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))], [safeGames]);
+  // Chip motore generati dai motori rilevati (+ "Unknown" se c'è un gioco senza motore)
+  const engineChips = useMemo(() => buildEngineChips(safeGames.map(game => game.engine), selectedEngines), [safeGames, selectedEngines]);
   const _languages = useMemo(() => {
     const allLanguages = safeGames.flatMap(game => game.supported_languages || []);
     const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
@@ -1203,10 +1136,8 @@ function LibraryListView() {
         
         const matchesSearch = fuzzyMatch(game.title ?? '', debouncedSearchTerm);
         const matchesPlatform = selectedPlatforms.length === 0 || selectedPlatforms.includes(game.platform);
-        const matchesEngine = selectedEngines.length === 0 || selectedEngines.some(eng => 
-          (game.engine || 'Unknown').toLowerCase().includes(eng.toLowerCase()) || 
-          eng.toLowerCase().includes((game.engine || '').toLowerCase())
-        );
+        // Motore vuoto = solo "Unknown": prima 'unity'.includes('') lo faceva passare sotto ogni chip
+        const matchesEngine = matchesEngineFilter(game.engine, selectedEngines);
         const matchesLanguage = selectedLanguages.length === 0 || (game.supported_languages && game.supported_languages.some(lang => selectedLanguages.includes(normalizeLanguage(lang))));
         const matchesGenre = selectedGenres.length === 0 || (game.genres && game.genres.some(g => selectedGenres.includes(g)));
         
@@ -1347,13 +1278,7 @@ function LibraryListView() {
               >
                 <Sparkles className="h-4 w-4" />
               </button>
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                className="bg-sky-600/90 hover:bg-sky-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-sky-500/50 hover:scale-110 border border-sky-400/30"
-                title={t('common.batch')}
-              >
-                <FolderOpen className="h-4 w-4" />
-              </button>
+              {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
                 className="bg-violet-600/90 hover:bg-violet-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-violet-500/50 hover:scale-110 border border-violet-400/30"
@@ -1402,7 +1327,7 @@ function LibraryListView() {
         </div>
       </Link>
     );
-  }, [filteredGames, coverCache, getGameDetailUrl, languagesCache]);
+  }, [filteredGames, coverCache, languagesCache]);
 
   const scanLanguagesNow = useCallback(async () => {
     if (isScanningLangs) {
@@ -1632,13 +1557,7 @@ function LibraryListView() {
                         <Sparkles className="h-3 w-3" />
                         String it!
                       </button>
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                        className="flex items-center gap-1 bg-sky-600/90 hover:bg-sky-500 px-2.5 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-sky-500/30"
-                        title={t('common.batchTranslate')}
-                      >
-                        <FolderOpen className="h-3 w-3" />
-                      </button>
+                      {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
                     </div>
                   </div>
                 </Link>
@@ -1752,9 +1671,10 @@ function LibraryListView() {
               <span className="text-[11px] font-semibold tracking-wide">{isAddingGame ? t('heroJob.addingGame') : t('heroJob.addGame')}</span>
             </button>
             <ForceRefreshButton onRefreshComplete={(games: unknown[]) => handleForceRefresh(games as Game[])} />
-            <button 
-              onClick={testFamilySharing} 
-              className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30"
+            <button
+              onClick={handleScan}
+              disabled={isLoading}
+              className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30 disabled:opacity-60"
               title={t('libraryPage.rescanTitle')}
             >
               <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
@@ -1799,10 +1719,21 @@ function LibraryListView() {
                         setShowMoreActions(false);
                         toast.info(lib.downloadingNames);
                         try {
-                          const result = await invoke<Record<string, Game>>('update_remote_game_database');
-                          const updatedGames = Object.values(result ?? {}) as Game[];
-                          setGames(mergeManual(updatedGames));
-                          toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
+                          // Il comando restituisce la cache Steam grezza (steam_app_id, install_path...):
+                          // la usiamo solo come mappa di nomi, senza mai sostituire la libreria
+                          const result = await invoke<Array<{ steam_app_id?: number | null; title?: string | null }>>('update_remote_game_database');
+                          const { updated } = applySteamTitles(games, result);
+                          setGames(prev => {
+                            const next = applySteamTitles(prev, result).games;
+                            if (next !== prev) {
+                              _libCache.games.data = next;
+                              _libCache.games.loaded = true;
+                            }
+                            return next;
+                          });
+                          const message = `${lib.databaseUpdated} ${updated} ${lib.games}`;
+                          if (updated > 0) toast.success(message);
+                          else toast.info(message);
                         } catch (e: unknown) {
                           toast.error(lib.updateError + ': ' + e);
                         }
@@ -1967,7 +1898,7 @@ function LibraryListView() {
                 <Wrench className="h-3 w-3" /> {lib.engine}
               </span>
               <div className="flex flex-wrap gap-2">
-                {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
+                {engineChips.map(eng => (
                   <button key={eng} onClick={() => toggleFilter(selectedEngines, setSelectedEngines, eng)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedEngines.includes(eng) 

@@ -80,7 +80,10 @@ export function VROverlayPanel() {
       setIsRunning(false);
       toast.success(t('vrOverlay.stopped'));
     } else {
-      vrOverlayService.start();
+      if (!vrOverlayService.start()) {
+        toast.error(t('vrOverlay.notConnected'));
+        return;
+      }
       setIsRunning(true);
       toast.success(t('vrOverlay.started'));
     }

@@ -32,6 +32,61 @@ import { formatDistanceToNow } from 'date-fns';
 import { getAvatarGradient, getInitials } from '@/lib/avatar-utils';
 import { AlphabetBackground } from '@/components/ui/alphabet-background';
 import { clientLogger } from '@/lib/client-logger';
+import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
+
+// "Ricorda password": la password sta nello store cifrato del backend
+// (set_secure_key, AES-256-GCM), non più in base64 in localStorage (gs_pwd_<id>).
+// security-dialog.tsx aggiorna la stessa chiave dopo un cambio password.
+const rememberedPasswordKey = (profileId: string) => `PROFILE_PASSWORD_${profileId}`;
+const legacyPasswordKey = (profileId: string) => `gs_pwd_${profileId}`;
+
+async function loadRememberedPassword(profileId: string): Promise<string | null> {
+  const name = rememberedPasswordKey(profileId);
+
+  // Migrazione una tantum dal vecchio valore base64: il valore in chiaro
+  // viene tolto da localStorage in ogni caso.
+  let legacy: string | null = null;
+  try {
+    legacy = localStorage.getItem(legacyPasswordKey(profileId));
+    localStorage.removeItem(legacyPasswordKey(profileId));
+  } catch {}
+  if (legacy) {
+    let password: string;
+    try {
+      password = atob(legacy);
+    } catch {
+      return null;
+    }
+    try {
+      await invoke('set_secure_key', { name, value: password });
+    } catch (e: unknown) {
+      clientLogger.warn('Remembered password migration failed:', e);
+    }
+    return password;
+  }
+
+  try {
+    if (!(await invoke<boolean | null>('has_secure_key', { name }))) return null;
+    return (await invoke<string | null>('get_secure_key', { name })) ?? null;
+  } catch (e: unknown) {
+    clientLogger.warn('Could not read remembered password:', e);
+    return null;
+  }
+}
+
+async function saveRememberedPassword(profileId: string, password: string | null): Promise<void> {
+  const name = rememberedPasswordKey(profileId);
+  try {
+    localStorage.removeItem(legacyPasswordKey(profileId));
+    if (password) {
+      await invoke('set_secure_key', { name, value: password });
+    } else {
+      await invoke('remove_secure_key', { name });
+    }
+  } catch (e: unknown) {
+    clientLogger.warn('Could not update remembered password:', e);
+  }
+}
 
 interface ProfileSelectorProps {
   onCreateProfile: () => void;
@@ -54,14 +109,19 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
+  // True while the field holds the remembered password: it can't be revealed until edited
+  const [isRememberedPassword, setIsRememberedPassword] = useState(false);
 
   // Load saved password on mount
   useEffect(() => {
-    const savedPassword = localStorage.getItem(`gs_pwd_${profile.id}`);
-    if (savedPassword) {
-      setPassword(atob(savedPassword)); // Decode base64
-      setRememberPassword(true);
-    }
+    loadRememberedPassword(profile.id).then((savedPassword) => {
+      if (savedPassword) {
+        setPassword(savedPassword);
+        setRememberPassword(true);
+        setIsRememberedPassword(true);
+        setShowPassword(false);
+      }
+    });
   }, [profile.id]);
   
   const { authenticateProfile, deleteProfile, getProfileAvatar, updateProfileAvatar } = useProfiles();
@@ -171,19 +231,16 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
         }));
       } catch {}
       // Save or remove password based on checkbox
-      if (rememberPassword) {
-        localStorage.setItem(`gs_pwd_${profile.id}`, btoa(password)); // Encode base64
-      } else {
-        localStorage.removeItem(`gs_pwd_${profile.id}`);
-      }
+      void saveRememberedPassword(profile.id, rememberPassword ? password : null);
       // 🔄 No onSelect call: UI updates via global state
       // and "profile-auth-changed" event. ProtectedRoute will detect isAuthenticated=true.
     } else {
       setAuthError(t('profile.incorrectPassword'));
       setPassword('');
       // Remove saved password if incorrect
-      localStorage.removeItem(`gs_pwd_${profile.id}`);
+      void saveRememberedPassword(profile.id, null);
       setRememberPassword(false);
+      setIsRememberedPassword(false);
     }
     
     setIsAuthenticating(false);
@@ -212,11 +269,14 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
       // Reset UI on success
       setShowDeleteConfirm(false);
       setPassword('');
+      // Don't leave the deleted profile's password in the encrypted store
+      void saveRememberedPassword(profile.id, null);
     }
-    
+
     setIsDeleting(false);
     setShowDeleteConfirm(false);
     setPassword('');
+    setIsRememberedPassword(false);
   };
 
 
@@ -338,7 +398,10 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         id={`password-${profile.id}`}
                         type={showPassword ? 'text' : 'password'}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setIsRememberedPassword(false);
+                        }}
                         onClick={(e) => e.stopPropagation()}
                         placeholder={t('profile.enterPassword')}
                         className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-indigo-500/50 focus:ring-indigo-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-8 text-sm"
@@ -355,7 +418,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                           e.stopPropagation();
                           setShowPassword(!showPassword);
                         }}
-                        disabled={isAuthenticating}
+                        disabled={isAuthenticating || isRememberedPassword}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -522,18 +585,22 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
       
       // Find profile and saved password
       const profile = profiles.find(p => p.id === profileId);
-      const savedPassword = localStorage.getItem(`gs_pwd_${profileId}`);
-      
-      if (profile && savedPassword) {
+
+      if (profile) {
         setIsAutoLoggingIn(true);
-        const password = atob(savedPassword); // Decode base64
-        
-        // Execute auto-login using profile NAME, not ID
-        authenticateProfile(profile.name, password).then(success => {
-          setIsAutoLoggingIn(false);
-          if (success) {
-            clientLogger.debug('✅ Auto-login completed after language change');
+        loadRememberedPassword(profile.id).then(password => {
+          if (!password) {
+            setIsAutoLoggingIn(false);
+            return;
           }
+
+          // Execute auto-login using profile NAME, not ID
+          return authenticateProfile(profile.name, password).then(success => {
+            setIsAutoLoggingIn(false);
+            if (success) {
+              clientLogger.debug('✅ Auto-login completed after language change');
+            }
+          });
         });
       }
     }

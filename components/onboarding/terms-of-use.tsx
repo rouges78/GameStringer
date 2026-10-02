@@ -11,9 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Shield, AlertTriangle, ShieldAlert, Scale, Server, Globe, Brain, Check } from 'lucide-react';
 import { VisuallyHidden } from 'radix-ui';
 import { useTranslation } from '@/lib/i18n';
-
-const TOS_KEY = 'gamestringer_tos_accepted';
-const TOS_VERSION = 2; // Increment ONLY when TOS content actually changes
+import { TOS_KEY, TOS_VERSION } from './first-run';
 
 export function TermsOfUse() {
   const { t } = useTranslation();

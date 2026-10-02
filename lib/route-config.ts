@@ -67,8 +67,8 @@ export const PUBLIC_ROUTES: readonly { path: string; perche: string }[] = [
 /**
  * NB: `/overlay` e `/vr-overlay` NON sono in questo elenco di proposito.
  * Nonostante il nome sono pagine normali della finestra principale, raggiungibili
- * dal menu (`main-layout.tsx:195`) e dal registro strumenti: vanno protette come
- * tutte le altre. Le finestre trasparenti vere sono solo le tre qui sopra.
+ * dal registro strumenti (Guida) anche ora che `/overlay` è fuori dal menu: vanno
+ * protette come tutte le altre. Le finestre trasparenti vere sono solo le tre qui sopra.
  */
 
 const PUBLIC_PATHS = PUBLIC_ROUTES.map((r) => r.path);

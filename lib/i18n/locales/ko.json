@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "Custom Prompt 설정이 저장되었습니다",
     "settingsReset": "설정이 초기화되었습니다",
-    "title": "사용자 지정 프롬프트 & 보이스",
     "newBadge": "신규 2026",
     "subtitle": "페르소나, 톤, 사용자 지정 프롬프트로 LLM provider 동작을 사용자화하세요",
     "enableCustomPrompt": "Custom Prompt 활성화",
-    "enableDesc": "모든 번역에 사용자 지정 지침을 추가합니다",
     "personaRole": "페르소나 / 역할",
     "personaDesc": "이 캐릭터가 된 것처럼 번역하세요",
     "toneStyle": "톤 / 스타일",
     "customPrompt": "사용자 지정 프롬프트",
     "customPromptDesc": "시스템 프롬프트에 추가될 추가 지침",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "실시간 음성 번역 (40개 이상 언어)",
-    "ttsVoice": "TTS 음성",
-    "preserveVoice": "원본 음성 특성 보존",
-    "preserveVoiceDesc": "원본 음성의 어조, 강조, 스타일을 유지합니다 (베타)",
     "preview": "미리 보기:",
     "reset": "초기화",
     "personaPh": "페르소나 선택...",
     "tonePh": "톤 선택...",
-    "customPromptPh": "예: 고어체 어휘 사용, 격식체로 말하기, 판타지 전용 용어 사용..."
+    "customPromptPh": "예: 고어체 어휘 사용, 격식체로 말하기, 판타지 전용 용어 사용...",
+    "enableDescCloud": "클라우드 AI 제공자(Gemini, OpenAI, Claude, DeepSeek, Groq, Mistral 등)의 번역에 지침을 추가합니다. 로컬 모델(Ollama, LM Studio)과 DeepL 같은 엔진은 사용하지 않습니다."
   },
   "lipSyncPanel": {
     "title": "립싱크 (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "음성 & Provider",
     "defaultVoice": "기본 음성",
     "sttEngine": "STT 엔진",
-    "groqWhisper": "Groq Whisper (빠름)",
     "durationMatching": "길이 일치",
     "lipSync": "립싱크 (Rhubarb)",
     "generateSubtitles": "자막 생성",
@@ -161,7 +154,17 @@
     "errors": "오류",
     "confidence": "신뢰도",
     "audioSegments": "오디오 세그먼트",
-    "selectFolderPrompt": "자동 더빙을 시작할 게임 폴더를 선택하세요. 파이프라인은 다음 순서로 실행됩니다: 오디오 스캔 → Whisper 전사 → AI 번역 → 음성 합성 → 오디오 파일 패치."
+    "selectFolderPrompt": "자동 더빙을 시작할 게임 폴더를 선택하세요. 파이프라인은 다음 순서로 실행됩니다: 오디오 스캔 → Whisper 전사 → AI 번역 → 음성 합성 → 오디오 파일 패치.",
+    "doneToast": "더빙 완료: 오디오 파일 {n}개를 교체했습니다",
+    "partialToast": "더빙 일부 완료: 오디오 파일 {n}개 교체, 오류 {errors}개",
+    "failedToast": "교체된 오디오 파일이 없습니다",
+    "paidConfirmTitle": "유료 음성 인식 확인",
+    "paidConfirmDesc": "게임 폴더에서 오디오 파일 {count}개({size} MB)를 찾았습니다. 음악과 효과음도 포함됩니다. 음성 인식은 각 파일을 음성-텍스트 서비스로 전송합니다: 파일당 유료 호출 1회이며 API 키로 청구됩니다. 음성이 있는 파일은 이후 유료 번역과 음성 합성도 사용합니다.",
+    "paidConfirmProceed": "파일 {count}개 음성 인식",
+    "patchFormatMismatch": "형식 불일치: 합성된 오디오({actual})가 게임 파일(.{expected})과 맞지 않습니다. 오디오 변환을 사용할 수 없어 파일을 변경하지 않았습니다.",
+    "unknownAudioFormat": "알 수 없는 형식",
+    "noCompatibleAudio": "{count}개의 오디오 파일 중 MP3가 없습니다. 음성 합성은 MP3를 만들고 오디오 변환은 사용할 수 없어 게임 파일을 교체할 수 없습니다. 유료 서비스로는 아무것도 보내지 않았습니다.",
+    "groqWhisperUnavailable": "Groq Whisper (아직 사용할 수 없음)"
   },
   "fileSelector": {
     "fromWizard": "Translation Wizard에서 왔습니다",
@@ -615,41 +618,11 @@
     "enterCurrentPassword": "현재 비밀번호를 입력하세요",
     "passwordMinLength": "새 비밀번호는 최소 4자 이상이어야 합니다",
     "passwordChanged": "비밀번호가 성공적으로 변경되었습니다!",
-    "invalidCode": "잘못된 코드",
-    "twoFaDisabledMsg": "2단계 인증이 비활성화되었습니다",
-    "enter6DigitCode": "6자리 코드를 입력하세요",
-    "twoFaEnabledMsg": "2단계 인증이 활성화되었습니다!",
     "passwordsDontMatch": "비밀번호가 일치하지 않습니다",
-    "passwordTab": "비밀번호",
-    "sessionsTab": "세션",
-    "activityTab": "활동",
     "changePassword": "비밀번호 변경",
     "changePasswordDesc": "프로필 비밀번호를 변경하세요",
     "passwordsMatch": "비밀번호가 일치합니다",
-    "sessionManagement": "세션 관리",
-    "sessionMgmtDesc": "시간 초과 및 자동 잠금 구성",
-    "disconnectAfterInactivity": "비활성 시 연결 해제",
-    "min15": "15분",
-    "min30": "30분",
-    "hour1": "1시간",
-    "hours2": "2시간",
-    "requirePassword": "비활성 후 비밀번호 요구",
-    "min5": "5분",
-    "min10": "10분",
-    "notifyNewLogins": "새 로그인 알림",
-    "disconnectAll": "모든 세션 연결 해제",
-    "twoFactorAuth": "2단계 인증",
-    "addExtraSecurity": "보안 계층 추가",
-    "protectAccount": "2차 인증 요소로 계정을 보호하세요",
-    "configure2fa": "2FA 구성",
-    "saveInAuthApp": "인증 앱(Google Authenticator, Authy 등)에 저장하세요",
-    "cancel": "취소",
-    "verify": "확인",
-    "twoFaActive": "2FA 활성화됨",
-    "accountProtected": "계정이 보호되고 있습니다",
-    "disable2fa": "2FA 비활성화",
-    "activityHistory": "활동 기록",
-    "recentActivity": "최근 로그인 및 변경사항"
+    "passwordChangeFailed": "비밀번호가 변경되지 않았습니다. 현재 비밀번호가 올바른지 확인하세요."
   },
   "coverPicker": {
     "chooseCoverFor": "다음의 커버 선택",
@@ -791,7 +764,9 @@
     "toClipboard": "클립보드로",
     "backToEditorAria": "에디터로 돌아가기",
     "backToEditor": "에디터로 돌아가기",
-    "translationPh": "번역..."
+    "translationPh": "번역...",
+    "cpkBuildUnavailable": "이 파일에는 사용할 수 없음",
+    "cpkBuildUnavailableReason": "{formats} 파일에 대해서는 아직 패치된 CPK를 만들 수 없습니다. GameStringer에는 원래 구조대로 다시 만드는 기능이 없고, 번역을 일반 텍스트로 다시 쓰면 게임이 손상됩니다. 대신 CSV 또는 PO로 내보내세요."
   },
   "translationWizard": {
     "renderError": "렌더링 오류",
@@ -1054,7 +1029,6 @@
     "more": "더 보기",
     "moreTooltip": "기타 도구 (P.T. Rank, Dry Run, DB 이름)",
     "alreadyRunning": "번역이 이미 백그라운드에서 실행 중입니다.",
-    "advancedParams": "고급 매개변수 (온도, 토큰, 배치)",
     "stepScan": "game.veb 스캔 중",
     "stepExtract": "문자열 추출 중",
     "stepTranslateCloud": "AI 번역 (클라우드)",
@@ -1094,7 +1068,13 @@
     "pakAesSaved": "키가 저장되었습니다. String it!을 다시 실행해 보세요.",
     "pakAesWrong": "저장된 키로는 이 pak을 열 수 없습니다. 다른 키를 붙여 넣거나 저장된 키를 삭제하세요.",
     "pakAesClear": "저장된 키 삭제",
-    "pakAesCleared": "키가 삭제되었습니다."
+    "pakAesCleared": "키가 삭제되었습니다.",
+    "pageRouteDetected": "{engine} 게임 감지됨",
+    "pageRouteMsg": "{engine}에는 String it! 자동 파이프라인이 없습니다: 전용 {tool}(으)로 이 게임을 번역하세요.",
+    "pageRouteToast": "{engine}: {tool}을(를) 여세요",
+    "pageRouteOpen": "{tool} 열기",
+    "gmRestored": "GameMaker 패치 실패: 게임 원본 파일을 백업에서 복원했습니다.",
+    "gmRestoreFailed": "GameMaker 패치가 실패했고 백업도 복원하지 못했습니다: 실행하기 전에 게임 파일을 확인하세요(또는 Steam에서 무결성을 검사하세요)."
   },
   "autoTranslatePage": {
     "identical": "동일",
@@ -1290,7 +1270,16 @@
     "wait25MinutesAndClick": "25분 기다린 후 클릭하세요",
     "configureAnAiProviderGeminiDee": "다음에서 AI 제공자(Gemini, DeepSeek 등)를 설정하세요:",
     "tpLogProjectSaved": "프로젝트 업데이트됨: {count}개 문자열이 프로젝트에 저장됨 (재개·내보내기·게시는 거기서)",
-    "tpLogProjectSaveFailed": "패치는 적용되었지만 프로젝트 등록에 실패했습니다: {err}"
+    "tpLogProjectSaveFailed": "패치는 적용되었지만 프로젝트 등록에 실패했습니다: {err}",
+    "bgJobNotFound": "이 백그라운드 번역의 결과를 더 이상 사용할 수 없습니다.",
+    "gamePathUnknown": "이 게임의 설치 폴더를 찾을 수 없습니다. 파일을 직접 불러오거나 라이브러리에서 게임을 여세요.",
+    "libraryLoadFailed": "게임 라이브러리를 불러올 수 없습니다.",
+    "pickInstalledGame": "또는 설치된 게임 선택:",
+    "pickGamePlaceholder": "게임 선택…",
+    "noInstalledGames": "라이브러리에서 설치된 게임을 찾을 수 없습니다.",
+    "noStringsTranslated": "번역된 문자열이 없습니다",
+    "noStringsTranslatedDesc": "문자열을 하나도 번역하지 못한 채 번역이 끝났습니다. 불러온 파일은 그대로 있으니 다시 시도할 수 있습니다.",
+    "nothingToTranslate": "불러온 파일에 번역할 텍스트가 없습니다."
   },
   "aiPipelinePage": {
     "title": "AI 번역 파이프라인",
@@ -1390,7 +1379,10 @@
     "japanese": "일본어",
     "chinese": "중국어",
     "korean": "한국어",
-    "impostazioniPerLestrazioneAuto": "자동 추출 및 프롬프트 주입 설정"
+    "impostazioniPerLestrazioneAuto": "자동 추출 및 프롬프트 주입 설정",
+    "noGameTexts": "이 게임과 대상 언어에 대해 저장된 문자열이 없습니다. 먼저 게임을 번역한 다음 실제 텍스트에서 용어를 추출하세요.",
+    "gameTextsAvailable": "출처: 이 게임의 저장된 문자열 {count}개 (대표 샘플이 AI로 전송됩니다).",
+    "noGlossaryForGame": "이 게임에는 아직 용어집이 없습니다. 용어를 관리하려면 하나 만드세요."
   },
   "visualNovelPage": {
     "title": "비주얼 노벨 패처",
@@ -1708,7 +1700,18 @@
     "translationMemory": "번역 메모리",
     "selectString": "목록에서 문자열 선택",
     "noSelection": "선택 없음",
-    "traduciUnGiocoConNeuralTransla": "Neural Translator로 게임을 번역하여 여기에 데이터를 채우세요."
+    "traduciUnGiocoConNeuralTransla": "Neural Translator로 게임을 번역하여 여기에 데이터를 채우세요.",
+    "deepLinkNoData": "에디터에 아직 \"{game}\"의 번역이 없습니다",
+    "fileLoadedDesc": "{file} - 문자열 {n}개 발견",
+    "fileLoadedDescMulti": "{file} - 문자열 {n}개 (다국어 파일 감지됨)",
+    "partialLoadedTitle": "부분 결과를 불러왔습니다",
+    "partialLoadedDesc": "{game}의 문자열 {done}/{total}개 번역됨",
+    "savedStringsFile": "저장된 문자열",
+    "savedDictionaryFailed": "에디터에는 저장했지만 게임 사전에는 저장하지 못했습니다",
+    "aiNoProvider": "응답한 번역 제공자가 없어 문자열이 번역되지 않았습니다. 설정에서 API 키와 활성 제공자를 확인하세요.",
+    "aiTranslated": "{provider}(으)로 번역했습니다",
+    "aiTranslateFailed": "AI 번역에 실패했습니다",
+    "savedLinesDesc": "번역 {n}개 저장됨"
   },
   "binaryPatcherPage": {
     "selectExeDll": "번역 가능한 문자열을 추출할 게임 .exe 또는 .dll을 선택하세요",
@@ -1740,7 +1743,14 @@
     "offlineDict": "오프라인 사전 — 빠르지만 기본 품질",
     "aiPreset": "AI 프리셋:",
     "allCategories": "모든 카테고리",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL 등 — 우수한 품질"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL 등 — 우수한 품질",
+    "readBinaryFailed": "바이너리를 바이트 단위로 읽을 수 없습니다({error}). 50MB를 넘는 파일은 게임 폴더에서 불러올 수 없습니다.",
+    "patchNothingApplied": "바이너리에 쓸 수 있는 번역이 없어 파일을 저장하지 않았습니다.",
+    "patchSaved": "패치된 파일을 저장했습니다: 문자열 {patched}개 기록",
+    "patchSkippedErrors": "번역 {n}개를 쓰지 못했습니다(바이트 길이 또는 원문 불일치)",
+    "backupKept": "교체된 파일의 백업: {path}",
+    "backupFailed": "교체할 파일을 백업하지 못해 아무것도 쓰지 않았습니다: {error}",
+    "patchSaveFailed": "패치된 파일을 저장하지 못했습니다: {error}"
   },
   "advancedToolsPage": {
     "title": "고급 도구",
@@ -1772,14 +1782,10 @@
     "communityHubSupabase": "커뮤니티 허브 — Supabase 백엔드",
     "communityHubShort": "커뮤니티 허브",
     "temperatureLabel": "Temperature:",
-    "maxTokensLabel": "최대 토큰:",
-    "batchSizeLabel": "배치 크기:",
     "copyToSeeAll": "\\n\\n... (모두 보려면 복사)",
     "gbTotal": "GB 전체",
     "diskUsed": "사용 중",
     "gbAvailable": "GB 사용 가능",
-    "rssFeedAdded": "RSS 피드 추가됨",
-    "feedRemoved": "피드 제거됨",
     "lmStudioDesc": "LM Studio는 OpenAI 호환 API로 로컬 LLM을 실행하는 데스크톱 앱입니다. 무료이며 API 키가 필요 없습니다.",
     "autoDetectFromServer": "서버에서 자동 감지",
     "lmStudioDownload1": "다음에서 LM Studio 다운로드: ",
@@ -1798,9 +1804,6 @@
     "deepl500k": "월 50만 자 무료 — ",
     "qwen1m": "월 100만 토큰 무료, 최고의 다국어 — ",
     "rssFeedDashboard": "RSS 피드 대시보드",
-    "rssDesc": "대시보드 티커에 표시할 RSS 피드를 구성합니다",
-    "feedNamePlaceholder": "피드 이름 (예: Steam News)",
-    "feedUrlPlaceholder": "RSS 피드 URL",
     "noFeeds": "구성된 피드가 없습니다. RSS 피드를 추가하여 시작하세요.",
     "restoreDefaults": "기본값 복원",
     "fontSmall": "작게 (14px)",
@@ -1848,7 +1851,10 @@
     "git": "Git:",
     "branch": "브랜치:",
     "ollamaUrlLabel": "Ollama 서버 URL",
-    "ollamaUrlHint": "비워 두면 자동으로 감지합니다. Ollama가 다른 포트, WSL/Docker 또는 다른 PC에서 실행 중이면 입력하세요(예: http://192.168.1.5:11434)."
+    "ollamaUrlHint": "비워 두면 자동으로 감지합니다. Ollama가 다른 포트, WSL/Docker 또는 다른 PC에서 실행 중이면 입력하세요(예: http://192.168.1.5:11434).",
+    "temperatureSection": "고급 매개변수 (온도)",
+    "temperatureScope": "클라우드 AI 제공자(Gemini, OpenAI, DeepSeek, Groq, Mistral, Cohere, OpenRouter, Together, Fireworks, Cerebras, Qwen)가 사용합니다. Claude는 자체 기본값을 유지합니다. Ollama는 별도의 온도 설정이 있습니다: Ollama / AI → 고급 기능.",
+    "rssNewsDesc": "대시보드 뉴스에 사용할 소스를 선택합니다. '뉴스 피드 관리' 페이지와 같은 목록입니다."
   },
   "translatorProPage": {
     "subtitle": "다단계 파이프라인을 갖춘 고급 신경망 번역",
@@ -1911,7 +1917,22 @@
     "applyInstalling": "패처 설치 중...",
     "applyApplying": "적용 중...",
     "applied": "적용 완료!",
-    "applyToGame": "게임에 적용"
+    "applyToGame": "게임에 적용",
+    "applyResult": {
+      "allTitle": "번역이 게임에 적용되었습니다",
+      "partialTitle": "번역이 일부만 적용되었습니다",
+      "noneTitle": "게임에 아무것도 기록되지 않았습니다",
+      "written": "기록됨",
+      "failed": "기록되지 않음: {error}",
+      "unknownLocation": "기록되지 않음: 게임 내 원래 위치를 알 수 없습니다",
+      "notLanguageFile": "기록되지 않음: 게임의 언어 파일이 아닙니다",
+      "noEntries": "기록되지 않음: 사전에 넣을 번역된 문자열이 없습니다",
+      "languageHint": "게임 옵션에서 새 언어를 선택하세요.",
+      "xunityHint": "XUnity 사전에 번역 {n}개. 게임을 실행하세요!",
+      "patcherFailed": "XUnity AutoTranslator를 설치할 수 없습니다: {error}",
+      "manualHint": "기록되지 않은 파일은 \"모두 다운로드\"로 받아 직접 복사하세요."
+    },
+    "patchSavedTo": "번역 패키지가 저장된 위치:"
   },
   "loggingDashboardComp": {
     "loggingDashboard": "로그 대시보드",
@@ -2103,40 +2124,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "번역",
-    "stringhe": "문자열",
-    "parole": "단어",
-    "progress": "진행률",
     "oggi": "오늘",
     "settimana": "주",
     "mese": "월",
-    "completati": "완료됨",
-    "inCorso": "진행 중",
     "totali": "전체",
     "title": "번역 통계",
-    "tradotte": "번역됨",
-    "elaborate": "처리됨",
-    "medio": "평균",
     "weeklyActivity": "주간 활동",
-    "estimatedTimeRemaining": "예상 남은 시간",
     "targetLanguages": "대상 언어",
-    "noTranslationsYet": "아직 번역이 없습니다"
+    "noTranslationsYet": "아직 번역이 없습니다",
+    "noLanguageData": "이 번역들에는 대상 언어가 기록되어 있지 않습니다",
+    "activityOverview": "번역 활동 개요"
   },
   "securityDialogComp": {
     "currentPassword": "현재 비밀번호",
     "newPassword": "새 비밀번호",
-    "confirmPassword": "비밀번호 확인",
-    "timeoutSessione": "세션 시간 초과",
-    "never": "안 함",
-    "autoLock": "자동 잠금",
-    "timeoutBlocco": "잠금 시간 초과",
-    "notificheLogin": "로그인 알림",
-    "active": "활성",
-    "inactive": "비활성",
-    "yourSecretCode": "보안 코드:",
-    "enterVerificationCode": "인증 코드 입력",
-    "enterCodeToDisable": "비활성화하려면 코드 입력",
-    "demoUsa123456": "데모: 123456 사용",
-    "noActivityRecorded": "기록된 활동 없음"
+    "confirmPassword": "비밀번호 확인"
   },
   "visualTranslationEditorComp": {
     "originale": "원본",
@@ -2287,7 +2289,8 @@
     "reviewNotesPlaceholder": "검토에 대한 메모 추가...",
     "approve": "승인",
     "saveChanges": "변경 사항 저장",
-    "exportResults": "결과 내보내기"
+    "exportResults": "결과 내보내기",
+    "emptyTranslationCannotApprove": "AI가 이 줄의 번역을 반환하지 않아 승인할 수 없습니다. 직접 입력하거나(편집) 거부하세요."
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "픽셀 글꼴 미리보기",
@@ -2470,7 +2473,8 @@
     "personalizzaTema": "테마 사용자 지정",
     "scegliOCreaIlTuoTemaPersonaliz": "테마를 선택하거나 사용자 지정 테마를 만드세요",
     "iTuoiTemiSalvati": "저장된 테마",
-    "anteprima": "미리보기"
+    "anteprima": "미리보기",
+    "altriTemi": "더 많은 테마"
   },
   "errorBoundaryComp": {
     "errorId": "오류 ID:",
@@ -2493,7 +2497,9 @@
     "importTranslations": "번역 가져오기",
     "game": "게임",
     "translationFile": "번역 파일",
-    "detectedFileFormat": "감지된 파일 형식:"
+    "detectedFileFormat": "감지된 파일 형식:",
+    "importResult": "번역 {total}개 중 {n}개를 가져왔습니다",
+    "noValidRows": "원문과 번역문이 모두 있는 행이 없습니다"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "전체 진행률",
@@ -2588,7 +2594,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "활성 프로필",
-    "chiudi": "닫기"
+    "chiudi": "닫기",
+    "avatarUpdated": "아바타가 업데이트되었습니다"
   },
   "nav": {
     "dashboard": "대시보드",
@@ -2752,7 +2759,15 @@
     "buildDate": "빌드 날짜",
     "gitHash": "Git 해시",
     "branch": "브랜치",
-    "unsavedChanges": "저장되지 않은 변경 사항"
+    "unsavedChanges": "저장되지 않은 변경 사항",
+    "temperatureTooltipHighCapped": "0.8-1.0: 더 창의적, 원문과 다를 수 있음",
+    "autoBackupConfigSaved": "자동 백업 설정이 저장되었습니다",
+    "backupDone": "백업 완료",
+    "backupDoneDesc": "파일 {n}개 저장됨 ({size})",
+    "backupFailed": "백업 실패",
+    "restoreDone": "복원 완료",
+    "restoreDoneDesc": "항목 {n}개 복원됨",
+    "restoreFailed": "복원 실패"
   },
   "common": {
     "loading": "로딩 중...",
@@ -3551,7 +3566,10 @@
     "play": "재생",
     "ltWindow": "창",
     "ltPickWindow": "창 선택",
-    "ltNoWindow": "창을 찾을 수 없음"
+    "ltNoWindow": "창을 찾을 수 없음",
+    "suggestionsGeneratedFor": "번역 {n}개에 대한 제안을 생성했습니다",
+    "originalsCopiedCount": "원문 {n}개 복사됨",
+    "translationsPastedCount": "번역 {n}개 붙여넣음"
   },
   "languages": {
     "cs": "Čeština",
@@ -3675,7 +3693,15 @@
     "passwordResetSuccess": "비밀번호가 성공적으로 재설정되었습니다",
     "historyCleared": "활동 기록이 지워졌습니다",
     "disconnectedAll": "다른 모든 세션에서 연결이 해제되었습니다",
-    "thisProfile": "이 프로필"
+    "thisProfile": "이 프로필",
+    "recoveryUnavailableTitle": "이 비밀번호는 재설정할 수 없습니다",
+    "recoveryUnavailableDesc": "프로필은 해당 비밀번호로 암호화되어 있으며, GameStringer는 이를 잠금 해제할 수 있는 다른 키를 보관하지 않습니다. 잊어버린 비밀번호는 프로필을 만들 때 표시된 12단어 복구 키로도 복구하거나 재설정할 수 없습니다.",
+    "recoveryUnavailableHint": "기억나지 않으면 새 프로필을 만드세요. 올바른 비밀번호를 입력하기 전까지 이 프로필의 데이터는 잠긴 상태로 유지됩니다.",
+    "passwordNoticeTitle": "비밀번호를 안전하게 보관하세요",
+    "passwordNoticeDesc": "이 프로필은 해당 비밀번호로 암호화되어 있습니다. 비밀번호를 잊어버리면 복구하거나 재설정할 수 없으며, 프로필 데이터는 잠긴 상태로 유지됩니다.",
+    "passwordNoticeHint": "적어 두거나 비밀번호 관리자에 저장하세요.",
+    "passwordNoticeConfirm": "이해했습니다",
+    "passwordUnrecoverableDesc": "프로필은 해당 비밀번호로 암호화되어 있으며, GameStringer는 이를 잠금 해제할 수 있는 다른 키를 보관하지 않습니다. 잊어버린 비밀번호는 복구하거나 재설정할 수 없습니다. 이전 버전에서 12단어 복구 키를 받았더라도 그 키로 프로필을 잠금 해제할 수 없습니다."
   },
   "onboarding": {
     "step": "{total} 중 {current}단계",
@@ -4113,7 +4139,8 @@
     "translated": "번역됨",
     "waitingForText": "텍스트 대기 중...",
     "footerInfo": "OCR은 모든 게임과 작동 • Gemini AI 번역",
-    "aiProvider": "AI 제공자"
+    "aiProvider": "AI 제공자",
+    "languagePackMissing": "Windows에서 이 언어({lang})의 텍스트를 읽을 수 없습니다. 광학 문자 인식(OCR)이 포함된 언어 팩이 설치되어 있지 않습니다. 설정 > 시간 및 언어 > 언어 및 지역에서 추가한 후 다시 시작하세요."
   },
   "workshop": {
     "title": "Steam 워크숍",
@@ -4135,9 +4162,6 @@
     "background": "배경",
     "startCapture": "캡처 시작",
     "stop": "중지",
-    "paused": "일시 정지됨",
-    "captureActive": "캡처 활성",
-    "subtitlesCaptured": "캡처된 자막",
     "livePreview": "실시간 미리보기",
     "settings": "설정",
     "style": "스타일",
@@ -4154,15 +4178,13 @@
     "fadeIn": "페이드 인",
     "fadeOut": "페이드 아웃",
     "animation": "애니메이션",
-    "history": "기록",
-    "noSubtitlesCaptured": "캡처된 자막 없음",
-    "startCaptureToBegin": "시작하려면 캡처를 시작하세요",
     "positionTop": "상단",
     "positionCenter": "중앙",
     "positionBottom": "하단",
     "positionAbove": "위",
     "positionBelow": "아래",
-    "positionInline": "인라인"
+    "positionInline": "인라인",
+    "notConnected": "실시간 캡처는 아직 연결되지 않았습니다: 여기서는 자막을 캡처하거나 번역하지 않습니다. 자막 스타일 미리보기만 가능합니다."
   },
   "translationFixer": {
     "title": "번역 수정기",
@@ -4233,19 +4255,14 @@
     "exportAll": "모두 내보내기",
     "dropImages": "이미지를 드래그하거나 클릭하여 업로드",
     "processing": "처리 중...",
-    "detecting": "말풍선 감지 중...",
-    "translating": "번역 중...",
-    "inpainting": "인페인팅 중...",
-    "completed": "완료!",
     "noPage": "페이지 없음",
     "original": "원본",
     "translated": "번역됨",
     "loadPages": "만화/코믹 페이지 로드",
     "supportedFormats": "JPG, PNG, WebP 지원",
     "pageOf": "{current} / {total} 페이지",
-    "analyzingText": "텍스트 분석 중...",
-    "batchTranslation": "배치 번역 중...",
-    "fontStyleLabel": "글꼴 스타일"
+    "fontStyleLabel": "글꼴 스타일",
+    "notConnected": "아직 연결되지 않음: 이 도구는 OCR이나 번역을 실행하지 않습니다. 페이지를 불러와 볼 수는 있지만 감지, 인페인팅, 내보내기는 비활성화되어 있습니다."
   },
   "textureTranslator": {
     "title": "텍스처 번역기",
@@ -4265,7 +4282,8 @@
     "noTexture": "선택된 텍스처 없음",
     "processAll": "모두 처리",
     "original": "원본",
-    "translated": "번역됨"
+    "translated": "번역됨",
+    "notConnected": "아직 연결되지 않음: 이 도구는 OCR이나 번역을 실행하지 않습니다. 텍스처를 불러와 볼 수는 있지만 텍스트 감지, 번역 적용, 내보내기는 비활성화되어 있습니다."
   },
   "dictionaryManager": {
     "addTranslation": "번역 추가"
@@ -4354,7 +4372,8 @@
     "reset": "재설정",
     "save": "저장",
     "selectToEdit": "편집할 자막을 선택하세요",
-    "issuesDetected": "문제가 감지되었습니다"
+    "issuesDetected": "문제가 감지되었습니다",
+    "linesNotTranslated": "자막 {n}줄을 번역하지 못해 원문이 그대로 남아 있습니다"
   },
   "multiLlmCompare": {
     "title": "멀티-LLM 비교",
@@ -4425,7 +4444,8 @@
     "cancel": "취소",
     "delete": "삭제",
     "translationUpdated": "번역이 업데이트되었습니다",
-    "translationDeleted": "번역이 삭제되었습니다"
+    "translationDeleted": "번역이 삭제되었습니다",
+    "languagePair": "언어 쌍"
   },
   "support": {
     "title": "지원",
@@ -4463,7 +4483,8 @@
     "micError": "마이크에 접근할 수 없습니다. 권한을 확인하세요.",
     "transcriptionError": "변환 오류. OpenAI API 키를 확인하세요.",
     "translationError": "번역 오류.",
-    "ttsError": "음성 합성 오류."
+    "ttsError": "음성 합성 오류.",
+    "noSpeechDetected": "오디오에서 음성을 인식하지 못했습니다."
   },
   "disclaimer": {
     "fullPolicy": "전체 법적 고지 및 이용 정책 읽기",
@@ -4852,7 +4873,8 @@
     "bgOpacity": "배경 불투명도",
     "shadow": "그림자",
     "positionApplied": "위치 \"{name}\"이(가) 적용되었습니다",
-    "styleApplied": "스타일 \"{name}\"이(가) 적용되었습니다"
+    "styleApplied": "스타일 \"{name}\"이(가) 적용되었습니다",
+    "notConnected": "헤드셋 출력은 아직 연결되지 않았습니다: 이 페이지는 오버레이 미리보기만 제공하며 VR 헤드셋으로는 아무것도 전송되지 않습니다."
   },
   "playerFeedback": {
     "title": "플레이어 피드백",
@@ -5607,15 +5629,6 @@
     "recommendedModel": "추천 모델",
     "local": "로컬",
     "cloud": "클라우드",
-    "autoSwitch": "모델 자동 전환",
-    "autoSwitchDesc": "사용 가능한 VRAM에 따라 AI 모델 자동 전환",
-    "preferLocal": "로컬 모델 우선",
-    "preferLocalDesc": "가능하면 클라우드 대신 Ollama/LM Studio 사용",
-    "alertHighUsage": "VRAM 높은 사용량 알림",
-    "alertHighUsageDesc": "VRAM이 임계값을 초과하면 알림",
-    "alertThreshold": "알림 임계값",
-    "cloudFallback": "클라우드 폴백 프로바이더",
-    "cloudAuto": "자동",
     "tierAndModels": "등급 및 모델",
     "statsUpdated": "시스템 통계 업데이트됨",
     "tierUltra": "울트라 (≥12GB)",
@@ -5662,7 +5675,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google 번역",
     "libretranslateFree": "LibreTranslate (무료)",
-    "workflowCompletato": "워크플로우 완료!"
+    "workflowCompletato": "워크플로우 완료!",
+    "linesNotTranslated": "AI가 {n}줄을 번역하지 못했습니다. 번역이 비어 있으니 직접 입력하거나 거부하세요."
   },
   "translationWizardPage": {
     "noGameTrovato": "게임을 찾을 수 없음",
@@ -5673,7 +5687,6 @@
     "traduzioneCompletata": "번역 완료!"
   },
   "libraryPage": {
-    "scanDone": "🎮 Family Sharing 스캔 완료!",
     "scanError": "스캔 중 오류 발생",
     "installStarted": "설치 시작됨",
     "installStartedDesc": "{{game}} 설치를 위해 Steam이 열립니다",
@@ -5709,12 +5722,16 @@
     "langScanDone": "{n}개 게임의 언어를 감지했습니다",
     "langScanNone": "새 언어를 찾지 못했습니다",
     "langScanError": "언어 감지 중 오류가 발생했습니다",
-    "addGameFromDiskHint": "게임이 목록에 없으면 디스크의 폴더를 선택해 추가하세요. 스토어 밖의 게임도 됩니다."
+    "addGameFromDiskHint": "게임이 목록에 없으면 디스크의 폴더를 선택해 추가하세요. 스토어 밖의 게임도 됩니다.",
+    "libraryScanDone": "모든 스토어에서 라이브러리를 다시 스캔했습니다",
+    "scanPartial": "스캔이 오류와 함께 완료되었습니다. 일부 소스를 읽을 수 없어 목록이 불완전할 수 있습니다.",
+    "steamCredsHint": "스토어에서 Steam 계정을 연결하면 보유했지만 설치하지 않은 게임도 볼 수 있습니다."
   },
   "unityBundlePage": {
     "auto": "자동",
     "fileOpenCtrlv": "파일 → 열기 → Ctrl+V",
-    "importDumpCtrlv": "덤프 가져오기 → Ctrl+V"
+    "importDumpCtrlv": "덤프 가져오기 → Ctrl+V",
+    "failedStrings": "문자열 {n}개를 번역하지 못해 원래 언어로 남아 있습니다"
   },
   "activityPage": {
     "filterBy": "필터 기준:",

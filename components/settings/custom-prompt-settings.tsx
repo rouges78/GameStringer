@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 import { 
   MessageSquareText, 
   UserCircle, 
-  Volume2, 
   Sparkles,
   Save,
   RotateCcw,
@@ -26,19 +25,17 @@ interface CustomPromptSettings {
   persona: string;
   tone: string;
   customPrompt: string;
-  enableVoice: boolean;
-  speakerVoice: string;
-  preserveVoice: boolean;
 }
 
+// Letti da withStoredCustomPrompt (lib/ai/ai-translate-direct.ts) all'ingresso
+// della catena di traduzione. Fino al 01/10/2026 questa chiave non la leggeva
+// nessuno, e qui c'era anche un blocco «DeepL Voice API» (voce TTS, preserva
+// voce) che non arrivava a nessun audio: tolto.
 const DEFAULT_SETTINGS: CustomPromptSettings = {
   enabled: false,
   persona: '',
   tone: '',
   customPrompt: '',
-  enableVoice: false,
-  speakerVoice: 'auto',
-  preserveVoice: false,
 };
 
 const PERSONA_PRESETS = [
@@ -65,16 +62,6 @@ const TONE_PRESETS = [
   { value: 'romantic', label: 'Romantico' },
   { value: 'technical', label: 'Tecnico' },
   { value: 'childish', label: 'Infantile' },
-];
-
-const VOICE_PRESETS = [
-  { value: 'auto', label: 'Auto (DeepL)' },
-  { value: 'nova', label: 'Nova (OpenAI)' },
-  { value: 'alloy', label: 'Alloy (OpenAI)' },
-  { value: 'echo', label: 'Echo (OpenAI)' },
-  { value: 'fable', label: 'Fable (OpenAI)' },
-  { value: 'onyx', label: 'Onyx (OpenAI)' },
-  { value: 'shimmer', label: 'Shimmer (OpenAI)' },
 ];
 
 export function CustomPromptSettings() {
@@ -118,7 +105,7 @@ export function CustomPromptSettings() {
       <CardHeader className="p-0 pb-4">
         <CardTitle className="flex items-center gap-2 text-base">
           <MessageSquareText className="h-4 w-4 text-purple-400" />
-          {t('customPromptSettings.title')}<Badge variant="outline" className="text-xs ml-2">{t('customPromptSettings.newBadge')}</Badge>
+          {t('customPromptSettings.customPrompt')}<Badge variant="outline" className="text-xs ml-2">{t('customPromptSettings.newBadge')}</Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
           {t('customPromptSettings.subtitle')}</p>
@@ -132,7 +119,7 @@ export function CustomPromptSettings() {
             <div>
               <span className="text-sm font-medium">{t('customPromptSettings.enableCustomPrompt')}</span>
               <p className="text-xs text-muted-foreground">
-                {t('customPromptSettings.enableDesc')}</p>
+                {t('customPromptSettings.enableDescCloud')}</p>
             </div>
           </div>
           <Switch
@@ -207,55 +194,6 @@ export function CustomPromptSettings() {
         )}
 
         <Separator />
-
-        {/* DeepL Voice API */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-          <div className="flex items-center gap-2">
-            <Volume2 className="h-4 w-4 text-emerald-400" />
-            <div>
-              <span className="text-sm font-medium">{t('customPromptSettings.deeplVoiceApi')}</span>
-              <p className="text-xs text-muted-foreground">
-                {t('customPromptSettings.voiceDesc')}</p>
-            </div>
-          </div>
-          <Switch
-            checked={settings.enableVoice}
-            onCheckedChange={(checked) => updateSetting('enableVoice', checked)}
-          />
-        </div>
-
-        {settings.enableVoice && (
-          <div className="space-y-3 pl-4 border-l-2 border-emerald-500/30">
-            <div className="space-y-2">
-              <Label className="text-xs">{t('customPromptSettings.ttsVoice')}</Label>
-              <Select
-                value={settings.speakerVoice}
-                onValueChange={(value) => updateSetting('speakerVoice', value)}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {VOICE_PRESETS.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">{t('customPromptSettings.preserveVoice')}</Label>
-              <Switch
-                checked={settings.preserveVoice}
-                onCheckedChange={(checked) => updateSetting('preserveVoice', checked)}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {t('customPromptSettings.preserveVoiceDesc')}</p>
-          </div>
-        )}
 
         {/* Preview */}
         {(settings.persona || settings.tone || settings.customPrompt) && (

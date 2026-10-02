@@ -58,8 +58,10 @@ import {
   type ActivityItem
 } from '@/lib/social/social';
 import { getThreads, type ForumThread } from '@/lib/social/forum';
+import { clientLogger } from '@/lib/client-logger';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 // ─── ACHIEVEMENT BADGE ───────────────────────────────────────────────────────
 
@@ -159,6 +161,11 @@ function ThreadCard({ thread }: { thread: ForumThread }) {
 interface UserProfileProps {
   userId?: string;
   username?: string;
+  /**
+   * uid di Supabase Auth dell'utente corrente: `profile.user_id` è normalizzato
+   * all'`id` di user_profiles (= uid Supabase), quindi l'id del profilo LOCALE
+   * qui non combacia mai e il proprio profilo non risultava "proprio".
+   */
   currentUserId?: string;
   onClose?: () => void;
 }
@@ -171,6 +178,8 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // Caricamento fallito (rete/backend): va detto, non spacciato per "utente non trovato".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>('none');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -190,6 +199,7 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     try {
       let profileData: UserProfile | null = null;
       
@@ -241,7 +251,8 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
         setFriendshipStatus(isFriend ? 'friends' : 'none');
       }
     } catch (error) {
-      console.error('[UserProfile] Error loading data:', error);
+      clientLogger.error('[UserProfile] Error loading data:', error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -277,10 +288,12 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
 
   const handleSaveProfile = async () => {
     if (!profile) return;
-    const success = await updateProfile(profile.user_id, editForm);
+    const success = await updateProfile(profile.user_id, editForm).catch(() => false);
     if (success) {
       setProfile({ ...profile, ...editForm });
       setIsEditing(false);
+    } else {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
     }
   };
 
@@ -295,6 +308,17 @@ export function UserProfileView({ userId, username, currentUserId, onClose }: Us
   }
 
   if (!profile) {
+    if (loadFailed) {
+      return (
+        <div className="flex flex-col items-center justify-center h-96 text-center">
+          <User className="h-16 w-16 text-slate-500 mb-4" />
+          <p className="text-sm text-slate-400">{t('forum.backendUnavailable')}</p>
+          <Button variant="outline" size="sm" onClick={loadData} className="mt-4">
+            {t('common.retry')}
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center h-96 text-center">
         <User className="h-16 w-16 text-slate-500 mb-4" />

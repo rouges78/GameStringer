@@ -24,7 +24,6 @@ import { useProfiles } from '@/hooks/use-profiles';
 import { CreateProfileRequest } from '@/types/profiles';
 import { useTranslation, Language } from '@/lib/i18n';
 import { Globe } from 'lucide-react';
-import { generateRecoveryKey, saveRecoveryKeyHash } from '@/lib/recovery-key';
 import { RecoveryKeyDisplay } from '@/components/profiles/recovery-key-display';
 import { VisuallyHidden } from 'radix-ui';
 import { DialogTitle } from '@/components/ui/dialog';
@@ -68,7 +67,6 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [customImage, setCustomImage] = useState<string | null>(null);
-  const [recoveryKey, setRecoveryKey] = useState<string[]>([]);
   const [showRecoveryKey, setShowRecoveryKey] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
@@ -162,15 +160,10 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     
     if (success) {
       clientLogger.debug('✅ Profile created successfully:', request.name);
-      
-      // Genera Recovery Key
-      const newRecoveryKey = generateRecoveryKey();
-      setRecoveryKey(newRecoveryKey);
-      
-      // Salva hash della recovery key (usa il nome come ID temporaneo)
-      await saveRecoveryKeyHash(request.name, newRecoveryKey);
-      
-      // Mostra dialog recovery key
+
+      // Nessuna recovery key: il profilo è cifrato con una chiave derivata dalla
+      // password e una chiave di recupero non potrebbe sbloccarlo (vedi
+      // password-recovery-dialog.tsx). Mostra solo l'avviso sulla password.
       setPendingProfileId(request.name);
       setShowRecoveryKey(true);
     } else {
@@ -202,7 +195,6 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     });
     setSelectedAvatar(null);
     setCustomImage(null);
-    setRecoveryKey([]);
     setShowRecoveryKey(false);
     
     // Chiudi il dialog
@@ -487,11 +479,10 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           </div>
         </motion.form>
 
-        {/* Recovery Key Display Dialog */}
+        {/* Avviso password (nessuna recovery key) */}
         <RecoveryKeyDisplay
           open={showRecoveryKey}
           onOpenChange={setShowRecoveryKey}
-          recoveryKey={recoveryKey}
           profileName={formData.name || pendingProfileId || ''}
           onConfirm={handleRecoveryKeyConfirmed}
         />

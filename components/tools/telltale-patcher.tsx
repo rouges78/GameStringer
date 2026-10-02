@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -187,6 +187,19 @@ export function TelltalePatcher() {
       addLog('❓ Game not automatically recognized');
     }
   };
+
+  // Ponte da String it! nel game-detail: ?gamePath=… rileva subito il gioco,
+  // senza ripassare dal folder picker (route con query params, convenzione del progetto).
+  useEffect(() => {
+    try {
+      const gp = new URLSearchParams(window.location.search).get('gamePath');
+      if (gp) {
+        setGamePath(gp);
+        detectGame(gp);
+      }
+    } catch { /* niente query params */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyTranslation = async () => {
     if (!gamePath || !selectedGame) {

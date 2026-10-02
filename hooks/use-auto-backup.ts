@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { invoke } from '@/lib/tauri-api';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
 export interface AutoBackupConfig {
@@ -48,7 +49,11 @@ export function useAutoBackup() {
   const [backups, setBackups] = useState<AutoBackupInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
+  // Ref: t cambia identità al cambio lingua e non deve ricreare runBackup
+  // (che riavvierebbe il timer e il controllo immediato del backup).
+  const { t } = useTranslation();
+  const tRef = useRef(t);
+  tRef.current = t;
 
   // Carica configurazione
   const loadConfig = useCallback(async () => {
@@ -65,12 +70,13 @@ export function useAutoBackup() {
     try {
       await invoke('save_autobackup_config', { config: newConfig });
       setConfig(newConfig);
-      toast({ title: '✅ Configurazione Auto-Backup salvata' });
+      // id fisso: gli slider salvano a ogni step, un solo toast aggiornato invece di una pila
+      toast.success(`✅ ${tRef.current('settings.autoBackupConfigSaved')}`, { id: 'autobackup-config' });
     } catch (e: unknown) {
       clientLogger.error(`[AutoBackup] Errore salvataggio config: ${String(e)}`);
-      toast({ title: 'Errore', description: String(e), variant: 'destructive' });
+      toast.error(tRef.current('common.error'), { id: 'autobackup-config', description: String(e) });
     }
-  }, [toast]);
+  }, []);
 
   // Carica lista backup
   const loadBackups = useCallback(async () => {
@@ -92,26 +98,25 @@ export function useAutoBackup() {
       setLastResult(result);
       
       if (result.success) {
-        toast({ 
-          title: '💾 Backup completato',
-          description: `${result.filesBackedUp.length} file salvati (${formatSize(result.totalSizeBytes)})`
+        toast.success(`💾 ${tRef.current('common.backupCreatedSuccessfully')}`, {
+          description: tRef.current('settings.backupDoneDesc')
+            .replace('{n}', String(result.filesBackedUp.length))
+            .replace('{size}', formatSize(result.totalSizeBytes))
         });
         await loadConfig(); // Aggiorna lastBackup
         await loadBackups();
       } else {
-        toast({ 
-          title: 'Errore backup', 
-          description: result.error || 'Errore sconosciuto',
-          variant: 'destructive'
+        toast.error(tRef.current('common.errorCreatingBackup'), {
+          description: result.error || undefined
         });
       }
     } catch (e: unknown) {
       clientLogger.error(`[AutoBackup] Errore esecuzione backup: ${String(e)}`);
-      toast({ title: 'Errore backup', description: String(e), variant: 'destructive' });
+      toast.error(tRef.current('common.errorCreatingBackup'), { description: String(e) });
     } finally {
       setIsRunning(false);
     }
-  }, [isRunning, toast, loadConfig, loadBackups]);
+  }, [isRunning, loadConfig, loadBackups]);
 
   // Verifica e esegui backup se necessario
   const checkAndRunBackup = useCallback(async () => {
@@ -135,17 +140,16 @@ export function useAutoBackup() {
         backupPath,
         restoreType
       });
-      toast({ 
-        title: '✅ Ripristino completato',
-        description: `${restored} elementi ripristinati`
+      toast.success(`✅ ${tRef.current('settings.restoreDone')}`, {
+        description: tRef.current('settings.restoreDoneDesc').replace('{n}', String(restored))
       });
       return restored;
     } catch (e: unknown) {
       clientLogger.error(`[AutoBackup] Errore ripristino: ${String(e)}`);
-      toast({ title: 'Errore ripristino', description: String(e), variant: 'destructive' });
+      toast.error(tRef.current('settings.restoreFailed'), { description: String(e) });
       throw e;
     }
-  }, [toast]);
+  }, []);
 
   // Setup timer auto-backup
   useEffect(() => {
