@@ -32,7 +32,7 @@ const ALLOWLIST = [
   {
     id: 'GHSA-ggr8-5vv4-36mx',
     package: 'deepmerge-ts',
-    until: '2026-09-30',
+    until: '2026-11-02',
     reason: [
       'CVE-2026-40345, pubblicata il 16/08/2026: deepmerge() va in stack',
       'exhaustion su grafi di oggetti RICORSIVI. Impatto solo Availability',
@@ -59,6 +59,12 @@ const ALLOWLIST = [
       'Cosa sblocca la rimozione: @prisma/config che passa a deepmerge-ts 8.x.',
       'Riverificare a ogni giro (lezione di brace-expansion: i backport che',
       'oggi non esistono domani ci sono).',
+      '',
+      'Riverificata il 02/10/2026, alla scadenza: l\'ultima 6.x (prisma e',
+      '@prisma/config 6.19.3) pinna ancora deepmerge-ts 7.1.5, e così il',
+      '@prisma/config più recente sul registry. Il «fix available» di npm',
+      'audit punta a prisma 8, ancora RC e salto major dal nostro ^6.10.1.',
+      'Le ragioni sopra reggono invariate: proroga di un mese, non di più.',
     ].join('\n'),
   },
   // Vuota dal 04/08/2026 al 17/08/2026 — e che torni vuota il prima possibile.
