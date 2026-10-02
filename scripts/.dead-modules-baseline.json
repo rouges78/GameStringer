@@ -1,6 +1,7 @@
 {
   "known": {
     "lib/steam-utils.ts": "1031 righe",
+    "lib/translation-session.ts": "979 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA: il suo unico importatore era components/translation-recommendation.tsx, amputato quel giorno. NON e' scarto e non va cancellato di slancio: gestisce checkpoint, resume, backup incrementale e validazione — cioe' proprio la materia del difetto piu' grave del progetto (l'auto-traduttore che si mangio' il proprio checkpoint e distrusse 200 traduzioni pagate, fix 73ab6637 del 14/08). Da decidere: o e' l'implementazione buona mai collegata, e allora si ricabla, o e' il predecessore di quella viva in Rust, e allora si cancella. La domanda da farsi prima: chi tiene i checkpoint OGGI?",
     "components/audio-translation.tsx": "775 righe",
     "components/community-translations.tsx": "738 righe",
     "components/ocr-image-processor.tsx": "638 righe",
@@ -19,6 +20,7 @@
     "lib/context-crawler.ts": "470 righe",
     "components/advanced-filters.tsx": "466 righe",
     "components/admin/secrets-dashboard.tsx": "455 righe",
+    "lib/patchers/danganronpa-filter.ts": "454 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA, stessa causa (unico importatore: translation-recommendation.tsx). Filtra le ~18K stringhe estratte da DR1 tenendo i ~3K dialoghi veri, per tagliare costi API e tempo. Vale una valutazione prima del cestino: DR1 ha 47.999 stringhe e il costo di tradurle tutte e' esattamente il problema che il selettore costo/qualita' del 18/08 mette davanti all'utente. Se il filtro funziona, e' un risparmio che nessun preset puo' dare.",
     "lib/ai/smart-content-router.ts": "453 righe",
     "lib/quality/translation-validator.ts": "448 righe",
     "components/library/advanced-filters.tsx": "440 righe",
@@ -30,7 +32,6 @@
     "lib/string-notes.ts": "418 righe",
     "lib/intelligent-timing-manager.ts": "417 righe",
     "components/mods/mod-profile-manager.tsx": "414 righe",
-    "components/onboarding/onboarding-wizard.tsx": "394 righe",
     "lib/ai/prompt-templates.ts": "394 righe",
     "lib/project-export-import.ts": "392 righe",
     "components/dashboard/global-progress-widget.tsx": "387 righe",
@@ -38,13 +39,13 @@
     "lib/translation-batch-operations-with-progress.ts": "342 righe",
     "components/tools/github-discussions.tsx": "339 righe",
     "lib/social/community-hub.ts": "336 righe",
-    "components/translation-batch-editor.tsx": "333 righe",
     "lib/rate-limiter.ts": "333 righe",
     "lib/db-queries.ts": "332 righe",
     "components/store-manager.tsx": "323 righe",
     "components/translator/adaptive-translation-panel.tsx": "318 righe",
     "components/stats-dashboard.tsx": "320 righe",
     "components/tools/translation-history-panel.tsx": "312 righe",
+    "components/translation-batch-editor.tsx": "333 righe",
     "hooks/use-batch-operations.ts": "301 righe",
     "hooks/use-progress-batch.ts": "295 righe",
     "components/translator/emotion-badge.tsx": "286 righe",
@@ -90,8 +91,6 @@
     "components/theme-toggle.tsx": "32 righe",
     "hooks/use-debounce.ts": "25 righe",
     "lib/db.ts": "11 righe",
-    "lib/notifications/notification-interference.ts": "1 righe",
-    "lib/translation-session.ts": "979 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA: il suo unico importatore era components/translation-recommendation.tsx, amputato quel giorno. NON e' scarto e non va cancellato di slancio: gestisce checkpoint, resume, backup incrementale e validazione — cioe' proprio la materia del difetto piu' grave del progetto (l'auto-traduttore che si mangio' il proprio checkpoint e distrusse 200 traduzioni pagate, fix 73ab6637 del 14/08). Da decidere: o e' l'implementazione buona mai collegata, e allora si ricabla, o e' il predecessore di quella viva in Rust, e allora si cancella. La domanda da farsi prima: chi tiene i checkpoint OGGI?",
-    "lib/patchers/danganronpa-filter.ts": "454 righe · ORFANO DAL 18/08/2026 PER EFFETTO A CATENA, stessa causa (unico importatore: translation-recommendation.tsx). Filtra le ~18K stringhe estratte da DR1 tenendo i ~3K dialoghi veri, per tagliare costi API e tempo. Vale una valutazione prima del cestino: DR1 ha 47.999 stringhe e il costo di tradurle tutte e' esattamente il problema che il selettore costo/qualita' del 18/08 mette davanti all'utente. Se il filtro funziona, e' un risparmio che nessun preset puo' dare."
+    "lib/notifications/notification-interference.ts": "1 righe"
   }
 }
