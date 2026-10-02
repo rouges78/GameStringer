@@ -2,24 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
-
-interface TranslatedText {
-  original: string;
-  translated: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import {
+  type OcrOverlayText,
+  OCR_OVERLAY_TEXTS_EVENT,
+  OCR_OVERLAY_VISIBILITY_EVENT,
+  toCssBox,
+} from '@/lib/ocr-overlay-payload';
 
 export default function OcrOverlayPage() {
-  const [texts, setTexts] = useState<TranslatedText[]>([]);
+  const [texts, setTexts] = useState<OcrOverlayText[]>([]);
   const [isVisible, setIsVisible] = useState(true);
   const [fadeState, setFadeState] = useState<'in' | 'out' | 'visible'>('in');
   const autoHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const unlistenTranslation = listen<TranslatedText[]>('ocr-translations', (event) => {
+    const unlistenTranslation = listen<OcrOverlayText[]>(OCR_OVERLAY_TEXTS_EVENT, (event) => {
       setTexts(event.payload);
       setFadeState('in');
 
@@ -32,8 +29,10 @@ export default function OcrOverlayPage() {
       }
     });
 
-    const unlistenVisibility = listen<boolean>('overlay-visibility', (event) => {
+    const unlistenVisibility = listen<boolean>(OCR_OVERLAY_VISIBILITY_EVENT, (event) => {
       setIsVisible(event.payload);
+      // Alla riapertura non devono ricomparire i testi della sessione prima.
+      if (!event.payload) setTexts([]);
     });
 
     return () => {
@@ -45,11 +44,14 @@ export default function OcrOverlayPage() {
 
   if (!isVisible) return null;
 
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden bg-transparent">
       {texts.map((text, index) => {
+        const box = toCssBox(text, dpr);
         // Adaptive font size based on bounding box height
-        const boxHeight = text.height || 24;
+        const boxHeight = box.height || 24;
         const fontSize = Math.max(11, Math.min(20, Math.round(boxHeight * 0.6)));
 
         return (
@@ -57,9 +59,9 @@ export default function OcrOverlayPage() {
             key={`${text.x}-${text.y}-${index}`}
             className="absolute pointer-events-auto"
             style={{
-              left: text.x,
-              top: text.y,
-              maxWidth: Math.max(text.width, 200),
+              left: box.left,
+              top: box.top,
+              maxWidth: Math.max(box.width, 200),
               animation: fadeState === 'in'
                 ? 'overlayFadeIn 0.3s ease-out forwards'
                 : fadeState === 'out'

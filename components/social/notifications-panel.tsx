@@ -31,6 +31,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { clientLogger } from '@/lib/client-logger';
+import { toast } from 'sonner';
 
 // ─── NOTIFICATION ICONS ──────────────────────────────────────────────────────
 
@@ -104,6 +106,7 @@ function NotificationItem({ notification, onRead, onClick }: NotificationItemPro
 // ─── NOTIFICATIONS PANEL ─────────────────────────────────────────────────────
 
 interface NotificationsPanelProps {
+  /** uid di Supabase Auth (notifications.user_id), NON l'id del profilo locale. */
   userId: string;
   onNotificationClick?: (notification: Notification) => void;
 }
@@ -113,6 +116,8 @@ export function NotificationsPanel({ userId, onNotificationClick }: Notification
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  // Caricamento fallito: il pannello lo dice invece di mostrare "nessuna notifica".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [open, setOpen] = useState(false);
 
   // ─── LOAD DATA ─────────────────────────────────────────────────────────────
@@ -127,8 +132,10 @@ export function NotificationsPanel({ userId, onNotificationClick }: Notification
       ]);
       setNotifications(notifs);
       setUnreadCount(count);
+      setLoadFailed(false);
     } catch (error) {
-      console.error('[NotificationsPanel] Error loading:', error);
+      clientLogger.warn('[NotificationsPanel] Error loading:', error);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -151,7 +158,8 @@ export function NotificationsPanel({ userId, onNotificationClick }: Notification
   // ─── HANDLERS ──────────────────────────────────────────────────────────────
 
   const handleMarkRead = async (notificationId: string) => {
-    await markNotificationRead(notificationId);
+    const ok = await markNotificationRead(notificationId).catch(() => false);
+    if (!ok) return; // resta non letta: sul server non è cambiato nulla
     setNotifications(prev => 
       prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
     );
@@ -159,7 +167,11 @@ export function NotificationsPanel({ userId, onNotificationClick }: Notification
   };
 
   const handleMarkAllRead = async () => {
-    await markAllNotificationsRead(userId);
+    const ok = await markAllNotificationsRead(userId).catch(() => false);
+    if (!ok) {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
+    }
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     setUnreadCount(0);
   };
@@ -222,6 +234,11 @@ export function NotificationsPanel({ userId, onNotificationClick }: Notification
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+            </div>
+          ) : loadFailed ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <Bell className="h-12 w-12 text-slate-600 mb-3" />
+              <p className="text-sm text-slate-400">{t('forum.backendUnavailable')}</p>
             </div>
           ) : notifications.length > 0 ? (
             <div className="p-2 space-y-1">

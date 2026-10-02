@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { translateSingleSmart } from "@/lib/ai/ai-translate-direct";
+import { translateSmart } from "@/lib/ai/ai-translate-direct";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,6 +109,7 @@ export default function UnityBundlePage() {
   const [strings, setStrings] = useState<StringEntry[]>([]);
   const [translating, setTranslating] = useState(false);
   const [translationProgress, setTranslationProgress] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
   const [outputFile, setOutputFile] = useState<string>("");
   const [creatingBundle, setCreatingBundle] = useState(false);
 
@@ -199,31 +200,31 @@ export default function UnityBundlePage() {
       for (let i = 0; i < strings.length; i++) {
         const entry = strings[i];
         
+        // translateSmart, non translateSingleSmart: quest'ultima butta via
+        // `success` e su errore restituisce il testo sorgente come se fosse la
+        // traduzione. Una riga fallita resta com'era (non tradotta) e si conta.
+        let translated = '';
         try {
           clientLogger.debug(`[TRANSLATE] Provider: ${provider}, targetLang: ${targetLanguage}`);
-          const result = await translateSingleSmart(entry.value, targetLanguage, 'en');
-          
-          if (!result?.translated) {
-            clientLogger.warn(`Translation failed for "${entry.value}"`);
-            consecutiveErrors++;
-            
-            // Se troppi errori consecutivi, ferma
-            if (consecutiveErrors >= 5) {
-              setError("Troppi errori API. Verifica la tua API key Gemini in Settings.");
-              break;
-            }
-            
-            translatedStrings.push({ ...entry, translated: entry.value });
-          } else {
-            translatedStrings.push({
-              ...entry,
-              translated: result.translated
-            });
-            consecutiveErrors = 0; // Reset errori
-          }
+          const result = await translateSmart({ texts: [entry.value], targetLanguage, sourceLanguage: 'en' });
+          if (result.success) translated = result.translations[0] ?? '';
         } catch (err: unknown) {
           clientLogger.error("error traduzione:", err);
-          translatedStrings.push({ ...entry, translated: entry.value });
+        }
+
+        if (!translated) {
+          clientLogger.warn(`Translation failed for "${entry.value}"`);
+          translatedStrings.push(entry);
+          consecutiveErrors++;
+
+          // Se troppi errori consecutivi, ferma
+          if (consecutiveErrors >= 5) {
+            setError("Troppi errori API. Verifica la tua API key Gemini in Settings.");
+            break;
+          }
+        } else {
+          translatedStrings.push({ ...entry, translated });
+          consecutiveErrors = 0; // Reset errori
         }
         
         setTranslationProgress(Math.round(((i + 1) / totalStrings) * 100));
@@ -234,10 +235,15 @@ export default function UnityBundlePage() {
         }
       }
       
+      // Dopo uno stop per troppi errori le righe non raggiunte restano com'erano
+      // (prima venivano tolte dall'elenco).
+      translatedStrings.push(...strings.slice(translatedStrings.length));
+      setFailedCount(translatedStrings.filter(s => !s.translated).length);
+
       setStrings(translatedStrings);
       
       if (outputFile) {
-        const translatedPath = outputFile.replace('.json', '_it.json');
+        const translatedPath = outputFile.replace(/\.json$/i, `_${targetLanguage}.json`);
         await invoke("save_translated_strings", {
           jsonPath: translatedPath,
           entries: translatedStrings
@@ -533,6 +539,11 @@ export default function UnityBundlePage() {
             {currentStep >= 3 && strings.some(s => s.translated) && (
               <p className="text-2xs text-green-400 text-center">
                 ✓ {t('unityBundle.translationsReady')}
+              </p>
+            )}
+            {currentStep >= 3 && failedCount > 0 && (
+              <p className="text-2xs text-yellow-400 text-center">
+                {t('unityBundlePage.failedStrings').replace('{n}', String(failedCount))}
               </p>
             )}
           </CardContent>

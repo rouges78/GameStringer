@@ -20,13 +20,16 @@ export default function SubtitlesPage() {
   // Funzione di traduzione che usa l'API
   const handleTranslate = async (texts: string[], targetLang: string): Promise<string[]> => {
     // Traduzione client-side (translateSmart), non più /api/translate (ora stub 501).
+    // Una riga fallita torna come '' (non tradotta), mai come il testo sorgente
+    // spacciato per traduzione: con success:false translations È il sorgente.
+    // L'avviso sulle righe non tradotte lo dà SubtitleTranslator, una volta per giro.
     try {
       const { translateSmart } = await import('@/lib/ai/ai-translate-direct');
       const result = await translateSmart({ texts, targetLanguage: targetLang });
-      return texts.map((text, i) => result.translations[i] ?? text);
+      return texts.map((_, i) => (result.success ? result.translations[i] ?? '' : ''));
     } catch (error: unknown) {
       clientLogger.error("Translation error:", error);
-      return texts; // fallback: testi originali
+      return texts.map(() => '');
     }
   };
 

@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "Οι ρυθμίσεις Custom Prompt αποθηκεύτηκαν",
     "settingsReset": "Οι ρυθμίσεις επαναφέρθηκαν",
-    "title": "Προσαρμοσμένο prompt & φωνή",
     "newBadge": "Νέο 2026",
     "subtitle": "Προσάρμοσε τη συμπεριφορά του provider LLM με persona, τόνο και custom prompt",
     "enableCustomPrompt": "Ενεργοποίηση Custom Prompt",
-    "enableDesc": "Προσθέτει προσαρμοσμένες οδηγίες σε όλες τις μεταφράσεις",
     "personaRole": "Persona / Ρόλος",
     "personaDesc": "Μετάφρασε σαν να ήσουν αυτός ο χαρακτήρας",
     "toneStyle": "Τόνος / Ύφος",
     "customPrompt": "Προσαρμοσμένο Prompt",
     "customPromptDesc": "Πρόσθετες οδηγίες που θα προστεθούν στο system prompt",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "Φωνητική μετάφραση σε πραγματικό χρόνο (40+ γλώσσες)",
-    "ttsVoice": "Φωνή TTS",
-    "preserveVoice": "Διατήρηση χαρακτηριστικών αρχικής φωνής",
-    "preserveVoiceDesc": "Διατηρεί τον τόνο, την έμφαση και το ύφος της αρχικής φωνής (beta)",
     "preview": "Προεπισκόπηση:",
     "reset": "Επαναφορά",
     "personaPh": "Επίλεξε μια persona...",
     "tonePh": "Επίλεξε έναν τόνο...",
-    "customPromptPh": "Π.χ.: Χρησιμοποίησε αρχαϊκό λεξιλόγιο, μίλα επίσημα, χρησιμοποίησε όρους ειδικούς για fantasy..."
+    "customPromptPh": "Π.χ.: Χρησιμοποίησε αρχαϊκό λεξιλόγιο, μίλα επίσημα, χρησιμοποίησε όρους ειδικούς για fantasy...",
+    "enableDescCloud": "Προσθέτει τις οδηγίες σας στις μεταφράσεις των παρόχων AI στο cloud (Gemini, OpenAI, Claude, DeepSeek, Groq, Mistral…). Τα τοπικά μοντέλα (Ollama, LM Studio) και μηχανές όπως το DeepL δεν τις χρησιμοποιούν."
   },
   "lipSyncPanel": {
     "title": "Συγχρονισμός χειλιών (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "Φωνή & Provider",
     "defaultVoice": "Προεπιλεγμένη φωνή",
     "sttEngine": "Μηχανή STT",
-    "groqWhisper": "Groq Whisper (γρήγορο)",
     "durationMatching": "Αντιστοίχιση διάρκειας",
     "lipSync": "Συγχρονισμός χειλιών (Rhubarb)",
     "generateSubtitles": "Δημιουργία υποτίτλων",
@@ -161,7 +154,17 @@
     "errors": "Σφάλματα",
     "confidence": "Αξιοπιστία",
     "audioSegments": "Τμήματα ήχου",
-    "selectFolderPrompt": "Επίλεξε έναν φάκελο παιχνιδιού για να ξεκινήσεις το αυτόματο dubbing. Το pipeline θα εκτελέσει: σάρωση ήχου → μεταγραφή Whisper → μετάφραση AI → σύνθεση φωνής → patching αρχείων ήχου."
+    "selectFolderPrompt": "Επίλεξε έναν φάκελο παιχνιδιού για να ξεκινήσεις το αυτόματο dubbing. Το pipeline θα εκτελέσει: σάρωση ήχου → μεταγραφή Whisper → μετάφραση AI → σύνθεση φωνής → patching αρχείων ήχου.",
+    "doneToast": "Η μεταγλώττιση ολοκληρώθηκε: αντικαταστάθηκαν {n} αρχεία ήχου",
+    "partialToast": "Μερική μεταγλώττιση: αντικαταστάθηκαν {n} αρχεία ήχου, {errors} σφάλματα",
+    "failedToast": "Δεν αντικαταστάθηκε κανένα αρχείο ήχου",
+    "paidConfirmTitle": "Επιβεβαίωση απομαγνητοφώνησης επί πληρωμή",
+    "paidConfirmDesc": "Βρέθηκαν {count} αρχεία ήχου ({size} MB) στον φάκελο του παιχνιδιού, μαζί με μουσική και ηχητικά εφέ. Η απομαγνητοφώνηση στέλνει κάθε αρχείο στην υπηρεσία μετατροπής ομιλίας σε κείμενο: μία κλήση επί πληρωμή ανά αρχείο, που χρεώνεται στο κλειδί API σου. Τα αρχεία με ομιλία χρησιμοποιούν στη συνέχεια και μετάφραση και σύνθεση φωνής επί πληρωμή.",
+    "paidConfirmProceed": "Απομαγνητοφώνηση {count} αρχείων",
+    "patchFormatMismatch": "Ασυμφωνία μορφής: ο συντεθειμένος ήχος ({actual}) δεν ταιριάζει με το αρχείο του παιχνιδιού (.{expected}). Η μετατροπή ήχου δεν είναι διαθέσιμη, οπότε το αρχείο έμεινε αμετάβλητο.",
+    "unknownAudioFormat": "άγνωστη μορφή",
+    "noCompatibleAudio": "Κανένα από τα {count} αρχεία ήχου δεν είναι MP3. Η σύνθεση φωνής παράγει MP3 και η μετατροπή ήχου δεν είναι διαθέσιμη, οπότε κανένα αρχείο του παιχνιδιού δεν θα μπορούσε να αντικατασταθεί. Τίποτα δεν στάλθηκε σε υπηρεσίες επί πληρωμή.",
+    "groqWhisperUnavailable": "Groq Whisper (δεν είναι ακόμη διαθέσιμο)"
   },
   "fileSelector": {
     "fromWizard": "Έρχεσαι από τον Translation Wizard",
@@ -613,41 +616,11 @@
     "enterCurrentPassword": "Εισήγαγε τον τρέχοντα κωδικό πρόσβασης",
     "passwordMinLength": "Ο νέος κωδικός πρόσβασης πρέπει να έχει τουλάχιστον 4 χαρακτήρες",
     "passwordChanged": "Ο κωδικός πρόσβασης άλλαξε με επιτυχία!",
-    "invalidCode": "Μη έγκυρος κωδικός",
-    "twoFaDisabledMsg": "Ο έλεγχος ταυτότητας δύο παραγόντων απενεργοποιήθηκε",
-    "enter6DigitCode": "Εισήγαγε έναν κωδικό 6 ψηφίων",
-    "twoFaEnabledMsg": "Ο έλεγχος ταυτότητας δύο παραγόντων ενεργοποιήθηκε!",
     "passwordsDontMatch": "Οι κωδικοί πρόσβασης δεν ταιριάζουν",
-    "passwordTab": "Κωδικός πρόσβασης",
-    "sessionsTab": "Συνεδρίες",
-    "activityTab": "Δραστηριότητα",
     "changePassword": "Αλλαγή Κωδικού Πρόσβασης",
     "changePasswordDesc": "Άλλαξε τον κωδικό πρόσβασης του προφίλ σου",
     "passwordsMatch": "Οι κωδικοί πρόσβασης ταιριάζουν",
-    "sessionManagement": "Διαχείριση Συνεδριών",
-    "sessionMgmtDesc": "Διαμόρφωσε το timeout και το αυτόματο κλείδωμα",
-    "disconnectAfterInactivity": "Αποσύνδεση μετά από αδράνεια",
-    "min15": "15 λεπτά",
-    "min30": "30 λεπτά",
-    "hour1": "1 ώρα",
-    "hours2": "2 ώρες",
-    "requirePassword": "Απαίτηση κωδικού πρόσβασης μετά από αδράνεια",
-    "min5": "5 λεπτά",
-    "min10": "10 λεπτά",
-    "notifyNewLogins": "Ειδοποίηση για νέες συνδέσεις",
-    "disconnectAll": "Αποσύνδεση Όλων των Συνεδριών",
-    "twoFactorAuth": "Έλεγχος Ταυτότητας Δύο Παραγόντων",
-    "addExtraSecurity": "Πρόσθεσε ένα επιπλέον επίπεδο ασφάλειας",
-    "protectAccount": "Προστάτεψε τον λογαριασμό σου με έναν δεύτερο παράγοντα ελέγχου ταυτότητας",
-    "configure2fa": "Ρύθμιση 2FA",
-    "saveInAuthApp": "Αποθήκευσέ το σε μια εφαρμογή ελέγχου ταυτότητας (Google Authenticator, Authy, κ.λπ.)",
-    "cancel": "Ακύρωση",
-    "verify": "Επαλήθευση",
-    "twoFaActive": "2FA ενεργό",
-    "accountProtected": "Ο λογαριασμός σου είναι προστατευμένος",
-    "disable2fa": "Απενεργοποίηση 2FA",
-    "activityHistory": "Ιστορικό Δραστηριότητας",
-    "recentActivity": "Πρόσφατες συνδέσεις και αλλαγές"
+    "passwordChangeFailed": "Ο κωδικός δεν άλλαξε. Ελέγξτε ότι ο τρέχων κωδικός είναι σωστός."
   },
   "coverPicker": {
     "chooseCoverFor": "Επίλεξε Εξώφυλλο για",
@@ -789,7 +762,9 @@
     "toClipboard": "Στο πρόχειρο",
     "backToEditorAria": "Επιστροφή στον επεξεργαστή",
     "backToEditor": "Επιστροφή στον Επεξεργαστή",
-    "translationPh": "Μετάφραση..."
+    "translationPh": "Μετάφραση...",
+    "cpkBuildUnavailable": "Μη διαθέσιμο για αυτά τα αρχεία",
+    "cpkBuildUnavailableReason": "Δεν είναι ακόμη δυνατή η δημιουργία CPK με patch για αρχεία {formats}: το GameStringer δεν έχει εργαλείο που να τα ανακατασκευάζει με την αρχική τους δομή, και η επανεγγραφή των μεταφράσεων ως απλό κείμενο θα χαλούσε το παιχνίδι. Κάνε εξαγωγή σε CSV ή PO."
   },
   "translationWizard": {
     "renderError": "Σφάλμα απόδοσης",
@@ -1041,7 +1016,6 @@
     "more": "Περισσότερα",
     "moreTooltip": "Άλλα εργαλεία (P.T. Rank, Dry Run, Ονόματα BD)",
     "alreadyRunning": "Η μετάφραση εκτελείται ήδη στο παρασκήνιο.",
-    "advancedParams": "Σύνθετες παράμετροι (θερμοκρασία, tokens, παρτίδα)",
     "stepScan": "Σάρωση game.veb",
     "stepExtract": "Εξαγωγή κειμένων",
     "stepTranslateCloud": "Μετάφραση AI (Cloud)",
@@ -1081,7 +1055,13 @@
     "pakAesSaved": "Το κλειδί αποθηκεύτηκε. Τρέξε ξανά το String it! για νέα προσπάθεια.",
     "pakAesWrong": "Το αποθηκευμένο κλειδί δεν ανοίγει αυτό το pak. Επικόλλησε άλλο ή αφαίρεσε το αποθηκευμένο.",
     "pakAesClear": "Αφαίρεση αποθηκευμένου κλειδιού",
-    "pakAesCleared": "Το κλειδί αφαιρέθηκε."
+    "pakAesCleared": "Το κλειδί αφαιρέθηκε.",
+    "pageRouteDetected": "Εντοπίστηκε παιχνίδι {engine}",
+    "pageRouteMsg": "Το {engine} δεν έχει αυτόματη ροή στο String it!: χρησιμοποιήστε τον ειδικό {tool} για να μεταφράσετε αυτό το παιχνίδι.",
+    "pageRouteToast": "{engine}: ανοίξτε το {tool}",
+    "pageRouteOpen": "Άνοιγμα {tool}",
+    "gmRestored": "Το patch GameMaker απέτυχε: τα αρχικά αρχεία του παιχνιδιού επαναφέρθηκαν από το αντίγραφο ασφαλείας.",
+    "gmRestoreFailed": "Το patch GameMaker απέτυχε και το αντίγραφο ασφαλείας δεν επαναφέρθηκε: ελέγξτε τα αρχεία του παιχνιδιού (ή επαληθεύστε τα από το Steam) πριν το ξεκινήσετε."
   },
   "autoTranslatePage": {
     "identical": "πανομοιότυπα",
@@ -1277,7 +1257,16 @@
     "wait25MinutesAndClick": "Περιμένετε 25 λεπτά και κάντε κλικ",
     "configureAnAiProviderGeminiDee": "Ρυθμίστε έναν πάροχο AI (Gemini, DeepSeek, κ.λπ.) στο",
     "tpLogProjectSaved": "Το έργο ενημερώθηκε: {count} συμβολοσειρές αποθηκεύτηκαν στα Έργα (συνέχισε, εξήγαγε ή δημοσίευσε από εκεί)",
-    "tpLogProjectSaveFailed": "Το patch εφαρμόστηκε, αλλά η καταχώριση του έργου απέτυχε: {err}"
+    "tpLogProjectSaveFailed": "Το patch εφαρμόστηκε, αλλά η καταχώριση του έργου απέτυχε: {err}",
+    "bgJobNotFound": "Τα αποτελέσματα αυτής της μετάφρασης στο παρασκήνιο δεν είναι πλέον διαθέσιμα.",
+    "gamePathUnknown": "Δεν βρέθηκε ο φάκελος εγκατάστασης αυτού του παιχνιδιού. Φορτώστε τα αρχεία χειροκίνητα ή ανοίξτε το παιχνίδι από τη Βιβλιοθήκη.",
+    "libraryLoadFailed": "Δεν ήταν δυνατή η φόρτωση της βιβλιοθήκης παιχνιδιών.",
+    "pickInstalledGame": "Ή επιλέξτε ένα εγκατεστημένο παιχνίδι:",
+    "pickGamePlaceholder": "Επιλέξτε παιχνίδι…",
+    "noInstalledGames": "Δεν βρέθηκαν εγκατεστημένα παιχνίδια στη βιβλιοθήκη.",
+    "noStringsTranslated": "Δεν μεταφράστηκε καμία συμβολοσειρά",
+    "noStringsTranslatedDesc": "Η μετάφραση ολοκληρώθηκε χωρίς να μεταφραστεί καμία συμβολοσειρά. Τα φορτωμένα αρχεία είναι ακόμα εδώ: μπορείτε να δοκιμάσετε ξανά.",
+    "nothingToTranslate": "Τα φορτωμένα αρχεία δεν περιέχουν κείμενο για μετάφραση."
   },
   "aiPipelinePage": {
     "title": "Pipeline μετάφρασης AI",
@@ -1377,7 +1366,10 @@
     "japanese": "Ιαπωνικά",
     "chinese": "Κινεζικά",
     "korean": "Κορεατικά",
-    "impostazioniPerLestrazioneAuto": "Ρυθμίσεις για την αυτόματη εξαγωγή και την έγχυση στο prompt"
+    "impostazioniPerLestrazioneAuto": "Ρυθμίσεις για την αυτόματη εξαγωγή και την έγχυση στο prompt",
+    "noGameTexts": "Δεν βρέθηκαν αποθηκευμένες συμβολοσειρές για αυτό το παιχνίδι και τη γλώσσα-στόχο. Μεταφράστε πρώτα το παιχνίδι και μετά εξαγάγετε όρους από τα πραγματικά του κείμενα.",
+    "gameTextsAvailable": "Πηγή: {count} αποθηκευμένες συμβολοσειρές αυτού του παιχνιδιού (στην ΤΝ αποστέλλεται ένα αντιπροσωπευτικό δείγμα).",
+    "noGlossaryForGame": "Αυτό το παιχνίδι δεν έχει ακόμη γλωσσάριο: δημιουργήστε ένα για να διαχειριστείτε τους όρους του."
   },
   "visualNovelPage": {
     "title": "Patcher Visual Novel",
@@ -1695,7 +1687,18 @@
     "translationMemory": "Μνήμη μετάφρασης",
     "selectString": "Επιλέξτε ένα string από τη λίστα",
     "noSelection": "Καμία επιλογή",
-    "traduciUnGiocoConNeuralTransla": "Μεταφράστε ένα παιχνίδι με το Neural Translator για να αρχίσετε να το γεμίζετε εδώ."
+    "traduciUnGiocoConNeuralTransla": "Μεταφράστε ένα παιχνίδι με το Neural Translator για να αρχίσετε να το γεμίζετε εδώ.",
+    "deepLinkNoData": "Δεν υπάρχουν ακόμη μεταφράσεις για το «{game}» στον Επεξεργαστή",
+    "fileLoadedDesc": "{file} - βρέθηκαν {n} συμβολοσειρές",
+    "fileLoadedDescMulti": "{file} - {n} συμβολοσειρές (εντοπίστηκε πολύγλωσσο αρχείο)",
+    "partialLoadedTitle": "Φορτώθηκαν μερικά αποτελέσματα",
+    "partialLoadedDesc": "Μεταφράστηκαν {done}/{total} συμβολοσειρές από {game}",
+    "savedStringsFile": "Αποθηκευμένες συμβολοσειρές",
+    "savedDictionaryFailed": "Αποθηκεύτηκε στον Επεξεργαστή, αλλά όχι στο λεξικό του παιχνιδιού",
+    "aiNoProvider": "Κανένας πάροχος μετάφρασης δεν απάντησε: η συμβολοσειρά δεν μεταφράστηκε. Ελέγξτε τα κλειδιά API και τους ενεργούς παρόχους στις Ρυθμίσεις.",
+    "aiTranslated": "Μεταφράστηκε με {provider}",
+    "aiTranslateFailed": "Η μετάφραση AI απέτυχε",
+    "savedLinesDesc": "Αποθηκεύτηκαν {n} μεταφράσεις"
   },
   "binaryPatcherPage": {
     "selectExeDll": "Επίλεξε ένα .exe ή .dll παιχνιδιού για να εξαγάγεις μεταφράσιμες συμβολοσειρές",
@@ -1727,7 +1730,14 @@
     "offlineDict": "Offline λεξικό — γρήγορο αλλά μόνο ES→IT, βασική ποιότητα",
     "aiPreset": "Προεπιλογή AI:",
     "allCategories": "Όλες οι κατηγορίες",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL και άλλα — ανώτερη ποιότητα"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL και άλλα — ανώτερη ποιότητα",
+    "readBinaryFailed": "Δεν ήταν δυνατή η ανάγνωση του δυαδικού αρχείου byte προς byte ({error}). Αρχεία άνω των 50 MB δεν μπορούν να φορτωθούν από τον φάκελο του παιχνιδιού.",
+    "patchNothingApplied": "Καμία μετάφραση δεν μπόρεσε να γραφτεί στο δυαδικό αρχείο, οπότε δεν αποθηκεύτηκε κανένα αρχείο.",
+    "patchSaved": "Το αρχείο με patch αποθηκεύτηκε: γράφτηκαν {patched} συμβολοσειρές",
+    "patchSkippedErrors": "{n} μεταφράσεις δεν γράφτηκαν (δεν ταιριάζει το μήκος σε byte ή το αρχικό κείμενο)",
+    "backupKept": "Αντίγραφο ασφαλείας του αρχείου που αντικαταστάθηκε: {path}",
+    "backupFailed": "Δεν ήταν δυνατή η δημιουργία αντιγράφου ασφαλείας του αρχείου προς αντικατάσταση, οπότε δεν γράφτηκε τίποτα: {error}",
+    "patchSaveFailed": "Δεν ήταν δυνατή η αποθήκευση του αρχείου με patch: {error}"
   },
   "advancedToolsPage": {
     "title": "Προηγμένα εργαλεία",
@@ -1800,7 +1810,22 @@
     "applyInstalling": "Εγκατάσταση patcher...",
     "applyApplying": "Εφαρμογή...",
     "applied": "Εφαρμόστηκε!",
-    "applyToGame": "Εφαρμογή στο παιχνίδι"
+    "applyToGame": "Εφαρμογή στο παιχνίδι",
+    "applyResult": {
+      "allTitle": "Η μετάφραση εφαρμόστηκε στο παιχνίδι",
+      "partialTitle": "Η μετάφραση εφαρμόστηκε μόνο εν μέρει",
+      "noneTitle": "Δεν γράφτηκε τίποτα στο παιχνίδι",
+      "written": "γράφτηκε",
+      "failed": "δεν γράφτηκε: {error}",
+      "unknownLocation": "δεν γράφτηκε: η αρχική θέση στο παιχνίδι είναι άγνωστη",
+      "notLanguageFile": "δεν γράφτηκε: δεν είναι το αρχείο γλώσσας του παιχνιδιού",
+      "noEntries": "δεν γράφτηκε: δεν υπάρχουν μεταφρασμένα κείμενα για το λεξικό",
+      "languageHint": "Επιλέξτε τη νέα γλώσσα στις επιλογές του παιχνιδιού.",
+      "xunityHint": "{n} μεταφράσεις στο λεξικό XUnity. Ξεκινήστε το παιχνίδι!",
+      "patcherFailed": "Δεν ήταν δυνατή η εγκατάσταση του XUnity AutoTranslator: {error}",
+      "manualHint": "Για τα αρχεία που δεν γράφτηκαν, χρησιμοποιήστε «Λήψη όλων» και αντιγράψτε τα χειροκίνητα."
+    },
+    "patchSavedTo": "Το πακέτο μετάφρασης αποθηκεύτηκε στο:"
   },
   "translationBridgePage": {
     "richieste": "Αιτήματα",
@@ -1834,14 +1859,10 @@
     "communityHubSupabase": "Community Hub — Backend Supabase",
     "communityHubShort": "Community Hub",
     "temperatureLabel": "Θερμοκρασία:",
-    "maxTokensLabel": "Μέγιστα tokens:",
-    "batchSizeLabel": "Μέγεθος παρτίδας:",
     "copyToSeeAll": "\\n\\n... (αντιγράψτε για να τα δείτε όλα)",
     "gbTotal": "GB συνολικά",
     "diskUsed": "σε χρήση",
     "gbAvailable": "GB διαθέσιμα",
-    "rssFeedAdded": "Η ροή RSS προστέθηκε",
-    "feedRemoved": "Η ροή αφαιρέθηκε",
     "lmStudioDesc": "Το LM Studio είναι μια εφαρμογή υπολογιστή για την εκτέλεση τοπικών LLM με API συμβατό με OpenAI. Δωρεάν, χωρίς κλειδί API.",
     "autoDetectFromServer": "Αυτόματος εντοπισμός από τον διακομιστή",
     "lmStudioDownload1": "Κατεβάστε το LM Studio από ",
@@ -1860,9 +1881,6 @@
     "deepl500k": "500K χαρακτήρες/μήνα δωρεάν — ",
     "qwen1m": "1M tokens/μήνα δωρεάν, κορυφαίο πολύγλωσσο — ",
     "rssFeedDashboard": "Πίνακας ροών RSS",
-    "rssDesc": "Ρυθμίστε τις ροές RSS που θα εμφανίζονται στο ticker του πίνακα",
-    "feedNamePlaceholder": "Όνομα ροής (π.χ. Steam News)",
-    "feedUrlPlaceholder": "URL ροής RSS",
     "noFeeds": "Δεν έχουν ρυθμιστεί ροές. Προσθέστε μια ροή RSS για να ξεκινήσετε.",
     "restoreDefaults": "Επαναφορά προεπιλογών",
     "fontSmall": "Μικρό (14px)",
@@ -1910,7 +1928,10 @@
     "git": "Git:",
     "branch": "Κλάδος:",
     "ollamaUrlLabel": "Διεύθυνση διακομιστή Ollama",
-    "ollamaUrlHint": "Αφήστε το κενό για αυτόματο εντοπισμό. Συμπληρώστε το αν το Ollama τρέχει σε άλλη θύρα, σε WSL/Docker ή σε άλλον υπολογιστή (π.χ. http://192.168.1.5:11434)."
+    "ollamaUrlHint": "Αφήστε το κενό για αυτόματο εντοπισμό. Συμπληρώστε το αν το Ollama τρέχει σε άλλη θύρα, σε WSL/Docker ή σε άλλον υπολογιστή (π.χ. http://192.168.1.5:11434).",
+    "temperatureSection": "Σύνθετες παράμετροι (θερμοκρασία)",
+    "temperatureScope": "Χρησιμοποιείται από τους παρόχους AI στο cloud (Gemini, OpenAI, DeepSeek, Groq, Mistral, Cohere, OpenRouter, Together, Fireworks, Cerebras, Qwen). Το Claude κρατά τη δική του προεπιλογή. Το Ollama έχει δική του θερμοκρασία: Ollama / AI → Προηγμένες δυνατότητες.",
+    "rssNewsDesc": "Επιλέξτε ποιες πηγές τροφοδοτούν τα νέα του πίνακα. Είναι η ίδια λίστα με τη σελίδα «Διαχείριση ροών νέων»."
   },
   "mtpePage": {
     "title": "Ροή εργασίας MTPE",
@@ -1936,7 +1957,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google Translate",
     "libretranslateFree": "LibreTranslate (Δωρεάν)",
-    "workflowCompletato": "Το workflow ολοκληρώθηκε!"
+    "workflowCompletato": "Το workflow ολοκληρώθηκε!",
+    "linesNotTranslated": "{n} γραμμές δεν μεταφράστηκαν από το AI: η μετάφρασή τους είναι κενή. Γράψε τες μόνος σου ή απόρριψέ τες."
   },
   "translationWizardPage": {
     "noGameTrovato": "Δεν βρέθηκε παιχνίδι",
@@ -1947,7 +1969,6 @@
     "traduzioneCompletata": "Η μετάφραση ολοκληρώθηκε!"
   },
   "libraryPage": {
-    "scanDone": "🎮 Η σάρωση Family Sharing ολοκληρώθηκε!",
     "scanError": "Σφάλμα κατά τη σάρωση",
     "installStarted": "Η εγκατάσταση ξεκίνησε",
     "installStartedDesc": "Το Steam θα ανοίξει για να εγκαταστήσει το {{game}}",
@@ -1983,12 +2004,16 @@
     "langScanDone": "Εντοπίστηκαν γλώσσες για {n} παιχνίδια",
     "langScanNone": "Δεν βρέθηκαν νέες γλώσσες",
     "langScanError": "Σφάλμα κατά τον εντοπισμό γλωσσών",
-    "addGameFromDiskHint": "Αν το παιχνίδι δεν εμφανίζεται, πρόσθεσέ το επιλέγοντας τον φάκελό του στον δίσκο — δουλεύει και για παιχνίδια εκτός καταστημάτων."
+    "addGameFromDiskHint": "Αν το παιχνίδι δεν εμφανίζεται, πρόσθεσέ το επιλέγοντας τον φάκελό του στον δίσκο — δουλεύει και για παιχνίδια εκτός καταστημάτων.",
+    "libraryScanDone": "Η βιβλιοθήκη σαρώθηκε ξανά σε όλα τα καταστήματα",
+    "scanPartial": "Η σάρωση ολοκληρώθηκε με σφάλματα: ορισμένες πηγές δεν ήταν δυνατό να διαβαστούν, οπότε η λίστα μπορεί να είναι ελλιπής.",
+    "steamCredsHint": "Συνδέστε τον λογαριασμό σας Steam στα Καταστήματα για να βλέπετε και τα παιχνίδια που έχετε αλλά δεν έχετε εγκαταστήσει."
   },
   "unityBundlePage": {
     "auto": "Αυτόματο",
     "fileOpenCtrlv": "Αρχείο → Άνοιγμα → Ctrl+V",
-    "importDumpCtrlv": "Εισαγωγή Dump → Ctrl+V"
+    "importDumpCtrlv": "Εισαγωγή Dump → Ctrl+V",
+    "failedStrings": "{n} συμβολοσειρές δεν μεταφράστηκαν και παραμένουν στην αρχική γλώσσα"
   },
   "activityPage": {
     "filterBy": "Φιλτράρισμα κατά:",
@@ -2232,40 +2257,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "Μεταφράσεις",
-    "stringhe": "Συμβολοσειρές",
-    "parole": "Λέξεις",
-    "progress": "Πρόοδος",
     "oggi": "Σήμερα",
     "settimana": "Εβδομάδα",
     "mese": "Μήνας",
-    "completati": "Ολοκληρωμένα",
-    "inCorso": "Σε εξέλιξη",
     "totali": "Σύνολο",
     "title": "Στατιστικά μετάφρασης",
-    "tradotte": "μεταφρασμένες",
-    "elaborate": "επεξεργασμένες",
-    "medio": "μέσος όρος",
     "weeklyActivity": "Εβδομαδιαία δραστηριότητα",
-    "estimatedTimeRemaining": "Εκτιμώμενος χρόνος που απομένει",
     "targetLanguages": "Γλώσσες-στόχοι",
-    "noTranslationsYet": "Δεν υπάρχουν ακόμη μεταφράσεις"
+    "noTranslationsYet": "Δεν υπάρχουν ακόμη μεταφράσεις",
+    "noLanguageData": "Δεν έχει καταγραφεί γλώσσα προορισμού για αυτές τις μεταφράσεις",
+    "activityOverview": "Επισκόπηση της μεταφραστικής σας δραστηριότητας"
   },
   "securityDialogComp": {
     "currentPassword": "Τρέχων κωδικός πρόσβασης",
     "newPassword": "Νέος κωδικός πρόσβασης",
-    "confirmPassword": "Επιβεβαίωση κωδικού πρόσβασης",
-    "timeoutSessione": "Λήξη χρόνου συνεδρίας",
-    "never": "Ποτέ",
-    "autoLock": "Αυτόματο κλείδωμα",
-    "timeoutBlocco": "Χρόνος έως το κλείδωμα",
-    "notificheLogin": "Ειδοποιήσεις σύνδεσης",
-    "active": "Ενεργό",
-    "inactive": "Ανενεργό",
-    "yourSecretCode": "Ο μυστικός σου κωδικός:",
-    "enterVerificationCode": "Εισάγετε τον κωδικό επαλήθευσης",
-    "enterCodeToDisable": "Εισάγετε τον κωδικό για απενεργοποίηση",
-    "demoUsa123456": "Demo: χρησιμοποίησε 123456",
-    "noActivityRecorded": "Δεν καταγράφηκε καμία δραστηριότητα"
+    "confirmPassword": "Επιβεβαίωση κωδικού πρόσβασης"
   },
   "visualTranslationEditorComp": {
     "originale": "Πρωτότυπο",
@@ -2416,7 +2422,8 @@
     "reviewNotesPlaceholder": "Προσθέστε σημειώσεις για τον έλεγχο...",
     "approve": "Έγκριση",
     "saveChanges": "Αποθήκευση αλλαγών",
-    "exportResults": "Εξαγωγή αποτελεσμάτων"
+    "exportResults": "Εξαγωγή αποτελεσμάτων",
+    "emptyTranslationCannotApprove": "Το AI δεν επέστρεψε μετάφραση για αυτή τη γραμμή, οπότε δεν μπορεί να εγκριθεί. Γράψε τη μόνος σου (Επεξεργασία) ή απόρριψέ τη."
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "Προεπισκόπηση Pixel Font",
@@ -2599,7 +2606,8 @@
     "personalizzaTema": "Προσαρμογή θέματος",
     "scegliOCreaIlTuoTemaPersonaliz": "Επίλεξε ή δημιούργησε το δικό σου προσαρμοσμένο θέμα",
     "iTuoiTemiSalvati": "Τα αποθηκευμένα θέματά σου",
-    "anteprima": "Προεπισκόπηση"
+    "anteprima": "Προεπισκόπηση",
+    "altriTemi": "Περισσότερα θέματα"
   },
   "errorBoundaryComp": {
     "errorId": "ID σφάλματος:",
@@ -2622,7 +2630,9 @@
     "importTranslations": "Εισαγωγή μεταφράσεων",
     "game": "Παιχνίδι",
     "translationFile": "Αρχείο μετάφρασης",
-    "detectedFileFormat": "Εντοπισμένη μορφή αρχείου:"
+    "detectedFileFormat": "Εντοπισμένη μορφή αρχείου:",
+    "importResult": "Εισήχθησαν {n} από {total} μεταφράσεις",
+    "noValidRows": "Καμία γραμμή δεν περιέχει και το αρχικό κείμενο και τη μετάφραση"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "Καθολική πρόοδος",
@@ -2717,7 +2727,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "Ενεργό προφίλ",
-    "chiudi": "Κλείσιμο"
+    "chiudi": "Κλείσιμο",
+    "avatarUpdated": "Το avatar ενημερώθηκε"
   },
   "nav": {
     "dashboard": "Πίνακας ελέγχου",
@@ -2881,7 +2892,15 @@
     "buildDate": "Ημερομηνία build",
     "gitHash": "Hash Git",
     "branch": "Κλάδος",
-    "unsavedChanges": "Μη αποθηκευμένες αλλαγές"
+    "unsavedChanges": "Μη αποθηκευμένες αλλαγές",
+    "temperatureTooltipHighCapped": "0.8-1.0: Πιο δημιουργικές, μπορεί να αποκλίνουν από το πρωτότυπο",
+    "autoBackupConfigSaved": "Οι ρυθμίσεις αυτόματου αντιγράφου ασφαλείας αποθηκεύτηκαν",
+    "backupDone": "Το αντίγραφο ασφαλείας ολοκληρώθηκε",
+    "backupDoneDesc": "Αποθηκεύτηκαν {n} αρχεία ({size})",
+    "backupFailed": "Η δημιουργία αντιγράφου ασφαλείας απέτυχε",
+    "restoreDone": "Η επαναφορά ολοκληρώθηκε",
+    "restoreDoneDesc": "Επαναφέρθηκαν {n} στοιχεία",
+    "restoreFailed": "Η επαναφορά απέτυχε"
   },
   "common": {
     "loading": "Φόρτωση...",
@@ -3670,7 +3689,10 @@
     "failed": "απέτυχαν",
     "ltWindow": "Παράθυρο",
     "ltPickWindow": "Επιλογή παραθύρου",
-    "ltNoWindow": "Δεν βρέθηκε παράθυρο"
+    "ltNoWindow": "Δεν βρέθηκε παράθυρο",
+    "suggestionsGeneratedFor": "Δημιουργήθηκαν προτάσεις για {n} μεταφράσεις",
+    "originalsCopiedCount": "Αντιγράφηκαν {n} αρχικά κείμενα",
+    "translationsPastedCount": "Επικολλήθηκαν {n} μεταφράσεις"
   },
   "languages": {
     "cs": "Čeština",
@@ -3794,7 +3816,15 @@
     "passwordResetSuccess": "Ο κωδικός σας επαναφέρθηκε με επιτυχία",
     "historyCleared": "Το ιστορικό δραστηριότητας διαγράφηκε",
     "disconnectedAll": "Αποσυνδεθήκατε από όλες τις άλλες συνεδρίες",
-    "thisProfile": "αυτό το προφίλ"
+    "thisProfile": "αυτό το προφίλ",
+    "recoveryUnavailableTitle": "Αυτός ο κωδικός δεν μπορεί να επαναφερθεί",
+    "recoveryUnavailableDesc": "Το προφίλ σας είναι κρυπτογραφημένο με τον κωδικό του και το GameStringer δεν διατηρεί κανένα άλλο κλειδί που να μπορεί να το ξεκλειδώσει. Ένας ξεχασμένος κωδικός δεν μπορεί να ανακτηθεί ούτε να επαναφερθεί, ούτε καν με το κλειδί ανάκτησης 12 λέξεων που εμφανίστηκε κατά τη δημιουργία του προφίλ.",
+    "recoveryUnavailableHint": "Αν δεν τον θυμάστε, δημιουργήστε νέο προφίλ. Τα δεδομένα αυτού του προφίλ παραμένουν κλειδωμένα μέχρι να εισαχθεί ο σωστός κωδικός.",
+    "passwordNoticeTitle": "Φυλάξτε τον κωδικό σας με ασφάλεια",
+    "passwordNoticeDesc": "Αυτό το προφίλ είναι κρυπτογραφημένο με τον κωδικό του. Αν τον ξεχάσετε, δεν μπορεί να ανακτηθεί ούτε να επαναφερθεί και τα δεδομένα του προφίλ παραμένουν κλειδωμένα.",
+    "passwordNoticeHint": "Σημειώστε τον ή αποθηκεύστε τον σε έναν διαχειριστή κωδικών πρόσβασης.",
+    "passwordNoticeConfirm": "Κατάλαβα",
+    "passwordUnrecoverableDesc": "Το προφίλ σας είναι κρυπτογραφημένο με τον κωδικό του και το GameStringer δεν διατηρεί κανένα άλλο κλειδί που να μπορεί να το ξεκλειδώσει. Ένας ξεχασμένος κωδικός δεν μπορεί να ανακτηθεί ούτε να επαναφερθεί. Αν μια παλαιότερη έκδοση σάς έδωσε κλειδί ανάκτησης 12 λέξεων, ούτε αυτό μπορεί να ξεκλειδώσει το προφίλ."
   },
   "onboarding": {
     "step": "Βήμα {current} από {total}",
@@ -4149,7 +4179,8 @@
     "bgOpacity": "Αδιαφάνεια φόντου",
     "shadow": "Σκιά",
     "positionApplied": "Η θέση \"{name}\" εφαρμόστηκε",
-    "styleApplied": "Το στυλ \"{name}\" εφαρμόστηκε"
+    "styleApplied": "Το στυλ \"{name}\" εφαρμόστηκε",
+    "notConnected": "Η έξοδος προς το ακουστικό δεν έχει συνδεθεί ακόμη: αυτή η σελίδα κάνει μόνο προεπισκόπηση της επικάλυψης, δεν αποστέλλεται τίποτα στο ακουστικό VR."
   },
   "playerFeedback": {
     "title": "Σχόλια Παικτών",
@@ -4495,7 +4526,8 @@
     "cancel": "Άκυρο",
     "delete": "Διαγραφή",
     "translationUpdated": "Η μετάφραση ενημερώθηκε",
-    "translationDeleted": "Η μετάφραση διαγράφηκε"
+    "translationDeleted": "Η μετάφραση διαγράφηκε",
+    "languagePair": "Ζεύγος γλωσσών"
   },
   "support": {
     "title": "Υποστήριξη",
@@ -4533,7 +4565,8 @@
     "micError": "Αδυναμία πρόσβασης στο μικρόφωνο. Ελέγξτε τα δικαιώματα.",
     "transcriptionError": "Σφάλμα μεταγραφής. Ελέγξτε το κλειδί API του OpenAI.",
     "translationError": "Σφάλμα μετάφρασης.",
-    "ttsError": "Σφάλμα σύνθεσης ομιλίας."
+    "ttsError": "Σφάλμα σύνθεσης ομιλίας.",
+    "noSpeechDetected": "Δεν αναγνωρίστηκε ομιλία στον ήχο."
   },
   "dictionaryManager": {
     "addTranslation": "Προσθήκη Μετάφρασης"
@@ -4622,7 +4655,8 @@
     "reset": "Επαναφορά",
     "save": "Αποθήκευση",
     "selectToEdit": "Επιλέξτε έναν υπότιτλο για επεξεργασία",
-    "issuesDetected": "Εντοπίστηκαν ζητήματα"
+    "issuesDetected": "Εντοπίστηκαν ζητήματα",
+    "linesNotTranslated": "{n} γραμμές υποτίτλων δεν μεταφράστηκαν και διατηρούν το αρχικό κείμενο"
   },
   "multiLlmCompare": {
     "title": "Σύγκριση Multi-LLM",
@@ -4802,9 +4836,6 @@
     "subtitle": "Ζωντανοί υπότιτλοι για streaming και εγγραφή",
     "startCapture": "Έναρξη καταγραφής",
     "stop": "Διακοπή",
-    "paused": "Σε παύση",
-    "captureActive": "Καταγραφή ενεργή",
-    "subtitlesCaptured": "υπότιτλοι καταγράφηκαν",
     "livePreview": "Ζωντανή προεπισκόπηση",
     "settings": "Ρυθμίσεις",
     "style": "Στυλ",
@@ -4824,15 +4855,13 @@
     "fadeIn": "Σταδιακή εμφάνιση",
     "fadeOut": "Σταδιακή απόκρυψη",
     "animation": "Κίνηση",
-    "history": "Ιστορικό",
-    "noSubtitlesCaptured": "Δεν καταγράφηκαν υπότιτλοι",
-    "startCaptureToBegin": "Ξεκινήστε την καταγραφή για να αρχίσετε",
     "positionTop": "Επάνω",
     "positionCenter": "Κέντρο",
     "positionBottom": "Κάτω",
     "positionAbove": "Πάνω από",
     "positionBelow": "Κάτω από",
-    "positionInline": "Ενσωματωμένο"
+    "positionInline": "Ενσωματωμένο",
+    "notConnected": "Η ζωντανή καταγραφή δεν έχει συνδεθεί ακόμη: εδώ δεν καταγράφονται ούτε μεταφράζονται υπότιτλοι. Μπορείτε μόνο να κάνετε προεπισκόπηση του στυλ των υποτίτλων."
   },
   "translationFixer": {
     "title": "Διορθωτής μετάφρασης",
@@ -4903,19 +4932,14 @@
     "exportAll": "Εξαγωγή όλων",
     "dropImages": "Αποθέστε εικόνες ή κάντε κλικ για μεταφόρτωση",
     "processing": "Επεξεργασία...",
-    "detecting": "Ανίχνευση συννεφιών...",
-    "translating": "Μετάφραση...",
-    "inpainting": "Inpainting...",
-    "completed": "Ολοκληρώθηκε!",
     "noPage": "Καμία σελίδα",
     "original": "Πρωτότυπο",
     "translated": "Μεταφρασμένο",
     "loadPages": "Φόρτωση σελίδων μάνγκα/κόμικ",
     "supportedFormats": "Υποστηρίζει JPG, PNG, WebP",
     "pageOf": "Σελίδα {current} από {total}",
-    "analyzingText": "Ανάλυση κειμένου...",
-    "batchTranslation": "Ομαδική μετάφραση...",
-    "fontStyleLabel": "Στυλ γραμματοσειράς"
+    "fontStyleLabel": "Στυλ γραμματοσειράς",
+    "notConnected": "Δεν έχει συνδεθεί ακόμη: αυτό το εργαλείο δεν εκτελεί OCR ούτε μετάφραση. Μπορείτε να φορτώσετε και να δείτε σελίδες, αλλά η ανίχνευση, το inpainting και η εξαγωγή είναι απενεργοποιημένα."
   },
   "textureTranslator": {
     "title": "Μεταφραστής υφών",
@@ -4935,7 +4959,8 @@
     "noTexture": "Δεν επιλέχθηκε υφή",
     "processAll": "Επεξεργασία όλων",
     "original": "Πρωτότυπο",
-    "translated": "Μεταφρασμένο"
+    "translated": "Μεταφρασμένο",
+    "notConnected": "Δεν έχει συνδεθεί ακόμη: αυτό το εργαλείο δεν εκτελεί OCR ούτε μετάφραση. Μπορείτε να φορτώσετε και να δείτε υφές, αλλά η ανίχνευση κειμένου, η εφαρμογή μεταφράσεων και η εξαγωγή είναι απενεργοποιημένες."
   },
   "qaCheck": {
     "title": "Έλεγχος QA",
@@ -5436,7 +5461,8 @@
     "translated": "μεταφράστηκαν",
     "waitingForText": "Αναμονή για κείμενο...",
     "footerInfo": "Το OCR λειτουργεί με κάθε παιχνίδι • Μεταφράσεις με Gemini AI",
-    "aiProvider": "Πάροχος AI"
+    "aiProvider": "Πάροχος AI",
+    "languagePackMissing": "Τα Windows δεν μπορούν να διαβάσουν κείμενο σε αυτή τη γλώσσα ({lang}): δεν είναι εγκατεστημένο το πακέτο γλώσσας με οπτική αναγνώριση χαρακτήρων (OCR). Προσθέστε το στις Ρυθμίσεις > Ώρα και γλώσσα > Γλώσσα και περιοχή και ξεκινήστε ξανά."
   },
   "workshop": {
     "title": "Steam Workshop",
@@ -5544,15 +5570,6 @@
     "recommendedModel": "Προτεινόμενο μοντέλο",
     "local": "Τοπικό",
     "cloud": "Cloud",
-    "autoSwitch": "Αυτόματη εναλλαγή μοντέλου",
-    "autoSwitchDesc": "Αυτόματη εναλλαγή μοντέλου AI βάσει της διαθέσιμης VRAM",
-    "preferLocal": "Προτίμηση τοπικών μοντέλων",
-    "preferLocalDesc": "Χρήση Ollama/LM Studio όταν είναι δυνατό, πριν από το cloud",
-    "alertHighUsage": "Ειδοποίηση υψηλής VRAM",
-    "alertHighUsageDesc": "Ειδοποίηση όταν η VRAM υπερβαίνει το όριο",
-    "alertThreshold": "Όριο ειδοποίησης",
-    "cloudFallback": "Εφεδρικός πάροχος cloud",
-    "cloudAuto": "Αυτόματο",
     "tierAndModels": "Επίπεδα & Μοντέλα",
     "statsUpdated": "Τα στατιστικά συστήματος ενημερώθηκαν",
     "tierUltra": "Ultra (≥12GB)",

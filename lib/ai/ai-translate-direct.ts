@@ -137,6 +137,53 @@ export function getApiKeys() {
   }
 }
 
+/**
+ * Temperatura scelta in Impostazioni → Traduzione → Parametri avanzati.
+ *
+ * Fino al 01/10/2026 lo slider salvava `translation.temperature` e nessuno la
+ * leggeva: ogni provider qui sotto mandava 0.3 fisso. Ora la leggono i provider
+ * cloud che già mandavano 0.3. Restano fuori Anthropic, che una temperatura non
+ * l'ha mai mandata, e i modelli locali, che hanno le loro opzioni
+ * (ollama-options.ts, pannello Ollama → Avanzate).
+ * Tetto a 1: oltre, alcuni provider rispondono 400 e la catena li bloccherebbe
+ * per il resto della sessione. Lo slider si ferma a 1 per lo stesso motivo.
+ */
+export function getUserTemperature(): number {
+  try {
+    const t = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}')?.translation?.temperature;
+    if (typeof t === 'number' && Number.isFinite(t)) return Math.min(1, Math.max(0, t));
+  } catch { /* storage illeggibile: default */ }
+  return 0.3;
+}
+
+/**
+ * Persona, tono e istruzioni da Impostazioni → «Prompt personalizzato».
+ *
+ * La card li salvava in `gs_custom_prompt_settings` e nessuno li leggeva: il
+ * prompt builder sapeva già usarli (opts.persona/tone/customPrompt), ma nessun
+ * chiamante glieli passava. Entrano qui, all'ingresso della catena, solo se la
+ * card è attiva e solo dove il chiamante non ha già deciso lui. Li usano i
+ * provider che costruiscono il prompt con buildTranslationPrompt (gli LLM cloud);
+ * Ollama, LM Studio e i motori MT hanno un prompt proprio o nessun prompt.
+ */
+export function withStoredCustomPrompt(opts: TranslateOptions): TranslateOptions {
+  try {
+    const raw = localStorage.getItem('gs_custom_prompt_settings');
+    if (!raw) return opts;
+    const s = JSON.parse(raw) as { enabled?: unknown; persona?: unknown; tone?: unknown; customPrompt?: unknown } | null;
+    if (s?.enabled !== true) return opts;
+    const pick = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
+    return {
+      ...opts,
+      persona: opts.persona ?? pick(s.persona),
+      tone: opts.tone ?? pick(s.tone),
+      customPrompt: opts.customPrompt ?? pick(s.customPrompt),
+    };
+  } catch {
+    return opts;
+  }
+}
+
 
 /** Traduzione con Gemini API - Default gemini-3.7-flash: stabile, nativamente
  *  multimodale, 1M di contesto e 64k di output. Fino al 31/12/2026 costa $0.75/1M
@@ -158,7 +205,7 @@ async function translateWithGemini(
     { 'Content-Type': 'application/json' },
     JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+      generationConfig: { temperature: getUserTemperature(), maxOutputTokens: 8192 },
     }),
   );
 
@@ -197,7 +244,7 @@ async function translateWithGemini31FlashLite(
     JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: getUserTemperature(),
         maxOutputTokens: 32768, // Aumentato per long-context
       },
     })
@@ -240,7 +287,7 @@ async function translateWithDeepSeek(
     JSON.stringify({
       model: 'deepseek-v4-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -281,7 +328,7 @@ async function translateWithGroq(
     JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -322,7 +369,7 @@ async function translateWithGroqGptOss(
     JSON.stringify({
       model: 'openai/gpt-oss-120b',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -364,7 +411,7 @@ async function translateWithOpenAI(
     JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -484,7 +531,7 @@ async function translateWithOpenAICompatible(
     JSON.stringify({
       model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -530,7 +577,7 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
     JSON.stringify({
       model: 'command-r-plus-08-2024',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -589,7 +636,7 @@ async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): 
     JSON.stringify({
       model: 'meta-llama/llama-3.3-70b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -1875,6 +1922,8 @@ export async function translateWithFallback(
   opts: TranslateOptions,
   preferWebApis: boolean = false
 ): Promise<TranslateResult> {
+  opts = withStoredCustomPrompt(opts);
+
   // Auto-inject TM RAG context se non già presente (lazy import per evitare circular dep)
   if (!opts.tmContext && opts.texts.length > 0 && opts.texts.length <= 50) {
     try {
@@ -2540,6 +2589,7 @@ Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, 
 export async function translateWithComparison(
   opts: TranslateOptions
 ): Promise<ComparisonResult> {
+  opts = withStoredCustomPrompt(opts);
   const startTime = Date.now();
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2];

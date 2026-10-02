@@ -12,9 +12,14 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
-
-const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
-const TUTORIAL_VERSION = 5; // Increment ONLY when tutorial content actually changes
+import {
+  TUTORIAL_KEY,
+  TUTORIAL_VERSION,
+  isOnboardingDone,
+  isTosAccepted,
+  isTutorialDone,
+  whenReady,
+} from './first-run';
 
 interface TutorialStep {
   id: string;
@@ -64,19 +69,21 @@ const tutorialSteps: TutorialStep[] = [
     selector: '[data-tutorial="nav-library"]',
     position: 'sidebar'
   },
+  // translator, patcher, community, settings: le loro voci stanno nei gruppi
+  // comprimibili della sidebar, che non hanno un data-tutorial per voce
+  // (i selettori nav-ai-translator, nav-unity-patcher, nav-community-hub e
+  // nav-settings non esistevano). Card centrata, senza evidenziazione.
   {
     id: 'translator',
     icon: <Languages className="h-6 w-6" />,
     iconColor: 'text-blue-400',
-    selector: '[data-tutorial="nav-ai-translator"]',
-    position: 'sidebar'
+    position: 'center'
   },
   {
     id: 'patcher',
     icon: <Wrench className="h-6 w-6" />,
     iconColor: 'text-emerald-400',
-    selector: '[data-tutorial="nav-unity-patcher"]',
-    position: 'sidebar'
+    position: 'center'
   },
   {
     id: 'advancedTools',
@@ -93,15 +100,13 @@ const tutorialSteps: TutorialStep[] = [
     id: 'community',
     icon: <Users className="h-6 w-6" />,
     iconColor: 'text-orange-400',
-    selector: '[data-tutorial="nav-community-hub"]',
-    position: 'sidebar'
+    position: 'center'
   },
   {
     id: 'settings',
     icon: <Settings className="h-6 w-6" />,
     iconColor: 'text-slate-400',
-    selector: '[data-tutorial="nav-settings"]',
-    position: 'sidebar'
+    position: 'center'
   },
   {
     id: 'complete',
@@ -128,35 +133,28 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    let stopWaiting: (() => void) | undefined;
     // Aspetta che la lingua sia caricata dal localStorage prima di mostrare il tutorial
     const timer = setTimeout(() => {
       setIsReady(true);
-      const tutorialCompleted = localStorage.getItem(TUTORIAL_KEY);
-      
+
       // Mostra tutorial se non è stato completato
       // Accept any version >= TUTORIAL_VERSION (don't re-show after app updates)
-      const completedVer = tutorialCompleted ? parseInt(tutorialCompleted, 10) : 0;
-      if (!isNaN(completedVer) && completedVer >= TUTORIAL_VERSION) {
-        return;
-      }
+      if (isTutorialDone()) return;
 
-      // Non mostrare se i Terms of Use non sono ancora stati accettati
-      const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
-      if (!tosAccepted) {
-        // Riprova dopo un po' (l'utente potrebbe accettare i TOS)
-        const retryInterval = setInterval(() => {
-          if (localStorage.getItem('gamestringer_tos_accepted')) {
-            clearInterval(retryInterval);
-            setTimeout(() => setIsVisible(true), 500);
-          }
-        }, 500);
-        return () => clearInterval(retryInterval);
-      }
-      
-      // Avvia automaticamente dopo un breve delay per permettere il rendering della sidebar
-      setTimeout(() => setIsVisible(true), 300);
+      // Non mostrare prima dei Terms of Use e del wizard del primo avvio: il
+      // wizard, chiudendosi, segna il tutorial come completato, quindi al primo
+      // avvio i due non si sovrappongono. Il delay lascia renderizzare la sidebar.
+      stopWaiting = whenReady(
+        () => isTosAccepted() && isOnboardingDone(),
+        () => { if (!isTutorialDone()) setIsVisible(true); },
+        300,
+      );
     }, 500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      stopWaiting?.();
+    };
   }, []);
 
   const updateHighlight = useCallback(() => {
@@ -291,7 +289,8 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
               "fixed z-[202] pointer-events-auto",
-              step.position === 'center' && "inset-0 flex items-center justify-center"
+              // Centrata anche quando l'elemento da evidenziare non c'è (prima restava senza top/left)
+              !cardPos && "inset-0 flex items-center justify-center"
             )}
             style={cardPos ? { left: cardPos.left, top: cardPos.top } : undefined}
           >

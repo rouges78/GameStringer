@@ -165,7 +165,6 @@ class VROverlayService {
   private activeSubtitle: VRSubtitle | null = null;
   private headset: VRHeadset | null = null;
   private isRunning = false;
-  private updateInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.loadConfig();
@@ -283,23 +282,21 @@ class VROverlayService {
     return this.activeSubtitle;
   }
 
-  start() {
-    if (this.isRunning) return;
-    
-    this.isRunning = true;
-    
-    // In produzione, questo invierebbe dati all'overlay VR
-    this.updateInterval = setInterval(() => {
-      // Update loop per sincronizzazione
-    }, 16); // ~60fps
+  /**
+   * Avvia l'invio dell'overlay al visore.
+   *
+   * Non esiste ancora un renderer OpenVR/OpenXR: prima qui girava un
+   * setInterval vuoto ogni 16 ms e la UI annunciava "Overlay avviato" senza
+   * che nulla arrivasse al visore. Finché il backend non c'è, l'avvio fallisce
+   * in modo esplicito: ritorna false e lo stato resta "fermo".
+   */
+  start(): boolean {
+    clientLogger.warn('[VROverlay] Output verso il visore non implementato: overlay non avviato');
+    return false;
   }
 
   stop() {
     this.isRunning = false;
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
-    }
   }
 
   isActive(): boolean {

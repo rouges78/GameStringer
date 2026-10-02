@@ -17,9 +17,12 @@ function markTableMissing(table: string): void {
   _tableExists[table] = false;
 }
 
-// Helper: esegue query Supabase ritornando null silenziosamente se la tabella non esiste
+// Helper: esegue query Supabase ritornando null silenziosamente se la tabella non esiste.
+// Con `rethrow` ogni ALTRO errore (rete giù, 5xx, timeout) viene rilanciato invece di
+// diventare null: serve a chi mostra "nessun risultato", che deve poter distinguere un
+// risultato vuoto vero da un backend irraggiungibile.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function safeQuery<T>(table: string, queryFn: (supabase: any) => any): Promise<T | null> {
+async function safeQuery<T>(table: string, queryFn: (supabase: any) => any, opts?: { rethrow?: boolean }): Promise<T | null> {
   if (!isSupabaseConfigured() || !isTableAvailable(table)) return null;
   try {
     const supabase = await getSupabase();
@@ -29,12 +32,15 @@ async function safeQuery<T>(table: string, queryFn: (supabase: any) => any): Pro
       const code = result.error.code || '';
       if (code === '42P01' || msg.includes('does not exist') || msg.includes('not found')) {
         markTableMissing(table);
+        return null;
       }
+      if (opts?.rethrow) throw new Error(msg || code || `${table} query failed`);
       return null;
     }
     _tableExists[table] = true;
     return result.data as T | null;
-  } catch {
+  } catch (e) {
+    if (opts?.rethrow) throw e;
     return null;
   }
 }
@@ -158,16 +164,21 @@ function normalizeProfile(row: UserProfile | null): UserProfile | null {
   };
 }
 
+// null = il profilo non esiste. Un backend irraggiungibile invece LANCIA: prima
+// diventava null e la pagina diceva "utente non trovato" a un utente esistente.
+// maybeSingle: zero righe è un risultato, non un errore.
 export async function getProfile(userId: string): Promise<UserProfile | null> {
   const row = await safeQuery<UserProfile>('user_profiles', (supabase) =>
-    supabase.from('user_profiles').select('*').eq('id', userId).single()
+    supabase.from('user_profiles').select('*').eq('id', userId).maybeSingle(),
+    { rethrow: true }
   );
   return normalizeProfile(row);
 }
 
 export async function getProfileByUsername(username: string): Promise<UserProfile | null> {
   const row = await safeQuery<UserProfile>('user_profiles', (supabase) =>
-    supabase.from('user_profiles').select('*').eq('username', username).single()
+    supabase.from('user_profiles').select('*').eq('username', username).maybeSingle(),
+    { rethrow: true }
   );
   return normalizeProfile(row);
 }
@@ -225,14 +236,17 @@ export async function getFriends(userId: string): Promise<UserProfile[]> {
   if (!friendships?.length) return [];
 
   const friendIds = friendships.map(f => f.requester_id === userId ? f.addressee_id : f.requester_id);
+  // La PK di user_profiles è `id` (= uid Supabase): `user_id` non esiste, e
+  // l'errore "column does not exist" segnava user_profiles come tabella
+  // mancante → da lì ogni profilo risultava "utente non trovato".
   const profiles = await safeQuery<UserProfile[]>('user_profiles', (supabase) => {
     const query = supabase.from('user_profiles').select('*');
     if (friendIds.length === 1) {
-      return query.eq('user_id', friendIds[0]);
+      return query.eq('id', friendIds[0]);
     }
-    return query.in('user_id', friendIds);
+    return query.in('id', friendIds);
   });
-  return profiles || [];
+  return (profiles || []).map(normalizeProfile).filter((p): p is UserProfile => !!p);
 }
 
 // Get friends with online presence info
@@ -391,12 +405,15 @@ export async function getOnlineUsers(limit = 50): Promise<UserPresence[]> {
 // ...
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
 
+// `userId` è l'uid di Supabase Auth (la RLS "notif_select_own" filtra su
+// user_id = auth.uid()). Backend irraggiungibile → LANCIA, così il pannello non
+// lo spaccia per "nessuna notifica".
 export async function getNotifications(userId: string, unreadOnly = false): Promise<Notification[]> {
   const data = await safeQuery<Notification[]>('notifications', (supabase) => {
     let query = supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50);
     if (unreadOnly) query = query.eq('is_read', false);
     return query;
-  });
+  }, { rethrow: true });
   return data || [];
 }
 
@@ -411,25 +428,28 @@ export async function getUnreadCount(userId: string): Promise<number> {
   } catch { return 0; }
 }
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
-  if (!isSupabaseConfigured()) return;
+// Ritornano se la scrittura è riuscita: il pannello segna "letta" solo allora.
+export async function markNotificationRead(notificationId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
   const supabase = await getSupabase();
   
-  await supabase
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId);
+  return !error;
 }
 
-export async function markAllNotificationsRead(userId: string): Promise<void> {
-  if (!isSupabaseConfigured()) return;
+export async function markAllNotificationsRead(userId: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
   const supabase = await getSupabase();
   
-  await supabase
+  const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', userId)
     .eq('is_read', false);
+  return !error;
 }
 
 export async function createNotification(notification: {

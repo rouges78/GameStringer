@@ -7,47 +7,103 @@ import { Progress } from '@/components/ui/progress';
 import { 
   BarChart3, 
   TrendingUp, 
-  Clock, 
   FileText, 
   Languages, 
-  CheckCircle,
-  Zap,
-  Target
+  CheckCircle
 } from 'lucide-react';
-import { activityHistory } from '@/lib/activity-history';
+import { activityHistory, type Activity } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
 
-interface TranslationStats {
+// Solo numeri che lo storico attività registra davvero. Stringhe, parole,
+// avanzamento medio, progetti completati e tempo rimanente NON sono nello
+// storico: prima venivano inventati (n*150, Math.random, 60%, 45 min).
+export interface TranslationStats {
   totalTranslations: number;
-  totalStrings: number;
-  totalWords: number;
-  completedProjects: number;
-  activeProjects: number;
-  averageProgress: number;
+  totalProjects: number; // giochi distinti con almeno una traduzione registrata
   todayTranslations: number;
   weekTranslations: number;
   monthTranslations: number;
   topLanguages: { lang: string; count: number }[];
   recentActivity: { date: string; count: number }[];
-  estimatedTimeRemaining: number; // minuti
+}
+
+export function computeTranslationStats(activities: Activity[], now: Date = new Date()): TranslationStats {
+  // Filtra solo traduzioni
+  const translations = activities.filter((a) => a.activity_type === 'translation');
+
+  // Calcola date
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  // Conta traduzioni per periodo
+  const todayTranslations = translations.filter((t) =>
+    new Date(t.timestamp) >= today
+  ).length;
+
+  const weekTranslations = translations.filter((t) =>
+    new Date(t.timestamp) >= weekAgo
+  ).length;
+
+  const monthTranslations = translations.filter((t) =>
+    new Date(t.timestamp) >= monthAgo
+  ).length;
+
+  // Calcola attività per giorno (ultimi 7 giorni)
+  const recentActivity: { date: string; count: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short' });
+    const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+    const count = translations.filter((t) => {
+      const tDate = new Date(t.timestamp);
+      return tDate >= date && tDate < nextDate;
+    }).length;
+    recentActivity.push({ date: dateStr, count });
+  }
+
+  // Lingue di destinazione: solo quelle registrate nei metadata dell'attività
+  const languageCounts = new Map<string, number>();
+  for (const tr of translations) {
+    const code = tr.metadata?.target_language;
+    if (typeof code !== 'string' || !code.trim()) continue;
+    const key = code.trim().toLowerCase();
+    languageCounts.set(key, (languageCounts.get(key) ?? 0) + 1);
+  }
+  const topLanguages = [...languageCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([code, count]) => ({
+      lang: TARGET_LANGUAGES.find((l) => l.code === code)?.name ?? code,
+      count,
+    }));
+
+  // Progetti: giochi distinti che compaiono nelle traduzioni
+  const uniqueGames = new Set(translations.map((t) => t.game_id || t.game_name).filter(Boolean));
+
+  return {
+    totalTranslations: translations.length,
+    totalProjects: uniqueGames.size,
+    todayTranslations,
+    weekTranslations,
+    monthTranslations,
+    topLanguages,
+    recentActivity,
+  };
 }
 
 export function TranslationStatsWidget() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<TranslationStats>({
     totalTranslations: 0,
-    totalStrings: 0,
-    totalWords: 0,
-    completedProjects: 0,
-    activeProjects: 0,
-    averageProgress: 0,
+    totalProjects: 0,
     todayTranslations: 0,
     weekTranslations: 0,
     monthTranslations: 0,
     topLanguages: [],
     recentActivity: [],
-    estimatedTimeRemaining: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,99 +116,12 @@ export function TranslationStatsWidget() {
     try {
       // Carica attività recenti
       const activities = await activityHistory.getRecent(500);
-      
-      // Filtra solo traduzioni
-      const translations = activities.filter((a) => a.activity_type === 'translation');
-      
-      // Calcola date
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      // Conta traduzioni per periodo
-      const todayTranslations = translations.filter((t) =>
-        new Date(t.timestamp) >= today
-      ).length;
-
-      const weekTranslations = translations.filter((t) =>
-        new Date(t.timestamp) >= weekAgo
-      ).length;
-
-      const monthTranslations = translations.filter((t) =>
-        new Date(t.timestamp) >= monthAgo
-      ).length;
-
-      // Calcola attività per giorno (ultimi 7 giorni)
-      const recentActivity: { date: string; count: number }[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short' });
-        const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-        const count = translations.filter((t) => {
-          const tDate = new Date(t.timestamp);
-          return tDate >= date && tDate < nextDate;
-        }).length;
-        recentActivity.push({ date: dateStr, count });
-      }
-
-      // Stima stringhe e parole (mock basato su attività)
-      const totalStrings = translations.length * 150; // ~150 stringhe per traduzione
-      const totalWords = totalStrings * 8; // ~8 parole per stringa
-
-      // Lingue più usate (mock)
-      const topLanguages = [
-        { lang: '🇮🇹 Italiano', count: Math.floor(translations.length * 0.7) },
-        { lang: '🇬🇧 English', count: Math.floor(translations.length * 0.15) },
-        { lang: '🇪🇸 Español', count: Math.floor(translations.length * 0.1) },
-        { lang: '🇩🇪 Deutsch', count: Math.floor(translations.length * 0.05) },
-      ].filter(l => l.count > 0);
-
-      // Progetti (mock basato su games unici)
-      const uniqueGames = new Set(translations.map((t) => t.game_id || t.game_name).filter(Boolean));
-      const completedProjects = Math.floor(uniqueGames.size * 0.6);
-      const activeProjects = uniqueGames.size - completedProjects;
-
-      // Progress medio
-      const averageProgress = translations.length > 0 ? 65 + Math.random() * 20 : 0;
-
-      // Tempo stimato rimanente (mock)
-      const estimatedTimeRemaining = activeProjects * 45; // ~45 min per progetto attivo
-
-      setStats({
-        totalTranslations: translations.length,
-        totalStrings,
-        totalWords,
-        completedProjects,
-        activeProjects,
-        averageProgress: Math.round(averageProgress),
-        todayTranslations,
-        weekTranslations,
-        monthTranslations,
-        topLanguages,
-        recentActivity,
-        estimatedTimeRemaining,
-      });
+      setStats(computeTranslationStats(activities));
     } catch (error: unknown) {
       clientLogger.error('error Loading...atistiche:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Formatta numeri grandi
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toString();
-  };
-
-  // Formatta tempo
-  const formatTime = (minutes: number) => {
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
   // Calcola altezza barra grafico
@@ -186,12 +155,12 @@ export function TranslationStatsWidget() {
               <h2 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
                 {t('translationStatsWidgetComp.title')}
               </h2>
-              <p className="text-sm text-blue-200/60">{t('translationStatsWidgetComp.panoramicaDelleTueAttività')}</p>
+              <p className="text-sm text-blue-200/60">{t('translationStatsWidgetComp.activityOverview')}</p>
             </div>
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-blue-400 mb-1">
                 <FileText className="h-4 w-4" />
@@ -202,37 +171,19 @@ export function TranslationStatsWidget() {
             </div>
             
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-indigo-400 mb-1">
-                <Languages className="h-4 w-4" />
-                <span className="text-xs">{t('translationStatsWidgetComp.stringhe')}</span>
-              </div>
-              <div className="text-2xl font-bold text-white">{formatNumber(stats.totalStrings)}</div>
-              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.tradotte')}</div>
-            </div>
-            
-            <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-violet-400 mb-1">
-                <Zap className="h-4 w-4" />
-                <span className="text-xs">{t('translationStatsWidgetComp.parole')}</span>
-              </div>
-              <div className="text-2xl font-bold text-white">{formatNumber(stats.totalWords)}</div>
-              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.elaborate')}</div>
-            </div>
-            
-            <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-emerald-400 mb-1">
-                <Target className="h-4 w-4" />
-                <span className="text-xs">{t('translationStatsWidgetComp.progress')}</span>
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-xs">{t('common.projects')}</span>
               </div>
-              <div className="text-2xl font-bold text-white">{stats.averageProgress}%</div>
-              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.medio')}</div>
+              <div className="text-2xl font-bold text-white">{stats.totalProjects}</div>
+              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.totali')}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Seconda riga: Attività e Progetti */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Seconda riga: Attività */}
+      <div className="grid grid-cols-1 gap-4">
         {/* Grafico attività settimanale */}
         <Card className="border-indigo-500/20 bg-indigo-500/5">
           <CardHeader className="pb-2">
@@ -272,43 +223,6 @@ export function TranslationStatsWidget() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Progetti */}
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-emerald-300">
-              <CheckCircle className="h-4 w-4" />
-              {t('common.projects')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-3xl font-bold text-emerald-400">{stats.completedProjects}</div>
-                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.completati')}</div>
-              </div>
-              <div className="h-16 w-px bg-emerald-500/20" />
-              <div>
-                <div className="text-3xl font-bold text-amber-400">{stats.activeProjects}</div>
-                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.inCorso')}</div>
-              </div>
-              <div className="h-16 w-px bg-emerald-500/20" />
-              <div>
-                <div className="text-3xl font-bold text-blue-400">{stats.completedProjects + stats.activeProjects}</div>
-                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.totali')}</div>
-              </div>
-            </div>
-            
-            {stats.estimatedTimeRemaining > 0 && (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <Clock className="h-4 w-4 text-amber-400" />
-                <span className="text-sm text-amber-200">
-                  {t('translationStatsWidgetComp.estimatedTimeRemaining')}: <strong>{formatTime(stats.estimatedTimeRemaining)}</strong>
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Terza riga: Lingue */}
@@ -322,7 +236,9 @@ export function TranslationStatsWidget() {
         <CardContent>
           {stats.topLanguages.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground text-sm">
-              {t('translationStatsWidgetComp.noTranslationsYet')}
+              {stats.totalTranslations === 0
+                ? t('translationStatsWidgetComp.noTranslationsYet')
+                : t('translationStatsWidgetComp.noLanguageData')}
             </div>
           ) : (
             <div className="space-y-3">

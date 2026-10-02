@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Sparkles,
   Gamepad2,
@@ -27,7 +27,18 @@ import {
 import { VisuallyHidden } from 'radix-ui';
 import { cn } from '@/lib/utils';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
+import {
+  ONBOARDING_KEY,
+  ONBOARDING_VERSION,
+  TUTORIAL_KEY,
+  TUTORIAL_VERSION,
+  isOnboardingDone,
+  isTosAccepted,
+  whenReady,
+} from './first-run';
 
 interface OnboardingStep {
   id: string;
@@ -37,10 +48,6 @@ interface OnboardingStep {
   color: string;
   content: React.ReactNode;
 }
-
-const ONBOARDING_KEY = 'gamestringer_onboarding_completed';
-const ONBOARDING_VERSION = 5; // Increment ONLY when onboarding content actually changes (v5: added "How to translate" step)
-const TUTORIAL_KEY = 'gamestringer-tutorial-completed'; // Chiave condivisa con InteractiveTutorial
 
 export function OnboardingWizard() {
   const { t } = useTranslation();
@@ -54,37 +61,26 @@ export function OnboardingWizard() {
     theme: 'dark'
   });
 
-  useEffect(() => {
-    checkOnboardingStatus();
+  // Il selettore parte dalla lingua già scelta, o da quella dell'interfaccia:
+  // prima mostrava sempre l'italiano anche a chi usa l'app in un'altra lingua.
+  const applyDefaultTarget = useCallback((lang: string) => {
+    setPreferences(p => ({ ...p, preferredLanguage: lang }));
   }, []);
+  const { markTouched } = useDefaultTargetLang(applyDefaultTarget);
 
-  const checkOnboardingStatus = () => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const completed = localStorage.getItem(ONBOARDING_KEY);
     // Accept any version >= ONBOARDING_VERSION (don't re-show after app updates)
-    const completedVersion = completed ? parseInt(completed, 10) : 0;
-    if (!isNaN(completedVersion) && completedVersion >= ONBOARDING_VERSION) return;
-
-    // Non mostrare se i Terms of Use non sono ancora stati accettati
-    const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
-    if (!tosAccepted) {
-      const retryInterval = setInterval(() => {
-        if (localStorage.getItem('gamestringer_tos_accepted')) {
-          clearInterval(retryInterval);
-          setTimeout(() => setIsOpen(true), 500);
-        }
-      }, 500);
-      return;
-    }
-    // Delay to avoid flash on startup
-    setTimeout(() => setIsOpen(true), 400);
-  };
+    if (isOnboardingDone()) return;
+    // Non mostrare finché i Terms of Use non sono stati accettati
+    // (delay to avoid flash on startup)
+    return whenReady(isTosAccepted, () => setIsOpen(true), 400);
+  }, []);
 
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(ONBOARDING_KEY, String(ONBOARDING_VERSION));
-      localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
+      localStorage.setItem(TUTORIAL_KEY, String(TUTORIAL_VERSION)); // Marca anche il tutorial interattivo come completato
       localStorage.setItem('gamestringer_preferences', JSON.stringify(preferences));
     }
     setIsOpen(false);
@@ -93,23 +89,33 @@ export function OnboardingWizard() {
   const skipOnboarding = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(ONBOARDING_KEY, String(ONBOARDING_VERSION));
-      localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
+      localStorage.setItem(TUTORIAL_KEY, String(TUTORIAL_VERSION)); // Marca anche il tutorial interattivo come completato
     }
     setIsOpen(false);
   };
 
+  // Scrive la lingua di destinazione dove la leggono le schermate di traduzione
+  // (gameStringerSettings.translation.defaultTargetLang, vedi useDefaultTargetLang)
+  const saveTargetLanguage = (lang: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('gameStringerSettings');
+      const s = raw ? JSON.parse(raw) : {};
+      s.translation = { ...(s.translation || {}), defaultTargetLang: lang };
+      localStorage.setItem('gameStringerSettings', JSON.stringify(s));
+      import('@/lib/settings-persistence').then(m => m.persistSettingsToDisk()).catch((e: unknown) => {
+        clientLogger.warn('[Onboarding] persist target language failed:', e);
+      });
+    } catch (e: unknown) {
+      clientLogger.warn('[Onboarding] save target language failed:', e);
+    }
+  };
+
   // Imposta la lingua di destinazione e la persiste subito (così ha effetto)
   const setTargetLanguage = (lang: string) => {
+    markTouched();
     setPreferences(p => ({ ...p, preferredLanguage: lang }));
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem('gameStringerSettings');
-        const s = raw ? JSON.parse(raw) : {};
-        s.translation = { ...(s.translation || {}), defaultTargetLang: lang };
-        localStorage.setItem('gameStringerSettings', JSON.stringify(s));
-        import('@/lib/settings-persistence').then(m => m.persistSettingsToDisk()).catch(() => {});
-      } catch { /* ignora */ }
-    }
+    saveTargetLanguage(lang);
   };
 
   // Completa l'onboarding e naviga verso la destinazione scelta
@@ -301,6 +307,8 @@ export function OnboardingWizard() {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   const nextStep = () => {
+    // "Avanti" conferma la lingua mostrata anche se l'utente non ha toccato il selettore
+    if (currentStepData.id === 'language') saveTargetLanguage(preferences.preferredLanguage);
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {

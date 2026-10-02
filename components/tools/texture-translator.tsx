@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { 
   Upload,
@@ -21,7 +20,6 @@ import {
   ZoomIn,
   ZoomOut,
   CheckCircle2,
-  Loader2,
   Layers,
   Search,
   FolderOpen,
@@ -30,10 +28,10 @@ import {
   Grid3X3,
   ScanLine,
   Replace,
-  Save
+  Save,
+  AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedTextRegion {
@@ -87,9 +85,6 @@ export function TextureTranslator() {
   const [selectedFont, setSelectedFont] = useState('arial');
   const [zoom, setZoom] = useState(100);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState('');
-  const [progress, setProgress] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [preserveStyle, setPreserveStyle] = useState(true);
@@ -157,161 +152,11 @@ export function TextureTranslator() {
     setTextures(prev => [...prev, ...newTextures]);
   }, []);
 
-  const detectTextInTexture = async () => {
-    if (!currentTexture) return;
-    
-    setIsProcessing(true);
-    setProcessingStep('Scansione texture...');
-    setProgress(0);
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(20);
-    setProcessingStep('Rilevamento testo con OCR...');
-
-    await new Promise(resolve => setTimeout(resolve, 600));
-    setProgress(50);
-
-    // Mock detected regions
-    const mockRegions: DetectedTextRegion[] = [
-      {
-        id: 'region-1',
-        x: 20,
-        y: 15,
-        width: 120,
-        height: 30,
-        text: 'START GAME',
-        translatedText: '',
-        confidence: 0.97,
-        backgroundColor: '#1a1a2e',
-        textColor: '#ffffff',
-        fontSize: 18,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-2',
-        x: 20,
-        y: 55,
-        width: 100,
-        height: 25,
-        text: 'OPTIONS',
-        translatedText: '',
-        confidence: 0.95,
-        backgroundColor: '#1a1a2e',
-        textColor: '#cccccc',
-        fontSize: 16,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-3',
-        x: 20,
-        y: 90,
-        width: 80,
-        height: 25,
-        text: 'EXIT',
-        translatedText: '',
-        confidence: 0.98,
-        backgroundColor: '#1a1a2e',
-        textColor: '#ff6666',
-        fontSize: 16,
-        fontFamily: 'Arial',
-      },
-      {
-        id: 'region-4',
-        x: 150,
-        y: 200,
-        width: 140,
-        height: 20,
-        text: 'LOADING...',
-        translatedText: '',
-        confidence: 0.92,
-        backgroundColor: '#000000',
-        textColor: '#00ff00',
-        fontSize: 14,
-        fontFamily: 'Pixel',
-      },
-    ];
-
-    setProgress(70);
-    setProcessingStep('Traduzione testi...');
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Translate
-    const translatedRegions = mockRegions.map(region => ({
-      ...region,
-      translatedText: translateText(region.text),
-    }));
-
-    setProgress(100);
-    setProcessingStep('Completato!');
-
-    setTextures(prev => prev.map((tex, idx) => 
-      idx === currentTextureIndex 
-        ? { ...tex, regions: translatedRegions, processed: true }
-        : tex
-    ));
-
-    setIsProcessing(false);
-  };
-
-  const translateText = (text: string): string => {
-    const translations: Record<string, string> = {
-      'START GAME': 'INIZIA GIOCO',
-      'OPTIONS': 'OPZIONI',
-      'EXIT': 'ESCI',
-      'LOADING...': 'CARICAMENTO...',
-      'NEW GAME': 'NUOVA PARTITA',
-      'CONTINUE': 'CONTINUA',
-      'SETTINGS': 'IMPOSTAZIONI',
-      'QUIT': 'ESCI',
-      'PAUSE': 'PAUSA',
-      'RESUME': 'RIPRENDI',
-    };
-    return translations[text] || text;
-  };
-
-  const applyTranslation = async () => {
-    if (!currentTexture) return;
-    
-    setIsProcessing(true);
-    setProcessingStep('Applicazione traduzioni...');
-    setProgress(0);
-
-    for (let i = 0; i <= 100; i += 20) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setProgress(i);
-    }
-
-    setTextures(prev => prev.map((tex, idx) => 
-      idx === currentTextureIndex 
-        ? { ...tex, modified: true }
-        : tex
-    ));
-
-    setIsProcessing(false);
-    setProcessingStep('');
-  };
-
-  const processAllTextures = async () => {
-    setIsProcessing(true);
-    
-    for (let i = 0; i < textures.length; i++) {
-      setCurrentTextureIndex(i);
-      setProcessingStep(`Elaborazione ${i + 1}/${textures.length}...`);
-      setProgress(Math.round((i / textures.length) * 100));
-      await detectTextInTexture();
-    }
-    
-    setIsProcessing(false);
-  };
-
-  const exportTexture = () => {
-    clientLogger.debug('Exporting texture:', currentTexture);
-  };
-
-  const exportAll = () => {
-    clientLogger.debug('Exporting all textures:', textures);
-  };
+  // OCR, traduzione, applicazione ed export NON sono collegati a questo strumento.
+  // Prima "Rileva testo" restituiva sempre le stesse 4 regioni (START GAME,
+  // OPTIONS, EXIT, LOADING...) tradotte da una mappa fissa, per qualunque
+  // immagine. Finché non c'è una pipeline vera, le azioni restano disabilitate
+  // e la pagina lo dice.
 
   const filteredTextures = textures.filter(tex => 
     tex.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -343,22 +188,16 @@ export function TextureTranslator() {
             {textures.length > 0 && (
               <>
                 <Button 
-                  onClick={detectTextInTexture}
-                  disabled={isProcessing}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
-                  {isProcessing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <ScanLine className="h-4 w-4 mr-2" />
-                  )}
+                  <ScanLine className="h-4 w-4 mr-2" />
                   {t('textureTranslator.detectText')}
                 </Button>
                 <Button 
-                  onClick={applyTranslation}
-                  disabled={isProcessing || !currentTexture?.processed}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
@@ -372,21 +211,11 @@ export function TextureTranslator() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {isProcessing && (
-        <Card className="border-teal-500/30 bg-teal-500/10">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-              <span className="text-sm text-teal-300">{processingStep}</span>
-              <div className="flex-1">
-                <Progress value={progress} className="h-2" />
-              </div>
-              <span className="text-sm text-teal-400">{progress}%</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Strumento non ancora collegato a OCR/traduzione */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <p className="text-sm text-amber-500">{t('textureTranslator.notConnected')}</p>
+      </div>
 
       <div className="grid grid-cols-12 gap-4">
         {/* Left Sidebar - File Browser */}
@@ -494,8 +323,7 @@ export function TextureTranslator() {
                 <Button 
                   size="sm" 
                   variant="outline" className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                  onClick={processAllTextures}
-                  disabled={isProcessing}
+                  disabled
                 >
                   <Wand2 className="h-3 w-3 mr-1" />
                   {t('textureTranslator.processAll')} ({textures.length})
@@ -751,8 +579,7 @@ export function TextureTranslator() {
                 size="sm" 
                 variant="outline" 
                 className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportTexture}
-                disabled={!currentTexture?.modified}
+                disabled
               >
                 <Save className="h-4 w-4 mr-2" />
                 {t('textureTranslator.save')}
@@ -761,8 +588,7 @@ export function TextureTranslator() {
                 size="sm" 
                 variant="outline"
                 className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportAll}
-                disabled={textures.length === 0}
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('textureTranslator.exportAll')}

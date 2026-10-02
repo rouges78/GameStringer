@@ -29,6 +29,21 @@ export const storageManager = {
     }
   },
 
+  /**
+   * Come getTranslations, ma una lettura fallita rigetta invece di restituire [].
+   * Per chi legge, fonde e riscrive l'intera lista: un [] da errore, riscritto,
+   * cancellerebbe tutte le traduzioni salvate.
+   */
+  async getTranslationsStrict(): Promise<unknown[]> {
+    const data = await get('gameTranslations');
+    return data || [];
+  },
+
+  /** Come saveTranslations, ma una scrittura fallita rigetta: niente "salvato" se non lo è. */
+  async saveTranslationsStrict(data: unknown[]): Promise<void> {
+    await set('gameTranslations', data);
+  },
+
   async getPatches(): Promise<unknown[]> {
     try {
       const data = await get('gamePatches');

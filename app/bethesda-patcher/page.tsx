@@ -156,13 +156,13 @@ export default function BethesdaPatcherPage() {
     }
   }, [])
 
-  const handleAnalyze = useCallback(async () => {
-    if (!folderPath) return
+  const analyzeFolder = useCallback(async (path: string) => {
+    if (!path) return
     setAnalyzing(true)
     setError('')
 
     try {
-      const info = await detectBethesdaGame(folderPath)
+      const info = await detectBethesdaGame(path)
       setGameInfo(info)
       // Auto-select all masters
       const masters = new Set(
@@ -180,7 +180,21 @@ export default function BethesdaPatcherPage() {
     } finally {
       setAnalyzing(false)
     }
-  }, [folderPath])
+  }, [])
+
+  const handleAnalyze = useCallback(() => analyzeFolder(folderPath), [analyzeFolder, folderPath])
+
+  // Ponte da String it! nel game-detail: ?gamePath=… analizza subito la cartella,
+  // senza ripassare dal folder picker (route con query params, convenzione del progetto).
+  useEffect(() => {
+    try {
+      const gp = new URLSearchParams(window.location.search).get('gamePath')
+      if (gp) {
+        setFolderPath(gp)
+        analyzeFolder(gp)
+      }
+    } catch { /* niente query params */ }
+  }, [analyzeFolder])
 
   // -----------------------------------------------------------------------
   // Step 2: Plugin overview

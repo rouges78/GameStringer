@@ -117,13 +117,20 @@ export function MTPEWorkflow({
   };
 
   const currentItem = items[currentIndex];
+  const hasMachineTranslation = !!currentItem?.machineTranslation.trim();
   const progress = items.length > 0 
     ? Math.round(((stats.approved + stats.edited + stats.rejected + stats.skipped) / items.length) * 100)
     : 0;
 
   const handleApprove = async () => {
     if (!currentItem) return;
-    
+    // Traduzione vuota (riga fallita): approvarla salverebbe in TM una voce
+    // "verificata" vuota. Si scrive (modifica) o si rifiuta.
+    if (!currentItem.machineTranslation.trim()) {
+      setIsEditing(true);
+      return;
+    }
+
     const updated = [...items];
     updated[currentIndex] = {
       ...currentItem,
@@ -407,6 +414,11 @@ export function MTPEWorkflow({
                 <span className="text-xs text-gray-500 ml-2">{t('mtpeWorkflowComp.clickToEdit')}</span>
               </div>
             )}
+            {currentItem?.status === 'pending' && !hasMachineTranslation && (
+              <p className="mt-1 text-xs text-orange-400">
+                {t('mtpeWorkflowComp.emptyTranslationCannotApprove')}
+              </p>
+            )}
           </div>
 
           {/* Quality Details */}
@@ -414,7 +426,7 @@ export function MTPEWorkflow({
             <div className="grid grid-cols-4 gap-2">
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-green-400">{currentItem.qualityScore.fluency}</div>
-                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.fluidità')}</div>
+                <div className="text-2xs text-gray-500">{t('translationInsightsComp.fluency')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-blue-400">{currentItem.qualityScore.accuracy}</div>
@@ -462,7 +474,7 @@ export function MTPEWorkflow({
               variant="outline"
               className="flex-1 bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20"
               onClick={handleApprove}
-              disabled={currentItem?.status !== 'pending'}
+              disabled={currentItem?.status !== 'pending' || !hasMachineTranslation}
             >
               <Check className="h-4 w-4 mr-1" />
               {t('mtpeWorkflowComp.approve')}

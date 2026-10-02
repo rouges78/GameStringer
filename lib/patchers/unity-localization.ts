@@ -319,6 +319,9 @@ export function getSmartStringLiterals(text: string): string[] {
 // TRANSLATION ORCHESTRATION
 // ═══════════════════════════════════════════════════════════════════
 
+/** Finisce in validationErrors delle righe di un batch che nessun provider ha tradotto. */
+const NO_PROVIDER_ERROR = 'No translation provider succeeded: the source text was kept';
+
 /**
  * Translate an entire StringTable into the target locale.
  *
@@ -364,6 +367,9 @@ export async function translateStringTable(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
+      // success:false → translateWithFallback restituisce la SORGENTE: è un errore,
+      // non una traduzione (stesso controllo di cri-patcher.ts).
+      if (!result.success) throw new Error(NO_PROVIDER_ERROR);
       const translated = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
       batch.forEach((entry, idx) => {
         entry.translated = translated[idx] ?? '';
@@ -407,6 +413,8 @@ export async function translateStringTable(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
+          // Senza questo controllo i letterali sorgente tornerebbero come "tradotti".
+          if (!result.success) throw new Error(NO_PROVIDER_ERROR);
           translatedLiterals = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
         }
       } catch (err: unknown) {
@@ -467,6 +475,7 @@ export async function translateStringTable(
           model: options?.model,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
+        if (!result.success) throw new Error(NO_PROVIDER_ERROR);
         const translated = result.translations ?? (result as unknown as Record<string, string[]>).results ?? [];
         batch.forEach((entry, idx) => {
           entry.translated = translated[idx] ?? '';

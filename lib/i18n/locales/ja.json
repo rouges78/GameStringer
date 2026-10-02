@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "カスタムプロンプトの設定を保存しました",
     "settingsReset": "設定をリセットしました",
-    "title": "カスタムプロンプトと音声",
     "newBadge": "新機能 2026",
     "subtitle": "ペルソナ、トーン、カスタムプロンプトでLLMプロバイダーの動作をカスタマイズ",
     "enableCustomPrompt": "カスタムプロンプトを有効化",
-    "enableDesc": "すべての翻訳にカスタム指示を追加",
     "personaRole": "ペルソナ / 役割",
     "personaDesc": "このキャラクターになりきって翻訳する",
     "toneStyle": "トーン / スタイル",
     "customPrompt": "カスタムプロンプト",
     "customPromptDesc": "システムプロンプトに追加される指示",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "リアルタイム音声翻訳（40以上の言語）",
-    "ttsVoice": "TTS ボイス",
-    "preserveVoice": "元の音声の特徴を保持",
-    "preserveVoiceDesc": "元の音声のトーン、強調、スタイルを保持（ベータ）",
     "preview": "プレビュー:",
     "reset": "リセット",
     "personaPh": "ペルソナを選択...",
     "tonePh": "トーンを選択...",
-    "customPromptPh": "例: 古語の語彙を使う、フォーマルに話す、ファンタジー固有の用語を使う..."
+    "customPromptPh": "例: 古語の語彙を使う、フォーマルに話す、ファンタジー固有の用語を使う...",
+    "enableDescCloud": "クラウド AI プロバイダー（Gemini、OpenAI、Claude、DeepSeek、Groq、Mistral など）の翻訳に指示を追加します。ローカルモデル（Ollama、LM Studio）や DeepL などのエンジンでは使われません。"
   },
   "lipSyncPanel": {
     "title": "リップシンク (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "音声とプロバイダー",
     "defaultVoice": "デフォルトの声",
     "sttEngine": "STT エンジン",
-    "groqWhisper": "Groq Whisper（高速）",
     "durationMatching": "尺の一致",
     "lipSync": "リップシンク (Rhubarb)",
     "generateSubtitles": "字幕を生成",
@@ -161,7 +154,17 @@
     "errors": "エラー",
     "confidence": "信頼度",
     "audioSegments": "音声セグメント",
-    "selectFolderPrompt": "自動ダビングを開始するにはゲームフォルダを選択してください。パイプラインは以下を実行します: 音声スキャン → Whisper文字起こし → AI翻訳 → 音声合成 → 音声ファイルのパッチ適用。"
+    "selectFolderPrompt": "自動ダビングを開始するにはゲームフォルダを選択してください。パイプラインは以下を実行します: 音声スキャン → Whisper文字起こし → AI翻訳 → 音声合成 → 音声ファイルのパッチ適用。",
+    "doneToast": "吹き替え完了：{n} 個の音声ファイルを差し替えました",
+    "partialToast": "吹き替えは一部のみ完了：{n} 個の音声ファイルを差し替え、エラー {errors} 件",
+    "failedToast": "音声ファイルは1つも差し替えられませんでした",
+    "paidConfirmTitle": "有料の文字起こしを確認",
+    "paidConfirmDesc": "ゲームフォルダーに音声ファイルが {count} 個（{size} MB）見つかりました（音楽と効果音を含む）。文字起こしでは各ファイルを音声認識サービスに送信します。1 ファイルにつき 1 回の有料呼び出しで、API キーに課金されます。音声を含むファイルでは、さらに有料の翻訳と音声合成も使用します。",
+    "paidConfirmProceed": "{count} 個のファイルを文字起こし",
+    "patchFormatMismatch": "形式の不一致：合成音声（{actual}）がゲームファイル（.{expected}）と一致しません。音声変換は利用できないため、ファイルは変更されていません。",
+    "unknownAudioFormat": "不明な形式",
+    "noCompatibleAudio": "{count} 個の音声ファイルのうち MP3 はありません。音声合成は MP3 を出力し、音声変換は利用できないため、ゲームのファイルを置き換えられません。有料サービスには何も送信していません。",
+    "groqWhisperUnavailable": "Groq Whisper（未対応）"
   },
   "fileSelector": {
     "fromWizard": "Translation Wizardから来ています",
@@ -615,41 +618,11 @@
     "enterCurrentPassword": "現在のパスワードを入力",
     "passwordMinLength": "新しいパスワードは4文字以上である必要があります",
     "passwordChanged": "パスワードの変更に成功しました！",
-    "invalidCode": "無効なコードです",
-    "twoFaDisabledMsg": "二要素認証が無効化されました",
-    "enter6DigitCode": "6桁のコードを入力",
-    "twoFaEnabledMsg": "二要素認証が有効化されました！",
     "passwordsDontMatch": "パスワードが一致しません",
-    "passwordTab": "パスワード",
-    "sessionsTab": "セッション",
-    "activityTab": "アクティビティ",
     "changePassword": "パスワードを変更",
     "changePasswordDesc": "プロファイルのパスワードを変更",
     "passwordsMatch": "パスワードが一致しています",
-    "sessionManagement": "セッション管理",
-    "sessionMgmtDesc": "タイムアウトと自動ロックを設定",
-    "disconnectAfterInactivity": "非アクティブ時に切断",
-    "min15": "15 分",
-    "min30": "30 分",
-    "hour1": "1 時間",
-    "hours2": "2 時間",
-    "requirePassword": "非アクティブ後にパスワードを要求",
-    "min5": "5 分",
-    "min10": "10 分",
-    "notifyNewLogins": "新規ログインを通知",
-    "disconnectAll": "すべてのセッションを切断",
-    "twoFactorAuth": "二要素認証",
-    "addExtraSecurity": "セキュリティのレイヤーを追加",
-    "protectAccount": "第二認証要素でアカウントを保護",
-    "configure2fa": "2FAを設定",
-    "saveInAuthApp": "認証アプリ（Google Authenticator、Authyなど）に保存してください",
-    "cancel": "キャンセル",
-    "verify": "確認",
-    "twoFaActive": "2FA 有効",
-    "accountProtected": "あなたのアカウントは保護されています",
-    "disable2fa": "2FA を無効化",
-    "activityHistory": "アクティビティ履歴",
-    "recentActivity": "最近のログインと変更"
+    "passwordChangeFailed": "パスワードは変更されませんでした。現在のパスワードが正しいか確認してください。"
   },
   "coverPicker": {
     "chooseCoverFor": "カバーを選択:",
@@ -791,7 +764,9 @@
     "toClipboard": "クリップボードへ",
     "backToEditorAria": "エディタに戻る",
     "backToEditor": "エディタに戻る",
-    "translationPh": "翻訳..."
+    "translationPh": "翻訳...",
+    "cpkBuildUnavailable": "これらのファイルには使用できません",
+    "cpkBuildUnavailableReason": "{formats} ファイルのパッチ済み CPK はまだ作成できません。GameStringer には元の構造のまま再構築する機能がなく、翻訳をプレーンテキストとして書き戻すとゲームが壊れます。代わりに CSV または PO でエクスポートしてください。"
   },
   "translationWizard": {
     "renderError": "レンダリングエラー",
@@ -1054,7 +1029,6 @@
     "more": "その他",
     "moreTooltip": "その他のツール（P.T. Rank、Dry Run、DB名）",
     "alreadyRunning": "翻訳はすでにバックグラウンドで実行中です。",
-    "advancedParams": "詳細パラメーター（温度、トークン、バッチ）",
     "stepScan": "game.veb をスキャン中",
     "stepExtract": "文字列を抽出中",
     "stepTranslateCloud": "AI翻訳（クラウド）",
@@ -1094,7 +1068,13 @@
     "pakAesSaved": "鍵を保存しました。String it! をもう一度実行してください。",
     "pakAesWrong": "保存された鍵ではこの pak を開けません。別の鍵を貼り付けるか、保存された鍵を削除してください。",
     "pakAesClear": "保存された鍵を削除",
-    "pakAesCleared": "鍵を削除しました。"
+    "pakAesCleared": "鍵を削除しました。",
+    "pageRouteDetected": "{engine}ゲームを検出",
+    "pageRouteMsg": "{engine}にはString it!の自動パイプラインがありません：専用の{tool}でこのゲームを翻訳してください。",
+    "pageRouteToast": "{engine}：{tool}を開いてください",
+    "pageRouteOpen": "{tool}を開く",
+    "gmRestored": "GameMakerのパッチに失敗しました：ゲームの元のファイルをバックアップから復元しました。",
+    "gmRestoreFailed": "GameMakerのパッチに失敗し、バックアップも復元できませんでした：起動する前にゲームファイルを確認してください（Steamで整合性を確認することもできます）。"
   },
   "autoTranslatePage": {
     "identical": "同一",
@@ -1290,7 +1270,16 @@
     "wait25MinutesAndClick": "25分待ってからクリック",
     "configureAnAiProviderGeminiDee": "AIプロバイダー（Gemini、DeepSeek など）を設定する場所",
     "tpLogProjectSaved": "プロジェクトを更新しました: {count} 件の文字列をプロジェクトに保存（再開・エクスポート・公開はそちらから）",
-    "tpLogProjectSaveFailed": "パッチは適用されましたが、プロジェクトの登録に失敗しました: {err}"
+    "tpLogProjectSaveFailed": "パッチは適用されましたが、プロジェクトの登録に失敗しました: {err}",
+    "bgJobNotFound": "このバックグラウンド翻訳の結果は利用できなくなりました。",
+    "gamePathUnknown": "このゲームのインストールフォルダーが見つかりません。ファイルを手動で読み込むか、ライブラリからゲームを開いてください。",
+    "libraryLoadFailed": "ゲームライブラリを読み込めませんでした。",
+    "pickInstalledGame": "またはインストール済みのゲームを選択:",
+    "pickGamePlaceholder": "ゲームを選択…",
+    "noInstalledGames": "ライブラリにインストール済みのゲームが見つかりません。",
+    "noStringsTranslated": "翻訳された文字列はありません",
+    "noStringsTranslatedDesc": "文字列を1つも翻訳せずに翻訳が終了しました。読み込んだファイルはそのままなので、再試行できます。",
+    "nothingToTranslate": "読み込んだファイルに翻訳するテキストがありません。"
   },
   "aiPipelinePage": {
     "title": "AI翻訳パイプライン",
@@ -1390,7 +1379,10 @@
     "japanese": "日本語",
     "chinese": "中国語",
     "korean": "韓国語",
-    "impostazioniPerLestrazioneAuto": "自動抽出とプロンプトへのインジェクション設定"
+    "impostazioniPerLestrazioneAuto": "自動抽出とプロンプトへのインジェクション設定",
+    "noGameTexts": "このゲームと翻訳先言語の保存済み文字列が見つかりません。先にゲームを翻訳してから、実際のテキストから用語を抽出してください。",
+    "gameTextsAvailable": "ソース：このゲームの保存済み文字列 {count} 件（代表的なサンプルがAIに送信されます）。",
+    "noGlossaryForGame": "このゲームにはまだ用語集がありません。作成して用語を管理しましょう。"
   },
   "visualNovelPage": {
     "title": "ビジュアルノベルパッチャー",
@@ -1708,7 +1700,18 @@
     "translationMemory": "翻訳メモリ",
     "selectString": "リストから文字列選択",
     "noSelection": "未選択",
-    "traduciUnGiocoConNeuralTransla": "Neural Translatorでゲームを翻訳するとここに表示されます。"
+    "traduciUnGiocoConNeuralTransla": "Neural Translatorでゲームを翻訳するとここに表示されます。",
+    "deepLinkNoData": "エディターにはまだ「{game}」の翻訳がありません",
+    "fileLoadedDesc": "{file} - {n} 件の文字列が見つかりました",
+    "fileLoadedDescMulti": "{file} - {n} 件の文字列（多言語ファイルを検出）",
+    "partialLoadedTitle": "部分的な結果を読み込みました",
+    "partialLoadedDesc": "{game} の文字列 {done}/{total} 件を翻訳済み",
+    "savedStringsFile": "保存済みの文字列",
+    "savedDictionaryFailed": "エディターには保存しましたが、ゲーム辞書には保存できませんでした",
+    "aiNoProvider": "翻訳プロバイダーが応答しなかったため、文字列は翻訳されませんでした。設定で API キーと有効なプロバイダーを確認してください。",
+    "aiTranslated": "{provider} で翻訳しました",
+    "aiTranslateFailed": "AI 翻訳に失敗しました",
+    "savedLinesDesc": "{n} 件の翻訳を保存しました"
   },
   "binaryPatcherPage": {
     "selectExeDll": "翻訳可能な文字列を抽出するゲームの.exeまたは.dllを選択",
@@ -1740,7 +1743,14 @@
     "offlineDict": "オフライン辞書 — 高速だが基本品質",
     "aiPreset": "AIプリセット：",
     "allCategories": "全カテゴリ",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepLなど — 最高品質"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini、DeepSeek、OpenAI、Ollama、DeepLなど — 最高品質",
+    "readBinaryFailed": "バイナリをバイト単位で読み込めませんでした（{error}）。50 MB を超えるファイルはゲームフォルダーから読み込めません。",
+    "patchNothingApplied": "バイナリに書き込める翻訳がなかったため、ファイルは保存されていません。",
+    "patchSaved": "パッチ済みファイルを保存しました：{patched} 件の文字列を書き込みました",
+    "patchSkippedErrors": "{n} 件の翻訳は書き込まれていません（バイト長または原文が一致しません）",
+    "backupKept": "置き換えたファイルのバックアップ：{path}",
+    "backupFailed": "置き換えるファイルのバックアップに失敗したため、何も書き込んでいません：{error}",
+    "patchSaveFailed": "パッチ済みファイルを保存できませんでした：{error}"
   },
   "advancedToolsPage": {
     "title": "高度なツール",
@@ -1772,14 +1782,10 @@
     "communityHubSupabase": "コミュニティハブ — Supabase バックエンド",
     "communityHubShort": "コミュニティハブ",
     "temperatureLabel": "Temperature:",
-    "maxTokensLabel": "最大トークン数:",
-    "batchSizeLabel": "バッチサイズ:",
     "copyToSeeAll": "\\n\\n...（コピーしてすべて表示）",
     "gbTotal": "GB 合計",
     "diskUsed": "使用中",
     "gbAvailable": "GB 利用可能",
-    "rssFeedAdded": "RSS フィードを追加しました",
-    "feedRemoved": "フィードを削除しました",
     "lmStudioDesc": "LM Studio は、OpenAI 互換 API でローカル LLM を実行できるデスクトップアプリです。無料で、API キーは不要です。",
     "autoDetectFromServer": "サーバーから自動検出",
     "lmStudioDownload1": "LM Studio を以下からダウンロード: ",
@@ -1798,9 +1804,6 @@
     "deepl500k": "月50万文字まで無料 — ",
     "qwen1m": "月100万トークンまで無料、多言語に最適 — ",
     "rssFeedDashboard": "RSS フィードダッシュボード",
-    "rssDesc": "ダッシュボードのティッカーに表示する RSS フィードを設定します",
-    "feedNamePlaceholder": "フィード名（例: Steam News）",
-    "feedUrlPlaceholder": "RSS フィード URL",
     "noFeeds": "フィードが設定されていません。RSS フィードを追加して始めましょう。",
     "restoreDefaults": "デフォルトに戻す",
     "fontSmall": "小（14px）",
@@ -1848,7 +1851,10 @@
     "git": "Git:",
     "branch": "ブランチ:",
     "ollamaUrlLabel": "Ollama サーバー URL",
-    "ollamaUrlHint": "空欄なら自動検出します。Ollama が別のポート、WSL/Docker、または別のPCで動作している場合に入力してください（例: http://192.168.1.5:11434）。"
+    "ollamaUrlHint": "空欄なら自動検出します。Ollama が別のポート、WSL/Docker、または別のPCで動作している場合に入力してください（例: http://192.168.1.5:11434）。",
+    "temperatureSection": "詳細パラメーター（温度）",
+    "temperatureScope": "クラウド AI プロバイダー（Gemini、OpenAI、DeepSeek、Groq、Mistral、Cohere、OpenRouter、Together、Fireworks、Cerebras、Qwen）で使用されます。Claude は独自の既定値を使います。Ollama には専用の温度設定があります: Ollama / AI → 詳細機能。",
+    "rssNewsDesc": "ダッシュボードのニュースに使うソースを選びます。「ニュースフィードを管理」ページと同じリストです。"
   },
   "translatorProPage": {
     "subtitle": "マルチステップパイプラインによる高度なニューラル翻訳",
@@ -1911,7 +1917,22 @@
     "applyInstalling": "パッチャーをインストール中...",
     "applyApplying": "適用中...",
     "applied": "適用しました！",
-    "applyToGame": "ゲームに適用"
+    "applyToGame": "ゲームに適用",
+    "applyResult": {
+      "allTitle": "翻訳をゲームに適用しました",
+      "partialTitle": "翻訳は一部のみ適用されました",
+      "noneTitle": "ゲームには何も書き込まれませんでした",
+      "written": "書き込み済み",
+      "failed": "書き込み失敗: {error}",
+      "unknownLocation": "書き込みなし: ゲーム内の元の場所が不明です",
+      "notLanguageFile": "書き込みなし: ゲームの言語ファイルではありません",
+      "noEntries": "書き込みなし: 辞書に入れる翻訳済み文字列がありません",
+      "languageHint": "ゲームのオプションで新しい言語を選択してください。",
+      "xunityHint": "XUnity 辞書に {n} 件の翻訳。ゲームを起動してください！",
+      "patcherFailed": "XUnity AutoTranslator をインストールできませんでした: {error}",
+      "manualHint": "書き込まれなかったファイルは「すべてダウンロード」で保存し、手動でコピーしてください。"
+    },
+    "patchSavedTo": "翻訳パッケージの保存先:"
   },
   "loggingDashboardComp": {
     "loggingDashboard": "ログダッシュボード",
@@ -2103,40 +2124,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "翻訳",
-    "stringhe": "文字列",
-    "parole": "単語",
-    "progress": "進捗",
     "oggi": "今日",
     "settimana": "週",
     "mese": "月",
-    "completati": "完了",
-    "inCorso": "進行中",
     "totali": "合計",
     "title": "翻訳の統計",
-    "tradotte": "翻訳済み",
-    "elaborate": "処理済み",
-    "medio": "平均",
     "weeklyActivity": "週間アクティビティ",
-    "estimatedTimeRemaining": "推定残り時間",
     "targetLanguages": "対象言語",
-    "noTranslationsYet": "翻訳はまだありません"
+    "noTranslationsYet": "翻訳はまだありません",
+    "noLanguageData": "これらの翻訳には翻訳先の言語が記録されていません",
+    "activityOverview": "翻訳アクティビティの概要"
   },
   "securityDialogComp": {
     "currentPassword": "現在のパスワード",
     "newPassword": "新しいパスワード",
-    "confirmPassword": "パスワードの確認",
-    "timeoutSessione": "セッションタイムアウト",
-    "never": "なし",
-    "autoLock": "自動ロック",
-    "timeoutBlocco": "ロックタイムアウト",
-    "notificheLogin": "ログイン通知",
-    "active": "有効",
-    "inactive": "無効",
-    "yourSecretCode": "あなたのシークレットコード:",
-    "enterVerificationCode": "確認コードを入力",
-    "enterCodeToDisable": "無効化するにはコードを入力",
-    "demoUsa123456": "デモ: 123456 を使用",
-    "noActivityRecorded": "記録されたアクティビティはありません"
+    "confirmPassword": "パスワードの確認"
   },
   "visualTranslationEditorComp": {
     "originale": "原文",
@@ -2287,7 +2289,8 @@
     "reviewNotesPlaceholder": "レビューについてのメモを追加...",
     "approve": "承認",
     "saveChanges": "変更を保存",
-    "exportResults": "結果をエクスポート"
+    "exportResults": "結果をエクスポート",
+    "emptyTranslationCannotApprove": "AI はこの行の訳文を返さなかったため、承認できません。自分で入力する（編集）か、却下してください。"
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "ピクセルフォントプレビュー",
@@ -2470,7 +2473,8 @@
     "personalizzaTema": "テーマをカスタマイズ",
     "scegliOCreaIlTuoTemaPersonaliz": "テーマを選択するか、カスタムテーマを作成",
     "iTuoiTemiSalvati": "保存したテーマ",
-    "anteprima": "プレビュー"
+    "anteprima": "プレビュー",
+    "altriTemi": "その他のテーマ"
   },
   "errorBoundaryComp": {
     "errorId": "エラーID:",
@@ -2493,7 +2497,9 @@
     "importTranslations": "翻訳をインポート",
     "game": "ゲーム",
     "translationFile": "翻訳ファイル",
-    "detectedFileFormat": "検出されたファイル形式:"
+    "detectedFileFormat": "検出されたファイル形式:",
+    "importResult": "{total} 件中 {n} 件の翻訳をインポートしました",
+    "noValidRows": "原文と訳文の両方を含む行がありません"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "全体の進行状況",
@@ -2588,7 +2594,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "アクティブなプロファイル",
-    "chiudi": "閉じる"
+    "chiudi": "閉じる",
+    "avatarUpdated": "アバターを更新しました"
   },
   "nav": {
     "dashboard": "ダッシュボード",
@@ -2752,7 +2759,15 @@
     "buildDate": "ビルド日",
     "gitHash": "Git ハッシュ",
     "branch": "ブランチ",
-    "unsavedChanges": "未保存の変更があります"
+    "unsavedChanges": "未保存の変更があります",
+    "temperatureTooltipHighCapped": "0.8-1.0: より創造的、原文から変わる可能性あり",
+    "autoBackupConfigSaved": "自動バックアップの設定を保存しました",
+    "backupDone": "バックアップが完了しました",
+    "backupDoneDesc": "{n} 個のファイルを保存しました ({size})",
+    "backupFailed": "バックアップに失敗しました",
+    "restoreDone": "復元が完了しました",
+    "restoreDoneDesc": "{n} 件の項目を復元しました",
+    "restoreFailed": "復元に失敗しました"
   },
   "common": {
     "loading": "読み込み中...",
@@ -3551,7 +3566,10 @@
     "play": "再生",
     "ltWindow": "ウィンドウ",
     "ltPickWindow": "ウィンドウを選択",
-    "ltNoWindow": "ウィンドウが見つかりません"
+    "ltNoWindow": "ウィンドウが見つかりません",
+    "suggestionsGeneratedFor": "{n} 件の翻訳の提案を生成しました",
+    "originalsCopiedCount": "{n} 件の原文をコピーしました",
+    "translationsPastedCount": "{n} 件の翻訳を貼り付けました"
   },
   "languages": {
     "cs": "Čeština",
@@ -3675,7 +3693,15 @@
     "passwordResetSuccess": "パスワードが正常にリセットされました",
     "historyCleared": "アクティビティ履歴をクリアしました",
     "disconnectedAll": "他のすべてのセッションから切断しました",
-    "thisProfile": "このプロフィール"
+    "thisProfile": "このプロフィール",
+    "recoveryUnavailableTitle": "このパスワードはリセットできません",
+    "recoveryUnavailableDesc": "プロフィールはそのパスワードで暗号化されており、GameStringer はこれを解除できる別の鍵を一切保持していません。忘れたパスワードは、プロフィール作成時に表示された12語のリカバリーキーを使っても、復元もリセットもできません。",
+    "recoveryUnavailableHint": "思い出せない場合は、新しいプロフィールを作成してください。このプロフィールのデータは、正しいパスワードが入力されるまでロックされたままです。",
+    "passwordNoticeTitle": "パスワードを大切に保管してください",
+    "passwordNoticeDesc": "このプロフィールはそのパスワードで暗号化されています。パスワードを忘れると復元もリセットもできず、プロフィールのデータはロックされたままになります。",
+    "passwordNoticeHint": "書き留めるか、パスワードマネージャーに保存してください。",
+    "passwordNoticeConfirm": "了解しました",
+    "passwordUnrecoverableDesc": "プロフィールはそのパスワードで暗号化されており、GameStringer はこれを解除できる別の鍵を一切保持していません。忘れたパスワードは復元もリセットもできません。以前のバージョンで12語のリカバリーキーを受け取っていても、そのキーでプロフィールを解除することはできません。"
   },
   "onboarding": {
     "step": "ステップ {current}/{total}",
@@ -3938,16 +3964,14 @@
     "translated": "翻訳済み",
     "waitingForText": "テキストを待機中...",
     "footerInfo": "OCRはどのゲームでも動作します • Gemini AIで翻訳",
-    "aiProvider": "AI プロバイダー"
+    "aiProvider": "AI プロバイダー",
+    "languagePackMissing": "Windows はこの言語 ({lang}) のテキストを読み取れません：光学式文字認識 (OCR) を含む言語パックがインストールされていません。設定 > 時刻と言語 > 言語と地域 で追加してから、もう一度開始してください。"
   },
   "subtitleOverlay": {
     "title": "字幕オーバーレイ",
     "subtitle": "ストリーミングと録画用のライブ字幕",
     "startCapture": "キャプチャ開始",
     "stop": "停止",
-    "paused": "一時停止中",
-    "captureActive": "キャプチャ中",
-    "subtitlesCaptured": "字幕をキャプチャ",
     "livePreview": "ライブプレビュー",
     "settings": "設定",
     "style": "スタイル",
@@ -3967,15 +3991,13 @@
     "fadeIn": "フェードイン",
     "fadeOut": "フェードアウト",
     "animation": "アニメーション",
-    "history": "履歴",
-    "noSubtitlesCaptured": "字幕がキャプチャされていません",
-    "startCaptureToBegin": "キャプチャを開始してください",
     "positionTop": "上",
     "positionCenter": "中央",
     "positionBottom": "下",
     "positionAbove": "上に",
     "positionBelow": "下に",
-    "positionInline": "インライン"
+    "positionInline": "インライン",
+    "notConnected": "ライブキャプチャはまだ接続されていません。ここでは字幕のキャプチャも翻訳も行われません。字幕スタイルのプレビューのみ可能です。"
   },
   "translationFixer": {
     "title": "翻訳修正ツール",
@@ -4046,19 +4068,14 @@
     "exportAll": "すべてエクスポート",
     "dropImages": "画像をドロップまたはクリックしてアップロード",
     "processing": "処理中...",
-    "detecting": "吹き出しを検出中...",
-    "translating": "翻訳中...",
-    "inpainting": "インペインティング中...",
-    "completed": "完了！",
     "noPage": "ページなし",
     "original": "オリジナル",
     "translated": "翻訳済み",
     "loadPages": "マンガ/コミックページを読み込む",
     "supportedFormats": "JPG、PNG、WebPに対応",
     "pageOf": "ページ {current} / {total}",
-    "analyzingText": "テキストを分析中...",
-    "batchTranslation": "一括翻訳中...",
-    "fontStyleLabel": "フォントスタイル"
+    "fontStyleLabel": "フォントスタイル",
+    "notConnected": "未接続：このツールはOCRも翻訳も実行しません。ページの読み込みと表示はできますが、検出・インペインティング・エクスポートは無効です。"
   },
   "textureTranslator": {
     "title": "テクスチャ翻訳",
@@ -4078,7 +4095,8 @@
     "noTexture": "テクスチャが選択されていません",
     "processAll": "すべて処理",
     "original": "オリジナル",
-    "translated": "翻訳済み"
+    "translated": "翻訳済み",
+    "notConnected": "未接続：このツールはOCRも翻訳も実行しません。テクスチャの読み込みと表示はできますが、テキスト検出・翻訳の適用・エクスポートは無効です。"
   },
   "dictionaryManager": {
     "addTranslation": "翻訳を追加"
@@ -4167,7 +4185,8 @@
     "reset": "リセット",
     "save": "保存",
     "selectToEdit": "編集する字幕を選択してください",
-    "issuesDetected": "問題が検出されました"
+    "issuesDetected": "問題が検出されました",
+    "linesNotTranslated": "{n} 行の字幕を翻訳できず、元のテキストのままです"
   },
   "multiLlmCompare": {
     "title": "マルチ LLM 比較",
@@ -4238,7 +4257,8 @@
     "cancel": "キャンセル",
     "delete": "削除",
     "translationUpdated": "翻訳を更新しました",
-    "translationDeleted": "翻訳を削除しました"
+    "translationDeleted": "翻訳を削除しました",
+    "languagePair": "言語ペア"
   },
   "support": {
     "title": "サポート",
@@ -4276,7 +4296,8 @@
     "micError": "マイクにアクセスできません。権限を確認してください。",
     "transcriptionError": "文字起こしエラー。OpenAI APIキーを確認してください。",
     "translationError": "翻訳エラー。",
-    "ttsError": "音声合成エラー。"
+    "ttsError": "音声合成エラー。",
+    "noSpeechDetected": "音声から発話を認識できませんでした。"
   },
   "aiTranslator": {
     "title": "AI翻訳アシスタント",
@@ -4492,7 +4513,8 @@
     "bgOpacity": "背景不透明度",
     "shadow": "シャドウ",
     "positionApplied": "位置「{name}」を適用",
-    "styleApplied": "スタイル「{name}」を適用"
+    "styleApplied": "スタイル「{name}」を適用",
+    "notConnected": "ヘッドセットへの出力はまだ接続されていません。このページはオーバーレイのプレビューのみで、VRヘッドセットには何も送信されません。"
   },
   "playerFeedback": {
     "title": "プレイヤーフィードバック",
@@ -5607,15 +5629,6 @@
     "recommendedModel": "推奨モデル",
     "local": "ローカル",
     "cloud": "クラウド",
-    "autoSwitch": "モデル自動切替",
-    "autoSwitchDesc": "利用可能なVRAMに応じてAIモデルを自動切替",
-    "preferLocal": "ローカルモデル優先",
-    "preferLocalDesc": "可能な場合はクラウドよりOllama/LM Studioを使用",
-    "alertHighUsage": "VRAM高使用量アラート",
-    "alertHighUsageDesc": "VRAMがしきい値を超えた場合に通知",
-    "alertThreshold": "アラートしきい値",
-    "cloudFallback": "クラウドフォールバックプロバイダー",
-    "cloudAuto": "自動",
     "tierAndModels": "ティアとモデル",
     "statsUpdated": "システム統計を更新しました",
     "tierUltra": "ウルトラ (≥12GB)",
@@ -5662,7 +5675,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google Translate",
     "libretranslateFree": "LibreTranslate (無料)",
-    "workflowCompletato": "ワークフローが完了しました！"
+    "workflowCompletato": "ワークフローが完了しました！",
+    "linesNotTranslated": "{n} 行は AI で翻訳できず、訳文が空です。自分で入力するか、却下してください。"
   },
   "translationWizardPage": {
     "noGameTrovato": "ゲームが見つかりません",
@@ -5673,7 +5687,6 @@
     "traduzioneCompletata": "翻訳完了！"
   },
   "libraryPage": {
-    "scanDone": "🎮 Family Sharing のスキャンが完了しました！",
     "scanError": "スキャン中にエラーが発生しました",
     "installStarted": "インストールを開始しました",
     "installStartedDesc": "{{game}} をインストールするために Steam が開きます",
@@ -5709,12 +5722,16 @@
     "langScanDone": "{n}件のゲームの言語を検出しました",
     "langScanNone": "新しい言語は見つかりませんでした",
     "langScanError": "言語の検出中にエラーが発生しました",
-    "addGameFromDiskHint": "ゲームが見つからない場合は、ディスク上のフォルダーを選んで追加できます（ストア外のゲームにも対応）。"
+    "addGameFromDiskHint": "ゲームが見つからない場合は、ディスク上のフォルダーを選んで追加できます（ストア外のゲームにも対応）。",
+    "libraryScanDone": "すべてのストアでライブラリを再スキャンしました",
+    "scanPartial": "スキャンはエラーありで終了しました。一部のソースを読み取れなかったため、リストが不完全な可能性があります。",
+    "steamCredsHint": "「ストア」でSteamアカウントを連携すると、所有していて未インストールのゲームも表示されます。"
   },
   "unityBundlePage": {
     "auto": "自動",
     "fileOpenCtrlv": "ファイル → 開く → Ctrl+V",
-    "importDumpCtrlv": "ダンプをインポート → Ctrl+V"
+    "importDumpCtrlv": "ダンプをインポート → Ctrl+V",
+    "failedStrings": "{n} 件の文字列を翻訳できず、元の言語のままです"
   },
   "activityPage": {
     "filterBy": "フィルター:",

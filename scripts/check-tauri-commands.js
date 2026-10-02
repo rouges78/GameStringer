@@ -50,7 +50,10 @@ const SKIP_FILE = /\.(test|spec|d)\.tsx?$/;
 
 // Wrapper che inoltrano a invoke() mantenendo il nome del comando come 1° argomento.
 // safeInvoke: lib/tauri-wrapper.ts · invokeCmd: helper locali in alcuni componenti.
-const INVOKERS = ['invoke', 'safeInvoke', 'invokeCmd'];
+// tauriInvoke / invokeCommand / invokeTauri: alias e wrapper con un nome che il
+// `\b` della regex non aggancia come «invoke». Senza di loro il gate non vedeva
+// `export_translation_patch`, un comando mai esistito chiamato da «Crea patch».
+const INVOKERS = ['invoke', 'safeInvoke', 'invokeCmd', 'tauriInvoke', 'invokeCommand', 'invokeTauri'];
 
 /** File .ts/.tsx sotto le radici del frontend, esclusi test e cartelle generate. */
 function walk(dir, out = []) {

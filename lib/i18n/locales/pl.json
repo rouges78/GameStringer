@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "Ustawienia niestandardowego promptu zapisane",
     "settingsReset": "Ustawienia zresetowane",
-    "title": "Własny prompt i głos",
     "newBadge": "Nowość 2026",
     "subtitle": "Dostosuj zachowanie providerów LLM za pomocą persony, tonu i niestandardowego promptu",
     "enableCustomPrompt": "Włącz niestandardowy prompt",
-    "enableDesc": "Dodaje niestandardowe instrukcje do wszystkich tłumaczeń",
     "personaRole": "Persona / Rola",
     "personaDesc": "Tłumacz tak, jakbyś był tą postacią",
     "toneStyle": "Ton / Styl",
     "customPrompt": "Niestandardowy prompt",
     "customPromptDesc": "Dodatkowe instrukcje, które zostaną dodane do promptu systemowego",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "Tłumaczenie głosowe w czasie rzeczywistym (ponad 40 języków)",
-    "ttsVoice": "Głos TTS",
-    "preserveVoice": "Zachowaj oryginalne cechy głosu",
-    "preserveVoiceDesc": "Zachowuje ton, akcentowanie i styl oryginalnego głosu (beta)",
     "preview": "Podgląd:",
     "reset": "Resetuj",
     "personaPh": "Wybierz personę...",
     "tonePh": "Wybierz ton...",
-    "customPromptPh": "Np.: Używaj archaicznego słownictwa, mów formalnie, używaj terminów typowych dla fantasy..."
+    "customPromptPh": "Np.: Używaj archaicznego słownictwa, mów formalnie, używaj terminów typowych dla fantasy...",
+    "enableDescCloud": "Dodaje Twoje instrukcje do tłumaczeń chmurowych dostawców AI (Gemini, OpenAI, Claude, DeepSeek, Groq, Mistral…). Modele lokalne (Ollama, LM Studio) i silniki takie jak DeepL ich nie używają."
   },
   "lipSyncPanel": {
     "title": "Lip Sync (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "Głos i provider",
     "defaultVoice": "Głos domyślny",
     "sttEngine": "Silnik STT",
-    "groqWhisper": "Groq Whisper (szybki)",
     "durationMatching": "Dopasowanie czasu trwania",
     "lipSync": "Lip Sync (Rhubarb)",
     "generateSubtitles": "Generuj napisy",
@@ -161,7 +154,17 @@
     "errors": "Błędy",
     "confidence": "Pewność",
     "audioSegments": "Segmenty audio",
-    "selectFolderPrompt": "Wybierz folder gry, aby rozpocząć automatyczny dubbing. Pipeline wykona: skanowanie audio → transkrypcję Whisper → tłumaczenie AI → syntezę głosu → patchowanie plików audio."
+    "selectFolderPrompt": "Wybierz folder gry, aby rozpocząć automatyczny dubbing. Pipeline wykona: skanowanie audio → transkrypcję Whisper → tłumaczenie AI → syntezę głosu → patchowanie plików audio.",
+    "doneToast": "Dubbing zakończony: podmieniono plików audio: {n}",
+    "partialToast": "Dubbing częściowy: podmieniono plików audio: {n}, błędów: {errors}",
+    "failedToast": "Nie podmieniono żadnego pliku audio",
+    "paidConfirmTitle": "Potwierdź płatną transkrypcję",
+    "paidConfirmDesc": "Znaleziono {count} plików audio ({size} MB) w folderze gry, łącznie z muzyką i efektami dźwiękowymi. Transkrypcja wysyła każdy plik do usługi rozpoznawania mowy: jedno płatne wywołanie na plik, rozliczane z Twojego klucza API. Pliki z mową korzystają potem także z płatnego tłumaczenia i syntezy mowy.",
+    "paidConfirmProceed": "Transkrybuj pliki: {count}",
+    "patchFormatMismatch": "Niezgodny format: zsyntetyzowany dźwięk ({actual}) nie pasuje do pliku gry (.{expected}). Konwersja audio jest niedostępna, więc plik pozostał bez zmian.",
+    "unknownAudioFormat": "nieznany format",
+    "noCompatibleAudio": "Żaden z {count} plików audio nie jest w formacie MP3. Synteza mowy tworzy MP3, a konwersja audio jest niedostępna, więc nie da się zastąpić żadnego pliku gry. Nic nie zostało wysłane do płatnych usług.",
+    "groqWhisperUnavailable": "Groq Whisper (jeszcze niedostępne)"
   },
   "fileSelector": {
     "fromWizard": "Pochodzi z Translation Wizard",
@@ -615,41 +618,11 @@
     "enterCurrentPassword": "Wpisz obecne hasło",
     "passwordMinLength": "Nowe hasło musi mieć co najmniej 4 znaki",
     "passwordChanged": "Hasło zmienione pomyślnie!",
-    "invalidCode": "Nieprawidłowy kod",
-    "twoFaDisabledMsg": "Uwierzytelnianie dwuskładnikowe wyłączone",
-    "enter6DigitCode": "Wpisz 6-cyfrowy kod",
-    "twoFaEnabledMsg": "Uwierzytelnianie dwuskładnikowe włączone!",
     "passwordsDontMatch": "Hasła nie są zgodne",
-    "passwordTab": "Hasło",
-    "sessionsTab": "Sesje",
-    "activityTab": "Aktywność",
     "changePassword": "Zmień hasło",
     "changePasswordDesc": "Zmień hasło swojego profilu",
     "passwordsMatch": "Hasła są zgodne",
-    "sessionManagement": "Zarządzanie sesjami",
-    "sessionMgmtDesc": "Skonfiguruj limit czasu i automatyczną blokadę",
-    "disconnectAfterInactivity": "Rozłącz po okresie bezczynności",
-    "min15": "15 minut",
-    "min30": "30 minut",
-    "hour1": "1 godzina",
-    "hours2": "2 godziny",
-    "requirePassword": "Wymagaj hasła po okresie bezczynności",
-    "min5": "5 minut",
-    "min10": "10 minut",
-    "notifyNewLogins": "Powiadamiaj o nowych logowaniach",
-    "disconnectAll": "Rozłącz wszystkie sesje",
-    "twoFactorAuth": "Uwierzytelnianie dwuskładnikowe",
-    "addExtraSecurity": "Dodaj dodatkową warstwę zabezpieczeń",
-    "protectAccount": "Chroń swoje konto drugim czynnikiem uwierzytelniania",
-    "configure2fa": "Skonfiguruj 2FA",
-    "saveInAuthApp": "Zapisz go w aplikacji uwierzytelniającej (Google Authenticator, Authy itp.)",
-    "cancel": "Anuluj",
-    "verify": "Zweryfikuj",
-    "twoFaActive": "2FA aktywne",
-    "accountProtected": "Twoje konto jest chronione",
-    "disable2fa": "Wyłącz 2FA",
-    "activityHistory": "Historia aktywności",
-    "recentActivity": "Ostatnie logowania i zmiany"
+    "passwordChangeFailed": "Hasło nie zostało zmienione. Sprawdź, czy obecne hasło jest poprawne."
   },
   "coverPicker": {
     "chooseCoverFor": "Wybierz okładkę dla",
@@ -791,7 +764,9 @@
     "toClipboard": "Do schowka",
     "backToEditorAria": "Powrót do edytora",
     "backToEditor": "Powrót do edytora",
-    "translationPh": "Tłumaczenie..."
+    "translationPh": "Tłumaczenie...",
+    "cpkBuildUnavailable": "Niedostępne dla tych plików",
+    "cpkBuildUnavailableReason": "Nie można jeszcze utworzyć spatchowanego CPK dla plików {formats}: GameStringer nie ma narzędzia, które odbudowuje je z oryginalną strukturą, a zapisanie tłumaczeń z powrotem jako zwykły tekst zepsułoby grę. Wyeksportuj do CSV lub PO."
   },
   "translationWizard": {
     "renderError": "Błąd renderowania",
@@ -1054,7 +1029,6 @@
     "more": "Więcej",
     "moreTooltip": "Inne narzędzia (P.T. Rank, Dry Run, Nazwy BD)",
     "alreadyRunning": "Tłumaczenie już trwa w tle.",
-    "advancedParams": "Parametry zaawansowane (temperatura, tokeny, partia)",
     "stepScan": "Skanowanie game.veb",
     "stepExtract": "Wyodrębnianie tekstów",
     "stepTranslateCloud": "Tłumaczenie AI (Chmura)",
@@ -1094,7 +1068,13 @@
     "pakAesSaved": "Klucz zapisany. Uruchom String it! ponownie, aby spróbować jeszcze raz.",
     "pakAesWrong": "Zapisany klucz nie otwiera tego paka. Wklej inny albo usuń zapisany.",
     "pakAesClear": "Usuń zapisany klucz",
-    "pakAesCleared": "Klucz usunięty."
+    "pakAesCleared": "Klucz usunięty.",
+    "pageRouteDetected": "Wykryto grę {engine}",
+    "pageRouteMsg": "{engine} nie ma automatycznego potoku w String it!: użyj dedykowanego {tool}, aby przetłumaczyć tę grę.",
+    "pageRouteToast": "{engine}: otwórz {tool}",
+    "pageRouteOpen": "Otwórz {tool}",
+    "gmRestored": "Łatka GameMaker nie powiodła się: oryginalne pliki gry zostały przywrócone z kopii zapasowej.",
+    "gmRestoreFailed": "Łatka GameMaker nie powiodła się, a kopii zapasowej nie udało się przywrócić: sprawdź pliki gry (lub zweryfikuj je w Steam) przed uruchomieniem."
   },
   "autoTranslatePage": {
     "identical": "identyczne",
@@ -1290,7 +1270,16 @@
     "wait25MinutesAndClick": "Poczekaj 25 minut i kliknij",
     "configureAnAiProviderGeminiDee": "Skonfiguruj dostawcę AI (Gemini, DeepSeek itp.) w",
     "tpLogProjectSaved": "Projekt zaktualizowany: {count} tekstów zapisano w Projektach (wznów, eksportuj lub publikuj stamtąd)",
-    "tpLogProjectSaveFailed": "Łatka zastosowana, ale rejestracja projektu nie powiodła się: {err}"
+    "tpLogProjectSaveFailed": "Łatka zastosowana, ale rejestracja projektu nie powiodła się: {err}",
+    "bgJobNotFound": "Wyniki tego tłumaczenia w tle nie są już dostępne.",
+    "gamePathUnknown": "Nie znaleziono folderu instalacji tej gry. Wczytaj pliki ręcznie lub otwórz grę z Biblioteki.",
+    "libraryLoadFailed": "Nie udało się wczytać biblioteki gier.",
+    "pickInstalledGame": "Lub wybierz zainstalowaną grę:",
+    "pickGamePlaceholder": "Wybierz grę…",
+    "noInstalledGames": "Nie znaleziono zainstalowanych gier w bibliotece.",
+    "noStringsTranslated": "Nie przetłumaczono żadnego ciągu",
+    "noStringsTranslatedDesc": "Tłumaczenie zakończyło się bez przetłumaczenia żadnego ciągu. Wczytane pliki nadal tu są: możesz ponowić.",
+    "nothingToTranslate": "Wczytane pliki nie zawierają tekstu do przetłumaczenia."
   },
   "aiPipelinePage": {
     "title": "Pipeline Tłumaczenia AI",
@@ -1390,7 +1379,10 @@
     "japanese": "Japoński",
     "chinese": "Chiński",
     "korean": "Koreański",
-    "impostazioniPerLestrazioneAuto": "Ustawienia automatycznej ekstrakcji i wstrzykiwania do promptu"
+    "impostazioniPerLestrazioneAuto": "Ustawienia automatycznej ekstrakcji i wstrzykiwania do promptu",
+    "noGameTexts": "Nie znaleziono zapisanych ciągów dla tej gry i języka docelowego. Najpierw przetłumacz grę, a potem wyodrębnij terminy z jej prawdziwych tekstów.",
+    "gameTextsAvailable": "Źródło: {count} zapisanych ciągów z tej gry (do AI wysyłana jest reprezentatywna próbka).",
+    "noGlossaryForGame": "Ta gra nie ma jeszcze glosariusza: utwórz go, aby zarządzać jej terminami."
   },
   "visualNovelPage": {
     "title": "Patcher visual novel",
@@ -1708,7 +1700,18 @@
     "translationMemory": "Pamięć Tłumaczeń",
     "selectString": "Wybierz ciąg z listy",
     "noSelection": "Brak wyboru",
-    "traduciUnGiocoConNeuralTransla": "Przetłumacz grę za pomocą Neural Translator, aby rozpocząć jej wypełnianie tutaj."
+    "traduciUnGiocoConNeuralTransla": "Przetłumacz grę za pomocą Neural Translator, aby rozpocząć jej wypełnianie tutaj.",
+    "deepLinkNoData": "W Edytorze nie ma jeszcze tłumaczeń dla „{game}”",
+    "fileLoadedDesc": "{file} - znaleziono ciągów: {n}",
+    "fileLoadedDescMulti": "{file} - ciągów: {n} (wykryto plik wielojęzyczny)",
+    "partialLoadedTitle": "Wczytano wyniki częściowe",
+    "partialLoadedDesc": "Przetłumaczono {done}/{total} ciągów z {game}",
+    "savedStringsFile": "Zapisane ciągi",
+    "savedDictionaryFailed": "Zapisano w Edytorze, ale nie w słowniku gry",
+    "aiNoProvider": "Żaden dostawca tłumaczeń nie odpowiedział: ciąg nie został przetłumaczony. Sprawdź klucze API i aktywnych dostawców w Ustawieniach.",
+    "aiTranslated": "Przetłumaczono za pomocą {provider}",
+    "aiTranslateFailed": "Tłumaczenie AI nie powiodło się",
+    "savedLinesDesc": "Zapisano tłumaczeń: {n}"
   },
   "binaryPatcherPage": {
     "selectExeDll": "Wybierz plik .exe lub .dll gry, aby wyodrębnić przetłumaczalne ciągi znaków",
@@ -1740,7 +1743,14 @@
     "offlineDict": "Słownik offline — szybki ale podstawowa jakość",
     "aiPreset": "Preset AI:",
     "allCategories": "Wszystkie kategorie",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL i inne — najwyższa jakość"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL i inne — najwyższa jakość",
+    "readBinaryFailed": "Nie udało się odczytać pliku binarnego bajt po bajcie ({error}). Plików większych niż 50 MB nie można wczytać z folderu gry.",
+    "patchNothingApplied": "Nie udało się zapisać żadnego tłumaczenia w pliku binarnym, więc nie zapisano żadnego pliku.",
+    "patchSaved": "Zapisano spatchowany plik: zapisane ciągi — {patched}",
+    "patchSkippedErrors": "Nie zapisano tłumaczeń: {n} (niezgodna długość w bajtach lub tekst oryginalny)",
+    "backupKept": "Kopia zapasowa zastąpionego pliku: {path}",
+    "backupFailed": "Nie udało się utworzyć kopii zapasowej zastępowanego pliku, więc nic nie zapisano: {error}",
+    "patchSaveFailed": "Nie udało się zapisać spatchowanego pliku: {error}"
   },
   "advancedToolsPage": {
     "title": "Zaawansowane Narzędzia",
@@ -1772,14 +1782,10 @@
     "communityHubSupabase": "Community Hub — backend Supabase",
     "communityHubShort": "Community Hub",
     "temperatureLabel": "Temperatura:",
-    "maxTokensLabel": "Maks. tokenów:",
-    "batchSizeLabel": "Rozmiar partii:",
     "copyToSeeAll": "\\n\\n... (skopiuj, aby zobaczyć wszystko)",
     "gbTotal": "GB łącznie",
     "diskUsed": "użyte",
     "gbAvailable": "GB dostępne",
-    "rssFeedAdded": "Dodano kanał RSS",
-    "feedRemoved": "Usunięto kanał",
     "lmStudioDesc": "LM Studio to aplikacja desktopowa do uruchamiania lokalnych LLM-ów z API zgodnym z OpenAI. Za darmo, bez klucza API.",
     "autoDetectFromServer": "Automatyczne wykrywanie z serwera",
     "lmStudioDownload1": "Pobierz LM Studio z ",
@@ -1798,9 +1804,6 @@
     "deepl500k": "500K znaków/miesiąc za darmo — ",
     "qwen1m": "1M tokenów/miesiąc za darmo, najlepszy wielojęzyczny — ",
     "rssFeedDashboard": "Panel kanałów RSS",
-    "rssDesc": "Skonfiguruj kanały RSS wyświetlane na pasku panelu",
-    "feedNamePlaceholder": "Nazwa kanału (np. Steam News)",
-    "feedUrlPlaceholder": "URL kanału RSS",
     "noFeeds": "Brak skonfigurowanych kanałów. Dodaj kanał RSS, aby rozpocząć.",
     "restoreDefaults": "Przywróć domyślne",
     "fontSmall": "Mały (14px)",
@@ -1848,7 +1851,10 @@
     "git": "Git:",
     "branch": "Gałąź:",
     "ollamaUrlLabel": "Adres serwera Ollama",
-    "ollamaUrlHint": "Pozostaw puste, aby wykryć automatycznie. Wypełnij, jeśli Ollama działa na innym porcie, w WSL/Dockerze lub na innym komputerze (np. http://192.168.1.5:11434)."
+    "ollamaUrlHint": "Pozostaw puste, aby wykryć automatycznie. Wypełnij, jeśli Ollama działa na innym porcie, w WSL/Dockerze lub na innym komputerze (np. http://192.168.1.5:11434).",
+    "temperatureSection": "Parametry zaawansowane (temperatura)",
+    "temperatureScope": "Używana przez chmurowych dostawców AI (Gemini, OpenAI, DeepSeek, Groq, Mistral, Cohere, OpenRouter, Together, Fireworks, Cerebras, Qwen). Claude zachowuje własną wartość domyślną. Ollama ma własną temperaturę: Ollama / AI → Funkcje zaawansowane.",
+    "rssNewsDesc": "Wybierz źródła aktualności wyświetlanych w panelu. To ta sama lista co na stronie „Zarządzaj kanałami aktualności”."
   },
   "translatorProPage": {
     "subtitle": "Zaawansowane tłumaczenie neuronowe z pipelinem wieloetapowym",
@@ -1911,7 +1917,22 @@
     "applyInstalling": "Instaluję patcher...",
     "applyApplying": "Stosuję...",
     "applied": "Zastosowano!",
-    "applyToGame": "Zastosuj do gry"
+    "applyToGame": "Zastosuj do gry",
+    "applyResult": {
+      "allTitle": "Tłumaczenie zastosowane w grze",
+      "partialTitle": "Tłumaczenie zastosowane tylko częściowo",
+      "noneTitle": "Nic nie zostało zapisane w grze",
+      "written": "zapisany",
+      "failed": "nie zapisano: {error}",
+      "unknownLocation": "nie zapisano: oryginalna lokalizacja w grze jest nieznana",
+      "notLanguageFile": "nie zapisano: to nie jest plik językowy gry",
+      "noEntries": "nie zapisano: brak przetłumaczonych tekstów do słownika",
+      "languageHint": "Wybierz nowy język w opcjach gry.",
+      "xunityHint": "{n} tłumaczeń w słowniku XUnity. Uruchom grę!",
+      "patcherFailed": "Nie udało się zainstalować XUnity AutoTranslator: {error}",
+      "manualHint": "Dla niezapisanych plików użyj „Pobierz wszystko” i skopiuj je ręcznie."
+    },
+    "patchSavedTo": "Pakiet tłumaczenia zapisano w:"
   },
   "loggingDashboardComp": {
     "loggingDashboard": "Panel logów",
@@ -2103,40 +2124,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "Tłumaczenia",
-    "stringhe": "Ciągi",
-    "parole": "Słowa",
-    "progress": "Postęp",
     "oggi": "Dzisiaj",
     "settimana": "Tydzień",
     "mese": "Miesiąc",
-    "completati": "Ukończone",
-    "inCorso": "W toku",
     "totali": "Łącznie",
     "title": "Statystyki tłumaczeń",
-    "tradotte": "przetłumaczone",
-    "elaborate": "przetworzone",
-    "medio": "średnio",
     "weeklyActivity": "Aktywność tygodniowa",
-    "estimatedTimeRemaining": "Szacowany pozostały czas",
     "targetLanguages": "Języki docelowe",
-    "noTranslationsYet": "Brak tłumaczeń"
+    "noTranslationsYet": "Brak tłumaczeń",
+    "noLanguageData": "Dla tych tłumaczeń nie zapisano języka docelowego",
+    "activityOverview": "Przegląd Twojej aktywności tłumaczeniowej"
   },
   "securityDialogComp": {
     "currentPassword": "Bieżące hasło",
     "newPassword": "Nowe hasło",
-    "confirmPassword": "Potwierdź hasło",
-    "timeoutSessione": "Limit czasu sesji",
-    "never": "Nigdy",
-    "autoLock": "Automatyczna blokada",
-    "timeoutBlocco": "Limit czasu blokady",
-    "notificheLogin": "Powiadomienia o logowaniu",
-    "active": "Aktywny",
-    "inactive": "Nieaktywny",
-    "yourSecretCode": "Twój sekretny kod:",
-    "enterVerificationCode": "Wprowadź kod weryfikacyjny",
-    "enterCodeToDisable": "Wprowadź kod, aby wyłączyć",
-    "demoUsa123456": "Demo: użyj 123456",
-    "noActivityRecorded": "Nie zarejestrowano żadnej aktywności"
+    "confirmPassword": "Potwierdź hasło"
   },
   "visualTranslationEditorComp": {
     "originale": "Oryginał",
@@ -2287,7 +2289,8 @@
     "reviewNotesPlaceholder": "Dodaj notatki o sprawdzeniu...",
     "approve": "Zatwierdź",
     "saveChanges": "Zapisz zmiany",
-    "exportResults": "Eksportuj wyniki"
+    "exportResults": "Eksportuj wyniki",
+    "emptyTranslationCannotApprove": "AI nie zwróciła tłumaczenia tej linii, więc nie można jej zatwierdzić. Wpisz je samodzielnie (Edytuj) lub odrzuć linię."
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "Podgląd czcionki pikselowej",
@@ -2470,7 +2473,8 @@
     "personalizzaTema": "Dostosuj motyw",
     "scegliOCreaIlTuoTemaPersonaliz": "Wybierz lub utwórz własny motyw",
     "iTuoiTemiSalvati": "Twoje zapisane motywy",
-    "anteprima": "Podgląd"
+    "anteprima": "Podgląd",
+    "altriTemi": "Więcej motywów"
   },
   "errorBoundaryComp": {
     "errorId": "ID błędu:",
@@ -2493,7 +2497,9 @@
     "importTranslations": "Importuj tłumaczenia",
     "game": "Gra",
     "translationFile": "Plik tłumaczenia",
-    "detectedFileFormat": "Wykryty format pliku:"
+    "detectedFileFormat": "Wykryty format pliku:",
+    "importResult": "Zaimportowano {n} z {total} tłumaczeń",
+    "noValidRows": "Żaden wiersz nie zawiera jednocześnie tekstu oryginalnego i tłumaczenia"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "Postęp globalny",
@@ -2588,7 +2594,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "Aktywny profil",
-    "chiudi": "Zamknij"
+    "chiudi": "Zamknij",
+    "avatarUpdated": "Awatar zaktualizowany"
   },
   "nav": {
     "dashboard": "Panel",
@@ -2752,7 +2759,15 @@
     "buildDate": "Data kompilacji",
     "gitHash": "Hash Git",
     "branch": "Gałąź",
-    "unsavedChanges": "Niezapisane zmiany"
+    "unsavedChanges": "Niezapisane zmiany",
+    "temperatureTooltipHighCapped": "0.8-1.0: Bardziej kreatywne, może odbiegać od oryginału",
+    "autoBackupConfigSaved": "Konfiguracja automatycznej kopii zapisana",
+    "backupDone": "Kopia zapasowa ukończona",
+    "backupDoneDesc": "Zapisano plików: {n} ({size})",
+    "backupFailed": "Kopia zapasowa nie powiodła się",
+    "restoreDone": "Przywracanie zakończone",
+    "restoreDoneDesc": "Przywrócono elementów: {n}",
+    "restoreFailed": "Przywracanie nie powiodło się"
   },
   "common": {
     "loading": "Ładowanie...",
@@ -3551,7 +3566,10 @@
     "play": "Odtwórz",
     "ltWindow": "Okno",
     "ltPickWindow": "Wybierz okno",
-    "ltNoWindow": "Nie znaleziono okna"
+    "ltNoWindow": "Nie znaleziono okna",
+    "suggestionsGeneratedFor": "Wygenerowano sugestie dla tłumaczeń: {n}",
+    "originalsCopiedCount": "Skopiowano tekstów oryginalnych: {n}",
+    "translationsPastedCount": "Wklejono tłumaczeń: {n}"
   },
   "languages": {
     "cs": "Čeština",
@@ -3675,7 +3693,15 @@
     "passwordResetSuccess": "Twoje hasło zostało pomyślnie zresetowane",
     "historyCleared": "Historia aktywności wyczyszczona",
     "disconnectedAll": "Rozłączono ze wszystkich innych sesji",
-    "thisProfile": "ten profil"
+    "thisProfile": "ten profil",
+    "recoveryUnavailableTitle": "Tego hasła nie można zresetować",
+    "recoveryUnavailableDesc": "Twój profil jest zaszyfrowany własnym hasłem, a GameStringer nie przechowuje żadnego innego klucza, który mógłby go odblokować. Zapomnianego hasła nie można odzyskać ani zresetować, nawet za pomocą 12-wyrazowego klucza odzyskiwania wyświetlonego przy tworzeniu profilu.",
+    "recoveryUnavailableHint": "Jeśli go nie pamiętasz, utwórz nowy profil. Dane tego profilu pozostaną zablokowane, dopóki nie zostanie wprowadzone prawidłowe hasło.",
+    "passwordNoticeTitle": "Zachowaj swoje hasło w bezpiecznym miejscu",
+    "passwordNoticeDesc": "Ten profil jest zaszyfrowany własnym hasłem. Jeśli je zapomnisz, nie będzie można go odzyskać ani zresetować, a dane profilu pozostaną zablokowane.",
+    "passwordNoticeHint": "Zapisz je lub przechowuj w menedżerze haseł.",
+    "passwordNoticeConfirm": "Rozumiem",
+    "passwordUnrecoverableDesc": "Twój profil jest zaszyfrowany własnym hasłem, a GameStringer nie przechowuje żadnego innego klucza, który mógłby go odblokować. Zapomnianego hasła nie można odzyskać ani zresetować. Jeśli starsza wersja dała ci 12-wyrazowy klucz odzyskiwania, on również nie odblokuje profilu."
   },
   "onboarding": {
     "step": "Krok {current} z {total}",
@@ -4113,7 +4139,8 @@
     "translated": "przetłumaczone",
     "waitingForText": "Oczekiwanie na tekst...",
     "footerInfo": "OCR działa z każdą grą • Tłumaczenia z Gemini AI",
-    "aiProvider": "Dostawca AI"
+    "aiProvider": "Dostawca AI",
+    "languagePackMissing": "Windows nie potrafi odczytać tekstu w tym języku ({lang}): brak pakietu językowego z optycznym rozpoznawaniem znaków (OCR). Dodaj go w Ustawienia > Czas i język > Język i region, a następnie uruchom ponownie."
   },
   "workshop": {
     "title": "Steam Workshop",
@@ -4135,9 +4162,6 @@
     "background": "Tło",
     "startCapture": "Uruchom Przechwytywanie",
     "stop": "Zatrzymaj",
-    "paused": "Wstrzymane",
-    "captureActive": "Przechwytywanie Aktywne",
-    "subtitlesCaptured": "przechwycone napisy",
     "livePreview": "Podgląd Live",
     "settings": "Ustawienia",
     "style": "Styl",
@@ -4154,15 +4178,13 @@
     "fadeIn": "Zanikanie wejścia",
     "fadeOut": "Zanikanie wyjścia",
     "animation": "Animacja",
-    "history": "Historia",
-    "noSubtitlesCaptured": "Brak przechwyconych napisów",
-    "startCaptureToBegin": "Uruchom przechwytywanie, aby rozpocząć",
     "positionTop": "Góra",
     "positionCenter": "Środek",
     "positionBottom": "Dół",
     "positionAbove": "Powyżej",
     "positionBelow": "Poniżej",
-    "positionInline": "W linii"
+    "positionInline": "W linii",
+    "notConnected": "Przechwytywanie na żywo nie jest jeszcze podłączone: tutaj nie są przechwytywane ani tłumaczone żadne napisy. Możesz jedynie podejrzeć styl napisów."
   },
   "translationFixer": {
     "title": "Korektor tłumaczeń",
@@ -4233,19 +4255,14 @@
     "exportAll": "Eksportuj Wszystko",
     "dropImages": "Przeciągnij obrazy lub kliknij, aby wczytać",
     "processing": "Przetwarzanie...",
-    "detecting": "Wykrywanie dymków...",
-    "translating": "Tłumaczenie w toku...",
-    "inpainting": "Inpainting w toku...",
-    "completed": "Ukończono!",
     "noPage": "Brak strony",
     "original": "Oryginał",
     "translated": "Przetłumaczone",
     "loadPages": "Wczytaj strony manga/komiksu",
     "supportedFormats": "Obsługuje JPG, PNG, WebP",
     "pageOf": "Strona {current} z {total}",
-    "analyzingText": "Analiza tekstu...",
-    "batchTranslation": "Tłumaczenie batch...",
-    "fontStyleLabel": "Styl Czcionki"
+    "fontStyleLabel": "Styl Czcionki",
+    "notConnected": "Jeszcze niepodłączone: to narzędzie nie wykonuje OCR ani tłumaczenia. Możesz wczytywać i przeglądać strony, ale wykrywanie, inpainting i eksport są wyłączone."
   },
   "textureTranslator": {
     "title": "Tłumacz tekstur",
@@ -4265,7 +4282,8 @@
     "noTexture": "Nie wybrano tekstury",
     "processAll": "Przetwórz Wszystkie",
     "original": "Oryginał",
-    "translated": "Przetłumaczone"
+    "translated": "Przetłumaczone",
+    "notConnected": "Jeszcze niepodłączone: to narzędzie nie wykonuje OCR ani tłumaczenia. Możesz wczytywać i przeglądać tekstury, ale wykrywanie tekstu, stosowanie tłumaczeń i eksport są wyłączone."
   },
   "dictionaryManager": {
     "addTranslation": "Dodaj Tłumaczenie"
@@ -4354,7 +4372,8 @@
     "reset": "Resetuj",
     "save": "Zapisz",
     "selectToEdit": "Wybierz napis, aby go edytować",
-    "issuesDetected": "Wykryto problemy"
+    "issuesDetected": "Wykryto problemy",
+    "linesNotTranslated": "Nie udało się przetłumaczyć linii napisów: {n}; zachowują oryginalny tekst"
   },
   "multiLlmCompare": {
     "title": "Porównanie Multi-LLM",
@@ -4425,7 +4444,8 @@
     "cancel": "Anuluj",
     "delete": "Usuń",
     "translationUpdated": "Tłumaczenie zaktualizowane",
-    "translationDeleted": "Tłumaczenie usunięte"
+    "translationDeleted": "Tłumaczenie usunięte",
+    "languagePair": "Para językowa"
   },
   "support": {
     "title": "Wsparcie",
@@ -4463,7 +4483,8 @@
     "micError": "Nie można uzyskać dostępu do mikrofonu. Sprawdź uprawnienia.",
     "transcriptionError": "Błąd transkrypcji. Sprawdź swój klucz API OpenAI.",
     "translationError": "Błąd tłumaczenia.",
-    "ttsError": "Błąd syntezy mowy."
+    "ttsError": "Błąd syntezy mowy.",
+    "noSpeechDetected": "Nie rozpoznano mowy w nagraniu."
   },
   "disclaimer": {
     "fullPolicy": "Przeczytaj pełną politykę prawną i zasady użytkowania",
@@ -4852,7 +4873,8 @@
     "bgOpacity": "Nieprzezroczystość tła",
     "shadow": "Cień",
     "positionApplied": "Zastosowano pozycję \"{name}\"",
-    "styleApplied": "Zastosowano styl \"{name}\""
+    "styleApplied": "Zastosowano styl \"{name}\"",
+    "notConnected": "Wyjście do headsetu nie jest jeszcze podłączone: ta strona tylko pokazuje podgląd nakładki, nic nie jest wysyłane do headsetu VR."
   },
   "playerFeedback": {
     "title": "Opinie graczy",
@@ -5607,15 +5629,6 @@
     "recommendedModel": "Zalecany model",
     "local": "Lokalny",
     "cloud": "Chmura",
-    "autoSwitch": "Automatyczne przełączanie modelu",
-    "autoSwitchDesc": "Automatycznie przełącza model AI na podstawie dostępnej VRAM",
-    "preferLocal": "Preferuj modele lokalne",
-    "preferLocalDesc": "Używaj Ollama/LM Studio zamiast chmury, gdy to możliwe",
-    "alertHighUsage": "Alert wysokiego użycia VRAM",
-    "alertHighUsageDesc": "Powiadamiaj, gdy VRAM przekroczy próg",
-    "alertThreshold": "Próg alertu",
-    "cloudFallback": "Dostawca chmury (zapasowy)",
-    "cloudAuto": "Automatyczny",
     "tierAndModels": "Poziomy i modele",
     "statsUpdated": "Statystyki systemu zaktualizowane",
     "tierUltra": "Ultra (≥12GB)",
@@ -5662,7 +5675,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google Translate",
     "libretranslateFree": "LibreTranslate (Darmowy)",
-    "workflowCompletato": "Workflow ukończony!"
+    "workflowCompletato": "Workflow ukończony!",
+    "linesNotTranslated": "AI nie przetłumaczyła linii: {n} — ich tłumaczenie jest puste. Wpisz je samodzielnie lub je odrzuć."
   },
   "translationWizardPage": {
     "noGameTrovato": "Nie znaleziono gry",
@@ -5673,7 +5687,6 @@
     "traduzioneCompletata": "Tłumaczenie Ukończone!"
   },
   "libraryPage": {
-    "scanDone": "🎮 Skanowanie Family Sharing zakończone!",
     "scanError": "Błąd podczas skanowania",
     "installStarted": "Rozpoczęto instalację",
     "installStartedDesc": "Steam otworzy się, aby zainstalować {{game}}",
@@ -5709,12 +5722,16 @@
     "langScanDone": "Wykryto języki dla {n} gier",
     "langScanNone": "Nie znaleziono nowych języków",
     "langScanError": "Błąd podczas wykrywania języków",
-    "addGameFromDiskHint": "Jeśli gry nie ma na liście, dodaj ją, wskazując jej folder na dysku — działa też dla gier spoza sklepów."
+    "addGameFromDiskHint": "Jeśli gry nie ma na liście, dodaj ją, wskazując jej folder na dysku — działa też dla gier spoza sklepów.",
+    "libraryScanDone": "Biblioteka ponownie przeskanowana we wszystkich sklepach",
+    "scanPartial": "Skanowanie zakończone z błędami: nie udało się odczytać niektórych źródeł, więc lista może być niepełna.",
+    "steamCredsHint": "Połącz konto Steam w sekcji Sklepy, aby widzieć także gry, które posiadasz, ale nie masz zainstalowanych."
   },
   "unityBundlePage": {
     "auto": "Auto",
     "fileOpenCtrlv": "Plik → Otwórz → Ctrl+V",
-    "importDumpCtrlv": "Importuj zrzut → Ctrl+V"
+    "importDumpCtrlv": "Importuj zrzut → Ctrl+V",
+    "failedStrings": "Nie udało się przetłumaczyć ciągów: {n}; pozostają w języku oryginalnym"
   },
   "activityPage": {
     "filterBy": "Filtruj według:",

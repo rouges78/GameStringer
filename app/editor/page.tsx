@@ -17,8 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useToast } from '@/components/ui/use-toast';
-import { notifications } from '@/lib/notifications/notifications';
+import { toast } from 'sonner';
 import { offlineCache } from '@/lib/offline-cache';
 import { TranslationImportDialog } from '@/components/translation-import-dialog';
 import { motion } from 'framer-motion';
@@ -32,7 +31,9 @@ import { storageManager } from '@/lib/storage-manager';
 import { listEditorTranslations, upsertEditorTranslation, removeEditorTranslation, buildTranslationExport } from '@/lib/editor-translations-store';
 import { get, set } from 'idb-keyval';
 import { loadGlossary, type AutoGlossaryEntry } from '@/lib/auto-glossary';
-import { BookOpen, FolderTree, Globe } from 'lucide-react';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
+import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { BookOpen, Globe } from 'lucide-react';
 
 // --- API / invoke result types ---
 interface DictEntry {
@@ -51,6 +52,8 @@ interface TransApiItem {
   game?: { title?: string; platform?: string };
   updatedAt?: string;
   status?: string;
+  targetLanguage?: string;
+  sourceLanguage?: string;
 }
 
 interface GameApiItem {
@@ -306,8 +309,21 @@ export default function EditorPage() {
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [glossaryTerms, setGlossaryTerms] = useState<AutoGlossaryEntry[]>([]);
   const [showGlossaryPanel, setShowGlossaryPanel] = useState(false);
-  const { toast } = useToast();
   const { t } = useTranslation();
+  // t "viva" per i callback async degli effetti di mount: arrivando con un
+  // caricamento completo (window.location.href → /editor) il provider i18n si
+  // monta insieme alla pagina e la t del primo render restituisce le chiavi grezze.
+  const tRef = useRef(t);
+  tRef.current = t;
+  // Lingua di destinazione quando un record non la dichiara (prima: 'it' fisso).
+  const [defaultTargetLang, setDefaultTargetLang] = useState('en');
+  useDefaultTargetLang(setDefaultTargetLang);
+  const defaultTargetLangRef = useRef(defaultTargetLang);
+  defaultTargetLangRef.current = defaultTargetLang;
+  // Traduzione selezionata ADESSO: "Traduci con AI" la confronta dopo l'attesa
+  // per non scrivere il risultato nella riga sbagliata se nel frattempo è cambiata.
+  const selectedTranslationIdRef = useRef<string | null>(null);
+  selectedTranslationIdRef.current = selectedTranslation?.id ?? null;
 
   // Mount-guard: con output:'export' Next prerenderizza questa pagina a build-time.
   // Alcuni componenti client (framer-motion, Radix Select/Popover) durante il
@@ -373,8 +389,45 @@ export default function EditorPage() {
 
   // --- Effects ---
   useEffect(() => {
-    fetchGames();
-    fetchGameProjects(); // Carica progetti con traduzioni
+    // Deep link: /editor?gameId=<id> (Progetti) oppure ?game=<titolo>&path=<cartella>
+    // (stepper di auto-traduzione, con &gameId= quando conosce l'id). Prima venivano ignorati.
+    let linkGameId: string | null = null;
+    let linkGameTitle: string | null = null;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      linkGameId = sp.get('gameId');
+      linkGameTitle = sp.get('game');
+    } catch { /* niente query params */ }
+    if (linkGameId) setFilterGame(linkGameId);
+
+    Promise.all([
+      fetchGames(),
+      fetchGameProjects(), // Carica progetti con traduzioni
+    ]).then(([loadedGames, projects]) => {
+      if (!isMountedRef.current || (!linkGameId && !linkGameTitle)) return;
+      let gameId = linkGameId;
+      // L'id della libreria (stepper) può non essere quello con cui l'Editor
+      // conosce il progetto: se non ne apre nessuno, si riprova col titolo.
+      if (linkGameTitle && !(gameId && projects.some(p => p.game.id === gameId))) {
+        const norm = (s: unknown) => String(s ?? '').trim().toLowerCase();
+        const title = norm(linkGameTitle);
+        const byTitle = projects.find(p => norm(p.game.title) === title)?.game.id
+          ?? loadedGames.find(g => norm(g.title) === title)?.id;
+        if (byTitle) {
+          gameId = byTitle;
+          setFilterGame(byTitle);
+        }
+      }
+      if (gameId && openGameProject(gameId, projects)) {
+        // Le stringhe del gioco anche quando in memoria ci sono risultati del Neural
+        // Translator: con quelli l'effetto sui filtri non ricarica dallo store e la
+        // lista resterebbe vuota sotto un progetto che dichiara N stringhe.
+        fetchTranslations(gameId);
+      } else {
+        const name = linkGameTitle || loadedGames.find(g => g.id === gameId)?.title || linkGameId || '';
+        toast.info(tRef.current('editorPage.deepLinkNoData').replace('{game}', name));
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -426,7 +479,7 @@ export default function EditorPage() {
             filePath: data.filePath || data.filename,
             originalText: content,
             translatedText: data.content || '',
-            targetLanguage: data.targetLanguage || 'it',
+            targetLanguage: data.targetLanguage || defaultTargetLangRef.current,
             sourceLanguage: data.sourceLanguage || 'en',
             status: 'pending',
             confidence: 85,
@@ -449,11 +502,10 @@ export default function EditorPage() {
           }
           await storageManager.clearEditorFile();
           
-          toast({
-            title: "File caricato",
-            description: isMultiLang 
-              ? `${data.filename} - ${parsedLines.length} stringhe (multi-lingua rilevato)`
-              : `${data.filename} - ${parsedLines.length} stringhe trovate`,
+          toast.success(tRef.current('common.fileCaricato'), {
+            description: tRef.current(isMultiLang ? 'editorPage.fileLoadedDescMulti' : 'editorPage.fileLoadedDesc')
+              .replace('{file}', String(data.filename || data.filePath || ''))
+              .replace('{n}', String(parsedLines.length)),
           });
           setIsLoading(false);
         } catch (err: unknown) {
@@ -463,7 +515,7 @@ export default function EditorPage() {
       }
     };
     loadEditorFile();
-  }, [toast]);
+  }, []);
 
   // Load partial translations from Neural Translator (localStorage)
   useEffect(() => {
@@ -481,7 +533,7 @@ export default function EditorPage() {
               filePath: data.files?.[0]?.path || 'Neural Translator',
               originalText: item.sourceText,
               translatedText: item.translatedText || '',
-              targetLanguage: data.targetLanguage || 'it',
+              targetLanguage: data.targetLanguage || defaultTargetLangRef.current,
               sourceLanguage: data.sourceLanguage || 'en',
               status: item.translatedText ? 'completed' : 'pending',
               confidence: item.fromMemory ? 100 : 85,
@@ -501,9 +553,12 @@ export default function EditorPage() {
               setSelectedTranslation(partialTranslations[0]);
             }
             
-            toast({
-              title: "results parziali caricati",
-              description: `${data.completed}/${data.total} stringhe tradotte da ${data.gameName || 'Neural Translator'}`,
+            // Conteggi dai dati caricati: il Neural Translator non salva completed/total.
+            toast.info(tRef.current('editorPage.partialLoadedTitle'), {
+              description: tRef.current('editorPage.partialLoadedDesc')
+                .replace('{done}', String(partialTranslations.filter(p => p.status === 'completed').length))
+                .replace('{total}', String(partialTranslations.length))
+                .replace('{game}', data.gameName || 'Neural Translator'),
             });
             
             // Non rimuovere i dati - l'utente potrebbe volerli rivedere più volte
@@ -516,7 +571,7 @@ export default function EditorPage() {
       }
     };
     loadPartialTranslations();
-  }, [toast]);
+  }, []);
 
   // Ri-parsa quando cambia la lingua sorgente
   useEffect(() => {
@@ -530,25 +585,28 @@ export default function EditorPage() {
   }, [sourceLanguageIndex]);
 
   // --- Actions ---
-  const fetchGames = async () => {
+  const fetchGames = async (): Promise<Game[]> => {
     try {
       // Lista giochi dal backend Tauri (get_games), non da /api (stub 501 nel desktop).
       const { invoke } = await import('@tauri-apps/api/core');
       const data = await invoke<GameApiItem[]>('get_games');
-      if (!isMountedRef.current) return;
-      setGames((ensureArray(data) as GameApiItem[]).map((g) => ({
+      if (!isMountedRef.current) return [];
+      const list = (ensureArray(data) as GameApiItem[]).map((g) => ({
         id: g.id,
         title: g.title,
         platform: 'Unknown',
         coverUrl: g.header_image || g.coverUrl
-      })));
+      }));
+      setGames(list);
+      return list;
     } catch (error: unknown) {
       clientLogger.error(`Error loading games: ${String(error)}`);
+      return [];
     }
   };
 
   // Carica progetti con traduzioni (dalla Translation Memory e dizionari via Tauri)
-  const fetchGameProjects = async () => {
+  const fetchGameProjects = async (): Promise<GameProject[]> => {
     setIsLoading(true);
     try {
       const projectsMap = new Map<string, GameProject>();
@@ -608,9 +666,30 @@ export default function EditorPage() {
           
           const project = projectsMap.get(gameId)!;
           project.totalStrings += 1;
-          if (trans.status === 'completed' || trans.status === 'reviewed') {
+          const isDone = trans.status === 'completed' || trans.status === 'reviewed';
+          if (isDone) {
             project.completedStrings += 1;
           }
+          // Le stringhe salvate dall'Editor (modifiche, import) non hanno un file su
+          // disco: senza questa voce il progetto si apriva su "Nessun file" e le
+          // stringhe restavano irraggiungibili dall'Explorer.
+          const storeFileId = `store-${gameId}`;
+          let storeFile = project.files.find(f => f.id === storeFileId);
+          if (!storeFile) {
+            storeFile = {
+              id: storeFileId,
+              filename: tRef.current('editorPage.savedStringsFile'),
+              path: '',
+              stringCount: 0,
+              completedCount: 0,
+              targetLanguage: trans.targetLanguage || defaultTargetLangRef.current,
+              sourceLanguage: trans.sourceLanguage || 'en',
+              lastUpdated: trans.updatedAt || new Date().toISOString()
+            };
+            project.files.push(storeFile);
+          }
+          storeFile.stringCount += 1;
+          if (isDone) storeFile.completedCount += 1;
         }
       } catch (transError: unknown) {
         clientLogger.warn(`[Editor] Traduzioni non disponibili: ${String(transError)}`);
@@ -653,19 +732,42 @@ export default function EditorPage() {
         }
       }
       
-      if (isMountedRef.current) setGameProjects(Array.from(projectsMap.values()));
+      const projects = Array.from(projectsMap.values());
+      if (isMountedRef.current) setGameProjects(projects);
+      return projects;
     } catch (error: unknown) {
       clientLogger.error(`Error loading game projects: ${String(error)}`);
+      return [];
     } finally {
       if (isMountedRef.current) setIsLoading(false);
     }
   };
 
-  const fetchTranslations = async () => {
+  // Apre nell'Explorer il progetto di un gioco (deep link, fine import). false se non c'è.
+  const openGameProject = (gameId: string, projects: GameProject[]): boolean => {
+    const project = projects.find(p => p.game.id === gameId);
+    if (!project) return false;
+    setSelectedProject(project);
+    setSelectedFile(null);
+    setExplorerView('files');
+    return true;
+  };
+
+  // Dopo un import riuscito: filtra sul gioco importato, ricarica stringhe e
+  // progetti e apre il progetto, così le traduzioni importate sono subito visibili.
+  const handleImportComplete = async (gameId: string) => {
+    setFilterGame(gameId);
+    await fetchTranslations(gameId);
+    const projects = await fetchGameProjects();
+    if (isMountedRef.current) openGameProject(gameId, projects);
+  };
+
+  // gameId esplicito quando il filtro è appena stato impostato (lo stato non è ancora aggiornato).
+  const fetchTranslations = async (gameId: string = filterGame) => {
     setIsLoading(true);
     try {
       // Translation Memory locale (IndexedDB), non /api (stub 501 nel desktop).
-      const data = await listEditorTranslations({ gameId: filterGame, status: filterStatus }) as unknown as Translation[];
+      const data = await listEditorTranslations({ gameId, status: filterStatus }) as unknown as Translation[];
       setTranslations(data);
       if (selectedTranslation) {
         const updated = data.find((t: Translation) => t.id === selectedTranslation.id);
@@ -673,7 +775,7 @@ export default function EditorPage() {
       }
     } catch (error: unknown) {
       clientLogger.error(`Error loading translations: ${String(error)}`);
-      toast({ title: 'error', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
+      toast.error(tRef.current('common.impossibileCaricareLeTraduzioni'));
     } finally {
       setIsLoading(false);
     }
@@ -691,79 +793,115 @@ export default function EditorPage() {
 
       // Persisti su IndexedDB (TM locale), non /api (stub 501 nel desktop).
       await upsertEditorTranslation({ ...updatedTranslation } as unknown as Record<string, unknown>);
+      // saveTranslations non propaga gli errori di IndexedDB: "Salvato" solo se il
+      // record si rilegge dallo store con il testo appena scritto.
+      const stored = (await listEditorTranslations({ gameId: updatedTranslation.gameId }))
+        .find(r => r.id === updatedTranslation.id);
+      if (stored?.translatedText !== updatedTranslation.translatedText) {
+        throw new Error('translation not found in the store after saving');
+      }
 
       // Integrazione con Dictionaries: salva nel dizionario del game via comando Rust.
+      let dictionary: 'saved' | 'failed' | 'skipped' = 'skipped';
       if (updates.translatedText && selectedTranslation.originalText) {
         try {
           const { invoke } = await import('@tauri-apps/api/core');
           await invoke('add_translation_to_dictionary', {
             gameId: selectedTranslation.gameId,
-            targetLang: selectedTranslation.targetLanguage,
+            targetLang: selectedTranslation.targetLanguage || defaultTargetLang,
             original: selectedTranslation.originalText,
             translated: updates.translatedText,
           });
+          dictionary = 'saved';
           clientLogger.debug('[Editor] Traduzione salvata nel dizionario');
         } catch (dictError) {
+          dictionary = 'failed';
           clientLogger.warn(`[Editor] Impossibile salvare nel dizionario: ${String(dictError)}`);
         }
       }
       
-      toast({ title: t('common.salvato'), description: 'Traduzione updated e salvata nel dizionario' });
+      // "salvata nel dizionario" solo se il dizionario l'ha davvero accettata.
+      if (dictionary === 'failed') {
+        toast.warning(t('editorPage.savedDictionaryFailed'));
+      } else {
+        toast.success(t('editor.saved'), dictionary === 'saved'
+          ? { description: t('common.traduzioneUpdatedESalvataNelDizionario') }
+          : undefined);
+      }
     } catch (error: unknown) {
       clientLogger.error(`Error saving translation: ${String(error)}`);
-      toast({ title: 'error', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
+      // La modifica non è salvata: resta "da salvare" (Salva riattivo).
+      setHasUnsavedChanges(true);
+      toast.error(t('common.impossibileSalvareLeModifiche'));
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Scrive una traduzione in una riga di un file a righe (parsedLines), senza
+  // dipendere dalla selezione corrente: serve anche dopo un'attesa async.
+  const applyLineTranslation = (translationId: string, lineNumber: number, newText: string) => {
+    setSelectedTranslation(prev => prev && prev.id === translationId && prev.parsedLines
+      ? { ...prev, parsedLines: prev.parsedLines.map(l => l.lineNumber === lineNumber ? { ...l, translatedText: newText } : l) }
+      : prev);
+    setSelectedLine(prev => prev && prev.lineNumber === lineNumber ? { ...prev, translatedText: newText } : prev);
+    setHasUnsavedChanges(true);
+  };
+
+  // "Traduci con AI": traduce la riga selezionata (o la traduzione selezionata se
+  // il file non è diviso in righe) con la catena di provider dell'app.
   const generateSuggestions = async () => {
-    if (!selectedTranslation || !selectedLine) {
-      notifications.warning(t('editorPage.selectStringFirst'));
+    const lineMode = !!selectedTranslation?.parsedLines?.length;
+    if (!selectedTranslation || (lineMode && !selectedLine)) {
+      toast.warning(t('editorPage.selectStringFirst'));
       return;
     }
-    
+    const translationId = selectedTranslation.id;
+    const line = lineMode ? selectedLine : null;
+    const sourceText = (line ? line.originalText : selectedTranslation.originalText) || '';
+    if (!sourceText.trim()) {
+      toast.warning(t('editorPage.selectStringFirst'));
+      return;
+    }
+    const sourceLang = selectedTranslation.sourceLanguage || 'en';
+    const targetLang = selectedTranslation.targetLanguage || defaultTargetLang;
+    const apply = (text: string) => {
+      if (line) applyLineTranslation(translationId, line.lineNumber, text);
+      else handleTranslationChange(text);
+    };
+
     // Check offline cache first
-    const cached = offlineCache.get(
-      selectedLine.originalText, 
-      'en', 
-      selectedTranslation.targetLanguage
-    );
+    const cached = offlineCache.get(sourceText, sourceLang, targetLang);
     if (cached) {
-      handleTranslationChange(cached);
-      notifications.success(t('editorPage.cacheHit'));
+      apply(cached);
+      toast.success(t('editorPage.cacheHit'));
       return;
     }
     
     // Online translation
     if (!offlineCache.isOnline()) {
-      notifications.error(t('editorPage.offlineUnavailable'));
+      toast.error(t('editorPage.offlineUnavailable'));
       return;
     }
     
-    // TODO: Implementare integrazione con API di traduzione (DeepL, Google Translate, etc.)
     setIsGeneratingSuggestions(true);
     try {
-      // Suggerimenti: nessun backend nel desktop (era /api, ora stub). Degrada a vuoto.
-      {
-        const suggestions: AISuggestion[] = [];
-        const updated = { ...selectedTranslation, suggestions };
-        setSelectedTranslation(updated);
-        setTranslations(prev => prev.map(t => t.id === updated.id ? updated : t));
-        
-        // Cache translations for offline use
-        if (suggestions.length > 0 && selectedLine) {
-          offlineCache.set(
-            selectedLine.originalText,
-            String(suggestions[0]),
-            'en',
-            selectedTranslation.targetLanguage
-          );
-        }
-        notifications.success(`${suggestions.length} suggerimenti trovati`);
+      const { translateSingleSmart } = await import('@/lib/ai/ai-translate-direct');
+      const result = await translateSingleSmart(sourceText, targetLang, sourceLang);
+      // provider 'none' = nessun provider ha risposto: torna il testo originale, non una traduzione.
+      if (result.provider === 'none' || !result.translated.trim()) {
+        toast.error(t('editorPage.aiNoProvider'));
+        return;
       }
-    } catch {
-      notifications.error(t('editorPage.cannotGenerateSuggestions'));
+      offlineCache.set(sourceText, result.translated, sourceLang, targetLang, result.provider);
+      // Selezione cambiata durante l'attesa: non scrivere nella traduzione sbagliata
+      // (il risultato resta in cache per la prossima richiesta su questa riga).
+      if (selectedTranslationIdRef.current !== translationId) return;
+      apply(result.translated);
+      toast.success(t('editorPage.aiTranslated').replace('{provider}', result.provider));
+    } catch (error: unknown) {
+      clientLogger.error(`[Editor] AI translation failed: ${String(error)}`);
+      toast.error(t('editorPage.aiTranslateFailed'));
     } finally {
       setIsGeneratingSuggestions(false);
     }
@@ -797,7 +935,7 @@ export default function EditorPage() {
         filePath: selectedTranslation.filePath,
         originalText: line.originalText,
         translatedText: line.translatedText,
-        targetLanguage: 'it',
+        targetLanguage: selectedTranslation.targetLanguage || defaultTargetLang,
         sourceLanguage: selectedTranslation.sourceLanguage,
         status: 'edited' as const,
         confidence: 100,
@@ -823,6 +961,7 @@ export default function EditorPage() {
       });
       
       // Salva anche in IndexedDB per persistenza
+      let persisted = false;
       try {
         const existingData = await get<PartialTranslationsData>('gamestringer_partial_translations');
         if (existingData) {
@@ -851,6 +990,9 @@ export default function EditorPage() {
           const newData = {
             timestamp: Date.now(),
             gameId: selectedTranslation.gameId,
+            // Le lingue del file: senza, alla riapertura si ricadeva su 'it'.
+            sourceLanguage: selectedTranslation.sourceLanguage,
+            targetLanguage: selectedTranslation.targetLanguage || defaultTargetLang,
             items: translatedLines.map(line => ({
               sourceText: line.originalText,
               translatedText: line.translatedText,
@@ -861,10 +1003,17 @@ export default function EditorPage() {
           await set('gamestringer_partial_translations', newData);
           clientLogger.debug(`[Editor] Creati nuovi dati in IndexedDB: ${translatedLines.length}`);
         }
+        persisted = true;
       } catch (err: unknown) {
         clientLogger.error(`[Editor] error salvataggio IndexedDB: ${String(err)}`);
       }
       
+      // Scrittura fallita: le modifiche restano "da salvare", niente "Salvato".
+      if (!persisted) {
+        toast.error(t('common.impossibileSalvareLeTraduzioni'));
+        return;
+      }
+
       setHasUnsavedChanges(false);
       
       // Traccia attività
@@ -876,9 +1025,8 @@ export default function EditorPage() {
         game_id: selectedTranslation.gameId,
       });
       
-      toast({ 
-        title: 'Salvato', 
-        description: `${translatedLines.length} traduzioni saved` 
+      toast.success(t('editor.saved'), {
+        description: t('editorPage.savedLinesDesc').replace('{n}', String(translatedLines.length)),
       });
     } else {
       updateTranslation({ translatedText: selectedTranslation.translatedText });
@@ -900,18 +1048,16 @@ export default function EditorPage() {
       await removeEditorTranslation(id);
       setTranslations(prev => prev.filter(t => t.id !== id));
       if (selectedTranslation?.id === id) setSelectedTranslation(null);
-      toast({ title: t('common.eliminata'), description: t('common.traduzioneRimossa') });
+      toast.success(t('editor.deleted'), { description: t('common.traduzioneRimossa') });
     } catch {
-      toast({ title: 'error', description: 'Impossibile eliminare', variant: 'destructive' });
+      toast.error(t('common.impossibileEliminare'));
     }
   };
 
   const exportTranslations = async (format: 'json' | 'csv' | 'po') => {
     if (!filterGame || filterGame === 'all') {
-      toast({
-        title: 'Select a game',
-        description: 'Devi selezionare un game specifico per esportare',
-        variant: 'destructive'
+      toast.error(t('common.selectAGame'), {
+        description: t('common.deviSelezionareUnGameSpecificoPerEsportare'),
       });
       return;
     }
@@ -930,10 +1076,23 @@ export default function EditorPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({ title: t('common.esportazioneCompletata'), description: `Traduzioni esportate in ${format.toUpperCase()}` });
+      toast.success(t('common.esportazioneCompletata'), { description: `${t('common.traduzioniEsportate')} (${format.toUpperCase()})` });
     } catch {
-      toast({ title: 'error', description: 'Impossibile esportare', variant: 'destructive' });
+      toast.error(t('common.impossibileEsportare'));
     }
+  };
+
+  // "Copiato" solo se la clipboard ha davvero accettato il testo.
+  const copyToClipboard = (text: string, description?: string) => {
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(text))
+      .then(
+        () => { toast.success(t('common.copiatoNegliAppunti'), description ? { description } : undefined); },
+        (err: unknown) => {
+          clientLogger.warn(`[Editor] Copia negli appunti non riuscita: ${String(err)}`);
+          toast.error(t('feedback.copyFailed'));
+        }
+      );
   };
 
   const getStatusColor = (status: string) => {
@@ -1301,11 +1460,8 @@ export default function EditorPage() {
                   </Button>
                   <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
                   {/* Cross-navigation */}
-                  <Link href={`/batch?game=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="xs" className="text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg">
-                      <FolderTree className="h-3.5 w-3.5 mr-1" />{t('aiTranslator.batch')}</Button>
-                  </Link>
-                  <Link href={`/glossary?gameId=${selectedTranslation.gameId || ''}`}>
+                  {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
+                  <Link href={`/glossary?gameId=${encodeURIComponent(selectedTranslation.gameId || '')}`}>
                     <Button variant="ghost" size="xs" className="text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg hidden sm:flex">
                       <BookOpen className="h-3.5 w-3.5 mr-1" />{t('nav.memory')}</Button>
                   </Link>
@@ -1345,7 +1501,10 @@ export default function EditorPage() {
                   <ArrowLeftRight className="h-3.5 w-3.5 text-slate-600" />
                   <div className="flex items-center gap-2">
                     <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.destLabel')}</span>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{t('languages.it')}</span>
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{(() => {
+                      const code = (selectedTranslation.targetLanguage || defaultTargetLang).toLowerCase();
+                      return TARGET_LANGUAGES.find(l => l.code === code)?.name || code.toUpperCase();
+                    })()}</span>
                   </div>
                 </div>
               )}
@@ -1449,8 +1608,7 @@ export default function EditorPage() {
                     <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <FileText className="h-3.5 w-3.5" />{t('qaCheck.originalText')}</span>
                     <Button variant="ghost" size="icon" aria-label={t('common.copia')} className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
-                      navigator.clipboard.writeText(selectedTranslation.originalText);
-                      toast({ title: 'Copiato negli appunti' });
+                      copyToClipboard(selectedTranslation.originalText);
                     }}>
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
@@ -1479,8 +1637,7 @@ export default function EditorPage() {
                         <Badge variant="outline" className="text-micro h-4 bg-slate-800/50 text-slate-400 border-slate-700/50">{t('editorPage.row')} {selectedLine.lineNumber}</Badge>
                       </div>
                       <Button variant="ghost" size="icon" aria-label={t('common.copia')} className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
-                        navigator.clipboard.writeText(selectedLine.originalText);
-                        toast({ title: 'Copiato negli appunti' });
+                        copyToClipboard(selectedLine.originalText);
                       }}>
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
@@ -1541,8 +1698,7 @@ export default function EditorPage() {
                             <button
                               key={term.id}
                               onClick={() => {
-                                navigator.clipboard.writeText(term.targetTerm);
-                                toast({ title: `Copiato: ${term.targetTerm}` });
+                                copyToClipboard(term.targetTerm, term.targetTerm);
                               }}
                               className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-xs group shadow-sm"
                               title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
@@ -1604,8 +1760,7 @@ export default function EditorPage() {
                           <button
                             key={term.id}
                             onClick={() => {
-                              navigator.clipboard.writeText(term.targetTerm);
-                              toast({ title: `Copiato: ${term.targetTerm}` });
+                              copyToClipboard(term.targetTerm, term.targetTerm);
                             }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-xs group shadow-sm"
                             title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
@@ -1640,7 +1795,7 @@ export default function EditorPage() {
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
         games={games}
-        onImportComplete={fetchTranslations}
+        onImportComplete={handleImportComplete}
       />
       </div>
     </div>

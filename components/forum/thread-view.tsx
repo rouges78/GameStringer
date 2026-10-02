@@ -47,7 +47,7 @@ import {
   type ForumPost,
   type ForumCategory,
 } from '@/lib/social/forum';
-import { getCurrentUserId } from '@/lib/social/auth-bridge';
+import { clientLogger } from '@/lib/client-logger';
 import { formatDistanceToNow, format } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -56,13 +56,21 @@ import { toast } from 'sonner';
 
 interface ThreadViewProps {
   threadId: string;
+  /** Id del profilo LOCALE: dice solo se in GameStringer c'è un utente loggato. */
   userId?: string;
+  /**
+   * uid di Supabase Auth, risolto dalla pagina. È l'identità delle righe del
+   * server (author_id dei thread, user_id delle reazioni): ogni confronto con
+   * quelle righe va fatto con questo, mai con `userId`.
+   * null = nessuna sessione community (backend giù o non configurato).
+   */
+  authUserId?: string | null;
   userName?: string;
   userAvatar?: string;
   onBack?: () => void;
 }
 
-export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: ThreadViewProps) {
+export function ThreadView({ threadId, userId, authUserId, userName, userAvatar, onBack }: ThreadViewProps) {
   const { language } = useTranslation();
   const locale = language === 'it' ? it : enUS;
   
@@ -75,12 +83,8 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [copied, setCopied] = useState(false);
-
-  // Identità SUPABASE dell'utente. Serve perché `thread.author_id` è l'uid
-  // Supabase, mentre la prop `userId` è l'id del profilo LOCALE: confrontarli
-  // direttamente dava sempre falso, quindi all'autore non comparivano mai
-  // "Modifica" ed "Elimina" sul proprio thread.
-  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  // Caricamento fallito (rete/backend): va detto, non spacciato per "thread non trovato".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
@@ -88,14 +92,9 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    getCurrentUserId()
-      .then(uid => { if (!cancelled) setAuthUserId(uid); })
-      .catch(() => { /* backend community non raggiungibile: resta null */ });
-    return () => { cancelled = true; };
-  }, []);
-
+  // `thread.author_id` è l'uid Supabase: confrontarlo con `userId` (profilo
+  // locale) dava sempre falso. Decide sia i pulsanti che il permesso di
+  // "Segna come soluzione".
   const isAuthor = !!authUserId && !!thread && authUserId === thread.author_id;
 
   // ─── LOAD DATA ─────────────────────────────────────────────────────────────
@@ -103,10 +102,14 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   const { t } = useTranslation();
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     try {
+      // I like dell'utente sono righe di forum_reactions con user_id = uid
+      // Supabase: con l'id locale risultavano tutti "non messi".
+      const uid = authUserId ?? undefined;
       const [threadData, postsData] = await Promise.all([
-        getThread(threadId, userId),
-        getPosts(threadId, userId),
+        getThread(threadId, uid),
+        getPosts(threadId, uid),
       ]);
       
       if (threadData) {
@@ -116,12 +119,13 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
       }
       setPosts(postsData);
     } catch (error) {
-      console.error('[ThreadView] Error loading:', error);
+      clientLogger.error('[ThreadView] Error loading:', error);
+      setLoadFailed(true);
       toast.error(t('common.erroreNelCaricamentoDelThread'));
     } finally {
       setLoading(false);
     }
-  }, [threadId, userId]);
+  }, [threadId, authUserId]);
   
   useEffect(() => {
     loadData();
@@ -191,13 +195,21 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
     // il thread con "-1 mi piace", che è quello che si vedeva in pagina.
     setLikeCount((prev) => Math.max(0, nuovo ? prev + 1 : prev - 1));
 
-    const success = await toggleLike(userId, threadId);
-    if (!success) {
+    const result = await toggleLike(userId, threadId).catch(() => null);
+    if (result === null) {
       // Rollback: se la scrittura non è andata a buon fine l'interfaccia deve
       // tornare com'era, altrimenti mostra un like che sul server non esiste.
       setLiked(precedente.liked);
       setLikeCount(precedente.likeCount);
       toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
+    }
+    // Il server dice com'è andata. Se lo stato mostrato era sbagliato (lettura
+    // del like fallita) il toggle ha fatto l'opposto: l'interfaccia lo segue
+    // invece di mostrare +1 su un like appena rimosso.
+    if (result !== nuovo) {
+      setLiked(result);
+      setLikeCount(Math.max(0, precedente.likeCount + (result ? 1 : -1)));
     }
   };
   
@@ -245,6 +257,10 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
         setReplyContent('');
         setReplyingTo(null);
         toast.success(t('common.rispostaPubblicata'));
+      } else {
+        // createPost ritorna null se l'uid Supabase non si risolve o l'insert
+        // viene respinto: prima il click non faceva nulla, in silenzio.
+        toast.error(t('common.erroreNellaPubblicazione'));
       }
     } catch {
       toast.error(t('common.erroreNellaPubblicazione'));
@@ -254,16 +270,21 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
   };
   
   const handleMarkSolution = async (postId: string) => {
-    if (!userId || thread?.author_id !== userId) {
+    // Stesso controllo che fa comparire il pulsante. Prima qui author_id si
+    // confrontava con l'id del profilo LOCALE: sempre diversi, quindi
+    // all'autore il click rispondeva sempre "solo l'autore".
+    if (!isAuthor) {
       toast.error(t('forumThread.onlyAuthorSolution'));
       return;
     }
     
-    const success = await markAsSolution(postId, threadId);
+    const success = await markAsSolution(postId, threadId).catch(() => false);
     if (success) {
       setPosts(prev => prev.map(p => ({ ...p, is_solution: p.id === postId })));
       setThread(prev => prev ? { ...prev, is_solved: true } : null);
       toast.success(t('common.rispostaSegnataComeSoluzione'));
+    } else {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
     }
   };
   
@@ -281,7 +302,12 @@ export function ThreadView({ threadId, userId, userName, userAvatar, onBack }: T
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
         <MessageSquare className="h-12 w-12 mb-3 opacity-30" />
-        <p>{t('common.threadNonTrovato')}</p>
+        <p>{loadFailed ? t('common.erroreNelCaricamentoDelThread') : t('common.threadNonTrovato')}</p>
+        {loadFailed && (
+          <Button variant="outline" onClick={loadData} className="mt-4">
+            {t('common.retry')}
+          </Button>
+        )}
         {onBack && (
           <Button variant="ghost" onClick={onBack} className="mt-4">
             <ArrowLeft className="h-4 w-4 mr-2" /> {t('common.back')}
@@ -541,11 +567,14 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
   
   const handleLike = async () => {
     if (!userId) return;
-    const success = await toggleLike(userId, undefined, post.id);
-    if (success) {
-      setLiked(!liked);
-      setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    const result = await toggleLike(userId, undefined, post.id).catch(() => null);
+    if (result === null) {
+      toast.error(t('common.impossibileSalvareLeModifiche'));
+      return;
     }
+    // Segue lo stato del server, non `!liked`: vedi toggleLike.
+    setLiked(result);
+    setLikeCount(prev => Math.max(0, prev + (result ? 1 : -1)));
   };
   
   return (

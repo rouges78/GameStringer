@@ -5,34 +5,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Shield, 
-  Key, 
-  Clock, 
-  Smartphone, 
-  History, 
-  Eye, 
+import {
+  Shield,
+  Key,
+  Eye,
   EyeOff,
   Check,
   X,
-  AlertTriangle,
-  Lock,
-  Unlock,
-  RefreshCw,
-  Trash2,
-  LogOut
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import { it } from 'date-fns/locale';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
+import { ProfileResponse } from '@/types/profiles';
 
 interface SecurityDialogProps {
   open: boolean;
@@ -41,27 +28,9 @@ interface SecurityDialogProps {
   profileName: string;
 }
 
-interface ActivityLog {
-  id: string;
-  action: string;
-  timestamp: Date;
-  device: string;
-  ip: string;
-  success: boolean;
-}
-
-interface SecuritySettings {
-  twoFactorEnabled: boolean;
-  sessionTimeout: number; // minutes
-  autoLockEnabled: boolean;
-  autoLockTimeout: number; // minutes
-  loginNotifications: boolean;
-}
-
 export function SecurityDialog({ open, onOpenChange, profileId, profileName }: SecurityDialogProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('password');
-  
+
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -69,180 +38,89 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  
-  // Security settings state
-  const [settings, setSettings] = useState<SecuritySettings>({
-    twoFactorEnabled: false,
-    sessionTimeout: 60,
-    autoLockEnabled: false,
-    autoLockTimeout: 15,
-    loginNotifications: true
-  });
-  
-  // 2FA state
-  const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [twoFactorSecret, setTwoFactorSecret] = useState('');
-  const [isSettingUp2FA, setIsSettingUp2FA] = useState(false);
-  
-  // Activity log
-  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  
-  // Load settings and logs on mount
+
+  // Le schede Sessioni, 2FA e Attività erano simulate (2FA con codice demo,
+  // log di accesso inventato, "disconnetti tutte le sessioni" solo un toast) e
+  // sono state rimosse. Puliamo quello che avevano scritto in localStorage,
+  // compresa la "nuova password" lasciata in base64 dal vecchio cambio finto.
   useEffect(() => {
     if (open && profileId) {
-      loadSecuritySettings();
-      loadActivityLogs();
+      try {
+        localStorage.removeItem(`security_${profileId}`);
+        localStorage.removeItem(`activity_${profileId}`);
+        localStorage.removeItem(`password_${profileId}`);
+      } catch (e: unknown) {
+        clientLogger.warn('Error clearing legacy security data:', e);
+      }
     }
   }, [open, profileId]);
-  
-  const loadSecuritySettings = () => {
-    const saved = localStorage.getItem(`security_${profileId}`);
-    if (saved) {
+
+  // "Ricorda password" (profile-selector.tsx) tiene la password nello store
+  // cifrato con questo nome: dopo un cambio va aggiornata, altrimenti al
+  // prossimo avvio verrebbe proposta la vecchia.
+  const updateRememberedPassword = async (password: string) => {
+    const name = `PROFILE_PASSWORD_${profileId}`;
+    try {
+      localStorage.removeItem(`gs_pwd_${profileId}`);
+      if (await invoke<boolean | null>('has_secure_key', { name })) {
+        await invoke('set_secure_key', { name, value: password });
+      }
+    } catch (e: unknown) {
+      clientLogger.warn('Could not update remembered password, removing it:', e);
       try {
-        setSettings(JSON.parse(saved));
-      } catch (e: unknown) {
-        clientLogger.error('Error loading security settings:', e);
+        await invoke('remove_secure_key', { name });
+      } catch (removeError: unknown) {
+        clientLogger.warn('Could not remove remembered password:', removeError);
       }
     }
   };
-  
-  const saveSecuritySettings = (newSettings: SecuritySettings) => {
-    setSettings(newSettings);
-    localStorage.setItem(`security_${profileId}`, JSON.stringify(newSettings));
-    logActivity('Impostazioni sicurezza aggiornate');
-  };
-  
-  const loadActivityLogs = () => {
-    const saved = localStorage.getItem(`activity_${profileId}`);
-    if (saved) {
-      try {
-        const logs = JSON.parse(saved).map((log: Record<string, unknown>) => ({
-          ...log,
-          timestamp: new Date(log.timestamp as string)
-        }));
-        setActivityLogs(logs);
-      } catch (e: unknown) {
-        clientLogger.error('Error loading activity logs:', e);
-      }
-    } else {
-      // Generate some mock logs for demo
-      const mockLogs: ActivityLog[] = [
-        {
-          id: '1',
-          action: 'Login effettuato',
-          timestamp: new Date(),
-          device: 'Windows 11 - Chrome',
-          ip: '192.168.1.x',
-          success: true
-        },
-        {
-          id: '2',
-          action: 'Profilo creato',
-          timestamp: new Date(Date.now() - 3600000),
-          device: 'Windows 11 - Chrome',
-          ip: '192.168.1.x',
-          success: true
-        }
-      ];
-      setActivityLogs(mockLogs);
-      localStorage.setItem(`activity_${profileId}`, JSON.stringify(mockLogs));
-    }
-  };
-  
-  const logActivity = (action: string, success: boolean = true) => {
-    const newLog: ActivityLog = {
-      id: Date.now().toString(),
-      action,
-      timestamp: new Date(),
-      device: navigator.userAgent.includes('Windows') ? 'Windows' : 'Unknown',
-      ip: '192.168.1.x',
-      success
-    };
-    
-    const updatedLogs = [newLog, ...activityLogs].slice(0, 50); // Keep last 50
-    setActivityLogs(updatedLogs);
-    localStorage.setItem(`activity_${profileId}`, JSON.stringify(updatedLogs));
-  };
-  
+
   const handleChangePassword = async () => {
     if (!currentPassword) {
       toast.error(t('securityDialog.enterCurrentPassword'));
       return;
     }
-    
+
     if (newPassword.length < 4) {
       toast.error(t('securityDialog.passwordMinLength'));
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       toast.error(t('securityDialog.passwordsDontMatch'));
       return;
     }
-    
+
     setIsChangingPassword(true);
-    
-    // Simulate password change
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Save new password hash (in real app, this would be hashed)
-    localStorage.setItem(`password_${profileId}`, btoa(newPassword));
-    
-    logActivity('Password changed');
-    toast.success(t('securityDialog.passwordChanged'));
-    
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    setIsChangingPassword(false);
-  };
-  
-  const handleSetup2FA = async () => {
-    if (settings.twoFactorEnabled) {
-      // Disable 2FA
-      if (twoFactorCode !== '123456') { // Demo code
-        toast.error(t('securityDialog.invalidCode'));
+
+    try {
+      // Il backend verifica la vecchia password decifrando il profilo e lo
+      // ri-cifra con la nuova. Gli errori arrivano come { success: false }.
+      const response = await invoke<ProfileResponse<boolean> | null>('change_profile_password', {
+        profileId,
+        oldPassword: currentPassword,
+        newPassword,
+      });
+
+      if (!response?.success) {
+        clientLogger.warn(`change_profile_password failed: ${response?.error ?? 'no response'}`);
+        toast.error(t('securityDialog.passwordChangeFailed'));
         return;
       }
-      
-      saveSecuritySettings({ ...settings, twoFactorEnabled: false });
-      logActivity('2FA disabilitato');
-      toast.success(t('securityDialog.twoFaDisabledMsg'));
-      setTwoFactorCode('');
-      setIsSettingUp2FA(false);
-    } else {
-      // Enable 2FA
-      if (!isSettingUp2FA) {
-        // Generate secret
-        const secret = Math.random().toString(36).substring(2, 10).toUpperCase();
-        setTwoFactorSecret(secret);
-        setIsSettingUp2FA(true);
-        return;
-      }
-      
-      if (twoFactorCode.length !== 6) {
-        toast.error(t('securityDialog.enter6DigitCode'));
-        return;
-      }
-      
-      // Verify code (demo: accept any 6 digit code)
-      saveSecuritySettings({ ...settings, twoFactorEnabled: true });
-      logActivity('2FA abilitato');
-      toast.success(t('securityDialog.twoFaEnabledMsg'));
-      setTwoFactorCode('');
-      setIsSettingUp2FA(false);
+
+      await updateRememberedPassword(newPassword);
+
+      toast.success(t('securityDialog.passwordChanged'));
+
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (e: unknown) {
+      clientLogger.error('Error changing profile password:', e);
+      toast.error(t('securityDialog.passwordChangeFailed'));
+    } finally {
+      setIsChangingPassword(false);
     }
-  };
-  
-  const handleClearActivityLog = () => {
-    setActivityLogs([]);
-    localStorage.removeItem(`activity_${profileId}`);
-    toast.success(t('profile.historyCleared'));
-  };
-  
-  const handleLogoutAllSessions = () => {
-    logActivity(t('profile.disconnectedAll'));
-    toast.success(t('profile.disconnectedAll'));
   };
 
   return (
@@ -254,356 +132,97 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
             {t('profile.security')} - {profileName}
           </DialogTitle>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="password" className="text-xs">
-              <Key className="h-3 w-3 mr-1" />
-              {t('securityDialog.passwordTab')}</TabsTrigger>
-            <TabsTrigger value="sessions" className="text-xs">
-              <Clock className="h-3 w-3 mr-1" />
-              {t('securityDialog.sessionsTab')}</TabsTrigger>
-            <TabsTrigger value="2fa" className="text-xs">
-              <Smartphone className="h-3 w-3 mr-1" />
-              2FA
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="text-xs">
-              <History className="h-3 w-3 mr-1" />
-              {t('securityDialog.activityTab')}</TabsTrigger>
-          </TabsList>
-          
-          {/* Password Tab */}
-          <TabsContent value="password" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Key className="h-4 w-4 mr-2" />
-                  {t('securityDialog.changePassword')}</CardTitle>
-                <CardDescription className="text-xs">
-                  {t('securityDialog.changePasswordDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="current-password" className="text-xs">{t('securityDialogComp.currentPassword')}</Label>
-                    <div className="relative">
-                      <Input
-                        id="current-password"
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="••••••"
-                        className="pr-10"
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password" className="text-xs">{t('securityDialogComp.newPassword')}</Label>
-                    <div className="relative">
-                      <Input
-                        id="new-password"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="••••••"
-                        className="pr-10"
-                        autoComplete="new-password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password" className="text-xs">{t('securityDialogComp.confirmPassword')}</Label>
+
+        <div className="mt-4 space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Key className="h-4 w-4 mr-2" />
+                {t('securityDialog.changePassword')}</CardTitle>
+              <CardDescription className="text-xs">
+                {t('securityDialog.changePasswordDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password" className="text-xs">{t('securityDialogComp.currentPassword')}</Label>
+                  <div className="relative">
                     <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      id="current-password"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="••••••"
+                      className="pr-10"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-password" className="text-xs">{t('securityDialogComp.newPassword')}</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-password"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••"
+                      className="pr-10"
                       autoComplete="new-password"
                     />
-                    {confirmPassword && newPassword !== confirmPassword && (
-                      <p className="text-xs text-red-500 flex items-center gap-1">
-                        <X className="h-3 w-3" /> {t('securityDialog.passwordsDontMatch')}</p>
-                    )}
-                    {confirmPassword && newPassword === confirmPassword && (
-                      <p className="text-xs text-green-500 flex items-center gap-1">
-                        <Check className="h-3 w-3" /> {t('securityDialog.passwordsMatch')}</p>
-                    )}
-                  </div>
-                  
-                  <Button 
-                    type="submit"
-                    disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                    className="w-full"
-                  >
-                    {isChangingPassword ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Key className="h-4 w-4 mr-2" />
-                    )}
-                    {t('securityDialog.changePassword')}</Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Sessions Tab */}
-          <TabsContent value="sessions" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  {t('securityDialog.sessionManagement')}</CardTitle>
-                <CardDescription className="text-xs">
-                  {t('securityDialog.sessionMgmtDesc')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm">{t('securityDialogComp.timeoutSessione')}</Label>
-                    <p className="text-xs text-muted-foreground">
-                      {t('securityDialog.disconnectAfterInactivity')}</p>
-                  </div>
-                  <select
-                    value={settings.sessionTimeout}
-                    onChange={(e) => saveSecuritySettings({ ...settings, sessionTimeout: Number(e.target.value) })}
-                    className="bg-background border rounded-md px-3 py-1.5 text-sm"
-                  >
-                    <option value={15}>{t('securityDialog.min15')}</option>
-                    <option value={30}>{t('securityDialog.min30')}</option>
-                    <option value={60}>{t('securityDialog.hour1')}</option>
-                    <option value={120}>{t('securityDialog.hours2')}</option>
-                    <option value={0}>{t('securityDialogComp.never')}</option>
-                  </select>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm">{t('securityDialogComp.autoLock')}</Label>
-                    <p className="text-xs text-muted-foreground">
-                      {t('securityDialog.requirePassword')}</p>
-                  </div>
-                  <Switch
-                    checked={settings.autoLockEnabled}
-                    onCheckedChange={(checked) => saveSecuritySettings({ ...settings, autoLockEnabled: checked })}
-                  />
-                </div>
-                
-                {settings.autoLockEnabled && (
-                  <div className="flex items-center justify-between pl-4 border-l-2 border-primary/20">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm">{t('securityDialogComp.timeoutBlocco')}</Label>
-                    </div>
-                    <select
-                      value={settings.autoLockTimeout}
-                      onChange={(e) => saveSecuritySettings({ ...settings, autoLockTimeout: Number(e.target.value) })}
-                      className="bg-background border rounded-md px-3 py-1.5 text-sm"
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      <option value={5}>{t('securityDialog.min5')}</option>
-                      <option value={10}>{t('securityDialog.min10')}</option>
-                      <option value={15}>{t('securityDialog.min15')}</option>
-                      <option value={30}>{t('securityDialog.min30')}</option>
-                    </select>
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-sm">{t('securityDialogComp.notificheLogin')}</Label>
-                    <p className="text-xs text-muted-foreground">
-                      {t('securityDialog.notifyNewLogins')}</p>
-                  </div>
-                  <Switch
-                    checked={settings.loginNotifications}
-                    onCheckedChange={(checked) => saveSecuritySettings({ ...settings, loginNotifications: checked })}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password" className="text-xs">{t('securityDialogComp.confirmPassword')}</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••"
+                    autoComplete="new-password"
                   />
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <Button variant="destructive" onClick={handleLogoutAllSessions} className="w-full">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {t('securityDialog.disconnectAll')}</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* 2FA Tab */}
-          <TabsContent value="2fa" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Smartphone className="h-4 w-4" />
-                  {t('securityDialog.twoFactorAuth')}{settings.twoFactorEnabled ? (
-                    <Badge className="bg-green-500 text-xs">{t('securityDialogComp.active')}</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">{t('securityDialogComp.inactive')}</Badge>
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      <X className="h-3 w-3" /> {t('securityDialog.passwordsDontMatch')}</p>
                   )}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {t('securityDialog.addExtraSecurity')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!settings.twoFactorEnabled && !isSettingUp2FA && (
-                  <div className="text-center py-4">
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                      <Lock className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {t('securityDialog.protectAccount')}</p>
-                    <Button onClick={handleSetup2FA}>
-                      <Smartphone className="h-4 w-4 mr-2" />
-                      {t('securityDialog.configure2fa')}</Button>
-                  </div>
-                )}
-                
-                {!settings.twoFactorEnabled && isSettingUp2FA && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground mb-2">{t('securityDialogComp.yourSecretCode')}</p>
-                      <p className="text-2xl font-mono font-bold tracking-wider">{twoFactorSecret}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {t('securityDialog.saveInAuthApp')}</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t('securityDialogComp.enterVerificationCode')}</Label>
-                      <Input
-                        type="text"
-                        maxLength={6}
-                        value={twoFactorCode}
-                        onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
-                        placeholder="000000"
-                        className="text-center text-2xl tracking-widest font-mono"
-                      />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setIsSettingUp2FA(false)} className="flex-1">
-                        {t('securityDialog.cancel')}</Button>
-                      <Button onClick={handleSetup2FA} className="flex-1">
-                        <Check className="h-4 w-4 mr-2" />
-                        {t('securityDialog.verify')}</Button>
-                    </div>
-                  </div>
-                )}
-                
-                {settings.twoFactorEnabled && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <Unlock className="h-5 w-5 text-green-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-green-500">{t('securityDialog.twoFaActive')}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('securityDialog.accountProtected')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t('securityDialogComp.enterCodeToDisable')}</Label>
-                      <Input
-                        type="text"
-                        maxLength={6}
-                        value={twoFactorCode}
-                        onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
-                        placeholder="000000"
-                        className="text-center text-2xl tracking-widest font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">{t('securityDialogComp.demoUsa123456')}</p>
-                    </div>
-                    
-                    <Button variant="destructive" onClick={handleSetup2FA} className="w-full">
-                      <X className="h-4 w-4 mr-2" />
-                      {t('securityDialog.disable2fa')}</Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Activity Tab */}
-          <TabsContent value="activity" className="mt-4 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <History className="h-4 w-4" />
-                      {t('securityDialog.activityHistory')}</CardTitle>
-                    <CardDescription className="text-xs">
-                      {t('securityDialog.recentActivity')}</CardDescription>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={handleClearActivityLog}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[300px] pr-4">
-                  {activityLogs.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">{t('securityDialogComp.noActivityRecorded')}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {activityLogs.map((log) => (
-                        <div
-                          key={log.id}
-                          className={cn(
-                            "flex items-start gap-3 p-3 rounded-lg border",
-                            log.success 
-                              ? "bg-muted/30 border-muted" 
-                              : "bg-red-500/10 border-red-500/20"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                            log.success ? "bg-green-500/20" : "bg-red-500/20"
-                          )}>
-                            {log.success ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <AlertTriangle className="h-4 w-4 text-red-500" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{log.action}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(log.timestamp, { addSuffix: true, locale: it })}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {log.device} • {log.ip}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  {confirmPassword && newPassword === confirmPassword && (
+                    <p className="text-xs text-green-500 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> {t('securityDialog.passwordsMatch')}</p>
                   )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                  className="w-full"
+                >
+                  {isChangingPassword ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Key className="h-4 w-4 mr-2" />
+                  )}
+                  {t('securityDialog.changePassword')}</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </DialogContent>
     </Dialog>
   );

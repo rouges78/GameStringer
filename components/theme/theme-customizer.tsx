@@ -19,7 +19,6 @@ import {
   Upload,
   Check,
   Star,
-  Heart,
   Zap,
   Brush,
   RotateCcw,
@@ -28,13 +27,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
+import { clientLogger } from '@/lib/client-logger';
 
 interface CustomTheme {
   id: string;
   name: string;
-  author: string;
-  downloads: number;
-  likes: number;
   preview: string;
   colors: ThemeColors;
   isOfficial?: boolean;
@@ -61,9 +58,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'default-blue',
     name: 'GameStringer Blue',
-    author: 'Official',
-    downloads: 15420,
-    likes: 892,
     preview: 'linear-gradient(135deg, #3b82f6, #6366f1)',
     isOfficial: true,
     colors: {
@@ -79,9 +73,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'cyberpunk',
     name: 'Cyberpunk 2077',
-    author: 'NightCity_Dev',
-    downloads: 8932,
-    likes: 654,
     preview: 'linear-gradient(135deg, #f9f002, #ff00ff)',
     isCommunity: true,
     colors: {
@@ -97,9 +88,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'emerald-forest',
     name: 'Emerald Forest',
-    author: 'GreenThumb',
-    downloads: 5621,
-    likes: 423,
     preview: 'linear-gradient(135deg, #10b981, #059669)',
     isCommunity: true,
     colors: {
@@ -115,9 +103,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'sunset-orange',
     name: 'Sunset Vibes',
-    author: 'SunsetLover',
-    downloads: 4218,
-    likes: 312,
     preview: 'linear-gradient(135deg, #f97316, #ea580c)',
     isCommunity: true,
     colors: {
@@ -133,9 +118,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'rose-gold',
     name: 'Rose Gold',
-    author: 'Elegance',
-    downloads: 6789,
-    likes: 521,
     preview: 'linear-gradient(135deg, #f43f5e, #ec4899)',
     isCommunity: true,
     colors: {
@@ -151,9 +133,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'arctic-ice',
     name: 'Arctic Ice',
-    author: 'FrostByte',
-    downloads: 3542,
-    likes: 287,
     preview: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
     isCommunity: true,
     colors: {
@@ -169,9 +148,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'purple-haze',
     name: 'Purple Haze',
-    author: 'PsychedelicDev',
-    downloads: 7123,
-    likes: 489,
     preview: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
     isCommunity: true,
     colors: {
@@ -187,9 +163,6 @@ const PRESET_THEMES: CustomTheme[] = [
   {
     id: 'monochrome',
     name: 'Monochrome',
-    author: 'MinimalDev',
-    downloads: 2891,
-    likes: 198,
     preview: 'linear-gradient(135deg, #71717a, #52525b)',
     isCommunity: true,
     colors: {
@@ -205,6 +178,86 @@ const PRESET_THEMES: CustomTheme[] = [
 ];
 
 const DEFAULT_COLORS: ThemeColors = PRESET_THEMES[0].colors;
+
+function applyThemeColors(colors: ThemeColors) {
+  const root = document.documentElement;
+  
+  // Converti hex in HSL per le variabili CSS
+  const hexToHsl = (hex: string): string => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
+  // Il testo sopra un colore scelto dall'utente non puo' essere fissato:
+  // con l'accento ciano il bianco sta a 2.43:1, col giallo a 1.20:1.
+  // Scegliamo inchiostro chiaro o scuro in base a quale dei due contrasta
+  // di piu' col colore scelto (WCAG relative luminance).
+  const INK_LIGHT = '0 0% 100%';
+  const INK_DARK = '220 30% 5%';
+
+  const readableOn = (hex: string): string => {
+    const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    const r = channel(parseInt(hex.slice(1, 3), 16) / 255);
+    const g = channel(parseInt(hex.slice(3, 5), 16) / 255);
+    const b = channel(parseInt(hex.slice(5, 7), 16) / 255);
+    const bg = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    // Luminanza relativa di INK_DARK (hsl(220 30% 5%)), precalcolata.
+    const inkDark = 0.0035;
+    const contrastLight = 1.05 / (bg + 0.05);
+    const contrastDark = (bg + 0.05) / (inkDark + 0.05);
+
+    return contrastDark > contrastLight ? INK_DARK : INK_LIGHT;
+  };
+
+  // Applica le variabili CSS
+  root.style.setProperty('--primary', hexToHsl(colors.primary));
+  root.style.setProperty('--primary-foreground', readableOn(colors.primary));
+  root.style.setProperty('--accent', hexToHsl(colors.accent));
+  root.style.setProperty('--accent-foreground', readableOn(colors.accent));
+  root.style.setProperty('--success', hexToHsl(colors.success));
+  root.style.setProperty('--success-foreground', readableOn(colors.success));
+  root.style.setProperty('--destructive', hexToHsl(colors.destructive));
+  root.style.setProperty('--destructive-foreground', readableOn(colors.destructive));
+  
+  // Salva il gradient per l'header
+  root.style.setProperty('--header-gradient', colors.headerGradient);
+}
+
+/**
+ * Riapplica all'avvio il tema scelto nel customizer (chiamata da ThemeProvider).
+ * Prima il tema salvato veniva solo ricaricato nello stato del dialog: al
+ * riavvio l'app tornava ai colori di default mentre il dialog lo mostrava
+ * ancora come selezionato.
+ */
+export function applySavedCustomTheme(): void {
+  try {
+    const saved = localStorage.getItem('gamestringer-custom-theme');
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (parsed?.colors) applyThemeColors(parsed.colors);
+  } catch (e: unknown) {
+    clientLogger.warn('[ThemeCustomizer] Tema salvato non applicabile:', e);
+  }
+}
 
 export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
   const { t } = useTranslation();
@@ -245,69 +298,6 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
     }
   }, [customColors, isPreviewActive]);
 
-  const applyThemeColors = (colors: ThemeColors) => {
-    const root = document.documentElement;
-    
-    // Converti hex in HSL per le variabili CSS
-    const hexToHsl = (hex: string): string => {
-      const r = parseInt(hex.slice(1, 3), 16) / 255;
-      const g = parseInt(hex.slice(3, 5), 16) / 255;
-      const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0, s = 0;
-      const l = (max + min) / 2;
-
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-          case g: h = ((b - r) / d + 2) / 6; break;
-          case b: h = ((r - g) / d + 4) / 6; break;
-        }
-      }
-
-      return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    };
-
-    // Il testo sopra un colore scelto dall'utente non puo' essere fissato:
-    // con l'accento ciano il bianco sta a 2.43:1, col giallo a 1.20:1.
-    // Scegliamo inchiostro chiaro o scuro in base a quale dei due contrasta
-    // di piu' col colore scelto (WCAG relative luminance).
-    const INK_LIGHT = '0 0% 100%';
-    const INK_DARK = '220 30% 5%';
-
-    const readableOn = (hex: string): string => {
-      const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
-      const r = channel(parseInt(hex.slice(1, 3), 16) / 255);
-      const g = channel(parseInt(hex.slice(3, 5), 16) / 255);
-      const b = channel(parseInt(hex.slice(5, 7), 16) / 255);
-      const bg = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-      // Luminanza relativa di INK_DARK (hsl(220 30% 5%)), precalcolata.
-      const inkDark = 0.0035;
-      const contrastLight = 1.05 / (bg + 0.05);
-      const contrastDark = (bg + 0.05) / (inkDark + 0.05);
-
-      return contrastDark > contrastLight ? INK_DARK : INK_LIGHT;
-    };
-
-    // Applica le variabili CSS
-    root.style.setProperty('--primary', hexToHsl(colors.primary));
-    root.style.setProperty('--primary-foreground', readableOn(colors.primary));
-    root.style.setProperty('--accent', hexToHsl(colors.accent));
-    root.style.setProperty('--accent-foreground', readableOn(colors.accent));
-    root.style.setProperty('--success', hexToHsl(colors.success));
-    root.style.setProperty('--success-foreground', readableOn(colors.success));
-    root.style.setProperty('--destructive', hexToHsl(colors.destructive));
-    root.style.setProperty('--destructive-foreground', readableOn(colors.destructive));
-    
-    // Salva il gradient per l'header
-    root.style.setProperty('--header-gradient', colors.headerGradient);
-  };
-
   const resetColors = () => {
     setCustomColors(DEFAULT_COLORS);
     setSelectedTheme(null);
@@ -341,9 +331,6 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
     const newTheme: CustomTheme = {
       id: `custom-${Date.now()}`,
       name: 'Il mio tema',
-      author: 'Tu',
-      downloads: 0,
-      likes: 0,
       preview: `linear-gradient(135deg, ${customColors.primary}, ${customColors.accent})`,
       colors: customColors
     };
@@ -352,6 +339,10 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
     setSavedThemes(updated);
     localStorage.setItem('gamestringer-user-themes', JSON.stringify(updated));
     localStorage.setItem('gamestringer-custom-theme', JSON.stringify(newTheme));
+    // Il tema salvato diventa quello corrente, che ThemeProvider riapplica
+    // all'avvio: applicarlo anche ora evita che cambi solo dopo il riavvio.
+    setSelectedTheme(newTheme);
+    applyThemeColors(customColors);
     
     toast.success(t('common.temaPersonalizzatoSalvato'));
   };
@@ -464,7 +455,7 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
               </TabsTrigger>
               <TabsTrigger value="community" className="gap-2">
                 <Users className="h-4 w-4" />
-                Community
+                {t('themeCustomizerComp.altriTemi')}
               </TabsTrigger>
               <TabsTrigger value="custom" className="gap-2">
                 <Brush className="h-4 w-4" />
@@ -491,7 +482,7 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
               
               <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                 <Star className="h-4 w-4 text-yellow-500" />
-                Temi Popolari
+                {t('themeCustomizerComp.altriTemi')}
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
@@ -515,7 +506,6 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
                     theme={themeItem} 
                     isSelected={selectedTheme?.id === themeItem.id}
                     onSelect={() => applyTheme(themeItem)}
-                    showStats
                   />
                 ))}
               </div>
@@ -649,13 +639,11 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
 function ThemeCard({ 
   theme, 
   isSelected, 
-  onSelect,
-  showStats = false 
+  onSelect
 }: { 
   theme: CustomTheme; 
   isSelected: boolean;
   onSelect: () => void;
-  showStats?: boolean;
 }) {
   return (
     <Card 
@@ -681,24 +669,7 @@ function ThemeCard({
         )}
       </div>
       <CardContent className="p-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="font-medium text-sm">{theme.name}</h4>
-            <p className="text-xs text-muted-foreground">by {theme.author}</p>
-          </div>
-          {showStats && (
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Download className="h-3 w-3" />
-                {theme.downloads.toLocaleString()}
-              </span>
-              <span className="flex items-center gap-1">
-                <Heart className="h-3 w-3" />
-                {theme.likes}
-              </span>
-            </div>
-          )}
-        </div>
+        <h4 className="font-medium text-sm">{theme.name}</h4>
       </CardContent>
     </Card>
   );

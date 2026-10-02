@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Camera, Loader2 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -17,7 +17,6 @@ interface ProfileManagerProps {
 export function ProfileManager({ onClose }: ProfileManagerProps) {
   const { t } = useTranslation();
   const { currentProfile, updateProfileAvatar, getProfileAvatar } = useProfiles();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
@@ -61,20 +60,16 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
 
     // Verify file type
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Error',
-        description: 'Select a valid image file (PNG, JPG, GIF)',
-        variant: 'destructive',
+      toast.error(t('common.error'), {
+        description: t('profile.selectValidImage'),
       });
       return;
     }
 
     // Verify size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: 'Error',
-        description: 'Image must be less than 5MB',
-        variant: 'destructive',
+      toast.error(t('common.fileTroppoGrande'), {
+        description: t('common.massimo5mb'),
       });
       return;
     }
@@ -92,34 +87,25 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
         
         if (success) {
           setAvatarSrc(base64Data);
-          toast({
-            title: 'Avatar updated',
-            description: 'Your avatar has been saved successfully',
-          });
+          toast.success(t('profileManagerComp.avatarUpdated'));
         } else {
-          toast({
-            title: 'Error',
-            description: 'Cannot save avatar',
-            variant: 'destructive',
+          toast.error(t('common.error'), {
+            description: t('profile.avatarUpdateError'),
           });
         }
         setIsUploading(false);
       };
       reader.onerror = () => {
-        toast({
-          title: 'Error',
-          description: 'Cannot read file',
-          variant: 'destructive',
+        toast.error(t('common.error'), {
+          description: t('common.cannotReadFile'),
         });
         setIsUploading(false);
       };
       reader.readAsDataURL(file);
     } catch (error: unknown) {
       clientLogger.error('Avatar upload error:', error);
-      toast({
-        title: 'Error',
-        description: 'An error occurred during upload',
-        variant: 'destructive',
+      toast.error(t('common.error'), {
+        description: t('common.anErrorOccurredDuringUpload'),
       });
       setIsUploading(false);
     }

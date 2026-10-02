@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { decode } from 'html-entities';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -82,6 +83,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { t, language } = useTranslation();
+  const router = useRouter();
   const dash = translations[language]?.dashboard || translations.it.dashboard;
   const [stats, setStats] = useState<DashboardStats>({
     totalGames: 0,
@@ -112,7 +114,7 @@ export default function Dashboard() {
   const [_lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
-  const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
+  const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string; installPath: string | null } | null>(null);
   const [activeTranslation, setActiveTranslation] = useState<{ percent: number; translated: number; total: number; lang: string } | null>(null);
   const [newsFilter, setNewsFilter] = useState<string>('all');
   const [rssNews, setRssNews] = useState<NewsFeedItem[]>([]);
@@ -176,6 +178,8 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
     setBlogPosts(blogService.getRecentPosts(5));
+    // Al primo avvio la copia in localStorage è vuota: rilegge dopo aver caricato blog.json
+    blogService.init().then(() => setBlogPosts(blogService.getRecentPosts(5)));
     // Carica news RSS
     const cachedNews = newsFeedService.getCachedNews();
     if (cachedNews.length > 0) {
@@ -369,7 +373,9 @@ export default function Dashboard() {
               image: lg.image || null,
               platform: lg.platform || 'Steam',
               visitedAt: lg.visitedAt || Date.now(),
-              appId: lg.appId || ''
+              appId: lg.appId || '',
+              // Salvato dalla scheda gioco: "Continua traduzione" lo passa al wizard
+              installPath: typeof lg.installPath === 'string' && lg.installPath ? lg.installPath : null
             });
           }
         }
@@ -756,8 +762,8 @@ export default function Dashboard() {
           
             {/* Ultimo gioco aperto */}
             {lastGame && (
-              <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
-                <div className="group relative rounded-xl overflow-hidden border border-[#2a475e]/40 hover:border-[#67c1f5]/50 transition-all cursor-pointer hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5">
+              <div className="group relative rounded-xl overflow-hidden border border-[#2a475e]/40 hover:border-[#67c1f5]/50 transition-all cursor-pointer hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5">
+                <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`} className="block">
                   {lastGame.image ? (
                     <div className="relative h-36">
                       <img
@@ -810,15 +816,24 @@ export default function Dashboard() {
                       </div>
                     </div>
                   )}
-                  {activeTranslation && (
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/auto-translate?gameId=${lastGame.id}&gameName=${encodeURIComponent(lastGame.title)}&installPath=&platform=${lastGame.platform}`; }}
-                      className="w-full py-2 bg-gradient-to-r from-[#1a9fff]/15 to-[#1a9fff]/5 hover:from-[#1a9fff]/25 hover:to-[#1a9fff]/15 border-t border-[#2a475e]/30 text-2xs font-bold text-[#67c1f5] flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
-                      <Zap className="h-3 w-3" fill="currentColor" /> {t('common.continueTranslation')}
-                    </button>
-                  )}
-                </div>
-              </Link>
+                </Link>
+                {/* Fuori dal <Link> (niente bottone dentro un'ancora). Prima passava
+                    installPath= vuoto e il wizard si apriva senza gioco: ora il path
+                    salvato dalla scheda gioco, o il wizard lo risolve da gameId; la
+                    lingua del checkpoint fa comparire il banner "Riprendi". */}
+                {activeTranslation && (
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams({ gameId: lastGame.id, gameName: lastGame.title, platform: lastGame.platform, targetLang: activeTranslation.lang });
+                      if (lastGame.installPath) params.set('installPath', lastGame.installPath);
+                      if (lastGame.image) params.set('gameImage', lastGame.image);
+                      router.push(`/auto-translate?${params.toString()}`);
+                    }}
+                    className="w-full py-2 bg-gradient-to-r from-[#1a9fff]/15 to-[#1a9fff]/5 hover:from-[#1a9fff]/25 hover:to-[#1a9fff]/15 border-t border-[#2a475e]/30 text-2xs font-bold text-[#67c1f5] flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                    <Zap className="h-3 w-3" fill="currentColor" /> {t('common.continueTranslation')}
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Attività Recenti */}

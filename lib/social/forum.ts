@@ -266,12 +266,19 @@ export async function getThread(id: string, userId?: string): Promise<ForumThrea
     .eq('id', id)
     .single();
   
-  if (error) return null;
+  if (error) {
+    // PGRST116 = nessuna riga: il thread non esiste (o è nascosto). Ogni altro
+    // errore (rete, 5xx, timeout) va rilanciato: tornare null lo faceva passare
+    // per "thread non trovato".
+    if (error.code === 'PGRST116') return null;
+    throw new Error(error.message || 'getThread failed');
+  }
   
   // Incrementa view count
   await supabase.rpc('increment_thread_views', { thread_uuid: id });
   
-  // Check se l'utente ha messo like
+  // Check se l'utente ha messo like. `userId` è l'uid di Supabase Auth: è
+  // quello che toggleLike scrive in forum_reactions.user_id.
   if (userId) {
     const { data: reaction } = await supabase
       .from('forum_reactions')
@@ -409,13 +416,13 @@ export async function getPosts(threadId: string, userId?: string): Promise<Forum
     .order('created_at');
   
   if (error) {
-    if (error.code !== '42P01' && !error.message?.includes('does not exist')) {
-      console.warn('[Forum] Error fetching posts:', error.message || error);
-    }
-    return [];
+    if (error.code === '42P01' || error.message?.includes('does not exist')) return [];
+    // Rete/5xx: rilancia. Tornare [] mostrava "0 risposte" su un thread che
+    // magari ne ha, come se il backend avesse risposto.
+    throw new Error(error.message || 'getPosts failed');
   }
   
-  // Check likes utente
+  // Check likes utente (userId = uid di Supabase Auth, come in forum_reactions)
   if (userId && data) {
     const { data: reactions } = await supabase
       .from('forum_reactions')
@@ -484,17 +491,25 @@ export async function deletePost(id: string): Promise<boolean> {
 
 export async function markAsSolution(postId: string, threadId: string): Promise<boolean> {
   const supabase = await getSupabase();
+  // Segna questo come solution. `.select('id')` dice se la riga è stata
+  // DAVVERO toccata: la RLS "Author update posts" lascia aggiornare un post solo
+  // al suo autore, e un UPDATE filtrato dalla RLS non dà errore, tocca 0 righe.
+  // Senza questo controllo l'autore del thread vedeva "segnata come soluzione"
+  // su una risposta altrui che sul server restava com'era.
+  const { data: marked, error: postError } = await supabase
+    .from('forum_posts')
+    .update({ is_solution: true })
+    .eq('id', postId)
+    .eq('thread_id', threadId)
+    .select('id');
+  if (postError || !marked?.length) return false;
+  
   // Rimuovi solution da altri post
   await supabase
     .from('forum_posts')
     .update({ is_solution: false })
-    .eq('thread_id', threadId);
-  
-  // Segna questo come solution
-  const { error: postError } = await supabase
-    .from('forum_posts')
-    .update({ is_solution: true })
-    .eq('id', postId);
+    .eq('thread_id', threadId)
+    .neq('id', postId);
   
   // Segna thread come risolto
   const { error: threadError } = await supabase
@@ -502,21 +517,28 @@ export async function markAsSolution(postId: string, threadId: string): Promise<
     .update({ is_solved: true })
     .eq('id', threadId);
   
-  return !postError && !threadError;
+  return !threadError;
 }
 
 // ─── REACTIONS ───────────────────────────────────────────────────────────────
 
-export async function toggleLike(userId: string, threadId?: string, postId?: string): Promise<boolean> {
+/**
+ * Mette o toglie il like. Ritorna lo stato DOPO il toggle — true = like messo,
+ * false = like tolto — oppure null se la scrittura non è riuscita.
+ * L'interfaccia deve allinearsi a questo valore, non al proprio `!liked`: se lo
+ * stato mostrato era sbagliato (lettura del like fallita) il server fa
+ * l'opposto di quello che l'utente vede.
+ */
+export async function toggleLike(userId: string, threadId?: string, postId?: string): Promise<boolean | null> {
   const supabase = await getSupabase();
-  if (!threadId && !postId) return false;
+  if (!threadId && !postId) return null;
 
   // Serve una sessione Supabase reale: la RLS "Auth insert reactions" (20260704)
   // pretende user_id = auth.uid() e ruolo authenticated. Bridge giù → niente like.
   const uid = await resolveAuthorId(userId);
   if (!uid) {
     console.warn('[Forum] Bridge auth non disponibile: like rimandato (riprova tra poco)');
-    return false;
+    return null;
   }
   
   // Check se esiste già
@@ -537,7 +559,7 @@ export async function toggleLike(userId: string, threadId?: string, postId?: str
       .from('forum_reactions')
       .delete()
       .eq('id', existing.id);
-    return !error;
+    return error ? null : false;
   } else {
     // Aggiungi like
     const { error } = await supabase
@@ -548,7 +570,7 @@ export async function toggleLike(userId: string, threadId?: string, postId?: str
         post_id: postId || null,
         reaction_type: 'like',
       });
-    return !error;
+    return error ? null : true;
   }
 }
 

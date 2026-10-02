@@ -12,7 +12,7 @@
  * se la libreria è già stata scansionata. Tutto lo stato è in localStorage.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,42 +24,59 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Rocket, Sparkles, Clock, Gamepad2, Library, ChevronRight } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { pickFirstGame, type FirstGameInput, type FirstGameSuggestion } from '@/lib/onboarding/first-game';
+import { pickFirstGame, type FirstGameInput } from '@/lib/onboarding/first-game';
+import { clientLogger } from '@/lib/client-logger';
+import { isOnboardingDone, isTosAccepted, isTutorialDone, whenReady } from './first-run';
 
 const DONE_KEY = 'gamestringer_first_game_done';
-const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
-const ONBOARDING_KEY = 'gamestringer_onboarding_completed';
 
-/** Legge i giochi scansionati dalla cache globale della libreria (se presente). */
-function readLibraryGames(): FirstGameInput[] {
+function toFirstGameInputs(raw: Array<Record<string, unknown>>): FirstGameInput[] {
+  return raw.map((gm) => ({
+    id: String(gm.id ?? gm.app_id ?? ''),
+    title: String(gm.title ?? ''),
+    engine: (gm.engine as string | null | undefined) ?? null,
+    isInstalled: Boolean(gm.is_installed),
+    // La Libreria salva install_dir; la scansione di avvio (GameInfo Rust) install_path.
+    installDir: ((gm.install_dir ?? gm.install_path) as string | null | undefined) ?? null,
+    supportedLanguages: Array.isArray(gm.supported_languages)
+      ? (gm.supported_languages as string[])
+      : undefined,
+    genres: Array.isArray(gm.genres) ? (gm.genres as string[]) : undefined,
+    lastPlayed: typeof gm.last_played === 'number' ? gm.last_played : undefined,
+  }));
+}
+
+/**
+ * Legge i giochi scansionati: dalla cache in memoria della Libreria se quella
+ * pagina è già stata aperta in questa sessione, altrimenti dalla cache
+ * IndexedDB `gs_library_games` (scritta dalla Libreria e dalla scansione di
+ * avvio in MainLayout). Prima leggeva solo la cache in memoria, che fuori
+ * dalla Libreria non esiste: il dialogo diceva quasi sempre "nessun gioco".
+ */
+export async function readLibraryGames(): Promise<FirstGameInput[]> {
   try {
     const cache = (globalThis as Record<string, unknown>).__gsLibCache as
       | { games?: { data?: Array<Record<string, unknown>> } }
       | undefined;
-    const raw = cache?.games?.data;
-    if (!Array.isArray(raw)) return [];
-    return raw.map((gm) => ({
-      id: String(gm.id ?? gm.app_id ?? ''),
-      title: String(gm.title ?? ''),
-      engine: (gm.engine as string | null | undefined) ?? null,
-      isInstalled: Boolean(gm.is_installed),
-      installDir: (gm.install_dir as string | undefined) ?? null,
-      supportedLanguages: Array.isArray(gm.supported_languages)
-        ? (gm.supported_languages as string[])
-        : undefined,
-      genres: Array.isArray(gm.genres) ? (gm.genres as string[]) : undefined,
-      lastPlayed: typeof gm.last_played === 'number' ? gm.last_played : undefined,
-    }));
-  } catch {
+    const inMemory = cache?.games?.data;
+    if (Array.isArray(inMemory) && inMemory.length > 0) return toFirstGameInputs(inMemory);
+    const { get } = await import('idb-keyval');
+    const stored = await get<Array<Record<string, unknown>>>('gs_library_games');
+    return Array.isArray(stored) ? toFirstGameInputs(stored) : [];
+  } catch (e: unknown) {
+    clientLogger.warn('[FirstGameFlow] lettura cache libreria fallita:', e);
     return [];
   }
 }
 
-/** Ricava la lingua target dalle impostazioni (fallback: lingua UI). */
-function readTargetLanguage(uiLanguage: string): string {
+/**
+ * Ricava la lingua target come le schermate di traduzione (useDefaultTargetLang):
+ * `translation.defaultTargetLang`, altrimenti la lingua dell'interfaccia.
+ */
+export function readTargetLanguage(uiLanguage: string): string {
   try {
     const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-    return settings?.translation?.targetLanguage || settings?.system?.language || uiLanguage;
+    return settings?.translation?.defaultTargetLang || uiLanguage;
   } catch {
     return uiLanguage;
   }
@@ -68,29 +85,48 @@ function readTargetLanguage(uiLanguage: string): string {
 export function FirstGameFlow() {
   const { t, language } = useTranslation() as unknown as { t: (k: string) => string; language: string };
   const [open, setOpen] = useState(false);
-  const [suggestion, setSuggestion] = useState<FirstGameSuggestion | null>(null);
-  const [hasGames, setHasGames] = useState(false);
+  const [games, setGames] = useState<FirstGameInput[]>([]);
+  const hasGames = games.length > 0;
+  const suggestion = useMemo(
+    () => (open ? pickFirstGame(games, { targetLanguage: readTargetLanguage(language || 'it') }) : null),
+    [open, games, language]
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Gate: mostra una sola volta, solo dopo il tutorial/onboarding di base.
+    // Gate: mostra una sola volta.
     if (localStorage.getItem(DONE_KEY) === 'true') return;
-    const tutorialDone = localStorage.getItem(TUTORIAL_KEY);
-    const onboardingDone = localStorage.getItem(ONBOARDING_KEY);
-    if (!tutorialDone && !onboardingDone) return; // non sovrapporsi al primo tutorial
 
-    // Piccolo ritardo per non competere con altri overlay all'avvio.
-    const timer = setTimeout(() => {
-      const games = readLibraryGames();
-      setHasGames(games.length > 0);
-      const target = readTargetLanguage(language || 'it');
-      setSuggestion(pickFirstGame(games, { targetLanguage: target }));
-      setOpen(true);
-    }, 1200);
+    let cancelled = false;
+    const loadGames = () => {
+      readLibraryGames().then((list) => {
+        if (!cancelled) setGames(list);
+      });
+    };
+    // La scansione di avvio (MainLayout) può finire con il dialogo già aperto.
+    window.addEventListener('gs-library-updated', loadGames);
 
-    return () => clearTimeout(timer);
-  }, [language]);
+    // Solo dopo Termini, wizard (lingua) e tour: non sovrapporsi al primo avvio.
+    // Piccolo ritardo per non competere con altri overlay.
+    const stopWaiting = whenReady(
+      () => isTosAccepted() && isOnboardingDone() && isTutorialDone(),
+      () => {
+        readLibraryGames().then((list) => {
+          if (cancelled) return;
+          setGames(list);
+          setOpen(true);
+        });
+      },
+      1200
+    );
+
+    return () => {
+      cancelled = true;
+      stopWaiting();
+      window.removeEventListener('gs-library-updated', loadGames);
+    };
+  }, []);
 
   const markDone = useCallback(() => {
     try {

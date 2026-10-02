@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from 'radix-ui';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Command, CommandInput, CommandList, CommandGroup, CommandItem } from '@/components/ui/command';
 import { 
-  Search, 
   Home, 
   Gamepad2, 
   Sparkles, 
@@ -30,13 +28,13 @@ import {
   Package,
   Workflow,
   ShieldCheck,
-  Eye
+  Eye,
+  Puzzle
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { useTranslation } from '@/lib/i18n';
 
-interface CommandItem {
+interface PaletteCommand {
   id: string;
   title: string;
   description?: string;
@@ -44,17 +42,18 @@ interface CommandItem {
   action: () => void;
   keywords?: string[];
   category: 'navigation' | 'action' | 'settings';
+  /** Fuori dalla palette finché la pagina non funziona: torna togliendo il flag. */
+  hidden?: boolean;
 }
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
   const { setTheme, theme: _theme } = useTheme();
   const { t } = useTranslation();
 
-  const commands: CommandItem[] = useMemo(() => [
+  const commands: PaletteCommand[] = useMemo(() => [
     // Navigation
     { id: 'dashboard', title: t('nav.dashboard'), description: t('commandPalette.dashboardDesc'), icon: <Home className="h-4 w-4" />, action: () => router.push('/'), keywords: ['home', 'main', 'dashboard'], category: 'navigation' },
     { id: 'library', title: t('nav.library'), description: t('commandPalette.libraryDesc'), icon: <Gamepad2 className="h-4 w-4" />, action: () => router.push('/library'), keywords: ['games', 'giochi', 'libreria'], category: 'navigation' },
@@ -66,30 +65,39 @@ export function CommandPalette() {
     { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share', 'comunità'], category: 'navigation' },
     { id: 'patch-hub', title: t('patchHubPage.title'), description: t('patchHubPage.subtitle'), icon: <Package className="h-4 w-4" />, action: () => router.push('/patch-hub'), keywords: ['patch', 'pack', 'traduzioni', 'hub'], category: 'navigation' },
     { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options', 'impostazioni'], category: 'navigation' },
-    { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation' },
+    // Batch nascosti: /batch dichiara "non implementato" con Avvia disabilitato, e
+    // /batch-translation fa fallire ogni job con BATCH_NON_IMPLEMENTATO.
+    { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation', hidden: true },
     { id: 'guide', title: t('nav.guide'), description: t('commandPalette.settingsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/guide'), keywords: ['guide', 'help', 'guida'], category: 'navigation' },
     { id: 'stats', title: t('commandPalette.stats'), description: t('commandPalette.statsDesc'), icon: <BarChart3 className="h-4 w-4" />, action: () => router.push('/stats'), keywords: ['analytics', 'progress', 'statistiche'], category: 'navigation' },
     { id: 'glossary', title: t('nav.glossary'), description: t('commandPalette.dictionaryDesc'), icon: <BookOpen className="h-4 w-4" />, action: () => router.push('/glossary'), keywords: ['glossary', 'terms', 'glossario'], category: 'navigation' },
     { id: 'editor', title: t('nav.editor'), description: t('editor.subtitle'), icon: <FileText className="h-4 w-4" />, action: () => router.push('/editor'), keywords: ['edit', 'editor', 'modifica'], category: 'navigation' },
     { id: 'ocr', title: t('nav.ocrTranslator'), description: t('ocrTranslator.subtitle'), icon: <Scan className="h-4 w-4" />, action: () => router.push('/ocr-translator'), keywords: ['ocr', 'screen', 'immagine', 'schermo'], category: 'navigation' },
     { id: 'stores', title: t('nav.stores'), description: t('stores.steam'), icon: <ShoppingBag className="h-4 w-4" />, action: () => router.push('/stores'), keywords: ['store', 'steam', 'epic', 'negozio'], category: 'navigation' },
-    { id: 'batch-queue', title: t('nav.translationQueue'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch-translation'), keywords: ['queue', 'coda', 'batch'], category: 'navigation' },
+    { id: 'batch-queue', title: t('nav.translationQueue'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch-translation'), keywords: ['queue', 'coda', 'batch'], category: 'navigation', hidden: true },
     { id: 'ai-pipeline', title: t('nav.aiPipeline'), description: t('aiTranslation.subtitle'), icon: <Workflow className="h-4 w-4" />, action: () => router.push('/ai-pipeline'), keywords: ['pipeline', 'workflow', 'qa'], category: 'navigation' },
     { id: 'qa-check', title: t('nav.qaCheck'), description: t('qaCheck.subtitle'), icon: <ShieldCheck className="h-4 w-4" />, action: () => router.push('/qa-check'), keywords: ['quality', 'check', 'qualità'], category: 'navigation' },
     { id: 'vision', title: t('nav.visionLlm'), description: t('aiTranslation.subtitle'), icon: <Eye className="h-4 w-4" />, action: () => router.push('/vision-translator'), keywords: ['vision', 'llm', 'visual', 'immagine'], category: 'navigation' },
+    // Arrivavano da Ctrl+K solo tramite GlobalSearch, non più montata nel layout.
+    { id: 'injector', title: t('nav.injector'), description: t('universalInjector.subtitle'), icon: <Puzzle className="h-4 w-4" />, action: () => router.push('/injector'), keywords: ['inject', 'mod', 'dll'], category: 'navigation' },
+    { id: 'crawler', title: t('nav.contextHarvester'), description: t('contextHarvesterPage.subtitle'), icon: <Scan className="h-4 w-4" />, action: () => router.push('/context-harvester'), keywords: ['crawler', 'context', 'contesto'], category: 'navigation' },
+    { id: 'fixer', title: t('nav.fixer'), description: t('translationFixer.subtitle'), icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/fixer'), keywords: ['fix', 'tag', 'correggi'], category: 'navigation' },
     
-    // Actions
-    { id: 'scan', title: t('commandPalette.scanGames'), description: t('commandPalette.scanGamesDesc'), icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find', 'scansiona'], category: 'action' },
-    { id: 'shortcuts', title: t('commandPalette.shortcuts'), description: t('commandPalette.shortcutsDesc'), icon: <Keyboard className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('show-shortcuts')); }, keywords: ['keyboard', 'hotkeys', 'scorciatoie'], category: 'action' },
+    // Actions — nascoste: nessuno ascolta 'scan-games' né 'show-shortcuts', quindi
+    // la voce chiudeva la palette senza fare nulla. Scansione: pulsante in Libreria;
+    // scorciatoie: Ctrl+/.
+    { id: 'scan', title: t('commandPalette.scanGames'), description: t('commandPalette.scanGamesDesc'), icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find', 'scansiona'], category: 'action', hidden: true },
+    { id: 'shortcuts', title: t('commandPalette.shortcuts'), description: t('commandPalette.shortcutsDesc'), icon: <Keyboard className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('show-shortcuts')); }, keywords: ['keyboard', 'hotkeys', 'scorciatoie'], category: 'action', hidden: true },
     
     // Settings (dark mode forzato — light non supportato)
     { id: 'theme-dark', title: t('commandPalette.darkTheme'), description: t('commandPalette.darkThemeDesc'), icon: <Moon className="h-4 w-4" />, action: () => setTheme('dark'), keywords: ['dark', 'night', 'scuro'], category: 'settings' },
   ], [router, setTheme, t]);
 
   const filteredCommands = useMemo(() => {
-    if (!search) return commands;
+    const visible = commands.filter(cmd => !cmd.hidden);
+    if (!search) return visible;
     const query = search.toLowerCase();
-    return commands.filter(cmd => 
+    return visible.filter(cmd => 
       cmd.title.toLowerCase().includes(query) ||
       cmd.description?.toLowerCase().includes(query) ||
       cmd.keywords?.some(k => k.includes(query))
@@ -97,7 +105,7 @@ export function CommandPalette() {
   }, [commands, search]);
 
   const groupedCommands = useMemo(() => {
-    const groups: Record<string, CommandItem[]> = {
+    const groups: Record<string, PaletteCommand[]> = {
       navigation: [],
       action: [],
       settings: []
@@ -108,44 +116,27 @@ export function CommandPalette() {
     return groups;
   }, [filteredCommands]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-      e.preventDefault();
-      setOpen(prev => !prev);
-    }
-    
-    if (!open) return;
-    
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.min(prev + 1, filteredCommands.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && filteredCommands[selectedIndex]) {
-      e.preventDefault();
-      filteredCommands[selectedIndex].action();
-      setOpen(false);
-      setSearch('');
-    } else if (e.key === 'Escape') {
-      setOpen(false);
-      setSearch('');
-    }
-  }, [open, filteredCommands, selectedIndex]);
-
+  // Su window resta SOLO Ctrl+K. Frecce e Invio li gestisce cmdk sul proprio
+  // input: il vecchio listener su window eseguiva il comando selezionato qui
+  // anche quando Invio era premuto in un altro dialog (es. Dashboard).
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setOpen(prev => !prev);
+      }
+    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+  }, []);
 
   useEffect(() => {
-    setSelectedIndex(0);
-  }, [search]);
+    if (!open) setSearch('');
+  }, [open]);
 
-  const executeCommand = (cmd: CommandItem) => {
+  const executeCommand = (cmd: PaletteCommand) => {
     cmd.action();
     setOpen(false);
-    setSearch('');
   };
 
   const categoryLabels: Record<string, string> = {
@@ -154,95 +145,71 @@ export function CommandPalette() {
     settings: t('commandPalette.settings')
   };
 
-  let flatIndex = 0;
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="p-0 gap-0 max-w-lg overflow-hidden">
         <VisuallyHidden.Root>
-          <DialogTitle>Command Palette</DialogTitle>
+          <DialogTitle>{t('globalSearchComp.globalSearch')}</DialogTitle>
         </VisuallyHidden.Root>
-        <div className="flex items-center border-b px-3">
-          <Search className="h-4 w-4 text-muted-foreground mr-2" />
-          <Input
+        {/* Filtro nostro (sottostringa su titolo/descrizione/keyword), cmdk solo per tastiera e selezione */}
+        <Command shouldFilter={false} className="rounded-none bg-transparent text-inherit">
+          <CommandInput
             placeholder={t('commandPalette.placeholder')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border-0 focus-visible:ring-0 h-12 text-base"
+            onValueChange={setSearch}
+            className="h-12 pr-8 text-base"
             autoFocus
           />
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
-            ESC
-          </kbd>
-        </div>
-        
-        <ScrollArea className="max-h-[300px]">
-          {filteredCommands.length === 0 ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              {t('commandPalette.noResults')} &quot;{search}&quot;
-            </div>
-          ) : (
-            <div className="p-2">
-              {Object.entries(groupedCommands).map(([category, items]) => {
+          <CommandList className="p-1">
+            {filteredCommands.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                {t('commandPalette.noResults')} &quot;{search}&quot;
+              </div>
+            ) : (
+              Object.entries(groupedCommands).map(([category, items]) => {
                 if (items.length === 0) return null;
                 return (
-                  <div key={category} className="mb-2">
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      {categoryLabels[category]}
-                    </div>
-                    {items.map((cmd) => {
-                      const currentIndex = flatIndex++;
-                      return (
-                        <button
-                          key={cmd.id}
-                          onClick={() => executeCommand(cmd)}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                            currentIndex === selectedIndex
-                              ? "bg-primary/10 text-primary"
-                              : "hover:bg-muted/50"
+                  <CommandGroup key={category} heading={categoryLabels[category]}>
+                    {items.map((cmd) => (
+                      <CommandItem
+                        key={cmd.id}
+                        value={cmd.id}
+                        onSelect={() => executeCommand(cmd)}
+                        className="group gap-3 px-3 py-2 rounded-lg cursor-pointer"
+                      >
+                        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-muted group-data-[selected=true]:bg-primary/20">
+                          {cmd.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{cmd.title}</div>
+                          {cmd.description && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {cmd.description}
+                            </div>
                           )}
-                        >
-                          <div className={cn(
-                            "flex items-center justify-center h-8 w-8 rounded-lg",
-                            currentIndex === selectedIndex ? "bg-primary/20" : "bg-muted"
-                          )}>
-                            {cmd.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm">{cmd.title}</div>
-                            {cmd.description && (
-                              <div className="text-xs text-muted-foreground truncate">
-                                {cmd.description}
-                              </div>
-                            )}
-                          </div>
-                          {currentIndex === selectedIndex && (
-                            <kbd className="hidden sm:inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">
-                              ↵
-                            </kbd>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        </div>
+                        <kbd className="hidden group-data-[selected=true]:inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">
+                          ↵
+                        </kbd>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
                 );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-        
+              })
+            )}
+          </CommandList>
+        </Command>
+
         <div className="border-t px-3 py-2 flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">↑↓</kbd>
-            <span>navigate</span>
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">↵</kbd>
-            <span>select</span>
+            <span>{t('globalSearchComp.navigate')}</span>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">{t('globalSearchComp.enter')}</kbd>
+            <span>{t('globalSearchComp.open')}</span>
           </div>
           <div className="flex items-center gap-1">
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">Ctrl</kbd>
-            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">K</kbd>
-            <span>open/close</span>
+            <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-2xs">{t('globalSearchComp.ctrlk')}</kbd>
+            <span>{t('globalSearchComp.search')}</span>
           </div>
         </div>
       </DialogContent>

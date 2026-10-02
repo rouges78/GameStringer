@@ -1,64 +1,51 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Play, 
-  Pause, 
-  Square,
   Settings,
-  Download,
   Eye,
   EyeOff,
   Monitor,
   Subtitles,
-  Clock,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import {
   SubtitleConfig,
-  Subtitle,
   DEFAULT_CONFIG,
   STYLE_PRESETS,
   saveConfig,
   loadConfig,
-  saveHistory,
-  loadHistory,
-  generateId,
-  exportToSRT,
-  exportToVTT,
 } from '@/lib/subtitle-overlay';
 import { useTranslation } from '@/lib/i18n';
 
+// La cattura live NON è collegata: nessun OCR/hook alimenta questa pagina.
+// Prima "Avvia cattura" generava ogni 4 s un sottotitolo a caso da 5 frasi
+// fisse, li accumulava nella cronologia e li esportava in SRT/VTT come se
+// fossero stati catturati. Resta l'anteprima dello stile; l'avvio è
+// disabilitato finché non esiste una sorgente vera.
 export function SubtitleOverlay() {
   const { t } = useTranslation();
   const [config, setConfig] = useState<SubtitleConfig>(DEFAULT_CONFIG);
-  const [isActive, setIsActive] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
-  const [history, setHistory] = useState<Subtitle[]>([]);
   const [previewText, setPreviewText] = useState('Hello, how are you?');
   const [previewTranslation, setPreviewTranslation] = useState('Ciao, come stai?');
   const [showPreview, setShowPreview] = useState(true);
   
   const _overlayRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Carica config salvata
   useEffect(() => {
     const saved = loadConfig();
     setConfig(saved);
-    const savedHistory = loadHistory();
-    setHistory(savedHistory);
   }, []);
 
   // Salva config quando cambia
@@ -66,89 +53,10 @@ export function SubtitleOverlay() {
     saveConfig(config);
   }, [config]);
 
-  // Simula ricezione sottotitoli (in produzione verrebbe da OCR/hook)
-  const simulateSubtitle = useCallback(() => {
-    if (!isActive || isPaused) return;
-
-    const samples = [
-      { original: 'Welcome to the game!', translated: 'Benvenuto nel game!' },
-      { original: 'Press any key to continue', translated: 'Premi un tasto per continuare' },
-      { original: 'Loading...', translated: 'Loading...' },
-      { original: 'Game saved successfully', translated: 'game salvato con successo' },
-      { original: 'Are you sure you want to quit?', translated: 'Sei sicuro di voler uscire?' },
-    ];
-
-    const sample = samples[Math.floor(Math.random() * samples.length)];
-    
-    const newSubtitle: Subtitle = {
-      id: generateId(),
-      originalText: sample.original,
-      translatedText: sample.translated,
-      startTime: Date.now(),
-      isVisible: true,
-    };
-
-    setCurrentSubtitle(newSubtitle);
-    setHistory(prev => [...prev, newSubtitle].slice(-50));
-
-    // Auto-hide dopo durata
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      setCurrentSubtitle(prev => prev ? { ...prev, isVisible: false, endTime: Date.now() } : null);
-    }, config.displayDuration);
-
-  }, [isActive, isPaused, config.displayDuration]);
-
-  // Demo mode - genera sottotitoli random
-  useEffect(() => {
-    if (!isActive || isPaused) return;
-    
-    const interval = setInterval(simulateSubtitle, 4000);
-    simulateSubtitle(); // Primo subito
-    
-    return () => clearInterval(interval);
-  }, [isActive, isPaused, simulateSubtitle]);
-
-  const handleStart = () => {
-    setIsActive(true);
-    setIsPaused(false);
-  };
-
-  const handlePause = () => {
-    setIsPaused(!isPaused);
-  };
-
-  const handleStop = () => {
-    setIsActive(false);
-    setIsPaused(false);
-    setCurrentSubtitle(null);
-    saveHistory(history);
-  };
-
   const handlePresetChange = (preset: string) => {
     if (STYLE_PRESETS[preset]) {
       setConfig(prev => ({ ...prev, ...STYLE_PRESETS[preset] }));
     }
-  };
-
-  const handleExportSRT = () => {
-    const srt = exportToSRT(history);
-    downloadFile(srt, 'subtitles.srt', 'text/plain');
-  };
-
-  const handleExportVTT = () => {
-    const vtt = exportToVTT(history);
-    downloadFile(vtt, 'subtitles.vtt', 'text/vtt');
-  };
-
-  const downloadFile = (content: string, filename: string, type: string) => {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -171,35 +79,18 @@ export function SubtitleOverlay() {
           
           {/* Controls */}
           <div className="flex items-center gap-3">
-            {!isActive ? (
-              <Button onClick={handleStart} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white" size="lg">
-                <Play className="h-5 w-5 mr-2" />
-                {t('subtitleOverlay.startCapture')}
-              </Button>
-            ) : (
-              <>
-                <Button onClick={handlePause} variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/20">
-                  {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
-                </Button>
-                <Button onClick={handleStop} variant="outline" className="border-red-400/50 text-red-300 hover:bg-red-500/10 hover:border-red-400" size="lg">
-                  <Square className="h-5 w-5 mr-2" />
-                  {t('subtitleOverlay.stop')}
-                </Button>
-              </>
-            )}
+            <Button disabled variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white" size="lg">
+              <Play className="h-5 w-5 mr-2" />
+              {t('subtitleOverlay.startCapture')}
+            </Button>
           </div>
         </div>
+      </div>
         
-        {/* Status Badge */}
-        {isActive && (
-          <div className="mt-4 flex items-center gap-3">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isPaused ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
-              <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`} />
-              {isPaused ? t('subtitleOverlay.paused') : t('subtitleOverlay.captureActive')}
-            </div>
-            <span className="text-white/60 text-sm">{history.length} {t('subtitleOverlay.subtitlesCaptured')}</span>
-          </div>
-        )}
+      {/* Cattura live non ancora collegata */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <p className="text-sm text-amber-500">{t('subtitleOverlay.notConnected')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -258,7 +149,7 @@ export function SubtitleOverlay() {
                         marginBottom: 2,
                         opacity: 0.8,
                       }}>
-                        {currentSubtitle?.originalText || previewText}
+                        {previewText}
                       </div>
                     )}
                     <div style={{ 
@@ -266,7 +157,7 @@ export function SubtitleOverlay() {
                       color: config.textColor,
                       fontFamily: config.fontFamily,
                     }}>
-                      {currentSubtitle?.translatedText || previewTranslation}
+                      {previewTranslation}
                     </div>
                     {config.showOriginal && config.originalPosition === 'below' && (
                       <div style={{ 
@@ -275,7 +166,7 @@ export function SubtitleOverlay() {
                         marginTop: 2,
                         opacity: 0.8,
                       }}>
-                        {currentSubtitle?.originalText || previewText}
+                        {previewText}
                       </div>
                     )}
                   </div>
@@ -553,70 +444,6 @@ export function SubtitleOverlay() {
           </CardContent>
         </Card>
       </div>
-
-      {/* History & Export */}
-      <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/20">
-                <Clock className="h-4 w-4 text-emerald-400" />
-              </div>
-              <span className="text-emerald-100">{t('subtitleOverlay.history')}</span>
-              <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-300 text-xs">
-                {history.length}
-              </Badge>
-            </span>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExportSRT} 
-                disabled={history.length === 0}
-                className="border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-300"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                SRT
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExportVTT} 
-                disabled={history.length === 0}
-                className="border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-300"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                VTT
-              </Button>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[150px]">
-            {history.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Subtitles className="h-10 w-10 text-emerald-500/30 mb-2" />
-                <p className="text-muted-foreground text-sm">{t('subtitleOverlay.noSubtitlesCaptured')}</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">{t('subtitleOverlay.startCaptureToBegin')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {history.slice().reverse().map(sub => (
-                  <div key={sub.id} className="flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
-                    <span className="text-emerald-400/70 text-xs font-mono w-16 flex-shrink-0">
-                      {new Date(sub.startTime).toLocaleTimeString()}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 truncate">{sub.originalText}</p>
-                      <p className="text-sm text-white truncate">{sub.translatedText}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
     </div>
   );
 }

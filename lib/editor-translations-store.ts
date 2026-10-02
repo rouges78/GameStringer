@@ -14,12 +14,15 @@ export interface EditorTranslationFilter {
 
 type Row = Record<string, unknown>;
 
+// Lettura e scrittura strict: ogni scrittura qui riscrive l'intera lista, quindi
+// una lettura fallita trattata come [] cancellerebbe tutte le stringhe, e una
+// scrittura fallita non deve risultare salvata. Gli errori arrivano al chiamante.
 async function readAll(): Promise<Row[]> {
-  const data = await storageManager.getTranslations();
+  const data = await storageManager.getTranslationsStrict();
   return Array.isArray(data) ? (data as Row[]) : [];
 }
 
-/** Lista i record, filtrati per gioco/stato (client-side). */
+/** Lista i record, filtrati per gioco/stato (client-side). Rigetta se lo store non è leggibile. */
 export async function listEditorTranslations(filter: EditorTranslationFilter = {}): Promise<Row[]> {
   let rows = await readAll();
   if (filter.gameId && filter.gameId !== 'all') rows = rows.filter((r) => r.gameId === filter.gameId);
@@ -27,19 +30,37 @@ export async function listEditorTranslations(filter: EditorTranslationFilter = {
   return rows;
 }
 
-/** Inserisce o aggiorna un record per id. */
+/** Inserisce o aggiorna un record per id. Rigetta se lettura o scrittura falliscono. */
 export async function upsertEditorTranslation(rec: Row): Promise<void> {
-  const rows = await readAll();
-  const idx = rows.findIndex((r) => r.id === rec.id);
-  if (idx >= 0) rows[idx] = { ...rows[idx], ...rec };
-  else rows.push(rec);
-  await storageManager.saveTranslations(rows);
+  await upsertEditorTranslations([rec]);
 }
 
-/** Rimuove un record per id. */
+/**
+ * Inserisce o aggiorna più record per id con una sola lettura e una sola
+ * scrittura (un upsert per record riscriverebbe l'intera lista ogni volta).
+ * Rigetta se lettura o scrittura falliscono: in quel caso lo store non cambia.
+ */
+export async function upsertEditorTranslations(recs: Row[]): Promise<void> {
+  if (recs.length === 0) return;
+  const rows = await readAll();
+  const index = new Map<unknown, number>();
+  rows.forEach((r, i) => { if (!index.has(r.id)) index.set(r.id, i); });
+  for (const rec of recs) {
+    const idx = index.get(rec.id);
+    if (idx !== undefined) {
+      rows[idx] = { ...rows[idx], ...rec };
+    } else {
+      index.set(rec.id, rows.length);
+      rows.push(rec);
+    }
+  }
+  await storageManager.saveTranslationsStrict(rows);
+}
+
+/** Rimuove un record per id. Rigetta se lettura o scrittura falliscono. */
 export async function removeEditorTranslation(id: string): Promise<void> {
   const rows = (await readAll()).filter((r) => r.id !== id);
-  await storageManager.saveTranslations(rows);
+  await storageManager.saveTranslationsStrict(rows);
 }
 
 /** Costruisce il contenuto di export client-side (JSON / CSV / PO minimale). */

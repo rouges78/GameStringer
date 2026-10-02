@@ -10,13 +10,17 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Mic, Play, Pause, Square, Volume2, Languages,
   CheckCircle, AlertCircle, Loader2, FolderOpen, FileAudio,
   BarChart3, Clock
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
-import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult } from '@/lib/voice/dubbing-pipeline';
+import { DubbingPipeline, type DubbingConfig, type DubbingProgress, type DubbingResult, type ScanSummary } from '@/lib/voice/dubbing-pipeline';
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
@@ -56,9 +60,28 @@ export default function DubbingPage() {
 
   // Pipeline state
   const [progress, setProgress] = useState<DubbingProgress | null>(null);
-  const [_result, setResult] = useState<DubbingResult | null>(null);
+  const [result, setResult] = useState<DubbingResult | null>(null);
   const { t } = useTranslation();
   const pipelineRef = useRef<DubbingPipeline | null>(null);
+
+  // Conferma prima delle chiamate a pagamento: la pipeline aspetta questa Promise.
+  // Il riepilogo resta impostato dopo la risposta: durante l'animazione di
+  // chiusura il dialogo mostrerebbe altrimenti "0 file".
+  const [paidConfirm, setPaidConfirm] = useState<ScanSummary | null>(null);
+  const [paidConfirmOpen, setPaidConfirmOpen] = useState(false);
+  const paidConfirmResolveRef = useRef<((ok: boolean) => void) | null>(null);
+
+  const askPaidConfirmation = useCallback((summary: ScanSummary) => new Promise<boolean>(resolve => {
+    paidConfirmResolveRef.current = resolve;
+    setPaidConfirm(summary);
+    setPaidConfirmOpen(true);
+  }), []);
+
+  const answerPaidConfirmation = (ok: boolean) => {
+    paidConfirmResolveRef.current?.(ok);
+    paidConfirmResolveRef.current = null;
+    setPaidConfirmOpen(false);
+  };
 
   const isRunning = progress?.isRunning || false;
 
@@ -100,17 +123,37 @@ export default function DubbingPage() {
     const pipeline = new DubbingPipeline(config);
     pipelineRef.current = pipeline;
 
+    setResult(null);
     toast.info(t('common.aiDubbingAvviato'));
-    const dubbingResult = await pipeline.run(setProgress);
-    setResult(dubbingResult);
+    let declined = false;
+    const dubbingResult = await pipeline.run(setProgress, async (summary) => {
+      const ok = await askPaidConfirmation(summary);
+      declined = !ok;
+      return ok;
+    });
     pipelineRef.current = null;
 
-    if (dubbingResult.success) {
-      toast.success(`Dubbing completato! ${dubbingResult.stats.patched} file audio patchati`);
-    } else {
-      toast.error(`Dubbing completato con ${dubbingResult.stats.errors} errori`);
+    // Conferma rifiutata: nessuna chiamata a pagamento è partita, si torna allo stato iniziale.
+    if (declined) {
+      setProgress(null);
+      toast.info(t('common.dubbingAnnullato'));
+      return;
     }
-  }, [gamePath, gameName, sourceLang, targetLang, ttsProvider, sttProvider, defaultVoice, enableLipSync, enableSubtitles, subtitleFormat, durationMatching]);
+    setResult(dubbingResult);
+
+    // Verde solo se qualcosa è stato davvero patchato, e senza nascondere gli errori.
+    // Un passo fallito (es. lip sync) o rimasto a metà (annullato) non è "completato".
+    const { patched, errors } = dubbingResult.stats;
+    const failedStep = dubbingResult.steps.find(s => s.status === 'failed');
+    const allStepsDone = dubbingResult.steps.every(s => s.status === 'completed');
+    if (dubbingResult.success && errors === 0 && allStepsDone) {
+      toast.success(t('dubbingPage.doneToast').replace('{n}', String(patched)));
+    } else if (dubbingResult.success) {
+      toast.warning(t('dubbingPage.partialToast').replace('{n}', String(patched)).replace('{errors}', String(errors)), { description: failedStep?.error });
+    } else {
+      toast.error(t('dubbingPage.failedToast'), { description: failedStep?.error });
+    }
+  }, [gamePath, gameName, sourceLang, targetLang, ttsProvider, sttProvider, defaultVoice, enableLipSync, enableSubtitles, subtitleFormat, durationMatching, askPaidConfirmation]);
 
   const handlePause = () => pipelineRef.current?.pause();
   const handleResume = () => pipelineRef.current?.resume();
@@ -224,7 +267,8 @@ export default function DubbingPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="openai_whisper">OpenAI Whisper</SelectItem>
-                    <SelectItem value="groq_whisper">{t('dubbingPage.groqWhisper')}</SelectItem>
+                    {/* La pipeline trascrive solo con OpenAI Whisper: Groq non ha ancora un percorso. */}
+                    <SelectItem value="groq_whisper" disabled>{t('dubbingPage.groqWhisperUnavailable')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -263,7 +307,7 @@ export default function DubbingPage() {
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">
-                    {currentStep ? currentStep.name : 'Completato'}
+                    {currentStep ? currentStep.name : paidConfirmOpen ? t('dubbingPage.paidConfirmTitle') : result && !result.success ? t('common.error') : t('common.completato')}
                   </span>
                   <span className="text-sm text-muted-foreground">{overallProgress}%</span>
                 </div>
@@ -293,6 +337,9 @@ export default function DubbingPage() {
                         <span className={`text-sm ${step.status === 'running' ? 'text-purple-300 font-medium' : step.status === 'completed' ? 'text-green-400' : 'text-muted-foreground'}`}>
                           {step.name}
                         </span>
+                        {step.status === 'failed' && step.error && (
+                          <p className="text-xs text-red-400 truncate" title={step.error}>{step.error}</p>
+                        )}
                       </div>
 
                       {step.status === 'running' && (
@@ -385,6 +432,26 @@ export default function DubbingPage() {
           )}
         </div>
       </div>
+
+      {/* Conferma costi: ogni file trovato è una trascrizione a pagamento */}
+      <AlertDialog open={paidConfirmOpen} onOpenChange={(open) => { if (!open) answerPaidConfirmation(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dubbingPage.paidConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dubbingPage.paidConfirmDesc')
+                .replace('{count}', String(paidConfirm?.fileCount ?? 0))
+                .replace('{size}', ((paidConfirm?.totalBytes ?? 0) / (1024 * 1024)).toFixed(1))}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('dubbingPage.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => answerPaidConfirmation(true)}>
+              {t('dubbingPage.paidConfirmProceed').replace('{count}', String(paidConfirm?.fileCount ?? 0))}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

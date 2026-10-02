@@ -4,6 +4,20 @@
  */
 
 import { clientLogger } from '@/lib/client-logger';
+import { getApiKeys } from '@/lib/ai/ai-translate-direct';
+import { persistSettingsToDisk } from '@/lib/settings-persistence';
+
+/**
+ * Le chiavi voce vivono nello store centrale delle Impostazioni
+ * (`gameStringerSettings.voice.*`, idratato dal disco da SettingsBootGate), lo
+ * stesso letto da getApiKeys(). Prima stavano solo in memoria: quelle inserite in
+ * /voice-clone si perdevano al riavvio e /dubbing non ne riceveva nessuna.
+ */
+const SETTINGS_KEY = 'gameStringerSettings';
+const VOICE_KEY_FIELDS: Record<string, string> = {
+  openai: 'openaiKey',
+  elevenlabs: 'elevenlabsKey',
+};
 
 export interface VoiceProfile {
   id: string;
@@ -127,10 +141,29 @@ class VoiceCloneService {
 
   setApiKey(provider: string, key: string) {
     this.apiKeys[provider] = key;
+    const field = VOICE_KEY_FIELDS[provider];
+    if (!field || typeof window === 'undefined') return;
+    try {
+      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      settings.voice = { ...(settings.voice || {}), [field]: key };
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      void persistSettingsToDisk();
+    } catch (e: unknown) {
+      clientLogger.warn('[VoiceClone] Could not persist API key:', String(e));
+    }
   }
 
   getApiKey(provider: string): string | undefined {
-    return this.apiKeys[provider];
+    if (this.apiKeys[provider]) return this.apiKeys[provider];
+    const field = VOICE_KEY_FIELDS[provider];
+    if (!field || typeof window === 'undefined') return undefined;
+    try {
+      const settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+      const voiceKey = settings?.voice?.[field];
+      if (voiceKey) return voiceKey;
+    } catch { /* blob corrotto: si ripiega sulle chiavi di traduzione */ }
+    // OpenAI: la stessa chiave che Impostazioni salva per la traduzione.
+    return provider === 'openai' ? getApiKeys().openai || undefined : undefined;
   }
 
   getProfiles(): VoiceProfile[] {
@@ -178,7 +211,7 @@ class VoiceCloneService {
   }
 
   private async cloneWithElevenLabs(request: CloneRequest): Promise<VoiceProfile> {
-    const apiKey = this.apiKeys['elevenlabs'];
+    const apiKey = this.getApiKey('elevenlabs');
     if (!apiKey) {
       throw new Error('API key ElevenLabs non configurata');
     }
@@ -322,7 +355,7 @@ class VoiceCloneService {
   }
 
   private async synthesizeWithOpenAI(request: SynthesisRequest): Promise<SynthesisResult> {
-    const apiKey = this.apiKeys['openai'];
+    const apiKey = this.getApiKey('openai');
     if (!apiKey) {
       throw new Error('API key OpenAI non configurata');
     }
@@ -360,7 +393,7 @@ class VoiceCloneService {
   }
 
   private async synthesizeWithElevenLabs(request: SynthesisRequest): Promise<SynthesisResult> {
-    const apiKey = this.apiKeys['elevenlabs'];
+    const apiKey = this.getApiKey('elevenlabs');
     if (!apiKey) {
       throw new Error('API key ElevenLabs non configurata');
     }
@@ -408,8 +441,8 @@ class VoiceCloneService {
   }
 
   private async synthesizeWithAzure(request: SynthesisRequest): Promise<SynthesisResult> {
-    const apiKey = this.apiKeys['azure'];
-    const region = this.apiKeys['azure_region'] || 'westeurope';
+    const apiKey = this.getApiKey('azure');
+    const region = this.getApiKey('azure_region') || 'westeurope';
     
     if (!apiKey) {
       throw new Error('API key Azure non configurata');

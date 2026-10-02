@@ -14,7 +14,9 @@ import { translateSingleSmart, translateWithFallback } from '@/lib/ai/ai-transla
 import { clientLogger } from '@/lib/client-logger';
 import { ollamaFetch } from '@/lib/ai/ollama-http';
 import { TARGET_LANGUAGES } from '@/lib/translation/target-languages';
+import { isOcrLanguageMissing, toOverlayTexts, OCR_OVERLAY_TEXTS_EVENT } from '@/lib/ocr-overlay-payload';
 
+// Niente `confidence`: Windows OCR non la fornisce (il backend mandava 0.9 fisso).
 interface DetectedText {
   text: string;
   translated?: string | null;
@@ -22,14 +24,12 @@ interface DetectedText {
   y?: number;
   width?: number;
   height?: number;
-  confidence: number;
 }
 
 interface OcrConfig {
   language: string;
   target_language: string;
   capture_interval_ms: number;
-  min_confidence: number;
   region: { x: number; y: number; width: number; height: number } | null;
   target_window: number | null;
 }
@@ -58,7 +58,6 @@ export default function OcrTranslatorPage() {
     language: 'ja',
     target_language: 'it',
     capture_interval_ms: 500,
-    min_confidence: 0.5,
     region: null,
     target_window: null,
   });
@@ -88,6 +87,10 @@ export default function OcrTranslatorPage() {
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'vlm' | 'gemini'>('libre');
+  // L'autostart gira in una closure del primo render: legge il provider da qui,
+  // non dallo stato, che lì resterebbe fermo a 'libre'.
+  const ocrProviderRef = useRef(ocrProvider);
+  useEffect(() => { ocrProviderRef.current = ocrProvider; }, [ocrProvider]);
   const [ollamaModel, setOllamaModel] = useState('deepseek-ocr');
   const [lastTranslationTime, setLastTranslationTime] = useState(0);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -125,6 +128,18 @@ export default function OcrTranslatorPage() {
     } catch {}
   };
 
+  // L'overlay copre l'area che l'OCR legge — regione, finestra del gioco o
+  // monitor principale — perché le coordinate dei testi sono relative a quella.
+  const openOverlay = async (cfg: OcrConfig) => {
+    await invoke('toggle_ocr_overlay', { show: true, region: cfg.region });
+    setOverlayOpen(true);
+    // Il VLM cattura lo schermo (capture_screen_region), non la finestra:
+    // le sue coordinate sono relative al monitor, non alla finestra del gioco.
+    if (cfg.target_window && ocrProviderRef.current !== 'vlm') {
+      await invoke('position_overlay_on_window', { hwnd: cfg.target_window });
+    }
+  };
+
   // ── Auto-routing dalla pagina del gioco (RPG Maker classico) ──
   // Deep-link: /ocr-translator?game=<nome>&src=ja&tgt=it&autostart=1
   // Pre-seleziona la finestra del gioco e, se autostart, avvia OCR + overlay.
@@ -153,7 +168,6 @@ export default function OcrTranslatorPage() {
         language: src || 'ja',
         target_language: tgt || 'it',
         capture_interval_ms: 500,
-        min_confidence: 0.5,
         region: null,
         target_window: match ? match.hwnd : null,
       };
@@ -166,16 +180,23 @@ export default function OcrTranslatorPage() {
       if (!auto) return;
 
       try {
-        await invoke('start_ocr_translator', { config: nextCfg });
+        // Come in toggleOcr: il VLM non usa il loop OCR di Windows, e un
+        // language pack mancante non deve bloccarne l'avvio.
+        if (ocrProviderRef.current !== 'vlm') {
+          await invoke('start_ocr_translator', { config: nextCfg });
+        }
         setIsRunning(true);
         toast.success(t('ocrTranslator.liveOcrStarted'));
         try {
-          await invoke('toggle_ocr_overlay', { show: true });
-          setOverlayOpen(true);
-          await invoke('position_overlay_on_window', { hwnd: match.hwnd });
-        } catch { /* overlay opzionale */ }
+          await openOverlay(nextCfg);
+        } catch (e: unknown) {
+          // overlay opzionale
+          clientLogger.warn('[OCR] Overlay non aperto', e);
+        }
       } catch (e: unknown) {
-        toast.error(`OCR: ${e}`);
+        toast.error(isOcrLanguageMissing(e)
+          ? t('ocrTranslator.languagePackMissing').replace('{lang}', nextCfg.language)
+          : `OCR: ${e}`);
       }
     })();
 
@@ -293,7 +314,6 @@ export default function OcrTranslatorPage() {
             setDetectedTexts([{
               text: 'Immagine analizzata (VLM)',
               translated: translated,
-              confidence: 1.0,
               x: 50,
               y: 50,
               width: capture.width - 100,
@@ -357,6 +377,20 @@ export default function OcrTranslatorPage() {
     };
   }, [isRunning, ocrProvider, config.language, config.target_language, geminiApiKey]);
 
+  // L'overlay ascolta `ocr-translations`: senza questo invio si apriva e
+  // restava vuoto. Vale anche per il VLM, che riempie detectedTexts da sé.
+  useEffect(() => {
+    if (!overlayOpen) return;
+    (async () => {
+      try {
+        const { emit } = await import('@tauri-apps/api/event');
+        await emit(OCR_OVERLAY_TEXTS_EVENT, toOverlayTexts(detectedTexts));
+      } catch (e: unknown) {
+        clientLogger.warn('[OCR] Invio testi all\'overlay non riuscito', e);
+      }
+    })();
+  }, [detectedTexts, overlayOpen]);
+
   const toggleOcr = async () => {
     try {
       if (isRunning) {
@@ -371,12 +405,18 @@ export default function OcrTranslatorPage() {
           toast.info(t('ocrTranslator.stopCapture'));
         }
       } else {
-        await invoke('start_ocr_translator', { config });
+        // Il VLM cattura e legge da sé: il loop OCR di Windows lavorerebbe a
+        // vuoto, e un language pack mancante non deve bloccarlo.
+        if (ocrProvider !== 'vlm') {
+          await invoke('start_ocr_translator', { config });
+        }
         setIsRunning(true);
         toast.success(t('ocrTranslator.startCapture'));
       }
     } catch (e: unknown) {
-      toast.error(`Error: ${e}`);
+      toast.error(isOcrLanguageMissing(e)
+        ? t('ocrTranslator.languagePackMissing').replace('{lang}', config.language)
+        : `Error: ${e}`);
     }
   };
 
@@ -734,19 +774,6 @@ export default function OcrTranslatorPage() {
                     className="w-full accent-blue-500"
                   />
                 </div>
-                <div>
-                  <div className="flex justify-between text-xs mb-2">
-                    <span>{t('ocrTranslator.minConfidenceLabel')}</span>
-                    <span className="font-mono">{Math.round(config.min_confidence * 100)}%</span>
-                  </div>
-                  <input 
-                    type="range" min="30" max="90" step="5"
-                    value={config.min_confidence * 100}
-                    onChange={(e) => setConfig({...config, min_confidence: Number(e.target.value) / 100})}
-                    disabled={isRunning}
-                    className="w-full accent-blue-500"
-                  />
-                </div>
               </div>
             )}
           </div>
@@ -777,9 +804,14 @@ export default function OcrTranslatorPage() {
               <Button 
                 onClick={async () => {
                   try {
-                    await invoke('toggle_ocr_overlay', { show: !overlayOpen });
-                    setOverlayOpen(!overlayOpen);
-                    toast.success(overlayOpen ? t('ocrTranslator.overlayClosed') : t('ocrTranslator.overlayOpened'));
+                    if (overlayOpen) {
+                      await invoke('toggle_ocr_overlay', { show: false });
+                      setOverlayOpen(false);
+                      toast.success(t('ocrTranslator.overlayClosed'));
+                    } else {
+                      await openOverlay(config);
+                      toast.success(t('ocrTranslator.overlayOpened'));
+                    }
                   } catch (e: unknown) {
                     toast.error(`error overlay: ${e}`);
                   }

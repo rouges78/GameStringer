@@ -60,26 +60,20 @@
   "customPromptSettings": {
     "settingsSaved": "Настройки Custom Prompt сохранены",
     "settingsReset": "Настройки сброшены",
-    "title": "Свой промпт и голос",
     "newBadge": "Новое 2026",
     "subtitle": "Настройте поведение провайдера LLM с помощью персоны, тона и пользовательского промпта",
     "enableCustomPrompt": "Включить Custom Prompt",
-    "enableDesc": "Добавляет пользовательские инструкции ко всем переводам",
     "personaRole": "Персона / Роль",
     "personaDesc": "Переводить, как если бы вы были этим персонажем",
     "toneStyle": "Тон / Стиль",
     "customPrompt": "Пользовательский промпт",
     "customPromptDesc": "Дополнительные инструкции, которые будут добавлены к системному промпту",
-    "deeplVoiceApi": "DeepL Voice API",
-    "voiceDesc": "Голосовой перевод в реальном времени (40+ языков)",
-    "ttsVoice": "Голос TTS",
-    "preserveVoice": "Сохранять характеристики оригинального голоса",
-    "preserveVoiceDesc": "Сохраняет тон, акценты и стиль оригинального голоса (бета)",
     "preview": "Предпросмотр:",
     "reset": "Сбросить",
     "personaPh": "Выберите персону...",
     "tonePh": "Выберите тон...",
-    "customPromptPh": "Например: используй архаичную лексику, говори формально, используй фэнтезийные термины..."
+    "customPromptPh": "Например: используй архаичную лексику, говори формально, используй фэнтезийные термины...",
+    "enableDescCloud": "Добавляет ваши инструкции к переводам облачных ИИ-провайдеров (Gemini, OpenAI, Claude, DeepSeek, Groq, Mistral…). Локальные модели (Ollama, LM Studio) и движки вроде DeepL их не используют."
   },
   "lipSyncPanel": {
     "title": "Синхронизация губ (Rhubarb)",
@@ -153,7 +147,6 @@
     "voiceProvider": "Голос и провайдер",
     "defaultVoice": "Голос по умолчанию",
     "sttEngine": "Движок STT",
-    "groqWhisper": "Groq Whisper (быстрый)",
     "durationMatching": "Подгонка длительности",
     "lipSync": "Синхронизация губ (Rhubarb)",
     "generateSubtitles": "Создать субтитры",
@@ -161,7 +154,17 @@
     "errors": "Ошибки",
     "confidence": "Уверенность",
     "audioSegments": "Аудиосегменты",
-    "selectFolderPrompt": "Выберите папку игры, чтобы начать автоматический дубляж. Будет выполнен пайплайн: сканирование аудио → транскрипция Whisper → перевод AI → синтез голоса → патчинг аудиофайлов."
+    "selectFolderPrompt": "Выберите папку игры, чтобы начать автоматический дубляж. Будет выполнен пайплайн: сканирование аудио → транскрипция Whisper → перевод AI → синтез голоса → патчинг аудиофайлов.",
+    "doneToast": "Озвучка завершена: заменено аудиофайлов: {n}",
+    "partialToast": "Озвучка выполнена частично: заменено аудиофайлов: {n}, ошибок: {errors}",
+    "failedToast": "Ни один аудиофайл не был заменён",
+    "paidConfirmTitle": "Подтвердите платную транскрипцию",
+    "paidConfirmDesc": "В папке игры найдено аудиофайлов: {count} ({size} МБ), включая музыку и звуковые эффекты. Транскрипция отправляет каждый файл в сервис распознавания речи: один платный запрос на файл, оплачиваемый по вашему API-ключу. Для файлов с речью затем также используются платный перевод и синтез речи.",
+    "paidConfirmProceed": "Транскрибировать файлы: {count}",
+    "patchFormatMismatch": "Несовпадение формата: синтезированное аудио ({actual}) не соответствует файлу игры (.{expected}). Конвертация аудио недоступна, поэтому файл не изменён.",
+    "unknownAudioFormat": "неизвестный формат",
+    "noCompatibleAudio": "Ни один из {count} аудиофайлов не в формате MP3. Синтез речи выдаёт MP3, а конвертация аудио недоступна, поэтому ни один файл игры нельзя заменить. В платные сервисы ничего не отправлено.",
+    "groqWhisperUnavailable": "Groq Whisper (пока недоступно)"
   },
   "fileSelector": {
     "fromWizard": "Из Translation Wizard",
@@ -615,41 +618,11 @@
     "enterCurrentPassword": "Введите текущий пароль",
     "passwordMinLength": "Новый пароль должен содержать не менее 4 символов",
     "passwordChanged": "Пароль успешно изменён!",
-    "invalidCode": "Неверный код",
-    "twoFaDisabledMsg": "Двухфакторная аутентификация отключена",
-    "enter6DigitCode": "Введите 6-значный код",
-    "twoFaEnabledMsg": "Двухфакторная аутентификация включена!",
     "passwordsDontMatch": "Пароли не совпадают",
-    "passwordTab": "Пароль",
-    "sessionsTab": "Сеансы",
-    "activityTab": "Активность",
     "changePassword": "Изменить пароль",
     "changePasswordDesc": "Изменить пароль вашего профиля",
     "passwordsMatch": "Пароли совпадают",
-    "sessionManagement": "Управление сессиями",
-    "sessionMgmtDesc": "Настройте таймаут и автоблокировку",
-    "disconnectAfterInactivity": "Отключать после бездействия",
-    "min15": "15 минут",
-    "min30": "30 минут",
-    "hour1": "1 час",
-    "hours2": "2 часа",
-    "requirePassword": "Требовать пароль после бездействия",
-    "min5": "5 минут",
-    "min10": "10 минут",
-    "notifyNewLogins": "Уведомлять о новых входах",
-    "disconnectAll": "Отключить все сессии",
-    "twoFactorAuth": "Двухфакторная аутентификация",
-    "addExtraSecurity": "Добавьте дополнительный уровень защиты",
-    "protectAccount": "Защитите свой аккаунт вторым фактором аутентификации",
-    "configure2fa": "Настроить 2FA",
-    "saveInAuthApp": "Сохраните его в приложении-аутентификаторе (Google Authenticator, Authy и т.д.)",
-    "cancel": "Отмена",
-    "verify": "Подтвердить",
-    "twoFaActive": "2FA активна",
-    "accountProtected": "Ваш аккаунт защищён",
-    "disable2fa": "Отключить 2FA",
-    "activityHistory": "История активности",
-    "recentActivity": "Недавние входы и изменения"
+    "passwordChangeFailed": "Пароль не изменён. Проверьте, что текущий пароль указан верно."
   },
   "coverPicker": {
     "chooseCoverFor": "Выбрать обложку для",
@@ -791,7 +764,9 @@
     "toClipboard": "В буфер обмена",
     "backToEditorAria": "Назад к редактору",
     "backToEditor": "Назад к редактору",
-    "translationPh": "Перевод..."
+    "translationPh": "Перевод...",
+    "cpkBuildUnavailable": "Недоступно для этих файлов",
+    "cpkBuildUnavailableReason": "Пропатченный CPK для файлов {formats} пока создать нельзя: в GameStringer нет модуля, который восстанавливает их исходную структуру, а запись переводов обратно как обычного текста сломает игру. Экспортируйте в CSV или PO."
   },
   "translationWizard": {
     "renderError": "Ошибка рендеринга",
@@ -1054,7 +1029,6 @@
     "more": "Ещё",
     "moreTooltip": "Другие инструменты (P.T. Rank, Dry Run, Имена БД)",
     "alreadyRunning": "Перевод уже выполняется в фоне.",
-    "advancedParams": "Расширенные параметры (температура, токены, пакет)",
     "stepScan": "Сканирование game.veb",
     "stepExtract": "Извлечение строк",
     "stepTranslateCloud": "ИИ-перевод (Облако)",
@@ -1094,7 +1068,13 @@
     "pakAesSaved": "Ключ сохранён. Запустите String it! ещё раз, чтобы повторить попытку.",
     "pakAesWrong": "Сохранённый ключ не открывает этот pak. Вставьте другой или удалите сохранённый.",
     "pakAesClear": "Удалить сохранённый ключ",
-    "pakAesCleared": "Ключ удалён."
+    "pakAesCleared": "Ключ удалён.",
+    "pageRouteDetected": "Обнаружена игра {engine}",
+    "pageRouteMsg": "У {engine} нет автоматического конвейера в String it!: используйте специальный {tool} для перевода этой игры.",
+    "pageRouteToast": "{engine}: откройте {tool}",
+    "pageRouteOpen": "Открыть {tool}",
+    "gmRestored": "Патч GameMaker не удался: исходные файлы игры восстановлены из резервной копии.",
+    "gmRestoreFailed": "Патч GameMaker не удался, и резервную копию восстановить не получилось: проверьте файлы игры (или проверьте их целостность в Steam) перед запуском."
   },
   "autoTranslatePage": {
     "identical": "идентичных",
@@ -1290,7 +1270,16 @@
     "wait25MinutesAndClick": "Подождите 25 минут и нажмите",
     "configureAnAiProviderGeminiDee": "Настройте AI-провайдера (Gemini, DeepSeek и т.д.) в",
     "tpLogProjectSaved": "Проект обновлён: {count} строк сохранено в Проектах (продолжить, экспортировать или опубликовать оттуда)",
-    "tpLogProjectSaveFailed": "Патч применён, но регистрация проекта не удалась: {err}"
+    "tpLogProjectSaveFailed": "Патч применён, но регистрация проекта не удалась: {err}",
+    "bgJobNotFound": "Результаты этого фонового перевода больше недоступны.",
+    "gamePathUnknown": "Папка установки этой игры не найдена. Загрузите файлы вручную или откройте игру из Библиотеки.",
+    "libraryLoadFailed": "Не удалось загрузить библиотеку игр.",
+    "pickInstalledGame": "Или выберите установленную игру:",
+    "pickGamePlaceholder": "Выберите игру…",
+    "noInstalledGames": "В библиотеке не найдено установленных игр.",
+    "noStringsTranslated": "Ни одна строка не переведена",
+    "noStringsTranslatedDesc": "Перевод завершился, не переведя ни одной строки. Загруженные файлы на месте — можно повторить.",
+    "nothingToTranslate": "В загруженных файлах нет текста для перевода."
   },
   "aiPipelinePage": {
     "title": "ИИ Конвейер Перевода",
@@ -1390,7 +1379,10 @@
     "japanese": "Японский",
     "chinese": "Китайский",
     "korean": "Корейский",
-    "impostazioniPerLestrazioneAuto": "Настройки для автоматического извлечения и внедрения в промпт"
+    "impostazioniPerLestrazioneAuto": "Настройки для автоматического извлечения и внедрения в промпт",
+    "noGameTexts": "Для этой игры и целевого языка не найдено сохранённых строк. Сначала переведите игру, затем извлеките термины из её настоящих текстов.",
+    "gameTextsAvailable": "Источник: {count} сохранённых строк этой игры (в ИИ отправляется репрезентативная выборка).",
+    "noGlossaryForGame": "У этой игры ещё нет глоссария: создайте его, чтобы управлять терминами."
   },
   "visualNovelPage": {
     "title": "Патчер Визуальных Новелл",
@@ -1708,7 +1700,18 @@
     "translationMemory": "Память Переводов",
     "selectString": "Выберите строку из списка",
     "noSelection": "Нет выбора",
-    "traduciUnGiocoConNeuralTransla": "Переведите игру с помощью Neural Translator, чтобы начать заполнять её здесь."
+    "traduciUnGiocoConNeuralTransla": "Переведите игру с помощью Neural Translator, чтобы начать заполнять её здесь.",
+    "deepLinkNoData": "В Редакторе пока нет переводов для «{game}»",
+    "fileLoadedDesc": "{file} - найдено строк: {n}",
+    "fileLoadedDescMulti": "{file} - строк: {n} (обнаружен многоязычный файл)",
+    "partialLoadedTitle": "Частичные результаты загружены",
+    "partialLoadedDesc": "Переведено строк: {done}/{total} ({game})",
+    "savedStringsFile": "Сохранённые строки",
+    "savedDictionaryFailed": "Сохранено в Редакторе, но не в словаре игры",
+    "aiNoProvider": "Ни один провайдер перевода не ответил: строка не переведена. Проверьте API-ключи и активных провайдеров в Настройках.",
+    "aiTranslated": "Переведено с помощью {provider}",
+    "aiTranslateFailed": "Не удалось выполнить AI-перевод",
+    "savedLinesDesc": "Сохранено переводов: {n}"
   },
   "binaryPatcherPage": {
     "selectExeDll": "Выберите .exe или .dll игры для извлечения переводимых строк",
@@ -1740,7 +1743,14 @@
     "offlineDict": "Оффлайн словарь — быстро, базовое качество",
     "aiPreset": "Пресет ИИ:",
     "allCategories": "Все категории",
-    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL и другие — высшее качество"
+    "geminiDeepseekOpenaiOllamaDeep": "Gemini, DeepSeek, OpenAI, Ollama, DeepL и другие — высшее качество",
+    "readBinaryFailed": "Не удалось прочитать бинарный файл побайтово ({error}). Файлы больше 50 МБ нельзя загрузить из папки игры.",
+    "patchNothingApplied": "Ни один перевод не удалось записать в бинарный файл, поэтому файл не сохранён.",
+    "patchSaved": "Пропатченный файл сохранён: записано строк — {patched}",
+    "patchSkippedErrors": "Не записано переводов: {n} (не совпадает длина в байтах или исходный текст)",
+    "backupKept": "Резервная копия заменённого файла: {path}",
+    "backupFailed": "Не удалось создать резервную копию заменяемого файла, поэтому ничего не записано: {error}",
+    "patchSaveFailed": "Не удалось сохранить пропатченный файл: {error}"
   },
   "advancedToolsPage": {
     "title": "Продвинутые Инструменты",
@@ -1772,14 +1782,10 @@
     "communityHubSupabase": "Community Hub — бэкенд Supabase",
     "communityHubShort": "Community Hub",
     "temperatureLabel": "Температура:",
-    "maxTokensLabel": "Макс. токенов:",
-    "batchSizeLabel": "Размер пакета:",
     "copyToSeeAll": "\\n\\n... (скопируйте, чтобы увидеть всё)",
     "gbTotal": "ГБ всего",
     "diskUsed": "использовано",
     "gbAvailable": "ГБ доступно",
-    "rssFeedAdded": "RSS-лента добавлена",
-    "feedRemoved": "Лента удалена",
     "lmStudioDesc": "LM Studio — это настольное приложение для запуска локальных LLM с API, совместимым с OpenAI. Бесплатно, ключ API не нужен.",
     "autoDetectFromServer": "Автоопределение с сервера",
     "lmStudioDownload1": "Скачайте LM Studio с ",
@@ -1798,9 +1804,6 @@
     "deepl500k": "500К символов/месяц бесплатно — ",
     "qwen1m": "1М токенов/месяц бесплатно, лучший многоязычный — ",
     "rssFeedDashboard": "Панель RSS-лент",
-    "rssDesc": "Настройте RSS-ленты для отображения в бегущей строке панели",
-    "feedNamePlaceholder": "Название ленты (напр. Steam News)",
-    "feedUrlPlaceholder": "URL RSS-ленты",
     "noFeeds": "Ленты не настроены. Добавьте RSS-ленту, чтобы начать.",
     "restoreDefaults": "Восстановить значения по умолчанию",
     "fontSmall": "Маленький (14px)",
@@ -1848,7 +1851,10 @@
     "git": "Git:",
     "branch": "Ветка:",
     "ollamaUrlLabel": "Адрес сервера Ollama",
-    "ollamaUrlHint": "Оставьте пустым для автоопределения. Заполните, если Ollama работает на другом порту, в WSL/Docker или на другом компьютере (напр. http://192.168.1.5:11434)."
+    "ollamaUrlHint": "Оставьте пустым для автоопределения. Заполните, если Ollama работает на другом порту, в WSL/Docker или на другом компьютере (напр. http://192.168.1.5:11434).",
+    "temperatureSection": "Расширенные параметры (температура)",
+    "temperatureScope": "Используется облачными ИИ-провайдерами (Gemini, OpenAI, DeepSeek, Groq, Mistral, Cohere, OpenRouter, Together, Fireworks, Cerebras, Qwen). Claude использует своё значение по умолчанию. У Ollama своя температура: Ollama / AI → Расширенные функции.",
+    "rssNewsDesc": "Выберите, из каких источников берутся новости на панели. Это тот же список, что и на странице «Управление лентами новостей»."
   },
   "translatorProPage": {
     "subtitle": "Продвинутый нейронный перевод с многошаговым конвейером",
@@ -1911,7 +1917,22 @@
     "applyInstalling": "Установка патчера...",
     "applyApplying": "Применение...",
     "applied": "Применено!",
-    "applyToGame": "Применить к игре"
+    "applyToGame": "Применить к игре",
+    "applyResult": {
+      "allTitle": "Перевод применён к игре",
+      "partialTitle": "Перевод применён лишь частично",
+      "noneTitle": "В игру ничего не записано",
+      "written": "записан",
+      "failed": "не записан: {error}",
+      "unknownLocation": "не записан: исходное расположение в игре неизвестно",
+      "notLanguageFile": "не записан: это не языковой файл игры",
+      "noEntries": "не записан: нет переведённых строк для словаря",
+      "languageHint": "Выберите новый язык в настройках игры.",
+      "xunityHint": "{n} переводов в словаре XUnity. Запустите игру!",
+      "patcherFailed": "Не удалось установить XUnity AutoTranslator: {error}",
+      "manualHint": "Для незаписанных файлов используйте «Скачать всё» и скопируйте их вручную."
+    },
+    "patchSavedTo": "Пакет перевода сохранён в:"
   },
   "loggingDashboardComp": {
     "loggingDashboard": "Панель логов",
@@ -2103,40 +2124,21 @@
   },
   "translationStatsWidgetComp": {
     "traduzioni": "Переводы",
-    "stringhe": "Строки",
-    "parole": "Слова",
-    "progress": "Прогресс",
     "oggi": "Сегодня",
     "settimana": "Неделя",
     "mese": "Месяц",
-    "completati": "Завершённые",
-    "inCorso": "В процессе",
     "totali": "Всего",
     "title": "Статистика переводов",
-    "tradotte": "переведено",
-    "elaborate": "обработано",
-    "medio": "в среднем",
     "weeklyActivity": "Активность за неделю",
-    "estimatedTimeRemaining": "Оставшееся время",
     "targetLanguages": "Целевые языки",
-    "noTranslationsYet": "Переводов пока нет"
+    "noTranslationsYet": "Переводов пока нет",
+    "noLanguageData": "Для этих переводов не записан целевой язык",
+    "activityOverview": "Обзор вашей переводческой активности"
   },
   "securityDialogComp": {
     "currentPassword": "Текущий пароль",
     "newPassword": "Новый пароль",
-    "confirmPassword": "Подтвердите пароль",
-    "timeoutSessione": "Тайм-аут сессии",
-    "never": "Никогда",
-    "autoLock": "Автоблокировка",
-    "timeoutBlocco": "Тайм-аут блокировки",
-    "notificheLogin": "Уведомления о входе",
-    "active": "Активно",
-    "inactive": "Неактивно",
-    "yourSecretCode": "Ваш секретный код:",
-    "enterVerificationCode": "Введите код подтверждения",
-    "enterCodeToDisable": "Введите код для отключения",
-    "demoUsa123456": "Демо: используйте 123456",
-    "noActivityRecorded": "Активность не зафиксирована"
+    "confirmPassword": "Подтвердите пароль"
   },
   "visualTranslationEditorComp": {
     "originale": "Оригинал",
@@ -2287,7 +2289,8 @@
     "reviewNotesPlaceholder": "Добавьте заметки о проверке...",
     "approve": "Одобрить",
     "saveChanges": "Сохранить изменения",
-    "exportResults": "Экспортировать результаты"
+    "exportResults": "Экспортировать результаты",
+    "emptyTranslationCannotApprove": "ИИ не вернул перевод для этой строки, поэтому её нельзя одобрить. Впишите перевод сами (Редактировать) или отклоните строку."
   },
   "pixelFontPreviewComp": {
     "pixelFontPreview": "Предпросмотр пиксельного шрифта",
@@ -2470,7 +2473,8 @@
     "personalizzaTema": "Настроить тему",
     "scegliOCreaIlTuoTemaPersonaliz": "Выберите или создайте свою тему",
     "iTuoiTemiSalvati": "Ваши сохранённые темы",
-    "anteprima": "Предпросмотр"
+    "anteprima": "Предпросмотр",
+    "altriTemi": "Другие темы"
   },
   "errorBoundaryComp": {
     "errorId": "ID ошибки:",
@@ -2493,7 +2497,9 @@
     "importTranslations": "Импорт переводов",
     "game": "Игра",
     "translationFile": "Файл перевода",
-    "detectedFileFormat": "Обнаруженный формат файла:"
+    "detectedFileFormat": "Обнаруженный формат файла:",
+    "importResult": "Импортировано переводов: {n} из {total}",
+    "noValidRows": "Ни в одной строке нет одновременно исходного текста и перевода"
   },
   "globalProgressWidgetComp": {
     "progressoGlobale": "Общий прогресс",
@@ -2588,7 +2594,8 @@
   },
   "profileManagerComp": {
     "activeProfile": "Активный профиль",
-    "chiudi": "Закрыть"
+    "chiudi": "Закрыть",
+    "avatarUpdated": "Аватар обновлён"
   },
   "nav": {
     "dashboard": "Панель",
@@ -2752,7 +2759,15 @@
     "buildDate": "Дата сборки",
     "gitHash": "Git хэш",
     "branch": "Ветка",
-    "unsavedChanges": "Несохранённые изменения"
+    "unsavedChanges": "Несохранённые изменения",
+    "temperatureTooltipHighCapped": "0.8-1.0: Более творческий, может отклоняться от оригинала",
+    "autoBackupConfigSaved": "Настройки автобэкапа сохранены",
+    "backupDone": "Бэкап завершён",
+    "backupDoneDesc": "Сохранено файлов: {n} ({size})",
+    "backupFailed": "Не удалось выполнить бэкап",
+    "restoreDone": "Восстановление завершено",
+    "restoreDoneDesc": "Восстановлено элементов: {n}",
+    "restoreFailed": "Не удалось восстановить"
   },
   "common": {
     "loading": "Загрузка...",
@@ -3551,7 +3566,10 @@
     "play": "Воспроизвести",
     "ltWindow": "Окно",
     "ltPickWindow": "Выберите окно",
-    "ltNoWindow": "Окно не найдено"
+    "ltNoWindow": "Окно не найдено",
+    "suggestionsGeneratedFor": "Предложения сгенерированы для переводов: {n}",
+    "originalsCopiedCount": "Скопировано исходных текстов: {n}",
+    "translationsPastedCount": "Вставлено переводов: {n}"
   },
   "languages": {
     "cs": "Čeština",
@@ -3675,7 +3693,15 @@
     "passwordResetSuccess": "Ваш пароль успешно сброшен",
     "historyCleared": "История активности очищена",
     "disconnectedAll": "Отключено от всех остальных сеансов",
-    "thisProfile": "этот профиль"
+    "thisProfile": "этот профиль",
+    "recoveryUnavailableTitle": "Этот пароль нельзя сбросить",
+    "recoveryUnavailableDesc": "Профиль зашифрован своим паролем, и GameStringer не хранит никакого другого ключа, способного его разблокировать. Забытый пароль невозможно восстановить или сбросить — даже с помощью ключа восстановления из 12 слов, показанного при создании профиля.",
+    "recoveryUnavailableHint": "Если вы не можете его вспомнить, создайте новый профиль. Данные этого профиля останутся заблокированными, пока не будет введён правильный пароль.",
+    "passwordNoticeTitle": "Сохраните свой пароль",
+    "passwordNoticeDesc": "Этот профиль зашифрован своим паролем. Если вы его забудете, его нельзя будет восстановить или сбросить, а данные профиля останутся заблокированными.",
+    "passwordNoticeHint": "Запишите его или сохраните в менеджере паролей.",
+    "passwordNoticeConfirm": "Понятно",
+    "passwordUnrecoverableDesc": "Профиль зашифрован своим паролем, и GameStringer не хранит никакого другого ключа, способного его разблокировать. Забытый пароль невозможно восстановить или сбросить. Если более ранняя версия выдала вам ключ восстановления из 12 слов, он тоже не сможет разблокировать профиль."
   },
   "onboarding": {
     "step": "Шаг {current} из {total}",
@@ -4113,7 +4139,8 @@
     "translated": "переведено",
     "waitingForText": "Ожидание текста...",
     "footerInfo": "OCR работает с любой игрой • Переводы через Gemini AI",
-    "aiProvider": "AI-провайдер"
+    "aiProvider": "AI-провайдер",
+    "languagePackMissing": "Windows не может прочитать текст на этом языке ({lang}): не установлен языковой пакет с оптическим распознаванием символов (OCR). Добавьте его в Параметры > Время и язык > Язык и регион, затем запустите снова."
   },
   "workshop": {
     "title": "Steam Workshop",
@@ -4135,9 +4162,6 @@
     "background": "Фон",
     "startCapture": "Запустить захват",
     "stop": "Стоп",
-    "paused": "На паузе",
-    "captureActive": "Захват активен",
-    "subtitlesCaptured": "субтитров захвачено",
     "livePreview": "Живой предпросмотр",
     "settings": "Настройки",
     "style": "Стиль",
@@ -4154,15 +4178,13 @@
     "fadeIn": "Появление",
     "fadeOut": "Исчезновение",
     "animation": "Анимация",
-    "history": "История",
-    "noSubtitlesCaptured": "Нет захваченных субтитров",
-    "startCaptureToBegin": "Запустите захват для начала",
     "positionTop": "Верх",
     "positionCenter": "Центр",
     "positionBottom": "Низ",
     "positionAbove": "Над",
     "positionBelow": "Под",
-    "positionInline": "В строке"
+    "positionInline": "В строке",
+    "notConnected": "Захват в реальном времени пока не подключён: здесь субтитры не захватываются и не переводятся. Доступен только предпросмотр стиля субтитров."
   },
   "translationFixer": {
     "title": "Исправитель переводов",
@@ -4233,19 +4255,14 @@
     "exportAll": "Экспорт всего",
     "dropImages": "Перетащите изображения или нажмите для загрузки",
     "processing": "Обработка...",
-    "detecting": "Обнаружение пузырей...",
-    "translating": "Перевод...",
-    "inpainting": "Ретушь...",
-    "completed": "Завершено!",
     "noPage": "Нет страницы",
     "original": "Оригинал",
     "translated": "Переведено",
     "loadPages": "Загрузите страницы манги/комикса",
     "supportedFormats": "Поддерживаются JPG, PNG, WebP",
     "pageOf": "Страница {current} из {total}",
-    "analyzingText": "Анализ текста...",
-    "batchTranslation": "Пакетный перевод...",
-    "fontStyleLabel": "Стиль шрифта"
+    "fontStyleLabel": "Стиль шрифта",
+    "notConnected": "Пока не подключено: этот инструмент не выполняет OCR и перевод. Вы можете загружать и просматривать страницы, но распознавание, инпейнтинг и экспорт отключены."
   },
   "textureTranslator": {
     "title": "Переводчик текстур",
@@ -4265,7 +4282,8 @@
     "noTexture": "Текстура не выбрана",
     "processAll": "Обработать все",
     "original": "Оригинал",
-    "translated": "Переведено"
+    "translated": "Переведено",
+    "notConnected": "Пока не подключено: этот инструмент не выполняет OCR и перевод. Вы можете загружать и просматривать текстуры, но распознавание текста, применение переводов и экспорт отключены."
   },
   "dictionaryManager": {
     "addTranslation": "Добавить перевод"
@@ -4354,7 +4372,8 @@
     "reset": "Сброс",
     "save": "Сохранить",
     "selectToEdit": "Выберите субтитр для редактирования",
-    "issuesDetected": "Обнаружены проблемы"
+    "issuesDetected": "Обнаружены проблемы",
+    "linesNotTranslated": "Не удалось перевести строк субтитров: {n}; в них остаётся исходный текст"
   },
   "multiLlmCompare": {
     "title": "Сравнение Мульти-LLM",
@@ -4425,7 +4444,8 @@
     "cancel": "Отмена",
     "delete": "Удалить",
     "translationUpdated": "Перевод обновлён",
-    "translationDeleted": "Перевод удалён"
+    "translationDeleted": "Перевод удалён",
+    "languagePair": "Языковая пара"
   },
   "support": {
     "title": "Поддержка",
@@ -4463,7 +4483,8 @@
     "micError": "Не удалось получить доступ к микрофону. Проверьте разрешения.",
     "transcriptionError": "Ошибка транскрипции. Проверьте API-ключ OpenAI.",
     "translationError": "Ошибка перевода.",
-    "ttsError": "Ошибка синтеза речи."
+    "ttsError": "Ошибка синтеза речи.",
+    "noSpeechDetected": "В аудио не распознана речь."
   },
   "disclaimer": {
     "fullPolicy": "Читать полную правовую политику и правила использования",
@@ -4852,7 +4873,8 @@
     "bgOpacity": "Прозрачность фона",
     "shadow": "Тень",
     "positionApplied": "Позиция \"{name}\" применена",
-    "styleApplied": "Стиль \"{name}\" применён"
+    "styleApplied": "Стиль \"{name}\" применён",
+    "notConnected": "Вывод на гарнитуру пока не подключён: эта страница только показывает предпросмотр оверлея, на VR-гарнитуру ничего не отправляется."
   },
   "playerFeedback": {
     "title": "Отзывы игроков",
@@ -5607,15 +5629,6 @@
     "recommendedModel": "Рекомендуемая модель",
     "local": "Локально",
     "cloud": "Облако",
-    "autoSwitch": "Автопереключение модели",
-    "autoSwitchDesc": "Автоматически переключает ИИ-модель в зависимости от доступной VRAM",
-    "preferLocal": "Предпочитать локальные модели",
-    "preferLocalDesc": "Использовать Ollama/LM Studio вместо облака при возможности",
-    "alertHighUsage": "Оповещение о высоком использовании VRAM",
-    "alertHighUsageDesc": "Уведомлять при превышении порога VRAM",
-    "alertThreshold": "Порог оповещения",
-    "cloudFallback": "Облачный провайдер (резерв)",
-    "cloudAuto": "Авто",
     "tierAndModels": "Уровни и модели",
     "statsUpdated": "Статистика системы обновлена",
     "tierUltra": "Ультра (≥12ГБ)",
@@ -5662,7 +5675,8 @@
     "gpt4o": "GPT-4o",
     "googleTranslate": "Google Translate",
     "libretranslateFree": "LibreTranslate (бесплатно)",
-    "workflowCompletato": "Рабочий процесс завершён!"
+    "workflowCompletato": "Рабочий процесс завершён!",
+    "linesNotTranslated": "ИИ не смог перевести строк: {n} — их перевод пуст. Впишите его сами или отклоните эти строки."
   },
   "translationWizardPage": {
     "noGameTrovato": "Игра не найдена",
@@ -5673,7 +5687,6 @@
     "traduzioneCompletata": "Перевод завершён!"
   },
   "libraryPage": {
-    "scanDone": "🎮 Сканирование Family Sharing завершено!",
     "scanError": "Ошибка при сканировании",
     "installStarted": "Установка началась",
     "installStartedDesc": "Steam откроется для установки {{game}}",
@@ -5709,12 +5722,16 @@
     "langScanDone": "Языки определены для {n} игр",
     "langScanNone": "Новых языков не найдено",
     "langScanError": "Ошибка при определении языков",
-    "addGameFromDiskHint": "Если игры нет в списке, добавьте её, указав папку на диске — работает и для игр вне магазинов."
+    "addGameFromDiskHint": "Если игры нет в списке, добавьте её, указав папку на диске — работает и для игр вне магазинов.",
+    "libraryScanDone": "Библиотека пересканирована во всех магазинах",
+    "scanPartial": "Сканирование завершено с ошибками: некоторые источники не удалось прочитать, поэтому список может быть неполным.",
+    "steamCredsHint": "Подключите аккаунт Steam в разделе «Магазины», чтобы видеть и купленные, но не установленные игры."
   },
   "unityBundlePage": {
     "auto": "Авто",
     "fileOpenCtrlv": "Файл → Открыть → Ctrl+V",
-    "importDumpCtrlv": "Импорт дампа → Ctrl+V"
+    "importDumpCtrlv": "Импорт дампа → Ctrl+V",
+    "failedStrings": "Не удалось перевести строк: {n}; они остаются на исходном языке"
   },
   "activityPage": {
     "filterBy": "Фильтровать по:",

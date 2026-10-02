@@ -29,6 +29,9 @@ static LAST_TEXTS: Lazy<Mutex<Vec<DetectedText>>> = Lazy::new(|| Mutex::new(Vec:
 static TRANSLATION_CACHE: Lazy<Mutex<HashMap<String, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 static OCR_CONFIG: Lazy<Mutex<Option<OcrConfig>>> = Lazy::new(|| Mutex::new(None));
 
+// Niente campo `confidence`: Windows OCR non la fornisce, e il valore fisso
+// 0.9 che c'era rendeva finti sia il filtro «confidenza minima» sia il badge
+// percentuale mostrato in /live-ocr.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectedText {
     pub text: String,
@@ -37,7 +40,6 @@ pub struct DetectedText {
     pub y: i32,
     pub width: i32,
     pub height: i32,
-    pub confidence: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,7 +47,6 @@ pub struct OcrConfig {
     pub language: String,           // "en", "ja", "zh", etc.
     pub target_language: String,    // Lingua di traduzione
     pub capture_interval_ms: u64,   // Intervallo cattura (default 500ms)
-    pub min_confidence: f32,        // Confidenza minima OCR (0.0-1.0)
     pub region: Option<CaptureRegion>, // Regione specifica o tutto schermo
     pub target_window: Option<isize>, // HWND della finestra da catturare (None = schermo intero)
 }
@@ -64,7 +65,6 @@ impl Default for OcrConfig {
             language: "en".to_string(),
             target_language: "it".to_string(),
             capture_interval_ms: 500,
-            min_confidence: 0.5,
             region: None,
             target_window: None,
         }
@@ -78,6 +78,11 @@ pub async fn start_ocr_translator(app: tauri::AppHandle, config: OcrConfig) -> R
         return Ok("OCR già in esecuzione".to_string());
     }
     
+    // La lingua si verifica PRIMA di partire: senza language pack il loop
+    // falliva a ogni giro solo nel log, e la pagina diceva «avviato» senza
+    // mostrare mai un testo.
+    ocr_engine::check_language(&config.language)?;
+
     // Salva config globalmente
     if let Ok(mut cfg) = OCR_CONFIG.lock() {
         *cfg = Some(config.clone());
@@ -122,54 +127,70 @@ pub async fn list_capture_windows() -> Result<Vec<screen_capture::WindowInfo>, S
     Ok(screen_capture::list_windows())
 }
 
+/// Mostra la finestra overlay OCR sopra l'area che l'OCR legge.
+///
+/// Le coordinate dei testi sono relative all'area catturata: la regione, se
+/// c'è, altrimenti il monitor principale — lo stesso che `capture_screen`
+/// copia (SM_CXSCREEN x SM_CYSCREEN da 0,0). La finestra dichiarata in
+/// tauri.conf.json è 800x600 centrata: lasciata così, i testi finivano spostati
+/// di quanto il riquadro dista dall'angolo dello schermo. Chi cattura una
+/// finestra precisa chiama poi `position_overlay_on_window`.
+///
+/// Ogni apertura rimanda `overlay-visibility` true: la pagina /ocr-overlay
+/// restava a `false` dopo uno Stop e alla ripartenza non la rimetteva nessuno.
+fn show_ocr_overlay(app: &tauri::AppHandle, region: Option<CaptureRegion>) -> Result<(), String> {
+    use tauri::{Manager, PhysicalPosition, PhysicalSize};
+    
+    let window = app
+        .get_webview_window("ocr-overlay")
+        .ok_or_else(|| "Finestra overlay non trovata".to_string())?;
+            
+    let (x, y, width, height) = match region {
+        Some(r) if r.width > 0 && r.height > 0 => (r.x, r.y, r.width as u32, r.height as u32),
+        _ => {
+            let monitor = window
+                .primary_monitor()
+                .map_err(|e| e.to_string())?
+                .ok_or_else(|| "Monitor principale non trovato".to_string())?;
+            let pos = monitor.position();
+            let size = monitor.size();
+            (pos.x, pos.y, size.width, size.height)
+        }
+    };
+                
+    window.set_position(PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+    window.set_size(PhysicalSize::new(width, height)).map_err(|e| e.to_string())?;
+    // NON catturare il focus - lascia il gioco attivo
+    window.show().map_err(|e| e.to_string())?;
+    // Click-through tramite Tauri: lo stile resta nello stato della finestra,
+    // mentre un WS_EX_TRANSPARENT scritto a mano può essere sovrascritto quando
+    // la finestra ricalcola i propri stili (e open_ocr_overlay non lo metteva).
+    window.set_ignore_cursor_events(true).map_err(|e| e.to_string())?;
+                
+    let _ = app.emit("overlay-visibility", true);
+    log::info!("🪟 Overlay OCR mostrato: {}x{} @ ({},{}) (click-through)", width, height, x, y);
+    Ok(())
+}
+                
 /// Mostra/nasconde la finestra overlay OCR
 #[command]
-pub async fn toggle_ocr_overlay(app: tauri::AppHandle, show: bool) -> Result<(), String> {
+pub async fn toggle_ocr_overlay(
+    app: tauri::AppHandle,
+    show: bool,
+    region: Option<CaptureRegion>,
+) -> Result<(), String> {
     use tauri::Manager;
-    
-    if let Some(window) = app.get_webview_window("ocr-overlay") {
-        if show {
-            window.show().map_err(|e| e.to_string())?;
-            // NON catturare il focus - lascia il gioco attivo
-            // window.set_focus() RIMOSSO - bloccava l'input del gioco
             
-            // Rendi la finestra click-through (ignora mouse)
-            #[cfg(target_os = "windows")]
-            {
-                use std::ffi::c_void;
-                
-                #[link(name = "user32")]
-                extern "system" {
-                    fn GetWindowLongW(hwnd: *mut c_void, index: i32) -> i32;
-                    fn SetWindowLongW(hwnd: *mut c_void, index: i32, value: i32) -> i32;
-                }
-                
-                const GWL_EXSTYLE: i32 = -20;
-                const WS_EX_TRANSPARENT: i32 = 0x00000020;
-                const WS_EX_LAYERED: i32 = 0x00080000;
-                
-                if let Ok(hwnd) = window.hwnd() {
-                    unsafe {
-                        let ex_style = GetWindowLongW(hwnd.0 as *mut c_void, GWL_EXSTYLE);
-                        SetWindowLongW(
-                            hwnd.0 as *mut c_void, 
-                            GWL_EXSTYLE, 
-                            ex_style | WS_EX_TRANSPARENT | WS_EX_LAYERED
-                        );
-                    }
-                    log::info!("🪟 Overlay OCR reso click-through");
-                }
-            }
-            
-            log::info!("🪟 Overlay OCR mostrato (non blocca input)");
-        } else {
-            window.hide().map_err(|e| e.to_string())?;
-            log::info!("🪟 Overlay OCR nascosto");
-        }
-    } else {
-        return Err("Finestra overlay non trovata".to_string());
+    if show {
+        return show_ocr_overlay(&app, region);
     }
     
+    let window = app
+        .get_webview_window("ocr-overlay")
+        .ok_or_else(|| "Finestra overlay non trovata".to_string())?;
+    window.hide().map_err(|e| e.to_string())?;
+    let _ = app.emit("overlay-visibility", false);
+    log::info!("🪟 Overlay OCR nascosto");
     Ok(())
 }
 
@@ -241,13 +262,7 @@ fn run_ocr_loop(app: tauri::AppHandle, config: OcrConfig) {
             Ok(image_data) => {
                 // 2. OCR
                 match ocr_engine::recognize_text(&image_data, &config.language) {
-                    Ok(texts) => {
-                        // Filtra per confidenza
-                        let mut filtered: Vec<DetectedText> = texts
-                            .into_iter()
-                            .filter(|t| t.confidence >= config.min_confidence)
-                            .collect();
-                        
+                    Ok(mut filtered) => {
                         // 3. Traduci i testi localmente via TM
                         translate_detected_texts(&mut filtered, &config.target_language);
                         
@@ -695,7 +710,13 @@ pub async fn ocr_recognize(
             data: image_data,
         };
         
-        let detected = ocr_engine::recognize_text(&image, &language)?;
+        // L'OCR aspetta il risultato in modo bloccante: fuori dai thread
+        // del runtime async, come per la cattura.
+        let detected = tauri::async_runtime::spawn_blocking(move || {
+            ocr_engine::recognize_text(&image, &language)
+        })
+        .await
+        .map_err(|e| e.to_string())??;
         
         Ok(detected.iter().map(|t| OcrTextResult {
             text: t.text.clone(),
@@ -703,7 +724,6 @@ pub async fn ocr_recognize(
             y: t.y,
             width: t.width,
             height: t.height,
-            confidence: t.confidence,
         }).collect())
     }
     
@@ -718,39 +738,20 @@ pub struct OcrTextResult {
     pub y: i32,
     pub width: i32,
     pub height: i32,
-    pub confidence: f32,
 }
 
-/// Apre la finestra overlay OCR
+/// Apre la finestra overlay OCR.
+///
+/// Stesso percorso di `toggle_ocr_overlay`: la finestra `ocr-overlay` è
+/// dichiarata in tauri.conf.json e Tauri la crea all'avvio, quindi il ramo che
+/// la costruiva qui (1920x1080) non veniva mai eseguito, e questo comando la
+/// mostrava 800x600, centrata e senza click-through.
 #[command]
-pub async fn open_ocr_overlay(app: tauri::AppHandle) -> Result<(), String> {
-    use tauri::Manager;
-    
-    // Prova a trovare la finestra esistente
-    if let Some(window) = app.get_webview_window("ocr-overlay") {
-        window.show().map_err(|e| e.to_string())?;
-        log::info!("🪟 Overlay OCR mostrato");
-        return Ok(());
-    }
-    
-    // Crea nuova finestra overlay
-    let _window = tauri::WebviewWindowBuilder::new(
-        &app,
-        "ocr-overlay",
-        tauri::WebviewUrl::App("/ocr-overlay".into())
-    )
-    .title("OCR Overlay")
-    .decorations(false)
-    .always_on_top(true)
-    .skip_taskbar(true)
-    .visible(true)
-    .inner_size(1920.0, 1080.0)
-    .position(0.0, 0.0)
-    .build()
-    .map_err(|e| e.to_string())?;
-    
-    log::info!("🪟 Overlay OCR creato");
-    Ok(())
+pub async fn open_ocr_overlay(
+    app: tauri::AppHandle,
+    region: Option<CaptureRegion>,
+) -> Result<(), String> {
+    show_ocr_overlay(&app, region)
 }
 
 // Channel per comunicazione tra finestra selezione e comando async

@@ -173,7 +173,7 @@ export function BackgroundJobsWidget() {
               onResume={() => { mgr.resumeJob(job.id); }}
               onCancel={() => mgr.cancelJob(job.id)}
               onOpenResults={() => {
-                router.push(`/auto-translate?gameId=${job.gameId}&bgJobId=${job.id}`);
+                router.push(`/auto-translate?gameId=${encodeURIComponent(job.gameId)}&bgJobId=${encodeURIComponent(job.id)}`);
               }}
             />
           ))}
@@ -192,7 +192,7 @@ export function BackgroundJobsWidget() {
                   job={job}
                   onRemove={() => mgr.removeJob(job.id)}
                   onOpenResults={() => {
-                    router.push(`/auto-translate?gameId=${job.gameId}&bgJobId=${job.id}`);
+                    router.push(`/auto-translate?gameId=${encodeURIComponent(job.gameId)}&bgJobId=${encodeURIComponent(job.id)}`);
                   }}
                 />
               ))}

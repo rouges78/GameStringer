@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Database, Search, Trash2, Edit3, Check, X, RefreshCw,
   Filter, Download, Sparkles, Gamepad2,
-  ChevronDown, AlertCircle
+  ChevronDown, AlertCircle, Languages
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,16 +26,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { translationMemory, type TranslationUnit, type TMStats } from '@/lib/translation-memory';
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
 import { ExportDialog } from '@/components/tools/export-dialog';
 import { clientLogger } from '@/lib/client-logger';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 // Cache per i nomi dei games
 const gameNameCache: Record<string, string> = {};
+
+// Shape di list_translation_memories (struct Rust senza rename: snake_case)
+interface TMInfo {
+  source_language: string;
+  target_language: string;
+  unit_count: number;
+}
 
 export default function MemoryPage() {
   const { t } = useTranslation();
@@ -49,13 +57,31 @@ export default function MemoryPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<TranslationUnit | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const { toast } = useToast();
+
+  // Coppia di lingue della TM mostrata: ogni coppia è un file diverso su disco.
+  // Origine inglese, destinazione = lingua predefinita dell'utente.
+  const [sourceLang, setSourceLang] = useState('en');
+  const [targetLang, setTargetLang] = useState<string | null>(null);
+  const { markTouched } = useDefaultTargetLang(setTargetLang);
+  const [availablePairs, setAvailablePairs] = useState<TMInfo[]>([]);
+  const loadSeq = useRef(0);
+
+  useEffect(() => {
+    invoke<TMInfo[]>('list_translation_memories')
+      .then(list => setAvailablePairs(Array.isArray(list) ? list : []))
+      .catch((e: unknown) => clientLogger.debug('TM list not available:', e));
+  }, []);
 
   // Carica dati dalla Translation Memory
   const loadData = useCallback(async () => {
+    if (!targetLang) return;
+    // Il singleton TM è condiviso: se nel frattempo è stata scelta un'altra
+    // coppia, il risultato di questa chiamata non va mostrato.
+    const seq = ++loadSeq.current;
     setLoading(true);
     try {
-      await translationMemory.initialize('en', 'it');
+      await translationMemory.initialize(sourceLang, targetLang);
+      if (seq !== loadSeq.current) return;
       const memory = translationMemory.export();
       if (memory) {
         setUnits(memory.units);
@@ -64,11 +90,24 @@ export default function MemoryPage() {
     } catch (e: unknown) {
       clientLogger.error('TM loading error:', e);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
-  }, []);
+  }, [sourceLang, targetLang]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const selectPair = (source: string, target: string) => {
+    markTouched();
+    setFilterGame('all');
+    setSourceLang(source);
+    setTargetLang(target);
+  };
+
+  // Coppie selezionabili: quelle con una TM su disco, più quella corrente
+  const pairOptions = [...availablePairs];
+  if (targetLang && !pairOptions.some(p => p.source_language === sourceLang && p.target_language === targetLang)) {
+    pairOptions.unshift({ source_language: sourceLang, target_language: targetLang, unit_count: units.length });
+  }
 
   // Filtra unità per ricerca e game (esclude dati corrotti)
   const filteredUnits = units.filter(unit => {
@@ -180,6 +219,8 @@ export default function MemoryPage() {
     }
     
     try {
+      // Il singleton TM può essere passato a un'altra coppia (pipeline in background)
+      if (targetLang) await translationMemory.initialize(sourceLang, targetLang);
       await translationMemory.add(unit.sourceText, editValue, {
         context: unit.context,
         gameId: unit.gameId,
@@ -187,10 +228,10 @@ export default function MemoryPage() {
         confidence: 1.0,
         verified: true
       });
-      toast({ title: `✅ ${t('dictionary.translationUpdated')}` });
+      toast.success(`✅ ${t('dictionary.translationUpdated')}`);
       loadData();
     } catch (e: unknown) {
-      toast({ title: 'Error', description: String(e), variant: 'destructive' });
+      toast.error(t('common.error'), { description: String(e) });
     }
     setEditingId(null);
   };
@@ -199,11 +240,12 @@ export default function MemoryPage() {
   const handleDelete = async () => {
     if (!unitToDelete) return;
     try {
+      if (targetLang) await translationMemory.initialize(sourceLang, targetLang);
       await translationMemory.delete(unitToDelete.id);
-      toast({ title: `🗑️ ${t('dictionary.translationDeleted')}` });
+      toast.success(`🗑️ ${t('dictionary.translationDeleted')}`);
       loadData();
     } catch (e: unknown) {
-      toast({ title: 'Error', description: String(e), variant: 'destructive' });
+      toast.error(t('common.error'), { description: String(e) });
     }
     setDeleteDialogOpen(false);
     setUnitToDelete(null);
@@ -278,6 +320,26 @@ export default function MemoryPage() {
           />
         </div>
         
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2" title={t('dictionary.languagePair')} aria-label={t('dictionary.languagePair')}>
+              <Languages className="h-4 w-4" />
+              {sourceLang.toUpperCase()} → {(targetLang || '…').toUpperCase()}
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {pairOptions.map(p => (
+              <DropdownMenuItem
+                key={`${p.source_language}_${p.target_language}`}
+                onClick={() => selectPair(p.source_language, p.target_language)}
+              >
+                {p.source_language.toUpperCase()} → {p.target_language.toUpperCase()} ({p.unit_count})
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
@@ -436,21 +498,23 @@ export default function MemoryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Export Dialog */}
-      <ExportDialog
-        open={exportDialogOpen}
-        onOpenChange={setExportDialogOpen}
-        entries={filteredUnits.map(u => ({
-          id: u.id,
-          source: u.sourceText,
-          target: u.targetText,
-          context: u.context,
-          notes: u.metadata?.notes,
-        }))}
-        sourceLang="en"
-        targetLang="en"
-        defaultFileName="translation_memory"
-      />
+      {/* Export Dialog: etichettato con la coppia reale della TM mostrata */}
+      {targetLang && (
+        <ExportDialog
+          open={exportDialogOpen}
+          onOpenChange={setExportDialogOpen}
+          entries={filteredUnits.map(u => ({
+            id: u.id,
+            source: u.sourceText,
+            target: u.targetText,
+            context: u.context,
+            notes: u.metadata?.notes,
+          }))}
+          sourceLang={sourceLang}
+          targetLang={targetLang}
+          defaultFileName="translation_memory"
+        />
+      )}
     </div>
   );
 }

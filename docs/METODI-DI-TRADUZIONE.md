@@ -1728,6 +1728,131 @@ ogni anello e' verificato singolarmente e il giro completo non l'ha ancora fatto
 nessuno: l'unico modo di sapere se regge e' percorrerlo, e finche' non e' stato
 percorso va scritto cosi'.
 
+### Windows OCR: la lingua sorgente, il ripiego per scrittura e il panic di `block_on`
+
+**Il fatto.** Fino alla Fase 0 l'OCR Rust di Windows ignorava la lingua sorgente:
+il motore nasceva sempre da `OcrEngine::TryCreateFromUserProfileLanguages()`, il
+parametro di `recognize_text_async` si chiamava `_language` e nessuno lo leggeva
+(`recognize_text` lo scriveva nel `log::debug!` e lo passava avanti), quindi si
+otteneva il riconoscitore del profilo Windows qualunque lingua si scegliesse. E
+ogni riga usciva con `confidence: 0.9` scritto a mano, perché Windows OCR una
+confidenza per riga non la fornisce: il cursore «confidenza minima» di
+`/ocr-translator` (30–90%, default 50%) non scartava mai niente, e il badge di
+`/live-ocr` avrebbe mostrato 90% su qualunque testo, se quella pagina avesse mai
+ricevuto una risposta (vedi il panic più sotto). Ora:
+
+- il motore si crea per la lingua chiesta: `Language::CreateLanguage` →
+  `OcrEngine::IsLanguageSupported` → `OcrEngine::TryCreateFromLanguage`.
+  `"auto"` (o vuoto) resta sulle lingue del profilo, che è l'unico automatico
+  che Windows OCR offre;
+- se il riconoscitore esatto manca, si ripiega sul primo riconoscitore
+  installato con la **stessa scrittura** (`Language.Script`, quattro lettere).
+  Le scritture indeterminate (`Z…`: `Zyyy`, `Zzzz`, `Zxxx`) non combaciano con
+  niente;
+- se manca anche quello, l'errore è onesto: comincia col marcatore
+  `OCR_LANGUAGE_NOT_INSTALLED` e dice di installare il language pack con il
+  riconoscimento ottico dei caratteri. `start_ocr_translator` lo verifica
+  **prima** di accendere il loop, perché dentro `run_ocr_loop` un errore
+  finisce solo in `log::warn!` e la pagina resterebbe «avviata» e muta;
+- `confidence` è sparito da `DetectedText` e `OcrTextResult`, e
+  `min_confidence` da `OcrConfig`.
+
+**Misura (01/10/2026, questa macchina: Windows 11, unico riconoscitore OCR
+installato `it-IT`).** Le lingue si interrogano da Windows PowerShell 5.1
+(`powershell.exe`), che sa caricare i tipi WinRT:
+
+```powershell
+$null = [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime]
+$null = [Windows.Globalization.Language, Windows.Foundation, ContentType = WindowsRuntime]
+[Windows.Media.Ocr.OcrEngine]::AvailableRecognizerLanguages | % { "$($_.LanguageTag) $($_.Script)" }
+foreach ($t in 'en','en-US','it','ja','zh','zh-Hans','ko','ru') {
+  $l = [Windows.Globalization.Language]::new($t)
+  "$t supportata=$([Windows.Media.Ocr.OcrEngine]::IsLanguageSupported($l)) scrittura=$($l.Script)"
+}
+```
+
+`AvailableRecognizerLanguages` restituisce solo `it-IT Latn`. Il resto, con
+accanto cosa ne fa `create_engine` (letto dal codice, non eseguito in Rust):
+
+| richiesta | `IsLanguageSupported` | scrittura | `create_engine` |
+|---|---|---|---|
+| `it` | True | `Latn` | motore `it-IT` |
+| `en`, `en-US` | **False** | `Latn` | ripiego su `it-IT` |
+| `ru` | False | `Cyrl` | errore language pack |
+| `ja` | False | `Jpan` | errore language pack |
+| `ko` | False | `Kore` | errore language pack |
+| `zh-Hans` | False | `Hans` | errore language pack |
+| `zh` | False | **`Zyyy`** | errore, senza nemmeno tentare il ripiego |
+
+Che il riconoscitore italiano legga l'inglese è stato provato, non dedotto: un
+PNG sintetico (Segoe UI 28, nero su bianco, 900x160) con due righe inglesi, dato
+a `RecognizeAsync` del motore `it-IT` dalla stessa PowerShell (sonda non
+committata: `System.Drawing` per il disegno, `BitmapDecoder` per la
+`SoftwareBitmap`):
+
+```text
+richiesta: en  IsLanguageSupported=False  script=Latn
+riconoscitore usato: it-IT
+  riga: The quick brown foxjumps over the lazy dog
+  riga: New Game Load Game Options Quit
+```
+
+Due righe su due, un solo difetto (`foxjumps`, uno spazio perso). È testo di
+sistema pulito, non un fotogramma di gioco: dice che il ripiego ha senso, non
+quanto legga un font bitmap.
+
+**Il panic di `block_on`.** Prima `recognize_text` costruiva un runtime Tokio
+(`new_current_thread()`) e ci faceva `block_on` sull'`.await` di
+`RecognizeAsync`. Dal loop di `/ocr-translator` funzionava, perché
+`run_ocr_loop` gira in un `std::thread::spawn`, fuori da ogni runtime. Ma
+`ocr_recognize` è un comando Tauri `async` e chiamava `recognize_text`
+direttamente, cioè da un thread del runtime di Tauri; e `ocr_recognize_png`,
+quello che invoca `/live-ocr` (`components/tools/live-ocr-overlay.tsx`), passa da
+`ocr_recognize`. Lì Tokio va in panic con «Cannot start a runtime from within a
+runtime» (`tokio/src/runtime/context/runtime.rs`): la chiamata moriva invece di
+restituire un risultato o un errore. Ora l'attesa è `IAsyncOperation::get()` di
+`windows-future`, che blocca il thread su un evento Win32 senza nessun runtime
+(`windows-future-0.2.1/src/get.rs` e `waiter.rs`: `CreateEventW`, poi
+`WaitForSingleObject`), e `ocr_recognize` chiama `recognize_text`
+dentro `tauri::async_runtime::spawn_blocking`, così ad aspettare non è un thread
+del runtime async.
+
+**Nel codice.**
+
+- `src-tauri/src/ocr_translator/ocr_engine.rs` — `create_engine()`,
+  `engine_with_same_script()`, `check_language()`, `recognize_text()`; costante
+  `OCR_LANGUAGE_NOT_INSTALLED`.
+- `src-tauri/src/ocr_translator/mod.rs` — `start_ocr_translator` chiama
+  `ocr_engine::check_language` prima di partire; `ocr_recognize` usa
+  `spawn_blocking`.
+- `src-tauri/Cargo.toml` — feature `"Globalization"` del crate `windows` 0.61:
+  senza, `windows::Globalization::Language` non esiste e `ocr_engine.rs` non
+  compila.
+- `lib/ocr-overlay-payload.ts` — lo stesso marcatore e `isOcrLanguageMissing()`,
+  con cui `app/ocr-translator/page.tsx` e `components/tools/live-ocr-overlay.tsx`
+  mostrano l'indicazione tradotta. `live-ocr-overlay.tsx` passa `zh-Hans` al
+  posto di `zh`, proprio per la scrittura indeterminata.
+
+**Le trappole.**
+
+1. **Un parametro col trattino basso è il compilatore che te lo dice.**
+   `_language` era una promessa della firma che il corpo non manteneva: la UI
+   faceva scegliere la lingua, la funzione la buttava. Nessun errore, solo un
+   riconoscitore diverso da quello chiesto.
+2. **Una costante al posto di una misura fa sembrare vivo un filtro.** 0.9 è
+   ≥ di ogni valore che il cursore permetteva: il cursore si muoveva, la soglia
+   non scartava mai niente, e il 90% era un numero inventato. Se il motore non
+   fornisce un dato, il dato non si mostra.
+3. **`IsLanguageSupported("en") == False` non vuol dire «l'inglese non si
+   legge».** Conta la scrittura, non il tag. Ma il ripiego vale solo per una
+   scrittura vera: `zh` da solo è `Zyyy`, e farlo combaciare con qualcosa
+   vorrebbe dire leggere il cinese con un riconoscitore a caso.
+4. **La stessa funzione era giusta da un chiamante e rotta dall'altro.**
+   `block_on` da un `std::thread` funziona, da un comando `async` va in panic.
+   Provarla dal loop di `/ocr-translator` non avrebbe mai mostrato il difetto di
+   `/live-ocr`: una funzione bloccante si prova da **ogni** contesto che la
+   chiama.
+
 ---
 
 ## Come si aggiunge una voce
