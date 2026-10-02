@@ -125,7 +125,7 @@
   "dependencies": {
     "@prisma/client": "^6.10.1",
     "@supabase/supabase-js": "^2.115.0",
-    "@tauri-apps/api": "2.10.1",
+    "@tauri-apps/api": "2.12.1",
     "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tauri-apps/plugin-fs": "^2.5.2",
     "@tauri-apps/plugin-process": "^2.3.1",
