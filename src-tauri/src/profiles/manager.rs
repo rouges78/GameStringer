@@ -2,7 +2,7 @@
 use crate::profiles::models::{UserProfile, ProfileInfo, CreateProfileRequest, ProfileSettings, EncryptedCredential, ProfileUsageStats, ProfilesSystemStats, SystemUsageStats, ProfilesHealthCheck, HealthCheckResult, HealthStatus, ProfilesSystemConfig};
 use crate::profiles::storage::ProfileStorage;
 use crate::profiles::encryption::ProfileEncryption;
-use crate::profiles::errors::{ProfileError, ProfileResult};
+use crate::profiles::errors::{ProfileError, ProfileResult, StorageError};
 use crate::profiles::validation::{ProfileValidator, ValidationConfig, ProfileNameValidationResult, PasswordValidationResult};
 use crate::profiles::rate_limiter::{RateLimiter, RateLimiterConfig, RateLimitResult};
 use crate::profiles::secure_memory::SecureMemory;
@@ -208,6 +208,11 @@ pub struct ProfileManager {
     cache_duration: u64,
     /// Rate limiter per tentativi di login
     rate_limiter: RateLimiter,
+    /// Password del profilo attivo, solo in memoria e solo per la sessione autenticata.
+    /// Serve ai salvataggi che non la ricevono dal chiamante (credenziali degli store):
+    /// prima salvavano con password vuota, la cifratura falliva e il profilo finiva in
+    /// chiaro su disco. Impostata da create_profile/authenticate_profile, pulita al logout.
+    session_password: Option<SecureMemory<String>>,
 }
 
 impl ProfileManager {
@@ -223,6 +228,7 @@ impl ProfileManager {
             cache_last_refresh: None,
             cache_duration: 300, // 5 minuti
             rate_limiter: RateLimiter::default(),
+            session_password: None,
         }
     }
 
@@ -239,6 +245,7 @@ impl ProfileManager {
             cache_last_refresh: None,
             cache_duration: cache_duration_seconds,
             rate_limiter: RateLimiter::default(),
+            session_password: None,
         }
     }
 
@@ -348,6 +355,7 @@ impl ProfileManager {
 
         // Imposta come profilo corrente automaticamente
         self.current_profile = Some(profile.clone());
+        self.set_session_password(&request.password);
 
         println!("[PROFILE MANAGER] ✅ Profilo '{}' creato con ID: {}", profile.name, profile.id);
         Ok(profile)
@@ -394,6 +402,7 @@ impl ProfileManager {
     /// Aggiorna il profilo corrente
     #[allow(dead_code)] // API per aggiornamento profilo corrente
     pub async fn update_current_profile(&mut self, password: &str) -> ProfileResult<()> {
+        self.verify_session_password(password)?;
         if let Some(profile) = &self.current_profile {
             let profile_name = profile.name.clone();
             
@@ -420,6 +429,7 @@ impl ProfileManager {
     /// Aggiunge credenziale al profilo corrente
     #[allow(dead_code)] // API per gestione credenziali
     pub async fn add_credential(&mut self, credential: EncryptedCredential, password: &str) -> ProfileResult<()> {
+        self.verify_session_password(password)?;
         if let Some(profile) = &mut self.current_profile {
             let store = credential.store.clone();
             profile.add_credential(credential);
@@ -444,6 +454,7 @@ impl ProfileManager {
     /// Rimuove credenziale dal profilo corrente
     #[allow(dead_code)] // API per gestione credenziali
     pub async fn remove_credential(&mut self, store: &str, password: &str) -> ProfileResult<()> {
+        self.verify_session_password(password)?;
         if let Some(profile) = &mut self.current_profile {
             profile.remove_credential(store);
             
@@ -472,6 +483,7 @@ impl ProfileManager {
 
     /// Aggiorna impostazioni profilo corrente
     pub async fn update_settings(&mut self, settings: ProfileSettings, password: &str) -> ProfileResult<()> {
+        self.verify_session_password(password)?;
         if let Some(profile) = &mut self.current_profile {
             profile.settings = settings;
             
@@ -506,6 +518,7 @@ impl ProfileManager {
             // Pulisce dati sensibili dalla memoria
             self.current_profile = None;
             self.session_stats = None;
+            self.clear_session_password();
             
             println!("[PROFILE MANAGER] ✅ Logout effettuato per profilo: {}", profile_id);
             Ok(())
@@ -594,6 +607,30 @@ impl ProfileManager {
 
     // finalize_session_stats rimosso - non utilizzato
 
+    /// Tiene in memoria la password della sessione autenticata (mai su disco)
+    fn set_session_password(&mut self, password: &str) {
+        self.clear_session_password();
+        self.session_password = Some(SecureMemory::new(password.to_string()));
+    }
+
+    /// Azzera i byte della password di sessione prima di rilasciarla
+    fn clear_session_password(&mut self) {
+        if let Some(mut password) = self.session_password.take() {
+            password.clear_string();
+        }
+    }
+
+    /// Verifica che `password` sia quella con cui la sessione è stata autenticata.
+    /// Un salvataggio con una password diversa ricifrerebbe il profilo con quella,
+    /// sostituendo la password vera senza averla mai verificata.
+    fn verify_session_password(&self, password: &str) -> ProfileResult<()> {
+        match &self.session_password {
+            None => Err(ProfileError::Unauthorized),
+            Some(session) if session.as_str() == password => Ok(()),
+            Some(_) => Err(ProfileError::InvalidPassword),
+        }
+    }
+
     /// Autentica un profilo con nome e password
     pub async fn authenticate_profile(&mut self, name: &str, password: &str) -> ProfileResult<UserProfile> {
         // Trova profilo per nome
@@ -621,7 +658,18 @@ impl ProfileManager {
         let mut secure_password = SecureMemory::new(password.to_string());
 
         // Tenta di caricare il profilo con la password
-        let load_result = self.storage.load_profile_secure(&profile_info.id, &secure_password).await;
+        let load_result = match self.storage.load_profile_secure(&profile_info.id, &secure_password).await {
+            // Profilo scritto in chiaro da una build precedente (salvataggio credenziali con
+            // password vuota). Nel file non c'è nulla contro cui verificare la password: la si
+            // accetta una volta e diventa la password del profilo al primo salvataggio
+            // esplicito, che lo ricifra con la password di sessione. Nessun save qui: la
+            // regola è non scrivere su disco durante l'autenticazione.
+            Err(StorageError::LegacyCleartext(_)) if !password.is_empty() => {
+                println!("[PROFILE MANAGER] ⚠️ Profilo '{}' ancora in chiaro su disco: verrà cifrato con questa password al prossimo salvataggio", name);
+                self.storage.load_legacy_cleartext_profile(&profile_info.id).await
+            }
+            other => other,
+        };
         
         // Pulisci la password dalla memoria
         secure_password.clear();
@@ -639,6 +687,7 @@ impl ProfileManager {
                 
                 // Imposta come profilo corrente con il timestamp aggiornato
                 self.current_profile = Some(profile.clone());
+                self.set_session_password(password);
                 
                 // Inizializza statistiche sessione
                 self.init_session_stats();
@@ -807,6 +856,7 @@ impl ProfileManager {
     pub fn force_logout_all(&mut self) {
         self.current_profile = None;
         self.session_stats = None;
+        self.clear_session_password();
         self.invalidate_cache();
         println!("[PROFILE MANAGER] 🚨 Logout forzato di tutti i profili");
     }
@@ -826,6 +876,12 @@ impl ProfileManager {
         // Salva con la nuova password
         self.storage.save_profile(&profile, new_password).await
             .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
+
+        // Se è il profilo attivo, i salvataggi successivi devono usare la nuova password:
+        // con la vecchia ricifrerebbero il file annullando il cambio
+        if self.current_profile_id() == Some(profile_id) {
+            self.set_session_password(new_password);
+        }
             
         println!("[PROFILE MANAGER] 🔐 Password aggiornata per profilo {}", profile_id);
         Ok(())
@@ -1336,6 +1392,9 @@ impl ProfileManager {
     /// Salva credenziale per il profilo attivo
     pub async fn save_credential_for_active_profile(&mut self, credential: crate::profiles::credential_manager::PlainCredential) -> ProfileResult<()> {
         if let Some(profile) = &mut self.current_profile {
+            // Il profilo si salva solo cifrato con la password della sessione
+            let password = self.session_password.as_ref().ok_or(ProfileError::Unauthorized)?;
+
             // Crea credenziale crittografata
             let encrypted = EncryptedCredential {
                 store: credential.store.as_str().to_string(),
@@ -1351,7 +1410,7 @@ impl ProfileManager {
             profile.add_credential(encrypted);
             
             // Salva profilo aggiornato
-            self.storage.save_profile(profile, "").await
+            self.storage.save_profile(profile, password).await
                 .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             Ok(())
@@ -1380,10 +1439,13 @@ impl ProfileManager {
     /// Rimuove credenziale per il profilo attivo
     pub async fn remove_credential_for_active_profile(&mut self, store: crate::profiles::credential_manager::StoreType) -> ProfileResult<()> {
         if let Some(profile) = &mut self.current_profile {
+            // Il profilo si salva solo cifrato con la password della sessione
+            let password = self.session_password.as_ref().ok_or(ProfileError::Unauthorized)?;
+
             profile.remove_credential(store.as_str());
             
             // Salva profilo aggiornato
-            self.storage.save_profile(profile, "").await
+            self.storage.save_profile(profile, password).await
                 .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             Ok(())
@@ -1731,6 +1793,7 @@ impl Drop for ProfileManager {
         self.current_profile = None;
         self.session_stats = None;
         self.profile_cache.clear();
+        self.clear_session_password();
         println!("[PROFILE MANAGER] 🧹 Dati sensibili puliti dalla memoria");
     }
 }

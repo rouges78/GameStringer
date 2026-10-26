@@ -105,21 +105,19 @@ impl ProfileStorage {
         Ok(())
     }
     
-    /// Salva un profilo crittografato
+    /// Salva un profilo crittografato.
+    ///
+    /// Se la cifratura fallisce (es. password vuota) il salvataggio fallisce e il file su
+    /// disco resta quello di prima. Un tempo qui c'era un fallback "SOLO PER SVILUPPO" che
+    /// scriveva il profilo in chiaro: save_credential_for_active_profile salvava con
+    /// password vuota, quindi le credenziali degli store finivano leggibili su disco.
     pub async fn save_profile(&self, profile: &UserProfile, password: &str) -> StorageResult<()> {
         // Serializza il profilo
         let profile_json = serde_json::to_string_pretty(profile)?;
-        let profile_bytes = profile_json.as_bytes();
-        
-        // Crittografa i dati (placeholder - sarà implementato nel task 1.3)
-        let encrypted_data = match self.encryption.encrypt_profile_data(profile_bytes, password) {
-            Ok(data) => data,
-            Err(_) => {
-                // Per ora salviamo in chiaro (SOLO PER SVILUPPO)
-                println!("[PROFILE STORAGE] ⚠️ Crittografia non implementata - salvando in chiaro");
-                profile_bytes.to_vec()
-            }
-        };
+
+        // Crittografa i dati: nessun fallback in chiaro
+        let encrypted_data = self.encryption.encrypt_profile_data(profile_json.as_bytes(), password)
+            .map_err(|e| StorageError::EncryptionError(e.to_string()))?;
         
         // Percorso file profilo
         let profile_filename = format!("profile_{}.json.enc", profile.id);
@@ -138,8 +136,49 @@ impl ProfileStorage {
         Ok(())
     }
     
-    /// Carica un profilo decrittografato
+    /// Carica un profilo decrittografato.
+    ///
+    /// Una decifratura fallita è un errore (password errata o file manomesso): niente più
+    /// lettura in chiaro di ripiego, che faceva autenticare un profilo con qualsiasi password.
+    /// Un file nel vecchio formato in chiaro dà `LegacyCleartext`: la migrazione passa
+    /// esplicitamente da `load_legacy_cleartext_profile`, mai da qui.
     pub async fn load_profile(&self, id: &str, password: &str) -> StorageResult<UserProfile> {
+        let file_data = self.read_profile_file(id).await?;
+
+        if Self::parse_legacy_cleartext(&file_data).is_some() {
+            return Err(StorageError::LegacyCleartext(id.to_string()));
+        }
+        
+        // Decrittografa i dati
+        let decrypted_data = self.encryption.decrypt_profile_data(&file_data, password)
+            .map_err(|e| StorageError::EncryptionError(e.to_string()))?;
+        
+        // Deserializza profilo
+        let profile_json = String::from_utf8(decrypted_data)
+            .map_err(|e| StorageError::SerializationError(serde_json::Error::io(std::io::Error::new(std::io::ErrorKind::InvalidData, e))))?;
+        let profile: UserProfile = serde_json::from_str(&profile_json)?;
+
+        Ok(Self::finish_load(profile))
+    }
+
+    /// Carica un profilo scritto in chiaro da una build precedente, senza password.
+    ///
+    /// Quei file nascevano dal fallback in chiaro di save_profile (vedi sopra) e non
+    /// contengono nulla contro cui verificare una password: la politica la decide il
+    /// chiamante (il ProfileManager li accetta solo al login e li ricifra al primo
+    /// salvataggio). Su un file cifrato fallisce: non è un modo per saltare la password.
+    pub async fn load_legacy_cleartext_profile(&self, id: &str) -> StorageResult<UserProfile> {
+        let file_data = self.read_profile_file(id).await?;
+
+        let profile = Self::parse_legacy_cleartext(&file_data)
+            .ok_or_else(|| StorageError::EncryptionError(format!("Profilo {} cifrato: serve la password", id)))?;
+
+        println!("[PROFILE STORAGE] ⚠️ Profilo '{}' letto dal vecchio formato in chiaro", profile.name);
+        Ok(Self::finish_load(profile))
+    }
+
+    /// Legge il file di un profilo dopo i controlli su indice, blocco e hash d'integrità
+    async fn read_profile_file(&self, id: &str) -> StorageResult<Vec<u8>> {
         // Carica indice per trovare il file
         let index = self.load_index().await?;
         let entry = index.profiles.get(id)
@@ -164,24 +203,17 @@ impl ProfileStorage {
             return Err(StorageError::FileNotFound("File profilo corrotto: hash non corrispondente".to_string()));
         }
         
-        // Leggi file crittografato
-        let encrypted_data = async_fs::read(&profile_path).await?;
-        
-        // Decrittografa i dati (placeholder - sarà implementato nel task 1.3)
-        let decrypted_data = match self.encryption.decrypt_profile_data(&encrypted_data, password) {
-            Ok(data) => data,
-            Err(_) => {
-                // Per ora leggiamo in chiaro (SOLO PER SVILUPPO)
-                println!("[PROFILE STORAGE] ⚠️ Decrittografia non implementata - leggendo in chiaro");
-                encrypted_data
-            }
-        };
-        
-        // Deserializza profilo
-        let profile_json = String::from_utf8(decrypted_data)
-            .map_err(|e| StorageError::SerializationError(serde_json::Error::io(std::io::Error::new(std::io::ErrorKind::InvalidData, e))))?;
-        let mut profile: UserProfile = serde_json::from_str(&profile_json)?;
-        
+        Ok(async_fs::read(&profile_path).await?)
+    }
+
+    /// Riconosce un file profilo nel vecchio formato in chiaro.
+    /// Il formato cifrato è bincode di EncryptedData e inizia con version=1 in little-endian
+    /// (byte 0x01), quindi non è mai JSON valido: se il file si legge come UserProfile, è chiaro.
+    fn parse_legacy_cleartext(file_data: &[u8]) -> Option<UserProfile> {
+        serde_json::from_slice(file_data).ok()
+    }
+
+    fn finish_load(mut profile: UserProfile) -> UserProfile {
         // Aggiorna ultimo accesso (solo in memoria).
         // NB: NON ripersistere qui. Un tempo veniva lanciato un tokio::spawn(save_profile)
         // fire-and-forget per aggiornare last_access su disco, ma quel save detached faceva
@@ -193,7 +225,7 @@ impl ProfileStorage {
         profile.update_last_access();
 
         println!("[PROFILE STORAGE] ✅ Profilo '{}' caricato", profile.name);
-        Ok(profile)
+        profile
     }
 
     /// Carica un profilo decrittografato usando SecureMemory per la password
