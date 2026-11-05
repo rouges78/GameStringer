@@ -65,7 +65,7 @@ const ALLOWED_SECRET_KEYS = [
 ] as const;
 
 export const secretsRequestSchema = z.object({
-  key: z.enum(ALLOWED_SECRET_KEYS, { errorMap: () => ({ message: 'Invalid API key name' }) }),
+  key: z.enum(ALLOWED_SECRET_KEYS, { error: 'Invalid API key name' }),
   value: z.string().max(256, 'API key value too long (max 256 chars)').optional().default(''),
 });
 

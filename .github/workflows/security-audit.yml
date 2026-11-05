@@ -111,8 +111,20 @@ jobs:
       #   Da rimuovere quando tauri-plugin-updater passa a zip >= 9 (allora va
       #   portata a 9.x anche la nostra dipendenza diretta `zip = "4.6"`).
       #   Revisione prevista: 2026-11-20, o prima a ogni bump di Tauri.
+      #
+      # RUSTSEC-2026-0429 — zip <9.0.0 (aggiunto il 05/11/2026): `extract()`
+      #   manda in abort il processo su una entry symlink con dimensione
+      #   dichiarata enorme. Stessa funzione, stessa analisi delle tre sopra:
+      #   il nostro codice non chiama `extract()` (grep del 05/11/2026) e
+      #   l'updater la chiama solo dopo `verify_signature`.
+      #   L'uscita ORA ESISTE: tauri-plugin-updater 2.14.1 richiede `zip ^9`
+      #   (verificato su crates.io il 05/11/2026). Non è un `cargo update`
+      #   però: la 2.14.1 vuole tauri 2.12 (oggi 2.10.3, con wry 0.54 -> 0.57)
+      #   e la CLI pretende `@tauri-apps/api` sulla stessa minor. Va fatto
+      #   come aggiornamento di Tauri a sé, insieme a `zip = "9"`, e allora
+      #   cadono tutti e quattro gli ignore su zip. Stessa scadenza: 2026-11-20.
       - name: cargo audit
-        run: cargo audit --ignore RUSTSEC-2026-0367 --ignore RUSTSEC-2026-0368 --ignore RUSTSEC-2026-0369
+        run: cargo audit --ignore RUSTSEC-2026-0367 --ignore RUSTSEC-2026-0368 --ignore RUSTSEC-2026-0369 --ignore RUSTSEC-2026-0429
       - name: Genera SBOM CycloneDX (cargo)
         if: always()
         continue-on-error: true # come sopra: visibile, ma non blocca
