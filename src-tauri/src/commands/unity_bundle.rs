@@ -401,9 +401,10 @@ pub async fn install_uabea() -> Result<UabeaStatus, String> {
         let mut file = archive.by_index(i)
             .map_err(|e| format!("Errore lettura ZIP: {}", e))?;
         
-        let outpath = uabea_dir.join(file.name());
+        let outpath = uabea_dir.join(&*file.name()
+            .map_err(|e| format!("Errore lettura ZIP: {}", e))?);
         
-        if file.name().ends_with('/') {
+        if file.is_dir() {
             fs::create_dir_all(&outpath).ok();
         } else {
             if let Some(parent) = outpath.parent() {

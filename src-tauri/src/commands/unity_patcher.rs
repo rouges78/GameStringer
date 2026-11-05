@@ -2754,9 +2754,9 @@ async fn download_and_extract(url: &str, target_dir: &Path) -> Result<(), String
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        let outpath = target_dir.join(file.mangled_name());
+        let outpath = target_dir.join(file.mangled_name().map_err(|e| e.to_string())?);
 
-        if file.name().ends_with('/') {
+        if file.is_dir() {
             fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
         } else {
             if let Some(p) = outpath.parent() {

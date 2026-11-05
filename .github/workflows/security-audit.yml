@@ -91,40 +91,16 @@ jobs:
       #   scaduto mai e diventato permanente. Un'eccezione che non può essere
       #   chiusa non è un'eccezione, è una rinuncia scritta in un commento.
       #
-      # RUSTSEC-2026-0367 / 0368 / 0369 — zip <9.0.0: `ZipArchive::extract()` e
-      #   l'estrazione in streaming conservano i bit SUID/SGID, creano symlink
-      #   con target fuori dalla destinazione e applicano permessi Unix
-      #   attraverso quei symlink. Tutte e tre stanno SOLO in `extract()`.
-      #   Il fix esiste solo in 9.x (`patched = [">= 9.0.0"]`, nessun backport
-      #   su 4.x) e non è raggiungibile: `tauri-plugin-updater` richiede
-      #   `zip ^4` anche nell'ultima 2.14.0 (verificato su crates.io il
-      #   20/10/2026), quindi zip 4.x resta nel grafo comunque.
-      #   Perché non è raggiungibile da input di terzi:
-      #   - il nostro codice (src-tauri/src) NON chiama mai `extract()`: legge
-      #     le entry una per una con `mangled_name()` e scrive file normali,
-      #     senza symlink né `set_permissions` (grep del 20/10/2026);
-      #   - l'updater chiama `extract()` solo nel ramo `#[cfg(windows)]` (zip è
-      #     dipendenza target windows-only) e DOPO `verify_signature` minisign
-      #     sul pacchetto scaricato: un archivio ostile richiede la nostra
-      #     chiave di firma. SUID/SGID e i symlink verificati negli advisory
-      #     sono comportamento macOS/Linux.
-      #   Da rimuovere quando tauri-plugin-updater passa a zip >= 9 (allora va
-      #   portata a 9.x anche la nostra dipendenza diretta `zip = "4.6"`).
-      #   Revisione prevista: 2026-11-20, o prima a ogni bump di Tauri.
-      #
-      # RUSTSEC-2026-0429 — zip <9.0.0 (aggiunto il 05/11/2026): `extract()`
-      #   manda in abort il processo su una entry symlink con dimensione
-      #   dichiarata enorme. Stessa funzione, stessa analisi delle tre sopra:
-      #   il nostro codice non chiama `extract()` (grep del 05/11/2026) e
-      #   l'updater la chiama solo dopo `verify_signature`.
-      #   L'uscita ORA ESISTE: tauri-plugin-updater 2.14.1 richiede `zip ^9`
-      #   (verificato su crates.io il 05/11/2026). Non è un `cargo update`
-      #   però: la 2.14.1 vuole tauri 2.12 (oggi 2.10.3, con wry 0.54 -> 0.57)
-      #   e la CLI pretende `@tauri-apps/api` sulla stessa minor. Va fatto
-      #   come aggiornamento di Tauri a sé, insieme a `zip = "9"`, e allora
-      #   cadono tutti e quattro gli ignore su zip. Stessa scadenza: 2026-11-20.
+      # RUSTSEC-2026-0367 / 0368 / 0369 / 0429 — zip <9.0.0: ignore RIMOSSI il
+      #   05/11/2026, prima della revisione del 20/11. Stavano tutti in
+      #   `ZipArchive::extract()` (SUID/SGID, symlink fuori destinazione, abort
+      #   su symlink con dimensione enorme) e il fix esiste solo in 9.x.
+      #   tauri-plugin-updater 2.14.1 usa `zip ^9` ma richiede tauri 2.12:
+      #   aggiornato Tauri (2.10.3 -> 2.12, con @tauri-apps/api e cli sulla
+      #   stessa minor) e portata a `zip = "9"` anche la dipendenza diretta.
+      #   Nel grafo resta solo zip 9.x, quindi nessun ignore serve più.
       - name: cargo audit
-        run: cargo audit --ignore RUSTSEC-2026-0367 --ignore RUSTSEC-2026-0368 --ignore RUSTSEC-2026-0369 --ignore RUSTSEC-2026-0429
+        run: cargo audit
       - name: Genera SBOM CycloneDX (cargo)
         if: always()
         continue-on-error: true # come sopra: visibile, ma non blocca
