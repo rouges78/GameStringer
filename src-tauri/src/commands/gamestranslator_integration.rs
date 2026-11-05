@@ -301,7 +301,7 @@ pub async fn install_translation_from_zip(
 
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-                let name = file.mangled_name();
+                let name = file.mangled_name().map_err(|e| e.to_string())?;
                 let fname = name.file_name().unwrap_or_default().to_string_lossy().to_string();
 
                 if fname.ends_with(".pak") || fname.ends_with(".ucas") || fname.ends_with(".utoc") {
@@ -309,7 +309,7 @@ pub async fn install_translation_from_zip(
                     let mut out = fs::File::create(&dest).map_err(|e| e.to_string())?;
                     std::io::copy(&mut file, &mut out).map_err(|e| e.to_string())?;
                     installed_files.push(fname);
-                } else if !fname.is_empty() && !file.name().ends_with('/') {
+                } else if !fname.is_empty() && !file.is_dir() {
                     skipped_files.push(fname);
                 }
             }
@@ -318,10 +318,10 @@ pub async fn install_translation_from_zip(
             // Per Unity: estrae tutto nella cartella di gioco mantenendo la struttura
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-                let relative = file.mangled_name();
+                let relative = file.mangled_name().map_err(|e| e.to_string())?;
                 let dest = game_dir.join(&relative);
 
-                if file.name().ends_with('/') {
+                if file.is_dir() {
                     fs::create_dir_all(&dest).map_err(|e| e.to_string())?;
                 } else {
                     if let Some(p) = dest.parent() {

@@ -301,9 +301,10 @@ pub async fn install_extension(source: String) -> Result<String, String> {
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i)
                     .map_err(|e| format!("Errore file zip #{}: {}", i, e))?;
-                let out_path = extract_dir.join(file.mangled_name());
+                let out_path = extract_dir.join(file.mangled_name()
+                    .map_err(|e| format!("Errore file zip #{}: {}", i, e))?);
                 
-                if file.name().ends_with('/') {
+                if file.is_dir() {
                     std::fs::create_dir_all(&out_path)
                         .map_err(|e| format!("Errore creazione dir: {}", e))?;
                 } else {

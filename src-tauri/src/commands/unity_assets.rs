@@ -227,8 +227,8 @@ async fn try_download_uabea(client: &Client, url: &str, dir: &std::path::Path) -
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        let out = dir.join(file.mangled_name());
-        if file.name().ends_with('/') {
+        let out = dir.join(file.mangled_name().map_err(|e| e.to_string())?);
+        if file.is_dir() {
             fs::create_dir_all(&out).map_err(|e| e.to_string())?;
         } else {
             if let Some(p) = out.parent() { fs::create_dir_all(p).map_err(|e| e.to_string())?; }
