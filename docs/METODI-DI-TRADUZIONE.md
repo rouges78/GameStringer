@@ -371,6 +371,64 @@ composta.
    (cp1252) si ferma stampando caratteri come `ő`. Per questo la sonda è in
    Node, come le altre in `scripts/`.
 
+### TextAsset in Rust (`unity_serialized.rs`): misurato su un gioco vero, e perché non entra da solo in String it
+
+**Il fatto.** Il riscrittore dei TextAsset tutto in Rust non restituiva il file
+identico nemmeno senza sostituzioni: ricompattava gli oggetti con allineamento
+a 4 byte e perdeva il riempimento originale e la coda del file. Corretto
+l'11/11/2026: ora conserva i vuoti fra gli oggetti e la coda, e quando un testo
+cambia lunghezza sposta gli oggetti successivi solo di multipli di 16 byte,
+così ognuno mantiene l'allineamento che aveva.
+
+**Misura.** art of rally (Steam, Unity 2019.4.38f1, SerializedFile v21), 11/11/2026,
+sola lettura — non scrive nella cartella del gioco:
+
+```bash
+cd src-tauri && GS_UNITY_SHOW=1 GS_UNITY_DATA_DIRS="E:/SteamLibrary/steamapps/common/artofrally/artofrally_Data"   cargo test --bin gamestringer real_games_roundtrip -- --ignored --nocapture
+```
+
+| Cosa | Prima | Dopo |
+|---|---|---|
+| File `.assets` riconosciuti | 63 su 63 | 63 su 63 |
+| Riscrittura senza sostituzioni identica byte per byte | 1 su 63 | 63 su 63 |
+| Allungare un TextAsset e rileggerlo (testo nuovo presente, gli altri invariati) | ok | ok |
+| TextAsset trovati | 23, tutti in `resources.assets` | 23 |
+
+**Cosa contengono quei 23 TextAsset.** 9 assetti delle auto (`[body] weight=900 …`),
+4 classifiche JSON (`top-times*`, fino a 199 KB), 4 tabelle di caratteri per
+l'a capo di TextMeshPro, 2 README di un pacchetto di texture, un numero di
+versione, una nota di una cartella, e **un solo** file con testo per il
+giocatore: `achievements` (JSON, 14 KB).
+
+**Cosa ne segue.** Tradurre «tutti i TextAsset» romperebbe il gioco: l'assetto
+di un'auto è un TextAsset quanto un dialogo. Un metodo statico automatico su
+Unity deve prima RICONOSCERE quali TextAsset sono tabelle di localizzazione
+(CSV con colonne lingua, JSON con chiavi lingua, formati I2/SimpleLocalization)
+e toccare solo quelli, campo per campo. Finché quel riconoscitore non c'è, il
+piano di String it tiene XUnity come primo metodo per Unity.
+
+**Trappole.**
+
+1. **«12 giochi Unity installati» erano 1.** Le cartelle `*_Data` in
+   `steamapps/common` restano dopo la disinstallazione, con dentro una cartella
+   `Languages` o poco altro. Si contano i file `.assets`, non le cartelle.
+2. **`data.unity3d` non è coperto.** Lost Host Demo ed Esoteric Ebb tengono
+   tutto in un bundle UnityFS: zero file `.assets` sciolti, quindi questo
+   riscrittore non li vede.
+3. **Rileggere col proprio parser non prova che il gioco carichi il file.** Il
+   test «allungo e rileggo» passava anche PRIMA della correzione, con il file
+   già diverso dall'originale. L'unica prova forte senza avviare il gioco è
+   l'identità byte per byte a sostituzioni vuote.
+4. **`| tail` in fondo a un comando di misura taglia la misura.** La prima
+   tabella mostrava solo art of rally perché le righe degli altri giochi non
+   c'erano; ma l'avrebbe mostrata uguale se fossero state tagliate. Si salva
+   l'uscita intera e si conta.
+
+**Nel codice.** `src-tauri/src/commands/unity_serialized.rs` —
+`rewrite_text_assets`, test `real_games_roundtrip` (ignorato, vuole
+`GS_UNITY_DATA_DIRS`). Nessuna pagina chiama ancora `extract_unity_text_assets`
+/ `rewrite_unity_text_assets`.
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026

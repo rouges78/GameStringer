@@ -17,11 +17,13 @@
 // (build di sviluppo) e bundle UnityFS compressi (quelli passano già da
 // unity_localization.rs, che li decomprime).
 //
-// ATTENZIONE: il layout è stato validato su fixture derivate dalla specifica
-// pubblica (AssetStudio/UnityPy) e da un port Python, MA non ancora su un file
-// di un gioco reale. Prima di dichiararlo affidabile in produzione va provato su
-// almeno un resources.assets vero per ciascuna fascia di versione. Vedi
-// is_serialized_file() per il fallback difensivo.
+// ATTENZIONE: il layout è validato su fixture derivate dalla specifica pubblica
+// (AssetStudio/UnityPy) e, dall'11/11/2026, su UN gioco reale: art of rally,
+// Unity 2019.4.38f1, SerializedFile v21 — 63 file .assets letti, riscrittura
+// senza sostituzioni identica byte per byte in 63 su 63 (test ignorato
+// `real_games_roundtrip` in fondo al file). NON è ancora stato provato che il
+// gioco CARICHI un file riscritto con un testo più lungo, né una v22 reale.
+// Vedi is_serialized_file() per il fallback difensivo.
 
 use serde::{Deserialize, Serialize};
 use tauri::command;
@@ -283,7 +285,8 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
 /// tutti gli oggetti successivi slittano. metadata_size e data_offset NON
 /// cambiano (la tabella oggetti è a campi fissi), quindi ripatchiamo in-place
 /// byte_start/byte_size di ogni oggetto e file_size nell'header, poi riaccodiamo
-/// la sezione dati ricostruita.
+/// la sezione dati ricostruita. Senza sostituzioni il risultato è identico
+/// all'ingresso byte per byte.
 pub fn rewrite_text_assets(
     data: &[u8],
     replacements: &std::collections::HashMap<i64, String>,
@@ -300,39 +303,64 @@ pub fn rewrite_text_assets(
     // (nuovo_byte_start, nuovo_byte_size) per ogni oggetto, indicizzato come objects
     let mut new_pos: Vec<(u64, u32)> = vec![(0, 0); objects.len()];
 
+    // Il layout originale si CONSERVA: i byte fra un oggetto e il successivo
+    // (riempimento di allineamento) e la coda del file si ricopiano tali e
+    // quali. Misurato su art of rally (63 file .assets, 11/11/2026): ricompattando
+    // con allineamento a 4 il file tornava diverso in 62 casi su 63 anche senza
+    // sostituzioni, perché Unity allinea più largo di 4.
+    // `prev_end` = fine dell'ultimo oggetto copiato, nella sezione dati originale.
+    let mut prev_end: usize = 0;
+    let section_len = data.len().saturating_sub(data_offset);
+
     for &i in &order {
-        while new_data.len() % 4 != 0 {
-            new_data.push(0);
-        }
         let obj = &objects[i];
-        let base = data_offset + obj.byte_start as usize;
-        let end = base + obj.byte_size as usize;
-        if end > data.len() {
+        let start = obj.byte_start as usize;
+        let size = obj.byte_size as usize;
+        if start + size > section_len {
             return Err(format!(
                 "oggetto path_id {} punta fuori dai limiti del file",
                 obj.path_id
             ));
         }
+        if start < prev_end {
+            return Err(format!("oggetto path_id {} sovrapposto al precedente", obj.path_id));
+        }
+        // vuoto originale prima dell'oggetto
+        new_data.extend_from_slice(&data[data_offset + prev_end..data_offset + start]);
+
+        let original = &data[data_offset + start..data_offset + start + size];
         let new_byte_start = new_data.len() as u64;
 
-        if obj.class_id == CLASS_ID_TEXT_ASSET {
-            if let Some(new_script) = replacements.get(&obj.path_id) {
-                match rebuild_text_asset(&data[base..end], new_script) {
-                    Some(body) => new_data.extend_from_slice(&body),
-                    // corpo non riconosciuto: meglio conservare l'originale che
-                    // corrompere il file
-                    None => new_data.extend_from_slice(&data[base..end]),
-                }
-            } else {
-                new_data.extend_from_slice(&data[base..end]);
-            }
+        let rebuilt = if obj.class_id == CLASS_ID_TEXT_ASSET {
+            // corpo non riconosciuto → None: meglio conservare l'originale che
+            // corrompere il file
+            replacements.get(&obj.path_id).and_then(|script| rebuild_text_asset(original, script))
         } else {
-            new_data.extend_from_slice(&data[base..end]);
-        }
+            None
+        };
 
-        let new_byte_size = (new_data.len() as u64 - new_byte_start) as u32;
+        let new_byte_size = match rebuilt {
+            Some(body) => {
+                new_data.extend_from_slice(&body);
+                // Gli oggetti successivi slittano: lo slittamento si arrotonda a
+                // un multiplo di 16, così ognuno mantiene l'allineamento che
+                // aveva (Unity usa 4, 8 o 16), qualunque esso sia.
+                let delta = body.len() as i64 - size as i64;
+                let pad = (16 - delta.rem_euclid(16)) % 16;
+                new_data.extend(std::iter::repeat(0u8).take(pad as usize));
+                body.len() as u32
+            }
+            None => {
+                new_data.extend_from_slice(original);
+                obj.byte_size
+            }
+        };
+
         new_pos[i] = (new_byte_start, new_byte_size);
+        prev_end = start + size;
     }
+    // coda originale dopo l'ultimo oggetto
+    new_data.extend_from_slice(&data[data_offset + prev_end..]);
 
     // Copia header+metadata (fino a data_offset), poi patcha i campi.
     let mut out = data[..data_offset].to_vec();
@@ -798,6 +826,8 @@ mod tests {
             &[(49, text_asset_body("a", "hello")), (28, vec![1, 2, 3, 4])],
         );
         let out = rewrite_text_assets(&buf, &HashMap::new()).unwrap();
+        // Nessuna sostituzione: il file deve tornare identico byte per byte.
+        assert_eq!(out, buf);
         // Nessuna sostituzione: il contenuto ri-estratto deve combaciare.
         assert_eq!(extracted(&out), extracted(&buf));
         // e file_size resta coerente
@@ -839,5 +869,73 @@ mod tests {
         let twice = rewrite_text_assets(&once, &HashMap::new()).unwrap();
         assert_eq!(once, twice, "una riscrittura a vuoto non deve cambiare il file");
         assert_eq!(extracted(&once)["b"], "due tradotto");
+    }
+}
+
+/// Misura su giochi VERI, in sola lettura: non scrive mai nella cartella del
+/// gioco. Ignorato di default perché ha bisogno di giochi installati.
+///
+/// ```bash
+/// cd src-tauri && GS_UNITY_DATA_DIRS="C:/…/Game_Data;D:/…/Other_Data" \
+///   cargo test --bin gamestringer real_games_roundtrip -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+mod real_games {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    #[ignore]
+    fn real_games_roundtrip() {
+        let dirs = std::env::var("GS_UNITY_DATA_DIRS").expect("GS_UNITY_DATA_DIRS non impostata");
+        println!("gioco | file | supportato | textasset | identita | riscrittura");
+        for dir in dirs.split(';').filter(|d| !d.trim().is_empty()) {
+            let game = std::path::Path::new(dir).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            let Ok(entries) = std::fs::read_dir(dir) else { println!("{game} | cartella illeggibile"); continue };
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if !name.ends_with(".assets") { continue; }
+                let Ok(data) = std::fs::read(entry.path()) else { continue };
+                if !is_serialized_file(&data) {
+                    println!("{game} | {name} | no | - | - | -");
+                    continue;
+                }
+                let assets = match extract_text_assets(&data) {
+                    Ok(a) => a,
+                    Err(e) => { println!("{game} | {name} | si | ERRORE {e} | - | -"); continue; }
+                };
+                // 1. Senza sostituzioni il file deve tornare identico byte a byte.
+                let identity = match rewrite_text_assets(&data, &HashMap::new()) {
+                    Ok(out) => if out == data { "ok".to_string() } else { format!("DIVERSO ({} vs {} byte)", out.len(), data.len()) },
+                    Err(e) => format!("ERRORE {e}"),
+                };
+                // 2. Allungando un TextAsset, rileggendo si ritrova il testo nuovo
+                //    e tutti gli altri restano uguali.
+                let rewrite = match assets.first() {
+                    None => "-".to_string(),
+                    Some(first) => {
+                        let new_text = format!("{}\nGS-PROVA àèìòù", first.content);
+                        let map = HashMap::from([(first.path_id, new_text.clone())]);
+                        match rewrite_text_assets(&data, &map).and_then(|out| extract_text_assets(&out)) {
+                            Err(e) => format!("ERRORE {e}"),
+                            Ok(after) => {
+                                let changed_ok = after.iter().any(|a| a.path_id == first.path_id && a.content == new_text);
+                                let others_ok = after.len() == assets.len()
+                                    && after.iter().zip(&assets).all(|(a, b)| a.path_id == first.path_id || a == b);
+                                if changed_ok && others_ok { "ok".to_string() } else { format!("SBAGLIATA (nuovo={changed_ok}, altri={others_ok})") }
+                            }
+                        }
+                    }
+                };
+                println!("{game} | {name} | si | {} | {identity} | {rewrite}", assets.len());
+                // GS_UNITY_SHOW=1: elenca i TextAsset (nome, byte, inizio del testo).
+                if std::env::var("GS_UNITY_SHOW").is_ok() {
+                    for a in &assets {
+                        let head: String = a.content.chars().take(70).map(|c| if c.is_control() { ' ' } else { c }).collect();
+                        println!("    textasset | {} | {} byte | {head}", a.name, a.content.len());
+                    }
+                }
+            }
+        }
     }
 }
