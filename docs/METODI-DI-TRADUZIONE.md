@@ -717,8 +717,36 @@ dentro il CSV, che è un'unica stringa lunga e non è uguale a nessuna voce.
 Per queste regole 16 voci su 295 restano in lituano: è il prezzo del non
 rompere il gioco.
 
-**Cosa NON è provato.** Che il gioco carichi `level0` riscritto e mostri
-l'italiano scegliendo il lituano. Il motore non è collegato a nessun comando.
+**Provato in gioco l'11/11/2026.** Scritto `level0` tradotto nel bundle
+installato (305 stringhe, 13 s, 12 blocchi ricompressi su 43.702, originale
+tenuto come backup): il gioco parte, e scegliendo il lituano **il menu è in
+italiano**, visto dal proprietario del gioco. `Player.log`: caricamento di
+`data.unity3d` e uscita con «Exit button pressed», nessun errore. Poi
+l'originale è stato ripristinato.
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="level0" GS_UNITY_TABLES="sharedassets0.assets" \
+  GS_UNITY_FROM="LOST_HOST - Lithuanian" GS_UNITY_TO="LOST_HOST - Italian" \
+  cargo test --bin gamestringer -- commands::unity_strings::real_scene_apply::real_scene_apply --ignored --nocapture --exact
+```
+
+È la prima traduzione statica di un gioco Unity fatta solo con i motori Rust
+(lettore e scrittore di bundle, riscrittura di oggetti, sostituzione di
+stringhe) e vista funzionare in gioco, su Unity 6000.3.
+
+**Cosa NON è provato.**
+
+- Un dizionario fatto da una traduzione AI: qui i testi nuovi erano
+  l'italiano ufficiale del gioco. La catena tecnica è la stessa, cambia solo
+  da dove arrivano i testi.
+- `level2` (il gioco vero dopo «Nuova partita»): misurato in memoria, non
+  scritto.
+- Più file interni nella stessa passata: `replace_node_in_place` ne sostituisce
+  uno e riparte sempre dall'originale, quindi una seconda chiamata su un altro
+  file annullerebbe la prima. Serve una versione che ne prenda più d'uno.
+- Giochi con i file `.assets` sciolti, e versioni di Unity diverse da 6000.3.
+- Il motore non è collegato a nessun comando né a String it.
 
 **Trappole.**
 
