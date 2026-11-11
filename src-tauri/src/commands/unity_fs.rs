@@ -274,75 +274,126 @@ impl Bundle {
         Ok(out)
     }
 
-    /// Scrive in `dst` un bundle uguale a questo, ma con il file interno
-    /// `node_index` sostituito da `new_content`. L'originale non si tocca.
+    /// `rewrite_nodes` con un solo file interno.
+    pub fn rewrite_node(&mut self, dst: &Path, node_index: usize, new_content: &[u8]) -> Result<RewriteStats, String> {
+        self.rewrite_nodes(dst, &[(node_index, new_content.to_vec())])
+    }
+
+    /// Scrive in `dst` un bundle uguale a questo, ma con i file interni
+    /// indicati (indice → contenuto nuovo) sostituiti. L'originale non si tocca.
     ///
-    /// Si ricomprimono solo i blocchi che contengono byte di quel file; gli
+    /// Si ricomprimono solo i blocchi che contengono byte di quei file; gli
     /// altri si copiano compressi come sono. I file interni successivi slittano
     /// di un multiplo di 16 byte, così conservano l'allineamento che avevano.
-    pub fn rewrite_node(&mut self, dst: &Path, node_index: usize, new_content: &[u8]) -> Result<RewriteStats, String> {
-        let node = self.nodes.get(node_index).cloned().ok_or("file interno inesistente")?;
-        if node.size == 0 {
-            return Err(format!("{} è vuoto: non si sa in quale blocco stia", node.path));
+    pub fn rewrite_nodes(&mut self, dst: &Path, replacements: &[(usize, Vec<u8>)]) -> Result<RewriteStats, String> {
+        if replacements.is_empty() {
+            return Err("nessun file interno da sostituire".to_string());
         }
         if self.blocks.iter().any(|b| b.compression == COMPRESSION_LZMA) {
             return Err("bundle compresso con LZMA: non supportato".to_string());
         }
 
-        // Blocchi che contengono il primo e l'ultimo byte del file interno.
-        let first = self.blocks.partition_point(|b| b.stream_offset + b.uncompressed_size as u64 <= node.offset);
-        let last = self.blocks.partition_point(|b| b.stream_offset + b.uncompressed_size as u64 <= node.offset + node.size - 1);
-        let span_start = self.blocks[first].stream_offset;
-        let span_end = self.blocks[last].stream_offset + self.blocks[last].uncompressed_size as u64;
+        // File da sostituire, in ordine di posizione nel flusso.
+        struct Item<'a> {
+            index: usize,
+            offset: u64,
+            size: u64,
+            content: &'a [u8],
+            /// Di quanto slittano i file che vengono dopo questo.
+            shift: i64,
+            pad: usize,
+        }
+        let mut items: Vec<Item> = Vec::with_capacity(replacements.len());
+        for (index, content) in replacements {
+            let node = self.nodes.get(*index).ok_or("file interno inesistente")?;
+            if node.size == 0 {
+                return Err(format!("{} è vuoto: non si sa in quale blocco stia", node.path));
+            }
+            if items.iter().any(|i| i.index == *index) {
+                return Err(format!("{} indicato due volte", node.path));
+            }
+            let delta = content.len() as i64 - node.size as i64;
+            let pad = ((16 - delta.rem_euclid(16)) % 16) as usize;
+            items.push(Item { index: *index, offset: node.offset, size: node.size, content, shift: delta + pad as i64, pad });
+        }
+        items.sort_by_key(|i| i.offset);
 
-        // Nuovo contenuto del tratto: ciò che precede il file nel primo blocco,
-        // il file nuovo, il riempimento, ciò che lo segue nell'ultimo blocco.
-        let delta = new_content.len() as i64 - node.size as i64;
-        let pad = (16 - delta.rem_euclid(16)) % 16;
-        let shift = delta + pad;
-        let mut span = self.read_stream(span_start, (node.offset - span_start) as usize)?;
-        span.extend_from_slice(new_content);
-        span.extend(std::iter::repeat(0u8).take(pad as usize));
-        let node_end = node.offset + node.size;
-        span.extend(self.read_stream(node_end, (span_end - node_end) as usize)?);
-
-        // Ricompressione del tratto in blocchi da 128 KB. I bit non di
-        // compressione si ereditano dal primo blocco sostituito.
-        let other_bits = self.blocks[first].flags & !(FLAG_COMPRESSION_MASK as u16);
-        let mut new_blocks: Vec<(Vec<u8>, u32, u16)> = Vec::new();
-        for chunk in span.chunks(WRITE_BLOCK_SIZE) {
-            let packed = lz4_flex::compress(chunk);
-            if packed.len() < chunk.len() {
-                new_blocks.push((packed, chunk.len() as u32, other_bits | 2));
-            } else {
-                // incomprimibile: si salva com'è
-                new_blocks.push((chunk.to_vec(), chunk.len() as u32, other_bits));
+        // Tratti di blocchi da riscrivere: i blocchi che contengono un file
+        // sostituito, uniti quando due file condividono o toccano un blocco.
+        let block_at = |blocks: &[Block], pos: u64| blocks.partition_point(|b| b.stream_offset + b.uncompressed_size as u64 <= pos);
+        let mut spans: Vec<(usize, usize, Vec<usize>)> = Vec::new(); // (primo blocco, ultimo blocco, file)
+        for (i, item) in items.iter().enumerate() {
+            let first = block_at(&self.blocks, item.offset);
+            let last = block_at(&self.blocks, item.offset + item.size - 1);
+            match spans.last_mut() {
+                Some((_, span_last, members)) if first <= *span_last => {
+                    *span_last = (*span_last).max(last);
+                    members.push(i);
+                }
+                _ => spans.push((first, last, vec![i])),
             }
         }
 
-        // Indice nuovo.
+        // Contenuto nuovo di ogni tratto, ricompresso in blocchi da 128 KB.
+        // I bit non di compressione si ereditano dal primo blocco sostituito.
+        let mut new_spans: Vec<Vec<(Vec<u8>, u32, u16)>> = Vec::with_capacity(spans.len());
+        for (first, last, members) in &spans {
+            let span_end = self.blocks[*last].stream_offset + self.blocks[*last].uncompressed_size as u64;
+            let mut pos = self.blocks[*first].stream_offset;
+            let mut bytes = Vec::new();
+            for &m in members {
+                let (offset, size, pad) = (items[m].offset, items[m].size, items[m].pad);
+                bytes.extend(self.read_stream(pos, (offset - pos) as usize)?);
+                bytes.extend_from_slice(items[m].content);
+                bytes.extend(std::iter::repeat(0u8).take(pad));
+                pos = offset + size;
+            }
+            bytes.extend(self.read_stream(pos, (span_end - pos) as usize)?);
+
+            let other_bits = self.blocks[*first].flags & !(FLAG_COMPRESSION_MASK as u16);
+            let mut blocks = Vec::new();
+            for chunk in bytes.chunks(WRITE_BLOCK_SIZE) {
+                let packed = lz4_flex::compress(chunk);
+                if packed.len() < chunk.len() {
+                    blocks.push((packed, chunk.len() as u32, other_bits | 2));
+                } else {
+                    // incomprimibile: si salva com'è
+                    blocks.push((chunk.to_vec(), chunk.len() as u32, other_bits));
+                }
+            }
+            new_spans.push(blocks);
+        }
+
+        // Indice nuovo: blocchi nell'ordine in cui verranno scritti.
         let mut info = self.info_hash.clone();
-        let block_count = first + new_blocks.len() + (self.blocks.len() - last - 1);
+        let rewritten_blocks: usize = spans.iter().map(|(f, l, _)| l - f + 1).sum();
+        let new_block_count: usize = new_spans.iter().map(Vec::len).sum();
+        let block_count = self.blocks.len() - rewritten_blocks + new_block_count;
         info.extend((block_count as u32).to_be_bytes());
         let entry = |info: &mut Vec<u8>, uncompressed: u32, compressed: u32, flags: u16| {
             info.extend(uncompressed.to_be_bytes());
             info.extend(compressed.to_be_bytes());
             info.extend(flags.to_be_bytes());
         };
-        for b in &self.blocks[..first] {
+        let mut next = 0;
+        for ((first, last, _), blocks) in spans.iter().zip(&new_spans) {
+            for b in &self.blocks[next..*first] {
+                entry(&mut info, b.uncompressed_size, b.compressed_size, b.flags);
+            }
+            for (data, uncompressed, flags) in blocks {
+                entry(&mut info, *uncompressed, data.len() as u32, *flags);
+            }
+            next = last + 1;
+        }
+        for b in &self.blocks[next..] {
             entry(&mut info, b.uncompressed_size, b.compressed_size, b.flags);
         }
-        for (data, uncompressed, flags) in &new_blocks {
-            entry(&mut info, *uncompressed, data.len() as u32, *flags);
-        }
-        for b in &self.blocks[last + 1..] {
-            entry(&mut info, b.uncompressed_size, b.compressed_size, b.flags);
-        }
+
         info.extend((self.nodes.len() as u32).to_be_bytes());
         for (i, n) in self.nodes.iter().enumerate() {
-            let offset = if n.offset > node.offset { (n.offset as i64 + shift) as u64 } else { n.offset };
-            let size = if i == node_index { new_content.len() as u64 } else { n.size };
-            info.extend((offset as i64).to_be_bytes());
+            let shift: i64 = items.iter().filter(|item| item.offset < n.offset).map(|item| item.shift).sum();
+            let size = items.iter().find(|item| item.index == i).map(|item| item.content.len() as u64).unwrap_or(n.size);
+            info.extend((n.offset as i64 + shift).to_be_bytes());
             info.extend((size as i64).to_be_bytes());
             info.extend(n.flags.to_be_bytes());
             info.extend(n.path.as_bytes());
@@ -385,21 +436,25 @@ impl Bundle {
             written = aligned;
         }
 
-        // Blocchi: quelli prima e dopo il tratto si copiano dal file originale.
+        // Blocchi: quelli fuori dai tratti si copiano dal file originale.
         let blocks_end = self.blocks.last().map(|b| b.file_offset + b.compressed_size as u64).unwrap_or(self.data_start);
+        let file_pos = |blocks: &[Block], index: usize| blocks.get(index).map(|b| b.file_offset).unwrap_or(blocks_end);
         let copy = |file: &mut File, from: u64, to: u64, out: &mut std::io::BufWriter<File>| -> Result<u64, String> {
             file.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
             std::io::copy(&mut file.take(to - from), out).map_err(io)
         };
-        let copied_before = copy(&mut self.file, self.data_start, self.blocks[first].file_offset, &mut out)?;
-        let mut rewritten = 0u64;
-        for (data, _, _) in &new_blocks {
-            out.write_all(data).map_err(io)?;
-            rewritten += data.len() as u64;
+        let (mut copied, mut rewritten) = (0u64, 0u64);
+        let mut next = 0;
+        for ((first, last, _), blocks) in spans.iter().zip(&new_spans) {
+            copied += copy(&mut self.file, file_pos(&self.blocks, next), file_pos(&self.blocks, *first), &mut out)?;
+            for (data, _, _) in blocks {
+                out.write_all(data).map_err(io)?;
+                rewritten += data.len() as u64;
+            }
+            next = last + 1;
         }
-        let after_from = self.blocks[last].file_offset + self.blocks[last].compressed_size as u64;
-        let copied_after = copy(&mut self.file, after_from, blocks_end, &mut out)?;
-        written += copied_before + rewritten + copied_after;
+        copied += copy(&mut self.file, file_pos(&self.blocks, next), blocks_end, &mut out)?;
+        written += copied + rewritten;
         if info_at_end {
             out.write_all(&info_packed).map_err(io)?;
             written += info_packed.len() as u64;
@@ -412,8 +467,8 @@ impl Bundle {
 
         Ok(RewriteStats {
             blocks_total: block_count,
-            blocks_recompressed: new_blocks.len(),
-            bytes_copied: copied_before + copied_after,
+            blocks_recompressed: new_block_count,
+            bytes_copied: copied,
             bytes_recompressed: rewritten,
             file_size: written,
         })
@@ -445,30 +500,22 @@ pub fn backup_path(bundle: &Path) -> std::path::PathBuf {
     std::path::PathBuf::from(name)
 }
 
-/// Sostituisce un file interno NEL GIOCO, tenendo l'originale come backup.
-///
-/// `transform` riceve il contenuto originale del file interno e restituisce
-/// quello nuovo. La sorgente è sempre il bundle ORIGINALE: se un backup esiste
-/// già si riparte da quello, così applicare due volte non accumula modifiche e
-/// il backup resta l'originale vero.
-///
-/// Ordine delle operazioni, pensato per non lasciare mai il gioco senza
-/// bundle: si scrive il nuovo in `<bundle>.gs_new`; solo se la scrittura è
-/// riuscita si mette da parte l'originale (per RINOMINA, senza copiare
-/// gigabyte) e si rinomina il nuovo al suo posto.
+/// Il bundle ORIGINALE di un gioco: il backup se una modifica è già stata
+/// applicata, altrimenti il bundle stesso. Da qui si legge sempre, così le
+/// modifiche non si accumulano.
+pub fn original_bundle(bundle_path: &Path) -> std::path::PathBuf {
+    let backup = backup_path(bundle_path);
+    if backup.exists() { backup } else { bundle_path.to_path_buf() }
+}
+
+/// `replace_nodes_in_place` per un solo file interno: `transform` riceve il
+/// suo contenuto originale e restituisce quello nuovo.
 pub fn replace_node_in_place(
     bundle_path: &Path,
     node_path: &str,
     transform: impl FnOnce(&[u8]) -> Result<Vec<u8>, String>,
 ) -> Result<RewriteStats, String> {
-    let backup = backup_path(bundle_path);
-    let source = if backup.exists() { backup.clone() } else { bundle_path.to_path_buf() };
-    let mut staged = bundle_path.as_os_str().to_os_string();
-    staged.push(".gs_new");
-    let staged = std::path::PathBuf::from(staged);
-
-    let stats = {
-        let mut bundle = Bundle::open(&source)?;
+    replace_nodes_in_place(bundle_path, |bundle| {
         let index = bundle
             .nodes
             .iter()
@@ -476,8 +523,35 @@ pub fn replace_node_in_place(
             .ok_or_else(|| format!("{node_path} non è nel bundle"))?;
         let size = bundle.nodes[index].size as usize;
         let original = bundle.node(index).read_at(0, size)?;
-        let new_content = transform(&original)?;
-        let result = bundle.rewrite_node(&staged, index, &new_content);
+        Ok(vec![(index, transform(&original)?)])
+    })
+}
+
+/// Sostituisce dei file interni NEL GIOCO, tenendo l'originale come backup.
+///
+/// `transform` riceve il bundle ORIGINALE aperto e restituisce i file interni
+/// da sostituire (indice → contenuto nuovo). Se un backup esiste già si riparte
+/// da quello, così applicare due volte non accumula modifiche e il backup resta
+/// l'originale vero.
+///
+/// Ordine delle operazioni, pensato per non lasciare mai il gioco senza
+/// bundle: si scrive il nuovo in `<bundle>.gs_new`; solo se la scrittura è
+/// riuscita si mette da parte l'originale (per RINOMINA, senza copiare
+/// gigabyte) e si rinomina il nuovo al suo posto.
+pub fn replace_nodes_in_place(
+    bundle_path: &Path,
+    transform: impl FnOnce(&mut Bundle) -> Result<Vec<(usize, Vec<u8>)>, String>,
+) -> Result<RewriteStats, String> {
+    let backup = backup_path(bundle_path);
+    let source = original_bundle(bundle_path);
+    let mut staged = bundle_path.as_os_str().to_os_string();
+    staged.push(".gs_new");
+    let staged = std::path::PathBuf::from(staged);
+
+    let stats = {
+        let mut bundle = Bundle::open(&source)?;
+        let replacements = transform(&mut bundle)?;
+        let result = bundle.rewrite_nodes(&staged, &replacements);
         if result.is_err() {
             let _ = std::fs::remove_file(&staged);
         }
@@ -772,6 +846,53 @@ pub(crate) mod tests {
         assert_eq!(std::fs::read(&path).unwrap(), original);
         assert!(!backup_path(&path).exists());
         assert!(!dir.path().join("data.unity3d.gs_new").exists());
+    }
+
+    /// Riscrive più file interni e rilegge tutto dal bundle nuovo.
+    fn rewrite_many(files: &[(&str, Vec<u8>)], block_size: usize, replacements: &[(usize, Vec<u8>)]) -> Vec<Vec<u8>> {
+        let (dir, mut bundle) = open(&build_bundle(files, block_size, false, true));
+        let dst = dir.path().join("out.unity3d");
+        bundle.rewrite_nodes(&dst, replacements).unwrap();
+        let mut out = Bundle::open(&dst).unwrap();
+        (0..out.nodes.len())
+            .map(|i| {
+                let size = out.nodes[i].size as usize;
+                out.node(i).read_at(0, size).unwrap()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn several_nodes_can_be_rewritten_in_one_pass() {
+        let files = three_files();
+        let (a, c) = (vec![7u8; 6111], vec![8u8; 123]);
+        // blocchi piccoli (tratti separati) e blocchi grandi (un tratto solo
+        // che contiene tutti e tre i file): stesso risultato
+        for block_size in [500, 1024, 50_000] {
+            // dati in ordine inverso: l'ordine degli argomenti non conta
+            let contents = rewrite_many(&files, block_size, &[(2, c.clone()), (0, a.clone())]);
+            assert_eq!((&contents[0], &contents[1], &contents[2]), (&a, &files[1].1, &c), "blocchi da {block_size}");
+        }
+    }
+
+    #[test]
+    fn adjacent_nodes_sharing_a_block_are_both_rewritten() {
+        let files = three_files(); // 5.000 + 9.000 + 7.000 byte
+        // blocchi da 4.000: il blocco 1 contiene la fine del primo file e
+        // l'inizio del secondo
+        let (a, b) = (vec![1u8; 4999], vec![2u8; 9500]);
+        let contents = rewrite_many(&files, 4000, &[(0, a.clone()), (1, b.clone())]);
+        assert_eq!((&contents[0], &contents[1], &contents[2]), (&a, &b, &files[2].1));
+    }
+
+    #[test]
+    fn rewriting_nothing_or_the_same_node_twice_is_an_error() {
+        let files = three_files();
+        let (dir, mut bundle) = open(&build_bundle(&files, 1024, false, false));
+        let dst = dir.path().join("out");
+        assert!(bundle.rewrite_nodes(&dst, &[]).is_err());
+        assert!(bundle.rewrite_nodes(&dst, &[(1, vec![1]), (1, vec![2])]).is_err());
+        assert!(bundle.rewrite_nodes(&dst, &[(99, vec![1])]).is_err());
     }
 
     #[test]

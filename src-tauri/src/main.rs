@@ -627,6 +627,9 @@ fn main() {
             commands::game_lang_scan::detect_languages_from_files,
             commands::translation_plan::plan_translation,
             commands::unity_loc_tables::scan_unity_loc_tables,
+            commands::unity_static::unity_static_probe,
+            commands::unity_static::unity_static_apply,
+            commands::unity_static::unity_static_restore,
 
             // Godot Engine PCK patcher
             commands::godot_patcher::detect_godot_engine,

@@ -603,7 +603,7 @@ pub async fn rewrite_unity_text_assets(
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     // ── builder di fixture, derivati dalla spec (AssetStudio/UnityPy) ─────────
@@ -620,7 +620,7 @@ mod tests {
         r
     }
 
-    fn text_asset_body(name: &str, script: &str) -> Vec<u8> {
+    pub(crate) fn text_asset_body(name: &str, script: &str) -> Vec<u8> {
         let mut v = aligned_string(name);
         v.extend(aligned_string(script));
         v
@@ -628,7 +628,7 @@ mod tests {
 
     /// objects: (class_id, payload). Costruisce un SerializedFile v16-21
     /// (header classico) o v22 (header a 64 bit) type-tree disabilitato, LE.
-    fn build_serialized(version: u32, unity_ver: &str, objects: &[(i32, Vec<u8>)]) -> Vec<u8> {
+    pub(crate) fn build_serialized(version: u32, unity_ver: &str, objects: &[(i32, Vec<u8>)]) -> Vec<u8> {
         let mut meta: Vec<u8> = Vec::new();
         meta.extend_from_slice(unity_ver.as_bytes());
         meta.push(0);

@@ -212,7 +212,7 @@ pub fn recognize(content: &str) -> Option<Recognized> {
 /// e il codice: "LOST_HOST - Brazilian Portuguese" → ("LOST_HOST", "pt").
 /// Il separatore più lungo si prova per primo, così «Brazilian Portuguese»
 /// resta intero invece di spezzarsi sullo spazio.
-fn name_language(name: &str) -> Option<(String, &'static str)> {
+pub(crate) fn name_language(name: &str) -> Option<(String, &'static str)> {
     [" - ", "_", "-", ".", " "].iter().find_map(|sep| {
         let (stem, suffix) = name.rsplit_once(sep)?;
         let code = language_code(suffix)?;
@@ -267,7 +267,7 @@ fn recognize_families(assets: &[(&str, &str)]) -> Vec<(usize, Recognized)> {
 }
 
 /// La cartella `<Gioco>_Data` di un gioco Unity.
-fn data_dir(game_dir: &Path) -> Option<std::path::PathBuf> {
+pub(crate) fn data_dir(game_dir: &Path) -> Option<std::path::PathBuf> {
     std::fs::read_dir(game_dir)
         .ok()?
         .flatten()

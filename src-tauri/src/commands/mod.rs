@@ -141,6 +141,8 @@ pub mod translation_plan;
 pub mod unity_fs;
 // Stringhe dentro gli oggetti dei file serializzati Unity (scene comprese)
 pub mod unity_strings;
+// Traduzione statica dei testi incorporati nelle scene Unity (metodo di String it)
+pub mod unity_static;
 // Riconoscitore delle tabelle di localizzazione nei TextAsset Unity
 pub mod unity_loc_tables;
 // Rilevamento lingue gioco da file di localizzazione
