@@ -137,3 +137,10 @@ default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 
 
+
+# Build di rilascio: binario piu piccolo e piu veloce (la compilazione di
+# rilascio diventa piu lenta). Niente panic = "abort": il codice usa unwrap().
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

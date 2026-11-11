@@ -579,7 +579,7 @@ export default function AutoTranslatePage() {
         } catch {}
         if (hasBepInEx) {
           try {
-            const translations = await invoke<Record<string, string>>('extractXunityTranslations', { gamePath: installPath, targetLang: targetLang || 'it' })
+            const translations = await invoke<Record<string, string>>('extract_xunity_translations', { gamePath: installPath, targetLang: targetLang || 'it' })
             stringCount = Object.keys(translations || {}).length
           } catch {}
         }
