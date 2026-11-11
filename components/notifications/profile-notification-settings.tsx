@@ -120,14 +120,14 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
 
   return (
     <div className={className}>
-      <Card className="border-slate-800 bg-slate-900/50">
+      <Card className="border-noir-800 bg-noir-900/50">
         {/* Header pulito */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-noir-800/50">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-blue-400" />
+            <User className="h-4 w-4 text-noir-400" />
             <span className="text-sm font-medium text-white">{currentProfile.name}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-2xs text-slate-500">
+          <div className="flex items-center gap-1.5 text-2xs text-noir-500">
             <div className={`w-1.5 h-1.5 rounded-full ${autoSaveEnabled ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
             {t('notifications.autoSave')}
           </div>

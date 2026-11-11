@@ -12,7 +12,7 @@ export default function UnityPatcherPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         

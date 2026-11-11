@@ -144,7 +144,7 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
               >
                 <Avatar className="h-16 w-16 ring-2 ring-primary/20 transition-all group-hover:ring-primary/50">
                   <AvatarImage src={avatarSrc || undefined} alt={currentProfile?.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-noir-500 to-rouge-600 text-white text-xl font-semibold">
                     {currentProfile?.name ? getInitials(currentProfile.name) : <User className="h-8 w-8" />}
                   </AvatarFallback>
                 </Avatar>

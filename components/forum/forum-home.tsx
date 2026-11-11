@@ -78,16 +78,16 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
 };
 
 const CATEGORY_ACCENTS: Record<string, string> = {
-  'announcements': 'text-rose-400',
+  'announcements': 'text-rouge-400',
   'translation-packs': 'text-amber-400',
-  'help': 'text-cyan-400',
-  'tutorials': 'text-violet-400',
+  'help': 'text-noir-400',
+  'tutorials': 'text-rouge-400',
   'requests': 'text-emerald-400',
   'showcase': 'text-yellow-400',
-  'off-topic': 'text-slate-400',
+  'off-topic': 'text-noir-400',
 };
 
-const DEFAULT_ACCENT = 'text-indigo-400';
+const DEFAULT_ACCENT = 'text-rouge-400';
 
 // ─── FORUM HOME ─────────────────────────────────────────────────────────────
 
@@ -203,17 +203,17 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
       {/* ── Barra filtri ──────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[220px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500" />
           <Input
             placeholder={packsOnly ? (t('forum.searchPacks') || 'Cerca pack o giochi…') : t('forum.searchThreads')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 bg-slate-900/50 border-slate-800 focus:border-violet-500/50 focus:ring-violet-500/20"
+            className="pl-9 h-9 bg-noir-900/50 border-noir-800 focus:border-rouge-500/50 focus:ring-rouge-500/20"
           />
         </div>
 
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-          <SelectTrigger className="w-[170px] h-9 bg-slate-900/50 border-slate-800">
+          <SelectTrigger className="w-[170px] h-9 bg-noir-900/50 border-noir-800">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -232,7 +232,7 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
           </SelectContent>
         </Select>
 
-        <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400" onClick={loadData} disabled={loading}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-noir-400" onClick={loadData} disabled={loading}>
           <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
         </Button>
 
@@ -241,7 +241,7 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
         <Button
           onClick={() => handleNewThread(selectedCategory !== 'all' ? selectedCategory : undefined)}
           size="sm"
-          className="bg-violet-600 hover:bg-violet-500 h-9"
+          className="bg-rouge-600 hover:bg-rouge-500 h-9"
         >
           <Plus className="h-4 w-4 mr-1" />
           {t('forum.newThread')}
@@ -251,8 +251,8 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
       {/* ── Lista thread ──────────────────────────────────────────────────── */}
       <section>
         {totalThreads > 0 && (
-          <div className="flex items-center gap-2 mb-2 text-xs text-slate-500">
-            <Badge variant="outline" className="text-2xs border-slate-800 text-slate-400">
+          <div className="flex items-center gap-2 mb-2 text-xs text-noir-500">
+            <Badge variant="outline" className="text-2xs border-noir-800 text-noir-400">
               {totalThreads}
             </Badge>
             {packsOnly
@@ -294,7 +294,7 @@ export function ForumHome({ initialCategory, initialSearch, packsOnly = false, o
           >
             {t('forum.previous')}
           </Button>
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-noir-400">
             {t('forum.page')} {page} {t('forum.of')} {Math.ceil(totalThreads / 20)}
           </span>
           <Button
@@ -330,8 +330,8 @@ function CategoryChip({
       className={cn(
         'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors',
         active
-          ? 'bg-violet-500/15 border-violet-500/40 text-violet-200'
-          : 'bg-transparent border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+          ? 'bg-rouge-500/15 border-rouge-500/40 text-rouge-200'
+          : 'bg-transparent border-noir-800 text-noir-400 hover:border-noir-700 hover:text-noir-200'
       )}
     >
       {icon}
@@ -357,11 +357,11 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3.5 rounded-lg border border-slate-800/80 bg-slate-900/40 px-4 py-3 text-left transition-colors hover:border-slate-700 hover:bg-slate-900/70 group"
+      className="w-full flex items-center gap-3.5 rounded-lg border border-noir-800/80 bg-noir-900/40 px-4 py-3 text-left transition-colors hover:border-noir-700 hover:bg-noir-900/70 group"
     >
       <Avatar className="h-9 w-9 flex-shrink-0">
         <AvatarImage src={thread.author_avatar || undefined} />
-        <AvatarFallback className="bg-slate-800 text-xs text-slate-300 font-semibold">
+        <AvatarFallback className="bg-noir-800 text-xs text-noir-300 font-semibold">
           {thread.author_name.charAt(0).toUpperCase()}
         </AvatarFallback>
       </Avatar>
@@ -370,9 +370,9 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
         {/* Titolo + stato (icone sobrie invece di badge multipli) */}
         <div className="flex items-center gap-1.5 mb-0.5">
           {thread.is_pinned && <Pin className="h-3 w-3 text-amber-400 flex-shrink-0" aria-label={t('forum.pinned') || 'Pinned'} />}
-          {thread.is_locked && <Lock className="h-3 w-3 text-slate-500 flex-shrink-0" aria-label={t('forum.locked') || 'Locked'} />}
+          {thread.is_locked && <Lock className="h-3 w-3 text-noir-500 flex-shrink-0" aria-label={t('forum.locked') || 'Locked'} />}
           {thread.is_solved && <CheckCircle2 className="h-3 w-3 text-emerald-400 flex-shrink-0" aria-label={t('forum.solved') || 'Risolto'} />}
-          <h3 className="text-sm font-medium text-slate-100 truncate group-hover:text-white">
+          <h3 className="text-sm font-medium text-noir-100 truncate group-hover:text-white">
             {thread.title}
           </h3>
           {thread.is_translation_pack && (
@@ -384,8 +384,8 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
 
         {/* Info pack (solo se presente) */}
         {thread.is_translation_pack && thread.pack_data && (
-          <div className="flex items-center gap-2 mb-0.5 text-2xs text-slate-500">
-            <span className="flex items-center gap-1 text-slate-400">
+          <div className="flex items-center gap-2 mb-0.5 text-2xs text-noir-500">
+            <span className="flex items-center gap-1 text-noir-400">
               <Gamepad2 className="h-3 w-3" />
               {thread.pack_data.game_name}
             </span>
@@ -397,21 +397,21 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
         )}
 
         {/* Meta */}
-        <div className="flex items-center gap-1.5 text-2xs text-slate-500 truncate">
-          <span className="text-slate-400">{thread.author_name}</span>
+        <div className="flex items-center gap-1.5 text-2xs text-noir-500 truncate">
+          <span className="text-noir-400">{thread.author_name}</span>
           {category && (
             <>
-              <span className="text-slate-700">·</span>
+              <span className="text-noir-700">·</span>
               <span className={accent}>{categoryLabel(category.slug, category.name)}</span>
             </>
           )}
-          <span className="text-slate-700">·</span>
+          <span className="text-noir-700">·</span>
           <span>{formatDistanceToNow(new Date(thread.created_at), { addSuffix: true, locale })}</span>
         </div>
       </div>
 
       {/* Statistiche compatte */}
-      <div className="hidden sm:flex items-center gap-4 flex-shrink-0 text-xs text-slate-500">
+      <div className="hidden sm:flex items-center gap-4 flex-shrink-0 text-xs text-noir-500">
         <span className="flex items-center gap-1" title={t('forum.replies') || 'Risposte'}>
           <MessageSquare className="h-3.5 w-3.5" />{thread.reply_count}
         </span>
@@ -425,7 +425,7 @@ function ThreadRow({ thread, locale, onClick }: ThreadRowProps) {
         )}
       </div>
 
-      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
+      <ChevronRight className="h-4 w-4 text-noir-600 group-hover:text-noir-400 transition-colors flex-shrink-0" />
     </button>
   );
 }
@@ -445,24 +445,24 @@ function EmptyState({
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center justify-center py-14 px-6 text-center rounded-xl border border-dashed border-slate-800 bg-slate-900/30">
-      <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-4">
+    <div className="flex flex-col items-center justify-center py-14 px-6 text-center rounded-xl border border-dashed border-noir-800 bg-noir-900/30">
+      <div className="w-12 h-12 rounded-xl bg-noir-800/80 flex items-center justify-center mb-4">
         {hasFilters ? (
-          <Search className="h-5 w-5 text-slate-400" />
+          <Search className="h-5 w-5 text-noir-400" />
         ) : packsOnly ? (
           <Package className="h-5 w-5 text-amber-400" />
         ) : (
-          <MessageSquarePlus className="h-5 w-5 text-violet-400" />
+          <MessageSquarePlus className="h-5 w-5 text-rouge-400" />
         )}
       </div>
-      <h3 className="text-sm font-semibold text-slate-200 mb-1">
+      <h3 className="text-sm font-semibold text-noir-200 mb-1">
         {hasFilters
           ? (t('forum.noThreads') || 'Nessun risultato')
           : packsOnly
             ? (t('communityHub.noPacksYet') || 'Nessun pack pubblicato ancora')
             : (t('forum.beTheFirst') || 'Sii il primo!')}
       </h3>
-      <p className="text-xs text-slate-500 max-w-sm mb-4">
+      <p className="text-xs text-noir-500 max-w-sm mb-4">
         {hasFilters
           ? (t('forum.tryFilters') || 'Prova a modificare i filtri o la ricerca.')
           : packsOnly
@@ -475,7 +475,7 @@ function EmptyState({
           {t('communityHub.openPatchHub') || 'Apri il Patch Hub'}
         </Button>
       ) : (
-        <Button size="sm" onClick={onNewThread} className="bg-violet-600 hover:bg-violet-500">
+        <Button size="sm" onClick={onNewThread} className="bg-rouge-600 hover:bg-rouge-500">
           <Plus className="h-4 w-4 mr-1" />
           {t('forum.newThread')}
         </Button>
@@ -492,12 +492,12 @@ function ThreadListSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/40 border border-slate-800 animate-pulse"
+          className="flex items-center gap-3 p-3 rounded-lg bg-noir-900/40 border border-noir-800 animate-pulse"
         >
-          <div className="w-9 h-9 rounded-full bg-slate-800 flex-shrink-0" />
+          <div className="w-9 h-9 rounded-full bg-noir-800 flex-shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 bg-slate-800 rounded w-3/4" />
-            <div className="h-2 bg-slate-800 rounded w-1/2" />
+            <div className="h-3 bg-noir-800 rounded w-3/4" />
+            <div className="h-2 bg-noir-800 rounded w-1/2" />
           </div>
         </div>
       ))}

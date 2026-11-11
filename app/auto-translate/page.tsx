@@ -1866,7 +1866,7 @@ export default function AutoTranslatePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 p-4">
+      <div className="bg-gradient-to-r from-rouge-600 via-rouge-600 to-rouge-600 p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {gameInfo?.gameId && (
@@ -2004,7 +2004,7 @@ export default function AutoTranslatePage() {
 
             {/* Game Card (se selezionato) */}
             {gameInfo && (
-              <Card className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-violet-500/10 border-purple-500/30 overflow-hidden">
+              <Card className="bg-gradient-to-r from-rouge-500/10 via-rouge-500/5 to-rouge-500/10 border-rouge-500/30 overflow-hidden">
                 <CardContent className="p-5 flex items-center gap-5">
                   {gameInfo.gameImage && (
                     <img src={gameInfo.gameImage} alt={gameInfo.gameName} className="w-32 h-[72px] object-cover rounded-lg shadow-lg" />
@@ -2029,8 +2029,8 @@ export default function AutoTranslatePage() {
                           <span className="text-xs text-muted-foreground">{t('autoTranslatePage.files')}</span>
                         </div>
                         <div className="flex items-center gap-2 justify-end">
-                          <Languages className="h-4 w-4 text-violet-400" />
-                          <span className="text-2xl font-black text-violet-400">{totalStrings.toLocaleString()}</span>
+                          <Languages className="h-4 w-4 text-rouge-400" />
+                          <span className="text-2xl font-black text-rouge-400">{totalStrings.toLocaleString()}</span>
                           <span className="text-xs text-muted-foreground">{t('autoTranslatePage.strings')}</span>
                         </div>
                       </div>
@@ -2210,12 +2210,12 @@ export default function AutoTranslatePage() {
                             s.startsWith('✓') ? 'text-green-400' :
                             s.startsWith('❌') ? 'text-red-400' :
                             s.startsWith('⚠') ? 'text-yellow-400' :
-                            s.startsWith('🎉') || s.startsWith('📌') ? 'text-blue-300 font-semibold' :
+                            s.startsWith('🎉') || s.startsWith('📌') ? 'text-noir-300 font-semibold' :
                             'text-muted-foreground'
                           )}>{s}</p>
                         ))}
                         {bepinexStatus === 'installing' && (
-                          <p className="text-blue-400 animate-pulse">{t('autoTranslatePage.installingInProgress')}</p>
+                          <p className="text-noir-400 animate-pulse">{t('autoTranslatePage.installingInProgress')}</p>
                         )}
                       </div>
                     </ScrollArea>
@@ -2265,9 +2265,9 @@ export default function AutoTranslatePage() {
                   {/* Credits */}
                   <div className="pt-2 border-t border-white/5">
                     <p className="text-2xs text-muted-foreground/60">
-                      {t('autoTranslatePage.poweredBy')} <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">BepInEx</a> (BepInEx Team) 
+                      {t('autoTranslatePage.poweredBy')} <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-noir-400/70 hover:text-noir-400 underline">BepInEx</a> (BepInEx Team) 
                       {' '}{'&'}{' '}
-                      <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">XUnity.AutoTranslator</a> (bbepis).
+                      <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-noir-400/70 hover:text-noir-400 underline">XUnity.AutoTranslator</a> (bbepis).
                       {' '}{t('autoTranslatePage.thanksAuthors')}</p>
                   </div>
                   </div>
@@ -2284,7 +2284,7 @@ export default function AutoTranslatePage() {
                   <CardHeader className="py-2.5 px-4">
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span>{files.length} {t('autoTranslatePage.translatableFiles')}</span>
-                      <Badge className="bg-violet-500/15 text-violet-400 border-violet-500/30 text-xs">{totalStrings.toLocaleString()} {t('autoTranslatePage.strings')}</Badge>
+                      <Badge className="bg-rouge-500/15 text-rouge-400 border-rouge-500/30 text-xs">{totalStrings.toLocaleString()} {t('autoTranslatePage.strings')}</Badge>
                     </CardTitle>
                   </CardHeader>
                   <ScrollArea className="h-[220px]">
@@ -2356,7 +2356,7 @@ export default function AutoTranslatePage() {
                     <Button
                       onClick={() => handleStartTranslation(false)}
                       disabled={files.length === 0 || isTranslating}
-                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600"
+                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                     >
                       <Zap className="h-4 w-4 mr-2" />
                       {t('autoTranslatePage.translateNStrings').replace('{count}', String(totalStrings))}
@@ -2365,7 +2365,7 @@ export default function AutoTranslatePage() {
                       onClick={handleSendToBackground}
                       disabled={files.length === 0 || isTranslating || !gameInfo}
                       variant="outline"
-                      className="w-full h-8 text-xs border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200"
+                      className="w-full h-8 text-xs border-rouge-500/30 text-rouge-300 hover:bg-rouge-500/20 hover:text-rouge-200"
                     >
                       <Activity className="h-3.5 w-3.5 mr-1.5" />
                       {t('autoTranslatePage.translateInBackground')}
@@ -2421,7 +2421,7 @@ export default function AutoTranslatePage() {
             <Card className="overflow-hidden border-primary/20">
               <div className="h-1.5 bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500 transition-all duration-700 ease-out relative"
+                  className="h-full bg-gradient-to-r from-rouge-500 via-rouge-500 to-rouge-500 transition-all duration-700 ease-out relative"
                   style={{ width: `${progress.percent}%` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-pulse" />
@@ -2433,7 +2433,7 @@ export default function AutoTranslatePage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <div className="h-16 w-16 rounded-full border-4 border-primary/20 flex items-center justify-center">
-                        <span className="text-2xl font-black bg-gradient-to-br from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+                        <span className="text-2xl font-black bg-gradient-to-br from-rouge-400 to-rouge-400 bg-clip-text text-transparent">
                           {progress.percent}%
                         </span>
                       </div>
@@ -2485,7 +2485,7 @@ export default function AutoTranslatePage() {
                       <Timer className="h-3 w-3" /> {t('autoTranslatePage.elapsed')}</div>
                   </div>
                   <div className="bg-muted/40 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold tabular-nums text-violet-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
+                    <div className="text-2xl font-bold tabular-nums text-rouge-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
                     <div className="text-2xs text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
                       <TrendingUp className="h-3 w-3" /> ETA
                     </div>
@@ -2596,7 +2596,7 @@ export default function AutoTranslatePage() {
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.translated')}</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.avgScore')}</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
               <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.toReview')}</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
-              <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.edited')}</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.edited')}</div><div className="text-lg font-bold text-noir-400">{editedCount}</div></Card>
               <Card className={cn("p-2.5", untranslatedCount > 0 ? "border-red-500/30 bg-red-500/5" : "")}>
                 <div className="text-2xs text-muted-foreground">{t('autoTranslatePage.untranslated')}</div>
                 <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
@@ -2616,12 +2616,12 @@ export default function AutoTranslatePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-violet-500 to-indigo-500">
+              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-rouge-500 to-rouge-500">
                 <Package className="h-3.5 w-3.5 mr-1.5" /> {t('autoTranslatePage.createPatch')}</Button>
               {gameInfo?.installPath && isUnrealEngine(gameInfo.installPath) && (
                 <Button
                   onClick={handleTestPatch}
-                  className="h-9 text-xs bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                  className="h-9 text-xs bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                   disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
                 >
                   <Play className="h-3.5 w-3.5 mr-1.5" /> {t('autoTranslatePage.testPatch')}</Button>
@@ -2630,13 +2630,13 @@ export default function AutoTranslatePage() {
 
             {/* Pannello Test Patch UE (visibile anche in review) */}
             {testPatchStatus !== 'idle' && (
-              <Card className="border-violet-500/30 bg-violet-500/5">
+              <Card className="border-rouge-500/30 bg-rouge-500/5">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-xs flex items-center gap-2">
                     {testPatchStatus === 'monitoring' && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" /></span>}
                     {testPatchStatus === 'error' && <span className="h-2 w-2 rounded-full bg-red-500" />}
                     {testPatchStatus === 'done' && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
-                    {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
+                    {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-rouge-400" />}
                     <span>{t('autoTranslatePage.testPatch')}</span>
                     <span className="text-muted-foreground font-normal">
                       — {testPatchStatus === 'backing_up' ? 'Cleaning previous patches...' : testPatchStatus === 'applying' ? 'Applying translations...' : testPatchStatus === 'launching' ? 'Launching game...' : testPatchStatus === 'monitoring' ? 'Running — check in-game' : testPatchStatus === 'restoring' ? 'Restoring originals...' : testPatchStatus === 'error' ? 'Error' : 'Completed'}
@@ -2649,7 +2649,7 @@ export default function AutoTranslatePage() {
                       const currentIdx = steps.indexOf(testPatchStatus)
                       const isDone = testPatchStatus === 'done' || (currentIdx >= 0 && idx < currentIdx)
                       const isCurrent = testPatchStatus === s
-                      return <div key={s} className={cn("h-1 flex-1 rounded-full transition-colors", isDone ? "bg-emerald-500" : isCurrent ? "bg-violet-500 animate-pulse" : testPatchStatus === 'error' && idx <= Math.max(currentIdx, 0) ? "bg-red-500/60" : "bg-muted")} />
+                      return <div key={s} className={cn("h-1 flex-1 rounded-full transition-colors", isDone ? "bg-emerald-500" : isCurrent ? "bg-rouge-500 animate-pulse" : testPatchStatus === 'error' && idx <= Math.max(currentIdx, 0) ? "bg-red-500/60" : "bg-muted")} />
                     })}
                   </div>
                 </CardHeader>
@@ -2657,7 +2657,7 @@ export default function AutoTranslatePage() {
                   <ScrollArea className="h-[180px] rounded border border-border/50 bg-background/50 p-2">
                     <div className="space-y-0.5 text-2xs font-mono">
                       {testPatchLogs.map((log, i) => (
-                        <div key={i} className={cn("text-muted-foreground", log.includes('✅') && "text-emerald-400/80", log.includes('❌') && "text-red-400/80", log.includes('⚠️') && "text-yellow-400/80", log.includes('📦') && "text-violet-400/80")}>{log}</div>
+                        <div key={i} className={cn("text-muted-foreground", log.includes('✅') && "text-emerald-400/80", log.includes('❌') && "text-red-400/80", log.includes('⚠️') && "text-yellow-400/80", log.includes('📦') && "text-rouge-400/80")}>{log}</div>
                       ))}
                       <div ref={(el) => { el?.scrollIntoView({ behavior: 'smooth' }) }} />
                     </div>
@@ -2720,7 +2720,7 @@ export default function AutoTranslatePage() {
                       const finalTranslation = s.isEdited ? (s.editedTranslation || s.translation) : s.translation
                       return (
                         <div key={`${s.key}-${i}`} className={cn("p-2 rounded border transition-colors",
-                          !s.qaPassed ? "border-yellow-500/20 bg-yellow-500/5" : s.isEdited ? "border-blue-500/20 bg-blue-500/5" : "border-transparent hover:bg-muted/30")}>
+                          !s.qaPassed ? "border-yellow-500/20 bg-yellow-500/5" : s.isEdited ? "border-noir-500/20 bg-noir-500/5" : "border-transparent hover:bg-muted/30")}>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="text-micro text-muted-foreground/60 font-mono truncate mb-0.5">{s.key}</div>
@@ -2736,11 +2736,11 @@ export default function AutoTranslatePage() {
                               ) : (
                                 <div className="text-xs mt-0.5 flex items-start gap-1">
                                   {finalTranslation ? (
-                                    <span className={s.isEdited ? "text-blue-400" : ""}><DiffHighlight original={s.original} translated={finalTranslation} /></span>
+                                    <span className={s.isEdited ? "text-noir-400" : ""}><DiffHighlight original={s.original} translated={finalTranslation} /></span>
                                   ) : (
                                     <span className="text-red-400 italic">{t('autoTranslatePage.untranslated')}</span>
                                   )}
-                                  {s.isEdited && <Badge className="text-2xs h-3 px-1 bg-blue-500/20 text-blue-400">{t('autoTranslatePage.edited')}</Badge>}
+                                  {s.isEdited && <Badge className="text-2xs h-3 px-1 bg-noir-500/20 text-noir-400">{t('autoTranslatePage.edited')}</Badge>}
                                 </div>
                               )}
                             </div>
@@ -2781,7 +2781,7 @@ export default function AutoTranslatePage() {
               </Card>
             ) : patchResult ? (
               <>
-                <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30">
+                <Card className="bg-gradient-to-r from-emerald-500/10 to-noir-500/10 border-emerald-500/30">
                   <CardContent className="p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
                     <h2 className="text-xl font-bold">{t('autoTranslatePage.patchReady')}</h2>
@@ -2789,12 +2789,12 @@ export default function AutoTranslatePage() {
                       {patchResult.stats.translatedStrings}/{patchResult.stats.totalStrings}  {t('autoTranslatePage.stringsTranslated')} ({patchResult.stats.coveragePercent}%)
                     </p>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
-                      <Button onClick={handleDownloadZip} size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-500">
+                      <Button onClick={handleDownloadZip} size="lg" className="bg-gradient-to-r from-emerald-500 to-noir-500">
                         <Download className="h-4 w-4 mr-2" /> {t('autoTranslatePage.downloadZip')}</Button>
                       <Button
                         onClick={handleTestPatch}
                         size="lg"
-                        className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                        className="bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-600 hover:to-rouge-600"
                         disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
                       >
                         <Play className="h-4 w-4 mr-2" /> {t('autoTranslatePage.testPatch')}</Button>
@@ -2807,7 +2807,7 @@ export default function AutoTranslatePage() {
                   <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.files')}</div></Card>
                   <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.strings')}</div></Card>
                   <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.coverage')}</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.quality')}</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-noir-400">{avgScore}%</div><div className="text-2xs text-muted-foreground">{t('autoTranslatePage.quality')}</div></Card>
                 </div>
                 <Card className="border-dashed">
                   <CardHeader className="py-2 px-4"><CardTitle className="text-xs flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> {t('autoTranslatePage.exportAs')}</CardTitle></CardHeader>
@@ -2855,24 +2855,24 @@ export default function AutoTranslatePage() {
                 {testPatchStatus !== 'idle' && (
                   <Card className={cn(
                     "border",
-                    testPatchStatus === 'monitoring' ? 'border-violet-500/40 bg-violet-500/5' :
+                    testPatchStatus === 'monitoring' ? 'border-rouge-500/40 bg-rouge-500/5' :
                     testPatchStatus === 'error' ? 'border-red-500/40 bg-red-500/5' :
                     testPatchStatus === 'done' ? 'border-emerald-500/40 bg-emerald-500/5' :
-                    'border-blue-500/40 bg-blue-500/5'
+                    'border-noir-500/40 bg-noir-500/5'
                   )}>
                     <CardHeader className="py-3 px-4">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm flex items-center gap-2">
-                          {testPatchStatus === 'backing_up' && <><Loader2 className="h-4 w-4 animate-spin text-blue-400" /> {t('autoTranslatePage.backingUp')}</>}
-                          {testPatchStatus === 'applying' && <><Loader2 className="h-4 w-4 animate-spin text-blue-400" /> {t('autoTranslatePage.applyingPatch')}</>}
-                          {testPatchStatus === 'launching' && <><Loader2 className="h-4 w-4 animate-spin text-violet-400" /> {t('autoTranslatePage.launchingGame')}</>}
-                          {testPatchStatus === 'monitoring' && <><Shield className="h-4 w-4 text-violet-400 animate-pulse" />{t('common.monitoraggioAttivo')}</>}
+                          {testPatchStatus === 'backing_up' && <><Loader2 className="h-4 w-4 animate-spin text-noir-400" /> {t('autoTranslatePage.backingUp')}</>}
+                          {testPatchStatus === 'applying' && <><Loader2 className="h-4 w-4 animate-spin text-noir-400" /> {t('autoTranslatePage.applyingPatch')}</>}
+                          {testPatchStatus === 'launching' && <><Loader2 className="h-4 w-4 animate-spin text-rouge-400" /> {t('autoTranslatePage.launchingGame')}</>}
+                          {testPatchStatus === 'monitoring' && <><Shield className="h-4 w-4 text-rouge-400 animate-pulse" />{t('common.monitoraggioAttivo')}</>}
                           {testPatchStatus === 'restoring' && <><Loader2 className="h-4 w-4 animate-spin text-amber-400" /> {t('autoTranslatePage.restoring')}</>}
                           {testPatchStatus === 'done' && <><CheckCircle2 className="h-4 w-4 text-emerald-400" />{t('common.testCompletato')}</>}
                           {testPatchStatus === 'error' && <><XCircle className="h-4 w-4 text-red-400" />{t('qaCheck.error')}</>}
                         </CardTitle>
                         {testPatchApplied && (
-                          <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-micro">
+                          <Badge className="bg-rouge-500/20 text-rouge-300 border-rouge-500/30 text-micro">
                             {t('autoTranslatePage.patchActive')}
                           </Badge>
                         )}
@@ -2897,7 +2897,7 @@ export default function AutoTranslatePage() {
                               {i > 0 && <div className={cn("w-4 h-px", isDone ? "bg-emerald-500" : "bg-muted-foreground/20")} />}
                               <div className={cn(
                                 "flex items-center gap-1 px-2 py-1 rounded-full border",
-                                isActive ? "border-violet-500 bg-violet-500/20 text-violet-300" :
+                                isActive ? "border-rouge-500 bg-rouge-500/20 text-rouge-300" :
                                 isDone ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400" :
                                 "border-muted-foreground/20 text-muted-foreground/50"
                               )}>

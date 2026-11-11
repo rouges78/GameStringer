@@ -73,16 +73,16 @@ export const activityIcons: Record<ActivityType, string> = {
 
 // Colori per tipo
 export const activityColors: Record<ActivityType, string> = {
-  translation: 'purple',
+  translation: 'rouge',
   patch: 'orange',
   steam_sync: 'green',
-  game_added: 'blue',
-  game_launched: 'cyan',
-  profile_created: 'pink',
-  settings_changed: 'gray',
+  game_added: 'noir',
+  game_launched: 'noir',
+  profile_created: 'rouge',
+  settings_changed: 'noir',
   import_export: 'yellow',
-  translation_bridge: 'indigo',
-  other: 'slate',
+  translation_bridge: 'rouge',
+  other: 'noir',
 };
 
 // Localized activity type names

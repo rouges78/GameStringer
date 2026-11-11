@@ -104,7 +104,7 @@ export function CustomPromptSettings() {
     <Card className="p-4">
       <CardHeader className="p-0 pb-4">
         <CardTitle className="flex items-center gap-2 text-base">
-          <MessageSquareText className="h-4 w-4 text-purple-400" />
+          <MessageSquareText className="h-4 w-4 text-rouge-400" />
           {t('customPromptSettings.customPrompt')}<Badge variant="outline" className="text-xs ml-2">{t('customPromptSettings.newBadge')}</Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
@@ -113,7 +113,7 @@ export function CustomPromptSettings() {
       
       <CardContent className="p-0 space-y-4">
         {/* Abilitazione Custom Prompt */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-noir-800/50 border border-noir-700/50">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-amber-400" />
             <div>
@@ -135,7 +135,7 @@ export function CustomPromptSettings() {
             {/* Persona */}
             <div className="space-y-2">
               <Label className="text-xs flex items-center gap-1.5">
-                <UserCircle className="h-3.5 w-3.5 text-cyan-400" />
+                <UserCircle className="h-3.5 w-3.5 text-noir-400" />
                 {t('customPromptSettings.personaRole')}</Label>
               <Select
                 value={settings.persona}
@@ -159,7 +159,7 @@ export function CustomPromptSettings() {
             {/* Tono */}
             <div className="space-y-2">
               <Label className="text-xs flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-pink-400" />
+                <Sparkles className="h-3.5 w-3.5 text-rouge-400" />
                 {t('customPromptSettings.toneStyle')}</Label>
               <Select
                 value={settings.tone}
@@ -197,9 +197,9 @@ export function CustomPromptSettings() {
 
         {/* Preview */}
         {(settings.persona || settings.tone || settings.customPrompt) && (
-          <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
-            <p className="text-xs font-medium text-slate-300 mb-2">{t('customPromptSettings.preview')}</p>
-            <p className="text-xs text-slate-400 italic">
+          <div className="p-3 rounded-lg bg-noir-800/30 border border-noir-700/30">
+            <p className="text-xs font-medium text-noir-300 mb-2">{t('customPromptSettings.preview')}</p>
+            <p className="text-xs text-noir-400 italic">
               {settings.persona && `Persona: "${settings.persona}"`}
               {settings.persona && settings.tone && ' · '}
               {settings.tone && `Tono: "${settings.tone}"`}

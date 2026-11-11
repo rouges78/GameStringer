@@ -44,25 +44,25 @@ interface KpiCardProps {
 }
 
 const ACCENT_CLASSES: Record<KpiCardProps['accent'], { icon: string; iconBg: string }> = {
-  violet: { icon: 'text-violet-400', iconBg: 'bg-violet-500/10' },
-  indigo: { icon: 'text-indigo-400', iconBg: 'bg-indigo-500/10' },
+  violet: { icon: 'text-rouge-400', iconBg: 'bg-rouge-500/10' },
+  indigo: { icon: 'text-rouge-400', iconBg: 'bg-rouge-500/10' },
   emerald: { icon: 'text-emerald-400', iconBg: 'bg-emerald-500/10' },
   amber: { icon: 'text-amber-400', iconBg: 'bg-amber-500/10' },
-  rose: { icon: 'text-rose-400', iconBg: 'bg-rose-500/10' },
+  rose: { icon: 'text-rouge-400', iconBg: 'bg-rouge-500/10' },
 };
 
 function KpiCard({ icon: Icon, label, value, accent }: KpiCardProps) {
   const cls = ACCENT_CLASSES[accent];
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-800/60 bg-slate-900/40 px-3 py-2.5">
+    <div className="flex items-center gap-3 rounded-lg border border-noir-800/60 bg-noir-900/40 px-3 py-2.5">
       <div className={cn('flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center', cls.iconBg)}>
         <Icon className={cn('h-4 w-4', cls.icon)} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-lg font-semibold text-slate-200 leading-none">
+        <div className="text-lg font-semibold text-noir-200 leading-none">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </div>
-        <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5 truncate">
+        <div className="text-[10px] text-noir-500 uppercase tracking-wider mt-0.5 truncate">
           {label}
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function CommunityHubPage() {
   // "Modifica") e ricaricherebbero contando una seconda visita al thread.
   const authPending = (
     <div className="flex items-center justify-center py-20">
-      <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+      <div className="animate-spin h-8 w-8 border-2 border-rouge-500 border-t-transparent rounded-full" />
     </div>
   );
 
@@ -204,18 +204,18 @@ export default function CommunityHubPage() {
           {/* HEADER — solo in vista home                                      */}
           {/* ═══════════════════════════════════════════════════════════════ */}
           {view === 'home' && (
-            <div className="px-6 pt-5 pb-0 border-b border-slate-800/70 bg-slate-950/40 sticky top-0 z-10 backdrop-blur-sm">
+            <div className="px-6 pt-5 pb-0 border-b border-noir-800/70 bg-noir-950/40 sticky top-0 z-10 backdrop-blur-sm">
               {/* Riga titolo + azioni */}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                    <Users className="h-4 w-4 text-violet-400" />
+                  <div className="w-9 h-9 rounded-lg bg-rouge-500/10 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-rouge-400" />
                   </div>
                   <div>
-                    <h1 className="text-lg font-semibold text-slate-100 leading-tight">
+                    <h1 className="text-lg font-semibold text-noir-100 leading-tight">
                       {t('communityHub.title')}
                     </h1>
-                    <p className="text-slate-500 text-xs">
+                    <p className="text-noir-500 text-xs">
                       {t('communityHub.subtitle')}
                     </p>
                   </div>
@@ -228,7 +228,7 @@ export default function CommunityHubPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => router.push('/patch-hub')}
-                    className="text-slate-400 hover:text-amber-300 hover:bg-amber-500/10"
+                    className="text-noir-400 hover:text-amber-300 hover:bg-amber-500/10"
                     title={t('patchHub.title') || 'Patch Hub'}
                     aria-label="Patch Hub"
                   >
@@ -260,8 +260,8 @@ export default function CommunityHubPage() {
                       className={cn(
                         'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
                         active
-                          ? 'border-violet-500 text-slate-100'
-                          : 'border-transparent text-slate-500 hover:text-slate-300'
+                          ? 'border-rouge-500 text-noir-100'
+                          : 'border-transparent text-noir-500 hover:text-noir-300'
                       )}
                     >
                       <Icon className="h-4 w-4" />

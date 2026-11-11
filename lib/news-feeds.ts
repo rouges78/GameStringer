@@ -59,8 +59,8 @@ export function getCategoryLabel(cat: FeedCategoryDef, lang: string): string {
 }
 
 export const FEED_CATEGORIES: FeedCategoryDef[] = [
-  { id: 'gaming_news', labels: { it: 'Notizie Gaming', en: 'Gaming News', es: 'Noticias Gaming', fr: 'Actualites Gaming', de: 'Gaming-Nachrichten', ja: 'ゲームニュース', zh: '游戏新闻', ko: '게임 뉴스', pt: 'Noticias Gaming', ru: 'Игровые новости', pl: 'Wiadomosci Gaming' }, icon: '🎮', color: '#1a9fff' },
-  { id: 'pc_gaming', labels: { it: 'PC Gaming', en: 'PC Gaming', es: 'PC Gaming', fr: 'PC Gaming', de: 'PC Gaming', ja: 'PCゲーム', zh: 'PC游戏', ko: 'PC 게임', pt: 'PC Gaming', ru: 'PC Gaming', pl: 'PC Gaming' }, icon: '🖥️', color: '#67c1f5' },
+  { id: 'gaming_news', labels: { it: 'Notizie Gaming', en: 'Gaming News', es: 'Noticias Gaming', fr: 'Actualites Gaming', de: 'Gaming-Nachrichten', ja: 'ゲームニュース', zh: '游戏新闻', ko: '게임 뉴스', pt: 'Noticias Gaming', ru: 'Игровые новости', pl: 'Wiadomosci Gaming' }, icon: '🎮', color: '#ff3b4a' },
+  { id: 'pc_gaming', labels: { it: 'PC Gaming', en: 'PC Gaming', es: 'PC Gaming', fr: 'PC Gaming', de: 'PC Gaming', ja: 'PCゲーム', zh: 'PC游戏', ko: 'PC 게임', pt: 'PC Gaming', ru: 'PC Gaming', pl: 'PC Gaming' }, icon: '🖥️', color: '#ff6b76' },
   { id: 'indie', labels: { it: 'Indie & Dev', en: 'Indie & Dev', es: 'Indie & Dev', fr: 'Indie & Dev', de: 'Indie & Dev', ja: 'インディー＆開発', zh: '独立游戏', ko: '인디 & 개발', pt: 'Indie & Dev', ru: 'Инди и разработка', pl: 'Indie & Dev' }, icon: '🕹️', color: '#a855f7' },
   { id: 'console', labels: { it: 'Console', en: 'Console', es: 'Consola', fr: 'Console', de: 'Konsole', ja: 'コンソール', zh: '主机', ko: '콘솔', pt: 'Console', ru: 'Консоли', pl: 'Konsole' }, icon: '🎯', color: '#22c55e' },
   { id: 'tech', labels: { it: 'Tecnologia', en: 'Technology', es: 'Tecnologia', fr: 'Technologie', de: 'Technologie', ja: 'テクノロジー', zh: '科技', ko: '기술', pt: 'Tecnologia', ru: 'Технологии', pl: 'Technologia' }, icon: '💻', color: '#f59e0b' },

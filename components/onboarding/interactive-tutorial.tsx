@@ -35,37 +35,37 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
     icon: <Rocket className="h-6 w-6" />,
-    iconColor: 'text-purple-400',
+    iconColor: 'text-rouge-400',
     position: 'center',
     showLogo: true,
     features: [
-      { icon: <Brain className="h-4 w-4" />, text: 'AI Translation', color: 'text-violet-400' },
-      { icon: <Gamepad2 className="h-4 w-4" />, text: '9+ Store', color: 'text-teal-400' },
-      { icon: <Globe className="h-4 w-4" />, text: '20+ Lingue', color: 'text-blue-400' },
+      { icon: <Brain className="h-4 w-4" />, text: 'AI Translation', color: 'text-rouge-400' },
+      { icon: <Gamepad2 className="h-4 w-4" />, text: '9+ Store', color: 'text-noir-400' },
+      { icon: <Globe className="h-4 w-4" />, text: '20+ Lingue', color: 'text-noir-400' },
     ]
   },
   {
     id: 'aiFeatures',
     icon: <Brain className="h-6 w-6" />,
-    iconColor: 'text-violet-400',
+    iconColor: 'text-rouge-400',
     position: 'center',
     features: [
       { icon: <Zap className="h-4 w-4" />, text: 'Ollama (Gratuito)', color: 'text-green-400' },
-      { icon: <Cpu className="h-4 w-4" />, text: 'OpenAI / Claude / Gemini', color: 'text-blue-400' },
-      { icon: <Workflow className="h-4 w-4" />, text: 'AI Pipeline', color: 'text-pink-400' },
+      { icon: <Cpu className="h-4 w-4" />, text: 'OpenAI / Claude / Gemini', color: 'text-noir-400' },
+      { icon: <Workflow className="h-4 w-4" />, text: 'AI Pipeline', color: 'text-rouge-400' },
     ]
   },
   {
     id: 'dashboard',
     icon: <Home className="h-6 w-6" />,
-    iconColor: 'text-cyan-400',
+    iconColor: 'text-noir-400',
     selector: '[data-tutorial^="nav-"]',
     position: 'sidebar'
   },
   {
     id: 'library',
     icon: <Library className="h-6 w-6" />,
-    iconColor: 'text-purple-400',
+    iconColor: 'text-rouge-400',
     selector: '[data-tutorial="nav-library"]',
     position: 'sidebar'
   },
@@ -76,7 +76,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'translator',
     icon: <Languages className="h-6 w-6" />,
-    iconColor: 'text-blue-400',
+    iconColor: 'text-noir-400',
     position: 'center'
   },
   {
@@ -88,11 +88,11 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'advancedTools',
     icon: <Layers className="h-6 w-6" />,
-    iconColor: 'text-cyan-400',
+    iconColor: 'text-noir-400',
     position: 'center',
     features: [
       { icon: <FileText className="h-4 w-4" />, text: 'Unity CSV Translator', color: 'text-green-400' },
-      { icon: <ScanEye className="h-4 w-4" />, text: 'OCR Multi-Engine', color: 'text-cyan-400' },
+      { icon: <ScanEye className="h-4 w-4" />, text: 'OCR Multi-Engine', color: 'text-noir-400' },
       { icon: <Workflow className="h-4 w-4" />, text: 'Batch & Offline', color: 'text-amber-400' },
     ]
   },
@@ -105,7 +105,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'settings',
     icon: <Settings className="h-6 w-6" />,
-    iconColor: 'text-slate-400',
+    iconColor: 'text-noir-400',
     position: 'center'
   },
   {
@@ -114,8 +114,8 @@ const tutorialSteps: TutorialStep[] = [
     iconColor: 'text-green-400',
     position: 'center',
     features: [
-      { icon: <Download className="h-4 w-4" />, text: 'Esplora Libreria', color: 'text-teal-400' },
-      { icon: <Languages className="h-4 w-4" />, text: 'Inizia a Tradurre', color: 'text-violet-400' },
+      { icon: <Download className="h-4 w-4" />, text: 'Esplora Libreria', color: 'text-noir-400' },
+      { icon: <Languages className="h-4 w-4" />, text: 'Inizia a Tradurre', color: 'text-rouge-400' },
     ]
   }
 ];
@@ -274,8 +274,8 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                 width: highlightRect.width + 12,
                 height: highlightRect.height + 12,
                 borderRadius: 12,
-                border: '2px solid rgba(168, 85, 247, 0.8)',
-                boxShadow: '0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1)',
+                border: '2px solid rgba(255, 59, 74, 0.8)',
+                boxShadow: '0 0 20px rgba(255, 59, 74, 0.5), inset 0 0 20px rgba(255, 59, 74, 0.1)',
               }}
             />
           )}
@@ -295,11 +295,11 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
             style={cardPos ? { left: cardPos.left, top: cardPos.top } : undefined}
           >
             <div 
-              className="bg-gradient-to-br from-slate-900 via-slate-900 to-purple-950/50 backdrop-blur-xl border border-purple-500/40 rounded-2xl shadow-2xl shadow-purple-500/30 w-[340px]"
+              className="bg-gradient-to-br from-noir-900 via-noir-900 to-rouge-950/50 backdrop-blur-xl border border-rouge-500/40 rounded-2xl shadow-2xl shadow-rouge-500/30 w-[340px]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-3 border-b border-slate-800/50">
+              <div className="flex items-center justify-between p-3 border-b border-noir-800/50">
                 <div className="flex items-center gap-1.5">
                   {tutorialSteps.map((_, i) => (
                     <div
@@ -307,10 +307,10 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                       className={cn(
                         "h-1.5 rounded-full transition-all duration-300",
                         i === currentStep 
-                          ? "bg-purple-500 w-4" 
+                          ? "bg-rouge-500 w-4" 
                           : i < currentStep 
-                            ? "bg-purple-500/50 w-1.5" 
-                            : "bg-slate-700 w-1.5"
+                            ? "bg-rouge-500/50 w-1.5" 
+                            : "bg-noir-700 w-1.5"
                       )}
                     />
                   ))}
@@ -319,7 +319,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                   variant="ghost"
                   size="sm"
                   onClick={handleSkip}
-                  className="h-7 px-2 text-slate-500 hover:text-slate-300 text-xs"
+                  className="h-7 px-2 text-noir-500 hover:text-noir-300 text-xs"
                 >
                   <X className="h-3.5 w-3.5 mr-1" />
                   {t('tutorial.skip')}
@@ -348,7 +348,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                     </div>
                   ) : (
                     <div className={cn(
-                      "w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center",
+                      "w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-rouge-500/20 to-noir-500/20 flex items-center justify-center",
                       step.iconColor
                     )}>
                       {step.icon}
@@ -358,7 +358,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                   <h3 className="text-lg font-bold text-white mb-1.5">
                     {getStepText(step.id, 'title')}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed mb-3">
+                  <p className="text-noir-400 text-sm leading-relaxed mb-3">
                     {getStepText(step.id, 'description')}
                   </p>
                   
@@ -368,10 +368,10 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                       {step.features.map((feature, i) => (
                         <div 
                           key={i}
-                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50"
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-noir-800/50 rounded-lg border border-noir-700/50"
                         >
                           <span className={feature.color}>{feature.icon}</span>
-                          <span className="text-xs text-slate-300">{feature.text}</span>
+                          <span className="text-xs text-noir-300">{feature.text}</span>
                         </div>
                       ))}
                     </div>
@@ -380,7 +380,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between p-3 border-t border-slate-800/50">
+              <div className="flex items-center justify-between p-3 border-t border-noir-800/50">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -395,14 +395,14 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
                   {t('tutorial.back')}
                 </Button>
 
-                <span className="text-2xs text-slate-600">
+                <span className="text-2xs text-noir-600">
                   {t('tutorial.stepOf').replace('{current}', String(currentStep + 1)).replace('{total}', String(tutorialSteps.length))}
                 </span>
 
                 <Button
                   size="sm"
                   onClick={handleNext}
-                  className="h-8 text-xs bg-purple-600 hover:bg-purple-500"
+                  className="h-8 text-xs bg-rouge-600 hover:bg-rouge-500"
                 >
                   {isLastStep ? (
                     <>
@@ -420,7 +420,7 @@ export function InteractiveTutorial({ onComplete, forceShow: _forceShow = false 
 
               {/* Hint */}
               <div className="px-3 pb-2 text-center">
-                <span className="text-micro text-slate-600">
+                <span className="text-micro text-noir-600">
                   {t('tutorial.pressSpace')}
                 </span>
               </div>

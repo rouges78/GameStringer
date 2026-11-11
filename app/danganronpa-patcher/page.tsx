@@ -738,7 +738,7 @@ export default function DanganronpaPatcherPage() {
       case 'Text': return <Badge variant="default">{t('visualNovelPage.texts')}</Badge>;
       case 'Script': return <Badge variant="secondary">{t('visualNovelPage.script')}</Badge>;
       case 'Font': return <Badge variant="outline">{t('visualNovelPage.font')}</Badge>;
-      case 'Texture': return <Badge className="bg-purple-500">{t('textureTranslator.textures')}</Badge>;
+      case 'Texture': return <Badge className="bg-rouge-500">{t('textureTranslator.textures')}</Badge>;
       default: return <Badge variant="outline">{t('visualNovelPage.unknown')}</Badge>;
     }
   };
@@ -753,7 +753,7 @@ export default function DanganronpaPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-2 overflow-y-auto">
       {/* Hero Header - Stile Unity Bundle */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-2.5 shrink-0">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-2.5 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -826,7 +826,7 @@ export default function DanganronpaPatcherPage() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="pak" className="space-y-1.5 flex-1">
-        <TabsList className="bg-slate-900/50 border border-slate-800/50">
+        <TabsList className="bg-noir-900/50 border border-noir-800/50">
           <TabsTrigger value="pak" className="flex items-center gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white">
             <Package className="w-3 h-3" />
             {t('danganronpaPatcher.filePak')}</TabsTrigger>
@@ -888,7 +888,7 @@ export default function DanganronpaPatcherPage() {
                             key={i}
                             onClick={() => selectPakFile(pak)}
                             className={`w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between transition-all border ${
-                              isSelected ? 'bg-emerald-500/20 border-emerald-500/40' : 'hover:bg-slate-800/50 border-transparent'
+                              isSelected ? 'bg-emerald-500/20 border-emerald-500/40' : 'hover:bg-noir-800/50 border-transparent'
                             }`}
                           >
                             <span className="truncate">{fileName}</span>
@@ -1018,7 +1018,7 @@ export default function DanganronpaPatcherPage() {
                     )}
                   </div>
                 </div>
-                <Progress value={poStats.percentage} className="h-2 bg-slate-800" />
+                <Progress value={poStats.percentage} className="h-2 bg-noir-800" />
               </CardContent>
             </Card>
           )}
@@ -1068,7 +1068,7 @@ export default function DanganronpaPatcherPage() {
                           {/* Original */}
                           <div className="mb-3">
                             <label className="text-xs font-medium text-muted-foreground uppercase">{t('offlineTranslator.original')}</label>
-                            <p className="text-sm mt-1 font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                            <p className="text-sm mt-1 font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                               {entry.msgid}
                             </p>
                           </div>
@@ -1081,7 +1081,7 @@ export default function DanganronpaPatcherPage() {
                                 <Textarea
                                   value={editedTranslation}
                                   onChange={(e) => setEditedTranslation(e.target.value)}
-                                  className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                                  className="font-mono text-sm bg-noir-950/50 border-noir-700"
                                   rows={3}
                                 />
                                 <div className="flex gap-2">
@@ -1105,7 +1105,7 @@ export default function DanganronpaPatcherPage() {
                                   setEditingEntry(originalIndex);
                                   setEditedTranslation(entry.msgstr);
                                 }}
-                                className={`mt-1 p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                                className={`mt-1 p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                                   isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                                 }`}
                               >
@@ -1158,7 +1158,7 @@ export default function DanganronpaPatcherPage() {
                           className={`p-2 rounded-md border cursor-pointer transition-all ${
                             selectedSteamGame?.app_id === sg.app_id
                               ? 'bg-emerald-500/20 border-emerald-500/40'
-                              : 'hover:bg-slate-800/50 border-slate-800'
+                              : 'hover:bg-noir-800/50 border-noir-800'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -1209,7 +1209,7 @@ export default function DanganronpaPatcherPage() {
                   onClick={rebuildWad}
                   disabled={!selectedSteamGame || applyingPatch}
                   size="sm"
-                  className="w-full h-8 bg-violet-600 hover:bg-violet-500 text-xs"
+                  className="w-full h-8 bg-rouge-600 hover:bg-rouge-500 text-xs"
                 >
                   {applyingPatch ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -1222,7 +1222,7 @@ export default function DanganronpaPatcherPage() {
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">{t('visualNovelPage.currentWadFiles')}</p>
                     {selectedSteamGame.wad_files.map((wad, i) => (
-                      <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800">
+                      <div key={i} className="flex items-center justify-between p-2 rounded bg-noir-950/50 border border-noir-800">
                         <span className="text-xs font-mono">{wad.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-2xs text-muted-foreground">
@@ -1256,7 +1256,7 @@ export default function DanganronpaPatcherPage() {
                   {backups.length > 0 ? (
                     <div className="space-y-2">
                       {backups.map((backup, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800">
+                        <div key={i} className="flex items-center justify-between p-2 rounded bg-noir-950/50 border border-noir-800">
                           <div>
                             <span className="text-xs font-mono">{backup.name}</span>
                             <p className="text-2xs text-muted-foreground">
@@ -1312,7 +1312,7 @@ export default function DanganronpaPatcherPage() {
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">{t('visualNovelPage.availablePatches')}</p>
                     {alliceInfo.patches.map((patch, i) => (
-                      <div key={i} className="p-2 rounded bg-slate-950/50 border border-slate-800">
+                      <div key={i} className="p-2 rounded bg-noir-950/50 border border-noir-800">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium">{patch.game}</span>
                           <Badge variant="outline" className="text-2xs">v{patch.version}</Badge>
@@ -1337,7 +1337,7 @@ export default function DanganronpaPatcherPage() {
           </div>
 
           {/* Export Patch Distribuibile */}
-          <Card className="border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-slate-950/30">
+          <Card className="border-emerald-500/20 bg-gradient-to-b from-emerald-950/20 to-noir-950/30">
             <CardHeader className="py-1.5 px-3">
               <CardTitle className="text-xs flex items-center gap-1.5">
                 <Archive className="w-3 h-3 text-emerald-400" />
@@ -1395,8 +1395,8 @@ export default function DanganronpaPatcherPage() {
                 </div>
               )}
 
-              <div className="text-2xs text-muted-foreground space-y-1 p-2 rounded bg-slate-950/50 border border-slate-800">
-                <p className="font-medium text-slate-400">{t('visualNovelPage.zipContent')}</p>
+              <div className="text-2xs text-muted-foreground space-y-1 p-2 rounded bg-noir-950/50 border border-noir-800">
+                <p className="font-medium text-noir-400">{t('visualNovelPage.zipContent')}</p>
                 <p>&#x2022; <span className="text-emerald-400/70">dr1_data_keyboard_us.wad</span> {t('danganronpaPatcher.descWadPatched')}</p>
                 <p>&#x2022; <span className="text-emerald-400/70">install.bat</span> {t('danganronpaPatcher.descInstaller')}</p>
                 <p>&#x2022; <span className="text-emerald-400/70">LEGGIMI.txt</span> {t('danganronpaPatcher.descReadme')}</p>
@@ -1442,7 +1442,7 @@ export default function DanganronpaPatcherPage() {
                       onClick={translateWithAI} 
                       disabled={loading || linDialogues.filter(d => !d.translated).length === 0}
                       size="sm" 
-                      className="h-8 bg-purple-600 hover:bg-purple-500"
+                      className="h-8 bg-rouge-600 hover:bg-rouge-500"
                     >
                       {loading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Globe className="w-3 h-3 mr-1" />}
                       {t('danganronpaPatcher.translateWithAi')}</Button>
@@ -1460,7 +1460,7 @@ export default function DanganronpaPatcherPage() {
                     </Button>
                   </div>
                 </div>
-                <Progress value={linStats.percentage} className="h-2 bg-slate-800" />
+                <Progress value={linStats.percentage} className="h-2 bg-noir-800" />
               </CardContent>
             </Card>
           )}
@@ -1494,7 +1494,7 @@ export default function DanganronpaPatcherPage() {
                     <select
                       value={linSpeakerFilter}
                       onChange={(e) => setLinSpeakerFilter(e.target.value)}
-                      className="h-9 px-3 rounded-md border border-slate-700 bg-slate-900 text-sm"
+                      className="h-9 px-3 rounded-md border border-noir-700 bg-noir-900 text-sm"
                     >
                       <option value="all">{t('visualNovelPage.allCharacters')}</option>
                       {linStats && Object.keys(linStats.by_speaker).map(speaker => (
@@ -1508,7 +1508,7 @@ export default function DanganronpaPatcherPage() {
                         type="checkbox"
                         checked={linShowUntranslated}
                         onChange={(e) => setLinShowUntranslated(e.target.checked)}
-                        className="rounded border-slate-700"
+                        className="rounded border-noir-700"
                       />
                       {t('danganronpaPatcher.onlyUntranslated')}</label>
                     <div className="flex gap-1 ml-auto">
@@ -1548,8 +1548,8 @@ export default function DanganronpaPatcherPage() {
                               setEditingLinId(dialogue.id);
                               setEditedLinTranslation(dialogue.translated);
                             }}
-                            className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-slate-800/30 transition-colors ${
-                              isUntranslated ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-slate-800/50'
+                            className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-noir-800/30 transition-colors ${
+                              isUntranslated ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-noir-800/50'
                             }`}
                           >
                             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-2xs shrink-0">
@@ -1570,7 +1570,7 @@ export default function DanganronpaPatcherPage() {
                       return (
                         <div
                           key={dialogue.id}
-                          className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-slate-800'}`}
+                          className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/50 bg-yellow-500/5' : 'border-noir-800'}`}
                         >
                           {/* Header */}
                           <div className="flex items-center justify-between mb-2">
@@ -1584,7 +1584,7 @@ export default function DanganronpaPatcherPage() {
                           
                           {/* Original */}
                           <div className="mb-2">
-                            <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                            <p className="text-sm font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                               {dialogue.original}
                             </p>
                           </div>
@@ -1595,7 +1595,7 @@ export default function DanganronpaPatcherPage() {
                               <Textarea
                                 value={editedLinTranslation}
                                 onChange={(e) => setEditedLinTranslation(e.target.value)}
-                                className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                                className="font-mono text-sm bg-noir-950/50 border-noir-700"
                                 rows={2}
                               />
                               <div className="flex gap-2">
@@ -1619,7 +1619,7 @@ export default function DanganronpaPatcherPage() {
                                 setEditingLinId(dialogue.id);
                                 setEditedLinTranslation(dialogue.translated);
                               }}
-                              className={`p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                              className={`p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                                 isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                               }`}
                             >

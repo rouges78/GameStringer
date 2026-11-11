@@ -260,7 +260,7 @@ export default function MemoryPage() {
   return (
     <div className="flex flex-col h-full p-4 gap-4 animate-fade-in">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -311,12 +311,12 @@ export default function MemoryPage() {
       {/* Search & Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500" />
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('dictionary.searchPlaceholder')}
-            className="pl-10 bg-slate-800/50 border-slate-700"
+            className="pl-10 bg-noir-800/50 border-noir-700"
           />
         </div>
         
@@ -362,19 +362,19 @@ export default function MemoryPage() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-noir-500">
           {filteredUnits.length} {t('dictionary.results')}
         </span>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 min-h-0 rounded-xl border border-slate-700/50 bg-slate-900/30 overflow-hidden">
+      <div className="flex-1 min-h-0 rounded-xl border border-noir-700/50 bg-noir-900/30 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <RefreshCw className="h-8 w-8 text-slate-500 animate-spin" />
+            <RefreshCw className="h-8 w-8 text-noir-500 animate-spin" />
           </div>
         ) : filteredUnits.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-500">
+          <div className="flex flex-col items-center justify-center h-full text-noir-500">
             <Database className="h-16 w-16 mb-4 opacity-30" />
             <p className="text-lg font-medium">{t('dictionary.noTranslationsFound')}</p>
             <p className="text-sm">{t('dictionary.useNeuralTranslator')}</p>
@@ -383,11 +383,11 @@ export default function MemoryPage() {
           <ScrollArea className="h-full">
             <table className="w-full table-fixed border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-slate-800/95 backdrop-blur-sm">
-                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-600/50 w-1/2">
+                <tr className="bg-noir-800/95 backdrop-blur-sm">
+                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-noir-400 border-b border-noir-600/50 w-1/2">
                     {t('dictionary.original')}
                   </th>
-                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-orange-400/80 border-b border-slate-600/50 w-1/2">
+                  <th className="text-left py-1.5 px-2 text-2xs font-semibold uppercase tracking-wider text-orange-400/80 border-b border-noir-600/50 w-1/2">
                     {t('dictionary.translation')}
                   </th>
                 </tr>
@@ -398,18 +398,18 @@ export default function MemoryPage() {
                     key={unit.id} 
                     className={cn(
                       "group transition-all duration-200",
-                      "hover:bg-gradient-to-r hover:from-teal-500/10 hover:via-cyan-500/5 hover:to-transparent",
-                      "hover:shadow-[inset_0_0_30px_rgba(20,184,166,0.1)]",
-                      idx % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
+                      "hover:bg-gradient-to-r hover:from-noir-500/10 hover:via-noir-500/5 hover:to-transparent",
+                      "hover:shadow-[inset_0_0_30px_rgba(155,155,163,0.1)]",
+                      idx % 2 === 0 ? "bg-noir-900/20" : "bg-noir-900/40"
                     )}
                   >
                     {/* Originale */}
-                    <td className="py-1 px-2 border-b border-slate-800/30">
-                      <span className="text-slate-300 text-xs">{unit.sourceText}</span>
+                    <td className="py-1 px-2 border-b border-noir-800/30">
+                      <span className="text-noir-300 text-xs">{unit.sourceText}</span>
                     </td>
                     
                     {/* Traduzione */}
-                    <td className="py-1 px-2 border-b border-slate-800/30">
+                    <td className="py-1 px-2 border-b border-noir-800/30">
                       {editingId === unit.id ? (
                         <div className="flex items-center gap-2">
                           <Input
@@ -420,9 +420,9 @@ export default function MemoryPage() {
                               if (e.key === 'Enter') handleEdit(unit);
                               if (e.key === 'Escape') setEditingId(null);
                             }}
-                            className="h-8 text-sm bg-slate-800 border-teal-500/50 focus:border-teal-400 focus:ring-teal-400/20"
+                            className="h-8 text-sm bg-noir-800 border-noir-500/50 focus:border-noir-400 focus:ring-noir-400/20"
                           />
-                          <Button size="xs" className="px-3 bg-teal-600 hover:bg-teal-500 text-white" onClick={() => handleEdit(unit)}>
+                          <Button size="xs" className="px-3 bg-noir-600 hover:bg-noir-500 text-white" onClick={() => handleEdit(unit)}>
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setEditingId(null)}>
@@ -441,7 +441,7 @@ export default function MemoryPage() {
                             <Button 
                               size="sm" 
                               variant="ghost" 
-                              className="h-5 w-5 p-0 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10"
+                              className="h-5 w-5 p-0 text-noir-500 hover:text-rouge-400 hover:bg-rouge-500/10"
                               onClick={() => { setEditingId(unit.id); setEditValue(unit.targetText); }}
                             >
                               <Edit3 className="h-3 w-3" />
@@ -449,7 +449,7 @@ export default function MemoryPage() {
                             <Button 
                               size="sm" 
                               variant="ghost" 
-                              className="h-5 w-5 p-0 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+                              className="h-5 w-5 p-0 text-noir-500 hover:text-red-400 hover:bg-red-500/10"
                               onClick={() => { setUnitToDelete(unit); setDeleteDialogOpen(true); }}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -468,24 +468,24 @@ export default function MemoryPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-slate-900 border-slate-700">
+        <AlertDialogContent className="bg-noir-900 border-noir-700">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-400">
               <AlertCircle className="h-5 w-5" />
               {t('dictionary.deleteTitle')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+            <AlertDialogDescription className="text-noir-400">
               {t('dictionary.deleteDescription')}
               {unitToDelete && (
-                <span className="mt-3 p-3 rounded-lg bg-slate-800/50 text-sm block">
-                  <span className="text-slate-300 block">&quot;{unitToDelete.sourceText}&quot;</span>
+                <span className="mt-3 p-3 rounded-lg bg-noir-800/50 text-sm block">
+                  <span className="text-noir-300 block">&quot;{unitToDelete.sourceText}&quot;</span>
                   <span className="text-emerald-400 mt-1 block">→ &quot;{unitToDelete.targetText}&quot;</span>
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-800 border-slate-700 hover:bg-slate-700">
+            <AlertDialogCancel className="bg-noir-800 border-noir-700 hover:bg-noir-700">
               {t('dictionary.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 

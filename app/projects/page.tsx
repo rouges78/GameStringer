@@ -77,15 +77,15 @@ type FilterStatus = 'all' | 'in_progress' | 'completed' | 'empty';
 // doppio accanto ai codici). Lista lingue UNIFICATA via langFlagSrc.
 function FlagIcon({ code, className = 'h-3 w-4' }: { code: string; className?: string }) {
   const src = langFlagSrc(code);
-  if (!src) return <Globe className="w-3 h-3 text-slate-500" />;
+  if (!src) return <Globe className="w-3 h-3 text-noir-500" />;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={code.toUpperCase()} className={cn(className, 'rounded-[2px] object-cover ring-1 ring-slate-700/60 inline-block')} />;
+  return <img src={src} alt={code.toUpperCase()} className={cn(className, 'rounded-[2px] object-cover ring-1 ring-noir-700/60 inline-block')} />;
 }
 
 const SOURCE_LABELS: Record<UnifiedProject['source'], { label: string; color: string; icon: typeof BookOpen }> = {
-  active: { label: 'In Traduzione', color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', icon: Rocket },
-  quality: { label: 'Quality Scoring', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30', icon: TrendingUp },
-  dictionary: { label: 'Dictionary', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30', icon: BookOpen },
+  active: { label: 'In Traduzione', color: 'bg-rouge-500/20 text-rouge-300 border-rouge-500/30', icon: Rocket },
+  quality: { label: 'Quality Scoring', color: 'bg-rouge-500/20 text-rouge-300 border-rouge-500/30', icon: TrendingUp },
+  dictionary: { label: 'Dictionary', color: 'bg-noir-500/20 text-noir-300 border-noir-500/30', icon: BookOpen },
   translation_memory: { label: 'Translation Memory', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30', icon: Languages },
   game: { label: 'Game Library', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', icon: Gamepad2 },
 };
@@ -361,24 +361,24 @@ function ProjectCard({
     project.status === 'completed'
       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
       : project.status === 'in_progress'
-        ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30'
-        : 'text-slate-500 bg-slate-500/10 border-slate-500/30';
+        ? 'text-noir-400 bg-noir-500/10 border-noir-500/30'
+        : 'text-noir-500 bg-noir-500/10 border-noir-500/30';
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm hover:border-violet-500/50 hover:bg-slate-900/80 transition-all duration-200 shadow-lg hover:shadow-violet-500/10">
+    <div className="group relative overflow-hidden rounded-xl border border-noir-700/50 bg-noir-900/50 backdrop-blur-sm hover:border-rouge-500/50 hover:bg-noir-900/80 transition-all duration-200 shadow-lg hover:shadow-rouge-500/10">
       {/* Cover */}
       {project.coverUrl ? (
-        <div className="relative h-28 overflow-hidden bg-slate-800">
+        <div className="relative h-28 overflow-hidden bg-noir-800">
           <img
             src={project.coverUrl}
             alt={project.gameName}
             className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-noir-900 via-noir-900/60 to-transparent" />
         </div>
       ) : (
-        <div className="relative h-28 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex items-center justify-center">
-          <Gamepad2 className="w-12 h-12 text-slate-700 group-hover:text-slate-600 transition-colors" />
+        <div className="relative h-28 bg-gradient-to-br from-noir-800 via-noir-900 to-noir-800 flex items-center justify-center">
+          <Gamepad2 className="w-12 h-12 text-noir-700 group-hover:text-noir-600 transition-colors" />
         </div>
       )}
 
@@ -387,7 +387,7 @@ function ProjectCard({
         {/* Title + source */}
         <div>
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-bold text-slate-100 text-sm leading-tight line-clamp-2 flex-1">
+            <h3 className="font-bold text-noir-100 text-sm leading-tight line-clamp-2 flex-1">
               {project.gameName}
             </h3>
             <Badge variant="outline" className={cn('text-2xs px-1.5 py-0 h-5 shrink-0', statusColor)}>
@@ -413,11 +413,11 @@ function ProjectCard({
         </div>
 
         {/* Languages */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+        <div className="flex items-center gap-1.5 text-xs text-noir-400">
           <FlagIcon code={project.sourceLanguage} />
           <ArrowRight className="w-3 h-3" />
           <FlagIcon code={project.targetLanguage} />
-          <span className="text-slate-500 ml-1">
+          <span className="text-noir-500 ml-1">
             {project.sourceLanguage.toUpperCase()} → {project.targetLanguage.toUpperCase()}
           </span>
         </div>
@@ -425,21 +425,21 @@ function ProjectCard({
         {/* Progress */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-2xs">
-            <span className="text-slate-400">
+            <span className="text-noir-400">
               {/* Clamp: l'aggregazione può contare due volte (es. dizionari
                   sommati senza dedup) → mai mostrare 126/122 */}
               {Math.min(project.completedStrings, project.totalStrings).toLocaleString()} / {project.totalStrings.toLocaleString()}  {t('projectsPage.stringsUnit')}</span>
-            <span className="text-slate-300 font-semibold">{pct}%</span>
+            <span className="text-noir-300 font-semibold">{pct}%</span>
           </div>
           <Progress value={pct} className="h-1.5" />
         </div>
 
         {/* Quality score (se quality) */}
         {project.qualityScore !== undefined && project.source === 'quality' && (
-          <div className="flex items-center gap-1.5 text-2xs text-slate-400">
+          <div className="flex items-center gap-1.5 text-2xs text-noir-400">
             <TrendingUp className="w-3 h-3" />
             <span>
-              {t('projectsPage.qualityLabel')} <span className="text-purple-300 font-semibold">{project.qualityScore.toFixed(1)}/3.0</span>
+              {t('projectsPage.qualityLabel')} <span className="text-rouge-300 font-semibold">{project.qualityScore.toFixed(1)}/3.0</span>
             </span>
           </div>
         )}
@@ -452,7 +452,7 @@ function ProjectCard({
             <Button
               size="sm"
               variant="default"
-              className="flex-1 h-7 text-2xs bg-violet-600 hover:bg-violet-500"
+              className="flex-1 h-7 text-2xs bg-rouge-600 hover:bg-rouge-500"
               onClick={() => { if (project.openHref) router.push(project.openHref); }}
             >
               <FileText className="w-3 h-3 mr-1" />
@@ -462,7 +462,7 @@ function ProjectCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-300"
+              className="h-7 w-7 p-0 text-noir-400 hover:text-noir-300"
               onClick={() => onApply(project)}
               title={t('projectsPage.applyTitle')}
             >
@@ -473,7 +473,7 @@ function ProjectCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-emerald-300"
+              className="h-7 w-7 p-0 text-noir-400 hover:text-emerald-300"
               onClick={() => onPublish(project)}
               disabled={publishing}
               aria-busy={publishing}
@@ -503,7 +503,7 @@ function ProjectCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-slate-200"
+              className="h-7 w-7 p-0 text-noir-400 hover:text-noir-200"
               onClick={() => onExport(project)}
               title={t('projectsPage.exportTitle')}
             >
@@ -516,7 +516,7 @@ function ProjectCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-red-400"
+              className="h-7 w-7 p-0 text-noir-400 hover:text-red-400"
               onClick={() => onDelete(project)}
               title={t('projectsPage.deleteTitle')}
             >
@@ -988,12 +988,12 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rouge-600 to-rouge-600 flex items-center justify-center shadow-lg shadow-rouge-500/30">
             <Rocket className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-100">{t('nav.projects')}</h1>
-            <p className="text-sm text-slate-400">
+            <h1 className="text-2xl font-bold text-noir-100">{t('nav.projects')}</h1>
+            <p className="text-sm text-noir-400">
               {t('projectsPage.subtitle')}</p>
           </div>
         </div>
@@ -1002,7 +1002,7 @@ export default function ProjectsPage() {
             <Upload className="w-4 h-4 mr-2" />
             {t('projectsPage.importBtn')}</Button>
           {/* Senza gioco: il wizard mostra il selettore dei giochi installati */}
-          <Button size="sm" className="bg-violet-600 hover:bg-violet-500" onClick={() => router.push('/auto-translate')}>
+          <Button size="sm" className="bg-rouge-600 hover:bg-rouge-500" onClick={() => router.push('/auto-translate')}>
             <Plus className="w-4 h-4 mr-2" />
             {t('projectsPage.newProject')}</Button>
         </div>
@@ -1011,8 +1011,8 @@ export default function ProjectsPage() {
       {/* Stats cards — nascosti quando non c'è ancora alcun progetto (impalcatura inerte) */}
       {projects.length > 0 && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label={t('projectsPage.totalProjectsLabel')} value={stats.total} icon={Rocket} color="text-violet-400" />
-        <StatCard label={t('projectsPage.inProgress')} value={stats.inProgress} icon={Clock} color="text-cyan-400" />
+        <StatCard label={t('projectsPage.totalProjectsLabel')} value={stats.total} icon={Rocket} color="text-rouge-400" />
+        <StatCard label={t('projectsPage.inProgress')} value={stats.inProgress} icon={Clock} color="text-noir-400" />
         <StatCard label={t('projectsPage.completed')} value={stats.completed} icon={CheckCircle2} color="text-emerald-400" />
         <StatCard
           label={t('projectsPage.translatedStringsLabel')}
@@ -1025,19 +1025,19 @@ export default function ProjectsPage() {
 
       {/* Filters — mostrati solo se esistono progetti (altrimenti sono controlli inerti) */}
       {projects.length > 0 && (
-      <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-lg bg-slate-900/50 border border-slate-700/50">
+      <div className="flex flex-wrap items-center gap-2 mb-6 p-3 rounded-lg bg-noir-900/50 border border-noir-700/50">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-noir-500" />
           <Input
             placeholder={t('projectsPage.searchPh')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9 bg-slate-800/50 border-slate-700"
+            className="pl-9 h-9 bg-noir-800/50 border-noir-700"
           />
         </div>
 
         <Select value={filterStatus} onValueChange={(v: string) => setFilterStatus(v as FilterStatus)}>
-          <SelectTrigger className="w-[140px] h-9 bg-slate-800/50 border-slate-700">
+          <SelectTrigger className="w-[140px] h-9 bg-noir-800/50 border-noir-700">
             <Filter className="w-3.5 h-3.5 mr-1" />
             <SelectValue />
           </SelectTrigger>
@@ -1050,7 +1050,7 @@ export default function ProjectsPage() {
         </Select>
 
         <Select value={filterLang} onValueChange={setFilterLang}>
-          <SelectTrigger className="w-[140px] h-9 bg-slate-800/50 border-slate-700">
+          <SelectTrigger className="w-[140px] h-9 bg-noir-800/50 border-noir-700">
             <Globe className="w-3.5 h-3.5 mr-1" />
             <SelectValue />
           </SelectTrigger>
@@ -1065,7 +1065,7 @@ export default function ProjectsPage() {
         </Select>
 
         <Select value={filterSource} onValueChange={setFilterSource}>
-          <SelectTrigger className="w-[160px] h-9 bg-slate-800/50 border-slate-700">
+          <SelectTrigger className="w-[160px] h-9 bg-noir-800/50 border-noir-700">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -1081,25 +1081,25 @@ export default function ProjectsPage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-20 text-noir-400">
           <Loader2 className="w-8 h-8 animate-spin mb-3" />
           <p className="text-sm">{t('projectsPage.loadingProjects')}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-20 h-20 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-4">
-            <Rocket className="w-10 h-10 text-slate-600" />
+          <div className="w-20 h-20 rounded-2xl bg-noir-800/50 flex items-center justify-center mb-4">
+            <Rocket className="w-10 h-10 text-noir-600" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-300 mb-1">
+          <h3 className="text-lg font-semibold text-noir-300 mb-1">
             {projects.length === 0 ? 'Nessun progetto ancora' : 'Nessun progetto trovato'}
           </h3>
-          <p className="text-sm text-slate-500 mb-4 max-w-md">
+          <p className="text-sm text-noir-500 mb-4 max-w-md">
             {projects.length === 0
               ? "Inizia a tradurre un gioco per vederlo apparire qui. I progetti vengono raccolti da Quality Scoring, dizionari, Translation Memory e libreria giochi."
               : 'Prova a modificare i filtri di ricerca.'}
           </p>
           {projects.length === 0 && (
-            <Button className="bg-violet-600 hover:bg-violet-500" onClick={() => router.push('/auto-translate')}>
+            <Button className="bg-rouge-600 hover:bg-rouge-500" onClick={() => router.push('/auto-translate')}>
               <Plus className="w-4 h-4 mr-2" />
               {t('projectsPage.startTranslating')}</Button>
           )}
@@ -1138,12 +1138,12 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-700/50 bg-slate-900/50 backdrop-blur-sm p-3">
+    <div className="rounded-lg border border-noir-700/50 bg-noir-900/50 backdrop-blur-sm p-3">
       <div className="flex items-center gap-2 mb-1">
         <Icon className={cn('w-4 h-4', color)} />
-        <span className="text-xs text-slate-400">{label}</span>
+        <span className="text-xs text-noir-400">{label}</span>
       </div>
-      <div className="text-xl font-bold text-slate-100">{value}</div>
+      <div className="text-xl font-bold text-noir-100">{value}</div>
     </div>
   );
 }

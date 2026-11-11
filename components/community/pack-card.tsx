@@ -11,7 +11,7 @@ import type { TranslationPack } from '@/lib/social/community-hub-service';
 
 // Solo le classi colore; le etichette di stato arrivano da i18n (patchHubPage.status*).
 export const STATUS_CLS: Record<TranslationPack['status'], string> = {
-  draft: 'bg-slate-700/40 text-slate-400',
+  draft: 'bg-noir-700/40 text-noir-400',
   published: 'bg-amber-500/15 text-amber-300',
   verified: 'bg-emerald-500/15 text-emerald-300',
   featured: 'bg-orange-500/15 text-orange-300',
@@ -27,7 +27,7 @@ export function Stars({ rating }: { rating: number }) {
   return (
     <span className="inline-flex items-center gap-0.5 text-amber-400">
       <Star className="h-3.5 w-3.5 fill-amber-400" />
-      <span className="text-xs font-medium text-slate-300">{rating.toFixed(1)}</span>
+      <span className="text-xs font-medium text-noir-300">{rating.toFixed(1)}</span>
     </span>
   );
 }
@@ -38,7 +38,7 @@ export function PackCard({ pack, onOpen }: { pack: TranslationPack; onOpen: (id:
   return (
     <button
       onClick={() => onOpen(pack.id)}
-      className="group relative overflow-hidden text-left rounded-xl border border-slate-800/60 bg-slate-900/40 hover:bg-slate-900/70 hover:border-amber-500/30 transition-all p-4 flex flex-col gap-3"
+      className="group relative overflow-hidden text-left rounded-xl border border-noir-800/60 bg-noir-900/40 hover:bg-noir-900/70 hover:border-amber-500/30 transition-all p-4 flex flex-col gap-3"
     >
       {/* Cover del gioco: sfondo accennato sotto un gradiente, così il testo
           resta leggibile. Se il pack non ha cover, la card resta com'era. */}
@@ -51,7 +51,7 @@ export function PackCard({ pack, onOpen }: { pack: TranslationPack; onOpen: (id:
             loading="lazy"
             className="w-full h-full object-cover opacity-25 group-hover:opacity-40 transition-opacity"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-noir-950 via-noir-950/80 to-noir-950/40" />
         </div>
       )}
       <div className="relative flex items-start justify-between gap-2">
@@ -70,29 +70,29 @@ export function PackCard({ pack, onOpen }: { pack: TranslationPack; onOpen: (id:
         </span>
       </div>
       <div className="relative min-w-0">
-        <h3 className="text-sm font-semibold text-slate-200 truncate group-hover:text-amber-200">{pack.name}</h3>
-        <p className="text-xs text-slate-500 truncate">{pack.gameName}</p>
+        <h3 className="text-sm font-semibold text-noir-200 truncate group-hover:text-amber-200">{pack.name}</h3>
+        <p className="text-xs text-noir-500 truncate">{pack.gameName}</p>
       </div>
-      <div className="relative flex items-center gap-1.5 text-[11px] text-slate-400">
+      <div className="relative flex items-center gap-1.5 text-[11px] text-noir-400">
         {/* Bandiera della NUOVA lingua (SVG: le emoji su Windows non esistono) */}
         {flag
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={flag} alt={pack.targetLanguage.toUpperCase()} title={pack.targetLanguage.toUpperCase()} className="h-3 w-4 rounded-[2px] object-cover ring-1 ring-slate-700/60" />
+          ? <img src={flag} alt={pack.targetLanguage.toUpperCase()} title={pack.targetLanguage.toUpperCase()} className="h-3 w-4 rounded-[2px] object-cover ring-1 ring-noir-700/60" />
           : <Globe className="h-3 w-3" />}
         <span className="uppercase">{pack.sourceLanguage}</span>
         <span>→</span>
-        <span className="uppercase font-medium text-slate-300">{pack.targetLanguage}</span>
-        <span className="text-slate-600">·</span>
+        <span className="uppercase font-medium text-noir-300">{pack.targetLanguage}</span>
+        <span className="text-noir-600">·</span>
         <span>v{pack.version}</span>
       </div>
       {/* Completion bar */}
-      <div className="relative h-1.5 rounded-full bg-slate-800 overflow-hidden">
+      <div className="relative h-1.5 rounded-full bg-noir-800 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
           style={{ width: `${Math.min(100, pack.completionPercentage)}%` }}
         />
       </div>
-      <div className="relative flex items-center justify-between text-[11px] text-slate-500">
+      <div className="relative flex items-center justify-between text-[11px] text-noir-500">
         <span>{pack.completionPercentage}% {t('patchHubPage.translated')}</span>
         <span className="flex items-center gap-2">
           <Stars rating={pack.rating} />

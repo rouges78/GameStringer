@@ -62,12 +62,12 @@ export function WizardStepper({
               type="button"
               className={cn(
                 "flex items-center gap-1.5 rounded-full transition-all",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-noir-400/50",
                 isSm ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm",
-                isPast && "bg-cyan-600 text-white",
-                isPast && isClickable && "cursor-pointer hover:bg-cyan-500",
-                isCurrent && "bg-cyan-600 text-white",
-                isFuture && "bg-slate-800/50 text-slate-500 border border-slate-700/50 cursor-default",
+                isPast && "bg-noir-600 text-white",
+                isPast && isClickable && "cursor-pointer hover:bg-noir-500",
+                isCurrent && "bg-noir-600 text-white",
+                isFuture && "bg-noir-800/50 text-noir-500 border border-noir-700/50 cursor-default",
               )}
               onClick={() => isClickable && onStepClick(step.num)}
               tabIndex={isClickable ? 0 : -1}
@@ -88,7 +88,7 @@ export function WizardStepper({
             {idx < steps.length - 1 && (
               <ArrowRight
                 className={cn(
-                  "mx-1 text-slate-600",
+                  "mx-1 text-noir-600",
                   isSm ? "h-3 w-3" : "h-3.5 w-3.5"
                 )}
                 aria-hidden="true"

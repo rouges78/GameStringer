@@ -191,7 +191,7 @@ export default function LiveTranslatePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-zinc-600'}`} />
+          <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-noir-600'}`} />
           <h1 className="text-2xl font-bold">{t('common.ltTitle')}</h1>
           <Badge variant={isRunning ? 'default' : 'secondary'} className={isRunning ? 'bg-green-600' : ''}>
             {isRunning ? (stats.isPaused ? t('common.ltStatusPaused') : t('common.ltStatusActive')) : t('common.ltStatusIdle')}
@@ -282,10 +282,10 @@ export default function LiveTranslatePage() {
                       <span className="flex items-center gap-2"><Zap className="h-3 w-3 text-yellow-500" /> {t('common.modalitaFast')}</span>
                     </SelectItem>
                     <SelectItem value="vlm-hybrid">
-                      <span className="flex items-center gap-2"><Eye className="h-3 w-3 text-cyan-400" /> {t('common.modalitaVlmHybrid')}</span>
+                      <span className="flex items-center gap-2"><Eye className="h-3 w-3 text-noir-400" /> {t('common.modalitaVlmHybrid')}</span>
                     </SelectItem>
                     <SelectItem value="vlm-full">
-                      <span className="flex items-center gap-2"><Eye className="h-3 w-3 text-purple-400" /> {t('common.modalitaVlmFull')}</span>
+                      <span className="flex items-center gap-2"><Eye className="h-3 w-3 text-rouge-400" /> {t('common.modalitaVlmFull')}</span>
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -386,27 +386,27 @@ export default function LiveTranslatePage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Stats cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Card className="bg-zinc-900/50">
+            <Card className="bg-noir-900/50">
               <CardContent className="p-3 text-center">
-                <div className="text-2xl font-bold text-cyan-400">{stats.captures}</div>
+                <div className="text-2xl font-bold text-noir-400">{stats.captures}</div>
                 <div className="text-xs text-muted-foreground">{t('common.ltStatCaptures')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900/50">
+            <Card className="bg-noir-900/50">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-green-400">{stats.translations}</div>
                 <div className="text-xs text-muted-foreground">{t('common.ltStatTranslations')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900/50">
+            <Card className="bg-noir-900/50">
               <CardContent className="p-3 text-center">
                 <div className="text-2xl font-bold text-yellow-400">{stats.skipped}</div>
                 <div className="text-xs text-muted-foreground">{t('common.ltStatSkipped')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900/50">
+            <Card className="bg-noir-900/50">
               <CardContent className="p-3 text-center">
-                <div className="text-2xl font-bold text-purple-400">
+                <div className="text-2xl font-bold text-rouge-400">
                   {stats.avgLatencyMs > 0 ? `${(stats.avgLatencyMs / 1000).toFixed(1)}s` : '--'}
                 </div>
                 <div className="text-xs text-muted-foreground">{t('common.ltStatAvgLatency')}</div>
@@ -416,13 +416,13 @@ export default function LiveTranslatePage() {
 
           {/* Last translation preview */}
           {stats.lastText && (
-            <Card className="bg-zinc-900/50 border-cyan-800/30">
+            <Card className="bg-noir-900/50 border-noir-800/30">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <Eye className="h-4 w-4 mt-1 text-cyan-400 shrink-0" />
+                  <Eye className="h-4 w-4 mt-1 text-noir-400 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground truncate">{stats.lastText}</p>
-                    <p className="text-sm font-medium text-cyan-300 truncate mt-1">{stats.lastTranslation}</p>
+                    <p className="text-sm font-medium text-noir-300 truncate mt-1">{stats.lastTranslation}</p>
                   </div>
                 </div>
               </CardContent>
@@ -445,18 +445,18 @@ export default function LiveTranslatePage() {
                 ) : (
                   logs.map((log, i) => (
                     <div key={i} className="flex items-start gap-2 py-0.5">
-                      <span className="text-zinc-500 shrink-0">[{log.time}]</span>
+                      <span className="text-noir-500 shrink-0">[{log.time}]</span>
                       {log.type === 'success' && <CheckCircle className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />}
                       {log.type === 'error' && <AlertCircle className="h-3 w-3 text-red-500 mt-0.5 shrink-0" />}
                       {log.type === 'warning' && <AlertCircle className="h-3 w-3 text-yellow-500 mt-0.5 shrink-0" />}
-                      {log.type === 'skip' && <SkipForward className="h-3 w-3 text-zinc-500 mt-0.5 shrink-0" />}
-                      {log.type === 'info' && <Clock className="h-3 w-3 text-blue-500 mt-0.5 shrink-0" />}
+                      {log.type === 'skip' && <SkipForward className="h-3 w-3 text-noir-500 mt-0.5 shrink-0" />}
+                      {log.type === 'info' && <Clock className="h-3 w-3 text-noir-500 mt-0.5 shrink-0" />}
                       <span className={
                         log.type === 'error' ? 'text-red-400' :
                         log.type === 'success' ? 'text-green-400' :
-                        log.type === 'skip' ? 'text-zinc-500' :
+                        log.type === 'skip' ? 'text-noir-500' :
                         log.type === 'warning' ? 'text-yellow-400' :
-                        'text-zinc-300'
+                        'text-noir-300'
                       }>
                         {log.message}
                       </span>

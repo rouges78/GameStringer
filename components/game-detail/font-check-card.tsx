@@ -97,18 +97,18 @@ export function FontCheckCard({ installPath, engine, targetLang }: FontCheckCard
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-sky-500/25 bg-sky-500/[0.05] p-3 space-y-2"
+      className="rounded-xl border border-noir-500/25 bg-noir-500/[0.05] p-3 space-y-2"
       data-testid="font-check-card"
     >
       <div className="flex items-start gap-3">
-        <Type className="h-4 w-4 shrink-0 mt-0.5 text-sky-300" />
+        <Type className="h-4 w-4 shrink-0 mt-0.5 text-noir-300" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-[12px] font-semibold text-sky-200">
+            <p className="text-[12px] font-semibold text-noir-200">
               {t('fontCheck.title')} · {targetLang.toUpperCase()}
             </p>
             <Button size="xs" variant="outline" disabled={checking}
-              className="border-sky-500/40 text-sky-300 hover:bg-sky-500/10"
+              className="border-noir-500/40 text-noir-300 hover:bg-noir-500/10"
               onClick={() => void run()}>
               {checking ? <Loader2 className="h-3 w-3 animate-spin" /> : <Type className="h-3 w-3" />}
               <span className="ml-1">{checking ? t('fontCheck.running') : t('fontCheck.run')}</span>
@@ -172,7 +172,7 @@ export function FontCheckCard({ installPath, engine, targetLang }: FontCheckCard
                       </p>
                       {needsUnityFix && (
                         <Button size="xs" disabled={fixing}
-                          className="mt-1 bg-sky-600 hover:bg-sky-500 text-white"
+                          className="mt-1 bg-noir-600 hover:bg-noir-500 text-white"
                           onClick={() => void applyFix()}>
                           {fixing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
                           <span className="ml-1">{fixing ? t('fontCheck.applying') : t('fontCheck.applyFix')}</span>
@@ -200,7 +200,7 @@ export function FontCheckCard({ installPath, engine, targetLang }: FontCheckCard
                   </p>
                   <div className="flex gap-2 mt-1">
                     <Button size="xs" disabled={fixing}
-                      className="bg-sky-600 hover:bg-sky-500 text-white"
+                      className="bg-noir-600 hover:bg-noir-500 text-white"
                       onClick={() => void installFont()}>
                       {fixing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
                       <span className="ml-1">{fixing ? t('fontCheck.applying') : t('fontCheck.installFont')}</span>

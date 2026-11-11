@@ -208,7 +208,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">{t('storeManagerComp.storeManagement')}</h2>
-          <p className="text-gray-600">{t('storeManagerComp.manageConnectionsToYourGameSto')}</p>
+          <p className="text-noir-600">{t('storeManagerComp.manageConnectionsToYourGameSto')}</p>
         </div>
         <Button
           onClick={refreshAllStores}
@@ -234,7 +234,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
                   <CardTitle className="text-lg">{store.name}</CardTitle>
                   <div className="flex items-center gap-2">
                     {status.loading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                      <Loader2 className="h-5 w-5 animate-spin text-noir-500" />
                     ) : status.connected ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
@@ -258,7 +258,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
                 {status.gamesCount !== undefined && (
                   <div className="text-sm">
                     <span className="font-medium">Games: </span>
-                    <span className="text-blue-600">{status.gamesCount}</span>
+                    <span className="text-noir-600">{status.gamesCount}</span>
                   </div>
                 )}
 
@@ -272,7 +272,7 @@ export function StoreManager({ stores }: StoreManagerProps) {
 
                 {/* Last check */}
                 {status.lastChecked && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-noir-500">
                     Last check: {status.lastChecked.toLocaleTimeString()}
                   </div>
                 )}

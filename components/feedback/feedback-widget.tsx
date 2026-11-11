@@ -23,7 +23,7 @@ export function FeedbackWidget() {
     <Card>
       <CardHeader>
         <CardTitle as="h2" className="flex items-center gap-2 text-base">
-          <MessageSquarePlus className="h-4 w-4 text-sky-400" />
+          <MessageSquarePlus className="h-4 w-4 text-noir-400" />
           {t('feedback.cardTitle')}
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">{t('feedback.cardDesc')}</p>

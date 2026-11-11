@@ -68,7 +68,7 @@ export function ProgressBar({
   };
 
   const variantClasses = {
-    default: 'bg-blue-500',
+    default: 'bg-rouge-500',
     success: 'bg-green-500',
     warning: 'bg-yellow-500',
     error: 'bg-red-500'
@@ -80,7 +80,7 @@ export function ProgressBar({
     <div className={cn('w-full', className)}>
       {/* Header con percentuale e tempo */}
       {(showPercentage || showTimeRemaining) && (
-        <div className="flex justify-between items-center mb-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex justify-between items-center mb-2 text-sm text-noir-600 dark:text-noir-400">
           {showPercentage && (
             <span className="font-medium">
               {formatProgress(clampedProgress)}
@@ -97,7 +97,7 @@ export function ProgressBar({
       {/* Barra di progresso */}
       <div
         className={cn(
-          'w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden',
+          'w-full bg-noir-200 dark:bg-noir-700 rounded-full overflow-hidden',
           sizeClasses[size]
         )}
       >
@@ -141,7 +141,7 @@ export function IndeterminateProgress({
   };
 
   const variantClasses = {
-    default: 'bg-blue-500',
+    default: 'bg-rouge-500',
     success: 'bg-green-500',
     warning: 'bg-yellow-500',
     error: 'bg-red-500'
@@ -151,7 +151,7 @@ export function IndeterminateProgress({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden',
+          'w-full bg-noir-200 dark:bg-noir-700 rounded-full overflow-hidden',
           sizeClasses[size]
         )}
       >
@@ -193,7 +193,7 @@ export function CircularProgress({
   const offset = circumference - (progress / 100) * circumference;
 
   const variantColors = {
-    default: 'stroke-blue-500',
+    default: 'stroke-noir-500',
     success: 'stroke-green-500',
     warning: 'stroke-yellow-500',
     error: 'stroke-red-500'
@@ -214,7 +214,7 @@ export function CircularProgress({
           stroke="currentColor"
           strokeWidth={strokeWidth}
           fill="none"
-          className="text-gray-200 dark:text-gray-700"
+          className="text-noir-200 dark:text-noir-700"
         />
         {/* Progress circle */}
         <circle
@@ -234,7 +234,7 @@ export function CircularProgress({
       </svg>
       {showPercentage && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-noir-700 dark:text-noir-300">
             {Math.round(progress)}%
           </span>
         </div>

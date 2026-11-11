@@ -97,8 +97,8 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
     if (!currentProfile) {
       return {
         icon: Shield,
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-500',
+        color: 'text-noir-500',
+        bgColor: 'bg-noir-500',
         text: 'Not authenticated',
         status: 'unauthenticated'
       };
@@ -140,18 +140,18 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
 
   if (isExpanded) {
     return (
-      <div className="px-2 py-2 border-t border-gray-700/50">
+      <div className="px-2 py-2 border-t border-noir-700/50">
         {currentProfile ? (
           <div className="flex items-center gap-2">
             <div className="relative">
               <Avatar className="w-7 h-7">
                 <AvatarImage src={avatarSrc || undefined} alt={currentProfile.name} />
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-blue-600 text-white text-xs font-bold">
+                <AvatarFallback className="bg-gradient-to-br from-rouge-500 to-noir-600 text-white text-xs font-bold">
                   {currentProfile.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className={cn(
-                "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900",
+                "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-noir-900",
                 authStatus.status === 'authenticated' ? "bg-green-500" : 
                 authStatus.status === 'expiring' ? "bg-orange-500" : "bg-red-500"
               )} />
@@ -160,7 +160,7 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
               <p className="text-xs font-medium text-white truncate">
                 {currentProfile.name}
               </p>
-              <p className="text-micro text-gray-500">
+              <p className="text-micro text-noir-500">
                 {authStatus.text}
               </p>
             </div>
@@ -176,7 +176,7 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-noir-500">
             <User className="w-4 h-4" />
             <span className="text-xs">Not authenticated</span>
           </div>
@@ -187,12 +187,12 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
 
   // Collapsed view
   return (
-    <div className="p-2 border-t border-b bg-gradient-to-r from-slate-800/50 to-slate-700/50">
+    <div className="p-2 border-t border-b bg-gradient-to-r from-noir-800/50 to-noir-700/50">
       <div className="flex flex-col items-center gap-1">
         {currentProfile && (
           <Avatar className="w-6 h-6" title={`Profilo: ${currentProfile.name}`}>
             <AvatarImage src={avatarSrc || undefined} alt={currentProfile.name} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs">
+            <AvatarFallback className="bg-gradient-to-br from-noir-500 to-rouge-600 text-white text-xs">
               {currentProfile.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -205,7 +205,7 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
         
         {sessionTimeRemaining && isAuthenticated && (
           <div 
-            className="text-xs text-gray-400 font-mono"
+            className="text-xs text-noir-400 font-mono"
             title={`Scade tra: ${formatTime(sessionTimeRemaining)}`}
           >
             {Math.floor(sessionTimeRemaining / (1000 * 60))}m

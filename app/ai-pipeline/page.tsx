@@ -62,7 +62,7 @@ const STEP_ICONS: Record<PipelineStepId, any> = {
 
 const STEP_COLORS: Record<string, string> = {
   pending: "text-muted-foreground",
-  running: "text-blue-400 animate-pulse",
+  running: "text-noir-400 animate-pulse",
   completed: "text-emerald-400",
   failed: "text-red-400",
   skipped: "text-muted-foreground/50",
@@ -222,7 +222,7 @@ export default function AIPipelinePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-4">
+      <div className="bg-gradient-to-r from-rouge-600 via-rouge-600 to-rouge-600 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
@@ -326,7 +326,7 @@ export default function AIPipelinePage() {
                   <span className="flex items-center gap-1.5">
                     <span>🤖</span> Multi-Agent
                     {(agentConfig.translate || agentConfig.autoFix || agentConfig.review) && (
-                      <Badge variant="outline" className="text-2xs px-1 py-0 h-3.5 bg-violet-500/10 text-violet-400 border-violet-500/30">ON</Badge>
+                      <Badge variant="outline" className="text-2xs px-1 py-0 h-3.5 bg-rouge-500/10 text-rouge-400 border-rouge-500/30">ON</Badge>
                     )}
                   </span>
                   <ChevronRight className={cn("h-3 w-3 transition-transform", showAgents && "rotate-90")} />
@@ -344,7 +344,7 @@ export default function AIPipelinePage() {
                           className={cn(
                             "text-micro px-1.5 py-1.5 rounded border transition-colors text-center truncate",
                             activePresetId === preset.id
-                              ? "bg-violet-500/15 border-violet-500/40 text-violet-300"
+                              ? "bg-rouge-500/15 border-rouge-500/40 text-rouge-300"
                               : "bg-background/50 border-border/50 hover:border-border text-muted-foreground"
                           )}
                         >
@@ -364,7 +364,7 @@ export default function AIPipelinePage() {
                             <select
                               value={current?.model || ''}
                               onChange={(e) => { updateAgent(role, e.target.value); setActivePresetId('custom'); }}
-                              className="w-full h-6 text-2xs bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+                              className="w-full h-6 text-2xs bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-rouge-500/30"
                             >
                               <option value="">{t('aiPipelinePage.defaultProviderChain')}</option>
                               {ollamaModels.map(m => (
@@ -409,7 +409,7 @@ export default function AIPipelinePage() {
                         "flex items-center gap-1.5 px-2 py-1 rounded text-xs border",
                         step.status === "completed" ? "bg-emerald-500/10 border-emerald-500/30" :
                         step.status === "failed" ? "bg-red-500/10 border-red-500/30" :
-                        step.status === "running" ? "bg-blue-500/10 border-blue-500/30" :
+                        step.status === "running" ? "bg-noir-500/10 border-noir-500/30" :
                         step.status === "skipped" ? "bg-muted/30 border-transparent" :
                         "bg-muted/10 border-transparent"
                       )}>
@@ -447,11 +447,11 @@ export default function AIPipelinePage() {
               </Card>
               <Card className="p-3">
                 <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.autoFixed')}</div>
-                <div className="text-xl font-bold text-blue-400">{result.stats.fixedByAutoFix}</div>
+                <div className="text-xl font-bold text-noir-400">{result.stats.fixedByAutoFix}</div>
               </Card>
               <Card className="p-3">
                 <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.reviewImproved')}</div>
-                <div className="text-xl font-bold text-purple-400">{result.stats.improvedByReview}</div>
+                <div className="text-xl font-bold text-rouge-400">{result.stats.improvedByReview}</div>
               </Card>
               <Card className="p-3">
                 <div className="text-2xs text-muted-foreground">{t('aiPipelinePage.totalTime')}</div>
@@ -538,7 +538,7 @@ export default function AIPipelinePage() {
                     <div className="flex gap-3 text-xs">
                       <div className="text-red-400">{selectedReport.summary.errors} {t('aiPipelinePage.errorsLabel')}</div>
                       <div className="text-yellow-400">{selectedReport.summary.warnings} {t('aiPipelinePage.warningsLabel')}</div>
-                      <div className="text-blue-400">{selectedReport.summary.infos} {t('aiPipelinePage.infosLabel')}</div>
+                      <div className="text-noir-400">{selectedReport.summary.infos} {t('aiPipelinePage.infosLabel')}</div>
                     </div>
 
                     <Separator />
@@ -628,8 +628,8 @@ export default function AIPipelinePage() {
                             entry.averageScore >= 60 ? "text-yellow-400" : "text-red-400"
                           )}>{entry.averageScore}%</td>
                           <td className="py-1 pr-2 text-right text-emerald-400">{entry.passedFirstTime}/{entry.totalStrings}</td>
-                          <td className="py-1 pr-2 text-right text-blue-400">{entry.fixedByAutoFix}</td>
-                          <td className="py-1 pr-2 text-right text-purple-400">{entry.improvedByReview}</td>
+                          <td className="py-1 pr-2 text-right text-noir-400">{entry.fixedByAutoFix}</td>
+                          <td className="py-1 pr-2 text-right text-rouge-400">{entry.improvedByReview}</td>
                           <td className="py-1 pr-2 text-right text-muted-foreground">{entry.msPerString}ms</td>
                           <td className="py-1 text-right text-muted-foreground">{(entry.totalDurationMs / 1000).toFixed(1)}s</td>
                         </tr>

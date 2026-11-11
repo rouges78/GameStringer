@@ -320,7 +320,7 @@ export function UnrealTranslator() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto overflow-x-hidden">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -383,7 +383,7 @@ export function UnrealTranslator() {
               <CardTitle className="text-sm flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-emerald-400" />
                 {t('ueTranslator.unrealGames')}
-                <Badge variant="outline" className="ml-1 text-2xs px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                <Badge variant="outline" className="ml-1 text-2xs px-1.5 py-0 bg-noir-500/10 text-noir-400 border-noir-500/30">
                   {filteredGames.length}
                 </Badge>
               </CardTitle>
@@ -396,7 +396,7 @@ export function UnrealTranslator() {
                 placeholder={t('gamePatcher.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 h-7 text-xs bg-slate-950/50 border-slate-800/70"
+                className="pl-7 h-7 text-xs bg-noir-950/50 border-noir-800/70"
               />
             </div>
             
@@ -417,23 +417,23 @@ export function UnrealTranslator() {
                     onClick={() => handleSelectGame(game)}
                     className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-all border ${
                       selectedGame?.id === game.id 
-                        ? 'bg-gradient-to-r from-blue-500/20 to-cyan-400/10 border-blue-500/40 text-white shadow-sm' 
-                        : 'border-transparent hover:bg-blue-500/10 hover:border-blue-500/20 text-slate-300'
+                        ? 'bg-gradient-to-r from-noir-500/20 to-noir-400/10 border-noir-500/40 text-white shadow-sm' 
+                        : 'border-transparent hover:bg-noir-500/10 hover:border-noir-500/20 text-noir-300'
                     }`}
                   >
                     {game.header_image ? (
                       <Image src={game.header_image} alt="" width={44} height={20} className="rounded object-cover shrink-0" />
                     ) : (
-                      <div className="w-11 h-[20px] bg-slate-800/80 rounded flex items-center justify-center shrink-0">
-                        <Gamepad2 className="w-3 h-3 text-slate-500" />
+                      <div className="w-11 h-[20px] bg-noir-800/80 rounded flex items-center justify-center shrink-0">
+                        <Gamepad2 className="w-3 h-3 text-noir-500" />
                       </div>
                     )}
                     <span className="truncate flex-1 font-medium text-[11px]">{getGameName(game)}</span>
-                    <Badge variant="outline" className="text-2xs px-1 py-0 shrink-0 bg-blue-500/20 text-blue-400 border-blue-500/40">
+                    <Badge variant="outline" className="text-2xs px-1 py-0 shrink-0 bg-noir-500/20 text-noir-400 border-noir-500/40">
                       UE
                     </Badge>
                     {selectedGame?.id === game.id && (
-                      <CheckCircle2 className="w-3 h-3 shrink-0 text-blue-400" />
+                      <CheckCircle2 className="w-3 h-3 shrink-0 text-noir-400" />
                     )}
                   </button>
                 ))

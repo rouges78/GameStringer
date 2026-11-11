@@ -53,15 +53,15 @@ const LANG_NAMES: Record<string, string> = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   enemy: 'bg-red-500/20 text-red-400',
-  ability: 'bg-purple-500/20 text-purple-400',
-  stat: 'bg-blue-500/20 text-blue-400',
+  ability: 'bg-rouge-500/20 text-rouge-400',
+  stat: 'bg-noir-500/20 text-noir-400',
   item: 'bg-amber-500/20 text-amber-400',
   ui: 'bg-green-500/20 text-green-400',
-  dialogue: 'bg-cyan-500/20 text-cyan-400',
+  dialogue: 'bg-noir-500/20 text-noir-400',
   gameplay: 'bg-orange-500/20 text-orange-400',
-  debug: 'bg-zinc-500/20 text-zinc-400',
-  engine: 'bg-zinc-500/20 text-zinc-400',
-  unknown: 'bg-zinc-500/20 text-zinc-400',
+  debug: 'bg-noir-500/20 text-noir-400',
+  engine: 'bg-noir-500/20 text-noir-400',
+  unknown: 'bg-noir-500/20 text-noir-400',
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -821,7 +821,7 @@ export default function BinaryPatcherPage() {
                     </div>
                   </div>
                 )}
-                <div className="p-3 rounded-lg bg-zinc-900/50 border border-white/10 max-h-[200px] overflow-auto">
+                <div className="p-3 rounded-lg bg-noir-900/50 border border-white/10 max-h-[200px] overflow-auto">
                   {autoLoadLog.map((log, i) => (
                     <p key={i} className="text-xs text-white/70 font-mono py-0.5">{log}</p>
                   ))}
@@ -901,7 +901,7 @@ export default function BinaryPatcherPage() {
               <div className="flex items-center gap-3 mb-4">
                 <label className="text-sm text-white/60">{t('binaryPatcherPage.targetLang')}</label>
                 <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
-                  className="border border-white/10 rounded px-3 py-1.5 text-sm text-white" style={{backgroundColor: '#1a1a2e'}}>
+                  className="border border-white/10 rounded px-3 py-1.5 text-sm text-white" style={{backgroundColor: '#161618'}}>
                   <option value="it">🇮🇹 {t('languages.it')}</option>
                   <option value="en">🇬🇧 {t('languages.en')}</option>
                   <option value="es">🇪🇸 {t('languages.es')}</option>
@@ -932,7 +932,7 @@ export default function BinaryPatcherPage() {
                 <p className="text-xs text-white/50">{t('binaryPatcherPage.detectedLanguages')}</p>
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
-                <p className="text-2xl font-bold text-blue-400">{Object.keys(stats.byCategory).length}</p>
+                <p className="text-2xl font-bold text-noir-400">{Object.keys(stats.byCategory).length}</p>
                 <p className="text-xs text-white/50">{t('culturalAdaptation.categories')}</p>
               </div>
             </div>
@@ -998,17 +998,17 @@ export default function BinaryPatcherPage() {
                 <span className="text-sm text-orange-400 font-medium">{LANG_NAMES[targetLang]}</span>
               </div>
               <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
-                className="border border-white/10 rounded px-2 py-1 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="it" style={{backgroundColor: '#1a1a2e'}}>🇮🇹 {t('languages.it')}</option>
-                <option value="en" style={{backgroundColor: '#1a1a2e'}}>🇬🇧 {t('languages.en')}</option>
-                <option value="es" style={{backgroundColor: '#1a1a2e'}}>🇪🇸 {t('languages.es')}</option>
-                <option value="de" style={{backgroundColor: '#1a1a2e'}}>🇩🇪 {t('languages.de')}</option>
-                <option value="fr" style={{backgroundColor: '#1a1a2e'}}>🇫🇷 {t('languages.fr')}</option>
-                <option value="pt" style={{backgroundColor: '#1a1a2e'}}>🇵🇹 {t('languages.pt')}</option>
-                <option value="ja" style={{backgroundColor: '#1a1a2e'}}>🇯🇵 日本語</option>
-                <option value="ko" style={{backgroundColor: '#1a1a2e'}}>🇰🇷 한국어</option>
-                <option value="zh" style={{backgroundColor: '#1a1a2e'}}>🇨🇳 中文</option>
-                <option value="ru" style={{backgroundColor: '#1a1a2e'}}>🇷🇺 Русский</option>
+                className="border border-white/10 rounded px-2 py-1 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="it" style={{backgroundColor: '#161618'}}>🇮🇹 {t('languages.it')}</option>
+                <option value="en" style={{backgroundColor: '#161618'}}>🇬🇧 {t('languages.en')}</option>
+                <option value="es" style={{backgroundColor: '#161618'}}>🇪🇸 {t('languages.es')}</option>
+                <option value="de" style={{backgroundColor: '#161618'}}>🇩🇪 {t('languages.de')}</option>
+                <option value="fr" style={{backgroundColor: '#161618'}}>🇫🇷 {t('languages.fr')}</option>
+                <option value="pt" style={{backgroundColor: '#161618'}}>🇵🇹 {t('languages.pt')}</option>
+                <option value="ja" style={{backgroundColor: '#161618'}}>🇯🇵 日本語</option>
+                <option value="ko" style={{backgroundColor: '#161618'}}>🇰🇷 한국어</option>
+                <option value="zh" style={{backgroundColor: '#161618'}}>🇨🇳 中文</option>
+                <option value="ru" style={{backgroundColor: '#161618'}}>🇷🇺 Русский</option>
               </select>
             </div>
 
@@ -1023,13 +1023,13 @@ export default function BinaryPatcherPage() {
                   onClick={() => setTranslationMode('ai')}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${
                     translationMode === 'ai'
-                      ? 'border-purple-500/50 bg-purple-500/10'
+                      ? 'border-rouge-500/50 bg-rouge-500/10'
                       : 'border-white/10 bg-white/5 hover:border-white/20'
                   }`}>
                   <div className="flex items-center gap-2 mb-1">
-                    <Bot className="h-4 w-4 text-purple-400" />
+                    <Bot className="h-4 w-4 text-rouge-400" />
                     <span className="text-sm font-medium text-white">{t('binaryPatcherPage.aiLlm')}</span>
-                    <Sparkles className="h-3 w-3 text-purple-400" />
+                    <Sparkles className="h-3 w-3 text-rouge-400" />
                   </div>
                   <p className="text-2xs text-white/50">{t('binaryPatcherPage.geminiDeepseekOpenaiOllamaDeep')}</p>
                 </div>
@@ -1060,7 +1060,7 @@ export default function BinaryPatcherPage() {
                         onClick={() => { setChainPresetState(preset.id as ChainPreset); setChainPreset(preset.id as ChainPreset); }}
                         className={`p-2 rounded-md border cursor-pointer transition-all flex items-center gap-3 ${
                           chainPreset === preset.id
-                            ? 'border-purple-500/50 bg-purple-500/10'
+                            ? 'border-rouge-500/50 bg-rouge-500/10'
                             : 'border-white/5 hover:border-white/15'
                         }`}>
                         <div className="flex-1">
@@ -1071,7 +1071,7 @@ export default function BinaryPatcherPage() {
                           </div>
                           <p className="text-2xs text-white/40">{preset.description}</p>
                         </div>
-                        {chainPreset === preset.id && <CheckCircle2 className="h-4 w-4 text-purple-400 flex-none" />}
+                        {chainPreset === preset.id && <CheckCircle2 className="h-4 w-4 text-rouge-400 flex-none" />}
                       </div>
                     ))}
                   </div>
@@ -1084,14 +1084,14 @@ export default function BinaryPatcherPage() {
 
             {/* Translation Log */}
             {translationLog.length > 0 && (
-              <div className="p-3 rounded-lg bg-zinc-900/50 border border-white/10 mb-4 max-h-[150px] overflow-auto">
+              <div className="p-3 rounded-lg bg-noir-900/50 border border-white/10 mb-4 max-h-[150px] overflow-auto">
                 {translationLog.map((log, i) => (
                   <p key={i} className="text-xs text-white/70 font-mono py-0.5">{log}</p>
                 ))}
                 {isProcessing && (
                   <div className="flex items-center gap-2 mt-1">
-                    <Loader2 className="h-3 w-3 animate-spin text-purple-400" />
-                    <span className="text-xs text-purple-400">{t('offlineTranslator.translating')}</span>
+                    <Loader2 className="h-3 w-3 animate-spin text-rouge-400" />
+                    <span className="text-xs text-rouge-400">{t('offlineTranslator.translating')}</span>
                   </div>
                 )}
               </div>
@@ -1160,15 +1160,15 @@ export default function BinaryPatcherPage() {
                 />
               </div>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('binaryPatcherPage.allCategories')}</option>
+                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="all" style={{backgroundColor: '#161618'}}>{t('binaryPatcherPage.allCategories')}</option>
                 {Object.entries(CATEGORY_NAMES).map(([k, v]) => (
-                  <option key={k} value={k} style={{backgroundColor: '#1a1a2e'}}>{v}</option>
+                  <option key={k} value={k} style={{backgroundColor: '#161618'}}>{v}</option>
                 ))}
               </select>
               <select value={filterLang} onChange={(e) => setFilterLang(e.target.value)}
-                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('communityHub.allLanguages')}</option>
+                className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#161618'}}>
+                <option value="all" style={{backgroundColor: '#161618'}}>{t('communityHub.allLanguages')}</option>
                 {Object.entries(stats.byLanguage).map(([k]) => (
                   <option key={k} value={k}>{LANG_NAMES[k] || k}</option>
                 ))}
@@ -1241,7 +1241,7 @@ export default function BinaryPatcherPage() {
 
         {/* Progress overlay */}
         {isProcessing && (
-          <div className="fixed bottom-4 right-4 bg-zinc-900 border border-white/10 rounded-lg p-3 shadow-xl z-50 min-w-[250px]">
+          <div className="fixed bottom-4 right-4 bg-noir-900 border border-white/10 rounded-lg p-3 shadow-xl z-50 min-w-[250px]">
             <div className="flex items-center gap-2 mb-2">
               <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
               <span className="text-sm text-white">{progress.label}</span>

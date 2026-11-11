@@ -5,12 +5,12 @@ import { useTranslation } from '@/lib/i18n';
 
 const SystemMonitor = dynamic(
   () => import('@/components/tools/system-monitor').then(mod => mod.SystemMonitor),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-noir-500 text-sm">Loading...</div> }
 );
 
 const OllamaSetupWizard = dynamic(
   () => import('@/components/tools/ollama-setup-wizard').then(mod => mod.OllamaSetupWizard),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-noir-500 text-sm">Loading...</div> }
 );
 
 export default function SystemMonitorPage() {
@@ -18,19 +18,19 @@ export default function SystemMonitorPage() {
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl font-bold text-slate-200">{t('systemMonitorPage.title')}</h1>
+        <h1 className="text-2xl font-bold text-noir-200">{t('systemMonitorPage.title')}</h1>
       </div>
-      <p className="text-sm text-slate-400 -mt-4">
+      <p className="text-sm text-noir-400 -mt-4">
         Monitora le risorse del sistema (VRAM, RAM) e configura l&apos;AI locale.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-300">{t('systemMonitorPage.systemResources')}</h2>
+          <h2 className="text-lg font-semibold text-noir-300">{t('systemMonitorPage.systemResources')}</h2>
           <SystemMonitor />
         </div>
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-300">{t('systemMonitorPage.localAiSetup')}</h2>
+          <h2 className="text-lg font-semibold text-noir-300">{t('systemMonitorPage.localAiSetup')}</h2>
           <OllamaSetupWizard onComplete={() => window.location.href = '/ai-translator'} />
         </div>
       </div>

@@ -137,12 +137,12 @@ export function OnboardingWizard() {
       title: t('settings.targetLang'),
       description: t('onboarding.welcome.description'),
       icon: Globe,
-      color: 'text-blue-500',
+      color: 'text-noir-500',
       content: (
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-500/10 rounded-xl flex items-center justify-center">
-              <Globe className="h-8 w-8 text-blue-500" />
+            <div className="w-16 h-16 bg-noir-500/10 rounded-xl flex items-center justify-center">
+              <Globe className="h-8 w-8 text-noir-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold">{t('settings.targetLang')}</h3>
@@ -171,12 +171,12 @@ export function OnboardingWizard() {
       title: t('onboarding.ai.title'),
       description: t('onboarding.ai.description'),
       icon: Brain,
-      color: 'text-purple-500',
+      color: 'text-rouge-500',
       content: (
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-purple-500/10 rounded-xl flex items-center justify-center">
-              <Brain className="h-8 w-8 text-purple-500" />
+            <div className="w-16 h-16 bg-rouge-500/10 rounded-xl flex items-center justify-center">
+              <Brain className="h-8 w-8 text-rouge-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold">{t('onboarding.ai.title')}</h3>
@@ -184,13 +184,13 @@ export function OnboardingWizard() {
             </div>
           </div>
 
-          <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+          <div className="p-4 bg-gradient-to-r from-rouge-500/10 to-rouge-500/10 rounded-lg border border-rouge-500/20">
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500" />
+              <Sparkles className="h-4 w-4 text-rouge-500" />
               {t('onboarding.ai.ollamaRecommended')}
             </h4>
             <p className="text-sm text-muted-foreground mb-3">
-              {t('onboarding.ai.ollamaDesc')} <span className="font-mono text-purple-400">ollama.ai</span> {t('onboarding.ai.ollamaCommand')}
+              {t('onboarding.ai.ollamaDesc')} <span className="font-mono text-rouge-400">ollama.ai</span> {t('onboarding.ai.ollamaCommand')}
             </p>
             <code className="block p-2 bg-black/30 rounded text-sm font-mono text-green-400">
               ollama run llama3.2
@@ -220,12 +220,12 @@ export function OnboardingWizard() {
       title: t('onboarding.library.title'),
       description: t('onboarding.library.description'),
       icon: Library,
-      color: 'text-teal-500',
+      color: 'text-noir-500',
       content: (
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-teal-500/10 rounded-xl flex items-center justify-center">
-              <Gamepad2 className="h-8 w-8 text-teal-500" />
+            <div className="w-16 h-16 bg-noir-500/10 rounded-xl flex items-center justify-center">
+              <Gamepad2 className="h-8 w-8 text-noir-500" />
             </div>
             <div>
               <h3 className="text-xl font-bold">{t('onboarding.library.title')}</h3>

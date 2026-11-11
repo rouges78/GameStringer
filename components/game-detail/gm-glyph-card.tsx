@@ -70,18 +70,18 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-violet-500/25 bg-violet-500/[0.05] p-3 space-y-2"
+      className="rounded-xl border border-rouge-500/25 bg-rouge-500/[0.05] p-3 space-y-2"
       data-testid="gm-glyph-card"
     >
       <div className="flex items-start gap-3">
-        <Brush className="h-4 w-4 shrink-0 mt-0.5 text-violet-300" />
+        <Brush className="h-4 w-4 shrink-0 mt-0.5 text-rouge-300" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-[12px] font-semibold text-violet-200">
+            <p className="text-[12px] font-semibold text-rouge-200">
               {t('gmGlyph.title')} · {targetLang.toUpperCase()}
             </p>
             <Button size="xs" variant="outline" disabled={busy !== null}
-              className="border-violet-500/40 text-violet-300 hover:bg-violet-500/10"
+              className="border-rouge-500/40 text-rouge-300 hover:bg-rouge-500/10"
               onClick={() => void run(false)}>
               {busy === 'preview' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Brush className="h-3 w-3" />}
               <span className="ml-1">{busy === 'preview' ? t('gmGlyph.previewing') : t('gmGlyph.preview')}</span>
@@ -184,7 +184,7 @@ export function GmGlyphCard({ installPath, engine, targetLang }: GmGlyphCardProp
               {/* Applica: solo se l'anteprima dice che ci sta */}
               {!esito.applicato && esito.realizzabile && (
                 <Button size="xs" disabled={busy !== null}
-                  className="mt-1 bg-violet-600 hover:bg-violet-500 text-white"
+                  className="mt-1 bg-rouge-600 hover:bg-rouge-500 text-white"
                   onClick={() => void run(true)}>
                   {busy === 'apply' ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
                   <span className="ml-1">{busy === 'apply' ? t('gmGlyph.applying') : t('gmGlyph.apply')}</span>

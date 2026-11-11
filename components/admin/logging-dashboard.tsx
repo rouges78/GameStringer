@@ -169,12 +169,12 @@ export function LoggingDashboard() {
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'debug': return 'bg-gray-100 text-gray-800';
-      case 'info': return 'bg-blue-100 text-blue-800';
+      case 'debug': return 'bg-noir-100 text-noir-800';
+      case 'info': return 'bg-noir-100 text-noir-800';
       case 'warn': return 'bg-yellow-100 text-yellow-800';
       case 'error': return 'bg-red-100 text-red-800';
       case 'fatal': return 'bg-red-600 text-white';
-      default: return 'bg-gray-100 text-gray-800';
+      default: return 'bg-noir-100 text-noir-800';
     }
   };
 

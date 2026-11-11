@@ -161,7 +161,7 @@ export function AdaptiveTranslationPanel({
   if (!analysis) {
     return (
       <Card className="p-4">
-        <div className="flex items-center justify-center py-8 text-slate-500">
+        <div className="flex items-center justify-center py-8 text-noir-500">
           <RefreshCw className="h-5 w-5 animate-spin mr-2" />
           {t('adaptiveTranslationPanelComp.analyzingContent')}
         </div>
@@ -178,10 +178,10 @@ export function AdaptiveTranslationPanel({
   );
 
   return (
-    <Card className="p-4 border-purple-500/20">
+    <Card className="p-4 border-rouge-500/20">
       <CardHeader className="p-0 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Brain className="h-4 w-4 text-purple-400" />
+          <Brain className="h-4 w-4 text-rouge-400" />
           {t('adaptiveTranslationPanelComp.title')}
           <Badge variant="outline" className="text-xs">AI</Badge>
         </CardTitle>
@@ -189,31 +189,31 @@ export function AdaptiveTranslationPanel({
 
       <CardContent className="p-0 space-y-4">
         {/* Main Detection */}
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-noir-800/50 border border-noir-700/50">
           <div className={`p-2 rounded-lg ${
             analysis.confidence > 0.7 ? 'bg-emerald-500/20 text-emerald-400' :
             analysis.confidence > 0.4 ? 'bg-amber-500/20 text-amber-400' :
-            'bg-slate-500/20 text-slate-400'
+            'bg-noir-500/20 text-noir-400'
           }`}>
             {CONTENT_TYPE_ICONS[analysis.type]}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-200">
+              <span className="font-medium text-noir-200">
                 {t(CONTENT_TYPE_KEYS[analysis.type])}
               </span>
               <Badge variant="outline" className="text-xs">
                 {(analysis.confidence * 100).toFixed(0)}%
               </Badge>
             </div>
-            <p className="text-xs text-slate-400">{analysis.explanation}</p>
+            <p className="text-xs text-noir-400">{analysis.explanation}</p>
           </div>
         </div>
 
         {/* Distribution (for batch) */}
         {distribution && (
           <div className="space-y-2">
-            <p className="text-xs text-slate-400">{t('adaptiveTranslationPanelComp.contentDistribution')}:</p>
+            <p className="text-xs text-noir-400">{t('adaptiveTranslationPanelComp.contentDistribution')}:</p>
             <div className="flex flex-wrap gap-1">
               {Object.entries(distribution)
                 .filter(([, count]) => count > 0)
@@ -223,7 +223,7 @@ export function AdaptiveTranslationPanel({
                   <Badge
                     key={type}
                     variant="outline"
-                    className="text-xs bg-slate-800/50"
+                    className="text-xs bg-noir-800/50"
                   >
                     {CONTENT_TYPE_ICONS[type as ContentType]}
                     <span className="ml-1">{Math.round((count / totalTexts) * 100)}%</span>
@@ -235,16 +235,16 @@ export function AdaptiveTranslationPanel({
 
         {/* Recommendations */}
         {suggestions.shouldAdapt && (
-          <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 space-y-2">
-            <p className="text-xs font-medium text-purple-300 flex items-center gap-1">
+          <div className="p-3 rounded-lg bg-rouge-500/10 border border-rouge-500/20 space-y-2">
+            <p className="text-xs font-medium text-rouge-300 flex items-center gap-1">
               <Zap className="h-3 w-3" />
               {t('editor.suggestions')}
             </p>
             
             {suggestions.suggestions.chain && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{t('adaptiveTranslationPanelComp.chain')}:</span>
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                <span className="text-noir-400">{t('adaptiveTranslationPanelComp.chain')}:</span>
+                <Badge className="bg-rouge-500/20 text-rouge-300 border-rouge-500/30">
                   {CHAIN_LABELS[suggestions.suggestions.chain] || suggestions.suggestions.chain}
                 </Badge>
               </div>
@@ -252,14 +252,14 @@ export function AdaptiveTranslationPanel({
             
             {suggestions.suggestions.persona && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{t('translationRecommendation.persona')}:</span>
-                <span className="text-slate-300 italic">{suggestions.suggestions.persona}</span>
+                <span className="text-noir-400">{t('translationRecommendation.persona')}:</span>
+                <span className="text-noir-300 italic">{suggestions.suggestions.persona}</span>
               </div>
             )}
             
             {suggestions.suggestions.tone && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">{t('gameContextEditorComp.tone')}:</span>
+                <span className="text-noir-400">{t('gameContextEditorComp.tone')}:</span>
                 <Badge variant="outline" className="text-xs capitalize">
                   {suggestions.suggestions.tone}
                 </Badge>
@@ -270,13 +270,13 @@ export function AdaptiveTranslationPanel({
 
         {/* Metadata */}
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="p-2 rounded bg-slate-800/30">
-            <span className="text-slate-500">{t('adaptiveTranslationPanelComp.complexity')}:</span>
-            <span className="ml-2 capitalize text-slate-300">{analysis.complexity}</span>
+          <div className="p-2 rounded bg-noir-800/30">
+            <span className="text-noir-500">{t('adaptiveTranslationPanelComp.complexity')}:</span>
+            <span className="ml-2 capitalize text-noir-300">{analysis.complexity}</span>
           </div>
-          <div className="p-2 rounded bg-slate-800/30">
-            <span className="text-slate-500">{t('adaptiveTranslationPanelComp.urgency')}:</span>
-            <span className="ml-2 capitalize text-slate-300">{analysis.urgency}</span>
+          <div className="p-2 rounded bg-noir-800/30">
+            <span className="text-noir-500">{t('adaptiveTranslationPanelComp.urgency')}:</span>
+            <span className="ml-2 capitalize text-noir-300">{analysis.urgency}</span>
           </div>
         </div>
 
@@ -289,7 +289,7 @@ export function AdaptiveTranslationPanel({
             className={`flex-1 gap-1.5 ${
               adapted 
                 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                : 'bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30'
+                : 'bg-rouge-500/20 text-rouge-300 border-rouge-500/30 hover:bg-rouge-500/30'
             }`}
             variant="outline"
           >
@@ -306,12 +306,12 @@ export function AdaptiveTranslationPanel({
             )}
           </Button>
           
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-800/50 border border-noir-700/50">
             <Switch
               checked={autoAdapt}
               onCheckedChange={handleToggleAutoAdapt}
             />
-            <span className="text-xs text-slate-400">{t('voiceProfileManager.auto')}</span>
+            <span className="text-xs text-noir-400">{t('voiceProfileManager.auto')}</span>
           </div>
         </div>
       </CardContent>

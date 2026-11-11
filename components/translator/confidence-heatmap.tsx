@@ -93,7 +93,7 @@ function HeatmapRow({
     if (result.score >= 90) {
       return <CheckCircle2 className="h-4 w-4 text-green-500" />
     }
-    return <Info className="h-4 w-4 text-blue-500" />
+    return <Info className="h-4 w-4 text-noir-500" />
   }, [result])
 
   return (
@@ -133,7 +133,7 @@ function HeatmapRow({
                   "text-xs",
                   issue.type === 'error' && "border-red-500 text-red-500",
                   issue.type === 'warning' && "border-yellow-500 text-yellow-500",
-                  issue.type === 'info' && "border-blue-500 text-blue-500"
+                  issue.type === 'info' && "border-rouge-500 text-noir-500"
                 )}
               >
                 {issue.messageIt}
@@ -271,12 +271,12 @@ function DetailPanel({ pair, result }: { pair: TranslationPair; result: Confiden
                   "p-2 rounded-lg text-sm flex items-start gap-2",
                   issue.type === 'error' && "bg-red-50 dark:bg-red-950/20",
                   issue.type === 'warning' && "bg-yellow-50 dark:bg-yellow-950/20",
-                  issue.type === 'info' && "bg-blue-50 dark:bg-blue-950/20"
+                  issue.type === 'info' && "bg-noir-50 dark:bg-noir-950/20"
                 )}
               >
                 {issue.type === 'error' && <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />}
                 {issue.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />}
-                {issue.type === 'info' && <Info className="h-4 w-4 text-blue-500 mt-0.5" />}
+                {issue.type === 'info' && <Info className="h-4 w-4 text-noir-500 mt-0.5" />}
                 <span>{issue.messageIt}</span>
               </div>
             ))}

@@ -480,7 +480,7 @@ export default function BethesdaPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-800 via-rouge-900 to-rouge-900 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
@@ -529,11 +529,11 @@ export default function BethesdaPatcherPage() {
         {WIZARD_STEPS.map((s, idx) => (
           <div key={s.num} className="flex items-center">
             <button
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-noir-400/50 ${
                 step >= s.num
-                  ? 'bg-cyan-600 text-white'
-                  : 'bg-slate-800/50 text-slate-500 border border-slate-700/50'
-              } ${s.num < step ? 'cursor-pointer hover:bg-cyan-500' : s.num > step ? 'cursor-default' : ''}`}
+                  ? 'bg-noir-600 text-white'
+                  : 'bg-noir-800/50 text-noir-500 border border-noir-700/50'
+              } ${s.num < step ? 'cursor-pointer hover:bg-noir-500' : s.num > step ? 'cursor-default' : ''}`}
               onClick={() => { if (s.num < step) setStep(s.num) }}
               tabIndex={s.num < step ? 0 : -1}
               aria-label={`Passo ${s.num}: ${s.label}`}
@@ -541,7 +541,7 @@ export default function BethesdaPatcherPage() {
               <span className="font-bold">{s.num}</span>
               <span>{s.label}</span>
             </button>
-            {idx < WIZARD_STEPS.length - 1 && <ArrowRight className="h-3 w-3 mx-1 text-slate-600" />}
+            {idx < WIZARD_STEPS.length - 1 && <ArrowRight className="h-3 w-3 mx-1 text-noir-600" />}
           </div>
         ))}
       </div>
@@ -573,12 +573,12 @@ export default function BethesdaPatcherPage() {
               <Card key={card.title} variant="muted">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <card.icon className="h-4 w-4 text-cyan-400" />
+                    <card.icon className="h-4 w-4 text-noir-400" />
                     {card.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-4 pb-4">
-                  <p className="text-xs text-slate-400 leading-relaxed">{card.desc}</p>
+                  <p className="text-xs text-noir-400 leading-relaxed">{card.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -588,7 +588,7 @@ export default function BethesdaPatcherPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-cyan-400" />
+                <FolderOpen className="h-4 w-4 text-noir-400" />
                 {t('bethPatcher.selectGameFolder')}</CardTitle>
               <CardDescription className="text-xs">
                 {t('bethPatcher.selectFolderDesc')}</CardDescription>
@@ -602,7 +602,7 @@ export default function BethesdaPatcherPage() {
                   onClick={handleAnalyze}
                   disabled={!folderPath || analyzing}
                   size="sm"
-                  className="h-9 bg-cyan-600 hover:bg-cyan-500 text-xs"
+                  className="h-9 bg-noir-600 hover:bg-noir-500 text-xs"
                 >
                   {analyzing ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -614,7 +614,7 @@ export default function BethesdaPatcherPage() {
 
               {folderPath && (
                 <p
-                  className="text-xs text-slate-400 font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50"
+                  className="text-xs text-noir-400 font-mono bg-noir-950/50 p-2 rounded truncate border border-noir-800/50"
                   title={folderPath}
                 >
                   {folderPath}
@@ -626,7 +626,7 @@ export default function BethesdaPatcherPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                   <div>
                     <p className="text-xs font-medium text-emerald-400">{gameInfo.game_name}</p>
-                    <p className="text-2xs text-slate-400">
+                    <p className="text-2xs text-noir-400">
                       {gameInfo.plugins.length}  {t('bethPatcher.pluginsUnit')}, {gameInfo.string_tables.length}  {t('bethPatcher.stringTablesUnit')}, {gameInfo.bsa_files.length}  {t('bethPatcher.archivesUnit')}</p>
                   </div>
                 </div>
@@ -645,7 +645,7 @@ export default function BethesdaPatcherPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Globe className="h-4 w-4 text-cyan-400" />
+                <Globe className="h-4 w-4 text-noir-400" />
                 {gameInfo.game_name}
                 <Badge variant="outline" className="ml-auto text-xs">{gameInfo.game_type}</Badge>
               </CardTitle>
@@ -657,7 +657,7 @@ export default function BethesdaPatcherPage() {
                   {availableLanguages.map((lang) => (
                     <Badge
                       key={lang}
-                      className="text-xs bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30"
+                      className="text-xs bg-noir-500/20 text-noir-400 border-noir-500/30 hover:bg-noir-500/30"
                     >
                       {getLanguageDisplayName(lang)} ({lang})
                     </Badge>
@@ -668,10 +668,10 @@ export default function BethesdaPatcherPage() {
               {/* Source / Target selectors */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                  <label className="text-xs text-noir-400 font-medium uppercase tracking-wider">
                     {t('bethPatcher.sourceLanguage')}</label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-950/50 border-slate-700/50">
+                    <SelectTrigger className="h-9 text-xs bg-noir-950/50 border-noir-700/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -684,10 +684,10 @@ export default function BethesdaPatcherPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                  <label className="text-xs text-noir-400 font-medium uppercase tracking-wider">
                     {t('bethPatcher.targetLanguage')}</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-950/50 border-slate-700/50">
+                    <SelectTrigger className="h-9 text-xs bg-noir-950/50 border-noir-700/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -709,7 +709,7 @@ export default function BethesdaPatcherPage() {
               <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <ScrollText className="h-4 w-4 text-cyan-400" />
+                    <ScrollText className="h-4 w-4 text-noir-400" />
                     {t('bethPatcher.stringTable')} ({gameInfo.string_tables.length})
                   </CardTitle>
                 </div>
@@ -718,7 +718,7 @@ export default function BethesdaPatcherPage() {
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                   {Array.from(stringTablesByPlugin.entries()).map(([pluginName, tables]) => (
                     <div key={pluginName} className="space-y-1">
-                      <p className="text-xs font-medium text-slate-300 px-1">{pluginName}</p>
+                      <p className="text-xs font-medium text-noir-300 px-1">{pluginName}</p>
                       {tables
                         .filter((t) => t.language.toLowerCase() === sourceLanguage.toLowerCase())
                         .map((table) => (
@@ -726,13 +726,13 @@ export default function BethesdaPatcherPage() {
                             key={table.path}
                             onClick={() => handleLoadStringTable(table)}
                             disabled={loading}
-                            className="group w-full text-left p-2.5 rounded-lg border transition-all hover:bg-slate-800/50 border-slate-800/30 hover:border-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                            className="group w-full text-left p-2.5 rounded-lg border transition-all hover:bg-noir-800/50 border-noir-800/30 hover:border-noir-700/50 focus:outline-none focus:ring-2 focus:ring-noir-400/50"
                             aria-label={`Carica ${table.table_type} per ${pluginName}`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <FileText className="h-3.5 w-3.5 text-cyan-400" />
-                                <span className="text-xs text-slate-200">
+                                <FileText className="h-3.5 w-3.5 text-noir-400" />
+                                <span className="text-xs text-noir-200">
                                   .{table.table_type.toUpperCase()}
                                 </span>
                                 <Badge variant="outline" className="text-2xs px-1.5 py-0">
@@ -740,9 +740,9 @@ export default function BethesdaPatcherPage() {
                                 </Badge>
                               </div>
                               {loading ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-noir-500" />
                               ) : (
-                                <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400" />
+                                <ChevronRight className="h-3.5 w-3.5 text-noir-600 group-hover:text-noir-400" />
                               )}
                             </div>
                           </button>
@@ -759,7 +759,7 @@ export default function BethesdaPatcherPage() {
             <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Package className="h-4 w-4 text-cyan-400" />
+                  <Package className="h-4 w-4 text-noir-400" />
                   {t('bethPatcher.plugin')} ({gameInfo.plugins.length})
                 </CardTitle>
                 <Button
@@ -781,18 +781,18 @@ export default function BethesdaPatcherPage() {
                     key={plugin.filename}
                     onClick={() => handleLoadPluginStrings(plugin)}
                     disabled={loading}
-                    className="group w-full text-left p-2.5 rounded-lg border transition-all hover:bg-slate-800/50 border-slate-800/30 hover:border-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    className="group w-full text-left p-2.5 rounded-lg border transition-all hover:bg-noir-800/50 border-noir-800/30 hover:border-noir-700/50 focus:outline-none focus:ring-2 focus:ring-noir-400/50"
                     aria-label={`Carica stringhe da ${plugin.filename}`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-cyan-400" />
-                        <span className="text-xs font-medium text-slate-200">{plugin.filename}</span>
+                        <FileText className="h-3.5 w-3.5 text-noir-400" />
+                        <span className="text-xs font-medium text-noir-200">{plugin.filename}</span>
                       </div>
                       {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-noir-500" />
                       ) : (
-                        <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400" />
+                        <ChevronRight className="h-3.5 w-3.5 text-noir-600 group-hover:text-noir-400" />
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -800,11 +800,11 @@ export default function BethesdaPatcherPage() {
                         {plugin.is_master ? 'ESM' : 'ESP'}
                       </Badge>
                       {plugin.is_localized && (
-                        <Badge className="text-2xs px-1.5 py-0 bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        <Badge className="text-2xs px-1.5 py-0 bg-noir-500/20 text-noir-400 border-noir-500/30">
                           <Globe className="h-2.5 w-2.5 mr-0.5" />
                           {t('bethPatcher.localized')}</Badge>
                       )}
-                      <span className="text-2xs text-slate-500 ml-auto">
+                      <span className="text-2xs text-noir-500 ml-auto">
                         {formatFileSize(plugin.size)}
                       </span>
                     </div>
@@ -827,11 +827,11 @@ export default function BethesdaPatcherPage() {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   {editorMode === 'strings' ? (
-                    <ScrollText className="h-4 w-4 text-cyan-400" />
+                    <ScrollText className="h-4 w-4 text-noir-400" />
                   ) : (
-                    <FileText className="h-4 w-4 text-cyan-400" />
+                    <FileText className="h-4 w-4 text-noir-400" />
                   )}
-                  <span className="text-sm font-semibold text-slate-200">
+                  <span className="text-sm font-semibold text-noir-200">
                     {editorMode === 'strings'
                       ? `${selectedStringTable?.plugin_name ?? ''} (${selectedStringTable?.table_type.toUpperCase() ?? ''})`
                       : 'Plugin Strings'}
@@ -839,18 +839,18 @@ export default function BethesdaPatcherPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <Badge className="text-xs bg-slate-700/50 text-slate-300">
+                  <Badge className="text-xs bg-noir-700/50 text-noir-300">
                     {sourceLanguage}
                   </Badge>
-                  <ArrowRight className="h-3 w-3 text-slate-500" />
-                  <Badge className="text-xs bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                  <ArrowRight className="h-3 w-3 text-noir-500" />
+                  <Badge className="text-xs bg-noir-500/20 text-noir-400 border-noir-500/30">
                     {targetLanguage}
                   </Badge>
                 </div>
 
                 {editorMode === 'plugin' && (
                   <Select value={recordTypeFilter} onValueChange={setRecordTypeFilter}>
-                    <SelectTrigger className="h-8 w-[140px] text-xs bg-slate-950/50 border-slate-700/50">
+                    <SelectTrigger className="h-8 w-[140px] text-xs bg-noir-950/50 border-noir-700/50">
                       <SelectValue placeholder={t('common.tipoRecord')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -865,13 +865,13 @@ export default function BethesdaPatcherPage() {
                 )}
 
                 <div className="relative ml-auto flex-1 max-w-xs">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-noir-500" />
                   <Input
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     aria-label={t('common.cercaStringhe')}
                     placeholder={t('bethPatcher.searchPh')}
-                    className="h-8 text-xs pl-8 bg-slate-950/50 border-slate-700/50"
+                    className="h-8 text-xs pl-8 bg-noir-950/50 border-noir-700/50"
                   />
                 </div>
 
@@ -892,14 +892,14 @@ export default function BethesdaPatcherPage() {
               {translating && (
                 <div className="mt-2 space-y-1">
                   <Progress value={progress} className="h-1.5" />
-                  <p className="text-xs text-center text-slate-400">{progress}%</p>
+                  <p className="text-xs text-center text-noir-400">{progress}%</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Virtualized entry list */}
-          <div className="flex-1 min-h-0 rounded-lg border border-slate-800/50 bg-slate-950/30 overflow-hidden">
+          <div className="flex-1 min-h-0 rounded-lg border border-noir-800/50 bg-noir-950/30 overflow-hidden">
             {editorMode === 'strings' ? (
               filteredStringEntries.length > 0 ? (
                 <Virtuoso
@@ -914,7 +914,7 @@ export default function BethesdaPatcherPage() {
                   )}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-sm text-slate-500">
+                <div className="flex items-center justify-center h-full text-sm text-noir-500">
                   {t('bethPatcher.noResults')}</div>
               )
             ) : filteredPluginEntries.length > 0 ? (
@@ -930,7 +930,7 @@ export default function BethesdaPatcherPage() {
                 )}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-slate-500">
+              <div className="flex items-center justify-center h-full text-sm text-noir-500">
                 {t('bethPatcher.noResults')}</div>
             )}
           </div>
@@ -939,7 +939,7 @@ export default function BethesdaPatcherPage() {
           <Card variant="muted" className="shrink-0">
             <CardContent className="px-4 py-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-noir-400">
                   <span>
                     <span className="text-emerald-400 font-semibold">{stats.translated}</span>
                     /{stats.total} {t('bethPatcher.translatedLower')}</span>
@@ -961,7 +961,7 @@ export default function BethesdaPatcherPage() {
                     {t('bethPatcher.importCsv')}</Button>
                   <Button
                     size="sm"
-                    className="h-8 text-xs bg-cyan-600 hover:bg-cyan-500"
+                    className="h-8 text-xs bg-noir-600 hover:bg-noir-500"
                     onClick={() => setStep(4)}
                     disabled={stats.translated === 0}
                   >
@@ -990,15 +990,15 @@ export default function BethesdaPatcherPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{stats.translated}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('bethPatcher.translatedCap')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('bethPatcher.translatedCap')}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
-                  <p className="text-2xl font-bold text-cyan-400">{stats.total}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('bethPatcher.totals')}</p>
+                <div className="p-3 rounded-lg bg-noir-500/10 border border-noir-500/20 text-center">
+                  <p className="text-2xl font-bold text-noir-400">{stats.total}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('bethPatcher.totals')}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
                   <p className="text-2xl font-bold text-yellow-400">{stats.errors}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('bethPatcher.errorsCap')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('bethPatcher.errorsCap')}</p>
                 </div>
               </div>
             </CardContent>
@@ -1008,7 +1008,7 @@ export default function BethesdaPatcherPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Download className="h-4 w-4 text-cyan-400" />
+                <Download className="h-4 w-4 text-noir-400" />
                 {t('bethPatcher.exportOptions')}</CardTitle>
               <CardDescription className="text-xs">
                 {gameInfo?.game_name ?? 'Bethesda'} {'\u2014'}{sourceLanguage} {'\u2192'}{targetLanguage}
@@ -1020,11 +1020,11 @@ export default function BethesdaPatcherPage() {
                   <Button
                     onClick={handleExportStringsFile}
                     disabled={exporting}
-                    className="h-auto py-3 flex flex-col items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-xs"
+                    className="h-auto py-3 flex flex-col items-center gap-1.5 bg-noir-600 hover:bg-noir-500 text-xs"
                   >
                     {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
                     <span className="font-medium">{t('common.fileStrings')}</span>
-                    <span className="text-2xs text-cyan-200/70">{t('common.patchDiretto')}</span>
+                    <span className="text-2xs text-noir-200/70">{t('common.patchDiretto')}</span>
                   </Button>
                 )}
 
@@ -1036,7 +1036,7 @@ export default function BethesdaPatcherPage() {
                 >
                   <FileText className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaCsv')}</span>
-                  <span className="text-2xs text-slate-400">{t('bethPatcher.spreadsheet')}</span>
+                  <span className="text-2xs text-noir-400">{t('bethPatcher.spreadsheet')}</span>
                 </Button>
 
                 <Button
@@ -1047,7 +1047,7 @@ export default function BethesdaPatcherPage() {
                 >
                   <Globe className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaPo')}</span>
-                  <span className="text-2xs text-slate-400">Gettext</span>
+                  <span className="text-2xs text-noir-400">Gettext</span>
                 </Button>
 
                 <Button
@@ -1057,7 +1057,7 @@ export default function BethesdaPatcherPage() {
                 >
                   {copiedFeedback ? <CheckCircle2 className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
                   <span className="font-medium">{copiedFeedback ? 'Copiato!' : 'Copia Tutto'}</span>
-                  <span className="text-2xs text-slate-400">{t('bethPatcher.toClipboard')}</span>
+                  <span className="text-2xs text-noir-400">{t('bethPatcher.toClipboard')}</span>
                 </Button>
               </div>
             </CardContent>
@@ -1071,7 +1071,7 @@ export default function BethesdaPatcherPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-emerald-400">{t('common.esportazioneCompletata')}</p>
-                    <p className="text-xs text-slate-400 font-mono truncate mt-0.5" title={exportResult}>
+                    <p className="text-xs text-noir-400 font-mono truncate mt-0.5" title={exportResult}>
                       {exportResult}
                     </p>
                   </div>
@@ -1107,10 +1107,10 @@ const StringEntryRow = React.memo(function StringEntryRow({
   const isLong = entry.value.length > 80
 
   return (
-    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
+    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-noir-800/40 hover:bg-noir-800/20 transition-colors">
       {/* ID + status */}
       <div className="flex items-center gap-2">
-        <span className="text-2xs text-slate-500 font-mono">
+        <span className="text-2xs text-noir-500 font-mono">
           {t('bethPatcher.idLabel')}{entry.id}
         </span>
         {entry.translationStatus === 'translated' && (
@@ -1124,14 +1124,14 @@ const StringEntryRow = React.memo(function StringEntryRow({
       {/* Content */}
       <div className={isLong ? 'flex flex-col gap-1.5' : 'flex items-start gap-3'}>
         <div className={`${isLong ? 'w-full' : 'flex-1'} min-w-0`}>
-          <p className="text-xs text-slate-300 leading-relaxed break-words">{entry.value}</p>
+          <p className="text-xs text-noir-300 leading-relaxed break-words">{entry.value}</p>
         </div>
         <div className={`${isLong ? 'w-full' : 'flex-1'} min-w-0`}>
           <Input
             value={entry.translated ?? ''}
             onChange={(e) => onChange(entry.id, e.target.value)}
             placeholder={t('bethPatcher.translationPh')}
-            className="h-8 text-xs bg-slate-950/50 border-slate-700/50 w-full"
+            className="h-8 text-xs bg-noir-950/50 border-noir-700/50 w-full"
             aria-label={`Traduzione per ID ${entry.id}`}
           />
         </div>
@@ -1156,21 +1156,21 @@ const PluginEntryRow = React.memo(function PluginEntryRow({
   const RecordIcon = RECORD_TYPE_ICONS[entry.record_type] ?? FileText
 
   return (
-    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
+    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-noir-800/40 hover:bg-noir-800/20 transition-colors">
       {/* Header: record type + form ID + editor ID */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Badge className="text-2xs px-1.5 py-0 bg-indigo-500/20 text-indigo-400 border-indigo-500/30">
+        <Badge className="text-2xs px-1.5 py-0 bg-rouge-500/20 text-rouge-400 border-rouge-500/30">
           <RecordIcon className="h-2.5 w-2.5 mr-0.5" />
           {entry.record_type}
         </Badge>
         <Badge variant="outline" className="text-2xs px-1.5 py-0">
           {entry.field_name}
         </Badge>
-        <span className="text-2xs text-slate-500 font-mono">
+        <span className="text-2xs text-noir-500 font-mono">
           {formatFormId(entry.form_id)}
         </span>
         {entry.editor_id && (
-          <span className="text-2xs text-slate-500 truncate max-w-[200px]" title={entry.editor_id}>
+          <span className="text-2xs text-noir-500 truncate max-w-[200px]" title={entry.editor_id}>
             {entry.editor_id}
           </span>
         )}
@@ -1185,14 +1185,14 @@ const PluginEntryRow = React.memo(function PluginEntryRow({
       {/* Content */}
       <div className={isLong ? 'flex flex-col gap-1.5' : 'flex items-start gap-3'}>
         <div className={`${isLong ? 'w-full' : 'flex-1'} min-w-0`}>
-          <p className="text-xs text-slate-300 leading-relaxed break-words">{entry.value}</p>
+          <p className="text-xs text-noir-300 leading-relaxed break-words">{entry.value}</p>
         </div>
         <div className={`${isLong ? 'w-full' : 'flex-1'} min-w-0`}>
           <Input
             value={entry.translated ?? ''}
             onChange={(e) => onChange(entry.form_id, entry.field_name, e.target.value)}
             placeholder={t('bethPatcher.translationPh')}
-            className="h-8 text-xs bg-slate-950/50 border-slate-700/50 w-full"
+            className="h-8 text-xs bg-noir-950/50 border-noir-700/50 w-full"
             aria-label={`Traduzione per ${entry.record_type} ${formatFormId(entry.form_id)}`}
           />
         </div>

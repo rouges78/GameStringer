@@ -33,13 +33,13 @@ export function PasswordRecoveryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-slate-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
+      <DialogContent className="sm:max-w-md bg-noir-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
-            <KeyRound className="h-5 w-5 text-purple-400" />
+            <KeyRound className="h-5 w-5 text-rouge-400" />
             {t('profile.recoveryUnavailableTitle')}
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-noir-400">
             {profileName || t('profile.thisProfile')}
           </DialogDescription>
         </DialogHeader>
@@ -50,7 +50,7 @@ export function PasswordRecoveryDialog({
             <p className="text-sm text-amber-200">{t('profile.passwordUnrecoverableDesc')}</p>
           </div>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-noir-500">
             {t('profile.recoveryUnavailableHint')}
           </p>
         </div>
@@ -60,7 +60,7 @@ export function PasswordRecoveryDialog({
           <div className="flex-1" />
           <Button
             onClick={() => onOpenChange(false)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-rouge-600 hover:bg-rouge-700"
           >
             {t('common.close')}
           </Button>

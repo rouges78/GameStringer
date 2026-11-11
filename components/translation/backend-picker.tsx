@@ -36,7 +36,7 @@ export function BackendPicker({
 
   return (
     <div className="mt-1.5 flex items-center gap-1.5" role="radiogroup" aria-label={t('translationBackend.label')}>
-      <span className="text-micro font-bold uppercase tracking-wider text-slate-500 shrink-0">
+      <span className="text-micro font-bold uppercase tracking-wider text-noir-500 shrink-0">
         {t('translationBackend.label')}
       </span>
       <div className="flex flex-1 rounded-lg border border-white/10 bg-white/5 p-0.5">
@@ -53,8 +53,8 @@ export function BackendPicker({
               onClick={() => onChange(id)}
               className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50 ${
                 active
-                  ? 'bg-indigo-600/40 text-indigo-200 shadow-sm'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-rouge-600/40 text-rouge-200 shadow-sm'
+                  : 'text-noir-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <Icon className="h-3 w-3" />

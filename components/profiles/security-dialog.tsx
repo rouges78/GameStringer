@@ -125,10 +125,10 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden bg-slate-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden bg-noir-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-500" />
+            <Shield className="h-5 w-5 text-noir-500" />
             {t('profile.security')} - {profileName}
           </DialogTitle>
         </DialogHeader>

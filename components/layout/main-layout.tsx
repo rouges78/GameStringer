@@ -250,8 +250,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   const [_systemStatus, setSystemStatus] = useState<SystemStatus>({
     neuralEngine: { status: 'online', color: 'bg-green-500', text: 'ON' },
-    steamApi: { status: 'connected', color: 'bg-blue-500', text: 'OK' },
-    cache: { percentage: 0, color: 'bg-cyan-500', text: '0%' }
+    steamApi: { status: 'connected', color: 'bg-rouge-500', text: 'OK' },
+    cache: { percentage: 0, color: 'bg-noir-500', text: '0%' }
   });
   const pathname = usePathname();
   const router = useRouter();
@@ -462,7 +462,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       const cache = {
         percentage: cachePercentage,
-        color: cachePercentage > 80 ? 'bg-red-500' : cachePercentage > 60 ? 'bg-yellow-500' : 'bg-cyan-500',
+        color: cachePercentage > 80 ? 'bg-red-500' : cachePercentage > 60 ? 'bg-yellow-500' : 'bg-noir-500',
         text: `${cachePercentage}%`
       };
 
@@ -823,7 +823,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     )}
                     {language === 'fr' && (
                       <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                        <span className="w-1/3 bg-blue-600" />
+                        <span className="w-1/3 bg-rouge-600" />
                         <span className="w-1/3 bg-white" />
                         <span className="w-1/3 bg-red-500" />
                       </span>
@@ -847,7 +847,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     )}
                     {language === 'ko' && (
                       <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-red-600 border border-blue-800" />
+                        <span className="w-2 h-2 rounded-full bg-red-600 border border-noir-800" />
                       </span>
                     )}
                     {language === 'pt' && (
@@ -859,7 +859,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     {language === 'ru' && (
                       <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
                         <span className="h-1/3 bg-white" />
-                        <span className="h-1/3 bg-blue-600" />
+                        <span className="h-1/3 bg-rouge-600" />
                         <span className="h-1/3 bg-red-500" />
                       </span>
                     )}
@@ -871,11 +871,11 @@ export function MainLayout({ children }: MainLayoutProps) {
                     )}
                     {language === 'el' && (
                       <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                        <span className="h-1/5 bg-blue-700" />
+                        <span className="h-1/5 bg-rouge-700" />
                         <span className="h-1/5 bg-white" />
-                        <span className="h-1/5 bg-blue-700" />
+                        <span className="h-1/5 bg-rouge-700" />
                         <span className="h-1/5 bg-white" />
-                        <span className="h-1/5 bg-blue-700" />
+                        <span className="h-1/5 bg-rouge-700" />
                       </span>
                     )}
                     <span className="font-mono text-xs font-bold tracking-widest">{language.toUpperCase()}</span>
@@ -911,7 +911,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('fr')} className="gap-3">
                     <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
-                      <span className="w-1/3 bg-blue-600" />
+                      <span className="w-1/3 bg-rouge-600" />
                       <span className="w-1/3 bg-white" />
                       <span className="w-1/3 bg-red-500" />
                     </span>
@@ -943,7 +943,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('ko')} className="gap-3">
                     <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
-                      <span className="w-3 h-3 rounded-full bg-red-600 border border-blue-800" />
+                      <span className="w-3 h-3 rounded-full bg-red-600 border border-noir-800" />
                     </span>
                     <span className="flex-1">한국어</span>
                     {language === 'ko' && <Check className="h-4 w-4 text-primary" />}
@@ -960,7 +960,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <DropdownMenuItem onClick={() => setLanguage('ru')} className="gap-3">
                     <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
                       <span className="h-1/3 bg-white" />
-                      <span className="h-1/3 bg-blue-600" />
+                      <span className="h-1/3 bg-rouge-600" />
                       <span className="h-1/3 bg-red-500" />
                     </span>
                     <span className="flex-1">Русский</span>
@@ -976,11 +976,11 @@ export function MainLayout({ children }: MainLayoutProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLanguage('el')} className="gap-3">
                     <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
-                      <span className="h-1/5 bg-blue-700" />
+                      <span className="h-1/5 bg-rouge-700" />
                       <span className="h-1/5 bg-white" />
-                      <span className="h-1/5 bg-blue-700" />
+                      <span className="h-1/5 bg-rouge-700" />
                       <span className="h-1/5 bg-white" />
-                      <span className="h-1/5 bg-blue-700" />
+                      <span className="h-1/5 bg-rouge-700" />
                     </span>
                     <span className="flex-1">Ελληνικά</span>
                     {language === 'el' && <Check className="h-4 w-4 text-primary" />}

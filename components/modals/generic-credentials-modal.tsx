@@ -151,7 +151,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
                   href={info.helpUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                  className="inline-flex items-center gap-1 text-xs text-noir-400 hover:text-noir-300 underline underline-offset-2"
                 >
                   <ExternalLink className="h-3 w-3" />
                   {info.helpLinkText || 'Gestisci account'}

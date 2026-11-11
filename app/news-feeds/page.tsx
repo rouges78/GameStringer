@@ -68,29 +68,29 @@ export default function NewsFeedsPage() {
   const _getCategoryInfo = (cat: NewsFeedCategory) => FEED_CATEGORIES.find(c => c.id === cat);
 
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-3" style={{ background: 'linear-gradient(180deg, #1b2838 0%, #171d25 40%, #0e1419 100%)' }}>
+    <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-3" style={{ background: 'linear-gradient(180deg, #161618 0%, #161618 40%, #0f0f10 100%)' }}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/">
-            <button className="h-8 w-8 rounded-sm bg-[#2a475e]/30 hover:bg-[#2a475e]/50 flex items-center justify-center transition-colors">
-              <ArrowLeft className="h-4 w-4 text-[#67c1f5]" />
+            <button className="h-8 w-8 rounded-sm bg-noir-700/30 hover:bg-noir-700/50 flex items-center justify-center transition-colors">
+              <ArrowLeft className="h-4 w-4 text-rouge-400" />
             </button>
           </Link>
-          <Rss className="h-5 w-5 text-[#67c1f5]" />
+          <Rss className="h-5 w-5 text-rouge-400" />
           <div>
-            <h1 className="text-base font-bold text-[#c6d4df]">{t('common.manageNewsFeeds')}</h1>
-            <p className="text-2xs text-[#8f98a0]">
+            <h1 className="text-base font-bold text-noir-200">{t('common.manageNewsFeeds')}</h1>
+            <p className="text-2xs text-noir-400">
               {enabledCount} {t('common.activeFeedsOutOf')} {sources.length}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={handleRefreshCache} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#2a475e]/30 hover:bg-[#2a475e]/50 text-[#8f98a0] hover:text-[#c6d4df] text-2xs transition-colors">
+          <button onClick={handleRefreshCache} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-noir-700/30 hover:bg-noir-700/50 text-noir-400 hover:text-noir-200 text-2xs transition-colors">
             <RefreshCw className="h-3 w-3" /> {t('common.clearCache')}
           </button>
-          <button onClick={handleEnableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] text-2xs transition-colors border border-[#1a9fff]/20">
+          <button onClick={handleEnableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-rouge-500/10 hover:bg-rouge-500/20 text-rouge-400 text-2xs transition-colors border border-rouge-500/20">
             <Check className="h-3 w-3" /> {t('common.enableAll')}
           </button>
           <button onClick={handleDisableAll} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 text-2xs transition-colors border border-red-500/20">
@@ -105,8 +105,8 @@ export default function NewsFeedsPage() {
           onClick={() => setSelectedCategory('all')}
           className={`px-3 py-1.5 rounded-sm text-2xs font-medium transition-all border ${
             selectedCategory === 'all'
-              ? 'bg-[#1a9fff]/20 border-[#1a9fff]/40 text-[#67c1f5]'
-              : 'bg-[#1b2838]/60 border-[#2a475e]/30 text-[#8f98a0] hover:border-[#2a475e]/60 hover:text-[#c6d4df]'
+              ? 'bg-rouge-500/20 border-rouge-500/40 text-rouge-400'
+              : 'bg-noir-900/60 border-noir-700/30 text-noir-400 hover:border-noir-700/60 hover:text-noir-200'
           }`}
         >
           {t('common.all')} ({sources.length})
@@ -120,8 +120,8 @@ export default function NewsFeedsPage() {
               onClick={() => setSelectedCategory(cat.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-2xs font-medium transition-all border ${
                 selectedCategory === cat.id
-                  ? 'bg-[#1a9fff]/20 border-[#1a9fff]/40 text-[#67c1f5]'
-                  : 'bg-[#1b2838]/60 border-[#2a475e]/30 text-[#8f98a0] hover:border-[#2a475e]/60 hover:text-[#c6d4df]'
+                  ? 'bg-rouge-500/20 border-rouge-500/40 text-rouge-400'
+                  : 'bg-noir-900/60 border-noir-700/30 text-noir-400 hover:border-noir-700/60 hover:text-noir-200'
               }`}
             >
               <span>{cat.icon}</span>
@@ -140,15 +140,15 @@ export default function NewsFeedsPage() {
         const someEnabled = catSources.some(s => s.enabled);
 
         return (
-          <div key={cat.id} className="rounded-sm border border-[#2a475e]/30 bg-[#1b2838]/40 overflow-hidden">
+          <div key={cat.id} className="rounded-sm border border-noir-700/30 bg-noir-900/40 overflow-hidden">
             {/* Category header */}
-            <div className="flex items-center justify-between px-3 py-2 bg-[#1b2838]/60 border-b border-[#2a475e]/20">
+            <div className="flex items-center justify-between px-3 py-2 bg-noir-900/60 border-b border-noir-700/20">
               <div className="flex items-center gap-2">
                 <span className="text-sm">{cat.icon}</span>
-                <span className="text-[11px] font-bold text-[#c6d4df] uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-noir-200 uppercase tracking-wider">
                   {cat.labels?.[language] || cat.labels?.['en'] || cat.id}
                 </span>
-                <span className="text-micro text-[#8f98a0]">
+                <span className="text-micro text-noir-400">
                   ({catSources.filter(s => s.enabled).length}/{catSources.length})
                 </span>
               </div>
@@ -156,10 +156,10 @@ export default function NewsFeedsPage() {
                 onClick={() => handleToggleCategory(cat.id, !allEnabled)}
                 className={`px-2 py-0.5 rounded-sm text-micro font-medium transition-colors ${
                   allEnabled
-                    ? 'bg-[#1a9fff]/20 text-[#67c1f5] hover:bg-red-500/20 hover:text-red-400'
+                    ? 'bg-rouge-500/20 text-rouge-400 hover:bg-red-500/20 hover:text-red-400'
                     : someEnabled
-                      ? 'bg-amber-500/20 text-amber-400 hover:bg-[#1a9fff]/20 hover:text-[#67c1f5]'
-                      : 'bg-[#2a475e]/20 text-[#8f98a0] hover:bg-[#1a9fff]/20 hover:text-[#67c1f5]'
+                      ? 'bg-amber-500/20 text-amber-400 hover:bg-rouge-500/20 hover:text-rouge-400'
+                      : 'bg-noir-700/20 text-noir-400 hover:bg-rouge-500/20 hover:text-rouge-400'
                 }`}
               >
                 {allEnabled 
@@ -171,14 +171,14 @@ export default function NewsFeedsPage() {
             </div>
 
             {/* Feed list */}
-            <div className="divide-y divide-[#2a475e]/10">
+            <div className="divide-y divide-noir-700/10">
               {catSources.map(source => (
-                <div key={source.id} className="group flex items-center gap-3 px-3 py-2.5 hover:bg-[#2a475e]/10 transition-colors">
+                <div key={source.id} className="group flex items-center gap-3 px-3 py-2.5 hover:bg-noir-700/10 transition-colors">
                   {/* Toggle */}
                   <button
                     onClick={() => handleToggle(source.id, !source.enabled)}
                     className={`w-9 h-5 rounded-full relative transition-colors flex-shrink-0 ${
-                      source.enabled ? 'bg-[#1a9fff]' : 'bg-[#2a475e]/50'
+                      source.enabled ? 'bg-rouge-500' : 'bg-noir-700/50'
                     }`}
                   >
                     <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
@@ -190,16 +190,16 @@ export default function NewsFeedsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs">{source.icon}</span>
-                      <span className={`text-[12px] font-bold transition-colors ${source.enabled ? 'text-[#c6d4df]' : 'text-[#8f98a0]/50'}`}>
+                      <span className={`text-[12px] font-bold transition-colors ${source.enabled ? 'text-noir-200' : 'text-noir-400/50'}`}>
                         {source.name}
                       </span>
                       <span className={`text-2xs px-1 py-0.5 rounded-sm uppercase tracking-wider font-semibold ${
-                        source.language === 'it' ? 'bg-green-500/15 text-green-400' : 'bg-blue-500/15 text-blue-400'
+                        source.language === 'it' ? 'bg-green-500/15 text-green-400' : 'bg-noir-500/15 text-noir-400'
                       }`}>
                         {source.language.toUpperCase()}
                       </span>
                     </div>
-                    <p className={`text-2xs mt-0.5 transition-colors ${source.enabled ? 'text-[#8f98a0]' : 'text-[#8f98a0]/30'}`}>
+                    <p className={`text-2xs mt-0.5 transition-colors ${source.enabled ? 'text-noir-400' : 'text-noir-400/30'}`}>
                       {source.description}
                     </p>
                   </div>
@@ -209,10 +209,10 @@ export default function NewsFeedsPage() {
                     href={source.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-[#2a475e]/30"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-noir-700/30"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <ExternalLink className="h-3 w-3 text-[#8f98a0]" />
+                    <ExternalLink className="h-3 w-3 text-noir-400" />
                   </a>
                 </div>
               ))}
@@ -222,10 +222,10 @@ export default function NewsFeedsPage() {
       })}
 
       {/* Info footer */}
-      <div className="rounded-sm bg-[#1b2838]/20 border border-[#2a475e]/15 p-3 flex items-start gap-2">
-        <Globe className="h-4 w-4 text-[#8f98a0]/40 flex-shrink-0 mt-0.5" />
+      <div className="rounded-sm bg-noir-900/20 border border-noir-700/15 p-3 flex items-start gap-2">
+        <Globe className="h-4 w-4 text-noir-400/40 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-2xs text-[#8f98a0]/60 leading-relaxed">
+          <p className="text-2xs text-noir-400/60 leading-relaxed">
             {t('common.feedsAreAutomaticallyRefreshedEvery15MinutesNewsAreFetchedViaPublicRssNoPersonalDataIsSent')}
           </p>
         </div>

@@ -162,7 +162,7 @@ export function FirstGameFlow() {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Rocket className="h-5 w-5 text-purple-400" />
+            <Rocket className="h-5 w-5 text-rouge-400" />
             {t('firstGame.title')}
           </DialogTitle>
           <DialogDescription>{t('firstGame.subtitle')}</DialogDescription>
@@ -172,11 +172,11 @@ export function FirstGameFlow() {
           <div className="space-y-4">
             <div className="rounded-xl border border-border bg-muted/40 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-teal-400" />
+                <Sparkles className="h-4 w-4 text-noir-400" />
                 {t('firstGame.pickedForYou')}
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <Gamepad2 className="h-5 w-5 text-violet-400" />
+                <Gamepad2 className="h-5 w-5 text-rouge-400" />
                 <span className="text-lg font-semibold">{suggestion.game.title}</span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -405,7 +405,7 @@ export default function GlossaryPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BookOpen className="h-6 w-6 text-purple-400" />
+            <BookOpen className="h-6 w-6 text-rouge-400" />
             <div>
               <h1 className="text-xl font-bold">{t('glossaryPage.autoGlossary')}</h1>
               <p className="text-xs text-muted-foreground">
@@ -414,11 +414,11 @@ export default function GlossaryPage() {
           </div>
           <div className="flex gap-2 items-center">
             <Link href="/editor">
-              <Button variant="outline" size="sm" className="text-slate-400 hover:text-blue-400">
+              <Button variant="outline" size="sm" className="text-noir-400 hover:text-noir-400">
                 <Edit3 className="h-3.5 w-3.5 mr-1" />{t('subtitleTranslator.editor')}</Button>
             </Link>
             {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
-            <div className="h-5 w-px bg-slate-700" />
+            <div className="h-5 w-px bg-noir-700" />
             <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
               <Settings className="h-3.5 w-3.5 mr-1" />
               {t('glossaryPage.config')}</Button>
@@ -597,18 +597,18 @@ export default function GlossaryPage() {
 
             {/* === EXTRACTION TAB === */}
             <TabsContent value="extract" className="space-y-4 mt-3">
-              <Card className="border-purple-500/30 bg-gradient-to-r from-purple-950/20 to-indigo-950/20">
+              <Card className="border-rouge-500/30 bg-gradient-to-r from-rouge-950/20 to-rouge-950/20">
                 <CardHeader className="pb-3">
                   <CardTitle as="h2" className="flex items-center gap-2 text-base">
-                    <Sparkles className="h-5 w-5 text-purple-400" />
-                    {t('glossaryPage.autoTermExtraction')}<Badge className="text-2xs bg-purple-600/80 text-white border-0">AI</Badge>
+                    <Sparkles className="h-5 w-5 text-rouge-400" />
+                    {t('glossaryPage.autoTermExtraction')}<Badge className="text-2xs bg-rouge-600/80 text-white border-0">AI</Badge>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     {t('glossaryPage.extractionDesc1')}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-white/5">
-                    <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                    <Info className="h-4 w-4 text-noir-400 flex-shrink-0" />
                     <p className="text-[11px] text-muted-foreground">
                       {t('glossaryPage.extractionDesc2')}</p>
                   </div>
@@ -617,7 +617,7 @@ export default function GlossaryPage() {
                     <Button
                       onClick={handleExtractTerms}
                       disabled={extracting || !gameTexts || gameTexts.length === 0}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-rouge-600 hover:bg-rouge-700"
                     >
                       {extracting ? (
                         <>
@@ -730,7 +730,7 @@ export default function GlossaryPage() {
                 <CardContent className="flex items-center justify-between gap-3 py-4">
                   <div className="min-w-0">
                     <p className="text-sm font-medium flex items-center gap-1.5">
-                      <UploadCloud className="h-4 w-4 text-violet-400" />
+                      <UploadCloud className="h-4 w-4 text-rouge-400" />
                       {t('communityGlossary.publishTitle')}
                     </p>
                     <p className="text-2xs text-muted-foreground">
@@ -772,7 +772,7 @@ export default function GlossaryPage() {
                   ) : (
                     <div className="space-y-2">
                       {communityList.map((g) => (
-                        <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-800/60 bg-slate-900/40">
+                        <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-noir-800/60 bg-noir-900/40">
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium truncate">
                               {g.sourceLanguage.toUpperCase()} → {g.targetLanguage.toUpperCase()} · {g.termsCount} {t('communityGlossary.termsLabel')}

@@ -36,13 +36,13 @@ type Status = 'idle' | 'scanning' | 'translating' | 'done' | 'error';
 
 const catColor: Record<string, string> = {
   map: 'bg-green-900/50 text-green-300',
-  common: 'bg-blue-900/50 text-blue-300',
+  common: 'bg-noir-900/50 text-noir-300',
   system: 'bg-amber-900/50 text-amber-300',
-  actors: 'bg-purple-900/50 text-purple-300',
-  items: 'bg-cyan-900/50 text-cyan-300',
+  actors: 'bg-rouge-900/50 text-rouge-300',
+  items: 'bg-noir-900/50 text-noir-300',
   skills: 'bg-red-900/50 text-red-300',
   enemies: 'bg-orange-900/50 text-orange-300',
-  other: 'bg-slate-700 text-slate-300',
+  other: 'bg-noir-700 text-noir-300',
 };
 
 /** Detect RPG Maker file category from filename */
@@ -315,7 +315,7 @@ export default function RPGMakerTranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -346,14 +346,14 @@ export default function RPGMakerTranslatorPage() {
       </div>
 
       {/* Step 1: Select */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="rounded-xl border border-noir-800 bg-noir-900/60 p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">1</div>
           <h2 className="text-base font-bold text-white">{t('common.selezionaProgettoRpgMaker')}</h2>
         </div>
         <div className="flex gap-2 items-center">
           <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />Sfoglia</Button>
-          <div className="flex-1 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm text-slate-300 truncate">{projectPath || 'Seleziona la cartella data/ del gioco'}</div>
+          <div className="flex-1 px-3 py-2 rounded-lg bg-noir-800/60 border border-noir-700 text-sm text-noir-300 truncate">{projectPath || 'Seleziona la cartella data/ del gioco'}</div>
           <Button onClick={doScan} disabled={!projectPath || status === 'scanning'} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
             {status === 'scanning' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Scansiona
           </Button>
@@ -373,9 +373,9 @@ export default function RPGMakerTranslatorPage() {
 
       {/* Step 2: Files */}
       {files.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-noir-800 bg-noir-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold">2</div>
+            <div className="w-7 h-7 rounded-full bg-noir-600 flex items-center justify-center text-white text-sm font-bold">2</div>
             <h2 className="text-base font-bold text-white">File del gioco ({files.length})</h2>
             <div className="flex-1" />
             <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={totalDone === 0}><Download className="h-3 w-3" />{t('common.esporta')}</Button>
@@ -384,32 +384,32 @@ export default function RPGMakerTranslatorPage() {
             {files.map((f, fi) => {
               const isExp = expanded === f.name;
               return (
-                <div key={fi} className="rounded-lg border border-slate-700/60 bg-slate-800/40">
-                  <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-700/30 text-left" onClick={() => setExpanded(isExp ? null : f.name)}>
-                    {isExp ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
+                <div key={fi} className="rounded-lg border border-noir-700/60 bg-noir-800/40">
+                  <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-noir-700/30 text-left" onClick={() => setExpanded(isExp ? null : f.name)}>
+                    {isExp ? <ChevronDown className="h-3.5 w-3.5 text-noir-400" /> : <ChevronRight className="h-3.5 w-3.5 text-noir-400" />}
                     <FileText className="h-3.5 w-3.5 text-emerald-400" />
                     <span className="text-sm font-semibold text-white flex-1">{f.name}</span>
                     <span className={`text-2xs px-1.5 py-0.5 rounded ${catColor[f.category] || catColor.other}`}>{f.category}</span>
-                    <span className="text-2xs px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{f.entries.length} str</span>
+                    <span className="text-2xs px-1.5 py-0.5 rounded bg-noir-700 text-noir-300">{f.entries.length} str</span>
                     {f.doneCount > 0 && <span className="text-2xs px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">{f.doneCount} ✓</span>}
                   </button>
                   {isExp && (
                     <div className="px-3 pb-3 max-h-[300px] overflow-y-auto">
                       <table className="w-full text-[11px]">
-                        <thead><tr className="text-slate-500 border-b border-slate-700/50">
+                        <thead><tr className="text-noir-500 border-b border-noir-700/50">
                           <th className="text-left py-1 w-40">Key</th>
                           <th className="text-left py-1">English</th>
                           <th className="text-left py-1">{t('common.traduzione')}</th>
                         </tr></thead>
                         <tbody>{f.entries.slice(0, 80).map((e, ei) => (
-                          <tr key={ei} className="border-b border-slate-800/50 hover:bg-slate-700/20">
-                            <td className="py-1 text-slate-500 font-mono text-micro truncate max-w-[150px]">{e.key}</td>
-                            <td className="py-1 text-slate-300 max-w-[250px] truncate">{e.english}</td>
-                            <td className="py-1 text-emerald-300 max-w-[250px] truncate">{e.translated || <span className="text-slate-600">—</span>}</td>
+                          <tr key={ei} className="border-b border-noir-800/50 hover:bg-noir-700/20">
+                            <td className="py-1 text-noir-500 font-mono text-micro truncate max-w-[150px]">{e.key}</td>
+                            <td className="py-1 text-noir-300 max-w-[250px] truncate">{e.english}</td>
+                            <td className="py-1 text-emerald-300 max-w-[250px] truncate">{e.translated || <span className="text-noir-600">—</span>}</td>
                           </tr>
                         ))}</tbody>
                       </table>
-                      {f.entries.length > 80 && <p className="text-2xs text-slate-500 mt-2 text-center">80/{f.entries.length}</p>}
+                      {f.entries.length > 80 && <p className="text-2xs text-noir-500 mt-2 text-center">80/{f.entries.length}</p>}
                     </div>
                   )}
                 </div>
@@ -421,44 +421,44 @@ export default function RPGMakerTranslatorPage() {
 
       {/* Step 3: Translate */}
       {files.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="rounded-xl border border-noir-800 bg-noir-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-sm font-bold">3</div>
+            <div className="w-7 h-7 rounded-full bg-noir-600 flex items-center justify-center text-white text-sm font-bold">3</div>
             <h2 className="text-base font-bold text-white">{t('common.traduciConAi')}</h2>
             <div className="flex-1" />
-            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="xs" className="gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
+            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="xs" className="gap-1 text-xs text-noir-400"><Settings2 className="h-3 w-3" />Config</Button>
           </div>
           {showCfg && (
-            <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
+            <div className="mb-3 p-3 rounded-lg bg-noir-800/60 border border-noir-700/50 flex gap-4 items-center flex-wrap">
               <div className="flex gap-2 items-center">
-                <label className="text-xs text-slate-400">{t('common.modello')}</label>
-                <select value={model} onChange={e => setModel(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                <label className="text-xs text-noir-400">{t('common.modello')}</label>
+                <select value={model} onChange={e => setModel(e.target.value)} className="bg-noir-700 text-white text-xs rounded px-2 py-1 border border-noir-600">
                   {models.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div className="flex gap-2 items-center">
-                <label className="text-xs text-slate-400">{t('common.lingua')}</label>
-                <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                <label className="text-xs text-noir-400">{t('common.lingua')}</label>
+                <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="bg-noir-700 text-white text-xs rounded px-2 py-1 border border-noir-600">
                   {['it','de','es','fr','pt','zh','ja','ko','ru'].map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
                 </select>
               </div>
               <div className="flex gap-2 items-center">
-                <label className="text-xs text-slate-400">{t('common.genere')}</label>
-                <select value={genre} onChange={e => setGenre(e.target.value as GameGenre)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                <label className="text-xs text-noir-400">{t('common.genere')}</label>
+                <select value={genre} onChange={e => setGenre(e.target.value as GameGenre)} className="bg-noir-700 text-white text-xs rounded px-2 py-1 border border-noir-600">
                   {getAllGenres().map(g => <option key={g.value} value={g.value}>{g.icon} {g.label}</option>)}
                 </select>
               </div>
-              <span className="text-2xs text-slate-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
+              <span className="text-2xs text-noir-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
             </div>
           )}
           {status === 'translating' && (
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
-                <span className="text-xs text-slate-300">{prog.file}: {prog.cur}/{prog.tot} ({pct}%)</span>
+                <span className="text-xs text-noir-300">{prog.file}: {prog.cur}/{prog.tot} ({pct}%)</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all" style={{ width: `${pct}%` }} />
+              <div className="h-2 rounded-full bg-noir-700 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-noir-400 transition-all" style={{ width: `${pct}%` }} />
               </div>
             </div>
           )}
@@ -478,13 +478,13 @@ export default function RPGMakerTranslatorPage() {
       )}
 
       {/* Logs */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60">
-        <button onClick={() => setShowLogs(!showLogs)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-slate-800/40 text-left">
-          {showLogs ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
-          <span className="text-xs font-medium text-slate-400">Log ({logs.length})</span>
+      <div className="rounded-xl border border-noir-800 bg-noir-900/60">
+        <button onClick={() => setShowLogs(!showLogs)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-noir-800/40 text-left">
+          {showLogs ? <ChevronDown className="h-3.5 w-3.5 text-noir-400" /> : <ChevronRight className="h-3.5 w-3.5 text-noir-400" />}
+          <span className="text-xs font-medium text-noir-400">Log ({logs.length})</span>
         </button>
         {showLogs && (
-          <div ref={logRef} className="px-4 pb-3 max-h-[200px] overflow-y-auto font-mono text-2xs text-slate-500 space-y-0.5">
+          <div ref={logRef} className="px-4 pb-3 max-h-[200px] overflow-y-auto font-mono text-2xs text-noir-500 space-y-0.5">
             {logs.map((l, i) => <div key={i}>{l}</div>)}
           </div>
         )}

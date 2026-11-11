@@ -61,11 +61,11 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const categoryColors: Record<string, string> = {
-  'Announcements': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  'General': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'Announcements': 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30',
+  'General': 'bg-noir-500/20 text-noir-400 border-noir-500/30',
   'Ideas': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   'Q&A': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'Show and tell': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  'Show and tell': 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30',
   'Polls': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
 };
 
@@ -203,7 +203,7 @@ export function GitHubDiscussions() {
       {/* Header Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-violet-400" />
+          <MessageSquare className="h-4 w-4 text-rouge-400" />
           <span className="text-sm font-medium">{t('communityHub.discussions') || 'Discussions'}</span>
           <Badge variant="outline" className="text-2xs h-5">
             {discussions.length}
@@ -251,7 +251,7 @@ export function GitHubDiscussions() {
           {discussions.map((discussion) => (
             <Card 
               key={discussion.id} 
-              className="hover:border-violet-500/50 transition-colors cursor-pointer"
+              className="hover:border-rouge-500/50 transition-colors cursor-pointer"
               onClick={() => openInGitHub(discussion.url)}
             >
               <CardContent className="p-3">
@@ -259,7 +259,7 @@ export function GitHubDiscussions() {
                   {/* Avatar */}
                   <Avatar className="h-8 w-8 shrink-0">
                     <AvatarImage src={discussion.author?.avatarUrl} />
-                    <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
+                    <AvatarFallback className="bg-rouge-500/20 text-rouge-400 text-xs">
                       {(discussion.author?.login ?? '??').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -269,7 +269,7 @@ export function GitHubDiscussions() {
                     <div className="flex items-center gap-2 mb-1">
                       <Badge 
                         variant="outline" 
-                        className={`text-2xs h-5 px-1.5 gap-1 ${categoryColors[discussion.category?.name ?? ''] || 'bg-gray-500/20 text-gray-400'}`}
+                        className={`text-2xs h-5 px-1.5 gap-1 ${categoryColors[discussion.category?.name ?? ''] || 'bg-noir-500/20 text-noir-400'}`}
                       >
                         {categoryIcons[discussion.category?.name ?? ''] || <Tag className="h-3 w-3" />}
                         {discussion.category?.name ?? 'General'}
@@ -282,7 +282,7 @@ export function GitHubDiscussions() {
                       )}
                     </div>
                     
-                    <h3 className="font-semibold text-sm text-violet-200 line-clamp-1 mb-1">
+                    <h3 className="font-semibold text-sm text-rouge-200 line-clamp-1 mb-1">
                       {discussion.title}
                     </h3>
                     
@@ -325,7 +325,7 @@ export function GitHubDiscussions() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-muted-foreground hover:text-violet-400"
+          className="text-xs text-muted-foreground hover:text-rouge-400"
           onClick={() => openInGitHub(DISCUSSIONS_URL)}
         >
           {t('communityHub.viewAllOnGitHub') || 'View all discussions on GitHub'}

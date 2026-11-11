@@ -227,7 +227,7 @@ export function RomPatcherUI() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Zap className="h-4 w-4 text-purple-400" />
+                <Zap className="h-4 w-4 text-rouge-400" />
                 {t('romPatcher.applyPatchTitle')}</CardTitle>
               <CardDescription className="text-xs">
                 {t('romPatcher.applyPatchDesc')}</CardDescription>
@@ -237,7 +237,7 @@ export function RomPatcherUI() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">{t('romPatcher.originalRom')}</Label>
                 <div
-                  className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-purple-400/50 transition-colors"
+                  className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-rouge-400/50 transition-colors"
                   onClick={() => applyRomRef.current?.click()}
                 >
                   <input ref={applyRomRef} type="file" className="hidden" onChange={handleApplyRom} />
@@ -260,13 +260,13 @@ export function RomPatcherUI() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">{t('common.filePatch')}</Label>
                 <div
-                  className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-purple-400/50 transition-colors"
+                  className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-rouge-400/50 transition-colors"
                   onClick={() => applyPatchRef.current?.click()}
                 >
                   <input ref={applyPatchRef} type="file" accept=".ips,.bps" className="hidden" onChange={handleApplyPatch} />
                   {applyPatchFile ? (
                     <div className="flex items-center justify-center gap-2">
-                      <FileDown className="h-4 w-4 text-blue-500" />
+                      <FileDown className="h-4 w-4 text-noir-500" />
                       <span className="text-sm font-medium">{applyPatchFile.name}</span>
                       <Badge className={`text-2xs uppercase ${applyPatchFile.info.valid ? 'bg-green-500' : 'bg-red-500'}`}>
                         {applyPatchFile.info.format}
@@ -285,7 +285,7 @@ export function RomPatcherUI() {
               {/* Patch info */}
               {applyPatchFile && applyPatchFile.info.valid && (
                 <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 text-xs">
-                  <Info className="h-3 w-3 text-blue-400" />
+                  <Info className="h-3 w-3 text-noir-400" />
                   <span>{t('romPatcher.formatLabel')} <strong>{applyPatchFile.info.format.toUpperCase()}</strong></span>
                   {applyPatchFile.info.targetSize && (
                     <span>{t('romPatcher.targetLabel')} <strong>{formatBytes(applyPatchFile.info.targetSize)}</strong></span>
@@ -298,7 +298,7 @@ export function RomPatcherUI() {
 
               {/* Apply button */}
               <Button
-                className="w-full bg-purple-500 hover:bg-purple-600"
+                className="w-full bg-rouge-500 hover:bg-rouge-600"
                 disabled={!applyRomFile || !applyPatchFile || isApplying}
                 onClick={handleApply}
               >
@@ -364,7 +364,7 @@ export function RomPatcherUI() {
                   <input ref={createOrigRef} type="file" className="hidden" onChange={handleCreateOriginal} />
                   {createOriginal ? (
                     <div className="flex items-center justify-center gap-2">
-                      <HardDrive className="h-4 w-4 text-blue-500" />
+                      <HardDrive className="h-4 w-4 text-noir-500" />
                       <span className="text-sm font-medium">{createOriginal.name}</span>
                       <Badge variant="outline" className="text-2xs">{formatBytes(createOriginal.data.length)}</Badge>
                     </div>
@@ -403,7 +403,7 @@ export function RomPatcherUI() {
               {/* Size comparison */}
               {createOriginal && createModified && (
                 <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 text-xs">
-                  <Info className="h-3 w-3 text-blue-400" />
+                  <Info className="h-3 w-3 text-noir-400" />
                   <span>{t('romPatcher.originalLabel')} <strong>{formatBytes(createOriginal.data.length)}</strong></span>
                   <span>{t('romPatcher.translatedLabel')} <strong>{formatBytes(createModified.data.length)}</strong></span>
                   {createOriginal.data.length !== createModified.data.length && (
@@ -471,7 +471,7 @@ export function RomPatcherUI() {
                           <ShieldCheck className={`h-3 w-3 mr-1 ${verifyStatus === 'ok' ? 'text-green-500' : verifyStatus === 'fail' ? 'text-red-500' : ''}`} />
                           {verifyStatus === 'ok' ? 'Verificata' : verifyStatus === 'fail' ? 'Fallita' : 'Verifica'}
                         </Button>
-                        <Button size="sm" className="bg-purple-500 hover:bg-purple-600" onClick={handlePublishToHub}>
+                        <Button size="sm" className="bg-rouge-500 hover:bg-rouge-600" onClick={handlePublishToHub}>
                           <Share2 className="h-3 w-3 mr-1" />{t('romPatcher.publishToHub')}</Button>
                       </div>
                       <div className="mt-2 p-2 rounded bg-muted/50">

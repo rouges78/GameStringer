@@ -19,7 +19,7 @@ export default function BatchPage() {
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* Hero Header - Blu Compatto */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-4 shadow-xl shadow-blue-900/50 text-white">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-4 shadow-xl shadow-noir-900/50 text-white">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -59,8 +59,8 @@ export default function BatchPage() {
       </div>
 
       {/* Features */}
-      <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-slate-900/30 border border-slate-700/50">
-        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
+      <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-noir-900/30 border border-noir-700/50">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/30 feature-card">
           <div className="p-2 bg-emerald-500/10 rounded-lg">
             <FolderTree className="w-4 h-4 text-emerald-500" />
           </div>
@@ -69,27 +69,27 @@ export default function BatchPage() {
             <p className="text-xs text-muted-foreground">{t('batchTranslator.scanSubfolders')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
-          <div className="p-2 bg-teal-500/10 rounded-lg">
-            <FileText className="w-4 h-4 text-teal-500" />
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/30 feature-card">
+          <div className="p-2 bg-noir-500/10 rounded-lg">
+            <FileText className="w-4 h-4 text-noir-500" />
           </div>
           <div>
             <p className="text-sm font-medium">{t('batchTranslator.multiFormat')}</p>
             <p className="text-xs text-muted-foreground">{t('batchTranslator.formatsSupported')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
-          <div className="p-2 bg-cyan-500/10 rounded-lg">
-            <Sparkles className="w-4 h-4 text-cyan-500" />
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/30 feature-card">
+          <div className="p-2 bg-noir-500/10 rounded-lg">
+            <Sparkles className="w-4 h-4 text-noir-500" />
           </div>
           <div>
             <p className="text-sm font-medium">{t('batchTranslator.smartSelection')}</p>
             <p className="text-xs text-muted-foreground">{t('batchTranslator.filterByType')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
-          <div className="p-2 bg-sky-500/10 rounded-lg">
-            <Languages className="w-4 h-4 text-sky-500" />
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/30 feature-card">
+          <div className="p-2 bg-noir-500/10 rounded-lg">
+            <Languages className="w-4 h-4 text-noir-500" />
           </div>
           <div>
             <p className="text-sm font-medium">{t('batchTranslator.flexibleOutput')}</p>

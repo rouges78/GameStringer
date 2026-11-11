@@ -27,14 +27,14 @@ export function DefaultProfileAlert() {
   }
 
   return (
-    <Alert className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-      <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+    <Alert className="mb-4 border-noir-200 bg-noir-50 dark:border-noir-800 dark:bg-noir-950">
+      <Info className="h-4 w-4 text-noir-600 dark:text-noir-400" />
       <AlertDescription className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-blue-800 dark:text-blue-200 font-medium mb-1">
+          <p className="text-noir-800 dark:text-noir-200 font-medium mb-1">
             🔧 Default Profile Active
           </p>
-          <p className="text-blue-700 dark:text-blue-300 text-sm">
+          <p className="text-noir-700 dark:text-noir-300 text-sm">
             You are using the automatically created default profile. 
             <br />
             <strong>{t('defaultProfileAlertComp.username')}</strong> Default
@@ -46,20 +46,20 @@ export function DefaultProfileAlert() {
             <Button
               variant="ghost"
               size="sm"
-              className="ml-1 h-auto p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+              className="ml-1 h-auto p-1 text-noir-600 hover:text-noir-800 dark:text-noir-400 dark:hover:text-noir-200"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
             </Button>
           </p>
-          <p className="text-blue-600 dark:text-blue-400 text-xs mt-1">
+          <p className="text-noir-600 dark:text-noir-400 text-xs mt-1">
             💡 You can create a new custom profile from profile settings.
           </p>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="ml-2 h-auto p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+          className="ml-2 h-auto p-1 text-noir-600 hover:text-noir-800 dark:text-noir-400 dark:hover:text-noir-200"
           onClick={() => setIsVisible(false)}
         >
           <X className="h-4 w-4" />

@@ -142,9 +142,9 @@ function SupabaseSettingsCard() {
         </p>
       </CardHeader>
       <CardContent className="p-0 space-y-4">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-noir-800/50 border border-noir-700/50">
           <div className="flex items-center gap-2">
-            <div className={`h-2.5 w-2.5 rounded-full ${enabled && url && anonKey ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+            <div className={`h-2.5 w-2.5 rounded-full ${enabled && url && anonKey ? 'bg-emerald-400 animate-pulse' : 'bg-noir-500'}`} />
             <span className="text-sm font-medium">
               {enabled && url && anonKey
                 ? (t('common.backendActive'))
@@ -202,7 +202,7 @@ function SupabaseSettingsCard() {
               {t('common.runThisSqlInSupabaseSqlEditorToCreateRequiredTables')}
             </p>
             <div className="relative">
-              <pre className="text-micro bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-slate-300 whitespace-pre-wrap">
+              <pre className="text-micro bg-noir-900 border border-noir-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-noir-300 whitespace-pre-wrap">
                 {SUPABASE_MIGRATION_SQL.trim().substring(0, 2000)}
                 {SUPABASE_MIGRATION_SQL.length > 2000 ? t('settingsPage.copyToSeeAll') : ''}
               </pre>
@@ -274,22 +274,22 @@ function CacheStatsCard() {
       <CardContent className="space-y-6">
         {/* App Data Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <HardDrive className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
+            <HardDrive className="h-6 w-6 mx-auto mb-2 text-noir-400" />
             <p className="text-2xl font-bold">{stats?.app_data_size_mb.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.appDataMb')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
-            <Database className="h-6 w-6 mx-auto mb-2 text-purple-400" />
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
+            <Database className="h-6 w-6 mx-auto mb-2 text-rouge-400" />
             <p className="text-2xl font-bold">{stats?.cache_size_mb.toFixed(1)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.coverCacheMb')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
             <Globe className="h-6 w-6 mx-auto mb-2 text-green-400" />
             <p className="text-2xl font-bold">{stats?.cover_count || 0}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.savedCovers')}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+          <div className="bg-noir-800/50 rounded-lg p-4 text-center">
             <Cpu className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
             <p className="text-2xl font-bold">{stats?.disk_free_gb.toFixed(0)}</p>
             <p className="text-xs text-muted-foreground">{t('settingsPage.freeGbDisk')}</p>
@@ -302,9 +302,9 @@ function CacheStatsCard() {
             <span className="text-muted-foreground">{t('settingsPage.diskSpace')}</span>
             <span>{(stats?.disk_total_gb || 0).toFixed(0)} {t('settingsPage.gbTotal')}</span>
           </div>
-          <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-3 bg-noir-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-green-500 to-noir-500 transition-all duration-500"
               style={{ width: `${Math.min(diskUsedPercent, 100)}%` }}
             />
           </div>
@@ -534,7 +534,7 @@ function AiQualityCard({
     <Card>
       <CardHeader>
         <CardTitle as="h2" className="flex items-center space-x-2">
-          <Brain className="h-5 w-5 text-fuchsia-500" />
+          <Brain className="h-5 w-5 text-rouge-500" />
           <span>{t('aiQuality.title')}</span>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">{t('aiQuality.desc')}</p>
@@ -585,7 +585,7 @@ function AiQualityCard({
 
         {/* Modello embedding + diagnostica (solo se la TM semantica è attiva) */}
         {semanticActive && (
-          <div className="space-y-2 pl-3 border-l-2 border-fuchsia-500/20">
+          <div className="space-y-2 pl-3 border-l-2 border-rouge-500/20">
             <div className="flex items-center gap-2">
               <Label>{t('aiQuality.embeddingTitle')}</Label>
               <InfoTooltip variant="info" content={<p className="text-xs max-w-xs">{t('aiQuality.embeddingDesc')}</p>} />
@@ -603,11 +603,11 @@ function AiQualityCard({
               </SelectContent>
             </Select>
 
-            <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-noir-800/50 border border-noir-700/50">
               <div className="flex items-center gap-2 min-w-0">
                 <div
                   className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-                    checking ? 'bg-amber-400 animate-pulse' : status?.available ? 'bg-emerald-400' : 'bg-slate-500'
+                    checking ? 'bg-amber-400 animate-pulse' : status?.available ? 'bg-emerald-400' : 'bg-noir-500'
                   }`}
                 />
                 <span className="text-xs truncate">
@@ -635,7 +635,7 @@ function AiQualityCard({
             )}
 
             {/* Pre-indicizzazione TM ("indicizza ora") */}
-            <div className="mt-2 pt-2 border-t border-slate-700/40 space-y-2">
+            <div className="mt-2 pt-2 border-t border-noir-700/40 space-y-2">
               <p className="text-2xs text-muted-foreground">{t('semanticIndex.hint')}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-2xs text-muted-foreground">{t('semanticIndex.sourceLabel')}</span>
@@ -676,9 +676,9 @@ function AiQualityCard({
               </div>
               {indexProgress && indexProgress.total > 0 && (
                 <div className="space-y-1">
-                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-noir-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-fuchsia-500 transition-all duration-300"
+                      className="h-full bg-rouge-500 transition-all duration-300"
                       style={{ width: `${Math.min(100, Math.round((indexProgress.done / indexProgress.total) * 100))}%` }}
                     />
                   </div>
@@ -1035,7 +1035,7 @@ export default function SettingsPage() {
   return (
     <div className="p-4 space-y-4 max-w-7xl mx-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-700 via-noir-600 to-noir-800 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1056,7 +1056,7 @@ export default function SettingsPage() {
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    <BookOpen className="h-5 w-5 text-noir-500" />
                     {t('settings.tutorial.chooseTitle')}
                   </DialogTitle>
                   <DialogDescription>
@@ -1066,11 +1066,11 @@ export default function SettingsPage() {
                 <div className="grid gap-3 py-4">
                   <Button
                     variant="outline"
-                    className="h-auto p-4 justify-start gap-4 hover:bg-blue-500/10 hover:border-blue-500/50"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-noir-500/10 hover:border-noir-500/50"
                     onClick={startNormalTutorial}
                   >
-                    <div className="p-2 rounded-lg bg-blue-500/20">
-                      <Play className="h-5 w-5 text-blue-500" />
+                    <div className="p-2 rounded-lg bg-noir-500/20">
+                      <Play className="h-5 w-5 text-noir-500" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">{t('settings.tutorial.normalTitle')}</div>
@@ -1079,11 +1079,11 @@ export default function SettingsPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto p-4 justify-start gap-4 hover:bg-purple-500/10 hover:border-purple-500/50"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-rouge-500/10 hover:border-rouge-500/50"
                     onClick={startGuidedTutorial}
                   >
-                    <div className="p-2 rounded-lg bg-purple-500/20">
-                      <Compass className="h-5 w-5 text-purple-500" />
+                    <div className="p-2 rounded-lg bg-rouge-500/20">
+                      <Compass className="h-5 w-5 text-rouge-500" />
                     </div>
                     <div className="text-left">
                       <div className="font-medium">{t('settings.tutorial.guidedTitle')}</div>
@@ -1095,7 +1095,7 @@ export default function SettingsPage() {
             </Dialog>
             <Button variant="outline" size="sm" onClick={resetSettings} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t('subtitleTranslator.reset')}</Button>
-            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-8 text-xs">
+            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-8 text-xs">
               {isSaving ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
               ) : (
@@ -1161,7 +1161,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-purple-500" />
+                <Monitor className="h-5 w-5 text-rouge-500" />
                 <span>{t('settingsPage.lmStudioLocale')}</span>
               </CardTitle>
             </CardHeader>
@@ -1202,7 +1202,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Globe className="h-5 w-5 text-teal-500" />
+                <Globe className="h-5 w-5 text-noir-500" />
                 <span>Alocai ModelWiz</span>
               </CardTitle>
             </CardHeader>
@@ -1242,7 +1242,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle as="h2" className="flex items-center space-x-2">
-                <Brain className="h-5 w-5 text-blue-500" />
+                <Brain className="h-5 w-5 text-noir-500" />
                 <span>{t('settings.aiConfig')}</span>
               </CardTitle>
             </CardHeader>
@@ -1551,7 +1551,7 @@ export default function SettingsPage() {
                     max={1}
                     min={0}
                     step={0.1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
                   <p className="text-2xs text-muted-foreground">{t('settingsPage.temperatureScope')}</p>
                 </div>
@@ -1667,28 +1667,28 @@ export default function SettingsPage() {
         <TabsContent value="display" className="space-y-3">
           {/* Screen Info - inline compatto */}
           <div className="grid grid-cols-4 gap-2">
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <Monitor className="h-3.5 w-3.5 text-blue-400" />
+                <Monitor className="h-3.5 w-3.5 text-noir-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.window')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <Maximize2 className="h-3.5 w-3.5 text-purple-400" />
+                <Maximize2 className="h-3.5 w-3.5 text-rouge-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.screen')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-green-400" />
                 <span className="text-2xs text-muted-foreground">DPI</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${(window.devicePixelRatio * 100).toFixed(0)}%` : '...'}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-2 text-center">
+            <div className="bg-noir-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Columns className="h-3.5 w-3.5 text-yellow-400" />
                 <span className="text-2xs text-muted-foreground">{t('settingsPage.ratio')}</span>
@@ -1710,7 +1710,7 @@ export default function SettingsPage() {
                     value={[settings.display.uiScale]}
                     onValueChange={(value) => updateSetting('display', 'uiScale', value[0])}
                     max={150} min={75} step={5}
-                    className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
                   <div className="flex justify-between text-micro text-muted-foreground">
                     <span>75%</span><span>100%</span><span>150%</span>
@@ -1725,7 +1725,7 @@ export default function SettingsPage() {
                     value={[settings.display.sidebarWidth]}
                     onValueChange={(value) => updateSetting('display', 'sidebarWidth', value[0])}
                     max={320} min={200} step={8}
-                    className="w-full [&_[data-slot=range]]:bg-violet-500 [&_[data-slot=thumb]]:bg-violet-500 [&_[data-slot=thumb]]:border-violet-500"
+                    className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
                   />
                   <div className="flex justify-between text-micro text-muted-foreground">
                     <span>200px</span><span>256px</span><span>320px</span>
@@ -1745,8 +1745,8 @@ export default function SettingsPage() {
                       onClick={() => updateSetting('display', 'fontSize', size)}
                       className={`p-2 rounded-lg border transition-all text-center ${
                         settings.display.fontSize === size
-                          ? 'border-violet-500 bg-violet-500/10'
-                          : 'border-slate-700 hover:border-slate-500'
+                          ? 'border-rouge-500 bg-rouge-500/10'
+                          : 'border-noir-700 hover:border-noir-500'
                       }`}
                     >
                       <Type className={`mx-auto mb-1 ${size === 'small' ? 'h-3 w-3' : size === 'large' ? 'h-5 w-5' : 'h-4 w-4'}`} />
@@ -1760,7 +1760,7 @@ export default function SettingsPage() {
 
               {/* Toggles — inline */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-noir-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.compact')}</Label>
                     <p className="text-2xs text-muted-foreground">{t('settingsPage.lessPadding')}</p>
@@ -1770,7 +1770,7 @@ export default function SettingsPage() {
                     onCheckedChange={(checked) => updateSetting('display', 'compactMode', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-noir-800/30">
                   <div>
                     <Label className="text-xs">{t('settingsPage.animations')}</Label>
                     <p className="text-2xs text-muted-foreground">{t('settingsPage.uiTransitions')}</p>
@@ -1814,7 +1814,7 @@ export default function SettingsPage() {
         {/* Debug & Test Tab */}
         <TabsContent value="debug" className="space-y-3">
           <Card className="p-3">
-            <div className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
+            <div className="text-xs font-semibold text-noir-400 mb-3 flex items-center gap-1.5">
               <TestTube className="h-3.5 w-3.5" />
               {t('settings.debugTools')}
               <Badge variant="outline" className="text-2xs ml-1">{t('settings.developers')}</Badge>
@@ -1826,7 +1826,7 @@ export default function SettingsPage() {
               </Button>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <p className="text-xs font-semibold text-slate-400">{t('settings.debugConsole')}</p>
+              <p className="text-xs font-semibold text-noir-400">{t('settings.debugConsole')}</p>
               <Button onClick={clearDebugResults} variant="ghost" size="xs" className="text-xs gap-1">
                 <Trash2 className="h-3 w-3" />
                 {t('settings.clear')}
@@ -1835,16 +1835,16 @@ export default function SettingsPage() {
             <div className="bg-black/30 rounded-lg p-2 h-[120px] overflow-y-auto">
               <div className="font-mono text-xs space-y-0.5">
                 {debugResults.length > 0 ? debugResults.map((result, index) => (
-                  <div key={index} className="text-gray-300">{result}</div>
+                  <div key={index} className="text-noir-300">{result}</div>
                 )) : (
-                  <div className="text-gray-500 italic">{t('settings.consoleEmpty')}</div>
+                  <div className="text-noir-500 italic">{t('settings.consoleEmpty')}</div>
                 )}
                 {isDebugging && <div className="text-orange-400 animate-pulse">{t('settings.testInProgress')}</div>}
               </div>
             </div>
           </Card>
           <Card className="p-3">
-            <p className="text-xs font-semibold text-slate-400 mb-2">{t('settings.systemInfo')}</p>
+            <p className="text-xs font-semibold text-noir-400 mb-2">{t('settings.systemInfo')}</p>
             <div className="grid grid-cols-4 gap-2 text-xs">
               <div><span className="text-muted-foreground">{t('settingsPage.ver')}</span> <span className="font-mono">{version}</span></div>
               <div><span className="text-muted-foreground">{t('settingsPage.build')}</span> <span className="font-mono">{buildInfo.build}</span></div>
@@ -1859,10 +1859,10 @@ export default function SettingsPage() {
       {/* Barra flottante: compare appena c'è qualcosa di non salvato.
           Il Salva in alto a destra resta, ma non è più l'unico. */}
       {dirty && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-slate-900/95 shadow-xl backdrop-blur">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/40 bg-noir-900/95 shadow-xl backdrop-blur">
           <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden />
           <span className="text-xs text-amber-200">{t('settings.unsavedChanges')}</span>
-          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-7 text-xs">
+          <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-rouge-600 hover:bg-rouge-500 h-7 text-xs">
             {isSaving ? (
               <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
             ) : (

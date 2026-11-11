@@ -58,7 +58,7 @@ export function NotificationBell({ onOpen }: NotificationBellProps) {
       variant="ghost"
       size="icon"
       onClick={onOpen}
-      className="relative h-9 w-9 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all"
+      className="relative h-9 w-9 text-noir-400 hover:text-noir-400 hover:bg-noir-500/10 rounded-xl transition-all"
       title={t('common.notifications')}
       // Il conteggio va nel nome accessibile, altrimenti chi usa uno screen
       // reader sente "Notifiche" e non sa che ce ne sono di non lette.

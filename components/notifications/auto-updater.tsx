@@ -87,9 +87,9 @@ export function AutoUpdater() {
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         className="fixed bottom-20 right-4 z-[100] max-w-xs"
       >
-        <div className="bg-slate-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-xl shadow-2xl shadow-emerald-500/10 overflow-hidden">
+        <div className="bg-noir-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-xl shadow-2xl shadow-emerald-500/10 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/10">
+          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-600/20 to-noir-600/10">
             <div className="p-1.5 bg-emerald-500/20 rounded-lg">
               <Sparkles className="h-4 w-4 text-emerald-400" />
             </div>
@@ -97,14 +97,14 @@ export function AutoUpdater() {
               <p className="text-sm font-semibold text-white">
                 {t('autoUpdaterComp.updateAvailable')}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-noir-400">
                 v{updateInfo.current_version} → v{updateInfo.latest_version}
               </p>
             </div>
             {!isWorking && (
               <button
                 onClick={handleDismiss}
-                className="p-1 text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 rounded transition-colors"
+                className="p-1 text-noir-500 hover:text-noir-300 hover:bg-noir-800/50 rounded transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -113,14 +113,14 @@ export function AutoUpdater() {
           
           {/* Progress bar durante download */}
           {isDownloading && (
-            <div className="px-4 py-2 bg-slate-800/50">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <div className="px-4 py-2 bg-noir-800/50">
+              <div className="flex items-center justify-between text-xs text-noir-400 mb-1">
                 <span>{t('autoUpdaterComp.downloadInProgress')}</span>
                 <span>{Math.round(downloadProgress)}%</span>
               </div>
-              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-noir-700 rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                  className="h-full bg-gradient-to-r from-emerald-500 to-noir-400 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${downloadProgress}%` }}
                   transition={{ duration: 0.3 }}
@@ -131,7 +131,7 @@ export function AutoUpdater() {
           
           {/* Installing message */}
           {isInstalling && (
-            <div className="px-4 py-3 bg-slate-800/50 flex items-center gap-2">
+            <div className="px-4 py-3 bg-noir-800/50 flex items-center gap-2">
               <Loader2 className="h-4 w-4 text-emerald-400 animate-spin" />
               <span className="text-sm text-emerald-400">{t('autoUpdaterComp.installingRestartSoon')}</span>
             </div>
@@ -150,7 +150,7 @@ export function AutoUpdater() {
               <button
                 onClick={handleUpdate}
                 disabled={isWorking}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-500 to-noir-600 hover:from-emerald-400 hover:to-noir-500 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isDownloading ? (
                   <>

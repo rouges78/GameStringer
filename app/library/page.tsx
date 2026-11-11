@@ -125,12 +125,12 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
   // Placeholder colorato basato sul nome
   const getGradient = (name: string) => {
     const gradients = [
-      'from-purple-900/80 to-blue-900/80',
+      'from-rouge-900/80 to-noir-900/80',
       'from-red-900/80 to-orange-900/80',
-      'from-green-900/80 to-teal-900/80',
-      'from-violet-900/80 to-indigo-900/80',
+      'from-green-900/80 to-noir-900/80',
+      'from-rouge-900/80 to-rouge-900/80',
       'from-yellow-900/80 to-red-900/80',
-      'from-cyan-900/80 to-blue-900/80',
+      'from-noir-900/80 to-noir-900/80',
     ];
     const hash = name.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     return gradients[hash % gradients.length];
@@ -255,7 +255,7 @@ const GameImageWithFallback = ({ game, sizes: _sizes, coverCache }: { game: Game
   if (isLoading) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getGradient(game.title)}`}>
-        <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-rouge-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -412,7 +412,7 @@ export default function LibraryPage() {
     <StoreGate>
       <Suspense fallback={
         <div className="flex items-center justify-center h-full py-24">
-          <div className="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full" />
+          <div className="animate-spin h-8 w-8 border-2 border-rouge-500 border-t-transparent rounded-full" />
         </div>
       }>
         <LibraryPageInner />
@@ -1198,13 +1198,13 @@ function LibraryListView() {
     
     return (
       <Link key={game.id || `game-${index}`} href={getGameDetailUrl(game)}>
-        <div className="group relative overflow-hidden rounded-xl border border-slate-800/60 hover:border-indigo-500/50 bg-slate-900/40 hover:bg-slate-900/80 transition-all duration-500 shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer h-full flex flex-col">
+        <div className="group relative overflow-hidden rounded-xl border border-noir-800/60 hover:border-rouge-500/50 bg-noir-900/40 hover:bg-noir-900/80 transition-all duration-500 shadow-lg hover:shadow-[0_0_20px_rgba(255,59,74,0.2)] cursor-pointer h-full flex flex-col">
           {/* Effetto bagliore interno hover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-gradient-to-br from-rouge-500/0 via-rouge-500/5 to-rouge-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0" />
           
           {/* Immagine */}
-          <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-slate-800/50 z-10">
-            <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />
+          <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-noir-800/50 z-10">
+            <div className="absolute inset-0 bg-noir-950/20 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />
             <GameImageWithFallback 
               key={`img-${game.id}-${game.app_id}`}
               game={game} 
@@ -1217,10 +1217,10 @@ function LibraryListView() {
               <span className={`text-micro font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md ${
                 game.platform === 'Steam' ? 'bg-[#171a21]/90 text-white border border-[#66c0f4]/30' :
                 game.platform === 'Epic Games' ? 'bg-[#2a2a2a]/90 text-white border border-white/20' :
-                game.platform === 'GOG' ? 'bg-[#5c2f82]/90 text-white border border-purple-400/30' :
+                game.platform === 'GOG' ? 'bg-[#5c2f82]/90 text-white border border-rouge-400/30' :
                 game.platform === 'Xbox Game Pass' ? 'bg-[#107c10]/90 text-white border border-[#52b043]/30' :
                 game.platform === 'Amazon Games' ? 'bg-[#ff9900]/90 text-black border border-[#ffb347]/30' :
-                'bg-slate-800/90 text-slate-300 border border-slate-600/50'
+                'bg-noir-800/90 text-noir-300 border border-noir-600/50'
               }`}>
                 {game.platform || 'Unknown'}
               </span>
@@ -1235,15 +1235,15 @@ function LibraryListView() {
                 <span className="bg-emerald-500/90 text-emerald-50 text-2xs w-5 h-5 flex items-center justify-center rounded shadow-md backdrop-blur-md border border-emerald-400/30 font-bold" title={t('libraryPage.installedBadge')}>✓</span>
               )}
               {game.engine && game.engine !== 'Unknown' && (
-                <span className="bg-sky-600/90 text-sky-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-sky-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
+                <span className="bg-noir-600/90 text-noir-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-noir-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
               )}
               {game.is_vr && (
-                <span className="bg-violet-600/90 text-violet-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-violet-400/30 font-bold" title={t('libraryPage.vrSupport')}>{t('libraryPage.vrBadge')}</span>
+                <span className="bg-rouge-600/90 text-rouge-50 text-micro px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-rouge-400/30 font-bold" title={t('libraryPage.vrSupport')}>{t('libraryPage.vrBadge')}</span>
               )}
             </div>
 
             {/* Quick Actions Overlay su hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex items-end justify-center pb-3 gap-1.5 flex-wrap backdrop-blur-[2px]">
+            <div className="absolute inset-0 bg-gradient-to-t from-noir-950/90 via-noir-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex items-end justify-center pb-3 gap-1.5 flex-wrap backdrop-blur-[2px]">
               {!game.is_installed && game.platform && (game.platform === 'Steam' || game.platform === 'Epic Games' || game.platform === 'GOG') && (
                 <button
                   onClick={(e) => {
@@ -1273,7 +1273,7 @@ function LibraryListView() {
               )}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
-                className="bg-indigo-600/90 hover:bg-indigo-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-indigo-500/50 hover:scale-110 border border-indigo-400/30"
+                className="bg-rouge-600/90 hover:bg-rouge-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-rouge-500/50 hover:scale-110 border border-rouge-400/30"
                 title={t('common.stringIt')}
               >
                 <Sparkles className="h-4 w-4" />
@@ -1281,21 +1281,21 @@ function LibraryListView() {
               {/* Batch nascosto: /batch dichiara "non implementato" e tiene disabilitato Avvia. */}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
-                className="bg-violet-600/90 hover:bg-violet-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-violet-500/50 hover:scale-110 border border-violet-400/30"
+                className="bg-rouge-600/90 hover:bg-rouge-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-rouge-500/50 hover:scale-110 border border-rouge-400/30"
                 title={t('libraryPage.community')}
               >
                 <Languages className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as Game & { install_path?: string }).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
-                className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
+                className="bg-rouge-600/90 hover:bg-rouge-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-rouge-500/50 hover:scale-110 border border-rouge-400/30"
                 title="P.T. Prediction Tool"
               >
                 <Brain className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
-                className="bg-slate-700/90 hover:bg-slate-600 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-slate-500/50 hover:scale-110 border border-slate-500/30"
+                className="bg-noir-700/90 hover:bg-noir-600 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-noir-500/50 hover:scale-110 border border-noir-500/30"
                 title={t('libraryPage.changeCover')}
               >
                 <ImageIcon className="h-4 w-4" />
@@ -1305,7 +1305,7 @@ function LibraryListView() {
           
           {/* Info sotto l'immagine */}
           <div className="p-2.5 flex-1 flex flex-col z-10">
-            <p className="text-[13px] font-bold truncate text-slate-200 group-hover:text-indigo-300 transition-colors drop-shadow-sm mb-1" title={game.title ?? 'Unnamed game'}>
+            <p className="text-[13px] font-bold truncate text-noir-200 group-hover:text-rouge-300 transition-colors drop-shadow-sm mb-1" title={game.title ?? 'Unnamed game'}>
               {game.title ?? 'Unnamed game'}
             </p>
             {(() => {
@@ -1318,7 +1318,7 @@ function LibraryListView() {
                   {languages && languages.length > 1 ? (
                     <LanguageFlags supportedLanguages={languages} maxFlags={8} />
                   ) : (
-                    <span className="text-2xs text-slate-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
+                    <span className="text-2xs text-noir-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
                   )}
                 </div>
               );
@@ -1371,15 +1371,15 @@ function LibraryListView() {
         <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
           {/* Icona gamepad animata con glow */}
           <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl animate-pulse" />
-            <div className="relative p-5 rounded-2xl bg-gradient-to-br from-blue-600/20 via-indigo-600/20 to-purple-600/20 border border-white/10 backdrop-blur-sm">
-              <Gamepad2 className="h-10 w-10 text-blue-400 animate-bounce" style={{ animationDuration: '2s' }} />
+            <div className="absolute inset-0 rounded-full bg-noir-500/20 blur-xl animate-pulse" />
+            <div className="relative p-5 rounded-2xl bg-gradient-to-br from-noir-600/20 via-rouge-600/20 to-rouge-600/20 border border-white/10 backdrop-blur-sm">
+              <Gamepad2 className="h-10 w-10 text-noir-400 animate-bounce" style={{ animationDuration: '2s' }} />
             </div>
           </div>
 
           {/* Testo */}
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <h3 className="text-lg font-semibold bg-gradient-to-r from-noir-400 via-rouge-400 to-rouge-400 bg-clip-text text-transparent">
               {lib.loadingTitle}
             </h3>
             <p className="text-sm text-muted-foreground">{lib.loadingSubtitle}</p>
@@ -1389,7 +1389,7 @@ function LibraryListView() {
           {/* Barra progresso animata */}
           <div className="w-64 h-1.5 rounded-full bg-white/5 overflow-hidden">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
+              className="h-full rounded-full bg-gradient-to-r from-noir-500 via-rouge-500 to-rouge-500"
               style={{ 
                 animation: 'loading-bar 2s ease-in-out infinite',
                 width: '40%',
@@ -1403,7 +1403,7 @@ function LibraryListView() {
               {Array.from({ length: 15 }).map((_, index) => (
                 <div 
                   key={index} 
-                  className="relative rounded-lg aspect-[16/9] overflow-hidden bg-gray-800/40 border border-white/5"
+                  className="relative rounded-lg aspect-[16/9] overflow-hidden bg-noir-800/40 border border-white/5"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <div 
@@ -1446,7 +1446,7 @@ function LibraryListView() {
       
       return (
         <div className="text-center py-10">
-          <p className="text-gray-400 mb-2">
+          <p className="text-noir-400 mb-2">
             {searchTerm
               ? t('libraryPage.noGamesFound').replace('{{q}}', searchTerm)
               : t('libraryPage.libraryEmpty')}
@@ -1457,12 +1457,12 @@ function LibraryListView() {
             </p>
           )}
           {searchTerm && safeGames.length > 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-noir-500">
               {t('libraryPage.gamesInLibraryHint').replace('{{count}}', String(safeGames.length))}
             </p>
           )}
           {!searchTerm && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-noir-500">
               {t('libraryPage.refreshHint')}
             </p>
           )}
@@ -1485,7 +1485,7 @@ function LibraryListView() {
               {isAddingGame ? t('heroJob.addingGame') : t('heroJob.addGame')}
             </span>
           </button>
-          <p className="text-xs text-gray-500 mt-2">{t('libraryPage.addGameFromDiskHint')}</p>
+          <p className="text-xs text-noir-500 mt-2">{t('libraryPage.addGameFromDiskHint')}</p>
         </div>
       );
     }
@@ -1504,23 +1504,23 @@ function LibraryListView() {
             return (
               <div className="pb-2">
                 <Link key={game.id || `list-game-${index}`} href={getGameDetailUrl(game)}>
-                  <div className="group flex items-center bg-slate-900/40 hover:bg-slate-800/60 rounded-xl p-2 border border-slate-800/60 hover:border-indigo-500/40 hover:shadow-[0_0_15px_rgba(99,102,241,0.1)] transition-all duration-300 cursor-pointer">
-                    <div className="w-[100px] h-[56px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-900 mr-4 relative border border-slate-800">
-                      <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
+                  <div className="group flex items-center bg-noir-900/40 hover:bg-noir-800/60 rounded-xl p-2 border border-noir-800/60 hover:border-rouge-500/40 hover:shadow-[0_0_15px_rgba(255,59,74,0.1)] transition-all duration-300 cursor-pointer">
+                    <div className="w-[100px] h-[56px] flex-shrink-0 rounded-lg overflow-hidden bg-noir-900 mr-4 relative border border-noir-800">
+                      <div className="absolute inset-0 bg-noir-950/20 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
                       <GameImageWithFallback key={`img-${game.id}-${game.app_id}`} game={game} sizes="100px" coverCache={coverCache} />
                     </div>
                     <div className="flex-grow min-w-0 mr-4">
-                      <h3 className="text-sm font-bold text-slate-200 truncate group-hover:text-indigo-300 transition-colors drop-shadow-sm">{game.title}</h3>
+                      <h3 className="text-sm font-bold text-noir-200 truncate group-hover:text-rouge-300 transition-colors drop-shadow-sm">{game.title}</h3>
                       <div className="flex items-center gap-2.5 mt-1">
-                        <span className="text-2xs font-semibold text-slate-500 tracking-wide uppercase">{game.platform}</span>
+                        <span className="text-2xs font-semibold text-noir-500 tracking-wide uppercase">{game.platform}</span>
                         {game.engine && game.engine.toLowerCase() !== 'unknown' && (
-                          <span className="text-micro font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded">{game.engine}</span>
+                          <span className="text-micro font-bold bg-noir-500/10 text-noir-400 border border-noir-500/20 px-1.5 py-0.5 rounded">{game.engine}</span>
                         )}
                       </div>
                     </div>
                     <div className="hidden lg:flex items-center gap-1.5 mr-4">
                       {game.genres && game.genres.filter(g => g && g.toLowerCase() !== 'unknown').slice(0, 3).map((genre, idx) => (
-                        <span key={`${game.id}-genre-${idx}`} className="text-micro font-medium bg-slate-800/80 text-slate-400 px-2 py-1 rounded-md border border-slate-700">{genre}</span>
+                        <span key={`${game.id}-genre-${idx}`} className="text-micro font-medium bg-noir-800/80 text-noir-400 px-2 py-1 rounded-md border border-noir-700">{genre}</span>
                       ))}
                     </div>
                     {(() => {
@@ -1541,7 +1541,7 @@ function LibraryListView() {
                         </span>
                       )}
                       {game.is_vr && (
-                        <span className="text-2xs font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-md border border-violet-500/20">VR</span>
+                        <span className="text-2xs font-bold text-rouge-400 bg-rouge-500/10 px-2 py-1 rounded-md border border-rouge-500/20">VR</span>
                       )}
                       {game.isShared && (
                         <span className="text-2xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">{t('libraryPage.shared')}</span>
@@ -1551,7 +1551,7 @@ function LibraryListView() {
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300 pr-2">
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `${getGameDetailUrl(game)}&stringit=1`; }}
-                        className="flex items-center gap-1 bg-indigo-600/90 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-indigo-500/30"
+                        className="flex items-center gap-1 bg-rouge-600/90 hover:bg-rouge-500 px-3 py-1.5 rounded-lg text-2xs font-bold text-white transition-all shadow-md hover:shadow-rouge-500/30"
                         title={t('common.stringIt')}
                       >
                         <Sparkles className="h-3 w-3" />
@@ -1592,28 +1592,28 @@ function LibraryListView() {
       {/* Hero Header Premium */}
       {/* NB: niente overflow-hidden sul contenitore — clipperebbe il dropdown "Altro".
           Il clipping serve solo ai layer decorativi, spostati nel wrapper qui sotto. */}
-      <div className="relative rounded-xl bg-slate-950/60 border border-slate-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80">
+      <div className="relative rounded-xl bg-noir-950/60 border border-noir-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-rouge-500/30 hover:bg-noir-950/80">
         <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50" />
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute inset-0 bg-gradient-to-r from-rouge-500/10 via-rouge-500/5 to-transparent opacity-50" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rouge-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rouge-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4" />
         </div>
         
         <div className="relative flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-slate-900/80 rounded-xl shadow-inner border border-slate-700/50 group-hover/header:border-indigo-500/40 group-hover/header:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300">
-              <Gamepad2 className="h-7 w-7 text-indigo-400 group-hover/header:text-indigo-300 transition-colors" />
+            <div className="p-3 bg-noir-900/80 rounded-xl shadow-inner border border-noir-700/50 group-hover/header:border-rouge-500/40 group-hover/header:shadow-[0_0_20px_rgba(255,59,74,0.2)] transition-all duration-300">
+              <Gamepad2 className="h-7 w-7 text-rouge-400 group-hover/header:text-rouge-300 transition-colors" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-baseline gap-3">
                 <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-sm">{lib.title}</h1>
                 {games.length > 0 && (
-                  <span className="text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-md">
+                  <span className="text-[11px] font-bold bg-rouge-500/10 text-rouge-300 border border-rouge-500/20 px-2 py-0.5 rounded-md">
                     {filteredGames.length === games.length ? games.length : `${filteredGames.length} / ${games.length}`}
                   </span>
                 )}
               </div>
-              <p className="text-slate-400 text-xs font-medium mt-0.5">
+              <p className="text-noir-400 text-xs font-medium mt-0.5">
                 {games.length > 0 
                   ? filteredGames.length === games.length
                     ? `${games.length} ${(lib as Record<string, string>).gamesAvailable || 'giochi disponibili'}`
@@ -1626,33 +1626,33 @@ function LibraryListView() {
           {/* Stats rapide */}
           {games.length > 0 && (
             <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-noir-900/60 border border-noir-700/50 shadow-sm transition-all hover:bg-noir-800/80">
                 <Monitor className="h-4 w-4 text-emerald-400" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-200 leading-none">{statsInstalled}</span>
-                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.installed}</span>
+                  <span className="text-xs font-bold text-noir-200 leading-none">{statsInstalled}</span>
+                  <span className="text-micro font-semibold text-noir-500 uppercase tracking-widest mt-0.5">{lib.installed}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
-                <FolderOpen className="h-4 w-4 text-sky-400" />
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-noir-900/60 border border-noir-700/50 shadow-sm transition-all hover:bg-noir-800/80">
+                <FolderOpen className="h-4 w-4 text-noir-400" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-200 leading-none">{statsPlatforms}</span>
-                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.provider}</span>
+                  <span className="text-xs font-bold text-noir-200 leading-none">{statsPlatforms}</span>
+                  <span className="text-micro font-semibold text-noir-500 uppercase tracking-widest mt-0.5">{lib.provider}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-noir-900/60 border border-noir-700/50 shadow-sm transition-all hover:bg-noir-800/80">
                 <Wrench className="h-4 w-4 text-amber-400" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-200 leading-none">{statsEngines}</span>
-                  <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.engine}</span>
+                  <span className="text-xs font-bold text-noir-200 leading-none">{statsEngines}</span>
+                  <span className="text-micro font-semibold text-noir-500 uppercase tracking-widest mt-0.5">{lib.engine}</span>
                 </div>
               </div>
               {statsShared > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
-                  <Languages className="h-4 w-4 text-violet-400" />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-noir-900/60 border border-noir-700/50 shadow-sm transition-all hover:bg-noir-800/80">
+                  <Languages className="h-4 w-4 text-rouge-400" />
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-200 leading-none">{statsShared}</span>
-                    <span className="text-micro font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
+                    <span className="text-xs font-bold text-noir-200 leading-none">{statsShared}</span>
+                    <span className="text-micro font-semibold text-noir-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
                   </div>
                 </div>
               )}
@@ -1674,7 +1674,7 @@ function LibraryListView() {
             <button
               onClick={handleScan}
               disabled={isLoading}
-              className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30 disabled:opacity-60"
+              className="group flex items-center gap-2 px-3 py-2 bg-noir-900/80 text-noir-300 hover:text-rouge-300 hover:bg-noir-800/80 rounded-xl transition-all border border-noir-700/50 hover:border-rouge-500/30 disabled:opacity-60"
               title={t('libraryPage.rescanTitle')}
             >
               <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
@@ -1686,32 +1686,32 @@ function LibraryListView() {
                 onClick={() => setShowMoreActions(v => !v)}
                 className={`group flex items-center gap-2 px-3 py-2 rounded-xl transition-all border ${
                   showMoreActions || showDryRun
-                    ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50'
-                    : 'bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800/80 border-slate-700/50 hover:border-indigo-500/40'
+                    ? 'bg-rouge-600/30 text-rouge-200 border-rouge-500/50'
+                    : 'bg-noir-900/80 text-noir-300 hover:text-white hover:bg-noir-800/80 border-noir-700/50 hover:border-rouge-500/40'
                 }`}
                 title={t('heroJob.moreTooltip')}
               >
-                <MoreHorizontal className="h-4 w-4 text-slate-400 group-hover:text-indigo-300 transition-colors" />
+                <MoreHorizontal className="h-4 w-4 text-noir-400 group-hover:text-rouge-300 transition-colors" />
                 <span className="text-[11px] font-semibold tracking-wide">{t('heroJob.more')}</span>
               </button>
               {showMoreActions && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMoreActions(false)} />
-                  <div className="absolute right-0 mt-2 z-50 w-60 p-1.5 rounded-xl bg-slate-900/95 backdrop-blur border border-slate-700/60 shadow-xl shadow-black/40 flex flex-col gap-1">
+                  <div className="absolute right-0 mt-2 z-50 w-60 p-1.5 rounded-xl bg-noir-900/95 backdrop-blur border border-noir-700/60 shadow-xl shadow-black/40 flex flex-col gap-1">
                     <button
                       onClick={() => { setShowMoreActions(false); window.location.href = '/prediction-tool/ranking'; }}
-                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-noir-300 hover:bg-noir-800 hover:text-white transition-colors"
                       title={t('libraryPage.ptRankTitle')}
                     >
-                      <Brain className="h-4 w-4 text-purple-400" />
+                      <Brain className="h-4 w-4 text-rouge-400" />
                       <span className="font-semibold tracking-wide">P.T. Rank</span>
                     </button>
                     <button
                       onClick={() => { setShowMoreActions(false); setShowDryRun(prev => !prev); }}
-                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-noir-300 hover:bg-noir-800 hover:text-white transition-colors"
                       title={t('libraryPage.dryRunTitle')}
                     >
-                      <Search className="h-4 w-4 text-indigo-400" />
+                      <Search className="h-4 w-4 text-rouge-400" />
                       <span className="font-semibold tracking-wide">Dry Run{showDryRun ? t('libraryPage.dryRunActive') : ''}</span>
                     </button>
                     <button
@@ -1738,10 +1738,10 @@ function LibraryListView() {
                           toast.error(lib.updateError + ': ' + e);
                         }
                       }}
-                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs text-noir-300 hover:bg-noir-800 hover:text-white transition-colors"
                       title={t('common.scaricaNomiCorrettiDeiGiochiDalDatabaseRemoto')}
                     >
-                      <Download className="h-4 w-4 text-slate-400" />
+                      <Download className="h-4 w-4 text-noir-400" />
                       <span className="font-semibold tracking-wide">{t('libraryPage.dbNames')}</span>
                     </button>
                   </div>
@@ -1763,16 +1763,16 @@ function LibraryListView() {
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
         {/* Ricerca con icona */}
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500 group-focus-within:text-rouge-400 transition-colors" />
           <input
             type="text"
             placeholder={lib.searchPlaceholder}
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-sm"
+            className="w-full pl-11 pr-4 py-2.5 bg-noir-900/60 border border-noir-700/50 rounded-xl text-sm font-medium text-white placeholder-noir-500 focus:outline-none focus:ring-2 focus:ring-rouge-500/40 focus:border-rouge-500/50 transition-all shadow-inner backdrop-blur-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-full hover:bg-slate-800">
+            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-noir-500 hover:text-noir-300 transition-colors p-1 rounded-full hover:bg-noir-800">
               <span className="text-xs font-bold">✕</span>
             </button>
           )}
@@ -1781,17 +1781,17 @@ function LibraryListView() {
         <div className="flex items-center gap-2">
           {/* Ordinamento */}
           <div className="relative group">
-            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-slate-300 transition-colors pointer-events-none" />
+            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500 group-hover:text-noir-300 transition-colors pointer-events-none" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'alphabetical' | 'lastPlayed' | 'recentlyAdded' | 'playtime')}
-              className="appearance-none bg-slate-900/60 border border-slate-700/50 rounded-xl pl-9 pr-9 py-2.5 text-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer shadow-sm transition-all"
+              className="appearance-none bg-noir-900/60 border border-noir-700/50 rounded-xl pl-9 pr-9 py-2.5 text-noir-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rouge-500/40 focus:border-rouge-500/50 hover:bg-noir-800/80 cursor-pointer shadow-sm transition-all"
             >
               <option value="alphabetical">{lib.alphabetical}</option>
               <option value="recentlyAdded">{lib.recent}</option>
               <option value="lastPlayed">{lib.lastPlayed}</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-500 pointer-events-none" />
           </div>
           
           {/* Rileva lingue supportate */}
@@ -1806,7 +1806,7 @@ function LibraryListView() {
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all border shadow-sm ${
               isScanningLangs
                 ? 'bg-amber-600/20 text-amber-300 border-amber-500/50'
-                : 'bg-slate-900/60 text-slate-300 border-slate-700/50 hover:bg-slate-800/80 hover:text-white'
+                : 'bg-noir-900/60 text-noir-300 border-noir-700/50 hover:bg-noir-800/80 hover:text-white'
             } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             {isScanningLangs ? (
@@ -1827,8 +1827,8 @@ function LibraryListView() {
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all border shadow-sm ${
               showFilters 
-                ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]' 
-                : 'bg-slate-900/60 text-slate-300 border-slate-700/50 hover:bg-slate-800/80 hover:text-white'
+                ? 'bg-rouge-600/20 text-rouge-300 border-rouge-500/50 shadow-[0_0_15px_rgba(255,59,74,0.1)]' 
+                : 'bg-noir-900/60 text-noir-300 border-noir-700/50 hover:bg-noir-800/80 hover:text-white'
             }`}
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -1836,7 +1836,7 @@ function LibraryListView() {
             {(() => {
               const activeCount = selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length;
               return activeCount > 0 ? (
-                <span className="ml-1 bg-indigo-500 text-white text-2xs font-bold w-5 h-5 rounded-md flex items-center justify-center">
+                <span className="ml-1 bg-rouge-500 text-white text-2xs font-bold w-5 h-5 rounded-md flex items-center justify-center">
                   {activeCount}
                 </span>
               ) : (
@@ -1846,17 +1846,17 @@ function LibraryListView() {
           </button>
           
           {/* Vista Toggle */}
-          <div className="flex bg-slate-900/60 rounded-xl border border-slate-700/50 p-1 shadow-sm">
+          <div className="flex bg-noir-900/60 rounded-xl border border-noir-700/50 p-1 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-rouge-500/20 text-rouge-400 shadow-sm' : 'text-noir-500 hover:text-noir-300 hover:bg-noir-800'}`}
               title={t('libraryPage.gridView')}
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-rouge-500/20 text-rouge-400 shadow-sm' : 'text-noir-500 hover:text-noir-300 hover:bg-noir-800'}`}
               title={t('libraryPage.listView')}
             >
               <List className="h-4 w-4" />
@@ -1867,15 +1867,15 @@ function LibraryListView() {
 
       {/* Pannello Filtri Elegante */}
       {showFilters && (
-        <div className="mb-5 p-4 bg-slate-900/80 border border-indigo-500/20 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-md animate-in slide-in-from-top-2 duration-300 relative overflow-hidden">
+        <div className="mb-5 p-4 bg-noir-900/80 border border-rouge-500/20 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-md animate-in slide-in-from-top-2 duration-300 relative overflow-hidden">
           {/* Sfondo sottile per il pannello */}
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-rouge-500/5 to-transparent pointer-events-none" />
           
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Status */}
             <div className="space-y-2">
-              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-noir-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Monitor className="h-3 w-3" /> {lib.status}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1883,8 +1883,8 @@ function LibraryListView() {
                   <button key={s.id} onClick={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedStatus.includes(s.id) 
-                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.15)]' 
-                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                      ? 'bg-rouge-500/20 text-rouge-300 border-rouge-500/40 shadow-[0_0_10px_rgba(255,59,74,0.15)]' 
+                      : 'bg-noir-800/50 text-noir-400 border-noir-700/50 hover:bg-noir-700 hover:text-noir-200'
                     }`}>
                     {s.label}
                   </button>
@@ -1894,7 +1894,7 @@ function LibraryListView() {
             
             {/* Engine */}
             <div className="space-y-2">
-              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-noir-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Wrench className="h-3 w-3" /> {lib.engine}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1903,7 +1903,7 @@ function LibraryListView() {
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedEngines.includes(eng) 
                       ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.15)]' 
-                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                      : 'bg-noir-800/50 text-noir-400 border-noir-700/50 hover:bg-noir-700 hover:text-noir-200'
                     }`}>
                     {eng}
                   </button>
@@ -1913,7 +1913,7 @@ function LibraryListView() {
             
             {/* Tags */}
             <div className="space-y-2">
-              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-noir-500 uppercase tracking-widest flex items-center gap-1.5">
                 <Gamepad2 className="h-3 w-3" /> {lib.tag}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1921,8 +1921,8 @@ function LibraryListView() {
                   <button key={t.id} onClick={() => toggleFilter(selectedTags, setSelectedTags, t.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedTags.includes(t.id) 
-                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.15)]' 
-                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                      ? 'bg-rouge-500/20 text-rouge-300 border-rouge-500/40 shadow-[0_0_10px_rgba(255,59,74,0.15)]' 
+                      : 'bg-noir-800/50 text-noir-400 border-noir-700/50 hover:bg-noir-700 hover:text-noir-200'
                     }`}>
                     {t.label}
                   </button>
@@ -1932,7 +1932,7 @@ function LibraryListView() {
             
             {/* Provider */}
             <div className="space-y-2">
-              <span className="text-2xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-2xs font-bold text-noir-500 uppercase tracking-widest flex items-center gap-1.5">
                 <FolderOpen className="h-3 w-3" /> {lib.provider}
               </span>
               <div className="flex flex-wrap gap-2">
@@ -1940,8 +1940,8 @@ function LibraryListView() {
                   <button key={plat} onClick={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedPlatforms.includes(plat) 
-                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-[0_0_10px_rgba(14,165,233,0.15)]' 
-                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                      ? 'bg-noir-500/20 text-noir-300 border-noir-500/40 shadow-[0_0_10px_rgba(155,155,163,0.15)]' 
+                      : 'bg-noir-800/50 text-noir-400 border-noir-700/50 hover:bg-noir-700 hover:text-noir-200'
                     }`}>
                     {plat}
                   </button>
@@ -1952,10 +1952,10 @@ function LibraryListView() {
           
           {/* Clear all filters */}
           {(selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length) > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex justify-end">
+            <div className="mt-4 pt-3 border-t border-noir-800/80 flex justify-end">
               <button 
                 onClick={() => { setSelectedStatus([]); setSelectedEngines([]); setSelectedTags([]); setSelectedPlatforms([]); }}
-                className="text-xs font-semibold text-slate-400 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10"
+                className="text-xs font-semibold text-noir-400 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10"
               >
                 {t('libraryPage.clearAllFilters')}
               </button>
