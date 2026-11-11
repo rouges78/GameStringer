@@ -89,6 +89,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
 import { isCommunityEnabled, autoSyncGSToSupabase } from '@/lib/social/auth-bridge';
 import { clientLogger } from '@/lib/client-logger';
+import { BRAND_FULL, BRAND_NAME, BRAND_PREFIX } from '@/lib/brand';
 import { getGameDetailUrl } from '@/lib/game-detail-url';
 
 // Lazy-loaded components for code splitting
@@ -502,9 +503,13 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Logo e toggle. Compressa (72px) non ci stanno affiancati: il logo
               resta in alto e la freccia scende in una riga sua. */}
           <div className={cn('flex h-14 shrink-0 items-center gap-2 border-b border-border px-3', !sidebarOpen && 'justify-center')}>
-            <Link href="/" className={cn('flex min-w-0 items-center gap-2.5', sidebarOpen && 'flex-1')} title={!sidebarOpen ? 'GameStringer' : undefined}>
-              <img src="/favicon.svg" alt={sidebarOpen ? '' : 'GameStringer'} className="h-8 w-8 shrink-0" />
-              {sidebarOpen && <span className="truncate font-pixel text-lg leading-none text-foreground">GameStringer</span>}
+            <Link href="/" className={cn('flex min-w-0 items-center gap-2.5', sidebarOpen && 'flex-1')} title={!sidebarOpen ? BRAND_FULL : undefined}>
+              <img src="/favicon.svg" alt={sidebarOpen ? '' : BRAND_FULL} className="h-8 w-8 shrink-0" />
+              {sidebarOpen && (
+                <span className="truncate font-pixel text-lg leading-none text-foreground" title={BRAND_FULL}>
+                  <span className="text-muted-foreground">{BRAND_PREFIX}</span>{BRAND_NAME}
+                </span>
+              )}
             </Link>
             {sidebarOpen && (
               <Button

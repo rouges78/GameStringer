@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { BRAND_FULL, BRAND_NAME, BRAND_PREFIX } from '@/lib/brand';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -666,22 +667,16 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
               >
                 <Image 
                   src="/logo.png" 
-                  alt="GameStringer" 
+                  alt={BRAND_FULL} 
                   width={180}
                   height={180}
                   className="mx-auto w-[180px] h-[180px] rounded-3xl"
                   priority
                 />
               </motion.div>
-              <h1
-                className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent mt-4"
-                style={{
-                  backgroundImage: 'linear-gradient(90deg, #ff3b4a, #f2f2f2, #ff3b4a)',
-                  backgroundSize: '200% 100%',
-                  animation: 'gradientMove 4s linear infinite',
-                }}
-              >
-                GameStringer
+              <h1 className="text-3xl font-extrabold tracking-tight mt-4 text-foreground">
+                <span className="text-muted-foreground">{BRAND_PREFIX}</span>
+                <span className="text-primary">{BRAND_NAME}</span>
               </h1>
               <p className="text-xs text-noir-500 mt-3 font-mono">v{version}</p>
               <p className="text-sm text-noir-400/80 italic mt-1.5">&quot;{t('profile.loginTagline')}&quot;</p>
