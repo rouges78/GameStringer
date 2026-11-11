@@ -61,6 +61,8 @@ pub struct TranslationPlan {
     pub confidence: u8,
     /// Anti-cheat trovato nella cartella, se c'è.
     pub anti_cheat: Option<String>,
+    /// Tabelle di localizzazione trovate nei TextAsset (solo Unity).
+    pub unity_loc_tables: usize,
     /// Metodi nell'ordine in cui provarli.
     pub methods: Vec<PlannedMethod>,
 }
@@ -81,6 +83,8 @@ pub enum RpgMakerFlavor {
 pub struct Facts {
     pub anti_cheat: Option<String>,
     pub rpgmaker: Option<RpgMakerFlavor>,
+    /// TextAsset Unity riconosciuti come tabelle di localizzazione.
+    pub unity_loc_tables: usize,
 }
 
 fn method(id: &'static str, kind: MethodKind, automatic: bool) -> PlannedMethod {
@@ -115,7 +119,15 @@ fn native_methods(engine_lower: &str, facts: &Facts) -> Vec<PlannedMethod> {
     }
     if has("unity") {
         // XUnity inietta un loader nel gioco: è runtime, non statico.
-        return vec![method("unity-xunity", MethodKind::Runtime, true)];
+        let mut methods = vec![method("unity-xunity", MethodKind::Runtime, true)];
+        // Le tabelle di localizzazione si sanno LEGGERE ma non ancora
+        // riscrivere nel gioco: il metodo compare nel piano, dopo XUnity e non
+        // automatico. Quando la scrittura sarà validata su un gioco vero
+        // passerà in testa.
+        if facts.unity_loc_tables > 0 {
+            methods.push(method("unity-loc-tables", MethodKind::Static, false));
+        }
+        return methods;
     }
     if has("unreal") {
         return vec![method("unreal-locres", MethodKind::Static, true)];
@@ -174,7 +186,14 @@ pub fn build_plan(engine: &str, source: EngineSource, facts: &Facts) -> Translat
         }
     }
 
-    TranslationPlan { engine, engine_source: source, confidence, anti_cheat: facts.anti_cheat.clone(), methods }
+    TranslationPlan {
+        engine,
+        engine_source: source,
+        confidence,
+        anti_cheat: facts.anti_cheat.clone(),
+        unity_loc_tables: facts.unity_loc_tables,
+        methods,
+    }
 }
 
 fn rpgmaker_flavor(dir: &Path) -> Option<RpgMakerFlavor> {
@@ -192,10 +211,16 @@ fn rpgmaker_flavor(dir: &Path) -> Option<RpgMakerFlavor> {
     None
 }
 
-/// Legge dal disco i fatti che servono alla regola.
-fn probe(dir: &Path) -> Facts {
+/// Legge dal disco i fatti che servono alla regola. `engine` serve a non
+/// cercare tabelle Unity in un gioco che Unity non è.
+fn probe(dir: &Path, engine: &str) -> Facts {
     let (anti_cheat, _) = super::unity_patcher::detect_anti_cheat_files(&dir.to_string_lossy());
-    Facts { anti_cheat, rpgmaker: rpgmaker_flavor(dir) }
+    let unity_loc_tables = if engine.to_lowercase().contains("unity") {
+        super::unity_loc_tables::scan(dir).len()
+    } else {
+        0
+    };
+    Facts { anti_cheat, rpgmaker: rpgmaker_flavor(dir), unity_loc_tables }
 }
 
 /// Piano di traduzione per un gioco installato.
@@ -209,14 +234,14 @@ pub async fn plan_translation(game_path: String, engine_hint: Option<String>) ->
         if !dir.is_dir() {
             return Err("Cartella del gioco non trovata".to_string());
         }
-        let facts = probe(dir);
         let detected = detect_engine(dir);
-        let plan = if detected != GameEngine::Unknown {
-            build_plan(detected.as_str(), EngineSource::Files, &facts)
+        let (engine, source) = if detected != GameEngine::Unknown {
+            (detected.as_str().to_string(), EngineSource::Files)
         } else {
-            build_plan(engine_hint.as_deref().unwrap_or(""), EngineSource::Hint, &facts)
+            (engine_hint.unwrap_or_default(), EngineSource::Hint)
         };
-        Ok(plan)
+        let facts = probe(dir, &engine);
+        Ok(build_plan(&engine, source, &facts))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -278,6 +303,22 @@ mod tests {
 
         let unreal = build_plan("Unreal Engine", EngineSource::Files, &facts);
         assert!(unreal.methods[0].blocked_by.is_none(), "il pak statico non inietta nulla");
+    }
+
+    #[test]
+    fn unity_loc_tables_are_listed_after_xunity_and_not_automatic() {
+        let none = build_plan("Unity", EngineSource::Files, &Facts::default());
+        assert_eq!(ids(&none), ["unity-xunity", "runtime-hook", "ocr-overlay"]);
+
+        let facts = Facts { unity_loc_tables: 3, ..Facts::default() };
+        let plan = build_plan("Unity", EngineSource::Files, &facts);
+        assert_eq!(ids(&plan), ["unity-xunity", "unity-loc-tables", "runtime-hook", "ocr-overlay"]);
+        assert_eq!(plan.unity_loc_tables, 3);
+        assert!(!plan.methods[1].automatic);
+
+        // le tabelle sono un fatto Unity: su altri motori non creano metodi
+        let renpy = build_plan("Ren'Py", EngineSource::Files, &facts);
+        assert_eq!(ids(&renpy), ["renpy-tl", "runtime-hook", "ocr-overlay"]);
     }
 
     #[test]

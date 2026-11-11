@@ -429,6 +429,53 @@ piano di String it tiene XUnity come primo metodo per Unity.
 `GS_UNITY_DATA_DIRS`). Nessuna pagina chiama ancora `extract_unity_text_assets`
 / `rewrite_unity_text_assets`.
 
+### Riconoscere le tabelle di localizzazione fra i TextAsset (`unity_loc_tables.rs`)
+
+**Il fatto.** Dall'11/11/2026 un riconoscitore decide quali TextAsset sono
+tabelle di localizzazione. È conservativo: dice sì solo se il file dichiara da
+solo **almeno due lingue** — CSV/TSV con colonne-lingua nell'intestazione, JSON
+con chiavi-lingua al primo livello o nelle voci di un elenco. Nel dubbio dice
+no. Il numero di tabelle entra nel piano di String it (`unity_loc_tables`), che
+su Unity aggiunge il metodo `unity-loc-tables` **dopo** XUnity e non automatico:
+le tabelle si sanno leggere, non ancora riscrivere nel gioco.
+
+**Misura.** Sola lettura, 11/11/2026:
+
+```bash
+cd src-tauri && GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/artofrally;E:/SteamLibrary/steamapps/common/Lost Host Demo"   cargo test --bin gamestringer real_games_loc_tables -- --ignored --nocapture
+```
+
+| Gioco | File `.assets` | TextAsset | Prese per tabelle | Tempo |
+|---|---|---|---|---|
+| art of rally | 63 | 23 | 0 (giusto: nessuno lo è) | 79 ms |
+| Lost Host Demo | 0 (tutto in `data.unity3d`) | — | 0 | 1 ms |
+
+I 79 ms valgono perché `extract_text_assets_from_path` legge dal disco solo la
+tabella degli oggetti e i singoli TextAsset, non i file interi (il solo
+`resources.assets` è 235 MB).
+
+**Cosa NON è misurato.** Il caso positivo su un gioco vero: nessun gioco
+installato qui ha una tabella multilingua in un TextAsset. Il sì è coperto solo
+da test con dati scritti a mano.
+
+**Trappole.**
+
+1. **`id` e `no` sono codici ISO** (indonesiano, norvegese): l'intestazione
+   `name,id,no` sembrerebbe una tabella a due lingue. Sono esclusi, insieme a
+   `is` e `to`.
+2. **Un file che comincia con `[` o `{` si giudica solo come JSON.** `[body]
+   weight=900` è l'assetto di un'auto: letto come CSV non avrebbe lingue, ma è
+   meglio non provarci nemmeno.
+3. **`serde_json` ordina le chiavi.** Le lingue di un JSON escono in ordine
+   alfabetico, non di comparsa: non usarne l'ordine per decidere la lingua
+   sorgente.
+4. **Testo in una lingua sola non è una tabella.** `achievements` di art of
+   rally è l'unico TextAsset con testo per il giocatore, ed è rifiutato di
+   proposito: senza conoscere il gioco non si sa quali campi tradurre.
+
+**Nel codice.** `src-tauri/src/commands/unity_loc_tables.rs` — `recognize`,
+`scan`, comando `scan_unity_loc_tables`; `translation_plan.rs` — `probe`.
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026

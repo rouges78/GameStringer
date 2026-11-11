@@ -15,7 +15,7 @@ function m(id: PlannedMethod['id'], kind: PlannedMethod['kind'], blocked: string
 }
 
 function plan(methods: PlannedMethod[], over: Partial<TranslationPlan> = {}): TranslationPlan {
-  return { engine: 'Unity', engine_source: 'files', confidence: 90, anti_cheat: null, methods, ...over };
+  return { engine: 'Unity', engine_source: 'files', confidence: 90, anti_cheat: null, unity_loc_tables: 0, methods, ...over };
 }
 
 describe('string-it plan', () => {

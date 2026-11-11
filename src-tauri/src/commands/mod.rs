@@ -137,6 +137,8 @@ pub mod retoc_wrapper;
 pub mod rss_proxy;
 // Pianificatore di String it: ordina i metodi di traduzione per un gioco
 pub mod translation_plan;
+// Riconoscitore delle tabelle di localizzazione nei TextAsset Unity
+pub mod unity_loc_tables;
 // Rilevamento lingue gioco da file di localizzazione
 pub mod game_lang_scan;
 // Godot Engine PCK patcher

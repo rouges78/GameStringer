@@ -7294,6 +7294,7 @@
       "renpy-tl": "Ren'Py tl folder",
       "visionaire-vis": ".vis file",
       "tyrano-asar": "Scripts in app.asar",
+      "unity-loc-tables": "Localization tables ({count})",
       "unity-xunity": "XUnity (while playing)",
       "unreal-locres": "Localization pak",
       "rpgmaker-json": "JSON data",

@@ -277,6 +277,51 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
     Ok(out)
 }
 
+/// Come `extract_text_assets`, ma legge dal disco SOLO l'intestazione con la
+/// tabella degli oggetti e poi i singoli TextAsset: un `resources.assets` da
+/// centinaia di MB non viene caricato in memoria per trovarci 20 file di testo.
+pub fn extract_text_assets_from_path(path: &std::path::Path) -> Result<Vec<SerializedTextAsset>, String> {
+    use std::io::{Read, Seek, SeekFrom};
+
+    // Un TextAsset più grande di così non è una tabella di testi.
+    const MAX_TEXT_ASSET: u64 = 64 * 1024 * 1024;
+    // La tabella oggetti di un file reale sta in pochi MB; oltre è un file rotto.
+    const MAX_METADATA: u64 = 256 * 1024 * 1024;
+
+    let mut file = std::fs::File::open(path).map_err(|e| format!("Errore lettura: {}", e))?;
+    let mut head = vec![0u8; 48];
+    let got = file.read(&mut head).map_err(|e| format!("Errore lettura: {}", e))?;
+    head.truncate(got);
+    if !is_serialized_file(&head) {
+        return Err("Non è un SerializedFile della fascia supportata (v16-22, type-tree disabilitato)".to_string());
+    }
+    let data_offset = parse_header(&head)?.data_offset;
+    if data_offset > MAX_METADATA {
+        return Err(format!("data_offset implausibile: {}", data_offset));
+    }
+
+    let mut metadata = vec![0u8; data_offset as usize];
+    file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+    file.read_exact(&mut metadata).map_err(|e| format!("Errore lettura metadati: {}", e))?;
+    let (header, objects) = parse(&metadata)?;
+
+    let mut out = Vec::new();
+    for obj in objects.iter().filter(|o| o.class_id == CLASS_ID_TEXT_ASSET) {
+        if obj.byte_size as u64 > MAX_TEXT_ASSET {
+            continue;
+        }
+        let mut body = vec![0u8; obj.byte_size as usize];
+        if file.seek(SeekFrom::Start(header.data_offset + obj.byte_start)).is_err() || file.read_exact(&mut body).is_err() {
+            // Oggetto che punta fuori dal file: salta, non abortire tutto.
+            continue;
+        }
+        if let Some((name, content)) = read_text_asset(&body) {
+            out.push(SerializedTextAsset { name, content, path_id: obj.path_id });
+        }
+    }
+    Ok(out)
+}
+
 /// Riscrive il contenuto (m_Script) dei TextAsset indicati, restituendo un nuovo
 /// SerializedFile. `replacements` mappa path_id → nuovo contenuto. Gli oggetti
 /// non citati — TextAsset o no — restano identici byte a byte.
@@ -816,6 +861,22 @@ mod tests {
         let d = extracted(&out);
         assert_eq!(d["grow"], "adesso molto più lungo di prima davvero");
         assert_eq!(d["shrink"], "corto");
+    }
+
+    #[test]
+    fn reading_from_disk_matches_reading_from_memory() {
+        let buf = build_serialized(
+            21,
+            "2019.4.38f1",
+            &[(28, vec![7; 40]), (49, text_asset_body("a", "uno")), (49, text_asset_body("b", "due àè"))],
+        );
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("resources.assets");
+        std::fs::write(&path, &buf).unwrap();
+        assert_eq!(extract_text_assets_from_path(&path).unwrap(), extract_text_assets(&buf).unwrap());
+
+        std::fs::write(&path, b"non un asset").unwrap();
+        assert!(extract_text_assets_from_path(&path).is_err());
     }
 
     #[test]

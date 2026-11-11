@@ -626,6 +626,7 @@ fn main() {
             commands::rss_proxy::http_post_json,
             commands::game_lang_scan::detect_languages_from_files,
             commands::translation_plan::plan_translation,
+            commands::unity_loc_tables::scan_unity_loc_tables,
 
             // Godot Engine PCK patcher
             commands::godot_patcher::detect_godot_engine,

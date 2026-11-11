@@ -7294,6 +7294,7 @@
       "renpy-tl": "Ren'Py tl 폴더",
       "visionaire-vis": ".vis 파일",
       "tyrano-asar": "app.asar 스크립트",
+      "unity-loc-tables": "현지화 테이블({count})",
       "unity-xunity": "XUnity(플레이 중)",
       "unreal-locres": "현지화 pak",
       "rpgmaker-json": "JSON 데이터",

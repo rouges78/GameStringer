@@ -16,6 +16,7 @@ export type MethodId =
   | 'visionaire-vis'
   | 'tyrano-asar'
   | 'unity-xunity'
+  | 'unity-loc-tables'
   | 'unreal-locres'
   | 'rpgmaker-json'
   | 'generic-workflow'
@@ -44,6 +45,8 @@ export interface TranslationPlan {
   /** 0-100. */
   confidence: number;
   anti_cheat: string | null;
+  /** Tabelle di localizzazione trovate nei TextAsset (solo Unity). */
+  unity_loc_tables: number;
   methods: PlannedMethod[];
 }
 

@@ -32,7 +32,7 @@ export function StringItPlan({ plan }: { plan: TranslationPlan }) {
               title={blocked ?? undefined}
               className={`px-1.5 py-0.5 border ${blocked ? 'border-noir-800 text-noir-600 line-through' : index === 0 ? 'border-rouge-500/50 text-noir-100' : 'border-noir-700 text-noir-300'}`}
             >
-              <span className="font-mono text-noir-500">{index + 1}</span> {t(`stringItPlan.methods.${method.id}`)}
+              <span className="font-mono text-noir-500">{index + 1}</span> {t(`stringItPlan.methods.${method.id}`).replace('{count}', String(plan.unity_loc_tables))}
               {blocked && <span className="sr-only"> ({blocked})</span>}
             </li>
           );
