@@ -542,6 +542,57 @@ scelta da prendere quando si scriverà la scrittura, non prima.
 `text_assets`, `recognize_families`, `name_language`. LZMA non è supportato
 (errore esplicito).
 
+### Scrivere dentro `data.unity3d`: `Bundle::rewrite_node`
+
+**Il fatto.** Dall'11/11/2026 `unity_fs.rs` sa produrre un bundle nuovo in cui
+un file interno è sostituito. Ricomprime solo i blocchi che contengono byte di
+quel file (in blocchi LZ4 da 128 KB, la misura di Unity); tutti gli altri si
+copiano dall'originale compressi come sono. I file interni successivi slittano
+di un multiplo di 16 byte. L'originale non viene mai aperto in scrittura.
+
+**Misura.** Lost Host Demo, 11/11/2026. Si sostituisce il TextAsset
+`LOST_HOST - Italian` (una riga in più, con accentate) dentro
+`sharedassets0.assets` e si scrive il bundle in una cartella a parte:
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="sharedassets0.assets" GS_UNITY_ASSET="LOST_HOST - Italian" GS_UNITY_OUT="<cartella con 3 GB liberi>" \
+  cargo test --bin gamestringer real_bundle_rewrite -- --ignored --nocapture
+```
+
+| Cosa | Risultato |
+|---|---|
+| Tempo di scrittura | 8,5 s |
+| Blocchi ricompressi | 499 su 43.702 (quelli di `sharedassets0.assets`, 63 MB) |
+| Byte copiati senza decomprimere | 2.747.970.175 |
+| Byte ricompressi | 36.367.265 |
+| Dimensione | 2.778.817.629 → 2.784.531.472 (+5,7 MB) |
+| File interni identici all'originale | 93 su 94; l'unico diverso è quello sostituito |
+| TextAsset modificato, riletto dal bundle nuovo | testo nuovo presente, gli altri 14 invariati |
+| Tempo del confronto completo (5,4 GB decompressi due volte) | 120 s |
+
+**Cosa NON è provato.** Che il gioco **carichi** il bundle riscritto. Tutte le
+verifiche sono fatte rileggendo con il nostro lettore: dimostrano che il bundle
+è coerente e che nient'altro è cambiato, non che Unity lo accetti. Due punti
+sono ipotesi: che il runtime accetti blocchi LZ4 «veloce» al posto di LZ4HC
+(stesso formato di decompressione), e che accetti un ultimo blocco del tratto
+riscritto più corto di 128 KB in mezzo al flusso. Si chiude solo avviando il
+gioco con il bundle modificato, dopo un backup.
+
+**Trappole.**
+
+1. **Il bundle cresce** di 5,7 MB perché `lz4_flex` comprime meno di LZ4HC. È
+   innocuo, ma un confronto «stessa dimensione» fallirebbe sempre.
+2. **Il campo dimensione nell'intestazione è la lunghezza del file**: va
+   riscritto dopo aver finito, non prima.
+3. **`rmdir` su una cartella temporanea fuori dal progetto** è stato bloccato
+   dal controllo di sicurezza dell'ambiente. Il test cancella da sé il file che
+   crea; per le prove si usa una cartella che non richieda pulizie a mano.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `Bundle::rewrite_node`,
+`RewriteStats`, test `real_bundle_rewrite` (ignorato). Nessun comando Tauri lo
+espone ancora: non è raggiungibile dall'interfaccia.
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026

@@ -5,7 +5,12 @@
 //! `unity_localization.rs` carica il file intero e decomprime ogni blocco, cosa
 //! impraticabile a quelle dimensioni. Questo lettore tiene in memoria solo
 //! l'indice dei blocchi e decomprime, a richiesta, quelli che coprono i byte
-//! chiesti. Sola lettura.
+//! chiesti.
+//!
+//! Sa anche SCRIVERE: `rewrite_node` produce un bundle nuovo in cui un file
+//! interno è sostituito. Ricomprime solo i blocchi che toccano quel file; tutti
+//! gli altri si copiano dal bundle originale così come sono, senza
+//! decomprimerli. L'originale non viene mai modificato.
 //!
 //! Formato (campi big-endian):
 //! - firma `UnityFS\0`, versione u32, due stringhe di versione, dimensione i64,
@@ -21,7 +26,7 @@
 //! blocchi, LZMA è il formato dei bundle scaricati dal web.
 
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 const FLAG_COMPRESSION_MASK: u32 = 0x3F;
@@ -35,6 +40,8 @@ const COMPRESSION_LZMA: u32 = 1;
 /// Limiti di buon senso: oltre questi il file è rotto o non è un bundle.
 const MAX_INFO_SIZE: u32 = 256 * 1024 * 1024;
 const MAX_BLOCK_SIZE: u32 = 256 * 1024 * 1024;
+/// Dimensione dei blocchi che scriviamo: la stessa che usa Unity (128 KB).
+const WRITE_BLOCK_SIZE: usize = 0x20000;
 
 /// Qualunque cosa da cui si possano leggere byte a un offset: un file su disco
 /// o un file interno a un bundle.
@@ -65,6 +72,8 @@ struct Block {
     stream_offset: u64,
     uncompressed_size: u32,
     compression: u32,
+    /// Flag del blocco come scritti nel bundle (compressione + altri bit).
+    flags: u16,
 }
 
 /// Un file interno al bundle (es. `resources.assets`, `level0`).
@@ -74,6 +83,8 @@ pub struct Node {
     /// Posizione nel flusso decompresso.
     pub offset: u64,
     pub size: u64,
+    /// Flag del nodo come scritti nel bundle (es. 4 = file serializzato).
+    pub flags: u32,
 }
 
 pub struct Bundle {
@@ -81,6 +92,13 @@ pub struct Bundle {
     blocks: Vec<Block>,
     pub nodes: Vec<Node>,
     pub unity_revision: String,
+    version: u32,
+    player_version: String,
+    flags: u32,
+    /// I 16 byte di hash in testa all'indice: si ricopiano tali e quali.
+    info_hash: Vec<u8>,
+    /// Dove cominciano i blocchi dati nel file.
+    data_start: u64,
     /// Ultimo blocco decompresso: le letture vicine cadono quasi sempre lì.
     cache: Option<(usize, Vec<u8>)>,
 }
@@ -147,7 +165,7 @@ impl Bundle {
         }
         let mut c = Cursor { data: &head, pos: 8 };
         let version = c.u32()?;
-        let _player_version = c.cstring()?;
+        let player_version = c.cstring()?;
         let unity_revision = c.cstring()?;
         let _size = c.i64()?;
         let compressed_info = c.u32()?;
@@ -172,7 +190,8 @@ impl Bundle {
 
         let raw_info = file.read_at(info_offset, compressed_info as usize)?;
         let info = decompress(flags & FLAG_COMPRESSION_MASK, &raw_info, uncompressed_info as usize)?;
-        let mut c = Cursor { data: &info, pos: 16 }; // salta l'hash
+        let mut c = Cursor { data: &info, pos: 0 };
+        let info_hash = c.take(16)?.to_vec();
 
         let block_count = c.u32()?;
         if block_count as usize > info.len() / 10 {
@@ -193,6 +212,7 @@ impl Bundle {
                 stream_offset,
                 uncompressed_size,
                 compression: block_flags & FLAG_COMPRESSION_MASK,
+                flags: block_flags as u16,
             });
             file_offset += compressed_size as u64;
             stream_offset += uncompressed_size as u64;
@@ -206,12 +226,12 @@ impl Bundle {
         for _ in 0..node_count {
             let offset = c.i64()? as u64;
             let size = c.i64()? as u64;
-            let _flags = c.u32()?;
+            let node_flags = c.u32()?;
             let path = c.cstring()?;
-            nodes.push(Node { path, offset, size });
+            nodes.push(Node { path, offset, size, flags: node_flags });
         }
 
-        Ok(Bundle { file, blocks, nodes, unity_revision, cache: None })
+        Ok(Bundle { file, blocks, nodes, unity_revision, version, player_version, flags, info_hash, data_start, cache: None })
     }
 
     /// Dimensione del flusso decompresso.
@@ -254,11 +274,168 @@ impl Bundle {
         Ok(out)
     }
 
+    /// Scrive in `dst` un bundle uguale a questo, ma con il file interno
+    /// `node_index` sostituito da `new_content`. L'originale non si tocca.
+    ///
+    /// Si ricomprimono solo i blocchi che contengono byte di quel file; gli
+    /// altri si copiano compressi come sono. I file interni successivi slittano
+    /// di un multiplo di 16 byte, così conservano l'allineamento che avevano.
+    pub fn rewrite_node(&mut self, dst: &Path, node_index: usize, new_content: &[u8]) -> Result<RewriteStats, String> {
+        let node = self.nodes.get(node_index).cloned().ok_or("file interno inesistente")?;
+        if node.size == 0 {
+            return Err(format!("{} è vuoto: non si sa in quale blocco stia", node.path));
+        }
+        if self.blocks.iter().any(|b| b.compression == COMPRESSION_LZMA) {
+            return Err("bundle compresso con LZMA: non supportato".to_string());
+        }
+
+        // Blocchi che contengono il primo e l'ultimo byte del file interno.
+        let first = self.blocks.partition_point(|b| b.stream_offset + b.uncompressed_size as u64 <= node.offset);
+        let last = self.blocks.partition_point(|b| b.stream_offset + b.uncompressed_size as u64 <= node.offset + node.size - 1);
+        let span_start = self.blocks[first].stream_offset;
+        let span_end = self.blocks[last].stream_offset + self.blocks[last].uncompressed_size as u64;
+
+        // Nuovo contenuto del tratto: ciò che precede il file nel primo blocco,
+        // il file nuovo, il riempimento, ciò che lo segue nell'ultimo blocco.
+        let delta = new_content.len() as i64 - node.size as i64;
+        let pad = (16 - delta.rem_euclid(16)) % 16;
+        let shift = delta + pad;
+        let mut span = self.read_stream(span_start, (node.offset - span_start) as usize)?;
+        span.extend_from_slice(new_content);
+        span.extend(std::iter::repeat(0u8).take(pad as usize));
+        let node_end = node.offset + node.size;
+        span.extend(self.read_stream(node_end, (span_end - node_end) as usize)?);
+
+        // Ricompressione del tratto in blocchi da 128 KB. I bit non di
+        // compressione si ereditano dal primo blocco sostituito.
+        let other_bits = self.blocks[first].flags & !(FLAG_COMPRESSION_MASK as u16);
+        let mut new_blocks: Vec<(Vec<u8>, u32, u16)> = Vec::new();
+        for chunk in span.chunks(WRITE_BLOCK_SIZE) {
+            let packed = lz4_flex::compress(chunk);
+            if packed.len() < chunk.len() {
+                new_blocks.push((packed, chunk.len() as u32, other_bits | 2));
+            } else {
+                // incomprimibile: si salva com'è
+                new_blocks.push((chunk.to_vec(), chunk.len() as u32, other_bits));
+            }
+        }
+
+        // Indice nuovo.
+        let mut info = self.info_hash.clone();
+        let block_count = first + new_blocks.len() + (self.blocks.len() - last - 1);
+        info.extend((block_count as u32).to_be_bytes());
+        let entry = |info: &mut Vec<u8>, uncompressed: u32, compressed: u32, flags: u16| {
+            info.extend(uncompressed.to_be_bytes());
+            info.extend(compressed.to_be_bytes());
+            info.extend(flags.to_be_bytes());
+        };
+        for b in &self.blocks[..first] {
+            entry(&mut info, b.uncompressed_size, b.compressed_size, b.flags);
+        }
+        for (data, uncompressed, flags) in &new_blocks {
+            entry(&mut info, *uncompressed, data.len() as u32, *flags);
+        }
+        for b in &self.blocks[last + 1..] {
+            entry(&mut info, b.uncompressed_size, b.compressed_size, b.flags);
+        }
+        info.extend((self.nodes.len() as u32).to_be_bytes());
+        for (i, n) in self.nodes.iter().enumerate() {
+            let offset = if n.offset > node.offset { (n.offset as i64 + shift) as u64 } else { n.offset };
+            let size = if i == node_index { new_content.len() as u64 } else { n.size };
+            info.extend((offset as i64).to_be_bytes());
+            info.extend((size as i64).to_be_bytes());
+            info.extend(n.flags.to_be_bytes());
+            info.extend(n.path.as_bytes());
+            info.push(0);
+        }
+        let info_compression = self.flags & FLAG_COMPRESSION_MASK;
+        let info_packed = if info_compression == COMPRESSION_NONE { info.clone() } else { lz4_flex::compress(&info) };
+        // se l'indice originale era LZMA lo riscriviamo LZ4
+        let flags = if info_compression == COMPRESSION_LZMA { (self.flags & !FLAG_COMPRESSION_MASK) | 2 } else { self.flags };
+
+        // Intestazione. La dimensione totale si sa solo alla fine: si scrive
+        // un segnaposto e la si corregge dopo.
+        let mut header = b"UnityFS\0".to_vec();
+        header.extend(self.version.to_be_bytes());
+        header.extend(self.player_version.as_bytes());
+        header.push(0);
+        header.extend(self.unity_revision.as_bytes());
+        header.push(0);
+        let size_field = header.len();
+        header.extend(0i64.to_be_bytes());
+        header.extend((info_packed.len() as u32).to_be_bytes());
+        header.extend((info.len() as u32).to_be_bytes());
+        header.extend(flags.to_be_bytes());
+        if self.version >= 7 {
+            header.resize(align16(header.len() as u64) as usize, 0);
+        }
+        let info_at_end = flags & FLAG_INFO_AT_END != 0;
+
+        let mut out = std::io::BufWriter::new(File::create(dst).map_err(|e| format!("Errore scrittura: {e}"))?);
+        let io = |e: std::io::Error| format!("Errore scrittura: {e}");
+        out.write_all(&header).map_err(io)?;
+        let mut written = header.len() as u64;
+        if !info_at_end {
+            out.write_all(&info_packed).map_err(io)?;
+            written += info_packed.len() as u64;
+        }
+        if flags & FLAG_PADDING_AT_START != 0 {
+            let aligned = align16(written);
+            out.write_all(&vec![0u8; (aligned - written) as usize]).map_err(io)?;
+            written = aligned;
+        }
+
+        // Blocchi: quelli prima e dopo il tratto si copiano dal file originale.
+        let blocks_end = self.blocks.last().map(|b| b.file_offset + b.compressed_size as u64).unwrap_or(self.data_start);
+        let mut copy = |file: &mut File, from: u64, to: u64, out: &mut std::io::BufWriter<File>| -> Result<u64, String> {
+            file.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
+            std::io::copy(&mut file.take(to - from), out).map_err(io)
+        };
+        let copied_before = copy(&mut self.file, self.data_start, self.blocks[first].file_offset, &mut out)?;
+        let mut rewritten = 0u64;
+        for (data, _, _) in &new_blocks {
+            out.write_all(data).map_err(io)?;
+            rewritten += data.len() as u64;
+        }
+        let after_from = self.blocks[last].file_offset + self.blocks[last].compressed_size as u64;
+        let copied_after = copy(&mut self.file, after_from, blocks_end, &mut out)?;
+        written += copied_before + rewritten + copied_after;
+        if info_at_end {
+            out.write_all(&info_packed).map_err(io)?;
+            written += info_packed.len() as u64;
+        }
+
+        let mut file = out.into_inner().map_err(|e| format!("Errore scrittura: {e}"))?;
+        file.seek(SeekFrom::Start(size_field as u64)).map_err(|e| e.to_string())?;
+        file.write_all(&(written as i64).to_be_bytes()).map_err(io)?;
+        file.flush().map_err(io)?;
+
+        Ok(RewriteStats {
+            blocks_total: block_count,
+            blocks_recompressed: new_blocks.len(),
+            bytes_copied: copied_before + copied_after,
+            bytes_recompressed: rewritten,
+            file_size: written,
+        })
+    }
+
     /// Vista ad accesso casuale su un file interno.
     pub fn node(&mut self, index: usize) -> NodeReader<'_> {
         let node = self.nodes[index].clone();
         NodeReader { bundle: self, node }
     }
+}
+
+/// Cosa ha fatto `rewrite_node`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct RewriteStats {
+    pub blocks_total: usize,
+    /// Blocchi ricompressi: quelli che toccavano il file sostituito.
+    pub blocks_recompressed: usize,
+    /// Byte copiati dall'originale senza decomprimerli.
+    pub bytes_copied: u64,
+    pub bytes_recompressed: u64,
+    pub file_size: u64,
 }
 
 pub struct NodeReader<'a> {
@@ -383,6 +560,84 @@ pub(crate) mod tests {
         assert!(bundle.read_stream(total - 1, 2).is_err());
     }
 
+    /// Riscrive il file interno `index` e rilegge tutto dal bundle nuovo.
+    fn rewrite_and_reread(files: &[(&str, Vec<u8>)], block_size: usize, info_at_end: bool, padding: bool, index: usize, new_content: &[u8]) -> (RewriteStats, Vec<Vec<u8>>) {
+        let (dir, mut bundle) = open(&build_bundle(files, block_size, info_at_end, padding));
+        let dst = dir.path().join("out.unity3d");
+        let stats = bundle.rewrite_node(&dst, index, new_content).unwrap();
+        assert_eq!(stats.file_size, std::fs::metadata(&dst).unwrap().len());
+
+        let mut out = Bundle::open(&dst).unwrap();
+        assert_eq!(out.unity_revision, bundle.unity_revision);
+        let paths = |b: &Bundle| b.nodes.iter().map(|n| (n.path.clone(), n.flags)).collect::<Vec<_>>();
+        assert_eq!(paths(&out), paths(&bundle));
+        let contents = (0..out.nodes.len())
+            .map(|i| {
+                let size = out.nodes[i].size as usize;
+                out.node(i).read_at(0, size).unwrap()
+            })
+            .collect();
+        (stats, contents)
+    }
+
+    fn three_files() -> Vec<(&'static str, Vec<u8>)> {
+        vec![
+            ("globalgamemanagers", (0..5000u32).map(|i| (i % 251) as u8).collect()),
+            ("sharedassets0.assets", (0..9000u32).map(|i| (i % 13) as u8).collect()),
+            ("level0", (0..7000u32).map(|i| (i % 97) as u8).collect()),
+        ]
+    }
+
+    #[test]
+    fn rewriting_a_node_changes_only_that_node() {
+        let files = three_files();
+        let longer: Vec<u8> = (0..12345u32).map(|i| (i % 7) as u8).collect();
+        let shorter = vec![42u8; 100];
+        for (info_at_end, padding) in [(false, false), (false, true), (true, false), (true, true)] {
+            for new_content in [&longer, &shorter, &files[1].1] {
+                let (_, contents) = rewrite_and_reread(&files, 1024, info_at_end, padding, 1, new_content);
+                assert_eq!(contents[0], files[0].1, "il file prima non deve cambiare");
+                assert_eq!(&contents[1], new_content);
+                assert_eq!(contents[2], files[2].1, "il file dopo non deve cambiare");
+            }
+        }
+    }
+
+    #[test]
+    fn first_and_last_nodes_can_be_rewritten_too() {
+        let files = three_files();
+        let new_content = vec![9u8; 3333];
+        let (_, first) = rewrite_and_reread(&files, 700, false, true, 0, &new_content);
+        assert_eq!((&first[0], &first[1], &first[2]), (&new_content, &files[1].1, &files[2].1));
+        let (_, last) = rewrite_and_reread(&files, 700, true, false, 2, &new_content);
+        assert_eq!((&last[0], &last[1], &last[2]), (&files[0].1, &files[1].1, &new_content));
+    }
+
+    #[test]
+    fn only_the_blocks_touching_the_node_are_recompressed() {
+        let files = three_files(); // 21.000 byte in blocchi da 1.000
+        let (dir, mut bundle) = open(&build_bundle(&files, 1000, false, false));
+        let original_blocks = bundle.blocks.len();
+        // il secondo file occupa i byte 5.000..14.000: esattamente 9 blocchi
+        let stats = bundle.rewrite_node(&dir.path().join("out"), 1, &files[1].1).unwrap();
+        assert_eq!(original_blocks, 21);
+        assert!(stats.blocks_recompressed <= 9, "ricompressi {} blocchi", stats.blocks_recompressed);
+        assert!(stats.bytes_copied > 0);
+    }
+
+    #[test]
+    fn later_nodes_shift_by_a_multiple_of_16() {
+        let files = three_files();
+        let (dir, mut bundle) = open(&build_bundle(&files, 1024, false, false));
+        let before = bundle.nodes[2].offset;
+        let dst = dir.path().join("out");
+        bundle.rewrite_node(&dst, 1, &vec![1u8; 9001]).unwrap(); // un byte in più
+        let out = Bundle::open(&dst).unwrap();
+        assert_eq!(out.nodes[2].offset - before, 16);
+        assert_eq!(out.nodes[0].offset, 0);
+        assert_eq!(out.nodes[1].size, 9001);
+    }
+
     #[test]
     fn rejects_what_is_not_a_bundle_and_lzma() {
         let dir = tempfile::tempdir().unwrap();
@@ -432,7 +687,8 @@ mod real_bundles {
                         bundle.nodes.len(),
                         started.elapsed().as_millis()
                     );
-                    for i in 0..bundle.nodes.len() {
+                    // GS_UNITY_LIST=1: elenca i file interni.
+                    for i in (0..bundle.nodes.len()).filter(|_| std::env::var("GS_UNITY_LIST").is_ok()) {
                         let node = bundle.nodes[i].clone();
                         let head = bundle.node(i).read_at(0, node.size.min(20) as usize);
                         let version = head.as_ref().ok().filter(|h| h.len() >= 12).map(|h| u32::from_be_bytes([h[8], h[9], h[10], h[11]]));
@@ -441,5 +697,77 @@ mod real_bundles {
                 }
             }
         }
+    }
+}
+
+/// Riscrittura di un bundle VERO, scritta in una cartella a parte: il gioco non
+/// si tocca. Sostituisce un TextAsset dentro un file interno e poi confronta
+/// il bundle nuovo con l'originale, file interno per file interno.
+///
+/// ```bash
+/// cd src-tauri && GS_UNITY_BUNDLE="E:/…/LostHost_Data/data.unity3d" \
+///   GS_UNITY_NODE="sharedassets0.assets" GS_UNITY_ASSET="LOST_HOST - Italian" GS_UNITY_OUT="E:/tmp" \
+///   cargo test --bin gamestringer real_bundle_rewrite -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+mod real_bundle_rewrite {
+    use super::*;
+    use crate::commands::unity_serialized::{extract_text_assets, rewrite_text_assets};
+
+    /// Legge un file interno intero, a pezzi, e ne restituisce un'impronta.
+    fn fingerprint(bundle: &mut Bundle, index: usize) -> (u64, u64) {
+        use std::hash::Hasher;
+        let size = bundle.nodes[index].size;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        let mut node = bundle.node(index);
+        let mut pos = 0u64;
+        while pos < size {
+            let take = (size - pos).min(8 * 1024 * 1024) as usize;
+            hasher.write(&node.read_at(pos, take).unwrap());
+            pos += take as u64;
+        }
+        (size, hasher.finish())
+    }
+
+    #[test]
+    #[ignore]
+    fn real_bundle_rewrite() {
+        let var = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("{name} non impostata"));
+        let (src, node_path, asset_name, out_dir) = (var("GS_UNITY_BUNDLE"), var("GS_UNITY_NODE"), var("GS_UNITY_ASSET"), var("GS_UNITY_OUT"));
+        let dst = Path::new(&out_dir).join("gs-rewrite-test.unity3d");
+
+        let mut bundle = Bundle::open(Path::new(&src)).unwrap();
+        let index = bundle.nodes.iter().position(|n| n.path == node_path).expect("file interno non trovato");
+        let size = bundle.nodes[index].size as usize;
+        let original = bundle.node(index).read_at(0, size).unwrap();
+        let assets = extract_text_assets(&original).unwrap();
+        let target = assets.iter().find(|a| a.name == asset_name).expect("TextAsset non trovato");
+        let new_text = format!("{}\nGS-PROVA,àèìòù prova di scrittura\n", target.content);
+        let replaced = rewrite_text_assets(&original, &std::collections::HashMap::from([(target.path_id, new_text.clone())])).unwrap();
+
+        let started = std::time::Instant::now();
+        let stats = bundle.rewrite_node(&dst, index, &replaced).unwrap();
+        println!("scrittura | {} ms | {:?}", started.elapsed().as_millis(), stats);
+        println!("dimensione | originale {} | nuovo {}", std::fs::metadata(&src).unwrap().len(), stats.file_size);
+
+        let started = std::time::Instant::now();
+        let mut out = Bundle::open(&dst).unwrap();
+        assert_eq!(out.nodes.len(), bundle.nodes.len());
+        let (mut same, mut different) = (0, Vec::new());
+        for i in 0..bundle.nodes.len() {
+            if fingerprint(&mut bundle, i) == fingerprint(&mut out, i) { same += 1 } else { different.push(bundle.nodes[i].path.clone()) }
+        }
+        println!("confronto | {} ms | file interni identici {same} | diversi {:?}", started.elapsed().as_millis(), different);
+
+        let size = out.nodes[index].size as usize;
+        let after = extract_text_assets(&out.node(index).read_at(0, size).unwrap()).unwrap();
+        let changed_ok = after.iter().any(|a| a.path_id == target.path_id && a.content == new_text);
+        let others_ok = after.len() == assets.len() && after.iter().zip(&assets).all(|(a, b)| a.path_id == target.path_id || a == b);
+        println!("textasset | modificato riletto giusto: {changed_ok} | altri {} invariati: {others_ok}", assets.len() - 1);
+
+        drop(out);
+        std::fs::remove_file(&dst).unwrap();
+        assert_eq!(different, [node_path]);
+        assert!(changed_ok && others_ok);
     }
 }
