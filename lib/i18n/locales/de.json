@@ -7278,6 +7278,12 @@
     "back": "Zurück zum Dashboard"
   },
   "stringItPlan": {
+    "unityStaticStep": "In die Spielszenen eingebettete Texte",
+    "unityStaticTranslating": "Übersetze {done}/{total} Texte",
+    "unityStaticWriting": "Schreibe ins Spiel (das Original bleibt als Sicherung erhalten)",
+    "unityStaticDone": "Übersetzt. Wähle im Spiel die Sprache „{language}“: Ihr Name im Menü bleibt gleich.",
+    "unityStaticDetail": "{strings} Zeichenketten in {files} Dateien, {skipped} Einträge unverändert",
+    "unityStaticFallback": "Die Spieldateien lassen sich nicht direkt übersetzen ({reason}). Weiter mit XUnity.",
     "ocrOffer": "Nächste Methode: Bildschirm-OCR",
     "ocrOfferDesc": "Ins Spiel konnte nichts geschrieben werden. Die OCR liest den Bildschirm und funktioniert mit jeder Engine.",
     "openOcr": "OCR öffnen",

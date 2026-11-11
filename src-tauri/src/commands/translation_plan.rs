@@ -118,15 +118,17 @@ fn native_methods(engine_lower: &str, facts: &Facts) -> Vec<PlannedMethod> {
         return vec![method("tyrano-asar", MethodKind::Static, true)];
     }
     if has("unity") {
-        // XUnity inietta un loader nel gioco: è runtime, non statico.
-        let mut methods = vec![method("unity-xunity", MethodKind::Runtime, true)];
-        // Le tabelle di localizzazione si sanno LEGGERE ma non ancora
-        // riscrivere nel gioco: il metodo compare nel piano, dopo XUnity e non
-        // automatico. Quando la scrittura sarà validata su un gioco vero
-        // passerà in testa.
+        let mut methods = Vec::new();
+        // Se il gioco ha tabelle di localizzazione si prova prima a scrivere
+        // nei suoi file (unity_static.rs, provato in gioco su Lost Host Demo
+        // l'11/11/2026): non inietta nulla, quindi vale anche con un
+        // anti-cheat. Se il gioco non è fatto per quel metodo, il metodo lo
+        // dice e si passa a XUnity.
         if facts.unity_loc_tables > 0 {
-            methods.push(method("unity-loc-tables", MethodKind::Static, false));
+            methods.push(method("unity-loc-tables", MethodKind::Static, true));
         }
+        // XUnity inietta un loader nel gioco: è runtime, non statico.
+        methods.push(method("unity-xunity", MethodKind::Runtime, true));
         return methods;
     }
     if has("unreal") {
@@ -306,15 +308,22 @@ mod tests {
     }
 
     #[test]
-    fn unity_loc_tables_are_listed_after_xunity_and_not_automatic() {
+    fn unity_loc_tables_come_before_xunity_and_survive_an_anti_cheat() {
         let none = build_plan("Unity", EngineSource::Files, &Facts::default());
         assert_eq!(ids(&none), ["unity-xunity", "runtime-hook", "ocr-overlay"]);
 
         let facts = Facts { unity_loc_tables: 3, ..Facts::default() };
         let plan = build_plan("Unity", EngineSource::Files, &facts);
-        assert_eq!(ids(&plan), ["unity-xunity", "unity-loc-tables", "runtime-hook", "ocr-overlay"]);
+        assert_eq!(ids(&plan), ["unity-loc-tables", "unity-xunity", "runtime-hook", "ocr-overlay"]);
         assert_eq!(plan.unity_loc_tables, 3);
-        assert!(!plan.methods[1].automatic);
+        assert!(plan.methods[0].automatic);
+
+        // scrivere nei file non inietta nulla: con un anti-cheat resta l'unico
+        // metodo automatico
+        let guarded = Facts { unity_loc_tables: 3, anti_cheat: Some("BattlEye".into()), ..Facts::default() };
+        let plan = build_plan("Unity", EngineSource::Files, &guarded);
+        let runnable: Vec<_> = plan.methods.iter().filter(|m| m.blocked_by.is_none()).map(|m| m.id).collect();
+        assert_eq!(runnable, ["unity-loc-tables", "ocr-overlay"]);
 
         // le tabelle sono un fatto Unity: su altri motori non creano metodi
         let renpy = build_plan("Ren'Py", EngineSource::Files, &facts);

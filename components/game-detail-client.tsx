@@ -31,7 +31,8 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 // AudioPatcher import removed — not currently used
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
-import { translateWithFallback } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { runUnityStaticTranslation } from '@/lib/string-it/unity-static';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
@@ -2741,6 +2742,51 @@ export default function GameDetailPage() {
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
         setAutoTranslateActive(true);
+        // Primo metodo del piano, se il gioco ha tabelle di localizzazione:
+        // scrivere i testi nei file del gioco. Non inietta nulla, quindi si
+        // prova PRIMA del controllo anti-cheat. Se il gioco non è fatto per
+        // questo metodo si scende a XUnity, come dice il piano.
+        if (findMethod(translationPlan, 'unity-loc-tables')) {
+          const stepLabel = `📦 ${t('stringItPlan.unityStaticStep')}`;
+          const tgt = (targetLang || language || 'it').toLowerCase();
+          setAutoTranslateSteps([{ label: stepLabel, status: 'running' }]);
+          const outcome = await runUnityStaticTranslation({
+            gamePath: game.installPath,
+            targetLang: tgt,
+            translate: async (texts, source) => {
+              const res = await translateWithFallbackBatched(
+                { texts, targetLanguage: tgt, sourceLanguage: source, gameId: game.id || game.appid?.toString() || gameId },
+                20,
+                (done, total) => setAutoTranslateSteps([{
+                  label: stepLabel, status: 'running',
+                  detail: t('stringItPlan.unityStaticTranslating').replace('{done}', String(done)).replace('{total}', String(total)),
+                }]),
+              );
+              return res.success ? res.translations : texts.map(() => null);
+            },
+            onPhase: phase => {
+              if (phase === 'writing') {
+                setAutoTranslateSteps([{ label: stepLabel, status: 'running', detail: t('stringItPlan.unityStaticWriting') }]);
+              }
+            },
+          });
+          if (outcome.status === 'done') {
+            const done = t('stringItPlan.unityStaticDone').replace('{language}', outcome.report.select_language);
+            const detail = t('stringItPlan.unityStaticDetail')
+              .replace('{strings}', String(outcome.report.strings_replaced))
+              .replace('{files}', String(outcome.report.files_changed.length))
+              .replace('{skipped}', String(outcome.report.entries_skipped));
+            setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail: `${done} ${detail}` }]);
+            toast.success(done, { description: detail, duration: 20000 });
+            void activityHistory.trackPatch(game.name || game.title || '', game.appid?.toString(), `${done} ${detail}`);
+            setAutoTranslateBusy(false);
+            setAutoTranslateProgress('');
+            autoTranslateRunningRef.current = false;
+            return;
+          }
+          clientLogger.info(`[StringIt] metodo statico Unity ${outcome.status}: ${outcome.reason}`);
+          toast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
+        }
         // Anti-cheat: XUnity inietta un loader nel gioco, quindi non si installa.
         if (findMethod(translationPlan, 'unity-xunity')?.blocked_by) {
           const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlan?.anti_cheat ?? '');

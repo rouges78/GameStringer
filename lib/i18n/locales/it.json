@@ -7278,6 +7278,12 @@
     "back": "Torna alla Dashboard"
   },
   "stringItPlan": {
+    "unityStaticStep": "Testi incorporati nelle scene del gioco",
+    "unityStaticTranslating": "Traduco {done}/{total} testi",
+    "unityStaticWriting": "Scrivo nel gioco (l'originale resta come backup)",
+    "unityStaticDone": "Tradotto. In gioco scegli la lingua «{language}»: il suo nome nel menu resta quello.",
+    "unityStaticDetail": "{strings} stringhe in {files} file, {skipped} voci lasciate com'erano",
+    "unityStaticFallback": "I file del gioco non si possono tradurre direttamente ({reason}). Passo a XUnity.",
     "ocrOffer": "Metodo successivo: OCR a schermo",
     "ocrOfferDesc": "Nel gioco non è stato possibile scrivere nulla. L'OCR legge lo schermo e funziona con qualsiasi motore.",
     "openOcr": "Apri OCR",

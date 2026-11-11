@@ -7278,6 +7278,12 @@
     "back": "返回仪表板"
   },
   "stringItPlan": {
+    "unityStaticStep": "内置在游戏场景中的文本",
+    "unityStaticTranslating": "正在翻译 {done}/{total} 条文本",
+    "unityStaticWriting": "正在写入游戏(原文件保留为备份)",
+    "unityStaticDone": "已翻译。请在游戏中选择语言“{language}”:菜单里的名称不变。",
+    "unityStaticDetail": "{files} 个文件中的 {strings} 个字符串,{skipped} 条保持不变",
+    "unityStaticFallback": "无法直接翻译游戏文件({reason})。改用 XUnity。",
     "ocrOffer": "下一种方法:屏幕 OCR",
     "ocrOfferDesc": "无法向游戏写入任何内容。OCR 读取屏幕,适用于任何引擎。",
     "openOcr": "打开 OCR",

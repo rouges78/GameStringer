@@ -7278,6 +7278,12 @@
     "back": "Wróć do pulpitu"
   },
   "stringItPlan": {
+    "unityStaticStep": "Teksty wbudowane w sceny gry",
+    "unityStaticTranslating": "Tłumaczę {done}/{total} tekstów",
+    "unityStaticWriting": "Zapisuję w grze (oryginał zostaje jako kopia zapasowa)",
+    "unityStaticDone": "Przetłumaczono. W grze wybierz język „{language}”: jego nazwa w menu się nie zmienia.",
+    "unityStaticDetail": "{strings} ciągów w {files} plikach, {skipped} wpisów bez zmian",
+    "unityStaticFallback": "Plików gry nie da się przetłumaczyć bezpośrednio ({reason}). Przechodzę do XUnity.",
     "ocrOffer": "Następna metoda: OCR ekranu",
     "ocrOfferDesc": "Nie udało się niczego zapisać w grze. OCR czyta ekran i działa z każdym silnikiem.",
     "openOcr": "Otwórz OCR",

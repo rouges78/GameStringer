@@ -7278,6 +7278,12 @@
     "back": "ダッシュボードに戻る"
   },
   "stringItPlan": {
+    "unityStaticStep": "ゲームのシーンに埋め込まれたテキスト",
+    "unityStaticTranslating": "{done}/{total} 件を翻訳中",
+    "unityStaticWriting": "ゲームに書き込み中(元のファイルはバックアップとして残ります)",
+    "unityStaticDone": "翻訳しました。ゲーム内で言語「{language}」を選んでください。メニュー上の名前はそのままです。",
+    "unityStaticDetail": "{files} ファイルの {strings} 文字列、{skipped} 件は変更なし",
+    "unityStaticFallback": "ゲームのファイルは直接翻訳できません({reason})。XUnity に切り替えます。",
     "ocrOffer": "次の方法:画面OCR",
     "ocrOfferDesc": "ゲームには何も書き込めませんでした。OCRは画面を読み取るため、どのエンジンでも使えます。",
     "openOcr": "OCRを開く",

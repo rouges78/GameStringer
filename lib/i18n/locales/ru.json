@@ -7278,6 +7278,12 @@
     "back": "Вернуться на панель"
   },
   "stringItPlan": {
+    "unityStaticStep": "Тексты, встроенные в сцены игры",
+    "unityStaticTranslating": "Перевожу {done}/{total} текстов",
+    "unityStaticWriting": "Записываю в игру (оригинал сохраняется как резервная копия)",
+    "unityStaticDone": "Переведено. В игре выберите язык «{language}»: его название в меню останется прежним.",
+    "unityStaticDetail": "{strings} строк в {files} файлах, {skipped} записей без изменений",
+    "unityStaticFallback": "Файлы игры нельзя перевести напрямую ({reason}). Перехожу к XUnity.",
     "ocrOffer": "Следующий метод: экранный OCR",
     "ocrOfferDesc": "В игру ничего не удалось записать. OCR читает экран и работает с любым движком.",
     "openOcr": "Открыть OCR",

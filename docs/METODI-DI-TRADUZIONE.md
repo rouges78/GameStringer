@@ -596,13 +596,15 @@ cambiato quello che il gioco mostra. I 15 TextAsset `LOST_HOST - <Lingua>`
 esistono, ma il lituano è **anche incorporato nella scena `level0`**: è la
 lingua dello sviluppatore (GestLT) e fa da testo predefinito.
 
-> **Correzione del giorno stesso.** La prima stesura di questa voce diceva che
-> il gioco legge sempre la copia nella scena e che i CSV sono solo materiale di
-> partenza. La misura della voce successiva dice altro: nella scena c'è **solo
-> il lituano**. Che le altre 14 lingue vengano lette dai TextAsset è probabile
-> ma **non provato**: la prova in gioco è stata fatta sull'unica lingua che non
-> passa dai file. Il punto 1 di «Cosa ne segue» resta vero; la frase «è quella
-> la copia che il gioco usa» valeva solo per il lituano.
+> **Due correzioni del giorno stesso.** La prima stesura diceva che il gioco
+> legge sempre la copia nella scena e che i CSV sono solo materiale di partenza.
+> La seconda la ritrattava: «nella scena c'è solo il lituano, le altre lingue
+> passano dai TextAsset». Era sbagliata la seconda. La misura fatta con
+> `unity_static` (voce «Il metodo statico dentro String it») conta i testi di
+> ogni lingua negli script delle scene: **tutte e 14 le lingue sono
+> incorporate**, da 271 a 285 testi ciascuna. La prima stesura era giusta.
+> L'errore è nato dal guardare un solo oggetto (`path_id 3540`, la tabella
+> lituana) e generalizzare.
 
 **Prova nel gioco**, 11/11/2026, con il consenso del proprietario. Scritto nel
 bundle installato il testo italiano al posto di quello lituano
@@ -767,6 +769,85 @@ stringhe) e vista funzionare in gioco, su Unity 6000.3.
 `replace_strings`, `translation_map`, test `real_scene_strings` e
 `real_scene_translate` (ignorati, sola lettura); `unity_serialized.rs` —
 `list_objects`, `rewrite_objects`.
+
+### Il metodo statico dentro String it (`unity_static.rs`, `unity-loc-tables`)
+
+**Il fatto.** Dall'11/11/2026 String it, su un gioco Unity con tabelle di
+localizzazione, prova **prima** a scrivere i testi nei file del gioco e solo
+dopo XUnity. Il metodo:
+
+1. trova la famiglia di file lingua (`chiave,testo`, uno per lingua);
+2. conta, per ogni lingua, quanti suoi testi stanno negli script delle scene
+   (solo MonoBehaviour, solo testi che non sono anche chiavi);
+3. sceglie quale lingua **sostituire**: stesso alfabeto di quella voluta, mai
+   l'inglese, la meno diffusa per prima (l'utente può imporne un'altra);
+4. traduce i testi inglesi con la catena AI dell'app;
+5. li scrive nelle scene al posto di quelli della lingua scelta, in tutti i
+   file interni in una passata, con backup e ripristino.
+
+Se il gioco non è fatto così il metodo lo dice (`not-applicable`) e String it
+scende a XUnity. Non iniettando nulla, vale anche con un anti-cheat.
+
+**Misura.** Lost Host Demo, sola lettura, 11/11/2026:
+
+```bash
+cd src-tauri && GS_UNITY_TARGET="nl" GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/Lost Host Demo" \
+  cargo test --bin gamestringer -- commands::unity_static::real_static_probe::real_static_probe --ignored --nocapture --exact
+```
+
+| Lingua | Voci | Testi non-chiave | Ritrovati nelle scene |
+|---|---|---|---|
+| Coreano | 288 | 285 | 285 |
+| Turco | 292 | 289 | 278 |
+| Giapponese, francese, polacco | 289-292 | 284-288 | 277 |
+| Portoghese, spagnolo | 289-290 | 285-286 | 276 |
+| Russo | 293 | 288 | 275 |
+| Lituano, tedesco | 292-295 | 285-289 | 274 |
+| Arabo, italiano, cinese | 288-291 | 282-283 | 271 |
+| Inglese | 292 | 268 | 252 |
+
+Negli script delle scene ci sono 6.270 stringhe distinte.
+
+| Lingua voluta | Risposta della sonda |
+|---|---|
+| Olandese (`nl`) | sostituisce il lituano (274 testi), sorgente inglese, 292 voci |
+| Ucraino (`uk`) | sostituisce il russo (275 testi) |
+| Italiano (`it`) | rifiuta: il gioco ha già quella lingua |
+| Greco (`el`) | rifiuta: nessuna lingua del gioco ha quell'alfabeto |
+
+Tempo della sonda in build di debug: 6 s (legge e scandisce ~340 MB di file
+serializzati). In build di rilascio non è misurato.
+
+**Cosa NON è provato.**
+
+- Il percorso intero dal pulsante: sonda, traduzione AI, scrittura. I pezzi
+  sono provati separatamente (la scrittura in gioco con un dizionario già
+  pronto, l'orchestratore con dipendenze finte).
+- Che il gioco mostri bene una lingua nuova col font della lingua sostituita:
+  la regola dell'alfabeto è un'ipotesi ragionevole, non una misura.
+- Giochi con i file `.assets` sciolti: il metodo li rifiuta dicendolo.
+
+**Trappole.**
+
+1. **«Una lingua incorporata» era un'idea sbagliata, e il codice l'aveva già
+   presa per vera.** La prima versione cercava LA lingua incorporata e
+   pretendeva il doppio dei testi della seconda classificata: sul gioco vero
+   rispondeva «nessuna», perché le lingue sono tutte lì con numeri quasi
+   uguali. I test con dati finti passavano tutti. L'ha trovata solo la sonda
+   sul gioco reale, prima di collegare l'interfaccia.
+2. **L'inglese coincide con le chiavi.** Per questo si contano solo i testi
+   che non sono chiavi: altrimenti l'inglese risulterebbe sempre incorporato
+   al 100% solo perché le chiavi stanno nelle scene.
+3. **`replace_node_in_place` riparte dall'originale.** Per scrivere più file
+   interni serve `replace_nodes_in_place`: due chiamate separate si
+   annullerebbero.
+
+**Nel codice.** `src-tauri/src/commands/unity_static.rs` — `probe`, `apply`,
+`restore`, comandi `unity_static_probe/apply/restore`; `unity_fs.rs` —
+`rewrite_nodes`, `replace_nodes_in_place`; `lib/string-it/unity-static.ts` —
+`runUnityStaticTranslation`; ramo Unity di `startAutoTranslate` in
+`components/game-detail-client.tsx`; `translation_plan.rs` mette
+`unity-loc-tables` prima di `unity-xunity`.
 
 ## Traduzione in tempo reale (IPC)
 
@@ -2278,7 +2359,9 @@ Regole che il piano applica (coperte da test in fondo al file Rust):
 - RPG Maker dipende dalla variante letta dal disco: MV/MZ → `rpgmaker-json`,
   XP/VX/Ace → `generic-workflow`, 2000/2003 → nessun metodo statico;
 - Godot, Wolf RPG, Bethesda, CRI e Telltale sono metodi `page`: rinviano allo
-  strumento dedicato, non sono ancora automatici.
+  strumento dedicato, non sono ancora automatici;
+- Unity con tabelle di localizzazione: `unity-loc-tables` (statico, vedi la
+  voce «Il metodo statico dentro String it») viene prima di `unity-xunity`.
 
 Nel frontend (`lib/string-it/plan.ts`): `resolveEngine` è l'unico punto che
 decide il motore per tutti i rami; il ramo Unity e `tryRuntimeFallback` si

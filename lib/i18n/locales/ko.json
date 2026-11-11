@@ -7278,6 +7278,12 @@
     "back": "대시보드로 돌아가기"
   },
   "stringItPlan": {
+    "unityStaticStep": "게임 장면에 내장된 텍스트",
+    "unityStaticTranslating": "{done}/{total}개 번역 중",
+    "unityStaticWriting": "게임에 쓰는 중(원본은 백업으로 보관)",
+    "unityStaticDone": "번역했습니다. 게임에서 언어 “{language}”을(를) 선택하세요. 메뉴의 이름은 그대로입니다.",
+    "unityStaticDetail": "{files}개 파일의 문자열 {strings}개, {skipped}개 항목은 그대로",
+    "unityStaticFallback": "게임 파일을 직접 번역할 수 없습니다({reason}). XUnity로 넘어갑니다.",
     "ocrOffer": "다음 방법: 화면 OCR",
     "ocrOfferDesc": "게임에 아무것도 쓸 수 없었습니다. OCR은 화면을 읽으므로 어떤 엔진에서도 동작합니다.",
     "openOcr": "OCR 열기",

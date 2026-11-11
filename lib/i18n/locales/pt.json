@@ -7278,6 +7278,12 @@
     "back": "Voltar ao painel"
   },
   "stringItPlan": {
+    "unityStaticStep": "Textos incorporados nas cenas do jogo",
+    "unityStaticTranslating": "A traduzir {done}/{total} textos",
+    "unityStaticWriting": "A escrever no jogo (o original fica como cópia de segurança)",
+    "unityStaticDone": "Traduzido. No jogo escolhe o idioma «{language}»: o nome no menu mantém-se.",
+    "unityStaticDetail": "{strings} cadeias em {files} ficheiros, {skipped} entradas inalteradas",
+    "unityStaticFallback": "Os ficheiros do jogo não podem ser traduzidos diretamente ({reason}). A passar para o XUnity.",
     "ocrOffer": "Método seguinte: OCR no ecrã",
     "ocrOfferDesc": "Não foi possível escrever nada no jogo. O OCR lê o ecrã e funciona com qualquer motor.",
     "openOcr": "Abrir OCR",
