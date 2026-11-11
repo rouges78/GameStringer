@@ -7276,5 +7276,32 @@
     "title": "여기엔 아무것도 없습니다",
     "message": "이 페이지는 존재하지 않거나 이동되었습니다.",
     "back": "대시보드로 돌아가기"
+  },
+  "stringItPlan": {
+    "title": "계획",
+    "sourceFiles": "게임 파일에서 엔진 확인",
+    "sourceHint": "이름으로 엔진 추정",
+    "sourceNone": "엔진을 알 수 없음",
+    "antiCheat": "안티치트 {name} 감지: 게임에 아무것도 주입하지 않습니다",
+    "blocked": "건너뜀: 안티치트 {name}",
+    "injectionBlocked": "이 게임은 안티치트 {name}을(를) 사용하므로 GameStringer는 아무것도 주입하지 않습니다. 화면 OCR을 사용하세요.",
+    "methods": {
+      "danganronpa-wad": "WAD 아카이브",
+      "hendrix-csv": "Hendrix CSV",
+      "renpy-tl": "Ren'Py tl 폴더",
+      "visionaire-vis": ".vis 파일",
+      "tyrano-asar": "app.asar 스크립트",
+      "unity-xunity": "XUnity(플레이 중)",
+      "unreal-locres": "현지화 pak",
+      "rpgmaker-json": "JSON 데이터",
+      "generic-workflow": "게임 텍스트 파일",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "런타임 후크",
+      "ocr-overlay": "화면 OCR"
+    }
   }
 }

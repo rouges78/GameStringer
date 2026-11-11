@@ -1855,6 +1855,45 @@ del runtime async.
 
 ---
 
+## Scelta del metodo: il pianificatore di String it
+
+**Stato: primo passo fatto l'11/11/2026. Il piano ordina e blocca; l'esecuzione
+a cascata dei metodi NON è ancora fatta.**
+
+Prima la scelta era una catena di `if` sul nome del motore dentro
+`startAutoTranslate` (`components/game-detail-client.tsx`), con il motore
+ricalcolato 11 volte e l'anti-cheat mai controllato prima di installare
+BepInEx.
+
+Ora c'è un comando Rust, `plan_translation` (`src-tauri/src/commands/translation_plan.rs`),
+che per un gioco installato restituisce:
+
+- il motore e **da dove lo sappiamo**: `files` (marcatori nella cartella,
+  fiducia 90), `hint` (nome/PCGamingWiki, 50), `none` (0);
+- l'anti-cheat trovato nella cartella, se c'è;
+- i metodi **in ordine**: quello nativo del motore, poi `runtime-hook`, per
+  ultimo `ocr-overlay`, che c'è sempre.
+
+Regole che il piano applica (coperte da test in fondo al file Rust):
+
+- con un anti-cheat ogni metodo che inietta (`unity-xunity`, `runtime-hook`)
+  ha `blocked_by` e non va eseguito; i metodi statici e l'OCR restano;
+- RPG Maker dipende dalla variante letta dal disco: MV/MZ → `rpgmaker-json`,
+  XP/VX/Ace → `generic-workflow`, 2000/2003 → nessun metodo statico;
+- Godot, Wolf RPG, Bethesda, CRI e Telltale sono metodi `page`: rinviano allo
+  strumento dedicato, non sono ancora automatici.
+
+Nel frontend (`lib/string-it/plan.ts`): `resolveEngine` è l'unico punto che
+decide il motore per tutti i rami; il ramo Unity e `tryRuntimeFallback` si
+fermano se il piano blocca l'iniezione; sotto il pulsante compare il piano.
+
+**Cosa manca.** Quando un metodo non scrive nulla si passa ancora solo a
+`tryRuntimeFallback`, non al metodo successivo del piano (`nextMethod` esiste
+ed è testata, ma nessuno la chiama ancora). I rami RPG Maker MV/MZ e Unity non
+chiamano nemmeno il fallback. Il piano non sonda ancora quante stringhe
+troverebbe ogni metodo, quindi su Unity non sa preferire le tabelle di
+localizzazione a XUnity.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un

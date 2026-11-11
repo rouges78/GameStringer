@@ -7276,5 +7276,32 @@
     "title": "Здесь ничего нет",
     "message": "Эта страница не существует или была перемещена.",
     "back": "Вернуться на панель"
+  },
+  "stringItPlan": {
+    "title": "План",
+    "sourceFiles": "движок определён по файлам игры",
+    "sourceHint": "движок угадан по названию",
+    "sourceNone": "движок не распознан",
+    "antiCheat": "Найден античит {name}: в игру ничего не внедряется",
+    "blocked": "Пропущено: античит {name}",
+    "injectionBlocked": "В этой игре используется античит {name}, поэтому GameStringer ничего не внедряет. Используйте экранный OCR.",
+    "methods": {
+      "danganronpa-wad": "Архивы WAD",
+      "hendrix-csv": "CSV Hendrix",
+      "renpy-tl": "Папка tl Ren'Py",
+      "visionaire-vis": "Файл .vis",
+      "tyrano-asar": "Скрипты в app.asar",
+      "unity-xunity": "XUnity (во время игры)",
+      "unreal-locres": "Pak локализации",
+      "rpgmaker-json": "Данные JSON",
+      "generic-workflow": "Текстовые файлы игры",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "Перехват во время работы",
+      "ocr-overlay": "Экранный OCR"
+    }
   }
 }

@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
+import { fetchTranslationPlan, findMethod, resolveEngine, type TranslationPlan } from '@/lib/string-it/plan';
+import { StringItPlan } from '@/components/game-detail/string-it-plan';
 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -241,6 +243,8 @@ export default function GameDetailPage() {
 
   const [isInstallingPatch, setIsInstallingPatch] = useState(false);
   const [patchStatus, setPatchStatus] = useState<{success: boolean, message: string} | null>(null);
+  // Piano di String it: metodi ordinati + anti-cheat, calcolato da Rust.
+  const [translationPlan, setTranslationPlan] = useState<TranslationPlan | null>(null);
   const [engineInfo, setEngineInfo] = useState<{
     engine: string;
     can_patch: boolean;
@@ -643,6 +647,29 @@ export default function GameDetailPage() {
   const isDanganronpa = /spike|danganronpa/.test(
     (game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '').toLowerCase()
   );
+
+  // Il motore su cui decidono TUTTI i rami di String it: quello letto dai file
+  // del gioco (piano) batte quello dedotto dal nome. Un solo punto, invece di
+  // ricalcolarlo in ogni ramo.
+  const currentEngine = (): string => resolveEngine(
+    translationPlan,
+    game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '',
+  );
+
+  // Piano di traduzione: si ricalcola quando cambia la cartella o il motore noto.
+  const planPath = game?.installPath;
+  const planHint = game?.engine || engineInfo?.engine || '';
+  useEffect(() => {
+    if (!planPath) { setTranslationPlan(null); return; }
+    let cancelled = false;
+    fetchTranslationPlan(planPath, planHint)
+      .then(plan => { if (!cancelled) setTranslationPlan(plan); })
+      .catch((e: unknown) => {
+        clientLogger.warn('[StringIt] piano non disponibile:', String(e));
+        if (!cancelled) setTranslationPlan(null);
+      });
+    return () => { cancelled = true; };
+  }, [planPath, planHint]);
 
   // Rileva motore quando il gioco è caricato
   const detectEngine = async () => {
@@ -2043,7 +2070,7 @@ export default function GameDetailPage() {
     // file-based o instradamento esplicito). Il gate P.T. serve solo al workflow
     // generico (execute_complete_workflow) → per questi niente dialog, si parte.
     {
-      const engDirect = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engDirect = currentEngine().toLowerCase();
       const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot', 'spike', 'danganronpa'];
       if (DIRECT_ENGINES.some(k => engDirect.includes(k)) || ENGINE_PAGE_ROUTES.some(r => r.match(engDirect))) {
         startAutoTranslate();
@@ -2089,6 +2116,12 @@ export default function GameDetailPage() {
     cause: FallbackCause = 'engine-unsupported',
   ): Promise<RunReport | null> => {
     if (!game?.installPath) return null;
+
+    // Anti-cheat: il piano vieta ogni iniezione nel processo del gioco.
+    if (findMethod(translationPlan, 'runtime-hook')?.blocked_by) {
+      toast.info(t('stringItPlan.injectionBlocked').replace('{name}', translationPlan?.anti_cheat ?? ''));
+      return null;
+    }
 
     // Nome dell'eseguibile: stessa scala di ripieghi del percorso di patch.
     let exeName: string | undefined = game.detectedFiles?.find((f: string) => f.endsWith('.exe'));
@@ -2196,7 +2229,7 @@ export default function GameDetailPage() {
     // Regola: UN pulsante. estrai (contratto rebuild) → traduci offline con
     // checkpoint → rebuild WAD in Rust con verifica interna. Stop dal widget.
     {
-      const engD = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engD = currentEngine().toLowerCase();
       if (engD.includes('spike') || engD.includes('danganronpa')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         // catturata come const: il narrowing del guard non entra nelle closure
@@ -2263,7 +2296,7 @@ export default function GameDetailPage() {
     // Via CSV nativa del gioco: riempiamo la colonna lingua, abilitiamo il plugin
     // e registriamo la lingua. Non invasivo (nessun .json toccato).
     {
-      const engH = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engH = currentEngine().toLowerCase();
       if (engH.includes('hendrix')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const tgtName: Record<string, string> = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español', sp: 'Español', de: 'Deutsch', pt: 'Português', ja: '日本語', cn: '中文', zh: '中文', ru: 'Русский' };
@@ -2315,7 +2348,7 @@ export default function GameDetailPage() {
     // dialoghi (vedi generate_renpy_translation). Non invasivo: Ren'Py carica la
     // traduzione nativamente quando il giocatore seleziona la lingua.
     {
-      const engR = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engR = currentEngine().toLowerCase();
       if (engR.includes("ren'py") || engR.includes('renpy')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2446,7 +2479,7 @@ export default function GameDetailPage() {
     // Estrae le stringhe dal binario, traduce via Ollama e applica con
     // patch_vis_strings (backup .gs_bak automatico). Checkpoint/resume su idb.
     {
-      const engV = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engV = currentEngine().toLowerCase();
       if (engV.includes('visionaire')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2577,7 +2610,7 @@ export default function GameDetailPage() {
     // cloud/Ollama e applica con apply_tyrano_patch (backup app.asar.bak
     // automatico). Stesso trigger della strategia (riga detection): tyrano/nw.js/electron.
     {
-      const engT = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engT = currentEngine().toLowerCase();
       if (engT.includes('tyrano') || engT.includes('nw.js') || engT.includes('electron')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2678,11 +2711,21 @@ export default function GameDetailPage() {
     // del bottone patch), con messaggio onesto: "100% installato" ≠ tradotto,
     // serve avviare il gioco per catturare e tradurre le stringhe.
     {
-      const engUn = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engUn = currentEngine().toLowerCase();
       if (engUn.includes('unity')) {
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
         setAutoTranslateActive(true);
+        // Anti-cheat: XUnity inietta un loader nel gioco, quindi non si installa.
+        if (findMethod(translationPlan, 'unity-xunity')?.blocked_by) {
+          const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlan?.anti_cheat ?? '');
+          setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: blockedMsg }]);
+          setAutoTranslateError(blockedMsg);
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+          return;
+        }
         setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'running' }]);
         try {
           const ok = await handleInstallUnityPatch();
@@ -2707,7 +2750,7 @@ export default function GameDetailPage() {
     // "Migliora con AI" del pannello Unreal (upgradeUEWithAI, con toast e
     // progress propri). Senza .locres: messaggio onesto, niente workflow generico.
     {
-      const engUe = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engUe = currentEngine().toLowerCase();
       if (engUe.includes('unreal')) {
         const t0 = Date.now();
         setAutoTranslateError(null);
@@ -2839,7 +2882,7 @@ export default function GameDetailPage() {
     // Come per RPG Maker classico: messaggio onesto + azione esplicita verso
     // il Godot Translator (che ora si precompila via ?gamePath=).
     {
-      const engG = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engG = currentEngine().toLowerCase();
       if (engG.includes('godot')) {
         const godotUrl = `/godot-translator?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
         setAutoTranslateActive(true);
@@ -2861,7 +2904,7 @@ export default function GameDetailPage() {
     // mostrava passi finti e poi «nessuna stringa è entrata nel gioco».
     // Messaggio onesto + azione esplicita verso lo strumento che li tratta.
     {
-      const engP = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engP = currentEngine().toLowerCase();
       const route = ENGINE_PAGE_ROUTES.find(r => r.match(engP));
       if (route) {
         const routeUrl = `${route.href}?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
@@ -2886,7 +2929,7 @@ export default function GameDetailPage() {
     // NON è patchabile sui file e la cattura GDI è inaffidabile per la cache glifi
     // del font. Per questi instradiamo alla traduzione live OCR (immune alla cache
     // glifi), pre-targettando la finestra del gioco.
-    const engLc = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+    const engLc = currentEngine().toLowerCase();
     if (engLc.includes('rpg maker') || engLc.includes('rpgmaker')) {
       try {
         const rpgInfo = await invoke<{ version?: string }>('detect_rpgmaker_game', { gamePath: game.installPath });
@@ -3872,6 +3915,7 @@ export default function GameDetailPage() {
                   {translationStrategy.engine} · {translationStrategy.detail}
                 </div>
               )}
+              {translationPlan && <StringItPlan plan={translationPlan} />}
               {/* ── Motore AI: LOCALE o ONLINE, sceglie l'utente ─────────────
                   Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
                   pilotabile SOLO da localStorage: nessun pulsante, quindi per

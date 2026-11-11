@@ -135,6 +135,8 @@ pub mod repak_wrapper;
 pub mod retoc_wrapper;
 // RSS proxy (bypass CORS per feed news)
 pub mod rss_proxy;
+// Pianificatore di String it: ordina i metodi di traduzione per un gioco
+pub mod translation_plan;
 // Rilevamento lingue gioco da file di localizzazione
 pub mod game_lang_scan;
 // Godot Engine PCK patcher

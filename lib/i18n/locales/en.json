@@ -7276,5 +7276,32 @@
     "title": "Nothing here",
     "message": "This page doesn't exist or has been moved.",
     "back": "Back to Dashboard"
+  },
+  "stringItPlan": {
+    "title": "Plan",
+    "sourceFiles": "engine read from the game files",
+    "sourceHint": "engine guessed from the name",
+    "sourceNone": "engine not recognised",
+    "antiCheat": "{name} anti-cheat found: nothing will be injected into the game",
+    "blocked": "Skipped: {name} anti-cheat",
+    "injectionBlocked": "This game uses {name} anti-cheat, so GameStringer will not inject anything into it. Use the on-screen OCR instead.",
+    "methods": {
+      "danganronpa-wad": "WAD archives",
+      "hendrix-csv": "Hendrix CSV",
+      "renpy-tl": "Ren'Py tl folder",
+      "visionaire-vis": ".vis file",
+      "tyrano-asar": "Scripts in app.asar",
+      "unity-xunity": "XUnity (while playing)",
+      "unreal-locres": "Localization pak",
+      "rpgmaker-json": "JSON data",
+      "generic-workflow": "Game text files",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "Runtime hook",
+      "ocr-overlay": "On-screen OCR"
+    }
   }
 }

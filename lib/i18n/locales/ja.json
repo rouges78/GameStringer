@@ -7276,5 +7276,32 @@
     "title": "ここには何もありません",
     "message": "このページは存在しないか、移動されました。",
     "back": "ダッシュボードに戻る"
+  },
+  "stringItPlan": {
+    "title": "プラン",
+    "sourceFiles": "ゲームファイルからエンジンを判定",
+    "sourceHint": "名前からエンジンを推定",
+    "sourceNone": "エンジン不明",
+    "antiCheat": "アンチチート {name} を検出:ゲームには何も注入しません",
+    "blocked": "スキップ:アンチチート {name}",
+    "injectionBlocked": "このゲームはアンチチート {name} を使用しているため、GameStringer は何も注入しません。画面OCRを使ってください。",
+    "methods": {
+      "danganronpa-wad": "WAD アーカイブ",
+      "hendrix-csv": "Hendrix CSV",
+      "renpy-tl": "Ren'Py の tl フォルダー",
+      "visionaire-vis": ".vis ファイル",
+      "tyrano-asar": "app.asar 内のスクリプト",
+      "unity-xunity": "XUnity(プレイ中)",
+      "unreal-locres": "ローカライズ pak",
+      "rpgmaker-json": "JSON データ",
+      "generic-workflow": "ゲームのテキストファイル",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "ランタイムフック",
+      "ocr-overlay": "画面OCR"
+    }
   }
 }
