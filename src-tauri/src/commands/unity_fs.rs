@@ -438,6 +438,88 @@ pub struct RewriteStats {
     pub file_size: u64,
 }
 
+/// Dove sta il backup dell'originale: `data.unity3d.gs_backup`, accanto al bundle.
+pub fn backup_path(bundle: &Path) -> std::path::PathBuf {
+    let mut name = bundle.as_os_str().to_os_string();
+    name.push(".gs_backup");
+    std::path::PathBuf::from(name)
+}
+
+/// Sostituisce un file interno NEL GIOCO, tenendo l'originale come backup.
+///
+/// `transform` riceve il contenuto originale del file interno e restituisce
+/// quello nuovo. La sorgente è sempre il bundle ORIGINALE: se un backup esiste
+/// già si riparte da quello, così applicare due volte non accumula modifiche e
+/// il backup resta l'originale vero.
+///
+/// Ordine delle operazioni, pensato per non lasciare mai il gioco senza
+/// bundle: si scrive il nuovo in `<bundle>.gs_new`; solo se la scrittura è
+/// riuscita si mette da parte l'originale (per RINOMINA, senza copiare
+/// gigabyte) e si rinomina il nuovo al suo posto.
+pub fn replace_node_in_place(
+    bundle_path: &Path,
+    node_path: &str,
+    transform: impl FnOnce(&[u8]) -> Result<Vec<u8>, String>,
+) -> Result<RewriteStats, String> {
+    let backup = backup_path(bundle_path);
+    let source = if backup.exists() { backup.clone() } else { bundle_path.to_path_buf() };
+    let mut staged = bundle_path.as_os_str().to_os_string();
+    staged.push(".gs_new");
+    let staged = std::path::PathBuf::from(staged);
+
+    let stats = {
+        let mut bundle = Bundle::open(&source)?;
+        let index = bundle
+            .nodes
+            .iter()
+            .position(|n| n.path == node_path)
+            .ok_or_else(|| format!("{node_path} non è nel bundle"))?;
+        let size = bundle.nodes[index].size as usize;
+        let original = bundle.node(index).read_at(0, size)?;
+        let new_content = transform(&original)?;
+        let result = bundle.rewrite_node(&staged, index, &new_content);
+        if result.is_err() {
+            let _ = std::fs::remove_file(&staged);
+        }
+        result?
+        // qui `bundle` si chiude: su Windows un file aperto non si rinomina
+    };
+
+    // Il nuovo deve riaprirsi prima di sostituire qualunque cosa.
+    if let Err(e) = Bundle::open(&staged) {
+        let _ = std::fs::remove_file(&staged);
+        return Err(format!("il bundle riscritto non si riapre: {e}"));
+    }
+
+    let io = |what: &str, e: std::io::Error| format!("{what}: {e}");
+    if backup.exists() {
+        // l'originale è già al sicuro: il bundle attuale è una versione modificata
+        std::fs::remove_file(bundle_path).map_err(|e| io("rimozione del bundle modificato", e))?;
+    } else {
+        std::fs::rename(bundle_path, &backup).map_err(|e| io("backup dell'originale", e))?;
+    }
+    if let Err(e) = std::fs::rename(&staged, bundle_path) {
+        // rimetti l'originale al suo posto: meglio niente patch che niente gioco
+        let _ = std::fs::copy(&backup, bundle_path);
+        return Err(io("installazione del bundle nuovo", e));
+    }
+    Ok(stats)
+}
+
+/// Rimette l'originale al posto del bundle modificato. `false` se non c'è
+/// nessun backup da ripristinare.
+pub fn restore_original(bundle_path: &Path) -> Result<bool, String> {
+    let backup = backup_path(bundle_path);
+    if !backup.exists() {
+        return Ok(false);
+    }
+    if bundle_path.exists() {
+        std::fs::remove_file(bundle_path).map_err(|e| format!("rimozione del bundle modificato: {e}"))?;
+    }
+    std::fs::rename(&backup, bundle_path).map_err(|e| format!("ripristino dell'originale: {e}"))?;
+    Ok(true)
+}
+
 pub struct NodeReader<'a> {
     bundle: &'a mut Bundle,
     node: Node,
@@ -639,6 +721,60 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn replacing_in_place_keeps_the_original_as_backup_and_restores_it() {
+        let files = three_files();
+        let original = build_bundle(&files, 1024, false, true);
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("data.unity3d");
+        std::fs::write(&path, &original).unwrap();
+        let read_node = |index: usize| {
+            let mut b = Bundle::open(&path).unwrap();
+            let size = b.nodes[index].size as usize;
+            b.node(index).read_at(0, size).unwrap()
+        };
+
+        // prima applicazione: il contenuto diventa "uno"
+        replace_node_in_place(&path, "sharedassets0.assets", |old| {
+            assert_eq!(old, files[1].1.as_slice());
+            Ok(b"uno".to_vec())
+        })
+        .unwrap();
+        assert_eq!(read_node(1), b"uno");
+        assert_eq!(std::fs::read(backup_path(&path)).unwrap(), original, "il backup è l'originale");
+        assert!(!dir.path().join("data.unity3d.gs_new").exists());
+
+        // seconda applicazione: riparte dall'ORIGINALE, non da "uno"
+        replace_node_in_place(&path, "sharedassets0.assets", |old| {
+            assert_eq!(old, files[1].1.as_slice());
+            Ok(b"due".to_vec())
+        })
+        .unwrap();
+        assert_eq!(read_node(1), b"due");
+        assert_eq!(read_node(2), files[2].1);
+        assert_eq!(std::fs::read(backup_path(&path)).unwrap(), original);
+
+        // ripristino: torna identico byte per byte, e il backup sparisce
+        assert!(restore_original(&path).unwrap());
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+        assert!(!backup_path(&path).exists());
+        assert!(!restore_original(&path).unwrap(), "niente da ripristinare la seconda volta");
+    }
+
+    #[test]
+    fn a_failed_replacement_leaves_the_game_untouched() {
+        let original = build_bundle(&three_files(), 1024, false, false);
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("data.unity3d");
+        std::fs::write(&path, &original).unwrap();
+
+        assert!(replace_node_in_place(&path, "non-esiste", |_| Ok(vec![1])).is_err());
+        assert!(replace_node_in_place(&path, "level0", |_| Err("traduzione fallita".to_string())).is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+        assert!(!backup_path(&path).exists());
+        assert!(!dir.path().join("data.unity3d.gs_new").exists());
+    }
+
+    #[test]
     fn rejects_what_is_not_a_bundle_and_lzma() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("x");
@@ -769,5 +905,63 @@ mod real_bundle_rewrite {
         std::fs::remove_file(&dst).unwrap();
         assert_eq!(different, [node_path]);
         assert!(changed_ok && others_ok);
+    }
+}
+
+/// Prova NEL GIOCO: copia il testo di un TextAsset in un altro dentro il
+/// bundle installato, tenendo l'originale in `data.unity3d.gs_backup`.
+/// SCRIVE nella cartella del gioco: si lancia solo a gioco chiuso e con il
+/// consenso di chi possiede il gioco.
+///
+/// ```bash
+/// cd src-tauri && GS_UNITY_BUNDLE="E:/…/LostHost_Data/data.unity3d" GS_UNITY_NODE="sharedassets0.assets" \
+///   GS_UNITY_FROM="LOST_HOST - Italian" GS_UNITY_TO="LOST_HOST - Lithuanian" \
+///   cargo test --bin gamestringer real_bundle_apply -- --ignored --nocapture
+/// # per tornare all'originale:
+/// cd src-tauri && GS_UNITY_BUNDLE="E:/…/LostHost_Data/data.unity3d" \
+///   cargo test --bin gamestringer real_bundle_restore -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+mod real_bundle_apply {
+    use super::*;
+    use crate::commands::unity_serialized::{extract_text_assets, rewrite_text_assets};
+
+    fn var(name: &str) -> String {
+        std::env::var(name).unwrap_or_else(|_| panic!("{name} non impostata"))
+    }
+
+    #[test]
+    #[ignore]
+    fn real_bundle_apply() {
+        let (bundle, node, from, to) = (var("GS_UNITY_BUNDLE"), var("GS_UNITY_NODE"), var("GS_UNITY_FROM"), var("GS_UNITY_TO"));
+        let path = Path::new(&bundle);
+        let started = std::time::Instant::now();
+        let stats = replace_node_in_place(path, &node, |original| {
+            let assets = extract_text_assets(original)?;
+            let source = assets.iter().find(|a| a.name == from).ok_or("TextAsset sorgente non trovato")?;
+            let target = assets.iter().find(|a| a.name == to).ok_or("TextAsset destinazione non trovato")?;
+            println!("da | {} | {} byte    a | {} | {} byte", source.name, source.content.len(), target.name, target.content.len());
+            rewrite_text_assets(original, &std::collections::HashMap::from([(target.path_id, source.content.clone())]))
+        })
+        .unwrap();
+        println!("scritto nel gioco | {} ms | {:?}", started.elapsed().as_millis(), stats);
+        println!("backup | {}", backup_path(path).display());
+
+        // rilettura dal bundle installato
+        let mut installed = Bundle::open(path).unwrap();
+        let index = installed.nodes.iter().position(|n| n.path == node).unwrap();
+        let size = installed.nodes[index].size as usize;
+        let assets = extract_text_assets(&installed.node(index).read_at(0, size).unwrap()).unwrap();
+        let text = |name: &str| assets.iter().find(|a| a.name == name).map(|a| a.content.clone());
+        assert_eq!(text(&to), text(&from));
+        println!("verifica | nel bundle installato «{to}» ora ha il testo di «{from}»");
+    }
+
+    #[test]
+    #[ignore]
+    fn real_bundle_restore() {
+        let bundle = var("GS_UNITY_BUNDLE");
+        let restored = restore_original(Path::new(&bundle)).unwrap();
+        println!("ripristino | {}", if restored { "originale rimesso al suo posto" } else { "nessun backup trovato" });
     }
 }
