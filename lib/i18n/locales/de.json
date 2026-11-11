@@ -7278,6 +7278,9 @@
     "back": "Zurück zum Dashboard"
   },
   "stringItPlan": {
+    "ocrOffer": "Nächste Methode: Bildschirm-OCR",
+    "ocrOfferDesc": "Ins Spiel konnte nichts geschrieben werden. Die OCR liest den Bildschirm und funktioniert mit jeder Engine.",
+    "openOcr": "OCR öffnen",
     "title": "Plan",
     "sourceFiles": "Engine aus den Spieldateien gelesen",
     "sourceHint": "Engine aus dem Namen abgeleitet",

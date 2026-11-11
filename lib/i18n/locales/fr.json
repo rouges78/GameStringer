@@ -7278,6 +7278,9 @@
     "back": "Retour au tableau de bord"
   },
   "stringItPlan": {
+    "ocrOffer": "Méthode suivante : OCR à l'écran",
+    "ocrOfferDesc": "Rien n'a pu être écrit dans le jeu. L'OCR lit l'écran et fonctionne avec n'importe quel moteur.",
+    "openOcr": "Ouvrir l'OCR",
     "title": "Plan",
     "sourceFiles": "moteur lu dans les fichiers du jeu",
     "sourceHint": "moteur déduit du nom",

@@ -7278,6 +7278,9 @@
     "back": "Вернуться на панель"
   },
   "stringItPlan": {
+    "ocrOffer": "Следующий метод: экранный OCR",
+    "ocrOfferDesc": "В игру ничего не удалось записать. OCR читает экран и работает с любым движком.",
+    "openOcr": "Открыть OCR",
     "title": "План",
     "sourceFiles": "движок определён по файлам игры",
     "sourceHint": "движок угадан по названию",
@@ -7287,7 +7290,7 @@
     "injectionBlocked": "В этой игре используется античит {name}, поэтому GameStringer ничего не внедряет. Используйте экранный OCR.",
     "methods": {
       "danganronpa-wad": "Архивы WAD",
-      "hendrix-csv": "CSV Hendrix",
+      "hendrix-csv": "CSV-файл Hendrix",
       "renpy-tl": "Папка tl Ren'Py",
       "visionaire-vis": "Файл .vis",
       "tyrano-asar": "Скрипты в app.asar",

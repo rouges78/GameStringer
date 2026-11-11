@@ -7278,6 +7278,9 @@
     "back": "Volver al panel"
   },
   "stringItPlan": {
+    "ocrOffer": "Siguiente método: OCR en pantalla",
+    "ocrOfferDesc": "No se pudo escribir nada en el juego. El OCR lee la pantalla y funciona con cualquier motor.",
+    "openOcr": "Abrir OCR",
     "title": "Plan",
     "sourceFiles": "motor leído de los archivos del juego",
     "sourceHint": "motor deducido del nombre",

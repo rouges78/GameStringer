@@ -78,3 +78,12 @@ export function resolveEngine(plan: TranslationPlan | null | undefined, fallback
   if (plan && plan.engine_source === 'files') return plan.engine;
   return fallback;
 }
+
+/**
+ * Cosa provare quando nemmeno l'aggancio a runtime è andato (bloccato, non
+ * disponibile, gioco chiuso, iniezione fallita): il metodo che il piano mette
+ * dopo `runtime-hook`. Oggi è l'OCR; domani qualunque metodo aggiunto al piano.
+ */
+export function methodAfterRuntime(plan: TranslationPlan | null | undefined): PlannedMethod | null {
+  return plan ? nextMethod(plan, 'runtime-hook') : null;
+}

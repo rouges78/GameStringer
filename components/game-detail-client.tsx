@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
-import { fetchTranslationPlan, findMethod, resolveEngine, type TranslationPlan } from '@/lib/string-it/plan';
+import { fetchTranslationPlan, findMethod, methodAfterRuntime, resolveEngine, type TranslationPlan } from '@/lib/string-it/plan';
 import { StringItPlan } from '@/components/game-detail/string-it-plan';
 
 import { Button } from '@/components/ui/button';
@@ -2110,18 +2110,38 @@ export default function GameDetailPage() {
   // intraducibile: c'è gs-hook + la pipe GameStringerTranslator. La REGOLA su
   // cosa fare sta in lib/translation/runtime-fallback.ts (con i suoi test);
   // qui si raccolgono i fatti, si chiama la regola e si esegue il piano.
+  // Ultimo anello della cascata: quando nemmeno il runtime è andato si passa
+  // al metodo che il piano mette dopo. L'OCR non è automatico (serve il gioco
+  // a schermo), quindi si propone con un'azione invece di partire da solo.
+  const offerMethodAfterRuntime = () => {
+    const next = methodAfterRuntime(translationPlan);
+    if (!next || !game) return;
+    if (next.kind === 'ocr') {
+      const params = new URLSearchParams({
+        game: game.title || game.name || '',
+        tgt: targetLang || language || 'it',
+        autostart: '1',
+      });
+      toast(t('stringItPlan.ocrOffer'), {
+        description: t('stringItPlan.ocrOfferDesc'),
+        duration: 15000,
+        action: { label: t('stringItPlan.openOcr'), onClick: () => router.push(`/ocr-translator?${params.toString()}`) },
+      });
+    } else if (next.route) {
+      const route = next.route;
+      toast(t(`stringItPlan.methods.${next.id}`), {
+        duration: 15000,
+        action: { label: t(`stringItPlan.methods.${next.id}`), onClick: () => router.push(route) },
+      });
+    }
+  };
+
   const tryRuntimeFallback = async (
     staticOutcome: PatchOutcome,
     counts: { injected?: number | null; total?: number | null },
     cause: FallbackCause = 'engine-unsupported',
   ): Promise<RunReport | null> => {
     if (!game?.installPath) return null;
-
-    // Anti-cheat: il piano vieta ogni iniezione nel processo del gioco.
-    if (findMethod(translationPlan, 'runtime-hook')?.blocked_by) {
-      toast.info(t('stringItPlan.injectionBlocked').replace('{name}', translationPlan?.anti_cheat ?? ''));
-      return null;
-    }
 
     // Nome dell'eseguibile: stessa scala di ripieghi del percorso di patch.
     let exeName: string | undefined = game.detectedFiles?.find((f: string) => f.endsWith('.exe'));
@@ -2155,6 +2175,8 @@ export default function GameDetailPage() {
       hookAvailable,
       processName: exeName ?? null,
       processRunning,
+      // Anti-cheat: il piano vieta ogni iniezione nel processo del gioco.
+      antiCheatBlocked: Boolean(findMethod(translationPlan, 'runtime-hook')?.blocked_by),
     });
 
     const report = buildRunReport({
@@ -2179,6 +2201,7 @@ export default function GameDetailPage() {
 
     if (plan.action === 'unavailable' || plan.action === 'await-launch') {
       toast.info(t(report.nextStepKey));
+      offerMethodAfterRuntime();
       return report;
     }
 
@@ -2201,12 +2224,14 @@ export default function GameDetailPage() {
           id: 'gs-runtime-fallback',
           description: res.message.slice(0, 180),
         });
+        offerMethodAfterRuntime();
       }
     } catch (e: unknown) {
       toast.error(t('gameDetail.runtimeFallbackFailed'), {
         id: 'gs-runtime-fallback',
         description: String(e).slice(0, 180),
       });
+      offerMethodAfterRuntime();
     }
     return report;
   };
@@ -2735,6 +2760,7 @@ export default function GameDetailPage() {
           } else {
             setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: t('heroJob.unityRouteFail') }]);
             setAutoTranslateError(t('heroJob.unityRouteFail'));
+            void tryRuntimeFallback('failure', {}, 'run-failed');
           }
         } finally {
           setAutoTranslateBusy(false);
@@ -3038,6 +3064,7 @@ export default function GameDetailPage() {
             setAutoTranslateError(`RPG Maker: ${String(e)} — Ollama è avviato?`);
             await rmTracker.fail(e);
             toast.error(t('gameDetail.errRpgMaker'), { description: String(e) });
+            void tryRuntimeFallback('failure', {}, 'run-failed');
           } finally {
             setAutoTranslateBusy(false);
             setAutoTranslateProgress('');

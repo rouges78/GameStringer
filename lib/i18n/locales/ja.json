@@ -7278,6 +7278,9 @@
     "back": "ダッシュボードに戻る"
   },
   "stringItPlan": {
+    "ocrOffer": "次の方法:画面OCR",
+    "ocrOfferDesc": "ゲームには何も書き込めませんでした。OCRは画面を読み取るため、どのエンジンでも使えます。",
+    "openOcr": "OCRを開く",
     "title": "プラン",
     "sourceFiles": "ゲームファイルからエンジンを判定",
     "sourceHint": "名前からエンジンを推定",

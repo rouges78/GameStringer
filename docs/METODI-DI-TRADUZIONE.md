@@ -1857,8 +1857,8 @@ del runtime async.
 
 ## Scelta del metodo: il pianificatore di String it
 
-**Stato: primo passo fatto l'11/11/2026. Il piano ordina e blocca; l'esecuzione
-a cascata dei metodi NON è ancora fatta.**
+**Stato all'11/11/2026: il piano ordina, blocca e guida la cascata
+nativo → runtime → OCR. Non ancora provato su giochi veri.**
 
 Prima la scelta era una catena di `if` sul nome del motore dentro
 `startAutoTranslate` (`components/game-detail-client.tsx`), con il motore
@@ -1887,12 +1887,21 @@ Nel frontend (`lib/string-it/plan.ts`): `resolveEngine` è l'unico punto che
 decide il motore per tutti i rami; il ramo Unity e `tryRuntimeFallback` si
 fermano se il piano blocca l'iniezione; sotto il pulsante compare il piano.
 
-**Cosa manca.** Quando un metodo non scrive nulla si passa ancora solo a
-`tryRuntimeFallback`, non al metodo successivo del piano (`nextMethod` esiste
-ed è testata, ma nessuno la chiama ancora). I rami RPG Maker MV/MZ e Unity non
-chiamano nemmeno il fallback. Il piano non sonda ancora quante stringhe
-troverebbe ogni metodo, quindi su Unity non sa preferire le tabelle di
-localizzazione a XUnity.
+**Cascata (11/11/2026).** Quando il metodo nativo non scrive nulla si chiama
+`tryRuntimeFallback`, che ora segue il piano: prova `runtime-hook` (la regola
+`planRuntimeFallback` riceve finalmente `antiCheatBlocked`) e, se il runtime
+non va — bloccato, DLL assente, gioco chiuso, iniezione fallita — propone il
+metodo che il piano mette dopo (`methodAfterRuntime`), oggi l'OCR con un
+pulsante «Apri OCR». Anche i rami Unity e RPG Maker MV/MZ, che prima si
+fermavano all'errore, ora entrano nella cascata. Verificato solo con test
+della regola: **non provato su giochi veri**.
+
+**Cosa manca.** L'OCR si propone, non parte da solo (serve il gioco a
+schermo). Il piano non ha ancora un secondo metodo statico per nessun motore,
+e non sonda quante stringhe troverebbe ogni metodo: su Unity non sa preferire
+le tabelle di localizzazione a XUnity. I rami di `startAutoTranslate` restano
+`if` in sequenza: portare un metodo nuovo nel piano richiede ancora un ramo
+scritto a mano.
 
 ## Come si aggiunge una voce
 

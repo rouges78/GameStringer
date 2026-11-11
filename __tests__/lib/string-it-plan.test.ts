@@ -4,6 +4,7 @@ import {
   runnableMethods,
   nextMethod,
   findMethod,
+  methodAfterRuntime,
   resolveEngine,
   type PlannedMethod,
   type TranslationPlan,
@@ -48,5 +49,20 @@ describe('string-it plan', () => {
     expect(resolveEngine(plan([], { engine: 'Godot', engine_source: 'hint' }), 'Unity')).toBe('Unity');
     expect(resolveEngine(plan([], { engine: 'Unknown', engine_source: 'none' }), 'Unity')).toBe('Unity');
     expect(resolveEngine(null, 'Unity')).toBe('Unity');
+  });
+
+  it('dopo il runtime non riuscito si passa al metodo successivo del piano', () => {
+    const p = plan([m('unity-xunity', 'runtime'), m('runtime-hook', 'runtime'), m('ocr-overlay', 'ocr')]);
+    expect(methodAfterRuntime(p)?.id).toBe('ocr-overlay');
+    // senza piano non si inventa un metodo
+    expect(methodAfterRuntime(null)).toBeNull();
+  });
+  it("vale anche quando il runtime è bloccato dall'anti-cheat", () => {
+    const blocked = 'anti-cheat:BattlEye';
+    const p = plan(
+      [m('unity-xunity', 'runtime', blocked), m('runtime-hook', 'runtime', blocked), m('ocr-overlay', 'ocr')],
+      { anti_cheat: 'BattlEye' },
+    );
+    expect(methodAfterRuntime(p)?.kind).toBe('ocr');
   });
 });

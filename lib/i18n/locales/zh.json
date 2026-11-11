@@ -7278,6 +7278,9 @@
     "back": "返回仪表板"
   },
   "stringItPlan": {
+    "ocrOffer": "下一种方法:屏幕 OCR",
+    "ocrOfferDesc": "无法向游戏写入任何内容。OCR 读取屏幕,适用于任何引擎。",
+    "openOcr": "打开 OCR",
     "title": "方案",
     "sourceFiles": "根据游戏文件识别引擎",
     "sourceHint": "根据名称推测引擎",

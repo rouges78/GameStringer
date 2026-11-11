@@ -7278,6 +7278,9 @@
     "back": "Voltar ao painel"
   },
   "stringItPlan": {
+    "ocrOffer": "Método seguinte: OCR no ecrã",
+    "ocrOfferDesc": "Não foi possível escrever nada no jogo. O OCR lê o ecrã e funciona com qualquer motor.",
+    "openOcr": "Abrir OCR",
     "title": "Plano",
     "sourceFiles": "motor lido dos ficheiros do jogo",
     "sourceHint": "motor deduzido do nome",

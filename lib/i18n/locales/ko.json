@@ -7278,6 +7278,9 @@
     "back": "대시보드로 돌아가기"
   },
   "stringItPlan": {
+    "ocrOffer": "다음 방법: 화면 OCR",
+    "ocrOfferDesc": "게임에 아무것도 쓸 수 없었습니다. OCR은 화면을 읽으므로 어떤 엔진에서도 동작합니다.",
+    "openOcr": "OCR 열기",
     "title": "계획",
     "sourceFiles": "게임 파일에서 엔진 확인",
     "sourceHint": "이름으로 엔진 추정",

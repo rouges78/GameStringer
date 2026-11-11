@@ -7278,6 +7278,9 @@
     "back": "Wróć do pulpitu"
   },
   "stringItPlan": {
+    "ocrOffer": "Następna metoda: OCR ekranu",
+    "ocrOfferDesc": "Nie udało się niczego zapisać w grze. OCR czyta ekran i działa z każdym silnikiem.",
+    "openOcr": "Otwórz OCR",
     "title": "Plan",
     "sourceFiles": "silnik odczytany z plików gry",
     "sourceHint": "silnik odgadnięty z nazwy",

@@ -7278,6 +7278,9 @@
     "back": "Torna alla Dashboard"
   },
   "stringItPlan": {
+    "ocrOffer": "Metodo successivo: OCR a schermo",
+    "ocrOfferDesc": "Nel gioco non è stato possibile scrivere nulla. L'OCR legge lo schermo e funziona con qualsiasi motore.",
+    "openOcr": "Apri OCR",
     "title": "Piano",
     "sourceFiles": "motore letto dai file del gioco",
     "sourceHint": "motore dedotto dal nome",
