@@ -397,3 +397,66 @@ mod real_scene_translate {
         assert!(untouched_same);
     }
 }
+
+/// Prova NEL GIOCO: traduce le stringhe incorporate in un file interno del
+/// bundle installato, tenendo l'originale in `data.unity3d.gs_backup`.
+/// SCRIVE nella cartella del gioco: solo a gioco chiuso e con il consenso di
+/// chi possiede il gioco. Per tornare indietro: `real_bundle_restore` in
+/// `unity_fs.rs`.
+///
+/// ```bash
+/// cd src-tauri && GS_UNITY_BUNDLE="E:/…/data.unity3d" GS_UNITY_NODE="level0" GS_UNITY_TABLES="sharedassets0.assets" \
+///   GS_UNITY_FROM="LOST_HOST - Lithuanian" GS_UNITY_TO="LOST_HOST - Italian" \
+///   cargo test --bin gamestringer -- commands::unity_strings::real_scene_apply::real_scene_apply --ignored --nocapture --exact
+/// ```
+#[cfg(test)]
+mod real_scene_apply {
+    use super::real_scene_translate::{node_bytes, table};
+    use super::*;
+    use crate::commands::unity_fs::{backup_path, replace_node_in_place, Bundle};
+    use crate::commands::unity_serialized::{extract_text_assets, list_objects, rewrite_objects};
+
+    #[test]
+    #[ignore]
+    fn real_scene_apply() {
+        let var = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("{name} non impostata"));
+        let bundle_path = var("GS_UNITY_BUNDLE");
+        let path = std::path::Path::new(&bundle_path);
+        let node = var("GS_UNITY_NODE");
+
+        // Il dizionario si legge dall'ORIGINALE: il backup se c'è, altrimenti il bundle.
+        let source = if backup_path(path).exists() { backup_path(path) } else { path.to_path_buf() };
+        let map = {
+            let mut bundle = Bundle::open(&source).unwrap();
+            let assets = extract_text_assets(&node_bytes(&mut bundle, &var("GS_UNITY_TABLES"))).unwrap();
+            let asset = |name: &str| table(&assets.iter().find(|a| a.name == name).unwrap_or_else(|| panic!("{name} non trovato")).content);
+            translation_map(&asset(&var("GS_UNITY_FROM")), &asset(&var("GS_UNITY_TO")))
+        };
+
+        let started = std::time::Instant::now();
+        let mut replaced_total = 0;
+        let stats = replace_node_in_place(path, &node, |original| {
+            let mut bodies = HashMap::new();
+            for obj in list_objects(original)? {
+                if let Some((body, replaced)) = replace_strings(&original[obj.start..obj.start + obj.size], &map) {
+                    replaced_total += replaced;
+                    bodies.insert(obj.path_id, body);
+                }
+            }
+            if bodies.is_empty() {
+                return Err("nessuna stringa da tradurre in questo file".to_string());
+            }
+            rewrite_objects(original, &bodies)
+        })
+        .unwrap();
+        println!("scritto nel gioco | {} ms | {replaced_total} stringhe sostituite in {node} | {:?}", started.elapsed().as_millis(), stats);
+        println!("backup | {}", backup_path(path).display());
+
+        // rilettura dal bundle installato: i testi vecchi non ci sono più
+        let mut installed = Bundle::open(path).unwrap();
+        let data = node_bytes(&mut installed, &node);
+        let leftovers: usize = list_objects(&data).unwrap().iter().map(|o| find_strings(&data[o.start..o.start + o.size]).iter().filter(|s| map.contains_key(&s.text)).count()).sum();
+        println!("verifica | testi vecchi rimasti in {node} nel bundle installato: {leftovers}");
+        assert_eq!(leftovers, 0);
+    }
+}
