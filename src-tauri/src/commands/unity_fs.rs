@@ -965,3 +965,51 @@ mod real_bundle_apply {
         println!("ripristino | {}", if restored { "originale rimesso al suo posto" } else { "nessun backup trovato" });
     }
 }
+
+/// Cerca un testo in TUTTI i file interni di un bundle vero, in sola lettura:
+/// dice in quali file compare e quante volte. Serve a capire se un testo sta
+/// anche fuori dal TextAsset che si è sostituito.
+///
+/// ```bash
+/// cd src-tauri && GS_UNITY_BUNDLE="E:/…/data.unity3d" GS_UNITY_GREP="Žaisti" \
+///   cargo test --bin gamestringer real_bundle_grep -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+mod real_bundle_grep {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn real_bundle_grep() {
+        let var = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("{name} non impostata"));
+        let (path, needle) = (var("GS_UNITY_BUNDLE"), var("GS_UNITY_GREP"));
+        let needle = needle.as_bytes();
+        let mut bundle = Bundle::open(Path::new(&path)).unwrap();
+        println!("cerco {:?} in {path}", String::from_utf8_lossy(needle));
+        for i in 0..bundle.nodes.len() {
+            let node = bundle.nodes[i].clone();
+            // texture e audio: niente testo, e sono gigabyte
+            if node.path.ends_with(".resS") || node.path.ends_with(".resource") {
+                continue;
+            }
+            const CHUNK: u64 = 8 * 1024 * 1024;
+            let overlap = needle.len().saturating_sub(1) as u64;
+            let (mut pos, mut hits, mut first) = (0u64, 0usize, None);
+            while pos < node.size {
+                let take = (node.size - pos).min(CHUNK + overlap) as usize;
+                let data = bundle.node(i).read_at(pos, take).unwrap();
+                for (off, window) in data.windows(needle.len()).enumerate() {
+                    // le corrispondenze nella coda di sovrapposizione si contano nel pezzo dopo
+                    if window == needle && ((off as u64) < CHUNK || pos + CHUNK >= node.size) {
+                        hits += 1;
+                        first.get_or_insert(pos + off as u64);
+                    }
+                }
+                pos += CHUNK;
+            }
+            if hits > 0 {
+                println!("    {} | {hits} volte | prima a {:?}", node.path, first);
+            }
+        }
+    }
+}

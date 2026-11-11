@@ -571,13 +571,9 @@ cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo
 | TextAsset modificato, riletto dal bundle nuovo | testo nuovo presente, gli altri 14 invariati |
 | Tempo del confronto completo (5,4 GB decompressi due volte) | 120 s |
 
-**Cosa NON è provato.** Che il gioco **carichi** il bundle riscritto. Tutte le
-verifiche sono fatte rileggendo con il nostro lettore: dimostrano che il bundle
-è coerente e che nient'altro è cambiato, non che Unity lo accetti. Due punti
-sono ipotesi: che il runtime accetti blocchi LZ4 «veloce» al posto di LZ4HC
-(stesso formato di decompressione), e che accetti un ultimo blocco del tratto
-riscritto più corto di 128 KB in mezzo al flusso. Si chiude solo avviando il
-gioco con il bundle modificato, dopo un backup.
+**Il gioco carica il bundle riscritto: provato l'11/11/2026.** Vedi la voce
+qui sotto. Le due ipotesi — blocchi LZ4 «veloce» al posto di LZ4HC, e un blocco
+più corto di 128 KB in mezzo al flusso — reggono su Unity 6000.3.
 
 **Trappole.**
 
@@ -592,6 +588,72 @@ gioco con il bundle modificato, dopo un backup.
 **Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `Bundle::rewrite_node`,
 `RewriteStats`, test `real_bundle_rewrite` (ignorato). Nessun comando Tauri lo
 espone ancora: non è raggiungibile dall'interfaccia.
+
+### Lost Host Demo: il bundle riscritto si carica, ma il testo che il gioco mostra NON sta nei TextAsset
+
+**Il fatto.** Sostituire il file di una lingua con un altro non cambia quello
+che il gioco mostra. I 15 TextAsset `LOST_HOST - <Lingua>` esistono, ma il
+testo del menu è **anche incorporato nella scena `level0`**, dentro gli oggetti
+della scena, ed è quella la copia che il gioco usa. I CSV sono con ogni
+probabilità il materiale da cui lo sviluppatore ha generato quei testi.
+
+**Prova nel gioco**, 11/11/2026, con il consenso del proprietario. Scritto nel
+bundle installato il testo italiano al posto di quello lituano
+(`replace_node_in_place`, originale tenuto come `data.unity3d.gs_backup`):
+
+| Cosa | Risultato |
+|---|---|
+| Scrittura nel gioco | 14,7 s, 498 blocchi ricompressi su 43.701 |
+| Il gioco parte con il bundle riscritto | sì: `Player.log` riporta «Loading player data from …/data.unity3d», carica le scene fino a `Chapter1` ed esce con «Exit button pressed», senza errori di archivio |
+| Il lituano in gioco diventa italiano | **no** |
+| Ripristino | originale rimesso, 2.778.817.629 byte come prima |
+
+**Misura che spiega il no.** Ricerca di testo in tutti i file interni del
+bundle (sola lettura):
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" GS_UNITY_GREP="Nustatymai" \
+  cargo test --bin gamestringer -- commands::unity_fs::real_bundle_grep::real_bundle_grep --ignored --nocapture --exact
+```
+
+| Testo cercato | Bundle originale | Bundle con il lituano sostituito |
+|---|---|---|
+| `Nustatymai` («Impostazioni» in lituano) | `sharedassets0.assets` 1 volta, `level0` 3 volte | solo `level0` 3 volte |
+| `Žaisti` («Gioca» in lituano) | — | `level0` 2 volte |
+| `Impostazioni` | — | `sharedassets0.assets` 2 volte, `level0` 1 volta |
+
+Dopo la sostituzione il lituano è sparito dal TextAsset ma è rimasto in
+`level0`: il menu continua a leggerlo da lì.
+
+**Cosa ne segue.**
+
+1. **Un TextAsset di localizzazione che esiste non è per forza quello che il
+   gioco legge.** Il riconoscitore dice «qui ci sono tabelle», non «il gioco le
+   usa». Prima di proporre un metodo statico bisogna controllare che il testo
+   non compaia anche altrove (la ricerca qui sopra costa pochi secondi).
+2. Per questo gioco la via statica passa dai campi stringa degli oggetti di
+   scena (`level0`, `level2`), come per Fran Bow: stringhe con lunghezza in
+   testa, allineate a 4 byte, dentro oggetti senza albero dei tipi. In Rust
+   quel motore non esiste ancora; oggi lo fa solo `tools/unity_inject.py`.
+3. Lo scrittore di bundle e il backup per rinomina sono validati dal vero e
+   restano utili per quel motore: cambia cosa si riscrive, non come.
+
+**Trappole.**
+
+1. **Consigliare «sovrascrivi una lingua» prima di aver cercato dove sta
+   davvero il testo.** È stato l'errore di questa voce: la prova in gioco è
+   costata un backup da 2,78 GB e un avvio, la ricerca sarebbe costata un
+   minuto.
+2. **Il filtro di `cargo test` prende per sottostringa.** `real_bundle_apply`
+   è anche il nome del modulo che contiene `real_bundle_restore`: senza il
+   nome completo e `--exact` partirebbero insieme, applicando e ripristinando.
+3. **«Il gioco è partito» si legge nel registro**, non si deduce:
+   `%USERPROFILE%/AppData/LocalLow/GestLT/LostHost/Player.log`.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `replace_node_in_place`,
+`restore_original`, test `real_bundle_apply`, `real_bundle_restore`,
+`real_bundle_grep` (tutti ignorati; i primi due SCRIVONO nella cartella del
+gioco).
 
 ## Traduzione in tempo reale (IPC)
 
