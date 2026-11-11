@@ -7,10 +7,16 @@
 //! quelli che dichiarano da soli almeno due lingue. Nel dubbio la risposta è
 //! «non è una tabella».
 //!
+//! Guarda sia i file `.assets` sciolti sia i file interni di `data.unity3d`
+//! (tramite `unity_fs`).
+//!
 //! Riconosce:
 //! - CSV / TSV la cui intestazione ha almeno due colonne-lingua;
 //! - JSON con almeno due chiavi-lingua, al primo livello o nelle voci di un
-//!   elenco.
+//!   elenco;
+//! - famiglie di file per lingua: almeno due TextAsset dello stesso file con
+//!   lo stesso nome e una lingua diversa in coda (`LOST_HOST - Italian`,
+//!   `LOST_HOST - French`). Schema trovato su Lost Host Demo l'11/11/2026.
 //!
 //! NON riconosce (di proposito): testo in una lingua sola, come un JSON di
 //! obiettivi. Lì non c'è modo di sapere quali campi sono testo per il
@@ -19,7 +25,8 @@
 use serde::Serialize;
 use std::path::Path;
 
-use super::unity_serialized::extract_text_assets_from_path;
+use super::unity_fs::Bundle;
+use super::unity_serialized::{extract_text_assets_from, extract_text_assets_from_path, SerializedTextAsset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -38,6 +45,9 @@ pub struct Recognized {
     pub languages: Vec<String>,
     /// Righe (CSV) o voci (JSON) di contenuto.
     pub rows: usize,
+    /// Per i file per lingua: il nome comune della famiglia ("LOST_HOST").
+    /// `None` per le tabelle che hanno più lingue nello stesso file.
+    pub family: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -68,11 +78,11 @@ fn language_code(cell: &str) -> Option<&'static str> {
         ("de", &["de", "deu", "ger", "german", "de-de", "deutsch", "tedesco"]),
         ("es", &["es", "spa", "spanish", "es-es", "es-mx", "es-419", "español", "espanol", "spagnolo", "latam"]),
         ("it", &["it", "ita", "italian", "it-it", "italiano"]),
-        ("pt", &["pt", "por", "portuguese", "pt-br", "pt-pt", "português", "portugues", "brazilian", "portoghese"]),
+        ("pt", &["pt", "por", "portuguese", "pt-br", "pt-pt", "português", "portugues", "brazilian", "portoghese", "brazilian portuguese", "portuguese (brazil)"]),
         ("ru", &["ru", "rus", "russian", "ru-ru", "русский", "russo"]),
         ("ja", &["ja", "jp", "jpn", "japanese", "ja-jp", "日本語", "giapponese"]),
         ("ko", &["ko", "kr", "kor", "korean", "ko-kr", "한국어", "coreano"]),
-        ("zh", &["zh", "chi", "zho", "chinese", "zh-cn", "zh-tw", "zh-hans", "zh-hant", "schinese", "tchinese", "简体中文", "繁體中文", "中文", "cinese"]),
+        ("zh", &["zh", "chi", "zho", "chinese", "zh-cn", "zh-tw", "zh-hans", "zh-hant", "schinese", "tchinese", "简体中文", "繁體中文", "中文", "cinese", "simplified chinese", "traditional chinese"]),
         ("pl", &["pl", "pol", "polish", "pl-pl", "polski", "polacco"]),
         ("tr", &["tr", "tur", "turkish", "tr-tr", "türkçe"]),
         ("nl", &["nl", "nld", "dutch", "nl-nl", "nederlands"]),
@@ -84,6 +94,7 @@ fn language_code(cell: &str) -> Option<&'static str> {
         ("th", &["th", "tha", "thai", "ไทย"]),
         ("vi", &["vi", "vie", "vietnamese", "tiếng việt"]),
         ("el", &["el", "ell", "gre", "greek", "ελληνικά"]),
+        ("lt", &["lt", "lit", "lithuanian", "lietuvių"]),
     ];
     table.iter().find(|(_, names)| names.contains(&norm.as_str())).map(|(code, _)| *code)
 }
@@ -143,7 +154,7 @@ fn recognize_delimited(content: &str) -> Option<Recognized> {
     if rows == 0 {
         return None;
     }
-    Some(Recognized { format, languages, rows })
+    Some(Recognized { format, languages, rows, family: None })
 }
 
 fn recognize_json(content: &str) -> Option<Recognized> {
@@ -158,7 +169,7 @@ fn recognize_json(content: &str) -> Option<Recognized> {
                 .map(|v| v.as_object().map(|o| o.len()).or_else(|| v.as_array().map(|a| a.len())).unwrap_or(1))
                 .max()
                 .unwrap_or(0);
-            return Some(Recognized { format: TableFormat::Json, languages, rows });
+            return Some(Recognized { format: TableFormat::Json, languages, rows, family: None });
         }
     }
 
@@ -183,7 +194,7 @@ fn recognize_json(content: &str) -> Option<Recognized> {
     if !textual {
         return None;
     }
-    Some(Recognized { format: TableFormat::Json, languages, rows: list.len() })
+    Some(Recognized { format: TableFormat::Json, languages, rows: list.len(), family: None })
 }
 
 /// È una tabella di localizzazione? `None` = no, o non abbastanza sicuro.
@@ -197,6 +208,64 @@ pub fn recognize(content: &str) -> Option<Recognized> {
     recognize_delimited(trimmed)
 }
 
+/// Il nome di un TextAsset finisce con una lingua? Restituisce il nome comune
+/// e il codice: "LOST_HOST - Brazilian Portuguese" → ("LOST_HOST", "pt").
+/// Il separatore più lungo si prova per primo, così «Brazilian Portuguese»
+/// resta intero invece di spezzarsi sullo spazio.
+fn name_language(name: &str) -> Option<(String, &'static str)> {
+    [" - ", "_", "-", ".", " "].iter().find_map(|sep| {
+        let (stem, suffix) = name.rsplit_once(sep)?;
+        let code = language_code(suffix)?;
+        let stem = stem.trim();
+        (!stem.is_empty()).then(|| (stem.to_string(), code))
+    })
+}
+
+/// Formato di un file per lingua, dal suo contenuto.
+fn member_format(content: &str) -> TableFormat {
+    let trimmed = content.trim_start_matches('\u{feff}').trim_start();
+    if trimmed.starts_with('{') || trimmed.starts_with('[') {
+        TableFormat::Json
+    } else if trimmed.lines().next().is_some_and(|l| l.contains('\t')) {
+        TableFormat::Tsv
+    } else {
+        TableFormat::Csv
+    }
+}
+
+/// Famiglie di file per lingua fra i TextAsset di UNO stesso file. Una
+/// famiglia esiste solo con almeno due lingue diverse: un solo «readme_en» non
+/// è localizzazione. Restituisce, per ogni membro, l'indice e cosa si è capito.
+fn recognize_families(assets: &[(&str, &str)]) -> Vec<(usize, Recognized)> {
+    let named: Vec<(usize, String, &'static str)> = assets
+        .iter()
+        .enumerate()
+        .filter_map(|(i, (name, _))| name_language(name).map(|(stem, code)| (i, stem, code)))
+        .collect();
+
+    let mut out = Vec::new();
+    for (i, stem, code) in &named {
+        let mut languages: Vec<&str> = named.iter().filter(|(_, s, _)| s == stem).map(|(_, _, c)| *c).collect();
+        languages.sort_unstable();
+        languages.dedup();
+        if languages.len() < 2 {
+            continue;
+        }
+        let content = assets[*i].1;
+        let rows = content.lines().filter(|l| !l.trim().is_empty()).count();
+        if rows == 0 {
+            continue;
+        }
+        out.push((*i, Recognized {
+            format: member_format(content),
+            languages: vec![code.to_string()],
+            rows,
+            family: Some(stem.clone()),
+        }));
+    }
+    out
+}
+
 /// La cartella `<Gioco>_Data` di un gioco Unity.
 fn data_dir(game_dir: &Path) -> Option<std::path::PathBuf> {
     std::fs::read_dir(game_dir)
@@ -206,23 +275,65 @@ fn data_dir(game_dir: &Path) -> Option<std::path::PathBuf> {
         .find(|p| p.is_dir() && p.file_name().map(|n| n.to_string_lossy().ends_with("_Data")).unwrap_or(false))
 }
 
-/// Tabelle di localizzazione nei file `.assets` sciolti di un gioco Unity.
-/// Sola lettura. I bundle `data.unity3d` non sono coperti.
-pub fn scan(game_dir: &Path) -> Vec<LocTableInfo> {
+/// Tutti i TextAsset di un gioco Unity, con il file che li contiene: dai file
+/// `.assets` sciolti e dai file interni di `data.unity3d`. Sola lettura.
+pub fn text_assets(game_dir: &Path) -> Vec<(String, SerializedTextAsset)> {
     let Some(data) = data_dir(game_dir) else { return Vec::new() };
-    let Ok(entries) = std::fs::read_dir(&data) else { return Vec::new() };
+    let mut found = Vec::new();
 
-    let mut tables = Vec::new();
-    for entry in entries.flatten() {
-        let file = entry.file_name().to_string_lossy().to_string();
-        if !file.ends_with(".assets") {
-            continue;
-        }
-        let Ok(assets) = extract_text_assets_from_path(&entry.path()) else { continue };
-        for asset in assets {
-            if let Some(recognized) = recognize(&asset.content) {
-                tables.push(LocTableInfo { file: file.clone(), path_id: asset.path_id, name: asset.name, recognized });
+    if let Ok(entries) = std::fs::read_dir(&data) {
+        for entry in entries.flatten() {
+            let file = entry.file_name().to_string_lossy().to_string();
+            if !file.ends_with(".assets") {
+                continue;
             }
+            if let Ok(assets) = extract_text_assets_from_path(&entry.path()) {
+                found.extend(assets.into_iter().map(|a| (file.clone(), a)));
+            }
+        }
+    }
+
+    if let Ok(mut bundle) = Bundle::open(&data.join("data.unity3d")) {
+        for index in 0..bundle.nodes.len() {
+            let path = bundle.nodes[index].path.clone();
+            // .resS / .resource sono dati grezzi (texture, audio); GI/ è luce
+            // precalcolata. Il testo sta nei file serializzati.
+            if path.ends_with(".resS") || path.ends_with(".resource") || path.starts_with("GI/") {
+                continue;
+            }
+            if let Ok(assets) = extract_text_assets_from(&mut bundle.node(index)) {
+                let file = format!("data.unity3d/{path}");
+                found.extend(assets.into_iter().map(|a| (file.clone(), a)));
+            }
+        }
+    }
+    found
+}
+
+/// Tabelle di localizzazione di un gioco Unity. Sola lettura.
+pub fn scan(game_dir: &Path) -> Vec<LocTableInfo> {
+    let assets = text_assets(game_dir);
+    let mut tables = Vec::new();
+
+    // 1. tabelle con più lingue nello stesso file
+    let mut taken = vec![false; assets.len()];
+    for (i, (file, asset)) in assets.iter().enumerate() {
+        if let Some(recognized) = recognize(&asset.content) {
+            taken[i] = true;
+            tables.push(LocTableInfo { file: file.clone(), path_id: asset.path_id, name: asset.name.clone(), recognized });
+        }
+    }
+
+    // 2. famiglie di file per lingua, cercate dentro ciascun file contenitore
+    let mut files: Vec<&str> = assets.iter().map(|(f, _)| f.as_str()).collect();
+    files.sort_unstable();
+    files.dedup();
+    for file in files {
+        let members: Vec<usize> = (0..assets.len()).filter(|&i| !taken[i] && assets[i].0 == file).collect();
+        let view: Vec<(&str, &str)> = members.iter().map(|&i| (assets[i].1.name.as_str(), assets[i].1.content.as_str())).collect();
+        for (local, recognized) in recognize_families(&view) {
+            let asset = &assets[members[local]].1;
+            tables.push(LocTableInfo { file: file.to_string(), path_id: asset.path_id, name: asset.name.clone(), recognized });
         }
     }
     tables
@@ -325,6 +436,45 @@ mod tests {
     }
 
     #[test]
+    fn files_per_language_form_a_family() {
+        // Nomi e forma presi da Lost Host Demo (11/11/2026): un CSV per lingua.
+        let assets = [
+            ("LOST_HOST - English", "Play,Play\nSettings,Settings\n"),
+            ("LOST_HOST - Italian", "Play,Gioca\nSettings,Impostazioni\n"),
+            ("LOST_HOST - Brazilian Portuguese", "Play,Jogar\n"),
+            ("LOST_HOST - Simplified Chinese", "Play,开始游戏\n"),
+            // lingua scritta male nel gioco: non riconosciuta, resta fuori
+            ("LOST_HOST - Ukranian", "Play,Грати\n"),
+            ("BillingMode", "{\"androidStore\":\"GooglePlay\"}"),
+        ];
+        let found = recognize_families(&assets);
+        let codes: Vec<(usize, &str)> = found.iter().map(|(i, r)| (*i, r.languages[0].as_str())).collect();
+        assert_eq!(codes, [(0, "en"), (1, "it"), (2, "pt"), (3, "zh")]);
+        assert!(found.iter().all(|(_, r)| r.family.as_deref() == Some("LOST_HOST") && r.format == TableFormat::Csv));
+        assert_eq!(found[0].1.rows, 2);
+    }
+
+    #[test]
+    fn one_file_with_a_language_in_its_name_is_not_a_family() {
+        assert!(recognize_families(&[("readme_en", "hello"), ("notes", "x")]).is_empty());
+        // stessa lingua due volte: sempre una lingua sola
+        assert!(recognize_families(&[("menu_en", "a"), ("menu.en", "b")]).is_empty());
+        // nomi diversi non fanno famiglia
+        assert!(recognize_families(&[("menu_en", "a"), ("credits_fr", "b")]).is_empty());
+        // un nome che È una lingua, senza parte comune, non conta
+        assert_eq!(name_language("English"), None);
+    }
+
+    #[test]
+    fn family_names_are_split_on_the_longest_separator() {
+        assert_eq!(name_language("LOST_HOST - Brazilian Portuguese"), Some(("LOST_HOST".to_string(), "pt")));
+        assert_eq!(name_language("dialogue_fr"), Some(("dialogue".to_string(), "fr")));
+        assert_eq!(name_language("strings.ja"), Some(("strings".to_string(), "ja")));
+        assert_eq!(name_language("top-times_oldest"), None);
+        assert_eq!(name_language("80s_setup"), None);
+    }
+
+    #[test]
     fn scan_without_a_data_folder_finds_nothing() {
         let tmp = tempfile::tempdir().unwrap();
         assert!(scan(tmp.path()).is_empty());
@@ -348,10 +498,18 @@ mod real_games {
         let dirs = std::env::var("GS_UNITY_GAME_DIRS").expect("GS_UNITY_GAME_DIRS non impostata");
         for dir in dirs.split(';').filter(|d| !d.trim().is_empty()) {
             let started = std::time::Instant::now();
+            let assets = text_assets(Path::new(dir));
             let tables = scan(Path::new(dir));
-            println!("{dir} | tabelle={} | {} ms", tables.len(), started.elapsed().as_millis());
+            println!("{dir} | textasset={} | tabelle={} | {} ms (due passate)", assets.len(), tables.len(), started.elapsed().as_millis());
+            // GS_UNITY_SHOW=1: elenca i TextAsset (file, nome, byte, inizio del testo).
+            if std::env::var("GS_UNITY_SHOW").is_ok() {
+                for (file, a) in &assets {
+                    let head: String = a.content.chars().take(60).map(|c| if c.is_control() { ' ' } else { c }).collect();
+                    println!("    textasset | {file} | {} | {} byte | {head}", a.name, a.content.len());
+                }
+            }
             for t in &tables {
-                println!("    {} | {} | {:?} | lingue={:?} | righe={}", t.file, t.name, t.recognized.format, t.recognized.languages, t.recognized.rows);
+                println!("    {} | {} | {:?} | lingue={:?} | righe={} | famiglia={:?}", t.file, t.name, t.recognized.format, t.recognized.languages, t.recognized.rows, t.recognized.family);
             }
         }
     }

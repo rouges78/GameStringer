@@ -277,32 +277,27 @@ pub fn extract_text_assets(data: &[u8]) -> Result<Vec<SerializedTextAsset>, Stri
     Ok(out)
 }
 
-/// Come `extract_text_assets`, ma legge dal disco SOLO l'intestazione con la
-/// tabella degli oggetti e poi i singoli TextAsset: un `resources.assets` da
+/// Come `extract_text_assets`, ma legge dalla sorgente SOLO l'intestazione con
+/// la tabella degli oggetti e poi i singoli TextAsset: un `resources.assets` da
 /// centinaia di MB non viene caricato in memoria per trovarci 20 file di testo.
-pub fn extract_text_assets_from_path(path: &std::path::Path) -> Result<Vec<SerializedTextAsset>, String> {
-    use std::io::{Read, Seek, SeekFrom};
-
+/// La sorgente è un file su disco o un file interno a un bundle UnityFS.
+pub fn extract_text_assets_from<R: super::unity_fs::ReadAt>(source: &mut R) -> Result<Vec<SerializedTextAsset>, String> {
     // Un TextAsset più grande di così non è una tabella di testi.
     const MAX_TEXT_ASSET: u64 = 64 * 1024 * 1024;
     // La tabella oggetti di un file reale sta in pochi MB; oltre è un file rotto.
     const MAX_METADATA: u64 = 256 * 1024 * 1024;
 
-    let mut file = std::fs::File::open(path).map_err(|e| format!("Errore lettura: {}", e))?;
-    let mut head = vec![0u8; 48];
-    let got = file.read(&mut head).map_err(|e| format!("Errore lettura: {}", e))?;
-    head.truncate(got);
+    let total = source.len();
+    let head = source.read_at(0, total.min(48) as usize)?;
     if !is_serialized_file(&head) {
         return Err("Non è un SerializedFile della fascia supportata (v16-22, type-tree disabilitato)".to_string());
     }
     let data_offset = parse_header(&head)?.data_offset;
-    if data_offset > MAX_METADATA {
+    if data_offset > MAX_METADATA || data_offset > total {
         return Err(format!("data_offset implausibile: {}", data_offset));
     }
 
-    let mut metadata = vec![0u8; data_offset as usize];
-    file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
-    file.read_exact(&mut metadata).map_err(|e| format!("Errore lettura metadati: {}", e))?;
+    let metadata = source.read_at(0, data_offset as usize)?;
     let (header, objects) = parse(&metadata)?;
 
     let mut out = Vec::new();
@@ -310,16 +305,19 @@ pub fn extract_text_assets_from_path(path: &std::path::Path) -> Result<Vec<Seria
         if obj.byte_size as u64 > MAX_TEXT_ASSET {
             continue;
         }
-        let mut body = vec![0u8; obj.byte_size as usize];
-        if file.seek(SeekFrom::Start(header.data_offset + obj.byte_start)).is_err() || file.read_exact(&mut body).is_err() {
-            // Oggetto che punta fuori dal file: salta, non abortire tutto.
-            continue;
-        }
+        // Oggetto che punta fuori dal file: salta, non abortire tutto.
+        let Ok(body) = source.read_at(header.data_offset + obj.byte_start, obj.byte_size as usize) else { continue };
         if let Some((name, content)) = read_text_asset(&body) {
             out.push(SerializedTextAsset { name, content, path_id: obj.path_id });
         }
     }
     Ok(out)
+}
+
+/// `extract_text_assets_from` su un file `.assets` sciolto.
+pub fn extract_text_assets_from_path(path: &std::path::Path) -> Result<Vec<SerializedTextAsset>, String> {
+    let mut file = std::fs::File::open(path).map_err(|e| format!("Errore lettura: {}", e))?;
+    extract_text_assets_from(&mut file)
 }
 
 /// Riscrive il contenuto (m_Script) dei TextAsset indicati, restituendo un nuovo

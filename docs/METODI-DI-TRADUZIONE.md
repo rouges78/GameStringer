@@ -454,9 +454,10 @@ I 79 ms valgono perché `extract_text_assets_from_path` legge dal disco solo la
 tabella degli oggetti e i singoli TextAsset, non i file interi (il solo
 `resources.assets` è 235 MB).
 
-**Cosa NON è misurato.** Il caso positivo su un gioco vero: nessun gioco
-installato qui ha una tabella multilingua in un TextAsset. Il sì è coperto solo
-da test con dati scritti a mano.
+**Cosa NON è misurato.** Una tabella con più lingue nello STESSO file (CSV con
+colonne-lingua, JSON con chiavi-lingua) su un gioco vero: quel sì è coperto
+solo da test con dati scritti a mano. Il sì misurato dal vero è quello delle
+famiglie di file per lingua, nella voce qui sotto.
 
 **Trappole.**
 
@@ -475,6 +476,71 @@ da test con dati scritti a mano.
 
 **Nel codice.** `src-tauri/src/commands/unity_loc_tables.rs` — `recognize`,
 `scan`, comando `scan_unity_loc_tables`; `translation_plan.rs` — `probe`.
+
+### Leggere dentro `data.unity3d` (`unity_fs.rs`), e i file per lingua di Lost Host Demo
+
+**Il fatto.** Molti giochi Unity non hanno file `.assets` sciolti: tutto sta in
+un bundle UnityFS. Dall'11/11/2026 c'è un lettore scritto da zero che tiene in
+memoria solo l'indice dei blocchi e decomprime, a richiesta, quelli che coprono
+i byte chiesti. Il decompressore di `unity_localization.rs` carica il file
+intero e decomprime ogni blocco: su un bundle di gigabyte non è usabile.
+`unity_serialized::extract_text_assets_from` ora legge da una sorgente
+qualunque (`ReadAt`): un file su disco o un file interno al bundle.
+
+**Misura.** Lost Host Demo (Steam, Unity 6000.3.8f1, UnityFS v8), 11/11/2026,
+sola lettura:
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLES="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  cargo test --bin gamestringer real_bundles -- --ignored --nocapture
+cd src-tauri && GS_UNITY_SHOW=1 GS_UNITY_GAME_DIRS="E:/SteamLibrary/steamapps/common/Lost Host Demo" \
+  cargo test --bin gamestringer real_games_loc_tables -- --ignored --nocapture
+```
+
+| Cosa | Risultato |
+|---|---|
+| Bundle su disco | 2,78 GB, flag `0x243` (indice LZ4HC, riempimento a 16 prima dei blocchi) |
+| Apertura (solo indice) | 15 ms |
+| Blocchi | 43.701, flusso decompresso 5.462 MB |
+| File interni | 94: 9 serializzati (`globalgamemanagers`, `resources.assets`, `sharedassets0-2.assets`, `level0-2`…), i `.resS` con texture e audio, e la luce precalcolata in `GI/` |
+| Versione dei file serializzati | 22 — **prima lettura di una v22 vera**, il parser la legge |
+| TextAsset trovati | 20 (15 in `sharedassets0.assets`, 5 in `resources.assets`) |
+| Tabelle riconosciute | 14 su 15 file lingua; art of rally resta a 0 |
+| Tempo di due passate complete | 82 ms |
+
+**Lo schema di Lost Host Demo.** La localizzazione è una **famiglia di file per
+lingua**: 15 TextAsset `LOST_HOST - <Lingua>`, ognuno un CSV a due colonne
+`testo inglese,traduzione`, da 288 a 300 righe. L'italiano c'è già. Il
+riconoscitore cercava più lingue nello stesso file e dava zero: ora riconosce
+anche le famiglie (almeno due TextAsset dello stesso file, stesso nome, lingua
+diversa in coda).
+
+**Cosa ne segue.** Per un gioco fatto così, aggiungere una lingua che manca non
+è «riempire una colonna»: o si sovrascrive il file di una lingua che non serve,
+o si aggiunge un TextAsset nuovo (e il gioco deve saperlo elencare). È una
+scelta da prendere quando si scriverà la scrittura, non prima.
+
+**Trappole.**
+
+1. **`Ukranian`.** Il gioco scrive male «Ukrainian», quindi quel file non è
+   riconosciuto: 14 su 15. Non ho aggiunto l'errore di battitura alla lista
+   delle lingue; una famiglia già riconosciuta potrebbe però accogliere i
+   membri con lo stesso nome e coda sconosciuta.
+2. **Il primo campo dopo la firma non dice se un file interno è
+   serializzato.** I `.resS` e i file in `GI/` hanno byte casuali dove ci si
+   aspetta la versione: si saltano per nome, e per il resto decide
+   `is_serialized_file`.
+3. **Leggere oltre la fine di un file interno restituirebbe l'inizio del
+   successivo**, senza errore, perché il flusso decompresso è unico. Il lettore
+   controlla i limiti del nodo (c'è un test).
+4. **Esoteric Ebb non ha né `.assets` né `data.unity3d`** nella cartella
+   `_Data`: zero TextAsset in 10 ms. Probabilmente usa bundle Addressables in
+   `StreamingAssets`; non verificato.
+
+**Nel codice.** `src-tauri/src/commands/unity_fs.rs` — `Bundle::open`,
+`read_stream`, `NodeReader`, tratto `ReadAt`; `unity_loc_tables.rs` —
+`text_assets`, `recognize_families`, `name_language`. LZMA non è supportato
+(errore esplicito).
 
 ## Traduzione in tempo reale (IPC)
 
