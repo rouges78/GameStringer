@@ -139,6 +139,8 @@ pub mod rss_proxy;
 pub mod translation_plan;
 // Lettore ad accesso casuale dei bundle UnityFS (data.unity3d)
 pub mod unity_fs;
+// Stringhe dentro gli oggetti dei file serializzati Unity (scene comprese)
+pub mod unity_strings;
 // Riconoscitore delle tabelle di localizzazione nei TextAsset Unity
 pub mod unity_loc_tables;
 // Rilevamento lingue gioco da file di localizzazione

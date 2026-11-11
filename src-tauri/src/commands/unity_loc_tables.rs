@@ -111,7 +111,7 @@ fn languages_in<'a>(cells: impl Iterator<Item = &'a str>) -> Vec<String> {
 }
 
 /// Divide una riga CSV rispettando le virgolette doppie.
-fn split_row(line: &str, delimiter: char) -> Vec<String> {
+pub(crate) fn split_row(line: &str, delimiter: char) -> Vec<String> {
     let mut cells = Vec::new();
     let mut current = String::new();
     let mut quoted = false;

@@ -387,7 +387,7 @@ impl Bundle {
 
         // Blocchi: quelli prima e dopo il tratto si copiano dal file originale.
         let blocks_end = self.blocks.last().map(|b| b.file_offset + b.compressed_size as u64).unwrap_or(self.data_start);
-        let mut copy = |file: &mut File, from: u64, to: u64, out: &mut std::io::BufWriter<File>| -> Result<u64, String> {
+        let copy = |file: &mut File, from: u64, to: u64, out: &mut std::io::BufWriter<File>| -> Result<u64, String> {
             file.seek(SeekFrom::Start(from)).map_err(|e| e.to_string())?;
             std::io::copy(&mut file.take(to - from), out).map_err(io)
         };

@@ -251,6 +251,30 @@ fn parse(data: &[u8]) -> Result<(Header, Vec<ParsedObject>), String> {
     Ok((header, objects))
 }
 
+/// Un oggetto del file: dove sta e di che tipo è.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObjectInfo {
+    pub path_id: i64,
+    pub class_id: i32,
+    /// Posizione assoluta del corpo nel file.
+    pub start: usize,
+    pub size: usize,
+}
+
+/// Tutti gli oggetti di un SerializedFile in memoria (scene comprese). Quelli
+/// che puntano fuori dal file si saltano.
+pub fn list_objects(data: &[u8]) -> Result<Vec<ObjectInfo>, String> {
+    let (header, objects) = parse(data)?;
+    Ok(objects
+        .iter()
+        .filter_map(|o| {
+            let start = header.data_offset as usize + o.byte_start as usize;
+            let size = o.byte_size as usize;
+            (start + size <= data.len()).then_some(ObjectInfo { path_id: o.path_id, class_id: o.class_id, start, size })
+        })
+        .collect())
+}
+
 /// Estrae tutti i TextAsset da un SerializedFile in memoria.
 /// Ritorna Err se il file non è un SerializedFile della fascia supportata o se
 /// è troncato; il chiamante può allora ripiegare sullo scan euristico.
@@ -322,17 +346,37 @@ pub fn extract_text_assets_from_path(path: &std::path::Path) -> Result<Vec<Seria
 
 /// Riscrive il contenuto (m_Script) dei TextAsset indicati, restituendo un nuovo
 /// SerializedFile. `replacements` mappa path_id → nuovo contenuto. Gli oggetti
-/// non citati — TextAsset o no — restano identici byte a byte.
+/// non citati — TextAsset o no — restano identici byte a byte. Un path_id che
+/// non è un TextAsset, o il cui corpo non si riconosce, si ignora: meglio
+/// conservare l'originale che corrompere il file.
+pub fn rewrite_text_assets(
+    data: &[u8],
+    replacements: &std::collections::HashMap<i64, String>,
+) -> Result<Vec<u8>, String> {
+    let mut bodies = std::collections::HashMap::new();
+    for obj in list_objects(data)?.iter().filter(|o| o.class_id == CLASS_ID_TEXT_ASSET) {
+        if let Some(script) = replacements.get(&obj.path_id) {
+            if let Some(body) = rebuild_text_asset(&data[obj.start..obj.start + obj.size], script) {
+                bodies.insert(obj.path_id, body);
+            }
+        }
+    }
+    rewrite_objects(data, &bodies)
+}
+
+/// Sostituisce il corpo intero degli oggetti indicati (`bodies`: path_id →
+/// byte nuovi), restituendo un nuovo SerializedFile. Vale per qualunque tipo di
+/// oggetto. Gli oggetti non citati restano identici byte a byte.
 ///
-/// La stringa tradotta può avere lunghezza diversa dall'originale: in quel caso
+/// Un corpo nuovo può avere lunghezza diversa dall'originale: in quel caso
 /// tutti gli oggetti successivi slittano. metadata_size e data_offset NON
 /// cambiano (la tabella oggetti è a campi fissi), quindi ripatchiamo in-place
 /// byte_start/byte_size di ogni oggetto e file_size nell'header, poi riaccodiamo
 /// la sezione dati ricostruita. Senza sostituzioni il risultato è identico
 /// all'ingresso byte per byte.
-pub fn rewrite_text_assets(
+pub fn rewrite_objects(
     data: &[u8],
-    replacements: &std::collections::HashMap<i64, String>,
+    bodies: &std::collections::HashMap<i64, Vec<u8>>,
 ) -> Result<Vec<u8>, String> {
     let (header, mut objects) = parse(data)?;
     let data_offset = header.data_offset as usize;
@@ -374,17 +418,11 @@ pub fn rewrite_text_assets(
         let original = &data[data_offset + start..data_offset + start + size];
         let new_byte_start = new_data.len() as u64;
 
-        let rebuilt = if obj.class_id == CLASS_ID_TEXT_ASSET {
-            // corpo non riconosciuto → None: meglio conservare l'originale che
-            // corrompere il file
-            replacements.get(&obj.path_id).and_then(|script| rebuild_text_asset(original, script))
-        } else {
-            None
-        };
+        let rebuilt = bodies.get(&obj.path_id);
 
         let new_byte_size = match rebuilt {
             Some(body) => {
-                new_data.extend_from_slice(&body);
+                new_data.extend_from_slice(body);
                 // Gli oggetti successivi slittano: lo slittamento si arrotonda a
                 // un multiplo di 16, così ognuno mantiene l'allineamento che
                 // aveva (Unity usa 4, 8 o 16), qualunque esso sia.
@@ -875,6 +913,29 @@ mod tests {
 
         std::fs::write(&path, b"non un asset").unwrap();
         assert!(extract_text_assets_from_path(&path).is_err());
+    }
+
+    #[test]
+    fn any_object_body_can_be_replaced_not_only_text_assets() {
+        let buf = build_serialized(
+            21,
+            "2019.4.38f1",
+            &[(114, vec![1, 2, 3, 4, 5, 6, 7, 8]), (49, text_asset_body("a", "uno")), (114, vec![9; 12])],
+        );
+        let objects = list_objects(&buf).unwrap();
+        assert_eq!(objects.iter().map(|o| o.class_id).collect::<Vec<_>>(), [114, 49, 114]);
+
+        let new_body = vec![0xAB; 40];
+        let out = rewrite_objects(&buf, &HashMap::from([(objects[0].path_id, new_body.clone())])).unwrap();
+        let after = list_objects(&out).unwrap();
+        assert_eq!(&out[after[0].start..after[0].start + after[0].size], new_body.as_slice());
+        // gli altri due oggetti hanno gli stessi byte di prima
+        for i in [1, 2] {
+            assert_eq!(out[after[i].start..after[i].start + after[i].size], buf[objects[i].start..objects[i].start + objects[i].size]);
+        }
+        assert_eq!(extracted(&out)["a"], "uno");
+        // senza sostituzioni: identico
+        assert_eq!(rewrite_objects(&buf, &HashMap::new()).unwrap(), buf);
     }
 
     #[test]

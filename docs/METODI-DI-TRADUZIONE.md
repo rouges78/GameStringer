@@ -591,11 +591,18 @@ espone ancora: non è raggiungibile dall'interfaccia.
 
 ### Lost Host Demo: il bundle riscritto si carica, ma il testo che il gioco mostra NON sta nei TextAsset
 
-**Il fatto.** Sostituire il file di una lingua con un altro non cambia quello
-che il gioco mostra. I 15 TextAsset `LOST_HOST - <Lingua>` esistono, ma il
-testo del menu è **anche incorporato nella scena `level0`**, dentro gli oggetti
-della scena, ed è quella la copia che il gioco usa. I CSV sono con ogni
-probabilità il materiale da cui lo sviluppatore ha generato quei testi.
+**Il fatto.** Sostituire il file della lingua **lituana** con un altro non ha
+cambiato quello che il gioco mostra. I 15 TextAsset `LOST_HOST - <Lingua>`
+esistono, ma il lituano è **anche incorporato nella scena `level0`**: è la
+lingua dello sviluppatore (GestLT) e fa da testo predefinito.
+
+> **Correzione del giorno stesso.** La prima stesura di questa voce diceva che
+> il gioco legge sempre la copia nella scena e che i CSV sono solo materiale di
+> partenza. La misura della voce successiva dice altro: nella scena c'è **solo
+> il lituano**. Che le altre 14 lingue vengano lette dai TextAsset è probabile
+> ma **non provato**: la prova in gioco è stata fatta sull'unica lingua che non
+> passa dai file. Il punto 1 di «Cosa ne segue» resta vero; la frase «è quella
+> la copia che il gioco usa» valeva solo per il lituano.
 
 **Prova nel gioco**, 11/11/2026, con il consenso del proprietario. Scritto nel
 bundle installato il testo italiano al posto di quello lituano
@@ -654,6 +661,84 @@ Dopo la sostituzione il lituano è sparito dal TextAsset ma è rimasto in
 `restore_original`, test `real_bundle_apply`, `real_bundle_restore`,
 `real_bundle_grep` (tutti ignorati; i primi due SCRIVONO nella cartella del
 gioco).
+
+### Tradurre le stringhe dentro gli oggetti di scena (`unity_strings.rs`)
+
+**Il fatto.** Dall'11/11/2026 c'è un motore in Rust che trova le stringhe nel
+corpo di un oggetto Unity (lunghezza in 4 byte, UTF-8, riempimento a zero fino
+al multiplo di 4, cercate solo a posizioni multiple di 4) e sostituisce quelle
+**esattamente uguali** a un testo da tradurre, anche con lunghezza diversa.
+Dentro un oggetto i campi sono in fila, senza puntatori interni, quindi basta
+spostare ciò che segue; la dimensione nuova dell'oggetto la sistema
+`unity_serialized::rewrite_objects`, che ora sostituisce il corpo di un oggetto
+di qualunque tipo.
+
+**Com'è fatta la tabella incorporata di Lost Host Demo.** In `level0` l'oggetto
+`path_id 3540` (MonoBehaviour, 18.592 byte) contiene 577 stringhe a coppie
+`chiave, testo lituano`: `Play`, `Žaisti`, `Settings`, `Nustatymai`… Altri 31
+MonoBehaviour da ~528 byte hanno una sola stringa: il testo predefinito di
+un'etichetta dell'interfaccia.
+
+**Misura.** Tutta in memoria, non scrive nulla. Si traduce il lituano
+incorporato usando come dizionario i due TextAsset del gioco (lituano e
+italiano, appaiati per chiave):
+
+```bash
+cd src-tauri && GS_UNITY_BUNDLE="E:/SteamLibrary/steamapps/common/Lost Host Demo/LostHost_Data/data.unity3d" \
+  GS_UNITY_NODE="level0" GS_UNITY_TABLES="sharedassets0.assets" \
+  GS_UNITY_FROM="LOST_HOST - Lithuanian" GS_UNITY_TO="LOST_HOST - Italian" \
+  cargo test --bin gamestringer -- commands::unity_strings::real_scene_translate::real_scene_translate --ignored --nocapture --exact
+```
+
+| Cosa | `level0` | `level2` |
+|---|---|---|
+| Oggetti | 3.820 | 15.595 |
+| Voci nelle tabelle (lituano / italiano) | 295 / 291 | idem |
+| Coppie traducibili dopo le regole di sicurezza | 279 | idem |
+| Oggetti toccati | 32 (uno da 274 stringhe, 31 da una) | 5 |
+| Stringhe sostituite | 305 | 5 |
+| Stringhe lasciate identiche | 11.221 | 6.356 |
+| Stringhe sbagliate (controllo posizione per posizione) | 0 | 0 |
+| Oggetti non toccati identici byte per byte | tutti | tutti |
+| Dimensione del file | 1.390.912 → 1.391.088 | invariata |
+
+In `level1` e in `sharedassets0.assets` non cambia niente: lì il lituano è
+dentro il CSV, che è un'unica stringa lunga e non è uguale a nessuna voce.
+
+**Regole di sicurezza** (`translation_map`, con test):
+
+1. **Un testo che è anche una chiave non si traduce mai.** La tabella tiene
+   chiavi e testi come stringhe una accanto all'altra: se «OK» si dice «OK»,
+   sostituire quel testo cambierebbe anche la chiave.
+2. **Un testo con due traduzioni diverse si lascia stare.** Se «Atgal» vale
+   sia `Back` sia `Return`, non si sa quale voce si sta guardando.
+3. Si sostituisce solo per uguaglianza esatta: «Play now» non è «Play».
+
+Per queste regole 16 voci su 295 restano in lituano: è il prezzo del non
+rompere il gioco.
+
+**Cosa NON è provato.** Che il gioco carichi `level0` riscritto e mostri
+l'italiano scegliendo il lituano. Il motore non è collegato a nessun comando.
+
+**Trappole.**
+
+1. **Contare «quante stringhe sono uguali a una chiave» prima e dopo non
+   verifica niente.** Dopo la traduzione ce n'erano 6 in più (4.472 → 4.478):
+   non chiavi rovinate, ma parole italiane come «Audio» e «Video» che
+   coincidono con chiavi inglesi. Il controllo giusto è posizione per
+   posizione: stesso numero di stringhe, e la i-esima è il testo nuovo se era
+   in mappa, identica altrimenti.
+2. **`| head` in fondo alla misura ha tagliato di nuovo l'uscita** (la riga di
+   riepilogo di `level0` non c'era). Seconda volta in un giorno: l'uscita di
+   una misura si salva su file e ci si cerca dentro.
+3. **Trovare stringhe è un'euristica, e non importa.** Su `level0` i candidati
+   sono 11.526; fra loro ci saranno byte che per caso sembrano testo. Non si
+   toccano perché non sono uguali a nessuna voce del dizionario.
+
+**Nel codice.** `src-tauri/src/commands/unity_strings.rs` — `find_strings`,
+`replace_strings`, `translation_map`, test `real_scene_strings` e
+`real_scene_translate` (ignorati, sola lettura); `unity_serialized.rs` —
+`list_objects`, `rewrite_objects`.
 
 ## Traduzione in tempo reale (IPC)
 
