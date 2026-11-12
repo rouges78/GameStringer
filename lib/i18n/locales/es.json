@@ -7284,6 +7284,8 @@
     "unityStaticDone": "Traducido. En el juego elige el idioma «{language}»: su nombre en el menú sigue igual.",
     "unityStaticDetail": "{strings} cadenas en {files} archivos, {skipped} entradas sin cambios",
     "unityStaticFallback": "Los archivos del juego no se pueden traducir directamente ({reason}). Paso a XUnity.",
+    "unityStaticHint": "Tablas de localización encontradas: los textos se escriben en los archivos del juego. XUnity solo si no basta.",
+    "alreadyHasLanguage": "El juego ya tiene {lang} entre sus idiomas: elígelo en las opciones del juego. No hay nada que traducir.",
     "ocrOffer": "Siguiente método: OCR en pantalla",
     "ocrOfferDesc": "No se pudo escribir nada en el juego. El OCR lee la pantalla y funciona con cualquier motor.",
     "openOcr": "Abrir OCR",

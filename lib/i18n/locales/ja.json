@@ -7284,6 +7284,8 @@
     "unityStaticDone": "翻訳しました。ゲーム内で言語「{language}」を選んでください。メニュー上の名前はそのままです。",
     "unityStaticDetail": "{files} ファイルの {strings} 文字列、{skipped} 件は変更なし",
     "unityStaticFallback": "ゲームのファイルは直接翻訳できません({reason})。XUnity に切り替えます。",
+    "unityStaticHint": "ローカライズ表が見つかりました。テキストはゲームのファイルに書き込みます。足りない場合のみ XUnity を使います。",
+    "alreadyHasLanguage": "このゲームにはすでに {lang} があります。ゲームのオプションで選んでください。翻訳するものはありません。",
     "ocrOffer": "次の方法:画面OCR",
     "ocrOfferDesc": "ゲームには何も書き込めませんでした。OCRは画面を読み取るため、どのエンジンでも使えます。",
     "openOcr": "OCRを開く",

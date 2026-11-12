@@ -7284,6 +7284,8 @@
     "unityStaticDone": "번역했습니다. 게임에서 언어 “{language}”을(를) 선택하세요. 메뉴의 이름은 그대로입니다.",
     "unityStaticDetail": "{files}개 파일의 문자열 {strings}개, {skipped}개 항목은 그대로",
     "unityStaticFallback": "게임 파일을 직접 번역할 수 없습니다({reason}). XUnity로 넘어갑니다.",
+    "unityStaticHint": "현지화 표를 찾았습니다. 텍스트를 게임 파일에 기록합니다. 부족할 때만 XUnity를 사용합니다.",
+    "alreadyHasLanguage": "이 게임에는 이미 {lang}이(가) 있습니다. 게임 옵션에서 선택하세요. 번역할 내용이 없습니다.",
     "ocrOffer": "다음 방법: 화면 OCR",
     "ocrOfferDesc": "게임에 아무것도 쓸 수 없었습니다. OCR은 화면을 읽으므로 어떤 엔진에서도 동작합니다.",
     "openOcr": "OCR 열기",

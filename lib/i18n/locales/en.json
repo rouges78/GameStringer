@@ -7284,6 +7284,8 @@
     "unityStaticDone": "Translated. In the game, choose the language “{language}”: its name in the menu stays the same.",
     "unityStaticDetail": "{strings} strings in {files} files, {skipped} entries left as they were",
     "unityStaticFallback": "The game files cannot be translated directly ({reason}). Moving on to XUnity.",
+    "unityStaticHint": "Localization tables found: texts are written into the game files. XUnity only if that is not enough.",
+    "alreadyHasLanguage": "The game already has {lang} among its languages: pick it in the game options. There is nothing to translate.",
     "ocrOffer": "Next method: on-screen OCR",
     "ocrOfferDesc": "Nothing could be written into the game. OCR reads the screen and works with any engine.",
     "openOcr": "Open OCR",

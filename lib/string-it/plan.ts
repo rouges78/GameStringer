@@ -47,6 +47,8 @@ export interface TranslationPlan {
   anti_cheat: string | null;
   /** Tabelle di localizzazione trovate nei TextAsset (solo Unity). */
   unity_loc_tables: number;
+  /** Codici delle lingue di quelle tabelle ("en", "it", …). */
+  unity_loc_languages: string[];
   methods: PlannedMethod[];
 }
 

@@ -7284,6 +7284,8 @@
     "unityStaticDone": "Przetłumaczono. W grze wybierz język „{language}”: jego nazwa w menu się nie zmienia.",
     "unityStaticDetail": "{strings} ciągów w {files} plikach, {skipped} wpisów bez zmian",
     "unityStaticFallback": "Plików gry nie da się przetłumaczyć bezpośrednio ({reason}). Przechodzę do XUnity.",
+    "unityStaticHint": "Znaleziono tabele lokalizacji: teksty są zapisywane w plikach gry. XUnity tylko wtedy, gdy to nie wystarczy.",
+    "alreadyHasLanguage": "Gra ma już {lang} wśród swoich języków: wybierz go w opcjach gry. Nie ma nic do tłumaczenia.",
     "ocrOffer": "Następna metoda: OCR ekranu",
     "ocrOfferDesc": "Nie udało się niczego zapisać w grze. OCR czyta ekran i działa z każdym silnikiem.",
     "openOcr": "Otwórz OCR",

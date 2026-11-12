@@ -7284,6 +7284,8 @@
     "unityStaticDone": "Übersetzt. Wähle im Spiel die Sprache „{language}“: Ihr Name im Menü bleibt gleich.",
     "unityStaticDetail": "{strings} Zeichenketten in {files} Dateien, {skipped} Einträge unverändert",
     "unityStaticFallback": "Die Spieldateien lassen sich nicht direkt übersetzen ({reason}). Weiter mit XUnity.",
+    "unityStaticHint": "Lokalisierungstabellen gefunden: Die Texte werden in die Spieldateien geschrieben. XUnity nur, wenn das nicht reicht.",
+    "alreadyHasLanguage": "Das Spiel hat {lang} bereits unter seinen Sprachen: Wähle sie in den Spieloptionen. Es gibt nichts zu übersetzen.",
     "ocrOffer": "Nächste Methode: Bildschirm-OCR",
     "ocrOfferDesc": "Ins Spiel konnte nichts geschrieben werden. Die OCR liest den Bildschirm und funktioniert mit jeder Engine.",
     "openOcr": "OCR öffnen",

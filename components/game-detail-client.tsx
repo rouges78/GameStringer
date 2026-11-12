@@ -246,6 +246,13 @@ export default function GameDetailPage() {
   const [patchStatus, setPatchStatus] = useState<{success: boolean, message: string} | null>(null);
   // Piano di String it: metodi ordinati + anti-cheat, calcolato da Rust.
   const [translationPlan, setTranslationPlan] = useState<TranslationPlan | null>(null);
+  // Lo stesso piano per una corsa di String it già partita: la corsa vede lo
+  // stato del render in cui è nata, quindi un piano arrivato dopo lo legge qui.
+  const translationPlanRef = useRef<TranslationPlan | null>(null);
+  const storePlan = (plan: TranslationPlan | null) => {
+    translationPlanRef.current = plan;
+    setTranslationPlan(plan);
+  };
   const [engineInfo, setEngineInfo] = useState<{
     engine: string;
     can_patch: boolean;
@@ -653,7 +660,7 @@ export default function GameDetailPage() {
   // del gioco (piano) batte quello dedotto dal nome. Un solo punto, invece di
   // ricalcolarlo in ogni ramo.
   const currentEngine = (): string => resolveEngine(
-    translationPlan,
+    translationPlanRef.current,
     game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '',
   );
 
@@ -661,13 +668,13 @@ export default function GameDetailPage() {
   const planPath = game?.installPath;
   const planHint = game?.engine || engineInfo?.engine || '';
   useEffect(() => {
-    if (!planPath) { setTranslationPlan(null); return; }
+    if (!planPath) { storePlan(null); return; }
     let cancelled = false;
     fetchTranslationPlan(planPath, planHint)
-      .then(plan => { if (!cancelled) setTranslationPlan(plan); })
+      .then(plan => { if (!cancelled) storePlan(plan); })
       .catch((e: unknown) => {
         clientLogger.warn('[StringIt] piano non disponibile:', String(e));
-        if (!cancelled) setTranslationPlan(null);
+        if (!cancelled) storePlan(null);
       });
     return () => { cancelled = true; };
   }, [planPath, planHint]);
@@ -2115,7 +2122,7 @@ export default function GameDetailPage() {
   // al metodo che il piano mette dopo. L'OCR non è automatico (serve il gioco
   // a schermo), quindi si propone con un'azione invece di partire da solo.
   const offerMethodAfterRuntime = () => {
-    const next = methodAfterRuntime(translationPlan);
+    const next = methodAfterRuntime(translationPlanRef.current);
     if (!next || !game) return;
     if (next.kind === 'ocr') {
       const params = new URLSearchParams({
@@ -2177,7 +2184,7 @@ export default function GameDetailPage() {
       processName: exeName ?? null,
       processRunning,
       // Anti-cheat: il piano vieta ogni iniezione nel processo del gioco.
-      antiCheatBlocked: Boolean(findMethod(translationPlan, 'runtime-hook')?.blocked_by),
+      antiCheatBlocked: Boolean(findMethod(translationPlanRef.current, 'runtime-hook')?.blocked_by),
     });
 
     const report = buildRunReport({
@@ -2250,6 +2257,17 @@ export default function GameDetailPage() {
     autoTranslateRunningRef.current = true;
     setAutoTranslateBusy(true);
     setAutoTranslateProgress('');
+
+    // Il piano arriva qualche secondo dopo l'apertura della pagina (su Unity
+    // legge tutto data.unity3d). Premuto prima, il pulsante sceglierebbe il
+    // metodo senza piano e salterebbe quelli che solo il piano conosce.
+    if (!translationPlanRef.current) {
+      try {
+        storePlan(await fetchTranslationPlan(game.installPath, planHint));
+      } catch (e: unknown) {
+        clientLogger.warn('[StringIt] piano non disponibile:', String(e));
+      }
+    }
 
     // ── Danganronpa DR1 (Spike Chunsoft, WAD AGAR) ──
     // Regola: UN pulsante. estrai (contratto rebuild) → traduci offline con
@@ -2746,9 +2764,20 @@ export default function GameDetailPage() {
         // scrivere i testi nei file del gioco. Non inietta nulla, quindi si
         // prova PRIMA del controllo anti-cheat. Se il gioco non è fatto per
         // questo metodo si scende a XUnity, come dice il piano.
-        if (findMethod(translationPlan, 'unity-loc-tables')) {
+        const tgt = (targetLang || language || 'it').toLowerCase();
+        // Il gioco ha già quella lingua nelle sue tabelle: non c'è nulla da
+        // tradurre, e scendere a XUnity installerebbe un loader per niente.
+        if (translationPlanRef.current?.unity_loc_languages.includes(tgt.split('-')[0])) {
+          const msg = t('stringItPlan.alreadyHasLanguage').replace('{lang}', currentFlag?.label ?? tgt.toUpperCase());
+          setAutoTranslateSteps([{ label: `📦 ${t('stringItPlan.unityStaticStep')}`, status: 'done', detail: msg }]);
+          toast.info(msg, { duration: 20000 });
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+          return;
+        }
+        if (findMethod(translationPlanRef.current, 'unity-loc-tables')) {
           const stepLabel = `📦 ${t('stringItPlan.unityStaticStep')}`;
-          const tgt = (targetLang || language || 'it').toLowerCase();
           setAutoTranslateSteps([{ label: stepLabel, status: 'running' }]);
           const outcome = await runUnityStaticTranslation({
             gamePath: game.installPath,
@@ -2788,8 +2817,8 @@ export default function GameDetailPage() {
           toast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
         }
         // Anti-cheat: XUnity inietta un loader nel gioco, quindi non si installa.
-        if (findMethod(translationPlan, 'unity-xunity')?.blocked_by) {
-          const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlan?.anti_cheat ?? '');
+        if (findMethod(translationPlanRef.current, 'unity-xunity')?.blocked_by) {
+          const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlanRef.current?.anti_cheat ?? '');
           setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: blockedMsg }]);
           setAutoTranslateError(blockedMsg);
           setAutoTranslateBusy(false);
@@ -3895,7 +3924,10 @@ export default function GameDetailPage() {
               //    mai fatta — il contrario esatto dello scopo dell'app.
               //    Quindi la risposta si SCRIVE, non si fa dedurre.
               const targetCc = (getCountryCode(targetLang) ?? targetLang).toUpperCase();
-              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc);
+              // Le tabelle di localizzazione Unity stanno dentro data.unity3d, dove
+              // la scansione dei file non arriva: le loro lingue le porta il piano.
+              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc)
+                || (translationPlan?.unity_loc_languages ?? []).includes(targetLang.toLowerCase().split('-')[0]);
               const targetName = currentFlag?.label ?? targetLang.toUpperCase();
               return (
                 <div className="flex items-center gap-2 flex-wrap">
@@ -3985,7 +4017,9 @@ export default function GameDetailPage() {
               </div>
               {translationStrategy?.ready && (
                 <div className="text-2xs text-center mt-1 text-noir-500 tracking-wide">
-                  {translationStrategy.engine} · {translationStrategy.detail}
+                  {translationStrategy.engine} · {findMethod(translationPlan, 'unity-loc-tables')
+                    ? t('stringItPlan.unityStaticHint')
+                    : translationStrategy.detail}
                 </div>
               )}
               {translationPlan && <StringItPlan plan={translationPlan} />}

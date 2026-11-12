@@ -63,6 +63,8 @@ pub struct TranslationPlan {
     pub anti_cheat: Option<String>,
     /// Tabelle di localizzazione trovate nei TextAsset (solo Unity).
     pub unity_loc_tables: usize,
+    /// Codici delle lingue che quelle tabelle contengono ("en", "it", …).
+    pub unity_loc_languages: Vec<String>,
     /// Metodi nell'ordine in cui provarli.
     pub methods: Vec<PlannedMethod>,
 }
@@ -85,6 +87,8 @@ pub struct Facts {
     pub rpgmaker: Option<RpgMakerFlavor>,
     /// TextAsset Unity riconosciuti come tabelle di localizzazione.
     pub unity_loc_tables: usize,
+    /// Le lingue di quelle tabelle, senza doppioni.
+    pub unity_loc_languages: Vec<String>,
 }
 
 fn method(id: &'static str, kind: MethodKind, automatic: bool) -> PlannedMethod {
@@ -194,6 +198,7 @@ pub fn build_plan(engine: &str, source: EngineSource, facts: &Facts) -> Translat
         confidence,
         anti_cheat: facts.anti_cheat.clone(),
         unity_loc_tables: facts.unity_loc_tables,
+        unity_loc_languages: facts.unity_loc_languages.clone(),
         methods,
     }
 }
@@ -217,12 +222,15 @@ fn rpgmaker_flavor(dir: &Path) -> Option<RpgMakerFlavor> {
 /// cercare tabelle Unity in un gioco che Unity non è.
 fn probe(dir: &Path, engine: &str) -> Facts {
     let (anti_cheat, _) = super::unity_patcher::detect_anti_cheat_files(&dir.to_string_lossy());
-    let unity_loc_tables = if engine.to_lowercase().contains("unity") {
-        super::unity_loc_tables::scan(dir).len()
+    let tables = if engine.to_lowercase().contains("unity") {
+        super::unity_loc_tables::scan(dir)
     } else {
-        0
+        Vec::new()
     };
-    Facts { anti_cheat, rpgmaker: rpgmaker_flavor(dir), unity_loc_tables }
+    let mut unity_loc_languages: Vec<String> = tables.iter().flat_map(|t| t.recognized.languages.iter().cloned()).collect();
+    unity_loc_languages.sort();
+    unity_loc_languages.dedup();
+    Facts { anti_cheat, rpgmaker: rpgmaker_flavor(dir), unity_loc_tables: tables.len(), unity_loc_languages }
 }
 
 /// Piano di traduzione per un gioco installato.
@@ -312,8 +320,9 @@ mod tests {
         let none = build_plan("Unity", EngineSource::Files, &Facts::default());
         assert_eq!(ids(&none), ["unity-xunity", "runtime-hook", "ocr-overlay"]);
 
-        let facts = Facts { unity_loc_tables: 3, ..Facts::default() };
+        let facts = Facts { unity_loc_tables: 3, unity_loc_languages: vec!["en".into(), "it".into()], ..Facts::default() };
         let plan = build_plan("Unity", EngineSource::Files, &facts);
+        assert_eq!(plan.unity_loc_languages, ["en", "it"]);
         assert_eq!(ids(&plan), ["unity-loc-tables", "unity-xunity", "runtime-hook", "ocr-overlay"]);
         assert_eq!(plan.unity_loc_tables, 3);
         assert!(plan.methods[0].automatic);

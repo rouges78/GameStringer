@@ -818,11 +818,43 @@ Negli script delle scene ci sono 6.270 stringhe distinte.
 Tempo della sonda in build di debug: 6 s (legge e scandisce ~340 MB di file
 serializzati). In build di rilascio non è misurato.
 
+**Il percorso intero dal pulsante (12/11/2026).** Build di sviluppo
+(`npm run tauri:dev`), scheda di Lost Host Demo, lingua `NL`, profilo AI
+«Gratis», pulsante String it. Sotto il pulsante il piano mostrava «Tabelle di
+localizzazione (14)» al primo posto. Esito, in circa due minuti:
+
+- tradotti 291 testi dall'inglese (TM `en → nl` vuota, quindi tutti dall'AI);
+- messaggio dell'app: «In gioco scegli la lingua Lithuanian», 319 stringhe in
+  2 file, 27 voci lasciate com'erano;
+- `data.unity3d` riscritto (+354 KB), originale in `data.unity3d.gs_backup`;
+- `real_bundle_grep`: «Instellingen» 3 volte in `level0` nel file scritto e
+  zero nel backup; «Nustatymai» sparito da `level0` (resta solo nel TextAsset);
+- il gioco ha caricato il bundle riscritto fino al menu, `Player.log` senza
+  errori. **Il menu in olandese non è stato guardato da noi**: la finestra del
+  gioco non era visibile alla prova.
+
+Originale rimesso con `real_bundle_restore`.
+
+Tre difetti visti durante la prova e corretti lo stesso giorno:
+
+- la riga sotto il pulsante diceva «si traducono mentre giochi, con BepInEx +
+  XUnity» anche col piano che mette prima le tabelle: ora, se il piano ha
+  `unity-loc-tables`, dice che i testi si scrivono nei file del gioco;
+- la scheda diceva «Italiano: assente — traducibile» benché il gioco abbia
+  l'italiano fra i suoi file lingua, e con `IT` String it scendeva a XUnity.
+  Il piano ora porta le lingue delle tabelle (`unity_loc_languages`): la
+  scheda dice «già presente» e il pulsante si ferma con «il gioco ha già
+  Italiano», senza installare nulla. Visto nell'app su Lost Host Demo;
+- premuto prima che il piano fosse arrivato, il ramo Unity avrebbe saltato il
+  metodo statico: ora `startAutoTranslate` aspetta il piano. Non provato a
+  schermo: su Lost Host Demo la scansione dura 77 ms e la finestra non si
+  riesce ad aprire a mano.
+
+Resta da guardare: la scheda «Da tradurre» nella barra laterale prende le
+lingue da un'altra fonte e per Lost Host Demo diceva «Manca italiano».
+
 **Cosa NON è provato.**
 
-- Il percorso intero dal pulsante: sonda, traduzione AI, scrittura. I pezzi
-  sono provati separatamente (la scrittura in gioco con un dizionario già
-  pronto, l'orchestratore con dipendenze finte).
 - Che il gioco mostri bene una lingua nuova col font della lingua sostituita:
   la regola dell'alfabeto è un'ipotesi ragionevole, non una misura.
 - Giochi con i file `.assets` sciolti: il metodo li rifiuta dicendolo.
