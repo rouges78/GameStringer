@@ -2541,8 +2541,20 @@ stato guardato a schermo.
    conosce**: backup `.gs_bak`, checkpoint, BepInEx. Una prova pulita parte da
    una cartella senza resti.
 
+**Il motivo del fallimento AI ora si vede (13/11/2026).** Quando nessun
+provider traduce, `translateWithFallback` restituiva solo `success: false`: il
+perché restava nella console della webview. Ora raccoglie un motivo per ogni
+provider della catena (`senza chiave`, `in pausa dopo un errore`, `limite di
+richieste`, `testo restituito invariato`, oppure il messaggio d'errore, con le
+chiavi censurate) e lo mette in tre posti: nel campo `error` del risultato,
+accanto all'errore sotto il pulsante String it, e nel log di Tauri con il
+prefisso `[frontend] [AI]` (comando `log_frontend_warning`). Coperto da un
+test; **non ancora visto nell'app con provider che falliscono davvero**, quindi
+il perché del 13/11 resta da accertare alla prossima prova.
+
 **Nel codice.** `lib/hendrix-translate.ts` — il controllo nel ciclo dei batch
-e il blocco prima di applicare.
+e il blocco prima di applicare. `lib/ai/ai-translate-direct.ts` —
+`recordChainFailure` e `getChainFailureSince`.
 
 ## Come si aggiunge una voce
 

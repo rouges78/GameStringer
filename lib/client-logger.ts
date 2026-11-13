@@ -68,7 +68,7 @@ class ClientLogger {
    * difesa giusta sta QUI, al lavandino: qualunque log futuro che trasporti
    * un URL con credenziali passa da questa funzione.
    */
-  private redactSecrets(text: string): string {
+  public redactSecrets(text: string): string {
     return text
       // query string: ?key= / &api_key= / &token= / &access_token= / &apikey=
       .replace(/([?&](?:key|api[_-]?key|token|access[_-]?token|secret)=)[^&\s"']+/gi, '$1[REDACTED]')

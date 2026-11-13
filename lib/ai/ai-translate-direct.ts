@@ -80,6 +80,8 @@ export interface TranslateResult {
   translations: string[];
   provider: string;
   success: boolean;
+  /** Con `success: false`: perché ogni provider della catena non ha tradotto. */
+  error?: string;
   /** Statistiche del passaggio di riflessione (write → reflect → refine), se eseguito */
   reflection?: { candidates: number; refined: number; repaired?: number };
 }
@@ -108,6 +110,32 @@ function detectBatchLanguage(texts: string[]): string | null {
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+// L'ultima volta che nessun provider ha tradotto, e perché. Chi mostra un
+// errore all'utente lo legge da qui: fino al 13/11/2026 il motivo finiva solo
+// nella console della webview, e String it falliva senza dire perché.
+let lastChainFailure: { at: number; reason: string } | null = null;
+
+/** Il motivo dell'ultimo fallimento di tutta la catena, se avvenuto dopo `since` (ms). */
+export function getChainFailureSince(since: number): string | null {
+  return lastChainFailure && lastChainFailure.at >= since
+    ? `Nessun provider AI ha tradotto: ${lastChainFailure.reason}`
+    : null;
+}
+
+function recordChainFailure(failures: string[]): string {
+  const reason = clientLogger.redactSecrets(
+    failures.length > 0 ? failures.join(' · ') : 'nessun provider configurato',
+  );
+  lastChainFailure = { at: Date.now(), reason };
+  // Anche nel log di Tauri, dove chi prova l'app lo ritrova dopo.
+  if (isTauri()) {
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke('log_frontend_warning', { message: `[AI] nessun provider ha tradotto: ${reason}` }))
+      .catch(() => {});
+  }
+  return reason;
+}
 
 /** Legge API keys da localStorage */
 export function getApiKeys() {
@@ -2010,6 +2038,8 @@ export async function translateWithFallback(
 
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
   const skipped: string[] = [];
+  // Perché ogni provider non ha tradotto: serve solo se falliscono tutti.
+  const failures: string[] = [];
 
   // Auto-select: costruisci chain dinamica per lingua/genere.
   // Prima lo storico di sessione (success/unchanged), poi il benchmark qualità
@@ -2027,9 +2057,9 @@ export async function translateWithFallback(
   for (const providerName of providerList) {
     const info = PROVIDER_MAP[providerName];
     if (!info) { skipped.push(providerName); continue; }
-    if (info.isBlocked()) { skipped.push(providerName); continue; }
+    if (info.isBlocked()) { skipped.push(providerName); failures.push(`${providerName}: in pausa dopo un errore`); continue; }
     const key = info.getKey(keys);
-    if (info.needsKey && !key) { skipped.push(providerName); continue; }
+    if (info.needsKey && !key) { skipped.push(providerName); failures.push(`${providerName}: senza chiave`); continue; }
     providers.push({ name: providerName, key, fn: info.fn });
   }
 
@@ -2103,6 +2133,7 @@ export async function translateWithFallback(
           if (unchangedRatio > 0.7 && providers.length > 1) {
             clientLogger.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
             recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, false);
+            failures.push(`${provider.name}: testo restituito invariato`);
             break; // esce dal retry loop, passa al prossimo provider
           }
           recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, true);
@@ -2158,6 +2189,7 @@ export async function translateWithFallback(
           if (isFree) {
             // Provider gratuiti: quota giornaliera, retry inutile → skip subito
             clientLogger.warn(`[translateWithFallback] ${provider.name} rate-limited (free) → skip`);
+            failures.push(`${provider.name}: limite di richieste`);
             blockProvider(provider.name, false);
             break;
           }
@@ -2169,6 +2201,7 @@ export async function translateWithFallback(
         }
         
         clientLogger.warn(`[translateWithFallback] ${provider.name} failed: ${String(err)}`, 'TRANSLATE');
+        failures.push(`${provider.name}: ${errMsg === 'RateLimit' ? 'limite di richieste' : errMsg.slice(0, 160)}`);
         const isFreeProvider = FREE_PROVIDERS.has(provider.name);
         // ⚠️ Un guasto di RETE non è una colpa del provider (14/08/2026: DNS di
         // casa giù → Gemini «bloccato permanentemente per errore fatale», e a
@@ -2201,8 +2234,9 @@ export async function translateWithFallback(
   // testi originali): il chiamante decide come mostrarlo (la live OCR mostra l'originale,
   // il batch conteggia gli errori). Quindi warn, non error → niente rosso in console su
   // fallimenti transitori dei provider gratuiti, frequenti nella traduzione live.
-  clientLogger.warn(`[translateWithFallback] ⚠️ Nessun provider riuscito: ${opts.texts.length} stringhe NON tradotte (restituite come originali). Verifica chiavi/provider attivi.`);
-  return { translations: opts.texts, provider: 'none', success: false };
+  const reason = recordChainFailure(failures);
+  clientLogger.warn(`[translateWithFallback] ⚠️ Nessun provider riuscito: ${opts.texts.length} stringhe NON tradotte (restituite come originali). ${reason}`);
+  return { translations: opts.texts, provider: 'none', success: false, error: reason };
 }
 
 /**
@@ -2313,6 +2347,7 @@ export async function translateWithFallbackBatched(
   const allTranslations: string[] = new Array(texts.length);
   let lastProvider = 'none';
   let anySuccess = false;
+  let lastError: string | undefined;
   let doneCount = 0;
   
   // Prepara tutti i chunk con il loro indice originale
@@ -2345,6 +2380,7 @@ export async function translateWithFallbackBatched(
         anySuccess = true;
         lastProvider = result.provider;
       } else {
+        lastError = result.error;
         clientLogger.warn(`[Batched] ⚠️ Batch ${chunk.index + 1}/${chunks.length} FALLITO — stringhe non tradotte`);
       }
       doneCount += chunk.texts.length;
@@ -2362,7 +2398,7 @@ export async function translateWithFallbackBatched(
     if (allTranslations[i] === undefined) allTranslations[i] = texts[i];
   }
   
-  return { translations: allTranslations, provider: lastProvider, success: anySuccess };
+  return { translations: allTranslations, provider: lastProvider, success: anySuccess, error: anySuccess ? undefined : lastError };
 }
 
 // ═══════════════════════════════════════════════════════════════════

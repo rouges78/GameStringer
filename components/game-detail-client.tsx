@@ -31,7 +31,7 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 // AudioPatcher import removed — not currently used
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
-import { translateWithFallback, translateWithFallbackBatched } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, translateWithFallbackBatched, getChainFailureSince } from '@/lib/ai/ai-translate-direct';
 import { runUnityStaticTranslation } from '@/lib/string-it/unity-static';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
@@ -256,6 +256,8 @@ export default function GameDetailPage() {
   // Lo stesso piano per una corsa di String it già partita: la corsa vede lo
   // stato del render in cui è nata, quindi un piano arrivato dopo lo legge qui.
   const translationPlanRef = useRef<TranslationPlan | null>(null);
+  // Quando è partito l'ultimo String it: i fallimenti AI precedenti non lo riguardano.
+  const autoTranslateStartedAtRef = useRef(0);
   const storePlan = (plan: TranslationPlan | null) => {
     translationPlanRef.current = plan;
     setTranslationPlan(plan);
@@ -2262,6 +2264,7 @@ export default function GameDetailPage() {
     // con return anticipato: Hendrix/Ren'Py/RPG). Reset garantito nei rispettivi finally.
     if (autoTranslateBusy || autoTranslateRunningRef.current) return;
     autoTranslateRunningRef.current = true;
+    autoTranslateStartedAtRef.current = Date.now();
     setAutoTranslateBusy(true);
     setAutoTranslateProgress('');
 
@@ -4205,7 +4208,15 @@ export default function GameDetailPage() {
           {autoTranslateActive && (
             <AutoTranslateStepper
               steps={autoTranslateSteps}
-              error={autoTranslateError}
+              error={(() => {
+                // Se in questa corsa nessun provider AI ha tradotto, il motivo va
+                // accanto all'errore: senza, «operazione fallita» non dice nulla.
+                // I codici PAK_* sono chiavi che lo stepper riconosce: non si toccano.
+                const aiFailure = getChainFailureSince(autoTranslateStartedAtRef.current);
+                return autoTranslateError && aiFailure && !autoTranslateError.startsWith('PAK_')
+                  ? `${autoTranslateError} — ${aiFailure}`
+                  : autoTranslateError;
+              })()}
               result={autoTranslateResult}
               currentFlagLabel={currentFlag.label}
               onClose={() => setAutoTranslateActive(false)}

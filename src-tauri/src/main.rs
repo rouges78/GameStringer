@@ -431,6 +431,7 @@ fn main() {
             commands::utilities::clear_cache,
             commands::utilities::get_cache_stats,
             commands::utilities::check_path_exists,
+            commands::utilities::log_frontend_warning,
             commands::utilities::find_files_by_extension,
             commands::utilities::create_directory_backup,
             commands::utilities::restore_directory_backup,
