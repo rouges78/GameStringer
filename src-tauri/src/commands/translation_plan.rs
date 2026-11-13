@@ -244,17 +244,22 @@ pub async fn plan_translation(game_path: String, engine_hint: Option<String>) ->
         if !dir.is_dir() {
             return Err("Cartella del gioco non trovata".to_string());
         }
-        let detected = detect_engine(dir);
-        let (engine, source) = if detected != GameEngine::Unknown {
-            (detected.as_str().to_string(), EngineSource::Files)
-        } else {
-            (engine_hint.unwrap_or_default(), EngineSource::Hint)
-        };
-        let facts = probe(dir, &engine);
-        Ok(build_plan(&engine, source, &facts))
+        Ok(plan_for(dir, engine_hint))
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// Il piano per una cartella di gioco: legge il disco, poi applica la regola.
+fn plan_for(dir: &Path, engine_hint: Option<String>) -> TranslationPlan {
+    let detected = detect_engine(dir);
+    let (engine, source) = if detected != GameEngine::Unknown {
+        (detected.as_str().to_string(), EngineSource::Files)
+    } else {
+        (engine_hint.unwrap_or_default(), EngineSource::Hint)
+    };
+    let facts = probe(dir, &engine);
+    build_plan(&engine, source, &facts)
 }
 
 #[cfg(test)]
@@ -399,5 +404,119 @@ mod tests {
         let ace = tempfile::tempdir().unwrap();
         std::fs::write(ace.path().join("Game.rgss3a"), "").unwrap();
         assert_eq!(rpgmaker_flavor(ace.path()), Some(RpgMakerFlavor::Rgss));
+    }
+}
+
+/// Banco di prova su giochi VERI, in sola lettura: per ogni gioco installato,
+/// quale motore riconosce il piano e quale metodo proverebbe per primo. Non
+/// traduce nulla e non dice se il metodo poi riesce: misura la SCELTA.
+///
+/// I giochi sono quelli che Steam dà per installati (`appmanifest_*.acf` con
+/// `StateFlags` 4): le cartelle in `common` non bastano, molte sono resti di
+/// giochi disinstallati (salvataggi, backup, BepInEx) e risultano «Unknown».
+///
+/// Il confronto è con `bench/string-it-plan.tsv`: un gioco che cambia riga fa
+/// fallire il test, uno non più installato si salta, uno nuovo si segnala.
+/// `GS_BENCH_WRITE=1` riscrive il file con quello che si vede ora.
+///
+/// ```bash
+/// cd src-tauri && GS_BENCH_LIBRARIES="C:/Program Files (x86)/Steam/steamapps;E:/SteamLibrary/steamapps" ///   cargo test --bin gamestringer -- commands::translation_plan::real_bench::real_games_plan_bench --ignored --nocapture --exact
+/// ```
+#[cfg(test)]
+mod real_bench {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    const EXPECTED: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/bench/string-it-plan.tsv");
+    const HEADER: &str = "gioco\tmotore\tfonte\tprimo metodo\tanti-cheat\ttabelle";
+
+    /// Il primo metodo che String it eseguirebbe da solo: automatico e non
+    /// bloccato. `-` se resta solo ciò che richiede l'utente (pagina, OCR).
+    fn first_automatic(plan: &TranslationPlan) -> &'static str {
+        plan.methods.iter().find(|m| m.automatic && m.blocked_by.is_none()).map(|m| m.id).unwrap_or("-")
+    }
+
+    /// Il valore di una chiave in un `.acf`: `"installdir" "Lost Host Demo"`.
+    fn acf_value(acf: &str, key: &str) -> Option<String> {
+        let line = acf.lines().find(|l| l.trim_start().starts_with(&format!("\"{key}\"")))?;
+        line.rsplit('"').nth(1).map(str::to_string)
+    }
+
+    /// Cartelle dei giochi installati in una libreria Steam (`…/steamapps`).
+    fn installed_games(steamapps: &Path) -> Vec<std::path::PathBuf> {
+        let entries = std::fs::read_dir(steamapps).unwrap_or_else(|e| panic!("{}: {e}", steamapps.display()));
+        entries
+            .flatten()
+            .filter(|e| e.file_name().to_string_lossy().starts_with("appmanifest_"))
+            .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+            .filter(|acf| acf_value(acf, "StateFlags").as_deref() == Some("4"))
+            .filter_map(|acf| acf_value(&acf, "installdir"))
+            // strumenti di Steam, non giochi
+            .filter(|dir| !["Steamworks Shared", "SteamVR", "Steam Controller Configs"].contains(&dir.as_str()))
+            .map(|dir| steamapps.join("common").join(dir))
+            .filter(|path| path.is_dir())
+            .collect()
+    }
+
+    fn row(plan: &TranslationPlan) -> String {
+        format!(
+            "{}\t{:?}\t{}\t{}\t{}",
+            plan.engine,
+            plan.engine_source,
+            first_automatic(plan),
+            plan.anti_cheat.as_deref().unwrap_or("-"),
+            plan.unity_loc_tables
+        )
+    }
+
+    #[test]
+    #[ignore]
+    fn real_games_plan_bench() {
+        let libraries = std::env::var("GS_BENCH_LIBRARIES").expect("GS_BENCH_LIBRARIES non impostata");
+        let mut seen: BTreeMap<String, String> = BTreeMap::new();
+        for library in libraries.split(';').filter(|l| !l.trim().is_empty()) {
+            for game in installed_games(Path::new(library.trim())) {
+                let name = game.file_name().unwrap().to_string_lossy().to_string();
+                seen.insert(name, row(&plan_for(&game, None)));
+            }
+        }
+
+        let expected: BTreeMap<String, String> = std::fs::read_to_string(EXPECTED)
+            .unwrap_or_default()
+            .lines()
+            .skip(1)
+            .filter_map(|line| line.split_once('\t'))
+            .map(|(name, rest)| (name.to_string(), rest.to_string()))
+            .collect();
+
+        let mut changed = Vec::new();
+        println!("{HEADER}");
+        for (name, now) in &seen {
+            let mark = match expected.get(name) {
+                Some(before) if before == now => "  ",
+                Some(before) => {
+                    changed.push(format!("{name}: era «{before}», ora «{now}»"));
+                    "≠ "
+                }
+                None => "+ ",
+            };
+            println!("{mark}{name}\t{now}");
+        }
+        let unknown = seen.values().filter(|r| r.split('\t').nth(1) != Some("Files")).count();
+        println!("giochi={} | motore non riconosciuto dai file={}", seen.len(), unknown);
+
+        if std::env::var("GS_BENCH_WRITE").is_ok() {
+            let mut out = format!("{HEADER}\n");
+            for (name, now) in &seen {
+                out.push_str(&format!("{name}\t{now}\n"));
+            }
+            std::fs::create_dir_all(Path::new(EXPECTED).parent().unwrap()).unwrap();
+            std::fs::write(EXPECTED, out).unwrap();
+            println!("scritto {EXPECTED}");
+            return;
+        }
+        assert!(changed.is_empty(), "il piano è cambiato per {} giochi:
+{}", changed.len(), changed.join("
+"));
     }
 }

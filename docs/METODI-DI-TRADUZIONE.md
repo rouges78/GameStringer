@@ -2415,6 +2415,128 @@ le tabelle di localizzazione a XUnity. I rami di `startAutoTranslate` restano
 `if` in sequenza: portare un metodo nuovo nel piano richiede ancora un ramo
 scritto a mano.
 
+### Il banco di prova del piano sui giochi installati (12/11/2026)
+
+**Il fatto.** Un test `#[ignore]` fa il piano per ogni gioco che Steam dà per
+installato e lo confronta con `src-tauri/bench/string-it-plan.tsv`: motore,
+da dove lo sappiamo, primo metodo automatico, anti-cheat, tabelle Unity. Se
+una riga cambia il test fallisce; un gioco nuovo è segnato `+`, uno non più
+installato si salta. È in sola lettura e misura la SCELTA del metodo, non se
+poi il metodo riesce.
+
+```bash
+cd src-tauri && GS_BENCH_LIBRARIES="C:/Program Files (x86)/Steam/steamapps;E:/SteamLibrary/steamapps;F:/SteamLibrary/steamapps" \
+  cargo test --bin gamestringer -- commands::translation_plan::real_bench::real_games_plan_bench --ignored --nocapture --exact
+```
+
+`GS_BENCH_WRITE=1` riscrive il file con quello che si vede ora: va usato dopo
+aver installato un gioco o aver cambiato la regola di proposito.
+
+**Misura.** 15 giochi installati al 13/11/2026 (erano 8 il giorno prima),
+1,1 s in tutto, motore letto dai file in 13 su 15:
+
+| Gioco | Motore | Fonte | Primo metodo automatico |
+|---|---|---|---|
+| AILA, DREAD FLATS, Fobia, Townfall | Unreal Engine | file | `unreal-locres` |
+| Lost Host Demo | Unity | file | `unity-loc-tables` (14 tabelle) |
+| art of rally, Mouthwashing | Unity | file | `unity-xunity` |
+| Danganronpa Trigger Happy Havoc | Spike Chunsoft | file | `danganronpa-wad` |
+| Foolish Mortals | Visionaire Studio | file | `visionaire-vis` |
+| Look Outside | Hendrix Localization | file | `hendrix-csv` |
+| Scarlet Hollow | Ren'Py | file | `renpy-tl` |
+| The Incident at Galley House | Godot | file | `runtime-hook` |
+| Resident Evil Requiem | RE Engine | file | `generic-workflow` |
+| Gabriel Knight 2, The Dig | Unknown | nessuna | `generic-workflow` |
+
+Su Godot il primo metodo del piano è `godot-pck`, che è una pagina e non parte
+da solo: per questo il primo AUTOMATICO risulta l'aggancio a runtime.
+
+**Cosa NON è provato.** Che il metodo scelto riesca: il banco dice solo quale
+è. In particolare `generic-workflow` su RE Engine, Gabriel Knight 2 e The Dig.
+Senza un gioco installato restano RPG Maker MV/MZ puro, GameMaker, Tyrano e
+Wolf RPG.
+
+**Trappole.**
+
+1. **Le cartelle in `steamapps/common` non sono i giochi installati.** La
+   prima versione le contava tutte: 45 «giochi», 33 col motore sconosciuto.
+   Erano resti di giochi disinstallati (salvataggi, backup `.gs_bak`,
+   BepInEx). I giochi veri sono gli `appmanifest_*.acf` con `StateFlags` 4.
+2. **`F:/SteamLibrary` non è in `libraryfolders.vdf`** e non ha manifest: solo
+   resti. Non conta.
+
+**Nel codice.** `src-tauri/src/commands/translation_plan.rs` — `plan_for`
+(il piano per una cartella, usato anche dal comando) e il modulo `real_bench`.
+
+### Il pulsante sui giochi del banco: tre provati, uno scriveva inglese (13/11/2026)
+
+**Il fatto.** String it premuto nella build di sviluppo su tre giochi appena
+installati, profilo AI «Gratis», backend cloud. Ogni cartella è stata
+fotografata prima (percorso e dimensione di ogni file) e confrontata dopo.
+
+| Gioco | Metodo | Esito |
+|---|---|---|
+| Foolish Mortals | `visionaire-vis` | interrotto a 2.000/33.221: 540 tradotte, **262 scritte** |
+| Look Outside | `hendrix-csv` | «finito» in 10 min: **23.322 righe su 23.532 uguali all'inglese** |
+| Mouthwashing (`nl`) | `unity-xunity` | installato; nel gioco 49 testi tradotti dopo 75 s |
+
+**Foolish Mortals.** Scansione ed estrazione riuscite, ~660 stringhe/min
+(un'ora per tutto). Backup `data.vis.gs_bak` e checkpoint
+`gamestringer_ckpt_it.json` creati; l'annullamento funziona. Dal log di
+`visionaire_patcher`: «Patch a parità di offset: 262 applicate, 278 NON entrano
+nello spazio dell'originale (tenuto l'inglese)». **Metà delle traduzioni
+italiane è più lunga dell'originale e viene scartata**: il gioco esce a
+macchia di leopardo. Dopo l'annullamento i passi restano segnati con la spunta
+verde, con scritto «interrotta dall'utente».
+
+**Look Outside.** La barra è arrivata al 100% e non è comparso alcun
+riepilogo. Nel CSV la colonna `it` conteneva l'inglese: le 142 righe
+«diverse» differivano solo per gli spazi ai bordi. Causa: quando tutti i
+provider falliscono `translateWithFallback` restituisce i testi sorgente con
+`success: false`; `runHendrixTranslation` non guardava `success` e accettava
+un testo uguale all'originale, quindi il freno dei tre batch a vuoto non
+scattava mai. Danganronpa, RPG Maker e Ren'Py lo scartavano già; Hendrix no.
+Corretto: uguale all'originale (a meno degli spazi ai bordi) non è una
+traduzione, e senza nemmeno una traduzione il gioco non si tocca. Riprovato:
+«Operazione fallita», cartella intatta.
+
+**Mouthwashing.** BepInEx 5 + XUnity 5.6.3.1 installati, `Language=nl`,
+`Endpoint=GoogleTranslateV2`. Avviato il gioco: `LogOutput.log` dice «Loaded
+XUnity.AutoTranslator into Unity [2022.3.15f1]» e
+`_AutoGeneratedTranslations.txt` aveva 49 righe («New Game=Nieuw spel»). Un
+solo errore di batch su un testo lungo. La traduzione la fa Google dentro
+XUnity, non la catena AI dell'app.
+
+**Cosa NON è provato.** AILA, Danganronpa, Scarlet Hollow e The Incident at
+Galley House: i provider gratuiti avevano smesso di rispondere e senza
+traduzione la prova non dice nulla. Perché abbiano smesso non è accertato
+(limite di richieste è l'ipotesi): gli errori stanno nella console della
+webview, che il log di `tauri:dev` non raccoglie. Nessuno dei tre giochi è
+stato guardato a schermo.
+
+**Trappole.**
+
+1. **Una barra al 100% non dice che è stato tradotto qualcosa.** L'unica
+   prova è confrontare la colonna scritta con l'originale.
+2. **«Italiano: già presente» su Look Outside è falso.** Il gioco ha solo le
+   colonne `en, fr, sp, cn`. La scansione delle lingue conta i file
+   `locales/it.pak` di Chromium che NW.js porta con sé (32 «lingue»). Non
+   corretto.
+3. **Su Mouthwashing l'italiano c'è davvero e il pulsante procede lo stesso.**
+   Il blocco «il gioco ha già la lingua» copre solo le tabelle Unity; qui con
+   `IT` avrebbe installato XUnity per niente. Non corretto.
+4. **HowLongToBeat dà gli stessi numeri a ogni gioco** (19h / 22h / 26h / 24h
+   per Lost Host Demo, Foolish Mortals, Look Outside, Mouthwashing). Non
+   corretto.
+5. **Il traduttore Hendrix toglie gli spazi iniziali**, che in Look Outside
+   servono a centrare i cartelli. Non corretto.
+6. **Dopo la reinstallazione di un gioco Steam lascia i file che non
+   conosce**: backup `.gs_bak`, checkpoint, BepInEx. Una prova pulita parte da
+   una cartella senza resti.
+
+**Nel codice.** `lib/hendrix-translate.ts` — il controllo nel ciclo dei batch
+e il blocco prima di applicare.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
