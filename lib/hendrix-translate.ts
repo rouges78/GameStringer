@@ -144,7 +144,11 @@ export async function runHendrixTranslation(opts: {
     outs.forEach((raw, k) => {
       const orig = slice[k].original;
       const accepted = acceptOfflineTranslation(orig, (raw || '').trim());
-      if (accepted !== null) { translations[orig] = accepted; accettateNelBatch++; }
+      // Uguale all'originale non è una traduzione: quando tutti i provider
+      // falliscono il cloud restituisce i testi sorgente, e accettarli scriveva
+      // l'inglese nella colonna della lingua (Look Outside, 13/11/2026). Il
+      // confronto ignora gli spazi ai bordi: `raw` arriva già senza.
+      if (accepted !== null && accepted.trim() !== orig.trim()) { translations[orig] = accepted; accettateNelBatch++; }
     });
     if (accettateNelBatch === 0) {
       batchVuoti++;
@@ -164,6 +168,12 @@ export async function runHendrixTranslation(opts: {
       await syncRowsAndSave(); // checkpoint + applica risultati parziali in-game
       sinceSave = 0;
     }
+  }
+
+  // Senza nemmeno una traduzione non si tocca il gioco: abilitare il plugin
+  // con la colonna vuota lo farebbe partire in una lingua che non c'è.
+  if (Object.keys(translations).length === 0) {
+    throw new Error(`nessuna traduzione ottenuta dal motore AI (${backend})`);
   }
 
   // Finalizzazione: salva, applica colonna, abilita plugin + lingua.
