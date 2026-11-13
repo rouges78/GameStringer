@@ -140,6 +140,13 @@ function compatRefFor(game: Game): CompatGameRef {
 }
 
 /** Separatore fra le stringhe concatenate in una sola richiesta di traduzione. */
+/** Le lingue che lo store dichiara per il gioco, senza tag HTML né asterischi. */
+function storeLanguages(game: Game | null | undefined): string[] {
+  return typeof game?.supported_languages === 'string'
+    ? game.supported_languages.split(',').map(s => s.replace(/<[^>]*>/g, '').replace(/\*/g, '').trim()).filter(Boolean)
+    : [];
+}
+
 const SEP_TRADUZIONE = '\n||||\n';
 
 /**
@@ -2765,9 +2772,14 @@ export default function GameDetailPage() {
         // prova PRIMA del controllo anti-cheat. Se il gioco non è fatto per
         // questo metodo si scende a XUnity, come dice il piano.
         const tgt = (targetLang || language || 'it').toLowerCase();
-        // Il gioco ha già quella lingua nelle sue tabelle: non c'è nulla da
-        // tradurre, e scendere a XUnity installerebbe un loader per niente.
-        if (translationPlanRef.current?.unity_loc_languages.includes(tgt.split('-')[0])) {
+        // Il gioco ha già quella lingua, nelle sue tabelle o a detta dello
+        // store: non c'è nulla da tradurre, e scendere a XUnity installerebbe
+        // un loader per niente (Mouthwashing, 13/11/2026). La scansione dei
+        // file qui non conta: è un'euristica, e un falso positivo fermerebbe
+        // il pulsante.
+        const tgtCc = (getCountryCode(tgt) ?? tgt).toUpperCase();
+        if (translationPlanRef.current?.unity_loc_languages.includes(tgt.split('-')[0])
+          || storeLanguages(game).some(l => (getCountryCode(l) ?? '').toUpperCase() === tgtCc)) {
           const msg = t('stringItPlan.alreadyHasLanguage').replace('{lang}', currentFlag?.label ?? tgt.toUpperCase());
           setAutoTranslateSteps([{ label: `📦 ${t('stringItPlan.unityStaticStep')}`, status: 'done', detail: msg }]);
           toast.info(msg, { duration: 20000 });
@@ -3902,9 +3914,7 @@ export default function GameDetailPage() {
 
             {/* Lingue del gioco — rilevate dai file di localizzazione (+ Steam se presenti) */}
             {(() => {
-              const fromSteam = typeof game.supported_languages === 'string'
-                ? game.supported_languages.split(',').map(s => s.replace(/<[^>]*>/g, '').replace(/\*/g, '').trim()).filter(Boolean)
-                : [];
+              const fromSteam = storeLanguages(game);
               const seen = new Set<string>();
               const merged: string[] = [];
               for (const l of [...detectedLanguages, ...fromSteam]) {
