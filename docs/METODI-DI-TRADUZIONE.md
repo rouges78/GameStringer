@@ -2710,6 +2710,68 @@ verificato. La corsa completa di Danganronpa non è stata fatta.
 3. **MyMemory ora raggiunge il server dall'app** (risponde, anche se col testo
    invariato): la correzione del mattino è confermata.
 
+### AILA avviato: la tripletta si carica, ma i `.locres` non sono tutto il testo (13/11/2026)
+
+**Il fatto.** AILA avviato da Steam (`steam://rungameid/2695430`) con la
+tripletta `ProjectAIDA_GameStringer_it_P.*` nella cartella `Paks`. È la prima
+volta che una patch scritta dal pulsante viene guardata dentro il gioco.
+
+**Cosa si vede.**
+
+- Menu principale in italiano: «GIOCO NUOVO», «OPZIONI», «ESCI», «Regola le
+  opzioni di gioco.», «Naviga», «Conferma». Sono le nostre stringhe: stanno
+  identiche in `GameStringer/translation_session.json`.
+- In Opzioni la voce TESTI è su **ENGLISH** e il gioco mostra l'italiano: la
+  patch copre i testi inglesi, non aggiunge una decima lingua da scegliere.
+- In partita l'intestazione «OBIETTIVI» è italiana, l'obiettivo sotto resta
+  **«Go to the dinner»** (visto dal proprietario giocando).
+
+**Perché l'obiettivo resta inglese.** La frase non è in nessuno degli 8
+`.locres`: 0 occorrenze nella sessione delle 3.518 stringhe. Decomprimendo
+tutti i 601.660 blocchi di `ProjectAIDA-Windows.ucas` (17,5 GB) compare **una
+volta sola**, nell'asset `Content/Blueprints/AP/Trash/UI_PercentMission.uasset`
+(chunk `823cb2deef3dcc1e00000001`). Lì è un `FText` **senza chiave**: flag `2`
+(`CultureInvariant`), storia `-1`, poi la stringa. Un testo invariante non ha
+namespace né chiave, quindi **nessuna voce di `.locres` può tradurlo**:
+l'ipotesi «basta aggiungere la chiave» era sbagliata.
+
+**Il metodo che funziona: sostituire l'asset.** Provato su questa sola frase.
+
+```bash
+# retoc vuole solo i contenitori del gioco: con la nostra tripletta nella
+# stessa cartella rifiuta («different header versions»). Servono copie o
+# collegamenti fisici di ProjectAIDA-Windows.utoc/.ucas e global.utoc/.ucas.
+retoc to-legacy -f UI_PercentMission --no-shaders <cartella-collegamenti> legacy
+# nel .uexp: «Go to the dinner» -> «Vai alla cena   » (stessa lunghezza)
+retoc to-zen --version UE5_5 legacy ProjectAIDA_GameStringer_assets_P.utoc
+```
+
+La tripletta `ProjectAIDA_GameStringer_assets_P.pak/.utoc/.ucas` (347 + 483 +
+31.599 byte) copiata in `Paks`: il gioco parte, carica il salvataggio e
+l'inventario (TAB) mostra **«Vai alla cena»** sotto «OBIETTIVI».
+
+**Cosa NON è provato.**
+
+- Una traduzione di **lunghezza diversa**: qui la frase è stata riempita di
+  spazi per non spostare nessun offset. Con lunghezze libere vanno riscritte le
+  dimensioni dentro l'asset.
+- **Quanti** testi invarianti ha il gioco. Di sicuro non è l'unico: le tre
+  schede dell'inventario dicono «Items».
+- Che il metodo regga su altri asset e altri giochi: un asset, un gioco.
+
+**Trappole.**
+
+1. **«Tradotto al 94%» è il 94% dei `.locres`, non del gioco.** Il riepilogo
+   non sa dei testi rimasti negli asset.
+2. **La nostra tripletta `_it_P` ha un'intestazione più nuova del gioco**
+   (`SoftPackageReferencesOffset`, scritta come UE5_7; il gioco è
+   `SoftPackageReferences`, cioè UE5_5). Il gioco la carica lo stesso perché è
+   vuota, ma `retoc` si rifiuta di leggere le due insieme. Per un contenitore
+   con asset veri la versione va presa dal gioco, non fissata.
+3. **Errori del modello passati senza controllo**, visti a schermo:
+   «LINGUAGUE» per Language, «MAUS/TASTIERA» per Mouse/Keyboard, «CAMMINA
+   DRITTO» sul tasto D (era «muovi a destra»).
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
