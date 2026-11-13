@@ -193,6 +193,11 @@ fn walk(dir: &Path, depth: usize, in_loc: bool, budget: &mut usize, out: &mut BT
         let name_lc = name.to_ascii_lowercase();
 
         if file_type.is_dir() {
+            // `locales/en-US.pak` è l'interfaccia di Chromium che NW.js, Electron
+            // e CEF portano con sé in decine di lingue: non sono lingue del gioco.
+            if name_lc == "locales" && path.join("en-US.pak").is_file() {
+                continue;
+            }
             let dir_is_loc = LOC_FOLDERS.contains(&name_lc.as_str());
             let child_in_loc = in_loc || dir_is_loc;
 
@@ -247,4 +252,36 @@ pub async fn detect_languages_from_files(game_path: String) -> Result<Vec<String
     walk(&root, 0, false, &mut budget, &mut out);
 
     Ok(out.into_iter().collect::<Vec<String>>())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scan(root: &Path) -> Vec<String> {
+        let mut out = BTreeSet::new();
+        let mut budget = 1_000;
+        walk(root, 0, false, &mut budget, &mut out);
+        out.into_iter().collect()
+    }
+
+    #[test]
+    fn chromium_locales_are_not_game_languages() {
+        let dir = tempfile::tempdir().unwrap();
+        let locales = dir.path().join("locales");
+        std::fs::create_dir(&locales).unwrap();
+        for name in ["en-US.pak", "it.pak", "de.pak"] {
+            std::fs::write(locales.join(name), b"").unwrap();
+        }
+        assert!(scan(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn a_game_locales_folder_still_counts() {
+        let dir = tempfile::tempdir().unwrap();
+        let locales = dir.path().join("locales");
+        std::fs::create_dir(&locales).unwrap();
+        std::fs::write(locales.join("it.json"), b"{}").unwrap();
+        assert_eq!(scan(dir.path()), vec!["Italian".to_string()]);
+    }
 }
