@@ -29,37 +29,10 @@ const ROOT = path.resolve(__dirname, '..');
  * non è raggiungibile da input di terzi, e cosa sblocca la rimozione.
  */
 const ALLOWLIST = [
-  {
-    id: 'GHSA-vfj7-8cjw-p6xm',
-    package: 'braces',
-    until: '2026-11-20',
-    reason: [
-      'braces <=3.0.3 va in stack exhaustion espandendo pattern di parentesi',
-      'graffe annidati in profondità. Impatto solo Availability (crash).',
-      '',
-      'Perché non si aggiorna e basta: il range vulnerabile è <=3.0.3 e la',
-      '3.0.3 è l\'ULTIMA versione pubblicata (settembre 2024, verificato sul',
-      'registry il 20/10/2026). Non esiste un fix, né backport né major:',
-      'nessun `npm audit fix` e nessun override possibile. Il «fix» che npm',
-      'propone è tailwindcss 4, una migrazione dell\'intero CSS, non un bump.',
-      '',
-      'Perché non è raggiungibile da input di terzi:',
-      '  - braces arriva solo da micromatch / fast-glob / chokidar 3, tirati',
-      '    da tailwindcss 3.3.3 e da eslint-config-next: tutti',
-      '    devDependencies, il gate lo marca «solo dev». Niente finisce nel',
-      '    bundle Tauri spedito (il chokidar di dependencies è il 5, che non',
-      '    usa braces).',
-      '  - i pattern che espande sono i glob scritti da noi nel `content` di',
-      '    tailwind.config e nella config ESLint: input LOCALE dello',
-      '    sviluppatore, mai dati da rete o da un gioco tradotto.',
-      '  - nessun sorgente dell\'app importa braces, micromatch o fast-glob',
-      '    (grep su app/ components/ lib/ hooks/ scripts/ il 20/10/2026).',
-      '',
-      'Cosa sblocca la rimozione: una braces >3.0.3 col fix (allora basta',
-      '`npm update braces`), oppure la migrazione a tailwindcss 4 insieme a',
-      'un eslint-config-next che non tiri più fast-glob 3.',
-    ].join('\n'),
-  },
+  // GHSA-vfj7-8cjw-p6xm (braces) — pensionata il 13/11/2026, prima della
+  // scadenza del 20/11: l'advisory non compare più nell'audit e il gate
+  // stesso chiedeva di toglierla.
+  //
   // GHSA-ggr8-5vv4-36mx (deepmerge-ts, CVE-2026-40345) — pensionata il
   // 20/10/2026, in anticipo sulla scadenza del 02/11. @prisma/config 6.x pinna
   // ancora deepmerge-ts 7.1.5, ma l'unico uso è `deepmerge()` semplice come
