@@ -904,8 +904,29 @@ async function translateWithDeepLVoice(
   return results;
 }
 
+/**
+ * GET verso MyMemory. Nell'app Tauri la `fetch` della webview verso un dominio
+ * esterno fallisce («Failed to fetch», visto il 13/11/2026 su Scarlet Hollow):
+ * la richiesta passa dal lato Rust, come fa già la traduzione della chat.
+ */
+async function myMemoryGet(url: string): Promise<{ status: number; data: { responseStatus?: number | string; responseData?: { translatedText?: string } } | null }> {
+  if (isTauri()) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    try {
+      return { status: 200, data: JSON.parse(await invoke<string>('fetch_url_content', { url })) };
+    } catch (e) {
+      // `fetch_url_content` risponde «HTTP <codice> per <url>» quando il server rifiuta.
+      const http = /HTTP (\d{3})/.exec(String(e));
+      if (http) return { status: Number(http[1]), data: null };
+      throw e;
+    }
+  }
+  const res = await fetch(url);
+  return { status: res.status, data: res.ok ? await res.json() : null };
+}
+
 /** MyMemory — gratis, nessuna API key, 5000 chars/day */
-async function translateWithMyMemory(
+export async function translateWithMyMemory(
   _apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
@@ -915,12 +936,11 @@ async function translateWithMyMemory(
   
   for (const text of opts.texts) {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcLang}|${tgtLang}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      blockProvider('mymemory', res.status === 429 ? false : true);
-      throw new Error(res.status === 429 ? 'RateLimit' : `MyMemory ${res.status}`);
+    const { status, data } = await myMemoryGet(url);
+    if (!data) {
+      blockProvider('mymemory', status === 429 ? false : true);
+      throw new Error(status === 429 ? 'RateLimit' : `MyMemory ${status}`);
     }
-    const data = await res.json();
     if (data?.responseStatus === 429) {
       blockProvider('mymemory', false); // cooldown, non blocco permanente
       throw new Error('RateLimit');
