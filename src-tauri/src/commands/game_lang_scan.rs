@@ -192,6 +192,15 @@ fn walk(dir: &Path, depth: usize, in_loc: bool, budget: &mut usize, out: &mut BT
         let name = entry.file_name().to_string_lossy().to_string();
         let name_lc = name.to_ascii_lowercase();
 
+        // I file che scriviamo noi nella cartella del gioco portano la lingua
+        // di DESTINAZIONE nel nome (`gs_renpy_progress_it.json`): contarli
+        // faceva risultare «italiano già presente» dopo una traduzione fallita
+        // (Scarlet Hollow, 13/11/2026).
+        let own = name_lc.trim_start_matches('.');
+        if own.starts_with("gamestringer") || own.starts_with("gs_") || name_lc.contains(".gsprogress_") {
+            continue;
+        }
+
         if file_type.is_dir() {
             // `locales/en-US.pak` è l'interfaccia di Chromium che NW.js, Electron
             // e CEF portano con sé in decine di lingue: non sono lingue del gioco.
@@ -273,6 +282,21 @@ mod tests {
         for name in ["en-US.pak", "it.pak", "de.pak"] {
             std::fs::write(locales.join(name), b"").unwrap();
         }
+        assert!(scan(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn our_own_files_are_not_game_languages() {
+        let dir = tempfile::tempdir().unwrap();
+        for name in [
+            "gs_renpy_progress_it.json",
+            "gamestringer_ckpt_it.json",
+            "game_messages.csv.gsprogress_it.json",
+        ] {
+            std::fs::write(dir.path().join(name), b"{}").unwrap();
+        }
+        let ours = dir.path().join("GameStringer").join("tl").join("italian");
+        std::fs::create_dir_all(&ours).unwrap();
         assert!(scan(dir.path()).is_empty());
     }
 

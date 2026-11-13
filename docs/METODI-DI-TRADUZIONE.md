@@ -2552,6 +2552,49 @@ prefisso `[frontend] [AI]` (comando `log_frontend_warning`). Coperto da un
 test; **non ancora visto nell'app con provider che falliscono davvero**, quindi
 il perché del 13/11 resta da accertare alla prossima prova.
 
+**Visto nell'app lo stesso giorno, su Scarlet Hollow (Ren'Py).** Estrazione
+riuscita: 83.530 stringhe da `GameStringer/rpa_src` (199 file `.rpy`). La
+traduzione si è fermata dopo tre blocchi a vuoto e il motivo è comparso sotto
+il pulsante e nel log. **Con il profilo «Gratis» e backend cloud non c'era un
+solo provider utilizzabile:**
+
+| Provider | Motivo |
+|---|---|
+| groq-gptoss, groq, cerebras, openrouter | senza chiave |
+| hymt, translategemma, ollama | cercato su `127.0.0.1:11500`, dove non risponde nessuno |
+| lmstudio | non raggiungibile |
+| nllb, mymemory | `Failed to fetch` |
+| libretranslate | testo restituito invariato |
+
+**Ollama era acceso.** Rispondeva su `127.0.0.1:11434` con cinque modelli
+(fra cui `translategemma:12b`, `gemma4:e4b` e `hy-mt1.5`), ma l'app lo cercava
+sulla porta 11500 e lo dava per «spento, 0 modelli». Nel codice 11500 non
+compare: viene dall'indirizzo Ollama salvato nelle Impostazioni
+(`translation.ollamaUrl`), non verificato a schermo. Con l'indirizzo giusto i
+tre provider locali sarebbero partiti. Non corretto: è un'impostazione.
+
+MyMemory e NLLB chiamano `fetch` dalla webview, che verso domini esterni
+fallisce: nell'app Tauri **non possono funzionare mai**. La traduzione della
+chat usa già il giro giusto (`fetch_url_content`, lato Rust); questi due no.
+MyMemory corretto il 13/11 (`myMemoryGet`, due test); NLLB no. **Non
+riprovato nell'app.** Come abbia fatto la corsa del 12/11 su Lost Host Demo a tradurre
+291 testi con lo stesso profilo non è accertato.
+
+Nella cartella del gioco restano `GameStringer/rpa_src/` e
+`gs_renpy_progress_it.json` (24 MB, senza traduzioni); nessun file del gioco è
+stato modificato e `game/tl/` non è stata creata. Danganronpa, AILA e The
+Incident at Galley House non sono stati provati: senza un provider avrebbero
+dato lo stesso esito.
+
+Dopo la prova fallita la scheda diceva **«Italiano: già presente»**: la
+scansione delle lingue leggeva `it` nel nome del nostro
+`gs_renpy_progress_it.json`. Corretto il 13/11: la scansione salta i file e
+le cartelle che scriviamo noi (`gs_*`, `gamestringer*`, `*.gsprogress_*`).
+
+Altri due difetti visti: con «Lotto di prova (200)» spuntato il contatore
+mostrava 0/83.530, e in alto compare «Errore sconosciuto» mentre il motivo
+vero sta nel pannello. Non corretti.
+
 **Nel codice.** `lib/hendrix-translate.ts` — il controllo nel ciclo dei batch
 e il blocco prima di applicare. `lib/ai/ai-translate-direct.ts` —
 `recordChainFailure` e `getChainFailureSince`.
