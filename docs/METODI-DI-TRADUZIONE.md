@@ -2794,6 +2794,53 @@ come stringhe semplici (`FString`) o in tabelle dati non sono contati.
    «LINGUAGUE» per Language, «MAUS/TASTIERA» per Mouse/Keyboard, «CAMMINA
    DRITTO» sul tasto D (era «muovi a destra»).
 
+### Scarlet Hollow e Danganronpa avviati (13/11/2026)
+
+**Il fatto.** I due giochi avviati da Steam con i file scritti dal pulsante al
+mattino, guardati a schermo.
+
+| Gioco | Si avvia? | Italiano a schermo? |
+|---|---|---|
+| Scarlet Hollow (Ren'Py) | sì, `log.txt` senza traceback | sì, dove il lotto di prova è arrivato |
+| Danganronpa (WAD ricostruito) | sì | sì, con due difetti |
+
+**Scarlet Hollow.** Le due schermate nere iniziali restano inglesi (non erano
+nel lotto). Menu principale tutto italiano: «Prosegui», «Inizia», «Carica»,
+«Preferenze», «Accessibilità», «Controlli», «Fine». Nelle Preferenze sono
+italiane solo «Finestra» e «Modalità a schermo intero»; il resto è inglese,
+coerente con le 128 coppie scritte. `config.language = "it"` di
+`gs_language.rpy` basta: nessun menu lingua da toccare.
+
+**Danganronpa.** Nuova partita, lingua English: dopo il filmato il prologo
+(`e00_001_000.lin`) esce in italiano, sette righe guardate. Apostrofo tipografico
+e puntini di sospensione si vedono corretti.
+
+**Trappole.**
+
+1. **La «ì» non esiste nel font di Danganronpa**: «E lì,» esce come «E l≡,».
+   Nei testi inglesi originali le sole lettere accentate sono una «é» e una
+   «à»; nelle 215 righe tradotte ci sono 47 «è», 30 «ì», 21 «È», 18 «ò», 9 «ù».
+   Vista rotta solo la «ì»: le altre non sono state guardate. Finché il font
+   non è verificato lettera per lettera, l'italiano di questo gioco non è
+   pulito.
+2. **Le righe con parole colorate restano inglesi.** La riga 6 del prologo ha
+   la traduzione nella sessione ma nel gioco è inglese: è una delle «tag
+   interni» che il rebuild salta. Il riepilogo le conta, il giocatore le vede
+   come buchi nel mezzo del dialogo.
+3. **In Scarlet Hollow una voce lunga esce dal riquadro**: «Informazioni
+   generali sul gioco» (era «About») si sovrappone al pannello delle
+   Preferenze.
+4. **Nel lotto di Scarlet Hollow sono stati tradotti nomi interni** («who» →
+   «chi», «default_choice» → «opzione_predefinita»). Il gioco parte lo stesso,
+   ma sono identificatori, non testo.
+5. **Per chi guida il gioco da fuori:** in Danganronpa il testo avanza col
+   pulsante sinistro del mouse, e i clic sintetici non arrivano; Ctrl («salta
+   testo») sì. Non scambiare un dialogo fermo per un blocco della patch.
+
+**Cosa NON è provato.** Oltre il prologo di Danganronpa e oltre il menu di
+Scarlet Hollow non è stato guardato niente; nessun dialogo di Scarlet Hollow è
+tradotto, quindi lì i dialoghi a schermo non sono verificati.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
