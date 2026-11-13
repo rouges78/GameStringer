@@ -2591,6 +2591,41 @@ scansione delle lingue leggeva `it` nel nome del nostro
 `gs_renpy_progress_it.json`. Corretto il 13/11: la scansione salta i file e
 le cartelle che scriviamo noi (`gs_*`, `gamestringer*`, `*.gsprogress_*`).
 
+**Seconda corsa, con Ollama raggiungibile (13/11/2026).** Nella build di
+sviluppo l'indirizzo salvato era ancora `:11500`; svuotato il campo, Ollama è
+risultato attivo con 5 modelli. Lotto di prova da 200, backend cloud: la
+catena è scesa sui modelli locali, ~1,2 stringhe/s, finita in 3 minuti.
+L'app dichiara «136 stringhe scritte nei file del gioco (25% riuscito)» e
+«150 errori»; sul disco ci sono `game/tl/it/screens_it.rpy` con **50** coppie
+`old`/`new` e `game/gs_language.rpy` (`config.language = "it"`). Perché 136
+contro 50 non è accertato. Il gioco non è stato avviato.
+
+**Trappola: `byte as char` nell'estrazione Ren'Py.** `extract_first_quoted`
+leggeva la riga byte per byte e spingeva ogni byte come carattere: il pallino
+`•` (E2 80 A2) usciva come tre caratteri Latin-1 e nel file `tl` finiva
+`C3 A2 C2 80 C2 A2`. Un `old` così non combacia col testo del gioco, quindi
+**ogni riga con un carattere non ASCII restava in inglese**, e il modello
+riceveva testo sporco (nelle traduzioni compaiono `Â¢` e `Â�•`). I sorgenti
+`.rpy` erano UTF-8 validi (199 su 199): il danno nasceva solo lì. Corretto il
+13/11 leggendo per caratteri, con un test. Il checkpoint e il file `tl` già
+scritti in Scarlet Hollow contenevano gli originali sporchi. **Riprovato lo
+stesso giorno a cartella pulita**: 65 coppie in due file (`screens_it.rpy`,
+`01virtual_keyboard_it.rpy`), tutti gli `old` compaiono identici nel sorgente,
+nessun carattere sporco né negli `old` né nei `new`, i pallini restano
+pallini. Il lotto ha impiegato circa 2 minuti. Altri difetti di qualità visti
+nel campione: «Duke» tradotto «Il Duca», la persona del verbo che cambia da
+una riga all'altra,
+vengono tradotti identificatori (`forced_short`, `default_choice`) e i nomi
+dei tasti (`Enter` → «Inserisci»).
+
+**Perché è lento (misurato in parte).** ~1,2 stringhe/s: per 83.530 stringhe
+l'app stimava 19 ore. Il modello che traduce è `hy-mt1.5` 7B, tutto in GPU
+(5,3 GB). `translateWithHYMT` manda **una richiesta per stringa**, tre alla
+volta; sopra ci sono lotti da 30 spezzati in sotto-lotti da 20 con pause fisse
+(800 ms di sfalsamento, 1,5 s fra i gruppi), e prima di ogni lotto la ricerca
+nella memoria di traduzione, quella semantica e un `/api/tags`. Quanto pesa
+ciascuna voce non è misurato.
+
 Altri due difetti visti: con «Lotto di prova (200)» spuntato il contatore
 mostrava 0/83.530, e in alto compare «Errore sconosciuto» mentre il motivo
 vero sta nel pannello. Non corretti.
