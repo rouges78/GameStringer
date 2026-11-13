@@ -48,6 +48,16 @@ export function acceptOfflineTranslation(orig: string, out: string): string | nu
   return codeKey(fixed) === codeKey(orig) ? fixed : null;
 }
 
+/**
+ * Rimette attorno alla traduzione gli spazi ai bordi dell'originale: il
+ * traduttore li toglie, e in Look Outside quelli iniziali centrano i cartelli.
+ */
+export function withOriginalEdges(orig: string, translated: string): string {
+  const core = orig.trim();
+  const start = orig.indexOf(core);
+  return orig.slice(0, start) + translated.trim() + orig.slice(start + core.length);
+}
+
 function lsGet(key: string): string | null {
   try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
 }
@@ -148,7 +158,7 @@ export async function runHendrixTranslation(opts: {
       // falliscono il cloud restituisce i testi sorgente, e accettarli scriveva
       // l'inglese nella colonna della lingua (Look Outside, 13/11/2026). Il
       // confronto ignora gli spazi ai bordi: `raw` arriva già senza.
-      if (accepted !== null && accepted.trim() !== orig.trim()) { translations[orig] = accepted; accettateNelBatch++; }
+      if (accepted !== null && accepted.trim() !== orig.trim()) { translations[orig] = withOriginalEdges(orig, accepted); accettateNelBatch++; }
     });
     if (accettateNelBatch === 0) {
       batchVuoti++;

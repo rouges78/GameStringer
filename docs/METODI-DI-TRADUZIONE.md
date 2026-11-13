@@ -2520,16 +2520,23 @@ stato guardato a schermo.
    prova è confrontare la colonna scritta con l'originale.
 2. **«Italiano: già presente» su Look Outside è falso.** Il gioco ha solo le
    colonne `en, fr, sp, cn`. La scansione delle lingue conta i file
-   `locales/it.pak` di Chromium che NW.js porta con sé (32 «lingue»). Non
-   corretto.
+   `locales/it.pak` di Chromium che NW.js porta con sé (32 «lingue»).
+   Corretto il 13/11: una cartella `locales` che contiene `en-US.pak` è
+   l'interfaccia di Chromium (NW.js, Electron, CEF) e la scansione la salta
+   (`game_lang_scan.rs`, due test). Non riguardato nell'app.
 3. **Su Mouthwashing l'italiano c'è davvero e il pulsante procede lo stesso.**
-   Il blocco «il gioco ha già la lingua» copre solo le tabelle Unity; qui con
-   `IT` avrebbe installato XUnity per niente. Non corretto.
+   Il blocco «il gioco ha già la lingua» copriva solo le tabelle Unity; qui con
+   `IT` avrebbe installato XUnity per niente. Corretto il 13/11 **solo nel
+   ramo Unity**: ora si ferma anche quando la lingua è fra quelle dichiarate
+   dallo store. La scansione dei file non conta, perché è un'euristica e un
+   falso positivo fermerebbe il pulsante. Gli altri motori traducono ancora un
+   gioco che la lingua ce l'ha. Non riprovato nell'app.
 4. **HowLongToBeat dà gli stessi numeri a ogni gioco** (19h / 22h / 26h / 24h
    per Lost Host Demo, Foolish Mortals, Look Outside, Mouthwashing). Non
    corretto.
 5. **Il traduttore Hendrix toglie gli spazi iniziali**, che in Look Outside
-   servono a centrare i cartelli. Non corretto.
+   servono a centrare i cartelli. Corretto il 13/11: `withOriginalEdges`
+   rimette attorno alla traduzione gli spazi ai bordi dell'originale.
 6. **Dopo la reinstallazione di un gioco Steam lascia i file che non
    conosce**: backup `.gs_bak`, checkpoint, BepInEx. Una prova pulita parte da
    una cartella senza resti.
