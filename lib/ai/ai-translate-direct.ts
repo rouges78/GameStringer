@@ -1074,8 +1074,10 @@ async function translateWithHYMT(
 
   clientLogger.debug(`[HY-MT] Usando modello: ${modelName} (${srcLang} → ${tgtLang})`);
 
-  // Traduzione singola con richieste parallele (5 alla volta) per affidabilità + velocità
-  const CONCURRENCY = 3;
+  // Una richiesta per stringa, quattro alla volta: quanti sono gli slot con cui
+  // avviamo Ollama (`OLLAMA_PARALLEL_SLOTS`). Con uno slot solo le richieste in
+  // più aspettano in coda senza danno (misurato il 13/11/2026).
+  const CONCURRENCY = 4;
   const results: string[] = new Array(opts.texts.length).fill('');
 
   // Prompt base per contesto videogioco

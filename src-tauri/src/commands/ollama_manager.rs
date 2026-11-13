@@ -246,6 +246,9 @@ pub async fn download_ollama(app: tauri::AppHandle) -> Result<String, String> {
     Ok(installer_str)
 }
 
+/// Slot paralleli con cui avviamo Ollama quando l'utente non ne ha scelti.
+const OLLAMA_PARALLEL_SLOTS: &str = "4";
+
 #[tauri::command]
 pub async fn start_ollama(base_url: Option<String>) -> Result<String, String> {
     let endpoint = ollama_base_url(base_url.as_deref());
@@ -260,8 +263,17 @@ pub async fn start_ollama(base_url: Option<String>) -> Result<String, String> {
     println!("[OLLAMA] Avvio {:?} serve", ollama_path);
     
     // Avvia ollama serve in background (usa no_window_command che ha già CREATE_NO_WINDOW)
-    no_window_command(&ollama_path)
-        .arg("serve")
+    let mut serve = no_window_command(&ollama_path);
+    serve.arg("serve");
+    // Con uno slot solo Ollama serve una richiesta alla volta, e le nostre
+    // richieste parallele si mettono in coda. Misurato il 13/11/2026 (RTX 4080,
+    // hy-mt1.5 7B, 40 stringhe di Scarlet Hollow): 1,18 stringhe/s con uno
+    // slot, 3,24 con quattro. Costa memoria video (5,3 → 7,0 GB per quel
+    // modello). Chi ha già scelto un valore lo tiene.
+    if std::env::var_os("OLLAMA_NUM_PARALLEL").is_none() {
+        serve.env("OLLAMA_NUM_PARALLEL", OLLAMA_PARALLEL_SLOTS);
+    }
+    serve
         .spawn()
         .map_err(|e| format!("Impossibile avviare Ollama: {}", e))?;
     

@@ -2618,13 +2618,44 @@ una riga all'altra,
 vengono tradotti identificatori (`forced_short`, `default_choice`) e i nomi
 dei tasti (`Enter` → «Inserisci»).
 
-**Perché è lento (misurato in parte).** ~1,2 stringhe/s: per 83.530 stringhe
-l'app stimava 19 ore. Il modello che traduce è `hy-mt1.5` 7B, tutto in GPU
-(5,3 GB). `translateWithHYMT` manda **una richiesta per stringa**, tre alla
-volta; sopra ci sono lotti da 30 spezzati in sotto-lotti da 20 con pause fisse
-(800 ms di sfalsamento, 1,5 s fra i gruppi), e prima di ogni lotto la ricerca
-nella memoria di traduzione, quella semantica e un `/api/tags`. Quanto pesa
-ciascuna voce non è misurato.
+**Perché è lento: misurato (13/11/2026).** Nell'app ~1,2-1,7 stringhe/s: per
+83.530 stringhe la stima era 19 ore. Misure fatte fuori dall'app, contro
+Ollama, con 40 stringhe vere di `screens.rpy` (74 caratteri e ~30 token di
+uscita in media), RTX 4080 con 8,3 GB di memoria video già occupati da altro:
+
+| Modello | Slot Ollama | Concorrenza 1 | Concorrenza 4 | Concorrenza 8 |
+|---|---|---|---|---|
+| `hy-mt1.5` 7B | 1 (com'è oggi) | 1,22 str/s | 1,29 | 1,28 |
+| `gemma4:e4b` | 1 (com'è oggi) | 1,57 | 1,61 | 1,60 |
+| `hy-mt1.5` 7B | 4 | 1,18 | **3,24** | 3,36 |
+| `gemma4:e4b` | 4 | 2,42 | **3,65** | 2,80 |
+
+- Il tempo è quasi tutto generazione: ~0,55 s a stringa, più ~0,1 s di prompt.
+  Il modo in cui l'app chiama il modello costa poco: Ollama da solo, in
+  sequenza, fa 1,9 str/s con lo stesso prompt.
+- **Mandare più stringhe in una richiesta non serve**: 30 righe numerate in una
+  chiamata impiegano quanto 30 chiamate (i token da generare sono gli stessi).
+- **Le richieste parallele non servono se Ollama ha uno slot solo**: si mettono
+  in coda. Con `OLLAMA_NUM_PARALLEL=4` lo stesso modello rende 2,7 volte, al
+  prezzo di memoria video (hy-mt: 5,3 → 7,0 GB).
+- `translategemma:12b` qui fa 19 token/s: non entra nella memoria libera.
+
+Corretto il 13/11: quando è GameStringer ad avviare Ollama lo avvia con 4 slot
+(se l'utente non ha già scelto un valore), e `translateWithHYMT` manda 4
+richieste alla volta invece di 3. **Riprovato nell'app** con Ollama riavviato
+a 4 slot (variabile utente `OLLAMA_NUM_PARALLEL=4`): il lotto da 200 di
+Scarlet Hollow è passato da ~120 s a **~87 s** (2,3 str/s). Ollama da solo ne
+farebbe ~66: i ~20 s di differenza sono dell'app (pause fra i gruppi, ricerche
+prima di ogni lotto), non ancora scomposti. L'avvio da GameStringer con 4 slot
+non è stato provato: qui Ollama l'ha avviato la sua icona. Un Ollama già
+avviato da altri (l'icona di Ollama all'accesso a Windows) resta a uno slot:
+serve la variabile d'ambiente `OLLAMA_NUM_PARALLEL=4` e un riavvio di Ollama.
+Anche a 3,2 str/s Scarlet Hollow chiede ~7 ore: per un gioco di quelle
+dimensioni la via pratica resta un provider cloud.
+
+**Trappola della misura.** Due istanze di Ollama insieme riempiono la memoria
+video (15,2 GB su 16) e i numeri escono senza senso: la prova con più slot va
+fatta su un'istanza sola, con i modelli dell'altra scaricati.
 
 Altri due difetti visti: con «Lotto di prova (200)» spuntato il contatore
 mostrava 0/83.530, e in alto compare «Errore sconosciuto» mentre il motivo
