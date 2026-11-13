@@ -2665,6 +2665,51 @@ vero sta nel pannello. Non corretti.
 e il blocco prima di applicare. `lib/ai/ai-translate-direct.ts` —
 `recordChainFailure` e `getChainFailureSince`.
 
+### Il pulsante sugli altri tre giochi del banco (13/11/2026, pomeriggio)
+
+**Il fatto.** String it premuto nella build di sviluppo, backend cloud senza
+chiavi: la catena scende sul modello locale `hy-mt1.5` 7B, Ollama a 4 slot.
+Cartelle fotografate prima e confrontate dopo.
+
+| Gioco | Metodo | Esito |
+|---|---|---|
+| Danganronpa | `danganronpa-wad` | fermato a mano dopo ~1 min: **192 scritte**, WAD ricostruito |
+| AILA | `unreal-locres` | finito in 19 min: **3.317 tradotte su 3.518** |
+| The Incident at Galley House | `godot-pck` | **il pulsante si ferma subito**, cartella intatta |
+
+**Danganronpa.** 47.999 stringhe da 1.509 file `.lin`, ~3 str/s, stima 4 h
+48 min. Lo Stop salva il checkpoint e ricostruisce comunque il WAD con quanto
+c'è: «192 scritte · 0 mismatch · 23 tag interni · 7 senza traduzione ·
+verifica 4/4». `dr1_data_us.wad` passa da 1.306.210.055 a 1.306.212.357 byte;
+restano i backup `dr1_data_us.wad.gsbackup` e
+`dr1_data_keyboard_us.wad.gsbackup` e `GameStringer_Translation/`.
+
+**AILA.** 3.518 stringhe da 8 `.locres` dentro il pak (v11, Oodle). Scritta la
+tripletta `ProjectAIDA_GameStringer_it_P.pak` + `.utoc` + `.ucas` con
+`Game/it/Game.locres` e la cultura `it` aggiunta al `locmeta`; i file del
+gioco non sono toccati. 201 stringhe sono uguali all'originale, a campione
+legittime (nomi, «No»). L'app dichiara «3321 scritte (94% riuscito)». Un
+solo lotto è rimasto senza traduzione, col motivo nel log. Su Unreal il
+pannello non mostra un contatore, solo una barra.
+
+**The Incident at Galley House.** «Godot non ha una pipeline automatica in
+String it!: usa il Godot Translator dedicato». Il piano elenca dopo
+l'aggancio a runtime e l'OCR, ma il pulsante non ci scende: su Godot String it
+oggi non fa nulla.
+
+**Cosa NON è provato.** Nessuno dei giochi è stato avviato: che il WAD
+ricostruito e la tripletta Unreal si carichino e mostrino l'italiano non è
+verificato. La corsa completa di Danganronpa non è stata fatta.
+
+**Trappole.**
+
+1. **`translategemma` risponde 404**: è installato come `translategemma:12b`,
+   ma la catena lo chiama con un nome che Ollama non trova. Non corretto.
+2. **La ricerca in Libreria con i punti non trova il gioco**: «A.I.L.A» dà 20
+   risultati senza AILA in cima, «AILA» lo trova. Non corretto.
+3. **MyMemory ora raggiunge il server dall'app** (risponde, anche se col testo
+   invariato): la correzione del mattino è confermata.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
