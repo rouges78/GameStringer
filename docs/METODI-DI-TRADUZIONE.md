@@ -2755,9 +2755,31 @@ l'inventario (TAB) mostra **«Vai alla cena»** sotto «OBIETTIVI».
 - Una traduzione di **lunghezza diversa**: qui la frase è stata riempita di
   spazi per non spostare nessun offset. Con lunghezze libere vanno riscritte le
   dimensioni dentro l'asset.
-- **Quanti** testi invarianti ha il gioco. Di sicuro non è l'unico: le tre
-  schede dell'inventario dicono «Items».
 - Che il metodo regga su altri asset e altri giochi: un asset, un gioco.
+
+**Quanti sono (misura sull'intero archivio).** Decompressi i 38.850 chunk
+`ExportBundleData` e cercata la forma di «Go to the dinner» (flag u32, storia
+`-1`, bool `1`, FString):
+
+| | |
+|---|---|
+| occorrenze | 2.222 in 269 asset |
+| testi distinti | 518 |
+| distinti con almeno due lettere | 444 |
+| distinti con uno spazio (frasi) | 234, per 806 occorrenze |
+| di queste frasi, già presenti come testo nei `.locres` | 17 |
+
+Contro le 3.518 stringhe dei `.locres` il tetto è quindi **234 frasi (6,7%)**,
+444 contando le parole singole (12,6%). È un tetto, non il numero dei testi che
+il giocatore vede: dentro ci sono etichette di lavoro degli sviluppatori
+(«Lock» 332 volte, «Unlock» 286, «Disable Player Input» 237, soprattutto in
+`Content/Map/Experiences`), appunti in portoghese, segnaposto dei widget
+(«File name.txt») e testi veri («Kill 10 enemies silently», «Main Menu»,
+«Initializing A.I.L.A. System...»). **La forma del dato non distingue un
+testo a schermo da un'etichetta di lavoro.**
+
+Limite della misura: conta una sola forma di serializzazione. Testi salvati
+come stringhe semplici (`FString`) o in tabelle dati non sono contati.
 
 **Trappole.**
 
