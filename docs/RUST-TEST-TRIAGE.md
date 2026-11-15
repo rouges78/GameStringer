@@ -186,9 +186,11 @@ Linux resta su `@stable`.
 - ~~Che il rimedio basti~~ — **dimostrato il 15/11/2026**: con la 1.99.1
   `check-windows` è verde sia sulla PR 210 (`a9a6cbcd`) sia sulla PR 208
   (`2b10f9dd`), stesso codice che con la 1.100.0 cadeva.
-- **`release.yml` usa ancora `@stable` in tre punti**: una release Windows fatta
-  oggi sarebbe compilata con la 1.100.0. Se la caduta non riguarda solo il
-  binario dei test, riguarda anche l'app distribuita.
+- Se la caduta riguarda solo il binario dei test o anche l'app distribuita. Per
+  questo dal 15/11/2026 anche `build-windows` in `release.yml` è fissato alla
+  1.99.1 (Linux e macOS restano su `@stable`). Il blocco in `release.yml` non
+  è stato provato: quel workflow gira solo al rilascio. I due blocchi vanno
+  tolti insieme.
 
 **Strade da non rifare.**
 
