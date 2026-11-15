@@ -122,6 +122,20 @@ due esiti diversi per l'utente: da una porta chiusa a chiave si può entrare
 procurandosi la chiave, da una stanza vuota no. Nel codice il marcatore
 `PAK_NEEDS_AES` risale fino alla UI proprio per tenerli separati.
 
+**Seconda trappola (15/11/2026): il marcatore partiva solo sui giochi con `.utoc`.**
+`extract_iostore_localization` usciva con «Nessun file .utoc trovato» prima di
+arrivare al fallback sui `.pak` classici. Un gioco UE4 ha il solo `.pak`: se
+l'indice è cifrato il marcatore non partiva mai e l'utente leggeva «non espone
+testi estraibili». Misura: Fobia - St. Dinfna Hotel, un `.pak` da 3,3 GB con
+indice cifrato, nessun `.utoc`. Ora si esce subito solo se mancano sia i `.utoc`
+sia i `.pak`. Controllo riproducibile (sola lettura, deve finire con
+`PAK_ENCRYPTED_NEEDS_AES_KEY`):
+
+```bash
+cd /c/GIT/GameStringer/src-tauri
+GS_UE_GAME_PATH="E:/SteamLibrary/steamapps/common/FobiaStDinfnaHotel" cargo test --lib -- --ignored estrazione_su_gioco_reale --nocapture
+```
+
 ### UE5 IoStore: un `_P.pak` da solo non si monta, serve la tripletta
 
 **Il fatto.** Nei giochi UE5 IoStore (5.6+) un `_P.pak` da solo viene ignorato dal
