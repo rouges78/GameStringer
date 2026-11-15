@@ -2817,12 +2817,41 @@ e puntini di sospensione si vedono corretti.
 
 **Trappole.**
 
-1. **La «ì» non esiste nel font di Danganronpa**: «E lì,» esce come «E l≡,».
-   Nei testi inglesi originali le sole lettere accentate sono una «é» e una
-   «à»; nelle 215 righe tradotte ci sono 47 «è», 30 «ì», 21 «È», 18 «ò», 9 «ù».
-   Vista rotta solo la «ì»: le altre non sono state guardate. Finché il font
-   non è verificato lettera per lettera, l'italiano di questo gioco non è
-   pulito.
+1. **Il font di Danganronpa ha solo «à» e «é» fra le accentate italiane**:
+   «E lì,» esce come «E l≡,». Letto dal font stesso, non dedotto dallo schermo.
+   Sta in `Dr1/data/us/font/font.pak` dentro `dr1_data_us.wad`: un PAK di 4
+   voci, due immagini dei glifi e due tabelle `tFpS`. Nella tabella: `u32`
+   numero glifi a +8, `u32` inizio dati a +12, `u32` codice massimo a +16, poi
+   **da +32** un `u16` per ogni codice Unicode (`0xFFFF` = glifo assente).
+   Leggere da +28 sposta tutto di due codici: è l'errore fatto al primo colpo.
+
+   | Font | Glifi | Latin-1 | Punteggiatura tipografica |
+   |---|---|---|---|
+   | voce 1 (dialoghi) | 323 | × à é ó | — ― ’ “ ” • … ※ |
+   | voce 3 | 179 | nessuna | — … ※ |
+
+   Controprova: ogni carattere dei 47.999 testi inglesi originali risulta
+   presente nella voce 1. Mancano invece **è (47 volte), ì (30), È (21),
+   ò (18), ù (9)**: **96 righe tradotte su 215 (45%)** hanno almeno un
+   carattere senza glifo. Il rebuild dichiara «0 mismatch · verifica 4/4» e
+   non controlla i glifi. A schermo è stata vista rotta solo la «ì».
+
+   **Corretto nel rebuild** (`gs_font_safe` in `danganronpa_patcher.rs`): prima
+   dell'a-capo automatico il rebuild legge la tabella del font dal WAD stesso e
+   sostituisce ogni carattere senza glifo con un ripiego che il font ha
+   («è» → «e'», «È» → «E'», «…» → «...»). «à» ed «é» restano, perché ci sono.
+   Se il WAD non ha il font, o il ripiego non è nel font, il testo resta
+   com'è. Provato con i test su una tabella sintetica e **rivisto a schermo
+   il 15/11**: WAD ricostruito dal backup (192 scritte, +234 byte rispetto al
+   rebuild del 13/11), nuova partita, la riga che usciva «E l≡,» ora è
+   «E li', in piedi all’ingresso…»; «già» nella riga prima tiene la «à».
+   Guardate nove righe del prologo; le righe con «è», «È», «ò», «ù» non sono
+   capitate a schermo.
+
+   Per rifare il solo rebuild senza passare dal pulsante (che farebbe
+   ripartire la traduzione): un esempio Cargo di poche righe che chiama
+   `rebuild_danganronpa_wad(cartella)` dentro
+   `tauri::async_runtime::block_on`. Riparte sempre dal `.gsbackup`.
 2. **Le righe con parole colorate restano inglesi.** La riga 6 del prologo ha
    la traduzione nella sessione ma nel gioco è inglese: è una delle «tag
    interni» che il rebuild salta. Il riepilogo le conta, il giocatore le vede

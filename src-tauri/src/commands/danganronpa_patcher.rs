@@ -2,7 +2,7 @@
 // Supporto per estrazione e modifica file PAK e traduzioni PO
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom, Write, BufReader, BufRead};
 use std::path::{Path, PathBuf};
@@ -5246,6 +5246,66 @@ pub async fn extract_danganronpa_wad_text(game_path: String) -> Result<GsWadExtr
     })
 }
 
+/// Codici Unicode che una tabella `tFpS` del font sa disegnare.
+/// Formato: `u32` codice massimo a +16, poi da +32 un `u16` per codice
+/// (`0xFFFF` = glifo assente).
+fn gs_parse_font_glyphs(table: &[u8]) -> Option<HashSet<u32>> {
+    if table.len() < 32 || &table[0..4] != b"tFpS" { return None; }
+    let max_code = u32::from_le_bytes(table[16..20].try_into().ok()?);
+    let mut glyphs = HashSet::new();
+    for code in 0..=max_code {
+        let p = 32 + code as usize * 2;
+        let Some(b) = table.get(p..p + 2) else { break };
+        if u16::from_le_bytes([b[0], b[1]]) != 0xFFFF { glyphs.insert(code); }
+    }
+    if glyphs.is_empty() { None } else { Some(glyphs) }
+}
+
+/// Glifi del font dei dialoghi, letti dal WAD stesso (`font/font.pak`, prima
+/// tabella `tFpS`). `None` se il WAD non ha il font: il testo resta com'è.
+fn gs_read_font_glyphs(src: &mut File, entries: &[GsWadEntry], data_start: u64) -> Option<HashSet<u32>> {
+    let e = entries.iter().find(|e| e.name.ends_with("font/font.pak"))?;
+    let mut pak = vec![0u8; e.size as usize];
+    src.seek(SeekFrom::Start(data_start + e.offset)).ok()?;
+    src.read_exact(&mut pak).ok()?;
+    let count = u32::from_le_bytes(pak.get(0..4)?.try_into().ok()?) as usize;
+    for i in 0..count {
+        let off = u32::from_le_bytes(pak.get(4 + i * 4..8 + i * 4)?.try_into().ok()?) as usize;
+        if pak.get(off..off + 4) == Some(b"tFpS".as_slice()) {
+            return gs_parse_font_glyphs(&pak[off..]);
+        }
+    }
+    None
+}
+
+/// Sostituisce i caratteri che il font non sa disegnare (a schermo uscirebbe
+/// un simbolo sbagliato) con un equivalente che ha: «è» → «e'», «…» → «...».
+/// Se nemmeno il ripiego è nel font, il carattere resta com'è.
+fn gs_font_safe(text: &str, glyphs: &HashSet<u32>) -> String {
+    let mut out = String::with_capacity(text.len());
+    for ch in text.chars() {
+        if ch.is_control() || glyphs.contains(&(ch as u32)) {
+            out.push(ch);
+            continue;
+        }
+        let fallback = match ch {
+            'à' | 'á' => "a'", 'è' | 'é' => "e'", 'ì' | 'í' => "i'", 'ò' | 'ó' => "o'", 'ù' | 'ú' => "u'",
+            'À' | 'Á' => "A'", 'È' | 'É' => "E'", 'Ì' | 'Í' => "I'", 'Ò' | 'Ó' => "O'", 'Ù' | 'Ú' => "U'",
+            'â' | 'ä' | 'ã' | 'å' => "a", 'ê' | 'ë' => "e", 'î' | 'ï' => "i", 'ô' | 'ö' | 'õ' => "o", 'û' | 'ü' => "u",
+            'Â' | 'Ä' | 'Ã' | 'Å' => "A", 'Ê' | 'Ë' => "E", 'Î' | 'Ï' => "I", 'Ô' | 'Ö' | 'Õ' => "O", 'Û' | 'Ü' => "U",
+            'ç' => "c", 'Ç' => "C", 'ñ' => "n", 'Ñ' => "N",
+            '‘' | '’' => "'", '“' | '”' | '«' | '»' => "\"", '…' => "...", '—' | '–' => "-",
+            _ => "",
+        };
+        if !fallback.is_empty() && fallback.chars().all(|c| glyphs.contains(&(c as u32))) {
+            out.push_str(fallback);
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
 fn gs_rebuild_single_wad(
     wad_path: &Path,
     by_file: &HashMap<String, HashMap<i64, usize>>,
@@ -5261,6 +5321,7 @@ fn gs_rebuild_single_wad(
 
     let mut src = File::open(&backup_path).map_err(|e| format!("Apertura backup: {}", e))?;
     let (entries, table_start, file_table_end, data_start) = gs_read_wad(&mut src)?;
+    let glyphs = gs_read_font_glyphs(&mut src, &entries, data_start);
 
     let mut rebuilt: HashMap<usize, Vec<u8>> = HashMap::new();
     let mut rebuilt_names: Vec<(usize, String)> = Vec::new();
@@ -5303,7 +5364,11 @@ fn gs_rebuild_single_wad(
                 result.strings_skipped_inner_tags += 1;
                 continue;
             };
-            let wrapped = gs_word_wrap(tr.translated.trim(), GS_LIN_LINE_WIDTH);
+            let text = match &glyphs {
+                Some(g) => gs_font_safe(tr.translated.trim(), g),
+                None => tr.translated.trim().to_string(),
+            };
+            let wrapped = gs_word_wrap(&text, GS_LIN_LINE_WIDTH);
             new_raw.insert(en.index, format!("{}{}{}", prefix, wrapped, suffix));
             result.strings_written += 1;
         }
@@ -5497,6 +5562,41 @@ pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildRe
 #[cfg(test)]
 mod gs_lin_tests {
     use super::*;
+
+    /// Tabella `tFpS` sintetica che conosce solo i codici dati.
+    fn make_font_table(codes: &[char]) -> Vec<u8> {
+        let max = codes.iter().map(|c| *c as u32).max().unwrap_or(0);
+        let mut t = vec![0u8; 32];
+        t[0..4].copy_from_slice(b"tFpS");
+        t[16..20].copy_from_slice(&max.to_le_bytes());
+        for code in 0..=max {
+            let has = codes.iter().any(|c| *c as u32 == code);
+            t.extend_from_slice(&(if has { 0u16 } else { 0xFFFF }).to_le_bytes());
+        }
+        t
+    }
+
+    #[test]
+    fn font_table_lists_only_the_glyphs_it_has() {
+        let glyphs = gs_parse_font_glyphs(&make_font_table(&['a', 'é', '’'])).unwrap();
+        assert!(glyphs.contains(&('é' as u32)));
+        assert!(glyphs.contains(&('’' as u32)));
+        assert!(!glyphs.contains(&('è' as u32)));
+        assert!(gs_parse_font_glyphs(b"non un font").is_none());
+    }
+
+    #[test]
+    fn letters_without_a_glyph_fall_back_and_the_rest_stays() {
+        let ascii: Vec<char> = (' '..='~').collect();
+        let mut codes = ascii.clone();
+        codes.extend(['à', 'é', '’', '…']);
+        let glyphs = gs_parse_font_glyphs(&make_font_table(&codes)).unwrap();
+        // è, ì, ò, ù, È non ci sono: accento reso con l'apostrofo.
+        assert_eq!(gs_font_safe("E lì, perché è così più giù…", &glyphs), "E li', perché e' cosi' piu' giu'…");
+        assert_eq!(gs_font_safe("È l’una\ndi là", &glyphs), "E' l’una\ndi là");
+        // Carattere senza ripiego noto: resta com'è.
+        assert_eq!(gs_font_safe("★", &glyphs), "★");
+    }
 
     /// Costruisce un .lin sintetico col formato vero (count+1 offset + padding).
     fn make_lin(texts: &[&str], pad: &[u8]) -> Vec<u8> {
