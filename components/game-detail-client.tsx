@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
+import { fetchTranslationPlan, findMethod, methodAfterRuntime, resolveEngine, type TranslationPlan } from '@/lib/string-it/plan';
+import { StringItPlan } from '@/components/game-detail/string-it-plan';
 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -29,7 +31,8 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 // AudioPatcher import removed — not currently used
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 import { clientLogger } from '@/lib/client-logger';
-import { translateWithFallback } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, translateWithFallbackBatched, getChainFailureSince } from '@/lib/ai/ai-translate-direct';
+import { runUnityStaticTranslation } from '@/lib/string-it/unity-static';
 import { projectService } from '@/lib/services/translation-projects';
 import { gamePathKey } from '@/lib/game-path';
 import { runHendrixTranslation } from '@/lib/hendrix-translate';
@@ -137,6 +140,13 @@ function compatRefFor(game: Game): CompatGameRef {
 }
 
 /** Separatore fra le stringhe concatenate in una sola richiesta di traduzione. */
+/** Le lingue che lo store dichiara per il gioco, senza tag HTML né asterischi. */
+function storeLanguages(game: Game | null | undefined): string[] {
+  return typeof game?.supported_languages === 'string'
+    ? game.supported_languages.split(',').map(s => s.replace(/<[^>]*>/g, '').replace(/\*/g, '').trim()).filter(Boolean)
+    : [];
+}
+
 const SEP_TRADUZIONE = '\n||||\n';
 
 /**
@@ -241,6 +251,17 @@ export default function GameDetailPage() {
 
   const [isInstallingPatch, setIsInstallingPatch] = useState(false);
   const [patchStatus, setPatchStatus] = useState<{success: boolean, message: string} | null>(null);
+  // Piano di String it: metodi ordinati + anti-cheat, calcolato da Rust.
+  const [translationPlan, setTranslationPlan] = useState<TranslationPlan | null>(null);
+  // Lo stesso piano per una corsa di String it già partita: la corsa vede lo
+  // stato del render in cui è nata, quindi un piano arrivato dopo lo legge qui.
+  const translationPlanRef = useRef<TranslationPlan | null>(null);
+  // Quando è partito l'ultimo String it: i fallimenti AI precedenti non lo riguardano.
+  const autoTranslateStartedAtRef = useRef(0);
+  const storePlan = (plan: TranslationPlan | null) => {
+    translationPlanRef.current = plan;
+    setTranslationPlan(plan);
+  };
   const [engineInfo, setEngineInfo] = useState<{
     engine: string;
     can_patch: boolean;
@@ -643,6 +664,29 @@ export default function GameDetailPage() {
   const isDanganronpa = /spike|danganronpa/.test(
     (game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '').toLowerCase()
   );
+
+  // Il motore su cui decidono TUTTI i rami di String it: quello letto dai file
+  // del gioco (piano) batte quello dedotto dal nome. Un solo punto, invece di
+  // ricalcolarlo in ogni ramo.
+  const currentEngine = (): string => resolveEngine(
+    translationPlanRef.current,
+    game?.engine || engineInfo?.engine || (game ? detectEngineByName(game.name || game.title || '') : '') || '',
+  );
+
+  // Piano di traduzione: si ricalcola quando cambia la cartella o il motore noto.
+  const planPath = game?.installPath;
+  const planHint = game?.engine || engineInfo?.engine || '';
+  useEffect(() => {
+    if (!planPath) { storePlan(null); return; }
+    let cancelled = false;
+    fetchTranslationPlan(planPath, planHint)
+      .then(plan => { if (!cancelled) storePlan(plan); })
+      .catch((e: unknown) => {
+        clientLogger.warn('[StringIt] piano non disponibile:', String(e));
+        if (!cancelled) storePlan(null);
+      });
+    return () => { cancelled = true; };
+  }, [planPath, planHint]);
 
   // Rileva motore quando il gioco è caricato
   const detectEngine = async () => {
@@ -2043,7 +2087,7 @@ export default function GameDetailPage() {
     // file-based o instradamento esplicito). Il gate P.T. serve solo al workflow
     // generico (execute_complete_workflow) → per questi niente dialog, si parte.
     {
-      const engDirect = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engDirect = currentEngine().toLowerCase();
       const DIRECT_ENGINES = ['hendrix', "ren'py", 'renpy', 'visionaire', 'tyrano', 'nw.js', 'electron', 'rpg maker', 'rpgmaker', 'unity', 'unreal', 'godot', 'spike', 'danganronpa'];
       if (DIRECT_ENGINES.some(k => engDirect.includes(k)) || ENGINE_PAGE_ROUTES.some(r => r.match(engDirect))) {
         startAutoTranslate();
@@ -2083,6 +2127,32 @@ export default function GameDetailPage() {
   // intraducibile: c'è gs-hook + la pipe GameStringerTranslator. La REGOLA su
   // cosa fare sta in lib/translation/runtime-fallback.ts (con i suoi test);
   // qui si raccolgono i fatti, si chiama la regola e si esegue il piano.
+  // Ultimo anello della cascata: quando nemmeno il runtime è andato si passa
+  // al metodo che il piano mette dopo. L'OCR non è automatico (serve il gioco
+  // a schermo), quindi si propone con un'azione invece di partire da solo.
+  const offerMethodAfterRuntime = () => {
+    const next = methodAfterRuntime(translationPlanRef.current);
+    if (!next || !game) return;
+    if (next.kind === 'ocr') {
+      const params = new URLSearchParams({
+        game: game.title || game.name || '',
+        tgt: targetLang || language || 'it',
+        autostart: '1',
+      });
+      toast(t('stringItPlan.ocrOffer'), {
+        description: t('stringItPlan.ocrOfferDesc'),
+        duration: 15000,
+        action: { label: t('stringItPlan.openOcr'), onClick: () => router.push(`/ocr-translator?${params.toString()}`) },
+      });
+    } else if (next.route) {
+      const route = next.route;
+      toast(t(`stringItPlan.methods.${next.id}`), {
+        duration: 15000,
+        action: { label: t(`stringItPlan.methods.${next.id}`), onClick: () => router.push(route) },
+      });
+    }
+  };
+
   const tryRuntimeFallback = async (
     staticOutcome: PatchOutcome,
     counts: { injected?: number | null; total?: number | null },
@@ -2122,6 +2192,8 @@ export default function GameDetailPage() {
       hookAvailable,
       processName: exeName ?? null,
       processRunning,
+      // Anti-cheat: il piano vieta ogni iniezione nel processo del gioco.
+      antiCheatBlocked: Boolean(findMethod(translationPlanRef.current, 'runtime-hook')?.blocked_by),
     });
 
     const report = buildRunReport({
@@ -2146,6 +2218,7 @@ export default function GameDetailPage() {
 
     if (plan.action === 'unavailable' || plan.action === 'await-launch') {
       toast.info(t(report.nextStepKey));
+      offerMethodAfterRuntime();
       return report;
     }
 
@@ -2168,12 +2241,14 @@ export default function GameDetailPage() {
           id: 'gs-runtime-fallback',
           description: res.message.slice(0, 180),
         });
+        offerMethodAfterRuntime();
       }
     } catch (e: unknown) {
       toast.error(t('gameDetail.runtimeFallbackFailed'), {
         id: 'gs-runtime-fallback',
         description: String(e).slice(0, 180),
       });
+      offerMethodAfterRuntime();
     }
     return report;
   };
@@ -2189,14 +2264,26 @@ export default function GameDetailPage() {
     // con return anticipato: Hendrix/Ren'Py/RPG). Reset garantito nei rispettivi finally.
     if (autoTranslateBusy || autoTranslateRunningRef.current) return;
     autoTranslateRunningRef.current = true;
+    autoTranslateStartedAtRef.current = Date.now();
     setAutoTranslateBusy(true);
     setAutoTranslateProgress('');
+
+    // Il piano arriva qualche secondo dopo l'apertura della pagina (su Unity
+    // legge tutto data.unity3d). Premuto prima, il pulsante sceglierebbe il
+    // metodo senza piano e salterebbe quelli che solo il piano conosce.
+    if (!translationPlanRef.current) {
+      try {
+        storePlan(await fetchTranslationPlan(game.installPath, planHint));
+      } catch (e: unknown) {
+        clientLogger.warn('[StringIt] piano non disponibile:', String(e));
+      }
+    }
 
     // ── Danganronpa DR1 (Spike Chunsoft, WAD AGAR) ──
     // Regola: UN pulsante. estrai (contratto rebuild) → traduci offline con
     // checkpoint → rebuild WAD in Rust con verifica interna. Stop dal widget.
     {
-      const engD = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engD = currentEngine().toLowerCase();
       if (engD.includes('spike') || engD.includes('danganronpa')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         // catturata come const: il narrowing del guard non entra nelle closure
@@ -2263,7 +2350,7 @@ export default function GameDetailPage() {
     // Via CSV nativa del gioco: riempiamo la colonna lingua, abilitiamo il plugin
     // e registriamo la lingua. Non invasivo (nessun .json toccato).
     {
-      const engH = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engH = currentEngine().toLowerCase();
       if (engH.includes('hendrix')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const tgtName: Record<string, string> = { it: 'Italiano', en: 'English', fr: 'Français', es: 'Español', sp: 'Español', de: 'Deutsch', pt: 'Português', ja: '日本語', cn: '中文', zh: '中文', ru: 'Русский' };
@@ -2315,7 +2402,7 @@ export default function GameDetailPage() {
     // dialoghi (vedi generate_renpy_translation). Non invasivo: Ren'Py carica la
     // traduzione nativamente quando il giocatore seleziona la lingua.
     {
-      const engR = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engR = currentEngine().toLowerCase();
       if (engR.includes("ren'py") || engR.includes('renpy')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2446,7 +2533,7 @@ export default function GameDetailPage() {
     // Estrae le stringhe dal binario, traduce via Ollama e applica con
     // patch_vis_strings (backup .gs_bak automatico). Checkpoint/resume su idb.
     {
-      const engV = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engV = currentEngine().toLowerCase();
       if (engV.includes('visionaire')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2577,7 +2664,7 @@ export default function GameDetailPage() {
     // cloud/Ollama e applica con apply_tyrano_patch (backup app.asar.bak
     // automatico). Stesso trigger della strategia (riga detection): tyrano/nw.js/electron.
     {
-      const engT = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engT = currentEngine().toLowerCase();
       if (engT.includes('tyrano') || engT.includes('nw.js') || engT.includes('electron')) {
         const tgt = (targetLang || language || 'it').toLowerCase();
         const t0 = Date.now();
@@ -2678,11 +2765,82 @@ export default function GameDetailPage() {
     // del bottone patch), con messaggio onesto: "100% installato" ≠ tradotto,
     // serve avviare il gioco per catturare e tradurre le stringhe.
     {
-      const engUn = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engUn = currentEngine().toLowerCase();
       if (engUn.includes('unity')) {
         setAutoTranslateError(null);
         setAutoTranslateResult(null);
         setAutoTranslateActive(true);
+        // Primo metodo del piano, se il gioco ha tabelle di localizzazione:
+        // scrivere i testi nei file del gioco. Non inietta nulla, quindi si
+        // prova PRIMA del controllo anti-cheat. Se il gioco non è fatto per
+        // questo metodo si scende a XUnity, come dice il piano.
+        const tgt = (targetLang || language || 'it').toLowerCase();
+        // Il gioco ha già quella lingua, nelle sue tabelle o a detta dello
+        // store: non c'è nulla da tradurre, e scendere a XUnity installerebbe
+        // un loader per niente (Mouthwashing, 13/11/2026). La scansione dei
+        // file qui non conta: è un'euristica, e un falso positivo fermerebbe
+        // il pulsante.
+        const tgtCc = (getCountryCode(tgt) ?? tgt).toUpperCase();
+        if (translationPlanRef.current?.unity_loc_languages.includes(tgt.split('-')[0])
+          || storeLanguages(game).some(l => (getCountryCode(l) ?? '').toUpperCase() === tgtCc)) {
+          const msg = t('stringItPlan.alreadyHasLanguage').replace('{lang}', currentFlag?.label ?? tgt.toUpperCase());
+          setAutoTranslateSteps([{ label: `📦 ${t('stringItPlan.unityStaticStep')}`, status: 'done', detail: msg }]);
+          toast.info(msg, { duration: 20000 });
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+          return;
+        }
+        if (findMethod(translationPlanRef.current, 'unity-loc-tables')) {
+          const stepLabel = `📦 ${t('stringItPlan.unityStaticStep')}`;
+          setAutoTranslateSteps([{ label: stepLabel, status: 'running' }]);
+          const outcome = await runUnityStaticTranslation({
+            gamePath: game.installPath,
+            targetLang: tgt,
+            translate: async (texts, source) => {
+              const res = await translateWithFallbackBatched(
+                { texts, targetLanguage: tgt, sourceLanguage: source, gameId: game.id || game.appid?.toString() || gameId },
+                20,
+                (done, total) => setAutoTranslateSteps([{
+                  label: stepLabel, status: 'running',
+                  detail: t('stringItPlan.unityStaticTranslating').replace('{done}', String(done)).replace('{total}', String(total)),
+                }]),
+              );
+              return res.success ? res.translations : texts.map(() => null);
+            },
+            onPhase: phase => {
+              if (phase === 'writing') {
+                setAutoTranslateSteps([{ label: stepLabel, status: 'running', detail: t('stringItPlan.unityStaticWriting') }]);
+              }
+            },
+          });
+          if (outcome.status === 'done') {
+            const done = t('stringItPlan.unityStaticDone').replace('{language}', outcome.report.select_language);
+            const detail = t('stringItPlan.unityStaticDetail')
+              .replace('{strings}', String(outcome.report.strings_replaced))
+              .replace('{files}', String(outcome.report.files_changed.length))
+              .replace('{skipped}', String(outcome.report.entries_skipped));
+            setAutoTranslateSteps([{ label: stepLabel, status: 'done', detail: `${done} ${detail}` }]);
+            toast.success(done, { description: detail, duration: 20000 });
+            void activityHistory.trackPatch(game.name || game.title || '', game.appid?.toString(), `${done} ${detail}`);
+            setAutoTranslateBusy(false);
+            setAutoTranslateProgress('');
+            autoTranslateRunningRef.current = false;
+            return;
+          }
+          clientLogger.info(`[StringIt] metodo statico Unity ${outcome.status}: ${outcome.reason}`);
+          toast.info(t('stringItPlan.unityStaticFallback').replace('{reason}', outcome.reason.slice(0, 160)));
+        }
+        // Anti-cheat: XUnity inietta un loader nel gioco, quindi non si installa.
+        if (findMethod(translationPlanRef.current, 'unity-xunity')?.blocked_by) {
+          const blockedMsg = t('stringItPlan.injectionBlocked').replace('{name}', translationPlanRef.current?.anti_cheat ?? '');
+          setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: blockedMsg }]);
+          setAutoTranslateError(blockedMsg);
+          setAutoTranslateBusy(false);
+          setAutoTranslateProgress('');
+          autoTranslateRunningRef.current = false;
+          return;
+        }
         setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'running' }]);
         try {
           const ok = await handleInstallUnityPatch();
@@ -2692,6 +2850,7 @@ export default function GameDetailPage() {
           } else {
             setAutoTranslateSteps([{ label: `🩹 ${t('heroJob.unityRouteStep')}`, status: 'error', detail: t('heroJob.unityRouteFail') }]);
             setAutoTranslateError(t('heroJob.unityRouteFail'));
+            void tryRuntimeFallback('failure', {}, 'run-failed');
           }
         } finally {
           setAutoTranslateBusy(false);
@@ -2707,7 +2866,7 @@ export default function GameDetailPage() {
     // "Migliora con AI" del pannello Unreal (upgradeUEWithAI, con toast e
     // progress propri). Senza .locres: messaggio onesto, niente workflow generico.
     {
-      const engUe = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engUe = currentEngine().toLowerCase();
       if (engUe.includes('unreal')) {
         const t0 = Date.now();
         setAutoTranslateError(null);
@@ -2839,7 +2998,7 @@ export default function GameDetailPage() {
     // Come per RPG Maker classico: messaggio onesto + azione esplicita verso
     // il Godot Translator (che ora si precompila via ?gamePath=).
     {
-      const engG = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engG = currentEngine().toLowerCase();
       if (engG.includes('godot')) {
         const godotUrl = `/godot-translator?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
         setAutoTranslateActive(true);
@@ -2861,7 +3020,7 @@ export default function GameDetailPage() {
     // mostrava passi finti e poi «nessuna stringa è entrata nel gioco».
     // Messaggio onesto + azione esplicita verso lo strumento che li tratta.
     {
-      const engP = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+      const engP = currentEngine().toLowerCase();
       const route = ENGINE_PAGE_ROUTES.find(r => r.match(engP));
       if (route) {
         const routeUrl = `${route.href}?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`;
@@ -2886,7 +3045,7 @@ export default function GameDetailPage() {
     // NON è patchabile sui file e la cattura GDI è inaffidabile per la cache glifi
     // del font. Per questi instradiamo alla traduzione live OCR (immune alla cache
     // glifi), pre-targettando la finestra del gioco.
-    const engLc = (game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '').toLowerCase();
+    const engLc = currentEngine().toLowerCase();
     if (engLc.includes('rpg maker') || engLc.includes('rpgmaker')) {
       try {
         const rpgInfo = await invoke<{ version?: string }>('detect_rpgmaker_game', { gamePath: game.installPath });
@@ -2995,6 +3154,7 @@ export default function GameDetailPage() {
             setAutoTranslateError(`RPG Maker: ${String(e)} — Ollama è avviato?`);
             await rmTracker.fail(e);
             toast.error(t('gameDetail.errRpgMaker'), { description: String(e) });
+            void tryRuntimeFallback('failure', {}, 'run-failed');
           } finally {
             setAutoTranslateBusy(false);
             setAutoTranslateProgress('');
@@ -3446,46 +3606,46 @@ export default function GameDetailPage() {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
         {/* Header skeleton */}
-        <div className="h-14 border-b border-slate-800/40 bg-slate-950/90 backdrop-blur-2xl flex items-center gap-3 px-5 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-slate-800/40 animate-pulse" />
-          <div className="h-px w-px bg-slate-800/60" />
-          <div className="w-7 h-7 rounded-lg bg-slate-800/40 animate-pulse" />
-          <div className="w-40 h-4 rounded-md bg-slate-800/40 animate-pulse" />
-          <div className="ml-auto w-9 h-9 rounded-xl bg-slate-800/30 animate-pulse" />
+        <div className="h-14 border-b border-noir-800/40 bg-noir-950/90 backdrop-blur-2xl flex items-center gap-3 px-5 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-noir-800/40 animate-pulse" />
+          <div className="h-px w-px bg-noir-800/60" />
+          <div className="w-7 h-7 rounded-lg bg-noir-800/40 animate-pulse" />
+          <div className="w-40 h-4 rounded-md bg-noir-800/40 animate-pulse" />
+          <div className="ml-auto w-9 h-9 rounded-xl bg-noir-800/30 animate-pulse" />
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <div className="max-w-[1400px] mx-auto space-y-4">
             {/* Hero card skeleton */}
-            <div className="rounded-2xl border border-slate-800/20 bg-slate-900/20 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-800/5 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" style={{backgroundSize: '200% 100%'}} />
+            <div className="rounded-2xl border border-noir-800/20 bg-noir-900/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-noir-800/5 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" style={{backgroundSize: '200% 100%'}} />
               <div className="flex flex-col lg:flex-row">
                 <div className="lg:w-[250px] shrink-0 p-5">
-                  <div className="aspect-[2/3] w-full rounded-xl bg-slate-800/30 animate-pulse" />
+                  <div className="aspect-[2/3] w-full rounded-xl bg-noir-800/30 animate-pulse" />
                 </div>
                 <div className="flex-1 p-6 space-y-4">
-                  <div className="w-3/4 h-8 rounded-lg bg-slate-800/30 animate-pulse" />
-                  <div className="w-1/3 h-3 rounded bg-slate-800/20 animate-pulse" />
+                  <div className="w-3/4 h-8 rounded-lg bg-noir-800/30 animate-pulse" />
+                  <div className="w-1/3 h-3 rounded bg-noir-800/20 animate-pulse" />
                   <div className="space-y-2 mt-4">
-                    <div className="w-full h-3.5 rounded bg-slate-800/20 animate-pulse" />
-                    <div className="w-5/6 h-3.5 rounded bg-slate-800/20 animate-pulse" />
-                    <div className="w-2/3 h-3.5 rounded bg-slate-800/20 animate-pulse" />
+                    <div className="w-full h-3.5 rounded bg-noir-800/20 animate-pulse" />
+                    <div className="w-5/6 h-3.5 rounded bg-noir-800/20 animate-pulse" />
+                    <div className="w-2/3 h-3.5 rounded bg-noir-800/20 animate-pulse" />
                   </div>
                   <div className="flex gap-2 mt-5">
-                    {[1,2,3,4].map(i => <div key={i} className="w-20 h-7 rounded-lg bg-slate-800/20 animate-pulse" />)}
+                    {[1,2,3,4].map(i => <div key={i} className="w-20 h-7 rounded-lg bg-noir-800/20 animate-pulse" />)}
                   </div>
-                  <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800/20">
-                    {[1,2,3].map(i => <div key={i} className="w-24 h-8 rounded-lg bg-slate-800/20 animate-pulse" />)}
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-noir-800/20">
+                    {[1,2,3].map(i => <div key={i} className="w-24 h-8 rounded-lg bg-noir-800/20 animate-pulse" />)}
                   </div>
                 </div>
               </div>
             </div>
             {/* CTA skeleton */}
-            <div className="w-full h-14 rounded-xl bg-indigo-500/5 border border-indigo-500/10 animate-pulse" />
+            <div className="w-full h-14 rounded-xl bg-rouge-500/5 border border-rouge-500/10 animate-pulse" />
             {/* Screenshot skeleton */}
-            <div className="rounded-2xl border border-slate-800/20 bg-slate-900/15 p-4 space-y-2">
-              <div className="w-full aspect-video rounded-xl bg-slate-800/20 animate-pulse" />
+            <div className="rounded-2xl border border-noir-800/20 bg-noir-900/15 p-4 space-y-2">
+              <div className="w-full aspect-video rounded-xl bg-noir-800/20 animate-pulse" />
               <div className="grid grid-cols-5 gap-1.5">
-                {[1,2,3,4,5].map(i => <div key={i} className="aspect-video rounded-lg bg-slate-800/15 animate-pulse" />)}
+                {[1,2,3,4,5].map(i => <div key={i} className="aspect-video rounded-lg bg-noir-800/15 animate-pulse" />)}
               </div>
             </div>
           </div>
@@ -3498,13 +3658,13 @@ export default function GameDetailPage() {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center bg-transparent">
         <div className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-slate-900/60 border border-slate-800/50 flex items-center justify-center">
-            <Gamepad2 className="h-8 w-8 text-slate-600" />
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-noir-900/60 border border-noir-800/50 flex items-center justify-center">
+            <Gamepad2 className="h-8 w-8 text-noir-600" />
           </div>
-          <h1 className="text-xl font-bold text-slate-300">{t('common.giocoNonTrovato')}</h1>
-          <p className="text-sm text-slate-500 max-w-sm">{t('gameDetail.notInLibrary')}</p>
+          <h1 className="text-xl font-bold text-noir-300">{t('common.giocoNonTrovato')}</h1>
+          <p className="text-sm text-noir-500 max-w-sm">{t('gameDetail.notInLibrary')}</p>
           <Link href="/library">
-            <Button variant="outline" className="mt-2 h-10 px-5 bg-slate-900/50 border-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl">
+            <Button variant="outline" className="mt-2 h-10 px-5 bg-noir-900/50 border-noir-700/50 text-noir-300 hover:text-white hover:bg-noir-800 rounded-xl">
               <ArrowLeft className="h-4 w-4 mr-2" /> {t('gameDetail.backToLibrary')}</Button>
           </Link>
         </div>
@@ -3519,10 +3679,10 @@ export default function GameDetailPage() {
     if (genre.includes('horror') || genre.includes('survival')) {
       return {
         border: 'border-red-500/20',
-        bg: 'bg-gradient-to-r from-red-950/80 via-rose-950/60 to-orange-950/80',
+        bg: 'bg-gradient-to-r from-red-950/80 via-rouge-950/60 to-orange-950/80',
         blur1: 'bg-red-500/10',
         blur2: 'bg-orange-500/10',
-        text: 'from-red-300 via-rose-300 to-orange-300',
+        text: 'from-red-300 via-rouge-300 to-orange-300',
         accent: 'text-red-400',
         accent2: 'text-orange-400',
         borderLine: 'border-red-500/20'
@@ -3540,36 +3700,36 @@ export default function GameDetailPage() {
       };
     } else if (genre.includes('rpg') || genre.includes('role')) {
       return {
-        border: 'border-purple-500/20',
-        bg: 'bg-gradient-to-r from-purple-950/80 via-violet-950/60 to-indigo-950/80',
-        blur1: 'bg-purple-500/10',
-        blur2: 'bg-indigo-500/10',
-        text: 'from-purple-300 via-violet-300 to-indigo-300',
-        accent: 'text-purple-400',
-        accent2: 'text-violet-400',
-        borderLine: 'border-purple-500/20'
+        border: 'border-rouge-500/20',
+        bg: 'bg-gradient-to-r from-rouge-950/80 via-rouge-950/60 to-rouge-950/80',
+        blur1: 'bg-rouge-500/10',
+        blur2: 'bg-rouge-500/10',
+        text: 'from-rouge-300 via-rouge-300 to-rouge-300',
+        accent: 'text-rouge-400',
+        accent2: 'text-rouge-400',
+        borderLine: 'border-rouge-500/20'
       };
     } else if (genre.includes('strategy') || genre.includes('simulation')) {
       return {
         border: 'border-emerald-500/20',
-        bg: 'bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-cyan-950/80',
+        bg: 'bg-gradient-to-r from-emerald-950/80 via-noir-950/60 to-noir-950/80',
         blur1: 'bg-emerald-500/10',
-        blur2: 'bg-cyan-500/10',
-        text: 'from-emerald-300 via-teal-300 to-cyan-300',
+        blur2: 'bg-noir-500/10',
+        text: 'from-emerald-300 via-noir-300 to-noir-300',
         accent: 'text-emerald-400',
-        accent2: 'text-teal-400',
+        accent2: 'text-noir-400',
         borderLine: 'border-emerald-500/20'
       };
     } else if (genre.includes('adventure') || genre.includes('indie')) {
       return {
-        border: 'border-sky-500/20',
-        bg: 'bg-gradient-to-r from-sky-950/80 via-blue-950/60 to-indigo-950/80',
-        blur1: 'bg-sky-500/10',
-        blur2: 'bg-indigo-500/10',
-        text: 'from-sky-300 via-blue-300 to-indigo-300',
-        accent: 'text-sky-400',
-        accent2: 'text-blue-400',
-        borderLine: 'border-sky-500/20'
+        border: 'border-noir-500/20',
+        bg: 'bg-gradient-to-r from-noir-950/80 via-noir-950/60 to-rouge-950/80',
+        blur1: 'bg-noir-500/10',
+        blur2: 'bg-rouge-500/10',
+        text: 'from-noir-300 via-noir-300 to-rouge-300',
+        accent: 'text-noir-400',
+        accent2: 'text-noir-400',
+        borderLine: 'border-noir-500/20'
       };
     } else if (genre.includes('sport') || genre.includes('racing')) {
       return {
@@ -3585,15 +3745,15 @@ export default function GameDetailPage() {
     }
     // Default scuro elegante
     return {
-      border: 'border-slate-500/20',
-      bg: 'bg-gradient-to-br from-slate-900/80 via-slate-950/40 to-slate-900/80',
-      blur1: 'bg-slate-500/5',
-      blur2: 'bg-gray-500/5',
-      text: 'from-slate-300 via-gray-300 to-slate-400',
-      accent: 'text-slate-400',
-      accent2: 'text-gray-400',
-      borderLine: 'border-slate-500/20',
-      button: 'from-slate-700 to-slate-600 shadow-slate-500/20'
+      border: 'border-noir-500/20',
+      bg: 'bg-gradient-to-br from-noir-900/80 via-noir-950/40 to-noir-900/80',
+      blur1: 'bg-noir-500/5',
+      blur2: 'bg-noir-500/5',
+      text: 'from-noir-300 via-noir-300 to-noir-400',
+      accent: 'text-noir-400',
+      accent2: 'text-noir-400',
+      borderLine: 'border-noir-500/20',
+      button: 'from-noir-700 to-noir-600 shadow-noir-500/20'
     };
   };
 
@@ -3604,7 +3764,7 @@ export default function GameDetailPage() {
   const showEngine = engineLabel && engineLabel !== 'Unknown' && engineLabel !== 'Sconosciuto';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#0a0e14] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-noir-950 overflow-hidden">
 
       {/* ═══ IMMERSIVE HERO — fullwidth ═══ */}
       <div className="relative shrink-0 overflow-hidden" style={{ minHeight: 340 }}>
@@ -3634,8 +3794,8 @@ export default function GameDetailPage() {
                 }
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/70 to-[#0a0e14]/30" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0e14]/90 via-transparent to-[#0a0e14]/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-noir-950 via-noir-950/70 to-noir-950/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-noir-950/90 via-transparent to-noir-950/60" />
           </div>
         )}
         {!heroImg && <div className={`absolute inset-0 ${theme.bg}`} />}
@@ -3694,7 +3854,7 @@ export default function GameDetailPage() {
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center"><Gamepad2 className="h-10 w-10 text-slate-600" /></div>
+                  <div className="w-full h-full bg-gradient-to-br from-noir-800 to-noir-900 flex items-center justify-center"><Gamepad2 className="h-10 w-10 text-noir-600" /></div>
                 );
               })()}
               <button className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-all text-2xs font-bold uppercase tracking-wider flex items-center gap-1" onClick={() => setIsCoverPickerOpen(true)}>
@@ -3712,12 +3872,12 @@ export default function GameDetailPage() {
             {/* Badges row */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-2xs font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
-                game.platform === 'Steam' ? 'text-blue-300 bg-blue-500/15 border-blue-500/25' :
-                game.platform === 'GOG' ? 'text-violet-300 bg-violet-500/15 border-violet-500/25' :
-                'text-slate-300 bg-white/10 border-white/15'
+                game.platform === 'Steam' ? 'text-noir-300 bg-noir-500/15 border-noir-500/25' :
+                game.platform === 'GOG' ? 'text-rouge-300 bg-rouge-500/15 border-rouge-500/25' :
+                'text-noir-300 bg-white/10 border-white/15'
               }`}>{game.platform || 'Steam'}</span>
               {showEngine && (
-                <span className="text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/15 border border-sky-500/25 flex items-center gap-1">
+                <span className="text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-noir-300 bg-noir-500/15 border border-noir-500/25 flex items-center gap-1">
                   <Cpu className="h-3 w-3" /> {engineLabel}
                 </span>
               )}
@@ -3725,7 +3885,7 @@ export default function GameDetailPage() {
                 <span className="text-2xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" /> {t('gameDetails.installed')}</span>
               )}
-              {isDetectingEngine && <Settings className="h-3.5 w-3.5 text-slate-500 animate-spin" />}
+              {isDetectingEngine && <Settings className="h-3.5 w-3.5 text-noir-500 animate-spin" />}
             </div>
 
             {/* Title */}
@@ -3734,32 +3894,30 @@ export default function GameDetailPage() {
             </h1>
 
             {/* Developer + release */}
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              {game.developers?.[0] && <span className="font-semibold text-slate-300">{game.developers[0]}</span>}
-              {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && <><span className="text-slate-600">|</span><span>{game.publishers[0]}</span></>}
-              {((typeof game.release_date === 'object' && game.release_date?.date) || game.releaseDate) && <><span className="text-slate-600">|</span><span>{(typeof game.release_date === 'object' ? game.release_date?.date : game.release_date) || (typeof game.releaseDate === 'string' ? game.releaseDate : game.releaseDate ? new Date(Number(game.releaseDate) * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short' }) : '')}</span></>}
+            <div className="flex items-center gap-2 text-xs text-noir-400">
+              {game.developers?.[0] && <span className="font-semibold text-noir-300">{game.developers[0]}</span>}
+              {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && <><span className="text-noir-600">|</span><span>{game.publishers[0]}</span></>}
+              {((typeof game.release_date === 'object' && game.release_date?.date) || game.releaseDate) && <><span className="text-noir-600">|</span><span>{(typeof game.release_date === 'object' ? game.release_date?.date : game.release_date) || (typeof game.releaseDate === 'string' ? game.releaseDate : game.releaseDate ? new Date(Number(game.releaseDate) * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short' }) : '')}</span></>}
             </div>
 
             {/* Genre pills + scores inline */}
             <div className="flex items-center gap-2 flex-wrap">
               {game.genres?.filter(g => typeof g === 'object' && g?.description).slice(0, 4).map((genre, i) => (
-                <span key={i} className="text-2xs font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{typeof genre === 'object' ? genre.description : genre}</span>
+                <span key={i} className="text-2xs font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-noir-300">{typeof genre === 'object' ? genre.description : genre}</span>
               ))}
               {typeof game.recommendations === 'object' && game.recommendations != null && (game.recommendations.total ?? 0) > 0 && (
-                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {(game.recommendations.total ?? 0).toLocaleString()}</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-noir-300 bg-noir-500/10 border border-noir-500/15">👍 {(game.recommendations.total ?? 0).toLocaleString()}</span>
               ) || typeof game.recommendations === 'number' && game.recommendations > 0 && (
-                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.toLocaleString()}</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-noir-300 bg-noir-500/10 border border-noir-500/15">👍 {game.recommendations.toLocaleString()}</span>
               )}
               {(game.playtime_forever ?? 0) > 0 && (
-                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round((game.playtime_forever ?? 0) / 60)}h</span>
+                <span className="text-2xs font-bold px-2.5 py-1 rounded-md text-rouge-300 bg-rouge-500/10 border border-rouge-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round((game.playtime_forever ?? 0) / 60)}h</span>
               )}
             </div>
 
             {/* Lingue del gioco — rilevate dai file di localizzazione (+ Steam se presenti) */}
             {(() => {
-              const fromSteam = typeof game.supported_languages === 'string'
-                ? game.supported_languages.split(',').map(s => s.replace(/<[^>]*>/g, '').replace(/\*/g, '').trim()).filter(Boolean)
-                : [];
+              const fromSteam = storeLanguages(game);
               const seen = new Set<string>();
               const merged: string[] = [];
               for (const l of [...detectedLanguages, ...fromSteam]) {
@@ -3779,15 +3937,18 @@ export default function GameDetailPage() {
               //    mai fatta — il contrario esatto dello scopo dell'app.
               //    Quindi la risposta si SCRIVE, non si fa dedurre.
               const targetCc = (getCountryCode(targetLang) ?? targetLang).toUpperCase();
-              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc);
+              // Le tabelle di localizzazione Unity stanno dentro data.unity3d, dove
+              // la scansione dei file non arriva: le loro lingue le porta il piano.
+              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc)
+                || (translationPlan?.unity_loc_languages ?? []).includes(targetLang.toLowerCase().split('-')[0]);
               const targetName = currentFlag?.label ?? targetLang.toUpperCase();
               return (
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-2xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                  <span className="text-2xs font-semibold uppercase tracking-wider text-noir-500 flex items-center gap-1">
                     <Languages className="h-3 w-3" /> {t('gameDetails.gameLanguages') || 'Lingue'}
                   </span>
                   <LanguageFlags supportedLanguages={merged} maxFlags={12} />
-                  <span className="text-2xs text-slate-500">({merged.length})</span>
+                  <span className="text-2xs text-noir-500">({merged.length})</span>
                   <span
                     className={`text-2xs font-bold px-2 py-0.5 rounded-md border ${
                       hasTarget
@@ -3815,8 +3976,8 @@ export default function GameDetailPage() {
             {highlightStringIt && (
               <style>{`
                 @keyframes firstGamePulse {
-                  0%, 100% { box-shadow: 0 0 0 0 rgba(129,140,248,0.55), 0 10px 30px rgba(99,102,241,0.45); }
-                  50% { box-shadow: 0 0 0 8px rgba(129,140,248,0), 0 10px 30px rgba(99,102,241,0.65); }
+                  0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,74,0.55), 0 10px 30px rgba(255,59,74,0.45); }
+                  50% { box-shadow: 0 0 0 8px rgba(255,59,74,0), 0 10px 30px rgba(255,59,74,0.65); }
                 }
                 .first-game-pulse { animation: firstGamePulse 1.2s ease-out infinite; }
               `}</style>
@@ -3830,7 +3991,7 @@ export default function GameDetailPage() {
             <div className="flex flex-col items-stretch">
               <div className="flex items-stretch gap-0">
                 {/* ── Bottone STRING IT! (HERO — azione principale) ── */}
-                <button ref={stringItBtnRef} className={`h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all border border-indigo-400/30 border-r-0 relative overflow-hidden group${highlightStringIt ? ' first-game-pulse ring-2 ring-indigo-300/70' : ''}`}
+                <button ref={stringItBtnRef} className={`h-12 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-rouge-600 to-rouge-500 hover:from-rouge-500 hover:to-rouge-400 text-white font-extrabold text-xs uppercase tracking-widest shadow-xl shadow-rouge-500/40 hover:shadow-rouge-500/60 transition-all border border-rouge-400/30 border-r-0 relative overflow-hidden group${highlightStringIt ? ' first-game-pulse ring-2 ring-rouge-300/70' : ''}`}
                   onClick={() => { setHighlightStringIt(false); handleStringIt(); }}
                   disabled={autoTranslateBusy}
                   title={t('common.avviaLaTraduzioneCompletaDelGioco')}
@@ -3841,7 +4002,7 @@ export default function GameDetailPage() {
                 {/* ── Bandierina lingua target ── */}
                 <div className="relative" ref={langPickerRef}>
                   <button
-                    className="h-12 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-2xs font-bold uppercase tracking-wider shadow-xl shadow-purple-500/30 transition-all border border-purple-400/30 border-l-0"
+                    className="h-12 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-rouge-500 to-rouge-600 hover:from-rouge-400 hover:to-rouge-500 text-white text-2xs font-bold uppercase tracking-wider shadow-xl shadow-rouge-500/30 transition-all border border-rouge-400/30 border-l-0"
                     onClick={() => setShowLangPicker(!showLangPicker)}
                     title={`Lingua: ${currentFlag.label}`}
                   >
@@ -3854,12 +4015,12 @@ export default function GameDetailPage() {
                         return (
                           <button
                             key={lang.code}
-                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-[11px] transition-colors ${targetLang === lang.code ? 'bg-indigo-600/30 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-[11px] transition-colors ${targetLang === lang.code ? 'bg-rouge-600/30 text-rouge-300 font-bold' : 'text-noir-300 hover:bg-white/5 hover:text-white'}`}
                             onClick={() => { setTargetLang(lang.code); setShowLangPicker(false); }}
                           >
                             <span className="text-sm">{lang.flag}</span>
                             <span>{lang.label}</span>
-                            <span className="ml-auto text-micro text-slate-500 uppercase">{lang.code}</span>
+                            <span className="ml-auto text-micro text-noir-500 uppercase">{lang.code}</span>
                           </button>
                         );
                       })}
@@ -3868,10 +4029,13 @@ export default function GameDetailPage() {
                 </div>
               </div>
               {translationStrategy?.ready && (
-                <div className="text-2xs text-center mt-1 text-slate-500 tracking-wide">
-                  {translationStrategy.engine} · {translationStrategy.detail}
+                <div className="text-2xs text-center mt-1 text-noir-500 tracking-wide">
+                  {translationStrategy.engine} · {findMethod(translationPlan, 'unity-loc-tables')
+                    ? t('stringItPlan.unityStaticHint')
+                    : translationStrategy.detail}
                 </div>
               )}
+              {translationPlan && <StringItPlan plan={translationPlan} />}
               {/* ── Motore AI: LOCALE o ONLINE, sceglie l'utente ─────────────
                   Il ramo cloud della pipeline Ren'Py esisteva dal 07/08 ma era
                   pilotabile SOLO da localStorage: nessun pulsante, quindi per
@@ -3936,12 +4100,12 @@ export default function GameDetailPage() {
                     disabled={autoTranslateBusy}
                   />
                   <label
-                    className="mt-1 flex items-center gap-1.5 text-micro font-bold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                    className="mt-1 flex items-center gap-1.5 text-micro font-bold uppercase tracking-wider text-noir-500 hover:text-noir-300 transition-colors cursor-pointer"
                     title={t('translationBackend.testBatchHint').replace('{n}', String(RENPY_TEST_BATCH_SIZE))}
                   >
                     <input
                       type="checkbox"
-                      className="h-3 w-3 accent-indigo-500"
+                      className="h-3 w-3 accent-rouge-500"
                       checked={renpyTestBatch}
                       disabled={autoTranslateBusy}
                       onChange={(e) => setRenpyTestBatch(e.target.checked)}
@@ -3956,7 +4120,7 @@ export default function GameDetailPage() {
               {/* ── Indicizza ora: qui il gioco e' gia' il contesto attivo, quindi
                   TM + glossario + lore si scaldano senza passare da Impostazioni. ── */}
               <button
-                className="h-7 mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                className="h-7 mt-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-noir-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all disabled:opacity-50"
                 onClick={runGameWarmIndex}
                 disabled={warmIndexing}
                 title={t('semanticIndex.hint')}
@@ -3973,21 +4137,21 @@ export default function GameDetailPage() {
                 href={`https://store.steampowered.com/app/${game.appid}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all no-underline"
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-noir-400 hover:text-white text-micro font-bold uppercase tracking-wider transition-all no-underline"
               >
                 <Globe className="h-3 w-3" /> Steam Store
               </a>
             )}
             {game.isInstalled && game.installPath && (
               <Link href={`/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`}
-                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 text-rouge-400 hover:text-rouge-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
               >
                 <Brain className="h-3 w-3" /> P.T.
               </Link>
             )}
             {game.isInstalled && game.installPath && (
               <Link href={`/video-extractor?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}&gameId=${encodeURIComponent(game.appid?.toString() || game.id || '')}`}
-                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 hover:text-fuchsia-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 text-rouge-400 hover:text-rouge-300 text-micro font-bold uppercase tracking-wider transition-all no-underline"
               >
                 <Film className="h-3 w-3" /> {t('gameDetail.video')}</Link>
             )}
@@ -3996,40 +4160,40 @@ export default function GameDetailPage() {
       </div>
 
       {/* ═══ MOBILE ACTION BAR (visible only on small screens) ═══ */}
-      <div className="flex lg:hidden gap-2 px-4 py-2.5 bg-[#0a0e14]/95 border-t border-white/[0.04] shrink-0">
+      <div className="flex lg:hidden gap-2 px-4 py-2.5 bg-noir-950/95 border-t border-white/[0.04] shrink-0">
         {game.isInstalled && (
           <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 text-white font-bold text-2xs uppercase tracking-wider"
             onClick={async () => { if ((game.appid ?? 0) > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
           >
             <Play className="h-3.5 w-3.5 fill-current" /> {t('gameDetail.play')}</button>
         )}
-        <button className={`flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-gradient-to-r from-indigo-600 to-violet-500 text-white font-bold text-2xs uppercase tracking-wider shadow-lg shadow-indigo-500/30${highlightStringIt ? ' first-game-pulse ring-2 ring-indigo-300/70' : ''}`}
+        <button className={`flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-gradient-to-r from-rouge-600 to-rouge-500 text-white font-bold text-2xs uppercase tracking-wider shadow-lg shadow-rouge-500/30${highlightStringIt ? ' first-game-pulse ring-2 ring-rouge-300/70' : ''}`}
           onClick={() => { setHighlightStringIt(false); handleStringIt(); }}
           disabled={autoTranslateBusy}
         >
           {autoTranslateBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateBusy ? (autoTranslateProgress || '...') : 'String it!'}
         </button>
-        <button className="h-9 px-2 flex items-center gap-0.5 rounded-r-lg bg-violet-600/90 text-white text-xs font-bold"
+        <button className="h-9 px-2 flex items-center gap-0.5 rounded-r-lg bg-rouge-600/90 text-white text-xs font-bold"
           onClick={() => setShowLangPicker(!showLangPicker)}
         >
           {currentFlag.flag}
           <ChevronDown className="h-2.5 w-2.5 opacity-70" />
         </button>
-        <button className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400"
+        <button className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-noir-400"
           onClick={scanGameFiles}
         >
           <Search className="h-3.5 w-3.5" />
         </button>
         {game.isInstalled && game.installPath && (
           <Link href={`/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`}
-            className="h-9 w-9 flex items-center justify-center rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all no-underline"
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 text-rouge-400 hover:text-rouge-300 transition-all no-underline"
           >
             <Brain className="h-3.5 w-3.5" />
           </Link>
         )}
         {game.isInstalled && game.installPath && (
           <Link href={`/video-extractor?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}&gameId=${encodeURIComponent(game.appid?.toString() || game.id || '')}`}
-            className="h-9 w-9 flex items-center justify-center rounded-lg bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/20 text-fuchsia-400 hover:text-fuchsia-300 transition-all no-underline"
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 text-rouge-400 hover:text-rouge-300 transition-all no-underline"
           >
             <Film className="h-3.5 w-3.5" />
           </Link>
@@ -4044,7 +4208,15 @@ export default function GameDetailPage() {
           {autoTranslateActive && (
             <AutoTranslateStepper
               steps={autoTranslateSteps}
-              error={autoTranslateError}
+              error={(() => {
+                // Se in questa corsa nessun provider AI ha tradotto, il motivo va
+                // accanto all'errore: senza, «operazione fallita» non dice nulla.
+                // I codici PAK_* sono chiavi che lo stepper riconosce: non si toccano.
+                const aiFailure = getChainFailureSince(autoTranslateStartedAtRef.current);
+                return autoTranslateError && aiFailure && !autoTranslateError.startsWith('PAK_')
+                  ? `${autoTranslateError} — ${aiFailure}`
+                  : autoTranslateError;
+              })()}
               result={autoTranslateResult}
               currentFlagLabel={currentFlag.label}
               onClose={() => setAutoTranslateActive(false)}
@@ -4057,9 +4229,9 @@ export default function GameDetailPage() {
           {/* Descrizione */}
           {(translatedDescription || game.shortDescription || game.description) && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
-              <p className="text-[13px] text-slate-300/90 leading-relaxed line-clamp-3">{translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description}</p>
+              <p className="text-[13px] text-noir-300/90 leading-relaxed line-clamp-3">{translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description}</p>
               {game.description && !translatedDescription && language !== 'en' && (
-                <button className="text-2xs text-indigo-400 hover:text-indigo-300 mt-1.5 flex items-center gap-1 font-semibold" onClick={() => translateDescription(game.description)}>
+                <button className="text-2xs text-rouge-400 hover:text-rouge-300 mt-1.5 flex items-center gap-1 font-semibold" onClick={() => translateDescription(game.description)}>
                   <Languages className="h-3 w-3" /> {t('gameDetail.translateIn')}{language.toUpperCase()}
                 </button>
               )}
@@ -4072,21 +4244,21 @@ export default function GameDetailPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="relative overflow-hidden rounded-xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-950/60 via-purple-950/40 to-violet-950/60 p-4"
+              className="relative overflow-hidden rounded-xl border border-rouge-500/30 bg-gradient-to-r from-rouge-950/60 via-rouge-950/40 to-rouge-950/60 p-4"
             >
-              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl bg-fuchsia-500/20 pointer-events-none" />
+              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl bg-rouge-500/20 pointer-events-none" />
               <div className="relative flex items-center gap-4">
-                <div className="shrink-0 h-12 w-12 rounded-xl bg-fuchsia-500/20 border border-fuchsia-500/30 flex items-center justify-center">
-                  <Film className="h-6 w-6 text-fuchsia-300" />
+                <div className="shrink-0 h-12 w-12 rounded-xl bg-rouge-500/20 border border-rouge-500/30 flex items-center justify-center">
+                  <Film className="h-6 w-6 text-rouge-300" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="text-sm font-bold text-fuchsia-200">🎬 {t('gameDetails.fmvGameDetected') || 'Gioco FMV rilevato'}</h3>
-                    <span className="text-2xs px-1.5 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30 font-semibold uppercase tracking-wider">
+                    <h3 className="text-sm font-bold text-rouge-200">🎬 {t('gameDetails.fmvGameDetected') || 'Gioco FMV rilevato'}</h3>
+                    <span className="text-2xs px-1.5 py-0.5 rounded bg-rouge-500/20 text-rouge-300 border border-rouge-500/30 font-semibold uppercase tracking-wider">
                       {fmvInfo.totalFiles} {t('common.fileVideo') || 'file video'}
                     </span>
                   </div>
-                  <p className="text-xs text-fuchsia-300/70">
+                  <p className="text-xs text-rouge-300/70">
                     {fmvInfo.totalSizeMB.toFixed(0)}  {t('gameDetails.mbUnit')} {fmvInfo.formats.slice(0, 3).join(', ')}
                     {fmvInfo.formats.length > 3 ? ` +${fmvInfo.formats.length - 3}` : ''}
                     {' — '}{t('gameDetails.fmvExtractHint') || 'estrai, converti e traduci i video del gioco'}
@@ -4094,7 +4266,7 @@ export default function GameDetailPage() {
                 </div>
                 <Link
                   href={`/video-extractor?gamePath=${encodeURIComponent(game.installPath || '')}&gameName=${encodeURIComponent(game.title || game.name || '')}&gameId=${encodeURIComponent(game.appid?.toString() || game.id || '')}`}
-                  className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-500 hover:from-fuchsia-400 hover:to-purple-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-fuchsia-500/30 transition-all no-underline"
+                  className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rouge-500 to-rouge-500 hover:from-rouge-400 hover:to-rouge-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-rouge-500/30 transition-all no-underline"
                 >
                   <Play className="h-3.5 w-3.5" />
                   {t('gameDetails.extractVideos') || 'Estrai Video'}
@@ -4115,8 +4287,8 @@ export default function GameDetailPage() {
           {/* Scan progress */}
           {isScanning && (
             <div className="flex items-center gap-3 bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
-              <Progress value={scanProgress} className="h-2 flex-1 bg-slate-800" />
-              <span className="text-xs font-bold text-indigo-400 tabular-nums">{scanProgress}%</span>
+              <Progress value={scanProgress} className="h-2 flex-1 bg-noir-800" />
+              <span className="text-xs font-bold text-rouge-400 tabular-nums">{scanProgress}%</span>
             </div>
           )}
 
@@ -4130,7 +4302,7 @@ export default function GameDetailPage() {
             type="button"
             onClick={() => setShowAdvancedTools((v) => !v)}
             aria-expanded={showAdvancedTools}
-            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-[#1b2838]/40 border border-white/5 hover:border-white/10 text-[#8f98a0] hover:text-[#c7d5e0] text-xs font-semibold transition-all"
+            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-noir-900/40 border border-white/5 hover:border-white/10 text-noir-400 hover:text-[#c7d5e0] text-xs font-semibold transition-all"
           >
             <span className="flex items-center gap-2">
               <Wrench className="h-3.5 w-3.5" />
@@ -4261,17 +4433,17 @@ export default function GameDetailPage() {
 
           {/* ── Godot Translator (ponte alla pagina dedicata) ── */}
           {(game.engine?.toLowerCase().includes('godot') || engineInfo?.engine?.toLowerCase().includes('godot')) && game.installPath && (
-            <div className="rounded-xl border border-sky-500/20 bg-gradient-to-r from-sky-950/50 to-blue-950/40 p-4 flex items-center gap-4">
-              <div className="shrink-0 h-11 w-11 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center">
-                <Languages className="h-5 w-5 text-sky-300" />
+            <div className="rounded-xl border border-noir-500/20 bg-gradient-to-r from-noir-950/50 to-noir-950/40 p-4 flex items-center gap-4">
+              <div className="shrink-0 h-11 w-11 rounded-xl bg-noir-500/15 border border-noir-500/25 flex items-center justify-center">
+                <Languages className="h-5 w-5 text-noir-300" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-sky-200">{t('gameDetail.godotDetected')}</h3>
-                <p className="text-xs text-sky-300/70">{t('gameDetail.godotBridgeDesc')}</p>
+                <h3 className="text-sm font-bold text-noir-200">{t('gameDetail.godotDetected')}</h3>
+                <p className="text-xs text-noir-300/70">{t('gameDetail.godotBridgeDesc')}</p>
               </div>
               <Link
                 href={`/godot-translator?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`}
-                className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-400 hover:to-blue-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-sky-500/25 transition-all no-underline"
+                className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-noir-500 to-noir-500 hover:from-noir-400 hover:to-noir-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-noir-500/25 transition-all no-underline"
               >
                 <Languages className="h-3.5 w-3.5" />
                 {t('gameDetail.openGodotTranslator')}
@@ -4281,7 +4453,7 @@ export default function GameDetailPage() {
 
           {/* ── Wolf RPG Patcher (ponte alla pagina dedicata) ── */}
           {(game.engine?.toLowerCase().includes('wolf') || engineInfo?.engine?.toLowerCase().includes('wolf')) && game.installPath && (
-            <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/50 to-teal-950/40 p-4 flex items-center gap-4">
+            <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/50 to-noir-950/40 p-4 flex items-center gap-4">
               <div className="shrink-0 h-11 w-11 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
                 <Wrench className="h-5 w-5 text-emerald-300" />
               </div>
@@ -4291,7 +4463,7 @@ export default function GameDetailPage() {
               </div>
               <Link
                 href={`/wolfrpg-patcher?gamePath=${encodeURIComponent(game.installPath)}&gameName=${encodeURIComponent(game.title || game.name || '')}`}
-                className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all no-underline"
+                className="shrink-0 h-9 px-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-noir-500 hover:from-emerald-400 hover:to-noir-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all no-underline"
               >
                 <Wrench className="h-3.5 w-3.5" />
                 {t('gameDetail.openWolfPatcher')}
@@ -4301,7 +4473,7 @@ export default function GameDetailPage() {
 
           {/* ── GameMaker Translator ── */}
           {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
-            <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
+            <div className="rounded-xl bg-noir-900/60 border border-amber-500/20 p-3.5">
               <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name || ''} targetLang={targetLang || language} />
             </div>
           )}
@@ -4368,7 +4540,7 @@ export default function GameDetailPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+            className="bg-noir-900 border border-noir-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-b border-amber-500/20 p-4">
@@ -4385,14 +4557,14 @@ export default function GameDetailPage() {
             
             {/* Content */}
             <div className="p-5">
-              <p className="text-sm text-slate-300 mb-4">
+              <p className="text-sm text-noir-300 mb-4">
                 {ptConfirmDialog.expired
                   ? `L'analisi precedente è scaduta (${ptConfirmDialog.ageHours}h fa). Rianalizzare migliora le stime di tempo e qualità.`
                   : 'Eseguire prima P.T. permette di scegliere la chain LLM migliore e stimare tempi/costi con precisione.'}
               </p>
               
-              <div className="bg-slate-800/50 rounded-xl p-3 mb-4 border border-slate-700/30">
-                <p className="text-xs text-slate-400">
+              <div className="bg-noir-800/50 rounded-xl p-3 mb-4 border border-noir-700/30">
+                <p className="text-xs text-noir-400">
                   <span className="text-amber-400 font-semibold">{t('gameDetail.recommended')}</span> {t('gameDetail.ptDesc')}</p>
               </div>
             </div>
@@ -4404,7 +4576,7 @@ export default function GameDetailPage() {
                   setPtConfirmDialog({ ...ptConfirmDialog, open: false });
                   startAutoTranslate();
                 }}
-                className="flex-1 h-10 rounded-xl text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600/50 transition-all"
+                className="flex-1 h-10 rounded-xl text-sm font-medium bg-noir-800 hover:bg-noir-700 text-noir-300 border border-noir-600/50 transition-all"
               >
                 {t('gameDetail.translateAnyway')}</button>
               <button
@@ -4426,9 +4598,9 @@ export default function GameDetailPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+            className="bg-noir-900 border border-noir-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
           >
-            <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-b border-emerald-500/20 p-4">
+            <div className="bg-gradient-to-r from-emerald-500/20 to-noir-500/20 border-b border-emerald-500/20 p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -4439,7 +4611,7 @@ export default function GameDetailPage() {
               </div>
             </div>
             <div className="p-5">
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-noir-300">
                 {t('gameDetail.legalGateBody') ||
                   'GameStringer applica patch solo a giochi che possiedi legalmente. Confermando, dichiari di avere una copia legittima di questo gioco.'}
               </p>
@@ -4455,7 +4627,7 @@ export default function GameDetailPage() {
             <div className="flex gap-3 p-4 pt-0">
               <button
                 onClick={() => setLegalGateOpen(false)}
-                className="flex-1 h-10 rounded-xl text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600/50 transition-all"
+                className="flex-1 h-10 rounded-xl text-sm font-medium bg-noir-800 hover:bg-noir-700 text-noir-300 border border-noir-600/50 transition-all"
               >
                 {t('gameDetail.legalGateCancel') || 'Annulla'}
               </button>
@@ -4469,7 +4641,7 @@ export default function GameDetailPage() {
                   setLegalGateOpen(false);
                   handleStringIt();
                 }}
-                className="flex-1 h-10 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 transition-all"
+                className="flex-1 h-10 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-noir-500 hover:from-emerald-400 hover:to-noir-400 text-white shadow-lg shadow-emerald-500/25 transition-all"
               >
                 {t('gameDetail.legalGateConfirm') || 'Confermo, possiedo il gioco'}
               </button>

@@ -278,7 +278,7 @@ export function WadExtractor() {
                 </div>
                 <div className="flex gap-3 text-sm">
                   <div className="flex items-center gap-1">
-                    <Database className="w-3.5 h-3.5 text-blue-400" />
+                    <Database className="w-3.5 h-3.5 text-noir-400" />
                     <span className="font-medium">{stats.total.toLocaleString()}</span>
                     <span className="text-muted-foreground text-xs">{t('wadExtractor.totalUnit')}</span>
                   </div>
@@ -310,7 +310,7 @@ export function WadExtractor() {
                   onClick={translateBatch}
                   disabled={translating || stats.translated === stats.total}
                   size="sm"
-                  className="h-8 bg-purple-600 hover:bg-purple-500"
+                  className="h-8 bg-rouge-600 hover:bg-rouge-500"
                 >
                   {translating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
                   {t('wadExtractor.translateAi')}</Button>
@@ -327,7 +327,7 @@ export function WadExtractor() {
                   {t('wadExtractor.export')}</Button>
               </div>
             </div>
-            <Progress value={translating ? translateProgress : stats.percentage} className="h-2 bg-slate-800" />
+            <Progress value={translating ? translateProgress : stats.percentage} className="h-2 bg-noir-800" />
           </CardContent>
         </Card>
       )}
@@ -356,7 +356,7 @@ export function WadExtractor() {
             </div>
 
             {/* Extract Command */}
-            <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
+            <div className="p-2 rounded bg-noir-950/80 border border-noir-800">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-2xs text-muted-foreground">{t('wadExtractorComp.comandoEstrazione')}</span>
                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={copyExtractCommand}>
@@ -373,25 +373,25 @@ export function WadExtractor() {
               <p className="text-2xs text-muted-foreground font-medium uppercase">{t('wadExtractorComp.workflow')}</p>
               <div className="space-y-1.5">
                 <div className={`flex items-center gap-2 text-xs ${entries.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-noir-800 border border-noir-700'}`}>
                     {entries.length > 0 ? <Check className="w-3 h-3" /> : '1'}
                   </div>
                   {t('wadExtractor.extractTextCli')}</div>
                 <div className={`flex items-center gap-2 text-xs ${entries.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-noir-800 border border-noir-700'}`}>
                     {entries.length > 0 ? <Check className="w-3 h-3" /> : '2'}
                   </div>
                   {t('wadExtractor.loadJson')}</div>
                 <div className={`flex items-center gap-2 text-xs ${stats.translated > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${stats.translated > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${stats.translated > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-noir-800 border border-noir-700'}`}>
                     {stats.translated > 0 ? <Check className="w-3 h-3" /> : '3'}
                   </div>
                   {t('wadExtractor.translateAiManual')}</div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-slate-800 border border-slate-700">4</div>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-noir-800 border border-noir-700">4</div>
                   {t('wadExtractor.exportTranslations')}</div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-slate-800 border border-slate-700">5</div>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-noir-800 border border-noir-700">5</div>
                   {t('wadExtractor.applyPatchCli')}</div>
               </div>
             </div>
@@ -481,7 +481,7 @@ export function WadExtractor() {
                     type="checkbox"
                     checked={showUntranslated}
                     onChange={(e) => setShowUntranslated(e.target.checked)}
-                    className="rounded border-slate-700"
+                    className="rounded border-noir-700"
                   />
                   {t('wadExtractor.onlyUntranslated')} ({(stats.total - stats.translated).toLocaleString()})
                 </label>
@@ -501,14 +501,14 @@ export function WadExtractor() {
                         <div
                           key={`${entry.file}-${entry.index}-${i}`}
                           onClick={() => { setEditingIndex(i); setEditedText(entry.translated || ''); }}
-                          className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-slate-800/30 transition-colors ${
-                            isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800/50'
+                          className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-noir-800/30 transition-colors ${
+                            isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-noir-800/50'
                           }`}
                         >
                           <Badge className={`text-micro shrink-0 ${
                             entry.type === 'dialogue'
-                              ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                              : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                              ? 'bg-noir-500/20 text-noir-400 border-noir-500/30'
+                              : 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30'
                           }`}>
                             {entry.type === 'dialogue' ? 'DLG' : 'TXT'}
                           </Badge>
@@ -526,14 +526,14 @@ export function WadExtractor() {
                     return (
                       <div
                         key={`${entry.file}-${entry.index}-${i}`}
-                        className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
+                        className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-noir-800'}`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Badge className={`text-micro ${
                               entry.type === 'dialogue'
-                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                                : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                                ? 'bg-noir-500/20 text-noir-400 border-noir-500/30'
+                                : 'bg-rouge-500/20 text-rouge-400 border-rouge-500/30'
                             }`}>
                               {entry.type === 'dialogue' ? 'Dialogo' : 'Testo'}
                             </Badge>
@@ -547,7 +547,7 @@ export function WadExtractor() {
                         </div>
 
                         <div className="mb-2">
-                          <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                          <p className="text-sm font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                             {entry.original}
                           </p>
                           {entry.raw && entry.raw !== entry.original && (
@@ -562,7 +562,7 @@ export function WadExtractor() {
                             <Textarea
                               value={editedText}
                               onChange={(e) => setEditedText(e.target.value)}
-                              className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                              className="font-mono text-sm bg-noir-950/50 border-noir-700"
                               rows={2}
                               placeholder={t('wadExtractor.translationPh')}
                             />
@@ -586,7 +586,7 @@ export function WadExtractor() {
                         ) : (
                           <div
                             onClick={() => { setEditingIndex(i); setEditedText(entry.translated || ''); }}
-                            className={`p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                            className={`p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >
@@ -607,7 +607,7 @@ export function WadExtractor() {
                   <p className="text-lg font-medium">{t('wadExtractorComp.nessunTestoWadCaricato')}</p>
                   <p className="text-sm mt-2 max-w-md mx-auto">
                     {t('wadExtractor.runCommandHint')}</p>
-                  <div className="mt-4 p-3 rounded-lg bg-slate-950/50 border border-slate-800 max-w-lg mx-auto">
+                  <div className="mt-4 p-3 rounded-lg bg-noir-950/50 border border-noir-800 max-w-lg mx-auto">
                     <code className="text-xs text-emerald-400 font-mono">
                       node scripts/extract-wad-text.mjs &quot;path/to/game.wad&quot; output.json
                     </code>

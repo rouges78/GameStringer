@@ -662,7 +662,7 @@ function ThemeCard({
           </div>
         )}
         {theme.isOfficial && (
-          <Badge className="absolute top-2 left-2 bg-blue-500/90">
+          <Badge className="absolute top-2 left-2 bg-noir-500/90">
             <Zap className="h-3 w-3 mr-1" />
             Official
           </Badge>

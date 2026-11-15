@@ -109,8 +109,8 @@ export function StatsDashboard() {
       title: 'Words Translated',
       value: formatNumber(stats.totalWordsTranslated),
       icon: Languages,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-noir-500',
+      bgColor: 'bg-noir-500/10',
     },
     {
       title: 'Files Processed',
@@ -123,8 +123,8 @@ export function StatsDashboard() {
       title: 'Games Translated',
       value: stats.totalGamesTranslated.toString(),
       icon: Gamepad2,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      color: 'text-rouge-500',
+      bgColor: 'bg-rouge-500/10',
     },
     {
       title: 'Total Time',
@@ -137,8 +137,8 @@ export function StatsDashboard() {
       title: 'Average Speed',
       value: `${stats.averageWordsPerMinute}/min`,
       icon: TrendingUp,
-      color: 'text-cyan-500',
-      bgColor: 'bg-cyan-500/10',
+      color: 'text-noir-500',
+      bgColor: 'bg-noir-500/10',
     },
   ];
 

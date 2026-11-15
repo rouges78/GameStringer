@@ -208,7 +208,7 @@ export function NexusModsBrowser() {
     return (
       <div className="space-y-4">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           
@@ -302,7 +302,7 @@ export function NexusModsBrowser() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -541,7 +541,7 @@ export function NexusModsBrowser() {
 
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="p-3 bg-muted/50 rounded-lg">
-                    <Download className="h-5 w-5 mx-auto mb-1 text-blue-500" />
+                    <Download className="h-5 w-5 mx-auto mb-1 text-noir-500" />
                     <p className="text-lg font-bold">{selectedMod.mod.downloads?.toLocaleString() || 0}</p>
                     <p className="text-xs text-muted-foreground">{t('nexusMods.downloads')}</p>
                   </div>

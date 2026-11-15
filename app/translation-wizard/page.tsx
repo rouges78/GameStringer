@@ -1910,10 +1910,10 @@ export default function TranslationWizardPage() {
             <div className="flex flex-col items-center">
               <div className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all",
-                step === s ? "bg-purple-500 text-white ring-2 ring-purple-500/30" :
+                step === s ? "bg-rouge-500 text-white ring-2 ring-rouge-500/30" :
                 currentIdx > i 
                   ? "bg-green-500 text-white" 
-                  : "bg-slate-700 text-slate-400"
+                  : "bg-noir-700 text-noir-400"
               )}>
                 {currentIdx > i ? (
                   <CheckCircle2 className="h-3.5 w-3.5" />
@@ -1923,7 +1923,7 @@ export default function TranslationWizardPage() {
               </div>
               <span className={cn(
                 "text-micro mt-1",
-                step === s ? "text-purple-300" : currentIdx > i ? "text-green-400" : "text-slate-600"
+                step === s ? "text-rouge-300" : currentIdx > i ? "text-green-400" : "text-noir-600"
               )}>
                 {STEP_LABELS[i]}
               </span>
@@ -1931,7 +1931,7 @@ export default function TranslationWizardPage() {
             {i < WIZARD_STEPS.length - 1 && (
               <div className={cn(
                 "w-8 h-0.5 mx-0.5 mb-4",
-                currentIdx > i ? "bg-green-500" : "bg-slate-700"
+                currentIdx > i ? "bg-green-500" : "bg-noir-700"
               )} />
             )}
           </div>
@@ -1943,10 +1943,10 @@ export default function TranslationWizardPage() {
   // Show error if any
   if (renderError) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-noir-900 flex items-center justify-center p-6">
         <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6 max-w-md">
           <h2 className="text-red-400 font-bold mb-2">{t('translationWizard.renderError')}</h2>
-          <p className="text-slate-300 text-sm">{renderError}</p>
+          <p className="text-noir-300 text-sm">{renderError}</p>
           <Button className="mt-4" onClick={() => window.location.reload()}>
             {t('translationWizard.reloadPage')}</Button>
         </div>
@@ -1955,19 +1955,19 @@ export default function TranslationWizardPage() {
   }
 
   return (
-    <div className="h-full overflow-auto bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 p-4">
+    <div className="h-full overflow-auto bg-gradient-to-br from-noir-900 via-rouge-900/10 to-noir-900 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header Compatto */}
         <div className="text-center mb-4 shrink-0">
           <div className="inline-flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rouge-500 to-noir-600 flex items-center justify-center">
               <Wand2 className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-rouge-400 to-noir-400 bg-clip-text text-transparent">
               Translation Wizard
             </h1>
           </div>
-          <p className="text-slate-400 text-sm">
+          <p className="text-noir-400 text-sm">
             {t('translationWizard.subtitle')}</p>
         </div>
 
@@ -1982,28 +1982,28 @@ export default function TranslationWizardPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Search className="h-5 w-5 text-purple-400" />
+                    <Search className="h-5 w-5 text-rouge-400" />
                     {t('translationWizard.selectGame')}</CardTitle>
                   <CardDescription>
                     {t('translationWizard.selectGameDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-noir-400" />
                     <Input
                       aria-label={t('translationWizard.searchAria')} placeholder={t('translationWizard.searchGame')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-slate-900/50 border-slate-600"
+                      className="pl-10 bg-noir-900/50 border-noir-600"
                     />
                   </div>
 
                   {isLoading ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+                      <Loader2 className="h-6 w-6 animate-spin text-rouge-400" />
                     </div>
                   ) : (
                     <ScrollArea className="h-[300px] pr-4">
@@ -2012,10 +2012,10 @@ export default function TranslationWizardPage() {
                           <button
                             key={game.id}
                             onClick={() => analyzeGame(game)}
-                            className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-900/30 hover:bg-slate-900/60 border border-slate-700 hover:border-purple-500/50 transition-all text-left group"
+                            className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-noir-900/30 hover:bg-noir-900/60 border border-noir-700 hover:border-rouge-500/50 transition-all text-left group"
                           >
                             {/* Game cover or fallback icon */}
-                            <div className="w-10 h-10 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0 overflow-hidden">
+                            <div className="w-10 h-10 rounded bg-gradient-to-br from-rouge-500/20 to-noir-500/20 flex items-center justify-center shrink-0 overflow-hidden">
                               {game.header_image ? (
                                 <img 
                                   src={game.header_image} 
@@ -2023,17 +2023,17 @@ export default function TranslationWizardPage() {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
-                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="h-4 w-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>';
+                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="h-4 w-4 text-rouge-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>';
                                   }}
                                 />
                               ) : (
-                                <FileText className="h-4 w-4 text-purple-400" />
+                                <FileText className="h-4 w-4 text-rouge-400" />
                               )}
                             </div>
                             {/* Info game */}
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white text-sm truncate">{game.title}</p>
-                              <p className="text-2xs text-slate-500 truncate">
+                              <p className="text-2xs text-noir-500 truncate">
                                 {game.install_path || 'Percorso non disponibile'}
                               </p>
                             </div>
@@ -2044,22 +2044,22 @@ export default function TranslationWizardPage() {
                                 className={cn(
                                   "text-2xs shrink-0 h-5",
                                   game.engine === 'Unity' && "border-green-500/50 text-green-400 bg-green-500/10",
-                                  game.engine?.includes('Unreal') && "border-blue-500/50 text-blue-400 bg-blue-500/10",
-                                  game.engine === 'Godot' && "border-cyan-500/50 text-cyan-400 bg-cyan-500/10",
+                                  game.engine?.includes('Unreal') && "border-noir-500/50 text-noir-400 bg-noir-500/10",
+                                  game.engine === 'Godot' && "border-noir-500/50 text-noir-400 bg-noir-500/10",
                                   game.engine === 'RPG Maker' && "border-orange-500/50 text-orange-400 bg-orange-500/10",
-                                  game.engine === "Ren'Py" && "border-pink-500/50 text-pink-400 bg-pink-500/10",
+                                  game.engine === "Ren'Py" && "border-rouge-500/50 text-rouge-400 bg-rouge-500/10",
                                   game.engine === 'GameMaker' && "border-yellow-500/50 text-yellow-400 bg-yellow-500/10"
                                 )}
                               >
                                 {game.engine?.replace(' Engine', '')}
                               </Badge>
                             )}
-                            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors shrink-0" />
+                            <ChevronRight className="h-4 w-4 text-noir-500 group-hover:text-rouge-400 transition-colors shrink-0" />
                           </button>
                         ))}
                         
                         {filteredGames.length === 0 && (
-                          <div className="text-center py-12 text-slate-500">
+                          <div className="text-center py-12 text-noir-500">
                             <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
                             <p>{t('translationWizardPage.noGameTrovato')}</p>
                             <p className="text-sm mt-1">{t('translationWizardPage.provaACercareConUnAltroTermine')}</p>
@@ -2081,27 +2081,27 @@ export default function TranslationWizardPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardContent className="pt-8 pb-8">
                   <div className="text-center">
                     <div className="relative w-24 h-24 mx-auto mb-6">
-                      <div className="absolute inset-0 rounded-full border-4 border-slate-700" />
+                      <div className="absolute inset-0 rounded-full border-4 border-noir-700" />
                       <div 
-                        className="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin"
+                        className="absolute inset-0 rounded-full border-4 border-rouge-500 border-t-transparent animate-spin"
                         style={{ animationDuration: '1s' }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <Wand2 className="h-8 w-8 text-purple-400" />
+                        <Wand2 className="h-8 w-8 text-rouge-400" />
                       </div>
                     </div>
                     
                     <h2 className="text-xl font-semibold text-white mb-2">
                       {t('translationWizard.analyzing')}</h2>
-                    <p className="text-slate-400 mb-6">{selectedGame?.title}</p>
+                    <p className="text-noir-400 mb-6">{selectedGame?.title}</p>
                     
                     <div className="max-w-md mx-auto">
                       <Progress value={analysisProgress} className="h-2 mb-3" />
-                      <p className="text-sm text-slate-500">{analysisStatus}</p>
+                      <p className="text-sm text-noir-500">{analysisStatus}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -2119,11 +2119,11 @@ export default function TranslationWizardPage() {
               className="space-y-4"
             >
               {/* Game Info Card */}
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardHeader className="pb-2 pt-5 px-5">
                   <div className="flex justify-between items-start gap-4">
                     {/* Game Cover */}
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-rouge-500/20 to-noir-500/20 flex items-center justify-center shrink-0 overflow-hidden">
                       {selectedGame?.header_image ? (
                         <img 
                           src={selectedGame.header_image} 
@@ -2134,7 +2134,7 @@ export default function TranslationWizardPage() {
                           }}
                         />
                       ) : (
-                        <FileText className="h-5 w-5 text-purple-400" />
+                        <FileText className="h-5 w-5 text-rouge-400" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -2160,20 +2160,20 @@ export default function TranslationWizardPage() {
                 </CardHeader>
                 <CardContent className="px-5 pb-5">
                   <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
-                      <Settings2 className="h-4 w-4 text-blue-400 mx-auto mb-1.5" />
+                    <div className="p-2.5 rounded-lg bg-noir-900/50 border border-noir-700 text-center">
+                      <Settings2 className="h-4 w-4 text-noir-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.engine}</p>
-                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('gameDetails.engine')}</p>
+                      <p className="text-2xs text-noir-500 uppercase tracking-wider">{t('gameDetails.engine')}</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
-                      <FileCode className="h-4 w-4 text-purple-400 mx-auto mb-1.5" />
+                    <div className="p-2.5 rounded-lg bg-noir-900/50 border border-noir-700 text-center">
+                      <FileCode className="h-4 w-4 text-rouge-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.localizationFiles.length}</p>
-                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('translationWizardPage.file')}</p>
+                      <p className="text-2xs text-noir-500 uppercase tracking-wider">{t('translationWizardPage.file')}</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
-                      <Database className="h-4 w-4 text-cyan-400 mx-auto mb-1.5" />
+                    <div className="p-2.5 rounded-lg bg-noir-900/50 border border-noir-700 text-center">
+                      <Database className="h-4 w-4 text-noir-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">~{analysisResult.estimatedStrings.toLocaleString()}</p>
-                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('batchTranslator.stringsCol')}</p>
+                      <p className="text-2xs text-noir-500 uppercase tracking-wider">{t('batchTranslator.stringsCol')}</p>
                     </div>
                   </div>
 
@@ -2185,7 +2185,7 @@ export default function TranslationWizardPage() {
                           key={lang} 
                           variant="secondary"
                           className={cn(
-                            "bg-slate-700 text-2xs px-1.5 h-5",
+                            "bg-noir-700 text-2xs px-1.5 h-5",
                             lang === 'it' && "bg-green-500/20 text-green-400 border-green-500/30"
                           )}
                         >
@@ -2194,7 +2194,7 @@ export default function TranslationWizardPage() {
                         </Badge>
                       ))}
                       {!analysisResult.existingLanguages.includes(targetLanguage) && (
-                        <Badge variant="outline" className="border-dashed border-purple-500/50 text-purple-400 text-2xs px-1.5 h-5">
+                        <Badge variant="outline" className="border-dashed border-rouge-500/50 text-rouge-400 text-2xs px-1.5 h-5">
                           + {languageNames[targetLanguage] || targetLanguage.toUpperCase()}
                         </Badge>
                       )}
@@ -2207,12 +2207,12 @@ export default function TranslationWizardPage() {
                       "p-3 rounded-lg border",
                       strategy.canDoInline
                         ? "bg-emerald-500/10 border-emerald-500/30"
-                        : "bg-purple-500/10 border-purple-500/30"
+                        : "bg-rouge-500/10 border-rouge-500/30"
                     )}>
                       <div className="flex items-start gap-3">
                         <Zap className={cn(
                           "h-5 w-5 mt-0.5 shrink-0",
-                          strategy.canDoInline ? "text-emerald-400" : "text-purple-400"
+                          strategy.canDoInline ? "text-emerald-400" : "text-rouge-400"
                         )} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -2229,12 +2229,12 @@ export default function TranslationWizardPage() {
                                 {t('translationWizard.directTranslation')}</Badge>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 leading-relaxed mb-2">{strategy.description}</p>
+                          <p className="text-xs text-noir-400 leading-relaxed mb-2">{strategy.description}</p>
                           
                           <div className="space-y-0.5">
                             {strategy.steps.map((step, i) => (
-                              <div key={i} className="flex items-start gap-1.5 text-2xs text-slate-500">
-                                <span className="text-purple-400 font-bold shrink-0">{i + 1}.</span>
+                              <div key={i} className="flex items-start gap-1.5 text-2xs text-noir-500">
+                                <span className="text-rouge-400 font-bold shrink-0">{i + 1}.</span>
                                 <span>{step}</span>
                               </div>
                             ))}
@@ -2249,7 +2249,7 @@ export default function TranslationWizardPage() {
                             </div>
                           )}
 
-                          <div className="mt-2 text-2xs text-slate-500">
+                          <div className="mt-2 text-2xs text-noir-500">
                             Tempo stimato: ~{strategy.estimatedMinutes} min
                           </div>
                         </div>
@@ -2260,16 +2260,16 @@ export default function TranslationWizardPage() {
                   {/* Alternative strategies */}
                   {altStrategies.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-2xs text-slate-500 mb-1.5">{t('translationWizardPage.strategieAlternative')}</p>
+                      <p className="text-2xs text-noir-500 mb-1.5">{t('translationWizardPage.strategieAlternative')}</p>
                       <div className="flex gap-2">
                         {altStrategies.map(alt => (
                           <button
                             key={alt.id}
                             onClick={() => startTranslation(alt)}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-colors text-left"
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-noir-800/50 border border-noir-700 hover:border-rouge-500/50 transition-colors text-left"
                           >
-                            <span className="text-2xs font-medium text-slate-300">{alt.name}</span>
-                            <ArrowRight className="h-3 w-3 text-slate-500" />
+                            <span className="text-2xs font-medium text-noir-300">{alt.name}</span>
+                            <ArrowRight className="h-3 w-3 text-noir-500" />
                           </button>
                         ))}
                       </div>
@@ -2280,35 +2280,35 @@ export default function TranslationWizardPage() {
 
               {/* Localization Files */}
               {analysisResult.localizationFiles.length > 0 && (
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardHeader className="py-3 px-5 border-b border-slate-700/50">
-                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                      <FileText className="h-4 w-4 text-purple-400" />
+                <Card className="bg-noir-800/50 border-noir-700">
+                  <CardHeader className="py-3 px-5 border-b border-noir-700/50">
+                    <CardTitle className="text-sm flex items-center gap-2 text-noir-300">
+                      <FileText className="h-4 w-4 text-rouge-400" />
                       File di Localizzazione ({analysisResult.localizationFiles.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
                     <ScrollArea className="h-[180px]">
-                      <div className="divide-y divide-slate-700/50">
+                      <div className="divide-y divide-noir-700/50">
                         {analysisResult.localizationFiles.map((file, i) => (
                           <div 
                             key={i}
-                            className="flex items-center justify-between py-2 px-5 hover:bg-slate-700/30 transition-colors"
+                            className="flex items-center justify-between py-2 px-5 hover:bg-noir-700/30 transition-colors"
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className={cn(
                                 "w-6 h-6 rounded flex items-center justify-center text-micro font-bold shrink-0",
                                 file.type === 'csv' && "bg-green-500/20 text-green-400",
                                 file.type === 'json' && "bg-yellow-500/20 text-yellow-400",
-                                file.type === 'xml' && "bg-blue-500/20 text-blue-400",
-                                file.type === 'asset' && "bg-purple-500/20 text-purple-400",
-                                !['csv', 'json', 'xml', 'asset'].includes(file.type) && "bg-slate-700 text-slate-400"
+                                file.type === 'xml' && "bg-noir-500/20 text-noir-400",
+                                file.type === 'asset' && "bg-rouge-500/20 text-rouge-400",
+                                !['csv', 'json', 'xml', 'asset'].includes(file.type) && "bg-noir-700 text-noir-400"
                               )}>
                                 {file.type.toUpperCase().slice(0, 3)}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-200 truncate leading-tight">{file.name}</p>
-                                <p className="text-2xs text-slate-500 leading-tight">
+                                <p className="text-sm font-medium text-noir-200 truncate leading-tight">{file.name}</p>
+                                <p className="text-2xs text-noir-500 leading-tight">
                                   {file.stringCount > 0 ? `~${file.stringCount} str.` : 'Compilato'}
                                   {file.size > 0 && ` • ${(file.size / 1024).toFixed(1)} KB`}
                                 </p>
@@ -2320,7 +2320,7 @@ export default function TranslationWizardPage() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                className="h-7 w-7 p-0 text-slate-400 hover:text-white"
+                                className="h-7 w-7 p-0 text-noir-400 hover:text-white"
                                 onClick={() => openInEditor(file)}
                               >
                                 <Eye className="h-3.5 w-3.5" />
@@ -2339,13 +2339,13 @@ export default function TranslationWizardPage() {
                 <Button 
                   variant="outline" 
                   onClick={() => { setStep('select-game'); setAnalysisResult(null); }}
-                  className="border-slate-600"
+                  className="border-noir-600"
                 >
                   {t('translationWizard.chooseAnotherGame')}</Button>
                 
                 <div className="flex items-center gap-3">
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                    <SelectTrigger className="w-[140px] bg-slate-800 border-slate-600">
+                    <SelectTrigger className="w-[140px] bg-noir-800 border-noir-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -2375,7 +2375,7 @@ export default function TranslationWizardPage() {
                   {strategy?.id !== 'telltale' && strategy?.id !== 'ocr' && strategy?.id !== 'community-patch' && strategy?.canDoInline !== false && (
                     <Button 
                       onClick={() => startTranslation()}
-                      className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                      className="bg-gradient-to-r from-rouge-500 to-noir-600 hover:from-rouge-600 hover:to-noir-700"
                     >
                       <Play className="h-4 w-4 mr-2" />
                       {t('translationWizard.translateNow')}</Button>
@@ -2411,8 +2411,8 @@ export default function TranslationWizardPage() {
                         window.location.href = strategy.dedicatedTool!.route;
                       }}
                       className={strategy.id === 'telltale' || strategy.id === 'ocr' 
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700" 
-                        : "border-slate-600"}
+                        ? "bg-gradient-to-r from-emerald-500 to-noir-600 hover:from-emerald-600 hover:to-noir-700" 
+                        : "border-noir-600"}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       {strategy.dedicatedTool.name}
@@ -2431,23 +2431,23 @@ export default function TranslationWizardPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
-                    <Languages className="h-5 w-5 text-purple-400 animate-pulse" />{t('offlineTranslator.translating')}</CardTitle>
+                    <Languages className="h-5 w-5 text-rouge-400 animate-pulse" />{t('offlineTranslator.translating')}</CardTitle>
                   <CardDescription>{selectedGame?.title} → {languageNames[targetLanguage] || targetLanguage}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <div className="flex justify-between text-xs text-noir-400 mb-1">
                       <span>{translateStatus}</span>
                       <span>{Math.round(translateProgress)}%</span>
                     </div>
                     <Progress value={translateProgress} className="h-2" />
                   </div>
 
-                  <ScrollArea className="h-[250px] rounded-lg bg-slate-900/50 border border-slate-700 p-3">
-                    <pre className="text-[11px] text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
+                  <ScrollArea className="h-[250px] rounded-lg bg-noir-900/50 border border-noir-700 p-3">
+                    <pre className="text-[11px] text-noir-300 font-mono whitespace-pre-wrap leading-relaxed">
                       {translateLog.join('\n') || 'Avvio traduzione...'}
                     </pre>
                   </ScrollArea>
@@ -2465,7 +2465,7 @@ export default function TranslationWizardPage() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <Card className={`bg-slate-800/50 ${strategy?.id === 'ocr' ? 'border-amber-500/30' : 'border-emerald-500/30'}`}>
+              <Card className={`bg-noir-800/50 ${strategy?.id === 'ocr' ? 'border-amber-500/30' : 'border-emerald-500/30'}`}>
                 <CardContent className="pt-8 pb-8 text-center">
                   {strategy?.id === 'community-patch' ? (
                     <>
@@ -2473,7 +2473,7 @@ export default function TranslationWizardPage() {
                         <Download className="h-8 w-8 text-emerald-400" />
                       </div>
                       <h2 className="text-xl font-bold text-white mb-2">{t('translationWizardPage.communityTranslationAvailable')}</h2>
-                      <p className="text-slate-400 text-sm mb-6">
+                      <p className="text-noir-400 text-sm mb-6">
                         {strategy?.description}
                       </p>
                     </>
@@ -2485,7 +2485,7 @@ export default function TranslationWizardPage() {
                       <h2 className="text-xl font-bold text-white mb-2">
                         {strategy?.dedicatedTool ? `Usa ${strategy.dedicatedTool.name}` : 'Prossimo Passo'}
                       </h2>
-                      <p className="text-slate-400 text-sm mb-6">
+                      <p className="text-noir-400 text-sm mb-6">
                         {selectedGame?.title} — {strategy?.description}
                       </p>
                     </>
@@ -2495,15 +2495,15 @@ export default function TranslationWizardPage() {
                         <CheckCircle2 className="h-8 w-8 text-emerald-400" />
                       </div>
                       <h2 className="text-xl font-bold text-white mb-2">{t('translationWizardPage.traduzioneCompletata')}</h2>
-                      <p className="text-slate-400 text-sm mb-6">
+                      <p className="text-noir-400 text-sm mb-6">
                         {selectedGame?.title} è stato tradotto in {languageNames[targetLanguage] || targetLanguage}.
                         {strategy?.dedicatedTool && ` Per opzioni avanzate usa ${strategy.dedicatedTool.name}.`}
                       </p>
                     </>
                   )}
 
-                  <ScrollArea className="h-[180px] rounded-lg bg-slate-900/50 border border-slate-700 p-3 text-left mb-6">
-                    <pre className="text-[11px] text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
+                  <ScrollArea className="h-[180px] rounded-lg bg-noir-900/50 border border-noir-700 p-3 text-left mb-6">
+                    <pre className="text-[11px] text-noir-300 font-mono whitespace-pre-wrap leading-relaxed">
                       {translateLog.join('\n')}
                     </pre>
                   </ScrollArea>
@@ -2512,7 +2512,7 @@ export default function TranslationWizardPage() {
                     <Button
                       variant="outline"
                       onClick={() => { setStep('select-game'); setAnalysisResult(null); setStrategy(null); }}
-                      className="border-slate-600"
+                      className="border-noir-600"
                     >
                       {t('translationWizard.translateAnotherGame')}</Button>
                     {strategy?.id === 'community-patch' && (() => {
@@ -2533,7 +2533,7 @@ export default function TranslationWizardPage() {
                     {strategy?.id !== 'ocr' && strategy?.id !== 'telltale' && (
                       <Button
                         variant={strategy?.id === 'community-patch' ? 'outline' : 'default'}
-                        className={strategy?.id === 'community-patch' ? 'border-slate-600' : 'bg-gradient-to-r from-emerald-500 to-cyan-600'}
+                        className={strategy?.id === 'community-patch' ? 'border-noir-600' : 'bg-gradient-to-r from-emerald-500 to-noir-600'}
                         onClick={() => {
                           if (analysisResult?.game.install_path) {
                             invoke('open_path', { path: analysisResult.game.install_path }).catch(() => {});
@@ -2545,7 +2545,7 @@ export default function TranslationWizardPage() {
                     )}
                     {strategy?.dedicatedTool && strategy?.id !== 'community-patch' && (
                       <Button
-                        className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                        className="bg-gradient-to-r from-emerald-500 to-noir-600 hover:from-emerald-600 hover:to-noir-700"
                         onClick={() => {
                           if (analysisResult) {
                             sessionStorage.setItem('patcherAutoGame', JSON.stringify({

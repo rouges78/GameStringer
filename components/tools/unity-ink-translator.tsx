@@ -456,7 +456,7 @@ export function UnityInkTranslator() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-700 via-purple-600 to-fuchsia-700 p-4">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-rouge-700 via-rouge-600 to-rouge-700 p-4">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -526,10 +526,10 @@ export function UnityInkTranslator() {
           
           {/* STEP 1: Select Game */}
           {step === 'select' && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-violet-400" />
+                  <FolderOpen className="h-4 w-4 text-rouge-400" />
                   {t('unityInkTranslator.selectGameFolder')}
                 </CardTitle>
               </CardHeader>
@@ -538,13 +538,13 @@ export function UnityInkTranslator() {
                 {(steamGames.length > 0 || scanningGames) && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <h3 className="text-xs font-semibold text-noir-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Zap className="h-3 w-3 text-amber-400" />
                         {t('unityInkTranslator.unityGamesDetected')}
                       </h3>
-                      {scanningGames && <Loader2 className="h-3 w-3 animate-spin text-slate-500" />}
+                      {scanningGames && <Loader2 className="h-3 w-3 animate-spin text-noir-500" />}
                       {!scanningGames && (
-                        <Button onClick={scanSteamGames} variant="ghost" size="xs" className="px-2 text-2xs text-slate-500">
+                        <Button onClick={scanSteamGames} variant="ghost" size="xs" className="px-2 text-2xs text-noir-500">
                           <RefreshCw className="h-2.5 w-2.5 mr-1" />{t('unityInkTranslator.rescan')}
                         </Button>
                       )}
@@ -559,27 +559,27 @@ export function UnityInkTranslator() {
                             className={cn(
                               "w-full text-left rounded-lg border p-2.5 transition-all hover:scale-[1.01]",
                               gameDir === game.dataPath
-                                ? "bg-violet-500/15 border-violet-500/40 shadow-lg shadow-violet-500/10"
-                                : "bg-slate-800/30 border-slate-700/30 hover:bg-slate-800/50 hover:border-slate-600/50"
+                                ? "bg-rouge-500/15 border-rouge-500/40 shadow-lg shadow-rouge-500/10"
+                                : "bg-noir-800/30 border-noir-700/30 hover:bg-noir-800/50 hover:border-noir-600/50"
                             )}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 min-w-0">
                                 <div className={cn(
                                   "w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0",
-                                  gameDir === game.dataPath ? "bg-violet-500/30 text-violet-300" : "bg-slate-700/50 text-slate-400"
+                                  gameDir === game.dataPath ? "bg-rouge-500/30 text-rouge-300" : "bg-noir-700/50 text-noir-400"
                                 )}>
                                   {game.inkBlobs}
                                 </div>
                                 <div className="min-w-0">
-                                  <div className="text-sm font-medium text-slate-200 truncate">{game.name}</div>
-                                  <div className="text-2xs text-slate-500 truncate">{game.dataPath}</div>
+                                  <div className="text-sm font-medium text-noir-200 truncate">{game.name}</div>
+                                  <div className="text-2xs text-noir-500 truncate">{game.dataPath}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                <Badge variant="outline" className="text-micro border-slate-600/50 text-slate-400">
+                                <Badge variant="outline" className="text-micro border-noir-600/50 text-noir-400">
                                   {game.assetsFiles}  {t('unityInkTranslator.filesUnit')}</Badge>
-                                <Badge variant="outline" className="text-micro border-slate-600/50 text-slate-400">
+                                <Badge variant="outline" className="text-micro border-noir-600/50 text-noir-400">
                                   {game.size}
                                 </Badge>
                               </div>
@@ -588,7 +588,7 @@ export function UnityInkTranslator() {
                         ))}
                       </div>
                     ) : scanningGames ? (
-                      <div className="text-xs text-slate-500 text-center py-3">
+                      <div className="text-xs text-noir-500 text-center py-3">
                         {t('unityInkTranslator.scanning')}
                       </div>
                     ) : null}
@@ -599,10 +599,10 @@ export function UnityInkTranslator() {
                 {steamGames.length > 0 && (
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-700/50" />
+                      <div className="w-full border-t border-noir-700/50" />
                     </div>
                     <div className="relative flex justify-center text-2xs">
-                      <span className="bg-slate-900 px-2 text-slate-500">{t('unityInkTranslator.orManualPath')}</span>
+                      <span className="bg-noir-900 px-2 text-noir-500">{t('unityInkTranslator.orManualPath')}</span>
                     </div>
                   </div>
                 )}
@@ -613,12 +613,12 @@ export function UnityInkTranslator() {
                     value={gameDir}
                     onChange={(e) => setGameDir(e.target.value)}
                     placeholder={t('unityInkTranslator.examplePath')}
-                    className="flex-1 bg-slate-800/50 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50"
+                    className="flex-1 bg-noir-800/50 border border-noir-600/50 rounded-lg px-3 py-2 text-sm text-noir-200 placeholder:text-noir-500 focus:outline-none focus:ring-2 focus:ring-rouge-500/50 focus:border-rouge-500/50"
                   />
                   <Button 
                     onClick={handleSelectGame}
                     disabled={!gameDir.trim()}
-                    className="bg-violet-600 hover:bg-violet-500"
+                    className="bg-rouge-600 hover:bg-rouge-500"
                   >
                     <Search className="h-4 w-4 mr-1" />
                     {t('unityInkTranslator.detect')}</Button>
@@ -626,11 +626,11 @@ export function UnityInkTranslator() {
 
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="text-xs text-slate-500 mb-1 block">{t('common.linguaTarget')}</label>
+                    <label className="text-xs text-noir-500 mb-1 block">{t('common.linguaTarget')}</label>
                     <select 
                       value={targetLang} 
                       onChange={e => setTargetLang(e.target.value)}
-                      className="w-full bg-slate-800/50 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-200"
+                      className="w-full bg-noir-800/50 border border-noir-600/50 rounded-lg px-3 py-2 text-sm text-noir-200"
                     >
                       <option value="it">{t('unityInkTranslator.italian')}</option>
                       <option value="es">{t('unityInkTranslator.spanish')}</option>
@@ -645,11 +645,11 @@ export function UnityInkTranslator() {
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className="text-xs text-slate-500 mb-1 block">{t('common.modelloOllama')}</label>
+                    <label className="text-xs text-noir-500 mb-1 block">{t('common.modelloOllama')}</label>
                     <select 
                       value={ollamaModel} 
                       onChange={e => setOllamaModel(e.target.value)}
-                      className="w-full bg-slate-800/50 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-200"
+                      className="w-full bg-noir-800/50 border border-noir-600/50 rounded-lg px-3 py-2 text-sm text-noir-200"
                     >
                       {ollamaModels.length > 0 ? (
                         ollamaModels.map(m => <option key={m} value={m}>{m}</option>)
@@ -665,15 +665,15 @@ export function UnityInkTranslator() {
 
           {/* STEP 2: Extract */}
           {step === 'extract' && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Search className="h-4 w-4 text-blue-400" />
+                  <Search className="h-4 w-4 text-noir-400" />
                   {t('unityInkTranslator.extractInkTitle')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-slate-400">
-                  {t('unityInkTranslator.scanningOf')} <span className="text-blue-300 font-medium">{gameName}</span>  {t('unityInkTranslator.toExtractDesc')}</p>
+                <p className="text-sm text-noir-400">
+                  {t('unityInkTranslator.scanningOf')} <span className="text-noir-300 font-medium">{gameName}</span>  {t('unityInkTranslator.toExtractDesc')}</p>
                 
                 {extractResult ? (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -686,7 +686,7 @@ export function UnityInkTranslator() {
                   <Button 
                     onClick={handleExtract}
                     disabled={extracting}
-                    className="bg-blue-600 hover:bg-blue-500 w-full"
+                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
                     size="lg"
                   >
                     {extracting ? (
@@ -700,7 +700,7 @@ export function UnityInkTranslator() {
                 {extractResult && (
                   <Button 
                     onClick={() => setStep('translate')} 
-                    className="bg-violet-600 hover:bg-violet-500 w-full"
+                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
                   >
                     {t('unityInkTranslator.proceedToTranslation')} <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -711,7 +711,7 @@ export function UnityInkTranslator() {
 
           {/* STEP 3: Translate */}
           {step === 'translate' && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Languages className="h-4 w-4 text-green-400" />
@@ -720,22 +720,22 @@ export function UnityInkTranslator() {
               <CardContent className="space-y-4">
                 {translateProgress.status === 'idle' && (
                   <>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-noir-400">
                       {t('unityInkTranslator.translationOf')} <span className="text-green-300 font-medium">{extractResult?.uniqueStrings || '?'}</span>  {t('unityInkTranslator.stringsWith')} <span className="text-green-300 font-medium">{ollamaModel}</span>
                     </p>
 
                     {/* Character Voice Profiles Toggle */}
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 space-y-3">
+                    <div className="bg-noir-800/50 border border-noir-700/50 rounded-lg p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Wand2 className="h-4 w-4 text-purple-400" />
-                          <span className="text-sm font-medium text-slate-200">{t('unityInkTranslator.characterVoiceAI')}</span>
+                          <Wand2 className="h-4 w-4 text-rouge-400" />
+                          <span className="text-sm font-medium text-noir-200">{t('unityInkTranslator.characterVoiceAI')}</span>
                         </div>
                         <button
                           onClick={() => setUseCharacterVoices(!useCharacterVoices)}
                           className={cn(
                             "relative w-10 h-5 rounded-full transition-colors",
-                            useCharacterVoices ? "bg-purple-500" : "bg-slate-600"
+                            useCharacterVoices ? "bg-rouge-500" : "bg-noir-600"
                           )}
                         >
                           <span className={cn(
@@ -747,7 +747,7 @@ export function UnityInkTranslator() {
                       
                       {useCharacterVoices && (
                         <div className="space-y-2">
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-noir-500">
                             {t('unityInkTranslator.characterVoiceDesc')}</p>
                           
                           {/* Quick-add preset profiles */}
@@ -786,8 +786,8 @@ export function UnityInkTranslator() {
                                   className={cn(
                                     "px-2 py-1 rounded-md text-[11px] font-medium border transition-all",
                                     isActive
-                                      ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
-                                      : "bg-slate-700/30 border-slate-600/30 text-slate-400 hover:border-slate-500/50"
+                                      ? "bg-rouge-500/20 border-rouge-500/40 text-rouge-300"
+                                      : "bg-noir-700/30 border-noir-600/30 text-noir-400 hover:border-noir-500/50"
                                   )}
                                 >
                                   {preset.name}
@@ -797,7 +797,7 @@ export function UnityInkTranslator() {
                           </div>
                           
                           {characterProfiles.length > 0 && (
-                            <div className="text-2xs text-purple-400/70">
+                            <div className="text-2xs text-rouge-400/70">
                               {characterProfiles.length} profil{characterProfiles.length === 1 ? 'o' : 'i'} attiv{characterProfiles.length === 1 ? 'o' : 'i'}: {characterProfiles.map(p => p.name).join(', ')}
                             </div>
                           )}
@@ -809,7 +809,7 @@ export function UnityInkTranslator() {
                       onClick={handleTranslate}
                       className={cn(
                         "w-full",
-                        useCharacterVoices ? "bg-purple-600 hover:bg-purple-500" : "bg-green-600 hover:bg-green-500"
+                        useCharacterVoices ? "bg-rouge-600 hover:bg-rouge-500" : "bg-green-600 hover:bg-green-500"
                       )}
                       size="lg"
                     >
@@ -822,23 +822,23 @@ export function UnityInkTranslator() {
                 {(translateProgress.status === 'running' || translateProgress.status === 'done') && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-400">
+                      <span className="text-noir-400">
                         {translateProgress.done} / {translateProgress.total}  {t('unityInkTranslator.stringsUnit')}</span>
-                      <span className="text-slate-500">
+                      <span className="text-noir-500">
                         {translateProgress.rate.toFixed(1)}{t('unityInkTranslator.rateEta')} {Math.ceil(translateProgress.eta)}{t('unityInkTranslator.minUnit')}</span>
                     </div>
                     
                     <Progress 
                       value={translateProgress.total > 0 ? (translateProgress.done / translateProgress.total) * 100 : 0} 
-                      className="h-3 bg-slate-800" 
+                      className="h-3 bg-noir-800" 
                     />
                     
                     {translateProgress.currentText && (
-                      <div className="bg-slate-800/50 rounded-lg p-2 text-xs text-slate-400 space-y-1">
+                      <div className="bg-noir-800/50 rounded-lg p-2 text-xs text-noir-400 space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-slate-500">{t('unityInkTranslator.current')}</span>
+                          <span className="text-noir-500">{t('unityInkTranslator.current')}</span>
                           {translateProgress.currentCharacter && (
-                            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-2xs font-medium">
+                            <span className="px-1.5 py-0.5 rounded bg-rouge-500/20 text-rouge-300 text-2xs font-medium">
                               {translateProgress.currentCharacter}
                             </span>
                           )}
@@ -858,7 +858,7 @@ export function UnityInkTranslator() {
                 {translateProgress.status === 'done' && (
                   <Button 
                     onClick={() => setStep('inject')} 
-                    className="bg-violet-600 hover:bg-violet-500 w-full"
+                    className="bg-rouge-600 hover:bg-rouge-500 w-full"
                   >
                     {t('unityInkTranslator.proceedToInjection')} <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -879,7 +879,7 @@ export function UnityInkTranslator() {
 
           {/* STEP 4: Inject */}
           {step === 'inject' && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Rocket className="h-4 w-4 text-orange-400" />
@@ -901,7 +901,7 @@ export function UnityInkTranslator() {
                 )}
 
                 {injectResult.status === 'running' && (
-                  <div className="flex items-center gap-2 text-sm text-slate-300">
+                  <div className="flex items-center gap-2 text-sm text-noir-300">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {t('unityInkTranslator.injectionInProgress')}</div>
                 )}
@@ -944,13 +944,13 @@ export function UnityInkTranslator() {
 
           {/* STEP 5: Done */}
           {step === 'done' && (
-            <Card className="bg-slate-900/50 border-green-500/30">
+            <Card className="bg-noir-900/50 border-green-500/30">
               <CardContent className="pt-6 text-center space-y-4">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="h-8 w-8 text-green-400" />
                 </div>
                 <h2 className="text-xl font-bold text-green-300">{t('unityInkTranslator.translationCompleted')}</h2>
-                <p className="text-slate-400 text-sm max-w-md mx-auto">
+                <p className="text-noir-400 text-sm max-w-md mx-auto">
                   <span className="text-green-300 font-bold">{injectResult.totalReplacements.toLocaleString()}</span> {t('unityInkTranslator.stringsTranslated')} 
                   <span className="text-green-300 font-bold"> {injectResult.filesProcessed}</span> {t('unityInkTranslator.files')} {t('unityInkTranslator.launchToVerify')}
                 </p>
@@ -965,7 +965,7 @@ export function UnityInkTranslator() {
                   <Button onClick={handleRestore} variant="outline" size="sm" className="text-amber-300 border-amber-500/30">
                     <RotateCcw className="h-3 w-3 mr-1" />{t('unityInkTranslator.restoreOriginals')}
                   </Button>
-                  <Button onClick={handleExportPack} variant="outline" size="sm" className="text-violet-300 border-violet-500/30">
+                  <Button onClick={handleExportPack} variant="outline" size="sm" className="text-rouge-300 border-rouge-500/30">
                     <Package className="h-3 w-3 mr-1" />{t('unityInkTranslator.exportPack')}
                   </Button>
                   <Button 
@@ -982,7 +982,7 @@ export function UnityInkTranslator() {
 
           {/* Translation Preview Panel — shown after extract or later */}
           {currentStepIdx >= 2 && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardHeader className="pb-2 pt-3 px-4">
                 <div className="flex items-center justify-between">
                   <CardTitle 
@@ -992,10 +992,10 @@ export function UnityInkTranslator() {
                       if (!showPreview && previewPairs.length === 0) loadPreview(); 
                     }}
                   >
-                    <Table className="h-4 w-4 text-violet-400" />
+                    <Table className="h-4 w-4 text-rouge-400" />
                     {t('unityInkTranslator.translationPreview')}
                     {previewStats && (
-                      <Badge variant="outline" className="text-2xs border-violet-500/30 text-violet-300 ml-1">
+                      <Badge variant="outline" className="text-2xs border-rouge-500/30 text-rouge-300 ml-1">
                         {previewStats.coverage}{t('unityInkTranslator.coveragePercent')}
                       </Badge>
                     )}
@@ -1003,15 +1003,15 @@ export function UnityInkTranslator() {
                   <div className="flex items-center gap-1">
                     {showPreview && (
                       <>
-                        <Button onClick={handleExportPack} variant="ghost" size="xs" className="px-2 text-2xs text-violet-400">
+                        <Button onClick={handleExportPack} variant="ghost" size="xs" className="px-2 text-2xs text-rouge-400">
                           <Package className="h-3 w-3 mr-1" />{t('unityInkTranslator.export')}
                         </Button>
-                        <Button onClick={() => loadPreview(previewPage, previewSearch)} variant="ghost" size="xs" className="px-2 text-2xs text-slate-400">
+                        <Button onClick={() => loadPreview(previewPage, previewSearch)} variant="ghost" size="xs" className="px-2 text-2xs text-noir-400">
                           <RefreshCw className="h-3 w-3" />
                         </Button>
                       </>
                     )}
-                    {showPreview ? <ChevronUp className="h-3 w-3 text-slate-500 cursor-pointer" onClick={() => setShowPreview(false)} /> : <ChevronDown className="h-3 w-3 text-slate-500 cursor-pointer" onClick={() => { setShowPreview(true); if (previewPairs.length === 0) loadPreview(); }} />}
+                    {showPreview ? <ChevronUp className="h-3 w-3 text-noir-500 cursor-pointer" onClick={() => setShowPreview(false)} /> : <ChevronDown className="h-3 w-3 text-noir-500 cursor-pointer" onClick={() => { setShowPreview(true); if (previewPairs.length === 0) loadPreview(); }} />}
                   </div>
                 </div>
               </CardHeader>
@@ -1025,17 +1025,17 @@ export function UnityInkTranslator() {
                         <div className="text-lg font-bold text-green-400">{previewStats.coverage}%</div>
                         <div className="text-micro text-green-400/70">{t('common.coverage')}</div>
                       </div>
-                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-blue-400">{previewStats.translatedCount.toLocaleString()}</div>
-                        <div className="text-micro text-blue-400/70">{t('unityInkTranslator.translated')}</div>
+                      <div className="bg-noir-500/10 border border-noir-500/20 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-noir-400">{previewStats.translatedCount.toLocaleString()}</div>
+                        <div className="text-micro text-noir-400/70">{t('unityInkTranslator.translated')}</div>
                       </div>
                       <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-center">
                         <div className="text-lg font-bold text-amber-400">{previewStats.untranslatedCount.toLocaleString()}</div>
                         <div className="text-micro text-amber-400/70">{t('unityInkTranslator.missing')}</div>
                       </div>
-                      <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 text-center">
-                        <div className="text-lg font-bold text-purple-400">{previewStats.totalStrings.toLocaleString()}</div>
-                        <div className="text-micro text-purple-400/70">{t('common.totale')}</div>
+                      <div className="bg-rouge-500/10 border border-rouge-500/20 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-rouge-400">{previewStats.totalStrings.toLocaleString()}</div>
+                        <div className="text-micro text-rouge-400/70">{t('common.totale')}</div>
                       </div>
                     </div>
                   )}
@@ -1043,20 +1043,20 @@ export function UnityInkTranslator() {
                   {/* Coverage Visual Bar */}
                   {previewStats && (
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-2xs text-slate-500">
+                      <div className="flex items-center justify-between text-2xs text-noir-500">
                         <span>{t('common.coperturaTraduzione')}</span>
                         <span>{previewStats.translatedCount}/{previewStats.totalStrings}</span>
                       </div>
-                      <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-2.5 bg-noir-800 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
                           style={{ width: `${previewStats.coverage}%` }}
                         />
                       </div>
-                      <div className="flex gap-3 text-micro text-slate-500">
-                        <span>{t('unityInkTranslator.shortLabel')} <span className="text-slate-400">{previewStats.shortCount}</span></span>
-                        <span>{t('unityInkTranslator.mediumLabel')} <span className="text-slate-400">{previewStats.mediumCount}</span></span>
-                        <span>{t('unityInkTranslator.longLabel')} <span className="text-slate-400">{previewStats.longCount}</span></span>
+                      <div className="flex gap-3 text-micro text-noir-500">
+                        <span>{t('unityInkTranslator.shortLabel')} <span className="text-noir-400">{previewStats.shortCount}</span></span>
+                        <span>{t('unityInkTranslator.mediumLabel')} <span className="text-noir-400">{previewStats.mediumCount}</span></span>
+                        <span>{t('unityInkTranslator.longLabel')} <span className="text-noir-400">{previewStats.longCount}</span></span>
                       </div>
                     </div>
                   )}
@@ -1064,20 +1064,20 @@ export function UnityInkTranslator() {
                   {/* Search & Filter */}
                   <div className="flex gap-2">
                     <div className="flex-1 relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-noir-500" />
                       <input
                         type="text"
                         value={previewSearch}
                         onChange={(e) => setPreviewSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadPreview(0, previewSearch)}
                         aria-label={t('common.cerca')} placeholder={t('unityInkTranslator.searchPh')}
-                        className="w-full bg-slate-800/50 border border-slate-600/50 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+                        className="w-full bg-noir-800/50 border border-noir-600/50 rounded-lg pl-8 pr-3 py-1.5 text-xs text-noir-200 placeholder:text-noir-500 focus:outline-none focus:ring-1 focus:ring-rouge-500/50"
                       />
                     </div>
                     <select
                       value={previewFilter}
                       onChange={(e) => { setPreviewFilter(e.target.value as "all" | "translated" | "untranslated"); loadPreview(0, previewSearch); }}
-                      className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-2 py-1.5 text-xs text-slate-300"
+                      className="bg-noir-800/50 border border-noir-600/50 rounded-lg px-2 py-1.5 text-xs text-noir-300"
                     >
                       <option value="all">{t('common.all')}</option>
                       <option value="translated">{t('common.translated')}</option>
@@ -1086,32 +1086,32 @@ export function UnityInkTranslator() {
                   </div>
 
                   {/* Table */}
-                  <div className="bg-slate-950/50 rounded-lg border border-slate-800/50 overflow-hidden">
-                    <div className="grid grid-cols-[1fr_1fr] text-2xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800/50">
+                  <div className="bg-noir-950/50 rounded-lg border border-noir-800/50 overflow-hidden">
+                    <div className="grid grid-cols-[1fr_1fr] text-2xs font-semibold text-noir-400 uppercase tracking-wider border-b border-noir-800/50">
                       <div className="px-3 py-2">{t('languages.en')}</div>
                       <div className="px-3 py-2">{t('languages.it')}</div>
                     </div>
                     
                     {loadingPreview ? (
-                      <div className="p-4 text-center text-slate-500 text-xs">
+                      <div className="p-4 text-center text-noir-500 text-xs">
                         <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
                         {t('unityInkTranslator.loading')}</div>
                     ) : previewPairs.length === 0 ? (
-                      <div className="p-4 text-center text-slate-500 text-xs">
+                      <div className="p-4 text-center text-noir-500 text-xs">
                         {t('unityInkTranslator.noResults')}</div>
                     ) : (
                       previewPairs.map((pair, i) => (
                         <div 
                           key={i} 
                           className={cn(
-                            "grid grid-cols-[1fr_1fr] text-[11px] border-b border-slate-800/30 hover:bg-slate-800/30 transition-colors",
+                            "grid grid-cols-[1fr_1fr] text-[11px] border-b border-noir-800/30 hover:bg-noir-800/30 transition-colors",
                             !pair.translated && "bg-amber-500/5"
                           )}
                         >
-                          <div className="px-3 py-1.5 text-slate-300 break-words border-r border-slate-800/30">
+                          <div className="px-3 py-1.5 text-noir-300 break-words border-r border-noir-800/30">
                             {pair.english.length > 100 ? pair.english.substring(0, 100) + '...' : pair.english}
                           </div>
-                          <div className={cn("px-3 py-1.5 break-words", pair.translated ? "text-green-300/80" : "text-slate-600 italic")}>
+                          <div className={cn("px-3 py-1.5 break-words", pair.translated ? "text-green-300/80" : "text-noir-600 italic")}>
                             {pair.translated ? (pair.italian.length > 100 ? pair.italian.substring(0, 100) + '...' : pair.italian) : '— non tradotta —'}
                           </div>
                         </div>
@@ -1121,7 +1121,7 @@ export function UnityInkTranslator() {
 
                   {/* Pagination */}
                   {previewTotalPages > 1 && (
-                    <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center justify-between text-xs text-noir-500">
                       <Button 
                         onClick={() => loadPreview(Math.max(0, previewPage - 1), previewSearch)} 
                         disabled={previewPage === 0}
@@ -1147,22 +1147,22 @@ export function UnityInkTranslator() {
         <div className="space-y-4">
           {/* Quick Info */}
           {gameName && (
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-noir-900/50 border-noir-700/50">
               <CardContent className="pt-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-500">{t('unityInkTranslator.gameLabel')}</span>
-                  <span className="text-slate-200 font-medium">{gameName}</span>
+                  <span className="text-noir-500">{t('unityInkTranslator.gameLabel')}</span>
+                  <span className="text-noir-200 font-medium">{gameName}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-500">{t('unityInkTranslator.languageLabel')}</span>
-                  <span className="text-slate-200">{targetLang.toUpperCase()}</span>
+                  <span className="text-noir-500">{t('unityInkTranslator.languageLabel')}</span>
+                  <span className="text-noir-200">{targetLang.toUpperCase()}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-500">{t('unityInkTranslator.modelLabel')}</span>
-                  <span className="text-slate-200 text-xs truncate">{ollamaModel}</span>
+                  <span className="text-noir-500">{t('unityInkTranslator.modelLabel')}</span>
+                  <span className="text-noir-200 text-xs truncate">{ollamaModel}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-500">{t('unityInkTranslator.ollamaLabel')} </span>
+                  <span className="text-noir-500">{t('unityInkTranslator.ollamaLabel')} </span>
                   <Badge variant="outline" className={cn(
                     "text-2xs",
                     ollamaStatus === 'online' ? "border-green-500/30 text-green-400" : "border-red-500/30 text-red-400"
@@ -1175,29 +1175,29 @@ export function UnityInkTranslator() {
           )}
 
           {/* Log Console */}
-          <Card className="bg-slate-950/80 border-slate-700/50">
+          <Card className="bg-noir-950/80 border-noir-700/50">
             <CardHeader className="pb-2 pt-3 px-3">
               <div 
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => setShowLogs(!showLogs)}
               >
-                <CardTitle className="text-xs flex items-center gap-1 text-slate-400">
+                <CardTitle className="text-xs flex items-center gap-1 text-noir-400">
                   <Eye className="h-3 w-3" />
                   {t('unityInkTranslator.consoleLog')}</CardTitle>
-                {showLogs ? <ChevronUp className="h-3 w-3 text-slate-500" /> : <ChevronDown className="h-3 w-3 text-slate-500" />}
+                {showLogs ? <ChevronUp className="h-3 w-3 text-noir-500" /> : <ChevronDown className="h-3 w-3 text-noir-500" />}
               </div>
             </CardHeader>
             {showLogs && (
               <CardContent className="pt-0 px-3 pb-3">
-                <div className="bg-black/50 rounded-lg p-2 max-h-64 overflow-y-auto font-mono text-2xs text-slate-400 space-y-0.5">
+                <div className="bg-black/50 rounded-lg p-2 max-h-64 overflow-y-auto font-mono text-2xs text-noir-400 space-y-0.5">
                   {logs.length === 0 ? (
-                    <div className="text-slate-600">{t('unityInkTranslator.waiting')}</div>
+                    <div className="text-noir-600">{t('unityInkTranslator.waiting')}</div>
                   ) : (
                     logs.map((log, i) => (
                       <div key={i} className={cn(
                         log.includes('Errore') ? 'text-red-400' : 
                         log.includes('completat') ? 'text-green-400' : 
-                        'text-slate-400'
+                        'text-noir-400'
                       )}>
                         {log}
                       </div>
@@ -1210,16 +1210,16 @@ export function UnityInkTranslator() {
           </Card>
 
           {/* How it works */}
-          <Card className="bg-slate-900/50 border-slate-700/50">
+          <Card className="bg-noir-900/50 border-noir-700/50">
             <CardContent className="pt-4 space-y-2">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('unityInkTranslator.howItWorks')}</h3>
-              <div className="space-y-2 text-[11px] text-slate-500">
+              <h3 className="text-xs font-semibold text-noir-400 uppercase tracking-wider">{t('unityInkTranslator.howItWorks')}</h3>
+              <div className="space-y-2 text-[11px] text-noir-500">
                 <div className="flex gap-2">
-                  <span className="text-violet-400 font-bold">1.</span>
-                  <span>{t('unityInkTranslator.step1').replace('<code>', '<code className="text-violet-300">')}</span>
+                  <span className="text-rouge-400 font-bold">1.</span>
+                  <span>{t('unityInkTranslator.step1').replace('<code>', '<code className="text-rouge-300">')}</span>
                 </div>
                 <div className="flex gap-2">
-                  <span className="text-blue-400 font-bold">2.</span>
+                  <span className="text-noir-400 font-bold">2.</span>
                   <span>{t('unityInkTranslator.step2')}</span>
                 </div>
                 <div className="flex gap-2">
@@ -1248,8 +1248,8 @@ function StatCard({ label, value, icon: Icon, color, small }: {
   small?: boolean;
 }) {
   const colors = {
-    blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    purple: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+    blue: 'text-noir-400 bg-noir-500/10 border-noir-500/20',
+    purple: 'text-rouge-400 bg-rouge-500/10 border-rouge-500/20',
     green: 'text-green-400 bg-green-500/10 border-green-500/20',
     amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
     red: 'text-red-400 bg-red-500/10 border-red-500/20',

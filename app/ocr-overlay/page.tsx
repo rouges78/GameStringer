@@ -78,7 +78,7 @@ export default function OcrOverlayPage() {
               }}
             >
               <p
-                className="text-cyan-400/60 leading-tight"
+                className="text-noir-400/60 leading-tight"
                 style={{ fontSize: Math.max(9, fontSize - 3) }}
               >
                 {text.original}

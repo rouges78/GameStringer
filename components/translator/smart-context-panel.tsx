@@ -160,7 +160,7 @@ export function SmartContextPanel({
   if (!context) {
     return (
       <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-4 text-center text-gray-500">
+        <CardContent className="p-4 text-center text-noir-500">
           <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">{t('smartContextPanelComp.selezionaUnGiocoPerAttivareSma')}</p>
         </CardContent>
@@ -173,15 +173,15 @@ export function SmartContextPanel({
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="bg-card/50 border-border/50">
           <CollapsibleTrigger asChild>
-            <CardHeader className="p-3 cursor-pointer hover:bg-purple-500/10 transition-colors">
+            <CardHeader className="p-3 cursor-pointer hover:bg-rouge-500/10 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-purple-400" />
-                  <span className="text-sm font-medium text-purple-300">{t('smartContextPanelComp.smartContext')}</span>
+                  <Brain className="h-4 w-4 text-rouge-400" />
+                  <span className="text-sm font-medium text-rouge-300">{t('smartContextPanelComp.smartContext')}</span>
                   <Badge variant="outline" className="text-2xs">
                     {context.stats.learnings}  {t('smartContextPanelComp.learningsUnit')}</Badge>
                 </div>
-                {isOpen ? <ChevronDown className="h-4 w-4 text-gray-500" /> : <ChevronRight className="h-4 w-4 text-gray-500" />}
+                {isOpen ? <ChevronDown className="h-4 w-4 text-noir-500" /> : <ChevronRight className="h-4 w-4 text-noir-500" />}
               </div>
             </CardHeader>
           </CollapsibleTrigger>
@@ -198,7 +198,7 @@ export function SmartContextPanel({
               </div>
               
               {context.characters.length > 0 && (
-                <div className="text-2xs text-gray-500">
+                <div className="text-2xs text-noir-500">
                   {t('smartContextPanelComp.charactersLabel')} {context.characters.slice(0, 3).map(c => c.name).join(', ')}
                   {context.characters.length > 3 && ` +${context.characters.length - 3}`}
                 </div>
@@ -215,12 +215,12 @@ export function SmartContextPanel({
       <CardHeader className="p-4 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Brain className="h-5 w-5 text-purple-400" />
+            <div className="p-2 bg-rouge-500/20 rounded-lg">
+              <Brain className="h-5 w-5 text-rouge-400" />
             </div>
             <div>
-              <CardTitle className="text-base text-purple-300">{t('smartContextPanelComp.smartContext')}</CardTitle>
-              <p className="text-2xs text-gray-500">{context.gameName}</p>
+              <CardTitle className="text-base text-rouge-300">{t('smartContextPanelComp.smartContext')}</CardTitle>
+              <p className="text-2xs text-noir-500">{context.gameName}</p>
             </div>
           </div>
           <div className="flex gap-1">
@@ -274,26 +274,26 @@ export function SmartContextPanel({
                 <div key={i} className="p-2 bg-muted/30 rounded-lg border border-border/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <MessageSquare className="h-3 w-3 text-purple-400" />
+                      <MessageSquare className="h-3 w-3 text-rouge-400" />
                       <span className="text-sm font-medium">{char.name}</span>
                       {char.translatedName && (
-                        <span className="text-xs text-gray-500">→ {char.translatedName}</span>
+                        <span className="text-xs text-noir-500">→ {char.translatedName}</span>
                       )}
                     </div>
                     <Badge 
                       variant="outline" 
                       className={`text-2xs ${
-                        char.speechStyle === 'formal' ? 'border-blue-500/30 text-blue-400' :
+                        char.speechStyle === 'formal' ? 'border-noir-500/30 text-noir-400' :
                         char.speechStyle === 'informal' ? 'border-green-500/30 text-green-400' :
                         char.speechStyle === 'archaic' ? 'border-amber-500/30 text-amber-400' :
-                        'border-gray-500/30 text-gray-400'
+                        'border-noir-500/30 text-noir-400'
                       }`}
                     >
                       {char.speechStyle}
                     </Badge>
                   </div>
                   {char.personality && (
-                    <p className="text-2xs text-gray-500 mt-1">{char.personality}</p>
+                    <p className="text-2xs text-noir-500 mt-1">{char.personality}</p>
                   )}
                   {char.aliases.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
@@ -317,12 +317,12 @@ export function SmartContextPanel({
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-purple-400" />
+                      <Users className="h-5 w-5 text-rouge-400" />
                       {t('smartContextPanelComp.newCharacter')}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.nome')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.nome')}</label>
                       <Input
                         value={newCharacter.name}
                         onChange={(e) => setNewCharacter({ ...newCharacter, name: e.target.value })}
@@ -331,7 +331,7 @@ export function SmartContextPanel({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.nomeTradottoOpzionale')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.nomeTradottoOpzionale')}</label>
                       <Input
                         value={newCharacter.translatedName || ''}
                         onChange={(e) => setNewCharacter({ ...newCharacter, translatedName: e.target.value })}
@@ -340,7 +340,7 @@ export function SmartContextPanel({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.stileDiDialogo')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.stileDiDialogo')}</label>
                       <Select 
                         value={newCharacter.speechStyle} 
                         onValueChange={(v) => setNewCharacter({ ...newCharacter, speechStyle: v as "formal" | "informal" | "neutral" | "archaic" | "modern" | "slang" })}
@@ -359,7 +359,7 @@ export function SmartContextPanel({
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.personalità')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.personalità')}</label>
                       <Input
                         value={newCharacter.personality || ''}
                         onChange={(e) => setNewCharacter({ ...newCharacter, personality: e.target.value })}
@@ -368,7 +368,7 @@ export function SmartContextPanel({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.aliasSoprannomi')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.aliasSoprannomi')}</label>
                       <div className="flex gap-2">
                         <Input
                           value={aliasInput}
@@ -395,15 +395,15 @@ export function SmartContextPanel({
                       )}
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.note')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.note')}</label>
                       <Textarea
                         value={newCharacter.notes || ''}
                         onChange={(e) => setNewCharacter({ ...newCharacter, notes: e.target.value })}
                         placeholder={t('smartContextPanelComp.notesPh')}
-                        className="bg-slate-800 border-slate-600 h-20"
+                        className="bg-noir-800 border-noir-600 h-20"
                       />
                     </div>
-                    <Button onClick={handleAddCharacter} className="w-full bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={handleAddCharacter} className="w-full bg-rouge-600 hover:bg-rouge-700">
                       <Check className="h-4 w-4 mr-2" />
                       {t('smartContextPanelComp.addCharacter')}</Button>
                   </div>
@@ -420,8 +420,8 @@ export function SmartContextPanel({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{term.original}</span>
-                      <span className="text-gray-500">→</span>
-                      <span className="text-sm text-purple-300">{term.translation}</span>
+                      <span className="text-noir-500">→</span>
+                      <span className="text-sm text-rouge-300">{term.translation}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Badge variant="outline" className="text-micro h-4">
@@ -444,7 +444,7 @@ export function SmartContextPanel({
                     </div>
                   </div>
                   {term.context && (
-                    <p className="text-2xs text-gray-500 mt-1">{term.context}</p>
+                    <p className="text-2xs text-noir-500 mt-1">{term.context}</p>
                   )}
                 </div>
               ))}
@@ -459,12 +459,12 @@ export function SmartContextPanel({
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-purple-400" />
+                      <BookOpen className="h-5 w-5 text-rouge-400" />
                       {t('smartContextPanelComp.newTerm')}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.originale')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.originale')}</label>
                       <Input
                         value={newTerm.original}
                         onChange={(e) => setNewTerm({ ...newTerm, original: e.target.value })}
@@ -473,7 +473,7 @@ export function SmartContextPanel({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.traduzione')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.traduzione')}</label>
                       <Input
                         value={newTerm.translation}
                         onChange={(e) => setNewTerm({ ...newTerm, translation: e.target.value })}
@@ -482,7 +482,7 @@ export function SmartContextPanel({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-1 block">{t('smartContextPanelComp.contestoOpzionale')}</label>
+                      <label className="text-xs text-noir-500 mb-1 block">{t('smartContextPanelComp.contestoOpzionale')}</label>
                       <Input
                         value={newTerm.context}
                         onChange={(e) => setNewTerm({ ...newTerm, context: e.target.value })}
@@ -490,7 +490,7 @@ export function SmartContextPanel({
                         className="bg-muted/50 border-border"
                       />
                     </div>
-                    <Button onClick={handleAddTerm} className="w-full bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={handleAddTerm} className="w-full bg-rouge-600 hover:bg-rouge-700">
                       <Check className="h-4 w-4 mr-2" />
                       {t('smartContextPanelComp.addTerm')}</Button>
                   </div>
@@ -503,8 +503,8 @@ export function SmartContextPanel({
         {/* AI Suggestion Hint */}
         <div className="mt-3 p-2 bg-primary/10 rounded-lg border border-primary/20">
           <div className="flex items-start gap-2">
-            <Lightbulb className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
-            <p className="text-2xs text-purple-300/80">
+            <Lightbulb className="h-4 w-4 text-rouge-400 shrink-0 mt-0.5" />
+            <p className="text-2xs text-rouge-300/80">
               {t('smartContextPanelComp.autoLearnDesc')}</p>
           </div>
         </div>

@@ -62,7 +62,7 @@ export function SubtitleOverlay() {
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-noir-500 to-noir-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -117,7 +117,7 @@ export function SubtitleOverlay() {
           <CardContent>
             {showPreview && (
               <div 
-                className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden"
+                className="relative bg-gradient-to-br from-noir-800 to-noir-900 rounded-lg overflow-hidden"
                 style={{ height: 200 }}
               >
                 {/* Simulated game screen */}
@@ -276,7 +276,7 @@ export function SubtitleOverlay() {
                     min={12}
                     max={48}
                     step={1}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
 
@@ -292,7 +292,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={100}
                     step={5}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
 
@@ -302,7 +302,7 @@ export function SubtitleOverlay() {
                   <Switch
                     checked={config.shadow}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, shadow: v }))}
-                    className="data-[state=checked]:bg-teal-500"
+                    className="data-[state=checked]:bg-noir-500"
                   />
                 </div>
               </TabsContent>
@@ -332,7 +332,7 @@ export function SubtitleOverlay() {
                   <Switch
                     checked={config.showOriginal}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, showOriginal: v }))}
-                    className="data-[state=checked]:bg-teal-500"
+                    className="data-[state=checked]:bg-noir-500"
                   />
                 </div>
 
@@ -367,7 +367,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={100}
                     step={4}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
               </TabsContent>
@@ -385,7 +385,7 @@ export function SubtitleOverlay() {
                     min={1000}
                     max={15000}
                     step={500}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
 
@@ -401,7 +401,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={1000}
                     step={50}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
 
@@ -417,7 +417,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={1000}
                     step={50}
-                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
+                    className="mt-1 [&_[data-slot=range]]:bg-noir-500 [&_[data-slot=thumb]]:bg-noir-500 [&_[data-slot=thumb]]:border-noir-500"
                   />
                 </div>
 

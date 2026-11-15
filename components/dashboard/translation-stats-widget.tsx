@@ -129,10 +129,10 @@ export function TranslationStatsWidget() {
 
   if (isLoading) {
     return (
-      <Card className="border-blue-500/20 bg-blue-500/5">
+      <Card className="border-noir-500/20 bg-noir-500/5">
         <CardContent className="p-6">
           <div className="flex items-center justify-center h-40">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rouge-500" />
           </div>
         </CardContent>
       </Card>
@@ -142,32 +142,32 @@ export function TranslationStatsWidget() {
   return (
     <div className="space-y-4">
       {/* Header con stats principali */}
-      <div className="relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-950/80 via-indigo-950/60 to-violet-950/80 p-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-noir-500/20 bg-gradient-to-r from-noir-950/80 via-rouge-950/60 to-rouge-950/80 p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-noir-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-rouge-500/10 rounded-full blur-3xl" />
         
         <div className="relative">
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-noir-500 to-rouge-600 shadow-lg shadow-noir-500/30">
               <BarChart3 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-noir-300 to-rouge-300 bg-clip-text text-transparent">
                 {t('translationStatsWidgetComp.title')}
               </h2>
-              <p className="text-sm text-blue-200/60">{t('translationStatsWidgetComp.activityOverview')}</p>
+              <p className="text-sm text-noir-200/60">{t('translationStatsWidgetComp.activityOverview')}</p>
             </div>
           </div>
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-blue-400 mb-1">
+              <div className="flex items-center gap-2 text-noir-400 mb-1">
                 <FileText className="h-4 w-4" />
                 <span className="text-xs">{t('translationStatsWidgetComp.traduzioni')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.totalTranslations}</div>
-              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.totali')}</div>
+              <div className="text-xs text-noir-200/50">{t('translationStatsWidgetComp.totali')}</div>
             </div>
             
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
@@ -176,7 +176,7 @@ export function TranslationStatsWidget() {
                 <span className="text-xs">{t('common.projects')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.totalProjects}</div>
-              <div className="text-xs text-blue-200/50">{t('translationStatsWidgetComp.totali')}</div>
+              <div className="text-xs text-noir-200/50">{t('translationStatsWidgetComp.totali')}</div>
             </div>
           </div>
         </div>
@@ -185,9 +185,9 @@ export function TranslationStatsWidget() {
       {/* Seconda riga: Attività */}
       <div className="grid grid-cols-1 gap-4">
         {/* Grafico attività settimanale */}
-        <Card className="border-indigo-500/20 bg-indigo-500/5">
+        <Card className="border-rouge-500/20 bg-rouge-500/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-indigo-300">
+            <CardTitle className="text-sm flex items-center gap-2 text-rouge-300">
               <TrendingUp className="h-4 w-4" />
               {t('translationStatsWidgetComp.weeklyActivity')}
             </CardTitle>
@@ -197,7 +197,7 @@ export function TranslationStatsWidget() {
               {stats.recentActivity.map((day, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <div 
-                    className="w-full bg-indigo-500/30 rounded-t transition-all hover:bg-indigo-500/50"
+                    className="w-full bg-rouge-500/30 rounded-t transition-all hover:bg-rouge-500/50"
                     style={{ 
                       height: `${Math.max((day.count / maxActivity) * 100, 5)}%`,
                       minHeight: '4px'
@@ -207,17 +207,17 @@ export function TranslationStatsWidget() {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between mt-3 pt-3 border-t border-indigo-500/20">
+            <div className="flex justify-between mt-3 pt-3 border-t border-rouge-500/20">
               <div className="text-center">
-                <div className="text-lg font-bold text-indigo-400">{stats.todayTranslations}</div>
+                <div className="text-lg font-bold text-rouge-400">{stats.todayTranslations}</div>
                 <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.oggi')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-indigo-400">{stats.weekTranslations}</div>
+                <div className="text-lg font-bold text-rouge-400">{stats.weekTranslations}</div>
                 <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.settimana')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-indigo-400">{stats.monthTranslations}</div>
+                <div className="text-lg font-bold text-rouge-400">{stats.monthTranslations}</div>
                 <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.mese')}</div>
               </div>
             </div>
@@ -226,9 +226,9 @@ export function TranslationStatsWidget() {
       </div>
 
       {/* Terza riga: Lingue */}
-      <Card className="border-violet-500/20 bg-violet-500/5">
+      <Card className="border-rouge-500/20 bg-rouge-500/5">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2 text-violet-300">
+          <CardTitle className="text-sm flex items-center gap-2 text-rouge-300">
             <Languages className="h-4 w-4" />
             {t('translationStatsWidgetComp.targetLanguages')}
           </CardTitle>

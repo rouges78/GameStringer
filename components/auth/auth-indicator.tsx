@@ -41,7 +41,7 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
   if (!isAuthenticated) {
     return (
       <Badge variant="secondary" className={cn("gap-1", className)}>
-        <Shield className="w-3 h-3 text-gray-500" />
+        <Shield className="w-3 h-3 text-noir-500" />
         <span>{t('authIndicatorComp.notAuthenticated')}</span>
       </Badge>
     );

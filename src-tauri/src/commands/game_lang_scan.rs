@@ -192,7 +192,21 @@ fn walk(dir: &Path, depth: usize, in_loc: bool, budget: &mut usize, out: &mut BT
         let name = entry.file_name().to_string_lossy().to_string();
         let name_lc = name.to_ascii_lowercase();
 
+        // I file che scriviamo noi nella cartella del gioco portano la lingua
+        // di DESTINAZIONE nel nome (`gs_renpy_progress_it.json`): contarli
+        // faceva risultare «italiano già presente» dopo una traduzione fallita
+        // (Scarlet Hollow, 13/11/2026).
+        let own = name_lc.trim_start_matches('.');
+        if own.starts_with("gamestringer") || own.starts_with("gs_") || name_lc.contains(".gsprogress_") {
+            continue;
+        }
+
         if file_type.is_dir() {
+            // `locales/en-US.pak` è l'interfaccia di Chromium che NW.js, Electron
+            // e CEF portano con sé in decine di lingue: non sono lingue del gioco.
+            if name_lc == "locales" && path.join("en-US.pak").is_file() {
+                continue;
+            }
             let dir_is_loc = LOC_FOLDERS.contains(&name_lc.as_str());
             let child_in_loc = in_loc || dir_is_loc;
 
@@ -247,4 +261,51 @@ pub async fn detect_languages_from_files(game_path: String) -> Result<Vec<String
     walk(&root, 0, false, &mut budget, &mut out);
 
     Ok(out.into_iter().collect::<Vec<String>>())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scan(root: &Path) -> Vec<String> {
+        let mut out = BTreeSet::new();
+        let mut budget = 1_000;
+        walk(root, 0, false, &mut budget, &mut out);
+        out.into_iter().collect()
+    }
+
+    #[test]
+    fn chromium_locales_are_not_game_languages() {
+        let dir = tempfile::tempdir().unwrap();
+        let locales = dir.path().join("locales");
+        std::fs::create_dir(&locales).unwrap();
+        for name in ["en-US.pak", "it.pak", "de.pak"] {
+            std::fs::write(locales.join(name), b"").unwrap();
+        }
+        assert!(scan(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn our_own_files_are_not_game_languages() {
+        let dir = tempfile::tempdir().unwrap();
+        for name in [
+            "gs_renpy_progress_it.json",
+            "gamestringer_ckpt_it.json",
+            "game_messages.csv.gsprogress_it.json",
+        ] {
+            std::fs::write(dir.path().join(name), b"{}").unwrap();
+        }
+        let ours = dir.path().join("GameStringer").join("tl").join("italian");
+        std::fs::create_dir_all(&ours).unwrap();
+        assert!(scan(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn a_game_locales_folder_still_counts() {
+        let dir = tempfile::tempdir().unwrap();
+        let locales = dir.path().join("locales");
+        std::fs::create_dir(&locales).unwrap();
+        std::fs::write(locales.join("it.json"), b"{}").unwrap();
+        assert_eq!(scan(dir.path()), vec!["Italian".to_string()]);
+    }
 }

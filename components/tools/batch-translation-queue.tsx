@@ -349,8 +349,8 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
   // Status icon
   const getStatusIcon = (status: TranslationJob['status']) => {
     switch (status) {
-      case 'pending': return <Clock className="h-4 w-4 text-gray-400" />;
-      case 'translating': return <Loader2 className="h-4 w-4 text-blue-400 animate-spin" />;
+      case 'pending': return <Clock className="h-4 w-4 text-noir-400" />;
+      case 'translating': return <Loader2 className="h-4 w-4 text-noir-400 animate-spin" />;
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-400" />;
       case 'failed': return <XCircle className="h-4 w-4 text-red-400" />;
       case 'paused': return <Pause className="h-4 w-4 text-yellow-400" />;
@@ -360,8 +360,8 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
   // Status badge color
   const getStatusBadge = (status: TranslationJob['status']) => {
     switch (status) {
-      case 'pending': return 'bg-gray-500/20 text-gray-400';
-      case 'translating': return 'bg-blue-500/20 text-blue-400';
+      case 'pending': return 'bg-noir-500/20 text-noir-400';
+      case 'translating': return 'bg-noir-500/20 text-noir-400';
       case 'completed': return 'bg-green-500/20 text-green-400';
       case 'failed': return 'bg-red-500/20 text-red-400';
       case 'paused': return 'bg-yellow-500/20 text-yellow-400';
@@ -549,7 +549,7 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
               variant="ghost" 
               onClick={clearQueue}
               disabled={isProcessing}
-              className="text-gray-400 hover:text-red-400"
+              className="text-noir-400 hover:text-red-400"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -586,7 +586,7 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
                   <div 
                     key={job.id}
                     className={`p-3 flex items-center gap-3 hover:bg-muted/30 transition-colors ${
-                      currentJobId === job.id ? 'bg-blue-500/10' : ''
+                      currentJobId === job.id ? 'bg-noir-500/10' : ''
                     }`}
                   >
                     {/* Checkbox */}
@@ -616,7 +616,7 @@ export function BatchTranslationQueue({ onTranslateFile: _onTranslateFile }: Bat
                           </span>
                         )}
                         {job.estimatedTime && job.status === 'translating' && (
-                          <span className="text-xs text-blue-400">
+                          <span className="text-xs text-noir-400">
                             • ~{formatTime(job.estimatedTime)} remaining
                           </span>
                         )}

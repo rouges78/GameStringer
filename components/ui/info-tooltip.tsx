@@ -29,8 +29,8 @@ const variantStyles = {
   },
   info: {
     icon: Info,
-    iconClass: 'text-blue-500 hover:text-blue-400',
-    contentClass: 'border-blue-500/30 bg-blue-500/10',
+    iconClass: 'text-noir-500 hover:text-noir-400',
+    contentClass: 'border-noir-500/30 bg-noir-500/10',
   },
   warning: {
     icon: AlertCircle,

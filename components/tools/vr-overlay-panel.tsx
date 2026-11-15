@@ -94,7 +94,7 @@ export function VROverlayPanel() {
   return (
     <div className="space-y-3">
       {/* Hero Header - Stile verde */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -153,12 +153,12 @@ export function VROverlayPanel() {
         <Card className="lg:col-span-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Eye className="h-4 w-4 text-cyan-500" />
+              <Eye className="h-4 w-4 text-noir-500" />
               {t('vrOverlay.preview')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative h-[280px] bg-gradient-to-b from-slate-900 to-slate-800 rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="relative h-[280px] bg-gradient-to-b from-noir-900 to-noir-800 rounded-lg overflow-hidden flex items-center justify-center">
               {/* Simulated VR view */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-full h-full relative">
@@ -198,7 +198,7 @@ export function VROverlayPanel() {
                 <Button
                   size="sm"
                   onClick={toggleOverlay}
-                  className={isRunning ? 'bg-red-600 hover:bg-red-500' : 'bg-cyan-600 hover:bg-cyan-500'}
+                  className={isRunning ? 'bg-red-600 hover:bg-red-500' : 'bg-noir-600 hover:bg-noir-500'}
                 >
                   {isRunning ? (
                     <>
@@ -221,7 +221,7 @@ export function VROverlayPanel() {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Settings className="h-4 w-4 text-cyan-500" />
+              <Settings className="h-4 w-4 text-noir-500" />
               {t('vrOverlay.settings')}
             </CardTitle>
           </CardHeader>

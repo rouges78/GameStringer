@@ -5103,7 +5103,7 @@
     "severityLevels": "Επίπεδα σοβαρότητας"
   },
   "infoPage": {
-    "title": "GameStringer",
+    "title": "Rouges@Gamestringer",
     "subtitle": "Εργαλειοθήκη μετάφρασης παιχνιδιών",
     "openSource": "Ανοιχτού κώδικα",
     "information": "Σχετικά",
@@ -7251,5 +7251,44 @@
     "title": "Δεν υπάρχει τίποτα εδώ",
     "message": "Αυτή η σελίδα δεν υπάρχει ή έχει μετακινηθεί.",
     "back": "Επιστροφή στον πίνακα ελέγχου"
+  },
+  "stringItPlan": {
+    "unityStaticStep": "Κείμενα ενσωματωμένα στις σκηνές του παιχνιδιού",
+    "unityStaticTranslating": "Μετάφραση {done}/{total} κειμένων",
+    "unityStaticWriting": "Εγγραφή στο παιχνίδι (το πρωτότυπο μένει ως αντίγραφο ασφαλείας)",
+    "unityStaticDone": "Μεταφράστηκε. Στο παιχνίδι επιλέξτε τη γλώσσα «{language}»: το όνομά της στο μενού μένει ίδιο.",
+    "unityStaticDetail": "{strings} συμβολοσειρές σε {files} αρχεία, {skipped} εγγραφές αμετάβλητες",
+    "unityStaticFallback": "Τα αρχεία του παιχνιδιού δεν μεταφράζονται απευθείας ({reason}). Συνέχεια με XUnity.",
+    "unityStaticHint": "Βρέθηκαν πίνακες τοπικοποίησης: τα κείμενα γράφονται στα αρχεία του παιχνιδιού. XUnity μόνο αν δεν αρκεί.",
+    "alreadyHasLanguage": "Το παιχνίδι έχει ήδη {lang} στις γλώσσες του: επιλέξτε τη στις ρυθμίσεις του παιχνιδιού. Δεν υπάρχει τίποτα για μετάφραση.",
+    "ocrOffer": "Επόμενη μέθοδος: OCR οθόνης",
+    "ocrOfferDesc": "Δεν ήταν δυνατή η εγγραφή στο παιχνίδι. Το OCR διαβάζει την οθόνη και λειτουργεί με κάθε μηχανή.",
+    "openOcr": "Άνοιγμα OCR",
+    "title": "Πλάνο",
+    "sourceFiles": "μηχανή από τα αρχεία του παιχνιδιού",
+    "sourceHint": "μηχανή από το όνομα",
+    "sourceNone": "άγνωστη μηχανή",
+    "antiCheat": "Βρέθηκε anti-cheat {name}: δεν θα γίνει έγχυση στο παιχνίδι",
+    "blocked": "Παραλείφθηκε: anti-cheat {name}",
+    "injectionBlocked": "Το παιχνίδι χρησιμοποιεί το anti-cheat {name}, οπότε το GameStringer δεν κάνει έγχυση. Χρησιμοποιήστε το OCR οθόνης.",
+    "methods": {
+      "danganronpa-wad": "Αρχεία WAD",
+      "hendrix-csv": "CSV Hendrix",
+      "renpy-tl": "Φάκελος tl του Ren'Py",
+      "visionaire-vis": "Αρχείο .vis",
+      "tyrano-asar": "Σενάρια στο app.asar",
+      "unity-loc-tables": "Πίνακες τοπικοποίησης ({count})",
+      "unity-xunity": "XUnity (ενώ παίζετε)",
+      "unreal-locres": "Pak τοπικοποίησης",
+      "rpgmaker-json": "Δεδομένα JSON",
+      "generic-workflow": "Αρχεία κειμένου του παιχνιδιού",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "Σύνδεση κατά την εκτέλεση",
+      "ocr-overlay": "OCR οθόνης"
+    }
   }
 }

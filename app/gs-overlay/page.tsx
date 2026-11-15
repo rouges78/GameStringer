@@ -94,7 +94,7 @@ export default function GsOverlayPage() {
           animation: 'gsOverlayIn 0.25s ease-out forwards',
         }}
       >
-        <p className="text-sky-400/60 text-sm leading-snug">{line.original}</p>
+        <p className="text-noir-400/60 text-sm leading-snug">{line.original}</p>
         <p
           className={`font-semibold text-xl leading-snug mt-1 ${
             line.pending ? 'text-white/50 italic' : 'text-white'

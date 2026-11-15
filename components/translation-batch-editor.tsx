@@ -165,7 +165,7 @@ export function TranslationBatchEditor({
       case 'edited':
         return <CheckCircle className="h-3 w-3 text-green-500" />;
       case 'pending':
-        return <AlertCircle className="h-3 w-3 text-gray-500" />;
+        return <AlertCircle className="h-3 w-3 text-noir-500" />;
       default:
         return null;
     }

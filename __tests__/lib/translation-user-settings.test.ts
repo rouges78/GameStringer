@@ -45,6 +45,7 @@ import {
   getUserTemperature,
   withStoredCustomPrompt,
   translateWithFallback,
+  getChainFailureSince,
   setChainPreset,
   resetProviderBlocks,
 } from '@/lib/ai/ai-translate-direct';
@@ -147,4 +148,30 @@ describe('translateWithFallback: le impostazioni arrivano alla richiesta', () =>
     expect((body.generationConfig as { temperature: number }).temperature).toBe(0.3);
     expect(JSON.stringify(body.contents)).not.toContain('Persona:');
   });
+});
+
+describe('translateWithFallback: quando nessun provider traduce dice perché', () => {
+  it('il motivo torna nel risultato e resta leggibile per chi lo mostra', async () => {
+    const { httpPostJson } = await import('@/lib/ai/http-proxy');
+    vi.mocked(httpPostJson).mockImplementation(async () => {
+      throw new Error('HTTP 503 da https://example.test/v1?key=AIzaSyA1234567890abcdefghijklmnopqrstuv');
+    });
+    // I provider senza chiave passano da fetch: nel test la rete non c'è.
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('rete assente'); }));
+    setSettings({ apiKey: 'gemini-test-key' });
+    setChainPreset('long_context');
+    const started = Date.now();
+
+    const res = await translateWithFallback({ texts: ['Hello world'], targetLanguage: 'it', sourceLanguage: 'en' });
+
+    expect(res.success).toBe(false);
+    expect(res.translations).toEqual(['Hello world']);
+    expect(res.error).toMatch(/gemini[^·]*: /i);
+    // La chiave che reqwest mette nell'URL dell'errore non deve arrivare a schermo.
+    expect(res.error).not.toContain('AIzaSy');
+    expect(getChainFailureSince(started)).toContain(res.error);
+    expect(getChainFailureSince(Date.now() + 60_000)).toBeNull();
+
+    vi.unstubAllGlobals();
+  }, 30_000);
 });

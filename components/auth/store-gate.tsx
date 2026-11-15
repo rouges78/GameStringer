@@ -88,7 +88,7 @@ export function StoreGate({ children }: StoreGateProps) {
   // Schermata di blocco a tutto schermo (palette Risorse: orange/amber).
   return (
     <div className="flex items-center justify-center min-h-[70vh] p-6 animate-fade-in">
-      <div className="max-w-md w-full text-center space-y-5 rounded-2xl border border-orange-500/30 bg-slate-900/60 p-8">
+      <div className="max-w-md w-full text-center space-y-5 rounded-2xl border border-orange-500/30 bg-noir-900/60 p-8">
         <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-600 via-amber-500 to-yellow-500 flex items-center justify-center">
           <Lock className="h-8 w-8 text-white" />
         </div>
@@ -96,7 +96,7 @@ export function StoreGate({ children }: StoreGateProps) {
           <h1 className="text-xl font-bold text-white">
             {t('storeGate.title')}
           </h1>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-noir-300">
             {t('storeGate.description')}
           </p>
         </div>
@@ -107,7 +107,7 @@ export function StoreGate({ children }: StoreGateProps) {
           <Plug className="h-4 w-4" />
           {t('storeGate.connectButton')}
         </Link>
-        <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
+        <p className="text-xs text-noir-500 flex items-center justify-center gap-1.5">
           <StoreIcon className="h-3.5 w-3.5" />
           {t('storeGate.hint')}
         </p>

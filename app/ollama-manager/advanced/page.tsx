@@ -42,8 +42,8 @@ const PRESET_META: {
   iconColor: string;
 }[] = [
   { id: 'fedele', icon: Target, cardActive: 'border-emerald-500 ring-1 ring-emerald-500/40', iconColor: 'text-emerald-500' },
-  { id: 'bilanciato', icon: Scale, cardActive: 'border-sky-500 ring-1 ring-sky-500/40', iconColor: 'text-sky-500' },
-  { id: 'creativo', icon: Sparkles, cardActive: 'border-violet-500 ring-1 ring-violet-500/40', iconColor: 'text-violet-500' },
+  { id: 'bilanciato', icon: Scale, cardActive: 'border-noir-500 ring-1 ring-noir-500/40', iconColor: 'text-noir-500' },
+  { id: 'creativo', icon: Sparkles, cardActive: 'border-rouge-500 ring-1 ring-rouge-500/40', iconColor: 'text-rouge-500' },
 ];
 
 function fmt(key: SliderParam, v: number): string {
@@ -110,7 +110,7 @@ export default function OllamaAdvancedPage() {
   return (
     <div className="p-4 pt-2 space-y-3 overflow-auto overflow-x-hidden">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-rouge-600 via-rouge-500 to-rouge-500 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -219,7 +219,7 @@ export default function OllamaAdvancedPage() {
                     step={b.step}
                     value={value}
                     onChange={(e) => editParam(key, Number(e.target.value))}
-                    className="w-full accent-fuchsia-500"
+                    className="w-full accent-rouge-500"
                     aria-label={t(`ollamaAdvancedPage.param.${key}.label`)}
                   />
                   <p className="text-xs text-muted-foreground mt-1">{t(`ollamaAdvancedPage.param.${key}.help`)}</p>
@@ -234,7 +234,7 @@ export default function OllamaAdvancedPage() {
                   type="checkbox"
                   checked={seedEnabled}
                   onChange={(e) => toggleSeed(e.target.checked)}
-                  className="accent-fuchsia-500"
+                  className="accent-rouge-500"
                 />
                 <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{'seed'}</code>
                 {t('ollamaAdvancedPage.param.seed.label')}

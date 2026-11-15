@@ -101,10 +101,10 @@ export function getQualityLabel(score: number): QualityLabel {
 export function getQualityColor(label: QualityLabel): string {
   switch (label) {
     case 'Excellent': return 'text-emerald-400';
-    case 'Good': return 'text-blue-400';
+    case 'Good': return 'text-noir-400';
     case 'Fair': return 'text-amber-400';
     case 'Needs Review': return 'text-red-400';
-    case 'Empty': return 'text-zinc-500';
+    case 'Empty': return 'text-noir-500';
   }
 }
 
@@ -114,10 +114,10 @@ export function getQualityColor(label: QualityLabel): string {
 export function getQualityBgColor(label: QualityLabel): string {
   switch (label) {
     case 'Excellent': return 'bg-emerald-500/20 border-emerald-500/30';
-    case 'Good': return 'bg-blue-500/20 border-blue-500/30';
+    case 'Good': return 'bg-noir-500/20 border-noir-500/30';
     case 'Fair': return 'bg-amber-500/20 border-amber-500/30';
     case 'Needs Review': return 'bg-red-500/20 border-red-500/30';
-    case 'Empty': return 'bg-zinc-500/20 border-zinc-500/30';
+    case 'Empty': return 'bg-noir-500/20 border-noir-500/30';
   }
 }
 
@@ -127,9 +127,9 @@ export function getQualityBgColor(label: QualityLabel): string {
 export function getTagInfo(tag: QualityTag): { label: string; color: string; icon: string; description: string } {
   switch (tag) {
     case 'H': return { label: 'Human', color: 'text-emerald-400 bg-emerald-500/20', icon: '✍️', description: 'Translated or edited by a human' };
-    case 'V': return { label: 'Validated', color: 'text-blue-400 bg-blue-500/20', icon: '✅', description: 'AI translation approved by a human' };
+    case 'V': return { label: 'Validated', color: 'text-noir-400 bg-noir-500/20', icon: '✅', description: 'AI translation approved by a human' };
     case 'A': return { label: 'AI', color: 'text-amber-400 bg-amber-500/20', icon: '🤖', description: 'Machine translated, not reviewed' };
-    case 'C': return { label: 'Captured', color: 'text-zinc-400 bg-zinc-500/20', icon: '📋', description: 'Source text captured, not yet translated' };
+    case 'C': return { label: 'Captured', color: 'text-noir-400 bg-noir-500/20', icon: '📋', description: 'Source text captured, not yet translated' };
   }
 }
 

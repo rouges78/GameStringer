@@ -23,7 +23,7 @@ export default function FeedbackPage() {
     <div className="container mx-auto max-w-2xl p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <MessageSquarePlus className="h-6 w-6 text-sky-400" />
+          <MessageSquarePlus className="h-6 w-6 text-noir-400" />
           {t('feedback.pageTitle')}
         </h1>
         <p className="text-sm text-muted-foreground">{t('feedback.pageDesc')}</p>

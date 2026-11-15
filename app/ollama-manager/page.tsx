@@ -195,7 +195,7 @@ export default function OllamaManagerPage() {
               "text-xs font-medium",
               ollamaOnline === true ? "bg-emerald-900/50 text-emerald-200 border-emerald-400/50" :
               ollamaOnline === false ? "bg-red-900/50 text-red-200 border-red-400/50" :
-              "bg-gray-900/50 text-gray-200 border-gray-400/50"
+              "bg-noir-900/50 text-noir-200 border-noir-400/50"
             )}>
               {ollamaOnline === true ? '● Online' : ollamaOnline === false ? '● Offline' : '● Checking...'}
             </Badge>
@@ -243,10 +243,10 @@ export default function OllamaManagerPage() {
                             <span className="text-sm font-mono font-medium truncate">{m.name}</span>
                             <Badge variant="outline" className="text-2xs h-3.5 px-1 text-emerald-400 border-emerald-500/30">{formatSize(m.size)}</Badge>
                             {m.details?.parameter_size && (
-                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-cyan-400 border-cyan-500/30">{m.details.parameter_size}</Badge>
+                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-noir-400 border-noir-500/30">{m.details.parameter_size}</Badge>
                             )}
                             {m.details?.quantization_level && (
-                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-slate-400 border-slate-500/30">{m.details.quantization_level}</Badge>
+                              <Badge variant="outline" className="text-2xs h-3.5 px-1 text-noir-400 border-noir-500/30">{m.details.quantization_level}</Badge>
                             )}
                           </div>
                           {sr && (
@@ -259,7 +259,7 @@ export default function OllamaManagerPage() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
-                            variant="ghost" size="icon" aria-label={t('ollamaManagerPage.speedTest')} className="h-7 w-7 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+                            variant="ghost" size="icon" aria-label={t('ollamaManagerPage.speedTest')} className="h-7 w-7 text-noir-400 hover:text-noir-300 hover:bg-noir-500/10"
                             onClick={() => handleSpeedTest(m.name)}
                             disabled={speedTesting === m.name}
                           >
@@ -282,11 +282,11 @@ export default function OllamaManagerPage() {
           </Card>
 
           {/* Modelli Consigliati */}
-          <Card className="border-teal-500/20 bg-teal-950/20">
+          <Card className="border-noir-500/20 bg-noir-950/20">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Star className="h-4 w-4 text-teal-400" />
-                <span className="text-xs font-semibold text-teal-400">{t('ollamaManagerPage.recommended')}</span>
+                <Star className="h-4 w-4 text-noir-400" />
+                <span className="text-xs font-semibold text-noir-400">{t('ollamaManagerPage.recommended')}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {RECOMMENDED_MODELS.map(rm => {
@@ -295,21 +295,21 @@ export default function OllamaManagerPage() {
                   return (
                     <div key={rm.pullName} className={cn(
                       "rounded-lg p-2.5 border transition-colors",
-                      rm.recommended ? "bg-teal-500/5 border-teal-500/20" : "bg-background/30 border-white/5",
+                      rm.recommended ? "bg-noir-500/5 border-noir-500/20" : "bg-background/30 border-white/5",
                       isInstalled && "border-emerald-500/30 bg-emerald-500/5"
                     )}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-xs font-semibold">{rm.name}</span>
-                            {rm.category === 'embedding' && <Badge className="text-2xs h-3 px-1 bg-violet-500/20 text-violet-300 border-violet-500/30">{t('ollamaManagerPage.embeddingBadge') || 'Embedding · TM semantica'}</Badge>}
-                            {rm.recommended && <Badge className="text-2xs h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
+                            {rm.category === 'embedding' && <Badge className="text-2xs h-3 px-1 bg-rouge-500/20 text-rouge-300 border-rouge-500/30">{t('ollamaManagerPage.embeddingBadge') || 'Embedding · TM semantica'}</Badge>}
+                            {rm.recommended && <Badge className="text-2xs h-3 px-1 bg-noir-500/20 text-noir-300 border-noir-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
                             {isInstalled && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
                           </div>
                           <p className="text-2xs text-muted-foreground leading-tight">{rm.description}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-400 border-slate-500/30">{rm.sizeGb}</Badge>
-                            <Badge variant="outline" className="text-2xs h-3 px-1 text-cyan-400 border-cyan-500/30">VRAM {rm.vramGb}GB</Badge>
+                            <Badge variant="outline" className="text-2xs h-3 px-1 text-noir-400 border-noir-500/30">{rm.sizeGb}</Badge>
+                            <Badge variant="outline" className="text-2xs h-3 px-1 text-noir-400 border-noir-500/30">VRAM {rm.vramGb}GB</Badge>
                             <Badge variant="outline" className={cn("text-2xs h-3 px-1",
                               rm.speed === 'fast' ? "text-emerald-400 border-emerald-500/30" :
                               rm.speed === 'medium' ? "text-amber-400 border-amber-500/30" :
@@ -346,16 +346,16 @@ export default function OllamaManagerPage() {
 
           {/* Nuovi Modelli Scoperti Online */}
           {discovered.length > 0 && (
-            <Card className="border-purple-500/20 bg-purple-950/20">
+            <Card className="border-rouge-500/20 bg-rouge-950/20">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-purple-400" />
-                    <span className="text-xs font-semibold text-purple-400">{t('ollamaManagerPage.newModelsAvailable')} ({discovered.length})</span>
+                    <Sparkles className="h-4 w-4 text-rouge-400" />
+                    <span className="text-xs font-semibold text-rouge-400">{t('ollamaManagerPage.newModelsAvailable')} ({discovered.length})</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
-                      variant="ghost" size="xs" className="text-2xs gap-1 text-purple-300 hover:text-purple-200"
+                      variant="ghost" size="xs" className="text-2xs gap-1 text-rouge-300 hover:text-rouge-200"
                       onClick={async () => {
                         setDiscovering(true);
                         try {
@@ -382,14 +382,14 @@ export default function OllamaManagerPage() {
                     return (
                       <div key={dm.name} className={cn(
                         "rounded-lg p-2.5 border transition-colors",
-                        dm.isNew ? "bg-purple-500/5 border-purple-500/20" : "bg-background/30 border-white/5"
+                        dm.isNew ? "bg-rouge-500/5 border-rouge-500/20" : "bg-background/30 border-white/5"
                       )}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">
                               <span className="text-xs font-semibold">{dm.name}</span>
-                              {dm.isNew && <Badge className="text-2xs h-3 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">{t('common.nuovo')}</Badge>}
-                              <Badge variant="outline" className="text-2xs h-3 px-1 text-purple-400 border-purple-500/30">
+                              {dm.isNew && <Badge className="text-2xs h-3 px-1 bg-rouge-500/20 text-rouge-300 border-rouge-500/30">{t('common.nuovo')}</Badge>}
+                              <Badge variant="outline" className="text-2xs h-3 px-1 text-rouge-400 border-rouge-500/30">
                                 {dm.relevanceScore}% {t('ollamaManagerPage.relevant')}
                               </Badge>
                             </div>
@@ -398,12 +398,12 @@ export default function OllamaManagerPage() {
                             )}
                             <div className="flex flex-wrap gap-1 mt-1">
                               {dm.pulls !== '0' && (
-                                <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-400 border-slate-500/30">
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-noir-400 border-noir-500/30">
                                   <TrendingUp className="h-2 w-2 mr-0.5" />{dm.pulls} {t('ollamaManagerPage.pulls')}
                                 </Badge>
                               )}
                               {dm.sizes.length > 0 && (
-                                <Badge variant="outline" className="text-2xs h-3 px-1 text-cyan-400 border-cyan-500/30">
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-noir-400 border-noir-500/30">
                                   {dm.sizes.slice(0, 3).join(', ')}
                                 </Badge>
                               )}
@@ -411,7 +411,7 @@ export default function OllamaManagerPage() {
                                 <Badge key={c} variant="outline" className="text-2xs h-3 px-1 text-amber-400 border-amber-500/30">{c}</Badge>
                               ))}
                               {dm.updatedAgo !== 'unknown' && (
-                                <Badge variant="outline" className="text-2xs h-3 px-1 text-slate-500 border-slate-600/30">{dm.updatedAgo}</Badge>
+                                <Badge variant="outline" className="text-2xs h-3 px-1 text-noir-500 border-noir-600/30">{dm.updatedAgo}</Badge>
                               )}
                             </div>
                           </div>
@@ -420,7 +420,7 @@ export default function OllamaManagerPage() {
                               href={`https://ollama.com/library/${dm.name}`}
                               target="_blank"
                               rel="noopener"
-                              className="inline-flex items-center justify-center h-7 w-7 rounded-md text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md text-noir-400 hover:text-noir-200 hover:bg-white/5"
                             >
                               <ExternalLink className="h-3 w-3" />
                             </a>
@@ -450,12 +450,12 @@ export default function OllamaManagerPage() {
 
           {/* Speed Test Tutti */}
           {installed.length > 0 && (
-            <Card className="border-cyan-500/20 bg-cyan-950/20">
+            <Card className="border-noir-500/20 bg-noir-950/20">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-cyan-400" />
-                    <span className="text-xs font-semibold text-cyan-400">{t('ollamaManagerPage.speedTest')}</span>
+                    <Zap className="h-4 w-4 text-noir-400" />
+                    <span className="text-xs font-semibold text-noir-400">{t('ollamaManagerPage.speedTest')}</span>
                   </div>
                   <Button
                     variant="outline" size="xs" className="text-2xs gap-1"
@@ -480,7 +480,7 @@ export default function OllamaManagerPage() {
                           </span>
                           <span className="text-xs font-mono flex-1 truncate">{name}</span>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-cyan-300 tabular-nums">{sr.tokensPerSecond.toFixed(1)} tok/s</span>
+                            <span className="text-xs font-bold text-noir-300 tabular-nums">{sr.tokensPerSecond.toFixed(1)} tok/s</span>
                             <span className="text-2xs text-muted-foreground tabular-nums">TTFT {sr.firstTokenMs}ms</span>
                             <span className="text-2xs text-muted-foreground tabular-nums">{(sr.totalTimeMs / 1000).toFixed(1)}s</span>
                           </div>
@@ -495,11 +495,11 @@ export default function OllamaManagerPage() {
 
           {/* A/B Comparison */}
           {installed.length >= 2 && (
-            <Card className="border-violet-500/20 bg-violet-950/20">
+            <Card className="border-rouge-500/20 bg-rouge-950/20">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <ArrowLeftRight className="h-4 w-4 text-violet-400" />
-                  <span className="text-xs font-semibold text-violet-400">{t('ollamaManagerPage.abComparison')}</span>
+                  <ArrowLeftRight className="h-4 w-4 text-rouge-400" />
+                  <span className="text-xs font-semibold text-rouge-400">{t('ollamaManagerPage.abComparison')}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                   <div className="space-y-1">

@@ -25,23 +25,23 @@ import {
 } from '@/lib/ai/character-voice-ai';
 
 const ARCHETYPE_ICONS: Record<CharacterArchetype, React.ReactNode> = {
-  hero: <Sword className="h-4 w-4 text-blue-400" />,
+  hero: <Sword className="h-4 w-4 text-noir-400" />,
   villain: <Skull className="h-4 w-4 text-red-400" />,
   mentor: <BookOpen className="h-4 w-4 text-amber-400" />,
   sidekick: <Smile className="h-4 w-4 text-green-400" />,
-  love_interest: <Heart className="h-4 w-4 text-pink-400" />,
+  love_interest: <Heart className="h-4 w-4 text-rouge-400" />,
   comic_relief: <Smile className="h-4 w-4 text-yellow-400" />,
-  mysterious_stranger: <Sparkles className="h-4 w-4 text-purple-400" />,
+  mysterious_stranger: <Sparkles className="h-4 w-4 text-rouge-400" />,
   noble: <Crown className="h-4 w-4 text-amber-400" />,
   pirate: <Sword className="h-4 w-4 text-orange-400" />,
   warrior: <Sword className="h-4 w-4 text-red-400" />,
-  wizard: <Wand2 className="h-4 w-4 text-indigo-400" />,
+  wizard: <Wand2 className="h-4 w-4 text-rouge-400" />,
   merchant: <Crown className="h-4 w-4 text-green-400" />,
-  child: <Smile className="h-4 w-4 text-cyan-400" />,
-  robot: <Bot className="h-4 w-4 text-gray-400" />,
+  child: <Smile className="h-4 w-4 text-noir-400" />,
+  robot: <Bot className="h-4 w-4 text-noir-400" />,
   monster: <Skull className="h-4 w-4 text-green-600" />,
   narrator: <BookOpen className="h-4 w-4 text-white" />,
-  custom: <User className="h-4 w-4 text-gray-400" />
+  custom: <User className="h-4 w-4 text-noir-400" />
 };
 
 const ARCHETYPE_NAMES: Record<CharacterArchetype, string> = {
@@ -229,7 +229,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
   return (
     <div className="space-y-4">
       {/* Hero Header - stile ai-translator */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -417,7 +417,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
           <CardContent>
             <ScrollArea className="h-[400px]">
               {profiles.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-noir-500">
                   <User className="h-12 w-12 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">{t('common.nessunPersonaggio')}</p>
                   <p className="text-xs">{t('characterVoiceEditor.createFirst')}</p>
@@ -429,7 +429,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                       key={profile.id}
                       className={`p-3 rounded-lg cursor-pointer transition-colors ${
                         selectedProfile?.id === profile.id 
-                          ? 'bg-purple-600/30 border border-purple-500/50' 
+                          ? 'bg-rouge-600/30 border border-rouge-500/50' 
                           : 'bg-white/5 hover:bg-white/10 border border-transparent'
                       }`}
                       onClick={() => {
@@ -487,7 +487,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                     ))}
                   </div>
                   {selectedProfile.patterns.catchphrases.length > 0 && (
-                    <p className="text-xs text-gray-400 mt-2 italic">
+                    <p className="text-xs text-noir-400 mt-2 italic">
                       {'"'}{selectedProfile.patterns.catchphrases[0]}{'"'}
                     </p>
                   )}
@@ -538,7 +538,7 @@ export function CharacterVoiceEditor({ gameId, onProfileSelect }: CharacterVoice
                 )}
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
+              <div className="flex flex-col items-center justify-center h-[300px] text-noir-500">
                 <User className="h-16 w-16 mb-4 opacity-30" />
                 <p className="text-sm">{t('common.selezionaUnPersonaggio')}</p>
                 <p className="text-xs">per testare la traduzione con personalità</p>

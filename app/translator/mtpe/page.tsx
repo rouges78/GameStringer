@@ -115,7 +115,7 @@ export default function MTPEPage() {
   return (
     <div className="space-y-4 p-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-700 via-blue-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -139,7 +139,7 @@ export default function MTPEPage() {
 
         {/* Phase: Input */}
         {phase === 'input' && (
-          <Card className="bg-slate-900/50 border-slate-700">
+          <Card className="bg-noir-900/50 border-noir-700">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -148,9 +148,9 @@ export default function MTPEPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.sourceLanguage')}</label>
+                  <label className="text-xs text-noir-500 mb-1 block">{t('mtpePage.sourceLanguage')}</label>
                   <Select value={sourceLang} onValueChange={setSourceLang}>
-                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                    <SelectTrigger className="bg-noir-800 border-noir-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -166,9 +166,9 @@ export default function MTPEPage() {
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.targetLanguage')}</label>
+                  <label className="text-xs text-noir-500 mb-1 block">{t('mtpePage.targetLanguage')}</label>
                   <Select value={targetLang} onValueChange={setTargetLang}>
-                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                    <SelectTrigger className="bg-noir-800 border-noir-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -188,9 +188,9 @@ export default function MTPEPage() {
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.aiProvider')}</label>
+                  <label className="text-xs text-noir-500 mb-1 block">{t('mtpePage.aiProvider')}</label>
                   <Select value={provider} onValueChange={setProvider}>
-                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                    <SelectTrigger className="bg-noir-800 border-noir-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -209,17 +209,17 @@ export default function MTPEPage() {
               <Textarea
                 value={sourceTexts}
                 onChange={(e) => setSourceTexts(e.target.value)}
-                className="min-h-[300px] bg-slate-800/50 border-slate-600 font-mono text-sm"
+                className="min-h-[300px] bg-noir-800/50 border-noir-600 font-mono text-sm"
                 placeholder={t('mtpePage.inputPh')}
               />
 
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-noir-500">
                   {sourceTexts.split('\n').filter(l => l.trim()).length}  {t('mtpePage.linesUnit')}</span>
                 <Button 
                   onClick={handleStartTranslation}
                   disabled={!sourceTexts.trim()}
-                  className="bg-sky-600 hover:bg-sky-700"
+                  className="bg-noir-600 hover:bg-noir-700"
                 >
                   <Play className="h-4 w-4 mr-2" />
                   {t('mtpePage.startAiTranslation')}</Button>
@@ -230,21 +230,21 @@ export default function MTPEPage() {
 
         {/* Phase: Translate */}
         {phase === 'translate' && (
-          <Card className="bg-slate-900/50 border-slate-700">
+          <Card className="bg-noir-900/50 border-noir-700">
             <CardContent className="p-8 text-center">
-              <Sparkles className="h-12 w-12 text-sky-400 mx-auto mb-4 animate-pulse" />
+              <Sparkles className="h-12 w-12 text-noir-400 mx-auto mb-4 animate-pulse" />
               <h2 className="text-xl font-medium mb-2">{t('offlineTranslator.translating')}</h2>
-              <p className="text-gray-400 mb-4">
+              <p className="text-noir-400 mb-4">
                 {t('mtpePage.providerLabel')} {provider.toUpperCase()}
               </p>
               <div className="w-64 mx-auto">
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-noir-700 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-sky-500 transition-all duration-300"
+                    className="h-full bg-noir-500 transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-sm text-gray-500 mt-2">{progress}%</p>
+                <p className="text-sm text-noir-500 mt-2">{progress}%</p>
               </div>
             </CardContent>
           </Card>
@@ -274,11 +274,11 @@ export default function MTPEPage() {
 
         {/* Phase: Complete */}
         {phase === 'complete' && (
-          <Card className="bg-slate-900/50 border-slate-700">
+          <Card className="bg-noir-900/50 border-noir-700">
             <CardContent className="p-8 text-center">
               <div className="text-5xl mb-4">✅</div>
               <h2 className="text-xl font-medium mb-2">{t('mtpePage.workflowCompletato')}</h2>
-              <p className="text-gray-400 mb-4">
+              <p className="text-noir-400 mb-4">
                 {results.filter(r => r.status === 'approved').length}  {t('mtpePage.approvedCount')}{' '}
                 {results.filter(r => r.status === 'edited').length}  {t('mtpePage.editedCount')}{' '}
                 {results.filter(r => r.status === 'rejected').length}  {t('mtpePage.rejectedCount')}</p>
@@ -291,7 +291,7 @@ export default function MTPEPage() {
                   {t('mtpePage.newWorkflow')}</Button>
               </div>
               
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-noir-500 mt-4">
                 {t('mtpePage.savedToTm')}</p>
             </CardContent>
           </Card>

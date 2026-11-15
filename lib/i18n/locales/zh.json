@@ -5097,7 +5097,7 @@
     "severityLevels": "严重级别"
   },
   "infoPage": {
-    "title": "GameStringer",
+    "title": "Rouges@Gamestringer",
     "subtitle": "游戏翻译工具包",
     "openSource": "开源",
     "information": "关于",
@@ -7276,5 +7276,44 @@
     "title": "这里什么都没有",
     "message": "此页面不存在或已被移动。",
     "back": "返回仪表板"
+  },
+  "stringItPlan": {
+    "unityStaticStep": "内置在游戏场景中的文本",
+    "unityStaticTranslating": "正在翻译 {done}/{total} 条文本",
+    "unityStaticWriting": "正在写入游戏(原文件保留为备份)",
+    "unityStaticDone": "已翻译。请在游戏中选择语言“{language}”:菜单里的名称不变。",
+    "unityStaticDetail": "{files} 个文件中的 {strings} 个字符串,{skipped} 条保持不变",
+    "unityStaticFallback": "无法直接翻译游戏文件({reason})。改用 XUnity。",
+    "unityStaticHint": "已找到本地化表：文本将写入游戏文件。仅在不够时才使用 XUnity。",
+    "alreadyHasLanguage": "游戏已包含 {lang}：请在游戏选项中选择它。没有需要翻译的内容。",
+    "ocrOffer": "下一种方法:屏幕 OCR",
+    "ocrOfferDesc": "无法向游戏写入任何内容。OCR 读取屏幕,适用于任何引擎。",
+    "openOcr": "打开 OCR",
+    "title": "方案",
+    "sourceFiles": "根据游戏文件识别引擎",
+    "sourceHint": "根据名称推测引擎",
+    "sourceNone": "未识别引擎",
+    "antiCheat": "检测到反作弊 {name}:不会向游戏注入任何内容",
+    "blocked": "已跳过:反作弊 {name}",
+    "injectionBlocked": "此游戏使用反作弊 {name},因此 GameStringer 不会注入任何内容。请改用屏幕 OCR。",
+    "methods": {
+      "danganronpa-wad": "WAD 存档",
+      "hendrix-csv": "Hendrix CSV",
+      "renpy-tl": "Ren'Py tl 文件夹",
+      "visionaire-vis": ".vis 文件",
+      "tyrano-asar": "app.asar 中的脚本",
+      "unity-loc-tables": "本地化表({count})",
+      "unity-xunity": "XUnity(游玩时)",
+      "unreal-locres": "本地化 pak",
+      "rpgmaker-json": "JSON 数据",
+      "generic-workflow": "游戏文本文件",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "运行时挂钩",
+      "ocr-overlay": "屏幕 OCR"
+    }
   }
 }

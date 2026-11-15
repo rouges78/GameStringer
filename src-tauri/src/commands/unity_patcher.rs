@@ -3711,7 +3711,7 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
 }
 
 /// Rileva file anti-cheat comuni nella cartella del gioco
-fn detect_anti_cheat_files(game_path: &str) -> (Option<String>, Option<String>) {
+pub(crate) fn detect_anti_cheat_files(game_path: &str) -> (Option<String>, Option<String>) {
     let game_dir = Path::new(game_path);
     
     // Lista di file/cartelle anti-cheat comuni

@@ -173,7 +173,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
                 )}
                 <div className={`max-w-[85%] rounded-lg p-2 ${
                   msg.role === 'user'
-                    ? 'bg-violet-500/20 border border-violet-500/20 text-violet-100'
+                    ? 'bg-rouge-500/20 border border-rouge-500/20 text-rouge-100'
                     : 'bg-amber-950/40 border border-amber-500/10 text-amber-100'
                 }`}>
                   <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
@@ -198,8 +198,8 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
                   )}
                 </div>
                 {msg.role === 'user' && (
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-                    <User className="h-3 w-3 text-violet-400" />
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-rouge-500/20 flex items-center justify-center">
+                    <User className="h-3 w-3 text-rouge-400" />
                   </div>
                 )}
               </div>

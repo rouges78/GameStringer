@@ -365,7 +365,7 @@ export function TTSPreview({
 
                 {useOpenAI ? (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('ttsPreviewComp.voceOpenai')}</label>
+                    <label className="text-xs text-noir-500 mb-1 block">{t('ttsPreviewComp.voceOpenai')}</label>
                     <Select value={openAIVoice} onValueChange={setOpenAIVoice}>
                       <SelectTrigger className="bg-muted/50 border-border">
                         <SelectValue />
@@ -382,7 +382,7 @@ export function TTSPreview({
                   </div>
                 ) : (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">{t('ttsPreviewComp.lingua')}</label>
+                    <label className="text-xs text-noir-500 mb-1 block">{t('ttsPreviewComp.lingua')}</label>
                     <Select value={selectedVoice} onValueChange={setSelectedVoice}>
                       <SelectTrigger className="bg-muted/50 border-border">
                         <SelectValue />
@@ -400,7 +400,7 @@ export function TTSPreview({
 
                 {/* Rate */}
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">
+                  <label className="text-xs text-noir-500 mb-1 block">
                     Velocità: {rate.toFixed(1)}x
                   </label>
                   <Slider
@@ -415,7 +415,7 @@ export function TTSPreview({
                 {/* Pitch (solo browser) */}
                 {!useOpenAI && (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">
+                    <label className="text-xs text-noir-500 mb-1 block">
                       Tono: {pitch.toFixed(1)}
                     </label>
                     <Slider
@@ -430,7 +430,7 @@ export function TTSPreview({
 
                 {/* Volume */}
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">
+                  <label className="text-xs text-noir-500 mb-1 block">
                     Volume: {Math.round(volume * 100)}%
                   </label>
                   <Slider
@@ -464,8 +464,8 @@ export function TTSPreview({
       <CardContent className="p-4 pt-2">
         {/* Text Preview */}
         <div className="p-3 bg-muted/30 rounded-lg border border-border/50 mb-3 min-h-[60px]">
-          <p className="text-sm text-gray-300 line-clamp-3">
-            {text || <span className="text-gray-500 italic">{t('ttsPreviewComp.nessunTestoDaRiprodurre')}</span>}
+          <p className="text-sm text-noir-300 line-clamp-3">
+            {text || <span className="text-noir-500 italic">{t('ttsPreviewComp.nessunTestoDaRiprodurre')}</span>}
           </p>
         </div>
 

@@ -46,7 +46,7 @@ export function QuickStartGuide() {
       title: '1. Scansiona la Libreria',
       description: 'Trova automaticamente i tuoi giochi da Steam, Epic, GOG e altri store',
       icon: Gamepad2,
-      color: 'text-teal-500',
+      color: 'text-noir-500',
       action: 'Scansiona Giochi',
       href: '/library'
     },
@@ -55,7 +55,7 @@ export function QuickStartGuide() {
       title: '2. Configura l\'AI',
       description: 'Installa Ollama (gratuito) o connetti OpenAI per traduzioni di qualità',
       icon: Brain,
-      color: 'text-violet-500',
+      color: 'text-rouge-500',
       action: 'Configura AI',
       href: '/settings'
     },
@@ -64,7 +64,7 @@ export function QuickStartGuide() {
       title: '3. Traduci un Gioco',
       description: 'Seleziona un gioco e avvia la traduzione automatica',
       icon: Languages,
-      color: 'text-blue-500',
+      color: 'text-noir-500',
       action: 'Vai al Traduttore',
       href: '/ai-translator'
     }

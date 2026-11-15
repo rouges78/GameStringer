@@ -54,10 +54,10 @@ const LANGUAGE_OPTIONS: { code: OCRLanguage; name: string }[] = [
 ]
 
 const ENGINE_COLORS: Record<OCREngineId, string> = {
-  oneocr: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  oneocr: "bg-noir-500/15 text-noir-400 border-noir-500/30",
   paddleocr: "bg-green-500/15 text-green-400 border-green-500/30",
   rapidocr: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  tesseract: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  tesseract: "bg-noir-500/15 text-noir-400 border-noir-500/30",
 }
 
 const ENGINE_ICONS: Record<OCREngineId, string> = {
@@ -143,7 +143,7 @@ export default function OCREnginesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 p-4">
+      <div className="bg-gradient-to-r from-noir-600 via-noir-600 to-emerald-600 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">

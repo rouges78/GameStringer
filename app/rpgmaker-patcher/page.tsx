@@ -228,13 +228,13 @@ export default function RpgMakerPatcherPage() {
 
   const getVersionBadge = (version: string) => {
     const colors: Record<string, string> = {
-      'MV': 'bg-blue-500',
-      'MZ': 'bg-purple-500',
+      'MV': 'bg-rouge-500',
+      'MZ': 'bg-rouge-500',
       'VXAce': 'bg-orange-500',
       'VX': 'bg-yellow-500',
       'XP': 'bg-red-500',
     };
-    return <Badge className={colors[version] || 'bg-gray-500'}>{version}</Badge>;
+    return <Badge className={colors[version] || 'bg-noir-500'}>{version}</Badge>;
   };
 
   const filteredStrings = strings.filter(s => {
@@ -256,7 +256,7 @@ export default function RpgMakerPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-700 via-indigo-600 to-purple-700 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-700 via-rouge-600 to-rouge-700 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -275,7 +275,7 @@ export default function RpgMakerPatcherPage() {
             {translatorInfo && (
               translatorInfo.available ? (
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
-                  <Check className="h-3.5 w-3.5 text-blue-300" />
+                  <Check className="h-3.5 w-3.5 text-noir-300" />
                   <span className="text-sm font-bold text-white">T++</span>
                   <span className="text-2xs text-white/70">{t('workshop.installed')}</span>
                 </div>
@@ -299,11 +299,11 @@ export default function RpgMakerPatcherPage() {
       <Card variant="muted">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-blue-400" />{t('telltale.selectGame')}</CardTitle>
+            <FolderOpen className="w-4 h-4 text-noir-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-blue-600 hover:bg-blue-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="xs" className="bg-rouge-600 hover:bg-rouge-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               {t('rpgmakerPatcherPage.browse')}
             </Button>
@@ -320,7 +320,7 @@ export default function RpgMakerPatcherPage() {
                   onClick={extractAllStrings} 
                   disabled={extracting}
                   size="sm" 
-                  className="h-8 bg-indigo-600 hover:bg-indigo-500 ml-auto"
+                  className="h-8 bg-rouge-600 hover:bg-rouge-500 ml-auto"
                 >
                   {extracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
                   {t('common.estraiStringhe')}
@@ -330,7 +330,7 @@ export default function RpgMakerPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-noir-950/50 p-2 rounded mt-3 border border-noir-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -344,7 +344,7 @@ export default function RpgMakerPatcherPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-6">
                 <div>
-                  <p className="text-2xl font-bold text-blue-400">{stats.percentage}%</p>
+                  <p className="text-2xl font-bold text-noir-400">{stats.percentage}%</p>
                   <p className="text-xs text-muted-foreground">{t('batchTranslator.done')}</p>
                 </div>
                 <div className="flex gap-4 text-sm">
@@ -363,7 +363,7 @@ export default function RpgMakerPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   {t('common.upload')}
                 </Button>
-                <Button onClick={saveTranslations} size="xs" className="bg-blue-600 hover:bg-blue-500">
+                <Button onClick={saveTranslations} size="xs" className="bg-rouge-600 hover:bg-rouge-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                 <Button size="sm" variant="outline" onClick={handleExportPO} disabled={strings.length === 0} className="h-8" aria-label={t('common.esportaFilePo')}>
                   <Download className="h-4 w-4 mr-1.5" />
@@ -371,7 +371,7 @@ export default function RpgMakerPatcherPage() {
                 </Button>
               </div>
             </div>
-            <Progress value={stats.percentage} className="h-2 bg-slate-800" />
+            <Progress value={stats.percentage} className="h-2 bg-noir-800" />
           </CardContent>
         </Card>
       )}
@@ -381,7 +381,7 @@ export default function RpgMakerPatcherPage() {
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
-              <FileJson className="w-4 h-4 text-blue-400" />
+              <FileJson className="w-4 h-4 text-noir-400" />
               {t('editor.title')}
               {strings.length > 0 && (
                 <Badge variant="outline" className="ml-2">{filteredStrings.length} / {strings.length}</Badge>
@@ -397,13 +397,13 @@ export default function RpgMakerPatcherPage() {
                   aria-label={t('common.cerca')} placeholder={t('rpgmakerPatcherPage.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-8 bg-slate-950/50 border-slate-700"
+                  className="pl-9 h-8 bg-noir-950/50 border-noir-700"
                 />
               </div>
               <select
                 value={filterFile}
                 onChange={(e) => setFilterFile(e.target.value)}
-                className="h-8 px-3 rounded-md bg-slate-950/50 border border-slate-700 text-sm"
+                className="h-8 px-3 rounded-md bg-noir-950/50 border border-noir-700 text-sm"
               >
                 <option value="all">{t('rpgmakerPatcherPage.allFiles')}</option>
                 {uniqueFiles.map(file => (
@@ -424,7 +424,7 @@ export default function RpgMakerPatcherPage() {
                   return (
                     <div
                       key={entry.id}
-                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
+                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-noir-800'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="outline" className="text-2xs">{entry.file}</Badge>
@@ -433,7 +433,7 @@ export default function RpgMakerPatcherPage() {
                       
                       <div className="mb-2">
                         <p className="text-xs text-muted-foreground uppercase mb-1">{t('offlineTranslator.original')}</p>
-                        <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                        <p className="text-sm font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                           {entry.original}
                         </p>
                       </div>
@@ -445,14 +445,14 @@ export default function RpgMakerPatcherPage() {
                             <Textarea
                               value={editedTranslation}
                               onChange={(e) => setEditedTranslation(e.target.value)}
-                              className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                              className="font-mono text-sm bg-noir-950/50 border-noir-700"
                               rows={2}
                             />
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
                                 onClick={() => updateTranslation(entry.id, editedTranslation)}
-                                className="h-7 bg-blue-600 hover:bg-blue-500"
+                                className="h-7 bg-rouge-600 hover:bg-rouge-500"
                               >
                                 <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                               <Button
@@ -469,7 +469,7 @@ export default function RpgMakerPatcherPage() {
                               setEditingId(entry.id);
                               setEditedTranslation(entry.translated);
                             }}
-                            className={`p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                            className={`p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >

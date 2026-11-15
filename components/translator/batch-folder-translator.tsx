@@ -94,15 +94,15 @@ const LANGUAGES = TARGET_LANGUAGES;
 const FILE_TYPE_COLORS: Record<string, string> = {
   Json: "bg-yellow-500/20 text-yellow-600",
   Po: "bg-green-500/20 text-green-600",
-  Resx: "bg-blue-500/20 text-blue-600",
+  Resx: "bg-noir-500/20 text-noir-600",
   Csv: "bg-orange-500/20 text-orange-600",
-  Srt: "bg-pink-500/20 text-pink-600",
-  Vtt: "bg-rose-500/20 text-rose-600",
-  Ass: "bg-purple-500/20 text-purple-600",
-  Xml: "bg-cyan-500/20 text-cyan-600",
-  Yaml: "bg-indigo-500/20 text-indigo-600",
+  Srt: "bg-rouge-500/20 text-rouge-600",
+  Vtt: "bg-rouge-500/20 text-rouge-600",
+  Ass: "bg-rouge-500/20 text-rouge-600",
+  Xml: "bg-noir-500/20 text-noir-600",
+  Yaml: "bg-rouge-500/20 text-rouge-600",
   Properties: "bg-emerald-500/20 text-emerald-600",
-  Txt: "bg-gray-500/20 text-gray-600",
+  Txt: "bg-noir-500/20 text-noir-600",
 };
 
 export function BatchFolderTranslator() {
@@ -301,7 +301,7 @@ export function BatchFolderTranslator() {
         <Card>
           <CardContent className="p-4">
             <div
-              className="border-2 border-dashed border-violet-500/30 rounded-lg p-6 text-center hover:border-violet-400/50 transition-colors cursor-pointer bg-slate-900/30"
+              className="border-2 border-dashed border-rouge-500/30 rounded-lg p-6 text-center hover:border-rouge-400/50 transition-colors cursor-pointer bg-noir-900/30"
               onClick={handleSelectFolder}
             >
               {isScanning ? (
@@ -314,7 +314,7 @@ export function BatchFolderTranslator() {
                 </>
               ) : (
                 <>
-                  <FolderOpen className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+                  <FolderOpen className="w-10 h-10 mx-auto mb-3 text-noir-400" />
                   <h3 className="text-base font-medium mb-1">{t('batchTranslator.selectFolder')}</h3>
                   <p className="text-xs text-muted-foreground mb-3">
                     {t('batchTranslator.chooseFolder')}
@@ -322,11 +322,11 @@ export function BatchFolderTranslator() {
                   <div className="flex justify-center gap-1.5 flex-wrap">
                     <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">JSON</Badge>
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">PO</Badge>
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">RESX</Badge>
+                    <Badge className="bg-noir-500/20 text-noir-400 border-noir-500/30">RESX</Badge>
                     <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">CSV</Badge>
-                    <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">SRT</Badge>
-                    <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30">VTT</Badge>
-                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">ASS</Badge>
+                    <Badge className="bg-rouge-500/20 text-rouge-400 border-rouge-500/30">SRT</Badge>
+                    <Badge className="bg-rouge-500/20 text-rouge-400 border-rouge-500/30">VTT</Badge>
+                    <Badge className="bg-rouge-500/20 text-rouge-400 border-rouge-500/30">ASS</Badge>
                   </div>
                 </>
               )}
@@ -424,7 +424,7 @@ export function BatchFolderTranslator() {
                       onClick={handleTranslate}
                       disabled={!BATCH_TRADUZIONE_ATTIVA || selectedFiles.size === 0}
                       title={!BATCH_TRADUZIONE_ATTIVA ? t('batchTranslator.notImplemented') : undefined}
-                      className="bg-gradient-to-r from-emerald-600 to-teal-600"
+                      className="bg-gradient-to-r from-emerald-600 to-noir-600"
                     >
                       <Play className="w-4 h-4 mr-2" />
                       {t('batchTranslator.translateFiles')} {selectedFiles.size} {t('batchTranslator.files')}
@@ -467,13 +467,13 @@ export function BatchFolderTranslator() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Link href="/editor">
-                        <Button variant="outline" size="xs" className="text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
+                        <Button variant="outline" size="xs" className="text-xs border-noir-500/30 text-noir-400 hover:bg-noir-500/10">
                           <Edit3 className="h-3 w-3 mr-1" />
                           Apri in Editor
                         </Button>
                       </Link>
                       <Link href="/community-hub?action=publish">
-                        <Button size="xs" className="text-xs bg-purple-600 hover:bg-purple-500 text-white">
+                        <Button size="xs" className="text-xs bg-rouge-600 hover:bg-rouge-500 text-white">
                           <Globe className="h-3 w-3 mr-1" />
                           Condividi
                         </Button>
@@ -551,7 +551,7 @@ export function BatchFolderTranslator() {
                             <span className="text-xs text-muted-foreground">{t('batchTranslator.pending')}</span>
                           )}
                           {status?.status === "translating" && (
-                            <span className="text-xs text-blue-500 flex items-center gap-1">
+                            <span className="text-xs text-noir-500 flex items-center gap-1">
                               <Loader2 className="w-3 h-3 animate-spin" />
                               {t('batchTranslator.translating')}
                             </span>

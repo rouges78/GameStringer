@@ -46,15 +46,15 @@ export function CommunityTranslationsBanner({
           <div className="mt-1.5 space-y-1.5">
             {translations.slice(0, 3).map((tr) => (
               <div key={tr.id} className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-[#c6d4df] font-medium truncate max-w-[220px]">{tr.title}</span>
+                <span className="text-[11px] text-noir-200 font-medium truncate max-w-[220px]">{tr.title}</span>
                 {tr.state && (
                   <span className={`text-micro font-bold px-1.5 py-0.5 rounded-full border ${
                     tr.state === '100%' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
                     : 'bg-amber-500/20 border-amber-500/30 text-amber-300'
                   }`}>{tr.state}</span>
                 )}
-                {tr.revision && <span className="text-micro text-[#8f98a0]">rev. {tr.revision}</span>}
-                {tr.author && <span className="text-micro text-[#8f98a0]">by {tr.author}</span>}
+                {tr.revision && <span className="text-micro text-noir-400">rev. {tr.revision}</span>}
+                {tr.author && <span className="text-micro text-noir-400">by {tr.author}</span>}
                 <div className="flex items-center gap-1 ml-auto shrink-0">
                   <button
                     className="h-5 px-2 rounded text-2xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 transition-all flex items-center gap-1"
@@ -68,7 +68,7 @@ export function CommunityTranslationsBanner({
           </div>
           {installPath && (
             <button
-              className="mt-2 h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all flex items-center gap-1.5"
+              className="mt-2 h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-noir-400 hover:text-noir-200 border border-white/10 transition-all flex items-center gap-1.5"
               onClick={onInstallZip}
               disabled={isInstallingZip}
             >

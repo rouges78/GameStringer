@@ -63,8 +63,8 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
       title: 'Totale',
       value: stats.total,
       icon: FileText,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-noir-500',
+      bgColor: 'bg-noir-500/10'
     },
     {
       title: 'Completate',
@@ -77,22 +77,22 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
       title: 'Revisionate',
       value: stats.reviewed,
       icon: CheckCircle,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-noir-500',
+      bgColor: 'bg-noir-500/10'
     },
     {
       title: 'Modificate',
       value: stats.edited,
       icon: Edit3,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10'
+      color: 'text-rouge-500',
+      bgColor: 'bg-rouge-500/10'
     },
     {
       title: 'In Attesa',
       value: stats.pending,
       icon: AlertCircle,
-      color: 'text-gray-500',
-      bgColor: 'bg-gray-500/10'
+      color: 'text-noir-500',
+      bgColor: 'bg-noir-500/10'
     }
   ];
 

@@ -31,9 +31,9 @@ export default function InfoPage() {
   ];
 
   const links = [
-    { icon: Github, label: 'GitHub', href: 'https://github.com/rouges78/GameStringer', color: 'text-gray-400' },
+    { icon: Github, label: 'GitHub', href: 'https://github.com/rouges78/GameStringer', color: 'text-noir-400' },
     { icon: Coffee, label: 'Ko-fi', href: 'https://ko-fi.com/gamestringer', color: 'text-yellow-500' },
-    { icon: Heart, label: 'Sponsor', href: 'https://github.com/sponsors/rouges78', color: 'text-pink-500' },
+    { icon: Heart, label: 'Sponsor', href: 'https://github.com/sponsors/rouges78', color: 'text-rouge-500' },
   ];
 
   return (
@@ -139,14 +139,14 @@ export default function InfoPage() {
                 <div className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${
                   v.type === 'major' ? 'bg-orange-500 border-orange-400 shadow-lg shadow-orange-500/30' :
                   v.type === 'minor' ? 'bg-amber-500 border-amber-400' :
-                  'bg-slate-500 border-slate-400'
+                  'bg-noir-500 border-noir-400'
                 }`} />
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-bold font-mono">{v.version}</span>
                   <Badge variant="outline" className={`text-2xs h-3.5 px-1 ${
                     v.type === 'major' ? 'text-orange-400 border-orange-500/30' :
                     v.type === 'minor' ? 'text-amber-400 border-amber-500/30' :
-                    'text-slate-400 border-slate-500/30'
+                    'text-noir-400 border-noir-500/30'
                   }`}>{v.type}</Badge>
                   <span className="text-micro text-muted-foreground/50">{new Date(v.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
@@ -165,13 +165,13 @@ export default function InfoPage() {
       )}
 
       {/* Special Thanks */}
-      <Card className="p-3 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-500/20">
-        <p className="text-xs font-semibold text-violet-400 mb-2 flex items-center gap-1.5">
+      <Card className="p-3 bg-gradient-to-r from-rouge-500/10 to-rouge-500/10 border-rouge-500/20">
+        <p className="text-xs font-semibold text-rouge-400 mb-2 flex items-center gap-1.5">
           <Heart className="h-3.5 w-3.5" />
           {t('infoPage.specialThanks')}
         </p>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+          <div className="p-2 bg-gradient-to-br from-rouge-500 to-rouge-600 rounded-lg">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div>

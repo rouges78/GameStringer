@@ -5280,7 +5280,7 @@
     "severityLevels": "Niveaux de Sévérité"
   },
   "infoPage": {
-    "title": "GameStringer",
+    "title": "Rouges@Gamestringer",
     "subtitle": "Toolkit de traduction de jeux vidéo",
     "openSource": "Open Source",
     "information": "À propos",
@@ -7276,5 +7276,44 @@
     "title": "Rien ici",
     "message": "Cette page n'existe pas ou a été déplacée.",
     "back": "Retour au tableau de bord"
+  },
+  "stringItPlan": {
+    "unityStaticStep": "Textes intégrés aux scènes du jeu",
+    "unityStaticTranslating": "Traduction de {done}/{total} textes",
+    "unityStaticWriting": "Écriture dans le jeu (l'original est conservé en sauvegarde)",
+    "unityStaticDone": "Traduit. Dans le jeu, choisissez la langue « {language} » : son nom dans le menu ne change pas.",
+    "unityStaticDetail": "{strings} chaînes dans {files} fichiers, {skipped} entrées laissées telles quelles",
+    "unityStaticFallback": "Les fichiers du jeu ne peuvent pas être traduits directement ({reason}). Passage à XUnity.",
+    "unityStaticHint": "Tables de localisation trouvées : les textes sont écrits dans les fichiers du jeu. XUnity seulement si cela ne suffit pas.",
+    "alreadyHasLanguage": "Le jeu a déjà {lang} parmi ses langues : choisissez-la dans les options du jeu. Il n'y a rien à traduire.",
+    "ocrOffer": "Méthode suivante : OCR à l'écran",
+    "ocrOfferDesc": "Rien n'a pu être écrit dans le jeu. L'OCR lit l'écran et fonctionne avec n'importe quel moteur.",
+    "openOcr": "Ouvrir l'OCR",
+    "title": "Plan",
+    "sourceFiles": "moteur lu dans les fichiers du jeu",
+    "sourceHint": "moteur déduit du nom",
+    "sourceNone": "moteur non reconnu",
+    "antiCheat": "Anti-triche {name} détecté : rien ne sera injecté dans le jeu",
+    "blocked": "Ignoré : anti-triche {name}",
+    "injectionBlocked": "Ce jeu utilise l'anti-triche {name}, GameStringer n'y injecte donc rien. Utilisez l'OCR à l'écran.",
+    "methods": {
+      "danganronpa-wad": "Archives WAD",
+      "hendrix-csv": "CSV Hendrix",
+      "renpy-tl": "Dossier tl de Ren'Py",
+      "visionaire-vis": "Fichier .vis",
+      "tyrano-asar": "Scripts dans app.asar",
+      "unity-loc-tables": "Tables de localisation ({count})",
+      "unity-xunity": "XUnity (en jouant)",
+      "unreal-locres": "Pak de localisation",
+      "rpgmaker-json": "Données JSON",
+      "generic-workflow": "Fichiers texte du jeu",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "Accrochage à l'exécution",
+      "ocr-overlay": "OCR à l'écran"
+    }
   }
 }

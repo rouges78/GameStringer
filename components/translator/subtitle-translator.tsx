@@ -285,7 +285,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
             <div className="grid grid-cols-4 gap-3">
               <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
-                  <Type className="w-4 h-4 text-blue-500" />
+                  <Type className="w-4 h-4 text-noir-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">{t('subtitleTranslator.lines')}</p>
                     <p className="font-semibold">{stats?.totalEntries}</p>
@@ -303,7 +303,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
               </Card>
               <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-purple-500" />
+                  <FileText className="w-4 h-4 text-rouge-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">{t('subtitleTranslator.characters')}</p>
                     <p className="font-semibold">{stats?.totalCharacters.toLocaleString()}</p>
@@ -370,7 +370,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <Button 
                       onClick={handleTranslate} 
                       disabled={isTranslating || !onTranslate}
-                      className="bg-gradient-to-r from-violet-600 to-indigo-600"
+                      className="bg-gradient-to-r from-rouge-600 to-rouge-600"
                     >
                       {isTranslating ? (
                         <>

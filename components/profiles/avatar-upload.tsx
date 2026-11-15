@@ -113,10 +113,10 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm border-white/10 bg-slate-900/60 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-4">
+      <DialogContent className="sm:max-w-sm border-white/10 bg-noir-900/60 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-4">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-1.5 text-sm text-slate-100">
-            <Camera className="h-3.5 w-3.5 text-indigo-400" />
+          <DialogTitle className="flex items-center gap-1.5 text-sm text-noir-100">
+            <Camera className="h-3.5 w-3.5 text-rouge-400" />
             {t('profile.changeAvatar')}
           </DialogTitle>
         </DialogHeader>
@@ -124,10 +124,10 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
         <div className="flex flex-col items-center gap-3 py-2">
           {/* Preview */}
           <div className="relative">
-            <div className="p-0.5 rounded-full bg-gradient-to-br from-indigo-500/40 via-cyan-500/30 to-blue-500/40">
-              <Avatar className="h-20 w-20 ring-2 ring-slate-950">
+            <div className="p-0.5 rounded-full bg-gradient-to-br from-rouge-500/40 via-noir-500/30 to-noir-500/40">
+              <Avatar className="h-20 w-20 ring-2 ring-noir-950">
                 <AvatarImage src={displayAvatar || undefined} alt={userName} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white text-2xl font-bold">
+                <AvatarFallback className="bg-gradient-to-br from-rouge-600 to-noir-700 text-white text-2xl font-bold">
                   {getInitials(userName)}
                 </AvatarFallback>
               </Avatar>
@@ -157,20 +157,20 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="gap-1.5 h-8 text-xs border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:border-indigo-500/50 text-slate-200 transition-all"
+              className="gap-1.5 h-8 text-xs border-noir-700 bg-noir-900/50 hover:bg-noir-800 hover:border-rouge-500/50 text-noir-200 transition-all"
             >
-              <ImagePlus className="h-3.5 w-3.5 text-indigo-400" />
+              <ImagePlus className="h-3.5 w-3.5 text-rouge-400" />
               Carica Immagine
             </Button>
             
-            <p className="text-2xs text-slate-500 text-center">
+            <p className="text-2xs text-noir-500 text-center">
               JPG, PNG o GIF • Max 5MB
             </p>
           </div>
           
           {/* Preset Avatars */}
           <div className="w-full">
-            <p className="text-2xs font-medium mb-2 text-center text-slate-500 uppercase tracking-wider">Preset</p>
+            <p className="text-2xs font-medium mb-2 text-center text-noir-500 uppercase tracking-wider">Preset</p>
             <div className="flex justify-center gap-2 flex-wrap">
               {[
                 { emoji: '🎮', from: '#3730a3', to: '#1e40af' },
@@ -180,7 +180,7 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
                 { emoji: '🎨', from: '#134e4a', to: '#0f766e' },
                 { emoji: '🎭', from: '#1e1b4b', to: '#3730a3' },
                 { emoji: '🎸', from: '#0c4a6e', to: '#0369a1' },
-                { emoji: '🎹', from: '#1a1a2e', to: '#16213e' },
+                { emoji: '🎹', from: '#161618', to: '#16213e' },
               ].map((preset, i) => (
                 <button
                   key={i}
@@ -204,8 +204,8 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
                   }}
                   className={cn(
                     "w-9 h-9 rounded-full flex items-center justify-center text-base",
-                    "bg-slate-800/80 border border-slate-700/50",
-                    "hover:scale-110 hover:border-indigo-500/50",
+                    "bg-noir-800/80 border border-noir-700/50",
+                    "hover:scale-110 hover:border-rouge-500/50",
                     "transition-all duration-200"
                   )}
                 >
@@ -216,16 +216,16 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
           </div>
         </div>
         
-        <DialogFooter className="flex gap-1.5 border-t border-slate-800/50 pt-3 mt-1">
+        <DialogFooter className="flex gap-1.5 border-t border-noir-800/50 pt-3 mt-1">
           {currentAvatar && (
             <Button variant="ghost" size="sm" onClick={handleRemoveAvatar} className="mr-auto text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 text-xs">
               {t('profile.removeAvatar')}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-slate-300 h-8 text-xs">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="border-noir-700 bg-noir-900/50 hover:bg-noir-800 text-noir-300 h-8 text-xs">
             {t('common.cancel')}
           </Button>
-          <Button size="sm" onClick={handleSave} disabled={!previewUrl || isLoading} className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 h-8 text-xs">
+          <Button size="sm" onClick={handleSave} disabled={!previewUrl || isLoading} className="bg-gradient-to-r from-rouge-600 to-noir-600 hover:from-rouge-500 hover:to-noir-500 text-white border-0 h-8 text-xs">
             <Check className="h-3.5 w-3.5 mr-1" />
             {t('common.save')}
           </Button>

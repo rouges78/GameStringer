@@ -104,14 +104,14 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
 
   const _getProgressColor = (progress: number) => {
     if (progress >= 90) return 'bg-green-500';
-    if (progress >= 70) return 'bg-blue-500';
+    if (progress >= 70) return 'bg-rouge-500';
     if (progress >= 50) return 'bg-yellow-500';
     return 'bg-orange-500';
   };
 
   const getQualityColor = (score: number) => {
     if (score >= 90) return 'text-green-500';
-    if (score >= 70) return 'text-blue-500';
+    if (score >= 70) return 'text-noir-500';
     if (score >= 50) return 'text-yellow-500';
     return 'text-red-500';
   };
@@ -119,7 +119,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
   return (
     <Card className={cn('overflow-hidden', className)}>
       {/* Header with gradient */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 text-white">
+      <div className="bg-gradient-to-r from-rouge-600 via-rouge-600 to-rouge-600 p-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg">
@@ -161,7 +161,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
                   <TooltipTrigger>
                     <div className={cn(
                       'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all',
-                      m.reached ? 'bg-white text-purple-600' : 'bg-white/30 text-white/70'
+                      m.reached ? 'bg-white text-rouge-600' : 'bg-white/30 text-white/70'
                     )}>
                       {m.reached ? '✓' : m.threshold}
                     </div>
@@ -201,7 +201,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
               icon={<Languages className="h-4 w-4" />}
               label={t('common.lingue')}
               value={stats.languages.toString()}
-              color="text-blue-500"
+              color="text-noir-500"
             />
             <StatCard
               icon={<CheckCircle2 className="h-4 w-4" />}
@@ -219,7 +219,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
               icon={<TrendingUp className="h-4 w-4" />}
               label={t('globalProgressWidgetComp.revisionate')}
               value={`${stats.reviewProgress}%`}
-              color="text-purple-500"
+              color="text-rouge-500"
             />
             
             {estimatedCompletion && (
@@ -366,7 +366,7 @@ function InsightCard({
   const colors = {
     success: 'bg-green-500/10 border-green-500/20 text-green-600',
     warning: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-600',
-    info: 'bg-blue-500/10 border-blue-500/20 text-blue-600',
+    info: 'bg-noir-500/10 border-noir-500/20 text-noir-600',
   };
 
   return (

@@ -64,13 +64,13 @@ const getExtensionIcon = (type: string) => {
 
 const getExtensionTypeBadge = (type: string) => {
   const colors: Record<string, string> = {
-    'GameStore': 'bg-blue-500',
+    'GameStore': 'bg-rouge-500',
     'GameSupport': 'bg-green-500',
-    'TranslationTool': 'bg-purple-500',
-    'Theme': 'bg-pink-500',
+    'TranslationTool': 'bg-rouge-500',
+    'Theme': 'bg-rouge-500',
     'Utility': 'bg-orange-500',
   };
-  return colors[type] || 'bg-gray-500';
+  return colors[type] || 'bg-noir-500';
 };
 
 export function ExtensionManager() {
@@ -162,9 +162,9 @@ export function ExtensionManager() {
       {/* Compact header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Puzzle className="h-5 w-5 text-purple-400" />
+          <Puzzle className="h-5 w-5 text-rouge-400" />
           <h2 className="text-lg font-bold">{t('extensionManagerComp.extensions')}</h2>
-          <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-purple-500/10 text-purple-400 border-purple-500/30">
+          <Badge variant="outline" className="text-2xs px-1.5 py-0 bg-rouge-500/10 text-rouge-400 border-rouge-500/30">
             {extensions.length} installed
           </Badge>
         </div>
@@ -271,15 +271,15 @@ export function ExtensionManager() {
                 key={ext.id} 
                 className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
                   ext.enabled 
-                    ? 'bg-slate-800/30 border-purple-500/30' 
-                    : 'bg-slate-900/30 border-slate-800/50 opacity-50'
+                    ? 'bg-noir-800/30 border-rouge-500/30' 
+                    : 'bg-noir-900/30 border-noir-800/50 opacity-50'
                 }`}
               >
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className={`w-1.5 h-8 rounded-full ${ext.enabled ? 'bg-purple-500' : 'bg-slate-600'}`} />
+                  <div className={`w-1.5 h-8 rounded-full ${ext.enabled ? 'bg-rouge-500' : 'bg-noir-600'}`} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <Icon className="h-4 w-4 text-purple-400" />
+                      <Icon className="h-4 w-4 text-rouge-400" />
                       <span className="text-sm font-medium truncate">{ext.name}</span>
                       <Badge variant="outline" className="text-micro px-1 py-0 shrink-0">v{ext.version}</Badge>
                       <Badge className={`text-micro px-1 py-0 shrink-0 ${getExtensionTypeBadge(ext.extension_type)}`}>

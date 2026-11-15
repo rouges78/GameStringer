@@ -65,7 +65,7 @@ export function ProgressModal({
     return (
       <div
         className={cn(
-          'fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-3 min-w-[300px] z-50',
+          'fixed bottom-4 right-4 bg-white dark:bg-noir-800 rounded-lg shadow-lg border p-3 min-w-[300px] z-50',
           className
         )}
       >
@@ -79,10 +79,10 @@ export function ProgressModal({
           />
           
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+            <div className="text-sm font-medium text-noir-900 dark:text-noir-100 truncate">
               {operation.title}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <div className="text-xs text-noir-500 dark:text-noir-400 truncate">
               {operation.status}
             </div>
           </div>
@@ -90,7 +90,7 @@ export function ProgressModal({
           <div className="flex items-center gap-1">
             <button
               onClick={onMinimize}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-noir-100 dark:hover:bg-noir-700 rounded"
               title={t('common.expand')}
             >
               <Maximize2 className="w-4 h-4" />
@@ -99,7 +99,7 @@ export function ProgressModal({
             {operation.canCancel && isInProgress && (
               <button
                 onClick={onCancel}
-                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-red-500"
+                className="p-1 hover:bg-noir-100 dark:hover:bg-noir-700 rounded text-red-500"
                 title="Cancel"
               >
                 <X className="w-4 h-4" />
@@ -116,24 +116,24 @@ export function ProgressModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div
         className={cn(
-          'bg-white dark:bg-gray-800 rounded-lg shadow-xl border max-w-md w-full',
+          'bg-white dark:bg-noir-800 rounded-lg shadow-xl border max-w-md w-full',
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-noir-200 dark:border-noir-700">
           <div className="flex items-center gap-3">
             <StatusIcon 
               className={cn(
                 'w-5 h-5',
                 {
-                  'text-blue-500': variant === 'default',
+                  'text-noir-500': variant === 'default',
                   'text-green-500': variant === 'success',
                   'text-red-500': variant === 'error'
                 }
               )}
             />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-lg font-semibold text-noir-900 dark:text-noir-100">
               {operation.title}
             </h3>
           </div>
@@ -142,7 +142,7 @@ export function ProgressModal({
             {operation.canMinimize && (
               <button
                 onClick={onMinimize}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                className="p-2 hover:bg-noir-100 dark:hover:bg-noir-700 rounded"
                 title="Minimize"
               >
                 <Minimize2 className="w-4 h-4" />
@@ -152,7 +152,7 @@ export function ProgressModal({
             {!isInProgress && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                className="p-2 hover:bg-noir-100 dark:hover:bg-noir-700 rounded"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -165,7 +165,7 @@ export function ProgressModal({
         <div className="p-6">
           {/* Descrizione */}
           {operation.description && (
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-noir-600 dark:text-noir-400 mb-4">
               {operation.description}
             </p>
           )}
@@ -188,13 +188,13 @@ export function ProgressModal({
 
           {/* Stato */}
           <div className="mb-4">
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div className="text-sm font-medium text-noir-700 dark:text-noir-300 mb-1">
               Status
             </div>
             <div className={cn(
               'text-sm',
               {
-                'text-gray-600 dark:text-gray-400': variant === 'default',
+                'text-noir-600 dark:text-noir-400': variant === 'default',
                 'text-green-600 dark:text-green-400': variant === 'success',
                 'text-red-600 dark:text-red-400': variant === 'error'
               }
@@ -206,20 +206,20 @@ export function ProgressModal({
           {/* Informazioni temporali */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <div className="font-medium text-noir-700 dark:text-noir-300 mb-1">
                 Elapsed time
               </div>
-              <div className="text-gray-600 dark:text-gray-400">
+              <div className="text-noir-600 dark:text-noir-400">
                 {formatDuration(elapsedTime)}
               </div>
             </div>
 
             {operation.estimatedEndTime && isInProgress && (
               <div>
-                <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="font-medium text-noir-700 dark:text-noir-300 mb-1">
                   Time remaining
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">
+                <div className="text-noir-600 dark:text-noir-400">
                   {formatDuration(operation.estimatedEndTime.getTime() - Date.now())}
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function ProgressModal({
         </div>
 
         {/* Footer con azioni */}
-        <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end gap-3 p-4 border-t border-noir-200 dark:border-noir-700">
           {operation.canCancel && isInProgress && (
             <button
               onClick={onCancel}
@@ -267,7 +267,7 @@ export function ProgressModal({
           {!isInProgress && (
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-rouge-600 hover:bg-rouge-700 rounded-lg transition-colors"
             >
               Close
             </button>

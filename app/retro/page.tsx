@@ -122,7 +122,7 @@ export default function RetroPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Hero Header - Compatto */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-4 text-white">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-600 via-noir-600 to-noir-600 p-4 text-white">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export default function RetroPage() {
         <Card>
           <CardContent className="p-6">
             <div
-              className="border-2 border-dashed border-teal-500/30 rounded-lg p-8 text-center hover:border-teal-400/50 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-noir-500/30 rounded-lg p-8 text-center hover:border-noir-400/50 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -250,13 +250,13 @@ export default function RetroPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-teal-500/10 rounded-lg">
-                    <Gamepad2 className="w-6 h-6 text-teal-500" />
+                  <div className="p-3 bg-noir-500/10 rounded-lg">
+                    <Gamepad2 className="w-6 h-6 text-noir-500" />
                   </div>
                   <div>
                     <h3 className="font-semibold">{fileName}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">
+                      <Badge className="bg-noir-500/20 text-noir-400 border-noir-500/30">
                         {PLATFORM_NAMES[romInfo.platform]}
                       </Badge>
                       <Badge variant="outline">{romInfo.region}</Badge>
@@ -352,7 +352,7 @@ export default function RetroPage() {
                   <div className="space-y-2 text-xs">
                     {PLATFORM_TOOLS[romInfo.platform]?.map(tool => (
                       <div key={tool} className="flex items-center gap-2 text-muted-foreground">
-                        <span className="w-1 h-1 rounded-full bg-teal-500" />
+                        <span className="w-1 h-1 rounded-full bg-noir-500" />
                         {tool}
                       </div>
                     ))}
@@ -422,7 +422,7 @@ export default function RetroPage() {
                               key={idx}
                               className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                                 selectedBlock === idx 
-                                  ? 'border-teal-500 bg-teal-500/10' 
+                                  ? 'border-noir-500 bg-noir-500/10' 
                                   : 'hover:border-muted-foreground/50'
                               }`}
                               onClick={() => {
@@ -440,7 +440,7 @@ export default function RetroPage() {
                               </div>
                               <p className="text-sm">{block.originalText}</p>
                               {block.translatedText && (
-                                <p className="text-sm text-teal-400 mt-1">{block.translatedText}</p>
+                                <p className="text-sm text-noir-400 mt-1">{block.translatedText}</p>
                               )}
                             </div>
                           ))
@@ -485,12 +485,12 @@ export default function RetroPage() {
           </div>
 
           {/* Info Box */}
-          <Card className="bg-teal-500/5 border-teal-500/20">
+          <Card className="bg-noir-500/5 border-noir-500/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-teal-500 mt-0.5" />
+                <Info className="w-5 h-5 text-noir-500 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-teal-400 mb-1">{t('retroRom.howToUse')}</p>
+                  <p className="font-medium text-noir-400 mb-1">{t('retroRom.howToUse')}</p>
                   <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                     <li>{t('retroRom.step1')}</li>
                     <li>{t('retroRom.step2')}</li>

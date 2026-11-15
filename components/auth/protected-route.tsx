@@ -57,13 +57,13 @@ export function ProtectedRoute({
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-noir-900 via-noir-900 to-noir-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-noir-500 to-rouge-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">{t('protectedRouteComp.gamestringer')}</h1>
-          <p className="text-blue-200">{t('protectedRouteComp.loadingAuthentication')}</p>
+          <p className="text-noir-200">{t('protectedRouteComp.loadingAuthentication')}</p>
         </div>
       </div>
     );

@@ -165,7 +165,7 @@ export function TextureTranslator() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -220,11 +220,11 @@ export function TextureTranslator() {
       <div className="grid grid-cols-12 gap-4">
         {/* Left Sidebar - File Browser */}
         <div className="col-span-3">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-teal-400" />
+                  <FolderOpen className="h-4 w-4 text-noir-400" />
                   {t('textureTranslator.textures')} ({textures.length})
                 </span>
                 <div className="flex gap-1">
@@ -250,27 +250,27 @@ export function TextureTranslator() {
               />
               
               <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-teal-400/50" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-noir-400/50" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('common.search') + '...'}
-                  className="h-7 text-xs pl-7 bg-black/20 border-teal-500/30"
+                  className="h-7 text-xs pl-7 bg-black/20 border-noir-500/30"
                 />
               </div>
               
               {textures.length === 0 ? (
                 <div 
-                  className="border-2 border-dashed border-teal-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="border-2 border-dashed border-noir-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-8 w-8 mx-auto text-teal-400/50 mb-2" />
-                  <p className="text-xs text-teal-400/70">
+                  <Upload className="h-8 w-8 mx-auto text-noir-400/50 mb-2" />
+                  <p className="text-xs text-noir-400/70">
                     {t('textureTranslator.dropTextures')}
                   </p>
-                  <p className="text-2xs text-teal-400/50 mt-1">
+                  <p className="text-2xs text-noir-400/50 mt-1">
                     PNG, DDS, TGA, JPG
                   </p>
                 </div>
@@ -282,7 +282,7 @@ export function TextureTranslator() {
                         key={texture.id}
                         className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${
                           textures.indexOf(texture) === currentTextureIndex 
-                            ? 'bg-teal-500/30 border border-teal-500' 
+                            ? 'bg-noir-500/30 border border-noir-500' 
                             : 'bg-white/5 hover:bg-white/10'
                         }`}
                         onClick={() => setCurrentTextureIndex(textures.indexOf(texture))}
@@ -297,7 +297,7 @@ export function TextureTranslator() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-white truncate">{texture.name}</p>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <Badge className="h-4 text-2xs bg-teal-500/30 px-1">
+                            <Badge className="h-4 text-2xs bg-noir-500/30 px-1">
                               {texture.format.toUpperCase()}
                             </Badge>
                             {texture.processed && (
@@ -322,7 +322,7 @@ export function TextureTranslator() {
               {textures.length > 0 && (
                 <Button 
                   size="sm" 
-                  variant="outline" className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                  variant="outline" className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
                   disabled
                 >
                   <Wand2 className="h-3 w-3 mr-1" />
@@ -335,12 +335,12 @@ export function TextureTranslator() {
 
         {/* Main Preview */}
         <div className="col-span-6">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <FileImage className="h-4 w-4 text-teal-400" />
-                  <span className="text-sm text-teal-300">
+                  <FileImage className="h-4 w-4 text-noir-400" />
+                  <span className="text-sm text-noir-300">
                     {currentTexture ? currentTexture.name : t('textureTranslator.noTexture')}
                   </span>
                 </div>
@@ -356,7 +356,7 @@ export function TextureTranslator() {
                     {showOriginal ? t('textureTranslator.translated') : t('textureTranslator.original')}
                   </Button>
                   <div className="flex items-center gap-1 bg-white/5 rounded-md px-2">
-                    <ZoomOut className="h-3 w-3 text-teal-400" />
+                    <ZoomOut className="h-3 w-3 text-noir-400" />
                     <Slider
                       value={[zoom]}
                       onValueChange={(v) => setZoom(v[0])}
@@ -365,8 +365,8 @@ export function TextureTranslator() {
                       step={10}
                       className="w-20"
                     />
-                    <ZoomIn className="h-3 w-3 text-teal-400" />
-                    <span className="text-xs text-teal-400 w-8">{zoom}%</span>
+                    <ZoomIn className="h-3 w-3 text-noir-400" />
+                    <span className="text-xs text-noir-400 w-8">{zoom}%</span>
                   </div>
                 </div>
               </div>
@@ -374,7 +374,7 @@ export function TextureTranslator() {
             <CardContent className="p-2">
               {currentTexture ? (
                 <div 
-                  className="relative overflow-auto bg-[repeating-conic-gradient(#1a1a2e_0%_25%,#0d0d1a_0%_50%)] bg-[length:20px_20px] rounded-lg"
+                  className="relative overflow-auto bg-[repeating-conic-gradient(#161618_0%_25%,#0d0d1a_0%_50%)] bg-[length:20px_20px] rounded-lg"
                   style={{ maxHeight: '450px' }}
                 >
                   <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}>
@@ -389,8 +389,8 @@ export function TextureTranslator() {
                         key={region.id}
                         className={`absolute border-2 cursor-pointer transition-all ${
                           selectedRegion === region.id 
-                            ? 'border-cyan-400 shadow-lg shadow-cyan-500/30' 
-                            : 'border-teal-500/50 hover:border-teal-400'
+                            ? 'border-noir-400 shadow-lg shadow-noir-500/30' 
+                            : 'border-noir-500/50 hover:border-noir-400'
                         }`}
                         style={{
                           left: region.x,
@@ -417,14 +417,14 @@ export function TextureTranslator() {
                 </div>
               ) : (
                 <div 
-                  className="h-[450px] border-2 border-dashed border-teal-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="h-[450px] border-2 border-dashed border-noir-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <Layers className="h-16 w-16 text-teal-400/30 mb-4" />
-                  <p className="text-teal-400/70 text-lg mb-2">{t('textureTranslator.dropTextures')}</p>
-                  <p className="text-teal-400/50 text-sm">PNG, DDS, TGA, JPG</p>
+                  <Layers className="h-16 w-16 text-noir-400/30 mb-4" />
+                  <p className="text-noir-400/70 text-lg mb-2">{t('textureTranslator.dropTextures')}</p>
+                  <p className="text-noir-400/50 text-sm">PNG, DDS, TGA, JPG</p>
                 </div>
               )}
             </CardContent>
@@ -434,17 +434,17 @@ export function TextureTranslator() {
         {/* Right Sidebar - Settings & Regions */}
         <div className="col-span-3 space-y-4">
           {/* Language Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Languages className="h-4 w-4 text-teal-400" />
+                <Languages className="h-4 w-4 text-noir-400" />
                 {t('textureTranslator.languages')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.from')}</label>
+                  <label className="text-2xs text-noir-400 mb-1 block">{t('common.from')}</label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -462,7 +462,7 @@ export function TextureTranslator() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-2xs text-teal-400 mb-1 block">{t('common.to')}</label>
+                  <label className="text-2xs text-noir-400 mb-1 block">{t('common.to')}</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -484,30 +484,30 @@ export function TextureTranslator() {
           </Card>
 
           {/* Font & Style Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Settings className="h-4 w-4 text-teal-400" />
+                <Settings className="h-4 w-4 text-noir-400" />
                 {t('textureTranslator.settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">{t('textureTranslator.preserveStyle')}</span>
+                <span className="text-xs text-noir-300">{t('textureTranslator.preserveStyle')}</span>
                 <Switch
                   checked={preserveStyle}
                   onCheckedChange={setPreserveStyle}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">{t('textureTranslator.autoFontMatch')}</span>
+                <span className="text-xs text-noir-300">{t('textureTranslator.autoFontMatch')}</span>
                 <Switch
                   checked={autoMatchFont}
                   onCheckedChange={setAutoMatchFont}
                 />
               </div>
               <div>
-                <label className="text-2xs text-teal-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
+                <label className="text-2xs text-noir-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
                 <Select value={selectedFont} onValueChange={setSelectedFont}>
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue />
@@ -526,10 +526,10 @@ export function TextureTranslator() {
 
           {/* Detected Regions */}
           {currentTexture?.regions.length > 0 && (
-            <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+            <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4 text-teal-400" />
+                  <Grid3X3 className="h-4 w-4 text-noir-400" />
                   {t('textureTranslator.detectedTexts')} ({currentTexture.regions.length})
                 </CardTitle>
               </CardHeader>
@@ -541,7 +541,7 @@ export function TextureTranslator() {
                         key={region.id}
                         className={`p-2 rounded-lg cursor-pointer transition-all ${
                           selectedRegion === region.id
-                            ? 'bg-teal-500/30 border border-teal-500'
+                            ? 'bg-noir-500/30 border border-noir-500'
                             : 'bg-white/5 hover:bg-white/10'
                         }`}
                         onClick={() => setSelectedRegion(region.id)}
@@ -552,7 +552,7 @@ export function TextureTranslator() {
                               className="w-3 h-3 rounded border"
                               style={{ backgroundColor: region.backgroundColor }}
                             />
-                            <span className="text-2xs text-teal-400">
+                            <span className="text-2xs text-noir-400">
                               {region.fontSize}px
                             </span>
                           </div>
@@ -573,12 +573,12 @@ export function TextureTranslator() {
           )}
 
           {/* Export */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardContent className="p-3 space-y-2">
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
                 disabled
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -587,7 +587,7 @@ export function TextureTranslator() {
               <Button 
                 size="sm" 
                 variant="outline"
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
                 disabled
               >
                 <Download className="h-4 w-4 mr-2" />

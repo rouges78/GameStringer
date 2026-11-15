@@ -285,7 +285,7 @@ export function LiveOcrOverlay() {
   return (
     <div className="space-y-4">
       {/* Hero Header - stile ai-translator */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -401,7 +401,7 @@ export function LiveOcrOverlay() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label className="text-xs">{t('liveOcrOverlay.captureInterval')}</Label>
-                <span className="text-xs text-gray-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</span>
+                <span className="text-xs text-noir-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</span>
               </div>
               <Slider
                 value={[captureInterval]}
@@ -431,7 +431,7 @@ export function LiveOcrOverlay() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label className="text-xs">{t('common.opacitàOverlay')}</Label>
-                  <span className="text-xs text-gray-400">{Math.round(overlayOpacity * 100)}%</span>
+                  <span className="text-xs text-noir-400">{Math.round(overlayOpacity * 100)}%</span>
                 </div>
                 <Slider
                   value={[overlayOpacity]}
@@ -470,7 +470,7 @@ export function LiveOcrOverlay() {
           <CardContent>
             <ScrollArea className="h-[400px]">
               {detectedTexts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="flex flex-col items-center justify-center h-full text-noir-500">
                   <Eye className="h-12 w-12 mb-4 opacity-30" />
                   <p className="text-sm">{t('common.nessunTestoRilevato')}</p>
                   <p className="text-xs opacity-70">{t('common.avviaLaCatturaPerVedereITesti')}</p>
@@ -484,11 +484,11 @@ export function LiveOcrOverlay() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-400 truncate">{text.original}</p>
+                          <p className="text-xs text-noir-400 truncate">{text.original}</p>
                           <p className="text-sm text-white font-medium mt-1">{text.translated}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-2 text-2xs text-gray-500">
+                      <div className="flex items-center gap-2 mt-2 text-2xs text-noir-500">
                         <span>📍 {text.x}, {text.y}</span>
                         <span>📐 {text.width}x{text.height}</span>
                       </div>
@@ -505,26 +505,26 @@ export function LiveOcrOverlay() {
       <div className="grid grid-cols-4 gap-2">
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-400">{fps}</div>
-            <div className="text-2xs text-gray-400">FPS</div>
+            <div className="text-2xl font-bold text-noir-400">{fps}</div>
+            <div className="text-2xs text-noir-400">FPS</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-400">{detectedTexts.length}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.currentTexts')}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.currentTexts')}</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-400">{totalDetected}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.sessionTotal')}</div>
+            <div className="text-2xl font-bold text-rouge-400">{totalDetected}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.sessionTotal')}</div>
           </div>
         </Card>
         <Card className="bg-card/50 border-border/50 p-3">
           <div className="text-center">
             <div className="text-2xl font-bold text-amber-400">{captureInterval}{t('liveOcrOverlay.msUnit')}</div>
-            <div className="text-2xs text-gray-400">{t('liveOcrOverlay.interval')}</div>
+            <div className="text-2xs text-noir-400">{t('liveOcrOverlay.interval')}</div>
           </div>
         </Card>
       </div>

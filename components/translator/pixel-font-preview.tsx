@@ -69,7 +69,7 @@ export function PixelFontPreview({
   const [fontSize, setFontSize] = useState(8);
   const [customWidth, setCustomWidth] = useState(maxWidth);
   const [customHeight, setCustomHeight] = useState(maxHeight);
-  const [bgColor, setBgColor] = useState('#1a1a2e');
+  const [bgColor, setBgColor] = useState('#161618');
   const [textColor, setTextColor] = useState('#ffffff');
   const [borderColor, setBorderColor] = useState('#4a4a6a');
   const [showBorder, _setShowBorder] = useState(true);
@@ -191,7 +191,7 @@ export function PixelFontPreview({
       <CardHeader className="p-3 pb-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Type className="h-5 w-5 text-sky-400" />
+            <Type className="h-5 w-5 text-noir-400" />
             <CardTitle className="text-base">{t('pixelFontPreviewComp.pixelFontPreview')}</CardTitle>
           </div>
           

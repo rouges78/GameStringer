@@ -245,9 +245,9 @@ export default function RenpyPatcherPage() {
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
       case 'Dialogue': return 'bg-emerald-500';
-      case 'Menu': return 'bg-purple-500';
-      case 'Narration': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'Menu': return 'bg-rouge-500';
+      case 'Narration': return 'bg-rouge-500';
+      default: return 'bg-noir-500';
     }
   };
 
@@ -269,7 +269,7 @@ export default function RenpyPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-noir-500 to-noir-600 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -340,7 +340,7 @@ export default function RenpyPatcherPage() {
           </div>
           
           {game && (
-            <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded mt-3 border border-slate-800/50 truncate">
+            <p className="text-2xs text-muted-foreground font-mono bg-noir-950/50 p-2 rounded mt-3 border border-noir-800/50 truncate">
               {game.path}
             </p>
           )}
@@ -388,16 +388,16 @@ export default function RenpyPatcherPage() {
                 </Button>
               </div>
             </div>
-            <Progress value={stats.percentage} className="h-2 bg-slate-800" />
+            <Progress value={stats.percentage} className="h-2 bg-noir-800" />
 
             {/* Generate Translation */}
-            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-800">
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-noir-800">
               <span className="text-sm text-muted-foreground">{t('renpyPatcherPage.generateTl')}</span>
               <Input
                 value={targetLanguage}
                 onChange={(e) => setTargetLanguage(e.target.value)}
                 placeholder={t('renpyPatcherPage.langPlaceholder')}
-                className="w-32 h-8 bg-slate-950/50 border-slate-700 text-sm"
+                className="w-32 h-8 bg-noir-950/50 border-noir-700 text-sm"
               />
               <Button 
                 onClick={generateTranslation} 
@@ -434,13 +434,13 @@ export default function RenpyPatcherPage() {
                   aria-label={t('common.cerca')} placeholder={t('renpyPatcherPage.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-8 bg-slate-950/50 border-slate-700"
+                  className="pl-9 h-8 bg-noir-950/50 border-noir-700"
                 />
               </div>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="h-8 px-3 rounded-md bg-slate-950/50 border border-slate-700 text-sm"
+                className="h-8 px-3 rounded-md bg-noir-950/50 border border-noir-700 text-sm"
               >
                 <option value="all">{t('renpyPatcherPage.allTypes')}</option>
                 <option value="Dialogue">{t('renpyPatcherPage.dialogues')}</option>
@@ -461,7 +461,7 @@ export default function RenpyPatcherPage() {
                   return (
                     <div
                       key={entry.id}
-                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800'}`}
+                      className={`p-3 rounded-lg border ${isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-noir-800'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -480,7 +480,7 @@ export default function RenpyPatcherPage() {
                       </div>
                       
                       <div className="mb-2">
-                        <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
+                        <p className="text-sm font-mono bg-noir-950/50 p-2 rounded border border-noir-800">
                           {entry.original}
                         </p>
                       </div>
@@ -491,7 +491,7 @@ export default function RenpyPatcherPage() {
                             <Textarea
                               value={editedTranslation}
                               onChange={(e) => setEditedTranslation(e.target.value)}
-                              className="font-mono text-sm bg-slate-950/50 border-slate-700"
+                              className="font-mono text-sm bg-noir-950/50 border-noir-700"
                               rows={2}
                             />
                             <div className="flex gap-2">
@@ -515,7 +515,7 @@ export default function RenpyPatcherPage() {
                               setEditingId(entry.id);
                               setEditedTranslation(entry.translated);
                             }}
-                            className={`p-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors text-sm ${
+                            className={`p-2 rounded cursor-pointer hover:bg-noir-800/50 transition-colors text-sm ${
                               isUntranslated ? 'text-muted-foreground italic' : 'font-mono'
                             }`}
                           >

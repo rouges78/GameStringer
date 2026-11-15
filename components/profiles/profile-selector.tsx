@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { BRAND_FULL, BRAND_NAME, BRAND_PREFIX } from '@/lib/brand';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -303,12 +304,12 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
       <div 
         className={`relative overflow-hidden rounded-2xl transition-all duration-300 h-full flex flex-col ${
         isSelected 
-          ? 'ring-2 ring-indigo-500 shadow-2xl shadow-indigo-500/20 bg-slate-900/80 backdrop-blur-xl' 
-          : 'hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 bg-slate-900/40 border border-slate-800 hover:border-indigo-500/30 backdrop-blur-md'
-        } ${profile.is_locked ? 'border-indigo-500/30 bg-indigo-950/30' : ''}`}
+          ? 'ring-2 ring-rouge-500 shadow-2xl shadow-rouge-500/20 bg-noir-900/80 backdrop-blur-xl' 
+          : 'hover:shadow-xl hover:shadow-rouge-500/10 hover:-translate-y-1 bg-noir-900/40 border border-noir-800 hover:border-rouge-500/30 backdrop-blur-md'
+        } ${profile.is_locked ? 'border-rouge-500/30 bg-rouge-950/30' : ''}`}
       >
         {/* Decorative gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-blue-500/5 opacity-0 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'} transition-opacity duration-500 pointer-events-none`} />
+        <div className={`absolute inset-0 bg-gradient-to-br from-rouge-500/5 via-transparent to-noir-500/5 opacity-0 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'} transition-opacity duration-500 pointer-events-none`} />
 
         <div className="p-5 relative z-10">
           <div className="flex items-center space-x-4">
@@ -321,10 +322,10 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                   className="hidden"
                   disabled={isUpdatingAvatar}
                 />
-                <Avatar className="h-14 w-14 ring-2 ring-slate-950/50 shadow-lg transition-all group-hover/avatar:ring-indigo-500/50">
+                <Avatar className="h-14 w-14 ring-2 ring-noir-950/50 shadow-lg transition-all group-hover/avatar:ring-rouge-500/50">
                   {isUpdatingAvatar ? (
-                    <AvatarFallback className="bg-slate-800">
-                      <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                    <AvatarFallback className="bg-noir-800">
+                      <Loader2 className="w-6 h-6 animate-spin text-rouge-400" />
                     </AvatarFallback>
                   ) : (
                     <>
@@ -341,7 +342,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                 </div>
               </label>
               {profile.is_locked && (
-                <div className="absolute -bottom-1 -right-1 bg-indigo-500 text-white rounded-full p-1 shadow-md">
+                <div className="absolute -bottom-1 -right-1 bg-rouge-500 text-white rounded-full p-1 shadow-md">
                   <Lock className="w-3 h-3" />
                 </div>
               )}
@@ -349,12 +350,12 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-0.5">
-                <h3 className={`text-lg font-bold truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                <h3 className={`text-lg font-bold truncate transition-colors ${isSelected ? 'text-white' : 'text-noir-200'}`}>
                   {profile.name}
                 </h3>
               </div>
               
-              <div className="flex items-center text-xs text-slate-400 font-medium">
+              <div className="flex items-center text-xs text-noir-400 font-medium">
                 <Clock className="w-3 h-3 mr-1.5 opacity-70" />
                 <span>{getLastAccessedText(profile.last_accessed)}</span>
               </div>
@@ -377,7 +378,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
               exit={{ opacity: 0, height: 0 }}
               className="px-5 pb-3 relative z-10"
             >
-              <div className="h-px w-full bg-slate-800/50 mb-1.5" />
+              <div className="h-px w-full bg-noir-800/50 mb-1.5" />
               
               {profile.is_locked ? (
                 <Alert className="border-red-500/20 bg-red-500/10 text-red-200">
@@ -390,7 +391,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                 <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-2">
                   <input type="text" name="username" value={profile.name} autoComplete="username" className="sr-only" tabIndex={-1} readOnly aria-hidden="true" />
                   <div className="space-y-1.5">
-                    <Label htmlFor={`password-${profile.id}`} className="text-2xs font-medium text-slate-400 uppercase tracking-wider">
+                    <Label htmlFor={`password-${profile.id}`} className="text-2xs font-medium text-noir-400 uppercase tracking-wider">
                       {t('profile.password')}
                     </Label>
                     <div className="relative group/input">
@@ -404,7 +405,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         }}
                         onClick={(e) => e.stopPropagation()}
                         placeholder={t('profile.enterPassword')}
-                        className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-indigo-500/50 focus:ring-indigo-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-8 text-sm"
+                        className="pr-10 bg-noir-950/50 border-noir-700/50 focus:border-rouge-500/50 focus:ring-rouge-500/20 text-noir-100 placeholder:text-noir-600 transition-all h-8 text-sm"
                         disabled={isAuthenticating}
                         autoFocus
                         autoComplete="current-password"
@@ -413,7 +414,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-slate-300 hover:bg-transparent"
+                        className="absolute right-0 top-0 h-full px-3 text-noir-500 hover:text-noir-300 hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowPassword(!showPassword);
@@ -435,11 +436,11 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         checked={rememberPassword}
                         onCheckedChange={(checked) => setRememberPassword(checked === true)}
                         onClick={(e) => e.stopPropagation()}
-                        className="border-slate-600 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600 w-4 h-4 rounded"
+                        className="border-noir-600 data-[state=checked]:bg-rouge-600 data-[state=checked]:border-rouge-600 w-4 h-4 rounded"
                       />
                       <label
                         htmlFor={`remember-${profile.id}`}
-                        className="text-xs text-slate-400 cursor-pointer select-none hover:text-slate-300 transition-colors"
+                        className="text-xs text-noir-400 cursor-pointer select-none hover:text-noir-300 transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {t('profile.rememberPassword')}
@@ -451,7 +452,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                           e.stopPropagation();
                           setShowPasswordRecovery(true);
                         }}
-                        className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
+                        className="text-xs text-rouge-400 hover:text-rouge-300 hover:underline transition-colors"
                       >
                         {t('profile.forgotPassword')}
                       </button>
@@ -474,7 +475,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                       type="submit"
                       onClick={(e) => e.stopPropagation()}
                       disabled={isAuthenticating || !password.trim()}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-indigo-900/20 h-8"
+                      className="flex-1 bg-gradient-to-r from-rouge-600 to-noir-600 hover:from-rouge-500 hover:to-noir-500 text-white border-0 shadow-lg shadow-rouge-900/20 h-8"
                     >
                       {isAuthenticating ? (
                         <>
@@ -502,7 +503,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                           }
                         }}
                         disabled={isAuthenticating || isDeleting || isCurrentProfile}
-                        className={`border-slate-700 bg-slate-800/50 w-10 h-10 shrink-0 ${isCurrentProfile ? 'text-slate-600 cursor-not-allowed opacity-50' : 'text-slate-400 hover:text-red-400 hover:bg-red-950/30 hover:border-red-900/50'}`}
+                        className={`border-noir-700 bg-noir-800/50 w-10 h-10 shrink-0 ${isCurrentProfile ? 'text-noir-600 cursor-not-allowed opacity-50' : 'text-noir-400 hover:text-red-400 hover:bg-red-950/30 hover:border-red-900/50'}`}
                         title={isCurrentProfile ? t('profile.cannotDeleteActive') : t('profile.deleteConfirm').replace(/<[^>]*>/g, '').replace('{name}', profile.name)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -530,7 +531,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                             setAuthError(null);
                           }}
                           disabled={isDeleting}
-                          className="flex-1 h-8 text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                          className="flex-1 h-8 text-xs text-noir-400 hover:text-noir-200 hover:bg-noir-800"
                         >
                           {t('common.cancel')}
                         </Button>
@@ -654,11 +655,11 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
               <motion.div
                 animate={{
                   filter: [
-                    'drop-shadow(0 0 20px rgba(59,130,246,0.5))',
-                    'drop-shadow(0 0 28px rgba(20,184,166,0.6))',
-                    'drop-shadow(0 0 24px rgba(16,185,129,0.55))',
-                    'drop-shadow(0 0 28px rgba(14,165,233,0.6))',
-                    'drop-shadow(0 0 20px rgba(59,130,246,0.5))',
+                    'drop-shadow(0 0 20px rgba(255,59,74,0.35))',
+                    'drop-shadow(0 0 28px rgba(255,59,74,0.5))',
+                    'drop-shadow(0 0 24px rgba(255,59,74,0.4))',
+                    'drop-shadow(0 0 28px rgba(255,59,74,0.5))',
+                    'drop-shadow(0 0 20px rgba(255,59,74,0.35))',
                   ],
                   scale: [1, 1.015, 1, 1.015, 1],
                 }}
@@ -666,31 +667,25 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
               >
                 <Image 
                   src="/logo.png" 
-                  alt="GameStringer" 
+                  alt={BRAND_FULL} 
                   width={180}
                   height={180}
                   className="mx-auto w-[180px] h-[180px] rounded-3xl"
                   priority
                 />
               </motion.div>
-              <h1
-                className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent mt-4"
-                style={{
-                  backgroundImage: 'linear-gradient(90deg, #ff4d9e, #b14dff, #4d8dff, #ff4d9e)',
-                  backgroundSize: '200% 100%',
-                  animation: 'gradientMove 4s linear infinite',
-                }}
-              >
-                GameStringer
+              <h1 className="text-3xl font-extrabold tracking-tight mt-4 text-foreground">
+                <span className="text-muted-foreground">{BRAND_PREFIX}</span>
+                <span className="text-primary">{BRAND_NAME}</span>
               </h1>
-              <p className="text-xs text-slate-500 mt-3 font-mono">v{version}</p>
-              <p className="text-sm text-slate-400/80 italic mt-1.5">&quot;{t('profile.loginTagline')}&quot;</p>
+              <p className="text-xs text-noir-500 mt-3 font-mono">v{version}</p>
+              <p className="text-sm text-noir-400/80 italic mt-1.5">&quot;{t('profile.loginTagline')}&quot;</p>
             </motion.div>
-            <p className="text-sm text-slate-400 mt-1">{t('profile.selectProfileToContinue')}</p>
+            <p className="text-sm text-noir-400 mt-1">{t('profile.selectProfileToContinue')}</p>
             
             {profiles.length > 0 && (
               <div className="mt-4">
-                <Badge variant="outline" className="px-3 py-1 rounded-full bg-slate-800/50 border-slate-700 text-slate-300 backdrop-blur-sm text-xs">
+                <Badge variant="outline" className="px-3 py-1 rounded-full bg-noir-800/50 border-noir-700 text-noir-300 backdrop-blur-sm text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse" />
                   {profiles.length} {profiles.length === 1 ? t('profile.profileAvailable') : t('profile.profilesAvailable')}
                 </Badge>
@@ -734,8 +729,8 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 onClick={onCreateProfile}
                 className="w-full max-w-[340px] cursor-pointer group"
               >
-                 <div className="h-full min-h-[140px] rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500/50 bg-slate-900/30 hover:bg-slate-800/50 transition-all duration-300 flex flex-col items-center justify-center p-6 text-slate-400 hover:text-indigo-300">
-                    <div className="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-indigo-500/20 flex items-center justify-center mb-3 transition-colors">
+                 <div className="h-full min-h-[140px] rounded-xl border-2 border-dashed border-noir-700 hover:border-rouge-500/50 bg-noir-900/30 hover:bg-noir-800/50 transition-all duration-300 flex flex-col items-center justify-center p-6 text-noir-400 hover:text-rouge-300">
+                    <div className="w-12 h-12 rounded-full bg-noir-800 group-hover:bg-rouge-500/20 flex items-center justify-center mb-3 transition-colors">
                       <Plus className="w-6 h-6" />
                     </div>
                     <span className="font-medium">{t('profile.createFirstProfile')}</span>
@@ -754,15 +749,15 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
               <Button
                 onClick={onCreateProfile}
                 variant="ghost"
-                className="text-slate-400 hover:text-white hover:bg-slate-800/50 px-6 py-6 h-auto rounded-xl border border-transparent hover:border-slate-700 transition-all"
+                className="text-noir-400 hover:text-white hover:bg-noir-800/50 px-6 py-6 h-auto rounded-xl border border-transparent hover:border-noir-700 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-noir-800 flex items-center justify-center">
                     <Plus className="w-4 h-4" />
                   </div>
                   <div className="text-left">
                     <div className="font-medium">{t('profile.newProfile')}</div>
-                    <div className="text-xs text-slate-500">{t('profile.addAnotherUser')}</div>
+                    <div className="text-xs text-noir-500">{t('profile.addAnotherUser')}</div>
                   </div>
                 </div>
               </Button>

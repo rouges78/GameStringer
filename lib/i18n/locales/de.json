@@ -5389,7 +5389,7 @@
     "severityLevels": "Schweregrade"
   },
   "infoPage": {
-    "title": "GameStringer",
+    "title": "Rouges@Gamestringer",
     "subtitle": "Toolkit für die Übersetzung von Videospielen",
     "openSource": "Open Source",
     "information": "Über",
@@ -7276,5 +7276,44 @@
     "title": "Hier ist nichts",
     "message": "Diese Seite existiert nicht oder wurde verschoben.",
     "back": "Zurück zum Dashboard"
+  },
+  "stringItPlan": {
+    "unityStaticStep": "In die Spielszenen eingebettete Texte",
+    "unityStaticTranslating": "Übersetze {done}/{total} Texte",
+    "unityStaticWriting": "Schreibe ins Spiel (das Original bleibt als Sicherung erhalten)",
+    "unityStaticDone": "Übersetzt. Wähle im Spiel die Sprache „{language}“: Ihr Name im Menü bleibt gleich.",
+    "unityStaticDetail": "{strings} Zeichenketten in {files} Dateien, {skipped} Einträge unverändert",
+    "unityStaticFallback": "Die Spieldateien lassen sich nicht direkt übersetzen ({reason}). Weiter mit XUnity.",
+    "unityStaticHint": "Lokalisierungstabellen gefunden: Die Texte werden in die Spieldateien geschrieben. XUnity nur, wenn das nicht reicht.",
+    "alreadyHasLanguage": "Das Spiel hat {lang} bereits unter seinen Sprachen: Wähle sie in den Spieloptionen. Es gibt nichts zu übersetzen.",
+    "ocrOffer": "Nächste Methode: Bildschirm-OCR",
+    "ocrOfferDesc": "Ins Spiel konnte nichts geschrieben werden. Die OCR liest den Bildschirm und funktioniert mit jeder Engine.",
+    "openOcr": "OCR öffnen",
+    "title": "Plan",
+    "sourceFiles": "Engine aus den Spieldateien gelesen",
+    "sourceHint": "Engine aus dem Namen abgeleitet",
+    "sourceNone": "Engine nicht erkannt",
+    "antiCheat": "Anti-Cheat {name} gefunden: Es wird nichts ins Spiel injiziert",
+    "blocked": "Übersprungen: Anti-Cheat {name}",
+    "injectionBlocked": "Dieses Spiel nutzt den Anti-Cheat {name}, daher injiziert GameStringer nichts. Nutze stattdessen die Bildschirm-OCR.",
+    "methods": {
+      "danganronpa-wad": "WAD-Archive",
+      "hendrix-csv": "Hendrix-CSV",
+      "renpy-tl": "Ren'Py-tl-Ordner",
+      "visionaire-vis": ".vis-Datei",
+      "tyrano-asar": "Skripte in app.asar",
+      "unity-loc-tables": "Lokalisierungstabellen ({count})",
+      "unity-xunity": "XUnity (beim Spielen)",
+      "unreal-locres": "Lokalisierungs-Pak",
+      "rpgmaker-json": "JSON-Daten",
+      "generic-workflow": "Textdateien des Spiels",
+      "godot-pck": "Godot Translator",
+      "wolfrpg": "Wolf RPG Patcher",
+      "bethesda": "Bethesda Patcher",
+      "cri": "CRI Patcher",
+      "telltale": "Telltale Patcher",
+      "runtime-hook": "Laufzeit-Hook",
+      "ocr-overlay": "Bildschirm-OCR"
+    }
   }
 }

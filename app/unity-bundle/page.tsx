@@ -333,14 +333,14 @@ export default function UnityBundlePage() {
       case "complete": return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "empty": return <XCircle className="h-4 w-4 text-red-500" />;
       case "partial": return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
+      default: return <AlertCircle className="h-4 w-4 text-noir-500" />;
     }
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -388,12 +388,12 @@ export default function UnityBundlePage() {
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ${
               currentStep >= step.num 
                 ? "bg-emerald-600 text-white" 
-                : "bg-slate-800/50 text-slate-500 border border-slate-700/50"
+                : "bg-noir-800/50 text-noir-500 border border-noir-700/50"
             }`}>
               <span className="font-bold">{step.num}</span>
               <span>{step.label}</span>
             </div>
-            {idx < 3 && <ArrowRight className="h-3 w-3 mx-1 text-slate-600" />}
+            {idx < 3 && <ArrowRight className="h-3 w-3 mx-1 text-noir-600" />}
           </div>
         ))}
       </div>
@@ -423,7 +423,7 @@ export default function UnityBundlePage() {
             </div>
             
             {folderPath && (
-              <p className="text-2xs text-muted-foreground font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50">
+              <p className="text-2xs text-muted-foreground font-mono bg-noir-950/50 p-2 rounded truncate border border-noir-800/50">
                 {folderPath.split('\\').slice(-2).join('\\')}
               </p>
             )}
@@ -438,7 +438,7 @@ export default function UnityBundlePage() {
                       className={`p-2 rounded cursor-pointer border text-xs transition-all ${
                         selectedBundle?.bundle_path === bundle.bundle_path
                           ? "bg-emerald-500/20 border-emerald-500/40" 
-                          : "hover:bg-slate-800/50 border-transparent"
+                          : "hover:bg-noir-800/50 border-transparent"
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -491,9 +491,9 @@ export default function UnityBundlePage() {
             )}
             
             {strings.length > 0 && (
-              <ScrollArea className="h-[140px] border border-slate-800/50 rounded p-2 bg-slate-950/50">
+              <ScrollArea className="h-[140px] border border-noir-800/50 rounded p-2 bg-noir-950/50">
                 {strings.slice(0, 30).map((s, i) => (
-                  <div key={i} className="text-2xs py-1 border-b border-slate-800/30 last:border-0">
+                  <div key={i} className="text-2xs py-1 border-b border-noir-800/30 last:border-0">
                     <p className="text-muted-foreground truncate">{s.key}</p>
                     <p className="truncate">{s.value}</p>
                     {s.translated && <p className="text-green-400 truncate">→ {s.translated}</p>}
@@ -586,7 +586,7 @@ export default function UnityBundlePage() {
                   {uabeaStep > 1 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
                 </div>
                 
-                <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 2 ? 'bg-green-500/20' : uabeaStep >= 2 ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
+                <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 2 ? 'bg-green-500/20' : uabeaStep >= 2 ? 'bg-emerald-500/20' : 'bg-noir-800/50'}`}>
                   <span className="font-bold">2.</span>
                   <Button size="sm" onClick={copyBundlePath} disabled={uabeaStep < 2 || uabeaStep > 2} className="h-6 text-2xs">
                     {t('unityBundle.copyBundlePath')}
@@ -595,7 +595,7 @@ export default function UnityBundlePage() {
                 </div>
                 <p className="text-micro text-muted-foreground pl-5">{t('unityBundlePage.fileOpenCtrlv')}</p>
                 
-                <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 3 ? 'bg-green-500/20' : uabeaStep >= 3 ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
+                <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 3 ? 'bg-green-500/20' : uabeaStep >= 3 ? 'bg-emerald-500/20' : 'bg-noir-800/50'}`}>
                   <span className="font-bold">3.</span>
                   <Button size="sm" onClick={copyDumpPath} disabled={uabeaStep < 3 || uabeaStep > 3} className="h-6 text-2xs">
                     {t('unityBundle.copyTranslationsPath')}

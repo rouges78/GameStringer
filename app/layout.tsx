@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next';
+import { BRAND_FULL } from '@/lib/brand';
 import { IBM_Plex_Sans, JetBrains_Mono, Pixelify_Sans } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -36,8 +37,8 @@ const pixel = Pixelify_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'GameStringer - AI Game Translation',
-  description: 'GameStringer è un sistema avanzato per la traduzione automatica e manuale di videogames.',
+  title: `${BRAND_FULL} - AI Game Translation`,
+  description: 'Rouges@Gamestringer è un sistema avanzato per la traduzione automatica e manuale di videogames.',
 };
 
 export default function RootLayout({

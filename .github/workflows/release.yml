@@ -38,8 +38,14 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      # FISSATO a 1.99.1 il 15/11/2026, come check-windows in ci.yml: con la
+      # 1.100.0 il binario dei test muore su Windows con STATUS_ACCESS_VIOLATION
+      # e la causa non è nota, quindi la release non va compilata con un
+      # compilatore su cui i test non passano. Linux e macOS restano su
+      # `@stable`. Da togliere insieme al blocco in ci.yml: vedi
+      # docs/RUST-TEST-TRIAGE.md.
+      - name: Setup Rust 1.99.1
+        uses: dtolnay/rust-toolchain@1.99.1
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2

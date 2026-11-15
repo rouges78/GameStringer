@@ -2,7 +2,7 @@
 // Supporto per estrazione e modifica file PAK e traduzioni PO
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom, Write, BufReader, BufRead};
 use std::path::{Path, PathBuf};
@@ -4886,7 +4886,8 @@ msgstr "[TODO] da fare"
 //   · di ogni entry si sostituisce solo la parte TESTUALE, preservando i tag
 //     CLT esterni e la coda di byte dopo il terminatore null;
 //   · entry con tag CLT in mezzo al testo (non solo prefisso/suffisso) →
-//     SALTATE e contate: meglio una battuta in inglese che un tag rotto.
+//     scritte con `gs_rewrite_inner_clt`: la parola colorata tiene il colore
+//     solo se compare identica nella traduzione, altrimenti lo perde.
 // ═══════════════════════════════════════════════════════════════════
 
 const GS_LIN_LINE_WIDTH: usize = 40; // caratteri per riga nel text box DR1
@@ -4963,6 +4964,129 @@ fn gs_split_clt(raw: &str) -> Option<(String, String, String)> {
     // niente tag residui nel mezzo
     if rest.contains("<CLT") { return None; }
     Some((prefix, rest.to_string(), suffix))
+}
+
+/// Segmenti di testo di un raw, ognuno col tag di colore in vigore
+/// (`None` = nessun colore: `<CLT>` chiude, `<CLT n>` apre).
+fn gs_clt_segments(raw: &str) -> Vec<(Option<String>, String)> {
+    let mut segs = Vec::new();
+    let mut state: Option<String> = None;
+    let mut rest = raw;
+    while let Some(start) = rest.find("<CLT") {
+        let Some(gt) = rest[start..].find('>') else { break };
+        if start > 0 { segs.push((state.clone(), rest[..start].to_string())); }
+        let tag = &rest[start..start + gt + 1];
+        state = if tag == "<CLT>" { None } else { Some(tag.to_string()) };
+        rest = &rest[start + gt + 1..];
+    }
+    if !rest.is_empty() { segs.push((state, rest.to_string())); }
+    segs
+}
+
+/// Cerca `needle` in `hay` come parola intera, fuori dai tratti già presi.
+/// Apostrofo dritto e tipografico valgono uguale: il modello li scambia.
+fn gs_find_span(hay: &str, needle: &str, claimed: &[(usize, usize)]) -> Option<(usize, usize)> {
+    let same = |a: char, b: char| a == b || (matches!(a, '\'' | '’') && matches!(b, '\'' | '’'));
+    let n: Vec<char> = needle.chars().collect();
+    let h: Vec<(usize, char)> = hay.char_indices().collect();
+    if n.is_empty() || n.len() > h.len() { return None; }
+    for i in 0..=h.len() - n.len() {
+        if !(0..n.len()).all(|k| same(h[i + k].1, n[k])) { continue; }
+        let end = i + n.len();
+        let whole_word = (i == 0 || !h[i - 1].1.is_alphanumeric())
+            && (end == h.len() || !h[end].1.is_alphanumeric());
+        let (s, e) = (h[i].0, h.get(end).map_or(hay.len(), |x| x.0));
+        if whole_word && !claimed.iter().any(|&(cs, ce)| s < ce && cs < e) {
+            return Some((s, e));
+        }
+    }
+    None
+}
+
+/// Riscrive un raw che ha tag di colore NEL MEZZO del testo. La traduzione
+/// prende il colore di base della riga; una parola evidenziata resta colorata
+/// solo se compare identica nella traduzione (i nomi propri), altrimenti perde
+/// il colore. I tag escono sempre a coppie, come negli originali.
+/// Ritorna (nuovo raw, evidenziazioni tenute, evidenziazioni perse).
+fn gs_rewrite_inner_clt(raw: &str, translated: &str) -> (String, u32, u32) {
+    let segs = gs_clt_segments(raw);
+
+    // Colore di base = quello con cui la riga comincia e finisce (è così nelle
+    // forme più comuni: T#T#T e #T##T##T#). Se i due non coincidono, quello
+    // che copre più testo. «Più testo» da solo sbaglia quando la parola
+    // evidenziata è più lunga del resto della frase.
+    let texts: Vec<&(Option<String>, String)> = segs.iter().filter(|(_, t)| !t.trim().is_empty()).collect();
+    let base = match (texts.first(), texts.last()) {
+        (Some(first), Some(last)) if first.0 == last.0 => first.0.clone(),
+        _ => {
+            let mut weight: Vec<(Option<String>, usize)> = Vec::new();
+            for (st, t) in &texts {
+                let n = t.trim().chars().count();
+                match weight.iter_mut().find(|(s, _)| s == st) {
+                    Some(w) => w.1 += n,
+                    None => weight.push((st.clone(), n)),
+                }
+            }
+            weight.iter().max_by_key(|(_, n)| *n).and_then(|(s, _)| s.clone())
+        }
+    };
+
+    let mut claimed: Vec<(usize, usize, Option<String>)> = Vec::new();
+    let (mut kept, mut dropped) = (0u32, 0u32);
+    for (st, t) in &segs {
+        let needle = t.replace(['\n', '\r'], " ");
+        let needle = needle.trim();
+        if *st == base || needle.is_empty() || claimed.len() >= 200 { continue; }
+        let taken: Vec<(usize, usize)> = claimed.iter().map(|c| (c.0, c.1)).collect();
+        match gs_find_span(translated, needle, &taken) {
+            Some((s, e)) => { claimed.push((s, e, st.clone())); kept += 1; }
+            None => dropped += 1,
+        }
+    }
+    claimed.sort_by_key(|c| c.0);
+
+    // Marcatori di un carattere al posto dei tag: l'a-capo non li spezza.
+    const CLOSE: char = '\u{E0FF}';
+    let mut marked = String::new();
+    let mut pos = 0;
+    for (k, (s, e, _)) in claimed.iter().enumerate() {
+        marked.push_str(&translated[pos..*s]);
+        marked.push(char::from_u32(0xE000 + k as u32).unwrap_or(CLOSE));
+        marked.push_str(&translated[*s..*e]);
+        marked.push(CLOSE);
+        pos = *e;
+    }
+    marked.push_str(&translated[pos..]);
+    let wrapped = gs_word_wrap(&marked, GS_LIN_LINE_WIDTH);
+
+    let lead: String = raw.chars().take_while(|c| matches!(c, '\n' | '\r')).collect();
+    let trail_len = raw.chars().rev().take_while(|c| matches!(c, '\n' | '\r')).count();
+    let mut out = lead;
+    let mut piece = String::new();
+    let mut span: Option<usize> = None;
+    let flush = |piece: &mut String, span: Option<usize>, out: &mut String| {
+        if piece.is_empty() { return; }
+        match span.map_or(&base, |k| &claimed[k].2) {
+            Some(tag) => { out.push_str(tag); out.push_str(piece); out.push_str("<CLT>"); }
+            None => out.push_str(piece),
+        }
+        piece.clear();
+    };
+    for ch in wrapped.chars() {
+        let code = ch as u32;
+        if ch == CLOSE {
+            flush(&mut piece, span, &mut out);
+            span = None;
+        } else if (0xE000..0xE0FF).contains(&code) {
+            flush(&mut piece, span, &mut out);
+            span = Some((code - 0xE000) as usize);
+        } else {
+            piece.push(ch);
+        }
+    }
+    flush(&mut piece, span, &mut out);
+    out.push_str(&raw[raw.len() - trail_len..]);
+    (out, kept, dropped)
 }
 
 fn gs_word_wrap(text: &str, max_width: usize) -> String {
@@ -5118,6 +5242,11 @@ pub struct GsWadRebuildResult {
     pub strings_written: u32,
     pub strings_skipped_mismatch: u32,
     pub strings_skipped_inner_tags: u32,
+    /// Righe con parole colorate nel mezzo, scritte lo stesso.
+    pub strings_written_inner_tags: u32,
+    /// Parole colorate rimaste colorate / che hanno perso il colore.
+    pub highlights_kept: u32,
+    pub highlights_dropped: u32,
     pub strings_missing_translation: u32,
     pub verified_sample: u32,
     pub verified_sample_total: u32,
@@ -5246,6 +5375,66 @@ pub async fn extract_danganronpa_wad_text(game_path: String) -> Result<GsWadExtr
     })
 }
 
+/// Codici Unicode che una tabella `tFpS` del font sa disegnare.
+/// Formato: `u32` codice massimo a +16, poi da +32 un `u16` per codice
+/// (`0xFFFF` = glifo assente).
+fn gs_parse_font_glyphs(table: &[u8]) -> Option<HashSet<u32>> {
+    if table.len() < 32 || &table[0..4] != b"tFpS" { return None; }
+    let max_code = u32::from_le_bytes(table[16..20].try_into().ok()?);
+    let mut glyphs = HashSet::new();
+    for code in 0..=max_code {
+        let p = 32 + code as usize * 2;
+        let Some(b) = table.get(p..p + 2) else { break };
+        if u16::from_le_bytes([b[0], b[1]]) != 0xFFFF { glyphs.insert(code); }
+    }
+    if glyphs.is_empty() { None } else { Some(glyphs) }
+}
+
+/// Glifi del font dei dialoghi, letti dal WAD stesso (`font/font.pak`, prima
+/// tabella `tFpS`). `None` se il WAD non ha il font: il testo resta com'è.
+fn gs_read_font_glyphs(src: &mut File, entries: &[GsWadEntry], data_start: u64) -> Option<HashSet<u32>> {
+    let e = entries.iter().find(|e| e.name.ends_with("font/font.pak"))?;
+    let mut pak = vec![0u8; e.size as usize];
+    src.seek(SeekFrom::Start(data_start + e.offset)).ok()?;
+    src.read_exact(&mut pak).ok()?;
+    let count = u32::from_le_bytes(pak.get(0..4)?.try_into().ok()?) as usize;
+    for i in 0..count {
+        let off = u32::from_le_bytes(pak.get(4 + i * 4..8 + i * 4)?.try_into().ok()?) as usize;
+        if pak.get(off..off + 4) == Some(b"tFpS".as_slice()) {
+            return gs_parse_font_glyphs(&pak[off..]);
+        }
+    }
+    None
+}
+
+/// Sostituisce i caratteri che il font non sa disegnare (a schermo uscirebbe
+/// un simbolo sbagliato) con un equivalente che ha: «è» → «e'», «…» → «...».
+/// Se nemmeno il ripiego è nel font, il carattere resta com'è.
+fn gs_font_safe(text: &str, glyphs: &HashSet<u32>) -> String {
+    let mut out = String::with_capacity(text.len());
+    for ch in text.chars() {
+        if ch.is_control() || glyphs.contains(&(ch as u32)) {
+            out.push(ch);
+            continue;
+        }
+        let fallback = match ch {
+            'à' | 'á' => "a'", 'è' | 'é' => "e'", 'ì' | 'í' => "i'", 'ò' | 'ó' => "o'", 'ù' | 'ú' => "u'",
+            'À' | 'Á' => "A'", 'È' | 'É' => "E'", 'Ì' | 'Í' => "I'", 'Ò' | 'Ó' => "O'", 'Ù' | 'Ú' => "U'",
+            'â' | 'ä' | 'ã' | 'å' => "a", 'ê' | 'ë' => "e", 'î' | 'ï' => "i", 'ô' | 'ö' | 'õ' => "o", 'û' | 'ü' => "u",
+            'Â' | 'Ä' | 'Ã' | 'Å' => "A", 'Ê' | 'Ë' => "E", 'Î' | 'Ï' => "I", 'Ô' | 'Ö' | 'Õ' => "O", 'Û' | 'Ü' => "U",
+            'ç' => "c", 'Ç' => "C", 'ñ' => "n", 'Ñ' => "N",
+            '‘' | '’' => "'", '“' | '”' | '«' | '»' => "\"", '…' => "...", '—' | '–' => "-",
+            _ => "",
+        };
+        if !fallback.is_empty() && fallback.chars().all(|c| glyphs.contains(&(c as u32))) {
+            out.push_str(fallback);
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
 fn gs_rebuild_single_wad(
     wad_path: &Path,
     by_file: &HashMap<String, HashMap<i64, usize>>,
@@ -5261,6 +5450,7 @@ fn gs_rebuild_single_wad(
 
     let mut src = File::open(&backup_path).map_err(|e| format!("Apertura backup: {}", e))?;
     let (entries, table_start, file_table_end, data_start) = gs_read_wad(&mut src)?;
+    let glyphs = gs_read_font_glyphs(&mut src, &entries, data_start);
 
     let mut rebuilt: HashMap<usize, Vec<u8>> = HashMap::new();
     let mut rebuilt_names: Vec<(usize, String)> = Vec::new();
@@ -5298,13 +5488,24 @@ fn gs_rebuild_single_wad(
                 result.strings_skipped_mismatch += 1;
                 continue;
             }
-            let Some((prefix, _body, suffix)) = gs_split_clt(&en.raw) else {
-                // tag CLT in mezzo: non si riscrive (meglio inglese che tag rotti)
-                result.strings_skipped_inner_tags += 1;
-                continue;
+            let text = match &glyphs {
+                Some(g) => gs_font_safe(tr.translated.trim(), g),
+                None => tr.translated.trim().to_string(),
             };
-            let wrapped = gs_word_wrap(tr.translated.trim(), GS_LIN_LINE_WIDTH);
-            new_raw.insert(en.index, format!("{}{}{}", prefix, wrapped, suffix));
+            let rewritten = match gs_split_clt(&en.raw) {
+                Some((prefix, _body, suffix)) => {
+                    format!("{}{}{}", prefix, gs_word_wrap(&text, GS_LIN_LINE_WIDTH), suffix)
+                }
+                // tag CLT in mezzo: la riga si scrive, il colore resta dove si può
+                None => {
+                    let (raw, kept, dropped) = gs_rewrite_inner_clt(&en.raw, &text);
+                    result.strings_written_inner_tags += 1;
+                    result.highlights_kept += kept;
+                    result.highlights_dropped += dropped;
+                    raw
+                }
+            };
+            new_raw.insert(en.index, rewritten);
             result.strings_written += 1;
         }
         if new_raw.is_empty() { continue; }
@@ -5487,8 +5688,9 @@ pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildRe
         && result.verified_sample == result.verified_sample_total
         && result.verified_sample_total > 0;
     log::info!(
-        "✅ DR1 rebuild: {} scritte · {} mismatch · {} tag interni · {} senza traduzione · verifica {}/{}",
-        result.strings_written, result.strings_skipped_mismatch, result.strings_skipped_inner_tags,
+        "✅ DR1 rebuild: {} scritte · {} mismatch · {} con colori nel mezzo ({} colori tenuti, {} persi) · {} senza traduzione · verifica {}/{}",
+        result.strings_written, result.strings_skipped_mismatch, result.strings_written_inner_tags,
+        result.highlights_kept, result.highlights_dropped,
         result.strings_missing_translation, result.verified_sample, result.verified_sample_total
     );
     Ok(result)
@@ -5497,6 +5699,41 @@ pub async fn rebuild_danganronpa_wad(game_path: String) -> Result<GsWadRebuildRe
 #[cfg(test)]
 mod gs_lin_tests {
     use super::*;
+
+    /// Tabella `tFpS` sintetica che conosce solo i codici dati.
+    fn make_font_table(codes: &[char]) -> Vec<u8> {
+        let max = codes.iter().map(|c| *c as u32).max().unwrap_or(0);
+        let mut t = vec![0u8; 32];
+        t[0..4].copy_from_slice(b"tFpS");
+        t[16..20].copy_from_slice(&max.to_le_bytes());
+        for code in 0..=max {
+            let has = codes.iter().any(|c| *c as u32 == code);
+            t.extend_from_slice(&(if has { 0u16 } else { 0xFFFF }).to_le_bytes());
+        }
+        t
+    }
+
+    #[test]
+    fn font_table_lists_only_the_glyphs_it_has() {
+        let glyphs = gs_parse_font_glyphs(&make_font_table(&['a', 'é', '’'])).unwrap();
+        assert!(glyphs.contains(&('é' as u32)));
+        assert!(glyphs.contains(&('’' as u32)));
+        assert!(!glyphs.contains(&('è' as u32)));
+        assert!(gs_parse_font_glyphs(b"non un font").is_none());
+    }
+
+    #[test]
+    fn letters_without_a_glyph_fall_back_and_the_rest_stays() {
+        let ascii: Vec<char> = (' '..='~').collect();
+        let mut codes = ascii.clone();
+        codes.extend(['à', 'é', '’', '…']);
+        let glyphs = gs_parse_font_glyphs(&make_font_table(&codes)).unwrap();
+        // è, ì, ò, ù, È non ci sono: accento reso con l'apostrofo.
+        assert_eq!(gs_font_safe("E lì, perché è così più giù…", &glyphs), "E li', perché e' cosi' piu' giu'…");
+        assert_eq!(gs_font_safe("È l’una\ndi là", &glyphs), "E' l’una\ndi là");
+        // Carattere senza ripiego noto: resta com'è.
+        assert_eq!(gs_font_safe("★", &glyphs), "★");
+    }
 
     /// Costruisce un .lin sintetico col formato vero (count+1 offset + padding).
     fn make_lin(texts: &[&str], pad: &[u8]) -> Vec<u8> {
@@ -5560,6 +5797,43 @@ mod gs_lin_tests {
     fn tag_in_mezzo_al_testo_non_si_riscrive() {
         assert!(gs_split_clt("prima <CLT 3>dentro<CLT> dopo").is_none());
         assert!(gs_split_clt("<CLT 4>tutto dentro<CLT>").is_some());
+    }
+
+    #[test]
+    fn inner_colour_stays_on_a_word_the_translation_keeps() {
+        // nessun colore di base: la parola evidenziata è un nome che resta uguale
+        let (raw, kept, dropped) =
+            gs_rewrite_inner_clt("Go to <CLT 3>Room A<CLT> now", "Vai nella Room A adesso");
+        assert_eq!(raw, "Vai nella <CLT 3>Room A<CLT> adesso");
+        assert_eq!((kept, dropped), (1, 0));
+    }
+
+    #[test]
+    fn inner_colour_is_dropped_when_the_word_was_translated() {
+        let (raw, kept, dropped) =
+            gs_rewrite_inner_clt("It gives <CLT 3>hope<CLT> to all", "Dona speranza a tutti");
+        assert_eq!(raw, "Dona speranza a tutti");
+        assert_eq!((kept, dropped), (0, 1));
+        // «hope» minuscolo non deve colorare un pezzo di «Hope’s»
+        let (raw, kept, _) =
+            gs_rewrite_inner_clt("It gives <CLT 3>hope<CLT> to all", "Da Hope’s Peak a tutti");
+        assert_eq!(raw, "Da Hope’s Peak a tutti");
+        assert_eq!(kept, 0);
+    }
+
+    #[test]
+    fn inner_colour_keeps_the_base_colour_in_pairs() {
+        // base colorata, come negli originali: ogni tratto ha la sua coppia di tag
+        let (raw, kept, dropped) = gs_rewrite_inner_clt(
+            "<CLT 4>Ask <CLT><CLT 3>Mr. X<CLT><CLT 4> first<CLT>",
+            "Chiedi prima a Mr. X",
+        );
+        assert_eq!(raw, "<CLT 4>Chiedi prima a <CLT><CLT 3>Mr. X<CLT>");
+        assert_eq!((kept, dropped), (1, 0));
+        // apostrofo dritto nell'originale, tipografico nella traduzione
+        let (raw, kept, _) = gs_rewrite_inner_clt("See <CLT 3>Bo's Bar<CLT> ok", "Vedi Bo’s Bar ok");
+        assert_eq!(raw, "Vedi <CLT 3>Bo’s Bar<CLT> ok");
+        assert_eq!(kept, 1);
     }
 
     #[test]

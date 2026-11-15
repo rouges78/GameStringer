@@ -45,14 +45,14 @@ export function ProgressNotificationComponent({
   };
 
   const typeColors = {
-    info: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20',
+    info: 'border-noir-200 bg-noir-50 dark:border-noir-800 dark:bg-noir-900/20',
     success: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20',
     warning: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20',
     error: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
   };
 
   const iconColors = {
-    info: 'text-blue-500',
+    info: 'text-noir-500',
     success: 'text-green-500',
     warning: 'text-yellow-500',
     error: 'text-red-500'
@@ -79,12 +79,12 @@ export function ProgressNotificationComponent({
         {/* Contenuto */}
         <div className="flex-1 min-w-0">
           {/* Titolo */}
-          <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+          <div className="font-medium text-noir-900 dark:text-noir-100 mb-1">
             {notification.title}
           </div>
 
           {/* Messaggio */}
-          <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          <div className="text-sm text-noir-600 dark:text-noir-400 mb-3">
             {notification.message}
           </div>
 
@@ -111,7 +111,7 @@ export function ProgressNotificationComponent({
                   className={cn(
                     'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                     {
-                      'bg-blue-600 hover:bg-blue-700 text-white': notification.type === 'info',
+                      'bg-rouge-600 hover:bg-rouge-700 text-white': notification.type === 'info',
                       'bg-green-600 hover:bg-green-700 text-white': notification.type === 'success',
                       'bg-yellow-600 hover:bg-yellow-700 text-white': notification.type === 'warning',
                       'bg-red-600 hover:bg-red-700 text-white': notification.type === 'error'
@@ -131,7 +131,7 @@ export function ProgressNotificationComponent({
             setIsVisible(false);
             setTimeout(() => onClose?.(), 300);
           }}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1 hover:bg-noir-200 dark:hover:bg-noir-700 rounded transition-colors"
           title={t('common.closeNotification')}
         >
           <X className="w-4 h-4" />
@@ -191,7 +191,7 @@ export function ProgressNotificationContainer({
       {/* Indicatore se ci sono più notifiche */}
       {notifications.length > maxNotifications && (
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-400">
+          <div className="inline-flex items-center gap-2 px-3 py-2 bg-noir-100 dark:bg-noir-800 rounded-lg text-sm text-noir-600 dark:text-noir-400">
             <span>+{notifications.length - maxNotifications} altre notifiche</span>
           </div>
         </div>

@@ -67,16 +67,16 @@ export function AutoHookScanner() {
   };
 
   return (
-    <Card className="border-rose-500/20 bg-rose-950/20 backdrop-blur-sm">
+    <Card className="border-rouge-500/20 bg-rouge-950/20 backdrop-blur-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <Crosshair className="h-5 w-5 text-rose-400" />
+          <Crosshair className="h-5 w-5 text-rouge-400" />
           <CardTitle className="text-base">{t('autoHookScannerComp.autohookScanner')}</CardTitle>
-          <Badge variant="outline" className="text-micro px-1.5 border-rose-500/20 text-rose-400">
+          <Badge variant="outline" className="text-micro px-1.5 border-rouge-500/20 text-rouge-400">
             Click-to-Hook
           </Badge>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-noir-400 mt-1">
           {t('autoHookScannerComp.intro')}
         </p>
       </CardHeader>
@@ -84,21 +84,21 @@ export function AutoHookScanner() {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-2xs text-slate-500 mb-1 block">{t('autoHookScannerComp.processIdPid')}</label>
+            <label className="text-2xs text-noir-500 mb-1 block">{t('autoHookScannerComp.processIdPid')}</label>
             <Input
               value={processId}
               onChange={e => setProcessId(e.target.value.replace(/\D/g, ''))}
               placeholder={t('autoHookScannerComp.pidPlaceholder')}
-              className="h-8 text-xs bg-rose-950/30 border-rose-500/20"
+              className="h-8 text-xs bg-rouge-950/30 border-rouge-500/20"
             />
           </div>
           <div>
-            <label className="text-2xs text-slate-500 mb-1 block">{t('autoHookScannerComp.testoDaCercare')}</label>
+            <label className="text-2xs text-noir-500 mb-1 block">{t('autoHookScannerComp.testoDaCercare')}</label>
             <Input
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               placeholder={t('autoHookScannerComp.searchPlaceholder')}
-              className="h-8 text-xs bg-rose-950/30 border-rose-500/20"
+              className="h-8 text-xs bg-rouge-950/30 border-rouge-500/20"
               onKeyDown={e => e.key === 'Enter' && handleScan()}
             />
           </div>
@@ -107,7 +107,7 @@ export function AutoHookScanner() {
         <Button
           onClick={handleScan}
           disabled={loading || !processId || !searchText.trim()}
-          className="w-full h-8 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300"
+          className="w-full h-8 bg-rouge-500/20 hover:bg-rouge-500/30 text-rouge-300"
           size="sm"
         >
           {loading ? (
@@ -127,7 +127,7 @@ export function AutoHookScanner() {
         {result && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-noir-400">
                 {`${result.candidates.length} ${t('autoHookScannerComp.resultsIn')} ${result.scan_duration_ms}ms`}
               </span>
               <Badge variant="outline" className="text-micro">
@@ -136,7 +136,7 @@ export function AutoHookScanner() {
             </div>
 
             {result.candidates.length === 0 ? (
-              <div className="text-center py-4 text-xs text-slate-500">
+              <div className="text-center py-4 text-xs text-noir-500">
                 {t('autoHookScannerComp.noHookFound')}
               </div>
             ) : (
@@ -144,22 +144,22 @@ export function AutoHookScanner() {
                 {result.candidates.map((c, i) => (
                   <div
                     key={i}
-                    className="p-2 rounded-lg bg-rose-950/30 border border-rose-500/10 hover:border-rose-500/30 transition-all group"
+                    className="p-2 rounded-lg bg-rouge-950/30 border border-rouge-500/10 hover:border-rouge-500/30 transition-all group"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-2xs text-rose-300 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded">
+                        <code className="text-2xs text-rouge-300 font-mono bg-rouge-500/10 px-1.5 py-0.5 rounded">
                           {c.address}
                         </code>
                         <Badge className={`text-2xs px-1 py-0 h-3.5 ${
-                          c.hook_type === 'UTF-16LE' ? 'bg-violet-500/20 text-violet-300' : 'bg-blue-500/20 text-blue-300'
+                          c.hook_type === 'UTF-16LE' ? 'bg-rouge-500/20 text-rouge-300' : 'bg-noir-500/20 text-noir-300'
                         }`}>
                           {c.hook_type}
                         </Badge>
-                        <span className="text-micro text-slate-500">{c.module_name}</span>
+                        <span className="text-micro text-noir-500">{c.module_name}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className={`h-1.5 w-6 rounded-full overflow-hidden bg-slate-700`}>
+                        <div className={`h-1.5 w-6 rounded-full overflow-hidden bg-noir-700`}>
                           <div 
                             className={`h-full ${c.confidence > 0.85 ? 'bg-emerald-500' : 'bg-amber-500'}`}
                             style={{ width: `${c.confidence * 100}%` }}
@@ -172,12 +172,12 @@ export function AutoHookScanner() {
                           {copiedAddr === c.address ? (
                             <CheckCircle2 className="h-3 w-3 text-emerald-400" />
                           ) : (
-                            <Copy className="h-3 w-3 text-slate-500 hover:text-white" />
+                            <Copy className="h-3 w-3 text-noir-500 hover:text-white" />
                           )}
                         </button>
                       </div>
                     </div>
-                    <p className="text-2xs text-slate-400 truncate font-mono">
+                    <p className="text-2xs text-noir-400 truncate font-mono">
                       {c.text_preview}
                     </p>
                   </div>
@@ -187,7 +187,7 @@ export function AutoHookScanner() {
           </div>
         )}
 
-        <div className="text-micro text-slate-600 flex items-center gap-1">
+        <div className="text-micro text-noir-600 flex items-center gap-1">
           <Zap className="h-3 w-3" />
           {t('autoHookScannerComp.hint')}
         </div>

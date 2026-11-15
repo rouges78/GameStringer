@@ -231,10 +231,10 @@ export function ExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-700">
+      <DialogContent className="sm:max-w-[500px] bg-noir-900 border-noir-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-blue-400" />
+            <Download className="h-5 w-5 text-noir-400" />
             {t('exportDialogComp.esportaTraduzioni')}
           </DialogTitle>
           <DialogDescription>
@@ -249,11 +249,11 @@ export function ExportDialog({
               <Check className="h-8 w-8 text-emerald-400" />
             </div>
             <h3 className="text-lg font-semibold text-emerald-400 mb-2">{t('exportDialogComp.exportCompletato')}</h3>
-            <div className="space-y-1 text-sm text-slate-400">
+            <div className="space-y-1 text-sm text-noir-400">
               <p><strong>{t('exportDialogComp.formato')}</strong> {result.format}</p>
               <p><strong>{t('exportDialogComp.traduzioni')}</strong> {result.entriesCount}</p>
               <p><strong>{t('exportDialogComp.dimensione')}</strong> {formatSize(result.fileSize)}</p>
-              <p className="text-xs mt-3 p-2 bg-slate-800/50 rounded truncate">
+              <p className="text-xs mt-3 p-2 bg-noir-800/50 rounded truncate">
                 📁 {result.path}
               </p>
             </div>
@@ -272,21 +272,21 @@ export function ExportDialog({
                       className={cn(
                         "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
                         selectedFormat === format.id
-                          ? "bg-blue-500/10 border-blue-500/50"
-                          : "bg-slate-800/30 border-slate-700/50 hover:bg-slate-800/50"
+                          ? "bg-noir-500/10 border-noir-500/50"
+                          : "bg-noir-800/30 border-noir-700/50 hover:bg-noir-800/50"
                       )}
                       onClick={() => setSelectedFormat(format.id)}
                     >
                       <RadioGroupItem value={format.id} id={format.id} className="sr-only" />
                       <div className={cn(
-                        "text-slate-400",
-                        selectedFormat === format.id && "text-blue-400"
+                        "text-noir-400",
+                        selectedFormat === format.id && "text-noir-400"
                       )}>
                         {FORMAT_ICONS[format.id] || <FileText className="h-5 w-5" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{format.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{format.extension}</p>
+                        <p className="text-xs text-noir-500 truncate">{format.extension}</p>
                       </div>
                     </div>
                   ))}
@@ -299,7 +299,7 @@ export function ExportDialog({
               <Label className="text-sm font-medium">{t('exportDialogComp.opzioni')}</Label>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="include-context" className="text-sm text-slate-400">
+                  <Label htmlFor="include-context" className="text-sm text-noir-400">
                     {t('exportDialogComp.includiContesto')}
                   </Label>
                   <Switch
@@ -309,7 +309,7 @@ export function ExportDialog({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="include-notes" className="text-sm text-slate-400">
+                  <Label htmlFor="include-notes" className="text-sm text-noir-400">
                     {t('exportDialogComp.includiNote')}
                   </Label>
                   <Switch
@@ -319,7 +319,7 @@ export function ExportDialog({
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="include-empty" className="text-sm text-slate-400">
+                  <Label htmlFor="include-empty" className="text-sm text-noir-400">
                     {t('exportDialogComp.includiTraduzioniVuote')}
                   </Label>
                   <Switch
@@ -333,8 +333,8 @@ export function ExportDialog({
 
             {/* Format description */}
             {selectedFormat && (
-              <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/50">
-                <p className="text-xs text-slate-400">
+              <div className="p-3 rounded-lg bg-noir-800/30 border border-noir-700/50">
+                <p className="text-xs text-noir-400">
                   {formats.find(f => f.id === selectedFormat)?.description}
                 </p>
               </div>
@@ -355,7 +355,7 @@ export function ExportDialog({
               <Button 
                 onClick={handleExport} 
                 disabled={isExporting || entries.length === 0}
-                className="bg-blue-600 hover:bg-blue-500"
+                className="bg-rouge-600 hover:bg-rouge-500"
               >
                 {isExporting ? (
                   <>

@@ -413,7 +413,7 @@ export default function UnityLocalizationPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* ── Hero Header ─────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-700 via-teal-600 to-emerald-700 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-700 via-noir-600 to-emerald-700 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
@@ -466,11 +466,11 @@ export default function UnityLocalizationPage() {
         ].map((s, idx) => (
           <div key={s.num} className="flex items-center">
             <button
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all focus:outline-none focus:ring-2 focus:ring-noir-400/50 ${
                 step >= s.num
-                  ? "bg-cyan-600 text-white"
-                  : "bg-slate-800/50 text-slate-500 border border-slate-700/50"
-              } ${s.num < step ? "cursor-pointer hover:bg-cyan-500" : s.num > step ? "cursor-default" : ""}`}
+                  ? "bg-noir-600 text-white"
+                  : "bg-noir-800/50 text-noir-500 border border-noir-700/50"
+              } ${s.num < step ? "cursor-pointer hover:bg-noir-500" : s.num > step ? "cursor-default" : ""}`}
               onClick={() => { if (s.num < step) setStep(s.num); }}
               tabIndex={s.num < step ? 0 : -1}
               aria-label={`Passo ${s.num}: ${s.label}`}
@@ -478,7 +478,7 @@ export default function UnityLocalizationPage() {
               <span className="font-bold">{s.num}</span>
               <span>{s.label}</span>
             </button>
-            {idx < 3 && <ArrowRight className="h-3 w-3 mx-1 text-slate-600" />}
+            {idx < 3 && <ArrowRight className="h-3 w-3 mx-1 text-noir-600" />}
           </div>
         ))}
       </div>
@@ -510,12 +510,12 @@ export default function UnityLocalizationPage() {
               <Card key={card.title} variant="muted">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <card.icon className="h-4 w-4 text-cyan-400" />
+                    <card.icon className="h-4 w-4 text-noir-400" />
                     {card.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-4 pb-4">
-                  <p className="text-xs text-slate-400 leading-relaxed">{card.desc}</p>
+                  <p className="text-xs text-noir-400 leading-relaxed">{card.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -525,7 +525,7 @@ export default function UnityLocalizationPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <FolderOpen className="h-4 w-4 text-cyan-400" />
+                <FolderOpen className="h-4 w-4 text-noir-400" />
                 {t('unityLoc.selectProjectFolder')}</CardTitle>
               <CardDescription className="text-xs">
                 {t('unityLoc.selectFolderDesc')}</CardDescription>
@@ -539,7 +539,7 @@ export default function UnityLocalizationPage() {
                   onClick={handleAnalyzeFolder}
                   disabled={!folderPath || analyzing}
                   size="sm"
-                  className="h-9 bg-cyan-600 hover:bg-cyan-500 text-xs"
+                  className="h-9 bg-noir-600 hover:bg-noir-500 text-xs"
                 >
                   {analyzing ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -551,7 +551,7 @@ export default function UnityLocalizationPage() {
 
               {folderPath && (
                 <p
-                  className="text-xs text-slate-400 font-mono bg-slate-950/50 p-2 rounded truncate border border-slate-800/50"
+                  className="text-xs text-noir-400 font-mono bg-noir-950/50 p-2 rounded truncate border border-noir-800/50"
                   title={folderPath}
                 >
                   {folderPath}
@@ -571,7 +571,7 @@ export default function UnityLocalizationPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Globe className="h-4 w-4 text-cyan-400" />
+                <Globe className="h-4 w-4 text-noir-400" />
                 {t('unityLoc.localesDetected')}{catalog && (
                   <Badge variant="outline" className="ml-auto text-xs">
                     {catalog.tables.length} {t('unityLoc.tables')}</Badge>
@@ -584,7 +584,7 @@ export default function UnityLocalizationPage() {
                 {availableLocales.map((loc) => (
                   <Badge
                     key={loc}
-                    className="text-xs bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30"
+                    className="text-xs bg-noir-500/20 text-noir-400 border-noir-500/30 hover:bg-noir-500/30"
                   >
                     {getLocaleDisplayName(loc)} ({loc})
                   </Badge>
@@ -594,10 +594,10 @@ export default function UnityLocalizationPage() {
               {/* Source / Target selectors */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                  <label className="text-xs text-noir-400 font-medium uppercase tracking-wider">
                     {t('unityLoc.sourceLanguage')}</label>
                   <Select value={sourceLocale} onValueChange={setSourceLocale}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-950/50 border-slate-700/50">
+                    <SelectTrigger className="h-9 text-xs bg-noir-950/50 border-noir-700/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -610,10 +610,10 @@ export default function UnityLocalizationPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                  <label className="text-xs text-noir-400 font-medium uppercase tracking-wider">
                     {t('unityLoc.targetLanguage')}</label>
                   <Select value={targetLocale} onValueChange={setTargetLocale}>
-                    <SelectTrigger className="h-9 text-xs bg-slate-950/50 border-slate-700/50">
+                    <SelectTrigger className="h-9 text-xs bg-noir-950/50 border-noir-700/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -634,7 +634,7 @@ export default function UnityLocalizationPage() {
             <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-cyan-400" />
+                  <BookOpen className="h-4 w-4 text-noir-400" />
                   {t('unityLoc.stringTable')} ({tableSummaries.length})
                 </CardTitle>
                 <Button
@@ -655,15 +655,15 @@ export default function UnityLocalizationPage() {
                   <button
                     key={idx}
                     onClick={() => handleSelectTable(table)}
-                    className="group w-full text-left p-3 rounded-lg border transition-all hover:bg-slate-800/50 border-slate-800/30 hover:border-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    className="group w-full text-left p-3 rounded-lg border transition-all hover:bg-noir-800/50 border-noir-800/30 hover:border-noir-700/50 focus:outline-none focus:ring-2 focus:ring-noir-400/50"
                     tabIndex={0}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-cyan-400" />
-                        <span className="text-sm font-medium text-slate-200">{table.tableName}</span>
+                        <FileText className="h-4 w-4 text-noir-400" />
+                        <span className="text-sm font-medium text-noir-200">{table.tableName}</span>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-noir-600 group-hover:text-noir-400 transition-colors" />
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="outline" className="text-xs px-1.5 py-0.5">
@@ -672,19 +672,19 @@ export default function UnityLocalizationPage() {
                       <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                         {table.entryCount} {t('unityLoc.keys')}</Badge>
                       {table.smartCount > 0 && (
-                        <Badge className="text-xs px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        <Badge className="text-xs px-1.5 py-0.5 bg-noir-500/20 text-noir-400 border-noir-500/30">
                           <Braces className="h-3 w-3 mr-0.5" />
                           {table.smartCount} {t('unityLoc.smartBadge')}</Badge>
                       )}
                       {table.sizeBytes > 0 && (
-                        <span className="text-xs text-slate-500 ml-auto">{formatBytes(table.sizeBytes)}</span>
+                        <span className="text-xs text-noir-500 ml-auto">{formatBytes(table.sizeBytes)}</span>
                       )}
                     </div>
                   </button>
                 ))}
 
                 {tableSummaries.length === 0 && (
-                  <p className="text-sm text-slate-500 text-center py-8">
+                  <p className="text-sm text-noir-500 text-center py-8">
                     {t('unityLoc.noStringTable')}</p>
                 )}
               </div>
@@ -703,27 +703,27 @@ export default function UnityLocalizationPage() {
             <CardContent className="px-4 py-3">
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-cyan-400" />
-                  <span className="text-sm font-semibold text-slate-200">{loadedTable.tableName}</span>
+                  <FileText className="h-4 w-4 text-noir-400" />
+                  <span className="text-sm font-semibold text-noir-200">{loadedTable.tableName}</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <Badge className="text-xs bg-slate-700/50 text-slate-300">
+                  <Badge className="text-xs bg-noir-700/50 text-noir-300">
                     {sourceLocale.toUpperCase()}
                   </Badge>
-                  <ArrowRight className="h-3 w-3 text-slate-500" />
-                  <Badge className="text-xs bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                  <ArrowRight className="h-3 w-3 text-noir-500" />
+                  <Badge className="text-xs bg-noir-500/20 text-noir-400 border-noir-500/30">
                     {targetLocale.toUpperCase()}
                   </Badge>
                 </div>
 
                 <div className="relative ml-auto flex-1 max-w-xs">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-noir-500" />
                   <Input
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
                     aria-label={t('common.cerca')} placeholder={t('unityLoc.searchPh')}
-                    className="h-9 text-xs pl-8 bg-slate-950/50 border-slate-700/50"
+                    className="h-9 text-xs pl-8 bg-noir-950/50 border-noir-700/50"
                   />
                 </div>
 
@@ -744,7 +744,7 @@ export default function UnityLocalizationPage() {
               {translating && (
                 <div className="mt-2 space-y-1">
                   <Progress value={progress} className="h-1.5" />
-                  <p className="text-xs text-center text-slate-400">{progress}%</p>
+                  <p className="text-xs text-center text-noir-400">{progress}%</p>
                 </div>
               )}
             </CardContent>
@@ -752,7 +752,7 @@ export default function UnityLocalizationPage() {
 
           {/* Tabs + Virtualized entry list */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <TabsList className="bg-slate-900/50 border border-slate-800/50 shrink-0">
+            <TabsList className="bg-noir-900/50 border border-noir-800/50 shrink-0">
               <TabsTrigger value="all" className="text-xs">
                 {t('unityLoc.all')} ({tabCounts.all})
               </TabsTrigger>
@@ -770,7 +770,7 @@ export default function UnityLocalizationPage() {
             </TabsList>
 
             <TabsContent value={activeTab} className="flex-1 min-h-0 mt-2">
-              <div className="h-[calc(100vh-440px)] rounded-lg border border-slate-800/50 bg-slate-950/30 overflow-hidden">
+              <div className="h-[calc(100vh-440px)] rounded-lg border border-noir-800/50 bg-noir-950/30 overflow-hidden">
                 {filteredEntries.length > 0 ? (
                   <Virtuoso
                     data={filteredEntries}
@@ -785,7 +785,7 @@ export default function UnityLocalizationPage() {
                     )}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-sm text-slate-500">
+                  <div className="flex items-center justify-center h-full text-sm text-noir-500">
                     {t('unityLoc.noResults')}</div>
                 )}
               </div>
@@ -796,7 +796,7 @@ export default function UnityLocalizationPage() {
           <Card variant="muted" className="shrink-0">
             <CardContent className="px-4 py-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-noir-400">
                   <span>
                     <span className="text-emerald-400 font-semibold">{stats.translated}</span>
                     /{entries.length} {t('unityLoc.translatedLower')}</span>
@@ -828,7 +828,7 @@ export default function UnityLocalizationPage() {
                     {t('unityLoc.validateAll')}</Button>
                   <Button
                     size="sm"
-                    className="h-9 text-xs bg-cyan-600 hover:bg-cyan-500"
+                    className="h-9 text-xs bg-noir-600 hover:bg-noir-500"
                     onClick={() => setStep(4)}
                     disabled={stats.translated === 0}
                   >
@@ -857,15 +857,15 @@ export default function UnityLocalizationPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{stats.translated}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('unityLoc.entriesTranslated')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('unityLoc.entriesTranslated')}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
-                  <p className="text-2xl font-bold text-cyan-400">{stats.valid}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('common.validate')}</p>
+                <div className="p-3 rounded-lg bg-noir-500/10 border border-noir-500/20 text-center">
+                  <p className="text-2xl font-bold text-noir-400">{stats.valid}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('common.validate')}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
                   <p className="text-2xl font-bold text-yellow-400">{stats.warnings}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('unityLoc.warningsCap')}</p>
+                  <p className="text-xs text-noir-400 mt-0.5">{t('unityLoc.warningsCap')}</p>
                 </div>
               </div>
             </CardContent>
@@ -875,7 +875,7 @@ export default function UnityLocalizationPage() {
           <Card variant="muted">
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Download className="h-4 w-4 text-cyan-400" />
+                <Download className="h-4 w-4 text-noir-400" />
                 {t('unityLoc.exportOptions')}</CardTitle>
               {loadedTable && (
                 <CardDescription className="text-xs">
@@ -888,11 +888,11 @@ export default function UnityLocalizationPage() {
                 <Button
                   onClick={handleExportPatchedBundle}
                   disabled={exporting}
-                  className="h-auto py-3 flex flex-col items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-xs"
+                  className="h-auto py-3 flex flex-col items-center gap-1.5 bg-noir-600 hover:bg-noir-500 text-xs"
                 >
                   {exporting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
                   <span className="font-medium">{t('common.bundlePatchato')}</span>
-                  <span className="text-2xs text-cyan-200/70">{t('common.prontoPerUnity')}</span>
+                  <span className="text-2xs text-noir-200/70">{t('common.prontoPerUnity')}</span>
                 </Button>
 
                 <Button
@@ -903,7 +903,7 @@ export default function UnityLocalizationPage() {
                 >
                   <FileText className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaCsv')}</span>
-                  <span className="text-2xs text-slate-400">{t('unityLoc.spreadsheet')}</span>
+                  <span className="text-2xs text-noir-400">{t('unityLoc.spreadsheet')}</span>
                 </Button>
 
                 <Button
@@ -914,7 +914,7 @@ export default function UnityLocalizationPage() {
                 >
                   <Braces className="h-5 w-5" />
                   <span className="font-medium">{t('common.esportaJson')}</span>
-                  <span className="text-2xs text-slate-400">{t('unityLoc.structured')}</span>
+                  <span className="text-2xs text-noir-400">{t('unityLoc.structured')}</span>
                 </Button>
 
                 <Button
@@ -924,7 +924,7 @@ export default function UnityLocalizationPage() {
                 >
                   {copiedFeedback ? <CheckCircle2 className="h-5 w-5 text-emerald-400" /> : <Copy className="h-5 w-5" />}
                   <span className="font-medium">{copiedFeedback ? "Copiato!" : "Copia Tutto"}</span>
-                  <span className="text-2xs text-slate-400">{t('unityLoc.toClipboard')}</span>
+                  <span className="text-2xs text-noir-400">{t('unityLoc.toClipboard')}</span>
                 </Button>
               </div>
             </CardContent>
@@ -938,7 +938,7 @@ export default function UnityLocalizationPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-emerald-400">{t('common.esportazioneCompletata')}</p>
-                    <p className="text-xs text-slate-400 font-mono truncate mt-0.5" title={exportResult}>
+                    <p className="text-xs text-noir-400 font-mono truncate mt-0.5" title={exportResult}>
                       {exportResult}
                     </p>
                   </div>
@@ -980,14 +980,14 @@ const EntryRow = React.memo(function EntryRow({
   const isLong = entry.value.length > 80;
 
   return (
-    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
+    <div className="flex flex-col gap-1.5 px-4 py-3 border-b border-noir-800/40 hover:bg-noir-800/20 transition-colors">
       {/* Key name + smart badge */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-mono truncate max-w-[280px]" title={entry.keyName}>
+        <span className="text-xs text-noir-500 font-mono truncate max-w-[280px]" title={entry.keyName}>
           {entry.keyName}
         </span>
         {entry.isSmart && (
-          <Badge className="text-2xs px-1.5 py-0 bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+          <Badge className="text-2xs px-1.5 py-0 bg-noir-500/20 text-noir-400 border-noir-500/30">
             <Braces className="h-2.5 w-2.5 mr-0.5" />
             {t('unityLoc.smartBadge')}</Badge>
         )}
@@ -998,7 +998,7 @@ const EntryRow = React.memo(function EntryRow({
       <div className={isLong ? "flex flex-col gap-1.5" : "flex items-start gap-3"}>
         {/* Original value */}
         <div className={`${isLong ? "w-full" : "flex-1"} min-w-0`}>
-          <p className="text-xs text-slate-300 leading-relaxed break-words">
+          <p className="text-xs text-noir-300 leading-relaxed break-words">
             {entry.isSmart ? renderSmartTokens(entry.value, entry.smartTokens) : entry.value}
           </p>
         </div>
@@ -1009,7 +1009,7 @@ const EntryRow = React.memo(function EntryRow({
             value={entry.translated ?? ""}
             onChange={(e) => onChange(entry.keyId, e.target.value)}
             placeholder={t('unityLoc.translationPh')}
-            className="h-8 text-xs bg-slate-950/50 border-slate-700/50 w-full"
+            className="h-8 text-xs bg-noir-950/50 border-noir-700/50 w-full"
           />
         </div>
       </div>
@@ -1055,7 +1055,7 @@ function renderSmartTokens(
     parts.push(
       <span
         key={`tk-${keyIdx++}`}
-        className="inline-flex items-center bg-cyan-500/20 text-cyan-400 rounded px-1 font-mono text-2xs mx-0.5 align-middle"
+        className="inline-flex items-center bg-noir-500/20 text-noir-400 rounded px-1 font-mono text-2xs mx-0.5 align-middle"
         title={`${token.tokenType}: ${token.inner ?? token.raw}`}
       >
         {token.raw}

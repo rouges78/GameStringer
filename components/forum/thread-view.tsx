@@ -293,14 +293,14 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-2 border-rouge-500 border-t-transparent rounded-full" />
       </div>
     );
   }
   
   if (!thread) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+      <div className="flex flex-col items-center justify-center py-20 text-noir-400">
         <MessageSquare className="h-12 w-12 mb-3 opacity-30" />
         <p>{loadFailed ? t('common.erroreNelCaricamentoDelThread') : t('common.threadNonTrovato')}</p>
         {loadFailed && (
@@ -353,18 +353,18 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
       </div>
       
       {/* ── MAIN POST ── */}
-      <div className="rounded-xl bg-slate-800/50 border border-slate-700/50 overflow-hidden">
+      <div className="rounded-xl bg-noir-800/50 border border-noir-700/50 overflow-hidden">
         {/* Title */}
-        <div className="px-5 py-4 border-b border-slate-700/50">
+        <div className="px-5 py-4 border-b border-noir-700/50">
           <h1 className="text-xl font-bold text-white">{thread.title}</h1>
           
-          <div className="flex items-center gap-4 mt-2 text-sm text-slate-400">
+          <div className="flex items-center gap-4 mt-2 text-sm text-noir-400">
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
                 <AvatarImage src={thread.author_avatar || undefined} />
                 <AvatarFallback className="text-xs">{thread.author_name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <span className="font-medium text-slate-300">{thread.author_name}</span>
+              <span className="font-medium text-noir-300">{thread.author_name}</span>
             </div>
             <span>•</span>
             <span className="flex items-center gap-1">
@@ -407,14 +407,14 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
               <input
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
-                className="w-full rounded-md bg-slate-900/80 border border-slate-700 px-3 py-2 text-white"
+                className="w-full rounded-md bg-noir-900/80 border border-noir-700 px-3 py-2 text-white"
                 placeholder={t('common.inserisciUnTitolo')}
               />
               <Textarea
                 value={editContent}
                 onChange={e => setEditContent(e.target.value)}
                 rows={8}
-                className="bg-slate-900/80 border-slate-700"
+                className="bg-noir-900/80 border-noir-700"
                 placeholder={t('common.inserisciUnContenuto')}
               />
               <div className="flex items-center gap-2">
@@ -429,7 +429,7 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
           ) : (
             <div className="prose prose-invert prose-sm max-w-none">
               {thread.content.split('\n').map((line, i) => (
-                <p key={i} className="text-slate-300">{line || <br />}</p>
+                <p key={i} className="text-noir-300">{line || <br />}</p>
               ))}
             </div>
           )}
@@ -451,12 +451,12 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
         )}
         
         {/* Actions */}
-        <div className="px-5 py-3 border-t border-slate-700/50 flex items-center gap-2">
+        <div className="px-5 py-3 border-t border-noir-700/50 flex items-center gap-2">
           <Button
             variant={liked ? 'default' : 'ghost'}
             size="sm"
             onClick={handleLike}
-            className={liked ? 'bg-pink-600 hover:bg-pink-500' : ''}
+            className={liked ? 'bg-rouge-600 hover:bg-rouge-500' : ''}
           >
             <Heart className={`h-4 w-4 mr-1 ${liked ? 'fill-current' : ''}`} />
             {likeCount}
@@ -495,7 +495,7 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
       
       {/* ── REPLIES ── */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-noir-400 flex items-center gap-2">
           <MessageSquare className="h-4 w-4" />
           {posts.length} {posts.length === 1 ? t('forumThread.replySingular') : t('forumThread.replyPlural')}
         </h2>
@@ -515,13 +515,13 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
       
       {/* ── REPLY FORM ── */}
       {!thread.is_locked && (
-        <div className="rounded-xl bg-slate-800/50 border border-slate-700/50 p-4">
+        <div className="rounded-xl bg-noir-800/50 border border-noir-700/50 p-4">
           {replyingTo && (
-            <div className="mb-3 p-2 rounded-lg bg-slate-700/50 border-l-2 border-blue-500 flex items-start gap-2">
-              <Quote className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="mb-3 p-2 rounded-lg bg-noir-700/50 border-l-2 border-rouge-500 flex items-start gap-2">
+              <Quote className="h-4 w-4 text-noir-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <span className="text-xs text-blue-400 font-medium">{t('forumThread.replyingTo')} {replyingTo.author_name}</span>
-                <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{replyingTo.content}</p>
+                <span className="text-xs text-noir-400 font-medium">{t('forumThread.replyingTo')} {replyingTo.author_name}</span>
+                <p className="text-xs text-noir-400 line-clamp-2 mt-0.5">{replyingTo.content}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setReplyingTo(null)} className="h-6 w-6 p-0">
                 ×
@@ -534,7 +534,7 @@ export function ThreadView({ threadId, userId, authUserId, userName, userAvatar,
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             disabled={!userId}
-            className="min-h-[100px] bg-slate-900/50 border-slate-600/50"
+            className="min-h-[100px] bg-noir-900/50 border-noir-600/50"
           />
           
           <div className="flex justify-end mt-3">
@@ -578,7 +578,7 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
   };
   
   return (
-    <div className={`rounded-lg border p-4 ${post.is_solution ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-slate-800/30 border-slate-700/30'}`}>
+    <div className={`rounded-lg border p-4 ${post.is_solution ? 'bg-emerald-500/5 border-emerald-500/30' : 'bg-noir-800/30 border-noir-700/30'}`}>
       {/* Solution badge */}
       {post.is_solution && (
         <div className="flex items-center gap-2 mb-3 text-emerald-400">
@@ -589,7 +589,7 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
       
       {/* Quote */}
       {post.quote_text && (
-        <div className="mb-3 p-2 rounded bg-slate-700/30 border-l-2 border-slate-500 text-xs text-slate-400">
+        <div className="mb-3 p-2 rounded bg-noir-700/30 border-l-2 border-noir-500 text-xs text-noir-400">
           <Quote className="h-3 w-3 inline mr-1" />
           {post.quote_text}
         </div>
@@ -603,7 +603,7 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
         </Avatar>
         <div>
           <span className="text-sm font-medium text-white">{post.author_name}</span>
-          <span className="text-xs text-slate-500 ml-2">
+          <span className="text-xs text-noir-500 ml-2">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale })}
             {post.is_edited && ` (${t('forumThread.edited')})`}
           </span>
@@ -611,13 +611,13 @@ function PostCard({ post, locale, userId, isThreadAuthor, onReply, onMarkSolutio
       </div>
       
       {/* Content */}
-      <div className="text-sm text-slate-300 whitespace-pre-wrap">
+      <div className="text-sm text-noir-300 whitespace-pre-wrap">
         {post.content}
       </div>
       
       {/* Actions */}
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700/30">
-        <Button variant="ghost" size="sm" onClick={handleLike} className={liked ? 'text-pink-400' : ''}>
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-noir-700/30">
+        <Button variant="ghost" size="sm" onClick={handleLike} className={liked ? 'text-rouge-400' : ''}>
           <Heart className={`h-3.5 w-3.5 mr-1 ${liked ? 'fill-current' : ''}`} />
           {likeCount}
         </Button>

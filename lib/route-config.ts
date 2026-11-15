@@ -86,7 +86,7 @@ export const isPublicRoute = (path: string): boolean =>
  * (`overlay_ipc.rs:117`, creata `transparent(true)` + `always_on_top` a
  * 1920x1080 sopra la partita) e `/region-select` (`ocr_translator/mod.rs:751`,
  * `fullscreen(true)`) renderizzavano dentro `MainLayout`, cioè disegnavano la
- * sidebar dell'app (`bg-slate-950/95`) e la barra di navigazione **sopra il
+ * sidebar dell'app (`bg-noir-950/95`) e la barra di navigazione **sopra il
  * gioco**. L'elenco sta qui, accanto a quello delle rotte pubbliche, ed è
  * coperto dal test: è la stessa dimenticanza che non deve ripetersi alla
  * prossima finestra.
