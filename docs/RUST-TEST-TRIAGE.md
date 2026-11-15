@@ -151,3 +151,39 @@ messaggio è cambiato. Allineare la stringa attesa. Banale.
 
 Finché non bonificati, i test possono essere marcati `#[ignore = "tracking: <issue>"]`
 così la suite locale è verde e il debito è esplicito.
+
+## Il binario dei test muore su Windows in CI (aperto, 15/11/2026)
+
+**Il fatto.** Dal 13/11/2026 il passo `Cargo test` di `check-windows` finisce con
+`exit code: 0xc0000005, STATUS_ACCESS_VIOLATION` pochi millisecondi dopo
+`running N tests`. Nessun test fallisce: muore il processo.
+
+**Non è il codice.** Tre rami senza alcuna modifica Rust rispetto a `main`
+`49731a56`:
+
+| Ramo | Data | Immagine runner (Provisioner) | Esito |
+|---|---|---|---|
+| `fix/sidebar-toggle-focus` | 05/11 | `20261021.618` | verde |
+| `fix/npm-audit` | 13/11 | `20261103.629` | access violation |
+| `main` `4eb567a5` | 15/11 | `20261103.629` | access violation |
+
+Stesso codice, immagine diversa. In locale (Windows 11) cinque corse complete
+di `cargo test --lib` sono verdi.
+
+**Non è un test.** In parallelo erano stampati `ok` i primi 8 test di
+`anti_cheat`; con `-- --test-threads=1` il processo muore durante il secondo,
+`compatibility_strategies_known_vs_unknown`, che in parallelo era passato. Quei
+test riempiono una `HashMap` e la interrogano: niente thread, niente FFI. La
+caduta arriva a un tempo quasi fisso dall'avvio, qualunque test sia in corso.
+
+**Non è una DLL esterna.** Il binario dei test importa solo DLL di sistema
+(advapi32, bcrypt, combase, crypt32, kernel32, ntdll, psapi, shell32, userenv,
+ws2_32 e la CRT), nessun import ritardato.
+
+**Cosa NON è provato.** Chi causa la caduta. Restano in piedi: un inizializzatore
+statico o un thread avviato da una dipendenza, oppure qualcosa che la nuova
+immagine inietta nei processi. Il passo successivo è far girare il binario sotto
+`cdb` nel runner per avere lo stack del fault.
+
+**Strada da non rifare.** `--test-threads=1` per trovare «il test colpevole»:
+dà un nome, ma è quello del test che stava girando in quel momento.
