@@ -128,8 +128,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      # FISSATO a 1.99.1 il 15/11/2026. Con `@stable` il job ha preso rustc
+      # 1.100.0 (uscito il 09/11) e da allora il binario dei test muore con
+      # STATUS_ACCESS_VIOLATION pochi ms dopo l'avvio: stesso codice, verde con
+      # 1.99.1 il 05/11 e in locale. Su Linux la 1.100 passa, quindi lì resta
+      # `@stable`. Da togliere quando si capisce cosa rompe la 1.100 su Windows:
+      # vedi docs/RUST-TEST-TRIAGE.md.
+      - name: Install Rust 1.99.1
+        uses: dtolnay/rust-toolchain@1.99.1
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2

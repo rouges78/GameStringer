@@ -152,38 +152,50 @@ messaggio è cambiato. Allineare la stringa attesa. Banale.
 Finché non bonificati, i test possono essere marcati `#[ignore = "tracking: <issue>"]`
 così la suite locale è verde e il debito è esplicito.
 
-## Il binario dei test muore su Windows in CI (aperto, 15/11/2026)
+## Il binario dei test muore su Windows in CI (15/11/2026)
 
 **Il fatto.** Dal 13/11/2026 il passo `Cargo test` di `check-windows` finisce con
 `exit code: 0xc0000005, STATUS_ACCESS_VIOLATION` pochi millisecondi dopo
 `running N tests`. Nessun test fallisce: muore il processo.
 
-**Non è il codice.** Tre rami senza alcuna modifica Rust rispetto a `main`
-`49731a56`:
+**La causa: il compilatore, non il codice.** Il job usava
+`dtolnay/rust-toolchain@stable`, quindi ha preso da solo la versione nuova.
 
-| Ramo | Data | Immagine runner (Provisioner) | Esito |
+| Ramo (zero modifiche Rust rispetto a `main` `49731a56`) | Data | rustc | Esito |
 |---|---|---|---|
-| `fix/sidebar-toggle-focus` | 05/11 | `20261021.618` | verde |
-| `fix/npm-audit` | 13/11 | `20261103.629` | access violation |
-| `main` `4eb567a5` | 15/11 | `20261103.629` | access violation |
+| `fix/sidebar-toggle-focus` | 05/11 | 1.99.1 (58cf8f9c3) | verde |
+| `fix/npm-audit` | 13/11 | 1.100.0 (0ef1bc386, uscito il 09/11) | access violation |
+| `main` `4eb567a5` | 15/11 | 1.100.0 | access violation |
 
-Stesso codice, immagine diversa. In locale (Windows 11) cinque corse complete
-di `cargo test --lib` sono verdi.
+In locale c'è ancora la 1.99.1 e cinque corse complete di `cargo test --lib`
+sono verdi. Su Linux la 1.100.0 passa.
 
-**Non è un test.** In parallelo erano stampati `ok` i primi 8 test di
-`anti_cheat`; con `-- --test-threads=1` il processo muore durante il secondo,
-`compatibility_strategies_known_vs_unknown`, che in parallelo era passato. Quei
-test riempiono una `HashMap` e la interrogano: niente thread, niente FFI. La
-caduta arriva a un tempo quasi fisso dall'avvio, qualunque test sia in corso.
+**Come si legge la versione.** Nel log del job: il passo `Install Rust` stampa
+`stable-x86_64-pc-windows-msvc updated - rustc 1.100.0 (...) (from rustc 1.99.1)`.
+Nel binario: il percorso `/rustc/<commit>/` nei dati di sola lettura dà il commit
+del compilatore (`58cf8f9c…` nel binario locale = 1.99.1).
 
-**Non è una DLL esterna.** Il binario dei test importa solo DLL di sistema
-(advapi32, bcrypt, combase, crypt32, kernel32, ntdll, psapi, shell32, userenv,
-ws2_32 e la CRT), nessun import ritardato.
+**Rimedio applicato.** `check-windows` fissato a `dtolnay/rust-toolchain@1.99.1`.
+Linux resta su `@stable`.
 
-**Cosa NON è provato.** Chi causa la caduta. Restano in piedi: un inizializzatore
-statico o un thread avviato da una dipendenza, oppure qualcosa che la nuova
-immagine inietta nei processi. Il passo successivo è far girare il binario sotto
-`cdb` nel runner per avere lo stack del fault.
+**Cosa NON è provato.**
 
-**Strada da non rifare.** `--test-threads=1` per trovare «il test colpevole»:
-dà un nome, ma è quello del test che stava girando in quel momento.
+- Che cosa, con la 1.100.0, fa cadere il processo: un difetto del compilatore o
+  un comportamento indefinito nel nostro codice `unsafe` che prima passava per
+  caso. Non c'è ancora una riproduzione locale con la 1.100.0.
+- Che il rimedio basti: va visto verde in CI.
+- **`release.yml` usa ancora `@stable` in tre punti**: una release Windows fatta
+  oggi sarebbe compilata con la 1.100.0. Se la caduta non riguarda solo il
+  binario dei test, riguarda anche l'app distribuita.
+
+**Strade da non rifare.**
+
+1. Dare la colpa all'immagine del runner. È cambiata negli stessi giorni
+   (Provisioner `20261021.618` → `20261103.629`), ma è una coincidenza: la riga
+   che conta è quella della versione di rustc.
+2. `-- --test-threads=1` per trovare «il test colpevole». Dà un nome, ma è
+   quello del test che stava girando: con un thread solo è caduto durante un
+   test che in parallelo era passato, e che riempie solo una `HashMap`.
+3. Cercare una DLL esterna: il binario dei test importa solo DLL di sistema.
+4. Analizzare l'intero binario di debug (39 MB) con Ghidra: non finisce entro
+   330 secondi. Per l'identità del compilatore basta leggere i dati del binario.
