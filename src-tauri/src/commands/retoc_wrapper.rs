@@ -89,7 +89,7 @@ pub async fn download_retoc() -> Result<PathBuf, String> {
         .map_err(|e| format!("ZIP: {}", e))?;
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
-        let name = file.mangled_name();
+        let name = file.mangled_name().map_err(|e| e.to_string())?;
         let fname = name.file_name().unwrap_or_default().to_string_lossy().to_string();
         // Nome flessibile come per repak: l'eseguibile può stare in una
         // sottocartella e chiamarsi retoc.exe.
