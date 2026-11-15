@@ -12,7 +12,7 @@
  * rompe i tipi e non rompe i test: rompe solo il clic dell'utente.
  *
  * Regola: ogni rotta interna citata nel codice deve corrispondere a una pagina
- * reale sotto `app/`. Le rotte dinamiche (`/library/[id]`) coprono i loro figli.
+ * reale sotto `app/`. Le rotte dinamiche (`/u/[username]`) coprono i loro figli.
  */
 import { describe, expect, it as test } from 'vitest';
 import fs from 'node:fs';
