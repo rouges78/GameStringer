@@ -176,6 +176,16 @@ export function buildRunReport(args: {
 }
 
 /**
+ * Il giro ha scritto qualcosa nei file del gioco?
+ *
+ * Decide come finisce in cronologia: «Patch creata» solo se è vero. Un giro
+ * fallito che passa al runtime, o che si ferma, non ha creato nessuna patch.
+ */
+export function runReportWroteToGame(report: RunReport): boolean {
+  return report.staticOutcome !== 'failure';
+}
+
+/**
  * Riassunto di una riga per la cronologia attività.
  *
  * Dice cosa è ENTRATO nel gioco, non quanti stadi sono finiti — è la stessa
