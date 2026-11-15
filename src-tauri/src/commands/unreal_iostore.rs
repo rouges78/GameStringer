@@ -1287,8 +1287,11 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
     log::info!("🔍 IoStore extraction da: {}", game_path);
     
     // Trova file .utoc
+    // Senza .utoc si esce solo se mancano anche i .pak classici: un gioco UE4
+    // ha il solo .pak, e il fallback più sotto è l'unico a poterlo aprire (o a
+    // dire che è cifrato e serve la chiave).
     let utoc_files = find_utoc_files(game_dir);
-    if utoc_files.is_empty() {
+    if utoc_files.is_empty() && find_pak_files(game_dir).is_empty() {
         return Err("Nessun file .utoc trovato".into());
     }
     
@@ -3354,6 +3357,32 @@ mod tests {
         fs::write(paks.join("TheSkinStapler-Windows.ucas"), b"x").unwrap();
         let found = find_utoc_files(tmp.path());
         assert_eq!(found.len(), 1, "la Paks a due livelli deve essere trovata");
+    }
+
+    /// REGRESSIONE 15/11/2026 — Fobia - St. Dinfna Hotel (Steam).
+    /// Gioco UE4 con il solo .pak classico (nessun .utoc) e l'indice cifrato.
+    /// `extract_iostore_localization` usciva subito con «Nessun file .utoc
+    /// trovato», senza mai aprire il .pak: la UI leggeva un errore generico e
+    /// diceva «non espone testi estraibili» invece di chiedere la chiave AES.
+    #[tokio::test]
+    async fn pak_cifrato_senza_utoc_chiede_la_chiave() {
+        let tmp = TempDir::new().unwrap();
+        let paks = tmp.path().join("Fobia/Content/Paks");
+        fs::create_dir_all(&paks).unwrap();
+        // Footer minimo: guid, bEncryptedIndex = 1, magic, versione, offset e
+        // dimensione dell'indice, hash.
+        let mut pak = vec![0u8; 64];
+        pak.extend_from_slice(&[0u8; 16]);
+        pak.push(1);
+        pak.extend_from_slice(&PAK_MAGIC_LE.to_le_bytes());
+        pak.extend_from_slice(&11u32.to_le_bytes());
+        pak.extend_from_slice(&0u64.to_le_bytes());
+        pak.extend_from_slice(&32u64.to_le_bytes());
+        pak.extend_from_slice(&[0u8; 20]);
+        fs::write(paks.join("Fobia-WindowsNoEditor.pak"), &pak).unwrap();
+
+        let esito = extract_iostore_localization(tmp.path().to_string_lossy().into_owned()).await;
+        assert_eq!(esito.err().as_deref(), Some(PAK_NEEDS_AES));
     }
 
     /// Estrazione vera contro un gioco installato. Ignorato di default: serve
