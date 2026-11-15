@@ -2852,10 +2852,30 @@ e puntini di sospensione si vedono corretti.
    ripartire la traduzione): un esempio Cargo di poche righe che chiama
    `rebuild_danganronpa_wad(cartella)` dentro
    `tauri::async_runtime::block_on`. Riparte sempre dal `.gsbackup`.
-2. **Le righe con parole colorate restano inglesi.** La riga 6 del prologo ha
-   la traduzione nella sessione ma nel gioco è inglese: è una delle «tag
-   interni» che il rebuild salta. Il riepilogo le conta, il giocatore le vede
-   come buchi nel mezzo del dialogo.
+2. **Le righe con parole colorate restavano inglesi.** La riga 6 del prologo
+   aveva la traduzione nella sessione ma nel gioco era inglese: era una delle
+   «tag interni» che il rebuild saltava. Non sono poche: contando le forme dei
+   tag nei 1.871 `.lin` del gioco, 15.978 righe hanno un solo colore attorno
+   a tutto il testo (`#T#`, già gestite) e **circa 3.200 hanno tag nel
+   mezzo** (1.742 `T#T#T`, 948 `#T##T##T#`, più varianti). I tag sono sempre
+   a coppie: `<CLT n>` apre, `<CLT>` chiude.
+
+   **Corretto nel rebuild** (`gs_rewrite_inner_clt`): la riga si scrive
+   sempre. La traduzione prende il colore di base; una parola evidenziata
+   tiene il colore solo se compare identica nella traduzione, come parola
+   intera (in pratica i nomi propri), altrimenti lo perde. Sul gioco: 215
+   scritte invece di 192, **6 evidenziazioni tenute e 24 perse** nelle 23
+   righe. Rivisto a schermo il 15/11: la riga 6 è italiana, il nome
+   dell'accademia resta giallo, «speranza» è senza colore.
+
+   Strada sbagliata da non rifare: scegliere il colore di base come «quello
+   che copre più testo». Se la parola evidenziata è più lunga del resto della
+   frase, tutta la riga prende il colore dell'evidenziazione. Il colore di
+   base è quello con cui la riga comincia e finisce; il conteggio serve solo
+   se i due non coincidono.
+
+   Non provato: se nei dibattiti in classe un colore ha un ruolo nel gioco e
+   non solo di enfasi. Le quattro file tradotte sono tutte di dialogo.
 3. **In Scarlet Hollow una voce lunga esce dal riquadro**: «Informazioni
    generali sul gioco» (era «About») si sovrappone al pannello delle
    Preferenze.
@@ -2864,7 +2884,13 @@ e puntini di sospensione si vedono corretti.
    ma sono identificatori, non testo.
 5. **Per chi guida il gioco da fuori:** in Danganronpa il testo avanza col
    pulsante sinistro del mouse, e i clic sintetici non arrivano; Ctrl («salta
-   testo») sì. Non scambiare un dialogo fermo per un blocco della patch.
+   testo») sì. Non scambiare un dialogo fermo per un blocco della patch. I
+   tocchi brevi dei tasti spesso non vengono letti: servono pressioni tenute
+   (0,2 s nei menu; 0,1 s di Ctrl avanza una riga, 0,2 s ne salta due).
+6. **Le traduzioni lunghe escono dal riquadro.** Il riquadro del dialogo
+   mostra tre righe da 40 caratteri; l'a-capo automatico ne produce una
+   quarta quando l'italiano è più lungo, e quella si vede tagliata sul bordo
+   (viste due righe così nel prologo). Non corretto.
 
 **Cosa NON è provato.** Oltre il prologo di Danganronpa e oltre il menu di
 Scarlet Hollow non è stato guardato niente; nessun dialogo di Scarlet Hollow è
