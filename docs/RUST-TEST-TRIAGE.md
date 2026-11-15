@@ -183,7 +183,9 @@ Linux resta su `@stable`.
 - Che cosa, con la 1.100.0, fa cadere il processo: un difetto del compilatore o
   un comportamento indefinito nel nostro codice `unsafe` che prima passava per
   caso. Non c'è ancora una riproduzione locale con la 1.100.0.
-- Che il rimedio basti: va visto verde in CI.
+- ~~Che il rimedio basti~~ — **dimostrato il 15/11/2026**: con la 1.99.1
+  `check-windows` è verde sia sulla PR 210 (`a9a6cbcd`) sia sulla PR 208
+  (`2b10f9dd`), stesso codice che con la 1.100.0 cadeva.
 - **`release.yml` usa ancora `@stable` in tre punti**: una release Windows fatta
   oggi sarebbe compilata con la 1.100.0. Se la caduta non riguarda solo il
   binario dei test, riguarda anche l'app distribuita.
