@@ -46,6 +46,17 @@ describe('CommandPalette (Ctrl+K)', () => {
     expect(push).toHaveBeenCalledWith('/fixer');
   });
 
+  // 16/11/2026: /binary-patcher non aveva nessun ingresso — né sidebar né
+  // palette — e ci si arrivava solo dalla scheda d'errore di /auto-translate.
+  it('trova il Binary Patcher e lo apre', () => {
+    render(<CommandPalette />);
+    openWithCtrlK();
+    fireEvent.change(paletteInput(), { target: { value: 'binar' } });
+    fireEvent.keyDown(paletteInput(), { key: 'Enter' });
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push).toHaveBeenCalledWith('/binary-patcher');
+  });
+
   it('le frecce spostano la selezione e Invio esegue quella', () => {
     render(<CommandPalette />);
     openWithCtrlK();
