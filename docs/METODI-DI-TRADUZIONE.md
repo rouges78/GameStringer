@@ -895,6 +895,51 @@ lingue da un'altra fonte e per Lost Host Demo diceva «Manca italiano».
 `components/game-detail-client.tsx`; `translation_plan.rs` mette
 `unity-loc-tables` prima di `unity-xunity`.
 
+## GameMaker
+
+### Un `%` a metà frase è un codice anche se il controllo non lo conta
+
+**Il fatto.** Nei giochi tipo Deltarune `%` chiude il messaggio ovunque si
+trovi, non solo in coda. Per questo il gioco scrive «percent» per esteso. Il
+modello lo «corregge» in `%`, e il messaggio verrebbe troncato in quel punto.
+Una traduzione con più `%` dell'originale viene ora rifiutata e la riga resta
+com'era.
+
+**Come è stato misurato.** Confronto chiave per chiave tra
+`lang/lang_en_ch1.json` (sorgente) e `lang/lang_ja_ch1.json` (dove String it
+scrive l'italiano) dopo il giro del 16/11/2026: su 6.242 chiavi, 2 hanno un
+numero di `%` diverso, e in tutte e due la traduzione ne ha uno in più.
+
+| chiave | inglese | italiano scritto |
+|---|---|---|
+| `obj_checkers_enemy_slash_Step_0_gml_82_0` | `\cY~1-percent\cW loose!` | `\cY~1%\cW!` |
+| `obj_npc_room_slash_Other_10_gml_871_0` | `a 400-percent increase […]/%` | `del 400% […]/%` |
+
+Nel sorgente inglese solo 3 righe hanno un `%` non finale («% TP» due volte,
+«found by 5%.»): lì il `%` l'ha messo il gioco, e resta ammesso.
+
+**Quando.** 16/11/2026, DELTARUNE demo (Steam), Ollama locale.
+
+**Dove vive nel codice.** `src-tauri/src/commands/gm_placeholder.rs`,
+`codes_preserved`; chiamata dal percorso GameMaker in
+`src-tauri/src/commands/prediction_tool.rs`. Test:
+`rifiuta_il_percento_che_l_originale_non_aveva`, con le due righe vere.
+
+**La trappola.** `extract_gm_codes` conta `%` e `/` come codici solo in coda,
+per non toccare «100%» e «and/or». La scelta è giusta per il mascheramento, ma
+il confronto finale ereditava lo stesso punto cieco: un `%` nuovo a metà frase
+non risultava un codice e la riga usciva pulita. Mascherare e verificare hanno
+bisogno di regole diverse: chi verifica deve contare anche ciò che chi maschera
+lascia stare.
+
+**Cosa NON è provato.** Non è stato visto in gioco che cosa fa davvero un `%`
+a metà riga: che tronchi è dedotto dal fatto che il gioco evita di scriverlo.
+Lo stesso punto cieco vale per una `/` nuova a metà frase, che non viene
+rifiutata. Le due righe già scritte nella copia installata non sono state
+toccate: si correggono rifacendo il giro o ripristinando il `.bak`.
+
+---
+
 ## Traduzione in tempo reale (IPC)
 
 ### Stato della catena — aggiornato al 21/08/2026
