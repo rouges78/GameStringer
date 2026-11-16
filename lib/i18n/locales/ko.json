@@ -855,6 +855,8 @@
     "legalGateLink": "법적 고지 읽기",
     "legalGateCancel": "취소",
     "legalGateConfirm": "게임 소유를 확인합니다",
+    "langPresentGateTitle": "{lang}: 이미 있음",
+    "langPresentGateBody": "이 게임은 이미 이 언어를 지원하는 것으로 보입니다. 그래도 번역할 수 있지만 필요하지 않을 가능성이 높습니다.",
     "whitelistBlocked": "퍼블리셔의 요청으로 이 타이틀은 번역에서 제외되었습니다.",
     "whitelistOfficialNotice": "이 게임에는 이미 선택한 언어의 공식 현지화가 있습니다. 팬 번역은 아마 불필요합니다.",
     "advancedTools": "고급 도구",

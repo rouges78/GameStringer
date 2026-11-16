@@ -855,6 +855,8 @@
     "legalGateLink": "Przeczytaj informacje prawne",
     "legalGateCancel": "Anuluj",
     "legalGateConfirm": "Potwierdzam, że posiadam grę",
+    "langPresentGateTitle": "{lang}: już jest",
+    "langPresentGateBody": "Ta gra wygląda na dostępną już w tym języku. Możesz ją przetłumaczyć mimo to, ale prawdopodobnie nie jest to potrzebne.",
     "whitelistBlocked": "Ten tytuł jest wyłączony z tłumaczenia na prośbę wydawcy.",
     "whitelistOfficialNotice": "Ta gra ma już oficjalną lokalizację w wybranym języku: tłumaczenie fanowskie jest prawdopodobnie zbędne.",
     "advancedTools": "Narzędzia zaawansowane",

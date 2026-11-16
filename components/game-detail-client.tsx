@@ -19,6 +19,7 @@ import publisherWhitelistData from '@/data/publisher-whitelist.json';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { LanguageFlags, getCountryCode } from '@/components/ui/language-flags';
+import { mergeGameLanguages, hasTargetLanguage } from '@/components/game-detail/target-language';
 import { ollamaArgs } from '@/lib/ai/ollama-endpoint';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
@@ -325,6 +326,10 @@ export default function GameDetailPage() {
   // Gate anti-pirateria: conferma una-tantum di possedere una copia legale del
   // gioco, richiesta prima della PRIMA traduzione. Persistita in localStorage.
   const [legalGateOpen, setLegalGateOpen] = useState(false);
+  // Avviso «il gioco ha già questa lingua»: aperto da handleStringIt, e
+  // superato una volta sola dal suo pulsante «Traduci comunque».
+  const [langPresentGateOpen, setLangPresentGateOpen] = useState(false);
+  const langPresentAckRef = useRef(false);
   const isLegalCopyAcked = () => {
     try {
       return localStorage.getItem('gamestringer_legal_copy_ack') === '1';
@@ -2084,6 +2089,24 @@ export default function GameDetailPage() {
       }
     } catch { /* fail-open: la whitelist non deve mai rompere la traduzione */ }
     if (autoTranslateRunningRef.current || autoTranslateActive) return;
+
+    // Il gioco risulta già nella lingua di destinazione: lo si dice PRIMA di
+    // partire e sceglie l'utente (su Fobia, il 16/11/2026, il giro partiva
+    // senza una parola). È un avviso e non un blocco perché la scansione dei
+    // file è un'euristica: un falso positivo qui costa un clic, non il
+    // pulsante. Su Unity, quando lo dicono le tabelle o lo store, il giro si
+    // ferma già da solo con la sua spiegazione: lì l'avviso sarebbe un doppione.
+    {
+      const unityLoc = translationPlanRef.current?.unity_loc_languages;
+      const unityStops = currentEngine().toLowerCase().includes('unity')
+        && hasTargetLanguage(storeLanguages(game), targetLang, unityLoc);
+      const present = hasTargetLanguage(mergeGameLanguages(detectedLanguages, storeLanguages(game)), targetLang, unityLoc);
+      if (present && !unityStops && !langPresentAckRef.current) {
+        setLangPresentGateOpen(true);
+        return;
+      }
+      langPresentAckRef.current = false;
+    }
 
     // Motori con percorso DIRETTO (branch dedicato in startAutoTranslate: hero
     // file-based o instradamento esplicito). Il gate P.T. serve solo al workflow
@@ -3935,13 +3958,7 @@ export default function GameDetailPage() {
 
             {/* Lingue del gioco — rilevate dai file di localizzazione (+ Steam se presenti) */}
             {(() => {
-              const fromSteam = storeLanguages(game);
-              const seen = new Set<string>();
-              const merged: string[] = [];
-              for (const l of [...detectedLanguages, ...fromSteam]) {
-                const key = getCountryCode(l) ?? l.trim().toLowerCase();
-                if (key && !seen.has(key)) { seen.add(key); merged.push(l.trim()); }
-              }
+              const merged = mergeGameLanguages(detectedLanguages, storeLanguages(game));
               if (merged.length === 0) return null;
               // ⭐ LA DOMANDA PER CUI L'UTENTE APRE QUESTA PAGINA È UNA SOLA:
               //    «il gioco è nella mia lingua?». Fino all'11/08/2026 doveva
@@ -3954,11 +3971,7 @@ export default function GameDetailPage() {
               //    già tradotto. È un falso negativo che costa una traduzione
               //    mai fatta — il contrario esatto dello scopo dell'app.
               //    Quindi la risposta si SCRIVE, non si fa dedurre.
-              const targetCc = (getCountryCode(targetLang) ?? targetLang).toUpperCase();
-              // Le tabelle di localizzazione Unity stanno dentro data.unity3d, dove
-              // la scansione dei file non arriva: le loro lingue le porta il piano.
-              const hasTarget = merged.some(l => (getCountryCode(l) ?? '').toUpperCase() === targetCc)
-                || (translationPlan?.unity_loc_languages ?? []).includes(targetLang.toLowerCase().split('-')[0]);
+              const hasTarget = hasTargetLanguage(merged, targetLang, translationPlan?.unity_loc_languages);
               const targetName = currentFlag?.label ?? targetLang.toUpperCase();
               return (
                 <div className="flex items-center gap-2 flex-wrap">
@@ -4605,6 +4618,53 @@ export default function GameDetailPage() {
                 className="flex-1 h-10 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-500/25 transition-all"
               >
                 {t('gameDetail.runPtFirst')}</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Avviso: il gioco ha già la lingua di destinazione */}
+      {langPresentGateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="lang-present-gate-title"
+            className="bg-noir-900 border border-noir-700/50 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-amber-500/20 to-noir-500/20 border-b border-amber-500/20 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Languages className="w-5 h-5 text-amber-400" />
+                </div>
+                <h3 id="lang-present-gate-title" className="text-lg font-bold text-white">
+                  {t('gameDetail.langPresentGateTitle').replace('{lang}', currentFlag?.label ?? targetLang.toUpperCase())}
+                </h3>
+              </div>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-noir-300">{t('gameDetail.langPresentGateBody')}</p>
+            </div>
+            <div className="flex gap-3 p-4 pt-0">
+              <button
+                autoFocus
+                onClick={() => setLangPresentGateOpen(false)}
+                className="flex-1 h-10 rounded-xl text-sm font-medium bg-noir-800 hover:bg-noir-700 text-noir-300 border border-noir-600/50 transition-all"
+              >
+                {t('gameDetail.legalGateCancel')}
+              </button>
+              <button
+                onClick={() => {
+                  setLangPresentGateOpen(false);
+                  langPresentAckRef.current = true;
+                  handleStringIt();
+                }}
+                className="flex-1 h-10 rounded-xl text-sm font-bold bg-amber-500 hover:bg-amber-400 text-noir-950 transition-all"
+              >
+                {t('gameDetail.translateAnyway')}
+              </button>
             </div>
           </motion.div>
         </div>

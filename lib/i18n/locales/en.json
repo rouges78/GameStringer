@@ -855,6 +855,8 @@
     "legalGateLink": "Read the legal notice",
     "legalGateCancel": "Cancel",
     "legalGateConfirm": "I confirm I own the game",
+    "langPresentGateTitle": "{lang} is already there",
+    "langPresentGateBody": "This game already appears to be in this language. You can translate it anyway, but it is probably not needed.",
     "whitelistBlocked": "This title is excluded from translation at the publisher's request.",
     "whitelistOfficialNotice": "This game already has an official localization in the selected language: a fan translation is probably unnecessary.",
     "advancedTools": "Advanced tools",

@@ -855,6 +855,8 @@
     "legalGateLink": "法的注意事項を読む",
     "legalGateCancel": "キャンセル",
     "legalGateConfirm": "所有していることを確認",
+    "langPresentGateTitle": "{lang}はすでにあります",
+    "langPresentGateBody": "このゲームはすでにこの言語に対応しているようです。それでも翻訳できますが、おそらく不要です。",
     "whitelistBlocked": "このタイトルはパブリッシャーの要請により翻訳対象外です。",
     "whitelistOfficialNotice": "このゲームには選択した言語の公式ローカライズが既にあります。ファン翻訳はおそらく不要です。",
     "advancedTools": "詳細ツール",
