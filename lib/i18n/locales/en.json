@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Partial translation: {n} strings written, {missing} declared files missing",
+    "incompleteTitle": "Incomplete translation: {n} of {total} strings written, {left} left as they were",
+    "stepLeft": "⚠️ {n} deliverables created, {left} strings not written into the game",
     "unverifiedTitle": "The engine reports success, but no file was verified on disk",
     "unverifiedHint": "The game may still be in its original language. Launch it to check; if it isn't translated, try the OCR overlay or the engine's dedicated patcher.",
     "stringsTranslated": "strings translated",

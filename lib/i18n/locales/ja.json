@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "部分的な翻訳：{n} 件の文字列を書き込み、宣言された {missing} 件のファイルが見つかりません",
+    "incompleteTitle": "翻訳は未完了：{total} 件中 {n} 件の文字列を書き込み、{left} 件は元のままです",
+    "stepLeft": "⚠️ 成果物 {n} 件を作成、{left} 件の文字列はゲームに書き込まれていません",
     "unverifiedTitle": "エンジンは成功と報告していますが、ディスク上でファイルを検証できませんでした",
     "unverifiedHint": "ゲームはまだ元の言語のままかもしれません。起動して確認してください。翻訳されていなければ、OCRオーバーレイか専用パッチャーをお試しください。",
     "stringsTranslated": "文字列を翻訳",

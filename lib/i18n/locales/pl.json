@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Tłumaczenie częściowe: zapisano {n} ciągów, brakuje {missing} zadeklarowanych plików",
+    "incompleteTitle": "Tłumaczenie niepełne: zapisano {n} z {total} ciągów, {left} pozostało bez zmian",
+    "stepLeft": "⚠️ Utworzono {n} wyników, {left} ciągów nie zapisano w grze",
     "unverifiedTitle": "Silnik zgłasza sukces, ale żaden plik nie został zweryfikowany na dysku",
     "unverifiedHint": "Gra może wciąż być w oryginalnym języku. Uruchom ją, aby sprawdzić; jeśli nie jest przetłumaczona, spróbuj nakładki OCR lub dedykowanego patchera silnika.",
     "stringsTranslated": "ciągów przetłumaczonych",

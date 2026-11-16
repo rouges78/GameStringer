@@ -9,7 +9,8 @@ vi.mock('@/lib/i18n', () => ({
     t: (k: string) =>
       k === 'postTranslation.ocrDescPartial' ? 'partial {pct}%'
         : k === 'postTranslation.writtenTitle' ? 'written {n} ({pct}%)'
-          : k,
+          : k === 'postTranslation.incompleteTitle' ? 'incomplete {n}/{total}, left {left}'
+            : k,
     language: 'it',
   }),
 }));
@@ -142,6 +143,26 @@ describe('AutoTranslateStepper', () => {
       },
     });
     expect(screen.getByText('written 30 (1%)')).toBeInTheDocument();
+  });
+
+  it('a run that wrote 68% of the strings is amber and says how many are left', () => {
+    // DELTARUNE demo, 16/11/2026: 4184 of 6121 written, panel was green.
+    renderStepper({
+      steps: [{ label: 'Analisi', status: 'done' }],
+      result: {
+        ...baseResult,
+        successRate: 100,
+        stringsTranslated: 4184,
+        stringsTotal: 6121,
+        verification: {
+          checked: 1, verified: 1, missing: [], verifiedNames: ['GameMaker Patch'],
+          stringsWritten: 4184, stringsTotal: 6121, runtimeOnly: false,
+        },
+      } as typeof baseResult,
+    });
+    expect(screen.getByText('incomplete 4184/6121, left 1937')).toHaveClass('text-amber-300');
+    expect(screen.queryByText(/written 4184/)).toBeNull();
+    expect(screen.queryByText('postTranslation.unverifiedTitle')).toBeNull();
   });
 
   it('"Create patch" opens the GsPack export instead of calling a missing command', () => {

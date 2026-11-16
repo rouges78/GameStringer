@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Traducción parcial: {n} cadenas escritas, {missing} archivos declarados ausentes",
+    "incompleteTitle": "Traducción incompleta: {n} de {total} cadenas escritas, {left} quedaron como estaban",
+    "stepLeft": "⚠️ {n} entregables creados, {left} cadenas no escritas en el juego",
     "unverifiedTitle": "El motor declara éxito, pero ningún archivo se verificó en disco",
     "unverifiedHint": "Puede que el juego siga en su idioma original. Ábrelo para comprobarlo; si no está traducido, prueba el overlay OCR o el parcheador del motor.",
     "stringsTranslated": "cadenas traducidas",

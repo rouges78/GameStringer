@@ -455,6 +455,7 @@ export default function GameDetailPage() {
       missing: string[];    // percorsi dichiarati ma assenti
       verifiedNames: string[]; // nomi confermati (da mostrare all'utente)
       stringsWritten: number;  // stringhe realmente scritte nei file del gioco
+      stringsTotal?: number;   // stringhe trovate, quando il percorso le misura
       runtimeOnly: boolean;    // traduzione a runtime (BepInEx): niente da scrivere
     };
   } | null>(null);
@@ -3278,11 +3279,33 @@ export default function GameDetailPage() {
             ? `${injectedNow}/${totalNow} stringhe scritte nel gioco`
             : `${(success * 100).toFixed(0)}% degli stadi completati`;
 
+      // ── L'ESITO LO DECIDE UNA REGOLA SOLA ─────────────────────────────────
+      // `decidePatchOutcome` sta in lib/translation/patch-outcome.ts con i suoi
+      // test: qui non si ricopia la logica, la si chiama. Prima l'esito
+      // derivava da `successRate` (frazione di STADI completati), e un workflow
+      // con tutti gli stadi verdi e zero righe scritte finiva nel database come
+      // «riuscito».
+      const verdict = decidePatchOutcome({
+        totalStrings: executionResult?.totalStrings,
+        translatedStrings: executionResult?.translatedStrings,
+        injectedStrings: executionResult?.injectedStrings,
+        runtimeTranslation: executionResult?.runtimeTranslation,
+        successRate: executionResult?.successRate,
+      });
+      const patchResult = verdict.outcome;
+      // Stringhe trovate e non entrate nel gioco, quando i conteggi ci sono.
+      const leftNow = verdict.measured
+        ? Math.max(0, (verdict.stringsTotal ?? 0) - (verdict.stringsTranslated ?? 0))
+        : 0;
+
       if (!workflowFailed && !runtimeNow && injectedNow === 0) {
         // Tutti gli stadi verdi e nessuna riga nel gioco: questo caso prima
         // finiva nel ramo «completata». Non è un successo parziale, è un buco.
         updateStep(1, 'error', `Nessuna stringa è entrata nel gioco — ${executionResult?.nextSteps?.[0] || 'prova il patcher engine-specific dalla pagina del gioco'}`);
-      } else if (!workflowFailed && success >= 0.8) {
+      } else if (!workflowFailed && success >= 0.8 && patchResult !== 'partial') {
+        // `patchResult !== 'partial'`: tutti gli stadi finiti con il 68% delle
+        // stringhe scritte usciva verde (DELTARUNE, 16/11). Ora cade nel ramo
+        // «Parzialmente completata» qui sotto.
         updateStep(1, 'done', `Traduzione completata: ${esitoReale}, in ${duration.toFixed(1)}min`);
       } else if (workflowFailed) {
         // Fix issue #46: niente verde se il gioco non è stato modificato davvero
@@ -3323,21 +3346,6 @@ export default function GameDetailPage() {
       const errors = executionResult?.errors || [];
       const totalStr = executionResult?.totalStrings || 0;
 
-      // ── L'ESITO LO DECIDE UNA REGOLA SOLA ─────────────────────────────────
-      // `decidePatchOutcome` sta in lib/translation/patch-outcome.ts con i suoi
-      // test: qui non si ricopia la logica, la si chiama. Prima l'esito
-      // derivava da `successRate` (frazione di STADI completati), e un workflow
-      // con tutti gli stadi verdi e zero righe scritte finiva nel database come
-      // «riuscito».
-      const verdict = decidePatchOutcome({
-        totalStrings: executionResult?.totalStrings,
-        translatedStrings: executionResult?.translatedStrings,
-        injectedStrings: executionResult?.injectedStrings,
-        runtimeTranslation: executionResult?.runtimeTranslation,
-        successRate: executionResult?.successRate,
-      });
-      const patchResult = verdict.outcome;
-
       // Strada statica senza effetto sul gioco → prova il runtime. Il report
       // per gioco lo registra `tryRuntimeFallback` stesso, così vale anche per
       // il ramo «nessuna stringa estraibile» che esce prima di qui.
@@ -3369,7 +3377,11 @@ export default function GameDetailPage() {
         return; // → finally resetta lo stato; nessun result di "successo"
       }
 
-      if (errors.length === 0) {
+      if (errors.length === 0 && patchResult === 'partial') {
+        updateStep(2, 'done', t('postTranslation.stepLeft')
+          .replace('{n}', String(deliverables.length))
+          .replace('{left}', String(leftNow)));
+      } else if (errors.length === 0) {
         updateStep(2, 'done', `✅ ${deliverables.length} deliverables creati, 0 errori`);
       } else {
         updateStep(2, 'done', `⚠️ ${deliverables.length} deliverables creati, ${errors.length} errori`);
@@ -3490,6 +3502,7 @@ export default function GameDetailPage() {
           missing: missingPaths,
           verifiedNames,
           stringsWritten,
+          stringsTotal: verdict.stringsTotal ?? undefined,
           runtimeOnly,
         },
       });
