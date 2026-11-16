@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "部分翻译：已写入 {n} 条字符串，声明的 {missing} 个文件缺失",
+    "incompleteTitle": "翻译未完成：共 {total} 条字符串，已写入 {n} 条，{left} 条保持原样",
+    "stepLeft": "⚠️ 已创建 {n} 个交付物，{left} 条字符串未写入游戏",
     "unverifiedTitle": "引擎报告成功，但磁盘上没有任何文件得到验证",
     "unverifiedHint": "游戏可能仍是原始语言。请启动检查；如未翻译，请尝试 OCR 叠加层或引擎专用补丁工具。",
     "stringsTranslated": "条字符串已翻译",

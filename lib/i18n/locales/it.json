@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Traduzione parziale: {n} stringhe scritte, {missing} file dichiarati ma assenti",
+    "incompleteTitle": "Traduzione incompleta: {n} stringhe scritte su {total}, {left} rimaste com'erano",
+    "stepLeft": "⚠️ {n} deliverables creati, {left} stringhe non scritte nel gioco",
     "unverifiedTitle": "Il motore dichiara il successo, ma nessun file è stato verificato sul disco",
     "unverifiedHint": "Il gioco potrebbe essere ancora in lingua originale. Avvialo per controllare; se non è tradotto, prova l'overlay OCR o il patcher dedicato del motore.",
     "stringsTranslated": "stringhe tradotte",

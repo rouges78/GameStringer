@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Traduction partielle : {n} chaînes écrites, {missing} fichiers déclarés absents",
+    "incompleteTitle": "Traduction incomplète : {n} chaînes écrites sur {total}, {left} laissées telles quelles",
+    "stepLeft": "⚠️ {n} livrables créés, {left} chaînes non écrites dans le jeu",
     "unverifiedTitle": "Le moteur annonce un succès, mais aucun fichier n'a été vérifié sur le disque",
     "unverifiedHint": "Le jeu est peut-être encore dans sa langue d'origine. Lancez-le pour vérifier ; s'il n'est pas traduit, essayez l'overlay OCR ou le patcher dédié du moteur.",
     "stringsTranslated": "chaînes traduites",

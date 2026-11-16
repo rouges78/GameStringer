@@ -268,8 +268,8 @@ export function AutoTranslateStepper({
           // volte in due giorni. Il verdetto restituisce anche la verifica
           // normalizzata, così qui non si maneggia più un oggetto opzionale.
           const {
-            verifiedOk, partial, unverified, tone, nothingWritten,
-            stringsWritten, runtimeOnly, missing, verifiedNames,
+            verifiedOk, partial, incomplete, unverified, tone, nothingWritten,
+            stringsWritten, stringsLeft, runtimeOnly, missing, verifiedNames,
           } = effectVerdict(result.verification);
           return (
           <motion.div
@@ -307,6 +307,10 @@ export function AutoTranslateStepper({
                     {partial && t('postTranslation.partialTitle')
                       .replace('{n}', String(stringsWritten))
                       .replace('{missing}', String(missing.length))}
+                    {incomplete && t('postTranslation.incompleteTitle')
+                      .replace('{n}', String(stringsWritten))
+                      .replace('{total}', String(stringsWritten + (stringsLeft ?? 0)))
+                      .replace('{left}', String(stringsLeft ?? 0))}
                     {unverified && t('postTranslation.unverifiedTitle')}
                   </h3>
                   <p className="text-2xs text-noir-400 mt-0.5">

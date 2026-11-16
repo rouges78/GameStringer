@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "부분 번역: {n}개의 문자열을 기록했고, 선언된 파일 {missing}개가 없습니다",
+    "incompleteTitle": "번역 미완료: 문자열 {total}개 중 {n}개를 기록했고, {left}개는 그대로입니다",
+    "stepLeft": "⚠️ 결과물 {n}개 생성, 문자열 {left}개는 게임에 기록되지 않았습니다",
     "unverifiedTitle": "엔진은 성공이라고 하지만 디스크에서 확인된 파일이 없습니다",
     "unverifiedHint": "게임이 아직 원래 언어일 수 있습니다. 실행해서 확인하세요. 번역되지 않았다면 OCR 오버레이나 엔진 전용 패처를 사용해 보세요.",
     "stringsTranslated": "문자열 번역됨",

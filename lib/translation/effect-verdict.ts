@@ -17,6 +17,8 @@
  * gioco resta in inglese» — 4 segnalazioni.
  */
 
+import { PARTIAL_BELOW } from './patch-outcome';
+
 export interface EffectVerification {
   /** Deliverable che pretendono di aver cambiato il gioco. */
   checked: number;
@@ -34,6 +36,11 @@ export interface EffectVerification {
    * si è già sbagliato una volta.
    */
   stringsWritten?: number;
+  /**
+   * Stringhe trovate nel gioco. Opzionale: i percorsi che non lo misurano non
+   * lo mandano, e senza totale non si può dire che un giro è incompleto.
+   */
+  stringsTotal?: number;
   /** Traduzione a runtime (BepInEx/XUnity): non c'è nulla da riscrivere. */
   runtimeOnly?: boolean;
 }
@@ -43,6 +50,11 @@ export interface EffectVerdict {
   verifiedOk: boolean;
   /** Cambiato, ma qualche file dichiarato non si trova. */
   partial: boolean;
+  /**
+   * Cambiato e controprova a posto, ma è entrata meno dell'80% delle stringhe
+   * trovate (16/11/2026: DELTARUNE al 68% usciva verde con «0 errori»).
+   */
+  incomplete: boolean;
   /** Non risulta che sia cambiato niente. */
   unverified: boolean;
   /** Colore del pannello. Il verde si merita, non si concede. */
@@ -57,6 +69,8 @@ export interface EffectVerdict {
   // I campi seguenti sono la stessa verifica normalizzata, così chi disegna la
   // UI non deve maneggiare un oggetto opzionale (e non perde il narrowing).
   stringsWritten: number;
+  /** Stringhe trovate e non scritte. `null` = totale non misurato, o runtime. */
+  stringsLeft: number | null;
   runtimeOnly: boolean;
   verified: number;
   missing: string[];
@@ -64,10 +78,12 @@ export interface EffectVerdict {
 }
 
 /**
- * Il verde richiede TRE cose insieme:
+ * Il verde richiede QUATTRO cose insieme:
  *   1. una scrittura reale (`stringsWritten > 0`) oppure un loader a runtime;
  *   2. almeno un deliverable che regge la controprova (`verified > 0`);
- *   3. nessun percorso dichiarato risultato assente (`missing` vuoto).
+ *   3. nessun percorso dichiarato risultato assente (`missing` vuoto);
+ *   4. se il totale è noto, almeno l'80% delle stringhe scritto — la stessa
+ *      soglia di `decidePatchOutcome`.
  *
  * Il conteggio del patcher è la prova PRINCIPALE; l'esistenza su disco è solo
  * una controprova. Invertire i due ruoli è esattamente l'errore del 28/07.
@@ -77,9 +93,19 @@ export function effectVerdict(v: EffectVerification | undefined): EffectVerdict 
   const runtimeOnly = v?.runtimeOnly === true;
 
   const wrote = stringsWritten > 0 || runtimeOnly;
-  const verifiedOk = !!v && wrote && v.verified > 0 && v.missing.length === 0;
-  const partial = !!v && wrote && v.verified > 0 && v.missing.length > 0;
-  const unverified = !verifiedOk && !partial;
+  const changed = !!v && wrote && v.verified > 0;
+  const partial = changed && v.missing.length > 0;
+
+  const total = v?.stringsTotal;
+  const stringsLeft =
+    !runtimeOnly && typeof total === 'number' && total > 0
+      ? Math.max(0, total - stringsWritten)
+      : null;
+  const incomplete =
+    changed && !partial && stringsLeft !== null && stringsWritten < (total as number) * PARTIAL_BELOW;
+
+  const verifiedOk = changed && !partial && !incomplete;
+  const unverified = !verifiedOk && !partial && !incomplete;
 
   // `=== 0` e non `?? 0 === 0`: se il campo manca non sappiamo niente, e
   // spacciare l'ignoranza per una certezza negativa è come mentire al contrario.
@@ -88,10 +114,12 @@ export function effectVerdict(v: EffectVerification | undefined): EffectVerdict 
   return {
     verifiedOk,
     partial,
+    incomplete,
     unverified,
     tone: verifiedOk ? 'emerald' : 'amber',
     nothingWritten,
     stringsWritten,
+    stringsLeft,
     runtimeOnly,
     verified: v?.verified ?? 0,
     missing: v?.missing ?? [],

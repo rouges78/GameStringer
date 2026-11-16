@@ -7062,6 +7062,8 @@
   },
   "postTranslation": {
     "partialTitle": "Teilweise übersetzt: {n} Zeichenketten geschrieben, {missing} angegebene Dateien fehlen",
+    "incompleteTitle": "Unvollständige Übersetzung: {n} von {total} Zeichenketten geschrieben, {left} unverändert",
+    "stepLeft": "⚠️ {n} Ergebnisse erstellt, {left} Zeichenketten nicht ins Spiel geschrieben",
     "unverifiedTitle": "Die Engine meldet Erfolg, aber keine Datei wurde auf der Festplatte verifiziert",
     "unverifiedHint": "Das Spiel ist möglicherweise noch in der Originalsprache. Starte es zum Prüfen; falls nicht übersetzt, versuche das OCR-Overlay oder den Engine-Patcher.",
     "stringsTranslated": "Strings übersetzt",
