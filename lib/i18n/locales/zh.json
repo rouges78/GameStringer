@@ -7282,6 +7282,7 @@
     "back": "返回仪表板"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "未尝试：需要先提供游戏的 AES 密钥。",
     "unityStaticStep": "内置在游戏场景中的文本",
     "unityStaticTranslating": "正在翻译 {done}/{total} 条文本",
     "unityStaticWriting": "正在写入游戏(原文件保留为备份)",

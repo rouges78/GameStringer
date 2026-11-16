@@ -7282,6 +7282,7 @@
     "back": "Back to Dashboard"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Not tried: the game's AES key is needed first.",
     "unityStaticStep": "Texts built into the game scenes",
     "unityStaticTranslating": "Translating {done}/{total} texts",
     "unityStaticWriting": "Writing into the game (the original is kept as a backup)",

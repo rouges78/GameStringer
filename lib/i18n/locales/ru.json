@@ -7282,6 +7282,7 @@
     "back": "Вернуться на панель"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Не выполнялось: сначала нужен AES-ключ игры.",
     "unityStaticStep": "Тексты, встроенные в сцены игры",
     "unityStaticTranslating": "Перевожу {done}/{total} текстов",
     "unityStaticWriting": "Записываю в игру (оригинал сохраняется как резервная копия)",

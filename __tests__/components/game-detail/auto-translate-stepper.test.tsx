@@ -25,7 +25,7 @@ vi.mock('@/lib/donation-gate', () => ({
 
 import { AutoTranslateStepper } from '@/components/game-detail/auto-translate-stepper';
 
-type Step = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string };
+type Step = { label: string; status: 'pending' | 'running' | 'done' | 'error' | 'skipped'; detail?: string };
 
 const baseResult = {
   successRate: 0,
@@ -73,6 +73,21 @@ describe('AutoTranslateStepper', () => {
     expect(screen.getByText('Nessuna stringa è entrata nel gioco')).toHaveClass('text-red-400/60');
     expect(screen.getByText('postTranslation.unverifiedTitle')).toBeInTheDocument();
     expect(screen.getByText('gameDetails.close')).toBeInTheDocument();
+  });
+
+  it('a skipped step shows its reason and does not keep the run open', () => {
+    renderStepper({
+      steps: [
+        { label: 'Estrazione', status: 'error' },
+        { label: 'Aggancio a runtime', status: 'skipped', detail: 'Avvia il gioco' },
+      ],
+      result: baseResult,
+    });
+    expect(screen.getByText('Aggancio a runtime')).toBeTruthy();
+    // saltato non è fallito: il motivo non è scritto in rosso
+    expect(screen.getByText('Avvia il gioco')).not.toHaveClass('text-red-400/60');
+    // Il giro è finito: il risultato si vede, come con un passo rosso.
+    expect(screen.getByText('postTranslation.unverifiedTitle')).toBeTruthy();
   });
 
   it('shows neither result nor Close while a step is still running', () => {

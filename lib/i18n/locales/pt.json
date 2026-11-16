@@ -7282,6 +7282,7 @@
     "back": "Voltar ao painel"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Não tentado: primeiro é necessária a chave AES do jogo.",
     "unityStaticStep": "Textos incorporados nas cenas do jogo",
     "unityStaticTranslating": "A traduzir {done}/{total} textos",
     "unityStaticWriting": "A escrever no jogo (o original fica como cópia de segurança)",
