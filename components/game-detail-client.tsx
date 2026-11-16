@@ -54,6 +54,7 @@ import {
   planRuntimeFallback,
   buildRunReport,
   summarizeRunReport,
+  runReportWroteToGame,
   type RunReport,
   type FallbackCause,
 } from '@/lib/translation/runtime-fallback';
@@ -2208,11 +2209,15 @@ export default function GameDetailPage() {
 
     // Il report per gioco finisce nella cronologia: dice cosa è entrato nel
     // gioco e quale strada ci ha provato, non quanti stadi hanno detto verde.
-    void activityHistory.trackPatch(
-      game.name || game.title || '',
-      game.appid?.toString(),
-      summarizeRunReport(report),
-    );
+    // «Patch creata» solo se nel gioco è entrato qualcosa: un giro fallito
+    // alzava il contatore PATCH senza aver scritto un file (Fobia, 15/11/2026).
+    const gameName = game.name || game.title || '';
+    const summary = summarizeRunReport(report);
+    if (runReportWroteToGame(report)) {
+      void activityHistory.trackPatch(gameName, game.appid?.toString(), summary);
+    } else {
+      void activityHistory.trackAttempt(gameName, game.appid?.toString(), summary);
+    }
 
     if (plan.action === 'none') return report;
 

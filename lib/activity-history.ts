@@ -257,6 +257,20 @@ export class ActivityHistoryClient {
   }
 
   /**
+   * Traccia un giro di traduzione che non ha scritto nulla nel gioco.
+   * Non è una patch: tipo e titolo restano fuori dal conteggio delle patch.
+   */
+  async trackAttempt(gameName: string, gameId?: string, details?: string): Promise<void> {
+    await this.add({
+      activity_type: 'other',
+      title: `Nessun file scritto: ${gameName}`,
+      description: details,
+      game_name: gameName,
+      game_id: gameId,
+    });
+  }
+
+  /**
    * Traccia sincronizzazione Steam
    */
   async trackSteamSync(gamesCount: number): Promise<void> {

@@ -4,6 +4,7 @@ import {
   planRuntimeFallback,
   buildRunReport,
   summarizeRunReport,
+  runReportWroteToGame,
   runtimePlanMessageKey,
   type RuntimeContext,
 } from '@/lib/translation/runtime-fallback';
@@ -208,5 +209,28 @@ describe('summarizeRunReport', () => {
       plan: { action: 'unavailable', blocker: 'not-windows' },
     });
     expect(summarizeRunReport(r)).toBe('conteggi non disponibili — runtime non disponibile (not-windows)');
+  });
+});
+
+describe('runReportWroteToGame', () => {
+  // 15/11/2026, Fobia: String it! si ferma al pak cifrato, nel gioco non entra
+  // nulla, e la cronologia segnava «Patch creata» alzando il contatore PATCH.
+  it('un giro fallito non è una patch, qualunque sia il piano di ripiego', () => {
+    for (const plan of [
+      { action: 'none' as const },
+      { action: 'await-launch' as const, processName: 'Game.exe' },
+      { action: 'inject' as const, processName: 'Game.exe' },
+      { action: 'unavailable' as const, blocker: 'hook-missing' as const },
+    ]) {
+      const r = buildRunReport({ gameTitle: 'Gioco', staticOutcome: 'failure', stringsInjected: 0, plan });
+      expect(runReportWroteToGame(r)).toBe(false);
+    }
+  });
+
+  it('un giro riuscito o parziale ha scritto nel gioco', () => {
+    for (const staticOutcome of ['success', 'partial'] as const) {
+      const r = buildRunReport({ gameTitle: 'Gioco', staticOutcome, stringsInjected: 10, stringsTotal: 12, plan: { action: 'none' } });
+      expect(runReportWroteToGame(r)).toBe(true);
+    }
   });
 });
