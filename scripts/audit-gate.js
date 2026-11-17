@@ -29,6 +29,35 @@ const ROOT = path.resolve(__dirname, '..');
  * non è raggiungibile da input di terzi, e cosa sblocca la rimozione.
  */
 const ALLOWLIST = [
+  {
+    id: 'GHSA-fc5q-39xc-vjpf',
+    package: 'picomatch',
+    until: '2026-12-17',
+    reason: [
+      'CVE-2026-112366: ReDoS in picomatch <= 4.0.7 su glob del tipo «+(*)» o',
+      '«+(*a)». Impatto solo Availability: blocca il ciclo degli eventi di chi',
+      'compila il glob.',
+      '',
+      'Perché non è raggiungibile da input di terzi:',
+      '  - picomatch arriva solo da strumenti di sviluppo: vite e vitest',
+      '    (4.0.4, anche via tinyglobby e fdir) e tailwindcss (2.3.2, via',
+      '    chokidar, anymatch, readdirp e micromatch). Il gate la marca',
+      '    «solo dev».',
+      '  - i glob che quegli strumenti compilano sono scritti da noi nelle',
+      '    configurazioni (vitest, tailwind, vite): nessun glob arriva da',
+      '    rete, da un gioco o da un file tradotto.',
+      '  - nessun sorgente della app importa picomatch o micromatch',
+      '    (verificato con grep su app/ components/ lib/ hooks/ scripts/',
+      '    src-tauri/src il 17/11/2026).',
+      '',
+      'Perché non si aggiorna e basta: al 17/11/2026 non esiste una versione',
+      'corretta. Il bollettino copre «<= 4.0.7» e 4.0.7 è la più recente sul',
+      'registry; `npm audit` propone solo di retrocedere vitest alla 3.1.4.',
+      '',
+      'Cosa sblocca la rimozione: una picomatch corretta (4.0.8 o un',
+      'backport 2.3.x) e `npm audit fix`. Riverificare a ogni giro.',
+    ].join('\n'),
+  },
   // GHSA-vfj7-8cjw-p6xm (braces <=3.0.3, stack exhaustion) — pensionata il
   // 05/11/2026, in anticipo sulla scadenza del 20/11. braces è ancora 3.0.3
   // nel lockfile, ma l'advisory non compare più in `npm audit` (né in locale
