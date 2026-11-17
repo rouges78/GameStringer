@@ -29,7 +29,8 @@ import {
   Workflow,
   ShieldCheck,
   Eye,
-  Puzzle
+  Puzzle,
+  Binary
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useTranslation } from '@/lib/i18n';
@@ -82,6 +83,7 @@ export function CommandPalette() {
     { id: 'injector', title: t('nav.injector'), description: t('universalInjector.subtitle'), icon: <Puzzle className="h-4 w-4" />, action: () => router.push('/injector'), keywords: ['inject', 'mod', 'dll'], category: 'navigation' },
     { id: 'crawler', title: t('nav.contextHarvester'), description: t('contextHarvesterPage.subtitle'), icon: <Scan className="h-4 w-4" />, action: () => router.push('/context-harvester'), keywords: ['crawler', 'context', 'contesto'], category: 'navigation' },
     { id: 'fixer', title: t('nav.fixer'), description: t('translationFixer.subtitle'), icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/fixer'), keywords: ['fix', 'tag', 'correggi'], category: 'navigation' },
+    { id: 'binary-patcher', title: t('binaryPatcherPage.title'), description: t('binaryPatcherPage.selectExeDll'), icon: <Binary className="h-4 w-4" />, action: () => router.push('/binary-patcher'), keywords: ['binary', 'patcher', 'exe', 'dll'], category: 'navigation' },
     
     // Actions — nascoste: nessuno ascolta 'scan-games' né 'show-shortcuts', quindi
     // la voce chiudeva la palette senza fare nulla. Scansione: pulsante in Libreria;

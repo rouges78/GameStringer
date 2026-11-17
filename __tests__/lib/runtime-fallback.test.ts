@@ -6,6 +6,7 @@ import {
   summarizeRunReport,
   runReportWroteToGame,
   runtimePlanMessageKey,
+  runtimeStepFor,
   type RuntimeContext,
 } from '@/lib/translation/runtime-fallback';
 
@@ -232,5 +233,43 @@ describe('runReportWroteToGame', () => {
       const r = buildRunReport({ gameTitle: 'Gioco', staticOutcome, stringsInjected: 10, stringsTotal: 12, plan: { action: 'none' } });
       expect(runReportWroteToGame(r)).toBe(true);
     }
+  });
+});
+
+/**
+ * Il passo runtime nel riepilogo. Fino al 16/11/2026 il suo esito finiva solo
+ * in un toast: sparito quello, il riepilogo mostrava il piano con un passo in
+ * meno e nessuna spiegazione (visto su Fobia).
+ */
+describe('runtimeStepFor', () => {
+  const report = (plan: Parameters<typeof buildRunReport>[0]['plan'], cause?: 'run-failed') =>
+    buildRunReport({ gameTitle: 'Gioco', staticOutcome: 'failure', plan, cause });
+
+  it('non aggiunge nessun passo se il runtime non serviva', () => {
+    const r = buildRunReport({ gameTitle: 'Gioco', staticOutcome: 'success', plan: { action: 'none' } });
+    expect(runtimeStepFor(r)).toBeNull();
+  });
+
+  it("a gioco chiuso il passo è saltato, e il motivo è l'invito ad avviarlo", () => {
+    expect(runtimeStepFor(report({ action: 'await-launch', processName: 'Game.exe' }))).toEqual({
+      status: 'skipped', detailKey: 'gameDetail.runtimeFallbackAwaitLaunch',
+    });
+    expect(runtimeStepFor(report({ action: 'await-launch', processName: 'Game.exe' }, 'run-failed'))).toEqual({
+      status: 'skipped', detailKey: 'gameDetail.runtimeFallbackAfterFailure',
+    });
+  });
+
+  it('quando è precluso il passo è saltato, col suo motivo', () => {
+    for (const blocker of ['not-windows', 'hook-missing', 'anti-cheat', 'unknown-process'] as const) {
+      expect(runtimeStepFor(report({ action: 'unavailable', blocker }))).toEqual({
+        status: 'skipped', detailKey: `gameDetail.runtimeFallbackBlocked.${blocker}`,
+      });
+    }
+  });
+
+  it("dopo l'iniezione dice com'è andata", () => {
+    const r = report({ action: 'inject', processName: 'Game.exe' });
+    expect(runtimeStepFor(r, true)).toEqual({ status: 'done', detailKey: 'gameDetail.runtimeFallbackReady' });
+    expect(runtimeStepFor(r, false)).toEqual({ status: 'error', detailKey: 'gameDetail.runtimeFallbackFailed' });
   });
 });

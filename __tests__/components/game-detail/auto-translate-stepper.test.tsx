@@ -9,7 +9,8 @@ vi.mock('@/lib/i18n', () => ({
     t: (k: string) =>
       k === 'postTranslation.ocrDescPartial' ? 'partial {pct}%'
         : k === 'postTranslation.writtenTitle' ? 'written {n} ({pct}%)'
-          : k,
+          : k === 'postTranslation.incompleteTitle' ? 'incomplete {n}/{total}, left {left}'
+            : k,
     language: 'it',
   }),
 }));
@@ -24,7 +25,7 @@ vi.mock('@/lib/donation-gate', () => ({
 
 import { AutoTranslateStepper } from '@/components/game-detail/auto-translate-stepper';
 
-type Step = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string };
+type Step = { label: string; status: 'pending' | 'running' | 'done' | 'error' | 'skipped'; detail?: string };
 
 const baseResult = {
   successRate: 0,
@@ -72,6 +73,21 @@ describe('AutoTranslateStepper', () => {
     expect(screen.getByText('Nessuna stringa è entrata nel gioco')).toHaveClass('text-red-400/60');
     expect(screen.getByText('postTranslation.unverifiedTitle')).toBeInTheDocument();
     expect(screen.getByText('gameDetails.close')).toBeInTheDocument();
+  });
+
+  it('a skipped step shows its reason and does not keep the run open', () => {
+    renderStepper({
+      steps: [
+        { label: 'Estrazione', status: 'error' },
+        { label: 'Aggancio a runtime', status: 'skipped', detail: 'Avvia il gioco' },
+      ],
+      result: baseResult,
+    });
+    expect(screen.getByText('Aggancio a runtime')).toBeTruthy();
+    // saltato non è fallito: il motivo non è scritto in rosso
+    expect(screen.getByText('Avvia il gioco')).not.toHaveClass('text-red-400/60');
+    // Il giro è finito: il risultato si vede, come con un passo rosso.
+    expect(screen.getByText('postTranslation.unverifiedTitle')).toBeTruthy();
   });
 
   it('shows neither result nor Close while a step is still running', () => {
@@ -142,6 +158,26 @@ describe('AutoTranslateStepper', () => {
       },
     });
     expect(screen.getByText('written 30 (1%)')).toBeInTheDocument();
+  });
+
+  it('a run that wrote 68% of the strings is amber and says how many are left', () => {
+    // DELTARUNE demo, 16/11/2026: 4184 of 6121 written, panel was green.
+    renderStepper({
+      steps: [{ label: 'Analisi', status: 'done' }],
+      result: {
+        ...baseResult,
+        successRate: 100,
+        stringsTranslated: 4184,
+        stringsTotal: 6121,
+        verification: {
+          checked: 1, verified: 1, missing: [], verifiedNames: ['GameMaker Patch'],
+          stringsWritten: 4184, stringsTotal: 6121, runtimeOnly: false,
+        },
+      } as typeof baseResult,
+    });
+    expect(screen.getByText('incomplete 4184/6121, left 1937')).toHaveClass('text-amber-300');
+    expect(screen.queryByText(/written 4184/)).toBeNull();
+    expect(screen.queryByText('postTranslation.unverifiedTitle')).toBeNull();
   });
 
   it('"Create patch" opens the GsPack export instead of calling a missing command', () => {
