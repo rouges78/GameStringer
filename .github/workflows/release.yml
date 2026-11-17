@@ -45,7 +45,7 @@ jobs:
       # `@stable`. Da togliere insieme al blocco in ci.yml: vedi
       # docs/RUST-TEST-TRIAGE.md.
       - name: Setup Rust 1.99.1
-        uses: dtolnay/rust-toolchain@1.99.1
+        uses: dtolnay/rust-toolchain@1.120.0
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2

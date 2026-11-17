@@ -135,7 +135,7 @@ jobs:
       # `@stable`. Da togliere quando si capisce cosa rompe la 1.100 su Windows:
       # vedi docs/RUST-TEST-TRIAGE.md.
       - name: Install Rust 1.99.1
-        uses: dtolnay/rust-toolchain@1.99.1
+        uses: dtolnay/rust-toolchain@1.120.0
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
