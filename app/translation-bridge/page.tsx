@@ -236,16 +236,16 @@ export default function TranslationBridgePage() {
   }, [error, success]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/10 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-noir-900 via-noir-900/10 to-noir-900 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-noir-500 to-noir-600">
               <Gamepad2 className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{t('nav.translationBridge')}</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-noir-400 to-noir-400 bg-clip-text text-transparent">{t('nav.translationBridge')}</h1>
               <p className="text-muted-foreground">
                 {t('translationBridge.subtitle')}</p>
             </div>
@@ -267,7 +267,7 @@ export default function TranslationBridgePage() {
               onClick={handleToggleBridge}
               disabled={isLoading}
               variant={isRunning ? "destructive" : "default"}
-              className={!isRunning ? "bg-gradient-to-r from-blue-600 to-cyan-600" : ""}
+              className={!isRunning ? "bg-gradient-to-r from-noir-600 to-noir-600" : ""}
             >
               {isRunning ? (
                 <><Square className="h-4 w-4 mr-2" />{t('subtitleOverlay.stop')}</>
@@ -294,11 +294,11 @@ export default function TranslationBridgePage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-noir-800/50 border-noir-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <Database className="h-5 w-5 text-blue-400" />
+                <div className="p-2 rounded-lg bg-noir-500/20">
+                  <Database className="h-5 w-5 text-noir-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{dictStats?.total_entries ?? 0}</p>
@@ -308,11 +308,11 @@ export default function TranslationBridgePage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-noir-800/50 border-noir-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <Activity className="h-5 w-5 text-blue-400" />
+                <div className="p-2 rounded-lg bg-noir-500/20">
+                  <Activity className="h-5 w-5 text-noir-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats?.total_requests ?? 0}</p>
@@ -322,7 +322,7 @@ export default function TranslationBridgePage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-noir-800/50 border-noir-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-green-500/20">
@@ -338,7 +338,7 @@ export default function TranslationBridgePage() {
             </CardContent>
           </Card>
           
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-noir-800/50 border-noir-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-orange-500/20">
@@ -357,7 +357,7 @@ export default function TranslationBridgePage() {
 
         {/* Main Content */}
         <Tabs defaultValue="translations" className="space-y-4">
-          <TabsList className="bg-slate-800/50">
+          <TabsList className="bg-noir-800/50">
             <TabsTrigger value="translations">
               <Languages className="h-4 w-4 mr-2" />{t('activity.translations')}</TabsTrigger>
             <TabsTrigger value="test">
@@ -371,7 +371,7 @@ export default function TranslationBridgePage() {
           <TabsContent value="translations" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Add Single Translation */}
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Plus className="h-5 w-5" />{t('dictionaryManager.addTranslation')}</CardTitle>
@@ -405,7 +405,7 @@ export default function TranslationBridgePage() {
               </Card>
 
               {/* Bulk Import */}
-              <Card className="bg-slate-800/50 border-slate-700">
+              <Card className="bg-noir-800/50 border-noir-700">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Upload className="h-5 w-5" />
@@ -441,7 +441,7 @@ World=Mondo`}
 
           {/* Test Tab */}
           <TabsContent value="test">
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-noir-800/50 border-noir-700">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Zap className="h-5 w-5" />{t('settings.testTranslation')}</CardTitle>
@@ -483,7 +483,7 @@ World=Mondo`}
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-noir-800/50 border-noir-700">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Settings className="h-5 w-5" />{t('ueTranslator.configuration')}</CardTitle>
@@ -544,7 +544,7 @@ World=Mondo`}
 
                 {/* Current Languages */}
                 {dictStats && (
-                  <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700">
+                  <div className="p-4 rounded-lg bg-noir-900/50 border border-noir-700">
                     <p className="text-sm text-muted-foreground mb-2">{t('translationBridgePage.lingueAttive')}</p>
                     <p className="text-lg font-medium">
                       {getFlagEmoji(dictStats.active_source === 'en' ? 'GB' : dictStats.active_source.toUpperCase())} {dictStats.active_source}
@@ -565,7 +565,7 @@ World=Mondo`}
 
         {/* Performance Stats */}
         {stats && stats.total_requests > 0 && (
-          <Card className="bg-slate-800/50 border-slate-700">
+          <Card className="bg-noir-800/50 border-noir-700">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Activity className="h-5 w-5" />{t('settings.performance')}</CardTitle>

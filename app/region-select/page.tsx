@@ -94,9 +94,9 @@ export default function RegionSelectPage() {
     >
       {/* Istruzioni */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-        <div className="bg-black/80 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg border border-cyan-500/50">
+        <div className="bg-black/80 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg border border-noir-500/50">
           <p className="text-sm font-medium text-center">
-            Trascina per selezionare la regione OCR &mdash; <span className="text-cyan-400">ESC</span> per annullare
+            Trascina per selezionare la regione OCR &mdash; <span className="text-noir-400">ESC</span> per annullare
           </p>
         </div>
       </div>
@@ -104,7 +104,7 @@ export default function RegionSelectPage() {
       {/* Rettangolo di selezione */}
       {rect && rect.width > 0 && rect.height > 0 && (
         <div
-          className="absolute border-2 border-cyan-400 bg-cyan-400/10 pointer-events-none"
+          className="absolute border-2 border-noir-400 bg-noir-400/10 pointer-events-none"
           style={{
             left: rect.left,
             top: rect.top,
@@ -113,7 +113,7 @@ export default function RegionSelectPage() {
           }}
         >
           {/* Dimensioni */}
-          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-black/80 text-cyan-300 text-xs px-2 py-1 rounded whitespace-nowrap">
+          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-black/80 text-noir-300 text-xs px-2 py-1 rounded whitespace-nowrap">
             {Math.round(rect.width)} x {Math.round(rect.height)}
           </div>
         </div>

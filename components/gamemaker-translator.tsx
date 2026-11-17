@@ -481,7 +481,7 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
                 {dataInfo.gm_version}
               </Badge>
               {dataInfo.is_yyc && (
-                <Badge variant="outline" className="text-2xs border-purple-500/30 text-purple-400">
+                <Badge variant="outline" className="text-2xs border-rouge-500/30 text-rouge-400">
                   {t('gameMakerTranslator.exeStrings')}</Badge>
               )}
               {dataInfo.has_language_files && (
@@ -508,7 +508,7 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
       {/* Scan / Info */}
       {isScanning ? (
-        <div className="flex items-center gap-2 py-8 justify-center text-slate-400">
+        <div className="flex items-center gap-2 py-8 justify-center text-noir-400">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span className="text-sm">{t('gameMakerTranslator.analyzing')}</span>
         </div>
@@ -516,28 +516,28 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
         <>
           {/* Stats bar */}
           <div className="grid grid-cols-4 gap-2">
-            <Card className="bg-slate-800/50 border-slate-700/50">
+            <Card className="bg-noir-800/50 border-noir-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-white">{dataInfo.total_strings.toLocaleString()}</div>
-                <div className="text-micro text-slate-400 uppercase">{t('gameMakerTranslator.total')}</div>
+                <div className="text-micro text-noir-400 uppercase">{t('gameMakerTranslator.total')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-slate-800/50 border-slate-700/50">
+            <Card className="bg-noir-800/50 border-noir-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-amber-400">{dataInfo.translatable_strings.toLocaleString()}</div>
-                <div className="text-micro text-slate-400 uppercase">{t('common.traducibili')}</div>
+                <div className="text-micro text-noir-400 uppercase">{t('common.traducibili')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-slate-800/50 border-slate-700/50">
+            <Card className="bg-noir-800/50 border-noir-700/50">
               <CardContent className="p-2.5 text-center">
                 <div className="text-lg font-bold text-emerald-400">{translatedCount}</div>
-                <div className="text-micro text-slate-400 uppercase">{t('gameMakerTranslator.translated')}</div>
+                <div className="text-micro text-noir-400 uppercase">{t('gameMakerTranslator.translated')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-slate-800/50 border-slate-700/50">
+            <Card className="bg-noir-800/50 border-noir-700/50">
               <CardContent className="p-2.5 text-center">
-                <div className="text-lg font-bold text-sky-400">{translationPercent}%</div>
-                <div className="text-micro text-slate-400 uppercase">{t('common.progresso')}</div>
+                <div className="text-lg font-bold text-noir-400">{translationPercent}%</div>
+                <div className="text-micro text-noir-400 uppercase">{t('common.progresso')}</div>
               </CardContent>
             </Card>
           </div>
@@ -549,11 +549,11 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
           {/* Translation progress */}
           {isTranslating && (
-            <div className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-3">
+            <div className="bg-noir-500/10 border border-noir-500/20 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-sky-400" />
-                  <span className="text-sm text-sky-300">
+                  <Loader2 className="h-4 w-4 animate-spin text-noir-400" />
+                  <span className="text-sm text-noir-300">
                     {t('gameMakerTranslator.aiTranslationLabel')} {translateProgress}/{translateTotal}
                   </span>
                 </div>
@@ -573,13 +573,13 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
               {isExtracting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <FileText className="h-3.5 w-3.5 mr-1.5" />}
               {t('gameMakerTranslator.extractStrings')}</Button>
             
-            <Button size="xs" className="bg-sky-600 hover:bg-sky-700 text-white"
+            <Button size="xs" className="bg-noir-600 hover:bg-noir-700 text-white"
               onClick={translateBatch}
               disabled={isTranslating || strings.length === 0}>
               <Languages className="h-3.5 w-3.5 mr-1.5" />
               {t('gameMakerTranslator.translatePage')}</Button>
 
-            <Button size="xs" className="bg-violet-600 hover:bg-violet-700 text-white"
+            <Button size="xs" className="bg-rouge-600 hover:bg-rouge-700 text-white"
               onClick={translateAll}
               disabled={isTranslating || !dataInfo}>
               <Zap className="h-3.5 w-3.5 mr-1.5" />
@@ -618,12 +618,12 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
               </div>
               <div className="max-h-56 overflow-y-auto space-y-1.5">
                 {truncated.map((tr) => (
-                  <div key={tr.index} className="rounded bg-slate-900/60 px-2 py-1.5 text-[11px] space-y-0.5">
-                    <div className="flex items-center gap-2 text-slate-500 text-[10px]">
+                  <div key={tr.index} className="rounded bg-noir-900/60 px-2 py-1.5 text-[11px] space-y-0.5">
+                    <div className="flex items-center gap-2 text-noir-500 text-[10px]">
                       <span>#{tr.index}</span>
                       <span>{tr.needed_bytes} → {tr.available_bytes} {t('gameMakerTranslator.truncatedBytes')}</span>
                     </div>
-                    <div className="text-slate-400 truncate" title={tr.original}>
+                    <div className="text-noir-400 truncate" title={tr.original}>
                       {t('gameMakerTranslator.truncatedOriginal')}: {tr.original}
                     </div>
                     <div className="text-amber-200 truncate" title={tr.translated}>
@@ -642,13 +642,13 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
           {strings.length > 0 && (
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-noir-400" />
                 <Input
                   aria-label={t('common.cerca')} placeholder={t('gameMakerTranslator.searchPh')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') searchStrings(); }}
-                  className="pl-8 h-8 text-sm bg-slate-800/50 border-slate-700/50"
+                  className="pl-8 h-8 text-sm bg-noir-800/50 border-noir-700/50"
                 />
               </div>
               <Button size="sm" variant="outline" className="h-8" onClick={searchStrings}>
@@ -663,9 +663,9 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
           {/* String list */}
           {strings.length > 0 && (
-            <div className="border border-slate-700/50 rounded-lg overflow-hidden">
+            <div className="border border-noir-700/50 rounded-lg overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 bg-slate-800/80 text-2xs uppercase text-slate-400 font-bold tracking-wider">
+              <div className="grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 bg-noir-800/80 text-2xs uppercase text-noir-400 font-bold tracking-wider">
                 <span>#</span>
                 <span>{t('gameMakerTranslator.original')}</span>
                 <span>{t('common.traduzione')}</span>
@@ -673,12 +673,12 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
               </div>
 
               {/* Rows */}
-              <div className="max-h-[400px] overflow-y-auto custom-scrollbar divide-y divide-slate-800/50">
+              <div className="max-h-[400px] overflow-y-auto custom-scrollbar divide-y divide-noir-800/50">
                 {displayStrings.map((s) => (
-                  <div key={s.index} className={`grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 text-xs hover:bg-slate-800/30 transition-colors ${translations[s.index] ? 'bg-emerald-500/5' : ''}`}>
-                    <span className="text-slate-500 font-mono text-2xs">{s.index}</span>
+                  <div key={s.index} className={`grid grid-cols-[50px_1fr_1fr_60px] gap-2 px-3 py-2 text-xs hover:bg-noir-800/30 transition-colors ${translations[s.index] ? 'bg-emerald-500/5' : ''}`}>
+                    <span className="text-noir-500 font-mono text-2xs">{s.index}</span>
                     
-                    <div className="text-slate-300 break-words line-clamp-3 leading-relaxed" title={s.original}>
+                    <div className="text-noir-300 break-words line-clamp-3 leading-relaxed" title={s.original}>
                       {s.original.length > 200 ? s.original.slice(0, 200) + '...' : s.original}
                     </div>
                     
@@ -709,13 +709,13 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
                           {translations[s.index].length > 200 ? translations[s.index].slice(0, 200) + '...' : translations[s.index]}
                         </span>
                       ) : (
-                        <span className="text-slate-600 italic">—</span>
+                        <span className="text-noir-600 italic">—</span>
                       )}
                     </div>
                     
                     <div className="flex items-center justify-center gap-0.5">
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => startEdit(s)} title={t('common.modifica')}>
-                        <Edit3 className="h-3 w-3 text-slate-400" />
+                        <Edit3 className="h-3 w-3 text-noir-400" />
                       </Button>
                       {translations[s.index] && (
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" 
@@ -734,12 +734,12 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
               {/* Pagination */}
               {page >= 0 && totalPages > 1 && (
-                <div className="flex items-center justify-between px-3 py-2 bg-slate-800/60 border-t border-slate-700/50">
+                <div className="flex items-center justify-between px-3 py-2 bg-noir-800/60 border-t border-noir-700/50">
                   <Button size="sm" variant="ghost" className="h-7 text-[11px]"
                     disabled={page === 0}
                     onClick={() => extractStrings(page - 1)}>
                     <ChevronLeft className="h-3.5 w-3.5 mr-1" /> {t('gameMakerTranslator.previous')}</Button>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-noir-400">
                     {t('gameMakerTranslator.page')} {page + 1}  {t('gameMakerTranslator.of')} {totalPages}
                   </span>
                   <Button size="sm" variant="ghost" className="h-7 text-[11px]"
@@ -754,7 +754,7 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
 
           {/* Empty state */}
           {strings.length === 0 && !isExtracting && (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-8 text-noir-500">
               <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">{t('gameMakerTranslator.clickExtractPrompt')}</p>
               <p className="text-[11px] mt-1">{t('gameMakerTranslator.willExtractDesc')}</p>
@@ -773,7 +773,7 @@ export function GameMakerTranslator({ gamePath, gameName, targetLang = 'it' }: G
           </div>
         </>
       ) : (
-        <div className="text-center py-8 text-slate-500">
+        <div className="text-center py-8 text-noir-500">
           <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">{t('gameMakerTranslator.dataWinNotFound')}</p>
           <p className="text-[11px] mt-1">{gamePath}</p>

@@ -58,7 +58,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/',
       name: 'Dashboard',
       icon: Home,
-      color: 'slate',
+      color: 'noir',
       category: 'core',
       features: [
         'Panoramica attività di traduzione recenti',
@@ -73,7 +73,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Game Library',
       nameKey: 'nav.library',
       icon: Gamepad2,
-      color: 'slate',
+      color: 'noir',
       category: 'core',
       features: [
         'Scansione automatica Steam, Epic, GOG, Origin, Ubisoft, Battle.net',
@@ -90,7 +90,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'AI Translator',
       nameKey: 'nav.translate',
       icon: Sparkles,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'text',
       features: [
@@ -106,7 +106,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/translator/pro',
       name: 'Neural Translator Pro',
       icon: Brain,
-      color: 'violet',
+      color: 'rouge',
       category: 'translation',
       subcategory: 'text',
       features: [
@@ -122,7 +122,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Multi-LLM Compare',
       nameKey: 'nav.multiLlm',
       icon: Brain,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'text',
       features: [
@@ -138,7 +138,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/ai-review',
       name: 'AI Review',
       icon: ShieldCheck,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'text',
       features: [
@@ -154,7 +154,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/ocr-translator',
       name: 'OCR Translator',
       icon: Scan,
-      color: 'violet',
+      color: 'rouge',
       category: 'translation',
       subcategory: 'visual',
       features: [
@@ -170,7 +170,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/live-ocr',
       name: 'Live OCR',
       icon: Monitor,
-      color: 'violet',
+      color: 'rouge',
       category: 'translation',
       subcategory: 'visual',
       features: [
@@ -185,7 +185,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Texture Translator',
       nameKey: 'nav.texture',
       icon: Layers,
-      color: 'violet',
+      color: 'rouge',
       category: 'translation',
       subcategory: 'visual',
       features: [
@@ -200,7 +200,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Manga Translator',
       nameKey: 'nav.manga',
       icon: BookOpen,
-      color: 'violet',
+      color: 'rouge',
       category: 'translation',
       subcategory: 'visual',
       features: [
@@ -217,7 +217,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Voice Translator',
       nameKey: 'nav.voice',
       icon: Mic,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'audio',
       features: [
@@ -234,7 +234,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Voice Clone Studio',
       nameKey: 'nav.voiceClone',
       icon: AudioLines,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'audio',
       features: [
@@ -250,7 +250,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/character-voice',
       name: 'Character Voice AI',
       icon: User,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'audio',
       features: [
@@ -265,7 +265,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Sottotitoli',
       nameKey: 'nav.subtitles',
       icon: Film,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'audio',
       features: [
@@ -279,7 +279,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/dubbing',
       name: 'Fandub AI',
       icon: AudioLines,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'audio',
       experimental: true,
@@ -300,7 +300,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Batch Translator',
       nameKey: 'nav.batch',
       icon: FolderTree,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'utility',
       features: [
@@ -316,7 +316,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       name: 'Dictionary / Translation Memory',
       nameKey: 'nav.dictionary',
       icon: Database,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'utility',
       features: [
@@ -333,7 +333,7 @@ export function getToolsRegistry(): ToolDefinition[] {
       href: '/translator/tools',
       name: 'Translator Tools',
       icon: Sparkles,
-      color: 'blue',
+      color: 'noir',
       category: 'translation',
       subcategory: 'utility',
       features: [
@@ -740,8 +740,8 @@ export const subcategoryLabels: Record<string, string> = {
 
 // Mappa category → colore e label
 export const categoryMeta: Record<string, { label: string; color: string }> = {
-  core: { label: 'Core', color: 'slate' },
-  translation: { label: 'Traduzione', color: 'blue' },
+  core: { label: 'Core', color: 'noir' },
+  translation: { label: 'Traduzione', color: 'noir' },
   tools: { label: 'Strumenti', color: 'emerald' },
   resources: { label: 'Risorse', color: 'orange' },
 };

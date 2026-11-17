@@ -24,7 +24,6 @@ import { useProfiles } from '@/hooks/use-profiles';
 import { CreateProfileRequest } from '@/types/profiles';
 import { useTranslation, Language } from '@/lib/i18n';
 import { Globe } from 'lucide-react';
-import { generateRecoveryKey, saveRecoveryKeyHash } from '@/lib/recovery-key';
 import { RecoveryKeyDisplay } from '@/components/profiles/recovery-key-display';
 import { VisuallyHidden } from 'radix-ui';
 import { DialogTitle } from '@/components/ui/dialog';
@@ -68,7 +67,6 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [customImage, setCustomImage] = useState<string | null>(null);
-  const [recoveryKey, setRecoveryKey] = useState<string[]>([]);
   const [showRecoveryKey, setShowRecoveryKey] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
@@ -162,15 +160,10 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     
     if (success) {
       clientLogger.debug('✅ Profile created successfully:', request.name);
-      
-      // Genera Recovery Key
-      const newRecoveryKey = generateRecoveryKey();
-      setRecoveryKey(newRecoveryKey);
-      
-      // Salva hash della recovery key (usa il nome come ID temporaneo)
-      await saveRecoveryKeyHash(request.name, newRecoveryKey);
-      
-      // Mostra dialog recovery key
+
+      // Nessuna recovery key: il profilo è cifrato con una chiave derivata dalla
+      // password e una chiave di recupero non potrebbe sbloccarlo (vedi
+      // password-recovery-dialog.tsx). Mostra solo l'avviso sulla password.
       setPendingProfileId(request.name);
       setShowRecoveryKey(true);
     } else {
@@ -202,7 +195,6 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     });
     setSelectedAvatar(null);
     setCustomImage(null);
-    setRecoveryKey([]);
     setShowRecoveryKey(false);
     
     // Chiudi il dialog
@@ -235,7 +227,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-sm p-0 overflow-hidden bg-slate-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+      <DialogContent className="sm:max-w-sm p-0 overflow-hidden bg-noir-900/60 backdrop-blur-2xl border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
         <VisuallyHidden.Root><DialogTitle>{t('profile.newProfile')}</DialogTitle></VisuallyHidden.Root>
         
         {/* Hero Header */}
@@ -243,7 +235,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 p-3">
+          className="relative overflow-hidden bg-gradient-to-r from-noir-600 via-rouge-600 to-rouge-600 p-3">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           
@@ -276,7 +268,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
-            className="flex items-center gap-3 p-2.5 rounded-lg bg-gradient-to-r from-blue-500/10 to-rose-500/10 border border-blue-500/20">
+            className="flex items-center gap-3 p-2.5 rounded-lg bg-gradient-to-r from-noir-500/10 to-rouge-500/10 border border-noir-500/20">
             <label className="cursor-pointer group relative shrink-0">
               <input
                 type="file"
@@ -285,7 +277,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 className="hidden"
                 disabled={isCreating}
               />
-              <Avatar className="h-12 w-12 ring-2 ring-blue-500/50 shadow-md group-hover:ring-blue-400 transition-all">
+              <Avatar className="h-12 w-12 ring-2 ring-noir-500/50 shadow-md group-hover:ring-noir-400 transition-all">
                 {customImage ? (
                   <AvatarImage src={customImage} alt="Avatar" />
                 ) : null}
@@ -299,7 +291,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             </label>
             
             <div className="flex-1">
-              <p className="text-xs font-medium text-blue-300 mb-1.5">{t('profile.chooseColor')}</p>
+              <p className="text-xs font-medium text-noir-300 mb-1.5">{t('profile.chooseColor')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {AVATAR_GRADIENTS.map((avatar) => (
                   <button
@@ -308,7 +300,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                     onClick={() => handleAvatarSelect(avatar.id)}
                     className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatar.gradient} transition-all ${
                       selectedAvatar === avatar.id
-                        ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-110'
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-noir-950 scale-110'
                         : 'hover:scale-110'
                     }`}
                     title={avatar.name}
@@ -323,11 +315,11 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.18 }}
-            className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700/50">
+            className="p-2.5 rounded-lg bg-noir-900/50 border border-noir-700/50">
             <div className="flex items-center gap-2 mb-2.5">
-              <Globe className="h-3.5 w-3.5 text-indigo-400" />
-              <span className="text-xs font-medium text-slate-300">{t('profile.interfaceLanguage')}</span>
-              <span className="text-xs text-indigo-400 font-semibold ml-auto">{LANGUAGES.find(l => l.code === formData.language)?.name}</span>
+              <Globe className="h-3.5 w-3.5 text-rouge-400" />
+              <span className="text-xs font-medium text-noir-300">{t('profile.interfaceLanguage')}</span>
+              <span className="text-xs text-rouge-400 font-semibold ml-auto">{LANGUAGES.find(l => l.code === formData.language)?.name}</span>
             </div>
             <div className="grid grid-cols-6 gap-1.5">
               {LANGUAGES.map((lang) => {
@@ -343,14 +335,14 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                     disabled={isCreating}
                     className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all ${
                       isSelected
-                        ? 'ring-2 ring-indigo-500 bg-indigo-500/20 shadow-lg shadow-indigo-500/20'
-                        : 'opacity-60 hover:opacity-100 hover:bg-slate-800/50'
+                        ? 'ring-2 ring-rouge-500 bg-rouge-500/20 shadow-lg shadow-rouge-500/20'
+                        : 'opacity-60 hover:opacity-100 hover:bg-noir-800/50'
                     }`}
                     title={lang.name}
                   >
                     <lang.Flag className="w-6 h-4 rounded-[2px] shadow-sm" />
                     <span className={`text-micro font-medium leading-none ${
-                      isSelected ? 'text-indigo-300' : 'text-slate-500'
+                      isSelected ? 'text-rouge-300' : 'text-noir-500'
                     }`}>{lang.code.toUpperCase()}</span>
                   </button>
                 );
@@ -362,7 +354,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           <div className="space-y-4">
             {/* Nome */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-noir-400 uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
                 {t('profile.profileName')}
               </label>
@@ -373,13 +365,13 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 placeholder={t('profile.namePlaceholder')}
                 disabled={isCreating}
                 maxLength={50}
-                className="h-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
+                className="h-10 bg-noir-900/50 border-noir-700 focus:border-rouge-500 focus:ring-noir-500/20 text-white placeholder:text-noir-500"
               />
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-noir-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="h-3 w-3" />
                 {t('profile.password')}
               </label>
@@ -390,12 +382,12 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   placeholder={t('profile.passwordMinChars')}
                   disabled={isCreating}
-                  className="h-10 pr-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
+                  className="h-10 pr-10 bg-noir-900/50 border-noir-700 focus:border-rouge-500 focus:ring-noir-500/20 text-white placeholder:text-noir-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-noir-500 hover:text-noir-300"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -404,7 +396,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
             {/* Conferma Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-noir-400 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle className="h-3 w-3" />
                 {t('profile.confirmPassword')}
               </label>
@@ -415,12 +407,12 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   placeholder={t('profile.repeatPassword')}
                   disabled={isCreating}
-                  className="h-10 pr-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
+                  className="h-10 pr-10 bg-noir-900/50 border-noir-700 focus:border-rouge-500 focus:ring-noir-500/20 text-white placeholder:text-noir-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-noir-500 hover:text-noir-300"
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -463,14 +455,14 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
               variant="ghost"
               onClick={handleClose}
               disabled={isCreating}
-              className="flex-1 h-10 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700"
+              className="flex-1 h-10 text-noir-400 hover:text-white hover:bg-noir-800 border border-noir-700"
             >
               {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isCreating}
-              className="flex-1 h-10 bg-blue-600 hover:bg-blue-500 text-white border-0"
+              className="flex-1 h-10 bg-rouge-600 hover:bg-rouge-500 text-white border-0"
             >
               {isCreating ? (
                 <>
@@ -487,11 +479,10 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           </div>
         </motion.form>
 
-        {/* Recovery Key Display Dialog */}
+        {/* Avviso password (nessuna recovery key) */}
         <RecoveryKeyDisplay
           open={showRecoveryKey}
           onOpenChange={setShowRecoveryKey}
-          recoveryKey={recoveryKey}
           profileName={formData.name || pendingProfileId || ''}
           onConfirm={handleRecoveryKeyConfirmed}
         />

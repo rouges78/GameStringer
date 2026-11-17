@@ -266,6 +266,17 @@ export async function translateCriEntries(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
 
+        if (!translateResult.success) {
+          // Nessun provider riuscito: translateWithFallback restituisce la SORGENTE.
+          // Non è una traduzione: `translated` non si tocca (resta vuoto se non c'era)
+          // ed è un errore, così il contatore e l'export CSV/PO non spacciano
+          // l'originale per tradotto.
+          batchIndices.forEach((entryIdx) => {
+            result[entryIdx].translationStatus = 'error';
+          });
+          continue;
+        }
+
         const translated = translateResult.translations ?? (translateResult as unknown as Record<string, string[]>).results ?? [];
         batchIndices.forEach((entryIdx, batchIdx) => {
           result[entryIdx].translated = translated[batchIdx] ?? '';

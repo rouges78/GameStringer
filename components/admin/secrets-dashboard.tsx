@@ -140,7 +140,7 @@ export function SecretsDashboard() {
     if (secret.isConfigured) {
       return 'bg-green-100 text-green-800';
     }
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-noir-100 text-noir-800';
   };
 
   const getSecretStatusIcon = (secret: SecretInfo) => {
@@ -433,9 +433,9 @@ export function SecretsDashboard() {
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Alert className="border-blue-200 bg-blue-50">
-                        <AlertTriangle className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-800">
+                      <Alert className="border-noir-200 bg-noir-50">
+                        <AlertTriangle className="h-4 w-4 text-noir-600" />
+                        <AlertDescription className="text-noir-800">
                           {t('secretsDashboardComp.copyKeyWarning')}</AlertDescription>
                       </Alert>
                     </div>

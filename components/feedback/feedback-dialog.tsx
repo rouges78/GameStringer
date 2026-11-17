@@ -215,7 +215,7 @@ export function FeedbackDialog({ open, onOpenChange, source = 'other' }: Feedbac
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageSquarePlus className="h-5 w-5 text-sky-400" />
+            <MessageSquarePlus className="h-5 w-5 text-noir-400" />
             {t('feedback.dialogTitle')}
           </DialogTitle>
           <DialogDescription>{t('feedback.dialogDesc')}</DialogDescription>
@@ -281,31 +281,31 @@ export function FeedbackDialog({ open, onOpenChange, source = 'other' }: Feedbac
             </div>
 
             {/* Contesto automatico (read-only) */}
-            <div className="space-y-2 p-3 rounded-lg bg-slate-900/50 border border-slate-800/50">
-              <p className="text-2xs font-bold text-slate-500 uppercase tracking-widest">
+            <div className="space-y-2 p-3 rounded-lg bg-noir-900/50 border border-noir-800/50">
+              <p className="text-2xs font-bold text-noir-500 uppercase tracking-widest">
                 {t('feedback.contextTitle')}
               </p>
-              <div className="grid grid-cols-1 gap-1 text-2xs text-slate-400">
+              <div className="grid grid-cols-1 gap-1 text-2xs text-noir-400">
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">{t('feedback.ctxVersion')}</span>
+                  <span className="text-noir-500">{t('feedback.ctxVersion')}</span>
                   <span className="font-mono truncate">{context.appVersion}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">{t('feedback.ctxPlatform')}</span>
+                  <span className="text-noir-500">{t('feedback.ctxPlatform')}</span>
                   <span className="font-mono truncate">{context.platform}</span>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">{t('feedback.ctxRoute')}</span>
+                  <span className="text-noir-500">{t('feedback.ctxRoute')}</span>
                   <span className="font-mono truncate">{context.route}</span>
                 </div>
                 {context.gameId && (
                   <div className="flex justify-between gap-3">
-                    <span className="text-slate-500">{t('feedback.ctxGame')}</span>
+                    <span className="text-noir-500">{t('feedback.ctxGame')}</span>
                     <span className="font-mono truncate">{context.gameId}</span>
                   </div>
                 )}
               </div>
-              <p className="text-micro text-slate-600">{t('feedback.contextNote')}</p>
+              <p className="text-micro text-noir-600">{t('feedback.contextNote')}</p>
             </div>
           </div>
         )}

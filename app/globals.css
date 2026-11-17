@@ -105,10 +105,10 @@
 
 /* A11y: High contrast mode support */
 @media (forced-colors: active) {
-  .border-slate-800\/50, .border-slate-700\/50, .border-slate-800\/30 {
+  .border-noir-800\/50, .border-noir-700\/50, .border-noir-800\/30 {
     border-color: ButtonText;
   }
-  .bg-cyan-600, .bg-emerald-600 {
+  .bg-noir-600, .bg-emerald-600 {
     forced-color-adjust: none;
   }
 }
@@ -120,16 +120,16 @@
   100% { background-position: 0% 50%; }
 }
 
-/* Logo glow animation - colori blu */
+/* Logo glow animation - rosso della suite */
 @keyframes logoGlow {
   0%, 100% { 
-    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 10px rgba(37, 99, 235, 0.3));
+    filter: drop-shadow(0 0 5px rgba(255, 59, 74, 0.4)) drop-shadow(0 0 10px rgba(255, 59, 74, 0.3));
   }
   33% { 
-    filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.35));
+    filter: drop-shadow(0 0 6px rgba(255, 59, 74, 0.5)) drop-shadow(0 0 12px rgba(255, 59, 74, 0.35));
   }
   66% { 
-    filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.35));
+    filter: drop-shadow(0 0 6px rgba(255, 59, 74, 0.5)) drop-shadow(0 0 12px rgba(255, 59, 74, 0.35));
   }
 }
 
@@ -139,34 +139,6 @@
   50% { background-position: 100% 50%; }
 }
 
-/* Toast animations */
-@keyframes toast-slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes toast-slide-out {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-@keyframes toast-progress {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-
 /* Sonner toast custom styles */
 [data-sonner-toaster] {
   --normal-bg: hsl(var(--card));
@@ -174,120 +146,121 @@
   --normal-text: hsl(var(--foreground));
 }
 
+/* Toast come barra di sottotitolo (B): superficie piena, bordo doppio da
+   finestra di dialogo, una striscia del colore dell'esito a sinistra.
+   Niente gradienti né sfocature. */
 [data-sonner-toast] {
-  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(12px);
-  border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  background: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-left: 4px solid hsl(var(--muted-foreground)) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 0 0 1px hsl(var(--background)), 0 6px 20px rgb(0 0 0 / 0.35) !important;
+}
+[data-sonner-toast] [data-description] {
+  color: hsl(var(--muted-foreground)) !important;
 }
 
-[data-sonner-toast][data-type="success"] {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1)) !important;
-  border: 1px solid rgba(16, 185, 129, 0.3) !important;
-}
-
-[data-sonner-toast][data-type="success"] [data-icon] {
-  color: rgb(16, 185, 129) !important;
-}
-
-[data-sonner-toast][data-type="error"] {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1)) !important;
-  border: 1px solid rgba(239, 68, 68, 0.3) !important;
-}
-
-[data-sonner-toast][data-type="error"] [data-icon] {
-  color: rgb(239, 68, 68) !important;
-}
-
-[data-sonner-toast][data-type="warning"] {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1)) !important;
-  border: 1px solid rgba(245, 158, 11, 0.3) !important;
-}
-
-[data-sonner-toast][data-type="warning"] [data-icon] {
-  color: rgb(245, 158, 11) !important;
-}
-
-[data-sonner-toast][data-type="info"] {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)) !important;
-  border: 1px solid rgba(59, 130, 246, 0.3) !important;
-}
-
-[data-sonner-toast][data-type="info"] [data-icon] {
-  color: rgb(59, 130, 246) !important;
-}
-
-/* Toast progress bar */
-[data-sonner-toast]::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: currentColor;
-  opacity: 0.3;
-  animation: toast-progress 4s linear forwards;
-  border-radius: 0 0 12px 12px;
-}
+[data-sonner-toast][data-type="success"] { border-left-color: hsl(var(--success)) !important; }
+[data-sonner-toast][data-type="success"] [data-icon] { color: hsl(var(--success)) !important; }
+[data-sonner-toast][data-type="error"] { border-left-color: hsl(var(--destructive)) !important; }
+[data-sonner-toast][data-type="error"] [data-icon] { color: hsl(var(--destructive)) !important; }
+[data-sonner-toast][data-type="warning"] { border-left-color: hsl(var(--warning)) !important; }
+[data-sonner-toast][data-type="warning"] [data-icon] { color: hsl(var(--warning)) !important; }
+[data-sonner-toast][data-type="info"] { border-left-color: hsl(var(--info)) !important; }
+[data-sonner-toast][data-type="info"] [data-icon] { color: hsl(var(--info)) !important; }
 
 @layer base {
+  /* Tema "Rouge Noir" della suite Rouges (scelto l'11/11/2026; prima era la
+     palette B + C blu-notte/magenta del 02/10/2026). Valori presi da
+     Rouges@Launcher src/themes.rs: fondo #0f0f10, superfici #161618/#1d1d20,
+     hover #232327, bordi #2a2a2e/#3a3a40, testo #f2f2f2, testo tenue #9b9ba3,
+     rosso #ff3b4a con etichette #14060a. Angoli vivi come nel resto della suite.
+     Contrasti: testo ~17:1, tenue ≥6:1, rosso sul fondo 5.4:1, etichette sul
+     rosso 5.6:1.
+
+     Tema chiaro = "Carta" del Launcher: pronto ma ancora spento (forcedTheme
+     dark in components/theme-provider.tsx) finché le pagine usano classi colore
+     scritte a mano, che sul chiaro diventerebbero illeggibili. */
   :root {
-    /* Light theme - Grigio scuro stile "soft dark" */
-    --background: 225 15% 75%;
-    --foreground: 220 30% 5%;
-    --card: 225 15% 82%;
-    --card-foreground: 220 30% 5%;
-    --popover: 225 15% 80%;
-    --popover-foreground: 220 30% 5%;
-    --primary: 217 91% 50%;
+    --background: 60 8.3% 95.3%;
+    --foreground: 0 0% 6.7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 6.7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 6.7%;
+    --primary: 353 79% 45.5%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 225 15% 65%;
-    --secondary-foreground: 220 30% 5%;
-    --muted: 225 12% 68%;
-    --muted-foreground: 220 15% 18%;
-    --accent: 217 70% 60%;
-    --accent-foreground: 217 91% 25%;
-    --destructive: 0 84.2% 42%;
+    --secondary: 60 11% 96.5%;
+    --secondary-foreground: 0 0% 6.7%;
+    --muted: 60 11% 96.5%;
+    --muted-foreground: 0 0% 35.3%;
+    --accent: 60 8.6% 93.1%;
+    --accent-foreground: 0 0% 6.7%;
+    --destructive: 6 63% 46.1%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142.1 76.2% 25%;
+    --success: 145 62% 27.8%;
     --success-foreground: 0 0% 100%;
-    --border: 225 12% 55%;
-    --input: 225 12% 62%;
-    --ring: 217 91% 50%;
-    --radius: 0.5rem;
-    
-    /* Light theme specific colors */
-    --sidebar-bg: 225 18% 70%;
-    --header-bg: 225 15% 78%;
+    --warning: 30 100% 31.4%;
+    --warning-foreground: 0 0% 100%;
+    --info: 185 83% 25.7%;
+    --info-foreground: 0 0% 100%;
+    /* Oro del cursore ▶ e delle voci selezionate (B). */
+    --gold: 41 100% 25.9%;
+    --gold-foreground: 0 0% 100%;
+    --border: 60 5.4% 85.5%;
+    --input: 60 3.3% 70%;
+    --ring: 353 79% 45.5%;
+    --radius: 0rem;
+
+    --chart-1: 353 79% 45.5%;
+    --chart-2: 185 83% 25.7%;
+    --chart-3: 41 100% 25.9%;
+    --chart-4: 145 62% 27.8%;
+    --chart-5: 30 100% 31.4%;
+
+    --sidebar-bg: 60 11% 96.5%;
+    --header-bg: 60 8.3% 95.3%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    /* Inchiostro scuro: il quasi-bianco su questo blu sta a 3.47:1, sotto la
-       soglia 4.5:1 per le etichette dei bottoni. Con l'ink scuro sale a 5.41:1.
-       Nel tema chiaro il bianco va gia' bene (5.05:1) e resta invariato. */
-    --primary-foreground: 220 30% 5%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217 50% 25%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
-    
-    /* Dark theme specific colors */
-    --sidebar-bg: 222.2 84% 3%;
-    --header-bg: 222.2 84% 6%;
+    --background: 240 3.2% 6.1%;
+    --foreground: 0 0% 94.9%;
+    --card: 240 4.3% 9%;
+    --card-foreground: 0 0% 94.9%;
+    --popover: 240 4.9% 12%;
+    --popover-foreground: 0 0% 94.9%;
+    /* Rosso della suite; etichette quasi nere (5.6:1). */
+    --primary: 355 100% 61.6%;
+    --primary-foreground: 343 54% 5.1%;
+    --secondary: 240 4.9% 12%;
+    --secondary-foreground: 0 0% 94.9%;
+    --muted: 240 4.9% 12%;
+    --muted-foreground: 240 4.2% 62.4%;
+    --accent: 240 5.4% 14.5%;
+    --accent-foreground: 0 0% 94.9%;
+    --destructive: 358 100% 67.6%;
+    --destructive-foreground: 343 54% 5.1%;
+    --success: 145 61% 59.2%;
+    --success-foreground: 143 60% 5.9%;
+    --warning: 25 100% 62.9%;
+    --warning-foreground: 23 100% 5.1%;
+    --info: 187 47% 54.9%;
+    --info-foreground: 188 74% 6.1%;
+    --gold: 45 100% 65.3%;
+    --gold-foreground: 240 3.2% 6.1%;
+    --border: 240 4.5% 17.3%;
+    --input: 240 4.9% 23.9%;
+    --ring: 355 100% 61.6%;
+
+    --chart-1: 355 100% 61.6%;
+    --chart-2: 187 47% 54.9%;
+    --chart-3: 45 100% 65.3%;
+    --chart-4: 145 61% 59.2%;
+    --chart-5: 25 100% 62.9%;
+
+    --sidebar-bg: 240 4.3% 9%;
+    --header-bg: 240 3.2% 6.1%;
   }
   * {
     @apply border-border;
@@ -302,63 +275,35 @@
 }
 
 /* Light theme overrides for colored components */
-:root:not(.dark) .text-purple-300,
-:root:not(.dark) .text-purple-400 { color: rgb(126, 34, 206) !important; }
-:root:not(.dark) .text-violet-300,
-:root:not(.dark) .text-violet-400 { color: rgb(124, 58, 237) !important; }
-:root:not(.dark) .text-fuchsia-300,
-:root:not(.dark) .text-fuchsia-400 { color: rgb(192, 38, 211) !important; }
-:root:not(.dark) .text-pink-400 { color: rgb(219, 39, 119) !important; }
-:root:not(.dark) .text-cyan-300,
-:root:not(.dark) .text-cyan-400 { color: rgb(6, 182, 212) !important; }
-:root:not(.dark) .text-cyan-100 { color: rgb(8, 145, 178) !important; }
+/* Rouge Noir sul tema chiaro "Carta": rosso #d0182c, testo tenue #5a5a5a. */
+:root:not(.dark) .text-rouge-200,
+:root:not(.dark) .text-rouge-300,
+:root:not(.dark) .text-rouge-400 { color: rgb(208, 24, 44) !important; }
+:root:not(.dark) .text-noir-100,
+:root:not(.dark) .text-noir-200,
+:root:not(.dark) .text-noir-300,
+:root:not(.dark) .text-noir-400 { color: rgb(90, 90, 90) !important; }
+:root:not(.dark) .bg-rouge-500 { background-color: rgb(255, 241, 242) !important; }
+:root:not(.dark) .bg-noir-500 { background-color: rgb(239, 239, 236) !important; }
+:root:not(.dark) .border-rouge-500 { border-color: rgb(255, 199, 203) !important; }
+:root:not(.dark) .border-noir-500 { border-color: rgb(220, 220, 216) !important; }
 :root:not(.dark) .text-emerald-300,
 :root:not(.dark) .text-emerald-400 { color: rgb(16, 185, 129) !important; }
-:root:not(.dark) .text-blue-200,
-:root:not(.dark) .text-blue-300,
-:root:not(.dark) .text-blue-400 { color: rgb(37, 99, 235) !important; }
 :root:not(.dark) .text-amber-400 { color: rgb(217, 119, 6) !important; }
 :root:not(.dark) .text-orange-200,
 :root:not(.dark) .text-orange-400 { color: rgb(234, 88, 12) !important; }
-:root:not(.dark) .text-indigo-400 { color: rgb(99, 102, 241) !important; }
-:root:not(.dark) .text-gray-400 { color: rgb(107, 114, 128) !important; }
 :root:not(.dark) .text-green-400 { color: rgb(22, 163, 74) !important; }
 :root:not(.dark) .text-yellow-400 { color: rgb(202, 138, 4) !important; }
-:root:not(.dark) .text-sky-400 { color: rgb(14, 165, 233) !important; }
-:root:not(.dark) .text-teal-400 { color: rgb(20, 184, 166) !important; }
-
-:root:not(.dark) .text-violet-200 { color: rgb(91, 33, 182) !important; }
-:root:not(.dark) .text-cyan-300 { color: rgb(6, 148, 162) !important; }
 :root:not(.dark) .text-emerald-200 { color: rgb(5, 150, 105) !important; }
-:root:not(.dark) .text-purple-300 { color: rgb(126, 34, 206) !important; }
-:root:not(.dark) .text-blue-300 { color: rgb(37, 99, 235) !important; }
 :root:not(.dark) .text-orange-300 { color: rgb(234, 88, 12) !important; }
-:root:not(.dark) .text-sky-200 { color: rgb(14, 165, 233) !important; }
-
-:root:not(.dark) .bg-cyan-500 { background-color: rgb(236, 254, 255) !important; }
-:root:not(.dark) .bg-purple-500 { background-color: rgb(250, 245, 255) !important; }
 :root:not(.dark) .bg-emerald-500 { background-color: rgb(236, 253, 245) !important; }
-:root:not(.dark) .bg-violet-500 { background-color: rgb(245, 243, 255) !important; }
-:root:not(.dark) .bg-blue-500 { background-color: rgb(239, 246, 255) !important; }
 :root:not(.dark) .bg-orange-500 { background-color: rgb(255, 247, 237) !important; }
 :root:not(.dark) .bg-amber-500 { background-color: rgb(255, 251, 235) !important; }
-:root:not(.dark) .bg-indigo-500 { background-color: rgb(238, 242, 255) !important; }
-
-:root:not(.dark) .bg-purple-500 { background-color: rgb(243, 232, 255) !important; }
-:root:not(.dark) .bg-blue-500 { background-color: rgb(219, 234, 254) !important; }
 :root:not(.dark) .bg-emerald-500 { background-color: rgb(209, 250, 229) !important; }
 :root:not(.dark) .bg-orange-500 { background-color: rgb(255, 237, 213) !important; }
-:root:not(.dark) .bg-cyan-500 { background-color: rgb(207, 250, 254) !important; }
-
-:root:not(.dark) .border-cyan-500 { border-color: rgb(165, 243, 252) !important; }
-:root:not(.dark) .border-purple-500 { border-color: rgb(216, 180, 254) !important; }
 :root:not(.dark) .border-emerald-500 { border-color: rgb(167, 243, 208) !important; }
-:root:not(.dark) .border-violet-500 { border-color: rgb(196, 181, 253) !important; }
-:root:not(.dark) .border-blue-500 { border-color: rgb(191, 219, 254) !important; }
 :root:not(.dark) .border-orange-500 { border-color: rgb(254, 215, 170) !important; }
 :root:not(.dark) .border-amber-500 { border-color: rgb(252, 211, 77) !important; }
-:root:not(.dark) .border-indigo-500 { border-color: rgb(199, 210, 254) !important; }
-:root:not(.dark) .border-gray-500 { border-color: rgb(209, 213, 219) !important; }
 :root:not(.dark) .border-white { border-color: rgb(229, 231, 235) !important; }
 
 /* Ombreggiature scure per tema light */
@@ -393,10 +338,11 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Custom scrollbar - Hidden but functional */
+/* Scrollbar sottili ma VISIBILI: nascoste ovunque, in un'app desktop piena di
+   liste lunghe, toglievano l'unico segnale che c'era altro sotto. */
 ::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
+  width: 8px;
+  height: 8px;
   background: transparent;
 }
 
@@ -405,8 +351,15 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 0px;
+  background: hsl(var(--border));
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+  background-clip: padding-box;
 }
 .custom-scrollbar {
   scrollbar-width: thin;
@@ -508,41 +461,28 @@
    HOVER FLUIDI - Transizioni smooth globali
    ============================================================================ */
 
-/* Bottoni - transizione fluida */
+/* Bottoni: solo colori in transizione. Le regole globali che stavano qui
+   (scale su :active, scale sulle icone in hover, transition su svg) scrivevano
+   `transform` su OGNI bottone e icona e annullavano rotate-180 e
+   -translate-y-1/2 di Tailwind: le frecce dei menu non ruotavano più. La
+   pressione da tasto (1px) ora vive nel componente Button. */
 button,
-[role="button"],
-[class*="btn"],
-[class*="Button"] {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+[role="button"] {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:hover,[role="button"]:hover {}
-
-button:active,
-[role="button"]:active {
-  transform: scale(0.98);
-}
-
-/* Card - hover elegante */
-[class*="card"]:hover,
-[class*="Card"]:hover {
-}
-
-/* Input focus smooth */
 input:focus,
 textarea:focus,
 select:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.35);
 }
 
-/* Icone hover */
-button:hover svg,
-a:hover svg {
-  transform: scale(1.05);
-}
-
-svg {
-  transition: transform 0.2s ease;
+/* Il campo della palette Ctrl K sta dentro una riga senza bordo: l'anello
+   finiva attorno al solo testo, staccato dalla lente. */
+[cmdk-input]:focus {
+  box-shadow: none;
 }
 
 /* Custom animations */
@@ -681,7 +621,7 @@ svg {
 
 /* Progress glow effect */
 .progress-glow {
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 10px rgba(255, 59, 74, 0.5);
 }
 
 /* Minimized operation bounce */
@@ -727,7 +667,7 @@ svg {
 
 .card-hover:hover {
   transform: scale(1.02);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 20px rgba(255, 59, 74, 0.2);
 }
 
 /* Feature card glow */
@@ -737,7 +677,7 @@ svg {
 
 .feature-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(255, 59, 74, 0.15);
 }
 
 /* 3. Button hover enhanced */
@@ -746,7 +686,7 @@ svg {
 }
 
 .btn-glow:hover {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 15px rgba(255, 59, 74, 0.4);
   transform: translateY(-1px);
 }
 
@@ -775,8 +715,8 @@ svg {
 }
 
 .glow-border:hover, .glow-border:focus {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: rgba(255, 59, 74, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 59, 74, 0.1);
 }
 
 /* ============================================================================
@@ -785,13 +725,13 @@ svg {
 
 /* Glow generico blu */
 .glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 0 30px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 15px rgba(255, 59, 74, 0.4), 0 0 30px rgba(255, 59, 74, 0.2);
 }
 
 /* Focus glow per tutti gli elementi interattivi */
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px rgba(255, 59, 74, 0.6);
 }
 
 /* Link glow */
@@ -802,7 +742,7 @@ a:focus-visible {
 /* Button glow intenso */
 button:focus-visible,
 [role="button"]:focus-visible {
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px rgba(59, 130, 246, 0.6), 0 0 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px rgba(255, 59, 74, 0.6), 0 0 20px rgba(255, 59, 74, 0.3);
 }
 
 /* ============================================================================

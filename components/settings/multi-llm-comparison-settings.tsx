@@ -50,12 +50,12 @@ export function MultiLlmComparisonSettings() {
   if (!mounted) return null;
 
   return (
-    <Card className="border-purple-500/30 bg-gradient-to-r from-purple-950/20 to-indigo-950/20">
+    <Card className="border-rouge-500/30 bg-gradient-to-r from-rouge-950/20 to-rouge-950/20">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <GitCompareArrows className="h-5 w-5 text-purple-400" />
+          <GitCompareArrows className="h-5 w-5 text-rouge-400" />
           <span>{t('multiLlmComparisonSettingsComp.multillmComparison')}</span>
-          <Badge className="text-2xs bg-purple-600/80 text-white border-0 ml-1">NEW</Badge>
+          <Badge className="text-2xs bg-rouge-600/80 text-white border-0 ml-1">NEW</Badge>
         </CardTitle>
         <p className="text-xs text-muted-foreground mt-1">
           {t('multiLlmComparisonSettingsComp.description')}
@@ -82,7 +82,7 @@ export function MultiLlmComparisonSettings() {
           <>
             {/* Info provider disponibili */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/20 border border-white/5">
-              <Info className="h-4 w-4 text-blue-400 flex-shrink-0" />
+              <Info className="h-4 w-4 text-noir-400 flex-shrink-0" />
               <span className="text-xs text-muted-foreground">
                 {t('multiLlmComparisonSettingsComp.availableProvidersInfo')
                   .replace('{count}', String(availableCount))
@@ -106,7 +106,7 @@ export function MultiLlmComparisonSettings() {
                 min={2}
                 max={6}
                 step={1}
-                className="w-full [&_[data-slot=range]]:bg-purple-500 [&_[data-slot=thumb]]:bg-purple-500 [&_[data-slot=thumb]]:border-purple-500"
+                className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
               />
               <p className="text-2xs text-muted-foreground">
                 {t('multiLlmComparisonSettingsComp.candidatesHint')}
@@ -122,7 +122,7 @@ export function MultiLlmComparisonSettings() {
                 min={5000}
                 max={30000}
                 step={1000}
-                className="w-full [&_[data-slot=range]]:bg-purple-500 [&_[data-slot=thumb]]:bg-purple-500 [&_[data-slot=thumb]]:border-purple-500"
+                className="w-full [&_[data-slot=range]]:bg-rouge-500 [&_[data-slot=thumb]]:bg-rouge-500 [&_[data-slot=thumb]]:border-rouge-500"
               />
             </div>
 

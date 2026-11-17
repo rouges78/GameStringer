@@ -40,13 +40,13 @@ interface DryRunProgress {
 }
 
 const ENGINE_COLORS: Record<string, string> = {
-  tyranoscript: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  tyranoscript: 'bg-rouge-500/20 text-rouge-300 border-rouge-500/30',
   gamemaker: 'bg-green-500/20 text-green-300 border-green-500/30',
-  rpgmaker: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  rpgmaker: 'bg-noir-500/20 text-noir-300 border-noir-500/30',
   visionaire: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   unreal: 'bg-red-500/20 text-red-300 border-red-500/30',
-  generic: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
-  unsupported: 'bg-zinc-700/30 text-zinc-500 border-zinc-600/30',
+  generic: 'bg-noir-500/20 text-noir-300 border-noir-500/30',
+  unsupported: 'bg-noir-700/30 text-noir-500 border-noir-600/30',
 };
 
 const ENGINE_LABELS: Record<string, string> = {
@@ -111,17 +111,17 @@ export default function DryRunScanner() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-indigo-400" />
+            <BarChart3 className="w-5 h-5 text-rouge-400" />
             {t('common.dryRunPipelineScan')}
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-noir-400 mt-0.5">
             {t('common.dryRunPipelineScanDesc')}
           </p>
         </div>
         <Button
           onClick={startScan}
           disabled={running}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-lg"
+          className="bg-rouge-600 hover:bg-rouge-500 text-white text-sm px-4 py-2 rounded-lg"
         >
           {running ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {t('common.scanning')}</>
@@ -133,15 +133,15 @@ export default function DryRunScanner() {
 
       {/* Progress bar */}
       {running && progress && (
-        <Card className="bg-slate-900/60 border-indigo-500/20">
+        <Card className="bg-noir-900/60 border-rouge-500/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-indigo-300 font-mono">{progress.message}</span>
-              <span className="text-xs text-slate-500">{progress.current}/{progress.total}</span>
+              <span className="text-xs text-rouge-300 font-mono">{progress.message}</span>
+              <span className="text-xs text-noir-500">{progress.current}/{progress.total}</span>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-2">
+            <div className="w-full bg-noir-800 rounded-full h-2">
               <div
-                className="bg-indigo-500 h-2 rounded-full transition-all duration-300"
+                className="bg-rouge-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress.total > 0 ? (progress.current / progress.total * 100) : 0}%` }}
               />
             </div>
@@ -156,25 +156,25 @@ export default function DryRunScanner() {
             <SummaryCard label={t('common.scannedLabel')} value={report.scanned} icon={<Gamepad2 className="w-4 h-4" />} color="text-white" />
             <SummaryCard label={t('common.pronti')} value={report.ready} icon={<CheckCircle className="w-4 h-4" />} color="text-green-400" />
             <SummaryCard label={t('common.errors')} value={report.errors} icon={<XCircle className="w-4 h-4" />} color="text-red-400" />
-            <SummaryCard label={t('common.unsupportedLabel')} value={report.unsupported} icon={<AlertTriangle className="w-4 h-4" />} color="text-zinc-400" />
-            <SummaryCard label={t('common.tempo')} value={`${report.duration_seconds.toFixed(0)}s`} icon={<BarChart3 className="w-4 h-4" />} color="text-indigo-400" />
+            <SummaryCard label={t('common.unsupportedLabel')} value={report.unsupported} icon={<AlertTriangle className="w-4 h-4" />} color="text-noir-400" />
+            <SummaryCard label={t('common.tempo')} value={`${report.duration_seconds.toFixed(0)}s`} icon={<BarChart3 className="w-4 h-4" />} color="text-rouge-400" />
           </div>
 
           {/* Engine breakdown */}
           <div className="flex flex-wrap gap-2">
             {Object.entries(report.by_engine).sort((a, b) => b[1] - a[1]).map(([engine, count]) => (
-              <span key={engine} className={`text-2xs px-2 py-0.5 rounded-full border font-mono ${ENGINE_COLORS[engine] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
+              <span key={engine} className={`text-2xs px-2 py-0.5 rounded-full border font-mono ${ENGINE_COLORS[engine] || 'bg-noir-700/30 text-noir-400 border-noir-600/30'}`}>
                 {ENGINE_LABELS[engine] || engine}: {count}
               </span>
             ))}
           </div>
 
           {/* Filter tabs */}
-          <div className="flex gap-1 border-b border-slate-800 pb-1">
+          <div className="flex gap-1 border-b border-noir-800 pb-1">
             {(['all', 'ready', 'errors', 'unsupported'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`text-2xs px-3 py-1 rounded-t-lg font-medium transition-colors ${
-                  filter === f ? 'bg-indigo-600/20 text-indigo-300 border-b-2 border-indigo-500' : 'text-slate-500 hover:text-slate-300'
+                  filter === f ? 'bg-rouge-600/20 text-rouge-300 border-b-2 border-rouge-500' : 'text-noir-500 hover:text-noir-300'
                 }`}
               >
                 {f === 'all' ? `${t('common.all')} (${report.games.length})` :
@@ -186,10 +186,10 @@ export default function DryRunScanner() {
           </div>
 
           {/* Games table */}
-          <div className="max-h-[400px] overflow-y-auto rounded-lg border border-slate-800/50">
+          <div className="max-h-[400px] overflow-y-auto rounded-lg border border-noir-800/50">
             <table className="w-full text-[11px]">
-              <thead className="bg-slate-900/80 sticky top-0">
-                <tr className="text-slate-500 uppercase tracking-wider">
+              <thead className="bg-noir-900/80 sticky top-0">
+                <tr className="text-noir-500 uppercase tracking-wider">
                   <th className="text-left p-2">{t('common.gioco')}</th>
                   <th className="text-left p-2">{t('common.motore')}</th>
                   <th className="text-left p-2">Fast Path</th>
@@ -201,24 +201,24 @@ export default function DryRunScanner() {
               </thead>
               <tbody>
                 {filtered.map((g, i) => (
-                  <tr key={i} className={`border-t border-slate-800/30 hover:bg-white/[0.02] ${g.error ? 'bg-red-500/[0.03]' : ''}`}>
-                    <td className="p-2 text-slate-200 font-medium truncate max-w-[200px]" title={g.title}>{g.title}</td>
-                    <td className="p-2 text-slate-400">{g.engine_detected}</td>
+                  <tr key={i} className={`border-t border-noir-800/30 hover:bg-white/[0.02] ${g.error ? 'bg-red-500/[0.03]' : ''}`}>
+                    <td className="p-2 text-noir-200 font-medium truncate max-w-[200px]" title={g.title}>{g.title}</td>
+                    <td className="p-2 text-noir-400">{g.engine_detected}</td>
                     <td className="p-2">
-                      <span className={`text-micro px-1.5 py-0.5 rounded border ${ENGINE_COLORS[g.fast_path] || 'bg-slate-700/30 text-slate-400 border-slate-600/30'}`}>
+                      <span className={`text-micro px-1.5 py-0.5 rounded border ${ENGINE_COLORS[g.fast_path] || 'bg-noir-700/30 text-noir-400 border-noir-600/30'}`}>
                         {ENGINE_LABELS[g.fast_path] || g.fast_path}
                       </span>
                     </td>
-                    <td className="p-2 text-right font-mono text-slate-300">{g.strings_found > 0 ? g.strings_found.toLocaleString() : '-'}</td>
-                    <td className="p-2 text-right font-mono text-slate-400">{g.files_found || '-'}</td>
-                    <td className="p-2 text-right font-mono text-slate-500">{g.scan_duration_ms}</td>
+                    <td className="p-2 text-right font-mono text-noir-300">{g.strings_found > 0 ? g.strings_found.toLocaleString() : '-'}</td>
+                    <td className="p-2 text-right font-mono text-noir-400">{g.files_found || '-'}</td>
+                    <td className="p-2 text-right font-mono text-noir-500">{g.scan_duration_ms}</td>
                     <td className="p-2 text-center">
                       {g.error ? (
                         <span className="text-red-400" title={g.error}>❌</span>
                       ) : g.ready_to_translate ? (
                         <span className="text-green-400">✅</span>
                       ) : (
-                        <span className="text-zinc-500">—</span>
+                        <span className="text-noir-500">—</span>
                       )}
                     </td>
                   </tr>
@@ -234,12 +234,12 @@ export default function DryRunScanner() {
 
 function SummaryCard({ label, value, icon, color }: { label: string; value: number | string; icon: React.ReactNode; color: string }) {
   return (
-    <Card className="bg-slate-900/50 border-slate-800/50">
+    <Card className="bg-noir-900/50 border-noir-800/50">
       <CardContent className="p-3 flex items-center gap-2">
         <span className={color}>{icon}</span>
         <div>
           <div className={`text-lg font-bold ${color}`}>{value}</div>
-          <div className="text-micro text-slate-500 uppercase tracking-wider">{label}</div>
+          <div className="text-micro text-noir-500 uppercase tracking-wider">{label}</div>
         </div>
       </CardContent>
     </Card>

@@ -195,7 +195,16 @@ pub fn unmask_gm_codes(text: &str, codes: &[String]) -> String {
 /// Confronta i codici ORDINATI: la posizione può cambiare legittimamente,
 /// perché la sintassi italiana muove le parole. Ciò che non può cambiare è
 /// QUALI e QUANTI codici ci sono.
+///
+/// In più, la traduzione non può avere più `%` dell'originale. A metà frase
+/// `extract_gm_codes` non lo conta come codice (falso negativo per scelta), ma
+/// il gioco lo esegue lo stesso: chiude il messaggio in quel punto. Il 16/11
+/// il modello ha scritto «400%» dove Deltarune dice «400-percent». Un `%` che
+/// c'era già nell'originale resta ammesso, e toglierlo non fa danni.
 pub fn codes_preserved(source: &str, translation: &str) -> bool {
+    if translation.matches('%').count() > source.matches('%').count() {
+        return false;
+    }
     let mut a: Vec<String> = extract_gm_codes(source).into_iter().map(|c| c.code).collect();
     let mut b: Vec<String> = extract_gm_codes(translation).into_iter().map(|c| c.code).collect();
     a.sort();
@@ -280,6 +289,39 @@ mod tests {
         assert!(!codes_preserved("YOU^6& ACCEPT?", "LO ACCETTI?"), "un guard che non sa dire di no è cieco");
         assert!(!codes_preserved("A&B", "A E B"), "il caso & → «E» deve essere rilevato");
         assert!(codes_preserved("A&B", "C&D"));
+    }
+
+    /// Il difetto del 16/11/2026, con le due righe vere di Deltarune. Il gioco
+    /// scrive «percent» per esteso proprio perché `%` chiude il messaggio; il
+    /// modello lo «corregge» in `%`, a metà frase, dove `extract_gm_codes` per
+    /// scelta non lo conta come codice. Il confronto usciva pulito.
+    #[test]
+    fn rifiuta_il_percento_che_l_originale_non_aveva() {
+        assert!(
+            !codes_preserved(
+                "* The crown is \\cY~1-percent\\cW loose!",
+                "* La corona è allentata del \\cY~1%\\cW!"
+            ),
+            "un % nuovo a metà frase tronca il messaggio"
+        );
+        assert!(
+            !codes_preserved(
+                "* He's already mandated a 400-percent increase in salsa production./%",
+                "* Ha già imposto un aumento del 400% nella produzione di salsa./%"
+            ),
+            "un % in più oltre a quello di chiusura va rifiutato"
+        );
+    }
+
+    #[test]
+    fn il_percento_che_c_era_gia_resta_ammesso() {
+        // Riga vera: qui il `%` a metà frase l'ha messo il gioco.
+        let src = "Mossy rapier with a clover emblem.#Increases $ found by 5%.";
+        assert!(codes_preserved(src, "Stocco muschioso con un trifoglio.#Aumenta i $ trovati del 5%."));
+        // Toglierlo non può troncare niente.
+        assert!(codes_preserved(src, "Stocco muschioso con un trifoglio.#Aumenta i $ trovati del 5 per cento."));
+        // Scritto per esteso, come fa il gioco, passa.
+        assert!(codes_preserved("A 400-percent increase./%", "Un aumento del 400 per cento./%"));
     }
 
     /// Lo slicing per indice di byte va in panic se cade dentro un carattere

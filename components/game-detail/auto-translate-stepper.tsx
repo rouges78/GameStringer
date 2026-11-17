@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText, MinusCircle } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { effectVerdict, type EffectVerification } from '@/lib/translation/effect-verdict';
@@ -11,7 +11,7 @@ import { DonationDialog } from '@/components/donation-dialog';
 
 interface AutoTranslateStep {
   label: string;
-  status: 'pending' | 'running' | 'done' | 'error';
+  status: 'pending' | 'running' | 'done' | 'error' | 'skipped';
   detail?: string;
 }
 
@@ -42,7 +42,11 @@ interface AutoTranslateStepperProps {
   currentFlagLabel: string;
   onClose: () => void;
   onClearResult: () => void;
+  /** Apre l'export GsPack del gioco (lo stesso dialog del pannello strumenti). */
+  onCreatePatch: () => void;
   game: {
+    /** Id del gioco in libreria: l'Editor apre il progetto per `gameId`, il titolo resta il ripiego. */
+    id?: string;
     title?: string;
     name?: string;
     installPath?: string;
@@ -57,9 +61,15 @@ export function AutoTranslateStepper({
   currentFlagLabel,
   onClose,
   onClearResult,
+  onCreatePatch,
   game,
 }: AutoTranslateStepperProps) {
   const { t } = useTranslation();
+
+  // Il run è finito quando nessun passo è ancora in attesa o in corso. Un passo
+  // fallito resta rosso: wizard e «Chiudi» dipendono da «finito», non da «tutto
+  // verde» — altrimenti per arrivarci un passo rosso andava ridipinto di verde.
+  const finished = steps.every(s => s.status === 'done' || s.status === 'error' || s.status === 'skipped');
 
   // Chiave AES per i pak cifrati: si tiene qui e non nel padre perché serve
   // solo dentro questo pannello, e sparisce con lui.
@@ -119,19 +129,20 @@ export function AutoTranslateStepper({
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 'auto', opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="rounded-xl border border-indigo-500/20 bg-gradient-to-b from-indigo-950/40 to-[#0e1419] overflow-hidden"
+      className="rounded-xl border border-rouge-500/20 bg-gradient-to-b from-rouge-950/40 to-noir-950 overflow-hidden"
     >
       <div className="max-w-[800px] mx-auto px-6 py-5">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-            <Zap className="h-4 w-4 text-indigo-400" />
+          <div className="w-8 h-8 rounded-xl bg-rouge-500/15 flex items-center justify-center">
+            <Zap className="h-4 w-4 text-rouge-400" />
           </div>
           <div>
             <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
-            <span className="text-2xs text-indigo-400/70">{`String it! → ${currentFlagLabel}`}</span>
+            <span className="text-2xs text-rouge-400/70">{`String it! → ${currentFlagLabel}`}</span>
           </div>
-          {steps.every(s => s.status === 'done') && (
-            <button className="ml-auto text-micro font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
+          {/* Con un errore il «Chiudi» sta già nel banner sotto: uno solo. */}
+          {finished && !error && (
+            <button className="ml-auto text-micro font-bold text-noir-500 hover:text-noir-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
               onClick={onClose}
             >
               {t('gameDetails.close') || 'Close'}
@@ -141,35 +152,39 @@ export function AutoTranslateStepper({
         <div className="space-y-1">
           {steps.map((step, i) => (
             <div key={i} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ${
-              step.status === 'running' ? 'bg-indigo-500/10 border border-indigo-500/20' :
+              step.status === 'running' ? 'bg-rouge-500/10 border border-rouge-500/20' :
               step.status === 'done' ? 'bg-white/[0.02]' :
               step.status === 'error' ? 'bg-red-500/10 border border-red-500/20' :
+              step.status === 'skipped' ? 'bg-white/[0.02]' :
               'opacity-40'
             }`}>
               <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-                {step.status === 'running' && <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" />}
+                {step.status === 'running' && <Loader2 className="h-4 w-4 text-rouge-400 animate-spin" />}
                 {step.status === 'done' && <CheckCircle className="h-4 w-4 text-emerald-400" />}
                 {step.status === 'error' && <AlertTriangle className="h-4 w-4 text-red-400" />}
-                {step.status === 'pending' && <div className="w-2 h-2 rounded-full bg-slate-600" />}
+                {step.status === 'skipped' && <MinusCircle className="h-4 w-4 text-noir-400" />}
+                {step.status === 'pending' && <div className="w-2 h-2 rounded-full bg-noir-600" />}
               </div>
               <div className="flex-1 min-w-0">
                 <span className={`text-[11px] font-semibold block ${
-                  step.status === 'running' ? 'text-indigo-300' :
-                  step.status === 'done' ? 'text-slate-300' :
+                  step.status === 'running' ? 'text-rouge-300' :
+                  step.status === 'done' ? 'text-noir-300' :
                   step.status === 'error' ? 'text-red-300' :
-                  'text-slate-600'
+                  step.status === 'skipped' ? 'text-noir-300' :
+                  'text-noir-600'
                 }`}>{step.label}</span>
                 {step.detail && (
                   <span className={`text-micro block mt-0.5 ${
-                    step.status === 'running' ? 'text-indigo-400/60' :
-                    step.status === 'done' ? 'text-slate-500' :
+                    step.status === 'running' ? 'text-rouge-400/60' :
+                    step.status === 'done' ? 'text-noir-500' :
+                    step.status === 'skipped' ? 'text-noir-400' :
                     'text-red-400/60'
                   }`}>{step.detail}</span>
                 )}
               </div>
               {step.status === 'running' && (
-                <div className="w-16 h-1 rounded-full bg-slate-800 overflow-hidden">
-                  <div className="h-full bg-indigo-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+                <div className="w-16 h-1 rounded-full bg-noir-800 overflow-hidden">
+                  <div className="h-full bg-rouge-500 rounded-full animate-pulse" style={{ width: '60%' }} />
                 </div>
               )}
             </div>
@@ -251,14 +266,14 @@ export function AutoTranslateStepper({
             `runtimeOnly` (BepInEx/XUnity), dove non c'è nulla da riscrivere
             perché la traduzione avviene mentre si gioca.
             Niente prova → ambra, e si dice cosa non si è potuto verificare. */}
-        {result && steps.every(s => s.status === 'done') && (() => {
+        {result && finished && !error && (() => {
           // La regola sta in lib/translation/effect-verdict.ts, con i suoi test:
           // qui dentro non era verificabile, ed è logica che si è già rotta due
           // volte in due giorni. Il verdetto restituisce anche la verifica
           // normalizzata, così qui non si maneggia più un oggetto opzionale.
           const {
-            verifiedOk, partial, unverified, tone, nothingWritten,
-            stringsWritten, runtimeOnly, missing, verifiedNames,
+            verifiedOk, partial, incomplete, unverified, tone, nothingWritten,
+            stringsWritten, stringsLeft, runtimeOnly, missing, verifiedNames,
           } = effectVerdict(result.verification);
           return (
           <motion.div
@@ -267,8 +282,8 @@ export function AutoTranslateStepper({
             transition={{ delay: 0.5, duration: 0.5 }}
             className={`mt-4 rounded-xl border overflow-hidden ${
               tone === 'emerald'
-                ? 'border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-slate-950/50'
-                : 'border-amber-500/30 bg-gradient-to-b from-amber-950/30 to-slate-950/50'
+                ? 'border-emerald-500/30 bg-gradient-to-b from-emerald-950/30 to-noir-950/50'
+                : 'border-amber-500/30 bg-gradient-to-b from-amber-950/30 to-noir-950/50'
             }`}
           >
             {/* Summary Header */}
@@ -286,19 +301,23 @@ export function AutoTranslateStepper({
                         traduzione a runtime quel numero non esiste, e fingere
                         che esista sarebbe la stessa bugia di prima. */}
                     {verifiedOk && runtimeOnly && t('postTranslation.runtimeTitle')}
-                    {/* successRate arriva in PERCENTO (0-100) dai percorsi TS,
-                        ma in FRAZIONE (0-1) dal success_rate Rust: il 03/08 il
-                        62% è diventato "6200%". Normalizziamo qui, un punto
-                        solo: ≤1 è una frazione, sopra è già percento. */}
+                    {/* successRate è in PERCENTO (0-100) da tutti i percorsi:
+                        il generico converte il success_rate Rust alla
+                        frontiera. La vecchia normalizzazione «≤1 è una
+                        frazione» trasformava un 1% vero in «100%». */}
                     {verifiedOk && !runtimeOnly && t('postTranslation.writtenTitle')
                       .replace('{n}', String(stringsWritten))
-                      .replace('{pct}', (result.successRate <= 1 ? result.successRate * 100 : result.successRate).toFixed(0))}
+                      .replace('{pct}', result.successRate.toFixed(0))}
                     {partial && t('postTranslation.partialTitle')
                       .replace('{n}', String(stringsWritten))
                       .replace('{missing}', String(missing.length))}
+                    {incomplete && t('postTranslation.incompleteTitle')
+                      .replace('{n}', String(stringsWritten))
+                      .replace('{total}', String(stringsWritten + (stringsLeft ?? 0)))
+                      .replace('{left}', String(stringsLeft ?? 0))}
                     {unverified && t('postTranslation.unverifiedTitle')}
                   </h3>
-                  <p className="text-2xs text-slate-400 mt-0.5">
+                  <p className="text-2xs text-noir-400 mt-0.5">
                     {result.stringsTranslated > 0 && `${result.stringsTranslated} ${t('postTranslation.stringsTranslated')} | `}
                     Engine: {result.engine} |
                     {result.duration.toFixed(1)} min |
@@ -307,7 +326,7 @@ export function AutoTranslateStepper({
                   </p>
                   {/* I file confermati, PER NOME: la prova che si offre all'utente */}
                   {verifiedNames.length > 0 && (
-                    <p className="text-2xs text-slate-500 mt-1 font-mono truncate" title={verifiedNames.join(' · ')}>
+                    <p className="text-2xs text-noir-500 mt-1 font-mono truncate" title={verifiedNames.join(' · ')}>
                       ✓ {verifiedNames.slice(0, 3).join(' · ')}{verifiedNames.length > 3 ? ` +${verifiedNames.length - 3}` : ''}
                     </p>
                   )}
@@ -335,13 +354,13 @@ export function AutoTranslateStepper({
 
             {/* Action Prompt */}
             <div className="px-5 py-4">
-              <p className="text-xs text-slate-300 mb-1 font-medium">{t('postTranslation.whatNow')}</p>
+              <p className="text-xs text-noir-300 mb-1 font-medium">{t('postTranslation.whatNow')}</p>
               {/* «Ho premuto traduci, ha tradotto, e poi?» (triage 26/07, 03/07):
                   il passo successivo non è lo stesso per tutti. Con un patcher
                   il gioco è già cambiato e va solo verificato; con BepInEx la
                   traduzione avviene giocando e il primo avvio è lento; se non
                   è stato scritto niente va detto che il gioco è invariato. */}
-              <p className="text-2xs text-slate-500 mb-4 leading-tight">
+              <p className="text-2xs text-noir-500 mb-4 leading-tight">
                 {unverified
                   ? t('postTranslation.nextStepNothing')
                   : runtimeOnly
@@ -352,7 +371,9 @@ export function AutoTranslateStepper({
               {/* Fallback → Traduzione live OCR (palette blue/sky = Traduzione):
                   per RPG Maker con copertura parziale, e per QUALSIASI motore
                   quando la verifica su disco non conferma nessun file. */}
-              {(((/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 0.9) || unverified) && (
+              {/* successRate qui è in PERCENTO (0-100) da tutti i percorsi:
+                  il confronto con 0.9 scattava solo allo 0%. */}
+              {(((/rpg\s*maker/i.test(result.engine || '')) && result.successRate < 90) || unverified) && (
                 <button
                   onClick={() => {
                     onClose();
@@ -366,17 +387,17 @@ export function AutoTranslateStepper({
                     });
                     window.location.href = `/ocr-translator?${params.toString()}`;
                   }}
-                  className="group w-full mb-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 hover:border-sky-500/50 transition-all text-left"
+                  className="group w-full mb-3 flex items-center gap-3 px-4 py-3 rounded-xl bg-noir-500/10 hover:bg-noir-500/20 border border-noir-500/30 hover:border-noir-500/50 transition-all text-left"
                 >
-                  <div className="w-9 h-9 shrink-0 rounded-xl bg-sky-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ScanText className="h-4 w-4 text-sky-400" />
+                  <div className="w-9 h-9 shrink-0 rounded-xl bg-noir-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <ScanText className="h-4 w-4 text-noir-400" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-bold text-sky-300 block">{t('postTranslation.ocrTitle')}</span>
-                    <span className="text-2xs text-slate-400 leading-tight block">
+                    <span className="text-xs font-bold text-noir-300 block">{t('postTranslation.ocrTitle')}</span>
+                    <span className="text-2xs text-noir-400 leading-tight block">
                       {unverified
                         ? t('postTranslation.ocrDescUnverified')
-                        : t('postTranslation.ocrDescPartial').replace('{pct}', (result.successRate * 100).toFixed(0))}
+                        : t('postTranslation.ocrDescPartial').replace('{pct}', result.successRate.toFixed(0))}
                     </span>
                   </div>
                 </button>
@@ -392,16 +413,16 @@ export function AutoTranslateStepper({
                     if (translationSection) {
                       translationSection.scrollIntoView({ behavior: 'smooth' });
                     } else {
-                      window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}`;
+                      window.location.href = `/editor?game=${encodeURIComponent(game.title || '')}&path=${encodeURIComponent(game.installPath || '')}${game.id ? `&gameId=${encodeURIComponent(game.id)}` : ''}`;
                     }
                   }}
-                  className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 hover:border-indigo-500/40 transition-all text-center"
+                  className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 hover:border-rouge-500/40 transition-all text-center"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Edit3 className="h-4 w-4 text-indigo-400" />
+                  <div className="w-9 h-9 rounded-xl bg-rouge-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Edit3 className="h-4 w-4 text-rouge-400" />
                   </div>
-                  <span className="text-xs font-bold text-indigo-300">Rivedi Traduzioni</span>
-                  <span className="text-2xs text-slate-500 leading-tight">Controlla e modifica le stringhe tradotte nell&apos;editor</span>
+                  <span className="text-xs font-bold text-rouge-300">Rivedi Traduzioni</span>
+                  <span className="text-2xs text-noir-500 leading-tight">Controlla e modifica le stringhe tradotte nell&apos;editor</span>
                 </button>
 
                 {/* Option 2: Test Game */}
@@ -449,33 +470,23 @@ export function AutoTranslateStepper({
                     <Play className="h-4.5 w-4.5 text-emerald-400" />
                   </div>
                   <span className="text-xs font-bold text-emerald-300">{t('common.testaIlGioco')}</span>
-                  <span className="text-2xs text-slate-500 leading-tight">Avvia il gioco per verificare le traduzioni in-game</span>
+                  <span className="text-2xs text-noir-500 leading-tight">Avvia il gioco per verificare le traduzioni in-game</span>
                 </button>
 
-                {/* Option 3: Create Patch */}
+                {/* Option 3: Create Patch → export GsPack. Chiamava
+                    `export_translation_patch`, un comando che in src-tauri non
+                    è mai esistito: finiva sempre in errore. Il dialog GsPack
+                    esporta le stringhe salvate dall'apply, e se non ce ne sono
+                    lo dice invece di creare un pacchetto vuoto. */}
                 <button
-                  onClick={async () => {
-                    try {
-                      const { invoke: tauriInvoke } = await import('@tauri-apps/api/core');
-                      toast.info(t('common.creazionePatchInCorso'));
-                      const patchPath = await tauriInvoke<string>('export_translation_patch', {
-                        installPath: game.installPath,
-                        gameTitle: game.title || game.name || 'Game',
-                        targetLang: result?.targetLang || 'it',
-                      });
-                      toast.success(t('common.patchCreata'));
-                      await tauriInvoke('open_path', { path: patchPath }).catch(() => {});
-                    } catch (e: unknown) {
-                      toast.error(`Errore creazione patch: ${e}`);
-                    }
-                  }}
+                  onClick={onCreatePatch}
                   className="group flex flex-col items-center gap-2 px-4 py-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 transition-all text-center"
                 >
                   <div className="w-9 h-9 rounded-xl bg-amber-500/15 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Package className="h-4.5 w-4.5 text-amber-400" />
                   </div>
                   <span className="text-xs font-bold text-amber-300">{t('common.creaPatch')}</span>
-                  <span className="text-2xs text-slate-500 leading-tight">{t('common.esportaUnPacchettoProntoDaCondividereNellaCommunity')}</span>
+                  <span className="text-2xs text-noir-500 leading-tight">{t('common.esportaUnPacchettoProntoDaCondividereNellaCommunity')}</span>
                 </button>
               </div>
             </div>

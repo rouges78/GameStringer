@@ -13,15 +13,15 @@ interface IntelligentPlaceholderProps {
 
 // Colori per diversi store
 const storeColors = {
-  steam: 'from-blue-600 to-blue-800',
-  epic: 'from-gray-800 to-black',
-  gog: 'from-purple-600 to-purple-800',
+  steam: 'from-noir-600 to-noir-800',
+  epic: 'from-noir-800 to-black',
+  gog: 'from-rouge-600 to-rouge-800',
   origin: 'from-orange-500 to-orange-700',
-  ubisoft: 'from-blue-500 to-blue-700',
-  battlenet: 'from-blue-400 to-blue-600',
+  ubisoft: 'from-noir-500 to-noir-700',
+  battlenet: 'from-noir-400 to-noir-600',
   itchio: 'from-red-500 to-red-700',
   xbox: 'from-green-500 to-green-700',
-  default: 'from-gray-600 to-gray-800'
+  default: 'from-noir-600 to-noir-800'
 };
 
 // Icone per diversi store
@@ -40,27 +40,27 @@ const storeIcons = {
 const genreColors = {
   action: 'from-red-500 to-red-700',
   adventure: 'from-green-500 to-green-700',
-  rpg: 'from-purple-500 to-purple-700',
-  strategy: 'from-blue-500 to-blue-700',
+  rpg: 'from-rouge-500 to-rouge-700',
+  strategy: 'from-noir-500 to-noir-700',
   simulation: 'from-yellow-500 to-yellow-700',
   sports: 'from-orange-500 to-orange-700',
-  racing: 'from-pink-500 to-pink-700',
-  puzzle: 'from-indigo-500 to-indigo-700',
-  horror: 'from-gray-800 to-black',
-  indie: 'from-teal-500 to-teal-700',
-  default: 'from-gray-600 to-gray-800'
+  racing: 'from-rouge-500 to-rouge-700',
+  puzzle: 'from-rouge-500 to-rouge-700',
+  horror: 'from-noir-800 to-black',
+  indie: 'from-noir-500 to-noir-700',
+  default: 'from-noir-600 to-noir-800'
 };
 
 // Colori per diversi engine
 const engineColors = {
-  unity: 'from-gray-700 to-gray-900',
-  unreal: 'from-blue-700 to-blue-900',
-  godot: 'from-blue-500 to-blue-700',
+  unity: 'from-noir-700 to-noir-900',
+  unreal: 'from-noir-700 to-noir-900',
+  godot: 'from-noir-500 to-noir-700',
   construct: 'from-orange-600 to-orange-800',
   gamemaker: 'from-green-600 to-green-800',
   cryengine: 'from-red-600 to-red-800',
   source: 'from-yellow-600 to-yellow-800',
-  default: 'from-gray-600 to-gray-800'
+  default: 'from-noir-600 to-noir-800'
 };
 
 const IntelligentPlaceholder: React.FC<IntelligentPlaceholderProps> = ({

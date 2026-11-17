@@ -77,8 +77,8 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
 
   if (!stats) {
     return compact ? null : (
-      <Card className="border-slate-500/20 bg-slate-950/30">
-        <CardContent className="p-3 text-center text-xs text-slate-500">
+      <Card className="border-noir-500/20 bg-noir-950/30">
+        <CardContent className="p-3 text-center text-xs text-noir-500">
           <RefreshCw className="h-4 w-4 animate-spin mx-auto mb-1" />
           Caricamento monitor di sistema...
         </CardContent>
@@ -91,9 +91,9 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
     return (
       <button 
         onClick={() => setExpanded(true)}
-        className="flex items-center gap-2 px-2 py-1 rounded-md bg-slate-900/50 border border-slate-700/30 hover:border-slate-600/50 transition-all text-xs"
+        className="flex items-center gap-2 px-2 py-1 rounded-md bg-noir-900/50 border border-noir-700/30 hover:border-noir-600/50 transition-all text-xs"
       >
-        <Monitor className="h-3 w-3 text-slate-400" />
+        <Monitor className="h-3 w-3 text-noir-400" />
         {stats.gpu_available && (
           <span className={getUsageColor(stats.vram_usage_percent)}>
             VRAM {Math.round(stats.vram_usage_percent)}%
@@ -103,16 +103,16 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
           RAM {Math.round(stats.ram_usage_percent)}%
         </span>
         {stats.warning && <AlertTriangle className="h-3 w-3 text-amber-400" />}
-        <ChevronDown className="h-3 w-3 text-slate-500" />
+        <ChevronDown className="h-3 w-3 text-noir-500" />
       </button>
     );
   }
 
   return (
-    <Card className="border-slate-500/20 bg-slate-950/40 backdrop-blur-sm">
+    <Card className="border-noir-500/20 bg-noir-950/40 backdrop-blur-sm">
       <CardContent className="p-3">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-noir-300 flex items-center gap-2">
             <Monitor className="h-4 w-4" />
             System Monitor
           </h3>
@@ -150,16 +150,16 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
         <div className="space-y-2">
           {/* GPU / VRAM */}
           {stats.gpu_available ? (
-            <div className="p-2 rounded-lg bg-violet-950/30 border border-violet-500/10">
+            <div className="p-2 rounded-lg bg-rouge-950/30 border border-rouge-500/10">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1.5">
-                  <Cpu className="h-3 w-3 text-violet-400" />
-                  <span className="text-[11px] text-violet-300 font-medium">GPU</span>
-                  <span className="text-2xs text-violet-400/50 truncate max-w-[180px]">{stats.gpu_name}</span>
+                  <Cpu className="h-3 w-3 text-rouge-400" />
+                  <span className="text-[11px] text-rouge-300 font-medium">GPU</span>
+                  <span className="text-2xs text-rouge-400/50 truncate max-w-[180px]">{stats.gpu_name}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {stats.gpu_temp_celsius != null && (
-                    <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-violet-500/20">
+                    <Badge variant="outline" className="text-micro px-1.5 py-0 h-4 border-rouge-500/20">
                       <Thermometer className="h-2.5 w-2.5 mr-0.5" />
                       {stats.gpu_temp_celsius}°C
                     </Badge>
@@ -171,26 +171,26 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
               </div>
               <Progress value={stats.vram_usage_percent} className={`h-1.5 ${getProgressColor(stats.vram_usage_percent)}`} />
               <div className="flex justify-between mt-1">
-                <span className="text-micro text-violet-400/50">
+                <span className="text-micro text-rouge-400/50">
                   VRAM: {(stats.vram_used_mb / 1024).toFixed(1)} / {(stats.vram_total_mb / 1024).toFixed(1)} GB
                 </span>
-                <span className="text-micro text-violet-400/50">
+                <span className="text-micro text-rouge-400/50">
                   Libera: {(stats.vram_free_mb / 1024).toFixed(1)} GB
                 </span>
               </div>
             </div>
           ) : (
-            <div className="p-2 rounded-lg bg-slate-950/30 border border-slate-500/10 text-center">
-              <span className="text-2xs text-slate-500">{t('common.nessunaGpuNvidiaRilevata')}</span>
+            <div className="p-2 rounded-lg bg-noir-950/30 border border-noir-500/10 text-center">
+              <span className="text-2xs text-noir-500">{t('common.nessunaGpuNvidiaRilevata')}</span>
             </div>
           )}
 
           {/* RAM */}
-          <div className="p-2 rounded-lg bg-cyan-950/30 border border-cyan-500/10">
+          <div className="p-2 rounded-lg bg-noir-950/30 border border-noir-500/10">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
-                <MemoryStick className="h-3 w-3 text-cyan-400" />
-                <span className="text-[11px] text-cyan-300 font-medium">RAM</span>
+                <MemoryStick className="h-3 w-3 text-noir-400" />
+                <span className="text-[11px] text-noir-300 font-medium">RAM</span>
               </div>
               <span className={`text-xs font-bold ${getUsageColor(stats.ram_usage_percent)}`}>
                 {Math.round(stats.ram_usage_percent)}%
@@ -198,10 +198,10 @@ export function SystemMonitor({ compact = false }: { compact?: boolean }) {
             </div>
             <Progress value={stats.ram_usage_percent} className={`h-1.5 ${getProgressColor(stats.ram_usage_percent)}`} />
             <div className="flex justify-between mt-1">
-              <span className="text-micro text-cyan-400/50">
+              <span className="text-micro text-noir-400/50">
                 {(stats.ram_used_mb / 1024).toFixed(1)} / {(stats.ram_total_mb / 1024).toFixed(1)} GB
               </span>
-              <span className="text-micro text-cyan-400/50">
+              <span className="text-micro text-noir-400/50">
                 Libera: {((stats.ram_total_mb - stats.ram_used_mb) / 1024).toFixed(1)} GB
               </span>
             </div>

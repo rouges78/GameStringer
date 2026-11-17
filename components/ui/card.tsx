@@ -13,11 +13,11 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: "bg-card",
-        muted: "border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30",
-        highlight: "border-cyan-500/30 bg-cyan-500/5",
-        success: "border-emerald-500/30 bg-emerald-500/5",
-        error: "border-red-500/30 bg-red-500/5",
-        warning: "border-yellow-500/30 bg-yellow-500/5",
+        muted: "border-border/60 bg-muted/40",
+        highlight: "border-primary/40 bg-primary/5",
+        success: "border-success/40 bg-success/5",
+        error: "border-destructive/40 bg-destructive/5",
+        warning: "border-warning/40 bg-warning/5",
       },
     },
     defaultVariants: {

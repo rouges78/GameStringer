@@ -203,10 +203,10 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
   if (isLoading) {
     return (
       <div className="px-2 py-2">
-        <div className="rounded-lg bg-sky-500/15 border border-sky-500/25 p-2 backdrop-blur-md">
+        <div className="rounded-lg bg-noir-500/15 border border-noir-500/25 p-2 backdrop-blur-md">
           <div className="flex items-center gap-1.5">
-            <Loader2 className="h-3 w-3 text-sky-400 animate-spin" />
-            <span className="text-micro text-sky-300/60">Analisi libreria...</span>
+            <Loader2 className="h-3 w-3 text-noir-400 animate-spin" />
+            <span className="text-micro text-noir-300/60">Analisi libreria...</span>
           </div>
         </div>
       </div>
@@ -218,16 +218,16 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
     if (collapsed) return null;
     return (
       <div className="px-2 py-3">
-        <div className="rounded-2xl bg-slate-900/60 border border-cyan-500/30 p-3 backdrop-blur-xl shadow-lg">
+        <div className="rounded-2xl bg-noir-900/60 border border-noir-500/30 p-3 backdrop-blur-xl shadow-lg">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 bg-cyan-600/80 rounded-lg">
+            <div className="p-1.5 bg-noir-600/80 rounded-lg">
               <Languages className="h-4 w-4 text-white" />
             </div>
             <span className="text-2xs text-white uppercase tracking-wide font-semibold">
               {t('widget.recommendedToTranslate') || 'Da Tradurre'}
             </span>
           </div>
-          <p className="text-2xs text-cyan-300/60 text-center py-2">
+          <p className="text-2xs text-noir-300/60 text-center py-2">
             {t('widget.allGamesTranslated') || 'Tutti i giochi hanno la lingua!'}
           </p>
         </div>
@@ -239,7 +239,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
     return (
       <div className="px-2 py-3">
         <div 
-          className="w-12 h-12 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center cursor-pointer hover:border-sky-400/50 transition-colors"
+          className="w-12 h-12 rounded-lg bg-gradient-to-br from-noir-500/20 to-noir-500/10 border border-noir-500/30 flex items-center justify-center cursor-pointer hover:border-noir-400/50 transition-colors"
           title={game.name}
           onClick={handleGameClick}
         >
@@ -251,7 +251,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
               onError={() => setImageError(true)}
             />
           ) : (
-            <span className="text-lg font-bold text-cyan-400">
+            <span className="text-lg font-bold text-noir-400">
               {game.name?.charAt(0).toUpperCase() || '?'}
             </span>
           )}
@@ -262,11 +262,11 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
 
   return (
     <div className="px-2 py-3">
-      <div className="rounded-2xl bg-slate-900/60 border border-cyan-500/30 p-3 backdrop-blur-xl shadow-lg overflow-hidden">
+      <div className="rounded-2xl bg-noir-900/60 border border-noir-500/30 p-3 backdrop-blur-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-cyan-600/80 rounded-lg">
+            <div className="p-1.5 bg-noir-600/80 rounded-lg">
               <Languages className="h-4 w-4 text-white" />
             </div>
             <span className="text-2xs text-white uppercase tracking-wide font-semibold">
@@ -274,7 +274,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
             </span>
           </div>
           {gamesWithoutLang.length > 1 && (
-            <span className="text-micro text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">
+            <span className="text-micro text-noir-300 bg-noir-500/20 px-1.5 py-0.5 rounded-full font-medium border border-noir-500/30">
               {currentIndex + 1}/{gamesWithoutLang.length}
             </span>
           )}
@@ -301,7 +301,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
             onClick={handleGameClick}
           >
             {/* Cover */}
-            <div className="w-10 h-10 rounded-md bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+            <div className="w-10 h-10 rounded-md bg-noir-800 border border-noir-700/50 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
               {game.cover && !imageError ? (
                 <img 
                   src={game.cover} 
@@ -310,7 +310,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <span className="text-lg font-bold text-cyan-400">
+                <span className="text-lg font-bold text-noir-400">
                   {game.name?.charAt(0).toUpperCase() || '?'}
                 </span>
               )}
@@ -327,7 +327,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
                 </h4>
               </div>
               {game.reason && (
-                <span className="text-2xs text-cyan-400 font-medium whitespace-nowrap">
+                <span className="text-2xs text-noir-400 font-medium whitespace-nowrap">
                   {game.reason}
                 </span>
               )}
@@ -357,8 +357,8 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
                 onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
                 className={`w-1 h-1 rounded-full transition-colors ${
                   idx === currentIndex 
-                    ? 'bg-cyan-400' 
-                    : 'bg-white/20 hover:bg-cyan-400/50'
+                    ? 'bg-noir-400' 
+                    : 'bg-white/20 hover:bg-noir-400/50'
                 }`}
               />
             ))}

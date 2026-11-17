@@ -34,7 +34,7 @@ export const themeColors = {
     success: 'text-green-500 dark:text-green-400',
     error: 'text-red-500 dark:text-red-400',
     warning: 'text-yellow-500 dark:text-yellow-400',
-    info: 'text-blue-500 dark:text-blue-400',
+    info: 'text-noir-500 dark:text-noir-400',
   },
   
   // Status backgrounds
@@ -42,21 +42,21 @@ export const themeColors = {
     success: 'bg-green-500/10 dark:bg-green-400/10',
     error: 'bg-red-500/10 dark:bg-red-400/10',
     warning: 'bg-yellow-500/10 dark:bg-yellow-400/10',
-    info: 'bg-blue-500/10 dark:bg-blue-400/10',
+    info: 'bg-noir-500/10 dark:bg-noir-400/10',
   },
 } as const;
 
 // Gradient presets che funzionano in entrambi i temi
 export const gradients = {
-  primary: 'bg-gradient-to-r from-blue-600 to-cyan-600',
-  secondary: 'bg-gradient-to-r from-purple-600 to-pink-600',
+  primary: 'bg-gradient-to-r from-noir-600 to-noir-600',
+  secondary: 'bg-gradient-to-r from-rouge-600 to-rouge-600',
   success: 'bg-gradient-to-r from-green-600 to-emerald-600',
   warning: 'bg-gradient-to-r from-yellow-600 to-orange-600',
-  danger: 'bg-gradient-to-r from-red-600 to-rose-600',
+  danger: 'bg-gradient-to-r from-red-600 to-rouge-600',
   
   // Subtle gradients for backgrounds
-  subtlePrimary: 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10',
-  subtleSecondary: 'bg-gradient-to-r from-purple-500/10 to-pink-500/10',
+  subtlePrimary: 'bg-gradient-to-r from-noir-500/10 to-noir-500/10',
+  subtleSecondary: 'bg-gradient-to-r from-rouge-500/10 to-rouge-500/10',
 } as const;
 
 // Hero header styles consistenti
@@ -100,6 +100,6 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
  * Get appropriate text color for a background
  */
 export function getContrastText(bgColor: 'light' | 'dark'): string {
-  return bgColor === 'dark' ? 'text-white' : 'text-gray-900';
+  return bgColor === 'dark' ? 'text-white' : 'text-noir-900';
 }
 

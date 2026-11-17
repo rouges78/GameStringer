@@ -29,16 +29,16 @@ import { clientLogger } from '@/lib/client-logger';
 
 function QualityBar({ stats }: { stats: QualityStats }) {
   const total = stats.human + stats.validated + stats.ai;
-  if (total === 0) return <div className="h-3 rounded-full bg-zinc-800" />;
+  if (total === 0) return <div className="h-3 rounded-full bg-noir-800" />;
 
   const hPct = (stats.human / total) * 100;
   const vPct = (stats.validated / total) * 100;
   const aPct = (stats.ai / total) * 100;
 
   return (
-    <div className="h-3 rounded-full overflow-hidden flex bg-zinc-800">
+    <div className="h-3 rounded-full overflow-hidden flex bg-noir-800">
       {hPct > 0 && <div className="bg-emerald-500 transition-all" style={{ width: `${hPct}%` }} />}
-      {vPct > 0 && <div className="bg-blue-500 transition-all" style={{ width: `${vPct}%` }} />}
+      {vPct > 0 && <div className="bg-rouge-500 transition-all" style={{ width: `${vPct}%` }} />}
       {aPct > 0 && <div className="bg-amber-500 transition-all" style={{ width: `${aPct}%` }} />}
     </div>
   );
@@ -73,10 +73,10 @@ function StatsCards({ stats }: { stats: QualityStats }) {
   const { t } = useTranslation();
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-      <Card className="bg-zinc-900/50 border-zinc-800">
+      <Card className="bg-noir-900/50 border-noir-800">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold">{stats.total.toLocaleString()}</div>
-          <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.totale')}</div>
+          <div className="text-2xs text-noir-400">{t('qualityScoringDashboardComp.totale')}</div>
         </CardContent>
       </Card>
       <Card className="bg-emerald-950/30 border-emerald-900/30">
@@ -85,10 +85,10 @@ function StatsCards({ stats }: { stats: QualityStats }) {
           <div className="text-2xs text-emerald-400/60">✍️ {t('qualityScoringDashboardComp.human')}</div>
         </CardContent>
       </Card>
-      <Card className="bg-blue-950/30 border-blue-900/30">
+      <Card className="bg-noir-950/30 border-noir-900/30">
         <CardContent className="p-3 text-center">
-          <div className="text-2xl font-bold text-blue-400">{stats.validated.toLocaleString()}</div>
-          <div className="text-2xs text-blue-400/60">✅ {t('qualityScoringDashboardComp.validated')}</div>
+          <div className="text-2xl font-bold text-noir-400">{stats.validated.toLocaleString()}</div>
+          <div className="text-2xs text-noir-400/60">✅ {t('qualityScoringDashboardComp.validated')}</div>
         </CardContent>
       </Card>
       <Card className="bg-amber-950/30 border-amber-900/30">
@@ -97,10 +97,10 @@ function StatsCards({ stats }: { stats: QualityStats }) {
           <div className="text-2xs text-amber-400/60">🤖 {t('qualityScoringDashboardComp.ai')}</div>
         </CardContent>
       </Card>
-      <Card className="bg-zinc-900/50 border-zinc-800">
+      <Card className="bg-noir-900/50 border-noir-800">
         <CardContent className="p-3 text-center">
-          <div className="text-2xl font-bold text-zinc-400">{stats.captured.toLocaleString()}</div>
-          <div className="text-2xs text-zinc-500">📋 {t('qualityScoringDashboardComp.captured')}</div>
+          <div className="text-2xl font-bold text-noir-400">{stats.captured.toLocaleString()}</div>
+          <div className="text-2xs text-noir-500">📋 {t('qualityScoringDashboardComp.captured')}</div>
         </CardContent>
       </Card>
     </div>
@@ -132,10 +132,10 @@ function EntryRow({
   };
 
   return (
-    <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-zinc-800/50 group text-xs">
+    <div className="flex items-start gap-2 p-2 rounded-lg hover:bg-noir-800/50 group text-xs">
       <TagBadge tag={entry.tag} />
       <div className="flex-1 min-w-0 space-y-0.5">
-        <div className="text-zinc-400 truncate">{entry.sourceText}</div>
+        <div className="text-noir-400 truncate">{entry.sourceText}</div>
         {editing ? (
           <div className="flex items-center gap-1">
             <Input
@@ -153,7 +153,7 @@ function EntryRow({
           </div>
         ) : (
           <div className="text-white">
-            {entry.translatedText || <span className="text-zinc-600 italic">{t('qualityScoringDashboardComp.notTranslated')}</span>}
+            {entry.translatedText || <span className="text-noir-600 italic">{t('qualityScoringDashboardComp.notTranslated')}</span>}
           </div>
         )}
       </div>
@@ -264,14 +264,14 @@ function ProjectDetail({
       {/* Legend */}
       <div className="flex items-center gap-3 text-2xs">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> {t('qualityScoringDashboardComp.human')}</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" />{t('common.validated')}</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rouge-500" />{t('common.validated')}</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> {t('qualityScoringDashboardComp.ai')}</span>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-500" />
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-noir-500" />
           <Input
             aria-label={t('common.cerca')} placeholder={t('common.cercaStringhe')}
             value={search}
@@ -295,10 +295,10 @@ function ProjectDetail({
       </div>
 
       {/* Entries */}
-      <Card className="bg-zinc-900/50 border-zinc-800">
+      <Card className="bg-noir-900/50 border-noir-800">
         <CardContent className="p-2 max-h-[500px] overflow-y-auto space-y-0.5">
           {filteredEntries.length === 0 ? (
-            <div className="text-center text-zinc-500 py-8 text-sm">{t('qualityScoringDashboardComp.nessunaStringaTrovata')}</div>
+            <div className="text-center text-noir-500 py-8 text-sm">{t('qualityScoringDashboardComp.nessunaStringaTrovata')}</div>
           ) : (
             filteredEntries.map(([key, entry]) => (
               <EntryRow
@@ -312,7 +312,7 @@ function ProjectDetail({
           )}
         </CardContent>
       </Card>
-      <div className="text-xs text-zinc-500">
+      <div className="text-xs text-noir-500">
         {`${filteredEntries.length.toLocaleString()} / ${Object.keys(project.entries).length.toLocaleString()} ${t('qualityScoringDashboardComp.stringhe')}`}
       </div>
     </div>
@@ -389,39 +389,39 @@ export function QualityScoringDashboard() {
     <div className="space-y-4">
       {/* Global Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-noir-900/50 border-noir-800">
           <CardContent className="p-3 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-violet-400" />
+            <BarChart3 className="h-5 w-5 text-rouge-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.projects}</div>
-              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.progetti')}</div>
+              <div className="text-2xs text-noir-400">{t('qualityScoringDashboardComp.progetti')}</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-noir-900/50 border-noir-800">
           <CardContent className="p-3 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-cyan-400" />
+            <FileText className="h-5 w-5 text-noir-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.totalEntries.toLocaleString()}</div>
-              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.stringheTotali')}</div>
+              <div className="text-2xs text-noir-400">{t('qualityScoringDashboardComp.stringheTotali')}</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-noir-900/50 border-noir-800">
           <CardContent className="p-3 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-emerald-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.avgScore}/3</div>
-              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.scoreMedio')}</div>
+              <div className="text-2xs text-noir-400">{t('qualityScoringDashboardComp.scoreMedio')}</div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-noir-900/50 border-noir-800">
           <CardContent className="p-3 flex items-center gap-2">
             <Shield className={`h-5 w-5 ${getQualityColor(globalStats.avgLabel)}`} />
             <div>
               <div className="text-lg font-bold">{globalStats.avgLabel}</div>
-              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.qualitàMedia')}</div>
+              <div className="text-2xs text-noir-400">{t('qualityScoringDashboardComp.qualitàMedia')}</div>
             </div>
           </CardContent>
         </Card>
@@ -437,11 +437,11 @@ export function QualityScoringDashboard() {
 
       {/* Project List */}
       {projects.length === 0 ? (
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-noir-900/50 border-noir-800">
           <CardContent className="p-8 text-center">
-            <Shield className="h-10 w-10 mx-auto text-zinc-600 mb-3" />
-            <p className="text-zinc-400 text-sm mb-1">{t('qualityScoringDashboardComp.nessunProgettoDiTraduzione')}</p>
-            <p className="text-zinc-600 text-xs">
+            <Shield className="h-10 w-10 mx-auto text-noir-600 mb-3" />
+            <p className="text-noir-400 text-sm mb-1">{t('qualityScoringDashboardComp.nessunProgettoDiTraduzione')}</p>
+            <p className="text-noir-600 text-xs">
               {t('qualityScoringDashboardComp.emptyHint')}
             </p>
           </CardContent>
@@ -451,7 +451,7 @@ export function QualityScoringDashboard() {
           {projects.map(project => (
             <Card
               key={project.id}
-              className="bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 cursor-pointer transition-colors"
+              className="bg-noir-900/50 border-noir-800 hover:border-noir-700 cursor-pointer transition-colors"
               onClick={() => setSelectedProject(project)}
             >
               <CardContent className="p-3">
@@ -464,7 +464,7 @@ export function QualityScoringDashboard() {
                     <ScoreBadge stats={project.stats} />
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-2xs text-zinc-500">
+                    <span className="text-2xs text-noir-500">
                       {project.stats.translated.toLocaleString()} / {project.stats.total.toLocaleString()}
                     </span>
                     <Button
@@ -478,7 +478,7 @@ export function QualityScoringDashboard() {
                   </div>
                 </div>
                 <QualityBar stats={project.stats} />
-                <div className="flex items-center gap-3 mt-1.5 text-2xs text-zinc-500">
+                <div className="flex items-center gap-3 mt-1.5 text-2xs text-noir-500">
                   <span>✍️ H:{project.stats.human}</span>
                   <span>✅ V:{project.stats.validated}</span>
                   <span>🤖 A:{project.stats.ai}</span>

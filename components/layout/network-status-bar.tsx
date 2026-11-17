@@ -1,19 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, CloudOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 import { getNetworkStatus, onNetworkStatusChange, getOfflineQueueLength } from '@/lib/network-resilience';
 
 /**
- * Barra stato connessione — mostra quando offline o Supabase down.
- * Auto-hide quando connessione ripristinata (con transizione).
+ * Stato della connessione come voce della barra di stato in basso.
+ *
+ * Prima era una barra rossa fissa sopra l'header ogni volta che mancava la
+ * rete: in un'app che traduce anche offline, l'allarme a tutta larghezza
+ * diceva il contrario del vero. Ora è un LED con etichetta; i dettagli
+ * (coda, latenza del server) stanno nel tooltip.
  */
-export function NetworkStatusBar() {
+export function NetworkStatusChip() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState(getNetworkStatus());
   const [queueLength, setQueueLength] = useState(getOfflineQueueLength());
-  const [isRecovering, setIsRecovering] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [hideTimer, setHideTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const unsub = onNetworkStatusChange((newStatus) => {
@@ -34,71 +37,26 @@ export function NetworkStatusBar() {
     };
   }, []);
 
-  useEffect(() => {
-    // Show bar when offline or Supabase down
-    const shouldShow = !status.isOnline || !status.isSupabaseOnline;
-
-    if (shouldShow) {
-      setIsVisible(true);
-      setIsRecovering(false);
-      if (hideTimer) {
-        clearTimeout(hideTimer);
-        setHideTimer(null);
-      }
-    } else if (isVisible) {
-      // Connection restored — show recovery message briefly then hide
-      setIsRecovering(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setIsRecovering(false);
-      }, 3000);
-      setHideTimer(timer);
-    }
-
-    return () => {
-      if (hideTimer) clearTimeout(hideTimer);
-    };
-  }, [status.isOnline, status.isSupabaseOnline]);
-
-  if (!isVisible) return null;
-
-  // Determine severity
   const isOffline = !status.isOnline;
-  const isSupabaseDown = status.isOnline && !status.isSupabaseOnline;
+  const isServerDown = status.isOnline && !status.isSupabaseOnline;
+
+  const label = isOffline ? t('statusLine.offline') : isServerDown ? t('statusLine.serverDown') : t('statusLine.online');
+  const hint = isOffline
+    ? t('statusLine.offlineHint')
+    : isServerDown && status.latencyMs !== null
+      ? t('statusLine.latency').replace('{ms}', String(status.latencyMs))
+      : undefined;
 
   return (
-    <div
-      className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium transition-all duration-300 ${
-        isRecovering
-          ? 'bg-emerald-600/90 text-white'
-          : isOffline
-            ? 'bg-red-600/90 text-white'
-            : 'bg-amber-600/90 text-white'
-      }`}
-    >
-      {isRecovering ? (
-        <>
-          <Wifi className="h-3.5 w-3.5" />
-          <span>Connessione ripristinata{queueLength > 0 ? ` — sincronizzazione ${queueLength} operazioni...` : ''}</span>
-        </>
-      ) : isOffline ? (
-        <>
-          <WifiOff className="h-3.5 w-3.5" />
-          <span>Modalità offline — le modifiche saranno sincronizzate al ritorno della connessione</span>
-          {queueLength > 0 && (
-            <span className="ml-1 opacity-80">({queueLength} in coda)</span>
-          )}
-        </>
-      ) : isSupabaseDown ? (
-        <>
-          <CloudOff className="h-3.5 w-3.5" />
-          <span>Server non raggiungibile — alcune funzionalità potrebbero non essere disponibili</span>
-          {status.latencyMs !== null && (
-            <span className="ml-1 opacity-80">(latenza: {status.latencyMs}ms)</span>
-          )}
-        </>
-      ) : null}
-    </div>
+    <span className="flex items-center gap-1.5 border-r border-border px-3" title={hint}>
+      <span
+        aria-hidden
+        className={cn('h-1.5 w-1.5', isOffline ? 'bg-muted-foreground' : isServerDown ? 'bg-warning' : 'bg-success')}
+      />
+      <span className={cn(isServerDown && 'text-warning')}>{label}</span>
+      {queueLength > 0 && (
+        <span className="text-muted-foreground">· {t('statusLine.queued').replace('{n}', String(queueLength))}</span>
+      )}
+    </span>
   );
 }
-

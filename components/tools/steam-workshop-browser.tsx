@@ -324,22 +324,22 @@ export function SteamWorkshopBrowser() {
                             <Users className="h-3.5 w-3.5" />
                             <span>{formatNumber(item.subscriptions)}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-pink-400">
+                          <div className="flex items-center gap-1 text-xs text-rouge-400">
                             <Heart className="h-3.5 w-3.5" />
                             <span>{formatNumber(item.favorited)}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                          <div className="flex items-center gap-1 text-xs text-noir-400">
                             <Eye className="h-3.5 w-3.5" />
                             <span>{formatNumber(item.views)}</span>
                           </div>
                           {item.file_size > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <div className="flex items-center gap-1 text-xs text-noir-400">
                               <FileText className="h-3.5 w-3.5" />
                               <span>{formatFileSize(item.file_size)}</span>
                             </div>
                           )}
                           {item.time_updated > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <div className="flex items-center gap-1 text-xs text-noir-400">
                               <Clock className="h-3.5 w-3.5" />
                               <span>{new Date(item.time_updated * 1000).toLocaleDateString('it-IT')}</span>
                             </div>

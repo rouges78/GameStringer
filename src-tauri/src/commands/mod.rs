@@ -135,6 +135,16 @@ pub mod repak_wrapper;
 pub mod retoc_wrapper;
 // RSS proxy (bypass CORS per feed news)
 pub mod rss_proxy;
+// Pianificatore di String it: ordina i metodi di traduzione per un gioco
+pub mod translation_plan;
+// Lettore ad accesso casuale dei bundle UnityFS (data.unity3d)
+pub mod unity_fs;
+// Stringhe dentro gli oggetti dei file serializzati Unity (scene comprese)
+pub mod unity_strings;
+// Traduzione statica dei testi incorporati nelle scene Unity (metodo di String it)
+pub mod unity_static;
+// Riconoscitore delle tabelle di localizzazione nei TextAsset Unity
+pub mod unity_loc_tables;
 // Rilevamento lingue gioco da file di localizzazione
 pub mod game_lang_scan;
 // Godot Engine PCK patcher

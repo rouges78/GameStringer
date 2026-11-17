@@ -216,14 +216,14 @@ export function AITranslationAssistant() {
   return (
     <div className="space-y-3">
       {/* Top Bar: Provider + Model */}
-      <div className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-slate-800/30 border border-slate-700/50">
+      <div className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-noir-800/30 border border-noir-700/50">
         {providers.map(provider => (
           <button
             key={provider.id}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
               selectedProvider === provider.id 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                ? 'bg-rouge-600 text-white' 
+                : 'bg-noir-700/50 text-noir-300 hover:bg-noir-700'
             } ${!provider.isAvailable && provider.type === 'local' ? 'opacity-40' : ''}`}
             onClick={() => {
               if (provider.isAvailable || provider.type === 'cloud') {
@@ -234,15 +234,15 @@ export function AITranslationAssistant() {
           >
             {provider.type === 'local' ? <Cpu className="h-3 w-3" /> : <Cloud className="h-3 w-3" />}
             {provider.name}
-            <span className={`w-1.5 h-1.5 rounded-full ${provider.isAvailable ? 'bg-green-400' : 'bg-slate-500'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${provider.isAvailable ? 'bg-green-400' : 'bg-noir-500'}`} />
           </button>
         ))}
         
         {(providers.find(p => p.id === selectedProvider)?.models.length ?? 0) > 0 && (
           <>
-            <div className="h-4 w-px bg-slate-600 mx-1" />
+            <div className="h-4 w-px bg-noir-600 mx-1" />
             <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger className="h-7 w-32 text-xs bg-slate-700/50 border-slate-600">
+              <SelectTrigger className="h-7 w-32 text-xs bg-noir-700/50 border-noir-600">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -260,7 +260,7 @@ export function AITranslationAssistant() {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-xs">
           <AlertCircle className="h-3 w-3 text-yellow-500" />
           <span className="text-yellow-300">
-            {t('aiTranslationAssistant.ollamaNotDetected')} <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> → <code className="bg-slate-800 px-1 rounded text-2xs">ollama run translategemma</code>
+            {t('aiTranslationAssistant.ollamaNotDetected')} <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> → <code className="bg-noir-800 px-1 rounded text-2xs">ollama run translategemma</code>
           </span>
         </div>
       )}
@@ -285,7 +285,7 @@ export function AITranslationAssistant() {
                   <SelectItem value="es">🇪🇸 {t('languages.es')}</SelectItem>
                 </SelectContent>
               </Select>
-              <ArrowRight className="h-4 w-4 text-slate-500 flex-shrink-0" />
+              <ArrowRight className="h-4 w-4 text-noir-500 flex-shrink-0" />
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                 <SelectTrigger className="h-9 flex-1">
                   <SelectValue />
@@ -338,13 +338,13 @@ export function AITranslationAssistant() {
                 onCheckedChange={setGenerateAlternatives}
                 className="scale-90"
               />
-              <Label className="text-xs text-slate-400">{t('aiTranslation.alternative') || 'Alternative'}</Label>
+              <Label className="text-xs text-noir-400">{t('aiTranslation.alternative') || 'Alternative'}</Label>
             </div>
             <Button 
               onClick={handleTranslate} 
               disabled={isTranslating || !inputText.trim()}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-500"
+              className="bg-rouge-600 hover:bg-rouge-500"
             >
               {isTranslating ? (
                 <>
@@ -422,11 +422,11 @@ export function AITranslationAssistant() {
         {/* Context Panel - Sidebar */}
         <div className="lg:col-span-4 space-y-2">
           <Collapsible open={showContext} onOpenChange={setShowContext}>
-            <Card className="border-slate-700/50">
+            <Card className="border-noir-700/50">
               <CollapsibleTrigger asChild>
                 <div className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
                   <div className="flex items-center gap-2">
-                    <Gamepad2 className="h-4 w-4 text-blue-400" />
+                    <Gamepad2 className="h-4 w-4 text-noir-400" />
                     <span className="text-sm font-medium">{t('aiTranslation.gameContext')}</span>
                   </div>
                   {showContext ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -493,9 +493,9 @@ export function AITranslationAssistant() {
           </Collapsible>
 
           {/* Glossary - Compatto */}
-          <Card className="border-slate-700/50">
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/30">
-              <BookOpen className="h-4 w-4 text-blue-400" />
+          <Card className="border-noir-700/50">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-noir-700/30">
+              <BookOpen className="h-4 w-4 text-noir-400" />
               <span className="text-sm font-medium">{t('aiTranslation.glossary')}</span>
             </div>
             <CardContent className="space-y-2 p-3">
@@ -512,7 +512,7 @@ export function AITranslationAssistant() {
                   placeholder={t('aiTranslation.translationPlaceholder')}
                   className="w-28 min-w-0"
                 />
-                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500 shrink-0" aria-label={t('aiTranslation.addTerm')}>
+                <Button size="icon" onClick={addGlossaryTerm} className="bg-rouge-600 hover:bg-rouge-500 shrink-0" aria-label={t('aiTranslation.addTerm')}>
                   <Check className="h-4 w-4" />
                 </Button>
               </div>

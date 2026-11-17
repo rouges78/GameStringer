@@ -90,30 +90,30 @@ export function UpdateBell() {
       
       <PopoverContent 
         align="end" 
-        className="w-80 p-0 bg-slate-900/98 backdrop-blur-md border-slate-700/60 shadow-2xl shadow-black/40 z-[100] rounded-xl overflow-hidden"
+        className="w-80 p-0 bg-noir-900/98 backdrop-blur-md border-noir-700/60 shadow-2xl shadow-black/40 z-[100] rounded-xl overflow-hidden"
         sideOffset={8}
       >
         {hasUpdate && updateInfo ? (
           <div>
-            <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-b border-emerald-500/20 px-4 py-2.5">
+            <div className="bg-gradient-to-r from-emerald-600/20 to-noir-600/20 border-b border-emerald-500/20 px-4 py-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ArrowUpCircle className="w-4 h-4 text-emerald-400" />
                   <span className="text-white text-[13px] font-semibold">
                     v{updateInfo.latest_version}
                   </span>
-                  <span className="text-slate-400 text-[11px]">
+                  <span className="text-noir-400 text-[11px]">
                     disponibile
                   </span>
                 </div>
                 <button
                   onClick={handleDismiss}
-                  className="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-slate-800/50"
+                  className="text-noir-500 hover:text-noir-300 transition-colors p-1 rounded-md hover:bg-noir-800/50"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-slate-500 text-2xs mt-0.5">
+              <p className="text-noir-500 text-2xs mt-0.5">
                 Versione attuale: {updateInfo.current_version}
               </p>
             </div>
@@ -121,10 +121,10 @@ export function UpdateBell() {
             <div className="px-4 py-3">
               {updateInfo.release_notes && (
                 <div className="max-h-28 overflow-y-auto mb-3 pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-                  <p className="text-slate-500 text-2xs uppercase tracking-wider font-medium mb-1.5">{t('updateBellComp.novità')}</p>
+                  <p className="text-noir-500 text-2xs uppercase tracking-wider font-medium mb-1.5">{t('updateBellComp.novità')}</p>
                   <ul className="space-y-1">
                     {parseReleaseNotes(updateInfo.release_notes).map((item, i) => (
-                      <li key={i} className="text-slate-300 text-[11px] flex items-start gap-2">
+                      <li key={i} className="text-noir-300 text-[11px] flex items-start gap-2">
                         <span className="text-emerald-500 mt-0.5 text-2xs">●</span>
                         <span>{item}</span>
                       </li>
@@ -135,13 +135,13 @@ export function UpdateBell() {
               
               {isDownloading && (
                 <div className="mb-3">
-                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-noir-800 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 rounded-full"
+                      className="h-full bg-gradient-to-r from-emerald-500 to-noir-500 transition-all duration-300 rounded-full"
                       style={{ width: `${downloadProgress}%` }}
                     />
                   </div>
-                  <p className="text-slate-500 text-2xs mt-1 text-right">{Math.round(downloadProgress)}%</p>
+                  <p className="text-noir-500 text-2xs mt-1 text-right">{Math.round(downloadProgress)}%</p>
                 </div>
               )}
               
@@ -157,7 +157,7 @@ export function UpdateBell() {
                   type="button"
                   onClick={handleDownload}
                   disabled={isDownloading || isInstalling}
-                  className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:shadow-none"
+                  className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-noir-600 text-white hover:from-emerald-400 hover:to-noir-500 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50 disabled:shadow-none"
                 >
                   {isDownloading || isInstalling ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -171,7 +171,7 @@ export function UpdateBell() {
                 <button
                   onClick={handleDismiss}
                   disabled={isDownloading || isInstalling}
-                  className="text-slate-500 hover:text-slate-300 h-8 text-xs px-3 rounded-lg transition-colors hover:bg-slate-800/50"
+                  className="text-noir-500 hover:text-noir-300 h-8 text-xs px-3 rounded-lg transition-colors hover:bg-noir-800/50"
                 >
                   Ignora
                 </button>
@@ -181,8 +181,8 @@ export function UpdateBell() {
         ) : (
           <div className="p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-emerald-500/50 mx-auto mb-2" />
-            <p className="text-slate-300 text-xs font-medium">{t('updateBellComp.tuttoAggiornato')}</p>
-            <p className="text-slate-500 text-[11px] mt-0.5">
+            <p className="text-noir-300 text-xs font-medium">{t('updateBellComp.tuttoAggiornato')}</p>
+            <p className="text-noir-500 text-[11px] mt-0.5">
               v{updateInfo?.current_version || '...'}
             </p>
             <Button
@@ -190,7 +190,7 @@ export function UpdateBell() {
               variant="ghost"
               onClick={() => checkForUpdates()}
               disabled={isChecking}
-              className="mt-3 text-[11px] h-7 text-slate-400 hover:text-white"
+              className="mt-3 text-[11px] h-7 text-noir-400 hover:text-white"
             >
               {isChecking ? (
                 <>

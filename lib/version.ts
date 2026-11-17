@@ -110,8 +110,8 @@ export class Version {
     // Colori basati sul tipo di versione
     const { major, minor } = this.versionInfo;
     
-    if (major >= 4) return 'text-purple-400'; // Futuro
-    if (major >= 3 && minor >= 5) return 'text-blue-400'; // Stabile avanzata
+    if (major >= 4) return 'text-rouge-400'; // Futuro
+    if (major >= 3 && minor >= 5) return 'text-noir-400'; // Stabile avanzata
     if (major >= 3) return 'text-green-400'; // Stabile corrente
     if (major >= 2) return 'text-yellow-400'; // Legacy
     return 'text-red-400'; // Molto vecchia

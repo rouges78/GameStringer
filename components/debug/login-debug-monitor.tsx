@@ -129,12 +129,12 @@ export function LoginDebugMonitor() {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 max-h-64 overflow-auto z-50 bg-black/95 text-white border-gray-700">
+    <Card className="fixed bottom-4 right-4 w-80 max-h-64 overflow-auto z-50 bg-black/95 text-white border-noir-700">
       <CardHeader className="py-1.5 px-3 flex flex-row items-center justify-between">
         <CardTitle className="text-xs">🔍 Debug</CardTitle>
         <button 
           onClick={() => setIsExpanded(false)}
-          className="text-gray-400 hover:text-white text-sm"
+          className="text-noir-400 hover:text-white text-sm"
         >
           ✕
         </button>

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { decode } from 'html-entities';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -82,6 +83,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { t, language } = useTranslation();
+  const router = useRouter();
   const dash = translations[language]?.dashboard || translations.it.dashboard;
   const [stats, setStats] = useState<DashboardStats>({
     totalGames: 0,
@@ -112,7 +114,7 @@ export default function Dashboard() {
   const [_lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
-  const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
+  const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string; installPath: string | null } | null>(null);
   const [activeTranslation, setActiveTranslation] = useState<{ percent: number; translated: number; total: number; lang: string } | null>(null);
   const [newsFilter, setNewsFilter] = useState<string>('all');
   const [rssNews, setRssNews] = useState<NewsFeedItem[]>([]);
@@ -176,6 +178,8 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
     setBlogPosts(blogService.getRecentPosts(5));
+    // Al primo avvio la copia in localStorage è vuota: rilegge dopo aver caricato blog.json
+    blogService.init().then(() => setBlogPosts(blogService.getRecentPosts(5)));
     // Carica news RSS
     const cachedNews = newsFeedService.getCachedNews();
     if (cachedNews.length > 0) {
@@ -369,7 +373,9 @@ export default function Dashboard() {
               image: lg.image || null,
               platform: lg.platform || 'Steam',
               visitedAt: lg.visitedAt || Date.now(),
-              appId: lg.appId || ''
+              appId: lg.appId || '',
+              // Salvato dalla scheda gioco: "Continua traduzione" lo passa al wizard
+              installPath: typeof lg.installPath === 'string' && lg.installPath ? lg.installPath : null
             });
           }
         }
@@ -455,15 +461,15 @@ export default function Dashboard() {
   // Evita flash durante hydration - mostra schermata di caricamento pulita
   if (!isMounted) {
     return (
-      <div className="relative overflow-hidden h-full flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, #141c27 0%, #0f1923 60%, #0a1018 100%)' }}>
+      <div className="relative overflow-hidden h-full flex flex-col items-center justify-center" style={{ background: 'linear-gradient(180deg, #161618 0%, #0f0f10 60%, #0f0f10 100%)' }}>
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <Gamepad2 className="h-12 w-12 text-[#67c1f5] animate-pulse" />
-            <div className="absolute inset-0 blur-xl bg-[#1a9fff]/20 rounded-full" />
+            <Gamepad2 className="h-12 w-12 text-rouge-400 animate-pulse" />
+            <div className="absolute inset-0 blur-xl bg-rouge-500/20 rounded-full" />
           </div>
           <div className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4 text-[#67c1f5] animate-spin" />
-            <span className="text-sm text-[#8f98a0]">{t('common.loading')}</span>
+            <RefreshCw className="h-4 w-4 text-rouge-400 animate-spin" />
+            <span className="text-sm text-noir-400">{t('common.loading')}</span>
           </div>
         </div>
       </div>
@@ -471,19 +477,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative overflow-hidden h-full flex flex-col" style={{ background: 'linear-gradient(180deg, #141c27 0%, #0f1923 60%, #0a1018 100%)' }}>
+    <div className="relative overflow-hidden h-full flex flex-col" style={{ background: 'linear-gradient(180deg, #161618 0%, #0f0f10 60%, #0f0f10 100%)' }}>
       
       {/* ═══ HERO STATS BAR ═══ */}
-      <div className="shrink-0 relative overflow-hidden border-b border-[#2a475e]/50" style={{ background: 'linear-gradient(135deg, #1b2838 0%, #1e3a52 50%, #1b2838 100%)' }}>
+      <div className="shrink-0 relative overflow-hidden border-b border-noir-700/50" style={{ background: 'linear-gradient(135deg, #161618 0%, #26262a 50%, #161618 100%)' }}>
         <div className="relative px-5 py-2.5 flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Link href="/library" className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#1a9fff]/20 to-[#1a9fff]/5 hover:from-[#1a9fff]/30 hover:to-[#1a9fff]/15 border border-[#1a9fff]/25 hover:border-[#1a9fff]/50 transition-all hover:shadow-[0_0_20px_rgba(26,159,255,0.15)] hover:-translate-y-0.5">
-              <Sparkles className="h-4 w-4 text-[#67c1f5] group-hover:text-[#1a9fff]" />
-              <span className="text-xs font-semibold text-[#c6d4df] group-hover:text-white transition-colors">{t('common.translateAGame')}</span>
+            <Link href="/library" className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-rouge-500/20 to-rouge-500/5 hover:from-rouge-500/30 hover:to-rouge-500/15 border border-rouge-500/25 hover:border-rouge-500/50 transition-all hover:shadow-[0_0_20px_rgba(255,59,74,0.15)] hover:-translate-y-0.5">
+              <Sparkles className="h-4 w-4 text-rouge-400 group-hover:text-rouge-500" />
+              <span className="text-xs font-semibold text-noir-200 group-hover:text-white transition-colors">{t('common.translateAGame')}</span>
             </Link>
-            <Link href="/community-hub" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/40 border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all hover:-translate-y-0.5">
-              <Globe className="h-3.5 w-3.5 text-[#8f98a0] group-hover:text-[#67c1f5]" />
-              <span className="text-[11px] font-medium text-[#8f98a0] group-hover:text-[#c6d4df]">Community</span>
+            <Link href="/community-hub" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-noir-700/20 hover:bg-noir-700/40 border border-noir-700/30 hover:border-rouge-400/30 transition-all hover:-translate-y-0.5">
+              <Globe className="h-3.5 w-3.5 text-noir-400 group-hover:text-rouge-400" />
+              <span className="text-[11px] font-medium text-noir-400 group-hover:text-noir-200">Community</span>
             </Link>
             {/* 23/08/2026: puntava a /editor pur essendo etichettato «Progetti».
                 Nella sidebar sono due voci distinte (Progetti → /projects,
@@ -491,36 +497,36 @@ export default function Dashboard() {
                 Progetti. Le altre quattro Link verso /editor nel repo sono
                 etichettate «editor» e restano come sono: questa era l'unica
                 che diceva una cosa e ne faceva un'altra. */}
-            <Link href="/projects" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/40 border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all hover:-translate-y-0.5">
-              <Layers className="h-3.5 w-3.5 text-[#8f98a0] group-hover:text-[#67c1f5]" />
-              <span className="text-[11px] font-medium text-[#8f98a0] group-hover:text-[#c6d4df]">{t('common.projects')}</span>
+            <Link href="/projects" className="group flex items-center gap-2 px-3 py-2 rounded-lg bg-noir-700/20 hover:bg-noir-700/40 border border-noir-700/30 hover:border-rouge-400/30 transition-all hover:-translate-y-0.5">
+              <Layers className="h-3.5 w-3.5 text-noir-400 group-hover:text-rouge-400" />
+              <span className="text-[11px] font-medium text-noir-400 group-hover:text-noir-200">{t('common.projects')}</span>
             </Link>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-[#2a475e]/30 transition-opacity duration-300 ${totalGames > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <Gamepad2 className="h-3.5 w-3.5 text-[#67c1f5]" />
-              <span className="text-sm font-bold text-[#67c1f5]">{totalGames}</span>
-              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{t('common.games')}</span>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-950/60 border border-noir-700/30 transition-opacity duration-300 ${totalGames > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              <Gamepad2 className="h-3.5 w-3.5 text-rouge-400" />
+              <span className="text-sm font-bold text-rouge-400">{totalGames}</span>
+              <span className="text-micro text-noir-400 uppercase tracking-wider">{t('common.games')}</span>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-emerald-500/20 transition-opacity duration-300 ${(totalTranslated > 0 || stats.tmEntries > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-950/60 border border-emerald-500/20 transition-opacity duration-300 ${(totalTranslated > 0 || stats.tmEntries > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-sm font-bold text-emerald-400">{(totalTranslated + stats.tmEntries).toLocaleString()}</span>
-              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{t('common.translatedStrings')}</span>
+              <span className="text-micro text-noir-400 uppercase tracking-wider">{t('common.translatedStrings')}</span>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-purple-500/20 transition-opacity duration-300 ${(stats.tmEntries > 0 && totalTranslated > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <Zap className="h-3.5 w-3.5 text-purple-400" />
-              <span className="text-sm font-bold text-purple-400">{stats.tmEntries.toLocaleString()}</span>
-              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">TM</span>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-950/60 border border-rouge-500/20 transition-opacity duration-300 ${(stats.tmEntries > 0 && totalTranslated > 0) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              <Zap className="h-3.5 w-3.5 text-rouge-400" />
+              <span className="text-sm font-bold text-rouge-400">{stats.tmEntries.toLocaleString()}</span>
+              <span className="text-micro text-noir-400 uppercase tracking-wider">TM</span>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-amber-500/20 transition-opacity duration-300 ${stats.patches > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-950/60 border border-amber-500/20 transition-opacity duration-300 ${stats.patches > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <Wrench className="h-3.5 w-3.5 text-amber-400" />
               <span className="text-sm font-bold text-amber-400">{stats.patches}</span>
-              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{t('common.patches')}</span>
+              <span className="text-micro text-noir-400 uppercase tracking-wider">{t('common.patches')}</span>
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0e1419]/60 border border-cyan-500/20 transition-opacity duration-300 ${stats.timeSavedMinutes > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <Clock className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="text-sm font-bold text-cyan-400">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</span>
-              <span className="text-micro text-[#8f98a0] uppercase tracking-wider">{t('common.saved')}</span>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-noir-950/60 border border-noir-500/20 transition-opacity duration-300 ${stats.timeSavedMinutes > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              <Clock className="h-3.5 w-3.5 text-noir-400" />
+              <span className="text-sm font-bold text-noir-400">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</span>
+              <span className="text-micro text-noir-400 uppercase tracking-wider">{t('common.saved')}</span>
             </div>
           </div>
         </div>
@@ -530,28 +536,28 @@ export default function Dashboard() {
       <div className="flex-1 flex min-h-0">
         
         {/* ── COLONNA SINISTRA — News Feed ── */}
-        <div className="flex-[3] flex flex-col min-h-0 border-r border-[#2a475e]/40">
+        <div className="flex-[3] flex flex-col min-h-0 border-r border-noir-700/40">
           {/* Tab bar */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#2a475e]/40 bg-[#0d1520]">
+          <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-noir-700/40 bg-noir-950">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => { setNewsSource('rss'); setNewsFilter('all'); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${
                   newsSource === 'rss' 
-                    ? 'bg-[#1a9fff]/15 text-[#67c1f5] shadow-[0_0_8px_rgba(26,159,255,0.1)]' 
-                    : 'text-[#8f98a0] hover:text-[#c6d4df] hover:bg-[#2a475e]/20'
+                    ? 'bg-rouge-500/15 text-rouge-400 shadow-[0_0_8px_rgba(255,59,74,0.1)]' 
+                    : 'text-noir-400 hover:text-noir-200 hover:bg-noir-700/20'
                 }`}
               >
                 <Rss className="h-3.5 w-3.5" /> Feed
-                {rssNews.length > 0 && <span className={`text-micro ml-0.5 px-1.5 py-0.5 rounded-full ${newsSource === 'rss' ? 'bg-[#1a9fff]/20 text-[#67c1f5]' : 'bg-[#2a475e]/30 text-[#8f98a0]'}`}>{rssNews.length}</span>}
+                {rssNews.length > 0 && <span className={`text-micro ml-0.5 px-1.5 py-0.5 rounded-full ${newsSource === 'rss' ? 'bg-rouge-500/20 text-rouge-400' : 'bg-noir-700/30 text-noir-400'}`}>{rssNews.length}</span>}
                 {rssLoading && <RefreshCw className="h-2.5 w-2.5 animate-spin opacity-50" />}
               </button>
               <button
                 onClick={() => { setNewsSource('blog'); setNewsFilter('all'); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-all ${
                   newsSource === 'blog' 
-                    ? 'bg-[#1a9fff]/15 text-[#67c1f5] shadow-[0_0_8px_rgba(26,159,255,0.1)]' 
-                    : 'text-[#8f98a0] hover:text-[#c6d4df] hover:bg-[#2a475e]/20'
+                    ? 'bg-rouge-500/15 text-rouge-400 shadow-[0_0_8px_rgba(255,59,74,0.1)]' 
+                    : 'text-noir-400 hover:text-noir-200 hover:bg-noir-700/20'
                 }`}
               >
                 <Newspaper className="h-3.5 w-3.5" /> {t('common.myNews')}
@@ -561,7 +567,7 @@ export default function Dashboard() {
               <select
                 value={newsFilter}
                 onChange={(e) => setNewsFilter(e.target.value)}
-                className="text-2xs bg-[#0d1520] border border-[#2a475e]/60 rounded-md px-2.5 py-1.5 text-[#c6d4df] hover:border-[#67c1f5]/50 focus:border-[#67c1f5] focus:outline-none focus:ring-1 focus:ring-[#67c1f5]/20 transition-all cursor-pointer"
+                className="text-2xs bg-noir-950 border border-noir-700/60 rounded-md px-2.5 py-1.5 text-noir-200 hover:border-rouge-400/50 focus:border-rouge-400 focus:outline-none focus:ring-1 focus:ring-rouge-400/20 transition-all cursor-pointer"
               >
                 {newsSource === 'rss' ? (
                   <>
@@ -579,7 +585,7 @@ export default function Dashboard() {
                   </>
                 )}
               </select>
-              <Link href={newsSource === 'rss' ? '/news-feeds' : '/blog'} className="text-[#1a9fff]/60 hover:text-[#67c1f5] transition-colors">
+              <Link href={newsSource === 'rss' ? '/news-feeds' : '/blog'} className="text-rouge-500/60 hover:text-rouge-400 transition-colors">
                 <Settings2 className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -594,16 +600,16 @@ export default function Dashboard() {
                   <div className="group animate-fade-in" style={{ animationDelay: `${Math.min(idx * 25, 250)}ms` }}>
                     {(idx === 0 || filteredRss[idx - 1]?.pubDate !== item.pubDate) && (
                       <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
-                        <div className="h-px flex-1 bg-gradient-to-r from-[#2a475e] to-transparent" />
-                        <span className="text-2xs font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{item.pubDate}</span>
-                        <div className="h-px flex-1 bg-gradient-to-l from-[#2a475e] to-transparent" />
+                        <div className="h-px flex-1 bg-gradient-to-r from-noir-700 to-transparent" />
+                        <span className="text-2xs font-bold text-noir-400 uppercase tracking-[0.2em]">{item.pubDate}</span>
+                        <div className="h-px flex-1 bg-gradient-to-l from-noir-700 to-transparent" />
                       </div>
                     )}
                     
-                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-[#1b2838] hover:bg-[#1e2d3d] border border-[#2a475e]/40 hover:border-[#3d6a8e] transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-noir-900 hover:bg-noir-800 border border-noir-700/40 hover:border-noir-600 transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
                       
                       {/* Immagine SEMPRE visibile: item.image → favicon ad alta risoluzione → icona sorgente */}
-                      <div className="relative w-[180px] h-[100px] rounded-md flex-shrink-0 border border-black/20 shadow-lg group-hover:shadow-xl transition-shadow overflow-hidden bg-gradient-to-br from-[#243447] to-[#1b2838]">
+                      <div className="relative w-[180px] h-[100px] rounded-md flex-shrink-0 border border-black/20 shadow-lg group-hover:shadow-xl transition-shadow overflow-hidden bg-gradient-to-br from-noir-800 to-noir-900">
                         <ImageWithFallback
                           src={item.image || getFaviconFallback(item.link)}
                           fallbackSrc={getFaviconFallback(item.link)}
@@ -620,41 +626,41 @@ export default function Dashboard() {
 
                       <div className="relative flex-1 min-w-0 flex flex-col py-0.5">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-micro font-bold text-[#67c1f5] uppercase tracking-widest">{item.sourceName}</span>
+                          <span className="text-micro font-bold text-rouge-400 uppercase tracking-widest">{item.sourceName}</span>
                           {(() => { const ci = FEED_CATEGORIES.find(c => c.id === item.category); return ci ? <span className="text-2xs px-1.5 py-0.5 rounded-md font-semibold" style={{ color: ci.color, backgroundColor: ci.color + '22', border: `1px solid ${ci.color}44` }}>{ci.icon} {ci.labels?.[language] || ci.labels?.['en'] || ci.id}</span> : null; })()}
                         </div>
-                        <h3 className="text-[13px] font-bold text-[#e5e9ed] group-hover:text-white leading-snug transition-colors line-clamp-2">
+                        <h3 className="text-[13px] font-bold text-noir-100 group-hover:text-white leading-snug transition-colors line-clamp-2">
                           {decode(item.title)}
                         </h3>
-                        <p className="text-[11px] text-[#8f98a0] leading-relaxed mt-1.5 line-clamp-2">
+                        <p className="text-[11px] text-noir-400 leading-relaxed mt-1.5 line-clamp-2">
                           {decode(item.description)}
                         </p>
                         <div className="flex items-center gap-2 mt-auto pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ExternalLink className="h-3 w-3 text-[#1a9fff]/60" />
-                          <span className="text-micro text-[#1a9fff]/60">{t('common.readArticle')}</span>
+                          <ExternalLink className="h-3 w-3 text-rouge-500/60" />
+                          <span className="text-micro text-rouge-500/60">{t('common.readArticle')}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </a>
               )) : (
-                <div className="flex flex-col items-center justify-center h-full text-[#8f98a0]/40 gap-4 py-16">
+                <div className="flex flex-col items-center justify-center h-full text-noir-400/40 gap-4 py-16">
                   {rssLoading ? (
                     <>
                       <div className="relative">
                         <RefreshCw className="h-8 w-8 opacity-30 animate-spin" />
-                        <div className="absolute inset-0 blur-lg bg-[#1a9fff]/10 rounded-full animate-pulse" />
+                        <div className="absolute inset-0 blur-lg bg-rouge-500/10 rounded-full animate-pulse" />
                       </div>
-                      <p className="text-xs text-[#8f98a0]/60">{t('common.loadingFeeds')}</p>
+                      <p className="text-xs text-noir-400/60">{t('common.loadingFeeds')}</p>
                       <div className="w-full max-w-lg space-y-3 mt-2">
                         {[1,2,3].map(i => (
-                          <div key={i} className="flex gap-3.5 p-3 rounded-lg bg-[#16202d]/60 animate-pulse">
-                            <div className="w-[200px] h-[100px] rounded-md bg-[#2a475e]/20 flex-shrink-0" />
+                          <div key={i} className="flex gap-3.5 p-3 rounded-lg bg-noir-900/60 animate-pulse">
+                            <div className="w-[200px] h-[100px] rounded-md bg-noir-700/20 flex-shrink-0" />
                             <div className="flex-1 space-y-3 py-1">
-                              <div className="h-2 bg-[#2a475e]/20 rounded-full w-1/4" />
-                              <div className="h-3.5 bg-[#2a475e]/25 rounded w-3/4" />
-                              <div className="h-2.5 bg-[#2a475e]/15 rounded w-full" />
-                              <div className="h-2.5 bg-[#2a475e]/15 rounded w-2/3" />
+                              <div className="h-2 bg-noir-700/20 rounded-full w-1/4" />
+                              <div className="h-3.5 bg-noir-700/25 rounded w-3/4" />
+                              <div className="h-2.5 bg-noir-700/15 rounded w-full" />
+                              <div className="h-2.5 bg-noir-700/15 rounded w-2/3" />
                             </div>
                           </div>
                         ))}
@@ -664,11 +670,11 @@ export default function Dashboard() {
                     <>
                       <div className="relative">
                         <Rss className="h-12 w-12 opacity-20" />
-                        <div className="absolute inset-0 blur-xl bg-[#1a9fff]/5 rounded-full" />
+                        <div className="absolute inset-0 blur-xl bg-rouge-500/5 rounded-full" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-medium text-[#8f98a0]/50">{t('common.noActiveFeeds')}</p>
-                        <Link href="/news-feeds" className="text-xs text-[#1a9fff] hover:text-[#67c1f5] mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 border border-[#1a9fff]/20 transition-all">
+                        <p className="text-sm font-medium text-noir-400/50">{t('common.noActiveFeeds')}</p>
+                        <Link href="/news-feeds" className="text-xs text-rouge-500 hover:text-rouge-400 mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 transition-all">
                           <Settings2 className="h-3.5 w-3.5" />
                           {t('common.configureFeeds')}
                         </Link>
@@ -683,16 +689,16 @@ export default function Dashboard() {
                   <div className="group animate-fade-in" style={{ animationDelay: `${Math.min(idx * 25, 250)}ms` }}>
                     {(idx === 0 || filteredPosts[idx - 1]?.date !== post.date) && (
                       <div className="flex items-center gap-3 py-2.5 mt-1 first:mt-0">
-                        <div className="h-px flex-1 bg-gradient-to-r from-[#2a475e] to-transparent" />
-                        <span className="text-2xs font-bold text-[#8f98a0] uppercase tracking-[0.2em]">{post.date}</span>
-                        <div className="h-px flex-1 bg-gradient-to-l from-[#2a475e] to-transparent" />
+                        <div className="h-px flex-1 bg-gradient-to-r from-noir-700 to-transparent" />
+                        <span className="text-2xs font-bold text-noir-400 uppercase tracking-[0.2em]">{post.date}</span>
+                        <div className="h-px flex-1 bg-gradient-to-l from-noir-700 to-transparent" />
                       </div>
                     )}
                     
-                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-[#1b2838] hover:bg-[#1e2d3d] border border-[#2a475e]/40 hover:border-[#3d6a8e] transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                    <div className="relative flex gap-3.5 p-3 rounded-lg bg-noir-900 hover:bg-noir-800 border border-noir-700/40 hover:border-noir-600 transition-all cursor-pointer mb-1.5 overflow-hidden group-hover:shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
                       {/* Immagine SEMPRE visibile per i blog post: post.image → icona app → placeholder grafico */}
                       <div className="relative w-[200px] h-[110px] rounded-md flex-shrink-0 border border-black/20 shadow-lg overflow-hidden"
-                        style={{ background: 'linear-gradient(145deg, #1b2838 0%, #243447 50%, #1b2838 100%)' }}>
+                        style={{ background: 'linear-gradient(145deg, #161618 0%, #26262a 50%, #161618 100%)' }}>
                         <ImageWithFallback
                           src={post.image || '/icon.png'}
                           alt={post.title}
@@ -700,9 +706,9 @@ export default function Dashboard() {
                           placeholder={
                             <div className="absolute inset-0 flex items-center justify-center">
                               {post.gameName ? (
-                                <span className="text-[11px] font-bold text-[#67c1f5]/70 text-center px-3">{post.gameName}</span>
+                                <span className="text-[11px] font-bold text-rouge-400/70 text-center px-3">{post.gameName}</span>
                               ) : (
-                                <Newspaper className="h-8 w-8 text-[#67c1f5]/25" />
+                                <Newspaper className="h-8 w-8 text-rouge-400/25" />
                               )}
                             </div>
                           }
@@ -710,12 +716,12 @@ export default function Dashboard() {
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                         <div>
-                          <span className="text-micro font-bold text-[#8f98a0] uppercase tracking-widest">{post.tag || (t('common.news'))}</span>
-                          <h3 className="text-[13px] font-bold text-[#e5e9ed] group-hover:text-white leading-snug transition-colors line-clamp-2 mt-1">
+                          <span className="text-micro font-bold text-noir-400 uppercase tracking-widest">{post.tag || (t('common.news'))}</span>
+                          <h3 className="text-[13px] font-bold text-noir-100 group-hover:text-white leading-snug transition-colors line-clamp-2 mt-1">
                             {post.title}
                           </h3>
                         </div>
-                        <p className="text-[11px] text-[#8f98a0] line-clamp-2 leading-relaxed mt-1.5">
+                        <p className="text-[11px] text-noir-400 line-clamp-2 leading-relaxed mt-1.5">
                           {post.description}
                         </p>
                       </div>
@@ -723,11 +729,11 @@ export default function Dashboard() {
                   </div>
                 </Link>
               )) : (
-                <div className="flex flex-col items-center justify-center h-full text-[#8f98a0]/40 gap-4 py-16">
+                <div className="flex flex-col items-center justify-center h-full text-noir-400/40 gap-4 py-16">
                   <Newspaper className="h-12 w-12 opacity-15" />
                   <div className="text-center">
-                    <p className="text-sm font-medium text-[#8f98a0]/50">{t('common.noNewsYet')}</p>
-                    <Link href="/blog" className="text-xs text-[#1a9fff] hover:text-[#67c1f5] mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 border border-[#1a9fff]/20 transition-all">
+                    <p className="text-sm font-medium text-noir-400/50">{t('common.noNewsYet')}</p>
+                    <Link href="/blog" className="text-xs text-rouge-500 hover:text-rouge-400 mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rouge-500/10 hover:bg-rouge-500/20 border border-rouge-500/20 transition-all">
                       {t('common.writeTheFirstNews')}
                     </Link>
                   </div>
@@ -741,7 +747,7 @@ export default function Dashboard() {
               <button
                 onClick={scrollToTop}
                 title={t('common.backToTop')}
-                className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1a9fff]/90 hover:bg-[#1a9fff] text-white text-2xs font-bold shadow-lg shadow-[#1a9fff]/20 hover:shadow-[#1a9fff]/40 transition-all hover:-translate-y-0.5 backdrop-blur-sm z-10"
+                className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rouge-500/90 hover:bg-rouge-500 text-white text-2xs font-bold shadow-lg shadow-rouge-500/20 hover:shadow-rouge-500/40 transition-all hover:-translate-y-0.5 backdrop-blur-sm z-10"
               >
                 <ArrowUpCircle className="h-3.5 w-3.5" />
                 {t('common.backToTop')}
@@ -751,13 +757,13 @@ export default function Dashboard() {
         </div>
 
         {/* ── COLONNA DESTRA — Sidebar ── */}
-        <div className="w-[340px] shrink-0 flex flex-col min-h-0 overflow-y-auto custom-scrollbar border-l border-[#2a475e]/40 bg-[#111a24]">
+        <div className="w-[340px] shrink-0 flex flex-col min-h-0 overflow-y-auto custom-scrollbar border-l border-noir-700/40 bg-noir-950">
           <div className="p-4 space-y-4">
           
             {/* Ultimo gioco aperto */}
             {lastGame && (
-              <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
-                <div className="group relative rounded-xl overflow-hidden border border-[#2a475e]/40 hover:border-[#67c1f5]/50 transition-all cursor-pointer hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5">
+              <div className="group relative rounded-xl overflow-hidden border border-noir-700/40 hover:border-rouge-400/50 transition-all cursor-pointer hover:shadow-[0_4px_24px_rgba(0,0,0,0.4)] hover:-translate-y-0.5">
+                <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`} className="block">
                   {lastGame.image ? (
                     <div className="relative h-36">
                       <img
@@ -772,68 +778,77 @@ export default function Dashboard() {
                           const parent = img.parentElement;
                           if (parent && !parent.querySelector('.cover-fallback')) {
                             const div = document.createElement('div');
-                            div.className = 'cover-fallback absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#243447] to-[#1b2838]';
+                            div.className = 'cover-fallback absolute inset-0 flex items-center justify-center bg-gradient-to-br from-noir-800 to-noir-900';
                             div.innerHTML = '<span class="text-2xl">&#x1F3AE;</span>';
                             parent.appendChild(div);
                           }
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0e1419] via-[#0e1419]/60 to-transparent opacity-90" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#0e1419]/80 via-transparent to-transparent opacity-80" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-noir-950 via-noir-950/60 to-transparent opacity-90" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-noir-950/80 via-transparent to-transparent opacity-80" />
                       <div className="absolute bottom-0 left-0 right-0 p-3.5">
                         <div className="flex items-center gap-1.5 mb-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <Play className="h-3 w-3 text-[#67c1f5]" fill="currentColor" />
-                          <span className="text-micro text-[#8f98a0] uppercase tracking-[0.2em] font-bold">{t('common.lastOpened')}</span>
+                          <Play className="h-3 w-3 text-rouge-400" fill="currentColor" />
+                          <span className="text-micro text-noir-400 uppercase tracking-[0.2em] font-bold">{t('common.lastOpened')}</span>
                         </div>
                         <p className="text-[15px] font-bold text-white truncate drop-shadow-md">{lastGame.title}</p>
                       </div>
                       {activeTranslation && (
-                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 bg-[#0e1419]/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-[#1a9fff]/30 shadow-lg">
-                          <span className="text-[11px] font-bold text-[#67c1f5]">{activeTranslation.percent}%</span>
-                          <span className="text-2xs text-[#8f98a0] uppercase font-bold">{activeTranslation.lang}</span>
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 bg-noir-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-rouge-500/30 shadow-lg">
+                          <span className="text-[11px] font-bold text-rouge-400">{activeTranslation.percent}%</span>
+                          <span className="text-2xs text-noir-400 uppercase font-bold">{activeTranslation.lang}</span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="p-3 bg-[#16202d]">
+                    <div className="p-3 bg-noir-900">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-12 h-12 rounded-md bg-[#2a475e]/30 flex items-center justify-center">
-                          <Gamepad2 className="h-5 w-5 text-[#67c1f5]/40" />
+                        <div className="w-12 h-12 rounded-md bg-noir-700/30 flex items-center justify-center">
+                          <Gamepad2 className="h-5 w-5 text-rouge-400/40" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <Play className="h-2.5 w-2.5 text-[#67c1f5]" fill="currentColor" />
-                            <span className="text-2xs text-[#8f98a0] uppercase tracking-[0.15em] font-bold">{t('common.lastOpened')}</span>
+                            <Play className="h-2.5 w-2.5 text-rouge-400" fill="currentColor" />
+                            <span className="text-2xs text-noir-400 uppercase tracking-[0.15em] font-bold">{t('common.lastOpened')}</span>
                           </div>
-                          <p className="text-xs font-bold text-[#c6d4df] truncate group-hover:text-white transition-colors">{lastGame.title}</p>
+                          <p className="text-xs font-bold text-noir-200 truncate group-hover:text-white transition-colors">{lastGame.title}</p>
                         </div>
                       </div>
                     </div>
                   )}
-                  {activeTranslation && (
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/auto-translate?gameId=${lastGame.id}&gameName=${encodeURIComponent(lastGame.title)}&installPath=&platform=${lastGame.platform}`; }}
-                      className="w-full py-2 bg-gradient-to-r from-[#1a9fff]/15 to-[#1a9fff]/5 hover:from-[#1a9fff]/25 hover:to-[#1a9fff]/15 border-t border-[#2a475e]/30 text-2xs font-bold text-[#67c1f5] flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
-                      <Zap className="h-3 w-3" fill="currentColor" /> {t('common.continueTranslation')}
-                    </button>
-                  )}
-                </div>
-              </Link>
+                </Link>
+                {/* Fuori dal <Link> (niente bottone dentro un'ancora). Prima passava
+                    installPath= vuoto e il wizard si apriva senza gioco: ora il path
+                    salvato dalla scheda gioco, o il wizard lo risolve da gameId; la
+                    lingua del checkpoint fa comparire il banner "Riprendi". */}
+                {activeTranslation && (
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams({ gameId: lastGame.id, gameName: lastGame.title, platform: lastGame.platform, targetLang: activeTranslation.lang });
+                      if (lastGame.installPath) params.set('installPath', lastGame.installPath);
+                      if (lastGame.image) params.set('gameImage', lastGame.image);
+                      router.push(`/auto-translate?${params.toString()}`);
+                    }}
+                    className="w-full py-2 bg-gradient-to-r from-rouge-500/15 to-rouge-500/5 hover:from-rouge-500/25 hover:to-rouge-500/15 border-t border-noir-700/30 text-2xs font-bold text-rouge-400 flex items-center justify-center gap-1.5 transition-all uppercase tracking-wider">
+                    <Zap className="h-3 w-3" fill="currentColor" /> {t('common.continueTranslation')}
+                  </button>
+                )}
+              </div>
             )}
 
             {/* Attività Recenti */}
-            <div className="rounded-lg bg-[#1b2838] border border-[#2a475e]/50 overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2.5 bg-[#15202e] border-b border-[#2a475e]/50">
+            <div className="rounded-lg bg-noir-900 border border-noir-700/50 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2.5 bg-noir-900 border-b border-noir-700/50">
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Clock className="h-3.5 w-3.5 text-[#67c1f5]" />
-                    {activities.length > 0 && <div className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[#1a9fff] animate-pulse" />}
+                    <Clock className="h-3.5 w-3.5 text-rouge-400" />
+                    {activities.length > 0 && <div className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-rouge-500 animate-pulse" />}
                   </div>
-                  <h3 className="text-[11px] font-bold text-[#e5e9ed] uppercase tracking-wider">{dash.recentActivity}</h3>
+                  <h3 className="text-[11px] font-bold text-noir-100 uppercase tracking-wider">{dash.recentActivity}</h3>
                 </div>
                 <button
                   onClick={() => setActivityOrder(activityOrder === 'newest' ? 'oldest' : 'newest')}
-                  className="flex items-center text-[#8f98a0]/60 hover:text-[#67c1f5] p-1 rounded transition-colors"
+                  className="flex items-center text-noir-400/60 hover:text-rouge-400 p-1 rounded transition-colors"
                 >
                   {activityOrder === 'newest' ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />}
                 </button>
@@ -848,13 +863,13 @@ export default function Dashboard() {
                       )
                       .slice(0, 10)
                       .map((activity, index) => (
-                        <div key={index} className="group flex items-start gap-2.5 px-2.5 py-2 rounded-md hover:bg-[#2a475e]/15 transition-colors">
+                        <div key={index} className="group flex items-start gap-2.5 px-2.5 py-2 rounded-md hover:bg-noir-700/15 transition-colors">
                           <span className="text-[13px] flex-shrink-0 mt-0.5">{activity.icon || '📝'}</span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] text-[#e5e9ed] leading-snug group-hover:text-white transition-colors line-clamp-2">{activity.text}</p>
+                            <p className="text-[11px] text-noir-100 leading-snug group-hover:text-white transition-colors line-clamp-2">{activity.text}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-micro text-[#8f98a0]">{activity.time}</span>
-                              <span className="text-2xs text-[#8f98a0]/60 uppercase tracking-wider">{activity.type}</span>
+                              <span className="text-micro text-noir-400">{activity.time}</span>
+                              <span className="text-2xs text-noir-400/60 uppercase tracking-wider">{activity.type}</span>
                             </div>
                           </div>
                         </div>
@@ -862,10 +877,10 @@ export default function Dashboard() {
                   </div>
                 ) : activitiesLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="h-4 w-4 text-[#67c1f5] animate-spin" />
+                    <RefreshCw className="h-4 w-4 text-rouge-400 animate-spin" />
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-[#8f98a0]/30 gap-2">
+                  <div className="flex flex-col items-center justify-center py-8 text-noir-400/30 gap-2">
                     <Clock className="h-6 w-6 opacity-20" />
                     <span className="text-2xs">{dash.noRecentActivity}</span>
                   </div>
@@ -874,10 +889,10 @@ export default function Dashboard() {
             </div>
 
             {/* Ollama Status - Compact */}
-            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#1b2838]/60 border border-[#2a475e]/30">
+            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-noir-900/60 border border-noir-700/30">
               <div className="flex items-center gap-1.5">
-                <Cpu className="h-3 w-3 text-[#67c1f5]" />
-                <span className="text-micro text-[#8f98a0] uppercase font-medium">Ollama</span>
+                <Cpu className="h-3 w-3 text-rouge-400" />
+                <span className="text-micro text-noir-400 uppercase font-medium">Ollama</span>
               </div>
               {ollamaStatus ? (
                 ollamaStarting ? (
@@ -892,7 +907,7 @@ export default function Dashboard() {
                   </button>
                 )
               ) : (
-                <RefreshCw className="h-2.5 w-2.5 text-[#8f98a0] animate-spin" />
+                <RefreshCw className="h-2.5 w-2.5 text-noir-400 animate-spin" />
               )}
             </div>
 
@@ -904,7 +919,7 @@ export default function Dashboard() {
                 <p className="text-2xs font-semibold text-amber-300 group-hover:text-amber-200 transition-colors">
                   {t('common.supportGamestringer')}
                 </p>
-                <p className="text-2xs text-[#8f98a0]/70">
+                <p className="text-2xs text-noir-400/70">
                   {t('common.helpUsMaintainApisAndDevelopment')}
                 </p>
               </div>

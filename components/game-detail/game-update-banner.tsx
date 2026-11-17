@@ -62,11 +62,11 @@ export function GameUpdateBanner({
             ? 'Patch di traduzione danneggiata'
             : 'Gioco aggiornato — verifica traduzione'}
         </p>
-        <p className="text-[11px] text-[#8f98a0] mt-0.5">{updateStatus.message}</p>
+        <p className="text-[11px] text-noir-400 mt-0.5">{updateStatus.message}</p>
         {updateStatus.patch_details.length > 0 && (
           <div className="mt-1.5 space-y-0.5">
             {updateStatus.patch_details.map((d, i) => (
-              <p key={i} className="text-2xs text-[#8f98a0]/70">{d}</p>
+              <p key={i} className="text-2xs text-noir-400/70">{d}</p>
             ))}
           </div>
         )}
@@ -74,7 +74,7 @@ export function GameUpdateBanner({
           {/* Riapplica patch */}
           {updateStatus.patch_type === 'bepinex' && installPath && (
             <button
-              className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/20 transition-all flex items-center gap-1"
+              className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-noir-500/15 hover:bg-noir-500/25 text-noir-300 border border-noir-500/20 transition-all flex items-center gap-1"
               onClick={async () => {
                 try {
                   let exeName = '';
@@ -90,7 +90,7 @@ export function GameUpdateBanner({
           )}
           {updateStatus.patch_type === 'unreal_pak' && installPath && (
             <button
-              className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/20 transition-all flex items-center gap-1"
+              className="h-6 px-2.5 rounded-lg text-2xs font-bold bg-rouge-500/15 hover:bg-rouge-500/25 text-rouge-300 border border-rouge-500/20 transition-all flex items-center gap-1"
               onClick={onUpgradeUEWithAI}
               disabled={isUeAiUpgrading}
             >
@@ -99,7 +99,7 @@ export function GameUpdateBanner({
           )}
           {/* Segna come visto */}
           <button
-            className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all"
+            className="h-6 px-2.5 rounded-lg text-2xs font-semibold bg-white/5 hover:bg-white/10 text-noir-400 hover:text-noir-200 border border-white/10 transition-all"
             onClick={onDismiss}
             disabled={isDismissing}
           >
@@ -116,7 +116,7 @@ export function GameUpdateBanner({
           </button>
         </div>
       </div>
-      <span className="text-micro font-mono text-[#8f98a0]/50 shrink-0">build {updateStatus.current_build_id}</span>
+      <span className="text-micro font-mono text-noir-400/50 shrink-0">build {updateStatus.current_build_id}</span>
     </motion.div>
   );
 }

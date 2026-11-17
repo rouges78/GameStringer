@@ -229,7 +229,7 @@ export function CharacterProfileManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-purple-500" />
+          <Users className="h-5 w-5 text-rouge-500" />
           <h3 className="font-semibold">{t('characterProfileManagerComp.characterVoiceProfiles')}</h3>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
@@ -237,7 +237,7 @@ export function CharacterProfileManager({
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button size="sm" className="bg-purple-500 hover:bg-purple-600">
+            <Button size="sm" className="bg-rouge-500 hover:bg-rouge-600">
               <Plus className="h-4 w-4 mr-1" />
               New Profile
             </Button>
@@ -407,14 +407,14 @@ export function CharacterProfileManager({
               <Card 
                 key={key}
                 className={`cursor-pointer transition-all hover:shadow-md ${
-                  isSelected ? 'ring-2 ring-purple-500 bg-purple-500/5' : ''
+                  isSelected ? 'ring-2 ring-rouge-500 bg-rouge-500/5' : ''
                 }`}
                 onClick={() => handleSelectPreset(key)}
               >
                 <CardContent className="p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-purple-500" />
+                      <Icon className="h-4 w-4 text-rouge-500" />
                       <span className="font-medium text-sm capitalize">{key}</span>
                     </div>
                     <Button
@@ -459,7 +459,7 @@ export function CharacterProfileManager({
                 <Card 
                   key={profile.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    isSelected ? 'ring-2 ring-purple-500 bg-purple-500/5' : ''
+                    isSelected ? 'ring-2 ring-rouge-500 bg-rouge-500/5' : ''
                   }`}
                   onClick={() => handleSelectProfile(profile)}
                 >
@@ -515,11 +515,11 @@ export function CharacterProfileManager({
 
       {/* Selected Profile Summary */}
       {selectedProfileId && (
-        <Card className="bg-purple-500/10 border-purple-500/30">
+        <Card className="bg-rouge-500/10 border-rouge-500/30">
           <CardContent className="py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-purple-500" />
+                <Users className="h-4 w-4 text-rouge-500" />
                 <span className="text-sm font-medium">
                   Active profile: {selectedProfileId}
                 </span>

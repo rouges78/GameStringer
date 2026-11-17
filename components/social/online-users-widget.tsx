@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
   online: 'bg-green-500',
   away: 'bg-yellow-500',
   busy: 'bg-red-500',
-  offline: 'bg-slate-500',
+  offline: 'bg-noir-500',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -91,13 +91,13 @@ export function OnlineUsersWidget({
 
   if (loading) {
     return (
-      <div className={cn("p-4 rounded-xl bg-slate-800/50 border border-slate-700/50", className)}>
+      <div className={cn("p-4 rounded-xl bg-noir-800/50 border border-noir-700/50", className)}>
         <div className="flex items-center gap-2 mb-3">
           <Users className="h-4 w-4 text-emerald-400" />
           <span className="text-sm font-semibold text-white">{t('social.online')}</span>
         </div>
         <div className="flex items-center justify-center py-4">
-          <RefreshCw className="h-5 w-5 text-slate-500 animate-spin" />
+          <RefreshCw className="h-5 w-5 text-noir-500 animate-spin" />
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ export function OnlineUsersWidget({
   const remainingCount = Math.max(0, onlineUsers.length - maxDisplay);
 
   return (
-    <div className={cn("p-4 rounded-xl bg-slate-800/50 border border-slate-700/50", className)}>
+    <div className={cn("p-4 rounded-xl bg-noir-800/50 border border-noir-700/50", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -125,10 +125,10 @@ export function OnlineUsersWidget({
         </div>
         <button
           onClick={() => refreshOnlineUsers()}
-          className="p-1 rounded hover:bg-slate-700/50 transition-colors"
+          className="p-1 rounded hover:bg-noir-700/50 transition-colors"
           title="Aggiorna"
         >
-          <RefreshCw className="h-3 w-3 text-slate-500" />
+          <RefreshCw className="h-3 w-3 text-noir-500" />
         </button>
       </div>
 
@@ -139,17 +139,17 @@ export function OnlineUsersWidget({
             <div
               key={user.userId}
               onClick={() => onUserClick?.(user.userId)}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-700/50 cursor-pointer transition-colors"
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-noir-700/50 cursor-pointer transition-colors"
             >
               <div className="relative">
                 <Avatar className="h-8 w-8">
                   {user.avatar && !user.avatar.startsWith('gradient-') && !user.avatar.startsWith('avatar_') && <AvatarImage src={user.avatar} alt={user.username} />}
-                  <AvatarFallback className="bg-slate-700 text-xs">
+                  <AvatarFallback className="bg-noir-700 text-xs">
                     {user.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className={cn(
-                  "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-800",
+                  "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-noir-800",
                   STATUS_COLORS[user.status]
                 )} />
               </div>
@@ -162,9 +162,9 @@ export function OnlineUsersWidget({
                     {user.currentGame}
                   </p>
                 ) : showActivity && user.currentActivity ? (
-                  <p className="text-xs text-slate-400 truncate">{user.currentActivity}</p>
+                  <p className="text-xs text-noir-400 truncate">{user.currentActivity}</p>
                 ) : (
-                  <p className="text-2xs text-slate-500">{STATUS_LABELS[user.status] || ''}</p>
+                  <p className="text-2xs text-noir-500">{STATUS_LABELS[user.status] || ''}</p>
                 )}
               </div>
             </div>
@@ -172,7 +172,7 @@ export function OnlineUsersWidget({
 
           {remainingCount > 0 && (
             <div className="flex items-center justify-center pt-2">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-noir-400">
                 +{remainingCount} {t('social.usersOnline')}
               </span>
             </div>
@@ -180,9 +180,9 @@ export function OnlineUsersWidget({
         </div>
       ) : (
         <div className="text-center py-4">
-          <WifiOff className="h-6 w-6 text-slate-600 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">{t('social.noOnlineUsers')}</p>
-          <p className="text-2xs text-slate-600 mt-1">Connettiti per vedere chi è online</p>
+          <WifiOff className="h-6 w-6 text-noir-600 mx-auto mb-2" />
+          <p className="text-sm text-noir-500">{t('social.noOnlineUsers')}</p>
+          <p className="text-2xs text-noir-600 mt-1">Connettiti per vedere chi è online</p>
         </div>
       )}
     </div>
@@ -222,7 +222,7 @@ export function OnlineIndicator({ className }: OnlineIndicatorProps) {
               <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-50" />
             </div>
             <span className="text-emerald-400 font-medium">{count}</span>
-            <span className="text-slate-400">{t('social.online').toLowerCase()}</span>
+            <span className="text-noir-400">{t('social.online').toLowerCase()}</span>
           </div>
         </TooltipTrigger>
         <TooltipContent>

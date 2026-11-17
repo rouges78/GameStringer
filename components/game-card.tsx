@@ -172,7 +172,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
         {/* Badges sopra la cover */}
         <div className="absolute top-2 right-2 z-10 flex gap-2">
           {game.isVrSupported && (
-            <Badge className="bg-blue-600/90 text-white border-0 animate-pulse">
+            <Badge className="bg-noir-600/90 text-white border-0 animate-pulse">
               VR
             </Badge>
           )}
@@ -195,7 +195,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
               {game.title}
             </h3>
             {game.isVrSupported && (
-              <Badge className="bg-blue-600 text-white border-0 animate-pulse flex-shrink-0">
+              <Badge className="bg-rouge-600 text-white border-0 animate-pulse flex-shrink-0">
                 VR
               </Badge>
             )}
@@ -227,7 +227,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
                   key={i} 
                   src={`https://flagcdn.com/32x24/${countryCode}.png`}
                   alt={countryCode}
-                  className="w-6 h-4 rounded-sm shadow-md border border-gray-200/20"
+                  className="w-6 h-4 rounded-sm shadow-md border border-noir-200/20"
                   title={t('common.linguaSupportata')}
                   loading="lazy"
                 />
@@ -243,7 +243,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
             {game.engine && game.engine !== 'Unknown' && (
               <Badge
                 variant="secondary"
-                className="text-2xs bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-sm px-1.5 py-0"
+                className="text-2xs bg-gradient-to-r from-noir-600 to-rouge-600 text-white border-0 shadow-sm px-1.5 py-0"
                 title={`Motore: ${game.engine}`}
               >
                 <Cog className="h-2.5 w-2.5 mr-0.5" />
@@ -255,7 +255,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
         
         {/* Riga 2: HowLongToBeat */}
         {game.howLongToBeat && game.howLongToBeat.main > 0 && (
-          <div className="flex items-center gap-2 text-2xs text-muted-foreground bg-slate-800/50 rounded px-2 py-1">
+          <div className="flex items-center gap-2 text-2xs text-muted-foreground bg-noir-800/50 rounded px-2 py-1">
             <Timer className="h-3 w-3 text-amber-400" />
             <span title="Storia principale">🎮 {game.howLongToBeat.main}h</span>
             {game.howLongToBeat.mainExtra > 0 && (

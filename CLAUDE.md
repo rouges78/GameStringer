@@ -31,6 +31,15 @@ extraction, injection or engine detection** — the answer is often already ther
 When you discover a new method, or why a game resists, add an entry. A discovery
 that stays in a chat log is a discovery lost.
 
+## Width freeze (since 2026-11-12)
+
+No new pages, tools or standalone patchers until the "String it" button holds
+up on real games. Work goes into the one-click flow: library coverage, language
+detection, engine detection, method choice, fallbacks, and wiring existing
+patchers into the plan. Fixes to existing pages are fine. If a task seems to
+need a new page, say so and ask before building it. Only the owner lifts the
+freeze.
+
 ## Notes
 
 - Port management is scripted (`scripts/port-manager.js`, dev on 3002) — don't hardcode ports.

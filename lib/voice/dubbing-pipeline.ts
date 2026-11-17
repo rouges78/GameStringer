@@ -11,9 +11,9 @@
  */
 
 import { voiceCloneService, type VoiceProfile, type SynthesisResult } from './voice-clone';
-import { translateWithFallback } from '@/lib/ai/ai-translate-direct';
+import { translateWithFallback, getApiKeys } from '@/lib/ai/ai-translate-direct';
 import { clientLogger } from '@/lib/client-logger';
-import { isTauri } from '@/lib/tauri-api';
+import { tStatic } from '@/lib/i18n/t-static';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -121,6 +121,15 @@ export interface DubbingResult {
 
 type ProgressCallback = (progress: DubbingProgress) => void;
 
+/** Cosa ha trovato la scansione: la UI lo mostra prima di qualsiasi chiamata a pagamento. */
+export interface ScanSummary {
+  fileCount: number;
+  totalBytes: number;
+}
+
+/** true = l'utente ha confermato le chiamate a pagamento (una trascrizione per file). */
+export type ConfirmPaidCalls = (summary: ScanSummary) => Promise<boolean>;
+
 // ── Pipeline Steps Definition ──────────────────────────────
 
 function createSteps(config: DubbingConfig): DubbingStep[] {
@@ -152,6 +161,10 @@ export class DubbingPipeline {
   private isPaused = false;
   private abortController: AbortController | null = null;
   private onProgress: ProgressCallback | null = null;
+  /** Ultimo errore del passo in corso: diventa il motivo se il passo non produce nulla. */
+  private lastError: string | undefined;
+  /** Audio sintetizzato per segmento: patchAll lo usa direttamente, senza fetch del blob: URL. */
+  private synthesizedBlobs = new Map<string, Blob>();
 
   private stats: DubbingStats = {
     totalAudioFiles: 0, transcribed: 0, translated: 0, synthesized: 0,
@@ -166,7 +179,11 @@ export class DubbingPipeline {
 
   // ── Public API ──────────────────────────────────────────
 
-  async run(onProgress?: ProgressCallback): Promise<DubbingResult> {
+  /**
+   * `confirmPaidCalls` è obbligatorio: la pipeline non parte con le chiamate a
+   * pagamento senza il via dell'utente sul risultato della scansione.
+   */
+  async run(onProgress: ProgressCallback | undefined, confirmPaidCalls: ConfirmPaidCalls): Promise<DubbingResult> {
     this.onProgress = onProgress || null;
     this.isRunning = true;
     this.abortController = new AbortController();
@@ -179,57 +196,7 @@ export class DubbingPipeline {
     });
 
     try {
-      // Step 1: Scan audio files
-      await this.runStep('scan', async () => {
-        this.segments = await this.scanAudioFiles();
-        this.stats.totalAudioFiles = this.segments.length;
-        return `${this.segments.length} file audio trovati`;
-      });
-
-      if (this.segments.length === 0) {
-        return this.buildResult(pipelineStart);
-      }
-
-      // Step 2: Transcribe
-      await this.runStep('transcribe', async () => {
-        await this.transcribeAll();
-        return `${this.stats.transcribed} trascritti`;
-      });
-
-      // Step 3: Translate
-      await this.runStep('translate', async () => {
-        await this.translateAll();
-        return `${this.stats.translated} tradotti`;
-      });
-
-      // Step 4: Synthesize voice
-      await this.runStep('synthesize', async () => {
-        await this.synthesizeAll();
-        return `${this.stats.synthesized} sintetizzati`;
-      });
-
-      // Step 5: Patch audio files
-      await this.runStep('patch', async () => {
-        await this.patchAll();
-        return `${this.stats.patched} file patchati`;
-      });
-
-      // Step 6: Lip sync (optional)
-      if (this.config.enableLipSync) {
-        await this.runStep('lipsync', async () => {
-          await this.generateLipSync();
-          return 'Lip sync generato';
-        });
-      }
-
-      // Step 7: Subtitles (optional)
-      if (this.config.enableSubtitles) {
-        await this.runStep('subtitles', async () => {
-          this.generateSubtitles();
-          return `Sottotitoli ${this.config.subtitleFormat.toUpperCase()} generati`;
-        });
-      }
-
+      await this.runAllSteps(confirmPaidCalls);
     } catch (err: unknown) {
       clientLogger.error('Dubbing pipeline failed', 'DUBBING', {
         error: err instanceof Error ? err.message : String(err)
@@ -237,23 +204,124 @@ export class DubbingPipeline {
     }
 
     this.isRunning = false;
+    // Ultimo aggiornamento con isRunning=false: senza, la UI restava in "in corso".
+    this.emitProgress(null);
     return this.buildResult(pipelineStart);
+  }
+
+  /**
+   * Ogni passo deve produrre qualcosa: se non produce nulla fallisce col motivo
+   * dell'ultimo errore e la pipeline si ferma lì, invece di segnare verdi i passi
+   * successivi lavorando a vuoto.
+   */
+  private async runAllSteps(confirmPaidCalls: ConfirmPaidCalls): Promise<void> {
+    // Step 1: Scan audio files
+    const scanned = await this.runStep('scan', async () => {
+      this.segments = await this.scanAudioFiles();
+      this.stats.totalAudioFiles = this.segments.length;
+      if (this.segments.length === 0) throw new Error('Nessun file audio trovato nella cartella');
+      // La sintesi produce sempre TTS_OUTPUT_FORMAT e la conversione non c'è: un
+      // file di altro formato verrebbe rifiutato al patch dopo aver già pagato
+      // trascrizione, traduzione e sintesi. Si esclude prima di spendere.
+      for (const segment of this.segments) {
+        const ext = segment.fileName.split('.').pop()?.toLowerCase() || '';
+        if (ext !== TTS_OUTPUT_FORMAT) {
+          this.failSegment(segment, tStatic('dubbingPage.patchFormatMismatch')
+            .replace('{actual}', TTS_OUTPUT_FORMAT.toUpperCase())
+            .replace('{expected}', ext));
+        }
+      }
+      const compatible = this.segments.filter(s => s.status !== 'error').length;
+      if (compatible === 0) {
+        throw new Error(tStatic('dubbingPage.noCompatibleAudio').replace('{count}', String(this.segments.length)));
+      }
+      return `${this.segments.length} file audio trovati, ${compatible} sostituibili`;
+    });
+    if (!scanned) return;
+
+    // La scansione prende ogni .mp3 compatibile, musica compresa, e ogni file
+    // è una trascrizione a pagamento: senza il via esplicito dell'utente su
+    // quanti file e quanti byte, la pipeline si ferma qui.
+    const eligible = this.segments.filter(s => s.status !== 'error');
+    const confirmed = await confirmPaidCalls({
+      fileCount: eligible.length,
+      totalBytes: eligible.reduce((sum, s) => sum + (s.fileSize || 0), 0),
+    });
+    if (!confirmed) return;
+
+    // Step 2: Transcribe
+    const transcribed = await this.runStep('transcribe', async () => {
+      await this.transcribeAll();
+      if (this.stats.transcribed === 0) throw new Error(this.lastError || 'Nessun parlato rilevato nei file audio');
+      // I file senza parlato non sono errori, ma vanno detti: altrimenti spariscono dal conteggio.
+      return this.stats.skipped > 0
+        ? `${this.stats.transcribed} trascritti, ${this.stats.skipped} senza parlato`
+        : `${this.stats.transcribed} trascritti`;
+    });
+    if (!transcribed) return;
+
+    // Step 3: Translate
+    const translated = await this.runStep('translate', async () => {
+      await this.translateAll();
+      if (this.stats.translated === 0) throw new Error(this.lastError || 'Nessun segmento tradotto');
+      return `${this.stats.translated} tradotti`;
+    });
+    if (!translated) return;
+
+    // Step 4: Synthesize voice
+    const synthesized = await this.runStep('synthesize', async () => {
+      await this.synthesizeAll();
+      if (this.stats.synthesized === 0) throw new Error(this.lastError || 'Nessun segmento sintetizzato');
+      return `${this.stats.synthesized} sintetizzati`;
+    });
+    if (!synthesized) return;
+
+    // Step 5: Patch audio files
+    const patched = await this.runStep('patch', async () => {
+      await this.patchAll();
+      if (this.stats.patched === 0) throw new Error(this.lastError || 'Nessun file patchato');
+      return `${this.stats.patched} file patchati`;
+    });
+    if (!patched) return;
+
+    // Step 6: Lip sync (optional) — se fallisce non ferma i sottotitoli
+    if (this.config.enableLipSync) {
+      await this.runStep('lipsync', async () => {
+        const generated = await this.generateLipSync();
+        if (generated === 0) throw new Error(this.lastError || 'Lip sync non generato');
+        return `${generated} lip sync generati`;
+      });
+    }
+
+    // Step 7: Subtitles (optional)
+    if (this.config.enableSubtitles) {
+      await this.runStep('subtitles', async () => {
+        this.generateSubtitles();
+        return `Sottotitoli ${this.config.subtitleFormat.toUpperCase()} generati`;
+      });
+    }
   }
 
   pause() { this.isPaused = true; }
   resume() { this.isPaused = false; }
-  abort() { this.abortController?.abort(); this.isRunning = false; }
+  // isPaused=false: altrimenti un annullamento durante la pausa restava fermo nel
+  // `while (this.isPaused)` e la pipeline non finiva mai.
+  abort() { this.abortController?.abort(); this.isRunning = false; this.isPaused = false; }
 
   // ── Step Runner ─────────────────────────────────────────
 
-  private async runStep(stepId: DubbingStepId, fn: () => Promise<string>): Promise<void> {
+  /** true se il passo è stato completato, false se è fallito o la pipeline è stata annullata. */
+  private async runStep(stepId: DubbingStepId, fn: () => Promise<string>): Promise<boolean> {
     const step = this.steps.find(s => s.id === stepId);
-    if (!step) return;
+    if (!step) return false;
+    if (this.abortController?.signal.aborted) return false;
 
     step.status = 'running';
     step.startedAt = Date.now();
+    this.lastError = undefined;
     this.emitProgress(stepId);
 
+    let ok = false;
     try {
       const result = await fn();
       step.status = 'completed';
@@ -261,14 +329,26 @@ export class DubbingPipeline {
       step.result = result;
       step.completedAt = Date.now();
       step.durationMs = step.completedAt - step.startedAt;
+      ok = true;
     } catch (err: unknown) {
-      step.status = 'failed';
+      // Annullato a metà passo: non è un fallimento col motivo dell'ultimo errore.
+      step.status = this.abortController?.signal.aborted ? 'skipped' : 'failed';
       step.error = err instanceof Error ? err.message : String(err);
       step.completedAt = Date.now();
       step.durationMs = step.completedAt - (step.startedAt || Date.now());
+      clientLogger.warn(`Dubbing step ${stepId} failed: ${step.error}`, 'DUBBING');
     }
 
     this.emitProgress(stepId);
+    return ok;
+  }
+
+  /** Unico punto in cui un segmento diventa errore: così ogni fallimento viene contato. */
+  private failSegment(segment: AudioSegment, message: string) {
+    segment.status = 'error';
+    segment.error = message;
+    this.stats.errors++;
+    this.lastError = message;
   }
 
   private emitProgress(currentStep: DubbingStepId | null) {
@@ -287,23 +367,22 @@ export class DubbingPipeline {
   // ── Step 1: Scan ────────────────────────────────────────
 
   private async scanAudioFiles(): Promise<AudioSegment[]> {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const files = await invoke<Array<{ path: string; name: string; size: number }>>('scan_game_audio_files', {
-        gamePath: this.config.gamePath,
-      });
+    // Niente fallback a lista vuota: un errore di scansione deve far fallire il
+    // passo col suo motivo, non sembrare "0 file trovati".
+    const { invoke } = await import('@tauri-apps/api/core');
+    // Il comando Rust (AudioFile) serializza la dimensione come `size_bytes`:
+    // leggendo `size` la dimensione restava undefined.
+    const files = await invoke<Array<{ path: string; name: string; size_bytes: number }>>('scan_game_audio_files', {
+      gamePath: this.config.gamePath,
+    });
 
-      return (files || []).map((f, i) => ({
-        id: `seg_${i}`,
-        filePath: f.path,
-        fileName: f.name,
-        fileSize: f.size,
-        status: 'pending' as const,
-      }));
-    } catch {
-      // Fallback: empty list
-      return [];
-    }
+    return (files || []).map((f, i) => ({
+      id: `seg_${i}`,
+      filePath: f.path,
+      fileName: f.name,
+      fileSize: f.size_bytes,
+      status: 'pending' as const,
+    }));
   }
 
   // ── Step 2: Transcribe ──────────────────────────────────
@@ -311,65 +390,104 @@ export class DubbingPipeline {
   private async transcribeAll(): Promise<void> {
     const step = this.steps.find(s => s.id === 'transcribe')!;
     let confidenceSum = 0;
+    let confidenceCount = 0;
+
+    // Prima qui c'era `fetch('/api/voice/transcribe')`, che nel desktop non esiste:
+    // in Tauri ogni segmento veniva saltato senza contarlo e la pipeline finiva
+    // "completata" con 0 file. Ora si usa la stessa chiamata Whisper di
+    // components/voice/voice-translator.tsx, con la chiave OpenAI delle Impostazioni.
+    // Groq Whisper non ha ancora un percorso: fallisce dichiarandolo.
+    const apiKey = getApiKeys().openai;
+    const setupError = this.config.sttProvider !== 'openai_whisper'
+      ? `Trascrizione con ${this.config.sttProvider} non ancora disponibile: scegli OpenAI Whisper`
+      : !apiKey ? 'OpenAI API key non configurata. Vai nelle Impostazioni.' : undefined;
+    if (setupError) {
+      for (const segment of this.segments) {
+        if (segment.status !== 'error') this.failSegment(segment, setupError);
+      }
+      return;
+    }
 
     for (let i = 0; i < this.segments.length; i++) {
-      if (this.abortController?.signal.aborted) break;
       while (this.isPaused) await sleep(500);
+      if (this.abortController?.signal.aborted) break;
 
       const segment = this.segments[i];
+      // Escluso alla scansione (formato non sostituibile): nessuna chiamata a pagamento.
+      if (segment.status === 'error') continue;
       segment.status = 'transcribing';
       step.progress = Math.round((i / this.segments.length) * 100);
       this.emitProgress('transcribe');
 
       try {
-        // /api/voice/transcribe non esiste nel desktop impacchettato (feature Labs, solo
-        // build web): degrada in modo pulito invece di generare un 501.
-        if (isTauri()) {
-          segment.status = 'error';
+        const data = await this.transcribeSegment(segment, apiKey);
+        const text = (data.text || '').trim();
+        segment.duration = data.duration;
+        segment.detectedLanguage = data.language;
+        if (!text) {
+          // Musica o effetti: nulla da doppiare, non è un errore.
+          segment.status = 'skipped';
+          segment.error = 'Nessun parlato rilevato';
+          this.stats.skipped++;
           continue;
         }
-
-        // Read audio file as base64 via Tauri
-        const { invoke } = await import('@tauri-apps/api/core');
-        // Era `read_file_base64`, che non esiste: la trascrizione falliva a ogni
-        // segmento. Il comando vero è read_binary_file_base64.
-        const audioBase64 = await invoke<string>('read_binary_file_base64', { path: segment.filePath });
-
-        // Transcribe via API
-        const response = await fetch('/api/voice/transcribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-GS-Client': 'gamestringer' },
-          body: JSON.stringify({
-            audioData: audioBase64,
-            audioFormat: segment.fileName.split('.').pop() || 'wav',
-            language: this.config.sourceLanguage,
-            provider: this.config.sttProvider === 'groq_whisper' ? 'groq' : 'openai',
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          segment.originalText = data.text;
-          segment.detectedLanguage = data.language;
-          segment.transcriptionConfidence = data.confidence || 0.9;
-          segment.status = 'pending';
-          this.stats.transcribed++;
-          confidenceSum += segment.transcriptionConfidence ?? 0;
-        } else {
-          segment.status = 'error';
-          segment.error = `Transcription failed: ${response.status}`;
-          this.stats.errors++;
+        segment.originalText = text;
+        // Whisper non restituisce una "confidence": si usa la probabilità media per
+        // token (exp di avg_logprob dei suoi segmenti). Prima era un 0.9 inventato.
+        const logprobs = (data.segments || []).map(s => s.avg_logprob).filter((p): p is number => typeof p === 'number');
+        if (logprobs.length > 0) {
+          segment.transcriptionConfidence = Math.exp(logprobs.reduce((a, b) => a + b, 0) / logprobs.length);
+          confidenceSum += segment.transcriptionConfidence;
+          confidenceCount++;
         }
+        segment.status = 'pending';
+        this.stats.transcribed++;
+        this.stats.totalDurationOriginal += data.duration || 0;
       } catch (err: unknown) {
-        segment.status = 'error';
-        segment.error = err instanceof Error ? err.message : 'Transcription error';
-        this.stats.errors++;
+        this.failSegment(segment, err instanceof Error ? err.message : 'Transcription error');
       }
     }
 
-    if (this.stats.transcribed > 0) {
-      this.stats.avgTranscriptionConfidence = confidenceSum / this.stats.transcribed;
+    if (confidenceCount > 0) {
+      this.stats.avgTranscriptionConfidence = confidenceSum / confidenceCount;
     }
+  }
+
+  /** Una chiamata Whisper per file, come in voice-translator.tsx (whisper-1, verbose_json). */
+  private async transcribeSegment(segment: AudioSegment, apiKey: string): Promise<{
+    text?: string;
+    language?: string;
+    duration?: number;
+    segments?: Array<{ avg_logprob?: number }>;
+  }> {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const audioBase64 = await invoke<string>('read_binary_file_base64', { path: segment.filePath });
+    const binary = atob(audioBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    const formData = new FormData();
+    // Whisper riconosce il formato dall'estensione del nome file.
+    formData.append('file', new Blob([bytes]), segment.fileName);
+    // ⏰ whisper-1 esce dall'API OpenAI il 26/02/2027: vedi ROADMAP.md, P2.
+    formData.append('model', 'whisper-1');
+    formData.append('response_format', 'verbose_json');
+    if (this.config.sourceLanguage) {
+      formData.append('language', this.config.sourceLanguage);
+    }
+
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Whisper errore ${response.status}`);
+    }
+
+    return response.json();
   }
 
   // ── Step 3: Translate ───────────────────────────────────
@@ -381,8 +499,8 @@ export class DubbingPipeline {
     // Batch translate for efficiency
     const batchSize = 20;
     for (let i = 0; i < toTranslate.length; i += batchSize) {
-      if (this.abortController?.signal.aborted) break;
       while (this.isPaused) await sleep(500);
+      if (this.abortController?.signal.aborted) break;
 
       const batch = toTranslate.slice(i, i + batchSize);
       const texts = batch.map(s => s.originalText!);
@@ -400,17 +518,23 @@ export class DubbingPipeline {
 
         if (result.success) {
           batch.forEach((seg, idx) => {
-            seg.translatedText = result.translations[idx] || seg.originalText;
+            const translation = result.translations[idx];
+            // Niente ripiego sul testo originale: verrebbe doppiato come se fosse tradotto.
+            if (!translation) {
+              this.failSegment(seg, 'Traduzione mancante per questo segmento');
+              return;
+            }
+            seg.translatedText = translation;
             seg.status = 'pending';
             this.stats.translated++;
           });
+        } else {
+          // Prima un batch non tradotto restava "pending" senza contare errori.
+          batch.forEach(seg => this.failSegment(seg, 'Traduzione fallita: nessun provider ha risposto'));
         }
-      } catch {
-        batch.forEach(seg => {
-          seg.status = 'error';
-          seg.error = 'Translation batch failed';
-          this.stats.errors++;
-        });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Translation batch failed';
+        batch.forEach(seg => this.failSegment(seg, message));
       }
     }
   }
@@ -422,8 +546,8 @@ export class DubbingPipeline {
     const toSynthesize = this.segments.filter(s => s.translatedText && s.status !== 'error');
 
     for (let i = 0; i < toSynthesize.length; i++) {
-      if (this.abortController?.signal.aborted) break;
       while (this.isPaused) await sleep(500);
+      if (this.abortController?.signal.aborted) break;
 
       const segment = toSynthesize[i];
       segment.status = 'synthesizing';
@@ -455,6 +579,7 @@ export class DubbingPipeline {
         });
 
         segment.synthesizedAudioUrl = result.audioUrl;
+        this.synthesizedBlobs.set(segment.id, result.audioBlob);
         segment.synthesizedDuration = result.duration;
         segment.durationMatched = result.durationMatched;
         segment.status = 'pending';
@@ -465,9 +590,7 @@ export class DubbingPipeline {
         await sleep(300);
 
       } catch (err: unknown) {
-        segment.status = 'error';
-        segment.error = err instanceof Error ? err.message : 'Synthesis error';
-        this.stats.errors++;
+        this.failSegment(segment, err instanceof Error ? err.message : 'Synthesis error');
       }
     }
   }
@@ -476,7 +599,7 @@ export class DubbingPipeline {
 
   private async patchAll(): Promise<void> {
     const step = this.steps.find(s => s.id === 'patch')!;
-    const toPatch = this.segments.filter(s => s.synthesizedAudioUrl && s.status !== 'error');
+    const toPatch = this.segments.filter(s => this.synthesizedBlobs.has(s.id) && s.status !== 'error');
 
     for (let i = 0; i < toPatch.length; i++) {
       if (this.abortController?.signal.aborted) break;
@@ -487,14 +610,30 @@ export class DubbingPipeline {
       this.emitProgress('patch');
 
       try {
-        // Fetch synthesized audio as base64
-        const audioResponse = await fetch(segment.synthesizedAudioUrl!);
-        const audioBlob = await audioResponse.blob();
+        // Il Blob arriva direttamente dalla sintesi: un fetch() del blob: URL
+        // dipenderebbe dalla CSP (connect-src non elenca blob:).
+        const audioBlob = this.synthesizedBlobs.get(segment.id)!;
         const reader = new FileReader();
-        const audioBase64 = await new Promise<string>((resolve) => {
+        const audioBase64 = await new Promise<string>((resolve, reject) => {
           reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = () => reject(reader.error ?? new Error('Lettura audio sintetizzato fallita'));
           reader.readAsDataURL(audioBlob);
         });
+
+        // replace_audio_file scrive questi byte così come sono al posto del file del
+        // gioco: l'MP3 dei provider TTS dentro un .wav/.ogg/.flac lo romperebbe.
+        // Conversione non disponibile: si patcha solo se il formato coincide con
+        // l'estensione, altrimenti è un errore col motivo e il file resta intatto.
+        // (16 caratteri base64 = i primi 12 byte, bastano per il magic number.)
+        const head = Uint8Array.from(atob(audioBase64.slice(0, 16)), c => c.charCodeAt(0));
+        const actual = detectAudioFormat(head);
+        const expected = segment.fileName.split('.').pop()?.toLowerCase() || '';
+        if (actual !== expected) {
+          this.failSegment(segment, tStatic('dubbingPage.patchFormatMismatch')
+            .replace('{actual}', actual ? actual.toUpperCase() : tStatic('dubbingPage.unknownAudioFormat'))
+            .replace('{expected}', expected));
+          continue;
+        }
 
         // Replace via Tauri command (creates .original backup automatically)
         const { invoke } = await import('@tauri-apps/api/core');
@@ -506,18 +645,18 @@ export class DubbingPipeline {
         segment.status = 'complete';
         this.stats.patched++;
       } catch (err: unknown) {
-        segment.status = 'error';
-        segment.error = err instanceof Error ? err.message : 'Patch error';
-        this.stats.errors++;
+        this.failSegment(segment, err instanceof Error ? err.message : 'Patch error');
       }
     }
   }
 
   // ── Step 6: Lip Sync ────────────────────────────────────
 
-  private async generateLipSync(): Promise<void> {
+  /** Ritorna quanti lip sync sono stati generati davvero. */
+  private async generateLipSync(): Promise<number> {
     const step = this.steps.find(s => s.id === 'lipsync')!;
     const completed = this.segments.filter(s => s.status === 'complete');
+    let generated = 0;
 
     for (let i = 0; i < completed.length; i++) {
       step.progress = Math.round((i / completed.length) * 100);
@@ -531,33 +670,40 @@ export class DubbingPipeline {
           recognizer: 'phonetic',
         });
         completed[i].lipSyncData = lipSync;
-      } catch {
-        // Lip sync is optional — don't fail the pipeline
+        generated++;
+      } catch (err: unknown) {
+        // Lip sync is optional — don't fail the pipeline (l'audio è già patchato)
+        this.lastError = err instanceof Error ? err.message : String(err);
         clientLogger.warn(`Lip sync failed for ${completed[i].fileName}`, 'DUBBING');
       }
     }
+    return generated;
   }
 
   // ── Step 7: Generate Subtitles ──────────────────────────
 
   private generateSubtitles(): string {
-    const completed = this.segments.filter(s => s.translatedText);
     const format = this.config.subtitleFormat;
+    // Tempi dalle durate reali, una battuta dopo l'altra: l'audio doppiato se
+    // c'è, altrimenti la durata originale misurata da Whisper. Prima ogni
+    // battuta durava 5 s fissi.
+    let cursor = 0;
+    const completed = this.segments.filter(s => s.translatedText).map(seg => {
+      const start = cursor;
+      cursor += seg.synthesizedDuration || seg.duration || 0;
+      return { seg, start, end: cursor };
+    });
 
     if (format === 'srt') {
-      return completed.map((seg, i) => {
-        const start = formatSrtTime(i * 5); // Simplified: 5s per segment
-        const end = formatSrtTime((i + 1) * 5);
-        return `${i + 1}\n${start} --> ${end}\n${seg.translatedText}\n`;
+      return completed.map(({ seg, start, end }, i) => {
+        return `${i + 1}\n${formatSrtTime(start)} --> ${formatSrtTime(end)}\n${seg.translatedText}\n`;
       }).join('\n');
     }
 
     if (format === 'vtt') {
       let vtt = 'WEBVTT\n\n';
-      completed.forEach((seg, i) => {
-        const start = formatVttTime(i * 5);
-        const end = formatVttTime((i + 1) * 5);
-        vtt += `${start} --> ${end}\n${seg.translatedText}\n\n`;
+      completed.forEach(({ seg, start, end }) => {
+        vtt += `${formatVttTime(start)} --> ${formatVttTime(end)}\n${seg.translatedText}\n\n`;
       });
       return vtt;
     }
@@ -567,10 +713,8 @@ export class DubbingPipeline {
     ass += '[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n';
     ass += 'Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,2,1,2,10,10,10,1\n\n';
     ass += '[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n';
-    completed.forEach((seg, i) => {
-      const start = formatAssTime(i * 5);
-      const end = formatAssTime((i + 1) * 5);
-      ass += `Dialogue: 0,${start},${end},Default,,0,0,0,,${seg.translatedText}\n`;
+    completed.forEach(({ seg, start, end }) => {
+      ass += `Dialogue: 0,${formatAssTime(start)},${formatAssTime(end)},Default,,0,0,0,,${seg.translatedText}\n`;
     });
     return ass;
   }
@@ -581,7 +725,9 @@ export class DubbingPipeline {
     const subtitleContent = this.config.enableSubtitles ? this.generateSubtitles() : undefined;
 
     return {
-      success: this.stats.errors === 0 || this.stats.patched > 0,
+      // Successo solo se almeno un file è stato davvero patchato. Prima bastava
+      // `errors === 0`, e i segmenti saltati non contavano come errori.
+      success: this.stats.patched > 0,
       segments: this.segments,
       stats: this.stats,
       subtitleFile: subtitleContent,
@@ -597,25 +743,53 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/** I formati che scan_game_audio_files trova: il nome coincide con l'estensione. */
+export type AudioFormat = 'mp3' | 'wav' | 'ogg' | 'flac';
+
+/**
+ * Il formato che la sintesi restituisce con ogni provider di voice-clone.ts
+ * (OpenAI response_format di default, ElevenLabs, Azure con MP3 fisso).
+ * Se un provider imparerà a produrre altri formati, va passato come opzione.
+ */
+const TTS_OUTPUT_FORMAT: AudioFormat = 'mp3';
+
+/** Formato reale dai primi byte (magic number), null se non riconosciuto. */
+export function detectAudioFormat(bytes: Uint8Array): AudioFormat | null {
+  const ascii = (start: number, end: number) => String.fromCharCode(...bytes.slice(start, end));
+  if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WAVE') return 'wav';
+  if (ascii(0, 4) === 'OggS') return 'ogg';
+  if (ascii(0, 4) === 'fLaC') return 'flac';
+  if (ascii(0, 3) === 'ID3') return 'mp3';
+  // Frame MPEG senza tag ID3 (0xFFFB, 0xFFF3, ...): sync a 11 bit e layer III.
+  // Il controllo sul layer esclude l'AAC ADTS (0xFFF1), che ha lo stesso sync.
+  if (bytes[0] === 0xFF && (bytes[1] & 0xE6) === 0xE2) return 'mp3';
+  return null;
+}
+
+/** Le durate reali hanno decimali: i millisecondi non vanno più troncati a ,000. */
+function splitTime(seconds: number) {
+  const totalMs = Math.round(seconds * 1000);
+  return {
+    h: Math.floor(totalMs / 3600000),
+    m: Math.floor((totalMs % 3600000) / 60000),
+    s: Math.floor((totalMs % 60000) / 1000),
+    ms: totalMs % 1000,
+  };
+}
+
 function formatSrtTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  return `${pad(h)}:${pad(m)}:${pad(s)},000`;
+  const { h, m, s, ms } = splitTime(seconds);
+  return `${pad(h)}:${pad(m)}:${pad(s)},${ms.toString().padStart(3, '0')}`;
 }
 
 function formatVttTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  return `${pad(h)}:${pad(m)}:${pad(s)}.000`;
+  const { h, m, s, ms } = splitTime(seconds);
+  return `${pad(h)}:${pad(m)}:${pad(s)}.${ms.toString().padStart(3, '0')}`;
 }
 
 function formatAssTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  return `${h}:${pad(m)}:${pad(s)}.00`;
+  const { h, m, s, ms } = splitTime(seconds);
+  return `${h}:${pad(m)}:${pad(s)}.${pad(Math.floor(ms / 10))}`;
 }
 
 function pad(n: number): string {

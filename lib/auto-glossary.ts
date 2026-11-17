@@ -10,6 +10,7 @@
  * - src-tauri smart_glossary.rs (storage persistente Tauri)
  */
 
+import { get as idbGet } from 'idb-keyval';
 import { translateSmart } from '@/lib/ai/ai-translate-direct';
 import { invoke } from '@/lib/tauri-api';
 import { clientLogger } from '@/lib/client-logger';
@@ -362,6 +363,44 @@ export function searchTerms(
 // ═══════════════════════════════════════════════════════════════════
 
 /**
+ * Testi sorgente REALI di un gioco, per l'estrazione termini avviata a mano
+ * dalla pagina Glossario. Fonti, in ordine:
+ *  1. stringhe persistite su disco (`load_translation_strings`, le stesse che
+ *     usano Progetti e l'export .gspack);
+ *  2. checkpoint dell'auto-traduzione in IndexedDB
+ *     (`gs_translation_checkpoint_<gameId>_<lang>`).
+ * Nessuna fonte = array vuoto: chi chiama disabilita l'estrazione. Mai
+ * ripiegare su frasi d'esempio, che finirebbero nel glossario vero del gioco.
+ */
+export async function loadGameSourceTexts(gameId: string, targetLang: string): Promise<string[]> {
+  const unique = (texts: Array<string | undefined>): string[] =>
+    [...new Set(texts.map(s => (s || '').trim()).filter(s => s.length > 0))];
+
+  try {
+    const disk = await invoke<{ entries?: Array<{ source?: string }> } | null>(
+      'load_translation_strings',
+      { gameId, targetLanguage: targetLang }
+    );
+    const texts = unique((disk?.entries || []).map(e => e.source));
+    if (texts.length > 0) return texts;
+  } catch (err: unknown) {
+    clientLogger.debug('[AutoGlossary] Stringhe su disco non disponibili:', err);
+  }
+
+  try {
+    const checkpoint = await idbGet<{ data?: Record<string, Array<{ original?: string }>> }>(
+      `gs_translation_checkpoint_${gameId}_${targetLang}`
+    );
+    const texts = unique(Object.values(checkpoint?.data || {}).flat().map(s => s?.original));
+    if (texts.length > 0) return texts;
+  } catch (err: unknown) {
+    clientLogger.debug('[AutoGlossary] Checkpoint traduzione non disponibile:', err);
+  }
+
+  return [];
+}
+
+/**
  * Estrae automaticamente termini di gioco da un set di testi.
  * Usa un LLM per analizzare i testi e identificare:
  * - Nomi di personaggi
@@ -411,7 +450,19 @@ export async function extractTerms(
     });
 
     provider = result.provider;
+    // Nessun provider ha risposto: translateWithFallback restituisce il prompt
+    // stesso come "traduzione", e il JSON d'esempio del prompt verrebbe parsato
+    // come termine vero ("term" → "translation") e salvato nel glossario.
+    if (!result.success) {
+      throw new Error(`Nessun provider disponibile per l'estrazione (${provider})`);
+    }
     const responseText = result.translations[0] || '';
+    // Con un solo provider rimasto, un traduttore non-LLM può restituire il
+    // prompt tale e quale con success=true: è un'eco, non una risposta, e il
+    // suo JSON d'esempio finirebbe nel glossario come termine vero.
+    if (responseText.includes('Return ONLY a JSON array')) {
+      throw new Error(`Il provider ${provider} ha restituito il prompt invece dei termini`);
+    }
 
     // Prova a parsare il JSON dalla risposta
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
@@ -420,7 +471,10 @@ export async function extractTerms(
     }
   } catch (err: unknown) {
     clientLogger.warn('[AutoGlossary] Estrazione termini fallita:', err);
-    return { newTerms: [], duplicates: 0, total: 0, provider, timeMs: Date.now() - startTime };
+    // Rilancia: chi chiama deve poter dire «estrazione fallita», non
+    // «nessun nuovo termine trovato» (batch-translator e pagina Glossario
+    // gestiscono già l'eccezione).
+    throw err;
   }
 
   // Filtra e aggiungi termini al glossario

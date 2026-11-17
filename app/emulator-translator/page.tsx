@@ -306,7 +306,7 @@ export default function EmulatorTranslatorPage() {
   return (
     <div className="p-4 max-w-4xl mx-auto space-y-3">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-700 via-violet-600 to-fuchsia-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-rouge-700 via-rouge-600 to-rouge-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -339,10 +339,10 @@ export default function EmulatorTranslatorPage() {
       </div>
 
       {/* Mode Tabs */}
-      <div className="flex gap-1 p-1 rounded-lg bg-slate-800/50 border border-slate-700/50">
-        <button onClick={() => setMode('live')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'live' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+      <div className="flex gap-1 p-1 rounded-lg bg-noir-800/50 border border-noir-700/50">
+        <button onClick={() => setMode('live')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'live' ? 'bg-rouge-600 text-white shadow-lg' : 'text-noir-400 hover:text-white hover:bg-noir-700/50'}`}>
           <Monitor className="h-4 w-4" />{t('emulatorTranslator.liveCapture')}</button>
-        <button onClick={() => setMode('screenshot')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'screenshot' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+        <button onClick={() => setMode('screenshot')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'screenshot' ? 'bg-rouge-600 text-white shadow-lg' : 'text-noir-400 hover:text-white hover:bg-noir-700/50'}`}>
           <ImageIcon className="h-4 w-4" />{t('emulatorTranslator.screenshot')}</button>
       </div>
 
@@ -352,13 +352,13 @@ export default function EmulatorTranslatorPage() {
           <Card className="border border-dashed border-muted-foreground/20">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xs font-bold shadow-md">1</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-rouge-500 to-rouge-500 text-white text-xs font-bold shadow-md">1</span>
                 {t('emulatorTranslator.languages')}</div>
               <div className="flex items-center gap-2 pl-8">
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={sourceLang} onChange={e => setSourceLang(e.target.value)}>
                   {SOURCE_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
-                <ArrowRight className="h-4 w-4 text-purple-400" />
+                <ArrowRight className="h-4 w-4 text-rouge-400" />
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={targetLang} onChange={e => setTargetLang(e.target.value)}>
                   {TARGET_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
@@ -366,26 +366,26 @@ export default function EmulatorTranslatorPage() {
             </CardContent>
           </Card>
           <div
-            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${screenshotSrc ? 'border-purple-500/40 bg-purple-900/10' : 'border-slate-600/40 hover:border-purple-500/40 hover:bg-purple-900/5'}`}
+            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${screenshotSrc ? 'border-rouge-500/40 bg-rouge-900/10' : 'border-noir-600/40 hover:border-rouge-500/40 hover:bg-rouge-900/5'}`}
             onDragOver={e => e.preventDefault()} onDrop={handleFileDrop}
           >
             {screenshotProcessing ? (
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-10 w-10 animate-spin text-purple-400" />
-                <p className="text-sm text-purple-300">{t('emulatorTranslator.ocrInProgress')}</p>
+                <Loader2 className="h-10 w-10 animate-spin text-rouge-400" />
+                <p className="text-sm text-rouge-300">{t('emulatorTranslator.ocrInProgress')}</p>
               </div>
             ) : screenshotSrc ? (
               <div className="space-y-3">
                 <div className="relative inline-block">
-                  <img src={screenshotSrc} alt={t('emulatorTranslator.screenshot')} className="max-h-[300px] rounded-lg border border-slate-700 mx-auto" />
+                  <img src={screenshotSrc} alt={t('emulatorTranslator.screenshot')} className="max-h-[300px] rounded-lg border border-noir-700 mx-auto" />
                   <button onClick={() => { setScreenshotSrc(null); setScreenshotTexts([]); }} className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-400"><X className="h-3 w-3" /></button>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
-                <Gamepad2 className="h-12 w-12 text-slate-500 mx-auto" />
-                <p className="text-sm text-slate-300">{t('emulatorTranslator.dragScreenshot')}</p>
-                <p className="text-2xs text-slate-500">{t('emulatorTranslator.or')}</p>
+                <Gamepad2 className="h-12 w-12 text-noir-500 mx-auto" />
+                <p className="text-sm text-noir-300">{t('emulatorTranslator.dragScreenshot')}</p>
+                <p className="text-2xs text-noir-500">{t('emulatorTranslator.or')}</p>
                 <div className="flex items-center justify-center gap-2">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}><Upload className="h-3.5 w-3.5" />{t('common.upload')}</Button>
@@ -395,11 +395,11 @@ export default function EmulatorTranslatorPage() {
             )}
           </div>
           {screenshotTexts.length > 0 && (
-            <Card className="border border-purple-800/30">
+            <Card className="border border-rouge-800/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Scan className="h-4 w-4 text-purple-400" />
+                    <Scan className="h-4 w-4 text-rouge-400" />
                     <span className="text-sm font-medium text-white">{screenshotTexts.length}  {t('emulatorTranslator.linesUnit')}</span>
                   </div>
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => { navigator.clipboard.writeText(screenshotTexts.map(t => t.translated).join('\n')); toast.success(t('common.copiato')); }}>
@@ -408,9 +408,9 @@ export default function EmulatorTranslatorPage() {
                 <ScrollArea className="max-h-[350px]">
                   <div className="space-y-1.5">
                     {screenshotTexts.map((tx, i) => (
-                      <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                        <div className="flex-1 min-w-0"><p className="text-2xs text-slate-500">{t('emulatorTranslator.original')}</p><p className="text-xs text-slate-300">{tx.original}</p></div>
-                        <ArrowRight className="h-3 w-3 text-purple-400 mt-4 shrink-0" />
+                      <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-noir-800/40 border border-noir-700/30">
+                        <div className="flex-1 min-w-0"><p className="text-2xs text-noir-500">{t('emulatorTranslator.original')}</p><p className="text-xs text-noir-300">{tx.original}</p></div>
+                        <ArrowRight className="h-3 w-3 text-rouge-400 mt-4 shrink-0" />
                         <div className="flex-1 min-w-0"><p className="text-2xs text-emerald-500">{t('common.traduzione')}</p><p className="text-xs text-emerald-300">{tx.translated}</p></div>
                       </div>
                     ))}
@@ -430,7 +430,7 @@ export default function EmulatorTranslatorPage() {
             {/* Emulator Profile */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xs font-bold shadow-md">1</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-rouge-500 to-rouge-500 text-white text-xs font-bold shadow-md">1</span>
                 {t('emulatorTranslator.emulator')}</div>
               <div className="pl-8">
                 <select
@@ -449,13 +449,13 @@ export default function EmulatorTranslatorPage() {
             {/* Languages */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xs font-bold shadow-md">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-rouge-500 to-rouge-500 text-white text-xs font-bold shadow-md">2</span>
                 {t('emulatorTranslator.languages')}</div>
               <div className="flex items-center gap-2 pl-8">
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={sourceLang} onChange={e => setSourceLang(e.target.value)} disabled={isRunning}>
                   {SOURCE_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
-                <ArrowRight className="h-4 w-4 text-purple-400" />
+                <ArrowRight className="h-4 w-4 text-rouge-400" />
                 <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={targetLang} onChange={e => setTargetLang(e.target.value)} disabled={isRunning}>
                   {TARGET_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                 </select>
@@ -466,7 +466,7 @@ export default function EmulatorTranslatorPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white text-xs font-bold shadow-md">3</span>
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-rouge-500 to-rouge-500 text-white text-xs font-bold shadow-md">3</span>
                   {t('emulatorTranslator.emulatorWindow')}</div>
                 <Button variant="ghost" size="sm" onClick={loadWindows} disabled={isRunning}><RefreshCw className="h-4 w-4" /></Button>
               </div>
@@ -496,7 +496,7 @@ export default function EmulatorTranslatorPage() {
                       <span className="font-mono">{captureInterval}{t('emulatorTranslator.msUnit')}</span>
                     </div>
                     <input type="range" min="500" max="5000" step="250" value={captureInterval}
-                      onChange={e => setCaptureInterval(Number(e.target.value))} disabled={isRunning} className="w-full accent-purple-500" />
+                      onChange={e => setCaptureInterval(Number(e.target.value))} disabled={isRunning} className="w-full accent-rouge-500" />
                   </div>
                   <p className="text-2xs text-muted-foreground">
                     {t('emulatorTranslator.intervalHint')}</p>
@@ -507,7 +507,7 @@ export default function EmulatorTranslatorPage() {
             {/* Start/Stop */}
             <div className="flex gap-2">
               {!isRunning ? (
-                <Button onClick={startCapture} className="flex-1 h-11 bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 shadow-lg shadow-purple-500/25">
+                <Button onClick={startCapture} className="flex-1 h-11 bg-gradient-to-r from-rouge-600 to-rouge-600 hover:from-rouge-500 hover:to-rouge-500 shadow-lg shadow-rouge-500/25">
                   <Play className="h-4 w-4 mr-2" />{t('emulatorTranslator.startCapture')}</Button>
               ) : (
                 <>
@@ -525,14 +525,14 @@ export default function EmulatorTranslatorPage() {
 
         {/* Current translation */}
         {(currentText || isTranslating) && (
-          <Card className="border border-purple-500/30 bg-purple-900/10">
+          <Card className="border border-rouge-500/30 bg-rouge-900/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-4 w-4 text-purple-400" />
-                <span className="text-sm font-semibold text-purple-300">{t('common.traduzioneCorrente')}</span>
-                {isTranslating && <Loader2 className="h-3 w-3 animate-spin text-purple-400" />}
+                <Zap className="h-4 w-4 text-rouge-400" />
+                <span className="text-sm font-semibold text-rouge-300">{t('common.traduzioneCorrente')}</span>
+                {isTranslating && <Loader2 className="h-3 w-3 animate-spin text-rouge-400" />}
               </div>
-              {currentText && <p className="text-xs text-slate-400 mb-1">{currentText}</p>}
+              {currentText && <p className="text-xs text-noir-400 mb-1">{currentText}</p>}
               {currentTranslation && (
                 <p className="text-base text-emerald-300 font-medium">{currentTranslation}</p>
               )}
@@ -550,7 +550,7 @@ export default function EmulatorTranslatorPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-400" />
+                  <Clock className="h-4 w-4 text-noir-400" />
                   <span className="text-sm font-medium">{t('emulatorTranslator.history')} ({history.length})</span>
                 </div>
                 <div className="flex gap-1.5">
@@ -562,12 +562,12 @@ export default function EmulatorTranslatorPage() {
               <ScrollArea className="max-h-[350px]">
                 <div className="space-y-1.5">
                   {history.map((h, i) => (
-                    <div key={i} className="flex gap-3 p-2 rounded-lg bg-slate-800/30 border border-slate-700/20">
+                    <div key={i} className="flex gap-3 p-2 rounded-lg bg-noir-800/30 border border-noir-700/20">
                       <div className="flex-1 min-w-0">
-                        <p className="text-2xs text-slate-500">{new Date(h.timestamp).toLocaleTimeString()}</p>
-                        <p className="text-xs text-slate-400">{h.original}</p>
+                        <p className="text-2xs text-noir-500">{new Date(h.timestamp).toLocaleTimeString()}</p>
+                        <p className="text-xs text-noir-400">{h.original}</p>
                       </div>
-                      <ArrowRight className="h-3 w-3 text-purple-400 mt-3 shrink-0" />
+                      <ArrowRight className="h-3 w-3 text-rouge-400 mt-3 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-emerald-300">{h.translated}</p>
                       </div>

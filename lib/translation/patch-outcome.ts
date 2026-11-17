@@ -18,6 +18,9 @@
 
 export type PatchOutcome = 'success' | 'partial' | 'failure';
 
+/** Sotto questa quota di stringhe scritte un giro è «parziale», non riuscito. */
+export const PARTIAL_BELOW = 0.8;
+
 export interface PatchCounts {
   /** Stringhe trovate nel gioco. `undefined` = il client non le manda. */
   totalStrings?: number;
@@ -81,7 +84,7 @@ export function decidePatchOutcome(c: PatchCounts): PatchVerdict {
   let outcome: PatchOutcome;
   if (injected === 0) {
     outcome = 'failure';
-  } else if (total > 0 && injected < total * 0.8) {
+  } else if (total > 0 && injected < total * PARTIAL_BELOW) {
     outcome = 'partial';
   } else {
     outcome = 'success';

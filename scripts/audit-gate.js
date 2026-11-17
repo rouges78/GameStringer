@@ -30,40 +30,53 @@ const ROOT = path.resolve(__dirname, '..');
  */
 const ALLOWLIST = [
   {
-    id: 'GHSA-ggr8-5vv4-36mx',
-    package: 'deepmerge-ts',
-    until: '2026-09-30',
+    id: 'GHSA-fc5q-39xc-vjpf',
+    package: 'picomatch',
+    until: '2026-12-17',
     reason: [
-      'CVE-2026-40345, pubblicata il 16/08/2026: deepmerge() va in stack',
-      'exhaustion su grafi di oggetti RICORSIVI. Impatto solo Availability',
-      '(crash), niente confidenzialità né integrità.',
+      'CVE-2026-112366: ReDoS in picomatch <= 4.0.7 su glob del tipo «+(*)» o',
+      '«+(*a)». Impatto solo Availability: blocca il ciclo degli eventi di chi',
+      'compila il glob.',
       '',
       'Perché non è raggiungibile da input di terzi:',
-      '  - deepmerge-ts@7.1.5 arriva solo da @prisma/config, tirato dalla CLI',
-      '    `prisma` (devDependencies). Serve a fondere il file di',
-      '    configurazione Prisma: input LOCALE dello sviluppatore, non dati',
-      '    che arrivano da rete o da un gioco tradotto.',
-      '  - nessun sorgente dell\'app importa @prisma/config o deepmerge',
+      '  - picomatch arriva solo da strumenti di sviluppo: vite e vitest',
+      '    (4.0.4, anche via tinyglobby e fdir) e tailwindcss (2.3.2, via',
+      '    chokidar, anymatch, readdirp e micromatch). Il gate la marca',
+      '    «solo dev».',
+      '  - i glob che quegli strumenti compilano sono scritti da noi nelle',
+      '    configurazioni (vitest, tailwind, vite): nessun glob arriva da',
+      '    rete, da un gioco o da un file tradotto.',
+      '  - nessun sorgente della app importa picomatch o micromatch',
       '    (verificato con grep su app/ components/ lib/ hooks/ scripts/',
-      '    src-tauri/src il 17/08/2026).',
-      '  - il gate lo marca PROD perché @prisma/client dichiara `prisma` come',
-      '    peer opzionale, ma la CLI non finisce nel bundle Tauri spedito.',
+      '    src-tauri/src il 17/11/2026).',
       '',
-      'Perché non si aggiorna e basta: @prisma/config pinna ESATTAMENTE',
-      '"deepmerge-ts": "7.1.5" — anche nella sua ultima versione (7.9.1,',
-      'verificata sul registry il 17/08). Nessun `npm audit fix` possibile;',
-      'forzare 8.0.0 con overrides è un salto major su una libreria che',
-      'Prisma usa internamente, e `prisma generate` gira in postinstall: si',
-      'rischia di rompere la build di tutti per un DoS non raggiungibile.',
+      'Perché non si aggiorna e basta: al 17/11/2026 non esiste una versione',
+      'corretta. Il bollettino copre «<= 4.0.7» e 4.0.7 è la più recente sul',
+      'registry; `npm audit` propone solo di retrocedere vitest alla 3.1.4.',
       '',
-      'Cosa sblocca la rimozione: @prisma/config che passa a deepmerge-ts 8.x.',
-      'Riverificare a ogni giro (lezione di brace-expansion: i backport che',
-      'oggi non esistono domani ci sono).',
+      'Cosa sblocca la rimozione: una picomatch corretta (4.0.8 o un',
+      'backport 2.3.x) e `npm audit fix`. Riverificare a ogni giro.',
     ].join('\n'),
   },
+  // GHSA-vfj7-8cjw-p6xm (braces <=3.0.3, stack exhaustion) — pensionata il
+  // 05/11/2026, in anticipo sulla scadenza del 20/11. braces è ancora 3.0.3
+  // nel lockfile, ma l'advisory non compare più in `npm audit` (né in locale
+  // né in CI): il gate stesso chiedeva di toglierla. Se ricompare, il gate
+  // torna rosso e l'eccezione si riscrive con la motivazione di allora (solo
+  // devDependencies, glob scritti da noi: vedi git log di questo file).
+  //
+  // GHSA-ggr8-5vv4-36mx (deepmerge-ts, CVE-2026-40345) — pensionata il
+  // 20/10/2026, in anticipo sulla scadenza del 02/11. @prisma/config 6.x pinna
+  // ancora deepmerge-ts 7.1.5, ma l'unico uso è `deepmerge()` semplice come
+  // `merger` di c12 per fondere prisma.config: nessuna delle rotture della 8.x
+  // lo tocca (riguardano deepmergeInto, nomi di tipi e merge delle Map), e
+  // @prisma/config 7.10.1 è già passato da solo a deepmerge-ts 8.0.2. Quindi
+  // override in package.json invece di eccezione; verificato con
+  // `prisma validate` e `prisma generate`.
+  //
   // Vuota dal 04/08/2026 al 17/08/2026 — e che torni vuota il prima possibile.
   //
-  // Storia dell'unica eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
+  // Storia della prima eccezione avuta (GHSA-mh99-v99m-4gvg, brace-expansion,
   // datata 30/09): al 27/07 il fix esisteva solo in 5.x, senza backport, e
   // l'override era impossibile (il build CJS di 5.x esporta un oggetto e
   // rompe minimatch 3.x a runtime). Il 04/08 i backport sono ARRIVATI

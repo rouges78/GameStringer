@@ -10,9 +10,6 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 const BACKUPS = [
   { src: 'app/api', dst: 'app/_api_backup' },
-  { src: 'app/games/[id]', dst: 'app/games/_id_backup' },
-  { src: 'app/translator/[gameId]', dst: 'app/translator/_gameId_backup' },
-  { src: 'app/library/[id]', dst: 'app/library/_id_backup' },
 ];
 
 function log(msg) {

@@ -40,6 +40,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
 import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
@@ -152,12 +153,20 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
       const translatedFile = applyTranslations(subtitleFile, translations);
       setSubtitleFile(translatedFile);
       setProgress(100);
+
+      // Righe rimaste senza traduzione dopo QUESTO giro (onTranslate le restituisce '')
+      const notTranslated = translatedFile.entries.filter(e => e.text.trim() && !e.translatedText).length;
+      if (notTranslated > 0) {
+        toast.warning(t('subtitleTranslator.linesNotTranslated').replace('{n}', String(notTranslated)), {
+          id: 'subtitles-not-translated',
+        });
+      }
     } catch (error: unknown) {
       clientLogger.error("Translation error:", error);
     } finally {
       setIsTranslating(false);
     }
-  }, [subtitleFile, onTranslate, targetLang]);
+  }, [subtitleFile, onTranslate, targetLang, t]);
 
   const handleExport = useCallback(() => {
     if (!subtitleFile) return;
@@ -276,7 +285,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
             <div className="grid grid-cols-4 gap-3">
               <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
-                  <Type className="w-4 h-4 text-blue-500" />
+                  <Type className="w-4 h-4 text-noir-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">{t('subtitleTranslator.lines')}</p>
                     <p className="font-semibold">{stats?.totalEntries}</p>
@@ -294,7 +303,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
               </Card>
               <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-purple-500" />
+                  <FileText className="w-4 h-4 text-rouge-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">{t('subtitleTranslator.characters')}</p>
                     <p className="font-semibold">{stats?.totalCharacters.toLocaleString()}</p>
@@ -361,7 +370,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <Button 
                       onClick={handleTranslate} 
                       disabled={isTranslating || !onTranslate}
-                      className="bg-gradient-to-r from-violet-600 to-indigo-600"
+                      className="bg-gradient-to-r from-rouge-600 to-rouge-600"
                     >
                       {isTranslating ? (
                         <>

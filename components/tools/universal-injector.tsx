@@ -57,19 +57,19 @@ interface InjectionResult {
 }
 
 const ENGINE_COLORS: Record<string, string> = {
-  'Unity': 'bg-gradient-to-r from-gray-600 to-gray-800',
-  'UnrealEngine': 'bg-gradient-to-r from-blue-600 to-indigo-800',
-  'Godot': 'bg-gradient-to-r from-blue-500 to-cyan-600',
+  'Unity': 'bg-gradient-to-r from-noir-600 to-noir-800',
+  'UnrealEngine': 'bg-gradient-to-r from-noir-600 to-rouge-800',
+  'Godot': 'bg-gradient-to-r from-noir-500 to-noir-600',
   'RPGMakerMV': 'bg-gradient-to-r from-orange-500 to-red-600',
   'RPGMakerMZ': 'bg-gradient-to-r from-orange-500 to-red-600',
   'RPGMakerVXAce': 'bg-gradient-to-r from-orange-600 to-amber-600',
   'RPGMakerXP': 'bg-gradient-to-r from-yellow-500 to-orange-500',
   'GameMaker': 'bg-gradient-to-r from-green-500 to-emerald-600',
-  'RenPy': 'bg-gradient-to-r from-sky-500 to-blue-600',
-  'Kirikiri': 'bg-gradient-to-r from-purple-500 to-violet-600',
-  'NScripter': 'bg-gradient-to-r from-slate-500 to-slate-700',
+  'RenPy': 'bg-gradient-to-r from-noir-500 to-noir-600',
+  'Kirikiri': 'bg-gradient-to-r from-rouge-500 to-rouge-600',
+  'NScripter': 'bg-gradient-to-r from-noir-500 to-noir-700',
   'Wolf': 'bg-gradient-to-r from-amber-600 to-yellow-600',
-  'Unknown': 'bg-gradient-to-r from-gray-500 to-gray-600',
+  'Unknown': 'bg-gradient-to-r from-noir-500 to-noir-600',
 };
 
 const ENGINE_ICONS: Record<string, string> = {
@@ -167,7 +167,7 @@ export function UniversalInjector() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -289,7 +289,7 @@ export function UniversalInjector() {
                   <Button
                     onClick={handleInject}
                     disabled={isInjecting}
-                    className="w-full bg-blue-600 hover:bg-blue-500"
+                    className="w-full bg-rouge-600 hover:bg-rouge-500"
                     size="sm"
                   >
                     {isInjecting ? (
@@ -327,7 +327,7 @@ export function UniversalInjector() {
                               href={tool.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300"
+                              className="text-noir-400 hover:text-noir-300"
                             >
                               <ExternalLink className="h-4 w-4" />
                             </a>

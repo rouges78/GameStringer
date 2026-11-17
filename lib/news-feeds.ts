@@ -59,8 +59,8 @@ export function getCategoryLabel(cat: FeedCategoryDef, lang: string): string {
 }
 
 export const FEED_CATEGORIES: FeedCategoryDef[] = [
-  { id: 'gaming_news', labels: { it: 'Notizie Gaming', en: 'Gaming News', es: 'Noticias Gaming', fr: 'Actualites Gaming', de: 'Gaming-Nachrichten', ja: 'ゲームニュース', zh: '游戏新闻', ko: '게임 뉴스', pt: 'Noticias Gaming', ru: 'Игровые новости', pl: 'Wiadomosci Gaming' }, icon: '🎮', color: '#1a9fff' },
-  { id: 'pc_gaming', labels: { it: 'PC Gaming', en: 'PC Gaming', es: 'PC Gaming', fr: 'PC Gaming', de: 'PC Gaming', ja: 'PCゲーム', zh: 'PC游戏', ko: 'PC 게임', pt: 'PC Gaming', ru: 'PC Gaming', pl: 'PC Gaming' }, icon: '🖥️', color: '#67c1f5' },
+  { id: 'gaming_news', labels: { it: 'Notizie Gaming', en: 'Gaming News', es: 'Noticias Gaming', fr: 'Actualites Gaming', de: 'Gaming-Nachrichten', ja: 'ゲームニュース', zh: '游戏新闻', ko: '게임 뉴스', pt: 'Noticias Gaming', ru: 'Игровые новости', pl: 'Wiadomosci Gaming' }, icon: '🎮', color: '#ff3b4a' },
+  { id: 'pc_gaming', labels: { it: 'PC Gaming', en: 'PC Gaming', es: 'PC Gaming', fr: 'PC Gaming', de: 'PC Gaming', ja: 'PCゲーム', zh: 'PC游戏', ko: 'PC 게임', pt: 'PC Gaming', ru: 'PC Gaming', pl: 'PC Gaming' }, icon: '🖥️', color: '#ff6b76' },
   { id: 'indie', labels: { it: 'Indie & Dev', en: 'Indie & Dev', es: 'Indie & Dev', fr: 'Indie & Dev', de: 'Indie & Dev', ja: 'インディー＆開発', zh: '独立游戏', ko: '인디 & 개발', pt: 'Indie & Dev', ru: 'Инди и разработка', pl: 'Indie & Dev' }, icon: '🕹️', color: '#a855f7' },
   { id: 'console', labels: { it: 'Console', en: 'Console', es: 'Consola', fr: 'Console', de: 'Konsole', ja: 'コンソール', zh: '主机', ko: '콘솔', pt: 'Console', ru: 'Консоли', pl: 'Konsole' }, icon: '🎯', color: '#22c55e' },
   { id: 'tech', labels: { it: 'Tecnologia', en: 'Technology', es: 'Tecnologia', fr: 'Technologie', de: 'Technologie', ja: 'テクノロジー', zh: '科技', ko: '기술', pt: 'Tecnologia', ru: 'Технологии', pl: 'Technologia' }, icon: '💻', color: '#f59e0b' },
@@ -175,6 +175,9 @@ class NewsFeedService {
     this.loadConfig();
   }
 
+  // Le fonti sono sempre COPIE dei default: toggleSource le modifica sul posto, e
+  // se fossero gli oggetti di DEFAULT_FEED_SOURCES cambierebbe anche il default
+  // («Ripristina predefiniti» delle Impostazioni rimetterebbe lo stato modificato).
   private loadConfig(): void {
     if (typeof window === 'undefined') return;
     try {
@@ -185,10 +188,10 @@ class NewsFeedService {
         const savedMap = new Map(savedSources.map(s => [s.id, s]));
         this.sources = DEFAULT_FEED_SOURCES.map(def => {
           const saved = savedMap.get(def.id);
-          return saved ? { ...def, enabled: saved.enabled } : def;
+          return saved ? { ...def, enabled: saved.enabled } : { ...def };
         });
       } else {
-        this.sources = [...DEFAULT_FEED_SOURCES];
+        this.sources = DEFAULT_FEED_SOURCES.map(def => ({ ...def }));
       }
 
       const cached = localStorage.getItem(FEEDS_CACHE_KEY);
@@ -196,7 +199,7 @@ class NewsFeedService {
         this.cache = JSON.parse(cached);
       }
     } catch {
-      this.sources = [...DEFAULT_FEED_SOURCES];
+      this.sources = DEFAULT_FEED_SOURCES.map(def => ({ ...def }));
     }
   }
 
@@ -222,11 +225,15 @@ class NewsFeedService {
     return this.sources.filter(s => s.enabled);
   }
 
+  // Cambiare le fonti svuota la cache: altrimenti la dashboard continua a
+  // mostrare per 15 minuti le notizie delle fonti appena spente (e niente di
+  // quelle appena accese), e il cambio sembra non aver fatto nulla.
   toggleSource(id: string, enabled: boolean): void {
     const source = this.sources.find(s => s.id === id);
     if (source) {
       source.enabled = enabled;
       this.saveConfig();
+      this.clearCache();
     }
   }
 
@@ -235,6 +242,7 @@ class NewsFeedService {
       if (s.category === category) s.enabled = enabled;
     });
     this.saveConfig();
+    this.clearCache();
   }
 
   private async fetchWithProxy(url: string): Promise<string> {
@@ -624,7 +632,9 @@ class NewsFeedService {
   clearCache(): void {
     this.cache = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(FEEDS_CACHE_KEY);
+      // Ora la chiamano anche toggleSource/toggleCategory: con lo storage negato
+      // non deve far fallire il cambio di fonte (saveConfig già non lancia).
+      try { localStorage.removeItem(FEEDS_CACHE_KEY); } catch {}
     }
   }
 }

@@ -80,6 +80,8 @@ export interface TranslateResult {
   translations: string[];
   provider: string;
   success: boolean;
+  /** Con `success: false`: perché ogni provider della catena non ha tradotto. */
+  error?: string;
   /** Statistiche del passaggio di riflessione (write → reflect → refine), se eseguito */
   reflection?: { candidates: number; refined: number; repaired?: number };
 }
@@ -109,6 +111,32 @@ function detectBatchLanguage(texts: string[]): string | null {
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+// L'ultima volta che nessun provider ha tradotto, e perché. Chi mostra un
+// errore all'utente lo legge da qui: fino al 13/11/2026 il motivo finiva solo
+// nella console della webview, e String it falliva senza dire perché.
+let lastChainFailure: { at: number; reason: string } | null = null;
+
+/** Il motivo dell'ultimo fallimento di tutta la catena, se avvenuto dopo `since` (ms). */
+export function getChainFailureSince(since: number): string | null {
+  return lastChainFailure && lastChainFailure.at >= since
+    ? `Nessun provider AI ha tradotto: ${lastChainFailure.reason}`
+    : null;
+}
+
+function recordChainFailure(failures: string[]): string {
+  const reason = clientLogger.redactSecrets(
+    failures.length > 0 ? failures.join(' · ') : 'nessun provider configurato',
+  );
+  lastChainFailure = { at: Date.now(), reason };
+  // Anche nel log di Tauri, dove chi prova l'app lo ritrova dopo.
+  if (isTauri()) {
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke('log_frontend_warning', { message: `[AI] nessun provider ha tradotto: ${reason}` }))
+      .catch(() => {});
+  }
+  return reason;
+}
+
 /** Legge API keys da localStorage */
 export function getApiKeys() {
   try {
@@ -137,6 +165,53 @@ export function getApiKeys() {
   }
 }
 
+/**
+ * Temperatura scelta in Impostazioni → Traduzione → Parametri avanzati.
+ *
+ * Fino al 01/10/2026 lo slider salvava `translation.temperature` e nessuno la
+ * leggeva: ogni provider qui sotto mandava 0.3 fisso. Ora la leggono i provider
+ * cloud che già mandavano 0.3. Restano fuori Anthropic, che una temperatura non
+ * l'ha mai mandata, e i modelli locali, che hanno le loro opzioni
+ * (ollama-options.ts, pannello Ollama → Avanzate).
+ * Tetto a 1: oltre, alcuni provider rispondono 400 e la catena li bloccherebbe
+ * per il resto della sessione. Lo slider si ferma a 1 per lo stesso motivo.
+ */
+export function getUserTemperature(): number {
+  try {
+    const t = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}')?.translation?.temperature;
+    if (typeof t === 'number' && Number.isFinite(t)) return Math.min(1, Math.max(0, t));
+  } catch { /* storage illeggibile: default */ }
+  return 0.3;
+}
+
+/**
+ * Persona, tono e istruzioni da Impostazioni → «Prompt personalizzato».
+ *
+ * La card li salvava in `gs_custom_prompt_settings` e nessuno li leggeva: il
+ * prompt builder sapeva già usarli (opts.persona/tone/customPrompt), ma nessun
+ * chiamante glieli passava. Entrano qui, all'ingresso della catena, solo se la
+ * card è attiva e solo dove il chiamante non ha già deciso lui. Li usano i
+ * provider che costruiscono il prompt con buildTranslationPrompt (gli LLM cloud);
+ * Ollama, LM Studio e i motori MT hanno un prompt proprio o nessun prompt.
+ */
+export function withStoredCustomPrompt(opts: TranslateOptions): TranslateOptions {
+  try {
+    const raw = localStorage.getItem('gs_custom_prompt_settings');
+    if (!raw) return opts;
+    const s = JSON.parse(raw) as { enabled?: unknown; persona?: unknown; tone?: unknown; customPrompt?: unknown } | null;
+    if (s?.enabled !== true) return opts;
+    const pick = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
+    return {
+      ...opts,
+      persona: opts.persona ?? pick(s.persona),
+      tone: opts.tone ?? pick(s.tone),
+      customPrompt: opts.customPrompt ?? pick(s.customPrompt),
+    };
+  } catch {
+    return opts;
+  }
+}
+
 
 /** Traduzione con Gemini API - Default gemini-3.7-flash: stabile, nativamente
  *  multimodale, 1M di contesto e 64k di output. Fino al 31/12/2026 costa $0.75/1M
@@ -158,7 +233,7 @@ async function translateWithGemini(
     { 'Content-Type': 'application/json' },
     JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+      generationConfig: { temperature: getUserTemperature(), maxOutputTokens: 8192 },
     }),
   );
 
@@ -197,7 +272,7 @@ async function translateWithGemini31FlashLite(
     JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: getUserTemperature(),
         maxOutputTokens: 32768, // Aumentato per long-context
       },
     })
@@ -240,7 +315,7 @@ async function translateWithDeepSeek(
     JSON.stringify({
       model: 'deepseek-v4-flash',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -281,7 +356,7 @@ async function translateWithGroq(
     JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -322,7 +397,7 @@ async function translateWithGroqGptOss(
     JSON.stringify({
       model: 'openai/gpt-oss-120b',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -364,7 +439,7 @@ async function translateWithOpenAI(
     JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -484,7 +559,7 @@ async function translateWithOpenAICompatible(
     JSON.stringify({
       model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -530,7 +605,7 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
     JSON.stringify({
       model: 'command-r-plus-08-2024',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -589,7 +664,7 @@ async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): 
     JSON.stringify({
       model: 'meta-llama/llama-3.3-70b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
+      temperature: getUserTemperature(),
       max_tokens: 8192,
     }),
   );
@@ -829,8 +904,29 @@ async function translateWithDeepLVoice(
   return results;
 }
 
+/**
+ * GET verso MyMemory. Nell'app Tauri la `fetch` della webview verso un dominio
+ * esterno fallisce («Failed to fetch», visto il 13/11/2026 su Scarlet Hollow):
+ * la richiesta passa dal lato Rust, come fa già la traduzione della chat.
+ */
+async function myMemoryGet(url: string): Promise<{ status: number; data: { responseStatus?: number | string; responseData?: { translatedText?: string } } | null }> {
+  if (isTauri()) {
+    const { invoke } = await import('@tauri-apps/api/core');
+    try {
+      return { status: 200, data: JSON.parse(await invoke<string>('fetch_url_content', { url })) };
+    } catch (e) {
+      // `fetch_url_content` risponde «HTTP <codice> per <url>» quando il server rifiuta.
+      const http = /HTTP (\d{3})/.exec(String(e));
+      if (http) return { status: Number(http[1]), data: null };
+      throw e;
+    }
+  }
+  const res = await fetch(url);
+  return { status: res.status, data: res.ok ? await res.json() : null };
+}
+
 /** MyMemory — gratis, nessuna API key, 5000 chars/day */
-async function translateWithMyMemory(
+export async function translateWithMyMemory(
   _apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
@@ -840,12 +936,11 @@ async function translateWithMyMemory(
   
   for (const text of opts.texts) {
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcLang}|${tgtLang}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      blockProvider('mymemory', res.status === 429 ? false : true);
-      throw new Error(res.status === 429 ? 'RateLimit' : `MyMemory ${res.status}`);
+    const { status, data } = await myMemoryGet(url);
+    if (!data) {
+      blockProvider('mymemory', status === 429 ? false : true);
+      throw new Error(status === 429 ? 'RateLimit' : `MyMemory ${status}`);
     }
-    const data = await res.json();
     if (data?.responseStatus === 429) {
       blockProvider('mymemory', false); // cooldown, non blocco permanente
       throw new Error('RateLimit');
@@ -979,8 +1074,10 @@ async function translateWithHYMT(
 
   clientLogger.debug(`[HY-MT] Usando modello: ${modelName} (${srcLang} → ${tgtLang})`);
 
-  // Traduzione singola con richieste parallele (5 alla volta) per affidabilità + velocità
-  const CONCURRENCY = 3;
+  // Una richiesta per stringa, quattro alla volta: quanti sono gli slot con cui
+  // avviamo Ollama (`OLLAMA_PARALLEL_SLOTS`). Con uno slot solo le richieste in
+  // più aspettano in coda senza danno (misurato il 13/11/2026).
+  const CONCURRENCY = 4;
   const results: string[] = new Array(opts.texts.length).fill('');
 
   // Prompt base per contesto videogioco
@@ -1875,6 +1972,8 @@ export async function translateWithFallback(
   opts: TranslateOptions,
   preferWebApis: boolean = false
 ): Promise<TranslateResult> {
+  opts = withStoredCustomPrompt(opts);
+
   // Auto-inject TM RAG context se non già presente (lazy import per evitare circular dep)
   if (!opts.tmContext && opts.texts.length > 0 && opts.texts.length <= 50) {
     try {
@@ -1961,6 +2060,8 @@ export async function translateWithFallback(
 
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
   const skipped: string[] = [];
+  // Perché ogni provider non ha tradotto: serve solo se falliscono tutti.
+  const failures: string[] = [];
 
   // Auto-select: costruisci chain dinamica per lingua/genere.
   // Prima lo storico di sessione (success/unchanged), poi il benchmark qualità
@@ -1978,9 +2079,9 @@ export async function translateWithFallback(
   for (const providerName of providerList) {
     const info = PROVIDER_MAP[providerName];
     if (!info) { skipped.push(providerName); continue; }
-    if (info.isBlocked()) { skipped.push(providerName); continue; }
+    if (info.isBlocked()) { skipped.push(providerName); failures.push(`${providerName}: in pausa dopo un errore`); continue; }
     const key = info.getKey(keys);
-    if (info.needsKey && !key) { skipped.push(providerName); continue; }
+    if (info.needsKey && !key) { skipped.push(providerName); failures.push(`${providerName}: senza chiave`); continue; }
     providers.push({ name: providerName, key, fn: info.fn });
   }
 
@@ -2054,6 +2155,7 @@ export async function translateWithFallback(
           if (unchangedRatio > 0.7 && providers.length > 1) {
             clientLogger.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
             recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, false);
+            failures.push(`${provider.name}: testo restituito invariato`);
             break; // esce dal retry loop, passa al prossimo provider
           }
           recordProviderQuality(provider.name, opts.targetLanguage, unchangedRatio, true);
@@ -2109,6 +2211,7 @@ export async function translateWithFallback(
           if (isFree) {
             // Provider gratuiti: quota giornaliera, retry inutile → skip subito
             clientLogger.warn(`[translateWithFallback] ${provider.name} rate-limited (free) → skip`);
+            failures.push(`${provider.name}: limite di richieste`);
             blockProvider(provider.name, false);
             break;
           }
@@ -2120,6 +2223,7 @@ export async function translateWithFallback(
         }
         
         clientLogger.warn(`[translateWithFallback] ${provider.name} failed: ${String(err)}`, 'TRANSLATE');
+        failures.push(`${provider.name}: ${errMsg === 'RateLimit' ? 'limite di richieste' : errMsg.slice(0, 160)}`);
         const isFreeProvider = FREE_PROVIDERS.has(provider.name);
         // ⚠️ Un guasto di RETE non è una colpa del provider (14/08/2026: DNS di
         // casa giù → Gemini «bloccato permanentemente per errore fatale», e a
@@ -2152,8 +2256,9 @@ export async function translateWithFallback(
   // testi originali): il chiamante decide come mostrarlo (la live OCR mostra l'originale,
   // il batch conteggia gli errori). Quindi warn, non error → niente rosso in console su
   // fallimenti transitori dei provider gratuiti, frequenti nella traduzione live.
-  clientLogger.warn(`[translateWithFallback] ⚠️ Nessun provider riuscito: ${opts.texts.length} stringhe NON tradotte (restituite come originali). Verifica chiavi/provider attivi.`);
-  return { translations: opts.texts, provider: 'none', success: false };
+  const reason = recordChainFailure(failures);
+  clientLogger.warn(`[translateWithFallback] ⚠️ Nessun provider riuscito: ${opts.texts.length} stringhe NON tradotte (restituite come originali). ${reason}`);
+  return { translations: opts.texts, provider: 'none', success: false, error: reason };
 }
 
 /**
@@ -2264,6 +2369,7 @@ export async function translateWithFallbackBatched(
   const allTranslations: string[] = new Array(texts.length);
   let lastProvider = 'none';
   let anySuccess = false;
+  let lastError: string | undefined;
   let doneCount = 0;
   
   // Prepara tutti i chunk con il loro indice originale
@@ -2296,6 +2402,7 @@ export async function translateWithFallbackBatched(
         anySuccess = true;
         lastProvider = result.provider;
       } else {
+        lastError = result.error;
         clientLogger.warn(`[Batched] ⚠️ Batch ${chunk.index + 1}/${chunks.length} FALLITO — stringhe non tradotte`);
       }
       doneCount += chunk.texts.length;
@@ -2313,7 +2420,7 @@ export async function translateWithFallbackBatched(
     if (allTranslations[i] === undefined) allTranslations[i] = texts[i];
   }
   
-  return { translations: allTranslations, provider: lastProvider, success: anySuccess };
+  return { translations: allTranslations, provider: lastProvider, success: anySuccess, error: anySuccess ? undefined : lastError };
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2540,6 +2647,7 @@ Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, 
 export async function translateWithComparison(
   opts: TranslateOptions
 ): Promise<ComparisonResult> {
+  opts = withStoredCustomPrompt(opts);
   const startTime = Date.now();
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === getActiveChainPreset()) || CHAIN_PRESETS[2];

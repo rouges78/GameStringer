@@ -76,13 +76,12 @@ jobs:
       # Gli `--ignore` sono eccezioni motivate, non silenziamenti: vanno
       # rimossi appena esiste una versione corretta raggiungibile.
       #
-      # RUSTSEC-2026-0194 / 0195 — quick-xml <0.41, DoS su XML malformato.
-      #   Non è dipendenza diretta: arriva da `plist` (bundling macOS, legge
-      #   solo plist generati da noi) e da `tauri-winrt-notification` (payload
-      #   delle notifiche Windows, costruito dall'app). Non parsiamo XML di
-      #   terzi né dai file di gioco su quel percorso. Da rimuovere quando
-      #   plist / tauri-winrt-notification passano a quick-xml >= 0.41.
-      #   Revisione prevista: 2026-10-01, o prima a ogni bump di Tauri.
+      # RUSTSEC-2026-0194 / 0195 — quick-xml <0.41: ignore RIMOSSO il 20/10/2026.
+      #   Era tollerato finché plist e tauri-winrt-notification restavano su
+      #   quick-xml <0.41. Alla revisione (scaduta il 01/10) bastava un
+      #   `cargo update -p plist -p notify-rust`, senza toccare Tauri: plist
+      #   1.10 usa quick-xml 0.41, e notify-rust 4.18 porta
+      #   tauri-winrt-notification 0.8, che quick-xml non lo usa più.
       #
       # RUSTSEC-2026-0245 / 0246 — sevenz-rust: NESSUN ignore, RISOLTO ALLA RADICE
       #   l'11/08/2026 migrando a `sevenz-rust2`. Vale la pena scrivere perché non
@@ -91,8 +90,17 @@ jobs:
       #   un ignore non avrebbe avuto alcuna condizione di uscita, sarebbe
       #   scaduto mai e diventato permanente. Un'eccezione che non può essere
       #   chiusa non è un'eccezione, è una rinuncia scritta in un commento.
+      #
+      # RUSTSEC-2026-0367 / 0368 / 0369 / 0429 — zip <9.0.0: ignore RIMOSSI il
+      #   05/11/2026, prima della revisione del 20/11. Stavano tutti in
+      #   `ZipArchive::extract()` (SUID/SGID, symlink fuori destinazione, abort
+      #   su symlink con dimensione enorme) e il fix esiste solo in 9.x.
+      #   tauri-plugin-updater 2.14.1 usa `zip ^9` ma richiede tauri 2.12:
+      #   aggiornato Tauri (2.10.3 -> 2.12, con @tauri-apps/api e cli sulla
+      #   stessa minor) e portata a `zip = "9"` anche la dipendenza diretta.
+      #   Nel grafo resta solo zip 9.x, quindi nessun ignore serve più.
       - name: cargo audit
-        run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
+        run: cargo audit
       - name: Genera SBOM CycloneDX (cargo)
         if: always()
         continue-on-error: true # come sopra: visibile, ma non blocca

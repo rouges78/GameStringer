@@ -275,7 +275,7 @@ export default function HeatmapPage() {
   return (
       <div className="space-y-6">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 p-3">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-rouge-600 to-noir-600 p-3">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">

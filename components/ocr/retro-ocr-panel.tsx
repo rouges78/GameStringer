@@ -41,7 +41,7 @@ const GAME_TYPE_PRESETS = [
     name: 'Auto-Detect', 
     icon: Wand2, 
     description: 'Rileva automaticamente il tipo di game',
-    color: 'bg-purple-500'
+    color: 'bg-rouge-500'
   },
   { 
     id: '8bit', 
@@ -55,7 +55,7 @@ const GAME_TYPE_PRESETS = [
     name: '16-bit', 
     icon: Tv, 
     description: 'SNES, Genesis, PC Engine',
-    color: 'bg-blue-500'
+    color: 'bg-rouge-500'
   },
   { 
     id: 'dos', 
@@ -69,14 +69,14 @@ const GAME_TYPE_PRESETS = [
     name: 'PC-98', 
     icon: Monitor, 
     description: 'games giapponesi PC-98',
-    color: 'bg-pink-500'
+    color: 'bg-rouge-500'
   },
   { 
     id: 'earlywin', 
     name: 'Early Windows', 
     icon: Monitor, 
     description: 'Windows 3.1, Windows 95',
-    color: 'bg-cyan-500'
+    color: 'bg-noir-500'
   }
 ];
 
@@ -244,7 +244,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div className="flex items-center gap-2">
-                  <ZoomIn className="h-4 w-4 text-blue-500" />
+                  <ZoomIn className="h-4 w-4 text-noir-500" />
                   <span>{t('retroOcrPanel.upscaleLabel')} {config.upscaleFactor}x</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -252,7 +252,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
                   <span>{t('retroOcrPanel.contrastLabel')} {config.contrastBoost.toFixed(1)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ScanLine className="h-4 w-4 text-purple-500" />
+                  <ScanLine className="h-4 w-4 text-rouge-500" />
                   <span>{t('retroOcrPanel.thresholdLabel')} {config.threshold ?? 'Off'}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium flex items-center gap-2">
-                    <ZoomIn className="h-4 w-4 text-blue-500" />
+                    <ZoomIn className="h-4 w-4 text-noir-500" />
                     {t('retroOcrPanel.upscaleFactor')}</label>
                   <Badge variant="outline">{config.upscaleFactor}x</Badge>
                 </div>
@@ -315,7 +315,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium flex items-center gap-2">
-                    <ScanLine className="h-4 w-4 text-purple-500" />
+                    <ScanLine className="h-4 w-4 text-rouge-500" />
                     {t('retroOcrPanel.binaryThreshold')}</label>
                   <div className="flex items-center gap-2">
                     <Switch

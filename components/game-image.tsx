@@ -162,7 +162,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   if (isLoadingSteamGridDb || (!currentSrc && !triedSteamGridDb && appId && gameName)) {
     return (
       <div className="w-full h-full bg-muted/50 animate-pulse flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-rouge-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

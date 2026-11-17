@@ -82,7 +82,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
 
   const toolColors: Record<string, string> = {
     neural: 'bg-red-500/20 text-red-400 border-red-500/30',
-    ocr: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    ocr: 'bg-noir-500/20 text-noir-400 border-noir-500/30',
     ue: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
     unity: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
   };
@@ -90,9 +90,9 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
   const providerColors: Record<string, string> = {
     claude: 'bg-amber-500/20 text-amber-400',
     openai: 'bg-green-500/20 text-green-400',
-    gemini: 'bg-blue-500/20 text-blue-400',
-    deepl: 'bg-sky-500/20 text-sky-400',
-    local: 'bg-slate-500/20 text-slate-400',
+    gemini: 'bg-noir-500/20 text-noir-400',
+    deepl: 'bg-noir-500/20 text-noir-400',
+    local: 'bg-noir-500/20 text-noir-400',
   };
 
   if (compact) {
@@ -108,16 +108,16 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
         
         {stats && (
           <div className="grid grid-cols-3 gap-2 text-2xs">
-            <div className="p-1.5 rounded bg-slate-800/30 text-center">
+            <div className="p-1.5 rounded bg-noir-800/30 text-center">
               <div className="font-bold text-red-400">{stats.totalWords.toLocaleString()}</div>
               <div className="text-muted-foreground">{t('translationHistoryPanelComp.parole')}</div>
             </div>
-            <div className="p-1.5 rounded bg-slate-800/30 text-center">
+            <div className="p-1.5 rounded bg-noir-800/30 text-center">
               <div className="font-bold text-green-400">{formatCost(stats.totalCost)}</div>
               <div className="text-muted-foreground">{t('translationHistoryPanelComp.costo')}</div>
             </div>
-            <div className="p-1.5 rounded bg-slate-800/30 text-center">
-              <div className="font-bold text-blue-400">{formatDuration(stats.totalDuration)}</div>
+            <div className="p-1.5 rounded bg-noir-800/30 text-center">
+              <div className="font-bold text-noir-400">{formatDuration(stats.totalDuration)}</div>
               <div className="text-muted-foreground">{t('translationHistoryPanelComp.tempo')}</div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                   records.map(record => (
                     <div 
                       key={record.id}
-                      className="p-2 rounded-lg bg-slate-800/30 border border-slate-800/50"
+                      className="p-2 rounded-lg bg-noir-800/30 border border-noir-800/50"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -227,9 +227,9 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                     <div className="text-lg font-bold text-red-400">{stats.totalTranslations}</div>
                     <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.translations')}</div>
                   </div>
-                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
-                    <BarChart3 className="h-4 w-4 text-blue-400 mx-auto mb-1" />
-                    <div className="text-lg font-bold text-blue-400">{stats.totalWords.toLocaleString()}</div>
+                  <div className="p-2 rounded-lg bg-noir-500/10 border border-noir-500/20 text-center">
+                    <BarChart3 className="h-4 w-4 text-noir-400 mx-auto mb-1" />
+                    <div className="text-lg font-bold text-noir-400">{stats.totalWords.toLocaleString()}</div>
                     <div className="text-2xs text-muted-foreground">{t('translationHistoryPanelComp.words')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
@@ -281,7 +281,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                 </div>
 
                 {/* Cache Stats */}
-                <div className="p-2 rounded-lg bg-slate-800/30 border border-slate-800/50">
+                <div className="p-2 rounded-lg bg-noir-800/30 border border-noir-800/50">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{t('translationHistoryPanelComp.cacheHitRate')}</span>
                     <span className="font-mono text-green-400">

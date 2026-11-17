@@ -60,16 +60,16 @@ export function SupportButton({
         <Button 
           variant={variant} 
           size={size}
-          className={`text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 group ${className}`}
+          className={`text-rouge-400 hover:text-rouge-300 hover:bg-rouge-500/10 group ${className}`}
         >
-          <Heart className="h-4 w-4 animate-pulse fill-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)] group-hover:scale-125 transition-transform" />
+          <Heart className="h-4 w-4 animate-pulse fill-rouge-500 drop-shadow-[0_0_8px_rgba(255,59,74,0.8)] group-hover:scale-125 transition-transform" />
           {showLabel && <span className="ml-1.5">{t('support.title')}</span>}
         </Button>
       </DropdownMenuTrigger>
       
       <DropdownMenuContent align="end" className="w-56 z-[70]">
         <DropdownMenuLabel className="flex items-center gap-2">
-          <Heart className="h-4 w-4 text-pink-500" />
+          <Heart className="h-4 w-4 text-rouge-500" />
           {t('support.supportGameStringer')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

@@ -117,14 +117,14 @@ export function PlayerFeedbackPanel() {
       case 'declining':
         return <TrendingDown className="h-4 w-4 text-red-500" />;
       default:
-        return <Minus className="h-4 w-4 text-gray-500" />;
+        return <Minus className="h-4 w-4 text-noir-500" />;
     }
   };
 
   const getStatusBadge = (status: FeedbackEntry['status']) => {
     const colors: Record<string, string> = {
       pending: 'bg-amber-500',
-      reviewed: 'bg-blue-500',
+      reviewed: 'bg-rouge-500',
       applied: 'bg-green-500',
       rejected: 'bg-red-500',
     };
@@ -138,7 +138,7 @@ export function PlayerFeedbackPanel() {
           <Star
             key={star}
             className={`h-4 w-4 ${
-              star <= rating ? 'fill-amber-400 text-amber-400' : 'text-gray-400'
+              star <= rating ? 'fill-amber-400 text-amber-400' : 'text-noir-400'
             } ${onClick ? 'cursor-pointer hover:scale-110' : ''}`}
             onClick={() => onClick?.(star as 1 | 2 | 3 | 4 | 5)}
           />
@@ -150,7 +150,7 @@ export function PlayerFeedbackPanel() {
   return (
     <div className="space-y-4">
       {/* Hero Header - Stile verde */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-noir-600 to-noir-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -523,7 +523,7 @@ export function PlayerFeedbackPanel() {
             <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
               {t('playerFeedback.cancel')}
             </Button>
-            <Button onClick={handleSubmitFeedback} className="bg-pink-600 hover:bg-pink-500">
+            <Button onClick={handleSubmitFeedback} className="bg-rouge-600 hover:bg-rouge-500">
               <Send className="h-4 w-4 mr-1" />
               {t('playerFeedback.submit')}
             </Button>

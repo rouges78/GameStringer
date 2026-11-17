@@ -148,12 +148,17 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
         language: lang,
       });
     } catch {
-      // Fallback: try Windows native OCR
+      // Fallback: try Windows native OCR. ocr_recognize vuole BGRA grezzo con
+      // larghezza e altezza: per un'immagine codificata c'è ocr_recognize_png,
+      // che restituisce i blocchi di testo. "zh" per Windows OCR è ambiguo: serve zh-Hans
+      // (come in components/tools/live-ocr-overlay.tsx).
       try {
         const { invoke } = await import('@tauri-apps/api/core');
-        text = await invoke<string>('ocr_recognize', {
-          imageBase64: base64,
+        const blocks = await invoke<Array<{ text: string }>>('ocr_recognize_png', {
+          imageData: base64,
+          language: settings.language === 'zh' ? 'zh-Hans' : settings.language,
         });
+        text = blocks.map((b) => b.text).join('\n');
       } catch (e2) {
         throw new Error(
           `OCR non disponibile. Installa Tesseract o usa Windows 10+ per OCR nativo. Dettagli: ${e2}`

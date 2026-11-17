@@ -56,12 +56,12 @@ interface CompareResponse {
 
 const PROVIDERS = [
   { id: 'openai', name: 'OpenAI', icon: '🤖', color: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400', activeColor: 'bg-emerald-500 text-white' },
-  { id: 'gemini', name: 'Gemini', icon: '✨', color: 'bg-blue-500/20 border-blue-500/50 text-blue-400', activeColor: 'bg-blue-500 text-white' },
-  { id: 'claude', name: 'Claude', icon: '🧠', color: 'bg-purple-500/20 border-purple-500/50 text-purple-400', activeColor: 'bg-purple-500 text-white' },
-  { id: 'deepseek', name: 'DeepSeek', icon: '🔍', color: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400', activeColor: 'bg-cyan-500 text-white' },
+  { id: 'gemini', name: 'Gemini', icon: '✨', color: 'bg-noir-500/20 border-noir-500/50 text-noir-400', activeColor: 'bg-rouge-500 text-white' },
+  { id: 'claude', name: 'Claude', icon: '🧠', color: 'bg-rouge-500/20 border-rouge-500/50 text-rouge-400', activeColor: 'bg-rouge-500 text-white' },
+  { id: 'deepseek', name: 'DeepSeek', icon: '🔍', color: 'bg-noir-500/20 border-noir-500/50 text-noir-400', activeColor: 'bg-noir-500 text-white' },
   { id: 'mistral', name: 'Mistral', icon: '🌊', color: 'bg-orange-500/20 border-orange-500/50 text-orange-400', activeColor: 'bg-orange-500 text-white' },
-  { id: 'deepl', name: 'DeepL', icon: '📝', color: 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400', activeColor: 'bg-indigo-500 text-white' },
-  { id: 'libre', name: 'Libre', icon: '🆓', color: 'bg-slate-500/20 border-slate-500/50 text-slate-400', activeColor: 'bg-slate-500 text-white' }
+  { id: 'deepl', name: 'DeepL', icon: '📝', color: 'bg-rouge-500/20 border-rouge-500/50 text-rouge-400', activeColor: 'bg-rouge-500 text-white' },
+  { id: 'libre', name: 'Libre', icon: '🆓', color: 'bg-noir-500/20 border-noir-500/50 text-noir-400', activeColor: 'bg-noir-500 text-white' }
 ];
 
 const LANGUAGES = TARGET_LANGUAGES.map(l => ({ code: l.code, name: `${l.name} ${l.flag}` }));
@@ -140,13 +140,13 @@ export function MultiLLMCompare() {
   };
 
   const getProviderInfo = (providerId: string) => {
-    return PROVIDERS.find(p => p.id === providerId) || { id: providerId, name: providerId, icon: '❓', color: 'bg-slate-500/20 border-slate-500/50 text-slate-400', activeColor: 'bg-slate-500 text-white' };
+    return PROVIDERS.find(p => p.id === providerId) || { id: providerId, name: providerId, icon: '❓', color: 'bg-noir-500/20 border-noir-500/50 text-noir-400', activeColor: 'bg-noir-500 text-white' };
   };
 
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -241,7 +241,7 @@ export function MultiLLMCompare() {
               onClick={handleCompare}
               disabled={isLoading || !sourceText.trim() || selectedProviders.length === 0}
               size="sm"
-              className="w-full bg-blue-600 hover:bg-blue-500"
+              className="w-full bg-rouge-600 hover:bg-rouge-500"
             >
               {isLoading ? (
                 <><Loader2 className="h-3 w-3 mr-1 animate-spin" />{t('multiLlmCompare.comparing')}</>
@@ -295,7 +295,7 @@ export function MultiLLMCompare() {
               return (
                 <Card 
                   key={result.provider}
-                  className={`relative overflow-hidden transition-all hover:shadow-lg bg-slate-900/50 border-slate-700/50 ${
+                  className={`relative overflow-hidden transition-all hover:shadow-lg bg-noir-900/50 border-noir-700/50 ${
                     isBest ? 'ring-2 ring-yellow-500 shadow-yellow-500/20' : ''
                   } ${result.error ? 'opacity-60' : ''}`}
                 >

@@ -33,10 +33,10 @@ function Step({ number, title, children }: { number: number; title: string; chil
   return (
     <div className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-noir-500/20 text-noir-400 text-xs font-bold border border-noir-500/30">
           {number}
         </div>
-        <div className="flex-1 w-px bg-slate-700/50 mt-1" />
+        <div className="flex-1 w-px bg-noir-700/50 mt-1" />
       </div>
       <div className="pb-6 flex-1 min-w-0">
         <h4 className="text-sm font-semibold text-white mb-1">{title}</h4>
@@ -51,7 +51,7 @@ function Step({ number, title, children }: { number: number; title: string; chil
 // ============================================================================
 function Tip({ children, variant = 'info' }: { children: React.ReactNode; variant?: 'info' | 'warning' | 'success' }) {
   const styles = {
-    info: 'bg-blue-500/10 border-blue-500/20 text-blue-300',
+    info: 'bg-noir-500/10 border-noir-500/20 text-noir-300',
     warning: 'bg-amber-500/10 border-amber-500/20 text-amber-300',
     success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
   };
@@ -73,7 +73,7 @@ function Tip({ children, variant = 'info' }: { children: React.ReactNode; varian
 // ============================================================================
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 underline underline-offset-2 decoration-blue-400/30 hover:decoration-blue-300/60 transition-colors">
+    <Link href={href} className="inline-flex items-center gap-1 text-noir-400 hover:text-noir-300 underline underline-offset-2 decoration-noir-400/30 hover:decoration-noir-300/60 transition-colors">
       {children} <ArrowRight className="h-3 w-3" />
     </Link>
   );
@@ -109,7 +109,7 @@ export default function GuidePage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-hidden">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl border border-slate-800/50 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-orange-950/30 p-3 shrink-0">
+      <div className="relative overflow-hidden rounded-xl border border-noir-800/50 bg-gradient-to-r from-noir-900/80 via-noir-900/60 to-orange-950/30 p-3 shrink-0">
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -155,9 +155,9 @@ export default function GuidePage() {
         <TabsContent value="quickstart" className="flex-1 overflow-hidden mt-3">
           <ScrollArea className="h-full">
             <div className="space-y-4 pr-3 pb-6">
-              <Card className="border-blue-500/20 bg-blue-950/20">
+              <Card className="border-noir-500/20 bg-noir-950/20">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2 text-blue-400">
+                  <CardTitle className="text-base flex items-center gap-2 text-noir-400">
                     <Rocket className="h-5 w-5" />
                     {g.qsTitle}
                   </CardTitle>
@@ -202,7 +202,7 @@ export default function GuidePage() {
               </Card>
 
               {/* Cosa serve */}
-              <Card className="border-slate-800/50 bg-slate-900/30">
+              <Card className="border-noir-800/50 bg-noir-900/30">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400" />
@@ -211,15 +211,15 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+                    <div className="p-3 rounded-lg bg-noir-800/40 border border-noir-700/30">
                       <p className="text-xs font-semibold text-white mb-1">{g.needApiTitle}</p>
                       <p className="text-[11px] text-muted-foreground">{g.needApiDesc}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+                    <div className="p-3 rounded-lg bg-noir-800/40 border border-noir-700/30">
                       <p className="text-xs font-semibold text-white mb-1">{g.needGamesTitle}</p>
                       <p className="text-[11px] text-muted-foreground">{g.needGamesDesc}</p>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+                    <div className="p-3 rounded-lg bg-noir-800/40 border border-noir-700/30">
                       <p className="text-xs font-semibold text-white mb-1">{g.needInternetTitle}</p>
                       <p className="text-[11px] text-muted-foreground">{g.needInternetDesc}</p>
                     </div>
@@ -268,9 +268,9 @@ export default function GuidePage() {
               </Card>
 
               {/* Workflow 2: Gioco generico con file */}
-              <Card className="border-blue-500/20 bg-blue-950/10">
+              <Card className="border-noir-500/20 bg-noir-950/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2 text-blue-400">
+                  <CardTitle className="text-sm flex items-center gap-2 text-noir-400">
                     <FileText className="h-4 w-4" />
                     {g.wfFilesTitle}
                   </CardTitle>
@@ -298,9 +298,9 @@ export default function GuidePage() {
               </Card>
 
               {/* Workflow 3: Traduzione Manuale / Pro */}
-              <Card className="border-violet-500/20 bg-violet-950/10">
+              <Card className="border-rouge-500/20 bg-rouge-950/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2 text-violet-400">
+                  <CardTitle className="text-sm flex items-center gap-2 text-rouge-400">
                     <Brain className="h-4 w-4" />
                     {g.wfProTitle}
                   </CardTitle>
@@ -335,7 +335,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.wfOcrStep1Title}>
-                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">{t('guidePage.ocrTranslator')}</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-2xs font-mono">{t('guidePage.ctrlshiftt')}</kbd> {g.wfOcrStep1Line1c}</p>
+                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">{t('guidePage.ocrTranslator')}</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-noir-800 rounded border border-noir-600 text-2xs font-mono">{t('guidePage.ctrlshiftt')}</kbd> {g.wfOcrStep1Line1c}</p>
                   </Step>
                   <Step number={2} title={g.wfOcrStep2Title}>
                     <p>{g.wfOcrStep2Line1}</p>
@@ -407,7 +407,7 @@ export default function GuidePage() {
                             const Icon = tool.icon;
                             return (
                               <Link key={tool.id} href={tool.href}>
-                                <Card className="border-slate-800/50 bg-slate-900/30 hover:bg-slate-800/40 hover:border-slate-700/60 transition-colors cursor-pointer h-full">
+                                <Card className="border-noir-800/50 bg-noir-900/30 hover:bg-noir-800/40 hover:border-noir-700/60 transition-colors cursor-pointer h-full">
                                   <CardHeader className="py-2 px-3">
                                     <CardTitle className="text-xs flex items-center gap-2">
                                       <div className={`p-1 rounded bg-${tool.color}-500/20`}>
@@ -422,12 +422,12 @@ export default function GuidePage() {
                                     <ul className="space-y-0.5">
                                       {tool.features.slice(0, 3).map((f, j) => (
                                         <li key={j} className="flex items-start gap-1.5 text-2xs text-muted-foreground">
-                                          <ChevronRight className="h-2.5 w-2.5 mt-0.5 text-slate-600 shrink-0" />
+                                          <ChevronRight className="h-2.5 w-2.5 mt-0.5 text-noir-600 shrink-0" />
                                           <span>{f}</span>
                                         </li>
                                       ))}
                                       {tool.features.length > 3 && (
-                                        <li className="text-2xs text-slate-600 pl-4">+{tool.features.length - 3} {g.otherFunctions}</li>
+                                        <li className="text-2xs text-noir-600 pl-4">+{tool.features.length - 3} {g.otherFunctions}</li>
                                       )}
                                     </ul>
                                   </CardContent>
@@ -453,43 +453,43 @@ export default function GuidePage() {
             <div className="space-y-4 pr-3 pb-6">
 
               {/* ── CARD 0: Novità v1.10 ───────────────────────────────── */}
-              <Card className="border-blue-500/30 bg-gradient-to-br from-blue-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Rocket className="w-4 h-4 text-blue-400" />
+                    <Rocket className="w-4 h-4 text-noir-400" />
                     {g.novTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-blue-500/40 text-blue-300">v1.12</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.12</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">{g.novDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-blue-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-noir-300 mb-1">
                         <Cpu className="h-3 w-3" /> {g.novCloudT}
                       </div>
                       <p className="text-2xs text-muted-foreground">{g.novCloudDPre} <NavLink href="/settings">{t('nav.settings')}</NavLink> {g.novCloudDPost}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-blue-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-noir-300 mb-1">
                         <Layers className="h-3 w-3" /> {g.novBgT}
                       </div>
                       <p className="text-2xs text-muted-foreground">{g.novBgD}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-blue-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-noir-300 mb-1">
                         <Trophy className="h-3 w-3" /> {g.novProjT}
                       </div>
                       <p className="text-2xs text-muted-foreground">{g.novProjDPre} <NavLink href="/projects">{t('nav.projects')}</NavLink> {g.novProjDPost}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-blue-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-noir-300 mb-1">
                         <CheckCircle2 className="h-3 w-3" /> {g.novTrayT}
                       </div>
                       <p className="text-2xs text-muted-foreground">{g.novTrayD}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2 md:col-span-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-blue-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2 md:col-span-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-noir-300 mb-1">
                         <Database className="h-3 w-3" /> {g.novHubT}
                       </div>
                       <p className="text-2xs text-muted-foreground">{g.novHubDPre} <NavLink href="/patch-hub">Patch Hub</NavLink></p>
@@ -502,20 +502,20 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 1: Prediction Tool ────────────────────────────── */}
-              <Card className="border-purple-500/30 bg-gradient-to-br from-purple-950/20 to-slate-900/30">
+              <Card className="border-rouge-500/30 bg-gradient-to-br from-rouge-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-400" />
+                    <Brain className="w-4 h-4 text-rouge-400" />
                     {t('guidePage.ptTitle')}
-                    <Badge variant="outline" className="ml-auto text-2xs border-purple-500/40 text-purple-300">v1.9.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-rouge-500/40 text-rouge-300">v1.9.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {t('guidePage.ptDescA')} <em>{t('guidePage.ptDescBefore')}</em>  {t('guidePage.ptDescB')}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
                   {/* Pipeline diagram */}
-                  <div className="rounded-lg border border-purple-500/20 bg-slate-950/40 p-3">
-                    <div className="text-2xs text-purple-300 font-semibold mb-2 uppercase tracking-wider">{t('common.pipelineDiAnalisi')}</div>
+                  <div className="rounded-lg border border-rouge-500/20 bg-noir-950/40 p-3">
+                    <div className="text-2xs text-rouge-300 font-semibold mb-2 uppercase tracking-wider">{t('common.pipelineDiAnalisi')}</div>
                     <div className="flex items-center justify-between gap-1 text-2xs">
                       {[
                         { icon: FolderTree, label: 'Input', sub: 'game path' },
@@ -527,16 +527,16 @@ export default function GuidePage() {
                       ].map((step, i, arr) => (
                         <React.Fragment key={i}>
                           <div className="flex flex-col items-center gap-1 min-w-0 flex-1">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/15 border border-purple-500/40">
-                              <step.icon className="h-3.5 w-3.5 text-purple-300" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rouge-500/15 border border-rouge-500/40">
+                              <step.icon className="h-3.5 w-3.5 text-rouge-300" />
                             </div>
                             <div className="text-center">
-                              <div className="font-semibold text-purple-200">{step.label}</div>
+                              <div className="font-semibold text-rouge-200">{step.label}</div>
                               <div className="text-[9px] text-muted-foreground">{step.sub}</div>
                             </div>
                           </div>
                           {i < arr.length - 1 && (
-                            <ArrowRight className="h-3 w-3 text-purple-500/50 shrink-0 mt-[-14px]" />
+                            <ArrowRight className="h-3 w-3 text-rouge-500/50 shrink-0 mt-[-14px]" />
                           )}
                         </React.Fragment>
                       ))}
@@ -544,25 +544,25 @@ export default function GuidePage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-rouge-300 mb-1">
                         <Gauge className="h-3 w-3" /> {t('guidePage.ptDifficultyScore')}
                       </div>
                       <p className="text-2xs text-muted-foreground">{t('guidePage.ptDifficultyDesc')}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-rouge-300 mb-1">
                         <ShieldCheck className="h-3 w-3" /> {t('guidePage.drmEncoding')}</div>
                       <p className="text-2xs text-muted-foreground">{t('guidePage.ptDrmDesc')}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-rouge-300 mb-1">
                         <Cpu className="h-3 w-3" /> {t('guidePage.ptModelsTitle')}
                       </div>
                       <p className="text-2xs text-muted-foreground">{t('guidePage.ptModelsDesc')}</p>
                     </div>
-                    <div className="rounded border border-slate-700/40 bg-slate-900/40 p-2">
-                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-purple-300 mb-1">
+                    <div className="rounded border border-noir-700/40 bg-noir-900/40 p-2">
+                      <div className="flex items-center gap-1.5 text-2xs font-semibold text-rouge-300 mb-1">
                         <GitBranch className="h-3 w-3" /> {t('guidePage.ptChainsTitle')}
                       </div>
                       <p className="text-2xs text-muted-foreground">{t('guidePage.ptChainsDesc')}</p>
@@ -575,49 +575,49 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 2: Dry Run Scanner ────────────────────────────── */}
-              <Card className="border-sky-500/30 bg-gradient-to-br from-sky-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <FlaskConical className="w-4 h-4 text-sky-400" />
-                    {t('guidePage.dryRunTitle')}<Badge variant="outline" className="ml-auto text-2xs border-sky-500/40 text-sky-300">v1.9.0</Badge>
+                    <FlaskConical className="w-4 h-4 text-noir-400" />
+                    {t('guidePage.dryRunTitle')}<Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.9.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {t('guidePage.dryAnalyze')} <strong>{t('guidePage.dryAll')}</strong>  {t('guidePage.dryGamesBatch')} <strong>{t('guidePage.dryNoModify')}</strong> {t('guidePage.dryIdentify')}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
                   {/* Flow diagram */}
-                  <div className="rounded-lg border border-sky-500/20 bg-slate-950/40 p-3">
-                    <div className="text-2xs text-sky-300 font-semibold mb-2 uppercase tracking-wider">{t('guidePage.dryRunFlow')}</div>
+                  <div className="rounded-lg border border-noir-500/20 bg-noir-950/40 p-3">
+                    <div className="text-2xs text-noir-300 font-semibold mb-2 uppercase tracking-wider">{t('guidePage.dryRunFlow')}</div>
                     <div className="flex items-start gap-2 text-2xs">
                       <div className="flex flex-col items-center gap-1 flex-1">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
-                          <Database className="h-3.5 w-3.5 text-sky-300" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-noir-500/15 border border-noir-500/40">
+                          <Database className="h-3.5 w-3.5 text-noir-300" />
                         </div>
-                        <div className="text-center font-semibold text-sky-200">Steam Library</div>
+                        <div className="text-center font-semibold text-noir-200">Steam Library</div>
                         <div className="text-[9px] text-muted-foreground">{t('guidePage.gamesWholeLibrary')}</div>
                       </div>
-                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <ArrowRight className="h-3 w-3 text-noir-500/50 mt-3 shrink-0" />
                       <div className="flex flex-col items-center gap-1 flex-1">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
-                          <Scan className="h-3.5 w-3.5 text-sky-300" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-noir-500/15 border border-noir-500/40">
+                          <Scan className="h-3.5 w-3.5 text-noir-300" />
                         </div>
-                        <div className="text-center font-semibold text-sky-200">{t('guidePage.engineDetect')}</div>
+                        <div className="text-center font-semibold text-noir-200">{t('guidePage.engineDetect')}</div>
                         <div className="text-[9px] text-muted-foreground">{t('guidePage.stringCount')}</div>
                       </div>
-                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <ArrowRight className="h-3 w-3 text-noir-500/50 mt-3 shrink-0" />
                       <div className="flex flex-col items-center gap-1 flex-1">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
-                          <Layers className="h-3.5 w-3.5 text-sky-300" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-noir-500/15 border border-noir-500/40">
+                          <Layers className="h-3.5 w-3.5 text-noir-300" />
                         </div>
-                        <div className="text-center font-semibold text-sky-200">{t('guidePage.categorize')}</div>
+                        <div className="text-center font-semibold text-noir-200">{t('guidePage.categorize')}</div>
                         <div className="text-[9px] text-muted-foreground">{t('guidePage.readyErrNosup')}</div>
                       </div>
-                      <ArrowRight className="h-3 w-3 text-sky-500/50 mt-3 shrink-0" />
+                      <ArrowRight className="h-3 w-3 text-noir-500/50 mt-3 shrink-0" />
                       <div className="flex flex-col items-center gap-1 flex-1">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/15 border border-sky-500/40">
-                          <FileText className="h-3.5 w-3.5 text-sky-300" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-noir-500/15 border border-noir-500/40">
+                          <FileText className="h-3.5 w-3.5 text-noir-300" />
                         </div>
-                        <div className="text-center font-semibold text-sky-200">{t('guidePage.reportJson')}</div>
+                        <div className="text-center font-semibold text-noir-200">{t('guidePage.reportJson')}</div>
                         <div className="text-[9px] text-muted-foreground">DATA_DIR</div>
                       </div>
                     </div>
@@ -632,20 +632,20 @@ export default function GuidePage() {
                       <div className="text-sm font-bold text-amber-300">{t('guidePage.catErrors')}</div>
                       <div className="text-[10px] text-muted-foreground">{t('guidePage.dryErrors')}</div>
                     </div>
-                    <div className="rounded border border-slate-500/30 bg-slate-950/40 p-2 text-center">
-                      <div className="text-sm font-bold text-slate-300">{t('guidePage.catUnsupported')}</div>
+                    <div className="rounded border border-noir-500/30 bg-noir-950/40 p-2 text-center">
+                      <div className="text-sm font-bold text-noir-300">{t('guidePage.catUnsupported')}</div>
                       <div className="text-[10px] text-muted-foreground">{t('common.engineIgnotoOSenzaStringhe')}</div>
                     </div>
                   </div>
 
                   <Tip variant="success">
-                    {t('guidePage.howToLaunch')} <strong>Dry Run</strong>  {t('guidePage.inTopPanel')} <NavLink href="/library">{t('guidePage.library')}</NavLink> {t('guidePage.dryLaunchDesc')} <code className="text-[10px] bg-slate-800 px-1 rounded">DATA_DIR/dry_run_report.json</code>.
+                    {t('guidePage.howToLaunch')} <strong>Dry Run</strong>  {t('guidePage.inTopPanel')} <NavLink href="/library">{t('guidePage.library')}</NavLink> {t('guidePage.dryLaunchDesc')} <code className="text-[10px] bg-noir-800 px-1 rounded">DATA_DIR/dry_run_report.json</code>.
                   </Tip>
                 </CardContent>
               </Card>
 
               {/* ── CARD 3: P.T.Rank / Classifica Rapida ─────────────── */}
-              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-950/20 to-slate-900/30">
+              <Card className="border-amber-500/30 bg-gradient-to-br from-amber-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-amber-400" />
@@ -657,7 +657,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="p-3 space-y-3">
                   {/* Sample ranking visualization */}
-                  <div className="rounded-lg border border-amber-500/20 bg-slate-950/40 p-3 space-y-1.5">
+                  <div className="rounded-lg border border-amber-500/20 bg-noir-950/40 p-3 space-y-1.5">
                     <div className="text-2xs text-amber-300 font-semibold mb-1 uppercase tracking-wider flex items-center gap-1">
                       <ListOrdered className="h-3 w-3" /> {t('guidePage.rankExample')}
                     </div>
@@ -672,9 +672,9 @@ export default function GuidePage() {
                         <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-bold ${g.badge}`}>
                           {g.rank}
                         </div>
-                        <div className="flex-1 min-w-0 truncate font-semibold text-slate-200">{g.name}</div>
+                        <div className="flex-1 min-w-0 truncate font-semibold text-noir-200">{g.name}</div>
                         <div className="text-[10px] text-muted-foreground">{g.engine}</div>
-                        <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="w-24 h-1.5 bg-noir-800 rounded-full overflow-hidden">
                           <div className={`h-full ${g.bar}`} style={{ width: `${g.score}%` }} />
                         </div>
                         <div className={`text-[10px] font-mono w-6 text-right ${g.txt}`}>{g.score}</div>
@@ -688,24 +688,24 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 4: "String it!" quick action ────────────────── */}
-              <Card className="border-indigo-500/30 bg-gradient-to-br from-indigo-950/20 to-slate-900/30">
+              <Card className="border-rouge-500/30 bg-gradient-to-br from-rouge-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                    {t('guidePage.stringItTitle')}<Badge variant="outline" className="ml-auto text-2xs border-indigo-500/40 text-indigo-300">v1.9.0</Badge>
+                    <Sparkles className="w-4 h-4 text-rouge-400" />
+                    {t('guidePage.stringItTitle')}<Badge variant="outline" className="ml-auto text-2xs border-rouge-500/40 text-rouge-300">v1.9.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    {t('guidePage.purpleButton')} <Sparkles className="inline h-3 w-3 text-indigo-400" />  {t('guidePage.thatAppearsIn')} <em>{t('guidePage.hover')}</em>  {t('guidePage.stringItDesc')}</CardDescription>
+                    {t('guidePage.purpleButton')} <Sparkles className="inline h-3 w-3 text-rouge-400" />  {t('guidePage.thatAppearsIn')} <em>{t('guidePage.hover')}</em>  {t('guidePage.stringItDesc')}</CardDescription>
                 </CardHeader>
               </Card>
 
               {/* ── CARD 5: Live Translation Overlay (v1.8.0) ─────────── */}
-              <Card className="border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Scan className="w-4 h-4 text-cyan-400" />
+                    <Scan className="w-4 h-4 text-noir-400" />
                     {g.overlayTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-cyan-500/40 text-cyan-300">v1.8.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.8.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.overlayDesc}
@@ -713,7 +713,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.overlayStep1Title}>
-                    <p>{g.overlayStep1Line1} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-2xs font-mono">Ctrl+Alt+O</kbd>.</p>
+                    <p>{g.overlayStep1Line1} <kbd className="px-1.5 py-0.5 bg-noir-800 rounded border border-noir-600 text-2xs font-mono">Ctrl+Alt+O</kbd>.</p>
                   </Step>
                   <Step number={2} title={g.overlayStep2Title}>
                     <p>{g.overlayStep2Line1}</p>
@@ -726,12 +726,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 6: Hub Marketplace (v1.8.0) ──────────────────── */}
-              <Card className="border-fuchsia-500/30 bg-gradient-to-br from-fuchsia-950/20 to-slate-900/30">
+              <Card className="border-rouge-500/30 bg-gradient-to-br from-rouge-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Database className="w-4 h-4 text-fuchsia-400" />
+                    <Database className="w-4 h-4 text-rouge-400" />
                     {g.marketplaceTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-fuchsia-500/40 text-fuchsia-300">v1.8.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-rouge-500/40 text-rouge-300">v1.8.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.marketplaceDesc}
@@ -752,12 +752,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 7: Translation Memory Network (v1.8.0) ─────────── */}
-              <Card className="border-slate-500/30 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-800/30 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-slate-400" />
+                    <Layers className="w-4 h-4 text-noir-400" />
                     {g.tmTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-slate-500/40 text-slate-300">v1.8.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.8.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.tmDesc}
@@ -775,12 +775,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 8: AI Dubbing Pipeline (v1.8.0) ──────────────── */}
-              <Card className="border-violet-500/30 bg-gradient-to-br from-violet-950/20 to-slate-900/30">
+              <Card className="border-rouge-500/30 bg-gradient-to-br from-rouge-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Mic className="w-4 h-4 text-violet-400" />
+                    <Mic className="w-4 h-4 text-rouge-400" />
                     {g.dubbingTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-violet-500/40 text-violet-300">v1.8.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-rouge-500/40 text-rouge-300">v1.8.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.dubbingDesc}
@@ -801,12 +801,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 9: Auto-Select Engine (v1.7.0) ───────────────── */}
-              <Card className="border-blue-500/30 bg-gradient-to-br from-blue-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-blue-400" />
+                    <Brain className="w-4 h-4 text-noir-400" />
                     {g.autoSelectTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-blue-500/40 text-blue-300">v1.7.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.7.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.autoSelectDesc}
@@ -824,7 +824,7 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 10: Gridly CSV (v1.7.0) ──────────────────────── */}
-              <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-950/20 to-slate-900/30">
+              <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <FileText className="w-4 h-4 text-emerald-400" />
@@ -847,12 +847,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 11: Plugin System (v1.8.0) ─────────────────────── */}
-              <Card className="border-rose-500/30 bg-gradient-to-br from-rose-950/20 to-slate-900/30">
+              <Card className="border-rouge-500/30 bg-gradient-to-br from-rouge-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-rose-400" />
+                    <Wrench className="w-4 h-4 text-rouge-400" />
                     {g.pluginTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-rose-500/40 text-rose-300">v1.8.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-rouge-500/40 text-rouge-300">v1.8.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.pluginDesc}
@@ -873,12 +873,12 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 12: Ollama HTTP Direct (v1.9.0) ────────────────── */}
-              <Card className="border-teal-500/30 bg-gradient-to-br from-teal-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-teal-400" />
+                    <Cpu className="w-4 h-4 text-noir-400" />
                     {g.ollamaHttpTitle}
-                    <Badge variant="outline" className="ml-auto text-2xs border-teal-500/40 text-teal-300">v1.9.0</Badge>
+                    <Badge variant="outline" className="ml-auto text-2xs border-noir-500/40 text-noir-300">v1.9.0</Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {g.ollamaHttpDesc}
@@ -896,10 +896,10 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 12b: Provider locali — LM Studio & ModelWiz ─────── */}
-              <Card className="border-teal-500/30 bg-gradient-to-br from-teal-950/20 to-slate-900/30">
+              <Card className="border-noir-500/30 bg-gradient-to-br from-noir-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-teal-400" />
+                    <Cpu className="w-4 h-4 text-noir-400" />
                     {g.localProvidersTitle}
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -918,7 +918,7 @@ export default function GuidePage() {
               </Card>
 
               {/* ── CARD 13: Epic Credentials (v1.9.0) ──────────────────── */}
-              <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-950/20 to-slate-900/30">
+              <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-950/20 to-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Gamepad2 className="w-4 h-4 text-yellow-400" />
@@ -951,10 +951,10 @@ export default function GuidePage() {
           <ScrollArea className="h-full">
             <div className="space-y-4 pr-3 pb-6">
               {/* Navigazione */}
-              <Card className="border-slate-800/50 bg-slate-900/30">
+              <Card className="border-noir-800/50 bg-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Keyboard className="w-4 h-4 text-blue-400" />
+                    <Keyboard className="w-4 h-4 text-noir-400" />
                     {g.scNavTitle}
                   </CardTitle>
                 </CardHeader>
@@ -968,8 +968,8 @@ export default function GuidePage() {
                       { shortcut: 'Esc', desc: g.scNavClose },
                       { shortcut: 'Shift + ?', desc: g.scNavShortcuts },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-2xs font-mono text-blue-400 whitespace-nowrap">
+                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-noir-800/30">
+                        <kbd className="px-2 py-1 bg-noir-900 rounded border border-noir-700 text-2xs font-mono text-noir-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -995,8 +995,8 @@ export default function GuidePage() {
                       { shortcut: 'Ctrl + Alt + O', desc: g.scGlobalOverlay },
                       { shortcut: 'ALT + T', desc: g.scGlobalXunity },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-2xs font-mono text-green-400 whitespace-nowrap">
+                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-noir-800/30">
+                        <kbd className="px-2 py-1 bg-noir-900 rounded border border-green-500/30 text-2xs font-mono text-green-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -1008,10 +1008,10 @@ export default function GuidePage() {
               </Card>
 
               {/* Durante traduzione */}
-              <Card className="border-slate-800/50 bg-slate-900/30">
+              <Card className="border-noir-800/50 bg-noir-900/30">
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-violet-400" />
+                    <Sparkles className="w-4 h-4 text-rouge-400" />
                     {g.scTransTitle}
                   </CardTitle>
                 </CardHeader>
@@ -1023,8 +1023,8 @@ export default function GuidePage() {
                       { shortcut: 'Shift + Tab', desc: g.scTransPrev },
                       { shortcut: 'Enter', desc: g.scTransConfirm },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
-                        <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-2xs font-mono text-violet-400 whitespace-nowrap">
+                      <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-noir-800/30">
+                        <kbd className="px-2 py-1 bg-noir-900 rounded border border-noir-700 text-2xs font-mono text-rouge-400 whitespace-nowrap">
                           {s.shortcut}
                         </kbd>
                         <span className="text-[11px] text-muted-foreground text-right">{s.desc}</span>
@@ -1057,7 +1057,7 @@ export default function GuidePage() {
                 { q: g.faqFilesQ, a: g.faqFilesA },
                 { q: g.faqMultiplayerQ, a: g.faqMultiplayerA },
               ].map((faq, i) => (
-                <Card key={i} className="border-slate-800/50 bg-slate-900/30">
+                <Card key={i} className="border-noir-800/50 bg-noir-900/30">
                   <CardHeader className="py-2 px-3">
                     <CardTitle className="text-xs text-white">{faq.q}</CardTitle>
                   </CardHeader>
@@ -1067,7 +1067,7 @@ export default function GuidePage() {
                 </Card>
               ))}
 
-              <Separator className="my-2 bg-slate-800" />
+              <Separator className="my-2 bg-noir-800" />
 
               {/* Troubleshooting */}
               <h2 className="text-sm font-bold text-white flex items-center gap-2 px-1">
@@ -1082,7 +1082,7 @@ export default function GuidePage() {
                 { q: g.troubleCharsQ, a: g.troubleCharsA },
                 { q: g.troubleBackupQ, a: g.troubleBackupA },
               ].map((faq, i) => (
-                <Card key={i} className="border-amber-500/10 bg-slate-900/30">
+                <Card key={i} className="border-amber-500/10 bg-noir-900/30">
                   <CardHeader className="py-2 px-3">
                     <CardTitle className="text-xs text-amber-300">{faq.q}</CardTitle>
                   </CardHeader>
@@ -1092,7 +1092,7 @@ export default function GuidePage() {
                 </Card>
               ))}
 
-              <Separator className="my-2 bg-slate-800" />
+              <Separator className="my-2 bg-noir-800" />
 
               {/* Engine specifici */}
               <h2 className="text-sm font-bold text-white flex items-center gap-2 px-1">
@@ -1103,16 +1103,16 @@ export default function GuidePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
                   { engine: 'Unity', tool: 'Unity Patcher', href: '/unity-patcher', desc: g.engineUnity, color: 'emerald' },
-                  { engine: 'Unreal Engine 4/5', tool: 'UE Translator', href: '/unreal-translator', desc: g.engineUnreal, color: 'blue' },
+                  { engine: 'Unreal Engine 4/5', tool: 'UE Translator', href: '/unreal-translator', desc: g.engineUnreal, color: 'noir' },
                   { engine: 'RPG Maker (MV/MZ/VX)', tool: 'RPG Maker Patcher', href: '/rpgmaker-patcher', desc: g.engineRpgMaker, color: 'amber' },
-                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'teal' },
+                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'noir' },
                   { engine: 'Wolf RPG', tool: 'Wolf RPG Patcher', href: '/wolfrpg-patcher', desc: g.engineWolfRpg, color: 'orange' },
-                  { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: g.engineTelltale, color: 'violet' },
-                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/context-harvester', desc: g.engineGodot, color: 'cyan' },
+                  { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: g.engineTelltale, color: 'rouge' },
+                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/context-harvester', desc: g.engineGodot, color: 'noir' },
                   { engine: 'GameMaker', tool: 'Auto-Translate', href: '/auto-translate', desc: g.engineGameMaker, color: 'yellow' },
                 ].map((e, i) => (
                   <Link key={i} href={e.href}>
-                    <Card className="border-slate-800/50 bg-slate-900/30 hover:bg-slate-800/40 transition-colors cursor-pointer h-full">
+                    <Card className="border-noir-800/50 bg-noir-900/30 hover:bg-noir-800/40 transition-colors cursor-pointer h-full">
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline" className={`text-micro border-${e.color}-500/30 text-${e.color}-400 bg-${e.color}-500/10`}>

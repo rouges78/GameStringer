@@ -5,7 +5,8 @@ import type { ProgressState } from '@/lib/types/progress';
 
 // Mock del BatchProcessor
 vi.mock('@/lib/batch/batch-processor', () => ({
-  BatchProcessor: vi.fn().mockImplementation((options, callbacks) => ({
+  // `function` e non arrow: da Vitest 4 un mock usato con `new` deve essere costruibile.
+  BatchProcessor: vi.fn().mockImplementation(function (options, callbacks) { return {
     processBatch: vi.fn().mockImplementation(async (items, processor, operationType) => {
       // Simula elaborazione batch
       const results = [];
@@ -51,7 +52,7 @@ vi.mock('@/lib/batch/batch-processor', () => ({
     cancel: vi.fn(),
     isProcessing: vi.fn(() => false),
     getCurrentOperationId: vi.fn(() => 'test-operation-id')
-  }))
+  }; })
 }));
 
 describe('ProgressBatchProcessor Integration', () => {

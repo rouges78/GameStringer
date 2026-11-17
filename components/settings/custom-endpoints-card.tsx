@@ -90,7 +90,7 @@ export function CustomEndpointsCard() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Server className="h-4 w-4 text-sky-400" />
+            <Server className="h-4 w-4 text-noir-400" />
             <CardTitle className="text-base">{t('customEndpoints.title')}</CardTitle>
           </div>
           {attivi > 0 && (

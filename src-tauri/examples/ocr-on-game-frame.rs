@@ -49,7 +49,8 @@ fn prova(nome: &str, dati: &ImageData) {
         Ok(righe) => {
             println!("{} righe", righe.len());
             for r in &righe {
-                println!("    «{}»  conf={:.2}", r.text, r.confidence);
+                // Windows OCR non dà una confidenza: il vecchio campo era un 0.9 fisso.
+                println!("    «{}»  @{},{} {}x{}", r.text, r.x, r.y, r.width, r.height);
             }
         }
     }

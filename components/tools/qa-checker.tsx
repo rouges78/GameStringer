@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/collapsible';
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
 
@@ -87,7 +87,6 @@ export function QAChecker() {
   const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
   const [newTermSource, setNewTermSource] = useState('');
   const [newTermTarget, setNewTermTarget] = useState('');
-  const { toast } = useToast();
 
   // Load glossary from localStorage
   useEffect(() => {
@@ -110,15 +109,15 @@ export function QAChecker() {
   // Add glossary term
   const addGlossaryTerm = useCallback(() => {
     if (!newTermSource.trim() || !newTermTarget.trim()) {
-      toast({ title: t('qaCheck.enterBothTerms'), variant: 'destructive' });
+      toast.error(t('qaCheck.enterBothTerms'));
       return;
     }
     const newTerms = [...glossary, { source: newTermSource.trim(), target: newTermTarget.trim() }];
     saveGlossary(newTerms);
     setNewTermSource('');
     setNewTermTarget('');
-    toast({ title: `✅ ${t('qaCheck.termAdded')}` });
-  }, [glossary, newTermSource, newTermTarget, saveGlossary, toast, t]);
+    toast.success(`✅ ${t('qaCheck.termAdded')}`);
+  }, [glossary, newTermSource, newTermTarget, saveGlossary, t]);
 
   // Remove glossary term
   const removeGlossaryTerm = useCallback((index: number) => {
@@ -160,7 +159,7 @@ export function QAChecker() {
 
   const runCheck = useCallback(async () => {
     if (!source.trim() || !target.trim()) {
-      toast({ title: t('qaCheck.enterBothTexts'), variant: 'destructive' });
+      toast.error(t('qaCheck.enterBothTexts'));
       return;
     }
 
@@ -180,22 +179,21 @@ export function QAChecker() {
       setIssues(allIssues);
       
       if (allIssues.length === 0) {
-        toast({ title: `✅ ${t('qaCheck.noIssues')}` });
+        toast.success(`✅ ${t('qaCheck.noIssues')}`);
       } else {
         const errors = allIssues.filter(i => i.severity === 'error').length;
         const warnings = allIssues.filter(i => i.severity === 'warning').length;
-        toast({ 
-          title: `${allIssues.length} ${t('qaCheck.issuesFound')}`,
+        toast(`${allIssues.length} ${t('qaCheck.issuesFound')}`, {
           description: `${errors} ${t('qaCheck.errors')}, ${warnings} ${t('qaCheck.warnings')}`
         });
       }
     } catch (e: unknown) {
       clientLogger.error('[QA] Check error:', e);
-      toast({ title: 'Errore', description: String(e), variant: 'destructive' });
+      toast.error(t('qaCheck.error'), { description: String(e) });
     } finally {
       setIsChecking(false);
     }
-  }, [source, target, config, toast, checkGlossaryTerms]);
+  }, [source, target, config, checkGlossaryTerms, t]);
 
   const autoFix = useCallback(async (issueTypes: string[]) => {
     try {
@@ -204,19 +202,19 @@ export function QAChecker() {
         issueTypes
       });
       setTarget(fixed);
-      toast({ title: `✨ ${t('qaCheck.fixApplied')}` });
+      toast.success(`✨ ${t('qaCheck.fixApplied')}`);
       // Re-run check
       setTimeout(runCheck, 100);
     } catch (e: unknown) {
-      toast({ title: 'Errore', description: String(e), variant: 'destructive' });
+      toast.error(t('qaCheck.error'), { description: String(e) });
     }
-  }, [target, toast, runCheck]);
+  }, [target, runCheck, t]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
       case 'warning': return <AlertTriangle className="h-4 w-4 text-amber-500" />;
-      case 'info': return <Info className="h-4 w-4 text-blue-500" />;
+      case 'info': return <Info className="h-4 w-4 text-noir-500" />;
       default: return <Info className="h-4 w-4" />;
     }
   };
@@ -251,7 +249,7 @@ export function QAChecker() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-noir-500 to-noir-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -302,7 +300,7 @@ export function QAChecker() {
             value={source}
             onChange={(e) => setSource(e.target.value)}
             placeholder={t('qaCheck.enterOriginal')}
-            className="h-32 bg-slate-800/50 border-slate-700 resize-none"
+            className="h-32 bg-noir-800/50 border-noir-700 resize-none"
           />
         </div>
         <div className="space-y-2">
@@ -311,7 +309,7 @@ export function QAChecker() {
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder={t('qaCheck.enterTranslation')}
-            className="h-32 bg-slate-800/50 border-slate-700 resize-none"
+            className="h-32 bg-noir-800/50 border-noir-700 resize-none"
           />
         </div>
       </div>
@@ -326,7 +324,7 @@ export function QAChecker() {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
-            <Card className="bg-slate-800/30 border-slate-700/50">
+            <Card className="bg-noir-800/30 border-noir-700/50">
               <CardContent className="pt-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2">
@@ -412,7 +410,7 @@ export function QAChecker() {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
-            <Card className="bg-teal-900/20 border-teal-700/50">
+            <Card className="bg-noir-900/20 border-noir-700/50">
               <CardContent className="pt-4 space-y-3">
                 {/* Add new term */}
                 <div className="flex items-center gap-2">
@@ -420,14 +418,14 @@ export function QAChecker() {
                     placeholder={t('qaCheck.sourceTerm')}
                     value={newTermSource}
                     onChange={(e) => setNewTermSource(e.target.value)}
-                    className="h-8 text-sm bg-slate-800/50 border-slate-700"
+                    className="h-8 text-sm bg-noir-800/50 border-noir-700"
                   />
                   <span className="text-muted-foreground">→</span>
                   <Input
                     placeholder={t('qaCheck.targetTerm')}
                     value={newTermTarget}
                     onChange={(e) => setNewTermTarget(e.target.value)}
-                    className="h-8 text-sm bg-slate-800/50 border-slate-700"
+                    className="h-8 text-sm bg-noir-800/50 border-noir-700"
                     onKeyDown={(e) => e.key === 'Enter' && addGlossaryTerm()}
                   />
                   <Button size="sm" onClick={addGlossaryTerm} className="h-8 px-2">
@@ -440,10 +438,10 @@ export function QAChecker() {
                   <ScrollArea className="h-32">
                     <div className="space-y-1">
                       {glossary.map((term, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 rounded bg-slate-800/30 group">
-                          <span className="text-sm text-teal-300 flex-1">{term.source}</span>
+                        <div key={index} className="flex items-center gap-2 p-2 rounded bg-noir-800/30 group">
+                          <span className="text-sm text-noir-300 flex-1">{term.source}</span>
                           <span className="text-muted-foreground">→</span>
-                          <span className="text-sm text-teal-200 flex-1">{term.target}</span>
+                          <span className="text-sm text-noir-200 flex-1">{term.target}</span>
                           <Button 
                             size="icon" 
                             variant="ghost" 
@@ -482,7 +480,7 @@ export function QAChecker() {
             onClick={runCheck}
             disabled={isChecking || !source.trim() || !target.trim()}
             variant="outline"
-            className="border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400 gap-2"
+            className="border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400 gap-2"
           >
             {isChecking ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -496,7 +494,7 @@ export function QAChecker() {
 
       {/* Results */}
       {issues.length > 0 ? (
-        <Card className="bg-slate-900/50 border-slate-700/50">
+        <Card className="bg-noir-900/50 border-noir-700/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
@@ -513,7 +511,7 @@ export function QAChecker() {
                       "p-3 rounded-lg border transition-colors",
                       issue.severity === 'error' && "bg-red-500/10 border-red-500/30",
                       issue.severity === 'warning' && "bg-amber-500/10 border-amber-500/30",
-                      issue.severity === 'info' && "bg-blue-500/10 border-blue-500/30"
+                      issue.severity === 'info' && "bg-noir-500/10 border-noir-500/30"
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -525,7 +523,7 @@ export function QAChecker() {
                           {getSeverityBadge(issue.severity)}
                         </div>
                         {issue.suggestion && (
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-noir-400 mt-1">
                             💡 {issue.suggestion}
                           </p>
                         )}

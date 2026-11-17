@@ -134,7 +134,7 @@ export function EmotionBadge({
         <div className="space-y-4">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-500" />
+            <Sparkles className="h-4 w-4 text-rouge-500" />
             <h4 className="font-semibold">{t('emotionBadgeComp.emotionAnalysis')}</h4>
           </div>
 

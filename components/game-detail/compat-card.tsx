@@ -67,15 +67,15 @@ export function CompatCard({ game, targetLang }: CompatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-indigo-500/25 bg-indigo-500/[0.06] p-3 space-y-2"
+      className="rounded-xl border border-rouge-500/25 bg-rouge-500/[0.06] p-3 space-y-2"
       data-testid="compat-card"
     >
       {/* ── Domanda boot (il dato più prezioso) ── */}
       {pending && (
         <div className="flex items-start gap-3">
-          <Gamepad2 className="h-4 w-4 shrink-0 mt-0.5 text-indigo-300" />
+          <Gamepad2 className="h-4 w-4 shrink-0 mt-0.5 text-rouge-300" />
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-semibold text-indigo-200">
+            <p className="text-[12px] font-semibold text-rouge-200">
               {t('compat.bootQuestion')}
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -110,9 +110,9 @@ export function CompatCard({ game, targetLang }: CompatCardProps) {
       {/* ── Riepilogo community ── */}
       {hasData && (
         <div className="flex items-start gap-3">
-          <Users className="h-4 w-4 shrink-0 mt-0.5 text-indigo-300" />
+          <Users className="h-4 w-4 shrink-0 mt-0.5 text-rouge-300" />
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-semibold text-indigo-200">
+            <p className="text-[12px] font-semibold text-rouge-200">
               {t('compat.cardTitle')}
             </p>
             <p className="text-[12px] text-foreground/90 mt-0.5">

@@ -14,19 +14,24 @@ Object.defineProperty(window, '__TAURI__', {
   }
 });
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn()
-}));
+// Mock IntersectionObserver / ResizeObserver. `function` e non arrow: da
+// Vitest 4 un mock invocato con `new` deve avere un'implementazione
+// costruibile, altrimenti "is not a constructor".
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn()
+  };
+});
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn()
-}));
+global.ResizeObserver = vi.fn().mockImplementation(function () {
+  return {
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn()
+  };
+});
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {

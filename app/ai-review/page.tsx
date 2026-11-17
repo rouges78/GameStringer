@@ -108,7 +108,7 @@ export default function AIReviewPage() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function AIReviewPage() {
                     <Button
                       onClick={handleSingleReview}
                       disabled={!original.trim() || !translated.trim() || isReviewing}
-                      className="gap-2 bg-gradient-to-r from-blue-500 to-cyan-500"
+                      className="gap-2 bg-gradient-to-r from-noir-500 to-noir-500"
                     >
                       {isReviewing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -215,7 +215,7 @@ export default function AIReviewPage() {
                   <Button
                     onClick={handleBatchReview}
                     disabled={!batchInput.trim() || isReviewing}
-                    className="gap-2 bg-gradient-to-r from-blue-500 to-cyan-500"
+                    className="gap-2 bg-gradient-to-r from-noir-500 to-noir-500"
                   >
                     {isReviewing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -386,9 +386,9 @@ export default function AIReviewPage() {
 
         {/* Categories Sidebar - Compatto */}
         <div className="space-y-2">
-          <Card className="border-slate-700/50">
-            <div className="px-3 py-2 border-b border-slate-700/30">
-              <span className="text-xs font-medium text-slate-400">{t('aiReview.activeChecks')}</span>
+          <Card className="border-noir-700/50">
+            <div className="px-3 py-2 border-b border-noir-700/30">
+              <span className="text-xs font-medium text-noir-400">{t('aiReview.activeChecks')}</span>
             </div>
             <div className="p-2 grid grid-cols-2 gap-1">
               {Object.entries(REVIEW_CATEGORIES).map(([key, cat]) => (
@@ -407,9 +407,9 @@ export default function AIReviewPage() {
             </div>
           </Card>
 
-          <Card className="border-slate-700/50">
-            <div className="px-3 py-2 border-b border-slate-700/30">
-              <span className="text-xs font-medium text-slate-400">{t('aiReview.severityLevels')}</span>
+          <Card className="border-noir-700/50">
+            <div className="px-3 py-2 border-b border-noir-700/30">
+              <span className="text-xs font-medium text-noir-400">{t('aiReview.severityLevels')}</span>
             </div>
             <div className="p-2 flex flex-wrap gap-1">
               {Object.entries(SEVERITY_CONFIG).map(([key, sev]) => (

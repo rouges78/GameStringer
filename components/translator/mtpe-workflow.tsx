@@ -117,13 +117,20 @@ export function MTPEWorkflow({
   };
 
   const currentItem = items[currentIndex];
+  const hasMachineTranslation = !!currentItem?.machineTranslation.trim();
   const progress = items.length > 0 
     ? Math.round(((stats.approved + stats.edited + stats.rejected + stats.skipped) / items.length) * 100)
     : 0;
 
   const handleApprove = async () => {
     if (!currentItem) return;
-    
+    // Traduzione vuota (riga fallita): approvarla salverebbe in TM una voce
+    // "verificata" vuota. Si scrive (modifica) o si rifiuta.
+    if (!currentItem.machineTranslation.trim()) {
+      setIsEditing(true);
+      return;
+    }
+
     const updated = [...items];
     updated[currentIndex] = {
       ...currentItem,
@@ -257,8 +264,8 @@ export function MTPEWorkflow({
 
   if (items.length === 0) {
     return (
-      <Card className="bg-slate-900/50 border-slate-700">
-        <CardContent className="p-6 text-center text-gray-400">
+      <Card className="bg-noir-900/50 border-noir-700">
+        <CardContent className="p-6 text-center text-noir-400">
           {t('mtpeWorkflowComp.noTranslationsToReview')}
         </CardContent>
       </Card>
@@ -280,14 +287,14 @@ export function MTPEWorkflow({
   return (
     <div className="space-y-4">
       {/* Header Stats */}
-      <Card className="bg-slate-900/50 border-slate-700">
+      <Card className="bg-noir-900/50 border-noir-700">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-purple-400" />
+              <BarChart3 className="h-4 w-4 text-rouge-400" />
               <span className="text-sm font-medium">{t('mtpeWorkflowComp.progressoMtpe')}</span>
             </div>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-noir-400">
               {stats.approved + stats.edited + stats.rejected + stats.skipped} / {stats.total}
             </span>
           </div>
@@ -297,26 +304,26 @@ export function MTPEWorkflow({
           <div className="flex gap-4 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-gray-400">{t('mtpeWorkflowComp.approved')}: {stats.approved}</span>
+              <span className="text-noir-400">{t('mtpeWorkflowComp.approved')}: {stats.approved}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-gray-400">{t('mtpeWorkflowComp.edited')}: {stats.edited}</span>
+              <div className="w-2 h-2 rounded-full bg-rouge-500" />
+              <span className="text-noir-400">{t('mtpeWorkflowComp.edited')}: {stats.edited}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-gray-400">{t('mtpeWorkflowComp.rejected')}: {stats.rejected}</span>
+              <span className="text-noir-400">{t('mtpeWorkflowComp.rejected')}: {stats.rejected}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-gray-500" />
-              <span className="text-gray-400">{t('mtpeWorkflowComp.skipped')}: {stats.skipped}</span>
+              <div className="w-2 h-2 rounded-full bg-noir-500" />
+              <span className="text-noir-400">{t('mtpeWorkflowComp.skipped')}: {stats.skipped}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Current Item */}
-      <Card className="bg-slate-900/50 border-slate-700">
+      <Card className="bg-noir-900/50 border-noir-700">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -348,9 +355,9 @@ export function MTPEWorkflow({
                 <Badge 
                   className={
                     currentItem?.status === 'approved' ? 'bg-green-500/20 text-green-400' :
-                    currentItem?.status === 'edited' ? 'bg-blue-500/20 text-blue-400' :
+                    currentItem?.status === 'edited' ? 'bg-noir-500/20 text-noir-400' :
                     currentItem?.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
+                    'bg-noir-500/20 text-noir-400'
                   }
                 >
                   {currentItem?.status === 'approved' && <CheckCircle2 className="h-3 w-3 mr-1" />}
@@ -377,17 +384,17 @@ export function MTPEWorkflow({
         <CardContent className="space-y-4">
           {/* Source Text */}
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">
+            <label className="text-xs text-noir-500 uppercase tracking-wide">
               {t('mtpeWorkflowComp.sourceText')} ({sourceLang.toUpperCase()})
             </label>
-            <div className="mt-1 p-3 bg-slate-800/50 rounded-lg text-sm">
+            <div className="mt-1 p-3 bg-noir-800/50 rounded-lg text-sm">
               {currentItem?.source}
             </div>
           </div>
 
           {/* Machine Translation */}
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide flex items-center gap-2">
+            <label className="text-xs text-noir-500 uppercase tracking-wide flex items-center gap-2">
               <Sparkles className="h-3 w-3" />
               {t('mtpeWorkflowComp.aiTranslation')} ({targetLang.toUpperCase()})
             </label>
@@ -395,38 +402,43 @@ export function MTPEWorkflow({
               <Textarea
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
-                className="mt-1 min-h-[100px] bg-slate-800/50 border-slate-600"
+                className="mt-1 min-h-[100px] bg-noir-800/50 border-noir-600"
                 placeholder={t('mtpeWorkflowComp.editTranslationPlaceholder')}
               />
             ) : (
               <div 
-                className="mt-1 p-3 bg-slate-800/50 rounded-lg text-sm cursor-pointer hover:bg-slate-700/50 transition-colors"
+                className="mt-1 p-3 bg-noir-800/50 rounded-lg text-sm cursor-pointer hover:bg-noir-700/50 transition-colors"
                 onClick={() => setIsEditing(true)}
               >
                 {currentItem?.editedTranslation || currentItem?.machineTranslation}
-                <span className="text-xs text-gray-500 ml-2">{t('mtpeWorkflowComp.clickToEdit')}</span>
+                <span className="text-xs text-noir-500 ml-2">{t('mtpeWorkflowComp.clickToEdit')}</span>
               </div>
+            )}
+            {currentItem?.status === 'pending' && !hasMachineTranslation && (
+              <p className="mt-1 text-xs text-orange-400">
+                {t('mtpeWorkflowComp.emptyTranslationCannotApprove')}
+              </p>
             )}
           </div>
 
           {/* Quality Details */}
           {currentItem?.qualityScore && (
             <div className="grid grid-cols-4 gap-2">
-              <div className="p-2 bg-slate-800/30 rounded text-center">
+              <div className="p-2 bg-noir-800/30 rounded text-center">
                 <div className="text-lg font-bold text-green-400">{currentItem.qualityScore.fluency}</div>
-                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.fluidità')}</div>
+                <div className="text-2xs text-noir-500">{t('translationInsightsComp.fluency')}</div>
               </div>
-              <div className="p-2 bg-slate-800/30 rounded text-center">
-                <div className="text-lg font-bold text-blue-400">{currentItem.qualityScore.accuracy}</div>
-                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.accuratezza')}</div>
+              <div className="p-2 bg-noir-800/30 rounded text-center">
+                <div className="text-lg font-bold text-noir-400">{currentItem.qualityScore.accuracy}</div>
+                <div className="text-2xs text-noir-500">{t('mtpeWorkflowComp.accuratezza')}</div>
               </div>
-              <div className="p-2 bg-slate-800/30 rounded text-center">
-                <div className="text-lg font-bold text-purple-400">{currentItem.qualityScore.consistency}</div>
-                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.coerenza')}</div>
+              <div className="p-2 bg-noir-800/30 rounded text-center">
+                <div className="text-lg font-bold text-rouge-400">{currentItem.qualityScore.consistency}</div>
+                <div className="text-2xs text-noir-500">{t('mtpeWorkflowComp.coerenza')}</div>
               </div>
-              <div className="p-2 bg-slate-800/30 rounded text-center">
+              <div className="p-2 bg-noir-800/30 rounded text-center">
                 <div className="text-lg font-bold text-amber-400">{currentItem.qualityScore.style}</div>
-                <div className="text-2xs text-gray-500">{t('mtpeWorkflowComp.stile')}</div>
+                <div className="text-2xs text-noir-500">{t('mtpeWorkflowComp.stile')}</div>
               </div>
             </div>
           )}
@@ -445,24 +457,24 @@ export function MTPEWorkflow({
 
           {/* Notes */}
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">
+            <label className="text-xs text-noir-500 uppercase tracking-wide">
               {t('mtpeWorkflowComp.reviewerNotes')}
             </label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="mt-1 h-16 bg-slate-800/50 border-slate-600 text-xs"
+              className="mt-1 h-16 bg-noir-800/50 border-noir-600 text-xs"
               placeholder={t('mtpeWorkflowComp.reviewNotesPlaceholder')}
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 pt-2 border-t border-slate-700">
+          <div className="flex gap-2 pt-2 border-t border-noir-700">
             <Button
               variant="outline"
               className="flex-1 bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20"
               onClick={handleApprove}
-              disabled={currentItem?.status !== 'pending'}
+              disabled={currentItem?.status !== 'pending' || !hasMachineTranslation}
             >
               <Check className="h-4 w-4 mr-1" />
               {t('mtpeWorkflowComp.approve')}
@@ -471,7 +483,7 @@ export function MTPEWorkflow({
             {isEditing ? (
               <Button
                 variant="outline"
-                className="flex-1 bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                className="flex-1 bg-noir-500/10 border-noir-500/30 text-noir-400 hover:bg-noir-500/20"
                 onClick={handleEdit}
               >
                 <Save className="h-4 w-4 mr-1" />
@@ -480,7 +492,7 @@ export function MTPEWorkflow({
             ) : (
               <Button
                 variant="outline"
-                className="flex-1 bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                className="flex-1 bg-noir-500/10 border-noir-500/30 text-noir-400 hover:bg-noir-500/20"
                 onClick={() => setIsEditing(true)}
                 disabled={currentItem?.status !== 'pending'}
               >
@@ -500,7 +512,7 @@ export function MTPEWorkflow({
             
             <Button
               variant="ghost"
-              className="text-gray-400 hover:text-gray-300"
+              className="text-noir-400 hover:text-noir-300"
               onClick={handleSkip}
               disabled={currentItem?.status !== 'pending'}
             >
@@ -516,7 +528,7 @@ export function MTPEWorkflow({
           <CardContent className="p-4 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400 mx-auto mb-2" />
             <div className="text-lg font-medium text-green-400">{t('mtpeWorkflowComp.revisioneCompletata')}</div>
-            <div className="text-sm text-gray-400 mt-1">
+            <div className="text-sm text-noir-400 mt-1">
               {stats.approved} {t('mtpeWorkflowComp.approved')}, {stats.edited} {t('mtpeWorkflowComp.edited')}, {stats.rejected} {t('mtpeWorkflowComp.rejected')}
             </div>
             <Button 

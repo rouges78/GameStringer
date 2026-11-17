@@ -63,10 +63,10 @@ export function AutoBackupSettings() {
 
   const getBackupTypeIcon = (type: string) => {
     switch (type) {
-      case 'translation_memory': return <Database className="h-4 w-4 text-blue-400" />;
+      case 'translation_memory': return <Database className="h-4 w-4 text-noir-400" />;
       case 'dictionaries': return <FileText className="h-4 w-4 text-green-400" />;
-      case 'settings': return <Settings className="h-4 w-4 text-cyan-400" />;
-      default: return <HardDrive className="h-4 w-4 text-slate-400" />;
+      case 'settings': return <Settings className="h-4 w-4 text-noir-400" />;
+      default: return <HardDrive className="h-4 w-4 text-noir-400" />;
     }
   };
 
@@ -92,7 +92,7 @@ export function AutoBackupSettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <RefreshCw className="h-8 w-8 text-slate-500 animate-spin" />
+        <RefreshCw className="h-8 w-8 text-noir-500 animate-spin" />
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function AutoBackupSettings() {
   return (
     <div className="space-y-3">
       {/* Header Card */}
-      <Card className="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border-emerald-700/50 p-3">
+      <Card className="bg-gradient-to-br from-emerald-900/30 to-noir-900/30 border-emerald-700/50 p-3">
           <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Save className="h-5 w-5 text-emerald-400" />
@@ -125,8 +125,8 @@ export function AutoBackupSettings() {
       </Card>
 
       {/* Settings Card */}
-      <Card className="bg-slate-900/50 border-slate-700/50 p-3">
-        <p className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
+      <Card className="bg-noir-900/50 border-noir-700/50 p-3">
+        <p className="text-xs font-semibold text-noir-400 mb-3 flex items-center gap-1.5">
           <Settings className="h-3.5 w-3.5" />
           {t('settings.configuration')}
         </p>
@@ -135,7 +135,7 @@ export function AutoBackupSettings() {
           <div className="flex items-center justify-between">
             <div>
               <Label className="text-sm font-medium">{t('settings.autoBackupActive')}</Label>
-              <p className="text-xs text-slate-500">{t('settings.autoBackupActiveDesc')}</p>
+              <p className="text-xs text-noir-500">{t('settings.autoBackupActiveDesc')}</p>
             </div>
             <Switch
               checked={config.enabled}
@@ -158,7 +158,7 @@ export function AutoBackupSettings() {
               disabled={!config.enabled}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-xs text-noir-500">
               <span>5 min</span>
               <span>30 min</span>
               <span>60 min</span>
@@ -173,17 +173,17 @@ export function AutoBackupSettings() {
                 className={cn(
                   "flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer",
                   config.backupTranslationMemory 
-                    ? "bg-blue-500/10 border-blue-500/50" 
-                    : "bg-slate-800/50 border-slate-700/50"
+                    ? "bg-noir-500/10 border-noir-500/50" 
+                    : "bg-noir-800/50 border-noir-700/50"
                 )}
                 onClick={() => setConfig({ ...config, backupTranslationMemory: !config.backupTranslationMemory })}
               >
-                <Database className={cn("h-5 w-5", config.backupTranslationMemory ? "text-blue-400" : "text-slate-500")} />
+                <Database className={cn("h-5 w-5", config.backupTranslationMemory ? "text-noir-400" : "text-noir-500")} />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{t('settings.translationMemory')}</p>
-                  <p className="text-xs text-slate-500">{t('settings.savedTranslations')}</p>
+                  <p className="text-xs text-noir-500">{t('settings.savedTranslations')}</p>
                 </div>
-                {config.backupTranslationMemory && <CheckCircle2 className="h-4 w-4 text-blue-400" />}
+                {config.backupTranslationMemory && <CheckCircle2 className="h-4 w-4 text-noir-400" />}
               </div>
 
               <div 
@@ -191,14 +191,14 @@ export function AutoBackupSettings() {
                   "flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer",
                   config.backupDictionaries 
                     ? "bg-green-500/10 border-green-500/50" 
-                    : "bg-slate-800/50 border-slate-700/50"
+                    : "bg-noir-800/50 border-noir-700/50"
                 )}
                 onClick={() => setConfig({ ...config, backupDictionaries: !config.backupDictionaries })}
               >
-                <FileText className={cn("h-5 w-5", config.backupDictionaries ? "text-green-400" : "text-slate-500")} />
+                <FileText className={cn("h-5 w-5", config.backupDictionaries ? "text-green-400" : "text-noir-500")} />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{t('settings.dictionaries')}</p>
-                  <p className="text-xs text-slate-500">{t('settings.gameGlossaries')}</p>
+                  <p className="text-xs text-noir-500">{t('settings.gameGlossaries')}</p>
                 </div>
                 {config.backupDictionaries && <CheckCircle2 className="h-4 w-4 text-green-400" />}
               </div>
@@ -207,17 +207,17 @@ export function AutoBackupSettings() {
                 className={cn(
                   "flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer",
                   config.backupSettings 
-                    ? "bg-cyan-500/10 border-cyan-500/50" 
-                    : "bg-slate-800/50 border-slate-700/50"
+                    ? "bg-noir-500/10 border-noir-500/50" 
+                    : "bg-noir-800/50 border-noir-700/50"
                 )}
                 onClick={() => setConfig({ ...config, backupSettings: !config.backupSettings })}
               >
-                <Settings className={cn("h-5 w-5", config.backupSettings ? "text-cyan-400" : "text-slate-500")} />
+                <Settings className={cn("h-5 w-5", config.backupSettings ? "text-noir-400" : "text-noir-500")} />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{t('settings.settingsLabel')}</p>
-                  <p className="text-xs text-slate-500">{t('settings.userProfiles')}</p>
+                  <p className="text-xs text-noir-500">{t('settings.userProfiles')}</p>
                 </div>
-                {config.backupSettings && <CheckCircle2 className="h-4 w-4 text-cyan-400" />}
+                {config.backupSettings && <CheckCircle2 className="h-4 w-4 text-noir-400" />}
               </div>
             </div>
           </div>
@@ -236,7 +236,7 @@ export function AutoBackupSettings() {
               step={5}
               className="w-full"
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-noir-500">
               {t('settings.oldBackupsDeleted')}
             </p>
           </div>
@@ -244,9 +244,9 @@ export function AutoBackupSettings() {
       </Card>
 
       {/* Backup History */}
-      <Card className="bg-slate-900/50 border-slate-700/50 p-3">
+      <Card className="bg-noir-900/50 border-noir-700/50 p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-noir-400 flex items-center gap-1.5">
             <HardDrive className="h-3.5 w-3.5" />
             {t('settings.backupHistory')} ({backups.length})
           </p>
@@ -255,7 +255,7 @@ export function AutoBackupSettings() {
           </Button>
         </div>
           {backups.length === 0 ? (
-            <div className="text-center py-4 text-slate-500">
+            <div className="text-center py-4 text-noir-500">
               <HardDrive className="h-8 w-8 mx-auto mb-2 opacity-30" />
               <p className="text-sm">{t('settings.noBackupsFound')}</p>
             </div>
@@ -267,13 +267,13 @@ export function AutoBackupSettings() {
                     key={backup.path}
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-                      "bg-slate-800/30 border-slate-700/30 hover:bg-slate-800/50"
+                      "bg-noir-800/30 border-noir-700/30 hover:bg-noir-800/50"
                     )}
                   >
                     {getBackupTypeIcon(backup.backupType)}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{getBackupTypeLabel(backup.backupType)}</p>
-                      <p className="text-xs text-slate-500">{formatDate(backup.createdAt)}</p>
+                      <p className="text-xs text-noir-500">{formatDate(backup.createdAt)}</p>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {formatSize(backup.sizeBytes)}
@@ -295,21 +295,21 @@ export function AutoBackupSettings() {
 
       {/* Restore Dialog */}
       <AlertDialog open={!!restoreDialog} onOpenChange={() => setRestoreDialog(null)}>
-        <AlertDialogContent className="bg-slate-900 border-slate-700">
+        <AlertDialogContent className="bg-noir-900 border-noir-700">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-amber-400">
               <RotateCcw className="h-5 w-5" />
               {t('settings.restoreBackup')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+            <AlertDialogDescription className="text-noir-400">
               {t('settings.restoreConfirm')}
               {restoreDialog && (
-                <div className="mt-3 p-3 rounded-lg bg-slate-800/50 text-sm">
+                <div className="mt-3 p-3 rounded-lg bg-noir-800/50 text-sm">
                   <p className="flex items-center gap-2">
                     {getBackupTypeIcon(restoreDialog.backupType)}
                     <span className="font-medium">{getBackupTypeLabel(restoreDialog.backupType)}</span>
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-noir-500 mt-1">
                     {formatDate(restoreDialog.createdAt)} • {formatSize(restoreDialog.sizeBytes)}
                   </p>
                 </div>
@@ -317,7 +317,7 @@ export function AutoBackupSettings() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-800 border-slate-700 hover:bg-slate-700">
+            <AlertDialogCancel className="bg-noir-800 border-noir-700 hover:bg-noir-700">
               {t('settings.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 

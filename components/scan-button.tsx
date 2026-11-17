@@ -74,7 +74,7 @@ export function ScanButton() {
       disabled={isScanning} 
       variant="outline"
       size="sm"
-      className="text-slate-400 border-slate-600 hover:bg-slate-700/50 hover:text-slate-200"
+      className="text-noir-400 border-noir-600 hover:bg-noir-700/50 hover:text-noir-200"
     >
       <Search className={`h-3.5 w-3.5 mr-1.5 ${isScanning ? 'animate-spin' : ''}`} />
       {isScanning ? 'Scansione...' : 'Scansiona'}

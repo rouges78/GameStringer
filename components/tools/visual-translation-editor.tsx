@@ -176,14 +176,14 @@ export function VisualTranslationEditor() {
       });
 
       if (selectedOverlay === overlay.id) {
-        ctx.strokeStyle = '#3b82f6';
+        ctx.strokeStyle = '#ff3b4a';
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
         ctx.strokeRect(x - 2, y - 2, width + 4, height + 4);
         ctx.setLineDash([]);
 
         const handleSize = 8;
-        ctx.fillStyle = '#3b82f6';
+        ctx.fillStyle = '#ff3b4a';
         ctx.fillRect(x - handleSize/2, y - handleSize/2, handleSize, handleSize);
         ctx.fillRect(x + width - handleSize/2, y - handleSize/2, handleSize, handleSize);
         ctx.fillRect(x - handleSize/2, y + height - handleSize/2, handleSize, handleSize);
@@ -418,7 +418,7 @@ export function VisualTranslationEditor() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ImageIcon className="h-7 w-7 text-pink-500" />
+            <ImageIcon className="h-7 w-7 text-rouge-500" />
             {t('visualTranslationEditor.title')}</h1>
           <p className="text-muted-foreground">
             {t('visualTranslationEditor.subtitle')}</p>

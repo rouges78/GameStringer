@@ -139,9 +139,9 @@ export function ProfileNotifications() {
       case 'warning':
         return 'border-orange-500/50 bg-orange-500/10 text-orange-700 dark:text-orange-300';
       case 'info':
-        return 'border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-300';
+        return 'border-noir-500/50 bg-noir-500/10 text-noir-700 dark:text-noir-300';
       default:
-        return 'border-gray-500/50 bg-gray-500/10 text-gray-700 dark:text-gray-300';
+        return 'border-noir-500/50 bg-noir-500/10 text-noir-700 dark:text-noir-300';
     }
   };
 

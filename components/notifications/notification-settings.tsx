@@ -45,7 +45,7 @@ export function NotificationSettings({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/30 border border-slate-800">
+      <div className="flex items-center justify-between p-3 rounded-lg bg-noir-950/30 border border-noir-800">
         <div className="space-y-0.5">
           <Label htmlFor="globalEnabled" className="text-sm font-medium">{t('notifications.enableNotifications')}</Label>
           <p className="text-2xs text-muted-foreground">{t('notifications.enableNotificationsDesc')}</p>
@@ -59,9 +59,9 @@ export function NotificationSettings({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/30 border border-slate-800">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-noir-950/30 border border-noir-800">
           <div className="flex items-center space-x-2">
-            <Volume2 className="h-4 w-4 text-slate-400" />
+            <Volume2 className="h-4 w-4 text-noir-400" />
             <Label htmlFor="soundEnabled" className="text-xs">{t('notifications.sounds')}</Label>
           </div>
           <Switch
@@ -73,9 +73,9 @@ export function NotificationSettings({
           />
         </div>
         
-        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/30 border border-slate-800">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-noir-950/30 border border-noir-800">
           <div className="flex items-center space-x-2">
-            <Monitor className="h-4 w-4 text-slate-400" />
+            <Monitor className="h-4 w-4 text-noir-400" />
             <Label htmlFor="desktopEnabled" className="text-xs">{t('notifications.desktop')}</Label>
           </div>
           <Switch

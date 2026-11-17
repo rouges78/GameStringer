@@ -52,10 +52,16 @@ const getStoredAccounts = (): ConnectedAccount[] => {
   }
 };
 
+// Segreti che non devono mai finire in localStorage né nei log: restano solo
+// nel vault cifrato del profilo (lato Rust).
+const SECRET_FIELDS = ['password', 'twoFactorCode', 'accessToken', 'apiKey'];
+const withoutSecrets = <T extends Record<string, unknown>>(value: T): T =>
+  Object.fromEntries(Object.entries(value).filter(([key]) => !SECRET_FIELDS.includes(key))) as T;
+
 const setStoredAccounts = (accounts: ConnectedAccount[]) => {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(CONNECTED_ACCOUNTS_KEY, JSON.stringify(accounts));
+    localStorage.setItem(CONNECTED_ACCOUNTS_KEY, JSON.stringify(accounts.map(withoutSecrets)));
   } catch (error: unknown) {
     clientLogger.error('Errore nel salvare gli account:', error);
   }
@@ -123,7 +129,7 @@ export const useSession = (): UseSessionReturn => {
 
 // Funzione per il login
 export const signIn = async (provider: string, options?: Record<string, unknown>): Promise<SignInResult> => {
-  clientLogger.debug(`Auth locale: tentativo di login con ${provider}`, options);
+  clientLogger.debug(`Auth locale: tentativo di login con ${provider}`);
   
   try {
     const accounts = getStoredAccounts();
@@ -133,7 +139,7 @@ export const signIn = async (provider: string, options?: Record<string, unknown>
     
     // Aggiungi nuovo account
     const newAccount: ConnectedAccount = {
-      ...(options ? Object.fromEntries(Object.entries(options)) : {}),
+      ...(options ? withoutSecrets(options) : {}),
       provider,
       userId: (options?.userId || options?.steamid || `${provider}-user`) as string,
       ...(options?.steamid ? { steamId: options.steamid as string } : {}),
@@ -142,7 +148,7 @@ export const signIn = async (provider: string, options?: Record<string, unknown>
     const updatedAccounts = [...filteredAccounts, newAccount];
     setStoredAccounts(updatedAccounts);
     
-    clientLogger.debug(`Account ${provider} collegato con successo:`, newAccount);
+    clientLogger.debug(`Account ${provider} collegato con successo`);
     return { error: null, ok: true };
   } catch (error: unknown) {
     clientLogger.error(`Errore nel collegare ${provider}:`, error);

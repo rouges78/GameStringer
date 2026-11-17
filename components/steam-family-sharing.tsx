@@ -239,31 +239,31 @@ export function SteamFamilySharing() {
     <Card className="w-full bg-transparent border-0 shadow-none">
       <CardHeader className="py-2 px-0">
         <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-purple-500" />
+          <Users className="h-5 w-5 text-rouge-500" />
           <CardTitle className="text-white text-base">{t('steamFamilySharingComp.gestioneFamilySharing')}</CardTitle>
         </div>
-        <CardDescription className="text-slate-400 text-xs">
+        <CardDescription className="text-noir-400 text-xs">
           {t('steamFamilySharing.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent className="px-0 py-2">
         <Tabs defaultValue="add" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-900/50 border border-slate-700/50">
-            <TabsTrigger value="add" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-400">
+          <TabsList className="grid w-full grid-cols-3 bg-noir-900/50 border border-noir-700/50">
+            <TabsTrigger value="add" className="data-[state=active]:bg-rouge-600 data-[state=active]:text-white text-noir-400">
               <Users className="h-4 w-4 mr-2" />
               {t('steamFamilySharing.addFriends')}</TabsTrigger>
-            <TabsTrigger value="auto" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-400">
+            <TabsTrigger value="auto" className="data-[state=active]:bg-rouge-600 data-[state=active]:text-white text-noir-400">
               <Search className="h-4 w-4 mr-2" />
               {t('steamFamilySharing.autoDetect')}</TabsTrigger>
-            <TabsTrigger value="manual" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-400">
+            <TabsTrigger value="manual" className="data-[state=active]:bg-rouge-600 data-[state=active]:text-white text-noir-400">
               <Upload className="h-4 w-4 mr-2" />
               {t('steamFamilySharing.vdfFile')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="add" className="space-y-2 mt-2">
-            <div className="p-2 rounded border border-slate-700/50 bg-slate-800/30">
+            <div className="p-2 rounded border border-noir-700/50 bg-noir-800/30">
               <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                <p className="text-xs text-slate-400">
+                <Info className="h-4 w-4 text-rouge-400 flex-shrink-0" />
+                <p className="text-xs text-noir-400">
                   {t('steamFamilySharing.enterSteamIdDesc')}</p>
               </div>
             </div>
@@ -272,7 +272,7 @@ export function SteamFamilySharing() {
                 placeholder={t('steamFamilySharing.steamIdPh')}
                 value={manualSteamId}
                 onChange={(e) => setManualSteamId(e.target.value)}
-                className="flex-1 bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500"
+                className="flex-1 bg-noir-900/50 border-noir-700/50 text-white placeholder:text-noir-500"
               />
               <Button onClick={handleAddManualAccount}>
                 {t('steamFamilySharing.add')}</Button>
@@ -282,7 +282,7 @@ export function SteamFamilySharing() {
               <div className="space-y-2">
                 <Label>{t('steamFamilySharingComp.steamIdAggiunti')}</Label>
                 {manualAccounts.map((steamId) => (
-                  <div key={steamId} className="flex items-center justify-between p-2 rounded border border-slate-700/50 bg-slate-900/50">
+                  <div key={steamId} className="flex items-center justify-between p-2 rounded border border-noir-700/50 bg-noir-900/50">
                     <span className="font-mono text-sm">{steamId}</span>
                     <Button 
                       variant="ghost" 
@@ -299,10 +299,10 @@ export function SteamFamilySharing() {
           </TabsContent>
 
           <TabsContent value="auto" className="space-y-2 mt-2">
-            <div className="p-2 rounded border border-slate-700/50 bg-slate-800/30">
+            <div className="p-2 rounded border border-noir-700/50 bg-noir-800/30">
               <div className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                <p className="text-xs text-slate-400">
+                <Info className="h-4 w-4 text-rouge-400 flex-shrink-0" />
+                <p className="text-xs text-noir-400">
                   {t('steamFamilySharing.autoDetectDesc')}</p>
               </div>
             </div>
@@ -336,13 +336,13 @@ export function SteamFamilySharing() {
           </TabsContent>
 
           <TabsContent value="manual" className="space-y-2 mt-2">
-            <div className="p-2 rounded border border-slate-700/50 bg-slate-800/30">
+            <div className="p-2 rounded border border-noir-700/50 bg-noir-800/30">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                <p className="text-xs text-slate-400">
-                  {t('steamFamilySharing.load')} <code className="font-mono bg-slate-900 px-1 rounded text-purple-400">sharedconfig.vdf</code>
+                <FileText className="h-4 w-4 text-rouge-400 flex-shrink-0" />
+                <p className="text-xs text-noir-400">
+                  {t('steamFamilySharing.load')} <code className="font-mono bg-noir-900 px-1 rounded text-rouge-400">sharedconfig.vdf</code>
                 </p>
-                <Button variant="ghost" size="sm" onClick={copyPath} className="text-slate-400 hover:text-white h-6 ml-auto">
+                <Button variant="ghost" size="sm" onClick={copyPath} className="text-noir-400 hover:text-white h-6 ml-auto">
                   <Copy className="h-3 w-3 mr-1" /> {t('steamFamilySharing.copyPath')}</Button>
               </div>
             </div>
@@ -354,7 +354,7 @@ export function SteamFamilySharing() {
                   type="file"
                   accept=".vdf"
                   onChange={handleFileChange}
-                  className="cursor-pointer bg-slate-900/50 border-slate-700/50 text-white h-9"
+                  className="cursor-pointer bg-noir-900/50 border-noir-700/50 text-white h-9"
                 />
               </div>
               <Button 
@@ -394,11 +394,11 @@ export function SteamFamilySharing() {
               {sharedAccounts.map((account, index) => (
                 <div
                   key={account.steamId}
-                  className="flex items-center justify-between p-2 rounded border border-slate-700/50 bg-slate-900/50"
+                  className="flex items-center justify-between p-2 rounded border border-noir-700/50 bg-noir-900/50"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <Users className="h-4 w-4 text-purple-400" />
+                    <div className="h-7 w-7 rounded-full bg-rouge-500/20 flex items-center justify-center">
+                      <Users className="h-4 w-4 text-rouge-400" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{account.username || `Utente ${index + 1}`}</p>
@@ -425,9 +425,9 @@ export function SteamFamilySharing() {
 
             {familySharingConfig.total_shared_games > 0 ? (
               <div className="space-y-2">
-                <div className="max-h-32 overflow-y-auto space-y-1 border border-slate-700/50 rounded p-2 bg-slate-900/30">
+                <div className="max-h-32 overflow-y-auto space-y-1 border border-noir-700/50 rounded p-2 bg-noir-900/30">
                   {familySharingConfig.shared_games.slice(0, 5).map((game) => (
-                    <div key={game.appid} className="flex items-center justify-between py-1 border-b border-slate-700/30 last:border-b-0">
+                    <div key={game.appid} className="flex items-center justify-between py-1 border-b border-noir-700/30 last:border-b-0">
                       <span className="text-xs">{game.name}</span>
                       <span className="text-xs text-muted-foreground">{game.owner_account_name}</span>
                     </div>
@@ -463,7 +463,7 @@ export function SteamFamilySharing() {
                 </div>
               </div>
             ) : (
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-noir-400">
                 {t('steamFamilySharing.noSharedGames')}</div>
             )}
 

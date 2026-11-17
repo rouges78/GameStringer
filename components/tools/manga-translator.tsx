@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { Progress } from '@/components/ui/progress';
 import { 
   Upload,
   BookOpen,
@@ -22,16 +21,15 @@ import {
   ZoomIn,
   ZoomOut,
   CheckCircle2,
-  Loader2,
   ImageIcon,
   MessageSquare,
   Eraser,
   PaintBucket,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import { clientLogger } from '@/lib/client-logger';
 import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface DetectedBalloon {
@@ -79,9 +77,6 @@ export function MangaTranslator() {
   const [fontSize, setFontSize] = useState([16]);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState('');
-  const [progress, setProgress] = useState(0);
   const [selectedBalloon, setSelectedBalloon] = useState<string | null>(null);
 
   const currentPage = pages[currentPageIndex];
@@ -132,138 +127,15 @@ export function MangaTranslator() {
     setPages(prev => [...prev, ...newPages]);
   }, []);
 
-  const detectBalloons = async () => {
-    if (!currentPage) return;
-    
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.detecting'));
-    setProgress(0);
-
-    // Simula rilevamento balloon con OCR
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(20);
-    setProcessingStep(t('mangaTranslator.analyzingText'));
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setProgress(40);
-
-    // Genera balloon mock per demo
-    const mockBalloons: DetectedBalloon[] = [
-      {
-        id: 'balloon-1',
-        x: 50,
-        y: 30,
-        width: 150,
-        height: 80,
-        text: 'これは何ですか？',
-        translatedText: '',
-        confidence: 0.95,
-        isVertical: true,
-        fontStyle: 'manga',
-      },
-      {
-        id: 'balloon-2',
-        x: 250,
-        y: 150,
-        width: 120,
-        height: 60,
-        text: 'わからない...',
-        translatedText: '',
-        confidence: 0.88,
-        isVertical: false,
-        fontStyle: 'manga',
-      },
-      {
-        id: 'balloon-3',
-        x: 100,
-        y: 300,
-        width: 180,
-        height: 100,
-        text: '行こう！みんな待ってるよ！',
-        translatedText: '',
-        confidence: 0.92,
-        isVertical: true,
-        fontStyle: 'bold',
-      },
-    ];
-
-    setProgress(60);
-    setProcessingStep(t('mangaTranslator.translating'));
-
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Simula traduzione
-    const translatedBalloons = mockBalloons.map(balloon => ({
-      ...balloon,
-      translatedText: balloon.text === 'これは何ですか？' 
-        ? "Cos'è questo?" 
-        : balloon.text === 'わからない...'
-        ? 'Non lo so...'
-        : 'Andiamo! Tutti ci stanno aspettando!',
-    }));
-
-    setProgress(100);
-    setProcessingStep(t('mangaTranslator.completed'));
-
-    setPages(prev => prev.map((page, idx) => 
-      idx === currentPageIndex 
-        ? { ...page, balloons: translatedBalloons, processed: true }
-        : page
-    ));
-
-    setIsProcessing(false);
-  };
-
-  const applyInpainting = async () => {
-    if (!currentPage) return;
-    
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.inpainting'));
-    setProgress(0);
-
-    // Simula inpainting
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setProgress(i);
-    }
-
-    setPages(prev => prev.map((page, idx) => 
-      idx === currentPageIndex 
-        ? { ...page, inpainted: true }
-        : page
-    ));
-
-    setIsProcessing(false);
-    setProcessingStep('');
-  };
-
-  const _translateAll = async () => {
-    setIsProcessing(true);
-    setProcessingStep(t('mangaTranslator.batchTranslation'));
-    
-    for (let i = 0; i < pages.length; i++) {
-      setProgress(Math.round((i / pages.length) * 100));
-      setCurrentPageIndex(i);
-      await detectBalloons();
-    }
-    
-    setIsProcessing(false);
-  };
-
-  const exportPage = () => {
-    // Export logica
-    clientLogger.debug('Exporting page:', currentPage);
-  };
-
-  const exportAll = () => {
-    // Export all pages
-    clientLogger.debug('Exporting all pages:', pages);
-  };
+  // OCR, traduzione, inpainting ed export NON sono collegati a questo strumento.
+  // Prima "Rileva & Traduci" restituiva sempre gli stessi 3 balloon giapponesi
+  // con traduzioni italiane fisse, per qualunque immagine. Finché non c'è una
+  // pipeline vera, le azioni restano disabilitate e la pagina lo dice.
 
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -286,22 +158,16 @@ export function MangaTranslator() {
             {pages.length > 0 && (
               <>
                 <Button 
-                  onClick={detectBalloons}
-                  disabled={isProcessing}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
-                  {isProcessing ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4 mr-2" />
-                  )}
+                  <Wand2 className="h-4 w-4 mr-2" />
                   {t('mangaTranslator.detect') || 'Rileva & Traduci'}
                 </Button>
                 <Button 
-                  onClick={applyInpainting}
-                  disabled={isProcessing || !currentPage?.processed}
+                  disabled
                   variant="outline"
                   className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
@@ -315,30 +181,20 @@ export function MangaTranslator() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {isProcessing && (
-        <Card className="border-teal-500/30 bg-teal-500/10">
-          <CardContent className="py-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-              <span className="text-sm text-teal-300">{processingStep}</span>
-              <div className="flex-1">
-                <Progress value={progress} className="h-2" />
-              </div>
-              <span className="text-sm text-teal-400">{progress}%</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Strumento non ancora collegato a OCR/traduzione */}
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+        <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <p className="text-sm text-amber-500">{t('mangaTranslator.notConnected')}</p>
+      </div>
 
       <div className="grid grid-cols-12 gap-4">
         {/* Left Sidebar - Pages */}
         <div className="col-span-2">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4 text-teal-400" />
+                  <ImageIcon className="h-4 w-4 text-noir-400" />
                   {t('mangaTranslator.pages')} ({pages.length})
                 </span>
                 <Button 
@@ -363,13 +219,13 @@ export function MangaTranslator() {
               
               {pages.length === 0 ? (
                 <div 
-                  className="border-2 border-dashed border-teal-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="border-2 border-dashed border-noir-500/30 rounded-lg p-4 text-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <Upload className="h-8 w-8 mx-auto text-teal-400/50 mb-2" />
-                  <p className="text-xs text-teal-400/70">
+                  <Upload className="h-8 w-8 mx-auto text-noir-400/50 mb-2" />
+                  <p className="text-xs text-noir-400/70">
                     {t('mangaTranslator.dropImages')}
                   </p>
                 </div>
@@ -381,8 +237,8 @@ export function MangaTranslator() {
                         key={page.id}
                         className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                           index === currentPageIndex 
-                            ? 'border-teal-500 shadow-lg shadow-teal-500/20' 
-                            : 'border-transparent hover:border-teal-500/30'
+                            ? 'border-noir-500 shadow-lg shadow-noir-500/20' 
+                            : 'border-transparent hover:border-noir-500/30'
                         }`}
                         onClick={() => setCurrentPageIndex(index)}
                       >
@@ -402,7 +258,7 @@ export function MangaTranslator() {
                                 </Badge>
                               )}
                               {page.inpainted && (
-                                <Badge className="h-4 text-2xs bg-blue-500/80 px-1">
+                                <Badge className="h-4 text-2xs bg-noir-500/80 px-1">
                                   <PaintBucket className="h-2 w-2 mr-0.5" />
                                   INP
                                 </Badge>
@@ -421,7 +277,7 @@ export function MangaTranslator() {
 
         {/* Main Canvas */}
         <div className="col-span-7">
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -434,7 +290,7 @@ export function MangaTranslator() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-teal-300">
+                  <span className="text-sm text-noir-300">
                     {currentPage ? t('mangaTranslator.pageOf')?.replace('{current}', String(currentPageIndex + 1)).replace('{total}', String(pages.length)) : t('mangaTranslator.noPage')}
                   </span>
                   <Button
@@ -459,7 +315,7 @@ export function MangaTranslator() {
                     {showOriginal ? t('mangaTranslator.translated') : t('mangaTranslator.original')}
                   </Button>
                   <div className="flex items-center gap-1 bg-white/5 rounded-md px-2">
-                    <ZoomOut className="h-3 w-3 text-teal-400" />
+                    <ZoomOut className="h-3 w-3 text-noir-400" />
                     <Slider
                       value={[zoom]}
                       onValueChange={(v) => setZoom(v[0])}
@@ -468,8 +324,8 @@ export function MangaTranslator() {
                       step={10}
                       className="w-20"
                     />
-                    <ZoomIn className="h-3 w-3 text-teal-400" />
-                    <span className="text-xs text-teal-400 w-8">{zoom}%</span>
+                    <ZoomIn className="h-3 w-3 text-noir-400" />
+                    <span className="text-xs text-noir-400 w-8">{zoom}%</span>
                   </div>
                 </div>
               </div>
@@ -492,8 +348,8 @@ export function MangaTranslator() {
                         key={balloon.id}
                         className={`absolute border-2 rounded cursor-pointer transition-all ${
                           selectedBalloon === balloon.id 
-                            ? 'border-pink-500 bg-pink-500/20' 
-                            : 'border-teal-500/50 bg-teal-500/10 hover:border-teal-400'
+                            ? 'border-rouge-500 bg-rouge-500/20' 
+                            : 'border-noir-500/50 bg-noir-500/10 hover:border-noir-400'
                         }`}
                         style={{
                           left: balloon.x,
@@ -515,7 +371,7 @@ export function MangaTranslator() {
                           </span>
                         </div>
                         <Badge 
-                          className="absolute -top-2 -right-2 h-4 text-2xs bg-teal-600"
+                          className="absolute -top-2 -right-2 h-4 text-2xs bg-noir-600"
                         >
                           {Math.round(balloon.confidence * 100)}%
                         </Badge>
@@ -525,14 +381,14 @@ export function MangaTranslator() {
                 </div>
               ) : (
                 <div 
-                  className="h-[500px] border-2 border-dashed border-teal-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-teal-500/50 transition-colors"
+                  className="h-[500px] border-2 border-dashed border-noir-500/30 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-noir-500/50 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                 >
-                  <BookOpen className="h-16 w-16 text-teal-400/30 mb-4" />
-                  <p className="text-teal-400/70 text-lg mb-2">{t('mangaTranslator.loadPages')}</p>
-                  <p className="text-teal-400/50 text-sm">{t('mangaTranslator.supportedFormats')}</p>
+                  <BookOpen className="h-16 w-16 text-noir-400/30 mb-4" />
+                  <p className="text-noir-400/70 text-lg mb-2">{t('mangaTranslator.loadPages')}</p>
+                  <p className="text-noir-400/50 text-sm">{t('mangaTranslator.supportedFormats')}</p>
                 </div>
               )}
             </CardContent>
@@ -542,16 +398,16 @@ export function MangaTranslator() {
         {/* Right Sidebar - Settings & Balloons */}
         <div className="col-span-3 space-y-4">
           {/* Language Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Languages className="h-4 w-4 text-teal-400" />
+                <Languages className="h-4 w-4 text-noir-400" />
                 {t('mangaTranslator.languages')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div>
-                <label className="text-xs text-teal-400 mb-1 block">{t('mangaTranslator.source')}</label>
+                <label className="text-xs text-noir-400 mb-1 block">{t('mangaTranslator.source')}</label>
                 <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
@@ -569,7 +425,7 @@ export function MangaTranslator() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-teal-400 mb-1 block">{t('mangaTranslator.target')}</label>
+                <label className="text-xs text-noir-400 mb-1 block">{t('mangaTranslator.target')}</label>
                 <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
@@ -590,16 +446,16 @@ export function MangaTranslator() {
           </Card>
 
           {/* Font Settings */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Type className="h-4 w-4 text-teal-400" />
+                <Type className="h-4 w-4 text-noir-400" />
                 {t('mangaTranslator.fontStyle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div>
-                <label className="text-xs text-teal-400 mb-1 block">{t('mangaTranslator.fontStyleLabel')}</label>
+                <label className="text-xs text-noir-400 mb-1 block">{t('mangaTranslator.fontStyleLabel')}</label>
                 <Select value={selectedFont} onValueChange={setSelectedFont}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
@@ -617,7 +473,7 @@ export function MangaTranslator() {
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-teal-400 mb-1 block">
+                <label className="text-xs text-noir-400 mb-1 block">
                   {t('mangaTranslator.fontSize')}: {fontSize[0]}px
                 </label>
                 <Slider
@@ -633,10 +489,10 @@ export function MangaTranslator() {
 
           {/* Detected Balloons */}
           {currentPage?.balloons.length > 0 && (
-            <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+            <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-teal-400" />
+                  <MessageSquare className="h-4 w-4 text-noir-400" />
                   {t('mangaTranslator.balloons')} ({currentPage.balloons.length})
                 </CardTitle>
               </CardHeader>
@@ -648,7 +504,7 @@ export function MangaTranslator() {
                         key={balloon.id}
                         className={`p-2 rounded-lg cursor-pointer transition-all ${
                           selectedBalloon === balloon.id
-                            ? 'bg-teal-500/30 border border-teal-500'
+                            ? 'bg-noir-500/30 border border-noir-500'
                             : 'bg-white/5 hover:bg-white/10'
                         }`}
                         onClick={() => setSelectedBalloon(balloon.id)}
@@ -661,7 +517,7 @@ export function MangaTranslator() {
                             {Math.round(balloon.confidence * 100)}%
                           </Badge>
                         </div>
-                        <p className="text-xs text-teal-300 line-clamp-1">{balloon.text}</p>
+                        <p className="text-xs text-noir-300 line-clamp-1">{balloon.text}</p>
                         <p className="text-xs text-green-400 line-clamp-1 mt-1">
                           → {balloon.translatedText}
                         </p>
@@ -674,14 +530,13 @@ export function MangaTranslator() {
           )}
 
           {/* Export */}
-          <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
+          <Card className="border-noir-500/20 bg-gradient-to-br from-noir-500/5 to-transparent">
             <CardContent className="p-3 space-y-2">
               <Button 
                 size="sm" 
                 variant="outline"
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportPage}
-                disabled={!currentPage?.processed}
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('mangaTranslator.exportPage')}
@@ -689,9 +544,8 @@ export function MangaTranslator() {
               <Button 
                 size="sm" 
                 variant="outline"
-                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
-                onClick={exportAll}
-                disabled={pages.length === 0}
+                className="w-full border-noir-500/50 text-noir-400 hover:bg-noir-500/10 hover:border-noir-400"
+                disabled
               >
                 <Download className="h-4 w-4 mr-2" />
                 {t('mangaTranslator.exportAll')}

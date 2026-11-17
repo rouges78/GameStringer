@@ -6,15 +6,201 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Upload, FileText, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n';
 import { clientLogger } from '@/lib/client-logger';
+import { listEditorTranslations, upsertEditorTranslations } from '@/lib/editor-translations-store';
+import { useDefaultTargetLang } from '@/lib/translation/use-default-target-lang';
 
 interface TranslationImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   games: Array<{ id: string; title: string }>;
-  onImportComplete: () => void;
+  /** Chiamata solo se almeno una traduzione è stata davvero salvata, con il gioco di destinazione. */
+  onImportComplete: (gameId: string) => void;
+}
+
+/** Una riga letta dal file di import, già normalizzata. */
+export interface ImportRow {
+  filePath?: string;
+  originalText: string;
+  translatedText: string;
+  targetLanguage?: string;
+  sourceLanguage?: string;
+  context?: string;
+}
+
+type StoreRow = Record<string, unknown>;
+
+/**
+ * Tokenizer CSV (RFC 4180): campi tra virgolette con "" come escape, campi vuoti,
+ * CRLF e a-capo dentro i campi quotati. Il vecchio parser usava una regex che
+ * saltava i campi vuoti (le colonne scorrevano) e spezzava le righe sugli a-capo.
+ */
+export function parseCsvRecords(text: string): string[][] {
+  const src = text.replace(/^\uFEFF/, '');
+  const records: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let inQuotes = false;
+  const endRow = () => {
+    row.push(field);
+    field = '';
+    if (row.some(v => v.trim() !== '')) records.push(row);
+    row = [];
+  };
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (inQuotes) {
+      if (c === '"' && src[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else field += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      row.push(field);
+      field = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && src[i + 1] === '\n') i++;
+      endRow();
+    } else {
+      field += c;
+    }
+  }
+  endRow();
+  return records;
+}
+
+// Nomi di colonna riconosciuti (minuscolo, solo lettere). Includono l'header
+// che l'Editor stesso scrive in export (original,translated,status,targetLanguage).
+const CSV_COLUMNS: Record<keyof ImportRow, string[]> = {
+  filePath: ['filepath', 'file', 'path'],
+  originalText: ['original', 'originaltext', 'source', 'sourcetext'],
+  translatedText: ['translated', 'translatedtext', 'translation', 'target', 'targettext'],
+  targetLanguage: ['targetlanguage', 'targetlang'],
+  sourceLanguage: ['sourcelanguage', 'sourcelang'],
+  context: ['context', 'key'],
+};
+
+/**
+ * CSV → righe di import. La prima riga è l'header: se nomina le colonne di testo
+ * originale e tradotto si mappa per nome, altrimenti si usa lo schema posizionale
+ * storico (filePath, original, translated, targetLanguage, —, context).
+ */
+export function parseImportCsv(text: string): ImportRow[] {
+  const [header, ...records] = parseCsvRecords(text);
+  if (!header) return [];
+  const names = header.map(h => h.toLowerCase().replace(/[^a-z]/g, ''));
+  const col = (field: keyof ImportRow) => names.findIndex(n => CSV_COLUMNS[field].includes(n));
+  const byName = col('originalText') >= 0 && col('translatedText') >= 0;
+  const index: Record<keyof ImportRow, number> = byName
+    ? {
+        filePath: col('filePath'),
+        originalText: col('originalText'),
+        translatedText: col('translatedText'),
+        targetLanguage: col('targetLanguage'),
+        sourceLanguage: col('sourceLanguage'),
+        context: col('context'),
+      }
+    : { filePath: 0, originalText: 1, translatedText: 2, targetLanguage: 3, sourceLanguage: -1, context: 5 };
+  const at = (rec: string[], i: number) => (i >= 0 ? rec[i] ?? '' : '');
+  return records.map(rec => ({
+    filePath: at(rec, index.filePath).trim() || undefined,
+    originalText: at(rec, index.originalText),
+    translatedText: at(rec, index.translatedText),
+    targetLanguage: at(rec, index.targetLanguage).trim() || undefined,
+    sourceLanguage: at(rec, index.sourceLanguage).trim() || undefined,
+    context: at(rec, index.context).trim() || undefined,
+  }));
+}
+
+/** JSON → righe di import: array diretto o `{ translations: [...] }` (anche l'export JSON dell'Editor). */
+export function parseImportJson(text: string): ImportRow[] {
+  const data: unknown = JSON.parse(text);
+  const list = Array.isArray(data)
+    ? data
+    : ((data as { translations?: unknown } | null)?.translations ?? []);
+  if (!Array.isArray(list)) return [];
+  const str = (v: unknown) => (typeof v === 'string' ? v : '');
+  return list.map((raw): ImportRow => {
+    const item = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    return {
+      filePath: str(item.filePath) || undefined,
+      originalText: str(item.originalText) || str(item.original) || str(item.source) || str(item.sourceText),
+      translatedText: str(item.translatedText) || str(item.translated) || str(item.target) || str(item.targetText),
+      targetLanguage: str(item.targetLanguage) || undefined,
+      sourceLanguage: str(item.sourceLanguage) || undefined,
+      context: str(item.context) || undefined,
+    };
+  });
+}
+
+/**
+ * Fonde le righe importate nei record dello store dell'Editor (stesso shape che
+ * l'Editor legge e scrive). Una stringa già presente per lo stesso gioco e la
+ * stessa lingua viene aggiornata invece di duplicarla. Le righe senza testo
+ * originale o tradotto sono saltate. `written` = una coppia [id, testo tradotto]
+ * per ogni riga accettata: le righe ripetute nel file finiscono nello stesso
+ * record, ma contano ognuna (una ripetizione non è un import fallito).
+ */
+export function mergeImportRows(
+  existing: StoreRow[],
+  rows: ImportRow[],
+  game: { id: string; title: string },
+  defaultTargetLang: string,
+  now: string,
+): { merged: StoreRow[]; written: Array<[string, string]> } {
+  const merged = existing.slice();
+  const written: Array<[string, string]> = [];
+  const keyOf = (original: string, target: string) => `${target}\u0000${original}`;
+  const index = new Map<string, number>();
+  merged.forEach((r, i) => {
+    if (r.gameId === game.id && typeof r.originalText === 'string') {
+      index.set(keyOf(r.originalText, String(r.targetLanguage ?? '')), i);
+    }
+  });
+  rows.forEach((row, i) => {
+    if (!row.originalText.trim() || !row.translatedText.trim()) return;
+    const targetLanguage = row.targetLanguage || defaultTargetLang;
+    const key = keyOf(row.originalText, targetLanguage);
+    const at = index.get(key);
+    if (at !== undefined) {
+      const id = String(merged[at].id);
+      merged[at] = { ...merged[at], translatedText: row.translatedText, status: 'completed', updatedAt: now };
+      written.push([id, row.translatedText]);
+      return;
+    }
+    const id = `import-${game.id}-${Date.parse(now)}-${i}`;
+    merged.push({
+      id,
+      gameId: game.id,
+      filePath: row.filePath || 'import',
+      originalText: row.originalText,
+      translatedText: row.translatedText,
+      targetLanguage,
+      sourceLanguage: row.sourceLanguage || 'en',
+      status: 'completed',
+      confidence: 0,
+      isManualEdit: false,
+      ...(row.context ? { context: row.context } : {}),
+      updatedAt: now,
+      game: { id: game.id, title: game.title, platform: 'import' },
+      suggestions: [],
+    });
+    index.set(key, merged.length - 1);
+    written.push([id, row.translatedText]);
+  });
+  return { merged, written };
+}
+
+/** Quante righe scritte si ritrovano davvero nello store riletto, con il testo scritto. */
+export function countStoredImports(stored: StoreRow[], written: Array<[string, string]>): number {
+  const byId = new Map(stored.map(r => [String(r.id), r] as const));
+  let n = 0;
+  for (const [id, text] of written) {
+    if (byId.get(id)?.translatedText === text) n++;
+  }
+  return n;
 }
 
 export function TranslationImportDialog({
@@ -27,7 +213,9 @@ export function TranslationImportDialog({
   const [selectedGame, setSelectedGame] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const { toast } = useToast();
+  // Lingua di destinazione per le righe che non la dichiarano (prima: 'it' fisso).
+  const [defaultTargetLang, setDefaultTargetLang] = useState('en');
+  useDefaultTargetLang(setDefaultTargetLang);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,117 +224,86 @@ export function TranslationImportDialog({
     }
   };
 
-  const parseCSV = async (text: string): Promise<unknown[]> => {
-    const lines = text.split('\n').filter(line => line.trim());
-    const _headers = lines[0].split(',').map(h => h.trim());
-
-    const translations = [];
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].match(/(".*?"|[^,]+)/g) || [];
-      const cleanValues = values.map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
-      
-      if (cleanValues.length >= 3) {
-        translations.push({
-          filePath: cleanValues[0] || 'unknown',
-          originalText: cleanValues[1] || '',
-          translatedText: cleanValues[2] || '',
-          targetLanguage: cleanValues[3] || 'it',
-          sourceLanguage: 'en',
-          context: cleanValues[5] || undefined
-        });
-      }
-    }
-    
-    return translations;
-  };
-
-  const parseJSON = async (text: string): Promise<unknown[]> => {
-    try {
-      const data = JSON.parse(text);
-      
-      // Supporta sia array diretto che oggetto con campo translations
-      const translations = Array.isArray(data) ? data : (data.translations || []);
-      
-      return translations.map((item: Record<string, unknown>) => ({
-        filePath: (item.filePath as string) || 'unknown',
-        originalText: (item.originalText as string) || '',
-        translatedText: (item.translatedText as string) || '',
-        targetLanguage: (item.targetLanguage as string) || 'it',
-        sourceLanguage: (item.sourceLanguage as string) || 'en',
-        context: item.context as string | undefined
-      }));
-    } catch {
-      throw new Error('Invalid JSON format');
-    }
-  };
-
   const handleImport = async () => {
-    if (!selectedGame || !selectedFile) {
-      toast({
-        title: 'Error',
-        description: 'Select a game and file to import',
-        variant: 'destructive'
-      });
+    const game = games.find(g => g.id === selectedGame);
+    if (!game || !selectedFile) {
+      toast.error(t('common.selectAGameAndFileToImport'));
+      return;
+    }
+
+    const name = selectedFile.name.toLowerCase();
+    if (!name.endsWith('.csv') && !name.endsWith('.json')) {
+      toast.error(t('exportDialogComp.formatoNonSupportato'));
       return;
     }
 
     setIsImporting(true);
-    
+
     try {
       const text = await selectedFile.text();
-      let translations: unknown[] = [];
-      
-      if (selectedFile.name.endsWith('.csv')) {
-        translations = await parseCSV(text);
-      } else if (selectedFile.name.endsWith('.json')) {
-        translations = await parseJSON(text);
+      let rows: ImportRow[];
+      if (name.endsWith('.csv')) {
+        rows = parseImportCsv(text);
       } else {
-        throw new Error('Unsupported file format');
-      }
-
-      if (translations.length === 0) {
-        throw new Error('No translations found in file');
-      }
-
-      // Import diretto in Translation Memory (no API routes in Tauri)
-      let imported = 0;
-      const total = translations.length;
-      
-      for (const item of translations) {
         try {
-          const rec = item as Record<string, unknown>;
-          const tmData = JSON.parse(localStorage.getItem('gs_translation_memory') || '[]');
-          tmData.push({
-            id: `import-${Date.now()}-${imported}`,
-            sourceText: rec.source || rec.original,
-            targetText: rec.target || rec.translated,
-            gameId: selectedGame,
-            provider: 'import',
-            confidence: 0.9,
-            createdAt: new Date().toISOString()
-          });
-          localStorage.setItem('gs_translation_memory', JSON.stringify(tmData));
-          imported++;
-        } catch {}
+          rows = parseImportJson(text);
+        } catch {
+          toast.error(t('common.fileJsonNonValido'));
+          return;
+        }
       }
-      
-      toast({
-        title: 'Import completed',
-        description: `Imported ${imported} of ${total} translations`
-      });
-      
-      onImportComplete();
+
+      if (rows.length === 0) {
+        toast.error(t('dictionary.noTranslationsFound'));
+        return;
+      }
+
+      // Scrive nello store che l'Editor legge (listEditorTranslations). Una lettura
+      // che fallisce rigetta (finisce nel catch) invece di dare [], che riscritto
+      // cancellerebbe le stringhe già salvate.
+      const existing = await listEditorTranslations();
+      const { merged, written } = mergeImportRows(existing, rows, game, defaultTargetLang, new Date().toISOString());
+      if (written.length === 0) {
+        toast.error(t('translationImportDialogComp.noValidRows'));
+        return;
+      }
+
+      // Solo i record toccati, in un'unica lettura+scrittura (un upsert per riga
+      // riscriverebbe l'intero array ogni volta). Rigetta se lo store non li salva.
+      const writtenIds = new Set(written.map(([id]) => id));
+      try {
+        await upsertEditorTranslations(merged.filter(r => writtenIds.has(String(r.id))));
+      } catch (saveError: unknown) {
+        clientLogger.error(`Import save error: ${String(saveError)}`);
+        toast.error(t('common.impossibileSalvareLeTraduzioni'));
+        return;
+      }
+
+      // Si conta solo ciò che si rilegge davvero dallo store.
+      const imported = countStoredImports(await listEditorTranslations({ gameId: game.id }), written);
+      const total = rows.length;
+      const summary = t('translationImportDialogComp.importResult')
+        .replace('{n}', String(imported))
+        .replace('{total}', String(total));
+
+      if (imported === 0) {
+        toast.error(t('common.impossibileSalvareLeTraduzioni'));
+        return;
+      }
+
+      if (imported < total) toast.warning(summary);
+      else toast.success(summary);
+
+      onImportComplete(game.id);
       onOpenChange(false);
-      
+
       // Reset form
       setSelectedGame('');
       setSelectedFile(null);
     } catch (error: unknown) {
       clientLogger.error(`Import error: ${String(error)}`);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error during import',
-        variant: 'destructive'
+      toast.error(t('common.error'), {
+        description: error instanceof Error ? error.message : String(error),
       });
     } finally {
       setIsImporting(false);

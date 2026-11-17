@@ -54,17 +54,17 @@ export function BackgroundJobsIndicator() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 cursor-pointer hover:bg-indigo-500/25 transition-all">
-            <Loader2 className="h-3.5 w-3.5 text-indigo-400 animate-spin" />
-            <span className="text-xs font-bold text-indigo-300">{activeCount}</span>
+          <div className="relative flex items-center gap-1.5 px-2 py-1 rounded-lg bg-rouge-500/15 border border-rouge-500/30 cursor-pointer hover:bg-rouge-500/25 transition-all">
+            <Loader2 className="h-3.5 w-3.5 text-rouge-400 animate-spin" />
+            <span className="text-xs font-bold text-rouge-300">{activeCount}</span>
             {/* Mini progress ring */}
             <svg className="h-4 w-4 -rotate-90" viewBox="0 0 20 20">
-              <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-700/50" />
-              <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-400"
+              <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-noir-700/50" />
+              <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-rouge-400"
                 strokeDasharray={`${latestPercent * 0.503} 50.3`} strokeLinecap="round" />
             </svg>
             {/* Pulse animation */}
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-rouge-400 animate-pulse" />
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
@@ -116,17 +116,17 @@ export function BackgroundJobsWidget() {
   if (minimized && activeJobs.length > 0) {
     return (
       <div
-        className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 px-3 py-2 rounded-full bg-slate-900/95 border border-indigo-500/40 shadow-xl backdrop-blur-xl cursor-pointer hover:border-indigo-500/60 transition-all"
+        className="fixed bottom-10 right-4 z-[60] flex items-center gap-2 px-3 py-2 rounded-full bg-noir-900/95 border border-rouge-500/40 shadow-xl backdrop-blur-xl cursor-pointer hover:border-rouge-500/60 transition-all"
         onClick={() => setMinimized(false)}
       >
-        <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" />
-        <span className="text-xs font-bold text-indigo-300">
+        <Loader2 className="h-4 w-4 text-rouge-400 animate-spin" />
+        <span className="text-xs font-bold text-rouge-300">
           {activeJobs.length} traduzion{activeJobs.length === 1 ? 'e' : 'i'}
         </span>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-noir-400">
           {activeJobs[0]?.percent || 0}%
         </span>
-        <Maximize2 className="h-3 w-3 text-slate-500" />
+        <Maximize2 className="h-3 w-3 text-noir-500" />
       </div>
     );
   }
@@ -136,16 +136,16 @@ export function BackgroundJobsWidget() {
 
   return (
     <div className={cn(
-      "fixed bottom-4 right-4 z-[60] w-[380px] bg-slate-950/95 border border-slate-700/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden transition-all",
+      "fixed bottom-10 right-4 z-[60] w-[380px] bg-noir-950/95 border border-noir-700/60 rounded-xl shadow-2xl backdrop-blur-xl overflow-hidden transition-all",
       expanded ? "max-h-[500px]" : "max-h-[260px]"
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800/50 bg-slate-900/50">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-noir-800/50 bg-noir-900/50">
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-indigo-400" />
-          <span className="text-sm font-bold text-slate-200">Traduzioni in Background</span>
+          <Zap className="h-4 w-4 text-rouge-400" />
+          <span className="text-sm font-bold text-noir-200">Traduzioni in Background</span>
           {activeJobs.length > 0 && (
-            <Badge variant="outline" className="text-2xs px-1.5 py-0 h-4 border-indigo-500/40 text-indigo-300">
+            <Badge variant="outline" className="text-2xs px-1.5 py-0 h-4 border-rouge-500/40 text-rouge-300">
               {activeJobs.length} attiv{activeJobs.length === 1 ? 'a' : 'e'}
             </Badge>
           )}
@@ -173,7 +173,7 @@ export function BackgroundJobsWidget() {
               onResume={() => { mgr.resumeJob(job.id); }}
               onCancel={() => mgr.cancelJob(job.id)}
               onOpenResults={() => {
-                router.push(`/auto-translate?gameId=${job.gameId}&bgJobId=${job.id}`);
+                router.push(`/auto-translate?gameId=${encodeURIComponent(job.gameId)}&bgJobId=${encodeURIComponent(job.id)}`);
               }}
             />
           ))}
@@ -182,9 +182,9 @@ export function BackgroundJobsWidget() {
           {expanded && recentJobs.length > 0 && (
             <>
               <div className="flex items-center gap-2 pt-2">
-                <div className="h-px flex-1 bg-slate-800" />
-                <span className="text-2xs text-slate-600 uppercase tracking-wider">Recenti</span>
-                <div className="h-px flex-1 bg-slate-800" />
+                <div className="h-px flex-1 bg-noir-800" />
+                <span className="text-2xs text-noir-600 uppercase tracking-wider">Recenti</span>
+                <div className="h-px flex-1 bg-noir-800" />
               </div>
               {recentJobs.map(job => (
                 <CompletedJobCard
@@ -192,7 +192,7 @@ export function BackgroundJobsWidget() {
                   job={job}
                   onRemove={() => mgr.removeJob(job.id)}
                   onOpenResults={() => {
-                    router.push(`/auto-translate?gameId=${job.gameId}&bgJobId=${job.id}`);
+                    router.push(`/auto-translate?gameId=${encodeURIComponent(job.gameId)}&bgJobId=${encodeURIComponent(job.id)}`);
                   }}
                 />
               ))}
@@ -219,8 +219,8 @@ function JobCard({ job, onPause, onResume, onCancel }: {
   const isRunning = job.status === 'running';
   const isPaused = job.status === 'paused';
 
-  const statusColor = isRunning ? 'text-indigo-400' : isPaused ? 'text-yellow-400' : 'text-slate-400';
-  const statusBg = isRunning ? 'bg-indigo-500/10 border-indigo-500/30' : isPaused ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-slate-800/50 border-slate-700/30';
+  const statusColor = isRunning ? 'text-rouge-400' : isPaused ? 'text-yellow-400' : 'text-noir-400';
+  const statusBg = isRunning ? 'bg-rouge-500/10 border-rouge-500/30' : isPaused ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-noir-800/50 border-noir-700/30';
 
   return (
     <div className={cn("rounded-lg border p-3 space-y-2 transition-all", statusBg)}>
@@ -231,8 +231,8 @@ function JobCard({ job, onPause, onResume, onCancel }: {
             <img src={job.gameImage} alt="" className="h-6 w-10 rounded object-cover flex-shrink-0" />
           )}
           <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-200 truncate">{job.gameName}</p>
-            <p className="text-2xs text-slate-500">
+            <p className="text-xs font-bold text-noir-200 truncate">{job.gameName}</p>
+            <p className="text-2xs text-noir-500">
               {job.sourceLang.toUpperCase()} → {job.targetLang.toUpperCase()}
             </p>
           </div>
@@ -263,7 +263,7 @@ function JobCard({ job, onPause, onResume, onCancel }: {
             {isPaused && <Pause className="inline h-3 w-3 mr-1" />}
             {job.percent}% — {job.translatedCount}/{job.totalStrings}
           </span>
-          <span className="text-slate-500 flex items-center gap-1">
+          <span className="text-noir-500 flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {isRunning ? `~${mgr.formatTime(job.estimatedRemainingMs)}` : mgr.formatTime(job.elapsedMs)}
           </span>
@@ -272,16 +272,16 @@ function JobCard({ job, onPause, onResume, onCancel }: {
 
       {/* Current activity */}
       {job.currentFile && isRunning && (
-        <p className="text-2xs text-slate-500 truncate">
+        <p className="text-2xs text-noir-500 truncate">
           📄 {job.currentFile} {job.currentBatch && job.totalBatches ? `(batch ${job.currentBatch}/${job.totalBatches})` : ''}
-          {job.lastProvider && <span className="text-indigo-400/60 ml-1">via {job.lastProvider}</span>}
+          {job.lastProvider && <span className="text-rouge-400/60 ml-1">via {job.lastProvider}</span>}
         </p>
       )}
 
       {/* Last translated preview */}
       {job.lastTranslated && isRunning && (
-        <div className="text-2xs bg-slate-900/50 rounded px-2 py-1 space-y-0.5">
-          <p className="text-slate-500 truncate">&quot;{job.lastTranslated.original}&quot;</p>
+        <div className="text-2xs bg-noir-900/50 rounded px-2 py-1 space-y-0.5">
+          <p className="text-noir-500 truncate">&quot;{job.lastTranslated.original}&quot;</p>
           <p className="text-emerald-400/80 truncate">→ &quot;{job.lastTranslated.translation}&quot;</p>
         </div>
       )}
@@ -315,15 +315,15 @@ function CompletedJobCard({ job, onRemove, onOpenResults }: {
       "rounded-lg border p-2.5 flex items-center gap-2",
       isCompleted ? "bg-emerald-500/5 border-emerald-500/20" :
       isFailed ? "bg-red-500/5 border-red-500/20" :
-      "bg-slate-800/30 border-slate-700/20"
+      "bg-noir-800/30 border-noir-700/20"
     )}>
       {isCompleted ? <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" /> :
        isFailed ? <XCircle className="h-4 w-4 text-red-400 flex-shrink-0" /> :
-       <X className="h-4 w-4 text-slate-500 flex-shrink-0" />}
+       <X className="h-4 w-4 text-noir-500 flex-shrink-0" />}
       
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-slate-300 truncate">{job.gameName}</p>
-        <p className="text-2xs text-slate-500">
+        <p className="text-xs font-medium text-noir-300 truncate">{job.gameName}</p>
+        <p className="text-2xs text-noir-500">
           {job.translatedCount}/{job.totalStrings} — {mgr.formatTime(job.elapsedMs)}
         </p>
       </div>
@@ -335,7 +335,7 @@ function CompletedJobCard({ job, onRemove, onOpenResults }: {
           </Button>
         )}
         <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-red-500/20" onClick={onRemove}>
-          <Trash2 className="h-3 w-3 text-slate-500" />
+          <Trash2 className="h-3 w-3 text-noir-500" />
         </Button>
       </div>
     </div>

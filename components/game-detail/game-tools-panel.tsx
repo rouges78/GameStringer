@@ -86,12 +86,12 @@ export function GameToolsPanel({
     >
       {/* Quick tools row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <button className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] border border-[#1a9fff]/20 transition-all" onClick={onScan} disabled={isScanning}>
+        <button className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-rouge-500/10 hover:bg-rouge-500/20 text-rouge-400 border border-rouge-500/20 transition-all" onClick={onScan} disabled={isScanning}>
           {isScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} {t('gameDetails.scan')}
         </button>
         {(engineInfo?.engine?.toLowerCase().includes('unreal') || game.engine?.toLowerCase().includes('unreal')) && game.installPath && (
           <button
-            className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
+            className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-rouge-500/10 hover:bg-rouge-500/20 text-rouge-300 border border-rouge-500/20 transition-all disabled:opacity-50"
             onClick={onUpgradeUEWithAI}
             disabled={isUeAiUpgrading}
             title={t('gameDetails.ueAiTooltip')}
@@ -123,22 +123,22 @@ export function GameToolsPanel({
             )}
           </button>
         )}
-        <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-[#2a475e]/20 hover:bg-[#2a475e]/40 text-[#8f98a0] border border-[#2a475e]/30 transition-all" onClick={onOpenCoverPicker}>
+        <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-noir-700/20 hover:bg-noir-700/40 text-noir-400 border border-noir-700/30 transition-all" onClick={onOpenCoverPicker}>
           <ImageIconLucide className="h-3.5 w-3.5" /> {t('gameDetail.cover')}
         </button>
-        <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={onOpenGspackExport}>
+        <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-rouge-500/10 hover:bg-rouge-500/20 text-rouge-300 border border-rouge-500/20 transition-all" onClick={onOpenGspackExport}>
           <Package className="h-3 w-3" /> {t('gspack.exportBtn')}
         </button>
         <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-2xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all" onClick={onOpenGspackImport}>
           <Upload className="h-3 w-3" /> {t('gspack.importBtn')}
         </button>
         {game.platform === 'Steam' && game.appid && game.appid > 0 && (
-          <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-[#67c1f5] hover:bg-[#2a475e]/30 transition-all">
+          <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-noir-400 hover:text-rouge-400 hover:bg-noir-700/30 transition-all">
             <Globe className="h-3 w-3" /> Steam
           </a>
         )}
         {game.installPath && (
-          <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
+          <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-2xs font-semibold text-noir-400 hover:text-amber-300 hover:bg-amber-500/10 transition-all"
             onClick={async () => { try { await invoke('open_path', { path: game.installPath }); } catch { toast.error(t('common.impossibileAprireLaCartella')); } }}
           >
             <FolderOpen className="h-3 w-3" /> {t('gameDetails.folder')}
@@ -149,27 +149,27 @@ export function GameToolsPanel({
       {/* File rilevati + Patch status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* File traducibili */}
-        <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+        <div className="rounded-xl bg-noir-900/60 border border-noir-700/40 p-3.5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabFiles')}</span>
+            <span className="text-[11px] font-bold text-noir-200 flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-rouge-400" /> {t('gameDetails.tabFiles')}</span>
             {(game.detectedFiles?.length || 0) > 0 && (
-              <span className="text-2xs font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles!.length} {t('gameDetails.files')}</span>
+              <span className="text-2xs font-bold text-rouge-400 bg-rouge-500/10 px-2 py-0.5 rounded">{game.detectedFiles!.length} {t('gameDetails.files')}</span>
             )}
           </div>
           {(game.detectedFiles?.length || 0) > 0 ? (
             <div className="max-h-[140px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
               {(game.detectedFiles || []).map((file: string, index: number) => (
-                <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] hover:bg-[#2a475e]/20 transition-all group cursor-pointer"
+                <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] hover:bg-noir-700/20 transition-all group cursor-pointer"
                   onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
-                  <FileText className="h-3 w-3 text-[#8f98a0]/40 shrink-0" />
-                  <span className="truncate flex-1 text-[#8f98a0] group-hover:text-[#c6d4df] transition-colors">{file}</span>
+                  <FileText className="h-3 w-3 text-noir-400/40 shrink-0" />
+                  <span className="truncate flex-1 text-noir-400 group-hover:text-noir-200 transition-colors">{file}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-4">
-              <p className="text-[11px] text-[#8f98a0]/60 mb-2">{t('gameDetails.noFilesDetected')}</p>
-              <button className="text-2xs font-semibold text-[#67c1f5] hover:text-[#1a9fff] transition-colors" onClick={onScan} disabled={isScanning}>
+              <p className="text-[11px] text-noir-400/60 mb-2">{t('gameDetails.noFilesDetected')}</p>
+              <button className="text-2xs font-semibold text-rouge-400 hover:text-rouge-500 transition-colors" onClick={onScan} disabled={isScanning}>
                 {t('gameDetails.searchTranslatableFiles')}
               </button>
             </div>
@@ -177,16 +177,16 @@ export function GameToolsPanel({
         </div>
 
         {/* Patch & Engine info */}
-        <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
-          <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5 mb-2"><Zap className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabPatch')}</span>
+        <div className="rounded-xl bg-noir-900/60 border border-noir-700/40 p-3.5">
+          <span className="text-[11px] font-bold text-noir-200 flex items-center gap-1.5 mb-2"><Zap className="h-3.5 w-3.5 text-rouge-400" /> {t('gameDetails.tabPatch')}</span>
           <div className="space-y-2">
             {game.engine === 'Unity' && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-sky-500/[0.06] border border-sky-500/15">
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-noir-500/[0.06] border border-noir-500/15">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-3.5 w-3.5 text-sky-400" />
-                  <div><span className="text-[11px] font-bold text-sky-300">XUnity AutoTranslator</span></div>
+                  <Zap className="h-3.5 w-3.5 text-noir-400" />
+                  <div><span className="text-[11px] font-bold text-noir-300">XUnity AutoTranslator</span></div>
                 </div>
-                <Button size="xs" className="text-micro font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={onInstallUnityPatch} disabled={isInstallingPatch}>
+                <Button size="xs" className="text-micro font-bold bg-noir-500/15 hover:bg-noir-500/25 text-noir-300 rounded-lg border border-noir-500/20 px-2.5" onClick={onInstallUnityPatch} disabled={isInstallingPatch}>
                   {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} {t('gamePatcher.install')}
                 </Button>
               </div>
@@ -219,8 +219,8 @@ export function GameToolsPanel({
 
             {/* DLC compatti */}
             {dlcGames.length > 0 && (
-              <div className="pt-1 border-t border-[#2a475e]/30">
-                <span className="text-micro text-[#8f98a0]/60">{t('gameDetails.dlcLabel')}: {dlcGames.length}</span>
+              <div className="pt-1 border-t border-noir-700/30">
+                <span className="text-micro text-noir-400/60">{t('gameDetails.dlcLabel')}: {dlcGames.length}</span>
               </div>
             )}
           </div>

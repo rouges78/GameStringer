@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot, Layers } from 'lucide-react';
+import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AITranslationAssistant } from '@/components/tools/ai-translation-assistant';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -19,7 +19,7 @@ export default function AITranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header - Con immagine game fusa */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-noir-600 via-noir-600 to-noir-600 animate-shimmer p-3 shadow-xl shadow-noir-900/50">
         {/* Immagine game fusa nello sfondo */}
         {gameImage && (
           <>
@@ -32,8 +32,8 @@ export default function AITranslatorPage() {
                 unoptimized
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-600/80 via-blue-600/70 to-cyan-600/80" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-600/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-noir-600/80 via-noir-600/70 to-noir-600/80" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-noir-600/50 to-transparent" />
           </>
         )}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
@@ -93,12 +93,7 @@ export default function AITranslatorPage() {
               {ai.dictionary}
             </Button>
           </Link>
-          <Link href="/batch-translation">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-2xs border-white/30 bg-white/10 hover:bg-white/20 text-white">
-              <Layers className="h-3 w-3" />
-              Batch
-            </Button>
-          </Link>
+          {/* Batch nascosto: /batch-translation fa fallire ogni job con BATCH_NON_IMPLEMENTATO. */}
         </div>
       </div>
       

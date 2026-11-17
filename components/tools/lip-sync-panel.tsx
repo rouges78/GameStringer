@@ -160,15 +160,15 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
       {!compact && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-pink-500/20 rounded-lg">
-              <Smile className="w-5 h-5 text-pink-400" />
+            <div className="p-2 bg-rouge-500/20 rounded-lg">
+              <Smile className="w-5 h-5 text-rouge-400" />
             </div>
             <div>
               <h2 className="font-semibold text-white">{t('lipSyncPanel.title')}</h2>
-              <p className="text-xs text-zinc-500">{t('lipSyncPanel.subtitle')}</p>
+              <p className="text-xs text-noir-500">{t('lipSyncPanel.subtitle')}</p>
             </div>
           </div>
-          <Badge className={rhubarbAvailable === true ? 'bg-emerald-500/20 text-emerald-400' : rhubarbAvailable === false ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-500/20 text-zinc-400'}>
+          <Badge className={rhubarbAvailable === true ? 'bg-emerald-500/20 text-emerald-400' : rhubarbAvailable === false ? 'bg-amber-500/20 text-amber-400' : 'bg-noir-500/20 text-noir-400'}>
             {rhubarbAvailable === true ? 'Rhubarb OK' : rhubarbAvailable === false ? 'Non installato' : 'Verifica...'}
           </Badge>
         </div>
@@ -189,31 +189,31 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
       {/* Input Section */}
       <div className="space-y-3">
         <div>
-          <Label className="text-xs text-zinc-500 mb-1 block">{t('lipSyncPanel.audioFile')}</Label>
+          <Label className="text-xs text-noir-500 mb-1 block">{t('lipSyncPanel.audioFile')}</Label>
           <Input
             value={audioPath}
             onChange={(e) => setAudioPath(e.target.value)}
             placeholder={t('lipSyncPanel.audioPathPh')}
-            className="bg-zinc-800/50 border-zinc-700"
+            className="bg-noir-800/50 border-noir-700"
           />
         </div>
 
         <div>
-          <Label className="text-xs text-zinc-500 mb-1 block">{t('lipSyncPanel.dialogText')}</Label>
+          <Label className="text-xs text-noir-500 mb-1 block">{t('lipSyncPanel.dialogText')}</Label>
           <Textarea
             value={dialogText}
             onChange={(e) => setDialogText(e.target.value)}
             placeholder={t('lipSyncPanel.dialogPh')}
-            className="bg-zinc-800/50 border-zinc-700 min-h-[60px]"
+            className="bg-noir-800/50 border-noir-700 min-h-[60px]"
             rows={2}
           />
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            <Label className="text-xs text-zinc-500 mb-1 block">{t('lipSyncPanel.recognizer')}</Label>
+            <Label className="text-xs text-noir-500 mb-1 block">{t('lipSyncPanel.recognizer')}</Label>
             <Select value={recognizer} onValueChange={(v) => setRecognizer(v as 'phonetic' | 'pocketSphinx')}>
-              <SelectTrigger className="bg-zinc-800/50 border-zinc-700">
+              <SelectTrigger className="bg-noir-800/50 border-noir-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -226,7 +226,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
           <Button
             onClick={handleGenerate}
             disabled={generating || !audioPath.trim() || rhubarbAvailable !== true}
-            className="bg-pink-600 hover:bg-pink-500 mt-5"
+            className="bg-rouge-600 hover:bg-rouge-500 mt-5"
           >
             {generating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Smile className="w-4 h-4 mr-2" />}
             {generating ? 'Generazione...' : 'Genera Lip Sync'}
@@ -246,44 +246,44 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
         <div className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <div className="text-[10px] text-zinc-500">{t('common.durata')}</div>
+            <div className="p-2.5 rounded-lg bg-noir-800/50 border border-noir-700">
+              <div className="text-[10px] text-noir-500">{t('common.durata')}</div>
               <div className="text-sm font-bold text-white">{stats.duration.toFixed(2)}s</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <div className="text-[10px] text-zinc-500">{t('lipSyncPanel.cueLabel')}</div>
+            <div className="p-2.5 rounded-lg bg-noir-800/50 border border-noir-700">
+              <div className="text-[10px] text-noir-500">{t('lipSyncPanel.cueLabel')}</div>
               <div className="text-sm font-bold text-white">{stats.totalCues}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <div className="text-[10px] text-zinc-500">{t('lipSyncPanel.avgCueLabel')}</div>
+            <div className="p-2.5 rounded-lg bg-noir-800/50 border border-noir-700">
+              <div className="text-[10px] text-noir-500">{t('lipSyncPanel.avgCueLabel')}</div>
               <div className="text-sm font-bold text-white">{(stats.avgCueDuration * 1000).toFixed(0)}{t('lipSyncPanel.msUnit')}</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <div className="text-[10px] text-zinc-500">{t('lipSyncPanel.speech')}</div>
+            <div className="p-2.5 rounded-lg bg-noir-800/50 border border-noir-700">
+              <div className="text-[10px] text-noir-500">{t('lipSyncPanel.speech')}</div>
               <div className="text-sm font-bold text-emerald-400">{(stats.speechRatio * 100).toFixed(0)}%</div>
             </div>
-            <div className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700">
-              <div className="text-[10px] text-zinc-500">{t('lipSyncPanel.silence')}</div>
-              <div className="text-sm font-bold text-zinc-400">{(stats.silenceRatio * 100).toFixed(0)}%</div>
+            <div className="p-2.5 rounded-lg bg-noir-800/50 border border-noir-700">
+              <div className="text-[10px] text-noir-500">{t('lipSyncPanel.silence')}</div>
+              <div className="text-sm font-bold text-noir-400">{(stats.silenceRatio * 100).toFixed(0)}%</div>
             </div>
           </div>
 
           {/* Viseme Timeline Visualization */}
-          <div className="bg-zinc-800/30 rounded-lg border border-zinc-700 p-3">
+          <div className="bg-noir-800/30 rounded-lg border border-noir-700 p-3">
             <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="w-4 h-4 text-pink-400" />
-              <span className="text-xs font-medium text-zinc-400">{t('common.timelineVisemi')}</span>
+              <BarChart3 className="w-4 h-4 text-rouge-400" />
+              <span className="text-xs font-medium text-noir-400">{t('common.timelineVisemi')}</span>
               {/* Playback controls */}
               <div className="ml-auto flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={togglePlayback} className="h-6 w-6 p-0">
                   {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                 </Button>
-                <span className="text-[10px] text-zinc-500">{currentTime.toFixed(2)}s</span>
+                <span className="text-[10px] text-noir-500">{currentTime.toFixed(2)}s</span>
               </div>
             </div>
 
             {/* Timeline bars */}
-            <div className="relative h-10 bg-zinc-900 rounded overflow-hidden">
+            <div className="relative h-10 bg-noir-900 rounded overflow-hidden">
               {result.mouthCues.map((cue, i) => {
                 const left = (cue.start / result.duration) * 100;
                 const width = ((cue.end - cue.start) / result.duration) * 100;
@@ -317,7 +317,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
                 <div className="text-4xl font-mono font-bold" style={{ color: VISEME_COLORS[(activeViseme?.value as VisemeShape) || 'X'] }}>
                   {VISEME_DESCRIPTIONS[(activeViseme?.value as VisemeShape) || 'X']?.mouthShape || '·'}
                 </div>
-                <div className="text-xs text-zinc-500 mt-1">
+                <div className="text-xs text-noir-500 mt-1">
                   {activeViseme ? `${activeViseme.value} — ${VISEME_DESCRIPTIONS[activeViseme.value as VisemeShape]?.description}` : 'Riposo'}
                 </div>
               </div>
@@ -355,17 +355,17 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
           )}
 
           {/* Export Section */}
-          <div className="bg-zinc-800/30 rounded-lg border border-zinc-700 p-3 space-y-3">
+          <div className="bg-noir-800/30 rounded-lg border border-noir-700 p-3 space-y-3">
             <div className="flex items-center gap-2">
-              <Download className="w-4 h-4 text-pink-400" />
-              <span className="text-xs font-medium text-zinc-400">{t('common.esportaLipSync')}</span>
+              <Download className="w-4 h-4 text-rouge-400" />
+              <span className="text-xs font-medium text-noir-400">{t('common.esportaLipSync')}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-[10px] text-zinc-500 mb-1 block">{t('lipSyncPanel.engineTarget')}</Label>
+                <Label className="text-[10px] text-noir-500 mb-1 block">{t('lipSyncPanel.engineTarget')}</Label>
                 <Select value={exportEngine} onValueChange={(v) => setExportEngine(v as 'raw' | 'unity' | 'unreal')}>
-                  <SelectTrigger className="bg-zinc-800/50 border-zinc-700 h-8 text-xs">
+                  <SelectTrigger className="bg-noir-800/50 border-noir-700 h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -378,9 +378,9 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
 
               {exportEngine === 'raw' && (
                 <div>
-                  <Label className="text-[10px] text-zinc-500 mb-1 block">{t('common.formato')}</Label>
+                  <Label className="text-[10px] text-noir-500 mb-1 block">{t('common.formato')}</Label>
                   <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as 'json' | 'xml' | 'tsv')}>
-                    <SelectTrigger className="bg-zinc-800/50 border-zinc-700 h-8 text-xs">
+                    <SelectTrigger className="bg-noir-800/50 border-noir-700 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -393,7 +393,7 @@ export function LipSyncPanel({ audioPath: initialPath, dialogText: initialDialog
               )}
             </div>
 
-            <Button onClick={handleExport} size="sm" className="w-full bg-pink-600 hover:bg-pink-500">
+            <Button onClick={handleExport} size="sm" className="w-full bg-rouge-600 hover:bg-rouge-500">
               <Download className="w-3.5 h-3.5 mr-2" />
               {t('lipSyncPanel.export')}{exportEngine === 'unity' ? 'per Unity' : exportEngine === 'unreal' ? 'per Unreal' : exportFormat.toUpperCase()}
             </Button>
