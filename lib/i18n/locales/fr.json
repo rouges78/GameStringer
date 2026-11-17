@@ -855,6 +855,8 @@
     "legalGateLink": "Lire les mentions légales",
     "legalGateCancel": "Annuler",
     "legalGateConfirm": "Je confirme posséder le jeu",
+    "langPresentGateTitle": "{lang} est déjà présent",
+    "langPresentGateBody": "Ce jeu semble déjà disponible dans cette langue. Vous pouvez le traduire quand même, mais ce n'est probablement pas nécessaire.",
     "whitelistBlocked": "Ce titre est exclu de la traduction à la demande de l'éditeur.",
     "whitelistOfficialNotice": "Ce jeu dispose déjà d'une localisation officielle dans la langue choisie : une traduction amateur est probablement superflue.",
     "advancedTools": "Outils avancés",
@@ -7062,6 +7064,8 @@
   },
   "postTranslation": {
     "partialTitle": "Traduction partielle : {n} chaînes écrites, {missing} fichiers déclarés absents",
+    "incompleteTitle": "Traduction incomplète : {n} chaînes écrites sur {total}, {left} laissées telles quelles",
+    "stepLeft": "⚠️ {n} livrables créés, {left} chaînes non écrites dans le jeu",
     "unverifiedTitle": "Le moteur annonce un succès, mais aucun fichier n'a été vérifié sur le disque",
     "unverifiedHint": "Le jeu est peut-être encore dans sa langue d'origine. Lancez-le pour vérifier ; s'il n'est pas traduit, essayez l'overlay OCR ou le patcher dédié du moteur.",
     "stringsTranslated": "chaînes traduites",
@@ -7278,6 +7282,7 @@
     "back": "Retour au tableau de bord"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Non essayé : il faut d'abord la clé AES du jeu.",
     "unityStaticStep": "Textes intégrés aux scènes du jeu",
     "unityStaticTranslating": "Traduction de {done}/{total} textes",
     "unityStaticWriting": "Écriture dans le jeu (l'original est conservé en sauvegarde)",

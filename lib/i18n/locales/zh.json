@@ -855,6 +855,8 @@
     "legalGateLink": "阅读法律声明",
     "legalGateCancel": "取消",
     "legalGateConfirm": "确认，我拥有本游戏",
+    "langPresentGateTitle": "{lang}已存在",
+    "langPresentGateBody": "这款游戏似乎已经有这种语言。仍然可以翻译，但很可能没有必要。",
     "whitelistBlocked": "应发行商要求，该游戏已被排除在翻译之外。",
     "whitelistOfficialNotice": "该游戏已有所选语言的官方本地化：粉丝翻译可能没有必要。",
     "advancedTools": "高级工具",
@@ -7062,6 +7064,8 @@
   },
   "postTranslation": {
     "partialTitle": "部分翻译：已写入 {n} 条字符串，声明的 {missing} 个文件缺失",
+    "incompleteTitle": "翻译未完成：共 {total} 条字符串，已写入 {n} 条，{left} 条保持原样",
+    "stepLeft": "⚠️ 已创建 {n} 个交付物，{left} 条字符串未写入游戏",
     "unverifiedTitle": "引擎报告成功，但磁盘上没有任何文件得到验证",
     "unverifiedHint": "游戏可能仍是原始语言。请启动检查；如未翻译，请尝试 OCR 叠加层或引擎专用补丁工具。",
     "stringsTranslated": "条字符串已翻译",
@@ -7278,6 +7282,7 @@
     "back": "返回仪表板"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "未尝试：需要先提供游戏的 AES 密钥。",
     "unityStaticStep": "内置在游戏场景中的文本",
     "unityStaticTranslating": "正在翻译 {done}/{total} 条文本",
     "unityStaticWriting": "正在写入游戏(原文件保留为备份)",

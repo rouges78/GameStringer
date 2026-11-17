@@ -855,6 +855,8 @@
     "legalGateLink": "법적 고지 읽기",
     "legalGateCancel": "취소",
     "legalGateConfirm": "게임 소유를 확인합니다",
+    "langPresentGateTitle": "{lang}: 이미 있음",
+    "langPresentGateBody": "이 게임은 이미 이 언어를 지원하는 것으로 보입니다. 그래도 번역할 수 있지만 필요하지 않을 가능성이 높습니다.",
     "whitelistBlocked": "퍼블리셔의 요청으로 이 타이틀은 번역에서 제외되었습니다.",
     "whitelistOfficialNotice": "이 게임에는 이미 선택한 언어의 공식 현지화가 있습니다. 팬 번역은 아마 불필요합니다.",
     "advancedTools": "고급 도구",
@@ -7062,6 +7064,8 @@
   },
   "postTranslation": {
     "partialTitle": "부분 번역: {n}개의 문자열을 기록했고, 선언된 파일 {missing}개가 없습니다",
+    "incompleteTitle": "번역 미완료: 문자열 {total}개 중 {n}개를 기록했고, {left}개는 그대로입니다",
+    "stepLeft": "⚠️ 결과물 {n}개 생성, 문자열 {left}개는 게임에 기록되지 않았습니다",
     "unverifiedTitle": "엔진은 성공이라고 하지만 디스크에서 확인된 파일이 없습니다",
     "unverifiedHint": "게임이 아직 원래 언어일 수 있습니다. 실행해서 확인하세요. 번역되지 않았다면 OCR 오버레이나 엔진 전용 패처를 사용해 보세요.",
     "stringsTranslated": "문자열 번역됨",
@@ -7278,6 +7282,7 @@
     "back": "대시보드로 돌아가기"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "시도하지 않음: 먼저 게임의 AES 키가 필요합니다.",
     "unityStaticStep": "게임 장면에 내장된 텍스트",
     "unityStaticTranslating": "{done}/{total}개 번역 중",
     "unityStaticWriting": "게임에 쓰는 중(원본은 백업으로 보관)",

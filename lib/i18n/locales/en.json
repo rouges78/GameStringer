@@ -855,6 +855,8 @@
     "legalGateLink": "Read the legal notice",
     "legalGateCancel": "Cancel",
     "legalGateConfirm": "I confirm I own the game",
+    "langPresentGateTitle": "{lang} is already there",
+    "langPresentGateBody": "This game already appears to be in this language. You can translate it anyway, but it is probably not needed.",
     "whitelistBlocked": "This title is excluded from translation at the publisher's request.",
     "whitelistOfficialNotice": "This game already has an official localization in the selected language: a fan translation is probably unnecessary.",
     "advancedTools": "Advanced tools",
@@ -7062,6 +7064,8 @@
   },
   "postTranslation": {
     "partialTitle": "Partial translation: {n} strings written, {missing} declared files missing",
+    "incompleteTitle": "Incomplete translation: {n} of {total} strings written, {left} left as they were",
+    "stepLeft": "⚠️ {n} deliverables created, {left} strings not written into the game",
     "unverifiedTitle": "The engine reports success, but no file was verified on disk",
     "unverifiedHint": "The game may still be in its original language. Launch it to check; if it isn't translated, try the OCR overlay or the engine's dedicated patcher.",
     "stringsTranslated": "strings translated",
@@ -7278,6 +7282,7 @@
     "back": "Back to Dashboard"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Not tried: the game's AES key is needed first.",
     "unityStaticStep": "Texts built into the game scenes",
     "unityStaticTranslating": "Translating {done}/{total} texts",
     "unityStaticWriting": "Writing into the game (the original is kept as a backup)",

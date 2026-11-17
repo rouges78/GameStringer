@@ -855,6 +855,8 @@
     "legalGateLink": "Rechtliche Hinweise lesen",
     "legalGateCancel": "Abbrechen",
     "legalGateConfirm": "Ich bestätige, das Spiel zu besitzen",
+    "langPresentGateTitle": "{lang} ist bereits vorhanden",
+    "langPresentGateBody": "Dieses Spiel scheint bereits in dieser Sprache vorzuliegen. Du kannst es trotzdem übersetzen, aber vermutlich ist das nicht nötig.",
     "whitelistBlocked": "Dieser Titel ist auf Wunsch des Publishers von der Übersetzung ausgeschlossen.",
     "whitelistOfficialNotice": "Dieses Spiel hat bereits eine offizielle Lokalisierung in der gewählten Sprache: eine Fan-Übersetzung ist wahrscheinlich überflüssig.",
     "advancedTools": "Erweiterte Werkzeuge",
@@ -7062,6 +7064,8 @@
   },
   "postTranslation": {
     "partialTitle": "Teilweise übersetzt: {n} Zeichenketten geschrieben, {missing} angegebene Dateien fehlen",
+    "incompleteTitle": "Unvollständige Übersetzung: {n} von {total} Zeichenketten geschrieben, {left} unverändert",
+    "stepLeft": "⚠️ {n} Ergebnisse erstellt, {left} Zeichenketten nicht ins Spiel geschrieben",
     "unverifiedTitle": "Die Engine meldet Erfolg, aber keine Datei wurde auf der Festplatte verifiziert",
     "unverifiedHint": "Das Spiel ist möglicherweise noch in der Originalsprache. Starte es zum Prüfen; falls nicht übersetzt, versuche das OCR-Overlay oder den Engine-Patcher.",
     "stringsTranslated": "Strings übersetzt",
@@ -7278,6 +7282,7 @@
     "back": "Zurück zum Dashboard"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Nicht versucht: Zuerst wird der AES-Schlüssel des Spiels benötigt.",
     "unityStaticStep": "In die Spielszenen eingebettete Texte",
     "unityStaticTranslating": "Übersetze {done}/{total} Texte",
     "unityStaticWriting": "Schreibe ins Spiel (das Original bleibt als Sicherung erhalten)",

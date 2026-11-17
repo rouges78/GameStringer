@@ -7142,7 +7142,7 @@ async fn execute_workflow_from_prediction(
         if gm_codes_lost > 0 {
             // Detto all'utente, non solo loggato: è una scelta che lo riguarda.
             t_outputs.push(format!(
-                "🛡️ {} stringhe lasciate in originale: la traduzione aveva perso i codici di controllo del gioco (a capo, pause, fine messaggio). Tradurle così avrebbe potuto bloccare i dialoghi. Un modello più grande di solito li rispetta meglio.",
+                "🛡️ {} stringhe lasciate in originale: la traduzione aveva perso o aggiunto codici di controllo del gioco (a capo, pause, fine messaggio). Tradurle così avrebbe potuto bloccare i dialoghi. Un modello più grande di solito li rispetta meglio.",
                 gm_codes_lost
             ));
         }
@@ -7218,7 +7218,7 @@ async fn execute_workflow_from_prediction(
             let mancanti = gm_total_in_game as u64 - gm_injected;
             if gm_codes_lost > 0 {
                 next_steps.push(format!(
-                    "🛡️ Scritte {} stringhe su {}. Di quelle rimaste in inglese, {} sono state PROTETTE di proposito: la traduzione aveva perso i codici che il gioco usa per andare a capo, mettere in pausa e chiudere i dialoghi, e usarla avrebbe potuto bloccare una conversazione. È una scelta, non un errore.",
+                    "🛡️ Scritte {} stringhe su {}. Di quelle rimaste in inglese, {} sono state PROTETTE di proposito: la traduzione aveva perso o aggiunto codici che il gioco usa per andare a capo, mettere in pausa e chiudere i dialoghi, e usarla avrebbe potuto bloccare una conversazione. È una scelta, non un errore.",
                     gm_injected, gm_total_in_game, gm_codes_lost
                 ));
                 if mancanti > gm_codes_lost {

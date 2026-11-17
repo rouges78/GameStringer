@@ -47,6 +47,41 @@ describe('effectVerdict', () => {
     });
   });
 
+  describe('il difetto del 16/11: un giro al 68% usciva verde', () => {
+    // DELTARUNE demo: 4184 stringhe scritte su 6121, il resto rimasto in
+    // giapponese, e il pannello diceva «0 errori» in verde.
+    it('NON dà il verde se è entrata nel gioco meno dell\'80% delle stringhe', () => {
+      const v = effectVerdict(scritturaReale({ stringsWritten: 4184, stringsTotal: 6121 }));
+      expect(v.incomplete).toBe(true);
+      expect(v.verifiedOk).toBe(false);
+      expect(v.tone).toBe('amber');
+      expect(v.stringsLeft).toBe(1937);
+      // Il gioco È cambiato: non va detto «non risulta cambiato niente».
+      expect(v.unverified).toBe(false);
+      expect(v.nothingWritten).toBe(false);
+    });
+
+    it('resta verde sopra la soglia, ma sa dire quante ne restano', () => {
+      const v = effectVerdict(scritturaReale({ stringsWritten: 5900, stringsTotal: 6121 }));
+      expect(v.verifiedOk).toBe(true);
+      expect(v.incomplete).toBe(false);
+      expect(v.stringsLeft).toBe(221);
+    });
+
+    it('senza il totale non inventa un resto', () => {
+      const v = effectVerdict(scritturaReale());
+      expect(v.incomplete).toBe(false);
+      expect(v.stringsLeft).toBeNull();
+    });
+
+    it('a runtime il totale non conta: non si scrive niente per costruzione', () => {
+      const v = effectVerdict(scritturaReale({ stringsWritten: 0, stringsTotal: 6121, runtimeOnly: true }));
+      expect(v.verifiedOk).toBe(true);
+      expect(v.incomplete).toBe(false);
+      expect(v.stringsLeft).toBeNull();
+    });
+  });
+
   describe('il difetto del 28/07: il verde era garantito', () => {
     it('NON dà il verde se il motore dichiara il successo senza aver scritto niente', () => {
       // Era «100% con 0 errori» col gioco ancora in inglese: i file dichiarati
@@ -141,9 +176,11 @@ describe('effectVerdict', () => {
       expect(v.verifiedNames).toEqual([]);
     });
 
-    it('esattamente un esito è attivo, su casi che coprono tutti e tre i rami', () => {
-      const casi: { nome: string; v: EffectVerification | undefined; atteso: 'verifiedOk' | 'partial' | 'unverified' }[] = [
+    it('esattamente un esito è attivo, su casi che coprono tutti i rami', () => {
+      const casi: { nome: string; v: EffectVerification | undefined; atteso: 'verifiedOk' | 'partial' | 'incomplete' | 'unverified' }[] = [
         { nome: 'scrittura piena', v: scritturaReale(), atteso: 'verifiedOk' },
+        { nome: 'scritto il 68%', v: scritturaReale({ stringsWritten: 4184, stringsTotal: 6121 }), atteso: 'incomplete' },
+        { nome: 'scritto il 68% e un file manca', v: scritturaReale({ stringsWritten: 4184, stringsTotal: 6121, missing: ['x'] }), atteso: 'partial' },
         { nome: 'runtime', v: { checked: 1, verified: 1, missing: [], verifiedNames: ['x'], runtimeOnly: true }, atteso: 'verifiedOk' },
         { nome: 'scritto ma un file manca', v: scritturaReale({ checked: 2, missing: ['x'] }), atteso: 'partial' },
         { nome: 'nessuna scrittura', v: scritturaReale({ stringsWritten: 0 }), atteso: 'unverified' },
@@ -152,7 +189,7 @@ describe('effectVerdict', () => {
       ];
       for (const { nome, v, atteso } of casi) {
         const r = effectVerdict(v);
-        expect([r.verifiedOk, r.partial, r.unverified].filter(Boolean), `${nome}: esiti simultanei`).toHaveLength(1);
+        expect([r.verifiedOk, r.partial, r.incomplete, r.unverified].filter(Boolean), `${nome}: esiti simultanei`).toHaveLength(1);
         expect(r[atteso], `${nome}: atteso ${atteso}`).toBe(true);
       }
     });
