@@ -176,6 +176,33 @@ export function buildRunReport(args: {
 }
 
 /**
+ * Il passo runtime da mostrare nel riepilogo del giro, o `null` se il runtime
+ * non serviva.
+ *
+ * Esiste perché l'esito del runtime finiva solo in un toast: sparito quello,
+ * il riepilogo mostrava un passo in meno del piano senza dire perché. Un
+ * passo non eseguito è `skipped` col suo motivo, non un errore: «avvia il
+ * gioco» è un invito, e dipingerlo di rosso direbbe che qualcosa si è rotto.
+ *
+ * `injected` è l'esito dell'iniezione, e conta solo quando il piano è `inject`.
+ */
+export function runtimeStepFor(
+  report: RunReport,
+  injected?: boolean,
+): { status: 'done' | 'error' | 'skipped'; detailKey: string } | null {
+  switch (report.plan.action) {
+    case 'none':
+      return null;
+    case 'inject':
+      return injected
+        ? { status: 'done', detailKey: 'gameDetail.runtimeFallbackReady' }
+        : { status: 'error', detailKey: 'gameDetail.runtimeFallbackFailed' };
+    default:
+      return { status: 'skipped', detailKey: report.nextStepKey };
+  }
+}
+
+/**
  * Il giro ha scritto qualcosa nei file del gioco?
  *
  * Decide come finisce in cronologia: «Patch creata» solo se è vero. Un giro

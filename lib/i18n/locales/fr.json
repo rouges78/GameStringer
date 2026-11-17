@@ -7282,6 +7282,7 @@
     "back": "Retour au tableau de bord"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Non essayé : il faut d'abord la clé AES du jeu.",
     "unityStaticStep": "Textes intégrés aux scènes du jeu",
     "unityStaticTranslating": "Traduction de {done}/{total} textes",
     "unityStaticWriting": "Écriture dans le jeu (l'original est conservé en sauvegarde)",

@@ -56,6 +56,7 @@ import {
   buildRunReport,
   summarizeRunReport,
   runReportWroteToGame,
+  runtimeStepFor,
   type RunReport,
   type FallbackCause,
 } from '@/lib/translation/runtime-fallback';
@@ -436,7 +437,7 @@ export default function GameDetailPage() {
   const [autoTranslateBusy, setAutoTranslateBusy] = useState(false);
   const [autoTranslateProgress, setAutoTranslateProgress] = useState<string>('');
   const [_autoTranslateStep, setAutoTranslateStep] = useState(0);
-  const [autoTranslateSteps, setAutoTranslateSteps] = useState<{label: string, status: 'pending' | 'running' | 'done' | 'error', detail?: string}[]>([]);
+  const [autoTranslateSteps, setAutoTranslateSteps] = useState<{label: string, status: 'pending' | 'running' | 'done' | 'error' | 'skipped', detail?: string}[]>([]);
   const [autoTranslateError, setAutoTranslateError] = useState<string | null>(null);
   const [autoTranslateResult, setAutoTranslateResult] = useState<{
     successRate: number;
@@ -2245,7 +2246,20 @@ export default function GameDetailPage() {
 
     if (plan.action === 'none') return report;
 
+    // Il passo runtime entra nel riepilogo, col suo esito o col motivo per
+    // cui non è stato eseguito: il toast sparisce, il riepilogo resta.
+    const showRuntimeStep = (injected?: boolean) => {
+      const step = runtimeStepFor(report, injected);
+      if (!step) return;
+      const label = t('stringItPlan.methods.runtime-hook');
+      setAutoTranslateSteps(prev => [
+        ...prev.filter(s => s.label !== label),
+        { label, status: step.status, detail: t(step.detailKey) },
+      ]);
+    };
+
     if (plan.action === 'unavailable' || plan.action === 'await-launch') {
+      showRuntimeStep();
       toast.info(t(report.nextStepKey));
       offerMethodAfterRuntime();
       return report;
@@ -2263,6 +2277,7 @@ export default function GameDetailPage() {
         // hook: accenderlo dopo non avrebbe effetto sul gioco già agganciato.
         shareFrames: true,
       });
+      showRuntimeStep(res.success);
       if (res.success) {
         toast.success(t('gameDetail.runtimeFallbackReady'), { id: 'gs-runtime-fallback' });
       } else {
@@ -2273,6 +2288,7 @@ export default function GameDetailPage() {
         offerMethodAfterRuntime();
       }
     } catch (e: unknown) {
+      showRuntimeStep(false);
       toast.error(t('gameDetail.runtimeFallbackFailed'), {
         id: 'gs-runtime-fallback',
         description: String(e).slice(0, 180),
@@ -2990,7 +3006,17 @@ export default function GameDetailPage() {
             // non ricostruisce la chiave (sarebbe aggirare una protezione, e la
             // nostra ANTI_PIRACY.md dice che non lo facciamo), ma se l'utente ce
             // l'ha la usa — come `repak --aes-key`.
-            setAutoTranslateSteps([{ ...ueSteps[0], status: 'error', detail: t('heroJob.pakEncryptedDetail') }]);
+            // Qui il runtime NON si prova: prima va data la chiave. Se il
+            // piano lo prevede, il riepilogo lo dice invece di tacerlo (su
+            // Fobia, il 16/11/2026, il passo 2 del piano spariva e basta).
+            setAutoTranslateSteps([
+              { ...ueSteps[0], status: 'error', detail: t('heroJob.pakEncryptedDetail') },
+              ...(findMethod(translationPlanRef.current, 'runtime-hook') ? [{
+                label: t('stringItPlan.methods.runtime-hook'),
+                status: 'skipped' as const,
+                detail: t('stringItPlan.runtimeSkippedNeedsKey'),
+              }] : []),
+            ]);
             setAutoTranslateError(chiaveAesSbagliata ? 'PAK_ENCRYPTED_WRONG_AES_KEY' : 'PAK_ENCRYPTED_NEEDS_AES_KEY');
           } else {
             // Il gioco non espone testi estraibili (misurato: succede sui giochi

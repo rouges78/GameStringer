@@ -7282,6 +7282,7 @@
     "back": "Zurück zum Dashboard"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Nicht versucht: Zuerst wird der AES-Schlüssel des Spiels benötigt.",
     "unityStaticStep": "In die Spielszenen eingebettete Texte",
     "unityStaticTranslating": "Übersetze {done}/{total} Texte",
     "unityStaticWriting": "Schreibe ins Spiel (das Original bleibt als Sicherung erhalten)",

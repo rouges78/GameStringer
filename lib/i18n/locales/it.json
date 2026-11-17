@@ -7282,6 +7282,7 @@
     "back": "Torna alla Dashboard"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "Non provato: prima serve la chiave AES del gioco.",
     "unityStaticStep": "Testi incorporati nelle scene del gioco",
     "unityStaticTranslating": "Traduco {done}/{total} testi",
     "unityStaticWriting": "Scrivo nel gioco (l'originale resta come backup)",

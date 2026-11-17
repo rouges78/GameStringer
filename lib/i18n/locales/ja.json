@@ -7282,6 +7282,7 @@
     "back": "ダッシュボードに戻る"
   },
   "stringItPlan": {
+    "runtimeSkippedNeedsKey": "未実行: 先にゲームのAESキーが必要です。",
     "unityStaticStep": "ゲームのシーンに埋め込まれたテキスト",
     "unityStaticTranslating": "{done}/{total} 件を翻訳中",
     "unityStaticWriting": "ゲームに書き込み中(元のファイルはバックアップとして残ります)",

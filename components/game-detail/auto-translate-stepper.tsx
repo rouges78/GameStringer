@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertTriangle, Edit3, Play, Package, ScanText, MinusCircle } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { effectVerdict, type EffectVerification } from '@/lib/translation/effect-verdict';
@@ -11,7 +11,7 @@ import { DonationDialog } from '@/components/donation-dialog';
 
 interface AutoTranslateStep {
   label: string;
-  status: 'pending' | 'running' | 'done' | 'error';
+  status: 'pending' | 'running' | 'done' | 'error' | 'skipped';
   detail?: string;
 }
 
@@ -69,7 +69,7 @@ export function AutoTranslateStepper({
   // Il run è finito quando nessun passo è ancora in attesa o in corso. Un passo
   // fallito resta rosso: wizard e «Chiudi» dipendono da «finito», non da «tutto
   // verde» — altrimenti per arrivarci un passo rosso andava ridipinto di verde.
-  const finished = steps.every(s => s.status === 'done' || s.status === 'error');
+  const finished = steps.every(s => s.status === 'done' || s.status === 'error' || s.status === 'skipped');
 
   // Chiave AES per i pak cifrati: si tiene qui e non nel padre perché serve
   // solo dentro questo pannello, e sparisce con lui.
@@ -155,12 +155,14 @@ export function AutoTranslateStepper({
               step.status === 'running' ? 'bg-rouge-500/10 border border-rouge-500/20' :
               step.status === 'done' ? 'bg-white/[0.02]' :
               step.status === 'error' ? 'bg-red-500/10 border border-red-500/20' :
+              step.status === 'skipped' ? 'bg-white/[0.02]' :
               'opacity-40'
             }`}>
               <div className="w-6 h-6 shrink-0 flex items-center justify-center">
                 {step.status === 'running' && <Loader2 className="h-4 w-4 text-rouge-400 animate-spin" />}
                 {step.status === 'done' && <CheckCircle className="h-4 w-4 text-emerald-400" />}
                 {step.status === 'error' && <AlertTriangle className="h-4 w-4 text-red-400" />}
+                {step.status === 'skipped' && <MinusCircle className="h-4 w-4 text-noir-400" />}
                 {step.status === 'pending' && <div className="w-2 h-2 rounded-full bg-noir-600" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -168,12 +170,14 @@ export function AutoTranslateStepper({
                   step.status === 'running' ? 'text-rouge-300' :
                   step.status === 'done' ? 'text-noir-300' :
                   step.status === 'error' ? 'text-red-300' :
+                  step.status === 'skipped' ? 'text-noir-300' :
                   'text-noir-600'
                 }`}>{step.label}</span>
                 {step.detail && (
                   <span className={`text-micro block mt-0.5 ${
                     step.status === 'running' ? 'text-rouge-400/60' :
                     step.status === 'done' ? 'text-noir-500' :
+                    step.status === 'skipped' ? 'text-noir-400' :
                     'text-red-400/60'
                   }`}>{step.detail}</span>
                 )}
