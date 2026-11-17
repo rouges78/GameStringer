@@ -2955,6 +2955,42 @@ e puntini di sospensione si vedono corretti.
 Scarlet Hollow non è stato guardato niente; nessun dialogo di Scarlet Hollow è
 tradotto, quindi lì i dialoghi a schermo non sono verificati.
 
+## Eseguibili: patch delle stringhe sul posto (Binary Patcher)
+
+### Si patchano solo le stringhe i cui byte tornano identici
+
+**Il fatto.** Una sequenza trovata in un eseguibile è testo patchabile solo se,
+decodificata e ricodificata in UTF-8, restituisce gli stessi byte. Le altre non
+vanno estratte.
+
+**Come è stato misurato.** Su `DELTARUNE.exe` (demo, 5.070.848 byte) con il
+metodo «Basato su regole» EN→IT, che non traduce nulla, la revisione mostrava
+3 stringhe «tradotte» su 2393 e Applica Patch le scriveva. Confronto byte per
+byte con l'originale:
+
+- `0x1f82f8`, sezione `.text`: `C0 89 44 24` (istruzioni) → `EF BF BD 20`;
+- `0x49e8d2`, sezione `.data`: 8 byte di dati → due U+FFFD;
+- `0x4d5b4c`, sezione `.rsrc`: il BOM del manifest sparisce, testo scalato di 3 byte.
+
+Dopo la correzione: 2390 estratte, 0 marcate tradotte, patch rifiutata.
+
+```bash
+# da C:\GIT\GameStringer
+npx vitest run __tests__/lib/binary-string-patcher.test.ts
+```
+
+**Quando.** 17/11/2026, copia di DELTARUNE.exe, a schermo in `tauri:dev`.
+
+**Dove vive nel codice.** `lib/patchers/binary-string-patcher.ts`,
+`extractStringsFromBuffer` (controllo `roundTrips`).
+
+**La trappola.** Il lettore accetta come «UTF-8 a 2 byte» qualunque coppia
+`C0-DF` + `80-BF`, comprese le forme non valide (`C0 89`), frequenti nel codice
+macchina. `TextDecoder` le rende U+FFFD (3 byte) e toglie un BOM iniziale:
+`fitToByteLength(original)` non è più l'originale, `translateStrings` la marca
+`isTranslated` anche senza alcuna traduzione, `applyPatch` la scrive. Non
+provato: se l'eseguibile così patchato parte.
+
 ## Come si aggiunge una voce
 
 Quando trovi un modo nuovo di estrarre o reiniettare testo, o capisci perché un
